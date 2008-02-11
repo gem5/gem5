@@ -47,7 +47,7 @@ struct EndQuiesceEvent : public Event
     virtual void process();
 
     /** Event description */
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 #endif // __CPU_QUIESCE_EVENT_HH__

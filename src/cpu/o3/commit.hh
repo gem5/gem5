@@ -97,7 +97,7 @@ class DefaultCommit
         TrapEvent(DefaultCommit<Impl> *_commit, unsigned _tid);
 
         void process();
-        const char *description();
+        const char *description() const;
     };
 
     /** Overall commit status. Used to determine if the CPU can deschedule

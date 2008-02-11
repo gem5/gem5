@@ -93,7 +93,8 @@ class EtherTap : public EtherObject
         TxEvent(EtherTap *_tap)
             : Event(&mainEventQueue), tap(_tap) {}
         void process() { tap->retransmit(); }
-        virtual const char *description() { return "EtherTap retransmit"; }
+        virtual const char *description() const
+            { return "EtherTap retransmit"; }
     };
 
     friend class TxEvent;

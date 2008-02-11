@@ -39,7 +39,7 @@
 #include "enums/Prefetch.hh"
 #include "mem/config/cache.hh"
 #include "mem/config/prefetch.hh"
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "mem/cache/cache.hh"
 #include "mem/bus.hh"
 #include "params/BaseCache.hh"
@@ -67,13 +67,13 @@
 
 //Prefetcher Headers
 #if defined(USE_GHB)
-#include "mem/cache/prefetch/ghb_prefetcher.hh"
+#include "mem/cache/prefetch/ghb.hh"
 #endif
 #if defined(USE_TAGGED)
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#include "mem/cache/prefetch/tagged.hh"
 #endif
 #if defined(USE_STRIDED)
-#include "mem/cache/prefetch/stride_prefetcher.hh"
+#include "mem/cache/prefetch/stride.hh"
 #endif
 
 

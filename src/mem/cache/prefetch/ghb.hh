@@ -30,54 +30,37 @@
 
 /**
  * @file
- * Describes a strided prefetcher.
+ * Describes a ghb prefetcher.
  */
 
-#ifndef __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
-#define __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
+#ifndef __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
+#define __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
 
-#include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/cache/prefetch/base.hh"
 
-class StridePrefetcher : public BasePrefetcher
+class GHBPrefetcher : public BasePrefetcher
 {
   protected:
 
-    class strideEntry
-    {
-      public:
-        Addr IAddr;
-        Addr MAddr;
-        int stride;
-        int64_t confidence;
+    Addr second_last_miss_addr[64/*MAX_CPUS*/];
+    Addr last_miss_addr[64/*MAX_CPUS*/];
 
-/*	bool operator < (strideEntry a,strideEntry b)
-        {
-            if (a.confidence == b.confidence) {
-                return true; //??????
-            }
-            else return a.confidence < b.confidence;
-            }*/
-    };
-    Addr* lastMissAddr[64/*MAX_CPUS*/];
-
-    std::list<strideEntry*> table[64/*MAX_CPUS*/];
     Tick latency;
     int degree;
     bool useCPUId;
 
-
   public:
 
-    StridePrefetcher(const BaseCacheParams *p)
+    GHBPrefetcher(const BaseCacheParams *p)
         : BasePrefetcher(p), latency(p->prefetch_latency),
           degree(p->prefetch_degree), useCPUId(p->prefetch_use_cpu_id)
     {
     }
 
-    ~StridePrefetcher() {}
+    ~GHBPrefetcher() {}
 
     void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                            std::list<Tick> &delays);
 };
 
-#endif // __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
+#endif // __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__

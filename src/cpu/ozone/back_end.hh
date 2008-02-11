@@ -186,7 +186,7 @@ class BackEnd
         /** Processes writeback event. */
         virtual void process();
         /** Returns the description of the writeback event. */
-        virtual const char *description();
+        virtual const char *description() const;
     };
 
     BackEnd(Params *params);
@@ -309,7 +309,7 @@ class BackEnd
         DCacheCompletionEvent(BackEnd *_be);
 
         virtual void process();
-        virtual const char *description();
+        virtual const char *description() const;
     };
 
     friend class DCacheCompletionEvent;

@@ -35,7 +35,7 @@
 #include "cpu/ozone/cpu_impl.hh"
 #include "cpu/ozone/simple_impl.hh"
 #include "cpu/ozone/simple_params.hh"
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "sim/SimpleOzoneCPU.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"

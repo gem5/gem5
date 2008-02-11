@@ -73,7 +73,7 @@ class TsunamiIO : public BasicPioDevice
             virtual void process();
 
             /** Event description */
-            virtual const char *description();
+            virtual const char *description() const;
         };
 
       private:
@@ -161,7 +161,7 @@ class TsunamiIO : public BasicPioDevice
                 virtual void process();
 
                 /** Event description */
-                virtual const char *description();
+                virtual const char *description() const;
 
                 friend class Counter;
             };

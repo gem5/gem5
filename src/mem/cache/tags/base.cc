@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Regents of The University of Michigan
+ * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,68 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Erik Hallnor
+ *          Ron Dreslinski
  */
 
-#include "base/cprintf.hh"
-#include "mem/cache/cache_blk.hh"
+/**
+ * @file
+ * Definitions of BaseTags.
+ */
+
+#include "mem/cache/tags/base.hh"
+
+#include "mem/cache/base.hh"
+#include "cpu/smt.hh" //maxThreadsPerCPU
+#include "sim/sim_exit.hh"
+
+using namespace std;
 
 void
-CacheBlkPrintWrapper::print(std::ostream &os, int verbosity,
-                            const std::string &prefix) const
+BaseTags::setCache(BaseCache *_cache)
 {
-    ccprintf(os, "%sblk %c%c%c\n", prefix,
-             blk->isValid()    ? 'V' : '-',
-             blk->isWritable() ? 'E' : '-',
-             blk->isDirty()    ? 'M' : '-');
+    cache = _cache;
+    objName = cache->name();
 }
 
+void
+BaseTags::regStats(const string &name)
+{
+    using namespace Stats;
+    replacements
+        .init(maxThreadsPerCPU)
+        .name(name + ".replacements")
+        .desc("number of replacements")
+        .flags(total)
+        ;
+
+    tagsInUse
+        .name(name + ".tagsinuse")
+        .desc("Cycle average of tags in use")
+        ;
+
+    totalRefs
+        .name(name + ".total_refs")
+        .desc("Total number of references to valid blocks.")
+        ;
+
+    sampledRefs
+        .name(name + ".sampled_refs")
+        .desc("Sample count of references to valid blocks.")
+        ;
+
+    avgRefs
+        .name(name + ".avg_refs")
+        .desc("Average number of references to valid blocks.")
+        ;
+
+    avgRefs = totalRefs/sampledRefs;
+
+    warmupCycle
+        .name(name + ".warmup_cycle")
+        .desc("Cycle when the warmup percentage was hit.")
+        ;
+
+    registerExitCallback(new BaseTagsCallback(this));
+}

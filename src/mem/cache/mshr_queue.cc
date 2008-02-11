@@ -32,7 +32,7 @@
  * Definition of MSHRQueue class functions.
  */
 
-#include "mem/cache/miss/mshr_queue.hh"
+#include "mem/cache/mshr_queue.hh"
 
 using namespace std;
 

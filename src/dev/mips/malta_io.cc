@@ -208,7 +208,7 @@ MaltaIO::RTC::RTCEvent::process()
 }
 
 const char *
-MaltaIO::RTC::RTCEvent::description()
+MaltaIO::RTC::RTCEvent::description() const
 {
     return "malta RTC interrupt";
 }
@@ -461,7 +461,7 @@ MaltaIO::PITimer::Counter::CounterEvent::process()
 }
 
 const char *
-MaltaIO::PITimer::Counter::CounterEvent::description()
+MaltaIO::PITimer::Counter::CounterEvent::description() const
 {
     return "malta 8254 Interval timer";
 }

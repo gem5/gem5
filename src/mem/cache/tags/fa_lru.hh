@@ -38,10 +38,10 @@
 
 #include <list>
 
-#include "mem/cache/cache_blk.hh"
+#include "mem/cache/blk.hh"
 #include "mem/packet.hh"
 #include "base/hashmap.hh"
-#include "mem/cache/tags/base_tags.hh"
+#include "mem/cache/tags/base.hh"
 
 /**
  * A fully associative cache block.

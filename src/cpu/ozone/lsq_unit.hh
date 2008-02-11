@@ -80,7 +80,7 @@ class OzoneLSQ {
         void process();
 
         /** Returns the description of this event. */
-        const char *description();
+        const char *description() const;
 
       private:
         /** The store index of the store being written back. */

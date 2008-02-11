@@ -88,7 +88,7 @@ CPUProgressEvent::process()
 }
 
 const char *
-CPUProgressEvent::description()
+CPUProgressEvent::description() const
 {
     return "CPU Progress";
 }

@@ -39,7 +39,7 @@
 
 #include <math.h>
 
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "mem/cache/tags/iic.hh"
 #include "base/intmath.hh"
 #include "sim/core.hh" // for curTick

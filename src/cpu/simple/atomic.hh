@@ -68,7 +68,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
         TickEvent(AtomicSimpleCPU *c);
         void process();
-        const char *description();
+        const char *description() const;
     };
 
     TickEvent tickEvent;

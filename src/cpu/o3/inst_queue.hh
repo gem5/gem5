@@ -105,7 +105,7 @@ class InstructionQueue
                      InstructionQueue<Impl> *iq_ptr);
 
         virtual void process();
-        virtual const char *description();
+        virtual const char *description() const;
         void setFreeFU() { freeFU = true; }
     };
 

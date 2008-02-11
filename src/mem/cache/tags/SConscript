@@ -30,7 +30,7 @@
 
 Import('*')
 
-Source('base_tags.cc')
+Source('base.cc')
 Source('fa_lru.cc')
 Source('iic.cc')
 Source('lru.cc')
@@ -38,8 +38,8 @@ Source('split.cc')
 Source('split_lifo.cc')
 Source('split_lru.cc')
 
-SimObject('Repl.py')
-Source('repl/gen.cc')
+SimObject('iic_repl/Repl.py')
+Source('iic_repl/gen.cc')
 
 TraceFlag('IIC')
 TraceFlag('IICMore')

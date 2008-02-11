@@ -30,29 +30,54 @@
 
 /**
  * @file
- * Describes a tagged prefetcher.
+ * Describes a strided prefetcher.
  */
 
-#ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
-#define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#ifndef __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
+#define __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 
-#include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/cache/prefetch/base.hh"
 
-class TaggedPrefetcher : public BasePrefetcher
+class StridePrefetcher : public BasePrefetcher
 {
   protected:
 
+    class strideEntry
+    {
+      public:
+        Addr IAddr;
+        Addr MAddr;
+        int stride;
+        int64_t confidence;
+
+/*	bool operator < (strideEntry a,strideEntry b)
+        {
+            if (a.confidence == b.confidence) {
+                return true; //??????
+            }
+            else return a.confidence < b.confidence;
+            }*/
+    };
+    Addr* lastMissAddr[64/*MAX_CPUS*/];
+
+    std::list<strideEntry*> table[64/*MAX_CPUS*/];
     Tick latency;
     int degree;
+    bool useCPUId;
+
 
   public:
 
-    TaggedPrefetcher(const BaseCacheParams *p);
+    StridePrefetcher(const BaseCacheParams *p)
+        : BasePrefetcher(p), latency(p->prefetch_latency),
+          degree(p->prefetch_degree), useCPUId(p->prefetch_use_cpu_id)
+    {
+    }
 
-    ~TaggedPrefetcher() {}
+    ~StridePrefetcher() {}
 
     void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                            std::list<Tick> &delays);
 };
 
-#endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#endif // __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__

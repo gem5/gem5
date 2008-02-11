@@ -47,7 +47,7 @@
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
-#include "mem/cache/miss/mshr_queue.hh"
+#include "mem/cache/mshr_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"

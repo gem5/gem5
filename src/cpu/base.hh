@@ -68,7 +68,7 @@ class CPUProgressEvent : public Event
 
     void process();
 
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 class BaseCPU : public MemObject

@@ -105,7 +105,7 @@ void Bus::BusFreeEvent::process()
     bus->recvRetry(-1);
 }
 
-const char * Bus::BusFreeEvent::description()
+const char * Bus::BusFreeEvent::description() const
 {
     return "bus became available";
 }
@@ -307,9 +307,10 @@ Bus::findPort(Addr addr)
     dest_id = checkPortCache(addr);
     if (dest_id == -1) {
         PortIter i = portMap.find(RangeSize(addr,1));
-        if (i != portMap.end())
-          dest_id = i->second;
-        updatePortCache(dest_id, i->first.start, i->first.end);
+        if (i != portMap.end()) {
+            dest_id = i->second;
+            updatePortCache(dest_id, i->first.start, i->first.end);
+        }
     }
 
     // Check if this matches the default range

@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +26,14 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.SimObject import SimObject
+from m5.params import *
+class Repl(SimObject):
+    type = 'Repl'
+    abstract = True
 
-Source('mshr.cc')
-Source('mshr_queue.cc')
+class GenRepl(Repl):
+    type = 'GenRepl'
+    fresh_res = Param.Int("Fresh pool residency time")
+    num_pools = Param.Int("Number of priority pools")
+    pool_res = Param.Int("Pool residency time")

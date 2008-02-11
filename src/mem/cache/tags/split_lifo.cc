@@ -35,7 +35,7 @@
 
 #include <string>
 
-#include "mem/cache/base_cache.hh"
+#include "mem/cache/base.hh"
 #include "base/intmath.hh"
 #include "mem/cache/tags/split_lifo.hh"
 #include "sim/core.hh"

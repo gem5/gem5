@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -45,6 +45,8 @@ elif build_env['TARGET_ISA'] == 'x86':
     from X86TLB import X86DTB, X86ITB
 elif build_env['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB,MipsDTB, MipsITB, MipsUTB
+elif build_env['TARGET_ISA'] == 'arm':
+    from ArmTLB import ArmTLB, ArmDTB, ArmITB, ArmUTB
 
 class BaseCPU(SimObject):
     type = 'BaseCPU'
@@ -76,6 +78,11 @@ class BaseCPU(SimObject):
         dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
         itb = Param.MipsITB(MipsITB(), "Instruction TLB")
         tlb = Param.MipsUTB(MipsUTB(), "Unified TLB")
+    elif build_env['TARGET_ISA'] == 'arm':
+        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
+        dtb = Param.ArmDTB(ArmDTB(), "Data TLB")
+        itb = Param.ArmITB(ArmITB(), "Instruction TLB")
+        tlb = Param.ArmUTB(ArmUTB(), "Unified TLB")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             build_env['TARGET_ISA']

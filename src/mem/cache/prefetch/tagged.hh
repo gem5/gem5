@@ -30,41 +30,29 @@
 
 /**
  * @file
- * Describes a tagged prefetcher based on template policies.
+ * Describes a tagged prefetcher.
  */
 
-#include "arch/isa_traits.hh"
-#include "mem/cache/prefetch/tagged_prefetcher.hh"
+#ifndef __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
+#define __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__
 
-TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)
-    : BasePrefetcher(p),
-      latency(p->prefetch_latency), degree(p->prefetch_degree)
+#include "mem/cache/prefetch/base.hh"
+
+class TaggedPrefetcher : public BasePrefetcher
 {
-}
+  protected:
 
-void
-TaggedPrefetcher::
-calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                  std::list<Tick> &delays)
-{
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+    Tick latency;
+    int degree;
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
-            return;
-        }
-        else
-        {
-            addresses.push_back(newAddr);
-            delays.push_back(latency);
-        }
-    }
-}
+  public:
 
+    TaggedPrefetcher(const BaseCacheParams *p);
 
+    ~TaggedPrefetcher() {}
+
+    void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
+                           std::list<Tick> &delays);
+};
+
+#endif // __MEM_CACHE_PREFETCH_TAGGED_PREFETCHER_HH__

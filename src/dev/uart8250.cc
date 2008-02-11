@@ -55,7 +55,7 @@ Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
 }
 
 const char *
-Uart8250::IntrEvent::description()
+Uart8250::IntrEvent::description() const
 {
     return "uart interrupt delay";
 }

@@ -129,7 +129,7 @@ TraceCompleteEvent::process()
 }
 
 const char *
-TraceCompleteEvent::description()
+TraceCompleteEvent::description() const
 {
     return "trace access complete";
 }
@@ -146,7 +146,7 @@ TraceCPU::TickEvent::process()
 }
 
 const char *
-TraceCPU::TickEvent::description()
+TraceCPU::TickEvent::description() const
 {
     return "TraceCPU tick";
 }

@@ -55,7 +55,7 @@ AtomicSimpleCPU::TickEvent::process()
 }
 
 const char *
-AtomicSimpleCPU::TickEvent::description()
+AtomicSimpleCPU::TickEvent::description() const
 {
     return "AtomicSimpleCPU tick";
 }

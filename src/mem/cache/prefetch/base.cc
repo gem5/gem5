@@ -34,8 +34,8 @@
  */
 
 #include "base/trace.hh"
-#include "mem/cache/base_cache.hh"
-#include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/cache/base.hh"
+#include "mem/cache/prefetch/base.hh"
 #include "mem/request.hh"
 #include <list>
 

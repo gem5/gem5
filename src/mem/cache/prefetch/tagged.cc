@@ -26,67 +26,45 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
- *          Steve Reinhardt
  */
 
 /**
  * @file
- * Stride Prefetcher template instantiations.
+ * Describes a tagged prefetcher based on template policies.
  */
 
-#include "mem/cache/prefetch/stride_prefetcher.hh"
+#include "arch/isa_traits.hh"
+#include "mem/cache/prefetch/tagged.hh"
+
+TaggedPrefetcher::TaggedPrefetcher(const BaseCacheParams *p)
+    : BasePrefetcher(p),
+      latency(p->prefetch_latency), degree(p->prefetch_degree)
+{
+}
 
 void
-StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                                    std::list<Tick> &delays)
+TaggedPrefetcher::
+calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
+                  std::list<Tick> &delays)
 {
-//	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-    int cpuID = pkt->req->getCpuNum();
-    if (!useCPUId) cpuID = 0;
+    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
 
-    /* Scan Table for IAddr Match */
-/*	std::list<strideEntry*>::iterator iter;
-  for (iter=table[cpuID].begin();
-  iter !=table[cpuID].end();
-  iter++) {
-  if ((*iter)->IAddr == pkt->pc) break;
-  }
-
-  if (iter != table[cpuID].end()) {
-  //Hit in table
-
-  int newStride = blkAddr - (*iter)->MAddr;
-  if (newStride == (*iter)->stride) {
-  (*iter)->confidence++;
-  }
-  else {
-  (*iter)->stride = newStride;
-  (*iter)->confidence--;
-  }
-
-  (*iter)->MAddr = blkAddr;
-
-  for (int d=1; d <= degree; d++) {
-  Addr newAddr = blkAddr + d * newStride;
-  if (this->pageStop &&
-  (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-  (newAddr & ~(TheISA::VMPageSize - 1)))
-  {
-  //Spanned the page, so now stop
-  this->pfSpanPage += degree - d + 1;
-  return;
-  }
-  else
-  {
-  addresses.push_back(newAddr);
-  delays.push_back(latency);
-  }
-  }
-  }
-  else {
-  //Miss in table
-  //Find lowest confidence and replace
-
-  }
-*/
+    for (int d=1; d <= degree; d++) {
+        Addr newAddr = blkAddr + d*(this->blkSize);
+        if (this->pageStop &&
+            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
+            (newAddr & ~(TheISA::VMPageSize - 1)))
+        {
+            //Spanned the page, so now stop
+            this->pfSpanPage += degree - d + 1;
+            return;
+        }
+        else
+        {
+            addresses.push_back(newAddr);
+            delays.push_back(latency);
+        }
+    }
 }
+
+

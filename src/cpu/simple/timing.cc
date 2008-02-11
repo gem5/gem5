@@ -598,13 +598,19 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
             assert(fault == NoFault);
         } else {
             if (fault == NoFault) {
+                // Note that ARM can have NULL packets if the instruction gets
+                // squashed due to predication
                 // early fail on store conditional: complete now
-                assert(dcache_pkt != NULL);
+                assert(dcache_pkt != NULL || THE_ISA == ARM_ISA);
+
                 fault = curStaticInst->completeAcc(dcache_pkt, this,
                                                    traceData);
-                delete dcache_pkt->req;
-                delete dcache_pkt;
-                dcache_pkt = NULL;
+                if (dcache_pkt != NULL)
+                {
+                    delete dcache_pkt->req;
+                    delete dcache_pkt;
+                    dcache_pkt = NULL;
+                }
 
                 // keep an instruction count
                 if (fault == NoFault)
@@ -816,7 +822,7 @@ TimingSimpleCPU::IprEvent::process()
 }
 
 const char *
-TimingSimpleCPU::IprEvent::description()
+TimingSimpleCPU::IprEvent::description() const
 {
     return "Timing Simple CPU Delay IPR event";
 }

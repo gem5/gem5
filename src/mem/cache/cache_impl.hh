@@ -42,9 +42,9 @@
 #include "base/range_ops.hh"
 
 #include "mem/cache/cache.hh"
-#include "mem/cache/cache_blk.hh"
-#include "mem/cache/miss/mshr.hh"
-#include "mem/cache/prefetch/base_prefetcher.hh"
+#include "mem/cache/blk.hh"
+#include "mem/cache/mshr.hh"
+#include "mem/cache/prefetch/base.hh"
 
 #include "sim/sim_exit.hh" // for SimExitEvent
 

@@ -581,7 +581,7 @@ BackEnd<Impl>::LdWritebackEvent::process()
 
 template<class Impl>
 const char *
-BackEnd<Impl>::LdWritebackEvent::description()
+BackEnd<Impl>::LdWritebackEvent::description() const
 {
     return "Load writeback";
 }
@@ -601,7 +601,7 @@ BackEnd<Impl>::DCacheCompletionEvent::process()
 
 template <class Impl>
 const char *
-BackEnd<Impl>::DCacheCompletionEvent::description()
+BackEnd<Impl>::DCacheCompletionEvent::description() const
 {
     return "Cache completion";
 }

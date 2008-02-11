@@ -34,7 +34,7 @@
  * GHB Prefetcher implementation.
  */
 
-#include "mem/cache/prefetch/ghb_prefetcher.hh"
+#include "mem/cache/prefetch/ghb.hh"
 #include "arch/isa_traits.hh"
 
 void

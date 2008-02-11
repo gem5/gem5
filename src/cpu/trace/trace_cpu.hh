@@ -93,7 +93,7 @@ class TraceCPU : public SimObject
         /**
          * Return a string description of this event.
          */
-        const char *description();
+        const char *description() const;
     };
 
     TickEvent tickEvent;
@@ -135,7 +135,7 @@ class TraceCompleteEvent : public Event
 
     void process();
 
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 #endif // __CPU_TRACE_TRACE_CPU_HH__

@@ -68,7 +68,7 @@ class SimLoopExitEvent : public Event
 
     void process();	// process event
 
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 class CountedDrainEvent : public SimLoopExitEvent
@@ -104,7 +104,7 @@ class CountedExitEvent : public Event
 
     void process();	// process event
 
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 //
@@ -122,7 +122,7 @@ class CheckSwapEvent : public Event
 
     void process();	// process event
 
-    virtual const char *description();
+    virtual const char *description() const;
 };
 
 #endif  // __SIM_SIM_EVENTS_HH__

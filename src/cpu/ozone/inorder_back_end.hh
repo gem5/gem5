@@ -161,7 +161,7 @@ class InorderBackEnd
         DCacheCompletionEvent(InorderBackEnd *_be);
 
         virtual void process();
-        virtual const char *description();
+        virtual const char *description() const;
 
         DynInstPtr inst;
     };

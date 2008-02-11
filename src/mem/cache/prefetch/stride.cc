@@ -26,41 +26,67 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Ron Dreslinski
+ *          Steve Reinhardt
  */
 
 /**
  * @file
- * Describes a ghb prefetcher.
+ * Stride Prefetcher template instantiations.
  */
 
-#ifndef __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
-#define __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
+#include "mem/cache/prefetch/stride.hh"
 
-#include "mem/cache/prefetch/base_prefetcher.hh"
-
-class GHBPrefetcher : public BasePrefetcher
+void
+StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
+                                    std::list<Tick> &delays)
 {
-  protected:
+//	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
+    int cpuID = pkt->req->getCpuNum();
+    if (!useCPUId) cpuID = 0;
 
-    Addr second_last_miss_addr[64/*MAX_CPUS*/];
-    Addr last_miss_addr[64/*MAX_CPUS*/];
+    /* Scan Table for IAddr Match */
+/*	std::list<strideEntry*>::iterator iter;
+  for (iter=table[cpuID].begin();
+  iter !=table[cpuID].end();
+  iter++) {
+  if ((*iter)->IAddr == pkt->pc) break;
+  }
 
-    Tick latency;
-    int degree;
-    bool useCPUId;
+  if (iter != table[cpuID].end()) {
+  //Hit in table
 
-  public:
+  int newStride = blkAddr - (*iter)->MAddr;
+  if (newStride == (*iter)->stride) {
+  (*iter)->confidence++;
+  }
+  else {
+  (*iter)->stride = newStride;
+  (*iter)->confidence--;
+  }
 
-    GHBPrefetcher(const BaseCacheParams *p)
-        : BasePrefetcher(p), latency(p->prefetch_latency),
-          degree(p->prefetch_degree), useCPUId(p->prefetch_use_cpu_id)
-    {
-    }
+  (*iter)->MAddr = blkAddr;
 
-    ~GHBPrefetcher() {}
+  for (int d=1; d <= degree; d++) {
+  Addr newAddr = blkAddr + d * newStride;
+  if (this->pageStop &&
+  (blkAddr & ~(TheISA::VMPageSize - 1)) !=
+  (newAddr & ~(TheISA::VMPageSize - 1)))
+  {
+  //Spanned the page, so now stop
+  this->pfSpanPage += degree - d + 1;
+  return;
+  }
+  else
+  {
+  addresses.push_back(newAddr);
+  delays.push_back(latency);
+  }
+  }
+  }
+  else {
+  //Miss in table
+  //Find lowest confidence and replace
 
-    void calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
-                           std::list<Tick> &delays);
-};
-
-#endif // __MEM_CACHE_PREFETCH_GHB_PREFETCHER_HH__
+  }
+*/
+}

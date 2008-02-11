@@ -39,7 +39,7 @@
 #include <list>
 
 #include "base/statistics.hh"
-#include "mem/cache/tags/repl/repl.hh"
+#include "mem/cache/tags/iic_repl/repl.hh"
 #include "params/GenRepl.hh"
 
 /**

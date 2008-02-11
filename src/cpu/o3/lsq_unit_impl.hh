@@ -67,7 +67,7 @@ LSQUnit<Impl>::WritebackEvent::process()
 
 template<class Impl>
 const char *
-LSQUnit<Impl>::WritebackEvent::description()
+LSQUnit<Impl>::WritebackEvent::description() const
 {
     return "Store writeback";
 }

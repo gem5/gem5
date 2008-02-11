@@ -82,7 +82,7 @@ class Uart8250 : public Uart
         public:
             IntrEvent(Uart8250 *u, int bit);
             virtual void process();
-            virtual const char *description();
+            virtual const char *description() const;
             void scheduleIntr();
     };
 

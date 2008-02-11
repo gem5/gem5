@@ -131,7 +131,7 @@ class Bus : public MemObject
       public:
         BusFreeEvent(Bus * _bus);
         void process();
-        const char *description();
+        const char *description() const;
     };
 
     /** a globally unique id for this bus. */

@@ -538,7 +538,7 @@ InorderBackEnd<Impl>::DCacheCompletionEvent::process()
 
 template <class Impl>
 const char *
-InorderBackEnd<Impl>::DCacheCompletionEvent::description()
+InorderBackEnd<Impl>::DCacheCompletionEvent::description() const
 {
     return "DCache completion";
 }

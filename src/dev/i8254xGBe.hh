@@ -282,8 +282,12 @@ class IGbE : public EtherDevice
 
             wbOut = max_to_wb;
 
-            for (int x = 0; x < wbOut; x++)
-                memcpy(&wbBuf[x], usedCache[x], sizeof(T));
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                memcpy(&wbBuf[x], usedCache[0], sizeof(T));
+                delete usedCache[0];
+                usedCache.pop_front();
+            }
 
 
             assert(wbOut);
@@ -298,13 +302,17 @@ class IGbE : public EtherDevice
         {
             size_t max_to_fetch;
 
+            if (curFetching)
+                return;
+
             if (descTail() >= cachePnt)
                 max_to_fetch = descTail() - cachePnt;
             else
                 max_to_fetch = descLen() - cachePnt;
 
-            max_to_fetch = std::min(max_to_fetch, (size - usedCache.size() -
-                        unusedCache.size()));
+            size_t free_cache = size - usedCache.size() - unusedCache.size();
+
+            max_to_fetch = std::min(max_to_fetch, free_cache);
 
             DPRINTF(EthernetDesc, "Fetching descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_fetch: %d descleft: %d\n",
@@ -312,7 +320,7 @@ class IGbE : public EtherDevice
                     max_to_fetch, descLeft());
 
             // Nothing to do
-            if (max_to_fetch == 0 || curFetching)
+            if (max_to_fetch == 0)
                 return;
 
             // So we don't have two descriptor fetches going on at once
@@ -322,7 +330,6 @@ class IGbE : public EtherDevice
                     descBase() + cachePnt * sizeof(T),
                     igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
                     curFetching * sizeof(T));
-
             assert(curFetching);
             igbe->dmaRead(igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
                     curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf);
@@ -369,11 +376,6 @@ class IGbE : public EtherDevice
 #ifndef NDEBUG
             long oldHead = curHead;
 #endif
-            for (int x = 0; x < wbOut; x++) {
-                assert(usedCache.size());
-                delete usedCache[0];
-                usedCache.pop_front();
-            };
 
             curHead += wbOut;
             wbOut = 0;
@@ -523,7 +525,7 @@ class IGbE : public EtherDevice
          * @param packet ethernet packet to write
          * @return if the packet could be written (there was a free descriptor)
          */
-        bool writePacket(EthPacketPtr packet);
+        void writePacket(EthPacketPtr packet);
         /** Called by event when dma to write packet is completed
          */
         void pktComplete();
@@ -553,9 +555,7 @@ class IGbE : public EtherDevice
         virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
         virtual void updateHead(long h) { igbe->regs.tdh(h); }
         virtual void enableSm();
-        virtual void intAfterWb() const {
-            igbe->postInterrupt(iGbReg::IT_TXDW);
-        }
+        virtual void intAfterWb() const { igbe->postInterrupt(iGbReg::IT_TXDW); }
         virtual void fetchAfterWb() {
             if (!igbe->txTick && igbe->getState() == SimObject::Running)
                 fetchDescriptors();
