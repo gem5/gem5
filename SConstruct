@@ -698,13 +698,14 @@ base_env = env
 
 for build_path in build_paths:
     print "Building in", build_path
+
+    # Make a copy of the build-root environment to use for this config.
+    env = base_env.Copy()
     env['BUILDDIR'] = build_path
 
     # build_dir is the tail component of build path, and is used to
     # determine the build parameters (e.g., 'ALPHA_SE')
     (build_root, build_dir) = os.path.split(build_path)
-    # Make a copy of the build-root environment to use for this config.
-    env = base_env.Copy()
 
     # Set env options according to the build directory config.
     sticky_opts.files = []
