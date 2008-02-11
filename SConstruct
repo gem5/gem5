@@ -285,7 +285,7 @@ global_sticky_opts.Save(global_sticky_opts_file, env)
 
 # Parse EXTRAS option to build list of all directories where we're
 # look for sources etc.  This list is exported as base_dir_list.
-base_dir_list = [ROOT]
+base_dir_list = [joinpath(ROOT, 'src')]
 if env['EXTRAS']:
     base_dir_list += env['EXTRAS'].split(':')
 
