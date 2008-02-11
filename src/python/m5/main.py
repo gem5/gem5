@@ -42,7 +42,7 @@ __all__ = [ 'options', 'arguments', 'main' ]
 usage="%prog [m5 options] script.py [script options]"
 version="%prog 2.0"
 brief_copyright='''
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 '''
