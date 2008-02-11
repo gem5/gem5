@@ -691,7 +691,7 @@ IGbE::RxDescCache::RxDescCache(IGbE *i, const std::string n, int s)
 {
 }
 
-bool
+void
 IGbE::RxDescCache::writePacket(EthPacketPtr packet)
 {
     // We shouldn't have to deal with any of these yet
@@ -707,7 +707,6 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
     pktDone = false;
     igbe->dmaWrite(igbe->platform->pciToDma(unusedCache.front()->buf),
             packet->length, &pktEvent, packet->data);
-    return true;
 }
 
 void
@@ -716,7 +715,6 @@ IGbE::RxDescCache::pktComplete()
     assert(unusedCache.size());
     RxDesc *desc;
     desc = unusedCache.front();
-
 
     uint16_t crcfixup = igbe->regs.rctl.secrc() ? 0 : 4 ;
     desc->len = htole((uint16_t)(pktPtr->length + crcfixup));
@@ -937,6 +935,7 @@ IGbE::TxDescCache::pktComplete()
     assert(pktPtr);
 
     DPRINTF(EthernetDesc, "DMA of packet complete\n");
+
 
     desc = unusedCache.front();
     assert((TxdOp::isLegacy(desc) || TxdOp::isData(desc)) && TxdOp::getLen(desc));
@@ -1215,6 +1214,7 @@ IGbE::txStateMachine()
             return;
         }
 
+
         int size;
         size = txDescCache.getPacketSize();
         if (size > 0 && txFifo.avail() > size) {
@@ -1261,6 +1261,7 @@ IGbE::ethRxPkt(EthPacketPtr pkt)
         postInterrupt(IT_RXO, true);
         return false;
     }
+
     return true;
 }
 
@@ -1290,6 +1291,8 @@ IGbE::rxStateMachine()
 
         if (descLeft == 0) {
             rxDescCache.writeback(0);
+            DPRINTF(EthernetSM, "RXS: No descriptors left in ring, forcing"
+                    " writeback and stopping ticking\n");
             rxTick = false;
         }
 
@@ -1342,16 +1345,14 @@ IGbE::rxStateMachine()
     EthPacketPtr pkt;
     pkt = rxFifo.front();
 
-    DPRINTF(EthernetSM, "RXS: Writing packet into memory\n");
-    if (rxDescCache.writePacket(pkt)) {
-        DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
-        rxFifo.pop();
-        DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
-        rxTick = false;
-        rxDmaPacket = true;
-        return;
-    }
 
+    rxDescCache.writePacket(pkt);
+    DPRINTF(EthernetSM, "RXS: Writing packet into memory\n");
+    DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
+    rxFifo.pop();
+    DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
+    rxTick = false;
+    rxDmaPacket = true;
 }
 
 void
@@ -1362,10 +1363,8 @@ IGbE::txWire()
         return;
     }
 
-    if (etherInt->askBusy()) {
-        // We'll get woken up when the packet ethTxDone() gets called
-        txFifoTick = false;
-    } else {
+
+    if (etherInt->sendPacket(txFifo.front())) {
         if (DTRACE(EthernetSM)) {
             IpPtr ip(txFifo.front());
             if (ip)
@@ -1374,13 +1373,12 @@ IGbE::txWire()
             else
                 DPRINTF(EthernetSM, "Transmitting Non-Ip packet\n");
         }
-
-        bool r = etherInt->sendPacket(txFifo.front());
-        assert(r);
-        r += 1;
         DPRINTF(EthernetSM, "TxFIFO: Successful transmit, bytes available in fifo: %d\n",
                 txFifo.avail());
         txFifo.pop();
+    } else {
+        // We'll get woken up when the packet ethTxDone() gets called
+        txFifoTick = false;
     }
 }
 
