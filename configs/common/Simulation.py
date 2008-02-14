@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,14 +37,14 @@ def setCPUClass(options):
 
     atomic = False
     if options.timing:
-        TmpClass = TimingSimpleCPU
+        class TmpClass(TimingSimpleCPU): pass
     elif options.detailed:
         if not options.caches:
             print "O3 CPU must be used with caches"
             sys.exit(1)
-        TmpClass = DerivO3CPU
+        class TmpClass(DerivO3CPU): pass
     else:
-        TmpClass = AtomicSimpleCPU
+        class TmpClass(AtomicSimpleCPU): pass
         atomic = True
 
     CPUClass = None
@@ -53,7 +53,7 @@ def setCPUClass(options):
     if not atomic:
         if options.checkpoint_restore:
             CPUClass = TmpClass
-            TmpClass = AtomicSimpleCPU
+            class TmpClass(AtomicSimpleCPU): pass
         else:
             test_mem_mode = 'timing'
 
