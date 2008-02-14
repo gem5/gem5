@@ -713,6 +713,8 @@ AtomicSimpleCPU::tick()
         if (!curStaticInst || !curStaticInst->isDelayedCommit())
             checkForInterrupts();
 
+        checkPcEventQueue();
+
         Fault fault = setupFetchRequest(&ifetch_req);
 
         if (fault == NoFault) {

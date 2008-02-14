@@ -44,6 +44,7 @@
 #include "mem/port.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"
+#include "sim/system.hh"
 
 // forward declarations
 #if FULL_SYSTEM
@@ -85,6 +86,14 @@ class BaseSimpleCPU : public BaseCPU
 
   protected:
     Trace::InstRecord *traceData;
+
+    inline void checkPcEventQueue() {
+        Addr oldpc;
+        do {
+            oldpc = thread->readPC();
+            system->pcEventQueue.service(tc);
+        } while (oldpc != thread->readPC());
+    }
 
   public:
     void post_interrupt(int int_num, int index);

@@ -494,12 +494,6 @@ BaseSimpleCPU::advancePC(Fault fault)
             assert(thread->readNextPC() != thread->readNextNPC());
         }
     }
-
-    Addr oldpc;
-    do {
-        oldpc = thread->readPC();
-        system->pcEventQueue.service(tc);
-    } while (oldpc != thread->readPC());
 }
 
 /*Fault

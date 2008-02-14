@@ -522,6 +522,8 @@ TimingSimpleCPU::fetch()
     if (!curStaticInst || !curStaticInst->isDelayedCommit())
         checkForInterrupts();
 
+    checkPcEventQueue();
+
     Request *ifetch_req = new Request();
     ifetch_req->setThreadContext(cpuId, /* thread ID */ 0);
     Fault fault = setupFetchRequest(ifetch_req);
