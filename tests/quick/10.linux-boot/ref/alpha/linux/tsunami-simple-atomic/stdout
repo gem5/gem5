@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 14 2007 18:18:39
-M5 started Tue Aug 14 18:18:41 2007
-M5 executing on nacho
+M5 compiled Feb 13 2008 00:33:19
+M5 started Wed Feb 13 00:37:45 2008
+M5 executing on zizzer
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 1828355476000 because m5_exit instruction encountered
+Exiting @ tick 1828355496000 because m5_exit instruction encountered

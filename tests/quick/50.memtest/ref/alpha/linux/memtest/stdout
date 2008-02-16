@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan  2 2008 15:26:07
-M5 started Wed Jan  2 15:26:09 2008
-M5 executing on vm1
+M5 compiled Feb 13 2008 00:33:15
+M5 started Wed Feb 13 00:34:33 2008
+M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest tests/run.py quick/50.memtest/alpha/linux/memtest
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 162969030 because maximum number of loads reached
+Exiting @ tick 112555067 because maximum number of loads reached
