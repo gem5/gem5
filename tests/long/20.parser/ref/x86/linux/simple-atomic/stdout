@@ -59,14 +59,14 @@ Echoing of input sentence turned on.
 No errors!
 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec  3 2007 13:48:03
-M5 started Mon Dec  3 13:48:04 2007
-M5 executing on nacho
+M5 compiled Feb 16 2008 13:01:44
+M5 started Sat Feb 16 13:01:45 2008
+M5 executing on zizzer
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic tests/run.py long/20.parser/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 863243513500 because target called exit()
+Exiting @ tick 863243462500 because target called exit()
