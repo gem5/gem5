@@ -170,6 +170,14 @@ class Cache : public BaseCache
     void cmpAndSwap(BlkType *blk, PacketPtr pkt);
 
     /**
+     * Find a block frame for new block at address addr, assuming that
+     * the block is not currently in the cache.  Append writebacks if
+     * any to provided packet list.  Return free block frame.  May
+     * return NULL if there are no replaceable blocks at the moment.
+     */
+    BlkType *allocateBlock(Addr addr, PacketList &writebacks);
+
+    /**
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.

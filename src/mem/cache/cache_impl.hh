@@ -267,7 +267,6 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
         return false;
     }
 
-    bool satisfied = false;  // assume the worst
     blk = tags->findBlock(pkt->getAddr(), lat);
 
     if (prefetchAccess) {
@@ -279,7 +278,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
             (blk) ? "hit" : "miss");
 
     if (blk != NULL) {
-        // HIT
+
         if (blk->isPrefetch()) {
             //Signal that this was a hit under prefetch (no need for
             //use prefetch (only can get here if true)
@@ -296,37 +295,54 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isValid()) {
             // OK to satisfy access
             hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
-            satisfied = true;
             satisfyCpuSideRequest(pkt, blk);
-        } else if (pkt->cmd == MemCmd::Writeback) {
-            // special case: writeback to read-only block (e.g., from
-            // L1 into L2).  since we're really just passing ownership
-            // from one cache to another, we can update this cache to
-            // be the owner without making the block writeable
-            assert(!blk->isWritable() /* && !blk->isDirty() */);
-            assert(blkSize == pkt->getSize());
-            std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
-            blk->status |= BlkDirty;
-            satisfied = true;
-            // nothing else to do; writeback doesn't expect response
-            assert(!pkt->needsResponse());
-        } else {
-            // permission violation... nothing to do here, leave unsatisfied
-            // for statistics purposes this counts like a complete miss
-            incMissCount(pkt);
-        }
-    } else {
-        // complete miss (no matching block)
-        incMissCount(pkt);
-
-        if (pkt->isLocked() && pkt->isWrite()) {
-            // miss on store conditional... just give up now
-            pkt->req->setExtraData(0);
-            satisfied = true;
+            return true;
         }
     }
 
-    return satisfied;
+    // Can't satisfy access normally... either no block (blk == NULL)
+    // or have block but need exclusive & only have shared.
+
+    // Writeback handling is special case.  We can write the block
+    // into the cache without having a writeable copy (or any copy at
+    // all).
+    if (pkt->cmd == MemCmd::Writeback) {
+        PacketList writebacks;
+        assert(blkSize == pkt->getSize());
+        if (blk == NULL) {
+            // need to do a replacement
+            blk = allocateBlock(pkt->getAddr(), writebacks);
+            if (blk == NULL) {
+                // no replaceable block available, give up.
+                // writeback will be forwarded to next level.
+                incMissCount(pkt);
+                return false;
+            }
+            blk->status = BlkValid;
+        }
+        std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
+        blk->status |= BlkDirty;
+        // copy writebacks from replacement to write buffer
+        while (!writebacks.empty()) {
+            PacketPtr wbPkt = writebacks.front();
+            allocateWriteBuffer(wbPkt, curTick + hitLatency, true);
+            writebacks.pop_front();
+        }
+        // nothing else to do; writeback doesn't expect response
+        assert(!pkt->needsResponse());
+        hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+        return true;
+    }
+
+    incMissCount(pkt);
+
+    if (blk == NULL && pkt->isLocked() && pkt->isWrite()) {
+        // complete miss on store conditional... just give up now
+        pkt->req->setExtraData(0);
+        return true;
+    }
+
+    return false;
 }
 
 
@@ -850,6 +866,40 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
 }
 
 
+template<class TagStore>
+typename Cache<TagStore>::BlkType*
+Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
+{
+    BlkType *blk = tags->findReplacement(addr, writebacks);
+
+    if (blk->isValid()) {
+        Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
+        MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
+        if (repl_mshr) {
+            // must be an outstanding upgrade request on block
+            // we're about to replace...
+            assert(!blk->isWritable());
+            assert(repl_mshr->needsExclusive());
+            // too hard to replace block with transient state
+            return NULL;
+        } else {
+            DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
+                    repl_addr, addr,
+                    blk->isDirty() ? "writeback" : "clean");
+
+            if (blk->isDirty()) {
+                // Save writeback packet for handling by caller
+                writebacks.push_back(writebackBlk(blk));
+            }
+        }
+    }
+
+    // Set tag for new block.  Caller is responsible for setting status.
+    blk->tag = tags->extractTag(addr);
+    return blk;
+}
+
+
 // Note that the reason we return a list of writebacks rather than
 // inserting them directly in the write buffer is that this function
 // is called by both atomic and timing-mode accesses, and in atomic
@@ -868,37 +918,16 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
     if (blk == NULL) {
         // better have read new data...
         assert(pkt->hasData());
-
         // need to do a replacement
-        blk = tags->findReplacement(addr, writebacks);
-        if (blk->isValid()) {
-            Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
-            MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
-            if (repl_mshr) {
-                // must be an outstanding upgrade request on block
-                // we're about to replace...
-                assert(!blk->isWritable());
-                assert(repl_mshr->needsExclusive());
-                // too hard to replace block with transient state;
-                // just use temporary storage to complete the current
-                // request and then get rid of it
-                assert(!tempBlock->isValid());
-                blk = tempBlock;
-                tempBlock->set = tags->extractSet(addr);
-                DPRINTF(Cache, "using temp block for %x\n", addr);
-            } else {
-                DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
-                        repl_addr, addr,
-                        blk->isDirty() ? "writeback" : "clean");
-
-                if (blk->isDirty()) {
-                    // Save writeback packet for handling by caller
-                    writebacks.push_back(writebackBlk(blk));
-                }
-            }
+        blk = allocateBlock(addr, writebacks);
+        if (blk == NULL) {
+            // No replaceable block... just use temporary storage to
+            // complete the current request and then get rid of it
+            assert(!tempBlock->isValid());
+            blk = tempBlock;
+            tempBlock->set = tags->extractSet(addr);
+            DPRINTF(Cache, "using temp block for %x\n", addr);
         }
-
-        blk->tag = tags->extractTag(addr);
     } else {
         // existing block... probably an upgrade
         assert(blk->tag == tags->extractTag(addr));
