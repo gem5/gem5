@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -60,3 +60,7 @@ parser.add_option("-s", "--standard_switch", action="store_true",
 parser.add_option("-w", "--warmup", action="store", type="int",
                   help="if -s, then this is the warmup period.  else, this is ignored",
                   default=5000000000)
+parser.add_option("-f", "--fast_forward", type="int", action="store",
+                  help="fast_forward count in instructions: use alone to checkpoint or with -s and -max_inst")
+parser.add_option("--max_inst", type="int", action="store",
+                  help="max_insts_any_thread value")

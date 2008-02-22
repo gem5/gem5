@@ -95,6 +95,9 @@ def run(options, root, testsys, cpu_class):
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
 
     if options.standard_switch:
+        if (options.fast_forward and options.warmup):
+            m5.panic("Must specify either warmup OR fast-forward with -s!")
+
         switch_cpus = [TimingSimpleCPU(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]
         switch_cpus_1 = [DerivO3CPU(defer_registration=True, cpu_id=(2*np+i))
@@ -109,6 +112,11 @@ def run(options, root, testsys, cpu_class):
             switch_cpus[i].clock = testsys.cpu[0].clock
             switch_cpus_1[i].clock = testsys.cpu[0].clock
 
+            if options.fast_forward:
+                switch_cpus[i].max_insts_any_thread = options.fast_forward
+            if options.max_inst:
+                switch_cpus_1[i].max_insts_any_thread = options.max_inst
+
             if not options.caches:
                 # O3 CPU must have a cache to work.
                 switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
@@ -120,6 +128,10 @@ def run(options, root, testsys, cpu_class):
             testsys.switch_cpus_1 = switch_cpus_1
             switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
             switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
+
+    elif options.fast_forward:
+        for i in xrange(np):
+            testsys.cpu[i].max_insts_any_thread = options.fast_forward
 
     m5.instantiate(root)
 
@@ -167,10 +179,31 @@ def run(options, root, testsys, cpu_class):
         m5.resume(testsys)
 
         if options.standard_switch:
-            exit_event = m5.simulate(options.warmup)
+            if (options.warmup):
+                exit_event = m5.simulate(options.warmup)
+            if options.fast_forward:
+                exit_event = m5.simulate()
             m5.drain(testsys)
             m5.switchCpus(switch_cpu_list1)
             m5.resume(testsys)
+
+    # This should *only* be used by itself to take a checkpoint!
+    # Otherwise, use standard_switch
+    elif options.fast_forward:
+        exit_event = m5.simulate()
+
+        while exit_event.getCause() != "a thread reached the max instruction count":
+            if exit_event.getCause() == "user interrupt received":
+                print "User interrupt! Switching to simulation mode"
+                break
+            else:
+                m5.simulate(True)
+
+        if exit_event.getCause() == "a thread reached the max instruction count":
+            print "Reached fast_forward count %d; starting simulation at cycle %d" % (options.fast_forward, m5.curTick())
+
+        m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
+        return
 
     num_checkpoints = 0
     exit_cause = ''
