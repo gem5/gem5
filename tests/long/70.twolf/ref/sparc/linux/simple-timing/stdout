@@ -13,14 +13,16 @@ Authors: Carl Sechen, Bill Swartz
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
 122 123 124 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 13 2008 00:33:29
-M5 started Wed Feb 13 18:42:03 2008
-M5 executing on zizzer
+M5 compiled Feb 24 2008 13:27:50
+M5 started Mon Feb 25 16:18:16 2008
+M5 executing on tater
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing tests/run.py long/70.twolf/sparc/linux/simple-timing
+Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sav
+Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 270397899000 because target called exit()
+Exiting @ tick 270416976000 because target called exit()

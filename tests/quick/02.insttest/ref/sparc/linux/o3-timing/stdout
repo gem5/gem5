@@ -11,14 +11,14 @@ STTW:		Passed
 Done
 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 16 2008 04:32:20
-M5 started Wed Jan 16 04:31:23 2008
-M5 executing on m45-027.pool
+M5 compiled Feb 24 2008 13:27:50
+M5 started Mon Feb 25 12:17:27 2008
+M5 executing on tater
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing tests/run.py quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 14990500 because target called exit()
+Exiting @ tick 15392500 because target called exit()

@@ -31,14 +31,14 @@ Uncompressed data compared correctly
 Tested 1MB buffer: OK!
 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 13 2008 00:33:29
-M5 started Wed Feb 13 17:45:44 2008
-M5 executing on zizzer
+M5 compiled Feb 24 2008 13:27:50
+M5 started Mon Feb 25 16:16:45 2008
+M5 executing on tater
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/simple-timing tests/run.py long/00.gzip/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 2069290262000 because target called exit()
+Exiting @ tick 2070157841000 because target called exit()
