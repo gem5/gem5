@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -211,14 +211,17 @@ remove_lines(r'.*X86.*', None,  'AUTHORS')
 remove_lines(r'.*X86.*', None,  'src/base/loader/object_file.hh')
 remove_lines(r'.*_X86_.*', '.*else.*', 'src/base/loader/elf_object.cc')
 remove_lines(r'.*X86_ISA.*', r'^.el.*','src/sim/process.cc')
+remove_lines(r".*'x86' and build.*", None, 'src/cpu/BaseCPU.py')
+remove_lines(r".*walker.port.*", None, 'src/cpu/BaseCPU.py')
 remove_lines(r'.*x86.*', r'.*mips.*','src/cpu/BaseCPU.py')
-remove_lines(r'.*X86_ISA.*', r'^.*else.*','src/cpu/o3/dyn_inst.hh')
+remove_lines(r'.*X86_ISA.*', r'^.*elif.*','src/cpu/o3/dyn_inst.hh')
 remove_lines(r'.*X86_ISA.*', r'.*stay.*','src/cpu/simple/base.cc')
 remove_lines(r'.*x86.*', r'^if.*','src/cpu/SConscript')
 
 remove_lines(r'.*makeX86System.*', r'.*makeDualRoot.*','configs/common/FSConfig.py')
 remove_lines(r'.*X86.*', None,  'configs/example/fs.py')
 remove_lines(r'.*x86.*', None,  'configs/example/fs.py')
+remove_lines(r'.*x86.*', r'.*makeDualRoot.*',  'configs/common/FSConfig.py')
 
 replace_line(r'.*X86_SE.*', 'util/regress', "                     'SPARC_SE,SPARC_FS',")
 benches = [ 'bzip2', 'eon', 'gzip', 'mcf', 'parser', 'perlbmk',

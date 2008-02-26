@@ -9,6 +9,22 @@ Outstanding issues for 2.0 release:
 7. Testing
 8. Validation
 
+March 1, 2008: m5_2.0_beta5
+--------------------
+New Features
+1. Rick Strong's Simpoints config changes
+2. Support for FSU ARM port
+3. EXTRAS= option allow architectures to be specified
+
+Bug fixes
+1. Bus timing more realistic
+2. Cache writeback, LL/SC fixes
+3. Minor IGbE NIC fixes
+4. O3 op latency fix
+5. SPARC TLB demap fixes
+6. SPARC SE memory layout fixes
+7. Variety of MIPS fixes
+
 Nov 4, 2007: m5_2.0_beta4
 --------------------
 New Features
