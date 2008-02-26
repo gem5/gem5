@@ -110,7 +110,7 @@ const char * Bus::BusFreeEvent::description() const
     return "bus became available";
 }
 
-void Bus::occupyBus(PacketPtr pkt)
+void Bus::preparePacket(PacketPtr pkt, Tick & headerTime)
 {
     //Bring tickNextIdle up to the present tick
     //There is some potential ambiguity where a cycle starts, which might make
@@ -124,34 +124,30 @@ void Bus::occupyBus(PacketPtr pkt)
             tickNextIdle = curTick - (curTick % clock) + clock;
     }
 
+    headerTime = tickNextIdle + headerCycles * clock;
+
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
     int numCycles = 0;
-    // Requests need one cycle to send an address
-    if (pkt->isRequest())
-        numCycles++;
-    else if (pkt->isResponse() || pkt->hasData()) {
+    if (pkt->hasData()) {
         // If a packet has data, it needs ceil(size/width) cycles to send it
-        // We're using the "adding instead of dividing" trick again here
-        if (pkt->hasData()) {
-            int dataSize = pkt->getSize();
-            numCycles += dataSize/width;
-            if (dataSize % width)
-                numCycles++;
-        } else {
-            // If the packet didn't have data, it must have been a response.
-            // Those use the bus for one cycle to send their data.
+        int dataSize = pkt->getSize();
+        numCycles += dataSize/width;
+        if (dataSize % width)
             numCycles++;
-        }
     }
 
     // The first word will be delivered after the current tick, the delivery
     // of the address if any, and one bus cycle to deliver the data
-    pkt->firstWordTime = tickNextIdle + (pkt->isRequest() ? clock : 0) + clock;
+    pkt->firstWordTime = headerTime + clock;
 
-    //Advance it numCycles bus cycles.
-    //XXX Should this use the repeated addition trick as well?
-    tickNextIdle += (numCycles * clock);
+    pkt->finishTime = headerTime + numCycles * clock;
+}
+
+void Bus::occupyBus(Tick until)
+{
+    tickNextIdle = until;
+
     if (!busIdle.scheduled()) {
         busIdle.schedule(tickNextIdle);
     } else {
@@ -159,9 +155,6 @@ void Bus::occupyBus(PacketPtr pkt)
     }
     DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n",
             curTick, tickNextIdle);
-
-    // The bus will become idle once the current packet is delivered.
-    pkt->finishTime = tickNextIdle;
 }
 
 /** Function called by the port when the bus is receiving a Timing
@@ -197,8 +190,10 @@ Bus::recvTiming(PacketPtr pkt)
     DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x\n",
             src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
 
+    Tick headerTime = 0;
+
     if (!pkt->isExpressSnoop()) {
-        occupyBus(pkt);
+        preparePacket(pkt, headerTime);
     }
 
     short dest = pkt->getDest();
@@ -248,9 +243,16 @@ Bus::recvTiming(PacketPtr pkt)
             DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
                     src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
             addToRetryList(src_port);
+            if (!pkt->isExpressSnoop()) {
+                occupyBus(headerTime);
+            }
             return false;
         }
         // send OK, fall through
+    }
+
+    if (!pkt->isExpressSnoop()) {
+        occupyBus(pkt->finishTime);
     }
 
     // Packet was successfully sent.

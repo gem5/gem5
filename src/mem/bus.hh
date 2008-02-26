@@ -138,6 +138,8 @@ class Bus : public MemObject
     int busId;
     /** the clock speed for the bus */
     int clock;
+    /** cycles of overhead per transaction */
+    int headerCycles;
     /** the width of the bus in bytes */
     int width;
     /** the next tick at which the bus will be idle */
@@ -243,8 +245,13 @@ class Bus : public MemObject
      */
     void addressRanges(AddrRangeList &resp, bool &snoop, int id);
 
-    /** Occupy the bus with transmitting the packet pkt */
-    void occupyBus(PacketPtr pkt);
+    /** Prepare a packet to be sent on the bus. The header finishes at tick
+     *  headerTime
+     */
+    void preparePacket(PacketPtr pkt, Tick & headerTime);
+
+    /** Occupy the bus until until */
+    void occupyBus(Tick until);
 
     /** Ask everyone on the bus what their size is
      * @param id id of the busport that made the request
@@ -363,17 +370,20 @@ class Bus : public MemObject
     unsigned int drain(Event *de);
 
     Bus(const BusParams *p)
-        : MemObject(p), busId(p->bus_id), clock(p->clock), width(p->width),
-          tickNextIdle(0), drainEvent(NULL), busIdle(this), inRetry(false),
-          maxId(0), defaultPort(NULL), funcPort(NULL), funcPortId(-4),
+        : MemObject(p), busId(p->bus_id), clock(p->clock),
+          headerCycles(p->header_cycles), width(p->width), tickNextIdle(0),
+          drainEvent(NULL), busIdle(this), inRetry(false), maxId(0),
+          defaultPort(NULL), funcPort(NULL), funcPortId(-4),
           responderSet(p->responder_set), defaultBlockSize(p->block_size),
           cachedBlockSize(0), cachedBlockSizeValid(false)
     {
-        //Both the width and clock period must be positive
+        //width, clock period, and header cycles must be positive
         if (width <= 0)
             fatal("Bus width must be positive\n");
         if (clock <= 0)
             fatal("Bus clock period must be positive\n");
+        if (headerCycles <= 0)
+            fatal("Number of header cycles must be positive\n");
         clearBusCache();
         clearPortCache();
     }

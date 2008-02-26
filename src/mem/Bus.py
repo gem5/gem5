@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ class Bus(MemObject):
     port = VectorPort("vector port for connecting devices")
     bus_id = Param.Int(0, "blah")
     clock = Param.Clock("1GHz", "bus clock speed")
+    header_cycles = Param.Int(1, "cycles of overhead per transaction")
     width = Param.Int(64, "bus width (bytes)")
     responder_set = Param.Bool(False, "Did the user specify a default responder.")
     block_size = Param.Int(64, "The default block size if one isn't set by a device attached to the bus.")
