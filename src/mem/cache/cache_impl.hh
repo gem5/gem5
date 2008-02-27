@@ -439,12 +439,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
 #if 0
+    /** @todo make the fast write alloc (wh64) work with coherence. */
+
     PacketList writebacks;
 
     // If this is a block size write/hint (WH64) allocate the block here
     // if the coherence protocol allows it.
-    /** @todo make the fast write alloc (wh64) work with coherence. */
-    /** @todo Do we want to do fast writes for writebacks as well? */
     if (!blk && pkt->getSize() >= blkSize && coherence->allowFastWrites() &&
         (pkt->cmd == MemCmd::WriteReq
          || pkt->cmd == MemCmd::WriteInvalidateReq) ) {
@@ -517,6 +517,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 }
 
 
+// See comment in cache.hh.
 template<class TagStore>
 PacketPtr
 Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
@@ -529,14 +530,11 @@ Cache<TagStore>::getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
         return NULL;
     }
 
-    if (!blkValid &&
-        (cpu_pkt->cmd == MemCmd::Writeback ||
-         cpu_pkt->cmd == MemCmd::UpgradeReq)) {
-            // For now, writebacks from upper-level caches that
-            // completely miss in the cache just go through. If we had
-            // "fast write" support (where we could write the whole
-            // block w/o fetching new data) we might want to allocate
-            // on writeback misses instead.
+    if (!blkValid && (cpu_pkt->cmd == MemCmd::Writeback ||
+                      cpu_pkt->cmd == MemCmd::UpgradeReq)) {
+        // Writebacks that weren't allocated in access() and upgrades
+        // from upper-level caches that missed completely just go
+        // through.
         return NULL;
     }
 

@@ -270,12 +270,32 @@ class Cache : public BaseCache
     void squash(int threadNum);
 
     /**
-     * Selects a outstanding request to service.
-     * @return The request to service, NULL if none found.
+     * Generate an appropriate downstream bus request packet for the
+     * given parameters.
+     * @param cpu_pkt  The upstream request that needs to be satisfied.
+     * @param blk The block currently in the cache corresponding to
+     * cpu_pkt (NULL if none).
+     * @param needsExclusive  Indicates that an exclusive copy is required
+     * even if the request in cpu_pkt doesn't indicate that.
+     * @return A new Packet containing the request, or NULL if the
+     * current request in cpu_pkt should just be forwarded on.
      */
     PacketPtr getBusPacket(PacketPtr cpu_pkt, BlkType *blk,
                            bool needsExclusive);
+
+    /**
+     * Return the next MSHR to service, either a pending miss from the
+     * mshrQueue, a buffered write from the write buffer, or something
+     * from the prefetcher.  This function is responsible for
+     * prioritizing among those sources on the fly.
+     */
     MSHR *getNextMSHR();
+
+    /**
+     * Selects an outstanding request to service.  Called when the
+     * cache gets granted the downstream bus in timing mode.
+     * @return The request to service, NULL if none found.
+     */
     PacketPtr getTimingPacket();
 
     /**
