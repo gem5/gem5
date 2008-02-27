@@ -51,8 +51,10 @@ enum CacheBlkStatusBits {
     BlkValid =		0x01,
     /** write permission */
     BlkWritable =	0x02,
+    /** read permission (yes, block can be valid but not readable) */
+    BlkReadable =	0x04,
     /** dirty (modified) */
-    BlkDirty =		0x04,
+    BlkDirty =		0x08,
     /** block was referenced */
     BlkReferenced =	0x10,
     /** block was a hardware prefetch yet unaccessed*/
@@ -162,7 +164,19 @@ class CacheBlk
     }
 
     /**
-     * Checks that a block is valid (readable).
+     * Checks the read permissions of this block.  Note that a block
+     * can be valid but not readable if there is an outstanding write
+     * upgrade miss.
+     * @return True if the block is readable.
+     */
+    bool isReadable() const
+    {
+        const int needed_bits = BlkReadable | BlkValid;
+        return (status & needed_bits) == needed_bits;
+    }
+
+    /**
+     * Checks that a block is valid.
      * @return True if the block is valid.
      */
     bool isValid() const
