@@ -1,8 +1,8 @@
 
 ---------- Begin Simulation Statistics ----------
-host_mem_usage                                 374920                       # Number of bytes of host memory used
-host_seconds                                   187.04                       # Real time elapsed on the host
-host_tick_rate                                 606647                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 323140                       # Number of bytes of host memory used
+host_seconds                                   197.60                       # Real time elapsed on the host
+host_tick_rate                                 574221                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_seconds                                  0.000113                       # Number of seconds simulated
 sim_ticks                                   113467820                       # Number of ticks simulated
@@ -638,38 +638,38 @@ system.cpu7.l1c.writebacks                      10985                       # nu
 system.cpu7.num_copies                              0                       # number of copy accesses completed
 system.cpu7.num_reads                           99331                       # number of read accesses completed
 system.cpu7.num_writes                          53962                       # number of write accesses completed
-system.l2c.ReadExReq_accesses                   74680                       # number of ReadExReq accesses(hits+misses)
-system.l2c.ReadExReq_avg_miss_latency    20085.692461                       # average ReadExReq miss latency
+system.l2c.ReadExReq_accesses                   75034                       # number of ReadExReq accesses(hits+misses)
+system.l2c.ReadExReq_avg_miss_latency    19990.930951                       # average ReadExReq miss latency
 system.l2c.ReadExReq_avg_mshr_miss_latency 10006.831093                       # average ReadExReq mshr miss latency
 system.l2c.ReadExReq_miss_latency          1499999513                       # number of ReadExReq miss cycles
 system.l2c.ReadExReq_miss_rate                      1                       # miss rate for ReadExReq accesses
-system.l2c.ReadExReq_misses                     74680                       # number of ReadExReq misses
+system.l2c.ReadExReq_misses                     75034                       # number of ReadExReq misses
 system.l2c.ReadExReq_mshr_hits                    354                       # number of ReadExReq MSHR hits
 system.l2c.ReadExReq_mshr_miss_latency      747310146                       # number of ReadExReq MSHR miss cycles
-system.l2c.ReadExReq_mshr_miss_rate                 1                       # mshr miss rate for ReadExReq accesses
+system.l2c.ReadExReq_mshr_miss_rate          0.995282                       # mshr miss rate for ReadExReq accesses
 system.l2c.ReadExReq_mshr_misses                74680                       # number of ReadExReq MSHR misses
-system.l2c.ReadReq_accesses                    138650                       # number of ReadReq accesses(hits+misses)
-system.l2c.ReadReq_avg_miss_latency      20215.443305                       # average ReadReq miss latency
+system.l2c.ReadReq_accesses                    139261                       # number of ReadReq accesses(hits+misses)
+system.l2c.ReadReq_avg_miss_latency      19959.179983                       # average ReadReq miss latency
 system.l2c.ReadReq_avg_mshr_miss_latency 10007.689712                       # average ReadReq mshr miss latency
 system.l2c.ReadReq_avg_mshr_uncacheable_latency          inf                       # average ReadReq mshr uncacheable latency
 system.l2c.ReadReq_hits                         91062                       # number of ReadReq hits
 system.l2c.ReadReq_miss_latency             962012516                       # number of ReadReq miss cycles
-system.l2c.ReadReq_miss_rate                 0.343224                       # miss rate for ReadReq accesses
-system.l2c.ReadReq_misses                       47588                       # number of ReadReq misses
+system.l2c.ReadReq_miss_rate                 0.346106                       # miss rate for ReadReq accesses
+system.l2c.ReadReq_misses                       48199                       # number of ReadReq misses
 system.l2c.ReadReq_mshr_hits                      611                       # number of ReadReq MSHR hits
 system.l2c.ReadReq_mshr_miss_latency        476245938                       # number of ReadReq MSHR miss cycles
-system.l2c.ReadReq_mshr_miss_rate            0.343224                       # mshr miss rate for ReadReq accesses
+system.l2c.ReadReq_mshr_miss_rate            0.341718                       # mshr miss rate for ReadReq accesses
 system.l2c.ReadReq_mshr_misses                  47588                       # number of ReadReq MSHR misses
 system.l2c.ReadReq_mshr_uncacheable_latency    793404880                       # number of ReadReq MSHR uncacheable cycles
-system.l2c.UpgradeReq_accesses                  18486                       # number of UpgradeReq accesses(hits+misses)
-system.l2c.UpgradeReq_avg_miss_latency   11037.307260                       # average UpgradeReq miss latency
+system.l2c.UpgradeReq_accesses                  18516                       # number of UpgradeReq accesses(hits+misses)
+system.l2c.UpgradeReq_avg_miss_latency   11019.424390                       # average UpgradeReq miss latency
 system.l2c.UpgradeReq_avg_mshr_miss_latency 10007.005085                       # average UpgradeReq mshr miss latency
 system.l2c.UpgradeReq_miss_latency          204035662                       # number of UpgradeReq miss cycles
 system.l2c.UpgradeReq_miss_rate                     1                       # miss rate for UpgradeReq accesses
-system.l2c.UpgradeReq_misses                    18486                       # number of UpgradeReq misses
+system.l2c.UpgradeReq_misses                    18516                       # number of UpgradeReq misses
 system.l2c.UpgradeReq_mshr_hits                    30                       # number of UpgradeReq MSHR hits
 system.l2c.UpgradeReq_mshr_miss_latency     184989496                       # number of UpgradeReq MSHR miss cycles
-system.l2c.UpgradeReq_mshr_miss_rate                1                       # mshr miss rate for UpgradeReq accesses
+system.l2c.UpgradeReq_mshr_miss_rate         0.998380                       # mshr miss rate for UpgradeReq accesses
 system.l2c.UpgradeReq_mshr_misses               18486                       # number of UpgradeReq MSHR misses
 system.l2c.WriteReq_avg_mshr_uncacheable_latency          inf                       # average WriteReq mshr uncacheable latency
 system.l2c.WriteReq_mshr_uncacheable_latency    430707040                       # number of WriteReq MSHR uncacheable cycles
@@ -683,31 +683,31 @@ system.l2c.blocked_no_targets                       0                       # nu
 system.l2c.blocked_cycles_no_mshrs              17459                       # number of cycles access was blocked
 system.l2c.blocked_cycles_no_targets                0                       # number of cycles access was blocked
 system.l2c.cache_copies                             0                       # number of cache copies performed
-system.l2c.demand_accesses                     213330                       # number of demand (read+write) accesses
-system.l2c.demand_avg_miss_latency       20136.192863                       # average overall miss latency
+system.l2c.demand_accesses                     214295                       # number of demand (read+write) accesses
+system.l2c.demand_avg_miss_latency       19978.512484                       # average overall miss latency
 system.l2c.demand_avg_mshr_miss_latency  10007.165276                       # average overall mshr miss latency
 system.l2c.demand_hits                          91062                       # number of demand (read+write) hits
 system.l2c.demand_miss_latency             2462012029                       # number of demand (read+write) miss cycles
-system.l2c.demand_miss_rate                  0.573140                       # miss rate for demand accesses
-system.l2c.demand_misses                       122268                       # number of demand (read+write) misses
+system.l2c.demand_miss_rate                  0.575062                       # miss rate for demand accesses
+system.l2c.demand_misses                       123233                       # number of demand (read+write) misses
 system.l2c.demand_mshr_hits                       965                       # number of demand (read+write) MSHR hits
 system.l2c.demand_mshr_miss_latency        1223556084                       # number of demand (read+write) MSHR miss cycles
-system.l2c.demand_mshr_miss_rate             0.573140                       # mshr miss rate for demand accesses
+system.l2c.demand_mshr_miss_rate             0.570559                       # mshr miss rate for demand accesses
 system.l2c.demand_mshr_misses                  122268                       # number of demand (read+write) MSHR misses
 system.l2c.fast_writes                              0                       # number of fast writes performed
 system.l2c.mshr_cap_events                          0                       # number of times MSHR cap was activated
 system.l2c.no_allocate_misses                       0                       # Number of misses that were no-allocate
-system.l2c.overall_accesses                    213330                       # number of overall (read+write) accesses
-system.l2c.overall_avg_miss_latency      20136.192863                       # average overall miss latency
+system.l2c.overall_accesses                    214295                       # number of overall (read+write) accesses
+system.l2c.overall_avg_miss_latency      19978.512484                       # average overall miss latency
 system.l2c.overall_avg_mshr_miss_latency 10007.165276                       # average overall mshr miss latency
 system.l2c.overall_avg_mshr_uncacheable_latency          inf                       # average overall mshr uncacheable latency
 system.l2c.overall_hits                         91062                       # number of overall hits
 system.l2c.overall_miss_latency            2462012029                       # number of overall miss cycles
-system.l2c.overall_miss_rate                 0.573140                       # miss rate for overall accesses
-system.l2c.overall_misses                      122268                       # number of overall misses
+system.l2c.overall_miss_rate                 0.575062                       # miss rate for overall accesses
+system.l2c.overall_misses                      123233                       # number of overall misses
 system.l2c.overall_mshr_hits                      965                       # number of overall MSHR hits
 system.l2c.overall_mshr_miss_latency       1223556084                       # number of overall MSHR miss cycles
-system.l2c.overall_mshr_miss_rate            0.573140                       # mshr miss rate for overall accesses
+system.l2c.overall_mshr_miss_rate            0.570559                       # mshr miss rate for overall accesses
 system.l2c.overall_mshr_misses                 122268                       # number of overall MSHR misses
 system.l2c.overall_mshr_uncacheable_latency   1224111920                       # number of overall MSHR uncacheable cycles
 system.l2c.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
