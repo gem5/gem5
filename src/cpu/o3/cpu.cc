@@ -671,7 +671,12 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
 
     // Copy Thread Data From RegFile
     // If thread is suspended, it might be re-allocated
-    //this->copyToTC(tid);
+    // this->copyToTC(tid);
+
+
+    // @todo: 2-27-2008: Fix how we free up rename mappings
+    // here to alleviate the case for double-freeing registers
+    // in SMT workloads.
 
     // Unbind Int Regs from Rename Map
     for (int ireg = 0; ireg < TheISA::NumIntRegs; ireg++) {
