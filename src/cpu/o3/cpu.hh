@@ -263,6 +263,22 @@ class FullO3CPU : public BaseO3CPU
     /** Registers statistics. */
     void fullCPURegStats();
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        this->itb->demapPage(vaddr, asn);
+        this->dtb->demapPage(vaddr, asn);
+    }
+
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        this->itb->demapPage(vaddr, asn);
+    }
+
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        this->dtb->demapPage(vaddr, asn);
+    }
+
     /** Translates instruction requestion. */
     Fault translateInstReq(RequestPtr &req, Thread *thread)
     {

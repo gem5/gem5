@@ -92,6 +92,19 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** InstRecord that tracks this instructions. */
     Trace::InstRecord *traceData;
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        cpu->demapPage(vaddr, asn);
+    }
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        cpu->demapPage(vaddr, asn);
+    }
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        cpu->demapPage(vaddr, asn);
+    }
+
     /**
      * Does a read to a given address.
      * @param addr The address to read.

@@ -76,7 +76,7 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p) : SimObject(p), configAddress(0), size(p->size)
+TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size)
 {
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
@@ -169,7 +169,7 @@ TLB::invalidateNonGlobal()
 }
 
 void
-TLB::demapPage(Addr va)
+TLB::demapPage(Addr va, uint64_t asn)
 {
 }
 

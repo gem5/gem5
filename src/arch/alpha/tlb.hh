@@ -44,7 +44,7 @@
 #include "params/AlphaDTB.hh"
 #include "params/AlphaITB.hh"
 #include "sim/faults.hh"
-#include "sim/sim_object.hh"
+#include "sim/tlb.hh"
 
 class ThreadContext;
 
@@ -52,7 +52,7 @@ namespace AlphaISA
 {
     class TlbEntry;
 
-    class TLB : public SimObject
+    class TLB : public BaseTLB
     {
       protected:
         typedef std::multimap<Addr, int> PageTable;
@@ -78,6 +78,12 @@ namespace AlphaISA
         void flushAll();
         void flushProcesses();
         void flushAddr(Addr addr, uint8_t asn);
+
+        void demapPage(Addr vaddr, uint64_t asn)
+        {
+            assert(asn < (1 << 8));
+            flushAddr(vaddr, asn);
+        }
 
         // static helper functions... really EV5 VM traits
         static bool validVirtualAddress(Addr vaddr) {

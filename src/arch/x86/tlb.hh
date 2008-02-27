@@ -70,6 +70,7 @@
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
 #include "sim/faults.hh"
+#include "sim/tlb.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;
@@ -83,7 +84,7 @@ namespace X86ISA
 
     class TLB;
 
-    class TLB : public SimObject
+    class TLB : public BaseTLB
     {
       protected:
         friend class FakeITLBFault;
@@ -120,7 +121,7 @@ namespace X86ISA
 
         void invalidateNonGlobal();
 
-        void demapPage(Addr va);
+        void demapPage(Addr va, uint64_t asn);
 
       protected:
         int size;

@@ -163,6 +163,22 @@ class SimpleThread : public ThreadState
         return dtb->translate(req, tc, true);
     }
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        itb->demapPage(vaddr, asn);
+        dtb->demapPage(vaddr, asn);
+    }
+
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        itb->demapPage(vaddr, asn);
+    }
+
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        dtb->demapPage(vaddr, asn);
+    }
+
 #if FULL_SYSTEM
     int getInstAsid() { return regs.instAsid(); }
     int getDataAsid() { return regs.dataAsid(); }
