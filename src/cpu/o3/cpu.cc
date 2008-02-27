@@ -695,7 +695,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);
-    //iew.ldstQueue.squash(squash_seq_num, tid);
+    iew.ldstQueue.squash(squash_seq_num, tid);
     commit.rob->squash(squash_seq_num, tid);
 
 
