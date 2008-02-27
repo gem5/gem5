@@ -682,7 +682,7 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     }
 
     // Unbind Float Regs from Rename Map
-    for (int freg = 0; freg < TheISA::NumFloatRegs; freg++) {
+    for (int freg = TheISA::NumIntRegs; freg < TheISA::NumFloatRegs; freg++) {
         PhysRegIndex phys_reg = renameMap[tid].lookup(freg);
 
         scoreboard.unsetReg(phys_reg);
@@ -695,8 +695,11 @@ FullO3CPU<Impl>::removeThread(unsigned tid)
     decode.squash(tid);
     rename.squash(squash_seq_num, tid);
     iew.squash(tid);
+    //iew.ldstQueue.squash(squash_seq_num, tid);
     commit.rob->squash(squash_seq_num, tid);
 
+
+    assert(iew.instQueue.getCount(tid) == 0);
     assert(iew.ldstQueue.getCount(tid) == 0);
 
     // Reset ROB/IQ/LSQ Entries

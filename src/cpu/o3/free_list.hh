@@ -173,6 +173,8 @@ SimpleFreeList::addReg(PhysRegIndex freed_reg)
 #endif
             freeFloatRegs.push(freed_reg);
     }
+
+    //assert(freeIntRegs.size() <= numPhysicalIntRegs);
 }
 
 inline void
