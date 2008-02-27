@@ -76,7 +76,7 @@
 
 namespace X86ISA {
 
-TLB::TLB(const Params *p) : SimObject(p), size(p->size)
+TLB::TLB(const Params *p) : SimObject(p), configAddress(0), size(p->size)
 {
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
@@ -145,6 +145,12 @@ TLB::invalidateAll()
         entryList.pop_front();
         freeList.push_back(entry);
     }
+}
+
+void
+TLB::setConfigAddress(uint32_t addr)
+{
+    configAddress = addr;
 }
 
 void
@@ -478,7 +484,19 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             // Make sure the address fits in the expected 16 bit IO address
             // space.
             assert(!(IOPort & ~0xFFFF));
-            req->setPaddr(PhysAddrPrefixIO | IOPort);
+            if (IOPort == 0xCF8 && req->getSize() == 4) {
+                req->setMmapedIpr(true);
+                req->setPaddr(MISCREG_PCI_CONFIG_ADDRESS * sizeof(MiscReg));
+            } else if ((IOPort & ~mask(2)) == 0xCFC) {
+                Addr configAddress =
+                    tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
+                if (bits(configAddress, 31, 31)) {
+                    req->setPaddr(PhysAddrPrefixPciConfig |
+                            bits(configAddress, 30, 0));
+                }
+            } else {
+                req->setPaddr(PhysAddrPrefixIO | IOPort);
+            }
             return NoFault;
         } else {
             panic("Access to unrecognized internal address space %#x.\n",

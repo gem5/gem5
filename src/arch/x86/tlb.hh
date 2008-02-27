@@ -90,6 +90,7 @@ namespace X86ISA
         friend class FakeDTLBFault;
 
         bool _allowNX;
+        uint32_t configAddress;
 
       public:
         bool allowNX() const
@@ -103,6 +104,8 @@ namespace X86ISA
         void dumpAll();
 
         TlbEntry *lookup(Addr va, bool update_lru = true);
+
+        void setConfigAddress(uint32_t addr);
 
 #if FULL_SYSTEM
       protected:

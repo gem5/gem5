@@ -64,6 +64,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/x86/miscregs.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -88,8 +89,13 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
-                gtoh(pkt->get<uint64_t>()));
+        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
+        if (index == MISCREG_PCI_CONFIG_ADDRESS) {
+            xc->setMiscReg(index, gtoh(pkt->get<uint32_t>()));
+        } else {
+            xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
+                    gtoh(pkt->get<uint64_t>()));
+        }
 #endif
         return xc->getCpuPtr()->ticks(1);
     }

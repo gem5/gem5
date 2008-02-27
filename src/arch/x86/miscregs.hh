@@ -339,6 +339,8 @@ namespace X86ISA
 
         //XXX Add "Model-Specific Registers"
 
+        MISCREG_PCI_CONFIG_ADDRESS,
+
         NUM_MISCREGS
     };
 

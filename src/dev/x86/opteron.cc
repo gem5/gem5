@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/x86_traits.hh"
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
 #include "dev/x86/opteron.hh"
@@ -95,8 +96,10 @@ Opteron::pciToDma(Addr pciAddr) const
 Addr
 Opteron::calcConfigAddr(int bus, int dev, int func)
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    assert(func < 8);
+    assert(dev < 32);
+    assert(bus == 0);
+    return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
 }
 
 Opteron *
