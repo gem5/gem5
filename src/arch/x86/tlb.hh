@@ -90,6 +90,8 @@ namespace X86ISA
         friend class FakeITLBFault;
         friend class FakeDTLBFault;
 
+        typedef std::list<TlbEntry *> EntryList;
+
         bool _allowNX;
         uint32_t configAddress;
 
@@ -107,6 +109,10 @@ namespace X86ISA
         TlbEntry *lookup(Addr va, bool update_lru = true);
 
         void setConfigAddress(uint32_t addr);
+
+      protected:
+
+        EntryList::iterator lookupIt(Addr va, bool update_lru = true);
 
 #if FULL_SYSTEM
       protected:
@@ -128,7 +134,6 @@ namespace X86ISA
 
         TlbEntry * tlb;
 
-        typedef std::list<TlbEntry *> EntryList;
         EntryList freeList;
         EntryList entryList;
 

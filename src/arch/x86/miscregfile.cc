@@ -123,6 +123,84 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 
 MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 {
+    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
+        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
+                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
+            panic("Local APIC In-Service registers are unimplemented.\n");
+        }
+        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
+                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
+            panic("Local APIC Trigger Mode registers are unimplemented.\n");
+        }
+        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
+                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
+            panic("Local APIC Interrupt Request registers "
+                    "are unimplemented.\n");
+        }
+        switch (miscReg) {
+          case MISCREG_APIC_TASK_PRIORITY:
+            panic("Local APIC Task Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_ARBITRATION_PRIORITY:
+            panic("Local APIC Arbitration Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_PROCESSOR_PRIORITY:
+            panic("Local APIC Processor Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_EOI:
+            panic("Local APIC EOI register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LOGICAL_DESTINATION:
+            panic("Local APIC Logical Destination register unimplemented.\n");
+            break;
+          case MISCREG_APIC_DESTINATION_FORMAT:
+            panic("Local APIC Destination Format register unimplemented.\n");
+            break;
+          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
+            panic("Local APIC Spurious Interrupt Vector"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_ERROR_STATUS:
+            panic("Local APIC Error Status register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
+            panic("Local APIC Interrupt Command low"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
+            panic("Local APIC Interrupt Command high"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_TIMER:
+            panic("Local APIC LVT Timer register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_THERMAL_SENSOR:
+            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
+            panic("Local APIC LVT Performance Monitoring Counters"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_LINT0:
+            panic("Local APIC LVT LINT0 register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_LINT1:
+            panic("Local APIC LVT LINT1 register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_ERROR:
+            panic("Local APIC LVT Error register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INITIAL_COUNT:
+            panic("Local APIC Initial Count register unimplemented.\n");
+            break;
+          case MISCREG_APIC_CURRENT_COUNT:
+            panic("Local APIC Current Count register unimplemented.\n");
+            break;
+          case MISCREG_APIC_DIVIDE_COUNT:
+            panic("Local APIC Divide Count register unimplemented.\n");
+            break;
+        }
+    }
     return readRegNoEffect(miscReg);
 }
 
@@ -143,6 +221,92 @@ void MiscRegFile::setReg(int miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     MiscReg newVal = val;
+    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
+        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
+                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
+            panic("Local APIC In-Service registers are unimplemented.\n");
+        }
+        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
+                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
+            panic("Local APIC Trigger Mode registers are unimplemented.\n");
+        }
+        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
+                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
+            panic("Local APIC Interrupt Request registers "
+                    "are unimplemented.\n");
+        }
+        switch (miscReg) {
+          case MISCREG_APIC_ID:
+            panic("Local APIC ID register unimplemented.\n");
+            break;
+          case MISCREG_APIC_VERSION:
+            panic("Local APIC Version register is read only.\n");
+            break;
+          case MISCREG_APIC_TASK_PRIORITY:
+            panic("Local APIC Task Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_ARBITRATION_PRIORITY:
+            panic("Local APIC Arbitration Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_PROCESSOR_PRIORITY:
+            panic("Local APIC Processor Priority register unimplemented.\n");
+            break;
+          case MISCREG_APIC_EOI:
+            panic("Local APIC EOI register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LOGICAL_DESTINATION:
+            panic("Local APIC Logical Destination register unimplemented.\n");
+            break;
+          case MISCREG_APIC_DESTINATION_FORMAT:
+            panic("Local APIC Destination Format register unimplemented.\n");
+            break;
+          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
+            panic("Local APIC Spurious Interrupt Vector"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_ERROR_STATUS:
+            panic("Local APIC Error Status register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
+            panic("Local APIC Interrupt Command low"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
+            panic("Local APIC Interrupt Command high"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_TIMER:
+            panic("Local APIC LVT Timer register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_THERMAL_SENSOR:
+            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
+            panic("Local APIC LVT Performance Monitoring Counters"
+                    " register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_LINT0:
+            panic("Local APIC LVT LINT0 register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_LINT1:
+            panic("Local APIC LVT LINT1 register unimplemented.\n");
+            break;
+          case MISCREG_APIC_LVT_ERROR:
+            panic("Local APIC LVT Error register unimplemented.\n");
+            break;
+          case MISCREG_APIC_INITIAL_COUNT:
+            panic("Local APIC Initial Count register unimplemented.\n");
+            break;
+          case MISCREG_APIC_CURRENT_COUNT:
+            panic("Local APIC Current Count register unimplemented.\n");
+            break;
+          case MISCREG_APIC_DIVIDE_COUNT:
+            panic("Local APIC Divide Count register unimplemented.\n");
+            break;
+        }
+        setRegNoEffect(miscReg, newVal);
+        return;
+    }
     switch(miscReg)
     {
       case MISCREG_CR0:

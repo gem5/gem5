@@ -248,6 +248,16 @@ void initCPU(ThreadContext *tc, int cpuId)
     // TODO Turn on the APIC. This should be handled elsewhere but it isn't
     // currently being handled at all.
 
+    LocalApicBase lApicBase = 0;
+    lApicBase.base = 0xFEE00000 >> 12;
+    lApicBase.enable = 1;
+    lApicBase.bsp = (cpuId == 0);
+    tc->setMiscReg(MISCREG_APIC_BASE, lApicBase);
+
+    tc->setMiscRegNoEffect(MISCREG_APIC_ID, cpuId << 24);
+
+    tc->setMiscRegNoEffect(MISCREG_APIC_VERSION, (5 << 16) | 0x14);
+
     // TODO Set the SMRAM base address (SMBASE) to 0x00030000
 
     tc->setMiscReg(MISCREG_VM_CR, 0);

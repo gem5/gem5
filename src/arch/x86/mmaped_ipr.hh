@@ -78,7 +78,15 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
+        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
+        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
+                (index >= MISCREG_APIC_START &&
+                 index <= MISCREG_APIC_END)) {
+            pkt->set((uint32_t)(xc->readMiscReg(pkt->getAddr() /
+                            sizeof(MiscReg))));
+        } else {
+            pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
+        }
 #endif
         return xc->getCpuPtr()->ticks(1);
     }
@@ -90,7 +98,9 @@ namespace X86ISA
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
-        if (index == MISCREG_PCI_CONFIG_ADDRESS) {
+        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
+                (index >= MISCREG_APIC_START &&
+                 index <= MISCREG_APIC_END)) {
             xc->setMiscReg(index, gtoh(pkt->get<uint32_t>()));
         } else {
             xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),

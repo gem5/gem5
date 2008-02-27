@@ -339,6 +339,41 @@ namespace X86ISA
 
         //XXX Add "Model-Specific Registers"
 
+        MISCREG_APIC_BASE,
+
+        MISCREG_APIC_START,
+        MISCREG_APIC_ID = MISCREG_APIC_START,
+        MISCREG_APIC_VERSION,
+        MISCREG_APIC_TASK_PRIORITY,
+        MISCREG_APIC_ARBITRATION_PRIORITY,
+        MISCREG_APIC_PROCESSOR_PRIORITY,
+        MISCREG_APIC_EOI,
+        MISCREG_APIC_LOGICAL_DESTINATION,
+        MISCREG_APIC_DESTINATION_FORMAT,
+        MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR,
+
+        MISCREG_APIC_IN_SERVICE_BASE,
+
+        MISCREG_APIC_TRIGGER_MODE_BASE = MISCREG_APIC_IN_SERVICE_BASE + 16,
+
+        MISCREG_APIC_INTERRUPT_REQUEST_BASE =
+            MISCREG_APIC_TRIGGER_MODE_BASE + 16,
+
+        MISCREG_APIC_ERROR_STATUS = MISCREG_APIC_INTERRUPT_REQUEST_BASE + 16,
+        MISCREG_APIC_INTERRUPT_COMMAND_LOW,
+        MISCREG_APIC_INTERRUPT_COMMAND_HIGH,
+        MISCREG_APIC_LVT_TIMER,
+        MISCREG_APIC_LVT_THERMAL_SENSOR,
+        MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS,
+        MISCREG_APIC_LVT_LINT0,
+        MISCREG_APIC_LVT_LINT1,
+        MISCREG_APIC_LVT_ERROR,
+        MISCREG_APIC_INITIAL_COUNT,
+        MISCREG_APIC_CURRENT_COUNT,
+        MISCREG_APIC_DIVIDE_COUNT,
+        MISCREG_APIC_END = MISCREG_APIC_DIVIDE_COUNT,
+
+        // "Fake" MSRs for internally implemented devices
         MISCREG_PCI_CONFIG_ADDRESS,
 
         NUM_MISCREGS
@@ -444,6 +479,24 @@ namespace X86ISA
     MISCREG_SEG_ATTR(int index)
     {
         return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_APIC_IN_SERVICE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_APIC_IN_SERVICE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_APIC_TRIGGER_MODE(int index)
+    {
+        return (MiscRegIndex)(MISCREG_APIC_TRIGGER_MODE_BASE + index);
+    }
+
+    static inline MiscRegIndex
+    MISCREG_APIC_INTERRUPT_REQUEST(int index)
+    {
+        return (MiscRegIndex)(MISCREG_APIC_INTERRUPT_REQUEST_BASE + index);
     }
 
     /**
@@ -794,6 +847,16 @@ namespace X86ISA
      */
     BitUnion64(TR)
     EndBitUnion(TR)
+
+
+    /**
+     * Local APIC Base Register
+     */
+    BitUnion64(LocalApicBase)
+        Bitfield<51, 12> base;
+        Bitfield<11> enable;
+        Bitfield<8> bsp;
+    EndBitUnion(LocalApicBase)
 };
 
 #endif // __ARCH_X86_INTREGS_HH__

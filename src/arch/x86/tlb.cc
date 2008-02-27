@@ -108,8 +108,8 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     entryList.push_front(newEntry);
 }
 
-TlbEntry *
-TLB::lookup(Addr va, bool update_lru)
+TLB::EntryList::iterator
+TLB::lookupIt(Addr va, bool update_lru)
 {
     //TODO make this smarter at some point
     EntryList::iterator entry;
@@ -117,15 +117,25 @@ TLB::lookup(Addr va, bool update_lru)
         if ((*entry)->vaddr <= va && (*entry)->vaddr + (*entry)->size > va) {
             DPRINTF(TLB, "Matched vaddr %#x to entry starting at %#x "
                     "with size %#x.\n", va, (*entry)->vaddr, (*entry)->size);
-            TlbEntry *e = *entry;
             if (update_lru) {
+                entryList.push_front(*entry);
                 entryList.erase(entry);
-                entryList.push_front(e);
+                entry = entryList.begin();
             }
-            return e;
+            break;
         }
     }
-    return NULL;
+    return entry;
+}
+
+TlbEntry *
+TLB::lookup(Addr va, bool update_lru)
+{
+    EntryList::iterator entry = lookupIt(va, update_lru);
+    if (entry == entryList.end())
+        return NULL;
+    else
+        return *entry;
 }
 
 #if FULL_SYSTEM
@@ -205,6 +215,9 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             switch (vaddr & ~IntAddrPrefixMask) {
               case 0x10:
                 regNum = MISCREG_TSC;
+                break;
+              case 0x1B:
+                regNum = MISCREG_APIC_BASE;
                 break;
               case 0xFE:
                 regNum = MISCREG_MTRRCAP;
@@ -577,6 +590,148 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         DPRINTF(TLB, "In real mode.\n");
         DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, vaddr);
         req->setPaddr(vaddr);
+    }
+    // Check for an access to the local APIC
+    LocalApicBase localApicBase = tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
+    Addr baseAddr = localApicBase.base << 12;
+    Addr paddr = req->getPaddr();
+    if (baseAddr <= paddr && baseAddr + (1 << 12) > paddr) {
+        req->setMmapedIpr(true);
+        // Check alignment
+        if (paddr & ((32/8) - 1))
+            return new GeneralProtection(0);
+        // Check access size
+        if (req->getSize() != (32/8))
+            return new GeneralProtection(0);
+        MiscReg regNum;
+        switch (paddr - baseAddr)
+        {
+          case 0x20:
+            regNum = MISCREG_APIC_ID;
+            break;
+          case 0x30:
+            regNum = MISCREG_APIC_VERSION;
+            break;
+          case 0x80:
+            regNum = MISCREG_APIC_TASK_PRIORITY;
+            break;
+          case 0x90:
+            regNum = MISCREG_APIC_ARBITRATION_PRIORITY;
+            break;
+          case 0xA0:
+            regNum = MISCREG_APIC_PROCESSOR_PRIORITY;
+            break;
+          case 0xB0:
+            regNum = MISCREG_APIC_EOI;
+            break;
+          case 0xD0:
+            regNum = MISCREG_APIC_LOGICAL_DESTINATION;
+            break;
+          case 0xE0:
+            regNum = MISCREG_APIC_DESTINATION_FORMAT;
+            break;
+          case 0xF0:
+            regNum = MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR;
+            break;
+          case 0x100:
+          case 0x108:
+          case 0x110:
+          case 0x118:
+          case 0x120:
+          case 0x128:
+          case 0x130:
+          case 0x138:
+          case 0x140:
+          case 0x148:
+          case 0x150:
+          case 0x158:
+          case 0x160:
+          case 0x168:
+          case 0x170:
+          case 0x178:
+            regNum = MISCREG_APIC_IN_SERVICE(
+                    (paddr - baseAddr - 0x100) / 0x8);
+            break;
+          case 0x180:
+          case 0x188:
+          case 0x190:
+          case 0x198:
+          case 0x1A0:
+          case 0x1A8:
+          case 0x1B0:
+          case 0x1B8:
+          case 0x1C0:
+          case 0x1C8:
+          case 0x1D0:
+          case 0x1D8:
+          case 0x1E0:
+          case 0x1E8:
+          case 0x1F0:
+          case 0x1F8:
+            regNum = MISCREG_APIC_TRIGGER_MODE(
+                    (paddr - baseAddr - 0x180) / 0x8);
+            break;
+          case 0x200:
+          case 0x208:
+          case 0x210:
+          case 0x218:
+          case 0x220:
+          case 0x228:
+          case 0x230:
+          case 0x238:
+          case 0x240:
+          case 0x248:
+          case 0x250:
+          case 0x258:
+          case 0x260:
+          case 0x268:
+          case 0x270:
+          case 0x278:
+            regNum = MISCREG_APIC_INTERRUPT_REQUEST(
+                    (paddr - baseAddr - 0x200) / 0x8);
+            break;
+          case 0x280:
+            regNum = MISCREG_APIC_ERROR_STATUS;
+            break;
+          case 0x300:
+            regNum = MISCREG_APIC_INTERRUPT_COMMAND_LOW;
+            break;
+          case 0x310:
+            regNum = MISCREG_APIC_INTERRUPT_COMMAND_HIGH;
+            break;
+          case 0x320:
+            regNum = MISCREG_APIC_LVT_TIMER;
+            break;
+          case 0x330:
+            regNum = MISCREG_APIC_LVT_THERMAL_SENSOR;
+            break;
+          case 0x340:
+            regNum = MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
+            break;
+          case 0x350:
+            regNum = MISCREG_APIC_LVT_LINT0;
+            break;
+          case 0x360:
+            regNum = MISCREG_APIC_LVT_LINT1;
+            break;
+          case 0x370:
+            regNum = MISCREG_APIC_LVT_ERROR;
+            break;
+          case 0x380:
+            regNum = MISCREG_APIC_INITIAL_COUNT;
+            break;
+          case 0x390:
+            regNum = MISCREG_APIC_CURRENT_COUNT;
+            break;
+          case 0x3E0:
+            regNum = MISCREG_APIC_DIVIDE_COUNT;
+            break;
+          default:
+            // A reserved register field.
+            return new GeneralProtection(0);
+            break;
+        }
+        req->setPaddr(regNum * sizeof(MiscReg));
     }
     return NoFault;
 };
