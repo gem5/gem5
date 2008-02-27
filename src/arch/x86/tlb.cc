@@ -171,6 +171,11 @@ TLB::invalidateNonGlobal()
 void
 TLB::demapPage(Addr va, uint64_t asn)
 {
+    EntryList::iterator entry = lookupIt(va, false);
+    if (entry != entryList.end()) {
+        freeList.push_back(*entry);
+        entryList.erase(entry);
+    }
 }
 
 template<class TlbFault>
