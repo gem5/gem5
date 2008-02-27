@@ -39,7 +39,7 @@
 #include "params/SparcDTB.hh"
 #include "params/SparcITB.hh"
 #include "sim/faults.hh"
-#include "sim/sim_object.hh"
+#include "sim/tlb.hh"
 
 class ThreadContext;
 class Packet;
@@ -47,7 +47,7 @@ class Packet;
 namespace SparcISA
 {
 
-class TLB : public SimObject
+class TLB : public BaseTLB
 {
 #if !FULL_SYSTEM
     //These faults need to be able to populate the tlb in SE mode.
@@ -151,6 +151,11 @@ class TLB : public SimObject
   public:
     typedef SparcTLBParams Params;
     TLB(const Params *p);
+
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        panic("demapPage(Addr) is not implemented.\n");
+    }
 
     void dumpAll();
 

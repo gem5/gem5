@@ -70,6 +70,7 @@
 #include "params/X86DTB.hh"
 #include "params/X86ITB.hh"
 #include "sim/faults.hh"
+#include "sim/tlb.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;
@@ -83,13 +84,16 @@ namespace X86ISA
 
     class TLB;
 
-    class TLB : public SimObject
+    class TLB : public BaseTLB
     {
       protected:
         friend class FakeITLBFault;
         friend class FakeDTLBFault;
 
+        typedef std::list<TlbEntry *> EntryList;
+
         bool _allowNX;
+        uint32_t configAddress;
 
       public:
         bool allowNX() const
@@ -104,6 +108,12 @@ namespace X86ISA
 
         TlbEntry *lookup(Addr va, bool update_lru = true);
 
+        void setConfigAddress(uint32_t addr);
+
+      protected:
+
+        EntryList::iterator lookupIt(Addr va, bool update_lru = true);
+
 #if FULL_SYSTEM
       protected:
 
@@ -117,14 +127,13 @@ namespace X86ISA
 
         void invalidateNonGlobal();
 
-        void demapPage(Addr va);
+        void demapPage(Addr va, uint64_t asn);
 
       protected:
         int size;
 
         TlbEntry * tlb;
 
-        typedef std::list<TlbEntry *> EntryList;
         EntryList freeList;
         EntryList entryList;
 

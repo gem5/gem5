@@ -156,7 +156,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
     return self
 
 def x86IOAddress(port):
-    IO_address_space_base = 0x1000000000000000
+    IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
 
 def makeLinuxX86System(mem_mode, mdesc = None):
@@ -189,6 +189,7 @@ def makeLinuxX86System(mem_mode, mdesc = None):
 
     # Platform
     self.opteron = Opteron()
+    self.opteron.attachIO(self.iobus)
 
     self.intrctrl = IntrControl()
 

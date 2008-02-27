@@ -173,6 +173,18 @@ SimpleFreeList::addReg(PhysRegIndex freed_reg)
 #endif
             freeFloatRegs.push(freed_reg);
     }
+
+    // These assert conditions ensure that the number of free
+    // registers are not more than the # of total Physical  Registers.
+    // If this were false, it would mean that registers
+    // have been freed twice, overflowing the free register
+    // pool and potentially crashing SMT workloads.
+    // ----
+    // Comment out for now so as to not potentially break
+    // CMP and single-threaded workloads
+    // ----
+    // assert(freeIntRegs.size() <= numPhysicalIntRegs);
+    // assert(freeFloatRegs.size() <= numPhysicalFloatRegs);
 }
 
 inline void

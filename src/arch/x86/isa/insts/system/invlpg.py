@@ -81,14 +81,13 @@
 #
 # Authors: Gabe Black
 
-categories = ["halt",
-              "invlpg",
-              "undefined_operation",
-              "msrs",
-              "segmentation"]
+microcode = '''
+def macroop INVLPG_M {
+    tia seg, sib, disp
+};
 
-microcode = ""
-for category in categories:
-    exec "import %s as cat" % category
-    microcode += cat.microcode
-
+def macroop INVLPG_P {
+    rdip t7
+    tia seg, riprel, disp
+};
+'''

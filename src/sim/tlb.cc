@@ -48,3 +48,9 @@ GenericTLB::translate(RequestPtr req, ThreadContext * tc, bool)
         return NoFault;
 #endif
 }
+
+void
+GenericTLB::demapPage(Addr vaddr, uint64_t asn)
+{
+    warn("Demapping pages in the generic TLB is unnecessary.\n");
+}

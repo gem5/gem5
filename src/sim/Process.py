@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,3 +50,4 @@ class LiveProcess(Process):
     egid = Param.Int(100, 'effective group id')
     pid = Param.Int(100, 'process id')
     ppid = Param.Int(99, 'parent process id')
+    simpoint = Param.UInt64(0, 'simulation point at which to start simulation')

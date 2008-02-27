@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -85,6 +85,9 @@ class Benchmark(object):
         if not hasattr(self.__class__, 'output'):
             self.output = '%s.out' % self.name
 
+        if not hasattr(self.__class__, 'simpoint'):
+            self.simpoint = None
+
         try:
             func = getattr(self.__class__, input_set)
         except AttributeError:
@@ -137,7 +140,7 @@ class Benchmark(object):
             process_args['input'] = self.stdin
         if self.stdout:
             process_args['output'] = self.stdout
-
+        process_args['simpoint'] = self.simpoint
         # explicit keywords override defaults
         process_args.update(kwargs)
 
@@ -149,6 +152,7 @@ class Benchmark(object):
         # figure out working directory: use m5's outdir unless
         # overridden by LiveProcess's cwd param
         cwd = process_args.get('cwd')
+
         if not cwd:
             from m5.main import options
             cwd = options.outdir
@@ -179,16 +183,19 @@ class ammp(MinneDefaultBenchmark):
     name = 'ammp'
     number = 188
     lang = 'C'
+    simpoint = 108*100E6
 
 class applu(MinneDefaultBenchmark):
     name = 'applu'
     number = 173
     lang = 'F77'
+    simpoint = 2179*100E6
 
 class apsi(MinneDefaultBenchmark):
     name = 'apsi'
     number = 301
     lang = 'F77'
+    simpoint = 3408*100E6
 
 class art(DefaultBenchmark):
     name = 'art'
@@ -241,6 +248,7 @@ class art110(art):
                       '-endy', '240',
                       '-objects', '10' ]
         self.output = 'ref.1.out'
+        self.simpoint = 340*100E6
 
 class art470(art):
     def ref(self, isa, os):
@@ -254,11 +262,13 @@ class art470(art):
                       '-endy', '180',
                       '-objects', '10' ]
         self.output = 'ref.2.out'
+        self.simpoint = 365*100E6
 
 class equake(DefaultBenchmark):
     name = 'equake'
     number = 183
     lang = 'C'
+    simpoint = 812*100E6
 
     def lgred(self, isa, os): pass
 
@@ -266,21 +276,25 @@ class facerec(MinneDefaultBenchmark):
     name = 'facerec'
     number = 187
     lang = 'F'
+    simpoint = 375*100E6
 
 class fma3d(MinneDefaultBenchmark):
     name = 'fma3d'
     number = 191
     lang = 'F'
+    simpoint = 2541*100E6
 
 class galgel(MinneDefaultBenchmark):
     name = 'galgel'
     number = 178
     lang = 'F'
+    simpoint = 2491*100E6
 
 class lucas(MinneDefaultBenchmark):
     name = 'lucas'
     number = 189
     lang = 'F'
+    simpoint = 545*100E6
 
 class mesa(Benchmark):
     name = 'mesa'
@@ -300,6 +314,7 @@ class mesa(Benchmark):
 
     def ref(self, isa, os):
         self.__set_args('1000')
+        self.simpoint = 1135*100E6
 
     def lgred(self, isa, os):
         self.__set_args('1')
@@ -308,11 +323,13 @@ class mgrid(MinneDefaultBenchmark):
     name = 'mgrid'
     number = 172
     lang = 'F77'
+    simpoint = 3292*100E6
 
 class sixtrack(DefaultBenchmark):
     name = 'sixtrack'
     number = 200
     lang = 'F77'
+    simpoint = 3043*100E6
 
     def lgred(self, isa, os): pass
 
@@ -320,11 +337,13 @@ class swim(MinneDefaultBenchmark):
     name = 'swim'
     number = 171
     lang = 'F77'
+    simpoint = 2079*100E6
 
 class wupwise(DefaultBenchmark):
     name = 'wupwise'
     number = 168
     lang = 'F77'
+    simpoint = 3237*100E6
 
     def lgred(self, isa, os): pass
 
@@ -341,6 +360,7 @@ class bzip2(DefaultBenchmark):
 
 class bzip2_source(bzip2):
     def ref(self, isa, os):
+        self.simpoint = 977*100E6
         self.args = [ 'input.source', '58' ]
 
     def lgred(self, isa, os):
@@ -348,6 +368,7 @@ class bzip2_source(bzip2):
 
 class bzip2_graphic(bzip2):
     def ref(self, isa, os):
+        self.simpoint = 718*100E6
         self.args = [ 'input.graphic', '58' ]
 
     def lgred(self, isa, os):
@@ -355,6 +376,7 @@ class bzip2_graphic(bzip2):
 
 class bzip2_program(bzip2):
     def ref(self, isa, os):
+        self.simpoint = 458*100E6
         self.args = [ 'input.program', '58' ]
 
     def lgred(self, isa, os):
@@ -364,6 +386,7 @@ class crafty(MinneDefaultBenchmark):
     name = 'crafty'
     number = 186
     lang = 'C'
+    simpoint = 774*100E6
 
 class eon(MinneDefaultBenchmark):
     name = 'eon'
@@ -386,6 +409,7 @@ class eon_rushmeier(eon):
     args = [ 'chair.control.rushmeier', 'chair.camera', 'chair.surfaces',
              'chair.rushmeier.ppm', 'ppm', 'pixels_out.rushmeier' ]
     output = 'rushmeier_log.out'
+    simpoint = 403*100E6
 
 class gap(DefaultBenchmark):
     name = 'gap'
@@ -403,6 +427,7 @@ class gap(DefaultBenchmark):
 
     def ref(self, isa, os):
         self.__set_args('192M')
+        self.simpoint = 674*100E6
 
     def lgred(self, isa, os):
         self.__set_args('64M')
@@ -435,22 +460,27 @@ class gcc(DefaultBenchmark):
 
 class gcc_166(gcc):
     def ref(self, isa, os):
+        self.simpoint = 389*100E6
         self.args = [ '166.i', '-o', '166.s' ]
 
 class gcc_200(gcc):
     def ref(self, isa, os):
+        self.simpoint = 736*100E6
         self.args = [ '200.i', '-o', '200.s' ]
 
 class gcc_expr(gcc):
     def ref(self, isa, os):
+        self.simpoint = 36*100E6
         self.args = [ 'expr.i', '-o', 'expr.s' ]
 
 class gcc_integrate(gcc):
     def ref(self, isa, os):
+        self.simpoint = 4*100E6
         self.args = [ 'integrate.i', '-o', 'integrate.s' ]
 
 class gcc_scilab(gcc):
     def ref(self, isa, os):
+        self.simpoint = 207*100E6
         self.args = [ 'scilab.i', '-o', 'scilab.s' ]
 
 class gzip(DefaultBenchmark):
@@ -466,6 +496,7 @@ class gzip(DefaultBenchmark):
 
 class gzip_source(gzip):
     def ref(self, isa, os):
+        self.simpoint = 334*100E6
         self.args = [ 'input.source', '1' ]
     def smred(self, isa, os):
         self.args = [ 'input.source', '1' ]
@@ -476,6 +507,7 @@ class gzip_source(gzip):
 
 class gzip_log(gzip):
     def ref(self, isa, os):
+        self.simpoint = 265*100E6
         self.args = [ 'input.log', '60' ]
     def smred(self, isa, os):
         self.args = [ 'input.log', '1' ]
@@ -486,6 +518,7 @@ class gzip_log(gzip):
 
 class gzip_graphic(gzip):
     def ref(self, isa, os):
+        self.simpoint = 653*100E6
         self.args = [ 'input.graphic', '60' ]
     def smred(self, isa, os):
         self.args = [ 'input.graphic', '1' ]
@@ -496,6 +529,7 @@ class gzip_graphic(gzip):
 
 class gzip_random(gzip):
     def ref(self, isa, os):
+        self.simpoint = 623*100E6
         self.args = [ 'input.random', '60' ]
     def smred(self, isa, os):
         self.args = [ 'input.random', '1' ]
@@ -506,6 +540,7 @@ class gzip_random(gzip):
 
 class gzip_program(gzip):
     def ref(self, isa, os):
+        self.simpoint = 1189*100E6
         self.args = [ 'input.program', '60' ]
     def smred(self, isa, os):
         self.args = [ 'input.program', '1' ]
@@ -519,12 +554,14 @@ class mcf(MinneDefaultBenchmark):
     number = 181
     lang = 'C'
     args = [ 'mcf.in' ]
+    simpoint = 553*100E6
 
 class parser(MinneDefaultBenchmark):
     name = 'parser'
     number = 197
     lang = 'C'
     args = [ '2.1.dict', '-batch' ]
+    simpoint = 1146*100E6
 
 class perlbmk(DefaultBenchmark):
     name = 'perlbmk'
@@ -537,6 +574,7 @@ class perlbmk(DefaultBenchmark):
 
 class perlbmk_diffmail(perlbmk):
     def ref(self, isa, os):
+        self.simpoint = 141*100E6
         self.args = [ '-I', 'lib', 'diffmail.pl', '2', '550', '15', '24',
                       '23', '100' ]
 
@@ -551,6 +589,7 @@ class perlbmk_scrabbl(perlbmk):
 
 class perlbmk_makerand(perlbmk):
     def ref(self, isa, os):
+        self.simpoint = 11*100E6
         self.args = [ '-I', 'lib',  'makerand.pl' ]
 
     def lgred(self, isa, os):
@@ -564,6 +603,7 @@ class perlbmk_makerand(perlbmk):
 
 class perlbmk_perfect(perlbmk):
     def ref(self, isa, os):
+        self.simpoint = 5*100E6
         self.args = [ '-I', 'lib',  'perfect.pl', 'b', '3', 'm', '4' ]
 
     def train(self, isa, os):
@@ -571,6 +611,7 @@ class perlbmk_perfect(perlbmk):
 
 class perlbmk_splitmail1(perlbmk):
     def ref(self, isa, os):
+        self.simpoint = 405*100E6
         self.args = [ '-I', 'lib', 'splitmail.pl', '850', '5', '19',
                       '18', '1500' ]
 
@@ -602,6 +643,7 @@ class twolf(Benchmark):
         self.args = [ 'train' ]
 
     def ref(self, isa, os):
+        self.simpoint = 1066*100E6
         self.args = [ 'ref' ]
 
     def smred(self, isa, os):
@@ -653,15 +695,18 @@ class vortex1(vortex):
     def ref(self, isa, os):
         self.args = [ '%s1.raw' % self.endian ]
         self.output = 'vortex1.out'
+        self.simpoint = 271*100E6
 
 
 class vortex2(vortex):
     def ref(self, isa, os):
+        self.simpoint = 1024*100E6
         self.args = [ '%s2.raw' % self.endian ]
         self.output = 'vortex2.out'
 
 class vortex3(vortex):
     def ref(self, isa, os):
+        self.simpoint = 564*100E6
         self.args = [ '%s3.raw' % self.endian ]
         self.output = 'vortex3.out'
 
@@ -678,6 +723,7 @@ class vpr_place(vpr):
     output = 'place_log.out'
 
 class vpr_route(vpr):
+    simpoint = 476*100E6
     args = [ 'net.in', 'arch.in', 'place.in', 'route.out', '-nodisp',
              '-route_only', '-route_chan_width', '15',
              '-pres_fac_mult', '2', '-acc_fac', '1',

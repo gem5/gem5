@@ -64,6 +64,7 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "arch/x86/miscregs.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -77,7 +78,15 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
+        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
+        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
+                (index >= MISCREG_APIC_START &&
+                 index <= MISCREG_APIC_END)) {
+            pkt->set((uint32_t)(xc->readMiscReg(pkt->getAddr() /
+                            sizeof(MiscReg))));
+        } else {
+            pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
+        }
 #endif
         return xc->getCpuPtr()->ticks(1);
     }
@@ -88,8 +97,15 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
-        xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
-                gtoh(pkt->get<uint64_t>()));
+        MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
+        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
+                (index >= MISCREG_APIC_START &&
+                 index <= MISCREG_APIC_END)) {
+            xc->setMiscReg(index, gtoh(pkt->get<uint32_t>()));
+        } else {
+            xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
+                    gtoh(pkt->get<uint64_t>()));
+        }
 #endif
         return xc->getCpuPtr()->ticks(1);
     }

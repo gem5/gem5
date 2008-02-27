@@ -58,7 +58,7 @@ bool uncacheBit40 = false;
 #define MODE2MASK(X)			(1 << (X))
 
 TLB::TLB(const Params *p)
-    : SimObject(p), size(p->size), nlu(0)
+    : BaseTLB(p), size(p->size), nlu(0)
 {
     table = new TlbEntry[size];
     memset(table, 0, sizeof(TlbEntry[size]));

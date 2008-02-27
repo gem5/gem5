@@ -80,7 +80,7 @@ struct TlbEntry
 
 };
 
-class TLB : public SimObject
+class TLB : public BaseTLB
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
@@ -120,6 +120,10 @@ class TLB : public SimObject
     void insert(Addr vaddr, MipsISA::PTE &pte);
     void insertAt(MipsISA::PTE &pte, unsigned Index, int _smallPages);
     void flushAll();
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        panic("demapPage unimplemented.\n");
+    }
 
     // static helper functions... really
     static bool validVirtualAddress(Addr vaddr);

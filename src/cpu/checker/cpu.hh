@@ -324,6 +324,22 @@ class CheckerCPU : public BaseCPU
     void recordPCChange(uint64_t val) { changedPC = true; newPC = val; }
     void recordNextPCChange(uint64_t val) { changedNextPC = true; }
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        this->itb->demapPage(vaddr, asn);
+        this->dtb->demapPage(vaddr, asn);
+    }
+
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        this->itb->demapPage(vaddr, asn);
+    }
+
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        this->dtb->demapPage(vaddr, asn);
+    }
+
     bool translateInstReq(Request *req);
     void translateDataWriteReq(Request *req);
     void translateDataReadReq(Request *req);

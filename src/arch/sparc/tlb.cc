@@ -46,7 +46,7 @@
 namespace SparcISA {
 
 TLB::TLB(const Params *p)
-    : SimObject(p), size(p->size), usedEntries(0), lastReplaced(0),
+    : BaseTLB(p), size(p->size), usedEntries(0), lastReplaced(0),
       cacheValid(false)
 {
     // To make this work you'll have to change the hypervisor and OS

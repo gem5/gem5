@@ -39,13 +39,25 @@
 class ThreadContext;
 class Packet;
 
-class GenericTLB : public SimObject
+class BaseTLB : public SimObject
 {
   protected:
-    GenericTLB(const Params *p) : SimObject(p)
+    BaseTLB(const Params *p) : SimObject(p)
     {}
 
   public:
+    virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
+};
+
+class GenericTLB : public BaseTLB
+{
+  protected:
+    GenericTLB(const Params *p) : BaseTLB(p)
+    {}
+
+  public:
+    void demapPage(Addr vaddr, uint64_t asn);
+
     Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
 };
 

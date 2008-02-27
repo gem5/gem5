@@ -423,6 +423,22 @@ class OzoneCPU : public BaseCPU
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        itb->demap(vaddr, asn);
+        dtb->demap(vaddr, asn);
+    }
+
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        itb->demap(vaddr, asn);
+    }
+
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        dtb->demap(vaddr, asn);
+    }
+
 #if FULL_SYSTEM
     /** Translates instruction requestion. */
     Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)

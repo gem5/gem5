@@ -157,7 +157,7 @@
                         }
                         0x4: smsw_Mw();
                         0x6: lmsw_Mw();
-                        0x7: invlpg_M();
+                        0x7: Inst::INVLPG(M);
                         default: Inst::UD2();
                     }
                 }

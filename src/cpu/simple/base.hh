@@ -367,6 +367,21 @@ class BaseSimpleCPU : public BaseCPU
         return thread->setMiscReg(reg_idx, val);
     }
 
+    void demapPage(Addr vaddr, uint64_t asn)
+    {
+        thread->demapPage(vaddr, asn);
+    }
+
+    void demapInstPage(Addr vaddr, uint64_t asn)
+    {
+        thread->demapInstPage(vaddr, asn);
+    }
+
+    void demapDataPage(Addr vaddr, uint64_t asn)
+    {
+        thread->demapDataPage(vaddr, asn);
+    }
+
     unsigned readStCondFailures() {
         return thread->readStCondFailures();
     }

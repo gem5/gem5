@@ -62,7 +62,7 @@ using namespace MipsISA;
 #define MODE2MASK(X)			(1 << (X))
 
 TLB::TLB(const Params *p)
-    : SimObject(p), size(p->size), nlu(0)
+    : BaseTLB(p), size(p->size), nlu(0)
 {
     table = new MipsISA::PTE[size];
     memset(table, 0, sizeof(MipsISA::PTE[size]));
