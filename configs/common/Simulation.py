@@ -77,6 +77,12 @@ def run(options, root, testsys, cpu_class):
     else:
         cptdir = getcwd()
 
+    if options.fast_forward and options.checkpoint_restore != None:
+        m5.panic("Error: Can't specify both --fast-forward and --checkpoint-restore")
+
+    if options.standard_switch and not cpu_class:
+        m5.panic("Error: Must specify CPU to switch to for --standard-switch (almost always detailed (-d))")
+
     np = options.num_cpus
     max_checkpoints = options.max_checkpoints
     switch_cpus = None
