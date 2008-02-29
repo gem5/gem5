@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2006-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@ import os, optparse, sys
 m5.AddToPath('../common')
 import Simulation
 from Caches import *
+from cpu2000 import *
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -62,9 +63,22 @@ if args:
     print "Error: script doesn't take any positional arguments"
     sys.exit(1)
 
-process = LiveProcess()
-process.executable = options.cmd
-process.cmd = [options.cmd] + options.options.split()
+if options.bench:
+    try:
+        if m5.build_env['TARGET_ISA'] != 'alpha':
+            print >>sys.stderr, "Simpoints code only works for Alpha ISA at this time"
+            sys.exit(1)
+        exec("workload = %s('alpha', 'tru64', 'ref')" % options.bench)
+        process = workload.makeLiveProcess()
+    except:
+        print >>sys.stderr, "Unable to find workload for %s" % options.bench
+        sys.exit(1)
+else:
+    process = LiveProcess()
+    process.executable = options.cmd
+    process.cmd = [options.cmd] + options.options.split()
+
+
 if options.input != "":
     process.input = options.input
 

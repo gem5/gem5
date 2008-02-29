@@ -51,7 +51,7 @@ def setCPUClass(options):
     test_mem_mode = 'atomic'
 
     if not atomic:
-        if options.checkpoint_restore or options.fast_forward:
+        if options.checkpoint_restore != None or options.fast_forward:
             CPUClass = TmpClass
             class TmpClass(AtomicSimpleCPU): pass
         else:
@@ -87,11 +87,14 @@ def run(options, root, testsys, cpu_class):
 
         for i in xrange(np):
             if options.fast_forward:
-                testsys.cpu[i].max_insts_any_thread = options.fast_forward
+                testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             switch_cpus[i].system =  testsys
             if not m5.build_env['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
+            # simulation period
+            if options.max_inst:
+                switch_cpus[i].max_insts_any_thread = options.max_inst
 
         testsys.switch_cpus = switch_cpus
         switch_cpu_list = [(testsys.cpu[i], switch_cpus[i]) for i in xrange(np)]
@@ -112,11 +115,11 @@ def run(options, root, testsys, cpu_class):
             switch_cpus_1[i].clock = testsys.cpu[0].clock
 
             # if restoring, make atomic cpu simulate only a few instructions
-            if options.checkpoint_restore:
+            if options.checkpoint_restore != None:
                 testsys.cpu[i].max_insts_any_thread = 1
             # Fast forward to specified location if we are not restoring
             elif options.fast_forward:
-                testsys.cpu[i].max_insts_any_thread = options.fast_forward
+                testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             # Fast forward to a simpoint (warning: time consuming)
             elif options.simpoint:
                 if testsys.cpu[i].workload[0].simpoint == None:
@@ -147,7 +150,7 @@ def run(options, root, testsys, cpu_class):
             switch_cpu_list1 = [(switch_cpus[i], switch_cpus_1[i]) for i in xrange(np)]
 
     # set the checkpoint in the cpu before m5.instantiate is called
-    if options.take_checkpoints and \
+    if options.take_checkpoints != None and \
            (options.simpoint or options.at_instruction):
         offset = int(options.take_checkpoints)
         # Set an instruction break point
@@ -155,7 +158,7 @@ def run(options, root, testsys, cpu_class):
             for i in xrange(np):
                 if testsys.cpu[i].workload[0].simpoint == None:
                     m5.panic('no simpoint for testsys.cpu[%d].workload[0]' % i)
-                checkpoint_inst = testsys.cpu[i].workload[0].simpoint + offset
+                checkpoint_inst = int(testsys.cpu[i].workload[0].simpoint) + offset
                 testsys.cpu[i].max_insts_any_thread = checkpoint_inst
                 # used for output below
                 options.take_checkpoints = checkpoint_inst
@@ -166,11 +169,9 @@ def run(options, root, testsys, cpu_class):
             for i in xrange(np):
                 testsys.cpu[i].max_insts_any_thread = offset
 
-        testsys.cpu_switch_list = cpu_switch_list
-
     m5.instantiate(root)
 
-    if options.checkpoint_restore:
+    if options.checkpoint_restore != None:
         from os.path import isdir, exists
         from os import listdir
         import re
@@ -190,11 +191,11 @@ def run(options, root, testsys, cpu_class):
             print "Done."
         elif options.simpoint:
             # assume workload 0 has the simpoint
-            if testsys.cpu[i].workload[0].simpoint == None:
+            if testsys.cpu[0].workload[0].simpoint == None:
                 m5.panic('Unable to find simpoint')
 
             options.checkpoint_restore += \
-                testsys.cpu[0].workload[0].simpoint
+                int(testsys.cpu[0].workload[0].simpoint)
 
             checkpoint_dir = joinpath(cptdir, "cpt.%s.%d" % \
                     (options.bench, options.checkpoint_restore))
@@ -275,16 +276,12 @@ def run(options, root, testsys, cpu_class):
     # subsequent periods of <period>.  Checkpoint instructions
     # received from the benchmark running are ignored and skipped in
     # favor of command line checkpoint instructions.
-    if options.take_checkpoints:
-        when, period = options.take_checkpoints.split(",", 1)
-        when = int(when)
-        period = int(period)
-
+    if options.take_checkpoints != None :
         if options.at_instruction or options.simpoint:
-            checkpoint_inst = when
+            checkpoint_inst = int(options.take_checkpoints)
 
             # maintain correct offset if we restored from some instruction
-            if options.checkpoint_restore:
+            if options.checkpoint_restore != None:
                 checkpoint_inst += options.checkpoint_restore
 
             print "Creating checkpoint at inst:%d" % (checkpoint_inst)
@@ -305,6 +302,10 @@ def run(options, root, testsys, cpu_class):
             if exit_event.getCause() == "user interrupt received":
                 exit_cause = exit_event.getCause();
         else:
+            when, period = options.take_checkpoints.split(",", 1)
+            when = int(when)
+            period = int(period)
+
             exit_event = m5.simulate(when)
             while exit_event.getCause() == "checkpoint":
                 exit_event = m5.simulate(when - m5.curTick())
