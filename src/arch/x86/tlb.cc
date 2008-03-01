@@ -592,6 +592,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         req->setPaddr(vaddr);
     }
     // Check for an access to the local APIC
+#if FULL_SYSTEM
     LocalApicBase localApicBase = tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
     Addr baseAddr = localApicBase.base << 12;
     Addr paddr = req->getPaddr();
@@ -733,6 +734,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         }
         req->setPaddr(regNum * sizeof(MiscReg));
     }
+#endif
     return NoFault;
 };
 
