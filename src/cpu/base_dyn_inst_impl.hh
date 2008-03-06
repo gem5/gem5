@@ -171,8 +171,8 @@ BaseDynInst<Impl>::initVars()
     ++instcount;
 
     if (instcount > 1500) {
-        cpu->dumpInsts();
 #ifdef DEBUG
+        cpu->dumpInsts();
         dumpSNList();
 #endif
         assert(instcount <= 1500);
