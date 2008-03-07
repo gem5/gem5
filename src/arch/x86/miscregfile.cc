@@ -156,12 +156,8 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
           case MISCREG_APIC_DESTINATION_FORMAT:
             panic("Local APIC Destination Format register unimplemented.\n");
             break;
-          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
-            panic("Local APIC Spurious Interrupt Vector"
-                    " register unimplemented.\n");
-            break;
           case MISCREG_APIC_ERROR_STATUS:
-            panic("Local APIC Error Status register unimplemented.\n");
+            regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(0x1);
             break;
           case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
             panic("Local APIC Interrupt Command low"
@@ -170,25 +166,6 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
           case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
             panic("Local APIC Interrupt Command high"
                     " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_TIMER:
-            panic("Local APIC LVT Timer register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_THERMAL_SENSOR:
-            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
-            panic("Local APIC LVT Performance Monitoring Counters"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT0:
-            panic("Local APIC LVT LINT0 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT1:
-            panic("Local APIC LVT LINT1 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_ERROR:
-            panic("Local APIC LVT Error register unimplemented.\n");
             break;
           case MISCREG_APIC_INITIAL_COUNT:
             panic("Local APIC Initial Count register unimplemented.\n");
@@ -261,11 +238,22 @@ void MiscRegFile::setReg(int miscReg,
             panic("Local APIC Destination Format register unimplemented.\n");
             break;
           case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
-            panic("Local APIC Spurious Interrupt Vector"
-                    " register unimplemented.\n");
+            regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(1 << 1);
+            regVal[MISCREG_APIC_INTERNAL_STATE] |= val & (1 << 8);
+            if (val & (1 << 9))
+                warn("Focus processor checking not implemented.\n");
             break;
           case MISCREG_APIC_ERROR_STATUS:
-            panic("Local APIC Error Status register unimplemented.\n");
+            {
+                if (regVal[MISCREG_APIC_INTERNAL_STATE] & 0x1) {
+                    regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(0x1);
+                    newVal = 0;
+                } else {
+                    regVal[MISCREG_APIC_INTERNAL_STATE] |= ULL(0x1);
+                    return;
+                }
+
+            }
             break;
           case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
             panic("Local APIC Interrupt Command low"
@@ -276,23 +264,16 @@ void MiscRegFile::setReg(int miscReg,
                     " register unimplemented.\n");
             break;
           case MISCREG_APIC_LVT_TIMER:
-            panic("Local APIC LVT Timer register unimplemented.\n");
-            break;
           case MISCREG_APIC_LVT_THERMAL_SENSOR:
-            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
-            break;
           case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
-            panic("Local APIC LVT Performance Monitoring Counters"
-                    " register unimplemented.\n");
-            break;
           case MISCREG_APIC_LVT_LINT0:
-            panic("Local APIC LVT LINT0 register unimplemented.\n");
-            break;
           case MISCREG_APIC_LVT_LINT1:
-            panic("Local APIC LVT LINT1 register unimplemented.\n");
-            break;
           case MISCREG_APIC_LVT_ERROR:
-            panic("Local APIC LVT Error register unimplemented.\n");
+            {
+                uint64_t readOnlyMask = (1 << 12) | (1 << 14);
+                newVal = (val & ~readOnlyMask) |
+                         (regVal[miscReg] & readOnlyMask);
+            }
             break;
           case MISCREG_APIC_INITIAL_COUNT:
             panic("Local APIC Initial Count register unimplemented.\n");

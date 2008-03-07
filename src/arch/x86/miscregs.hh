@@ -373,6 +373,8 @@ namespace X86ISA
         MISCREG_APIC_DIVIDE_COUNT,
         MISCREG_APIC_END = MISCREG_APIC_DIVIDE_COUNT,
 
+        MISCREG_APIC_INTERNAL_STATE,
+
         // "Fake" MSRs for internally implemented devices
         MISCREG_PCI_CONFIG_ADDRESS,
 
