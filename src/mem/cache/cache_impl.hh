@@ -825,6 +825,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     }
 
     if (mshr->promoteDeferredTargets()) {
+        assert(mshr->needsExclusive() && !blk->isWritable());
+        // avoid later read getting stale data while write miss is
+        // outstanding.. see comment in timingAccess()
+        blk->status &= ~BlkReadable;
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
         requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
