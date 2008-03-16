@@ -128,7 +128,7 @@ def run(options, root, testsys, cpu_class):
                 testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             # Fast forward to a simpoint (warning: time consuming)
             elif options.simpoint:
-                if testsys.cpu[i].workload[0].simpoint == None:
+                if testsys.cpu[i].workload[0].simpoint == 0:
                     m5.panic('simpoint not found')
                 testsys.cpu[i].max_insts_any_thread = \
                     testsys.cpu[i].workload[0].simpoint
@@ -162,7 +162,7 @@ def run(options, root, testsys, cpu_class):
         # Set an instruction break point
         if options.simpoint:
             for i in xrange(np):
-                if testsys.cpu[i].workload[0].simpoint == None:
+                if testsys.cpu[i].workload[0].simpoint == 0:
                     m5.panic('no simpoint for testsys.cpu[%d].workload[0]' % i)
                 checkpoint_inst = int(testsys.cpu[i].workload[0].simpoint) + offset
                 testsys.cpu[i].max_insts_any_thread = checkpoint_inst
@@ -197,7 +197,7 @@ def run(options, root, testsys, cpu_class):
             print "Done."
         elif options.simpoint:
             # assume workload 0 has the simpoint
-            if testsys.cpu[0].workload[0].simpoint == None:
+            if testsys.cpu[0].workload[0].simpoint == 0:
                 m5.panic('Unable to find simpoint')
 
             options.checkpoint_restore += \

@@ -140,7 +140,8 @@ class Benchmark(object):
             process_args['input'] = self.stdin
         if self.stdout:
             process_args['output'] = self.stdout
-        process_args['simpoint'] = self.simpoint
+        if self.simpoint:
+            process_args['simpoint'] = self.simpoint
         # explicit keywords override defaults
         process_args.update(kwargs)
 
