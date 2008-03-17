@@ -110,21 +110,22 @@ const char * Bus::BusFreeEvent::description() const
     return "bus became available";
 }
 
-void Bus::preparePacket(PacketPtr pkt, Tick & headerTime)
+Tick Bus::calcPacketTiming(PacketPtr pkt)
 {
-    //Bring tickNextIdle up to the present tick
-    //There is some potential ambiguity where a cycle starts, which might make
-    //a difference when devices are acting right around a cycle boundary. Using
-    //a < allows things which happen exactly on a cycle boundary to take up
-    //only the following cycle. Anything that happens later will have to "wait"
-    //for the end of that cycle, and then start using the bus after that.
+    // Bring tickNextIdle up to the present tick.
+    // There is some potential ambiguity where a cycle starts, which
+    // might make a difference when devices are acting right around a
+    // cycle boundary. Using a < allows things which happen exactly on
+    // a cycle boundary to take up only the following cycle. Anything
+    // that happens later will have to "wait" for the end of that
+    // cycle, and then start using the bus after that.
     if (tickNextIdle < curTick) {
         tickNextIdle = curTick;
         if (tickNextIdle % clock != 0)
             tickNextIdle = curTick - (curTick % clock) + clock;
     }
 
-    headerTime = tickNextIdle + headerCycles * clock;
+    Tick headerTime = tickNextIdle + headerCycles * clock;
 
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
@@ -142,10 +143,17 @@ void Bus::preparePacket(PacketPtr pkt, Tick & headerTime)
     pkt->firstWordTime = headerTime + clock;
 
     pkt->finishTime = headerTime + numCycles * clock;
+
+    return headerTime;
 }
 
 void Bus::occupyBus(Tick until)
 {
+    if (until == 0) {
+        // shortcut for express snoop packets
+        return;
+    }
+
     tickNextIdle = until;
 
     if (!busIdle.scheduled()) {
@@ -190,11 +198,8 @@ Bus::recvTiming(PacketPtr pkt)
     DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x\n",
             src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
 
-    Tick headerTime = 0;
-
-    if (!pkt->isExpressSnoop()) {
-        preparePacket(pkt, headerTime);
-    }
+    Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
     short dest = pkt->getDest();
     int dest_port_id;
@@ -243,17 +248,16 @@ Bus::recvTiming(PacketPtr pkt)
             DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
                     src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
             addToRetryList(src_port);
-            if (!pkt->isExpressSnoop()) {
-                occupyBus(headerTime);
-            }
+            occupyBus(headerFinishTime);
             return false;
         }
-        // send OK, fall through
+        // send OK, fall through... pkt may have been deleted by
+        // target at this point, so it should *not* be referenced
+        // again.  We'll set it to NULL here just to be safe.
+        pkt = NULL;
     }
 
-    if (!pkt->isExpressSnoop()) {
-        occupyBus(pkt->finishTime);
-    }
+    occupyBus(packetFinishTime);
 
     // Packet was successfully sent.
     // Also take care of retries
