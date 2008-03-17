@@ -407,6 +407,9 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             memSidePort->sendTiming(snoopPkt);
             // main memory will delete snoopPkt
         }
+        // since we're the official target but we aren't responding,
+        // delete the packet now.
+        delete pkt;
         return true;
     }
 
@@ -1092,6 +1095,11 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             pkt->makeAtomicResponse();
             pkt->setDataFromBlock(blk->data, blkSize);
         }
+    } else if (is_timing && is_deferred) {
+        // if it's a deferred timing snoop then we've made a copy of
+        // the packet, and so if we're not using that copy to respond
+        // then we need to delete it here.
+        delete pkt;
     }
 
     // Do this last in case it deallocates block data or something
@@ -1160,6 +1168,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
                 markInService(mshr);
+                delete wb_pkt;
             }
 
             // If this was a shared writeback, there may still be
