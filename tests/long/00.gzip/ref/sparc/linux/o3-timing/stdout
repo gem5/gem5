@@ -36,9 +36,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2008 13:27:50
-M5 started Mon Feb 25 16:16:45 2008
-M5 executing on tater
+M5 compiled Mar 17 2008 06:14:16
+M5 started Mon Mar 17 06:14:18 2008
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing tests/run.py long/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 1102714100000 because target called exit()
