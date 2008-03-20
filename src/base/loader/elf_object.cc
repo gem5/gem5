@@ -79,7 +79,13 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             arch = ObjectFile::SPARC32;
         } else if (ehdr.e_machine == EM_MIPS
                 && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            arch = ObjectFile::Mips;
+            if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB) {
+                arch = ObjectFile::Mips;
+            } else {
+                fatal("The binary you're trying to load is compiled for big "
+                        "endian MIPS. M5\nonly supports little endian MIPS. "
+                        "Please recompile your binary.\n");
+            }
         } else if (ehdr.e_machine == EM_X86_64 &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             //In the future, we might want to differentiate between 32 bit
