@@ -941,6 +941,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             assert(!tempBlock->isValid());
             blk = tempBlock;
             tempBlock->set = tags->extractSet(addr);
+            tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
         }
     } else {
