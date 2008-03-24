@@ -455,7 +455,15 @@ class Packet : public FastAlloc, public Printable
 
     /** Destructor. */
     ~Packet()
-    { if (staticData || dynamicData) deleteData(); }
+    {
+        // If this is a request packet for which there's no response,
+        // delete the request object here, since the requester will
+        // never get the chance.
+        if (req && isRequest() && !needsResponse())
+            delete req;
+        if (staticData || dynamicData)
+            deleteData();
+    }
 
     /** Reinitialize packet address and size from the associated
      *   Request object, and reset other fields that may have been

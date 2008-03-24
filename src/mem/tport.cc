@@ -83,7 +83,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         assert(pkt->isResponse());
         schedSendTiming(pkt, curTick + latency);
     } else {
-        delete pkt->req;
         delete pkt;
     }
 
