@@ -537,6 +537,10 @@ sticky_opts.AddOptions(
     # scons 0.96.90 or later.
     ListOption('CPU_MODELS', 'CPU models', default_cpus, all_cpu_list),
     BoolOption('NO_FAST_ALLOC', 'Disable fast object allocator', False),
+    BoolOption('FAST_ALLOC_DEBUG', 'Enable fast object allocator debugging',
+               False),
+    BoolOption('FAST_ALLOC_STATS', 'Enable fast object allocator statistics',
+               False),
     BoolOption('EFENCE', 'Link with Electric Fence malloc debugger',
                False),
     BoolOption('SS_COMPATIBLE_FP',
@@ -561,7 +565,8 @@ nonsticky_opts.AddOptions(
 
 # These options get exported to #defines in config/*.hh (see src/SConscript).
 env.ExportOptions = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
-                     'USE_MYSQL', 'NO_FAST_ALLOC', 'SS_COMPATIBLE_FP', \
+                     'USE_MYSQL', 'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', \
+                     'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', \
                      'USE_CHECKER', 'PYTHONHOME', 'TARGET_ISA']
 
 # Define a handy 'no-op' action

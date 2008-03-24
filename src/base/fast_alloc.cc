@@ -45,7 +45,7 @@
 
 void *FastAlloc::freeLists[Num_Buckets];
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
 unsigned FastAlloc::newCount[Num_Buckets];
 unsigned FastAlloc::deleteCount[Num_Buckets];
 unsigned FastAlloc::allocCount[Num_Buckets];
@@ -59,7 +59,7 @@ void *FastAlloc::moreStructs(int bucket)
     const int nstructs = Num_Structs_Per_New;	// how many to allocate?
     char *p = ::new char[nstructs * sz];
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
     ++allocCount[bucket];
 #endif
 
@@ -72,7 +72,7 @@ void *FastAlloc::moreStructs(int bucket)
 }
 
 
-#ifdef FAST_ALLOC_DEBUG
+#if FAST_ALLOC_DEBUG
 
 #include <typeinfo>
 #include <iostream>
@@ -167,9 +167,9 @@ FastAlloc::dump_oldest(int n)
         return;
     }
 
-    for (FastAlloc *p = inUseHead.inUsePrev;
+    for (FastAlloc *p = inUseHead.inUseNext;
          p != &inUseHead && n > 0;
-         p = p->inUsePrev, --n)
+         p = p->inUseNext, --n)
     {
         cout << p << " " << typeid(*p).name() << endl;
     }
@@ -180,11 +180,13 @@ FastAlloc::dump_oldest(int n)
 // C interfaces to FastAlloc::dump_summary() and FastAlloc::dump_oldest().
 // gdb seems to have trouble with calling C++ functions directly.
 //
+void
 fast_alloc_summary()
 {
     FastAlloc::dump_summary();
 }
 
+void
 fast_alloc_oldest(int n)
 {
     FastAlloc::dump_oldest(n);
