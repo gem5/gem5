@@ -38,6 +38,7 @@
  */
 
 #include "sim/host.hh"
+#include "base/fast_alloc.hh"
 #include "base/misc.hh"
 #include "base/range_ops.hh"
 
@@ -346,7 +347,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 }
 
 
-class ForwardResponseRecord : public Packet::SenderState
+class ForwardResponseRecord : public Packet::SenderState, public FastAlloc
 {
     Packet::SenderState *prevSenderState;
     int prevSrc;

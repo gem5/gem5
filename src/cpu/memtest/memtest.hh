@@ -35,6 +35,7 @@
 #include <set>
 
 #include "base/statistics.hh"
+#include "base/fast_alloc.hh"
 #include "params/MemTest.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
@@ -116,7 +117,7 @@ class MemTest : public MemObject
 
     bool snoopRangeSent;
 
-    class MemTestSenderState : public Packet::SenderState
+    class MemTestSenderState : public Packet::SenderState, public FastAlloc
     {
       public:
         /** Constructor. */

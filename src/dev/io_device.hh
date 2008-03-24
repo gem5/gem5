@@ -32,6 +32,7 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
+#include "base/fast_alloc.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"
@@ -73,7 +74,7 @@ class PioPort : public SimpleTimingPort
 class DmaPort : public Port
 {
   protected:
-    struct DmaReqState : public Packet::SenderState
+    struct DmaReqState : public Packet::SenderState, public FastAlloc
     {
         /** Event to call on the device when this transaction (all packets)
          * complete. */

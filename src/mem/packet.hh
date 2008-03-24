@@ -295,7 +295,7 @@ class Packet : public FastAlloc, public Printable
      *    needed to process it.  A specific subclass would be derived
      *    from this to carry state specific to a particular sending
      *    device.  */
-    class SenderState : public FastAlloc {
+    class SenderState {
       public:
         virtual ~SenderState() {}
     };
@@ -304,7 +304,7 @@ class Packet : public FastAlloc, public Printable
      * Object used to maintain state of a PrintReq.  The senderState
      * field of a PrintReq should always be of this type.
      */
-    class PrintReqState : public SenderState {
+    class PrintReqState : public SenderState, public FastAlloc {
         /** An entry in the label stack. */
         class LabelStackEntry {
           public:

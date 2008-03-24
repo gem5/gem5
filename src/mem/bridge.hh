@@ -42,6 +42,7 @@
 #include <inttypes.h>
 #include <queue>
 
+#include "base/fast_alloc.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
@@ -73,7 +74,7 @@ class Bridge : public MemObject
         /** Pass ranges from one side of the bridge to the other? */
         std::vector<Range<Addr> > filterRanges;
 
-        class PacketBuffer : public Packet::SenderState {
+        class PacketBuffer : public Packet::SenderState, public FastAlloc {
 
           public:
             Tick ready;
