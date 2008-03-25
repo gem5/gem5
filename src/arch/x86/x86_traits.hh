@@ -90,6 +90,18 @@ namespace X86ISA
 
     const Addr PhysAddrPrefixIO = ULL(0x8000000000000000);
     const Addr PhysAddrPrefixPciConfig = ULL(0xC000000000000000);
+
+    static inline Addr
+    x86IOAddress(const uint32_t port)
+    {
+        return PhysAddrPrefixIO | port;
+    }
+
+    static inline Addr
+    x86PciConfigAddress(const uint32_t addr)
+    {
+        return PhysAddrPrefixPciConfig | addr;
+    }
 }
 
 #endif //__ARCH_X86_X86TRAITS_HH__

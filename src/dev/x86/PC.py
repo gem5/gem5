@@ -28,8 +28,9 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
 from Uart import Uart8250
+from Device import IsaFake
+from SouthBridge import SouthBridge
 from Platform import Platform
 from Pci import PciConfigAll
 from SimConsole import SimConsole
@@ -44,6 +45,11 @@ class PC(Platform):
 
     pciconfig = PciConfigAll()
 
+    south_bridge = SouthBridge()
+
+    # "Non-existant" port used for timing purposes by the linux kernel
+    i_dont_exist = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
+
     # Serial port and console
     console = SimConsole()
     com_1 = Uart8250()
@@ -51,6 +57,8 @@ class PC(Platform):
     com_1.sim_console = console
 
     def attachIO(self, bus):
+        self.south_bridge.pio = bus.port
+        self.i_dont_exist.pio = bus.port
         self.com_1.pio = bus.port
         self.pciconfig.pio = bus.default
         bus.responder_set = True

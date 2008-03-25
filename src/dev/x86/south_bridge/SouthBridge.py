@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +26,10 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from Device import PioDevice
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('PC.py')
-
-    Source('pc.cc')
+class SouthBridge(PioDevice):
+    type = 'SouthBridge'
+    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
