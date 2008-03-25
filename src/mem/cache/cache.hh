@@ -162,7 +162,8 @@ class Cache : public BaseCache
      * @return Pointer to the cache block touched by the request. NULL if it
      * was a miss.
      */
-    bool access(PacketPtr pkt, BlkType *&blk, int &lat);
+    bool access(PacketPtr pkt, BlkType *&blk,
+                int &lat, PacketList &writebacks);
 
     /**
      *Handle doing the Compare and Swap function for SPARC.

@@ -260,7 +260,8 @@ Cache<TagStore>::squash(int threadNum)
 
 template<class TagStore>
 bool
-Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
+Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
+                        int &lat, PacketList &writebacks)
 {
     if (pkt->req->isUncacheable())  {
         blk = NULL;
@@ -308,7 +309,6 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
     // into the cache without having a writeable copy (or any copy at
     // all).
     if (pkt->cmd == MemCmd::Writeback) {
-        PacketList writebacks;
         assert(blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
@@ -323,12 +323,6 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         blk->status |= BlkDirty;
-        // copy writebacks from replacement to write buffer
-        while (!writebacks.empty()) {
-            PacketPtr wbPkt = writebacks.front();
-            allocateWriteBuffer(wbPkt, curTick + hitLatency, true);
-            writebacks.pop_front();
-        }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
         hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
@@ -427,12 +421,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
     int lat = hitLatency;
     BlkType *blk = NULL;
-    bool satisfied = access(pkt, blk, lat);
+    PacketList writebacks;
+
+    bool satisfied = access(pkt, blk, lat, writebacks);
 
 #if 0
     /** @todo make the fast write alloc (wh64) work with coherence. */
-
-    PacketList writebacks;
 
     // If this is a block size write/hint (WH64) allocate the block here
     // if the coherence protocol allows it.
@@ -450,13 +444,6 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
                                    writebacks);
             ++fastWrites;
         }
-    }
-
-    // copy writebacks to write buffer
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        allocateWriteBuffer(wbPkt, time, true);
-        writebacks.pop_front();
     }
 #endif
 
@@ -525,6 +512,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
                 allocateMissBuffer(pkt, time, true);
             }
         }
+    }
+
+    // copy writebacks to write buffer
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        allocateWriteBuffer(wbPkt, time, true);
+        writebacks.pop_front();
     }
 
     return true;
@@ -614,8 +608,9 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
     // access in timing mode
 
     BlkType *blk = NULL;
+    PacketList writebacks;
 
-    if (!access(pkt, blk, lat)) {
+    if (!access(pkt, blk, lat, writebacks)) {
         // MISS
         PacketPtr busPkt = getBusPacket(pkt, blk, pkt->needsExclusive());
 
@@ -646,19 +641,18 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
             pkt->makeAtomicResponse();
             pkt->copyError(busPkt);
         } else if (isCacheFill && !is_error) {
-            PacketList writebacks;
             blk = handleFill(busPkt, blk, writebacks);
             satisfyCpuSideRequest(pkt, blk);
             delete busPkt;
-
-            // Handle writebacks if needed
-            while (!writebacks.empty()){
-                PacketPtr wbPkt = writebacks.front();
-                memSidePort->sendAtomic(wbPkt);
-                writebacks.pop_front();
-                delete wbPkt;
-            }
         }
+    }
+
+    // Handle writebacks if needed
+    while (!writebacks.empty()){
+        PacketPtr wbPkt = writebacks.front();
+        memSidePort->sendAtomic(wbPkt);
+        writebacks.pop_front();
+        delete wbPkt;
     }
 
     // We now have the block one way or another (hit or completed miss)
