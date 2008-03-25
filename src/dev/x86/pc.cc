@@ -28,65 +28,82 @@
  * Authors: Gabe Black
  */
 
-/**
- * @file
- * Declaration of top level class for the Opteron platform chips. This class
- * just retains pointers to all its children so the children can communicate.
+/** @file
+ * Implementation of PC platform.
  */
 
-#ifndef __DEV_Opteron_HH__
-#define __DEV_Opteron_HH__
+#include <deque>
+#include <string>
+#include <vector>
 
-#include "dev/platform.hh"
-#include "params/Opteron.hh"
+#include "arch/x86/x86_traits.hh"
+#include "cpu/intr_control.hh"
+#include "dev/simconsole.hh"
+#include "dev/x86/pc.hh"
+#include "sim/system.hh"
 
-class IdeController;
-class System;
+using namespace std;
+using namespace TheISA;
 
-class Opteron : public Platform
+PC::PC(const Params *p)
+    : Platform(p), system(p->system)
 {
-  public:
-    /** Pointer to the system */
-    System *system;
+    // set the back pointer from the system to myself
+    system->platform = this;
+}
 
-  public:
-    typedef OpteronParams Params;
+Tick
+PC::intrFrequency()
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
 
-    Opteron(const Params *p);
+void
+PC::postConsoleInt()
+{
+    warn_once("Don't know what interrupt to post for console.\n");
+    //panic("Need implementation\n");
+}
 
-    /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
+void
+PC::clearConsoleInt()
+{
+    warn_once("Don't know what interrupt to clear for console.\n");
+    //panic("Need implementation\n");
+}
 
-    /**
-     * Cause the cpu to post a serial interrupt to the CPU.
-     */
-    virtual void postConsoleInt();
+void
+PC::postPciInt(int line)
+{
+    panic("Need implementation\n");
+}
 
-    /**
-     * Clear a posted CPU interrupt
-     */
-    virtual void clearConsoleInt();
+void
+PC::clearPciInt(int line)
+{
+    panic("Need implementation\n");
+}
 
-    /**
-     * Cause the chipset to post a pci interrupt to the CPU.
-     */
-    virtual void postPciInt(int line);
-
-    /**
-     * Clear a posted PCI->CPU interrupt
-     */
-    virtual void clearPciInt(int line);
+Addr
+PC::pciToDma(Addr pciAddr) const
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
 
 
-    virtual Addr pciToDma(Addr pciAddr) const;
+Addr
+PC::calcConfigAddr(int bus, int dev, int func)
+{
+    assert(func < 8);
+    assert(dev < 32);
+    assert(bus == 0);
+    return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
+}
 
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    virtual Addr calcConfigAddr(int bus, int dev, int func);
-};
-
-#endif // __DEV_OPTERON_HH__
+PC *
+PCParams::create()
+{
+    return new PC(this);
+}

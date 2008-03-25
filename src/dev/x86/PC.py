@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,12 +24,34 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
+from Uart import Uart8250
+from Platform import Platform
+from Pci import PciConfigAll
+from SimConsole import SimConsole
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('PC.py')
+def x86IOAddress(port):
+    IO_address_space_base = 0x8000000000000000
+    return IO_address_space_base + port;
 
-    Source('pc.cc')
+class PC(Platform):
+    type = 'PC'
+    system = Param.System(Parent.any, "system")
+
+    pciconfig = PciConfigAll()
+
+    # Serial port and console
+    console = SimConsole()
+    com_1 = Uart8250()
+    com_1.pio_addr = x86IOAddress(0x3f8)
+    com_1.sim_console = console
+
+    def attachIO(self, bus):
+        self.com_1.pio = bus.port
+        self.pciconfig.pio = bus.default
+        bus.responder_set = True
+        bus.responder = self.pciconfig
