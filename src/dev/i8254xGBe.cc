@@ -1412,6 +1412,7 @@ IGbE::ethTxDone()
         txTick = true;
 
     restartClock();
+    txWire();
     DPRINTF(EthernetSM, "TxFIFO: Transmission complete\n");
 }
 
