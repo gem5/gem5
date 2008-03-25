@@ -31,6 +31,12 @@
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('PC.py')
+    # Main device
+    SimObject('SouthBridge.py')
+    Source('south_bridge.cc')
 
-    Source('pc.cc')
+    # Sub devices
+    Source('cmos.cc')
+    Source('i8254.cc')
+    Source('i8259.cc')
+    Source('speaker.cc')

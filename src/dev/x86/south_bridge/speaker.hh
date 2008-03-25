@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,37 +25,36 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- *          Miguel Serrano
- *          Nathan Binkert
+ * Authors: Gabe Black
  */
 
-static const int RTC_SEC = 0x00;
-static const int RTC_SEC_ALRM = 0x01;
-static const int RTC_MIN = 0x02;
-static const int RTC_MIN_ALRM = 0x03;
-static const int RTC_HR = 0x04;
-static const int RTC_HR_ALRM = 0x05;
-static const int RTC_DOW = 0x06;
-static const int RTC_DOM = 0x07;
-static const int RTC_MON = 0x08;
-static const int RTC_YEAR = 0x09;
+#ifndef __DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__
+#define __DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__
 
-static const int RTC_STAT_REGA = 0x0A;
-static const int RTCA_1024HZ = 0x06;  /* 1024Hz periodic interrupt frequency */
-static const int RTCA_32768HZ = 0x20; /* 22-stage divider, 32.768KHz timebase */
-static const int RTCA_UIP = 0x80;     /* 1 = date and time update in progress */
+#include "arch/x86/x86_traits.hh"
+#include "base/range.hh"
+#include "dev/x86/south_bridge/sub_device.hh"
 
-static const int RTC_STAT_REGB = 0x0B;
-static const int RTCB_DST = 0x01;     /* USA Daylight Savings Time enable */
-static const int RTCB_24HR = 0x02;    /* 0 = 12 hours, 1 = 24 hours */
-static const int RTCB_BIN = 0x04;     /* 0 = BCD, 1 = Binary coded time */
-static const int RTCB_SQWE = 0x08;    /* 1 = output sqare wave at SQW pin */
-static const int RTCB_UPDT_IE = 0x10; /* 1 = enable update-ended interrupt */
-static const int RTCB_ALRM_IE = 0x20; /* 1 = enable alarm interrupt */
-static const int RTCB_PRDC_IE = 0x40; /* 1 = enable periodic clock interrupt */
-static const int RTCB_NO_UPDT = 0x80; /* stop clock updates */
+namespace X86ISA
+{
 
-static const int RTC_STAT_REGC = 0x0C;
-static const int RTC_STAT_REGD = 0x0D;
+class Speaker : public SubDevice
+{
+  public:
 
+    Speaker()
+    {}
+    Speaker(Tick _latency) : SubDevice(_latency)
+    {}
+    Speaker(Addr start, Addr size, Tick _latency) :
+        SubDevice(start, size, _latency)
+    {}
+
+    Tick read(PacketPtr pkt);
+
+    Tick write(PacketPtr pkt);
+};
+
+}; // namespace X86ISA
+
+#endif //__DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__

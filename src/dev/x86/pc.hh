@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,37 +25,68 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- *          Miguel Serrano
- *          Nathan Binkert
+ * Authors: Gabe Black
  */
 
-static const int RTC_SEC = 0x00;
-static const int RTC_SEC_ALRM = 0x01;
-static const int RTC_MIN = 0x02;
-static const int RTC_MIN_ALRM = 0x03;
-static const int RTC_HR = 0x04;
-static const int RTC_HR_ALRM = 0x05;
-static const int RTC_DOW = 0x06;
-static const int RTC_DOM = 0x07;
-static const int RTC_MON = 0x08;
-static const int RTC_YEAR = 0x09;
+/**
+ * @file
+ * Declaration of top level class for PC platform components. This class
+ * just retains pointers to all its children so the children can communicate.
+ */
 
-static const int RTC_STAT_REGA = 0x0A;
-static const int RTCA_1024HZ = 0x06;  /* 1024Hz periodic interrupt frequency */
-static const int RTCA_32768HZ = 0x20; /* 22-stage divider, 32.768KHz timebase */
-static const int RTCA_UIP = 0x80;     /* 1 = date and time update in progress */
+#ifndef __DEV_PC_HH__
+#define __DEV_PC_HH__
 
-static const int RTC_STAT_REGB = 0x0B;
-static const int RTCB_DST = 0x01;     /* USA Daylight Savings Time enable */
-static const int RTCB_24HR = 0x02;    /* 0 = 12 hours, 1 = 24 hours */
-static const int RTCB_BIN = 0x04;     /* 0 = BCD, 1 = Binary coded time */
-static const int RTCB_SQWE = 0x08;    /* 1 = output sqare wave at SQW pin */
-static const int RTCB_UPDT_IE = 0x10; /* 1 = enable update-ended interrupt */
-static const int RTCB_ALRM_IE = 0x20; /* 1 = enable alarm interrupt */
-static const int RTCB_PRDC_IE = 0x40; /* 1 = enable periodic clock interrupt */
-static const int RTCB_NO_UPDT = 0x80; /* stop clock updates */
+#include "dev/platform.hh"
+#include "params/PC.hh"
 
-static const int RTC_STAT_REGC = 0x0C;
-static const int RTC_STAT_REGD = 0x0D;
+class IdeController;
+class System;
 
+class PC : public Platform
+{
+  public:
+    /** Pointer to the system */
+    System *system;
+
+  public:
+    typedef PCParams Params;
+
+    PC(const Params *p);
+
+    /**
+     * Return the interrupting frequency to AlphaAccess
+     * @return frequency of RTC interrupts
+     */
+    virtual Tick intrFrequency();
+
+    /**
+     * Cause the cpu to post a serial interrupt to the CPU.
+     */
+    virtual void postConsoleInt();
+
+    /**
+     * Clear a posted CPU interrupt
+     */
+    virtual void clearConsoleInt();
+
+    /**
+     * Cause the chipset to post a pci interrupt to the CPU.
+     */
+    virtual void postPciInt(int line);
+
+    /**
+     * Clear a posted PCI->CPU interrupt
+     */
+    virtual void clearPciInt(int line);
+
+
+    virtual Addr pciToDma(Addr pciAddr) const;
+
+    /**
+     * Calculate the configuration address given a bus/dev/func.
+     */
+    virtual Addr calcConfigAddr(int bus, int dev, int func);
+};
+
+#endif // __DEV_PC_HH__

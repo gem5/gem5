@@ -28,65 +28,18 @@
  * Authors: Gabe Black
  */
 
-/**
- * @file
- * Declaration of top level class for the Opteron platform chips. This class
- * just retains pointers to all its children so the children can communicate.
- */
+#include "dev/x86/south_bridge/i8259.hh"
 
-#ifndef __DEV_Opteron_HH__
-#define __DEV_Opteron_HH__
-
-#include "dev/platform.hh"
-#include "params/Opteron.hh"
-
-class IdeController;
-class System;
-
-class Opteron : public Platform
+Tick
+X86ISA::I8259::read(PacketPtr pkt)
 {
-  public:
-    /** Pointer to the system */
-    System *system;
+    warn("Reading from PIC device.\n");
+    return SubDevice::read(pkt);
+}
 
-  public:
-    typedef OpteronParams Params;
-
-    Opteron(const Params *p);
-
-    /**
-     * Return the interrupting frequency to AlphaAccess
-     * @return frequency of RTC interrupts
-     */
-    virtual Tick intrFrequency();
-
-    /**
-     * Cause the cpu to post a serial interrupt to the CPU.
-     */
-    virtual void postConsoleInt();
-
-    /**
-     * Clear a posted CPU interrupt
-     */
-    virtual void clearConsoleInt();
-
-    /**
-     * Cause the chipset to post a pci interrupt to the CPU.
-     */
-    virtual void postPciInt(int line);
-
-    /**
-     * Clear a posted PCI->CPU interrupt
-     */
-    virtual void clearPciInt(int line);
-
-
-    virtual Addr pciToDma(Addr pciAddr) const;
-
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    virtual Addr calcConfigAddr(int bus, int dev, int func);
-};
-
-#endif // __DEV_OPTERON_HH__
+Tick
+X86ISA::I8259::write(PacketPtr pkt)
+{
+    warn("Writing to PIC device.\n");
+    return SubDevice::write(pkt);
+}

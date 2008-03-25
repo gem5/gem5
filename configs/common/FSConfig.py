@@ -177,19 +177,12 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
 
-    # Serial port and console
-    self.console = SimConsole()
-    self.com_1 = Uart8250()
-    self.com_1.pio_addr = x86IOAddress(0x3f8)
-    self.com_1.pio = self.iobus.port
-    self.com_1.sim_console = self.console
-
     # Command line
     self.boot_osflags = 'earlyprintk=ttyS0'
 
     # Platform
-    self.opteron = Opteron()
-    self.opteron.attachIO(self.iobus)
+    self.pc = PC()
+    self.pc.attachIO(self.iobus)
 
     self.intrctrl = IntrControl()
 

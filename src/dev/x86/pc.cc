@@ -29,7 +29,7 @@
  */
 
 /** @file
- * Implementation of Opteron platform.
+ * Implementation of PC platform.
  */
 
 #include <deque>
@@ -39,13 +39,13 @@
 #include "arch/x86/x86_traits.hh"
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
-#include "dev/x86/opteron.hh"
+#include "dev/x86/pc.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace TheISA;
 
-Opteron::Opteron(const Params *p)
+PC::PC(const Params *p)
     : Platform(p), system(p->system)
 {
     // set the back pointer from the system to myself
@@ -53,40 +53,40 @@ Opteron::Opteron(const Params *p)
 }
 
 Tick
-Opteron::intrFrequency()
+PC::intrFrequency()
 {
     panic("Need implementation\n");
     M5_DUMMY_RETURN
 }
 
 void
-Opteron::postConsoleInt()
+PC::postConsoleInt()
 {
     warn_once("Don't know what interrupt to post for console.\n");
     //panic("Need implementation\n");
 }
 
 void
-Opteron::clearConsoleInt()
+PC::clearConsoleInt()
 {
     warn_once("Don't know what interrupt to clear for console.\n");
     //panic("Need implementation\n");
 }
 
 void
-Opteron::postPciInt(int line)
+PC::postPciInt(int line)
 {
     panic("Need implementation\n");
 }
 
 void
-Opteron::clearPciInt(int line)
+PC::clearPciInt(int line)
 {
     panic("Need implementation\n");
 }
 
 Addr
-Opteron::pciToDma(Addr pciAddr) const
+PC::pciToDma(Addr pciAddr) const
 {
     panic("Need implementation\n");
     M5_DUMMY_RETURN
@@ -94,7 +94,7 @@ Opteron::pciToDma(Addr pciAddr) const
 
 
 Addr
-Opteron::calcConfigAddr(int bus, int dev, int func)
+PC::calcConfigAddr(int bus, int dev, int func)
 {
     assert(func < 8);
     assert(dev < 32);
@@ -102,8 +102,8 @@ Opteron::calcConfigAddr(int bus, int dev, int func)
     return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
 }
 
-Opteron *
-OpteronParams::create()
+PC *
+PCParams::create()
 {
-    return new Opteron(this);
+    return new PC(this);
 }
