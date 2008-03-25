@@ -33,6 +33,7 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/range.hh"
+#include "dev/mc146818.hh"
 #include "dev/x86/south_bridge/sub_device.hh"
 
 namespace X86ISA
@@ -43,6 +44,8 @@ class Cmos : public SubDevice
   protected:
     uint8_t address;
 
+    struct tm foo_time;
+
     static const int numRegs = 128;
 
     uint8_t regs[numRegs];
@@ -50,22 +53,38 @@ class Cmos : public SubDevice
     uint8_t readRegister(uint8_t reg);
     void writeRegister(uint8_t reg, uint8_t val);
 
+    class X86RTC : public MC146818
+    {
+      public:
+        X86RTC(const std::string &n, const struct tm time,
+                bool bcd, Tick frequency) : MC146818(n, time, bcd, frequency)
+        {
+        }
+      protected:
+        void handleEvent()
+        {
+            return;
+        }
+    } rtc;
+
   public:
 
-    Cmos()
+    Cmos() : rtc("rtc", foo_time, true, 5000000000)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
-    Cmos(Tick _latency) : SubDevice(_latency)
+    Cmos(Tick _latency) : SubDevice(_latency),
+        rtc("rtc", foo_time, true, 5000000000)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
     Cmos(Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency)
+        SubDevice(start, size, _latency),
+        rtc("rtc", foo_time, true, 5000000000)
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;

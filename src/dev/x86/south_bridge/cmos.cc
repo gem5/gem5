@@ -71,27 +71,10 @@ uint8_t
 X86ISA::Cmos::readRegister(uint8_t reg)
 {
     assert(reg < numRegs);
-    switch(reg)
-    {
-      case 0x0:
-      case 0x1:
-      case 0x2:
-      case 0x3:
-      case 0x4:
-      case 0x5:
-      case 0x6:
-      case 0x7:
-      case 0x8:
-      case 0x9:
-      case 0xA:
-      case 0xB:
-      case 0xC:
-      case 0xD:
-        warn("Reading RTC in the CMOS.\n");
-        break;
-      default:
+    if (reg <= 0xD) {
+        return rtc.readData(reg);
+    } else {
         warn("Reading non-volitile CMOS address %x as %x.\n", reg, regs[reg]);
-        break;
     }
     return regs[reg];
 }
@@ -100,27 +83,11 @@ void
 X86ISA::Cmos::writeRegister(uint8_t reg, uint8_t val)
 {
     assert(reg < numRegs);
-    switch(reg)
-    {
-      case 0x0:
-      case 0x1:
-      case 0x2:
-      case 0x3:
-      case 0x4:
-      case 0x5:
-      case 0x6:
-      case 0x7:
-      case 0x8:
-      case 0x9:
-      case 0xA:
-      case 0xB:
-      case 0xC:
-      case 0xD:
-        warn("Writing RTC in the CMOS.\n");
-        break;
-      default:
+    if (reg <= 0xD) {
+        rtc.writeData(reg, val);
+        return;
+    } else {
         warn("Writing non-volitile CMOS address %x with %x.\n", reg, val);
-        break;
     }
     regs[reg] = val;
 }
