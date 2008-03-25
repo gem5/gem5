@@ -57,157 +57,9 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiIO::RTC::RTC(const string &n, Tsunami* tsunami,
-                    const TsunamiIO::Params *p)
-    : _name(n), event(tsunami, p->frequency), addr(0)
+TsunamiIO::TsunamiRTC::TsunamiRTC(const string &n, const TsunamiIOParams *p) :
+    MC146818(n, p->time, p->year_is_bcd, p->frequency), tsunami(p->tsunami)
 {
-    memset(clock_data, 0, sizeof(clock_data));
-    stat_regA = RTCA_32768HZ | RTCA_1024HZ;
-    stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
-
-    year = p->time.tm_year;
-
-    if (p->year_is_bcd) {
-        // The datasheet says that the year field can be either BCD or
-        // years since 1900.  Linux seems to be happy with years since
-        // 1900.
-        year = year % 100;
-        int tens = year / 10;
-        int ones = year % 10;
-        year = (tens << 4) + ones;
-    }
-
-    // Unix is 0-11 for month, data seet says start at 1
-    mon = p->time.tm_mon + 1;
-    mday = p->time.tm_mday;
-    hour = p->time.tm_hour;
-    min = p->time.tm_min;
-    sec = p->time.tm_sec;
-
-    // Datasheet says 1 is sunday
-    wday = p->time.tm_wday + 1;
-
-    DPRINTFN("Real-time clock set to %s", asctime(&p->time));
-}
-
-void
-TsunamiIO::RTC::writeAddr(const uint8_t data)
-{
-    if (data <= RTC_STAT_REGD)
-        addr = data;
-    else
-        panic("RTC addresses over 0xD are not implemented.\n");
-}
-
-void
-TsunamiIO::RTC::writeData(const uint8_t data)
-{
-    if (addr < RTC_STAT_REGA)
-        clock_data[addr] = data;
-    else {
-        switch (addr) {
-          case RTC_STAT_REGA:
-            if (data != (RTCA_32768HZ | RTCA_1024HZ))
-                panic("Unimplemented RTC register A value write!\n");
-            stat_regA = data;
-            break;
-          case RTC_STAT_REGB:
-            if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
-                panic("Write to RTC reg B bits that are not implemented!\n");
-
-            if (data & RTCB_PRDC_IE) {
-                if (!event.scheduled())
-                    event.scheduleIntr();
-            } else {
-                if (event.scheduled())
-                    event.deschedule();
-            }
-            stat_regB = data;
-            break;
-          case RTC_STAT_REGC:
-          case RTC_STAT_REGD:
-            panic("RTC status registers C and D are not implemented.\n");
-            break;
-        }
-    }
-}
-
-uint8_t
-TsunamiIO::RTC::readData()
-{
-    if (addr < RTC_STAT_REGA)
-        return clock_data[addr];
-    else {
-        switch (addr) {
-          case RTC_STAT_REGA:
-            // toggle UIP bit for linux
-            stat_regA ^= RTCA_UIP;
-            return stat_regA;
-            break;
-          case RTC_STAT_REGB:
-            return stat_regB;
-            break;
-          case RTC_STAT_REGC:
-          case RTC_STAT_REGD:
-            return 0x00;
-            break;
-          default:
-            panic("Shouldn't be here");
-        }
-    }
-}
-
-void
-TsunamiIO::RTC::serialize(const string &base, ostream &os)
-{
-    paramOut(os, base + ".addr", addr);
-    arrayParamOut(os, base + ".clock_data", clock_data, sizeof(clock_data));
-    paramOut(os, base + ".stat_regA", stat_regA);
-    paramOut(os, base + ".stat_regB", stat_regB);
-}
-
-void
-TsunamiIO::RTC::unserialize(const string &base, Checkpoint *cp,
-                            const string &section)
-{
-    paramIn(cp, section, base + ".addr", addr);
-    arrayParamIn(cp, section, base + ".clock_data", clock_data,
-                 sizeof(clock_data));
-    paramIn(cp, section, base + ".stat_regA", stat_regA);
-    paramIn(cp, section, base + ".stat_regB", stat_regB);
-
-    // We're not unserializing the event here, but we need to
-    // rescehedule the event since curTick was moved forward by the
-    // checkpoint
-    event.reschedule(curTick + event.interval);
-}
-
-TsunamiIO::RTC::RTCEvent::RTCEvent(Tsunami*t, Tick i)
-    : Event(&mainEventQueue), tsunami(t), interval(i)
-{
-    DPRINTF(MC146818, "RTC Event Initilizing\n");
-    schedule(curTick + interval);
-}
-
-void
-TsunamiIO::RTC::RTCEvent::scheduleIntr()
-{
-  schedule(curTick + interval);
-}
-
-void
-TsunamiIO::RTC::RTCEvent::process()
-{
-    DPRINTF(MC146818, "RTC Timer Interrupt\n");
-    schedule(curTick + interval);
-    //Actually interrupt the processor here
-    tsunami->cchip->postRTC();
-}
-
-const char *
-TsunamiIO::RTC::RTCEvent::description() const
-{
-    return "tsunami RTC interrupt";
 }
 
 TsunamiIO::PITimer::PITimer(const string &name)
@@ -436,7 +288,7 @@ TsunamiIO::PITimer::Counter::CounterEvent::description() const
 
 TsunamiIO::TsunamiIO(const Params *p)
     : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(p->name + ".rtc", p->tsunami, p)
+      rtc(p->name + ".rtc", p)
 {
     pioSize = 0x100;
 
@@ -495,7 +347,7 @@ TsunamiIO::read(PacketPtr pkt)
             pkt->set(pitimer.counter2.read());
             break;
           case TSDEV_RTC_DATA:
-            pkt->set(rtc.readData());
+            pkt->set(rtc.readData(rtcAddr));
             break;
           case TSDEV_CTRL_PORTB:
             if (pitimer.counter2.outputHigh())
@@ -573,10 +425,10 @@ TsunamiIO::write(PacketPtr pkt)
         pitimer.writeControl(pkt->get<uint8_t>());
         break;
       case TSDEV_RTC_ADDR:
-        rtc.writeAddr(pkt->get<uint8_t>());
+        rtcAddr = pkt->get<uint8_t>();
         break;
       case TSDEV_RTC_DATA:
-        rtc.writeData(pkt->get<uint8_t>());
+        rtc.writeData(rtcAddr, pkt->get<uint8_t>());
         break;
       case TSDEV_KBD:
       case TSDEV_DMA1_CMND:
@@ -623,6 +475,7 @@ TsunamiIO::clearPIC(uint8_t bitvector)
 void
 TsunamiIO::serialize(ostream &os)
 {
+    SERIALIZE_SCALAR(rtcAddr);
     SERIALIZE_SCALAR(timerData);
     SERIALIZE_SCALAR(mask1);
     SERIALIZE_SCALAR(mask2);
@@ -639,6 +492,7 @@ TsunamiIO::serialize(ostream &os)
 void
 TsunamiIO::unserialize(Checkpoint *cp, const string &section)
 {
+    UNSERIALIZE_SCALAR(rtcAddr);
     UNSERIALIZE_SCALAR(timerData);
     UNSERIALIZE_SCALAR(mask1);
     UNSERIALIZE_SCALAR(mask2);
