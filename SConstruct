@@ -65,6 +65,7 @@
 
 import sys
 import os
+import re
 
 from os.path import isdir, isfile, join as joinpath
 
@@ -82,15 +83,70 @@ EnsurePythonVersion(2,4)
 # Python < 2.4.
 import subprocess
 
-# Ironically, SCons 0.96 dies if you give EnsureSconsVersion a
-# 3-element version number.
-min_scons_version = (0,96,91)
-try:
-    EnsureSConsVersion(*min_scons_version)
-except:
-    print "Error checking current SCons version."
-    print "SCons", ".".join(map(str,min_scons_version)), "or greater required."
-    Exit(2)
+# helper function: compare arrays or strings of version numbers.
+# E.g., compare_version((1,3,25), (1,4,1)')
+# returns -1, 0, 1 if v1 is <, ==, > v2
+def compare_versions(v1, v2):
+    def make_version_list(v):
+        if isinstance(v, (list,tuple)):
+            return v
+        elif isinstance(v, str):
+            return map(int, v.split('.'))
+        else:
+            raise TypeError
+
+    v1 = make_version_list(v1)
+    v2 = make_version_list(v2)
+    # Compare corresponding elements of lists
+    for n1,n2 in zip(v1, v2):
+        if n1 < n2: return -1
+        if n1 > n2: return  1
+    # all corresponding values are equal... see if one has extra values
+    if len(v1) < len(v2): return -1
+    if len(v1) > len(v2): return  1
+    return 0
+
+# SCons version numbers need special processing because they can have
+# charecters and an release date embedded in them. This function does
+# the magic to extract them in a similar way to the SCons internal function
+# function does and then checks that the current version is not contained in
+# a list of version tuples (bad_ver_strs)
+def CheckSCons(bad_ver_strs):
+    def scons_ver(v):
+        num_parts = v.split(' ')[0].split('.')
+        major = int(num_parts[0])
+        minor = int(re.match('\d+', num_parts[1]).group())
+        rev = 0
+        rdate = 0
+        if len(num_parts) > 2:
+            try: rev = int(re.match('\d+', num_parts[2]).group())
+            except: pass
+            rev_parts = num_parts[2].split('d')
+            if len(rev_parts) > 1:
+                rdate = int(re.match('\d+', rev_parts[1]).group())
+
+        return (major, minor, rev, rdate)
+
+    sc_ver = scons_ver(SCons.__version__)
+    for bad_ver in bad_ver_strs:
+        bv = (scons_ver(bad_ver[0]), scons_ver(bad_ver[1]))
+        if  compare_versions(sc_ver, bv[0]) != -1 and\
+            compare_versions(sc_ver, bv[1]) != 1:
+            print "The version of SCons that you have installed: ", SCons.__version__
+            print "has a bug that prevents it from working correctly with M5."
+            print "Please install a version NOT contained within the following",
+            print "ranges (inclusive):"
+            for bad_ver in bad_ver_strs:
+                print "    %s - %s" % bad_ver
+            Exit(2)
+
+CheckSCons(( 
+    # We need a version that is 0.96.91 or newer
+    ('0.0.0', '0.96.90'), 
+    # This range has a bug with linking directories into the build dir
+    # that only have header files in them 
+    ('0.97.0d20071212', '0.98.0')
+    ))
 
 
 # The absolute path to the current directory (where this file lives).
@@ -146,22 +202,6 @@ def rfind(l, elt, offs = -1):
         if l[i] == elt:
             return i
     raise ValueError, "element not found"
-
-# helper function: compare dotted version numbers.
-# E.g., compare_version('1.3.25', '1.4.1')
-# returns -1, 0, 1 if v1 is <, ==, > v2
-def compare_versions(v1, v2):
-    # Convert dotted strings to lists
-    v1 = map(int, v1.split('.'))
-    v2 = map(int, v2.split('.'))
-    # Compare corresponding elements of lists
-    for n1,n2 in zip(v1, v2):
-        if n1 < n2: return -1
-        if n1 > n2: return  1
-    # all corresponding values are equal... see if one has extra values
-    if len(v1) < len(v2): return -1
-    if len(v1) > len(v2): return  1
-    return 0
 
 # Each target must have 'build' in the interior of the path; the
 # directory below this will determine the build parameters.  For
