@@ -143,9 +143,6 @@ def CheckSCons(bad_ver_strs):
 CheckSCons(( 
     # We need a version that is 0.96.91 or newer
     ('0.0.0', '0.96.90'), 
-    # This range has a bug with linking directories into the build dir
-    # that only have header files in them 
-    ('0.97.0d20071212', '0.98.0')
     ))
 
 
