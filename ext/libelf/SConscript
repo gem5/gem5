@@ -87,16 +87,9 @@ ElfFile('libelf_convert.c')
 ElfFile('libelf_fsize.c')
 ElfFile('libelf_msize.c')
 
-m4env = Environment(ENV=os.environ)
-
-if env.get('CC'):
-    m4env['CC'] = env['CC']
-if env.get('CXX'):
-    m4env['CXX'] = env['CXX']
-
-if env.get('OSX64bit'):
-    m4env.Append(CFLAGS='-arch x86_64')
-    m4env.Append(LINKFLAGS='-arch x86_64')
+m4env = env.Copy()
+del m4env['CCFLAGS']
+del m4env['CPPPATH']
 
 # If we have gm4 use it
 if m4env.Detect('gm4'):

@@ -303,6 +303,8 @@ global_sticky_opts = Options(global_sticky_opts_file, args=ARGUMENTS)
 global_sticky_opts.AddOptions(
     ('CC', 'C compiler', os.environ.get('CC', env['CC'])),
     ('CXX', 'C++ compiler', os.environ.get('CXX', env['CXX'])),
+    ('BATCH', 'Use batch pool for build and tests', False),
+    ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
      PathListAllExist, PathListMakeAbsolute)
     )    
@@ -368,6 +370,12 @@ else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'
     Exit(1)
+
+# Do this after we save setting back, or else we'll tack on an
+# extra 'qdo' every time we run scons.
+if env['BATCH']:
+    env['CC']  = env['BATCH_CMD'] + ' ' + env['CC']
+    env['CXX'] = env['BATCH_CMD'] + ' ' + env['CXX']
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
@@ -437,7 +445,6 @@ try:
             env.Append(CFLAGS='-arch x86_64')
             env.Append(LINKFLAGS='-arch x86_64')
             env.Append(ASFLAGS='-arch x86_64')
-            env['OSX64bit'] = True
 except:
     pass
 
@@ -592,8 +599,6 @@ sticky_opts.AddOptions(
     BoolOption('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolOption('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolOption('USE_CHECKER', 'Use checker for detailed CPU models', False),
-    BoolOption('BATCH', 'Use batch pool for build and tests', False),
-    ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('PYTHONHOME',
      'Override the default PYTHONHOME for this system (use with caution)',
      '%s:%s' % (sys.prefix, sys.exec_prefix)),
@@ -818,12 +823,6 @@ for build_path in build_paths:
 
     # Save sticky option settings back to current options file
     sticky_opts.Save(current_opts_file, env)
-
-    # Do this after we save setting back, or else we'll tack on an
-    # extra 'qdo' every time we run scons.
-    if env['BATCH']:
-        env['CC']  = env['BATCH_CMD'] + ' ' + env['CC']
-        env['CXX'] = env['BATCH_CMD'] + ' ' + env['CXX']
 
     if env['USE_SSE2']:
         env.Append(CCFLAGS='-msse2')
