@@ -41,6 +41,7 @@
 
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "config/full_system.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -51,7 +52,8 @@ using namespace std;
 using namespace TheISA;
 
 PhysicalMemory::PhysicalMemory(const Params *p)
-    : MemObject(p), pmemAddr(NULL), lat(p->latency)
+    : MemObject(p), pmemAddr(NULL), lat(p->latency),
+      lat_var(p->latency_var)
 {
     if (params()->range.size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
@@ -116,7 +118,10 @@ PhysicalMemory::deviceBlockSize()
 Tick
 PhysicalMemory::calculateLatency(PacketPtr pkt)
 {
-    return lat;
+    Tick latency = lat;
+    if (lat_var != 0)
+        latency += random_mt.random<Tick>(0, lat_var);
+    return latency;
 }
 
 
