@@ -48,3 +48,9 @@ if env['FULL_SYSTEM']:
         Source('tru64/tru64_syscalls.cc')
         TraceFlag('BADADDR')
 
+# Workaround for bug in SCons version > 0.97d20071212
+# Scons bug id: 2006 M5 Bug id: 308
+else:
+    Dir('linux')
+    if env['TARGET_ISA'] == 'alpha':
+        Dir('tru64')
