@@ -45,7 +45,7 @@
 using std::string;
 
 EtherDump::EtherDump(const Params *p)
-    : SimObject(p), stream(simout.resolve(p->file).c_str()),
+    : SimObject(p), stream(simout.create(p->file, true)),
       maxlen(p->maxlen)
 {
 }
@@ -86,7 +86,7 @@ EtherDump::init()
     hdr.sigfigs = 0;
     hdr.linktype = DLT_EN10MB;
 
-    stream.write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
+    stream->write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
 
     /*
      * output an empty packet with the current time so that we know
@@ -98,9 +98,9 @@ EtherDump::init()
     pkthdr.microseconds = 0;
     pkthdr.caplen = 0;
     pkthdr.len = 0;
-    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
 
-    stream.flush();
+    stream->flush();
 }
 
 void
@@ -111,9 +111,9 @@ EtherDump::dumpPacket(EthPacketPtr &packet)
     pkthdr.microseconds = (curTick / Clock::Int::us) % ULL(1000000);
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;
-    stream.write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
-    stream.write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
-    stream.flush();
+    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
+    stream->write(reinterpret_cast<char *>(packet->data), pkthdr.caplen);
+    stream->flush();
 }
 
 EtherDump *

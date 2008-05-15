@@ -379,13 +379,12 @@ Split::cleanupRefs()
     else if (lru_net)
         lru_net->cleanupRefs();
 
-    ofstream memPrint(simout.resolve("memory_footprint.txt").c_str(),
-                      ios::trunc);
+    ostream *memPrint = simout.create("memory_footprint.txt");
 
     // this shouldn't be here but it happens at the end, which is what i want
     memIter end = memHash.end();
     for (memIter iter = memHash.begin(); iter != end; ++iter) {
-        ccprintf(memPrint, "%8x\t%d\n", (*iter).first, (*iter).second);
+        ccprintf(*memPrint, "%8x\t%d\n", (*iter).first, (*iter).second);
     }
 }
 

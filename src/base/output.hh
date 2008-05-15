@@ -43,6 +43,8 @@ class OutputDirectory
     map_t files;
     std::string dir;
 
+    std::string resolve(const std::string &name);
+
   public:
     OutputDirectory();
     ~OutputDirectory();
@@ -50,7 +52,6 @@ class OutputDirectory
     void setDirectory(const std::string &dir);
     const std::string &directory();
 
-    std::string resolve(const std::string &name);
     std::ostream *create(const std::string &name, bool binary = false);
     std::ostream *find(const std::string &name);
 

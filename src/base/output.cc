@@ -98,7 +98,7 @@ OutputDirectory::create(const string &name, bool binary)
     ofstream *file = new ofstream(resolve(name).c_str(),
             ios::trunc | binary ?  ios::binary : (ios::openmode)0);
     if (!file->is_open())
-        panic("Cannot open file %s", name);
+        fatal("Cannot open file %s", name);
 
     return file;
 }
@@ -119,7 +119,7 @@ OutputDirectory::find(const string &name)
 
     ofstream *file = new ofstream(filename.c_str(), ios::trunc);
     if (!file->is_open())
-        panic("Cannot open file %s", filename);
+        fatal("Cannot open file %s", filename);
 
     files[filename] = file;
     return file;
