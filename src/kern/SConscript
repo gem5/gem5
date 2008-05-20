@@ -54,3 +54,5 @@ else:
     Dir('linux')
     if env['TARGET_ISA'] == 'alpha':
         Dir('tru64')
+    elif env['TARGET_ISA'] == 'sparc':
+        Dir('solaris')
