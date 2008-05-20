@@ -919,7 +919,7 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
 
     pktWaiting = true;
 
-    DPRINTF(EthernetDesc, "Starting DMA of packet\n");
+    DPRINTF(EthernetDesc, "Starting DMA of packet at offset %d\n", p->length);
     igbe->dmaRead(igbe->platform->pciToDma(TxdOp::getBuf(desc)),
             TxdOp::getLen(desc), &pktEvent, p->data + p->length);
 
@@ -943,20 +943,22 @@ IGbE::TxDescCache::pktComplete()
     DPRINTF(EthernetDesc, "TxDescriptor data d1: %#llx d2: %#llx\n", desc->d1, desc->d2);
 
     if (!TxdOp::eop(desc)) {
-        // This only supports two descriptors per tx packet
-        assert(pktPtr->length == 0);
-        pktPtr->length = TxdOp::getLen(desc);
+        pktPtr->length += TxdOp::getLen(desc);
         unusedCache.pop_front();
         usedCache.push_back(desc);
         pktDone = true;
         pktWaiting = false;
+        pktMultiDesc = true;
+
+        DPRINTF(EthernetDesc, "Partial Packet Descriptor of %d bytes Done\n",
+                pktPtr->length);
         pktPtr = NULL;
 
-        DPRINTF(EthernetDesc, "Partial Packet Descriptor Done\n");
         enableSm();
         igbe->checkDrain();
         return;
     }
+    pktMultiDesc = false;
 
     // Set the length of the data in the EtherPacket
     pktPtr->length += TxdOp::getLen(desc);
@@ -988,7 +990,7 @@ IGbE::TxDescCache::pktComplete()
     if (TxdOp::isData(desc) && ( TxdOp::ixsm(desc) || TxdOp::txsm(desc)) ) {
         DPRINTF(EthernetDesc, "Calculating checksums for packet\n");
         IpPtr ip(pktPtr);
-
+        assert(ip);
         if (TxdOp::ixsm(desc)) {
             ip->sum(0);
             ip->sum(cksum(ip));
@@ -1058,6 +1060,7 @@ IGbE::TxDescCache::serialize(std::ostream &os)
     SERIALIZE_SCALAR(pktDone);
     SERIALIZE_SCALAR(isTcp);
     SERIALIZE_SCALAR(pktWaiting);
+    SERIALIZE_SCALAR(pktMultiDesc);
 }
 
 void
@@ -1067,6 +1070,7 @@ IGbE::TxDescCache::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(pktDone);
     UNSERIALIZE_SCALAR(isTcp);
     UNSERIALIZE_SCALAR(pktWaiting);
+    UNSERIALIZE_SCALAR(pktMultiDesc);
 }
 
 bool
@@ -1172,7 +1176,8 @@ IGbE::txStateMachine()
     // If we have a packet available and it's length is not 0 (meaning it's not
     // a multidescriptor packet) put it in the fifo, otherwise an the next
     // iteration we'll get the rest of the data
-    if (txPacket && txDescCache.packetAvailable() && txPacket->length) {
+    if (txPacket && txDescCache.packetAvailable()
+                 && !txDescCache.packetMultiDesc() && txPacket->length) {
         bool success;
 
         DPRINTF(EthernetSM, "TXS: packet placed in TX FIFO\n");

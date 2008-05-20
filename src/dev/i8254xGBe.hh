@@ -564,6 +564,7 @@ class IGbE : public EtherDevice
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
+        bool pktMultiDesc;
 
       public:
         TxDescCache(IGbE *i, std::string n, int s);
@@ -585,6 +586,14 @@ class IGbE : public EtherDevice
          * @return packet still in transit.
          */
         bool packetWaiting() { return pktWaiting; }
+
+        /** Ask if this packet is composed of multiple descriptors
+         * so even if we've got data, we need to wait for more before
+         * we can send it out.
+         * @return packet can't be sent out because it's a multi-descriptor
+         * packet
+         */
+        bool packetMultiDesc() { return pktMultiDesc;}
 
         /** Called by event when dma to write packet is completed
          */
