@@ -40,6 +40,10 @@ if env['FULL_SYSTEM']:
     Source('linux/events.cc')
     Source('linux/linux_syscalls.cc')
     Source('linux/printk.cc')
+    
+    # Workaround for bug in SCons version > 0.97d20071212
+    # Scons bug id: 2006 M5 Bug id: 308
+    Dir('tru64')
 
     if env['TARGET_ISA'] == 'alpha':
         Source('tru64/dump_mbuf.cc')
