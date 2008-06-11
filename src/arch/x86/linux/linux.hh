@@ -82,7 +82,7 @@ class X86Linux64 : public Linux
         uint64_t st_mtime_nsec;
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
-        int64_t __unused[3];
+        int64_t unused0[3];
     } tgt_stat64;
 
     static OpenFlagTransTable openFlagTable[];
