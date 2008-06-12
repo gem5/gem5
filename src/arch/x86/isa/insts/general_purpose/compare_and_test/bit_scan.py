@@ -250,33 +250,39 @@ def macroop BSF_R_R {
 
     # Bit 6
     srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
+    andi t4, t3, 32, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 5
     srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
+    andi t4, t3, 16, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 4
     srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
+    andi t4, t3, 8, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 3
     srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
+    andi t4, t3, 4, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 2
     srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
+    andi t4, t3, 2, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 1
     srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
+    andi t4, t3, 1, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
 end:
     fault "NoFault"
@@ -299,33 +305,39 @@ def macroop BSF_R_M {
 
     # Bit 6
     srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
+    andi t4, t3, 32, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 5
     srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
+    andi t4, t3, 16, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 4
     srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
+    andi t4, t3, 8, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 3
     srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
+    andi t4, t3, 4, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 2
     srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
+    andi t4, t3, 2, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 1
     srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
+    andi t4, t3, 1, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
 end:
     fault "NoFault"
@@ -349,33 +361,39 @@ def macroop BSF_R_P {
 
     # Bit 6
     srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
+    andi t4, t3, 32, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 5
     srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
+    andi t4, t3, 16, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 4
     srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
+    andi t4, t3, 8, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 3
     srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
+    andi t4, t3, 4, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 2
     srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
+    andi t4, t3, 2, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 1
     srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
+    andi t4, t3, 1, flags=(EZF,)
+    or reg, reg, t4
+    mov t1, t1, t3, flags=(nCEZF,)
 
 end:
     fault "NoFault"
