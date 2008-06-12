@@ -406,7 +406,6 @@ class MemorySize32(CheckedInt):
 
 class Addr(CheckedInt):
     cxx_type = 'Addr'
-    cxx_predecls = ['#include "arch/isa_traits.hh"']
     size = 64
     unsigned = True
     def __init__(self, value):
