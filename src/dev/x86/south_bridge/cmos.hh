@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,14 +69,14 @@ class Cmos : public SubDevice
 
   public:
 
-    Cmos() : rtc("rtc", foo_time, true, 5000000000)
+    Cmos() : rtc("rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
     Cmos(Tick _latency) : SubDevice(_latency),
-        rtc("rtc", foo_time, true, 5000000000)
+        rtc("rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
@@ -84,7 +84,7 @@ class Cmos : public SubDevice
 
     Cmos(Addr start, Addr size, Tick _latency) :
         SubDevice(start, size, _latency),
-        rtc("rtc", foo_time, true, 5000000000)
+        rtc("rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
