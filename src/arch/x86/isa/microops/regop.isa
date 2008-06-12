@@ -1100,6 +1100,11 @@ let {{
             DestReg = TscOp;
         '''
 
+    class Rdm5reg(RdRegOp):
+        code = '''
+            DestReg = M5Reg;
+        '''
+
     class Wrdl(RegOp):
         code = '''
             SegDescriptor desc = SrcReg1;

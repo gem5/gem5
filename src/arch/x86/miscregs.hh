@@ -130,6 +130,9 @@ namespace X86ISA
         // Flags register
         MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
 
+        //Register to keep handy values like the CPU mode in.
+        MISCREG_M5_REG,
+
         /*
          * Model Specific Registers
          */
@@ -562,6 +565,12 @@ namespace X86ISA
         Bitfield<2> pf; // Parity Flag
         Bitfield<0> cf; // Carry Flag
     EndBitUnion(RFLAGS)
+
+    BitUnion64(HandyM5Reg)
+        Bitfield<0> mode;
+        Bitfield<3, 1> submode;
+        Bitfield<5, 4> cpl;
+    EndBitUnion(HandyM5Reg)
 
     /**
      * Control registers
