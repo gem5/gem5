@@ -29,7 +29,7 @@
  */
 
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -91,6 +91,8 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
+#include "sim/eventq.hh"
+#include "sim/host.hh"
 
 #include <string>
 
@@ -98,6 +100,7 @@ class Checkpoint;
 
 namespace X86ISA
 {
+
     std::string getMiscRegName(RegIndex);
 
     //These will have to be updated in the future.
@@ -108,6 +111,20 @@ namespace X86ISA
     {
       protected:
         MiscReg regVal[NumMiscRegs];
+
+        class ApicTimerEvent : public Event
+        {
+          public:
+            ApicTimerEvent() : Event(&mainEventQueue)
+            {}
+
+            void process()
+            {
+                warn("Local APIC timer event doesn't do anything!\n");
+            }
+        };
+
+        ApicTimerEvent apicTimerEvent;
 
       public:
         void clear();

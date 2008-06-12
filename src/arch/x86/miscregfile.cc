@@ -110,6 +110,16 @@ void MiscRegFile::clear()
     regVal[MISCREG_APIC_DESTINATION_FORMAT] = (MiscReg)(-1);
 }
 
+int divideFromConf(MiscReg conf)
+{
+    // This figures out what division we want from the division configuration
+    // register in the local APIC. The encoding is a little odd but it can
+    // be deciphered fairly easily.
+    int shift = ((conf & 0x8) >> 1) | (conf & 0x3);
+    shift = (shift + 1) % 8;
+    return 1 << shift;
+};
+
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 {
     // Make sure we're not dealing with an illegal control register.
@@ -152,11 +162,10 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
             panic("Local APIC Interrupt Command high"
                     " register unimplemented.\n");
             break;
-          case MISCREG_APIC_INITIAL_COUNT:
-            panic("Local APIC Initial Count register unimplemented.\n");
-            break;
           case MISCREG_APIC_CURRENT_COUNT:
-            panic("Local APIC Current Count register unimplemented.\n");
+            return (regVal[miscReg] - tc->getCpuPtr()->curCycle()) /
+                (16 * divideFromConf(
+                    regVal[MISCREG_APIC_DIVIDE_CONFIGURATION]));
             break;
         }
     }
@@ -262,11 +271,16 @@ void MiscRegFile::setReg(int miscReg,
             }
             break;
           case MISCREG_APIC_INITIAL_COUNT:
-            panic("Local APIC Initial Count register unimplemented.\n");
+            newVal = bits(val, 31, 0);
+            regVal[MISCREG_APIC_CURRENT_COUNT] =
+                tc->getCpuPtr()->curCycle() +
+                (16 * divideFromConf(
+                    regVal[MISCREG_APIC_DIVIDE_CONFIGURATION])) * newVal;
+            //FIXME This should schedule the timer event.
             break;
           case MISCREG_APIC_CURRENT_COUNT:
-            panic("Local APIC Current Count register unimplemented.\n");
-            break;
+            //Local APIC Current Count register is read only.
+            return;
           case MISCREG_APIC_DIVIDE_CONFIGURATION:
             newVal = val & 0xB;
             break;
