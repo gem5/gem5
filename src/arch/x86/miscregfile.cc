@@ -158,9 +158,6 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
           case MISCREG_APIC_CURRENT_COUNT:
             panic("Local APIC Current Count register unimplemented.\n");
             break;
-          case MISCREG_APIC_DIVIDE_COUNT:
-            panic("Local APIC Divide Count register unimplemented.\n");
-            break;
         }
     }
     switch (miscReg) {
@@ -270,8 +267,8 @@ void MiscRegFile::setReg(int miscReg,
           case MISCREG_APIC_CURRENT_COUNT:
             panic("Local APIC Current Count register unimplemented.\n");
             break;
-          case MISCREG_APIC_DIVIDE_COUNT:
-            panic("Local APIC Divide Count register unimplemented.\n");
+          case MISCREG_APIC_DIVIDE_CONFIGURATION:
+            newVal = val & 0xB;
             break;
         }
         setRegNoEffect(miscReg, newVal);

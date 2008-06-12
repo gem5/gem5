@@ -780,7 +780,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             regNum = MISCREG_APIC_CURRENT_COUNT;
             break;
           case 0x3E0:
-            regNum = MISCREG_APIC_DIVIDE_COUNT;
+            regNum = MISCREG_APIC_DIVIDE_CONFIGURATION;
             break;
           default:
             // A reserved register field.
