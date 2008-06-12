@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2007-2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -242,11 +242,7 @@ namespace BitfieldBackend
 //bitfields which are defined in the union, creating shared storage with no
 //overhead.
 #define __BitUnion(type, name) \
-    namespace BitfieldUnderlyingClasses \
-    { \
-        class name; \
-    } \
-    class BitfieldUnderlyingClasses::name : \
+    class BitfieldUnderlyingClasses##name : \
         public BitfieldBackend::BitfieldTypes<type> \
     { \
       public: \
@@ -262,8 +258,8 @@ namespace BitfieldBackend
         }; \
     }; \
     typedef BitfieldBackend::BitUnionOperators< \
-        BitfieldUnderlyingClasses::name::__DataType, \
-        BitfieldUnderlyingClasses::name> name;
+        BitfieldUnderlyingClasses##name::__DataType, \
+        BitfieldUnderlyingClasses##name> name;
 
 //This sets up a bitfield which has other bitfields nested inside of it. The
 //__data member functions like the "underlying storage" of the top level
