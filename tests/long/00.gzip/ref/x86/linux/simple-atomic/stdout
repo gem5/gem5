@@ -31,14 +31,14 @@ Uncompressed data compared correctly
 Tested 1MB buffer: OK!
 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 21 2007 20:57:52
-M5 started Sun Oct 21 21:35:26 2007
-M5 executing on nacho
+M5 compiled Apr 21 2008 13:57:00
+M5 started Mon Apr 21 13:59:05 2008
+M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-atomic tests/run.py long/00.gzip/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 954931687500 because target called exit()
+Exiting @ tick 954931689000 because target called exit()

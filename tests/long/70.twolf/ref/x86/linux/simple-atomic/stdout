@@ -13,14 +13,16 @@ Authors: Carl Sechen, Bill Swartz
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
 122 123 124 M5 Simulator System
 
-Copyright (c) 2001-2006
+Copyright (c) 2001-2008
 The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 21 2007 20:57:52
-M5 started Sun Oct 21 23:31:23 2007
-M5 executing on nacho
+M5 compiled Apr 21 2008 13:57:00
+M5 started Mon Apr 21 13:59:05 2008
+M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic tests/run.py long/70.twolf/x86/linux/simple-atomic
+Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sav
+Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 129910855000 because target called exit()
+Exiting @ tick 129910856500 because target called exit()
