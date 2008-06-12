@@ -82,7 +82,7 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop BSF_R_R {
+def macroop BSR_R_R {
     # Determine if the input was zero, and also move it to a temp reg.
     movi t1, t1, t0, dataSize=8
     and t1, regm, regm, flags=(ZF,)
@@ -131,7 +131,7 @@ end:
     fault "NoFault"
 };
 
-def macroop BSF_R_M {
+def macroop BSR_R_M {
 
     movi t1, t1, t0, dataSize=8
     ld t1, seg, sib, disp
@@ -183,7 +183,7 @@ end:
     fault "NoFault"
 };
 
-def macroop BSF_R_P {
+def macroop BSR_R_P {
 
     rdip t7
     movi t1, t1, t0, dataSize=8
@@ -236,7 +236,7 @@ end:
     fault "NoFault"
 };
 
-def macroop BSR_R_R {
+def macroop BSF_R_R {
     # Determine if the input was zero, and also move it to a temp reg.
     mov t1, t1, t0, dataSize=8
     and t1, regm, regm, flags=(ZF,)
@@ -282,7 +282,7 @@ end:
     fault "NoFault"
 };
 
-def macroop BSR_R_M {
+def macroop BSF_R_M {
 
     mov t1, t1, t0, dataSize=8
     ld t1, seg, sib, disp
@@ -331,7 +331,7 @@ end:
     fault "NoFault"
 };
 
-def macroop BSR_R_P {
+def macroop BSF_R_P {
 
     rdip t7
     mov t1, t1, t0, dataSize=8
