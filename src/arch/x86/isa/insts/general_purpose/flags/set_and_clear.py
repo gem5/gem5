@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -84,10 +84,18 @@ def macroop CMC {
     ruflags t1
     wruflagsi t1, "CFBit"
 };
+
+def macroop STI {
+    rflags t1
+    limm t2, "IFBit"
+    or t1, t1, t2
+    wrflags t1, t0
+};
+
+def macroop CLI {
+    rflags t1
+    limm t2, "~IFBit"
+    and t1, t1, t2
+    wrflags t1, t0
+};
 '''
-#let {{
-#    class CLI(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#    class STI(Inst):
-#	"GenFault ${new UnimpInstFault}"
-#}};

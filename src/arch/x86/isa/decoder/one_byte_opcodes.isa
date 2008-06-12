@@ -553,8 +553,8 @@
         0x1F: decode OPCODE_OP_BOTTOM3 {
             0x0: CLC();
             0x1: STC();
-            0x2: WarnUnimpl::cli();
-            0x3: WarnUnimpl::sti();
+            0x2: CLI();
+            0x3: STI();
             0x4: CLD();
             0x5: STD();
             //0x6: group4();
