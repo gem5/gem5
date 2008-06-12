@@ -219,7 +219,7 @@ void MiscRegFile::setReg(int miscReg,
         }
         switch (miscReg) {
           case MISCREG_APIC_ID:
-            panic("Local APIC ID register unimplemented.\n");
+            newVal = val & 0xFF;
             break;
           case MISCREG_APIC_VERSION:
             // The Local APIC Version register is read only.
