@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -75,12 +75,16 @@ def macroop CMPS_M_M {
 #
 
 def macroop CMPS_E_M_M {
+    and t0, rcx, rcx, flags=(EZF,), dataSize=asz
+    bri t0, label("end"), flags=(CEZF,)
+
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
+topOfLoop:
     ld t1, seg, [1, t0, rsi]
     ld t2, es, [1, t0, rdi]
     sub t0, t1, t2, flags=(OF, SF, ZF, AF, PF, CF)
@@ -88,17 +92,22 @@ def macroop CMPS_E_M_M {
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t3, dataSize=asz
     add rsi, rsi, t3, dataSize=asz
-    bri t0, 4, flags=(CSTRZnEZF,)
+    bri t0, label("topOfLoop"), flags=(CSTRZnEZF,)
+end:
     fault "NoFault"
 };
 
 def macroop CMPS_N_M_M {
+    and t0, rcx, rcx, flags=(EZF,), dataSize=asz
+    bri t0, label("end"), flags=(CEZF,)
+
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
+topOfLoop:
     ld t1, seg, [1, t0, rsi]
     ld t2, es, [1, t0, rdi]
     sub t0, t1, t2, flags=(OF, SF, ZF, AF, PF, CF)
@@ -106,7 +115,8 @@ def macroop CMPS_N_M_M {
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t3, dataSize=asz
     add rsi, rsi, t3, dataSize=asz
-    bri t0, 4, flags=(CSTRnZnEZF,)
+    bri t0, label("topOfLoop"), flags=(CSTRnZnEZF,)
+end:
     fault "NoFault"
 };
 '''

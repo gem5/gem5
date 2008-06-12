@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -73,34 +73,44 @@ def macroop SCAS_M {
 #
 
 def macroop SCAS_E_M {
+    and t0, rcx, rcx, flags=(EZF,), dataSize=asz
+    bri t0, label("end"), flags=(CEZF,)
+
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t2, t2, dsz, flags=(CEZF,), dataSize=asz
     subi t3, t0, dsz, dataSize=asz
     mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
 
+topOfLoop:
     ld t1, es, [1, t0, rdi]
     sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
-    bri t0, 4, flags=(CSTRZnEZF,)
+    bri t0, label("topOfLoop"), flags=(CSTRZnEZF,)
+end:
     fault "NoFault"
 };
 
 def macroop SCAS_N_M {
+    and t0, rcx, rcx, flags=(EZF,), dataSize=asz
+    bri t0, label("end"), flags=(CEZF,)
+
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t2, t2, dsz, flags=(CEZF,), dataSize=asz
     subi t3, t0, dsz, dataSize=asz
     mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
 
+topOfLoop:
     ld t1, es, [1, t0, rdi]
     sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
-    bri t0, 4, flags=(CSTRnZnEZF,)
+    bri t0, label("topOfLoop"), flags=(CSTRnZnEZF,)
+end:
     fault "NoFault"
 };
 
