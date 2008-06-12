@@ -217,7 +217,10 @@ class MetaSimObject(type):
                 # just declaring a pointer.
                 decl = 'class %s;' % _cxx_class
                 if namespace:
-                    decl = 'namespace %s { %s }' % (namespace, decl)
+                    namespaces = namespace.split('::')
+                    namespaces.reverse()
+                    for namespace in namespaces:
+                        decl = 'namespace %s { %s }' % (namespace, decl)
                 cls._value_dict['cxx_predecls'] = [decl]
 
             if 'swig_predecls' not in cls._value_dict:
