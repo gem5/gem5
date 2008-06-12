@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -183,6 +183,9 @@ namespace X86ISA
         MISCREG_MC2_CTL,
         MISCREG_MC3_CTL,
         MISCREG_MC4_CTL,
+        MISCREG_MC5_CTL,
+        MISCREG_MC6_CTL,
+        MISCREG_MC7_CTL,
 
         MISCREG_MC_STATUS_BASE,
         MISCREG_MC0_STATUS = MISCREG_MC_STATUS_BASE,
@@ -190,6 +193,9 @@ namespace X86ISA
         MISCREG_MC2_STATUS,
         MISCREG_MC3_STATUS,
         MISCREG_MC4_STATUS,
+        MISCREG_MC5_STATUS,
+        MISCREG_MC6_STATUS,
+        MISCREG_MC7_STATUS,
 
         MISCREG_MC_ADDR_BASE,
         MISCREG_MC0_ADDR = MISCREG_MC_ADDR_BASE,
@@ -197,6 +203,9 @@ namespace X86ISA
         MISCREG_MC2_ADDR,
         MISCREG_MC3_ADDR,
         MISCREG_MC4_ADDR,
+        MISCREG_MC5_ADDR,
+        MISCREG_MC6_ADDR,
+        MISCREG_MC7_ADDR,
 
         MISCREG_MC_MISC_BASE,
         MISCREG_MC0_MISC = MISCREG_MC_MISC_BASE,
@@ -204,6 +213,9 @@ namespace X86ISA
         MISCREG_MC2_MISC,
         MISCREG_MC3_MISC,
         MISCREG_MC4_MISC,
+        MISCREG_MC5_MISC,
+        MISCREG_MC6_MISC,
+        MISCREG_MC7_MISC,
 
         // Extended feature enable register
         MISCREG_EFER,

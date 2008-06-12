@@ -358,6 +358,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
               case 0x410:
                 regNum = MISCREG_MC4_CTL;
                 break;
+              case 0x414:
+                regNum = MISCREG_MC5_CTL;
+                break;
+              case 0x418:
+                regNum = MISCREG_MC6_CTL;
+                break;
+              case 0x41C:
+                regNum = MISCREG_MC7_CTL;
+                break;
               case 0x401:
                 regNum = MISCREG_MC0_STATUS;
                 break;
@@ -372,6 +381,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                 break;
               case 0x411:
                 regNum = MISCREG_MC4_STATUS;
+                break;
+              case 0x415:
+                regNum = MISCREG_MC5_STATUS;
+                break;
+              case 0x419:
+                regNum = MISCREG_MC6_STATUS;
+                break;
+              case 0x41D:
+                regNum = MISCREG_MC7_STATUS;
                 break;
               case 0x402:
                 regNum = MISCREG_MC0_ADDR;
@@ -388,6 +406,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
               case 0x412:
                 regNum = MISCREG_MC4_ADDR;
                 break;
+              case 0x416:
+                regNum = MISCREG_MC5_ADDR;
+                break;
+              case 0x41A:
+                regNum = MISCREG_MC6_ADDR;
+                break;
+              case 0x41E:
+                regNum = MISCREG_MC7_ADDR;
+                break;
               case 0x403:
                 regNum = MISCREG_MC0_MISC;
                 break;
@@ -402,6 +429,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                 break;
               case 0x413:
                 regNum = MISCREG_MC4_MISC;
+                break;
+              case 0x417:
+                regNum = MISCREG_MC5_MISC;
+                break;
+              case 0x41B:
+                regNum = MISCREG_MC6_MISC;
+                break;
+              case 0x41F:
+                regNum = MISCREG_MC7_MISC;
                 break;
               case 0xC0000080:
                 regNum = MISCREG_EFER;
