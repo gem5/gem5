@@ -355,6 +355,9 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         if (secondAddr <= addr)
         {
             data = gtoh(data);
+            if (traceData) {
+                traceData->setData(data);
+            }
             return fault;
         }
 
@@ -568,6 +571,9 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             // If the write needs to have a fault on the access, consider
             // calling changeStatus() and changing it to "bad addr write"
             // or something.
+            if (traceData) {
+                traceData->setData(data);
+            }
             return fault;
         }
 

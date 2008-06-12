@@ -296,6 +296,9 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         delete req;
     }
 
+    if (traceData) {
+        traceData->setData(data);
+    }
     return fault;
 }
 
@@ -431,6 +434,9 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         delete req;
     }
 
+    if (traceData) {
+        traceData->setData(data);
+    }
 
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
