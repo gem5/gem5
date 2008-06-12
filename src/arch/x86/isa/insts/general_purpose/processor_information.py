@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -149,33 +149,30 @@ extendedStart:
     fault "NoFault"
 
 # 0x80000002 -- Processor Name String Identifier
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0x656B6146, dataSize=4
+    limm rbx, 0x20354D20, dataSize=4
+    limm rcx, 0x5F363878, dataSize=4
+    limm rdx, 0x43203436, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
     fault "NoFault"
 
 # 0x80000003 -- Processor Name String Identifier
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0x00005550, dataSize=4
+    limm rbx, 0x00000000, dataSize=4
+    limm rdx, 0x00000000, dataSize=4
+    limm rcx, 0x00000000, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
     fault "NoFault"
 
 # 0x80000004 -- Processor Name String Identifier
-    # JUNK VALUES
-    limm rax, 0x80000018, dataSize=4
-    limm rbx, 0x68747541, dataSize=4
-    limm rdx, 0x69746e65, dataSize=4
-    limm rcx, 0x444d4163, dataSize=4
+    limm rax, 0x00000000, dataSize=4
+    limm rbx, 0x00000000, dataSize=4
+    limm rdx, 0x00000000, dataSize=4
+    limm rcx, 0x00000000, dataSize=4
     bri t0, label("end")
     fault "NoFault"
     fault "NoFault"
