@@ -110,8 +110,10 @@ if env['TARGET_ISA'] == 'x86':
 
     if env['FULL_SYSTEM']:
         SimObject('X86System.py')
+        SimObject('bios/E820.py')
 
         # Full-system sources
+        Source('bios/e820.cc')
         Source('linux/system.cc')
         Source('pagetable_walker.cc')
 	Source('smbios.cc')

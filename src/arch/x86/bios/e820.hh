@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -55,29 +55,46 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_LINUX_X86_SYSTEM_HH__
-#define __ARCH_LINUX_X86_SYSTEM_HH__
+#ifndef __ARCH_X86_BIOS_E820_HH__
+#define __ARCH_X86_BIOS_E820_HH__
 
-#include <string>
+#include "params/X86E820Entry.hh"
+#include "params/X86E820Table.hh"
+#include "sim/host.hh"
+#include "sim/sim_object.hh"
+
 #include <vector>
 
-#include "params/LinuxX86System.hh"
-#include "arch/x86/bios/e820.hh"
-#include "arch/x86/system.hh"
+class Port;
 
-class LinuxX86System : public X86System
+namespace X86ISA
 {
-  protected:
-    std::string commandLine;
-    X86ISA::E820Table * e820Table;
+    class E820Entry : public SimObject
+    {
+      public:
+        Addr addr;
+        Addr size;
+        uint32_t type;
 
-  public:
-    typedef LinuxX86SystemParams Params;
-    LinuxX86System(Params *p);
-    ~LinuxX86System();
+      public:
+        typedef X86E820EntryParams Params;
+        E820Entry(Params *p) :
+            SimObject(p), addr(p->addr), size(p->size), type(p->range_type)
+        {}
+    };
 
-    void startup();
+    class E820Table : public SimObject
+    {
+      public:
+        std::vector<E820Entry *> entries;
+
+      public:
+        typedef X86E820TableParams Params;
+        E820Table(Params *p) : SimObject(p), entries(p->entries)
+        {}
+
+        void writeTo(Port * port, Addr countAddr, Addr addr);
+    };
 };
 
-#endif
-
+#endif // __ARCH_X86_BIOS_E820_HH__

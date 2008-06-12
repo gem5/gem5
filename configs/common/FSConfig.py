@@ -168,8 +168,24 @@ def makeLinuxX86System(mem_mode, mdesc = None):
 
     # Physical memory
     self.membus = Bus(bus_id=1)
-    self.physmem = PhysicalMemory(range = AddrRange('4GB')) #range = AddrRange(mdesc.mem()))
+    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.physmem.port = self.membus.port
+
+    # We assume below that there's at least 1MB of memory. We'll require 2
+    # just to avoid corner cases.
+    assert(self.physmem.range.second >= 0x200000)
+
+    # Mark the first megabyte of memory as reserved
+    self.e820_table.entries.append(X86E820Entry(
+                addr = 0,
+                size = '1MB',
+                range_type = 2))
+
+    # Mark the rest as available
+    self.e820_table.entries.append(X86E820Entry(
+                addr = 0x100000,
+                size = '%dB' % (self.physmem.range.second - 0x100000 - 1),
+                range_type = 1))
 
     # North Bridge
     self.iobus = Bus(bus_id=0)

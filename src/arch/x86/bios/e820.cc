@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -55,29 +55,49 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_LINUX_X86_SYSTEM_HH__
-#define __ARCH_LINUX_X86_SYSTEM_HH__
-
-#include <string>
-#include <vector>
-
-#include "params/LinuxX86System.hh"
 #include "arch/x86/bios/e820.hh"
-#include "arch/x86/system.hh"
+#include "arch/x86/isa_traits.hh"
+#include "mem/port.hh"
+#include "sim/byteswap.hh"
 
-class LinuxX86System : public X86System
+using namespace std;
+using namespace X86ISA;
+
+template<class T>
+void writeVal(T val, Port * port, Addr &addr)
 {
-  protected:
-    std::string commandLine;
-    X86ISA::E820Table * e820Table;
+    T guestVal = htog(val);
+    port->writeBlob(addr, (uint8_t *)&guestVal, sizeof(T));
+    addr += sizeof(T);
+}
 
-  public:
-    typedef LinuxX86SystemParams Params;
-    LinuxX86System(Params *p);
-    ~LinuxX86System();
+void X86ISA::E820Table::writeTo(Port * port, Addr countAddr, Addr addr)
+{
+    uint8_t e820Nr = entries.size();
 
-    void startup();
-};
+    // Make sure the number of entries isn't bigger than what the kernel
+    // would be capable of handling.
+    assert(e820Nr <= 128);
 
-#endif
+    uint8_t guestE820Nr = htog(e820Nr);
 
+    port->writeBlob(countAddr, (uint8_t *)&guestE820Nr, sizeof(guestE820Nr));
+
+    for (int i = 0; i < e820Nr; i++) {
+        writeVal(entries[i]->addr, port, addr);
+        writeVal(entries[i]->size, port, addr);
+        writeVal(entries[i]->type, port, addr);
+    }
+}
+
+E820Table *
+X86E820TableParams::create()
+{
+    return new E820Table(this);
+}
+
+E820Entry *
+X86E820EntryParams::create()
+{
+    return new E820Entry(this);
+}

@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -54,14 +54,20 @@
 # Authors: Gabe Black
 
 from m5.params import *
-from E820 import X86E820Table, X86E820Entry
-from System import System
+from m5.SimObject import SimObject
 
-class X86System(System):
-    type = 'X86System'
+class X86E820Entry(SimObject):
+    type = 'X86E820Entry'
+    cxx_namespace = 'X86ISA'
+    cxx_class = 'E820Entry'
 
-class LinuxX86System(X86System):
-    type = 'LinuxX86System'
+    addr = Param.Addr(0, 'address of the beginning of the region')
+    size = Param.MemorySize('0B', 'size of the region')
+    range_type = Param.UInt64('type of the region')
 
-    e820_table = Param.X86E820Table(
-            X86E820Table(), 'E820 map of physical memory')
+class X86E820Table(SimObject):
+    type = 'X86E820Table'
+    cxx_namespace = 'X86ISA'
+    cxx_class = 'E820Table'
+
+    entries = VectorParam.X86E820Entry([], 'entries for the e820 table')
