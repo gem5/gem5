@@ -42,7 +42,6 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "dev/pitreg.h"
 #include "dev/rtcreg.h"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami.hh"
