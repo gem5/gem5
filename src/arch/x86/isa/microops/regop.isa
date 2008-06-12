@@ -1008,6 +1008,11 @@ let {{
             DestReg = SegLimitSrc1;
         '''
 
+    class RdAttr(SegOp):
+        code = '''
+            DestReg = SegAttrSrc1;
+        '''
+
     class Rdsel(SegOp):
         code = '''
             DestReg = SegSelSrc1;
