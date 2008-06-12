@@ -181,9 +181,9 @@
                 0x2: Inst::UD2();
                 0x3: Inst::UD2();
                 0x4: Inst::UD2();
-                0x5: threednow();
-                0x6: threednow();
-                0x7: threednow();
+                0x5: prefetch();
+                0x6: FailUnimpl::femms();
+                0x7: FailUnimpl::threednow();
             }
             0x02: decode LEGACY_DECODEVAL {
                 // no prefix
