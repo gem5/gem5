@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -598,13 +598,24 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     Addr paddr = req->getPaddr();
     if (baseAddr <= paddr && baseAddr + (1 << 12) > paddr) {
         req->setMmapedIpr(true);
+        // The Intel developer's manuals say the below restrictions apply,
+        // but the linux kernel, because of a compiler optimization, breaks
+        // them.
+        /*
         // Check alignment
         if (paddr & ((32/8) - 1))
             return new GeneralProtection(0);
         // Check access size
         if (req->getSize() != (32/8))
             return new GeneralProtection(0);
+        */
+
+        //Make sure we're at least only accessing one register.
+        if ((paddr & ~mask(3)) != ((paddr + req->getSize()) & ~mask(3)))
+            panic("Accessed more than one register at a time in the APIC!\n");
         MiscReg regNum;
+        Addr offset = paddr & mask(3);
+        paddr &= ~mask(3);
         switch (paddr - baseAddr)
         {
           case 0x20:
@@ -732,7 +743,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             return new GeneralProtection(0);
             break;
         }
-        req->setPaddr(regNum * sizeof(MiscReg));
+        req->setPaddr(regNum * sizeof(MiscReg) + offset);
     }
 #endif
     return NoFault;

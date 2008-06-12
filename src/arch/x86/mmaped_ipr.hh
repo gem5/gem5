@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -78,15 +78,12 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
+        Addr offset = pkt->getAddr() & mask(3);
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
-        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
-                (index >= MISCREG_APIC_START &&
-                 index <= MISCREG_APIC_END)) {
-            pkt->set((uint32_t)(xc->readMiscReg(pkt->getAddr() /
-                            sizeof(MiscReg))));
-        } else {
-            pkt->set(xc->readMiscReg(pkt->getAddr() / sizeof(MiscReg)));
-        }
+        MiscReg data = htog(xc->readMiscReg(index));
+        // Make sure we don't trot off the end of data.
+        assert(offset + pkt->getSize() <= sizeof(MiscReg));
+        pkt->setData(((uint8_t *)&data) + offset);
 #endif
         return xc->getCpuPtr()->ticks(1);
     }
@@ -97,15 +94,13 @@ namespace X86ISA
 #if !FULL_SYSTEM
         panic("Shouldn't have a memory mapped register in SE\n");
 #else
+        Addr offset = pkt->getAddr() & mask(3);
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
-        if (index == MISCREG_PCI_CONFIG_ADDRESS ||
-                (index >= MISCREG_APIC_START &&
-                 index <= MISCREG_APIC_END)) {
-            xc->setMiscReg(index, gtoh(pkt->get<uint32_t>()));
-        } else {
-            xc->setMiscReg(pkt->getAddr() / sizeof(MiscReg),
-                    gtoh(pkt->get<uint64_t>()));
-        }
+        MiscReg data = htog(xc->readMiscRegNoEffect(index));
+        // Make sure we don't trot off the end of data.
+        assert(offset + pkt->getSize() <= sizeof(MiscReg));
+        pkt->writeData(((uint8_t *)&data) + offset);
+        xc->setMiscReg(index, gtoh(data));
 #endif
         return xc->getCpuPtr()->ticks(1);
     }
