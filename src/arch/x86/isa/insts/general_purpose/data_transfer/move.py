@@ -237,65 +237,104 @@ def macroop MOV_REAL_S_P {
 };
 
 def macroop MOV_S_R {
-    chks t1, regm, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, regm
-end:
+    andi t0, regm, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, regm, 0xF8, dataSize=8
+    andi t0, regm, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks regm, t3, dataSize=8
+    wrdl reg, t3, regm
     wrsel reg, regm
 };
 
 def macroop MOV_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
-end:
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks t1, t3, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOV_S_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
-end:
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks t1, t3, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOVSS_S_R {
-    chks t1, regm, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, regm
+    andi t0, regm, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, regm, 0xF8, dataSize=8
+    andi t0, regm, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks regm, t3, SSCheck, dataSize=8
+    wrdl reg, t3, regm
     wrsel reg, regm
 };
 
 def macroop MOVSS_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks t1, t3, SSCheck, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOVSS_S_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8
+processDescriptor:
+    chks t1, t3, SSCheck, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 '''

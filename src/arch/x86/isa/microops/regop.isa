@@ -1030,7 +1030,9 @@ let {{
                     src1, src2, flags, dataSize)
         code = '''
             // The selector is in source 1 and can be at most 16 bits.
-            SegSelector selector = psrc1;
+            SegSelector selector = DestReg;
+            SegDescriptor desc = SrcReg1;
+            HandyM5Reg m5reg = M5Reg;
 
             switch (imm8)
             {
@@ -1044,15 +1046,31 @@ let {{
                         "not implemented.\\n");
                 break;
               case SegSSCheck:
-                panic("SS selector checks not implemented.\\n");
+                if (selector.si || selector.ti) {
+                    if (!desc.p) {
+                        //FIXME This needs to also push the selector.
+                        return new StackFault;
+                    }
+                } else {
+                    if ((m5reg.mode != SixtyFourBitMode || m5reg.cpl == 3) ||
+                            !(desc.s == 1 &&
+                            desc.type.codeOrData == 0 && desc.type.w) ||
+                            (desc.dpl != m5reg.cpl) ||
+                            (selector.rpl != m5reg.cpl)) {
+                        return new GeneralProtection(psrc1 & 0xFFFF);
+                    }
+                }
                 break;
               case SegIretCheck:
                 {
-                    SegAttr csAttr = CSAttr;
-                    if (!selector.si && !selector.ti)
+                    if ((!selector.si && !selector.ti) ||
+                            (selector.rpl < m5reg.cpl) ||
+                            !(desc.s == 1 && desc.type.codeOrData == 1) ||
+                            (!desc.type.c && desc.dpl != selector.rpl) ||
+                            (desc.type.c && desc.dpl > selector.rpl))
                         return new GeneralProtection(psrc1 & 0xFFFF);
-                    if (selector.rpl < csAttr.dpl)
-                        return new GeneralProtection(psrc1 & 0xFFFF);
+                    if (!desc.p)
+                        return new SegmentNotPresent;
                     break;
                 }
               case SegIntCSCheck:
@@ -1061,21 +1079,6 @@ let {{
                 break;
               default:
                 panic("Undefined segment check type.\\n");
-            }
-
-            // Compute the address of the descriptor and set DestReg to it.
-            if (selector.ti) {
-                // A descriptor in the LDT
-                Addr target = (selector.si << 3) + LDTRBase;
-                if (!LDTRSel || (selector.si << 3) + dataSize > LDTRLimit)
-                    fault = new GeneralProtection(selector & mask(16));
-                DestReg = target;
-            } else {
-                // A descriptor in the GDT
-                Addr target = (selector.si << 3) + GDTRBase;
-                if ((selector.si << 3) + dataSize > GDTRLimit)
-                    fault = new GeneralProtection(selector & mask(16));
-                DestReg = target;
             }
         '''
         flag_code = '''
@@ -1108,32 +1111,39 @@ let {{
     class Wrdl(RegOp):
         code = '''
             SegDescriptor desc = SrcReg1;
-            SegAttr attr = 0;
-            attr.dpl = desc.dpl;
-            attr.defaultSize = desc.d;
-            if (!desc.s) {
+            SegSelector selector = SrcReg2;
+            if (selector.si || selector.ti) {
+                SegAttr attr = 0;
+                attr.dpl = desc.dpl;
+                attr.defaultSize = desc.d;
+                if (!desc.s) {
+                    SegBaseDest = SegBaseDest;
+                    SegLimitDest = SegLimitDest;
+                    SegAttrDest = SegAttrDest;
+                    panic("System segment encountered.\\n");
+                } else {
+                    if (!desc.p)
+                        panic("Segment not present.\\n");
+                    if (desc.type.codeOrData) {
+                        attr.readable = desc.type.r;
+                        attr.longMode = desc.l;
+                    } else {
+                        attr.expandDown = desc.type.e;
+                        attr.readable = 1;
+                        attr.writable = desc.type.w;
+                    }
+                    Addr base = desc.baseLow | (desc.baseHigh << 24);
+                    Addr limit = desc.limitLow | (desc.limitHigh << 16);
+                    if (desc.g)
+                        limit = (limit << 12) | mask(12);
+                    SegBaseDest = base;
+                    SegLimitDest = limit;
+                    SegAttrDest = attr;
+                }
+            } else {
                 SegBaseDest = SegBaseDest;
                 SegLimitDest = SegLimitDest;
                 SegAttrDest = SegAttrDest;
-                panic("System segment encountered.\\n");
-            } else {
-                if (!desc.p)
-                    panic("Segment not present.\\n");
-                if (desc.type.codeOrData) {
-                    attr.readable = desc.type.r;
-                    attr.longMode = desc.l;
-                } else {
-                    attr.expandDown = desc.type.e;
-                    attr.readable = 1;
-                    attr.writable = desc.type.w;
-                }
-                Addr base = desc.baseLow | (desc.baseHigh << 24);
-                Addr limit = desc.limitLow | (desc.limitHigh << 16);
-                if (desc.g)
-                    limit = (limit << 12) | mask(12);
-                SegBaseDest = base;
-                SegLimitDest = limit;
-                SegAttrDest = attr;
             }
         '''
 }};

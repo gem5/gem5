@@ -574,14 +574,18 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             // Check for a NULL segment selector.
             if (!tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
                 return new GeneralProtection(0);
-            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
-            if (!attr.writable && write)
-                return new GeneralProtection(0);
-            if (!attr.readable && !write && !execute)
-                return new GeneralProtection(0);
+            bool expandDown = false;
+            if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
+                SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
+                if (!attr.writable && write)
+                    return new GeneralProtection(0);
+                if (!attr.readable && !write && !execute)
+                    return new GeneralProtection(0);
+                expandDown = attr.expandDown;
+            }
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
-            if (!attr.expandDown) {
+            if (expandDown) {
                 DPRINTF(TLB, "Checking an expand down segment.\n");
                 // We don't have to worry about the access going around the
                 // end of memory because accesses will be broken up into

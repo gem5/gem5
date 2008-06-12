@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -85,7 +85,7 @@ def macroop RET_FAR {
     ld t1, ss, [1, t0, rsp]
 
     # Get the return CS
-    ld t2, ss, [1, t0, rsp], dsz
+    ld t2, ss, [1, t0, rsp], ssz
 
     # Get the rpl
     andi t3, t2, 0x3
@@ -96,12 +96,21 @@ def macroop RET_FAR {
     # that doesn't happen yet.
 
     # Do stuff if they're equal
-    chks t4, t2, flags=(EZF,)
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t3, flatseg, [1, t0, t4], addressSize=8, dataSize=8
-    wrdl cs, t3, t2
+    andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
+    bri t0, label("processDescriptor"), flags=(CEZF,)
+    andi t3, t2, 0xF8, dataSize=8
+    andi t0, t2, 0x4, flags=(EZF,), dataSize=2
+    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t3], dataSize=8
+    bri t0, label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t3], dataSize=8
+processDescriptor:
+    chks t2, t3, IretCheck, dataSize=8
     # There should be validity checks on the RIP checks here, but I'll do
     # that later.
+    wrdl reg, t3, t2
+    wrsel reg, t2
     wrip t0, t1
     bri t0, label("end")
 
