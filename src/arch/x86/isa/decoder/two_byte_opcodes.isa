@@ -317,7 +317,7 @@
             }
             0x06: decode OPCODE_OP_BOTTOM3 {
                 0x0: Inst::WRMSR();
-                0x1: rdtsc();
+                0x1: Inst::RDTSC();
                 0x2: Inst::RDMSR();
                 0x3: rdpmc();
                 0x4: sysenter();

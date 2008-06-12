@@ -99,4 +99,12 @@ def macroop WRMSR
     or t2, t2, t3, dataSize=8
     st t2, intseg, [8, t1, rcx], dataSize=8, addressSize=4
 };
+
+def macroop RDTSC
+{
+    rdtsc t1
+    mov rax, rax, t1, dataSize=4
+    srli t1, t1, 32, dataSize=8
+    mov rdx, rdx, t1, dataSize=4
+};
 '''

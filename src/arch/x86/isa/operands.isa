@@ -26,7 +26,7 @@
 //
 // Authors: Gabe Black
 
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -146,5 +146,6 @@ def operands {{
         'GDTRBase':      ('ControlReg', 'uqw', 'MISCREG_TSG_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 205),
         'GDTRLimit':     ('ControlReg', 'uqw', 'MISCREG_TSG_LIMIT', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 206),
         'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_EFF_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 207),
+        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 208),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 300)
 }};

@@ -87,6 +87,7 @@
 
 #include "arch/x86/miscregfile.hh"
 #include "arch/x86/tlb.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
@@ -177,6 +178,10 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
             panic("Local APIC Divide Count register unimplemented.\n");
             break;
         }
+    }
+    switch (miscReg) {
+      case MISCREG_TSC:
+        return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
     }
     return readRegNoEffect(miscReg);
 }
@@ -377,6 +382,9 @@ void MiscRegFile::setReg(int miscReg,
                         MISCREG_SEG_BASE_BASE)] = val;
         }
         break;
+      case MISCREG_TSC:
+        regVal[MISCREG_TSC] = val - tc->getCpuPtr()->curCycle();
+        return;
     }
     setRegNoEffect(miscReg, newVal);
 }
