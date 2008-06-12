@@ -231,6 +231,11 @@ output header {{
     void
     divide(uint64_t dividend, uint64_t divisor,
             uint64_t &quotient, uint64_t &remainder);
+
+    enum SegmentSelectorCheck {
+      SegNoCheck, SegCSCheck, SegCallGateCheck,
+      SegSSCheck, SegIretCheck, SegIntCSCheck
+    };
 }};
 
 output decoder {{
@@ -1018,10 +1023,45 @@ let {{
             DestReg = SegSelSrc1;
         '''
 
-    class Chks(SegOp):
+    class Chks(RegOp):
+        def __init__(self, dest, src1, src2=0,
+                flags=None, dataSize="env.dataSize"):
+            super(Chks, self).__init__(dest,
+                    src1, src2, flags, dataSize)
         code = '''
             // The selector is in source 1 and can be at most 16 bits.
             SegSelector selector = psrc1;
+
+            switch (imm8)
+            {
+              case SegNoCheck:
+                break;
+              case SegCSCheck:
+                panic("CS checks for far calls/jumps not implemented.\\n");
+                break;
+              case SegCallGateCheck:
+                panic("CS checks for far calls/jumps through call gates"
+                        "not implemented.\\n");
+                break;
+              case SegSSCheck:
+                panic("SS selector checks not implemented.\\n");
+                break;
+              case SegIretCheck:
+                {
+                    SegAttr csAttr = CSAttr;
+                    if (!selector.si && !selector.ti)
+                        return new GeneralProtection(psrc1 & 0xFFFF);
+                    if (selector.rpl < csAttr.dpl)
+                        return new GeneralProtection(psrc1 & 0xFFFF);
+                    break;
+                }
+              case SegIntCSCheck:
+                panic("CS selector checks for interrupts and exceptions"
+                        "not implemented.\\n");
+                break;
+              default:
+                panic("Undefined segment check type.\\n");
+            }
 
             // Compute the address of the descriptor and set DestReg to it.
             if (selector.ti) {

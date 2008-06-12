@@ -81,6 +81,11 @@ let {{
     for letter in ("C", "D", "E", "F", "G", "S"):
         assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
 
+    # Add in symbols for the various checks of segment selectors.
+    for check in ("NoCheck", "CSCheck", "CallGateCheck",
+                  "SSCheck", "IretCheck", "IntCSCheck"):
+        assembler.symbols[check] = "Seg%s" % check
+
     for reg in ("TR", "IDTR"):
         assembler.symbols[reg.lower()] = "SYS_SEGMENT_REG_%s" % reg
 

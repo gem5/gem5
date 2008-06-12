@@ -149,6 +149,7 @@ def operands {{
         'GDTRBase':      ('ControlReg', 'uqw', 'MISCREG_TSG_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 205),
         'GDTRLimit':     ('ControlReg', 'uqw', 'MISCREG_TSG_LIMIT', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 206),
         'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_EFF_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 207),
-        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 208),
+        'CSAttr':        ('ControlReg', 'udw', 'MISCREG_CS_ATTR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 208),
+        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 209),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 300)
 }};
