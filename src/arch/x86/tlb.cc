@@ -571,6 +571,9 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         // If we're not in 64-bit mode, do protection/limit checks
         if (!efer.lma || !csAttr.longMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
+            // Check for a NULL segment selector.
+            if (!tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
+                return new GeneralProtection(0);
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (!attr.writable && write)
                 return new GeneralProtection(0);
