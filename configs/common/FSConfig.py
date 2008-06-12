@@ -168,7 +168,7 @@ def makeLinuxX86System(mem_mode, mdesc = None):
 
     # Physical memory
     self.membus = Bus(bus_id=1)
-    self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self.physmem = PhysicalMemory(range = AddrRange('4GB')) #range = AddrRange(mdesc.mem()))
     self.physmem.port = self.membus.port
 
     # North Bridge
