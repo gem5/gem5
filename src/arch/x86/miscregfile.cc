@@ -141,9 +141,6 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
                     "are unimplemented.\n");
         }
         switch (miscReg) {
-          case MISCREG_APIC_TASK_PRIORITY:
-            panic("Local APIC Task Priority register unimplemented.\n");
-            break;
           case MISCREG_APIC_ARBITRATION_PRIORITY:
             panic("Local APIC Arbitration Priority register unimplemented.\n");
             break;
@@ -221,7 +218,7 @@ void MiscRegFile::setReg(int miscReg,
             // The Local APIC Version register is read only.
             return;
           case MISCREG_APIC_TASK_PRIORITY:
-            panic("Local APIC Task Priority register unimplemented.\n");
+            newVal = val & 0xFF;
             break;
           case MISCREG_APIC_ARBITRATION_PRIORITY:
             panic("Local APIC Arbitration Priority register unimplemented.\n");
