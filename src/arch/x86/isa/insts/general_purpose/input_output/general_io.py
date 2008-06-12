@@ -84,25 +84,23 @@
 microcode = '''
     def macroop IN_R_I {
         .adjust_imm trimImm(8)
-        limm t1, "IntAddrPrefixIO", dataSize=8
-        ld reg, intseg, [1, t1, t0], imm, addressSize=8
+        limm t1, imm, dataSize=asz
+        ld reg, intseg, [1, t1, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 
     def macroop IN_R_R {
-        limm t1, "IntAddrPrefixIO", dataSize=8
         zexti t2, regm, 15, dataSize=2
-        ld reg, intseg, [1, t1, t2], addressSize=8
+        ld reg, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 
     def macroop OUT_I_R {
         .adjust_imm trimImm(8)
-        limm t1, "IntAddrPrefixIO", dataSize=8
-        st reg, intseg, [1, t1, t0], imm, addressSize=8
+        limm t1, imm, dataSize=8
+        st reg, intseg, [1, t1, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 
     def macroop OUT_R_R {
-        limm t1, "IntAddrPrefixIO", dataSize=8
         zexti t2, reg, 15, dataSize=2
-        st regm, intseg, [1, t1, t2], addressSize=8
+        st regm, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 '''

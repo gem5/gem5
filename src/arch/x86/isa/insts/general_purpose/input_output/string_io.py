@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -61,10 +61,9 @@ def macroop INS_M_R {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    limm t1, "IntAddrPrefixIO"
     zexti t2, reg, 15, dataSize=2
 
-    ld t6, intseg, [1, t1, t2], addressSize=8
+    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
     st t6, es, [1, t0, rdi]
 
     add rdi, rdi, t3, dataSize=asz
@@ -77,11 +76,10 @@ def macroop INS_E_M_R {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    limm t1, "IntAddrPrefixIO"
     zexti t2, reg, 15, dataSize=2
 
 topOfLoop:
-    ld t6, intseg, [1, t1, t2], addressSize=8
+    ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
     st t6, es, [1, t0, rdi]
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
@@ -97,11 +95,10 @@ def macroop OUTS_R_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    limm t1, "IntAddrPrefixIO"
     zexti t2, reg, 15, dataSize=2
 
     ld t6, ds, [1, t0, rsi]
-    st t6, intseg, [1, t1, t2], addressSize=8
+    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
 
     add rsi, rsi, t3, dataSize=asz
 };
@@ -113,12 +110,11 @@ def macroop OUTS_E_R_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    limm t1, "IntAddrPrefixIO"
     zexti t2, reg, 15, dataSize=2
 
 topOfLoop:
     ld t6, ds, [1, t0, rsi]
-    st t6, intseg, [1, t1, t2], addressSize=8
+    st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rsi, rsi, t3, dataSize=asz

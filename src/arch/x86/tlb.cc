@@ -206,10 +206,11 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     // value.
     if (seg == SEGMENT_REG_MS) {
         DPRINTF(TLB, "Addresses references internal memory.\n");
-        Addr prefix = vaddr & IntAddrPrefixMask;
+        Addr prefix = (vaddr >> 3) & IntAddrPrefixMask;
         if (prefix == IntAddrPrefixCPUID) {
             panic("CPUID memory space not yet implemented!\n");
         } else if (prefix == IntAddrPrefixMSR) {
+            vaddr = vaddr >> 3;
             req->setMmapedIpr(true);
             Addr regNum = 0;
             switch (vaddr & ~IntAddrPrefixMask) {
