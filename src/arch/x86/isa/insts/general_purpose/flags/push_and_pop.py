@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -57,8 +57,7 @@ microcode = '''
 def macroop PUSHF {
     .adjust_env oszIn64Override
 
-    # This should really read the whole flags register, not just user flags.
-    ruflags t1
+    rflags t1
     stupd t1, ss, [1, t0, rsp], "-env.dataSize"
 };
 
@@ -67,7 +66,6 @@ def macroop POPF {
 
     ld t1, ss, [1, t0, rsp]
     addi rsp, rsp, dsz
-    # This should really write the whole flags register, not just user flags.
-    wruflags t1, t0
+    wrflags t1, t0
 };
 '''

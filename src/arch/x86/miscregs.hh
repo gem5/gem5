@@ -82,6 +82,18 @@ namespace X86ISA
         OFBit = 1 << 11
     };
 
+    enum RFLAGBit {
+        TFBit = 1 << 8,
+        IFBit = 1 << 9,
+        NTBit = 1 << 14,
+        RFBit = 1 << 16,
+        VMBit = 1 << 17,
+        ACBit = 1 << 18,
+        VIFBit = 1 << 19,
+        VIPBit = 1 << 20,
+        IDBit = 1 << 21
+    };
+
     enum MiscRegIndex
     {
         // Control registers

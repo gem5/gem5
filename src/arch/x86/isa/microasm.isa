@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -135,7 +135,8 @@ let {{
     for reg in range(15):
         assembler.symbols["cr%d" % reg] = "MISCREG_CR%d" % reg
 
-    for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF'):
+    for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF', \
+                 'TF', 'IF', 'NT', 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID'):
         assembler.symbols[flag] = flag + "Bit"
 
     for cond in ('True', 'False', 'ECF', 'EZF', 'SZnZF',

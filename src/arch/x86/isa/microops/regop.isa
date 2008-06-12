@@ -845,11 +845,24 @@ let {{
     class Wruflags(WrRegOp):
         code = 'ccFlagBits = psrc1 ^ op2'
 
+    class Wrflags(WrRegOp):
+        code = '''
+            MiscReg newFlags = psrc1 ^ op2;
+            MiscReg userFlagMask = 0xDD5;
+            // Get only the user flags
+            ccFlagBits = newFlags & userFlagMask;
+            // Get everything else
+            nccFlagBits = newFlags & ~userFlagMask;
+        '''
+
     class Rdip(RdRegOp):
         code = 'DestReg = RIP - CSBase'
 
     class Ruflags(RdRegOp):
         code = 'DestReg = ccFlagBits'
+
+    class Rflags(RdRegOp):
+        code = 'DestReg = ccFlagBits | nccFlagBits'
 
     class Ruflag(RegOp):
         code = '''
@@ -861,6 +874,20 @@ let {{
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Ruflag, self).__init__(dest, \
+                    "NUM_INTREGS", imm, flags, dataSize)
+
+    class Rflag(RegOp):
+        code = '''
+            MiscReg flagMask = 0x3F7FDD5;
+            MiscReg flags = (nccFlagBits | ccFlagBits) & flagMask;
+            int flag = bits(flags, imm8);
+            DestReg = merge(DestReg, flag, dataSize);
+            ccFlagBits = (flag == 0) ? (ccFlagBits | EZFBit) :
+                                       (ccFlagBits & ~EZFBit);
+            '''
+        def __init__(self, dest, imm, flags=None, \
+                dataSize="env.dataSize"):
+            super(Rflag, self).__init__(dest, \
                     "NUM_INTREGS", imm, flags, dataSize)
 
     class Sext(RegOp):
