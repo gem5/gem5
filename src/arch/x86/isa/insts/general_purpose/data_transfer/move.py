@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -130,14 +130,14 @@ def macroop MOVSX_B_R_R {
 };
 
 def macroop MOVSX_B_R_M {
-    ld reg, seg, sib, disp, dataSize=1
-    sexti reg, reg, 7
+    ld t1, seg, sib, disp, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_B_R_P {
     rdip t7
-    ld reg, seg, riprel, disp, dataSize=1
-    sexti reg, reg, 7
+    ld t1, seg, riprel, disp, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_W_R_R {
