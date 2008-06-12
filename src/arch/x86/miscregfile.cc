@@ -222,8 +222,8 @@ void MiscRegFile::setReg(int miscReg,
             panic("Local APIC ID register unimplemented.\n");
             break;
           case MISCREG_APIC_VERSION:
-            panic("Local APIC Version register is read only.\n");
-            break;
+            // The Local APIC Version register is read only.
+            return;
           case MISCREG_APIC_TASK_PRIORITY:
             panic("Local APIC Task Priority register unimplemented.\n");
             break;
