@@ -127,18 +127,9 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 {
     if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
-        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
-                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
-            panic("Local APIC In-Service registers are unimplemented.\n");
-        }
         if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
                 miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
             panic("Local APIC Trigger Mode registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
-                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
-            panic("Local APIC Interrupt Request registers "
-                    "are unimplemented.\n");
         }
         switch (miscReg) {
           case MISCREG_APIC_ARBITRATION_PRIORITY:
