@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +37,7 @@
 #include <vector>
 
 #include "arch/x86/x86_traits.hh"
+#include "dev/intel_8254_timer.hh"
 #include "cpu/intr_control.hh"
 #include "dev/simconsole.hh"
 #include "dev/x86/pc.hh"
@@ -48,8 +49,23 @@ using namespace TheISA;
 PC::PC(const Params *p)
     : Platform(p), system(p->system)
 {
+    southBridge = NULL;
     // set the back pointer from the system to myself
     system->platform = this;
+}
+
+void
+PC::init()
+{
+    assert(southBridge);
+    Intel8254Timer & timer = southBridge->pit.pit;
+    //Timer 0, mode 2, no bcd, 16 bit count
+    timer.writeControl(0x34);
+    //Timer 0, latch command
+    timer.writeControl(0x00);
+    //Write a 16 bit count of 0
+    timer.counter0.write(0);
+    timer.counter0.write(0);
 }
 
 Tick

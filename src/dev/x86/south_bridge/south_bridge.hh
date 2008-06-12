@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,16 @@
 class SouthBridge : public PioDevice
 {
   protected:
+    AddrRangeList rangeList;
+
+    typedef range_map<Addr, X86ISA::SubDevice *> RangeMap;
+    typedef RangeMap::iterator RangeMapIt;
+    RangeMap rangeMap;
+
+
+    void addDevice(X86ISA::SubDevice &);
+
+  public:
     // PICs
     X86ISA::I8259 pic1;
     X86ISA::I8259 pic2;
@@ -56,16 +66,8 @@ class SouthBridge : public PioDevice
     // PC speaker
     X86ISA::Speaker speaker;
 
-    AddrRangeList rangeList;
-
-    typedef range_map<Addr, X86ISA::SubDevice *> RangeMap;
-    typedef RangeMap::iterator RangeMapIt;
-    RangeMap rangeMap;
-
-
-    void addDevice(X86ISA::SubDevice &);
-
   public:
+
     void addressRanges(AddrRangeList &range_list);
 
     Tick read(PacketPtr pkt);

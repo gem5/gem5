@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,6 +38,7 @@
 #define __DEV_PC_HH__
 
 #include "dev/platform.hh"
+#include "dev/x86/south_bridge/south_bridge.hh"
 #include "params/PC.hh"
 
 class IdeController;
@@ -48,9 +49,15 @@ class PC : public Platform
   public:
     /** Pointer to the system */
     System *system;
+    SouthBridge * southBridge;
 
   public:
     typedef PCParams Params;
+
+    /**
+     * Do platform initialization stuff
+     */
+    void init();
 
     PC(const Params *p);
 

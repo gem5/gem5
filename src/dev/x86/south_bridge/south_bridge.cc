@@ -30,6 +30,7 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/range.hh"
+#include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge/south_bridge.hh"
 
 using namespace X86ISA;
@@ -77,6 +78,11 @@ SouthBridge::SouthBridge(const Params *p) : PioDevice(p),
     addDevice(pit);
     addDevice(cmos);
     addDevice(speaker);
+
+    // Let the platform know where we are
+    PC * pc = dynamic_cast<PC *>(platform);
+    assert(pc);
+    pc->southBridge = this;
 }
 
 SouthBridge *
