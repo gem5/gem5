@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -68,7 +68,7 @@ SouthBridge::write(PacketPtr pkt)
 SouthBridge::SouthBridge(const Params *p) : PioDevice(p),
     pic1(0x20, 2, p->pio_latency),
     pic2(0xA0, 2, p->pio_latency),
-    pit(0x40, 4, p->pio_latency),
+    pit(p->name + ".pit", 0x40, 4, p->pio_latency),
     cmos(0x70, 2, p->pio_latency),
     speaker(0x61, 1, p->pio_latency)
 {

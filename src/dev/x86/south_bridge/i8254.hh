@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,10 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/range.hh"
+#include "dev/intel_8254_timer.hh"
 #include "dev/x86/south_bridge/sub_device.hh"
+
+#include <string>
 
 namespace X86ISA
 {
@@ -41,16 +44,17 @@ namespace X86ISA
 class I8254 : public SubDevice
 {
   protected:
-    void processControlWord(uint8_t word);
+    Intel8254Timer pit;
 
   public:
 
-    I8254()
+    I8254(const std::string &name) : pit(name)
     {}
-    I8254(Tick _latency) : SubDevice(_latency)
+    I8254(const std::string &name, Tick _latency) :
+        SubDevice(_latency), pit(name)
     {}
-    I8254(Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency)
+    I8254(const std::string &name, Addr start, Addr size, Tick _latency) :
+        SubDevice(start, size, _latency), pit(name)
     {}
 
     Tick read(PacketPtr pkt);

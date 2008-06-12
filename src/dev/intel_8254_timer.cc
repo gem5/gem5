@@ -1,0 +1,255 @@
+/*
+ * Copyright (c) 2004, 2005
+ * The Regents of The University of Michigan
+ * All Rights Reserved
+ *
+ * This code is part of the M5 simulator.
+ *
+ * Permission is granted to use, copy, create derivative works and
+ * redistribute this software and such derivative works for any
+ * purpose, so long as the copyright notice above, this grant of
+ * permission, and the disclaimer below appear in all copies made; and
+ * so long as the name of The University of Michigan is not used in
+ * any advertising or publicity pertaining to the use or distribution
+ * of this software without specific, written prior authorization.
+ *
+ * THIS SOFTWARE IS PROVIDED AS IS, WITHOUT REPRESENTATION FROM THE
+ * UNIVERSITY OF MICHIGAN AS TO ITS FITNESS FOR ANY PURPOSE, AND
+ * WITHOUT WARRANTY BY THE UNIVERSITY OF MICHIGAN OF ANY KIND, EITHER
+ * EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE. THE REGENTS OF THE UNIVERSITY OF MICHIGAN SHALL NOT BE
+ * LIABLE FOR ANY DAMAGES, INCLUDING DIRECT, SPECIAL, INDIRECT,
+ * INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WITH RESPECT TO ANY CLAIM
+ * ARISING OUT OF OR IN CONNECTION WITH THE USE OF THE SOFTWARE, EVEN
+ * IF IT HAS BEEN OR IS HEREAFTER ADVISED OF THE POSSIBILITY OF SUCH
+ * DAMAGES.
+ *
+ * Authors: Ali G. Saidi
+ *          Andrew L. Schultz
+ *          Miguel J. Serrano
+ */
+
+#include "base/misc.hh"
+#include "dev/intel_8254_timer.hh"
+
+using namespace std;
+
+Intel8254Timer::Intel8254Timer(const string &name)
+    : _name(name), counter0(name + ".counter0"), counter1(name + ".counter1"),
+      counter2(name + ".counter2")
+{
+    counter[0] = &counter0;
+    counter[1] = &counter0;
+    counter[2] = &counter0;
+}
+
+void
+Intel8254Timer::writeControl(const CtrlReg data)
+{
+    int sel = data.sel;
+
+    if (sel == ReadBackCommand)
+       panic("PITimer Read-Back Command is not implemented.\n");
+
+    if (data.rw == LatchCommand)
+        counter[sel]->latchCount();
+    else {
+        counter[sel]->setRW(data.rw);
+        counter[sel]->setMode(data.mode);
+        counter[sel]->setBCD(data.bcd);
+    }
+}
+
+void
+Intel8254Timer::serialize(const string &base, ostream &os)
+{
+    // serialize the counters
+    counter0.serialize(base + ".counter0", os);
+    counter1.serialize(base + ".counter1", os);
+    counter2.serialize(base + ".counter2", os);
+}
+
+void
+Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
+        const string &section)
+{
+    // unserialze the counters
+    counter0.unserialize(base + ".counter0", cp, section);
+    counter1.unserialize(base + ".counter1", cp, section);
+    counter2.unserialize(base + ".counter2", cp, section);
+}
+
+Intel8254Timer::Counter::Counter(const string &name)
+    : _name(name), event(this), count(0), latched_count(0), period(0),
+      mode(0), output_high(false), latch_on(false), read_byte(LSB),
+      write_byte(LSB)
+{
+
+}
+
+void
+Intel8254Timer::Counter::latchCount()
+{
+    // behave like a real latch
+    if(!latch_on) {
+        latch_on = true;
+        read_byte = LSB;
+        latched_count = count;
+    }
+}
+
+uint8_t
+Intel8254Timer::Counter::read()
+{
+    if (latch_on) {
+        switch (read_byte) {
+          case LSB:
+            read_byte = MSB;
+            return (uint8_t)latched_count;
+            break;
+          case MSB:
+            read_byte = LSB;
+            latch_on = false;
+            return latched_count >> 8;
+            break;
+          default:
+            panic("Shouldn't be here");
+        }
+    } else {
+        switch (read_byte) {
+          case LSB:
+            read_byte = MSB;
+            return (uint8_t)count;
+            break;
+          case MSB:
+            read_byte = LSB;
+            return count >> 8;
+            break;
+          default:
+            panic("Shouldn't be here");
+        }
+    }
+}
+
+void
+Intel8254Timer::Counter::write(const uint8_t data)
+{
+    switch (write_byte) {
+      case LSB:
+        count = (count & 0xFF00) | data;
+
+        if (event.scheduled())
+          event.deschedule();
+        output_high = false;
+        write_byte = MSB;
+        break;
+
+      case MSB:
+        count = (count & 0x00FF) | (data << 8);
+        period = count;
+
+        if (period > 0) {
+            DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
+                    count * event.interval);
+            event.schedule(curTick + count * event.interval);
+        }
+        write_byte = LSB;
+        break;
+    }
+}
+
+void
+Intel8254Timer::Counter::setRW(int rw_val)
+{
+    if (rw_val != TwoPhase)
+        panic("Only LSB/MSB read/write is implemented.\n");
+}
+
+void
+Intel8254Timer::Counter::setMode(int mode_val)
+{
+    if(mode_val != InitTc && mode_val != RateGen &&
+       mode_val != SquareWave)
+        panic("PIT mode %#x is not implemented: \n", mode_val);
+
+    mode = mode_val;
+}
+
+void
+Intel8254Timer::Counter::setBCD(int bcd_val)
+{
+    if (bcd_val)
+        panic("PITimer does not implement BCD counts.\n");
+}
+
+bool
+Intel8254Timer::Counter::outputHigh()
+{
+    return output_high;
+}
+
+void
+Intel8254Timer::Counter::serialize(const string &base, ostream &os)
+{
+    paramOut(os, base + ".count", count);
+    paramOut(os, base + ".latched_count", latched_count);
+    paramOut(os, base + ".period", period);
+    paramOut(os, base + ".mode", mode);
+    paramOut(os, base + ".output_high", output_high);
+    paramOut(os, base + ".latch_on", latch_on);
+    paramOut(os, base + ".read_byte", read_byte);
+    paramOut(os, base + ".write_byte", write_byte);
+
+    Tick event_tick = 0;
+    if (event.scheduled())
+        event_tick = event.when();
+    paramOut(os, base + ".event_tick", event_tick);
+}
+
+void
+Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
+                                         const string &section)
+{
+    paramIn(cp, section, base + ".count", count);
+    paramIn(cp, section, base + ".latched_count", latched_count);
+    paramIn(cp, section, base + ".period", period);
+    paramIn(cp, section, base + ".mode", mode);
+    paramIn(cp, section, base + ".output_high", output_high);
+    paramIn(cp, section, base + ".latch_on", latch_on);
+    paramIn(cp, section, base + ".read_byte", read_byte);
+    paramIn(cp, section, base + ".write_byte", write_byte);
+
+    Tick event_tick;
+    paramIn(cp, section, base + ".event_tick", event_tick);
+    if (event_tick)
+        event.schedule(event_tick);
+}
+
+Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
+    : Event(&mainEventQueue)
+{
+    interval = (Tick)(Clock::Float::s / 1193180.0);
+    counter = c_ptr;
+}
+
+void
+Intel8254Timer::Counter::CounterEvent::process()
+{
+    DPRINTF(Intel8254Timer, "Timer Interrupt\n");
+    switch (counter->mode) {
+      case InitTc:
+        counter->output_high = true;
+      case RateGen:
+      case SquareWave:
+        break;
+      default:
+        panic("Unimplemented PITimer mode.\n");
+    }
+}
+
+const char *
+Intel8254Timer::Counter::CounterEvent::description() const
+{
+    return "tsunami 8254 Interval timer";
+}

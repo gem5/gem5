@@ -39,6 +39,7 @@
 
 #include "base/range.hh"
 #include "dev/alpha/tsunami.hh"
+#include "dev/intel_8254_timer.hh"
 #include "dev/mc146818.hh"
 #include "dev/io_device.hh"
 #include "params/TsunamiIO.hh"
@@ -69,138 +70,6 @@ class TsunamiIO : public BasicPioDevice
         }
     };
 
-    /** Programmable Interval Timer (Intel 8254) */
-    class PITimer
-    {
-        /** Counter element for PIT */
-        class Counter
-        {
-            /** Event for counter interrupt */
-            class CounterEvent : public Event
-            {
-              private:
-                /** Pointer back to Counter */
-                Counter* counter;
-                Tick interval;
-
-              public:
-                CounterEvent(Counter*);
-
-                /** Event process */
-                virtual void process();
-
-                /** Event description */
-                virtual const char *description() const;
-
-                friend class Counter;
-            };
-
-          private:
-            std::string _name;
-            const std::string &name() const { return _name; }
-
-            CounterEvent event;
-
-            /** Current count value */
-            uint16_t count;
-
-            /** Latched count */
-            uint16_t latched_count;
-
-            /** Interrupt period */
-            uint16_t period;
-
-            /** Current mode of operation */
-            uint8_t mode;
-
-            /** Output goes high when the counter reaches zero */
-            bool output_high;
-
-            /** State of the count latch */
-            bool latch_on;
-
-            /** Set of values for read_byte and write_byte */
-            enum {LSB, MSB};
-
-            /** Determine which byte of a 16-bit count value to read/write */
-            uint8_t read_byte, write_byte;
-
-          public:
-            Counter(const std::string &name);
-
-            /** Latch the current count (if one is not already latched) */
-            void latchCount();
-
-            /** Set the read/write mode */
-            void setRW(int rw_val);
-
-            /** Set operational mode */
-            void setMode(int mode_val);
-
-            /** Set count encoding */
-            void setBCD(int bcd_val);
-
-            /** Read a count byte */
-            uint8_t read();
-
-            /** Write a count byte */
-            void write(const uint8_t data);
-
-            /** Is the output high? */
-            bool outputHigh();
-
-            /**
-             * Serialize this object to the given output stream.
-             * @param base The base name of the counter object.
-             * @param os   The stream to serialize to.
-             */
-            void serialize(const std::string &base, std::ostream &os);
-
-            /**
-             * Reconstruct the state of this object from a checkpoint.
-             * @param base The base name of the counter object.
-             * @param cp The checkpoint use.
-             * @param section The section name of this object
-             */
-            void unserialize(const std::string &base, Checkpoint *cp,
-                             const std::string &section);
-        };
-
-      private:
-        std::string _name;
-        const std::string &name() const { return _name; }
-
-        /** PIT has three seperate counters */
-        Counter *counter[3];
-
-      public:
-        /** Public way to access individual counters (avoid array accesses) */
-        Counter counter0;
-        Counter counter1;
-        Counter counter2;
-
-        PITimer(const std::string &name);
-
-        /** Write control word */
-        void writeControl(const uint8_t data);
-
-        /**
-         * Serialize this object to the given output stream.
-         * @param base The base name of the counter object.
-         * @param os The stream to serialize to.
-         */
-        void serialize(const std::string &base, std::ostream &os);
-
-        /**
-         * Reconstruct the state of this object from a checkpoint.
-         * @param base The base name of the counter object.
-         * @param cp The checkpoint use.
-         * @param section The section name of this object
-         */
-        void unserialize(const std::string &base, Checkpoint *cp,
-                         const std::string &section);
-    };
-
     /** Mask of the PIC1 */
     uint8_t mask1;
 
@@ -223,7 +92,7 @@ class TsunamiIO : public BasicPioDevice
     Tsunami *tsunami;
 
     /** Intel 8253 Periodic Interval Timer */
-    PITimer pitimer;
+    Intel8254Timer pitimer;
 
     TsunamiRTC rtc;
 

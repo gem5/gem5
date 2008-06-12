@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,21 +38,21 @@ X86ISA::I8254::read(PacketPtr pkt)
     switch(pkt->getAddr() - addrRange.start)
     {
       case 0x0:
-        warn("Reading from timer 0 counter.\n");
+        pkt->set(pit.counter0.read());
         break;
       case 0x1:
-        warn("Reading from timer 1 counter.\n");
+        pkt->set(pit.counter1.read());
         break;
       case 0x2:
-        warn("Reading from timer 2 counter.\n");
+        pkt->set(pit.counter2.read());
         break;
       case 0x3:
-        fatal("Reading from timer control word which is read only.\n");
+        pkt->set(uint8_t(-1));
         break;
       default:
         panic("Read from undefined i8254 register.\n");
     }
-    return SubDevice::read(pkt);
+    return latency;
 }
 
 Tick
@@ -62,25 +62,19 @@ X86ISA::I8254::write(PacketPtr pkt)
     switch(pkt->getAddr() - addrRange.start)
     {
       case 0x0:
-        warn("Writing to timer 0 counter.\n");
+        pit.counter0.write(pkt->get<uint8_t>());
         break;
       case 0x1:
-        warn("Writing to timer 1 counter.\n");
+        pit.counter1.write(pkt->get<uint8_t>());
         break;
       case 0x2:
-        warn("Writing to timer 2 counter.\n");
+        pit.counter2.write(pkt->get<uint8_t>());
         break;
       case 0x3:
-        processControlWord(pkt->get<uint8_t>());
-        return latency;
+        pit.writeControl(pkt->get<uint8_t>());
+        break;
       default:
         panic("Write to undefined i8254 register.\n");
     }
-    return SubDevice::write(pkt);
-}
-
-void
-X86ISA::I8254::processControlWord(uint8_t word)
-{
-    warn("I8254 received control word %x.\n", word);
+    return latency;
 }
