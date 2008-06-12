@@ -58,14 +58,14 @@ def macroop PUSHF {
     .adjust_env oszIn64Override
 
     rflags t1
-    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
+    stupd t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop POPF {
     .adjust_env oszIn64Override
 
-    ld t1, ss, [1, t0, rsp]
-    addi rsp, rsp, dsz
+    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    addi rsp, rsp, ssz
     wrflags t1, t0
 };
 '''

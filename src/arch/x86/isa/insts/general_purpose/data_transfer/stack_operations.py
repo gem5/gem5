@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -58,8 +58,8 @@ def macroop POP_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [1, t0, rsp]
-    addi rsp, rsp, dsz
+    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    addi rsp, rsp, ssz, dataSize=asz
     mov reg, reg, t1
 };
 
@@ -67,10 +67,10 @@ def macroop POP_M {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, ss, [1, t0, rsp]
-    cda seg, sib, disp
-    addi rsp, rsp, dsz
-    st t1, seg, sib, disp
+    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    cda seg, sib, disp, dataSize=ssz
+    addi rsp, rsp, ssz, dataSize=asz
+    st t1, seg, sib, disp, dataSize=ssz
 };
 
 def macroop POP_P {
@@ -78,17 +78,17 @@ def macroop POP_P {
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, ss, [1, t0, rsp]
-    cda seg, sib, disp
-    addi rsp, rsp, dsz
-    st t1, seg, riprel, disp
+    ld t1, ss, [1, t0, rsp], dataSize=ssz
+    cda seg, sib, disp, dataSize=ssz
+    addi rsp, rsp, ssz, dataSize=asz
+    st t1, seg, riprel, disp, dataSize=ssz
 };
 
 def macroop PUSH_R {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    stupd reg, ss, [1, t0, rsp], "-env.dataSize"
+    stupd reg, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop PUSH_I {
@@ -96,15 +96,15 @@ def macroop PUSH_I {
     .adjust_env oszIn64Override
 
     limm t1, imm
-    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
+    stupd t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop PUSH_M {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    ld t1, seg, sib, disp
-    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
+    ld t1, seg, sib, disp, dataSize=ssz
+    stupd t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop PUSH_P {
@@ -112,48 +112,48 @@ def macroop PUSH_P {
     .adjust_env oszIn64Override
 
     rdip t7
-    ld t1, seg, riprel, disp
-    stupd t1, ss, [1, t0, rsp], "-env.dataSize"
+    ld t1, seg, riprel, disp, dataSize=ssz
+    stupd t1, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop PUSHA {
     # Check all the stack addresses. We'll assume that if the beginning and
     # end are ok, then the stuff in the middle should be as well.
-    cda ss, [1, t0, rsp], "-env.dataSize"
-    cda ss, [1, t0, rsp], "-8 * env.dataSize"
-    stupd rax, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rcx, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rdx, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rbx, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rsp, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rbp, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rsi, ss, [1, t0, rsp], "-env.dataSize"
-    stupd rdi, ss, [1, t0, rsp], "-env.dataSize"
+    cda ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    cda ss, [1, t0, rsp], "-8 * env.stackSize", dataSize=ssz
+    stupd rax, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rcx, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rdx, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rbx, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rsp, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rbp, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rsi, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rdi, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 };
 
 def macroop POPA {
     # Check all the stack addresses. We'll assume that if the beginning and
     # end are ok, then the stuff in the middle should be as well.
-    ld t1, ss, [1, t0, rsp], "0 * env.dataSize"
-    ld t2, ss, [1, t0, rsp], "7 * env.dataSize"
-    mov rdi, rdi, t1
-    ld rsi, ss, [1, t0, rsp], "1 * env.dataSize"
-    ld rbp, ss, [1, t0, rsp], "2 * env.dataSize"
-    ld rbx, ss, [1, t0, rsp], "4 * env.dataSize"
-    ld rdx, ss, [1, t0, rsp], "5 * env.dataSize"
-    ld rcx, ss, [1, t0, rsp], "6 * env.dataSize"
-    mov rax, rax, t2
-    addi rsp, rsp, "8 * env.dataSize"
+    ld t1, ss, [1, t0, rsp], "0 * env.stackSize", dataSize=ssz
+    ld t2, ss, [1, t0, rsp], "7 * env.stackSize", dataSize=ssz
+    mov rdi, rdi, t1, dataSize=ssz
+    ld rsi, ss, [1, t0, rsp], "1 * env.stackSize", dataSize=ssz
+    ld rbp, ss, [1, t0, rsp], "2 * env.stackSize", dataSize=ssz
+    ld rbx, ss, [1, t0, rsp], "4 * env.stackSize", dataSize=ssz
+    ld rdx, ss, [1, t0, rsp], "5 * env.stackSize", dataSize=ssz
+    ld rcx, ss, [1, t0, rsp], "6 * env.stackSize", dataSize=ssz
+    mov rax, rax, t2, dataSize=ssz
+    addi rsp, rsp, "8 * env.stackSize", dataSize=asz
 };
 
 def macroop LEAVE {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    mov t1, t1, rbp
-    ld rbp, ss, [1, t0, t1]
-    mov rsp, rsp, t1
-    addi rsp, rsp, dsz
+    mov t1, t1, rbp, dataSize=asz
+    ld rbp, ss, [1, t0, t1], dataSize=ssz
+    mov rsp, rsp, t1, dataSize=asz
+    addi rsp, rsp, ssz, dataSize=asz
 };
 
 def macroop ENTER_I_I {
@@ -168,10 +168,10 @@ def macroop ENTER_I_I {
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
     # Push rbp.
-    stupd rbp, ss, [1, t0, rsp], "-env.dataSize"
+    stupd rbp, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
 
     # Save the stack pointer for later
-    mov t6, t6, rsp
+    mov t6, t6, rsp, dataSize=asz
 
     # If the nesting level is zero, skip all this stuff.
     subi t0, t1, t0, flags=(EZF,), dataSize=2
@@ -183,8 +183,8 @@ def macroop ENTER_I_I {
 
     limm t4, "ULL(-1)", dataSize=8
 topOfLoop:
-    ld t5, ss, [dsz, t4, rbp]
-    stupd t5, ss, [1, t0, rsp], "-env.dataSize"
+    ld t5, ss, [ssz, t4, rbp], dataSize=ssz
+    stupd t5, ss, [1, t0, rsp], "-env.stackSize"
 
     # If we're not done yet, loop
     subi t4, t4, 1, dataSize=8
@@ -193,10 +193,10 @@ topOfLoop:
 
 bottomOfLoop:
     # Push the old rbp onto the stack
-    stupd t6, ss, [1, t0, rsp], "-env.dataSize"
+    stupd t6, ss, [1, t0, rsp], "-env.stackSize"
 
 skipLoop:
-    sub rsp, rsp, t2
-    mov rbp, rbp, t6
+    sub rsp, rsp, t2, dataSize=asz
+    mov rbp, rbp, t6, dataSize=asz
 };
 '''
