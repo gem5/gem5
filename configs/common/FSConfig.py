@@ -178,7 +178,7 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.bridge.side_b = self.membus.port
 
     # Command line
-    self.boot_osflags = 'earlyprintk=ttyS0'
+    self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0'
 
     # Platform
     self.pc = PC()
