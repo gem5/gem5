@@ -106,6 +106,8 @@ void MiscRegFile::clear()
 {
     // Blank everything. 0 might not be an appropriate value for some things.
     memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
+    //Set the local apic DFR to the flat model.
+    regVal[MISCREG_APIC_DESTINATION_FORMAT] = (MiscReg)(-1);
 }
 
 MiscReg MiscRegFile::readRegNoEffect(int miscReg)
@@ -150,12 +152,6 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
             break;
           case MISCREG_APIC_EOI:
             panic("Local APIC EOI register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LOGICAL_DESTINATION:
-            panic("Local APIC Logical Destination register unimplemented.\n");
-            break;
-          case MISCREG_APIC_DESTINATION_FORMAT:
-            panic("Local APIC Destination Format register unimplemented.\n");
             break;
           case MISCREG_APIC_ERROR_STATUS:
             regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(0x1);
@@ -237,10 +233,10 @@ void MiscRegFile::setReg(int miscReg,
             panic("Local APIC EOI register unimplemented.\n");
             break;
           case MISCREG_APIC_LOGICAL_DESTINATION:
-            panic("Local APIC Logical Destination register unimplemented.\n");
+            newVal = val & 0xFF000000;
             break;
           case MISCREG_APIC_DESTINATION_FORMAT:
-            panic("Local APIC Destination Format register unimplemented.\n");
+            newVal = val | 0x0FFFFFFF;
             break;
           case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
             regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(1 << 1);
