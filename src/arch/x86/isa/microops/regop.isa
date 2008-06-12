@@ -988,20 +988,20 @@ let {{
 
     class Chks(SegOp):
         code = '''
-            // The selector is in source 1.
+            // The selector is in source 1 and can be at most 16 bits.
             SegSelector selector = psrc1;
 
             // Compute the address of the descriptor and set DestReg to it.
             if (selector.ti) {
                 // A descriptor in the LDT
-                Addr target = (selector.esi << 3) + LDTRBase;
-                if (!LDTRSel || (selector.esi << 3) + dataSize > LDTRLimit)
+                Addr target = (selector.si << 3) + LDTRBase;
+                if (!LDTRSel || (selector.si << 3) + dataSize > LDTRLimit)
                     fault = new GeneralProtection(selector & mask(16));
                 DestReg = target;
             } else {
                 // A descriptor in the GDT
-                Addr target = (selector.esi << 3) + GDTRBase;
-                if ((selector.esi << 3) + dataSize > GDTRLimit)
+                Addr target = (selector.si << 3) + GDTRBase;
+                if ((selector.si << 3) + dataSize > GDTRLimit)
                     fault = new GeneralProtection(selector & mask(16));
                 DestReg = target;
             }
@@ -1009,7 +1009,7 @@ let {{
         flag_code = '''
             // Check for a NULL selector and set ZF,EZF appropriately.
             ccFlagBits = ccFlagBits & ~(ext & (ZFBit | EZFBit));
-            if (!selector.esi && !selector.ti)
+            if (!selector.si && !selector.ti)
                 ccFlagBits = ccFlagBits | (ext & (ZFBit | EZFBit));
         '''
 
