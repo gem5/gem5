@@ -50,6 +50,10 @@ class PC(Platform):
     # "Non-existant" port used for timing purposes by the linux kernel
     i_dont_exist = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
 
+    # Ports behind the pci config and data regsiters. These don't do anything,
+    # but the linux kernel fiddles with them anway.
+    behind_pci = IsaFake(pio_addr=x86IOAddress(0xcf8), pio_size=8)
+
     # Serial port and console
     console = SimConsole()
     com_1 = Uart8250()
@@ -59,6 +63,7 @@ class PC(Platform):
     def attachIO(self, bus):
         self.south_bridge.pio = bus.port
         self.i_dont_exist.pio = bus.port
+        self.behind_pci.pio = bus.port
         self.com_1.pio = bus.port
         self.pciconfig.pio = bus.default
         bus.responder_set = True
