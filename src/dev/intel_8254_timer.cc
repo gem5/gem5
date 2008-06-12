@@ -147,13 +147,16 @@ Intel8254Timer::Counter::write(const uint8_t data)
 
       case MSB:
         count = (count & 0x00FF) | (data << 8);
-        period = count;
+        // In the RateGen or SquareWave modes, the timer wraps around and
+        // triggers on a value of 1, not 0.
+        if (mode == RateGen || mode == SquareWave)
+            period = count - 1;
+        else
+            period = count;
 
-        if (period > 0) {
-            DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
-                    count * event.interval);
-            event.schedule(curTick + count * event.interval);
-        }
+        if (period > 0)
+            event.setTo(period);
+
         write_byte = LSB;
         break;
     }
@@ -240,12 +243,24 @@ Intel8254Timer::Counter::CounterEvent::process()
     switch (counter->mode) {
       case InitTc:
         counter->output_high = true;
+        break;
       case RateGen:
       case SquareWave:
+        setTo(counter->period);
         break;
       default:
         panic("Unimplemented PITimer mode.\n");
     }
+}
+
+void
+Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
+{
+    if (clocks == 0)
+        panic("Timer can't be set to go off instantly.\n");
+    DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
+            clocks * interval);
+    schedule(curTick + clocks * interval);
 }
 
 const char *

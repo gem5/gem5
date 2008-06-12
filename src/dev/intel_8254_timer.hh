@@ -95,6 +95,8 @@ class Intel8254Timer
             virtual const char *description() const;
 
             friend class Counter;
+
+            void setTo(int clocks);
         };
 
       private:
