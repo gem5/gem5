@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,26 +29,23 @@
  */
 
 #include "base/bitunion.hh"
+#include "base/trace.hh"
+#include "dev/x86/south_bridge/i8254.hh"
 #include "dev/x86/south_bridge/speaker.hh"
 #include "mem/packet_access.hh"
-
-BitUnion8(SpeakerControl)
-    Bitfield<0> gate;
-    Bitfield<1> speaker;
-    Bitfield<5> timer;
-EndBitUnion(SpeakerControl)
 
 Tick
 X86ISA::Speaker::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() == addrRange.start);
     assert(pkt->getSize() == 1);
-    SpeakerControl val = 0xFF;
-    warn("Reading from speaker device: gate %s, speaker %s, output %s.\n",
-            val.gate ? "on" : "off",
-            val.speaker ? "on" : "off",
-            val.timer ? "on" : "off");
-    pkt->set((uint8_t)val);
+    controlVal.timer = timer->pit.counter2.outputHigh() ? 1 : 0;
+    DPRINTF(PCSpeaker,
+            "Reading from speaker device: gate %s, speaker %s, output %s.\n",
+            controlVal.gate ? "on" : "off",
+            controlVal.speaker ? "on" : "off",
+            controlVal.timer ? "on" : "off");
+    pkt->set((uint8_t)controlVal);
     return latency;
 }
 
@@ -58,7 +55,16 @@ X86ISA::Speaker::write(PacketPtr pkt)
     assert(pkt->getAddr() == addrRange.start);
     assert(pkt->getSize() == 1);
     SpeakerControl val = pkt->get<uint8_t>();
-    warn("Writing to speaker device: gate %s, speaker %s.\n",
-            val.gate ? "on" : "off", val.speaker ? "on" : "off");
+    controlVal.gate = val.gate;
+    //Change the gate value in the timer.
+    if (!val.gate)
+        warn("The gate bit of the pc speaker isn't implemented and "
+                "is always on.\n");
+    //This would control whether the timer output is hooked up to a physical
+    //speaker. Since M5 can't make noise, it's value doesn't actually do
+    //anything.
+    controlVal.speaker = val.speaker;
+    DPRINTF(PCSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
+            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
     return latency;
 }

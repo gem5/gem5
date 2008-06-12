@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,16 +38,30 @@
 namespace X86ISA
 {
 
+class I8254;
+
 class Speaker : public SubDevice
 {
+  protected:
+    BitUnion8(SpeakerControl)
+        Bitfield<0> gate;
+        Bitfield<1> speaker;
+        Bitfield<5> timer;
+    EndBitUnion(SpeakerControl)
+
+    SpeakerControl controlVal;
+
+    I8254 * timer;
+
   public:
 
-    Speaker()
+    Speaker(I8254 * _timer) : timer(_timer)
     {}
-    Speaker(Tick _latency) : SubDevice(_latency)
+    Speaker(I8254 * _timer, Tick _latency) :
+        SubDevice(_latency), timer(_timer)
     {}
-    Speaker(Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency)
+    Speaker(I8254 * _timer, Addr start, Addr size, Tick _latency) :
+        SubDevice(start, size, _latency), timer(_timer)
     {}
 
     Tick read(PacketPtr pkt);

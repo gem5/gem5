@@ -43,10 +43,8 @@ namespace X86ISA
 
 class I8254 : public SubDevice
 {
-  protected:
-    Intel8254Timer pit;
-
   public:
+    Intel8254Timer pit;
 
     I8254(const std::string &name) : pit(name)
     {}
