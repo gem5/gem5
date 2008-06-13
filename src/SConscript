@@ -332,6 +332,10 @@ env.Command('base/traceflags.hh', flags, generate.traceFlagsHH)
 env.Command('base/traceflags.cc', flags, generate.traceFlagsCC)
 Source('base/traceflags.cc')
 
+# Generate program_info.cc
+env.Command('base/program_info.cc',
+            Value(str(SCons.Node.FS.default_fs.SConstruct_dir)), generate.programInfo)
+
 # Build the zip file
 py_compiled = []
 py_zip_depends = []
@@ -364,11 +368,19 @@ envList = []
 # date.cc.
 def make_objs(sources, env):
     objs = [env.Object(s) for s in sources]
+  
     # make date.cc depend on all other objects so it always gets
     # recompiled whenever anything else does
     date_obj = env.Object('base/date.cc')
+
+    # Make the generation of program_info.cc dependend on all 
+    # the other cc files and the compiling of program_info.cc 
+    # dependent on all the objects but program_info.o 
+    pinfo_obj = env.Object('base/program_info.cc')
+    env.Depends('base/program_info.cc', sources)
     env.Depends(date_obj, objs)
-    objs.append(date_obj)
+    env.Depends(pinfo_obj, objs)
+    objs.extend([date_obj,pinfo_obj])
     return objs
 
 # Function to create a new build environment as clone of current
