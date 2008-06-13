@@ -31,6 +31,10 @@
 # "m5 test.py"
 
 import m5
+
+if m5.build_env['FULL_SYSTEM']:
+    m5.panic("This script requires syscall emulation mode (*_SE).")
+
 from m5.objects import *
 import os, optparse, sys
 m5.AddToPath('../common')
