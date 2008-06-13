@@ -103,11 +103,6 @@ SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
         return;
     }
 
-    // list is non-empty and this is not the head, so event should
-    // already be scheduled
-    assert(waitingOnRetry ||
-           (sendEvent->scheduled() && sendEvent->when() <= when));
-
     // list is non-empty & this belongs at the end
     if (when >= transmitList.back().tick) {
         transmitList.push_back(DeferredPacket(when, pkt));
