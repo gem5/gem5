@@ -39,6 +39,8 @@
 #include "sim/startup.hh"
 
 extern const char *compileDate;
+extern const char *hgRev;
+extern const char *hgDate;
 %}
 
 %include "stdint.i"
@@ -51,6 +53,8 @@ void SimStartup();
 void doExitCleanup();
 
 char *compileDate;
+char *hgRev;
+char *hgDate;
 
 void setClockFrequency(Tick ticksPerSecond);
 

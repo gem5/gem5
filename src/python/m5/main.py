@@ -268,6 +268,10 @@ def main():
         print "M5 compiled %s" % internal.core.cvar.compileDate;
         print "M5 started %s" % datetime.datetime.now().ctime()
         print "M5 executing on %s" % socket.gethostname()
+
+        print "M5 revision %s" % internal.core.cvar.hgRev
+        print "M5 commit date %s" % internal.core.cvar.hgDate
+
         print "command line:",
         for argv in sys.argv:
             print argv,

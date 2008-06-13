@@ -31,8 +31,7 @@ import py_compile
 import sys
 import zipfile
 
-from os.path import basename
-from os.path import exists
+from os.path import basename, exists, isdir, join
 
 class DictImporter(object):
     '''This importer takes a dictionary of arbitrary module names that
@@ -527,3 +526,35 @@ extern const Flags *compoundFlags[];
 '''
 
         f.close()
+
+    def programInfo(self, target, source, env):
+        def gen_file(target, rev, node, date):
+            pi_stats = file(target, 'w')
+            print >>pi_stats, 'const char *hgRev = "%s:%s";' %  (rev, node)
+            print >>pi_stats, 'const char *hgDate = "%s";' % date
+            pi_stats.close()
+
+        target = str(target[0])
+        scons_dir = eval(str(source[0]))
+        try:
+            import mercurial.demandimport, mercurial.hg, mercurial.ui
+            import mercurial.util, mercurial.node
+            if not exists(scons_dir) or not isdir(scons_dir) or \
+                   not exists(join(scons_dir, ".hg")):
+                raise ValueError
+            repo = mercurial.hg.repository(mercurial.ui.ui(), scons_dir)
+            rev = mercurial.node.nullrev + repo.changelog.count()
+            changenode = repo.changelog.node(rev)
+            changes = repo.changelog.read(changenode)
+            date = mercurial.util.datestr(changes[2])
+
+            gen_file(target, rev, mercurial.node.hex(changenode), date)
+
+            mercurial.demandimport.disable()
+        except ImportError:
+            gen_file(target, "Unknown", "Unknown", "Unknown")
+
+        except:
+            print "in except"
+            gen_file(target, "Unknown", "Unknown", "Unknown")
+            mercurial.demandimport.disable()
