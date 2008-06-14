@@ -334,7 +334,8 @@ Source('base/traceflags.cc')
 
 # Generate program_info.cc
 env.Command('base/program_info.cc',
-            Value(str(SCons.Node.FS.default_fs.SConstruct_dir)), generate.programInfo)
+            Value(str(SCons.Node.FS.default_fs.SConstruct_dir)),
+            generate.programInfo)
 
 # Build the zip file
 py_compiled = []
