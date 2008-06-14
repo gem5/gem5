@@ -535,7 +535,7 @@ extern const Flags *compoundFlags[];
             pi_stats.close()
 
         target = str(target[0])
-        scons_dir = str(source[0])
+        scons_dir = str(source[0].get_contents())
         try:
             import mercurial.demandimport, mercurial.hg, mercurial.ui
             import mercurial.util, mercurial.node
