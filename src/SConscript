@@ -266,6 +266,7 @@ for name,simobj in generate.sim_objects.iteritems():
     env.Depends(hh_file, depends + extra_deps)
 
 # Generate any parameter header files needed
+params_i_files = []
 for name,param in generate.params.iteritems():
     if isinstance(param, m5.params.VectorParamDesc):
         ext = 'vptype'
@@ -273,6 +274,7 @@ for name,param in generate.params.iteritems():
         ext = 'ptype'
 
     i_file = File('params/%s_%s.i' % (name, ext))
+    params_i_files.append(i_file)
     env.Command(i_file, Value(name), generate.createSwigParam)
     env.Depends(i_file, depends)
 
@@ -295,7 +297,7 @@ params_file = File('params/params.i')
 names = sort_list(generate.sim_objects.keys())
 env.Command(params_file, [ Value(v) for v in names ],
             generate.buildParams)
-env.Depends(params_file, params_hh_files + depends)
+env.Depends(params_file, params_hh_files + params_i_files + depends)
 SwigSource('m5.objects', params_file)
 
 # Build all swig modules
