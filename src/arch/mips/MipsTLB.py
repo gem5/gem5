@@ -33,10 +33,8 @@ from m5.SimObject import SimObject
 from m5.params import *
 
 class MipsTLB(SimObject):
-    abstract = True
     type = 'MipsTLB'
-    cxx_namespace = 'MipsISA'
-    cxx_class = 'TLB'
+    abstract = True
     size = Param.Int("TLB size")
 
 class MipsDTB(MipsTLB):

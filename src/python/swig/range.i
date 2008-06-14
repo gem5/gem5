@@ -28,6 +28,8 @@
  * Authors: Nathan Binkert
  */
 
+%rename(assign) *::operator=;
+
 %include "base/range.hh"
 %include "sim/host.hh"
 

@@ -69,8 +69,6 @@ if build_env['FULL_SYSTEM']:
 
 class X86TLB(SimObject):
     type = 'X86TLB'
-    cxx_namespace = 'X86ISA'
-    cxx_class = 'TLB'
     abstract = True
     size = Param.Int("TLB size")
     if build_env['FULL_SYSTEM']:
