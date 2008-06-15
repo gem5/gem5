@@ -122,6 +122,13 @@ def main():
     import info
     import internal
 
+    # load the options.py config file to allow people to set their own
+    # default options
+    options_file = config.get('options.py')
+    if options_file:
+        scope = { 'options' : options }
+        execfile(options_file, scope)
+
     arguments = options.parse_args()
 
     done = False
