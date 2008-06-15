@@ -1,4 +1,4 @@
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2006 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,161 +24,74 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Kevin Lim
+# Authors: Nathan Binkert
 
 import sys
 
-class ternary(object):
-    def __new__(cls, *args):
-        if len(args) > 1:
-            raise TypeError, \
-                  '%s() takes at most 1 argument (%d given)' % \
-                  (cls.__name__, len(args))
-
-        if args:
-            if not isinstance(args[0], (bool, ternary)):
-                raise TypeError, \
-                      '%s() argument must be True, False, or Any' % \
-                      cls.__name__
-            return args[0]
-        return super(ternary, cls).__new__(cls)
-
-    def __bool__(self):
-        return True
-
-    def __neg__(self):
-        return self
-
-    def __eq__(self, other):
-        return True
-
-    def __ne__(self, other):
-        return False
-
-    def __str__(self):
-        return 'Any'
-
-    def __repr__(self):
-        return 'Any'
-
-Any = ternary()
-
-class Flags(dict):
-    def __init__(self, *args, **kwargs):
-        super(Flags, self).__init__()
-        self.update(*args, **kwargs)
-
-    def __getattr__(self, attr):
-        return self[attr]
-
-    def __setattr__(self, attr, value):
-        self[attr] = value
-
-    def __setitem__(self, item, value):
-        return super(Flags, self).__setitem__(item, ternary(value))
-
-    def __getitem__(self, item):
-        if item not in self:
-            return False
-        return super(Flags, self).__getitem__(item)
-
-    def update(self, *args, **kwargs):
-        for arg in args:
-            if isinstance(arg, Flags):
-                super(Flags, self).update(arg)
-            elif isinstance(arg, dict):
-                for key,val in kwargs.iteritems():
-                    self[key] = val
-            else:
-                raise AttributeError, \
-                      'flags not of type %s or %s, but %s' % \
-                      (Flags, dict, type(arg))
-
-        for key,val in kwargs.iteritems():
-            self[key] = val
-
-    def match(self, *args, **kwargs):
-        match = Flags(*args, **kwargs)
-
-        for key,value in match.iteritems():
-            if self[key] != value:
-                return False
-
-        return True
-
-def crossproduct(items):
-    if not isinstance(items, (list, tuple)):
-        raise AttributeError, 'crossproduct works only on sequences'
-
-    if not items:
-        yield None
-        return
-
-    current = items[0]
-    remainder = items[1:]
-
-    if not hasattr(current, '__iter__'):
-        current = [ current ]
-
-    for item in current:
-        for rem in crossproduct(remainder):
-            data = [ item ]
-            if rem:
-                data += rem
-            yield data
-
-def flatten(items):
-    if not isinstance(items, (list, tuple)):
-        yield items
-        return
-
-    for item in items:
-        for flat in flatten(item):
-            yield flat
+from attrdict import attrdict, optiondict
+from misc import crossproduct, flatten
 
 class Data(object):
     def __init__(self, name, desc, **kwargs):
         self.name = name
         self.desc = desc
-        self.system = None
-        self.flags = Flags()
-        self.env = {}
-        for k,v in kwargs.iteritems():
-            setattr(self, k, v)
+        self.__dict__.update(kwargs)
 
     def update(self, obj):
         if not isinstance(obj, Data):
             raise AttributeError, "can only update from Data object"
 
-        self.env.update(obj.env)
-        self.flags.update(obj.flags)
-        if obj.system:
-            if self.system and self.system != obj.system:
+        for k,v in obj.__dict__.iteritems():
+            if not k.startswith('_'):
+                self.__dict__[k] = v
+        if hasattr(self, 'system') and hasattr(obj, 'system'):
+            if self.system != obj.system:
                 raise AttributeError, \
                       "conflicting values for system: '%s'/'%s'" % \
                       (self.system, obj.system)
-            self.system = obj.system
 
     def printinfo(self):
         if self.name:
             print 'name: %s' % self.name
         if self.desc:
             print 'desc: %s' % self.desc
-        if self.system:
-            print 'system: %s' % self.system
+        try:
+            if self.system:
+                print 'system: %s' % self.system
+        except AttributeError:
+            pass
 
     def printverbose(self):
-        print 'flags:'
-        keys = self.flags.keys()
-        keys.sort()
-        for key in keys:
-            print '    %s = %s' % (key, self.flags[key])
-        print 'env:'
-        keys = self.env.keys()
-        keys.sort()
-        for key in keys:
-            print '    %s = %s' % (key, self.env[key])
+        for key in self:
+            val = self[key]
+            if isinstance(val, dict):
+                import pprint
+                val = pprint.pformat(val)
+            print '%-20s = %s' % (key, val)
         print
+
+    def __contains__(self, attr):
+        if attr.startswith('_'):
+            return False
+        return attr in self.__dict__
+
+    def __getitem__(self, key):
+        if key.startswith('_'):
+            raise KeyError, "Key '%s' not found" % attr
+        return self.__dict__[key]
+
+    def __iter__(self):
+        keys = self.__dict__.keys()
+        keys.sort()
+        for key in keys:
+            if not key.startswith('_'):
+                yield key
+
+    def optiondict(self):
+        result = optiondict()
+        for key in self:
+            result[key] = self[key]
+        return result
 
     def __str__(self):
         return self.name
@@ -186,88 +99,84 @@ class Data(object):
 class Job(Data):
     def __init__(self, options):
         super(Job, self).__init__('', '')
-        self.setoptions(options)
 
-        self.checkpoint = False
-        opts = []
+        config = options[0]._config
         for opt in options:
-            cpt = opt.group.checkpoint
-            if not cpt:
-                self.checkpoint = True
-                continue
-            if isinstance(cpt, Option):
-                opt = cpt.clone(suboptions=False)
-            else:
-                opt = opt.clone(suboptions=False)
-
-            opts.append(opt)
-
-        if not opts:
-            self.checkpoint = False
-
-        if self.checkpoint:
-            self.checkpoint = Job(opts)
-
-    def clone(self):
-        return Job(self.options)
-
-    def __getattribute__(self, attr):
-        if attr == 'name':
-            names = [ ]
-            for opt in self.options:
-                if opt.name:
-                    names.append(opt.name)
-            return ':'.join(names)
-
-        if attr == 'desc':
-            descs = [ ]
-            for opt in self.options:
-                if opt.desc:
-                    descs.append(opt.desc)
-            return ', '.join(descs)
-
-        return super(Job, self).__getattribute__(attr)
-
-    def setoptions(self, options):
-        config = options[0].config
-        for opt in options:
-            if opt.config != config:
+            if opt._config != config:
                 raise AttributeError, \
                       "All options are not from the same Configuration"
 
-        self.config = config
-        self.groups = [ opt.group for opt in options ]
-        self.options = options
+        self._config = config
+        self._groups = [ opt._group for opt in options ]
+        self._options = options
 
-        self.update(self.config)
-        for group in self.groups:
+        self.update(self._config)
+        for group in self._groups:
             self.update(group)
 
-        for option in self.options:
+        self._is_checkpoint = True
+
+        for option in self._options:
             self.update(option)
+            if not option._group._checkpoint:
+                self._is_checkpoint = False
+
             if option._suboption:
                 self.update(option._suboption)
+                self._is_checkpoint = False
+
+        names = [ ]
+        for opt in self._options:
+            if opt.name:
+                names.append(opt.name)
+        self.name = ':'.join(names)
+
+        descs = [ ]
+        for opt in self._options:
+            if opt.desc:
+                descs.append(opt.desc)
+        self.desc = ', '.join(descs)
+
+        self._checkpoint = None
+        if not self._is_checkpoint:
+            opts = []
+            for opt in options:
+                cpt = opt._group._checkpoint
+                if not cpt:
+                    continue
+                if isinstance(cpt, Option):
+                    opt = cpt.clone(suboptions=False)
+                else:
+                    opt = opt.clone(suboptions=False)
+
+                opts.append(opt)
+
+            if opts:
+                self._checkpoint = Job(opts)
+
+    def clone(self):
+        return Job(self._options)
 
     def printinfo(self):
         super(Job, self).printinfo()
-        if self.checkpoint:
-            print 'checkpoint: %s' % self.checkpoint.name
-        print 'config: %s' % self.config.name
-        print 'groups: %s' % [ g.name for g in self.groups ]
-        print 'options: %s' % [ o.name for o in self.options ]
+        if self._checkpoint:
+            print 'checkpoint: %s' % self._checkpoint.name
+        print 'config: %s' % self._config.name
+        print 'groups: %s' % [ g.name for g in self._groups ]
+        print 'options: %s' % [ o.name for o in self._options ]
         super(Job, self).printverbose()
 
 class SubOption(Data):
     def __init__(self, name, desc, **kwargs):
         super(SubOption, self).__init__(name, desc, **kwargs)
-        self.number = None
+        self._number = None
 
 class Option(Data):
     def __init__(self, name, desc, **kwargs):
         super(Option, self).__init__(name, desc, **kwargs)
         self._suboptions = []
         self._suboption = None
-        self.number = None
+        self._number = None
 
     def __getattribute__(self, attr):
         if attr == 'name':
@@ -282,24 +191,23 @@ class Option(Data):
                 desc.append(self._suboption.desc)
             return ', '.join(desc)
 
-
         return super(Option, self).__getattribute__(attr)
 
     def suboption(self, name, desc, **kwargs):
         subo = SubOption(name, desc, **kwargs)
-        subo.config = self.config
-        subo.group = self.group
-        subo.option = self
-        subo.number = len(self._suboptions)
+        subo._config = self._config
+        subo._group = self._group
+        subo._option = self
+        subo._number = len(self._suboptions)
         self._suboptions.append(subo)
         return subo
 
     def clone(self, suboptions=True):
         option = Option(self.__dict__['name'], self.__dict__['desc'])
         option.update(self)
-        option.group = self.group
-        option.config = self.config
-        option.number = self.number
+        option._group = self._group
+        option._config = self._config
+        option._number = self._number
         if suboptions:
             option._suboptions.extend(self._suboptions)
             option._suboption = self._suboption
@@ -319,21 +227,21 @@ class Option(Data):
 
     def printinfo(self):
         super(Option, self).printinfo()
-        print 'config: %s' % self.config.name
+        print 'config: %s' % self._config.name
         super(Option, self).printverbose()
 
 class Group(Data):
     def __init__(self, name, desc, **kwargs):
         super(Group, self).__init__(name, desc, **kwargs)
         self._options = []
-        self.checkpoint = False
-        self.number = None
+        self._number = None
+        self._checkpoint = False
 
     def option(self, name, desc, **kwargs):
         opt = Option(name, desc, **kwargs)
-        opt.config = self.config
-        opt.group = self
-        opt.number = len(self._options)
+        opt._config = self._config
+        opt._group = self
+        opt._number = len(self._options)
         self._options.append(opt)
         return opt
 
@@ -349,7 +257,7 @@ class Group(Data):
 
     def printinfo(self):
         super(Group, self).printinfo()
-        print 'config: %s' % self.config.name
+        print 'config: %s' % self._config.name
         print 'options: %s' % [ o.name for o in self._options ]
         super(Group, self).printverbose()
 
@@ -362,40 +270,39 @@ class Configuration(Data):
 
     def group(self, name, desc, **kwargs):
         grp = Group(name, desc, **kwargs)
-        grp.config = self
-        grp.number = len(self._groups)
+        grp._config = self
+        grp._number = len(self._groups)
         self._groups.append(grp)
         return grp
 
-    def groups(self, flags=Flags(), sign=True):
-        if not flags:
-            return self._groups
-
-        return [ grp for grp in self._groups if sign ^ grp.flags.match(flags) ]
+    def groups(self):
+        return self._groups
 
     def checkchildren(self, kids):
         for kid in kids:
-            if kid.config != self:
+            if kid._config != self:
                 raise AttributeError, "child from the wrong configuration"
 
     def sortgroups(self, groups):
-        groups = [ (grp.number, grp) for grp in groups ]
+        groups = [ (grp._number, grp) for grp in groups ]
         groups.sort()
         return [ grp[1] for grp in groups ]
 
-    def options(self, groups = None, checkpoint = False):
+    def options(self, groups=None, checkpoint=False):
         if groups is None:
             groups = self._groups
         self.checkchildren(groups)
         groups = self.sortgroups(groups)
         if checkpoint:
-            groups = [ grp for grp in groups if grp.checkpoint ]
+            groups = [ grp for grp in groups if grp._checkpoint ]
             optgroups = [ g.options() for g in groups ]
         else:
             optgroups = [ g.subopts() for g in groups ]
+        if not optgroups:
+            return
         for options in crossproduct(optgroups):
             for opt in options:
-                cpt = opt.group.checkpoint
+                cpt = opt._group._checkpoint
                 if not isinstance(cpt, bool) and cpt != opt:
                     if checkpoint:
                         break
@@ -427,19 +334,19 @@ class Configuration(Data):
 
         return False
 
-    def checkpoints(self, groups = None):
+    def checkpoints(self, groups=None):
         for options in self.options(groups, True):
             job = Job(options)
             if self.jobfilter(job):
                 yield job
 
-    def jobs(self, groups = None):
+    def jobs(self, groups=None):
         for options in self.options(groups, False):
             job = Job(options)
             if self.jobfilter(job):
                 yield job
 
-    def alljobs(self, groups = None):
+    def alljobs(self, groups=None):
         for options in self.options(groups, True):
             yield Job(options)
         for options in self.options(groups, False):
@@ -454,7 +361,7 @@ class Configuration(Data):
 
     def job(self, options):
         self.checkchildren(options)
-        options = [ (opt.group.number, opt) for opt in options ]
+        options = [ (opt._group._number, opt) for opt in options ]
         options.sort()
         options = [ opt[1] for opt in options ]
         job = Job(options)
@@ -462,7 +369,7 @@ class Configuration(Data):
 
     def printinfo(self):
         super(Configuration, self).printinfo()
-        print 'groups: %s' % [ g.name for g in self._grouips ]
+        print 'groups: %s' % [ g.name for g in self._groups ]
         super(Configuration, self).printverbose()
 
 def JobFile(jobfile):
@@ -492,8 +399,7 @@ def JobFile(jobfile):
               (jobfile, type(conf), Configuration)
     return conf
 
-if __name__ == '__main__':
-    from jobfile import *
+def main(conf=None):
     import sys
 
     usage = 'Usage: %s [-b] [-c] [-v] <jobfile>' % sys.argv[0]
@@ -503,9 +409,6 @@ if __name__ == '__main__':
         opts, args = getopt.getopt(sys.argv[1:], '-bcv')
     except getopt.GetoptError:
         sys.exit(usage)
-
-    if len(args) != 1:
-        raise AttributeError, usage
 
     both = False
     checkpoint = False
@@ -519,21 +422,29 @@ if __name__ == '__main__':
         if opt == '-v':
             verbose = True
 
-    jobfile = args[0]
-    conf = JobFile(jobfile)
+    if conf is None:
+        if len(args) != 1:
+            raise AttributeError, usage
+        conf = JobFile(args[0])
+    else:
+        if len(args) != 0:
+            raise AttributeError, usage
 
     if both:
-        gen = conf.alljobs()
+        jobs = conf.alljobs()
     elif checkpoint:
-        gen = conf.checkpoints()
+        jobs = conf.checkpoints()
     else:
-        gen = conf.jobs()
+        jobs = conf.jobs()
 
-    for job in gen:
-        if not verbose:
-            cpt = ''
-            if job.checkpoint:
-                cpt = job.checkpoint.name
-            print job.name, cpt
-        else:
+    for job in jobs:
+        if verbose:
             job.printinfo()
+        else:
+            cpt = ''
+            if job._checkpoint:
+                cpt = job._checkpoint.name
+            print job.name, cpt
+
+if __name__ == '__main__':
+    main()

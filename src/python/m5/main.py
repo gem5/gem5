@@ -33,7 +33,7 @@ import os
 import socket
 import sys
 
-from attrdict import attrdict
+from util import attrdict
 import defines
 import traceflags
 

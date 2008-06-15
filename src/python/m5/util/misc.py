@@ -56,4 +56,32 @@ def applyOrMap(objOrSeq, meth, *args, **kwargs):
     else:
         return [applyMethod(o, meth, *args, **kwargs) for o in objOrSeq]
 
+def crossproduct(items):
+    if not isinstance(items, (list, tuple)):
+        raise AttributeError, 'crossproduct works only on sequences'
 
+    if not items:
+        yield None
+        return
+
+    current = items[0]
+    remainder = items[1:]
+
+    if not hasattr(current, '__iter__'):
+        current = [ current ]
+
+    for item in current:
+        for rem in crossproduct(remainder):
+            data = [ item ]
+            if rem:
+                data += rem
+            yield data
+
+def flatten(items):
+    if not isinstance(items, (list, tuple)):
+        yield items
+        return
+
+    for item in items:
+        for flat in flatten(item):
+            yield flat

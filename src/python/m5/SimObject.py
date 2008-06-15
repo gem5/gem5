@@ -32,7 +32,6 @@ import sys, types
 import proxy
 import m5
 from util import *
-from multidict import multidict
 
 # These utility functions have to come first because they're
 # referenced in params.py... otherwise they won't be defined when we

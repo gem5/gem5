@@ -26,7 +26,7 @@
 #
 # Authors: Nathan Binkert
 
-__all__ = [ 'attrdict' ]
+__all__ = [ 'attrdict', 'optiondict' ]
 
 class attrdict(dict):
     def __getattr__(self, attr):
@@ -43,6 +43,15 @@ class attrdict(dict):
         if attr in self:
             return self.__delitem__(attr)
         return super(attrdict, self).__delattr__(attr, value)
+
+class optiondict(attrdict):
+    def __getattr__(self, attr):
+        try:
+            return super(optiondict, self).__getattr__(attr)
+        except AttributeError:
+            #d = optionsdict()
+            #setattr(self, attr, d)
+            return None
 
 if __name__ == '__main__':
     x = attrdict()
