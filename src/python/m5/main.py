@@ -28,24 +28,16 @@
 
 import code
 import datetime
-import optparse
 import os
 import socket
 import sys
 
 from util import attrdict
 import defines
+from options import OptionParser
 import traceflags
 
 __all__ = [ 'options', 'arguments', 'main' ]
-
-usage="%prog [m5 options] script.py [script options]"
-version="%prog 2.0"
-brief_copyright='''
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-'''
 
 def print_list(items, indent=4):
     line = ' ' * indent
@@ -60,64 +52,19 @@ def print_list(items, indent=4):
             line += item
             print line
 
-# there's only one option parsing done, so make it global and add some
-# helper functions to make it work well.
-parser = optparse.OptionParser(usage=usage, version=version,
-                               description=brief_copyright,
-                               formatter=optparse.TitledHelpFormatter())
-parser.disable_interspersed_args()
+usage="%prog [m5 options] script.py [script options]"
+version="%prog 2.0"
+brief_copyright='''
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+'''
 
-# current option group
-group = None
-
-def set_group(*args, **kwargs):
-    '''set the current option group'''
-    global group
-    if not args and not kwargs:
-        group = None
-    else:
-        group = parser.add_option_group(*args, **kwargs)
-
-class splitter(object):
-    def __init__(self, split):
-        self.split = split
-    def __call__(self, option, opt_str, value, parser):
-        getattr(parser.values, option.dest).extend(value.split(self.split))
-
-def add_option(*args, **kwargs):
-    '''add an option to the current option group, or global none set'''
-
-    # if action=split, but allows the option arguments
-    # themselves to be lists separated by the split variable'''
-
-    if kwargs.get('action', None) == 'append' and 'split' in kwargs:
-        split = kwargs.pop('split')
-        kwargs['default'] = []
-        kwargs['type'] = 'string'
-        kwargs['action'] = 'callback'
-        kwargs['callback'] = splitter(split)
-
-    if group:
-        return group.add_option(*args, **kwargs)
-
-    return parser.add_option(*args, **kwargs)
-
-def bool_option(name, default, help):
-    '''add a boolean option called --name and --no-name.
-    Display help depending on which is the default'''
-
-    tname = '--%s' % name
-    fname = '--no-%s' % name
-    dest = name.replace('-', '_')
-    if default:
-        thelp = optparse.SUPPRESS_HELP
-        fhelp = help
-    else:
-        thelp = help
-        fhelp = optparse.SUPPRESS_HELP
-
-    add_option(tname, action="store_true", default=default, help=thelp)
-    add_option(fname, action="store_false", dest=dest, help=fhelp)
+options = OptionParser(usage=usage, version=version,
+                       description=brief_copyright)
+add_option = options.add_option
+set_group = options.set_group
+usage = options.usage
 
 # Help options
 add_option('-A', "--authors", action="store_true", default=False,
@@ -168,39 +115,13 @@ add_option("--trace-file", metavar="FILE", default="cout",
 add_option("--trace-ignore", metavar="EXPR", action='append', split=':',
     help="Ignore EXPR sim objects")
 
-options = attrdict()
-arguments = []
-
-def usage(exitcode=None):
-    parser.print_help()
-    if exitcode is not None:
-        sys.exit(exitcode)
-
-def parse_args():
-    _opts,args = parser.parse_args()
-    opts = attrdict(_opts.__dict__)
-
-    # setting verbose and quiet at the same time doesn't make sense
-    if opts.verbose > 0 and opts.quiet > 0:
-        usage(2)
-
-    # store the verbosity in a single variable.  0 is default,
-    # negative numbers represent quiet and positive values indicate verbose
-    opts.verbose -= opts.quiet
-
-    del opts.quiet
-
-    options.update(opts)
-    arguments.extend(args)
-    return opts,args
-
 def main():
     import defines
     import event
     import info
     import internal
 
-    parse_args()
+    arguments = options.parse_args()
 
     done = False
 
@@ -261,6 +182,11 @@ def main():
     if done:
         sys.exit(0)
 
+    # setting verbose and quiet at the same time doesn't make sense
+    if options.verbose > 0 and options.quiet > 0:
+        options.usage(2)
+
+    verbose = options.verbose - options.quiet
     if options.verbose >= 0:
         print "M5 Simulator System"
         print brief_copyright
@@ -282,7 +208,7 @@ def main():
         if arguments and not os.path.isfile(arguments[0]):
             print "Script %s not found" % arguments[0]
 
-        usage(2)
+        options.usage(2)
 
     # tell C++ about output directory
     internal.core.setOutputDir(options.outdir)
