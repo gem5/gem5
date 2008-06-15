@@ -379,6 +379,13 @@ class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
 class Float(ParamValue, float):
     cxx_type = 'double'
 
+    def __init__(self, value):
+        if isinstance(value, (int, long, float, NumericParamValue, Float)):
+            self.value = float(value)
+        else:
+            raise TypeError, "Can't convert object of type %s to Float" \
+                  % type(value).__name__
+
     def getValue(self):
         return float(self.value)
 
@@ -895,7 +902,9 @@ class MemoryBandwidth(float,ParamValue):
 
     def getValue(self):
         # convert to seconds per byte
-        value = 1.0 / float(self)
+        value = float(self)
+        if value:
+            value = 1.0 / float(self)
         # convert to ticks per byte
         value = ticks.fromSeconds(value)
         return float(value)
