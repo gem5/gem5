@@ -33,6 +33,7 @@ import socket
 import sys
 
 from util import attrdict
+import config
 import defines
 from options import OptionParser
 import traceflags

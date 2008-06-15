@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2004-2005 The Regents of The University of Michigan
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,37 +24,19 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Nathan Binkert
+# Authors: Nathan Binkert
 
-Import('*')
+import os
+from os.path import isdir, isfile, join as joinpath
 
-Source('swig/pyevent.cc')
-Source('swig/pyobject.cc')
+homedir = os.environ['HOME']
+confdir = os.environ.get('M5_CONFIG', joinpath(homedir, '.m5'))
+def get(name):
+    if not isdir(confdir):
+        return None
+    conffile = joinpath(confdir, name)
+    if not isfile(conffile):
+        return None
 
-PySource('m5', 'm5/__init__.py')
-PySource('m5', 'm5/SimObject.py')
-PySource('m5', 'm5/config.py')
-PySource('m5', 'm5/convert.py')
-PySource('m5', 'm5/event.py')
-PySource('m5', 'm5/main.py')
-PySource('m5', 'm5/options.py')
-PySource('m5', 'm5/params.py')
-PySource('m5', 'm5/proxy.py')
-PySource('m5', 'm5/simulate.py')
-PySource('m5', 'm5/smartdict.py')
-PySource('m5', 'm5/stats.py')
-PySource('m5', 'm5/ticks.py')
-PySource('m5.util', 'm5/util/__init__.py')
-PySource('m5.util', 'm5/util/attrdict.py')
-PySource('m5.util', 'm5/util/jobfile.py')
-PySource('m5.util', 'm5/util/misc.py')
-PySource('m5.util', 'm5/util/multidict.py')
+    return conffile
 
-SwigSource('m5.internal', 'swig/core.i')
-SwigSource('m5.internal', 'swig/debug.i')
-SwigSource('m5.internal', 'swig/event.i')
-SwigSource('m5.internal', 'swig/random.i')
-SwigSource('m5.internal', 'swig/stats.i')
-SwigSource('m5.internal', 'swig/trace.i')
-PySource('m5.internal', 'm5/internal/__init__.py')
