@@ -116,6 +116,11 @@ add_option("--trace-file", metavar="FILE", default="cout",
 add_option("--trace-ignore", metavar="EXPR", action='append', split=':',
     help="Ignore EXPR sim objects")
 
+# Help options
+set_group("Help Options")
+add_option("--list-sim-objects", action='store_true', default=False,
+    help="List all built-in SimObjects, their parameters and default values")
+
 def main():
     import defines
     import event
@@ -185,6 +190,27 @@ def main():
                 continue
             print "    %s:" % flag
             print_list(traceflags.compoundFlagMap[flag], indent=8)
+            print
+
+    if options.list_sim_objects:
+        import SimObject
+        done = True
+        print "SimObjects:"
+        objects = SimObject.allClasses.keys()
+        objects.sort()
+        for name in objects:
+            obj = SimObject.allClasses[name]
+            print "    %s" % obj
+            params = obj._params.keys()
+            params.sort()
+            for pname in params:
+                param = obj._params[pname]
+                default = getattr(param, 'default', '')
+                print "        %s" % pname
+                if default:
+                    print "            default: %s" % default
+                print "            desc: %s" % param.desc
+                print
             print
 
     if done:
