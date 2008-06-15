@@ -892,7 +892,7 @@ class NetworkBandwidth(float,ParamValue):
 
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
-    def __new__(self, value):
+    def __new__(cls, value):
         # we want the number of ticks per byte of data
         val = convert.toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
