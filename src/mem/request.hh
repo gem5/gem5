@@ -220,6 +220,7 @@ class Request : public FastAlloc
     int getSize() { assert(validPaddr || validAsidVaddr); return size; }
     /** Accessor for time. */
     Tick getTime() { assert(validPaddr || validAsidVaddr); return time; }
+    void resetTime() { assert(validPaddr || validAsidVaddr); time = curTick; }
 
     /** Accessor for flags. */
     uint32_t getFlags() { assert(validPaddr || validAsidVaddr); return flags; }
