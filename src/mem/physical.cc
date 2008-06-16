@@ -52,11 +52,15 @@ using namespace std;
 using namespace TheISA;
 
 PhysicalMemory::PhysicalMemory(const Params *p)
-    : MemObject(p), pmemAddr(NULL), lat(p->latency),
-      lat_var(p->latency_var)
+    : MemObject(p), pmemAddr(NULL), pagePtr(0),
+      lat(p->latency), lat_var(p->latency_var),
+      cachedSize(params()->range.size()), cachedStart(params()->range.start)
 {
     if (params()->range.size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
+
+    if (params()->null)
+        return;
 
     int map_flags = MAP_ANON | MAP_PRIVATE;
     pmemAddr = (uint8_t *)mmap(NULL, params()->range.size(),
@@ -70,12 +74,6 @@ PhysicalMemory::PhysicalMemory(const Params *p)
     //If requested, initialize all the memory to 0
     if (p->zero)
         memset(pmemAddr, 0, p->range.size());
-
-    pagePtr = 0;
-
-    cachedSize = params()->range.size();
-    cachedStart = params()->range.start;
-
 }
 
 void
@@ -257,6 +255,8 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         uint64_t condition_val64;
         uint32_t condition_val32;
 
+        if (!pmemAddr)
+            panic("Swap only works if there is real memory (i.e. null=False)");
         assert(sizeof(IntReg) >= pkt->getSize());
 
         overwrite_mem = true;
@@ -287,11 +287,13 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         if (pkt->isLocked()) {
             trackLoadLocked(pkt);
         }
-        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr)
+            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET("Read");
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
-            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+            if (pmemAddr)
+                memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
             TRACE_PACKET("Write");
         }
     } else if (pkt->isInvalidate()) {
@@ -320,11 +322,13 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - start();
 
     if (pkt->isRead()) {
-        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr)
+            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET("Read");
         pkt->makeAtomicResponse();
     } else if (pkt->isWrite()) {
-        memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+        if (pmemAddr)
+            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
         pkt->makeAtomicResponse();
     } else if (pkt->isPrint()) {
@@ -448,6 +452,9 @@ PhysicalMemory::drain(Event *de)
 void
 PhysicalMemory::serialize(ostream &os)
 {
+    if (!pmemAddr)
+        return;
+
     gzFile compressedMem;
     string filename = name() + ".physmem";
 
@@ -480,13 +487,15 @@ PhysicalMemory::serialize(ostream &os)
 void
 PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
 {
+    if (!pmemAddr)
+        return;
+
     gzFile compressedMem;
     long *tempPage;
     long *pmem_current;
     uint64_t curSize;
     uint32_t bytesRead;
     const int chunkSize = 16384;
-
 
     string filename;
 

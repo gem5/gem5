@@ -38,6 +38,7 @@ class PhysicalMemory(MemObject):
     latency = Param.Latency('1t', "latency of an access")
     latency_var = Param.Latency('0ns', "access variablity")
     zero = Param.Bool(False, "zero initialize memory")
+    null = Param.Bool(False, "do not store data, always return zero")
 
 class DRAMMemory(PhysicalMemory):
     type = 'DRAMMemory'
