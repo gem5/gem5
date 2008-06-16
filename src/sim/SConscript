@@ -35,6 +35,7 @@ SimObject('System.py')
 SimObject('InstTracer.py')
 
 Source('async.cc')
+Source('compile_info.cc')
 Source('core.cc')
 Source('debug.cc')
 Source('eventq.cc')

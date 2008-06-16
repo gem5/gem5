@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,53 +29,28 @@
  *          Steve Reinhardt
  */
 
-%module core
+#include <string>
+#include <vector>
 
-%{
-#include "python/swig/pyobject.hh"
+std::vector<std::string>
+compileFlags()
+{
+    static const char *flags[] = {
+#ifdef DEBUG
+        "DEBUG",
+#endif
+#ifdef NDEBUG
+        "NDEBUG",
+#endif
+#if TRACING_ON
+        "TRACING_ON",
+#endif
+    };
 
-#include "sim/core.hh"
-#include "sim/host.hh"
-#include "sim/startup.hh"
+    std::vector<std::string> result;
+    for (int i = 0; i < sizeof(flags) / sizeof(flags[0]); ++i)
+        result.push_back(flags[i]);
 
-extern const char *compileDate;
-std::vector<std::string> compileFlags();
-extern const char *hgRev;
-extern const char *hgDate;
-%}
+    return result;
+}
 
-%include "stdint.i"
-%include "std_string.i"
-%include "std_vector.i"
-%include "sim/host.hh"
-
-void setOutputDir(const std::string &dir);
-void setOutputFile(const std::string &file);
-void SimStartup();
-void doExitCleanup();
-
-%immutable compileDate;
-char *compileDate;
-
-namespace std { %template(StringVector) vector<string>; }
-std::vector<std::string> compileFlags();
-
-char *hgRev;
-char *hgDate;
-
-void setClockFrequency(Tick ticksPerSecond);
-
-%immutable curTick;
-Tick curTick;
-
-void serializeAll(const std::string &cpt_dir);
-void unserializeAll(const std::string &cpt_dir);
-
-void initAll();
-void regAllStats();
-
-%wrapper %{
-// fix up module name to reflect the fact that it's inside the m5 package
-#undef SWIG_name
-#define SWIG_name "m5.internal._core"
-%}
