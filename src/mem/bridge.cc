@@ -89,7 +89,7 @@ void
 Bridge::init()
 {
     // Make sure that both sides are connected to.
-    if (portA.getPeer() == NULL || portB.getPeer() == NULL)
+    if (!portA.isConnected() || !portB.isConnected())
         fatal("Both ports of bus bridge are not connected to a bus.\n");
 
     if (portA.peerBlockSize() != portB.peerBlockSize())

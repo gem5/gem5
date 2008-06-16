@@ -351,22 +351,17 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
     // Connect new CPU to old CPU's memory only if new CPU isn't
     // connected to anything.  Also connect old CPU's memory to new
     // CPU.
-    Port *peer;
-    if (ic->getPeer() == NULL || ic->getPeer()->isDefaultPort()) {
-        peer = oldCPU->getPort("icache_port")->getPeer();
+    if (!ic->isConnected()) {
+        Port *peer = oldCPU->getPort("icache_port")->getPeer();
         ic->setPeer(peer);
-    } else {
-        peer = ic->getPeer();
+        peer->setPeer(ic);
     }
-    peer->setPeer(ic);
 
-    if (dc->getPeer() == NULL || dc->getPeer()->isDefaultPort()) {
-        peer = oldCPU->getPort("dcache_port")->getPeer();
+    if (!dc->isConnected()) {
+        Port *peer = oldCPU->getPort("dcache_port")->getPeer();
         dc->setPeer(peer);
-    } else {
-        peer = dc->getPeer();
+        peer->setPeer(dc);
     }
-    peer->setPeer(dc);
 }
 
 

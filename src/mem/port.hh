@@ -73,8 +73,7 @@ class MemObject;
  */
 class Port
 {
-  private:
-
+  protected:
     /** Descriptive name (for DPRINTF output) */
     mutable std::string portName;
 
@@ -103,7 +102,7 @@ class Port
     /** Return port name (for DPRINTF). */
     const std::string &name() const { return portName; }
 
-    virtual ~Port() {};
+    virtual ~Port();
 
     // mey be better to use subclasses & RTTI?
     /** Holds the ports status.  Currently just that a range recomputation needs
@@ -131,7 +130,9 @@ class Port
      * demise. */
     void removeConn();
 
-    virtual bool isDefaultPort() { return false; }
+    virtual bool isDefaultPort() const { return false; }
+
+    bool isConnected() { return peer && !peer->isDefaultPort(); }
 
   protected:
 
