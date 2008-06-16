@@ -166,6 +166,10 @@ class ParamDesc(object):
 
 class VectorParamValue(list):
     __metaclass__ = MetaParamValue
+    def __setattr__(self, attr, value):
+        raise AttributeError, \
+              "Not allowed to set %s on '%s'" % (attr, type(self).__name__)
+
     def ini_str(self):
         return ' '.join([v.ini_str() for v in self])
 
