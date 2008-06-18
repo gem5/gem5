@@ -300,6 +300,7 @@ class Generate(object):
 
             print >>out, code
 
+        print >>out, '%%include "src/sim/sim_object_params.hh"' % obj
         for obj in ordered_objs:
             print >>out, '%%include "params/%s.hh"' % obj
 

@@ -396,13 +396,21 @@ class MetaSimObject(type):
                 code += '#include "enums/%s.hh"\n' % ptype.__name__
                 code += "\n\n"
 
+        code += cls.cxx_struct(base, params)
+
+        # close #ifndef __PARAMS__* guard
+        code += "\n#endif\n"
+        return code
+
+    def cxx_struct(cls, base, params):
+        if cls == SimObject:
+            return '#include "sim/sim_object_params.hh"\n'
+
         # now generate the actual param struct
-        code += "struct %sParams" % cls
+        code = "struct %sParams" % cls
         if base:
             code += " : public %sParams" % base
         code += "\n{\n"
-        if cls == SimObject:
-            code += "    virtual ~%sParams() {}\n" % cls
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
                 code += "    %s create();\n" % cls.cxx_type
@@ -411,8 +419,6 @@ class MetaSimObject(type):
         code += "".join(["    %s\n" % d for d in decls])
         code += "};\n"
 
-        # close #ifndef __PARAMS__* guard
-        code += "\n#endif\n"
         return code
 
     def cxx_type_decl(cls):
@@ -483,7 +489,6 @@ class SimObject(object):
     type = 'SimObject'
     abstract = True
 
-    name = Param.String("Object name")
     swig_objdecls = [ '%include "python/swig/sim_object.i"' ]
 
     # Initialize new instance.  For objects with SimObject-valued
@@ -762,7 +767,7 @@ class SimObject(object):
 
         cc_params_struct = getattr(m5.objects.params, '%sParams' % self.type)
         cc_params = cc_params_struct()
-        cc_params.object = self
+        cc_params.pyobj = self
         cc_params.name = str(self)
 
         param_names = self._params.keys()
