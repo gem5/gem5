@@ -39,7 +39,7 @@
 #include "arch/x86/x86_traits.hh"
 #include "dev/intel_8254_timer.hh"
 #include "cpu/intr_control.hh"
-#include "dev/simconsole.hh"
+#include "dev/terminal.hh"
 #include "dev/x86/pc.hh"
 #include "sim/system.hh"
 

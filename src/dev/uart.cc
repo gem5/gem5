@@ -32,17 +32,17 @@
  * Implements a base class for UARTs
  */
 
-#include "dev/simconsole.hh"
-#include "dev/uart.hh"
 #include "dev/platform.hh"
+#include "dev/terminal.hh"
+#include "dev/uart.hh"
 
 using namespace std;
 
 Uart::Uart(const Params *p)
-    : BasicPioDevice(p), platform(p->platform), cons(p->sim_console)
+    : BasicPioDevice(p), platform(p->platform), term(p->terminal)
 {
     status = 0;
 
     // set back pointers
-    cons->uart = this;
+    term->uart = this;
 }

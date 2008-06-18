@@ -30,7 +30,7 @@
  */
 
 /* @file
- * Implements the user interface to a serial console
+ * Implements the user interface to a serial terminal
  */
 
 #include <sys/ioctl.h>
@@ -50,7 +50,7 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "dev/platform.hh"
-#include "dev/simconsole.hh"
+#include "dev/terminal.hh"
 #include "dev/uart.hh"
 
 using namespace std;
@@ -59,38 +59,38 @@ using namespace std;
 /*
  * Poll event for the listen socket
  */
-SimConsole::ListenEvent::ListenEvent(SimConsole *c, int fd, int e)
-    : PollEvent(fd, e), cons(c)
+Terminal::ListenEvent::ListenEvent(Terminal *t, int fd, int e)
+    : PollEvent(fd, e), term(t)
 {
 }
 
 void
-SimConsole::ListenEvent::process(int revent)
+Terminal::ListenEvent::process(int revent)
 {
-    cons->accept();
+    term->accept();
 }
 
 /*
  * Poll event for the data socket
  */
-SimConsole::DataEvent::DataEvent(SimConsole *c, int fd, int e)
-    : PollEvent(fd, e), cons(c)
+Terminal::DataEvent::DataEvent(Terminal *t, int fd, int e)
+    : PollEvent(fd, e), term(t)
 {
 }
 
 void
-SimConsole::DataEvent::process(int revent)
+Terminal::DataEvent::process(int revent)
 {
     if (revent & POLLIN)
-        cons->data();
+        term->data();
     else if (revent & POLLNVAL)
-        cons->detach();
+        term->detach();
 }
 
 /*
- * SimConsole code
+ * Terminal code
  */
-SimConsole::SimConsole(const Params *p)
+Terminal::Terminal(const Params *p)
     : SimObject(p), listenEvent(NULL), dataEvent(NULL), number(p->number),
       data_fd(-1), txbuf(16384), rxbuf(16384), outfile(NULL)
 #if TRACING_ON == 1
@@ -110,7 +110,7 @@ SimConsole::SimConsole(const Params *p)
         listen(p->port);
 }
 
-SimConsole::~SimConsole()
+Terminal::~Terminal()
 {
     if (data_fd != -1)
         ::close(data_fd);
@@ -123,15 +123,15 @@ SimConsole::~SimConsole()
 }
 
 ///////////////////////////////////////////////////////////////////////
-// socket creation and console attach
+// socket creation and terminal attach
 //
 
 void
-SimConsole::listen(int port)
+Terminal::listen(int port)
 {
     while (!listener.listen(port, true)) {
-        DPRINTF(Console,
-                ": can't bind address console port %d inuse PID %d\n",
+        DPRINTF(Terminal,
+                ": can't bind address terminal port %d inuse PID %d\n",
                 port, getpid());
         port++;
     }
@@ -147,14 +147,14 @@ SimConsole::listen(int port)
 }
 
 void
-SimConsole::accept()
+Terminal::accept()
 {
     if (!listener.islistening())
         panic("%s: cannot accept a connection if not listening!", name());
 
     int fd = listener.accept(true);
     if (data_fd != -1) {
-        char message[] = "console already attached!\n";
+        char message[] = "terminal already attached!\n";
         ::write(fd, message, sizeof(message));
         ::close(fd);
         return;
@@ -165,7 +165,7 @@ SimConsole::accept()
     pollQueue.schedule(dataEvent);
 
     stringstream stream;
-    ccprintf(stream, "==== m5 slave console: Console %d ====", number);
+    ccprintf(stream, "==== m5 slave terminal: Terminal %d ====", number);
 
     // we need an actual carriage return followed by a newline for the
     // terminal
@@ -173,13 +173,13 @@ SimConsole::accept()
 
     write((const uint8_t *)stream.str().c_str(), stream.str().size());
 
-    DPRINTFN("attach console %d\n", number);
+    DPRINTFN("attach terminal %d\n", number);
 
     txbuf.readall(data_fd);
 }
 
 void
-SimConsole::detach()
+Terminal::detach()
 {
     if (data_fd != -1) {
         ::close(data_fd);
@@ -190,11 +190,11 @@ SimConsole::detach()
     delete dataEvent;
     dataEvent = NULL;
 
-    DPRINTFN("detach console %d\n", number);
+    DPRINTFN("detach terminal %d\n", number);
 }
 
 void
-SimConsole::data()
+Terminal::data()
 {
     uint8_t buf[1024];
     int len;
@@ -208,10 +208,10 @@ SimConsole::data()
 }
 
 size_t
-SimConsole::read(uint8_t *buf, size_t len)
+Terminal::read(uint8_t *buf, size_t len)
 {
     if (data_fd < 0)
-        panic("Console not properly attached.\n");
+        panic("Terminal not properly attached.\n");
 
     size_t ret;
     do {
@@ -230,12 +230,12 @@ SimConsole::read(uint8_t *buf, size_t len)
     return ret;
 }
 
-// Console output.
+// Terminal output.
 size_t
-SimConsole::write(const uint8_t *buf, size_t len)
+Terminal::write(const uint8_t *buf, size_t len)
 {
     if (data_fd < 0)
-        panic("Console not properly attached.\n");
+        panic("Terminal not properly attached.\n");
 
     size_t ret;
     for (;;) {
@@ -257,7 +257,7 @@ SimConsole::write(const uint8_t *buf, size_t len)
 #define RECEIVE_ERROR (ULL(3) << 62)
 
 uint8_t
-SimConsole::in()
+Terminal::in()
 {
     bool empty;
     uint8_t c;
@@ -268,14 +268,14 @@ SimConsole::in()
     empty = rxbuf.empty();
 
 
-    DPRINTF(ConsoleVerbose, "in: \'%c\' %#02x more: %d\n",
+    DPRINTF(TerminalVerbose, "in: \'%c\' %#02x more: %d\n",
             isprint(c) ? c : ' ', c, !empty);
 
     return c;
 }
 
 uint64_t
-SimConsole::console_in()
+Terminal::console_in()
 {
     uint64_t value;
 
@@ -287,16 +287,16 @@ SimConsole::console_in()
         value = RECEIVE_NONE;
     }
 
-    DPRINTF(ConsoleVerbose, "console_in: return: %#x\n", value);
+    DPRINTF(TerminalVerbose, "console_in: return: %#x\n", value);
 
     return value;
 }
 
 void
-SimConsole::out(char c)
+Terminal::out(char c)
 {
 #if TRACING_ON == 1
-    if (DTRACE(Console)) {
+    if (DTRACE(Terminal)) {
         static char last = '\0';
 
         if (c != '\n' && c != '\r' ||
@@ -306,7 +306,7 @@ SimConsole::out(char c)
                 char *buffer = new char[size + 1];
                 linebuf.read(buffer, size);
                 buffer[size] = '\0';
-                DPRINTF(Console, "%s\n", buffer);
+                DPRINTF(Terminal, "%s\n", buffer);
                 delete [] buffer;
             } else {
                 linebuf.write(c);
@@ -325,13 +325,13 @@ SimConsole::out(char c)
     if (outfile)
         outfile->write(&c, 1);
 
-    DPRINTF(ConsoleVerbose, "out: \'%c\' %#02x\n",
+    DPRINTF(TerminalVerbose, "out: \'%c\' %#02x\n",
             isprint(c) ? c : ' ', (int)c);
 
 }
 
-SimConsole *
-SimConsoleParams::create()
+Terminal *
+TerminalParams::create()
 {
-    return new SimConsole(this);
+    return new Terminal(this);
 }

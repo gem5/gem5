@@ -28,12 +28,13 @@
 
 from m5.params import *
 from m5.proxy import *
-from Uart import Uart8250
+
 from Device import IsaFake
-from SouthBridge import SouthBridge
-from Platform import Platform
 from Pci import PciConfigAll
-from SimConsole import SimConsole
+from Platform import Platform
+from SouthBridge import SouthBridge
+from Terminal import Terminal
+from Uart import Uart8250
 
 def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
@@ -54,11 +55,11 @@ class PC(Platform):
     # but the linux kernel fiddles with them anway.
     behind_pci = IsaFake(pio_addr=x86IOAddress(0xcf8), pio_size=8)
 
-    # Serial port and console
-    console = SimConsole()
+    # Serial port and terminal
+    terminal = Terminal()
     com_1 = Uart8250()
     com_1.pio_addr = x86IOAddress(0x3f8)
-    com_1.sim_console = console
+    com_1.terminal = terminal
 
     def attachIO(self, bus):
         self.south_bridge.pio = bus.port

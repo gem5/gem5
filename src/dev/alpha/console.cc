@@ -46,8 +46,8 @@
 #include "cpu/thread_context.hh"
 #include "dev/alpha/console.hh"
 #include "dev/platform.hh"
-#include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -58,7 +58,7 @@ using namespace std;
 using namespace AlphaISA;
 
 AlphaConsole::AlphaConsole(const Params *p)
-    : BasicPioDevice(p), disk(p->disk), console(p->sim_console),
+    : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
       system(p->system), cpu(p->cpu)
 {
 
@@ -139,7 +139,7 @@ AlphaConsole::read(PacketPtr pkt)
             switch (daddr)
             {
                 case offsetof(AlphaAccess, inputChar):
-                    pkt->set(console->console_in());
+                    pkt->set(terminal->console_in());
                     break;
                 case offsetof(AlphaAccess, cpuClock):
                     pkt->set(alphaAccess->cpuClock);
@@ -228,7 +228,7 @@ AlphaConsole::write(PacketPtr pkt)
         break;
 
       case offsetof(AlphaAccess, outputChar):
-        console->out((char)(val & 0xff));
+        terminal->out((char)(val & 0xff));
         break;
 
       default:

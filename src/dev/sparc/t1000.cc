@@ -37,8 +37,8 @@
 #include <vector>
 
 #include "cpu/intr_control.hh"
-#include "dev/simconsole.hh"
 #include "dev/sparc/t1000.hh"
+#include "dev/terminal.hh"
 #include "sim/system.hh"
 
 using namespace std;

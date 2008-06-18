@@ -37,11 +37,11 @@
 #include <vector>
 
 #include "cpu/intr_control.hh"
-#include "dev/simconsole.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami.hh"
+#include "dev/terminal.hh"
 #include "sim/system.hh"
 
 using namespace std;

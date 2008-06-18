@@ -30,11 +30,11 @@
  */
 
 /* @file
- * User Console Interface
+ * User Terminal Interface
  */
 
-#ifndef __CONSOLE_HH__
-#define __CONSOLE_HH__
+#ifndef __DEV_TERMINAL_HH__
+#define __DEV_TERMINAL_HH__
 
 #include <iostream>
 
@@ -43,12 +43,12 @@
 #include "base/pollevent.hh"
 #include "base/socket.hh"
 #include "sim/sim_object.hh"
-#include "params/SimConsole.hh"
+#include "params/Terminal.hh"
 
-class ConsoleListener;
+class TerminalListener;
 class Uart;
 
-class SimConsole : public SimObject
+class Terminal : public SimObject
 {
   public:
     Uart *uart;
@@ -57,10 +57,10 @@ class SimConsole : public SimObject
     class ListenEvent : public PollEvent
     {
       protected:
-        SimConsole *cons;
+        Terminal *term;
 
       public:
-        ListenEvent(SimConsole *c, int fd, int e);
+        ListenEvent(Terminal *t, int fd, int e);
         void process(int revent);
     };
 
@@ -70,10 +70,10 @@ class SimConsole : public SimObject
     class DataEvent : public PollEvent
     {
       protected:
-        SimConsole *cons;
+        Terminal *term;
 
       public:
-        DataEvent(SimConsole *c, int fd, int e);
+        DataEvent(Terminal *t, int fd, int e);
         void process(int revent);
     };
 
@@ -85,9 +85,9 @@ class SimConsole : public SimObject
     int data_fd;
 
   public:
-    typedef SimConsoleParams Params;
-    SimConsole(const Params *p);
-    ~SimConsole();
+    typedef TerminalParams Params;
+    Terminal(const Params *p);
+    ~Terminal();
 
   protected:
     ListenSocket listener;
@@ -119,10 +119,10 @@ class SimConsole : public SimObject
     /////////////////
     // OS interface
 
-    // Get a character from the console.
+    // Get a character from the terminal.
     uint8_t  in();
 
-    // get a character from the console in the console specific format
+    // get a character from the terminal in the console specific format
     // corresponds to GETC:
     // retval<63:61>
     //     000: success: character received
@@ -136,11 +136,11 @@ class SimConsole : public SimObject
     // Interrupts are cleared when the buffer is empty.
     uint64_t console_in();
 
-    // Send a character to the console
+    // Send a character to the terminal
     void out(char c);
 
-    //Ask the console if data is available
+    // Ask the terminal if data is available
     bool dataAvailable() { return !rxbuf.empty(); }
 };
 
-#endif // __CONSOLE_HH__
+#endif // __DEV_TERMINAL_HH__

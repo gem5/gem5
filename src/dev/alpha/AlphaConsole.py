@@ -34,5 +34,5 @@ class AlphaConsole(BasicPioDevice):
     type = 'AlphaConsole'
     cpu = Param.BaseCPU(Parent.cpu[0], "Processor")
     disk = Param.SimpleDisk("Simple Disk")
-    sim_console = Param.SimConsole(Parent.any, "The Simulator Console")
+    terminal = Param.Terminal(Parent.any, "The console terminal")
     system = Param.AlphaSystem(Parent.any, "system object")

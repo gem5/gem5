@@ -46,7 +46,7 @@
 
 class PciConfigAll;
 class IntrControl;
-class SimConsole;
+class Terminal;
 class Uart;
 class System;
 

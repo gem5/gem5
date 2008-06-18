@@ -43,7 +43,7 @@
 #include "sim/sim_object.hh"
 
 class BaseCPU;
-class SimConsole;
+class Terminal;
 class AlphaSystem;
 class SimpleDisk;
 
@@ -90,7 +90,7 @@ class AlphaConsole : public BasicPioDevice
     SimpleDisk *disk;
 
     /** the system console (the terminal) is accessable from the console */
-    SimConsole *console;
+    Terminal *terminal;
 
     /** a pointer to the system we are running in */
     AlphaSystem *system;

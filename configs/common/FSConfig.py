@@ -68,7 +68,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.sim_console = SimConsole()
+    self.terminal = Terminal()
     self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')
     self.console = binary('console')
@@ -148,7 +148,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.sim_console = SimConsole()
+    self.terminal = Terminal()
     self.kernel = binary('mips/vmlinux')
     self.console = binary('mips/console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'

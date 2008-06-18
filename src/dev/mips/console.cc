@@ -45,8 +45,8 @@
 #include "cpu/thread_context.hh"
 #include "dev/mips/console.hh"
 #include "dev/platform.hh"
-#include "dev/simconsole.hh"
 #include "dev/simple_disk.hh"
+#include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -58,7 +58,7 @@ using namespace std;
 using namespace MipsISA;
 
 MipsConsole::MipsConsole(const Params *p)
-  : BasicPioDevice(p), disk(p->disk), console(p->sim_console),
+  : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
     system(p->system), cpu(p->cpu)
 {
 
@@ -125,7 +125,7 @@ MipsConsole::read(PacketPtr pkt)
                     pkt->set(mipsAccess->intrClockFrequency);
                     break;
                 case offsetof(MipsAccess, inputChar):
-                    pkt->set(console->console_in());
+                    pkt->set(terminal->console_in());
                     break;
                 case offsetof(MipsAccess, cpuClock):
                     pkt->set(mipsAccess->cpuClock);
@@ -215,7 +215,7 @@ MipsConsole::write(PacketPtr pkt)
         break;
 
       case offsetof(MipsAccess, outputChar):
-        console->out((char)(val & 0xff));
+        terminal->out((char)(val & 0xff));
         break;
 
       default:

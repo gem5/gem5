@@ -43,7 +43,7 @@
 #include "sim/sim_object.hh"
 
 class BaseCPU;
-class SimConsole;
+class Terminal;
 class MipsSystem;
 class SimpleDisk;
 
@@ -89,8 +89,8 @@ class MipsConsole : public BasicPioDevice
     /** the disk must be accessed from the console */
     SimpleDisk *disk;
 
-    /** the system console (the terminal) is accessable from the console */
-    SimConsole *console;
+    /** the system terminal is accessable from the console */
+    Terminal *terminal;
 
     /** a pointer to the system we are running in */
     MipsSystem *system;

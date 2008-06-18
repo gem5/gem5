@@ -38,9 +38,9 @@
 #include "base/inifile.hh"
 #include "base/str.hh"        // for to_number
 #include "base/trace.hh"
-#include "dev/simconsole.hh"
-#include "dev/uart8250.hh"
 #include "dev/platform.hh"
+#include "dev/terminal.hh"
+#include "dev/uart8250.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 
@@ -120,8 +120,8 @@ Uart8250::read(PacketPtr pkt)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // read byte
-                if (cons->dataAvailable())
-                    pkt->set(cons->in());
+                if (term->dataAvailable())
+                    pkt->set(term->in());
                 else {
                     pkt->set((uint8_t)0);
                     // A limited amount of these are ok.
@@ -130,7 +130,7 @@ Uart8250::read(PacketPtr pkt)
                 status &= ~RX_INT;
                 platform->clearConsoleInt();
 
-                if (cons->dataAvailable() && (IER & UART_IER_RDI))
+                if (term->dataAvailable() && (IER & UART_IER_RDI))
                     rxIntrEvent.scheduleIntr();
             } else { // dll divisor latch
                ;
@@ -165,7 +165,7 @@ Uart8250::read(PacketPtr pkt)
             uint8_t lsr;
             lsr = 0;
             // check if there are any bytes to be read
-            if (cons->dataAvailable())
+            if (term->dataAvailable())
                 lsr = UART_LSR_DR;
             lsr |= UART_LSR_TEMT | UART_LSR_THRE;
             pkt->set(lsr);
@@ -201,7 +201,7 @@ Uart8250::write(PacketPtr pkt)
     switch (daddr) {
         case 0x0:
             if (!(LCR & 0x80)) { // write byte
-                cons->out(pkt->get<uint8_t>());
+                term->out(pkt->get<uint8_t>());
                 platform->clearConsoleInt();
                 status &= ~TX_INT;
                 if (UART_IER_THRI & IER)
@@ -237,7 +237,7 @@ Uart8250::write(PacketPtr pkt)
                     status &= ~TX_INT;
                 }
 
-                if ((UART_IER_RDI & IER) && cons->dataAvailable()) {
+                if ((UART_IER_RDI & IER) && term->dataAvailable()) {
                     DPRINTF(Uart, "IER: IER_RDI set, scheduling RX intrrupt\n");
                     rxIntrEvent.scheduleIntr();
                 } else {
