@@ -91,7 +91,7 @@ drivesys.disk2.dma_read_txs                         0                       # Nu
 drivesys.disk2.dma_write_bytes                      0                       # Number of bytes transfered via DMA writes.
 drivesys.disk2.dma_write_full_pages                 0                       # Number of full page size DMA writes.
 drivesys.disk2.dma_write_txs                        0                       # Number of DMA write transactions.
-drivesys.tsunami.ethernet.coalescedRxDesc            1                       # average number of RxDesc's coalesced into each post
+drivesys.tsunami.ethernet.coalescedRxDesc            0                       # average number of RxDesc's coalesced into each post
 drivesys.tsunami.ethernet.coalescedRxIdle            0                       # average number of RxIdle's coalesced into each post
 drivesys.tsunami.ethernet.coalescedRxOk             0                       # average number of RxOk's coalesced into each post
 drivesys.tsunami.ethernet.coalescedRxOrn            0                       # average number of RxOrn's coalesced into each post
@@ -105,7 +105,7 @@ drivesys.tsunami.ethernet.descDMAWrites            13                       # Nu
 drivesys.tsunami.ethernet.descDmaReadBytes           96                       # number of descriptor bytes read w/ DMA
 drivesys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
 drivesys.tsunami.ethernet.droppedPackets            0                       # number of packets dropped
-drivesys.tsunami.ethernet.postedInterrupts           10                       # number of posts to CPU
+drivesys.tsunami.ethernet.postedInterrupts           16                       # number of posts to CPU
 drivesys.tsunami.ethernet.postedRxDesc              6                       # number of RxDesc interrupts posted to CPU
 drivesys.tsunami.ethernet.postedRxIdle              0                       # number of rxIdle interrupts posted to CPU
 drivesys.tsunami.ethernet.postedRxOk                0                       # number of RxOk interrupts posted to CPU
@@ -139,10 +139,10 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                              129173906                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 476620                       # Number of bytes of host memory used
-host_seconds                                     2.12                       # Real time elapsed on the host
-host_tick_rate                            94522664540                       # Simulator tick rate (ticks/s)
+host_inst_rate                              222632706                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 479796                       # Number of bytes of host memory used
+host_seconds                                     1.23                       # Real time elapsed on the host
+host_tick_rate                           162907421274                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273294782                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
@@ -255,14 +255,14 @@ testsys.tsunami.ethernet.coalescedRxOrn             0                       # av
 testsys.tsunami.ethernet.coalescedSwi               0                       # average number of Swi's coalesced into each post
 testsys.tsunami.ethernet.coalescedTotal             1                       # average number of interrupts coalesced into each post
 testsys.tsunami.ethernet.coalescedTxDesc            0                       # average number of TxDesc's coalesced into each post
-testsys.tsunami.ethernet.coalescedTxIdle            1                       # average number of TxIdle's coalesced into each post
+testsys.tsunami.ethernet.coalescedTxIdle            0                       # average number of TxIdle's coalesced into each post
 testsys.tsunami.ethernet.coalescedTxOk              0                       # average number of TxOk's coalesced into each post
 testsys.tsunami.ethernet.descDMAReads               6                       # Number of descriptors the device read w/ DMA
 testsys.tsunami.ethernet.descDMAWrites             13                       # Number of descriptors the device wrote w/ DMA
 testsys.tsunami.ethernet.descDmaReadBytes          144                       # number of descriptor bytes read w/ DMA
 testsys.tsunami.ethernet.descDmaWriteBytes          104                       # number of descriptor bytes write w/ DMA
 testsys.tsunami.ethernet.droppedPackets             0                       # number of packets dropped
-testsys.tsunami.ethernet.postedInterrupts           10                       # number of posts to CPU
+testsys.tsunami.ethernet.postedInterrupts           15                       # number of posts to CPU
 testsys.tsunami.ethernet.postedRxDesc               4                       # number of RxDesc interrupts posted to CPU
 testsys.tsunami.ethernet.postedRxIdle               0                       # number of rxIdle interrupts posted to CPU
 testsys.tsunami.ethernet.postedRxOk                 0                       # number of RxOk interrupts posted to CPU
@@ -381,10 +381,10 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                           134363216323                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 476620                       # Number of bytes of host memory used
+host_inst_rate                           225676946325                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 479796                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              362870729                       # Simulator tick rate (ticks/s)
+host_tick_rate                              612132399                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273294782                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
