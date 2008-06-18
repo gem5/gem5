@@ -33,7 +33,8 @@ from BaseCPU import BaseCPU
 class AtomicSimpleCPU(BaseCPU):
     type = 'AtomicSimpleCPU'
     width = Param.Int(1, "CPU width")
-    simulate_stalls = Param.Bool(False, "Simulate cache stall cycles")
+    simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
+    simulate_inst_stalls = Param.Bool(False, "Simulate icache stall cycles")
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
     if build_env['FULL_SYSTEM']:

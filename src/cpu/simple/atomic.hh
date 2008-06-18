@@ -39,7 +39,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     struct Params : public BaseSimpleCPU::Params {
         int width;
-        bool simulate_stalls;
+        bool simulate_data_stalls;
+        bool simulate_inst_stalls;
     };
 
     AtomicSimpleCPU(Params *params);
@@ -74,7 +75,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     TickEvent tickEvent;
 
     const int width;
-    const bool simulate_stalls;
+    const bool simulate_data_stalls;
+    const bool simulate_inst_stalls;
 
     // main simulation loop (one cycle)
     void tick();

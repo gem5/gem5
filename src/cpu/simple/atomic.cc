@@ -153,8 +153,9 @@ AtomicSimpleCPU::DcachePort::setPeer(Port *port)
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), tickEvent(this),
-      width(p->width), simulate_stalls(p->simulate_stalls),
+    : BaseSimpleCPU(p), tickEvent(this), width(p->width),
+      simulate_data_stalls(p->simulate_data_stalls),
+      simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
       physmemPort(name() + "-iport", this), hasPhysMemPort(false)
 {
@@ -711,7 +712,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    Tick latency = ticks(1); // instruction takes one cycle by default
+    Tick latency = 0;
 
     for (int i = 0; i < width; ++i) {
         numCycles++;
@@ -769,22 +770,31 @@ AtomicSimpleCPU::tick()
                         curStaticInst->isFirstMicroop()))
                 instCnt++;
 
-            if (simulate_stalls) {
-                Tick icache_stall =
-                    icache_access ? icache_latency - ticks(1) : 0;
-                Tick dcache_stall =
-                    dcache_access ? dcache_latency - ticks(1) : 0;
-                Tick stall_cycles = (icache_stall + dcache_stall) / ticks(1);
-                if (ticks(stall_cycles) < (icache_stall + dcache_stall))
-                    latency += ticks(stall_cycles+1);
-                else
-                    latency += ticks(stall_cycles);
+            Tick stall_ticks = 0;
+            if (simulate_inst_stalls && icache_access)
+                stall_ticks += icache_latency;
+
+            if (simulate_data_stalls && dcache_access)
+                stall_ticks += dcache_latency;
+
+            if (stall_ticks) {
+                Tick stall_cycles = stall_ticks / ticks(1);
+                Tick aligned_stall_ticks = ticks(stall_cycles);
+
+                if (aligned_stall_ticks < stall_ticks)
+                    aligned_stall_ticks += 1;
+
+                latency += aligned_stall_ticks;
             }
 
         }
         if(fault != NoFault || !stayAtPC)
             advancePC(fault);
     }
+
+    // instruction takes at least one cycle
+    if (latency < ticks(1))
+        latency = ticks(1);
 
     if (_status != Idle)
         tickEvent.schedule(curTick + latency);
@@ -819,7 +829,8 @@ AtomicSimpleCPUParams::create()
     params->functionTrace = function_trace;
     params->functionTraceStart = function_trace_start;
     params->width = width;
-    params->simulate_stalls = simulate_stalls;
+    params->simulate_data_stalls = simulate_data_stalls;
+    params->simulate_inst_stalls = simulate_inst_stalls;
     params->system = system;
     params->cpu_id = cpu_id;
     params->tracer = tracer;
