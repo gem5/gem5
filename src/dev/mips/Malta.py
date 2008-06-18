@@ -28,12 +28,13 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice
-from Platform import Platform
-from MipsConsole import MipsConsole
-from Uart import Uart8250
-from Pci import PciConfigAll
+
 from BadDevice import BadDevice
+from Device import BasicPioDevice
+from MipsBackdoor import MipsBackdoor
+from Pci import PciConfigAll
+from Platform import Platform
+from Uart import Uart8250
 
 class MaltaCChip(BasicPioDevice):
     type = 'MaltaCChip'
@@ -56,7 +57,7 @@ class Malta(Platform):
     cchip = MaltaCChip(pio_addr=0x801a0000000)
     io = MaltaIO(pio_addr=0x801fc000000)
     uart = Uart8250(pio_addr=0xBFD003F8)
-    console = MipsConsole(pio_addr=0xBFD00F00, disk=Parent.simple_disk)
+    backdoor = MipsBackdoor(pio_addr=0xBFD00F00, disk=Parent.simple_disk)
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -65,4 +66,4 @@ class Malta(Platform):
         self.cchip.pio = bus.port
         self.io.pio = bus.port
         self.uart.pio = bus.port
-        self.console.pio = bus.port
+        self.backdoor.pio = bus.port

@@ -32,7 +32,7 @@
  */
 
 /** @file
- * Mips Console Definition
+ * Mips Console Backdoor Definition
  */
 #include <cstddef>
 #include <string>
@@ -43,21 +43,21 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "dev/mips/console.hh"
+#include "dev/mips/backdoor.hh"
 #include "dev/platform.hh"
 #include "dev/simple_disk.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
-#include "params/MipsConsole.hh"
+#include "params/MipsBackdoor.hh"
 #include "sim/sim_object.hh"
 
 
 using namespace std;
 using namespace MipsISA;
 
-MipsConsole::MipsConsole(const Params *p)
+MipsBackdoor::MipsBackdoor(const Params *p)
   : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
     system(p->system), cpu(p->cpu)
 {
@@ -81,7 +81,7 @@ MipsConsole::MipsConsole(const Params *p)
 }
 
 void
-MipsConsole::startup()
+MipsBackdoor::startup()
 {
     system->setMipsAccess(pioAddr);
     mipsAccess->numCPUs = system->getNumCPUs();
@@ -94,7 +94,7 @@ MipsConsole::startup()
 }
 
 Tick
-MipsConsole::read(PacketPtr pkt)
+MipsBackdoor::read(PacketPtr pkt)
 {
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
@@ -169,7 +169,7 @@ MipsConsole::read(PacketPtr pkt)
                     else
                         panic("Unknown 32bit access, %#x\n", daddr);
             }
-            //DPRINTF(MipsConsole, "read: offset=%#x val=%#x\n", daddr,
+            //DPRINTF(MipsBackdoor, "read: offset=%#x val=%#x\n", daddr,
                    // pkt->get<uint64_t>());
             break;
         default:
@@ -181,7 +181,7 @@ MipsConsole::read(PacketPtr pkt)
 }
 
 Tick
-MipsConsole::write(PacketPtr pkt)
+MipsBackdoor::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;
@@ -235,7 +235,7 @@ MipsConsole::write(PacketPtr pkt)
 }
 
 void
-MipsConsole::Access::serialize(ostream &os)
+MipsBackdoor::Access::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(last_offset);
     SERIALIZE_SCALAR(version);
@@ -257,7 +257,7 @@ MipsConsole::Access::serialize(ostream &os)
 }
 
 void
-MipsConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
+MipsBackdoor::Access::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);
@@ -279,19 +279,19 @@ MipsConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-MipsConsole::serialize(ostream &os)
+MipsBackdoor::serialize(ostream &os)
 {
     mipsAccess->serialize(os);
 }
 
 void
-MipsConsole::unserialize(Checkpoint *cp, const std::string &section)
+MipsBackdoor::unserialize(Checkpoint *cp, const std::string &section)
 {
     mipsAccess->unserialize(cp, section);
 }
 
-MipsConsole *
-MipsConsoleParams::create()
+MipsBackdoor *
+MipsBackdoorParams::create()
 {
-    return new MipsConsole(this);
+    return new MipsBackdoor(this);
 }
