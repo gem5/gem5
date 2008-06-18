@@ -893,12 +893,12 @@ Device::rxKick()
         // Grab a new packet from the fifo.
         vnic->rxPacket = rxFifoPtr++;
         vnic->rxPacketOffset = 0;
-        vnic->rxPacketBytes = (*vnic->rxPacket)->length;
+        vnic->rxPacketBytes = vnic->rxPacket->packet->length;
         assert(vnic->rxPacketBytes);
 
         vnic->rxDoneData = 0;
         /* scope for variables */ {
-            IpPtr ip(*vnic->rxPacket);
+            IpPtr ip(vnic->rxPacket->packet);
             if (ip) {
                 DPRINTF(Ethernet, "ID is %d\n", ip->id());
                 vnic->rxDoneData |= Regs::RxDone_IpPacket;
@@ -941,7 +941,7 @@ Device::rxKick()
                 Regs::get_RxData_Addr(vnic->RxData));
         rxDmaLen = std::min<int>(Regs::get_RxData_Len(vnic->RxData),
                             vnic->rxPacketBytes);
-        rxDmaData = (*vnic->rxPacket)->data + vnic->rxPacketOffset;
+        rxDmaData = vnic->rxPacket->packet->data + vnic->rxPacketOffset;
         rxState = rxCopy;
         if (rxDmaAddr == 1LL) {
             rxState = rxCopyDone;
