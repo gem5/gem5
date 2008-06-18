@@ -39,7 +39,6 @@
 #include <string>
 
 #include "base/inet.hh"
-#include "base/statistics.hh"
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"

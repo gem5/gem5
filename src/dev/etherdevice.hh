@@ -36,6 +36,7 @@
 #ifndef __DEV_ETHERDEVICE_HH__
 #define __DEV_ETHERDEVICE_HH__
 
+#include "base/statistics.hh"
 #include "dev/pcidev.hh"
 #include "params/EtherDevice.hh"
 #include "sim/sim_object.hh"
@@ -64,6 +65,59 @@ class EtherDevice : public PciDev
     /** Additional function to return the Port of a memory object. */
     virtual EtherInt *getEthPort(const std::string &if_name, int idx = -1) = 0;
 
+  public:
+    void regStats();
+
+  protected:
+    Stats::Scalar<> txBytes;
+    Stats::Scalar<> rxBytes;
+    Stats::Scalar<> txPackets;
+    Stats::Scalar<> rxPackets;
+    Stats::Scalar<> txIpChecksums;
+    Stats::Scalar<> rxIpChecksums;
+    Stats::Scalar<> txTcpChecksums;
+    Stats::Scalar<> rxTcpChecksums;
+    Stats::Scalar<> txUdpChecksums;
+    Stats::Scalar<> rxUdpChecksums;
+    Stats::Scalar<> descDmaReads;
+    Stats::Scalar<> descDmaWrites;
+    Stats::Scalar<> descDmaRdBytes;
+    Stats::Scalar<> descDmaWrBytes;
+    Stats::Formula totBandwidth;
+    Stats::Formula totPackets;
+    Stats::Formula totBytes;
+    Stats::Formula totPacketRate;
+    Stats::Formula txBandwidth;
+    Stats::Formula rxBandwidth;
+    Stats::Formula txPacketRate;
+    Stats::Formula rxPacketRate;
+    Stats::Scalar<> postedSwi;
+    Stats::Formula coalescedSwi;
+    Stats::Scalar<> totalSwi;
+    Stats::Scalar<> postedRxIdle;
+    Stats::Formula coalescedRxIdle;
+    Stats::Scalar<> totalRxIdle;
+    Stats::Scalar<> postedRxOk;
+    Stats::Formula coalescedRxOk;
+    Stats::Scalar<> totalRxOk;
+    Stats::Scalar<> postedRxDesc;
+    Stats::Formula coalescedRxDesc;
+    Stats::Scalar<> totalRxDesc;
+    Stats::Scalar<> postedTxOk;
+    Stats::Formula coalescedTxOk;
+    Stats::Scalar<> totalTxOk;
+    Stats::Scalar<> postedTxIdle;
+    Stats::Formula coalescedTxIdle;
+    Stats::Scalar<> totalTxIdle;
+    Stats::Scalar<> postedTxDesc;
+    Stats::Formula coalescedTxDesc;
+    Stats::Scalar<> totalTxDesc;
+    Stats::Scalar<> postedRxOrn;
+    Stats::Formula coalescedRxOrn;
+    Stats::Scalar<> totalRxOrn;
+    Stats::Formula coalescedTotal;
+    Stats::Scalar<> postedInterrupts;
+    Stats::Scalar<> droppedPackets;
 };
 
 #endif //__DEV_ETHERDEVICE_HH__
