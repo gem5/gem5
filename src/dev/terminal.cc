@@ -97,12 +97,8 @@ Terminal::Terminal(const Params *p)
       , linebuf(16384)
 #endif
 {
-    if (!p->output.empty()) {
-        if (p->append_name)
-            outfile = simout.find(p->output + "." + p->name);
-        else
-            outfile = simout.find(p->output);
-
+    if (p->output) {
+        outfile = simout.find(p->name);
         outfile->setf(ios::unitbuf);
     }
 
