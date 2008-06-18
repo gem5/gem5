@@ -2036,19 +2036,34 @@ NSGigE::txKick()
                     IpPtr ip(txPacket);
                     if (extsts & EXTSTS_UDPPKT) {
                         UdpPtr udp(ip);
-                        udp->sum(0);
-                        udp->sum(cksum(udp));
-                        txUdpChecksums++;
+                        if (udp) {
+                            udp->sum(0);
+                            udp->sum(cksum(udp));
+                            txUdpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("UDPPKT set, but not UDP!\n");
+                        }
                     } else if (extsts & EXTSTS_TCPPKT) {
                         TcpPtr tcp(ip);
-                        tcp->sum(0);
-                        tcp->sum(cksum(tcp));
-                        txTcpChecksums++;
+                        if (tcp) {
+                            tcp->sum(0);
+                            tcp->sum(cksum(tcp));
+                            txTcpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("TCPPKT set, but not UDP!\n");
+                        }
                     }
                     if (extsts & EXTSTS_IPPKT) {
-                        ip->sum(0);
-                        ip->sum(cksum(ip));
-                        txIpChecksums++;
+                        if (ip) {
+                            ip->sum(0);
+                            ip->sum(cksum(ip));
+                            txIpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("IPPKT set, but not UDP!\n");
+                        }
                     }
                 }
 

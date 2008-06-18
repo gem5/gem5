@@ -179,32 +179,31 @@ class IpPtr
     friend class UdpPtr;
     EthPacketPtr p;
 
-    const IpHdr *h() const
-    { return (const IpHdr *)(p->data + sizeof(eth_hdr)); }
-    IpHdr *h() { return (IpHdr *)(p->data + sizeof(eth_hdr)); }
-
     void set(const EthPacketPtr &ptr)
     {
-        EthHdr *eth = (EthHdr *)ptr->data;
-        if (eth->type() == ETH_TYPE_IP)
-            p = ptr;
-        else
-            p = 0;
+        p = 0;
+
+        if (ptr) {
+            EthHdr *eth = (EthHdr *)ptr->data;
+            if (eth->type() == ETH_TYPE_IP)
+                p = ptr;
+        }
     }
 
   public:
-    IpPtr() {}
-    IpPtr(const EthPacketPtr &ptr) { set(ptr); }
-    IpPtr(const EthPtr &ptr) { set(ptr.p); }
+    IpPtr() : p(0) {}
+    IpPtr(const EthPacketPtr &ptr) : p(0) { set(ptr); }
+    IpPtr(const EthPtr &ptr) : p(0) { set(ptr.p); }
     IpPtr(const IpPtr &ptr) : p(ptr.p) { }
 
-    IpHdr *operator->() { return h(); }
-    IpHdr &operator*() { return *h(); }
-    operator IpHdr *() { return h(); }
+    IpHdr *get() { return (IpHdr *)(p->data + sizeof(eth_hdr)); }
+    IpHdr *operator->() { return get(); }
+    IpHdr &operator*() { return *get(); }
 
-    const IpHdr *operator->() const { return h(); }
-    const IpHdr &operator*() const { return *h(); }
-    operator const IpHdr *() const { return h(); }
+    const IpHdr *get() const
+    { return (const IpHdr *)(p->data + sizeof(eth_hdr)); }
+    const IpHdr *operator->() const { return get(); }
+    const IpHdr &operator*() const { return *get(); }
 
     const IpPtr &operator=(const EthPacketPtr &ptr) { set(ptr); return *this; }
     const IpPtr &operator=(const EthPtr &ptr) { set(ptr.p); return *this; }
@@ -214,7 +213,6 @@ class IpPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
-    operator bool() { return p; }
 };
 
 uint16_t cksum(const IpPtr &ptr);
@@ -278,30 +276,27 @@ class TcpPtr
     EthPacketPtr p;
     int off;
 
-    const TcpHdr *h() const { return (const TcpHdr *)(p->data + off); }
-    TcpHdr *h() { return (TcpHdr *)(p->data + off); }
-
     void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
     void set(const IpPtr &ptr)
     {
-        if (ptr->proto() == IP_PROTO_TCP)
+        if (ptr && ptr->proto() == IP_PROTO_TCP)
             set(ptr.p, sizeof(eth_hdr) + ptr->hlen());
         else
             set(0, 0);
     }
 
   public:
-    TcpPtr() {}
-    TcpPtr(const IpPtr &ptr) { set(ptr); }
+    TcpPtr() : p(0), off(0) {}
+    TcpPtr(const IpPtr &ptr) : p(0), off(0) { set(ptr); }
     TcpPtr(const TcpPtr &ptr) : p(ptr.p), off(ptr.off) {}
 
-    TcpHdr *operator->() { return h(); }
-    TcpHdr &operator*() { return *h(); }
-    operator TcpHdr *() { return h(); }
+    TcpHdr *get() { return (TcpHdr *)(p->data + off); }
+    TcpHdr *operator->() { return get(); }
+    TcpHdr &operator*() { return *get(); }
 
-    const TcpHdr *operator->() const { return h(); }
-    const TcpHdr &operator*() const { return *h(); }
-    operator const TcpHdr *() const { return h(); }
+    const TcpHdr *get() const { return (const TcpHdr *)(p->data + off); }
+    const TcpHdr *operator->() const { return get(); }
+    const TcpHdr &operator*() const { return *get(); }
 
     const TcpPtr &operator=(const IpPtr &i) { set(i); return *this; }
     const TcpPtr &operator=(const TcpPtr &t) { set(t.p, t.off); return *this; }
@@ -310,7 +305,6 @@ class TcpPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
-    operator bool() { return p; }
 };
 
 uint16_t cksum(const TcpPtr &ptr);
@@ -368,30 +362,27 @@ class UdpPtr
     EthPacketPtr p;
     int off;
 
-    const UdpHdr *h() const { return (const UdpHdr *)(p->data + off); }
-    UdpHdr *h() { return (UdpHdr *)(p->data + off); }
-
     void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
     void set(const IpPtr &ptr)
     {
-        if (ptr->proto() == IP_PROTO_UDP)
+        if (ptr && ptr->proto() == IP_PROTO_UDP)
             set(ptr.p, sizeof(eth_hdr) + ptr->hlen());
         else
             set(0, 0);
     }
 
   public:
-    UdpPtr() {}
-    UdpPtr(const IpPtr &ptr) { set(ptr); }
+    UdpPtr() : p(0), off(0) {}
+    UdpPtr(const IpPtr &ptr) : p(0), off(0) { set(ptr); }
     UdpPtr(const UdpPtr &ptr) : p(ptr.p), off(ptr.off) {}
 
-    UdpHdr *operator->() { return h(); }
-    UdpHdr &operator*() { return *h(); }
-    operator UdpHdr *() { return h(); }
+    UdpHdr *get() { return (UdpHdr *)(p->data + off); }
+    UdpHdr *operator->() { return get(); }
+    UdpHdr &operator*() { return *get(); }
 
-    const UdpHdr *operator->() const { return h(); }
-    const UdpHdr &operator*() const { return *h(); }
-    operator const UdpHdr *() const { return h(); }
+    const UdpHdr *get() const { return (const UdpHdr *)(p->data + off); }
+    const UdpHdr *operator->() const { return get(); }
+    const UdpHdr &operator*() const { return *get(); }
 
     const UdpPtr &operator=(const IpPtr &i) { set(i); return *this; }
     const UdpPtr &operator=(const UdpPtr &t) { set(t.p, t.off); return *this; }
@@ -400,7 +391,6 @@ class UdpPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
-    operator bool() { return p; }
 };
 
 uint16_t cksum(const UdpPtr &ptr);
