@@ -46,7 +46,7 @@
 ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid)
     : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      physPort(NULL), virtPort(NULL),
+      kernelStats(NULL), physPort(NULL), virtPort(NULL),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
 ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,

@@ -86,11 +86,8 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     profileNode = &dummyNode;
     profilePC = 3;
 
-    if (use_kernel_stats) {
+    if (use_kernel_stats)
         kernelStats = new TheISA::Kernel::Statistics(system);
-    } else {
-        kernelStats = NULL;
-    }
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
