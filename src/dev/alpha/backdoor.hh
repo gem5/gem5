@@ -29,16 +29,16 @@
  */
 
 /** @file
- * System Console Interface
+ * System Console Backdoor Interface
  */
 
-#ifndef __ALPHA_CONSOLE_HH__
-#define __ALPHA_CONSOLE_HH__
+#ifndef __DEV_ALPHA_BACKDOOR_HH__
+#define __DEV_ALPHA_BACKDOOR_HH__
 
 #include "base/range.hh"
 #include "dev/alpha/access.h"
 #include "dev/io_device.hh"
-#include "params/AlphaConsole.hh"
+#include "params/AlphaBackdoor.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
 
@@ -50,7 +50,7 @@ class SimpleDisk;
 /**
  * Memory mapped interface to the system console. This device
  * represents a shared data region between the OS Kernel and the
- * System Console.
+ * System Console Backdoor.
  *
  * The system console is a small standalone program that is initially
  * run when the system boots.  It contains the necessary code to
@@ -72,7 +72,7 @@ class SimpleDisk;
  * primarily used doing boot before the kernel has loaded its device
  * drivers.
  */
-class AlphaConsole : public BasicPioDevice
+class AlphaBackdoor : public BasicPioDevice
 {
   protected:
     struct Access : public AlphaAccess
@@ -99,8 +99,8 @@ class AlphaConsole : public BasicPioDevice
     BaseCPU *cpu;
 
   public:
-    typedef AlphaConsoleParams Params;
-    AlphaConsole(const Params *p);
+    typedef AlphaBackdoorParams Params;
+    AlphaBackdoor(const Params *p);
 
     const Params *
     params() const
@@ -123,4 +123,4 @@ class AlphaConsole : public BasicPioDevice
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif // __ALPHA_CONSOLE_HH__
+#endif // __DEV_ALPHA_BACKDOOR_HH__

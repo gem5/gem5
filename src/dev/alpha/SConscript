@@ -32,14 +32,14 @@
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'alpha':
-    SimObject('AlphaConsole.py')
+    SimObject('AlphaBackdoor.py')
     SimObject('Tsunami.py')
 
-    Source('console.cc')
+    Source('backdoor.cc')
     Source('tsunami.cc')
     Source('tsunami_cchip.cc')
     Source('tsunami_io.cc')
     Source('tsunami_pchip.cc')
 
-    TraceFlag('AlphaConsole')
+    TraceFlag('AlphaBackdoor')
     TraceFlag('Tsunami')

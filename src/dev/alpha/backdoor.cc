@@ -32,7 +32,7 @@
  */
 
 /** @file
- * Alpha Console Definition
+ * Alpha Console Backdoor Definition
  */
 
 #include <cstddef>
@@ -44,20 +44,20 @@
 #include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
-#include "dev/alpha/console.hh"
+#include "dev/alpha/backdoor.hh"
 #include "dev/platform.hh"
 #include "dev/simple_disk.hh"
 #include "dev/terminal.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
-#include "params/AlphaConsole.hh"
+#include "params/AlphaBackdoor.hh"
 #include "sim/sim_object.hh"
 
 using namespace std;
 using namespace AlphaISA;
 
-AlphaConsole::AlphaConsole(const Params *p)
+AlphaBackdoor::AlphaBackdoor(const Params *p)
     : BasicPioDevice(p), disk(p->disk), terminal(p->terminal),
       system(p->system), cpu(p->cpu)
 {
@@ -81,7 +81,7 @@ AlphaConsole::AlphaConsole(const Params *p)
 }
 
 void
-AlphaConsole::startup()
+AlphaBackdoor::startup()
 {
     system->setAlphaAccess(pioAddr);
     alphaAccess->numCPUs = system->getNumCPUs();
@@ -94,7 +94,7 @@ AlphaConsole::startup()
 }
 
 Tick
-AlphaConsole::read(PacketPtr pkt)
+AlphaBackdoor::read(PacketPtr pkt)
 {
 
     /** XXX Do we want to push the addr munging to a bus brige or something? So
@@ -132,7 +132,7 @@ AlphaConsole::read(PacketPtr pkt)
                      */
                   pkt->setBadAddress();
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+            DPRINTF(AlphaBackdoor, "read: offset=%#x val=%#x\n", daddr,
                     pkt->get<uint32_t>());
             break;
         case sizeof(uint64_t):
@@ -183,7 +183,7 @@ AlphaConsole::read(PacketPtr pkt)
                     else
                         panic("Unknown 64bit access, %#x\n", daddr);
             }
-            DPRINTF(AlphaConsole, "read: offset=%#x val=%#x\n", daddr,
+            DPRINTF(AlphaBackdoor, "read: offset=%#x val=%#x\n", daddr,
                     pkt->get<uint64_t>());
             break;
         default:
@@ -193,7 +193,7 @@ AlphaConsole::read(PacketPtr pkt)
 }
 
 Tick
-AlphaConsole::write(PacketPtr pkt)
+AlphaBackdoor::write(PacketPtr pkt)
 {
     assert(pkt->getAddr() >= pioAddr && pkt->getAddr() < pioAddr + pioSize);
     Addr daddr = pkt->getAddr() - pioAddr;
@@ -248,7 +248,7 @@ AlphaConsole::write(PacketPtr pkt)
 }
 
 void
-AlphaConsole::Access::serialize(ostream &os)
+AlphaBackdoor::Access::serialize(ostream &os)
 {
     SERIALIZE_SCALAR(last_offset);
     SERIALIZE_SCALAR(version);
@@ -270,7 +270,7 @@ AlphaConsole::Access::serialize(ostream &os)
 }
 
 void
-AlphaConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
+AlphaBackdoor::Access::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(last_offset);
     UNSERIALIZE_SCALAR(version);
@@ -292,19 +292,19 @@ AlphaConsole::Access::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-AlphaConsole::serialize(ostream &os)
+AlphaBackdoor::serialize(ostream &os)
 {
     alphaAccess->serialize(os);
 }
 
 void
-AlphaConsole::unserialize(Checkpoint *cp, const std::string &section)
+AlphaBackdoor::unserialize(Checkpoint *cp, const std::string &section)
 {
     alphaAccess->unserialize(cp, section);
 }
 
-AlphaConsole *
-AlphaConsoleParams::create()
+AlphaBackdoor *
+AlphaBackdoorParams::create()
 {
-    return new AlphaConsole(this);
+    return new AlphaBackdoor(this);
 }

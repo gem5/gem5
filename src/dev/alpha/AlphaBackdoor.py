@@ -30,8 +30,8 @@ from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
 
-class AlphaConsole(BasicPioDevice):
-    type = 'AlphaConsole'
+class AlphaBackdoor(BasicPioDevice):
+    type = 'AlphaBackdoor'
     cpu = Param.BaseCPU(Parent.cpu[0], "Processor")
     disk = Param.SimpleDisk("Simple Disk")
     terminal = Param.Terminal(Parent.any, "The console terminal")
