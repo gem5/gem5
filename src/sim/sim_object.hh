@@ -36,10 +36,11 @@
 #ifndef __SIM_OBJECT_HH__
 #define __SIM_OBJECT_HH__
 
-#include <map>
-#include <list>
-#include <vector>
 #include <iostream>
+#include <list>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "params/SimObject.hh"
 #include "sim/serialize.hh"

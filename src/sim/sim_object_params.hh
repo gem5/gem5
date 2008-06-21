@@ -36,6 +36,8 @@
 struct PyObject;
 #endif
 
+#include <string>
+
 struct SimObjectParams
 {
     virtual ~SimObjectParams() {}
