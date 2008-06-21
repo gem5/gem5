@@ -72,8 +72,8 @@ Bus::getPort(const std::string &if_name, int idx)
     return bp;
 }
 
-void
-Bus::deletePortRefs(Port *p)
+bool
+Bus::deletePort(Port *p)
 {
 
     BusPort *bp =  dynamic_cast<BusPort*>(p);
@@ -81,10 +81,11 @@ Bus::deletePortRefs(Port *p)
         panic("Couldn't convert Port* to BusPort*\n");
     // If this is our one functional port
     if (funcPort == bp)
-        return;
+        return false;
     interfaces.erase(bp->getId());
     clearBusCache();
     delete bp;
+    return true;
 }
 
 /** Get the ranges of anyone other buses that we are connected to. */

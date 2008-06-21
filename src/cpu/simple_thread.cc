@@ -302,7 +302,6 @@ void
 SimpleThread::delVirtPort(VirtualPort *vp)
 {
     if (vp != virtPort) {
-        vp->removeConn();
         delete vp;
     }
 }

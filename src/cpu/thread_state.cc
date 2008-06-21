@@ -126,7 +126,7 @@ ThreadState::connectPhysPort()
     // already existed.  Fix this memory leak once the bus port IDs
     // for functional ports is resolved.
     if (physPort)
-        physPort->removeConn();
+        physPort->disconnectFromPeer();
     else
         physPort = new FunctionalPort(csprintf("%s-%d-funcport",
                                            baseCpu->name(), tid));
@@ -140,7 +140,7 @@ ThreadState::connectVirtPort()
     // already existed.  Fix this memory leak once the bus port IDs
     // for functional ports is resolved.
     if (virtPort)
-        virtPort->removeConn();
+        virtPort->disconnectFromPeer();
     else
         virtPort = new VirtualPort(csprintf("%s-%d-vport",
                                         baseCpu->name(), tid));

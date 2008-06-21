@@ -296,8 +296,8 @@ class LSQ {
 
       public:
         /** Default constructor. */
-        DcachePort(LSQ *_lsq)
-            : Port(_lsq->name() + "-dport"), lsq(_lsq)
+        DcachePort(LSQ *_lsq, O3CPU *_cpu)
+            : Port(_lsq->name() + "-dport", _cpu), lsq(_lsq)
         { }
 
         bool snoopRangeSent;

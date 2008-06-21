@@ -105,13 +105,14 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
 }
 
 template<class TagStore>
-void
-Cache<TagStore>::deletePortRefs(Port *p)
+bool
+Cache<TagStore>::deletePort(Port *p)
 {
     if (cpuSidePort == p || memSidePort == p)
         panic("Can only delete functional ports\n");
 
     delete p;
+    return true;
 }
 
 
