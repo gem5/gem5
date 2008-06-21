@@ -524,9 +524,12 @@ Bus::recvStatusChange(Port::Status status, int id)
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
                     iter->start, iter->end, id);
-            if (portMap.insert(*iter, id) == portMap.end())
-                panic("Two devices with same range\n");
-
+            if (portMap.insert(*iter, id) == portMap.end()) {
+                int conflict_id = portMap.find(*iter)->second;
+                fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
+                      name(), interfaces[id]->getPeer()->name(),
+                      interfaces[conflict_id]->getPeer()->name());
+            }
         }
     }
     DPRINTF(MMU, "port list has %d entries\n", portMap.size());
