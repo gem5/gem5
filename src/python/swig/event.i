@@ -44,8 +44,8 @@
 
 void create(PyObject *object, Tick when);
 
-class CountedDrainEvent
-{
+class Event;
+class CountedDrainEvent : public Event {
   public:
     void setCount(int _count);
 };
