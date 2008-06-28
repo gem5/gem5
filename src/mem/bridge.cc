@@ -47,7 +47,7 @@ Bridge::BridgePort::BridgePort(const std::string &_name,
                                int _delay, int _nack_delay, int _req_limit,
                                int _resp_limit,
                                std::vector<Range<Addr> > filter_ranges)
-    : Port(_name, _bridge), bridge(_bridge), otherPort(_otherPort),
+    : Port(_name), bridge(_bridge), otherPort(_otherPort),
       delay(_delay), nackDelay(_nack_delay), filterRanges(filter_ranges),
       outstandingResponses(0), queuedRequests(0), inRetry(false),
       reqQueueLimit(_req_limit), respQueueLimit(_resp_limit), sendEvent(this)

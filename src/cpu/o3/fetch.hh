@@ -80,8 +80,8 @@ class DefaultFetch
 
       public:
         /** Default constructor. */
-        IcachePort(DefaultFetch<Impl> *_fetch, O3CPU *_cpu)
-            : Port(_fetch->name() + "-iport", _cpu), fetch(_fetch)
+        IcachePort(DefaultFetch<Impl> *_fetch)
+            : Port(_fetch->name() + "-iport"), fetch(_fetch)
         { }
 
         bool snoopRangeSent;

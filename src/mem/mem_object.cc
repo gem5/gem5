@@ -43,8 +43,8 @@ MemObject::makeParams(const std::string &name)
     return params;
 }
 
-bool
-MemObject::deletePort(Port *p)
+void
+MemObject::deletePortRefs(Port *p)
 {
     panic("This object does not support port deletion\n");
 }

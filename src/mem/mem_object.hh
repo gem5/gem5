@@ -64,13 +64,9 @@ class MemObject : public SimObject
     /** Additional function to return the Port of a memory object. */
     virtual Port *getPort(const std::string &if_name, int idx = -1) = 0;
 
-    /** Tell MemObject that this port is no longer in use, so it
-     * should remove it from any structures that it's keeping it in.
-     * If the port was allocated dynamically for this connection, it
-     * should be deleted here.
-     * @return True if the port was deleted, false if it still exists.
-     */
-    virtual bool deletePort(Port *p);
+    /** Tell object that this port is about to disappear, so it should remove it
+     * from any structures that it's keeping it in. */
+    virtual void deletePortRefs(Port *p) ;
 };
 
 #endif //__MEM_MEM_OBJECT_HH__

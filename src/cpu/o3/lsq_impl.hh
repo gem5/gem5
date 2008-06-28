@@ -112,7 +112,7 @@ LSQ<Impl>::DcachePort::recvRetry()
 
 template <class Impl>
 LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params)
-    : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this, cpu_ptr),
+    : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
       numThreads(params->numberOfThreads),

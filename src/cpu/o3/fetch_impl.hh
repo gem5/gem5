@@ -167,7 +167,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
     instSize = sizeof(TheISA::MachInst);
 
     // Name is finally available, so create the port.
-    icachePort = new IcachePort(this, cpu);
+    icachePort = new IcachePort(this);
 
     icachePort->snoopRangeSent = false;
 

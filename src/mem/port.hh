@@ -87,14 +87,17 @@ class Port
 
   public:
 
+    Port();
+
     /**
      * Constructor.
      *
      * @param _name Port name for DPRINTF output.  Should include name
      * of memory system object to which the port belongs.
      * @param _owner Pointer to the MemObject that owns this port.
+     * Will not necessarily be set.
      */
-    Port(const std::string &_name, MemObject *_owner, Port *_peer = NULL);
+    Port(const std::string &_name, MemObject *_owner = NULL);
 
     /** Return port name (for DPRINTF). */
     const std::string &name() const { return portName; }
@@ -108,18 +111,24 @@ class Port
         RangeChange
     };
 
+    void setName(const std::string &name)
+    { portName = name; }
+
     /** Function to set the pointer for the peer port. */
     virtual void setPeer(Port *port);
 
     /** Function to get the pointer to the peer port. */
     Port *getPeer() { return peer; }
 
+    /** Function to set the owner of this port. */
+    void setOwner(MemObject *_owner) { owner = _owner; }
+
     /** Function to return the owner of this port. */
     MemObject *getOwner() { return owner; }
 
-    /** Notify my peer port that I'm disconnecting (by calling its
-     * disconnect() method) so it can clean up. */
-    void disconnectFromPeer();
+    /** Inform the peer port to delete itself and notify it's owner about it's
+     * demise. */
+    void removeConn();
 
     virtual bool isDefaultPort() const { return false; }
 
@@ -245,11 +254,6 @@ class Port
     /** Internal helper function for read/writeBlob().
      */
     void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd);
-
-    /** Receive notification that my peer is disconnecting and clean
-     * up (potentially deleting myself in the process). Should be
-     * called only from peer's disconnectFromPeer(). */
-    void disconnect();
 };
 
 /** A simple functional port that is only meant for one way communication to

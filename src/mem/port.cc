@@ -39,25 +39,17 @@
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-/**
- * Special class for port objects that are used as peers for
- * unconnected ports.  Assigning instances of this class to newly
- * allocated ports allows us to guarantee that every port has a peer
- * object (so there's no need to check for null peer pointers), while
- * catching uses of unconnected ports.
- */
 class DefaultPeerPort : public Port
 {
   protected:
     void blowUp()
     {
-        Port *peer = getPeer();
-        fatal("unconnected port: %s", peer ? peer->name() : "<unknown>");
+        fatal("%s: Unconnected port!", peer->name());
     }
 
   public:
-    DefaultPeerPort(Port *_peer)
-        : Port("default_port", NULL, _peer)
+    DefaultPeerPort()
+        : Port("default_port")
     { }
 
     bool recvTiming(PacketPtr)
@@ -96,59 +88,36 @@ class DefaultPeerPort : public Port
     bool isDefaultPort() const { return true; }
 };
 
+DefaultPeerPort defaultPeerPort;
 
-Port::Port(const std::string &_name, MemObject *_owner, Port *_peer) :
-    portName(_name),
-    peer(_peer ? _peer : new DefaultPeerPort(this)),
-    owner(_owner)
+Port::Port()
+    : peer(&defaultPeerPort), owner(NULL)
+{
+}
+
+Port::Port(const std::string &_name, MemObject *_owner)
+    : portName(_name), peer(&defaultPeerPort), owner(_owner)
 {
 }
 
 Port::~Port()
 {
-    disconnectFromPeer();
-}
-
-void
-Port::disconnectFromPeer()
-{
-    if (peer) {
-        assert(peer->getPeer() == this);
-        peer->disconnect();
-    }
-}
-
-void
-Port::disconnect()
-{
-    // This notification should come only from our peer, so we must
-    // have one,
-    assert(peer != NULL);
-    // We must clear 'peer' here, else if owner->deletePort() calls
-    // delete on us then we'll recurse infinitely through the Port
-    // destructor.
-    peer = NULL;
-    // If owner->deletePort() returns true, then we've been deleted,
-    // so don't do anything but get out of here.  If not, reset peer
-    // pointer to a DefaultPeerPort.
-    if (!(owner && owner->deletePort(this)))
-        peer = new DefaultPeerPort(this);
 }
 
 void
 Port::setPeer(Port *port)
 {
-    DPRINTF(Config, "setting peer to %s, old peer %s\n",
-            port->name(), peer ? peer->name() : "<null>");
-    
-    // You'd think we'd want to disconnect from the previous peer
-    // here, but it turns out that with some functional ports the old
-    // peer keeps using the connection, and it works because
-    // functional ports are unidirectional.
-    //
-    // disconnectFromPeer();
+    DPRINTF(Config, "setting peer to %s\n", port->name());
 
     peer = port;
+}
+
+void
+Port::removeConn()
+{
+    if (peer->getOwner())
+        peer->getOwner()->deletePortRefs(peer);
+    peer = NULL;
 }
 
 void
