@@ -91,11 +91,11 @@ struct ThreadState {
     Tick readLastSuspend() { return lastSuspend; }
 
 #if FULL_SYSTEM
-    void connectMemPorts();
+    void connectMemPorts(ThreadContext *tc);
 
     void connectPhysPort();
 
-    void connectVirtPort();
+    void connectVirtPort(ThreadContext *tc);
 
     void dumpFuncProfile();
 
@@ -201,7 +201,7 @@ struct ThreadState {
     FunctionalPort *physPort;
 
     /** A functional port, outgoing only, for functional accesse to virtual
-     * addresses. That doen't require execution context information */
+     * addresses. */
     VirtualPort *virtPort;
 #else
     TranslatingPort *port;

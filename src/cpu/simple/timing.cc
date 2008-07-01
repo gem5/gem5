@@ -766,7 +766,7 @@ TimingSimpleCPU::DcachePort::setPeer(Port *port)
 #if FULL_SYSTEM
     // Update the ThreadContext's memory ports (Functional/Virtual
     // Ports)
-    cpu->tcBase()->connectMemPorts();
+    cpu->tcBase()->connectMemPorts(cpu->tcBase());
 #endif
 }
 

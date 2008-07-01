@@ -788,7 +788,7 @@ FullO3CPU<Impl>::updateMemPorts()
     // Update all ThreadContext's memory ports (Functional/Virtual
     // Ports)
     for (int i = 0; i < thread.size(); ++i)
-        thread[i]->connectMemPorts();
+        thread[i]->connectMemPorts(thread[i]->getTC());
 }
 #endif
 

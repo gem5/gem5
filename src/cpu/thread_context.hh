@@ -134,7 +134,7 @@ class ThreadContext
 
     virtual void delVirtPort(VirtualPort *vp) = 0;
 
-    virtual void connectMemPorts() = 0;
+    virtual void connectMemPorts(ThreadContext *tc) = 0;
 #else
     virtual TranslatingPort *getMemPort() = 0;
 
@@ -325,7 +325,7 @@ class ProxyThreadContext : public ThreadContext
 
     void delVirtPort(VirtualPort *vp) { return actualTC->delVirtPort(vp); }
 
-    void connectMemPorts() { actualTC->connectMemPorts(); }
+    void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
 #else
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 

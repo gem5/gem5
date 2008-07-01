@@ -113,10 +113,10 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 
 #if FULL_SYSTEM
 void
-ThreadState::connectMemPorts()
+ThreadState::connectMemPorts(ThreadContext *tc)
 {
     connectPhysPort();
-    connectVirtPort();
+    connectVirtPort(tc);
 }
 
 void
@@ -134,7 +134,7 @@ ThreadState::connectPhysPort()
 }
 
 void
-ThreadState::connectVirtPort()
+ThreadState::connectVirtPort(ThreadContext *tc)
 {
     // @todo: For now this disregards any older port that may have
     // already existed.  Fix this memory leak once the bus port IDs
@@ -143,7 +143,7 @@ ThreadState::connectVirtPort()
         virtPort->removeConn();
     else
         virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        baseCpu->name(), tid));
+                                        baseCpu->name(), tid), tc);
     connectToMemFunc(virtPort);
 }
 
