@@ -145,7 +145,7 @@ TimingSimpleCPU::drain(Event *drain_event)
 {
     // TimingSimpleCPU is ready to drain if it's not waiting for
     // an access to complete.
-    if (status() == Idle || status() == Running || status() == SwitchedOut) {
+    if (_status == Idle || _status == Running || _status == SwitchedOut) {
         changeState(SimObject::Drained);
         return 0;
     } else {
@@ -179,7 +179,7 @@ TimingSimpleCPU::resume()
 void
 TimingSimpleCPU::switchOut()
 {
-    assert(status() == Running || status() == Idle);
+    assert(_status == Running || _status == Idle);
     _status = SwitchedOut;
     numCycles += tickToCycles(curTick - previousTick);
 

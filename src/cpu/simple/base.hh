@@ -129,6 +129,20 @@ class BaseSimpleCPU : public BaseCPU
   protected:
     int cpuId;
 
+    enum Status {
+        Idle,
+        Running,
+        IcacheRetry,
+        IcacheWaitResponse,
+        IcacheWaitSwitch,
+        DcacheRetry,
+        DcacheWaitResponse,
+        DcacheWaitSwitch,
+        SwitchedOut
+    };
+
+    Status _status;
+
   public:
 
 #if FULL_SYSTEM

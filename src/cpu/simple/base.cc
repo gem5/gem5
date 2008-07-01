@@ -174,12 +174,13 @@ void
 BaseSimpleCPU::resetStats()
 {
 //    startNumInst = numInst;
-    // notIdleFraction = (_status != Idle);
+     notIdleFraction = (_status != Idle);
 }
 
 void
 BaseSimpleCPU::serialize(ostream &os)
 {
+    SERIALIZE_ENUM(_status);
     BaseCPU::serialize(os);
 //    SERIALIZE_SCALAR(inst);
     nameOut(os, csprintf("%s.xc.0", name()));
@@ -189,6 +190,7 @@ BaseSimpleCPU::serialize(ostream &os)
 void
 BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
+    UNSERIALIZE_ENUM(_status);
     BaseCPU::unserialize(cp, section);
 //    UNSERIALIZE_SCALAR(inst);
     thread->unserialize(cp, csprintf("%s.xc.0", section));

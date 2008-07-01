@@ -48,19 +48,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     virtual void init();
 
-  public:
-    //
-    enum Status {
-        Running,
-        Idle,
-        SwitchedOut
-    };
-
-  protected:
-    Status _status;
-
-    Status status() const { return _status; }
-
   private:
 
     struct TickEvent : public Event

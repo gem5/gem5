@@ -46,24 +46,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
     virtual void init();
 
   public:
-    //
-    enum Status {
-        Idle,
-        Running,
-        IcacheRetry,
-        IcacheWaitResponse,
-        IcacheWaitSwitch,
-        DcacheRetry,
-        DcacheWaitResponse,
-        DcacheWaitSwitch,
-        SwitchedOut
-    };
-
-  protected:
-    Status _status;
-
-    Status status() const { return _status; }
-
     Event *drainEvent;
 
   private:
