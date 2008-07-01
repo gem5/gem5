@@ -75,7 +75,7 @@ void
 CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
 {
     uint8_t *dst = (uint8_t *)dest;
-    VirtualPort *vp = tc->getVirtPort(tc);
+    VirtualPort *vp = tc->getVirtPort();
 
     vp->readBlob(src, dst, cplen);
 
@@ -87,7 +87,7 @@ void
 CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
 {
     uint8_t *src = (uint8_t *)source;
-    VirtualPort *vp = tc->getVirtPort(tc);
+    VirtualPort *vp = tc->getVirtPort();
 
     vp->writeBlob(dest, src, cplen);
 
@@ -99,7 +99,7 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 {
     int len = 0;
     char *start = dst;
-    VirtualPort *vp = tc->getVirtPort(tc);
+    VirtualPort *vp = tc->getVirtPort();
 
     do {
         vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
@@ -112,7 +112,7 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
 void
 CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
 {
-    VirtualPort *vp = tc->getVirtPort(tc);
+    VirtualPort *vp = tc->getVirtPort();
     for (ChunkGenerator gen(vaddr, strlen(src), TheISA::PageBytes); !gen.done();
             gen.next())
     {

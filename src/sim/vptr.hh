@@ -71,7 +71,7 @@ class VPtr
         if (!ptr)
             return;
 
-        VirtualPort *port = tc->getVirtPort(tc);
+        VirtualPort *port = tc->getVirtPort();
         port->readBlob(ptr, buffer, sizeof(T));
         tc->delVirtPort(port);
     }

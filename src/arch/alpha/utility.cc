@@ -49,7 +49,7 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp)
             return tc->readIntReg(ArgumentReg[number]);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort(tc);
+        VirtualPort *vp = tc->getVirtPort();
         uint64_t arg = vp->read<uint64_t>(sp +
                            (number-NumArgumentRegs) * sizeof(uint64_t));
         tc->delVirtPort(vp);

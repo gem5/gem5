@@ -454,7 +454,7 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
 #if FULL_SYSTEM
-    VirtualPort *port = context->getVirtPort(context);
+    VirtualPort *port = context->getVirtPort();
 #else
     TranslatingPort *port = context->getMemPort();
 #endif
@@ -499,7 +499,7 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
             DPRINTFNR("\n");
     }
 #if FULL_SYSTEM
-    VirtualPort *port = context->getVirtPort(context);
+    VirtualPort *port = context->getVirtPort();
 #else
     TranslatingPort *port = context->getMemPort();
 #endif
