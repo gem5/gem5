@@ -60,7 +60,8 @@ IGbE::IGbE(const Params *p)
       txTick(false), txFifoTick(false), rxDmaPacket(false), rdtrEvent(this), radvEvent(this),
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
-      txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size), clock(p->clock)
+      txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size),
+      clock(p->clock), lastInterrupt(0)
 {
     etherInt = new IGbEInt(name() + ".int", this);
 
@@ -580,17 +581,22 @@ IGbE::postInterrupt(IntTypes t, bool now)
         return;
 
     regs.icr = regs.icr() | t;
-    if (regs.itr.interval() == 0 || now) {
+
+    Tick itr_interval = Clock::Int::ns * 256 * regs.itr.interval();
+
+    if (regs.itr.interval() == 0 || now || lastInterrupt + itr_interval <= curTick) {
         if (interEvent.scheduled()) {
             interEvent.deschedule();
         }
         postedInterrupts++;
         cpuPostInt();
     } else {
-       DPRINTF(EthernetIntr, "EINT: Scheduling timer interrupt for %d ticks\n",
-                Clock::Int::ns * 256 * regs.itr.interval());
+       Tick int_time = lastInterrupt + itr_interval;
+       assert(int_time > 0);
+       DPRINTF(EthernetIntr, "EINT: Scheduling timer interrupt for tick %d\n",
+                int_time);
        if (!interEvent.scheduled()) {
-           interEvent.schedule(curTick + Clock::Int::ns * 256 * regs.itr.interval());
+           interEvent.schedule(int_time);
        }
     }
 }
@@ -789,7 +795,7 @@ IGbE::RxDescCache::pktComplete()
                     igbe->intClock(),true);
     }
 
-    if (igbe->regs.radv.idv() && igbe->regs.rdtr.delay()) {
+    if (igbe->regs.radv.idv()) {
         DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n",
                 igbe->regs.radv.idv() * igbe->intClock());
         if (!igbe->radvEvent.scheduled()) {
@@ -799,7 +805,7 @@ IGbE::RxDescCache::pktComplete()
     }
 
     // if neither radv or rdtr, maybe itr is set...
-    if (!igbe->regs.rdtr.delay()) {
+    if (!igbe->regs.rdtr.delay() && !igbe->regs.radv.idv()) {
         DPRINTF(EthernetSM, "RXS: Receive interrupt delay disabled, posting IT_RXT\n");
         igbe->postInterrupt(IT_RXT);
     }
@@ -1446,6 +1452,7 @@ IGbE::serialize(std::ostream &os)
     SERIALIZE_SCALAR(eeDataBits);
     SERIALIZE_SCALAR(eeOpcode);
     SERIALIZE_SCALAR(eeAddr);
+    SERIALIZE_SCALAR(lastInterrupt);
     SERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
 
     rxFifo.serialize("rxfifo", os);
@@ -1497,6 +1504,7 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(eeDataBits);
     UNSERIALIZE_SCALAR(eeOpcode);
     UNSERIALIZE_SCALAR(eeAddr);
+    UNSERIALIZE_SCALAR(lastInterrupt);
     UNSERIALIZE_ARRAY(flash,iGbReg::EEPROM_SIZE);
 
     rxFifo.unserialize("rxfifo", cp, section);
