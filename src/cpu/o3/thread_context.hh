@@ -94,9 +94,7 @@ class O3ThreadContext : public ThreadContext
 
     virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
-    virtual VirtualPort *getVirtPort(ThreadContext *src_tc = NULL);
-
-    void delVirtPort(VirtualPort *vp);
+    virtual VirtualPort *getVirtPort();
 
     virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
 #else

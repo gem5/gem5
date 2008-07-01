@@ -169,7 +169,6 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
 
         vp = tc->getVirtPort();
         vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
-        tc->delVirtPort(vp);
     }
 }
 

@@ -742,16 +742,6 @@ OzoneCPU<Impl>::OzoneTC::setCpuId(int id)
     thread->setCpuId(id);
 }
 
-#if FULL_SYSTEM
-template <class Impl>
-void
-OzoneCPU<Impl>::OzoneTC::delVirtPort(VirtualPort *vp)
-{
-    vp->removeConn();
-    delete vp;
-}
-#endif
-
 template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::setStatus(Status new_status)

@@ -208,12 +208,11 @@ class SimpleThread : public ThreadState
 
     FunctionalPort *getPhysPort() { return physPort; }
 
-    /** Return a virtual port. If no thread context is specified then a static
-     * port is returned. Otherwise a port is created and returned. It must be
-     * deleted by deleteVirtPort(). */
-    VirtualPort *getVirtPort(ThreadContext *tc);
-
-    void delVirtPort(VirtualPort *vp);
+    /** Return a virtual port. This port cannot be cached locally in an object.
+     * After a CPU switch it may point to the wrong memory object which could
+     * mean stale data.
+     */
+    VirtualPort *getVirtPort() { return virtPort; }
 #endif
 
     Status status() const { return _status; }

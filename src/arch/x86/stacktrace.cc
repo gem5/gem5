@@ -70,8 +70,6 @@ namespace X86ISA
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
             panic("thread info not compiled into kernel\n");
         name_off = vp->readGtoH<int32_t>(addr);
-
-        tc->delVirtPort(vp);
     }
 
     Addr
@@ -87,7 +85,6 @@ namespace X86ISA
 
         vp = tc->getVirtPort();
         tsk = vp->readGtoH<Addr>(base + task_off);
-        tc->delVirtPort(vp);
 
         return tsk;
     }
@@ -105,7 +102,6 @@ namespace X86ISA
 
         vp = tc->getVirtPort();
         pd = vp->readGtoH<uint16_t>(task + pid_off);
-        tc->delVirtPort(vp);
 
         return pd;
     }

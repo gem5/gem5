@@ -71,8 +71,6 @@ namespace AlphaISA
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
             panic("thread info not compiled into kernel\n");
         name_off = vp->readGtoH<int32_t>(addr);
-
-        tc->delVirtPort(vp);
     }
 
     Addr
@@ -88,7 +86,6 @@ namespace AlphaISA
 
         vp = tc->getVirtPort();
         tsk = vp->readGtoH<Addr>(base + task_off);
-        tc->delVirtPort(vp);
 
         return tsk;
     }
@@ -106,7 +103,6 @@ namespace AlphaISA
 
         vp = tc->getVirtPort();
         pd = vp->readGtoH<uint16_t>(task + pid_off);
-        tc->delVirtPort(vp);
 
         return pd;
     }

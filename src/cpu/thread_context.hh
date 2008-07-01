@@ -130,9 +130,7 @@ class ThreadContext
 
     virtual FunctionalPort *getPhysPort() = 0;
 
-    virtual VirtualPort *getVirtPort(ThreadContext *tc = NULL) = 0;
-
-    virtual void delVirtPort(VirtualPort *vp) = 0;
+    virtual VirtualPort *getVirtPort() = 0;
 
     virtual void connectMemPorts(ThreadContext *tc) = 0;
 #else
@@ -321,9 +319,7 @@ class ProxyThreadContext : public ThreadContext
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return actualTC->getVirtPort(tc); }
-
-    void delVirtPort(VirtualPort *vp) { return actualTC->delVirtPort(vp); }
+    VirtualPort *getVirtPort() { return actualTC->getVirtPort(); }
 
     void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
 #else

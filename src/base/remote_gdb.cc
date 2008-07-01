@@ -459,9 +459,6 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     TranslatingPort *port = context->getMemPort();
 #endif
     port->readBlob(vaddr, (uint8_t*)data, size);
-#if FULL_SYSTEM
-    context->delVirtPort(port);
-#endif
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -504,9 +501,7 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     TranslatingPort *port = context->getMemPort();
 #endif
     port->writeBlob(vaddr, (uint8_t*)data, size);
-#if FULL_SYSTEM
-    context->delVirtPort(port);
-#else
+#if !FULL_SYSTEM
     delete port;
 #endif
 

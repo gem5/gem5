@@ -98,10 +98,8 @@ class CheckerThreadContext : public ThreadContext
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL)
+    VirtualPort *getVirtPort()
     { return actualTC->getVirtPort(); }
-
-    void delVirtPort(VirtualPort *vp) { actualTC->delVirtPort(vp); }
 #else
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 

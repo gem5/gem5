@@ -36,16 +36,9 @@
 #if FULL_SYSTEM
 template <class Impl>
 VirtualPort *
-O3ThreadContext<Impl>::getVirtPort(ThreadContext *src_tc)
+O3ThreadContext<Impl>::getVirtPort()
 {
-    if (!src_tc)
-        return thread->getVirtPort();
-
-    VirtualPort *vp;
-
-    vp = new VirtualPort("tc-vport", src_tc);
-    thread->connectToMemFunc(vp);
-    return vp;
+    return thread->getVirtPort();
 }
 
 template <class Impl>
@@ -96,18 +89,6 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     thread->inSyscall = false;
     thread->trapPending = false;
 }
-
-#if FULL_SYSTEM
-template <class Impl>
-void
-O3ThreadContext<Impl>::delVirtPort(VirtualPort *vp)
-{
-    if (vp != thread->getVirtPort()) {
-        vp->removeConn();
-        delete vp;
-    }
-}
-#endif
 
 template <class Impl>
 void

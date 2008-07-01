@@ -286,26 +286,3 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
     TheISA::copyRegs(src_tc, tc);
 }
 
-#if FULL_SYSTEM
-VirtualPort*
-SimpleThread::getVirtPort(ThreadContext *src_tc)
-{
-    if (!src_tc)
-        return virtPort;
-
-    VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
-    connectToMemFunc(vp);
-    return vp;
-}
-
-void
-SimpleThread::delVirtPort(VirtualPort *vp)
-{
-    if (vp != virtPort) {
-        vp->removeConn();
-        delete vp;
-    }
-}
-
-#endif
-

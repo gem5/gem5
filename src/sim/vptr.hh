@@ -73,7 +73,6 @@ class VPtr
 
         VirtualPort *port = tc->getVirtPort();
         port->readBlob(ptr, buffer, sizeof(T));
-        tc->delVirtPort(port);
     }
 
     bool

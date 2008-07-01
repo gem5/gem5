@@ -78,9 +78,6 @@ CopyOut(ThreadContext *tc, void *dest, Addr src, size_t cplen)
     VirtualPort *vp = tc->getVirtPort();
 
     vp->readBlob(src, dst, cplen);
-
-    tc->delVirtPort(vp);
-
 }
 
 void
@@ -90,8 +87,6 @@ CopyIn(ThreadContext *tc, Addr dest, void *source, size_t cplen)
     VirtualPort *vp = tc->getVirtPort();
 
     vp->writeBlob(dest, src, cplen);
-
-    tc->delVirtPort(vp);
 }
 
 void
@@ -105,7 +100,6 @@ CopyStringOut(ThreadContext *tc, char *dst, Addr vaddr, size_t maxlen)
         vp->readBlob(vaddr++, (uint8_t*)dst++, 1);
     } while (len < maxlen && start[len++] != 0 );
 
-    tc->delVirtPort(vp);
     dst[len] = 0;
 }
 
@@ -119,5 +113,4 @@ CopyStringIn(ThreadContext *tc, char *src, Addr vaddr)
         vp->writeBlob(gen.addr(), (uint8_t*)src, gen.size());
         src += gen.size();
     }
-    tc->delVirtPort(vp);
 }

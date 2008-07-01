@@ -111,9 +111,7 @@ struct ThreadState {
 
     void setPhysPort(FunctionalPort *port) { physPort = port; }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return virtPort; }
-
-    void setVirtPort(VirtualPort *port) { virtPort = port; }
+    VirtualPort *getVirtPort() { return virtPort; }
 #else
     Process *getProcessPtr() { return process; }
 

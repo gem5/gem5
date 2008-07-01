@@ -134,10 +134,8 @@ class OzoneCPU : public BaseCPU
 
         FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
-        VirtualPort *getVirtPort(ThreadContext *tc = NULL)
-        { return thread->getVirtPort(tc); }
-
-        void delVirtPort(VirtualPort *vp);
+        VirtualPort *getVirtPort()
+        { return thread->getVirtPort(); }
 #else
         TranslatingPort *getMemPort() { return thread->getMemPort(); }
 

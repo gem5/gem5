@@ -53,7 +53,6 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
         VirtualPort *vp = tc->getVirtPort();
         uint64_t arg = vp->read<uint64_t>(sp + 92 +
                             (number-NumArgumentRegs) * sizeof(uint64_t));
-        tc->delVirtPort(vp);
         return arg;
     }
 #else
