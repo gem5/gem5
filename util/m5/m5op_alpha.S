@@ -48,6 +48,12 @@ func:
 #define END(func)     \
         .end func
 
+#define SIMPLE_OP(_f, _o)	\
+        LEAF(_f)		\
+                _o;		\
+                RET;		\
+        END(_f)
+
 #define	ARM(reg) INST(m5_op, reg, 0, arm_func)
 #define QUIESCE INST(m5_op, 0, 0, quiesce_func)
 #define QUIESCENS(r1) INST(m5_op, r1, 0, quiescens_func)
@@ -65,125 +71,24 @@ func:
 #define SWITCHCPU INST(m5_op, 0, 0, switchcpu_func)
 #define ADDSYMBOL(r1,r2) INST(m5_op, r1, r2, addsymbol_func)
 #define PANIC INST(m5_op, 0, 0, panic_func)
-#define AN_BEGIN(r1) INST(m5_op, r1, 0, anbegin_func)
-#define AN_WAIT(r1,r2) INST(m5_op, r1, r2, anwait_func)
 
         .set noreorder
 
-        .align 4
-LEAF(arm)
-        ARM(16)
-        RET
-END(arm)
-
-        .align 4
-LEAF(quiesce)
-        QUIESCE
-        RET
-END(quiesce)
-
-        .align 4
-LEAF(quiesceNs)
-        QUIESCENS(16)
-        RET
-END(quiesceNs)
-
-        .align 4
-LEAF(quiesceCycle)
-        QUIESCECYC(16)
-        RET
-END(quiesceCycle)
-
-        .align 4
-LEAF(quiesceTime)
-        QUIESCETIME
-        RET
-END(quiesceTime)
-
-        .align 4
-LEAF(m5_exit)
-        M5EXIT(16)
-        RET
-END(m5_exit)
-
-        .align 4
-LEAF(m5_initparam)
-        INITPARAM(0)
-        RET
-END(m5_initparam)
-
-        .align 4
-LEAF(m5_loadsymbol)
-        LOADSYMBOL(0)
-        RET
-END(m5_loadsymbol)
-
-        .align 4
-LEAF(m5_reset_stats)
-        RESET_STATS(16, 17)
-        RET
-END(m5_reset_stats)
-
-        .align 4
-LEAF(m5_dump_stats)
-        DUMP_STATS(16, 17)
-        RET
-END(m5_dump_stats)
-
-        .align 4
-LEAF(m5_dumpreset_stats)
-        DUMPRST_STATS(16, 17)
-        RET
-END(m5_dumpreset_stats)
-
-        .align 4
-LEAF(m5_checkpoint)
-        CHECKPOINT(16, 17)
-        RET
-END(m5_checkpoint)
-
-        .align 4
-LEAF(m5_readfile)
-        READFILE
-        RET
-END(m5_readfile)
-
-        .align 4
-LEAF(m5_debugbreak)
-        DEBUGBREAK
-        RET
-END(m5_debugbreak)
-
-        .align 4
-LEAF(m5_switchcpu)
-        SWITCHCPU
-        RET
-END(m5_switchcpu)
-
-        .align 4
-LEAF(m5_addsymbol)
-        ADDSYMBOL(16, 17)
-        RET
-END(m5_addsymbol)
-
-        .align 4
-LEAF(m5_panic)
-        PANIC
-        RET
-END(m5_panic)
-
-
-        .align 4
-LEAF(m5_anbegin)
-        AN_BEGIN(16)
-        RET
-END(m5_anbegin)
-
-
-        .align 4
-LEAF(m5_anwait)
-        AN_WAIT(16,17)
-        RET
-END(m5_anwait)
-
+SIMPLE_OP(arm, ARM(16))
+SIMPLE_OP(quiesce, QUIESCE)
+SIMPLE_OP(quiesceNs, QUIESCENS(16))
+SIMPLE_OP(quiesceCycle, QUIESCECYC(16))
+SIMPLE_OP(quiesceTime, QUIESCETIME)
+SIMPLE_OP(m5_exit, M5EXIT(16))
+SIMPLE_OP(m5_initparam, INITPARAM(0))
+SIMPLE_OP(m5_loadsymbol, LOADSYMBOL(0))
+SIMPLE_OP(m5_reset_stats, RESET_STATS(16, 17))
+SIMPLE_OP(m5_dump_stats, DUMP_STATS(16, 17))
+SIMPLE_OP(m5_dumpreset_stats, DUMPRST_STATS(16, 17))
+SIMPLE_OP(m5_checkpoint, CHECKPOINT(16, 17))
+SIMPLE_OP(m5_readfile, READFILE)
+SIMPLE_OP(m5_debugbreak, DEBUGBREAK)
+SIMPLE_OP(m5_switchcpu, SWITCHCPU)
+SIMPLE_OP(m5_addsymbol, ADDSYMBOL(16, 17))
+SIMPLE_OP(m5_panic, PANIC)
 

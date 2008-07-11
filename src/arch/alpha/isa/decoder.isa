@@ -806,14 +806,15 @@ decode OPCODE default Unknown::unknown() {
             0x04: quiesceTime({{
                 R0 = PseudoInst::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
-            0x10: ivlb({{
-                warn_once("Obsolete M5 instruction ivlb encountered.\n");
+            0x10: deprecated_ivlb({{
+                warn_once("Obsolete M5 ivlb instruction encountered.\n");
             }});
-            0x11: ivle({{
-                warn_once("Obsolete M5 instruction ivlb encountered.\n");
+            0x11: deprecated_ivle({{
+                warn_once("Obsolete M5 ivlb instruction encountered.\n");
             }});
-            0x20: m5exit_old({{
-                PseudoInst::m5exit_old(xc->tcBase());
+            0x20: deprecated_exit ({{
+                warn_once("deprecated M5 exit instruction encountered.\n");
+                PseudoInst::m5exit(xc->tcBase(), 0);
             }}, No_OpClass, IsNonSpeculative);
             0x21: m5exit({{
                 PseudoInst::m5exit(xc->tcBase(), R16);
@@ -821,7 +822,9 @@ decode OPCODE default Unknown::unknown() {
             0x31: loadsymbol({{
                 PseudoInst::loadsymbol(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
-            0x30: initparam({{ Ra = xc->tcBase()->getCpuPtr()->system->init_param; }});
+            0x30: initparam({{
+                Ra = xc->tcBase()->getCpuPtr()->system->init_param;
+            }});
             0x40: resetstats({{
                 PseudoInst::resetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
@@ -849,11 +852,20 @@ decode OPCODE default Unknown::unknown() {
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());
             }}, IsNonSpeculative);
-            0x55: m5anBegin({{
-                PseudoInst::anBegin(xc->tcBase(), R16);
+            0x55: m5reserved1({{
+                warn("M5 reserved opcode ignored");
             }}, IsNonSpeculative);
-            0x56: m5anWait({{
-                PseudoInst::anWait(xc->tcBase(), R16, R17);
+            0x56: m5reserved2({{
+                warn("M5 reserved opcode ignored");
+            }}, IsNonSpeculative);
+            0x57: m5reserved3({{
+                warn("M5 reserved opcode ignored");
+            }}, IsNonSpeculative);
+            0x58: m5reserved4({{
+                warn("M5 reserved opcode ignored");
+            }}, IsNonSpeculative);
+            0x59: m5reserved5({{
+                warn("M5 reserved opcode ignored");
             }}, IsNonSpeculative);
         }
     }
