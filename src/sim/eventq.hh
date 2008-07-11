@@ -77,8 +77,8 @@ class Event : public Serializable, public FastAlloc
     // The event queue is now a linked list of linked lists.  The
     // 'nextBin' pointer is to find the bin, where a bin is defined as
     // when+priority.  All events in the same bin will be stored in a
-    // second circularly linked list maintained by the 'nextInBin'
-    // pointer.  The list will be accessed in FIFO order.  The end
+    // second linked list (a stack) maintained by the 'nextInBin'
+    // pointer.  The list will be accessed in LIFO order.  The end
     // result is that the insert/removal in 'nextBin' is
     // linear/constant, and the lookup/removal in 'nextInBin' is
     // constant/constant.  Hopefully this is a significant improvement
@@ -86,7 +86,7 @@ class Event : public Serializable, public FastAlloc
     Event *nextBin;
     Event *nextInBin;
 
-    friend void insertBefore(Event *event, Event *curr);
+    friend Event *insertBefore(Event *event, Event *curr);
     friend Event *removeItem(Event *event, Event *last);
 
     /// queue to which this event belongs (though it may or may not be

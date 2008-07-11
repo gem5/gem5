@@ -57,29 +57,25 @@ EventQueue mainEventQueue("MainEventQueue");
 Counter Event::instanceCounter = 0;
 #endif
 
-inline void
+inline Event *
 insertBefore(Event *event, Event *curr)
 {
-    // Either way, event will be the last element in the 'in bin' list
+    // Either way, event will be the top element in the 'in bin' list
     // which is the pointer we need in order to look into the list, so
     // we need to insert that into the bin list.
     if (!curr || *event < *curr) {
         // Insert the event before the current list since it is in the future.
         event->nextBin = curr;
-
-        // We need to create a new 'in bin' list
-        event->nextInBin = event;
+        event->nextInBin = NULL;
     } else {
         // Since we're on the correct list, we need to point to the next list
         event->nextBin = curr->nextBin;  // curr->nextBin can now become stale
 
-        // Insert event at the end of the 'nextInBin' curr is the last
-        // element on the 'in bin' list and curr->nextInBin is the first
-
-        event->nextInBin = curr->nextInBin; // event->nextInBin needs to
-                                            // point to the first
-        curr->nextInBin = event;     // curr->nextInBin is now second to last
+        // Insert event at the top of the stack
+        event->nextInBin = curr;
     }
+
+    return event;
 }
 
 void
@@ -87,54 +83,53 @@ EventQueue::insert(Event *event)
 {
     // Deal with the head case
     if (!head || *event <= *head) {
-        insertBefore(event, head);
-        head = event;
+        head = insertBefore(event, head);
         return;
     }
 
     // Figure out either which 'in bin' list we are on, or where a new list
     // needs to be inserted
-    Event *curr = head;
-    Event *next = head->nextBin;
-    while (next && *next < *event) {
-        curr = next;
-        next = next->nextBin;
+    Event *prev = head;
+    Event *curr = head->nextBin;
+    while (curr && *curr < *event) {
+        prev = curr;
+        curr = curr->nextBin;
     }
 
-    insertBefore(event, next);
-    curr->nextBin = event;  // all nextBin pointers on the curr
-                            // 'in bin' list are now stale
+    // Note: this operation may render all nextBin pointers on the
+    // prev 'in bin' list stale (except for the top one)
+    prev->nextBin = insertBefore(event, curr);
 }
 
 inline Event *
-removeItem(Event *event, Event *last)
+removeItem(Event *event, Event *top)
 {
-    Event *prev = last;
-    Event *curr = last->nextInBin;
+    Event *curr = top;
+    Event *next = top->nextInBin;
 
-    while (event != curr) {
-        if (curr == last)
-            panic("event not found!");
-
-        prev = curr;
-        curr = curr->nextInBin;
+    // if we removed the top item, we need to handle things specially
+    // and just remove the top item, fixing up the next bin pointer of
+    // the new top item
+    if (event == top) {
+        if (!next)
+            return top->nextBin;
+        next->nextBin = top->nextBin;
+        return next;
     }
 
-    // If this was the only item in this list, we're done.
-    if (prev == curr)
-        return NULL;
+    // Since we already checked the current element, we're going to
+    // keep checking event against the next element.
+    while (event != next) {
+        if (!next)
+            panic("event not found!");
 
-    // remove curr from the 'in bin' list since it's what we're looking for
-    prev->nextInBin = curr->nextInBin;
+        curr = next;
+        next = next->nextInBin;
+    }
 
-    // If we didn't remove the last item, we're done
-    if (curr != last)
-        return last;
-
-    // if we removed the last item, the new last item is prev
-    // fix it up since it might be stale and return it
-    prev->nextBin = last->nextBin;
-    return prev;
+    // remove next from the 'in bin' list since it's what we're looking for
+    curr->nextInBin = next->nextInBin;
+    return top;
 }
 
 void
@@ -147,8 +142,6 @@ EventQueue::remove(Event *event)
     // time as the head)
     if (*head == *event) {
         head = removeItem(event, head);
-        if (!head)
-            head = event->nextBin;
         return;
     }
 
@@ -163,33 +156,29 @@ EventQueue::remove(Event *event)
     if (!curr || *curr != *event)
         panic("event not found!");
 
-    // curr points to the last item of the the correct 'in bin' list, when
-    // we remove an item, it returns the new last item (which may be
+    // curr points to the top item of the the correct 'in bin' list, when
+    // we remove an item, it returns the new top item (which may be
     // unchanged)
-    Event *last = removeItem(event, curr);
-    if (!last) {
-        // The current item was removed, so we need to fix the bin list
-        prev->nextBin = curr->nextBin;
-    } else if (last != curr) {
-        // We have a new last item, so we need to update the bin list
-        prev->nextBin = last;
-    }
+    prev->nextBin = removeItem(event, curr);
 }
 
 Event *
 EventQueue::serviceOne()
 {
-    // grab the first element
-    Event *event = head->nextInBin;
+    Event *event = head;
+    Event *next = head->nextInBin;
     event->clearFlags(Event::Scheduled);
 
-    if (head == event) {
+    if (next) {
+        // update the next bin pointer since it could be stale
+        next->nextBin = head->nextBin;
+
+        // pop the stack
+        head = next;
+    } else {
         // this was the only element on the 'in bin' list, so get rid of
         // the 'in bin' list and point to the next bin list
-        head = event->nextBin;
-    } else {
-        // maintain head->nextInBin as the first element
-        head->nextInBin = event->nextInBin;
+        head = head->nextBin;
     }
 
     // handle action
@@ -247,16 +236,16 @@ EventQueue::serialize(ostream &os)
     int numEvents = 0;
     Event *nextBin = head;
     while (nextBin) {
-        Event *nextInBin = nextBin->nextInBin;
+        Event *nextInBin = nextBin;
 
-        do {
+        while (nextInBin) {
             if (nextInBin->getFlags(Event::AutoSerialize)) {
                 eventPtrs.push_back(nextInBin);
                 paramOut(os, csprintf("event%d", numEvents++),
                          nextInBin->name());
             }
             nextInBin = nextInBin->nextInBin;
-        } while (nextInBin != nextBin);
+        }
 
         nextBin = nextBin->nextBin;
     }
@@ -293,21 +282,16 @@ EventQueue::dump() const
     cprintf("EventQueue Dump  (cycle %d)\n", curTick);
     cprintf("------------------------------------------------------------\n");
 
-    m5::hash_map<long, bool> map;
-
     if (empty())
         cprintf("<No Events>\n");
     else {
         Event *nextBin = head;
         while (nextBin) {
             Event *nextInBin = nextBin;
-            if (map[reinterpret_cast<long>(nextInBin)])
-                break;
-            map[reinterpret_cast<long>(nextInBin)] = true;
-            do {
-                nextInBin = nextInBin->nextInBin;
+            while (nextInBin) {
                 nextInBin->dump();
-            } while (nextInBin != nextBin);
+                nextInBin = nextInBin->nextInBin;
+            }
 
             nextBin = nextBin->nextBin;
         }
@@ -326,8 +310,8 @@ EventQueue::debugVerify() const
 
     Event *nextBin = head;
     while (nextBin) {
-        Event *nextInBin = nextBin->nextInBin;
-        do {
+        Event *nextInBin = nextBin;
+        while (nextInBin) {
             if (nextInBin->when() < time) {
                 cprintf("time goes backwards!");
                 nextInBin->dump();
@@ -350,7 +334,7 @@ EventQueue::debugVerify() const
             priority = nextInBin->priority();
 
             nextInBin = nextInBin->nextInBin;
-        } while (nextInBin != nextBin);
+        }
 
         nextBin = nextBin->nextBin;
     }
