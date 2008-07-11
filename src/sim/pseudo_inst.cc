@@ -55,255 +55,258 @@ using namespace std;
 using namespace Stats;
 using namespace TheISA;
 
-namespace PseudoInst
+namespace PseudoInst {
+
+void
+arm(ThreadContext *tc)
 {
-    void
-    arm(ThreadContext *tc)
-    {
-        if (tc->getKernelStats())
-            tc->getKernelStats()->arm();
+    if (tc->getKernelStats())
+        tc->getKernelStats()->arm();
+}
+
+void
+quiesce(ThreadContext *tc)
+{
+    if (!tc->getCpuPtr()->params->do_quiesce)
+        return;
+
+    DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
+
+    tc->suspend();
+    if (tc->getKernelStats())
+        tc->getKernelStats()->quiesce();
+}
+
+void
+quiesceNs(ThreadContext *tc, uint64_t ns)
+{
+    if (!tc->getCpuPtr()->params->do_quiesce || ns == 0)
+        return;
+
+    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+
+    Tick resume = curTick + Clock::Int::ns * ns;
+
+    quiesceEvent->reschedule(resume, true);
+
+    DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
+            tc->getCpuPtr()->name(), ns, resume);
+
+    tc->suspend();
+    if (tc->getKernelStats())
+        tc->getKernelStats()->quiesce();
+}
+
+void
+quiesceCycles(ThreadContext *tc, uint64_t cycles)
+{
+    if (!tc->getCpuPtr()->params->do_quiesce || cycles == 0)
+        return;
+
+    EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+
+    Tick resume = curTick + tc->getCpuPtr()->ticks(cycles);
+
+    quiesceEvent->reschedule(resume, true);
+
+    DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
+            tc->getCpuPtr()->name(), cycles, resume);
+
+    tc->suspend();
+    if (tc->getKernelStats())
+        tc->getKernelStats()->quiesce();
+}
+
+uint64_t
+quiesceTime(ThreadContext *tc)
+{
+    return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
+}
+
+void
+m5exit_old(ThreadContext *tc)
+{
+    exitSimLoop("m5_exit_old instruction encountered");
+}
+
+void
+m5exit(ThreadContext *tc, Tick delay)
+{
+    Tick when = curTick + delay * Clock::Int::ns;
+    schedExitSimLoop("m5_exit instruction encountered", when);
+}
+
+void
+loadsymbol(ThreadContext *tc)
+{
+    const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
+    if (filename.empty()) {
+        return;
     }
 
-    void
-    quiesce(ThreadContext *tc)
-    {
-        if (!tc->getCpuPtr()->params->do_quiesce)
-            return;
+    std::string buffer;
+    ifstream file(filename.c_str());
 
-        DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
+    if (!file)
+        fatal("file error: Can't open symbol table file %s\n", filename);
 
-        tc->suspend();
-        if (tc->getKernelStats())
-            tc->getKernelStats()->quiesce();
-    }
+    while (!file.eof()) {
+        getline(file, buffer);
 
-    void
-    quiesceNs(ThreadContext *tc, uint64_t ns)
-    {
-        if (!tc->getCpuPtr()->params->do_quiesce || ns == 0)
-            return;
+        if (buffer.empty())
+            continue;
 
-        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
+        int idx = buffer.find(' ');
+        if (idx == string::npos)
+            continue;
 
-        Tick resume = curTick + Clock::Int::ns * ns;
+        string address = "0x" + buffer.substr(0, idx);
+        eat_white(address);
+        if (address.empty())
+            continue;
 
-        quiesceEvent->reschedule(resume, true);
+        // Skip over letter and space
+        string symbol = buffer.substr(idx + 3);
+        eat_white(symbol);
+        if (symbol.empty())
+            continue;
 
-        DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
-                tc->getCpuPtr()->name(), ns, resume);
+        Addr addr;
+        if (!to_number(address, addr))
+            continue;
 
-        tc->suspend();
-        if (tc->getKernelStats())
-            tc->getKernelStats()->quiesce();
-    }
+        if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
+            continue;
 
-    void
-    quiesceCycles(ThreadContext *tc, uint64_t cycles)
-    {
-        if (!tc->getCpuPtr()->params->do_quiesce || cycles == 0)
-            return;
-
-        EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
-
-        Tick resume = curTick + tc->getCpuPtr()->ticks(cycles);
-
-        quiesceEvent->reschedule(resume, true);
-
-        DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
-                tc->getCpuPtr()->name(), cycles, resume);
-
-        tc->suspend();
-        if (tc->getKernelStats())
-            tc->getKernelStats()->quiesce();
-    }
-
-    uint64_t
-    quiesceTime(ThreadContext *tc)
-    {
-        return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
-    }
-
-    void
-    m5exit_old(ThreadContext *tc)
-    {
-        exitSimLoop("m5_exit_old instruction encountered");
-    }
-
-    void
-    m5exit(ThreadContext *tc, Tick delay)
-    {
-        Tick when = curTick + delay * Clock::Int::ns;
-        schedExitSimLoop("m5_exit instruction encountered", when);
-    }
-
-    void
-    loadsymbol(ThreadContext *tc)
-    {
-        const string &filename = tc->getCpuPtr()->system->params()->symbolfile;
-        if (filename.empty()) {
-            return;
-        }
-
-        std::string buffer;
-        ifstream file(filename.c_str());
-
-        if (!file)
-            fatal("file error: Can't open symbol table file %s\n", filename);
-
-        while (!file.eof()) {
-            getline(file, buffer);
-
-            if (buffer.empty())
-                continue;
-
-            int idx = buffer.find(' ');
-            if (idx == string::npos)
-                continue;
-
-            string address = "0x" + buffer.substr(0, idx);
-            eat_white(address);
-            if (address.empty())
-                continue;
-
-            // Skip over letter and space
-            string symbol = buffer.substr(idx + 3);
-            eat_white(symbol);
-            if (symbol.empty())
-                continue;
-
-            Addr addr;
-            if (!to_number(address, addr))
-                continue;
-
-            if (!tc->getSystemPtr()->kernelSymtab->insert(addr, symbol))
-                continue;
-
-
-            DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
-        }
-        file.close();
-    }
-
-    void
-    resetstats(ThreadContext *tc, Tick delay, Tick period)
-    {
-        if (!tc->getCpuPtr()->params->do_statistics_insts)
-            return;
-
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        Stats::StatEvent(false, true, when, repeat);
-    }
-
-    void
-    dumpstats(ThreadContext *tc, Tick delay, Tick period)
-    {
-        if (!tc->getCpuPtr()->params->do_statistics_insts)
-            return;
-
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        Stats::StatEvent(true, false, when, repeat);
-    }
-
-    void
-    addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
-    {
-        char symb[100];
-        CopyStringOut(tc, symb, symbolAddr, 100);
-        std::string symbol(symb);
 
         DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
-
-        tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
     }
-
-    void
-    anBegin(ThreadContext *tc, uint64_t cur)
-    {
-        Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
-                0xFFFFFFFF, 0,0);
-    }
-
-    void
-    anWait(ThreadContext *tc, uint64_t cur, uint64_t wait)
-    {
-        Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
-                0xFFFFFFFF, wait >> 32, wait & 0xFFFFFFFF);
-    }
-
-
-    void
-    dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
-    {
-        if (!tc->getCpuPtr()->params->do_statistics_insts)
-            return;
-
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        Stats::StatEvent(true, true, when, repeat);
-    }
-
-    void
-    m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
-    {
-        if (!tc->getCpuPtr()->params->do_checkpoint_insts)
-            return;
-
-        Tick when = curTick + delay * Clock::Int::ns;
-        Tick repeat = period * Clock::Int::ns;
-
-        schedExitSimLoop("checkpoint", when, repeat);
-    }
-
-    uint64_t
-    readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
-    {
-        const string &file = tc->getSystemPtr()->params()->readfile;
-        if (file.empty()) {
-            return ULL(0);
-        }
-
-        uint64_t result = 0;
-
-        int fd = ::open(file.c_str(), O_RDONLY, 0);
-        if (fd < 0)
-            panic("could not open file %s\n", file);
-
-        if (::lseek(fd, offset, SEEK_SET) < 0)
-            panic("could not seek: %s", strerror(errno));
-
-        char *buf = new char[len];
-        char *p = buf;
-        while (len > 0) {
-            int bytes = ::read(fd, p, len);
-            if (bytes <= 0)
-                break;
-
-            p += bytes;
-            result += bytes;
-            len -= bytes;
-        }
-
-        close(fd);
-        CopyIn(tc, vaddr, buf, result);
-        delete [] buf;
-        return result;
-    }
-
-    void debugbreak(ThreadContext *tc)
-    {
-        debug_break();
-    }
-
-    void switchcpu(ThreadContext *tc)
-    {
-        exitSimLoop("switchcpu");
-    }
+    file.close();
 }
+
+void
+resetstats(ThreadContext *tc, Tick delay, Tick period)
+{
+    if (!tc->getCpuPtr()->params->do_statistics_insts)
+        return;
+
+
+    Tick when = curTick + delay * Clock::Int::ns;
+    Tick repeat = period * Clock::Int::ns;
+
+    Stats::StatEvent(false, true, when, repeat);
+}
+
+void
+dumpstats(ThreadContext *tc, Tick delay, Tick period)
+{
+    if (!tc->getCpuPtr()->params->do_statistics_insts)
+        return;
+
+
+    Tick when = curTick + delay * Clock::Int::ns;
+    Tick repeat = period * Clock::Int::ns;
+
+    Stats::StatEvent(true, false, when, repeat);
+}
+
+void
+addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
+{
+    char symb[100];
+    CopyStringOut(tc, symb, symbolAddr, 100);
+    std::string symbol(symb);
+
+    DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+
+    tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+}
+
+void
+anBegin(ThreadContext *tc, uint64_t cur)
+{
+    Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
+                              0xFFFFFFFF, 0,0);
+}
+
+void
+anWait(ThreadContext *tc, uint64_t cur, uint64_t wait)
+{
+    Annotate::annotations.add(tc->getSystemPtr(), 0, cur >> 32, cur &
+                              0xFFFFFFFF, wait >> 32, wait & 0xFFFFFFFF);
+}
+
+
+void
+dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
+{
+    if (!tc->getCpuPtr()->params->do_statistics_insts)
+        return;
+
+
+    Tick when = curTick + delay * Clock::Int::ns;
+    Tick repeat = period * Clock::Int::ns;
+
+    Stats::StatEvent(true, true, when, repeat);
+}
+
+void
+m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
+{
+    if (!tc->getCpuPtr()->params->do_checkpoint_insts)
+        return;
+
+    Tick when = curTick + delay * Clock::Int::ns;
+    Tick repeat = period * Clock::Int::ns;
+
+    schedExitSimLoop("checkpoint", when, repeat);
+}
+
+uint64_t
+readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
+{
+    const string &file = tc->getSystemPtr()->params()->readfile;
+    if (file.empty()) {
+        return ULL(0);
+    }
+
+    uint64_t result = 0;
+
+    int fd = ::open(file.c_str(), O_RDONLY, 0);
+    if (fd < 0)
+        panic("could not open file %s\n", file);
+
+    if (::lseek(fd, offset, SEEK_SET) < 0)
+        panic("could not seek: %s", strerror(errno));
+
+    char *buf = new char[len];
+    char *p = buf;
+    while (len > 0) {
+        int bytes = ::read(fd, p, len);
+        if (bytes <= 0)
+            break;
+
+        p += bytes;
+        result += bytes;
+        len -= bytes;
+    }
+
+    close(fd);
+    CopyIn(tc, vaddr, buf, result);
+    delete [] buf;
+    return result;
+}
+
+void
+debugbreak(ThreadContext *tc)
+{
+    debug_break();
+}
+
+void
+switchcpu(ThreadContext *tc)
+{
+    exitSimLoop("switchcpu");
+}
+
+/* namespace PseudoInst */ }
