@@ -30,18 +30,16 @@
  *          Steve Raasch
  */
 
-#include <assert.h>
-
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "cpu/smt.hh"
 #include "base/misc.hh"
-
-#include "sim/eventq.hh"
 #include "base/trace.hh"
+#include "cpu/smt.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 
 using namespace std;
 
@@ -203,7 +201,7 @@ EventQueue::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-EventQueue::dump()
+EventQueue::dump() const
 {
     cprintf("============================================================\n");
     cprintf("EventQueue Dump  (cycle %d)\n", curTick);
@@ -235,7 +233,6 @@ Event::description() const
     return "generic";
 }
 
-#if TRACING_ON
 void
 Event::trace(const char *action)
 {
@@ -250,23 +247,21 @@ Event::trace(const char *action)
     // needs to be printed.
     DPRINTFN("%s event %s @ %d\n", description(), action, when());
 }
-#endif
 
 void
-Event::dump()
+Event::dump() const
 {
-    cprintf("Event  (%s)\n", description());
+    cprintf("Event %s (%s)\n", name(), description());
     cprintf("Flags: %#x\n", _flags);
-#if TRACING_ON
-    cprintf("Created: %d\n", when_created);
+#ifdef EVENTQ_DEBUG
+    cprintf("Created: %d\n", whenCreated);
 #endif
     if (scheduled()) {
-#if TRACING_ON
-        cprintf("Scheduled at  %d\n", when_scheduled);
+#ifdef EVENTQ_DEBUG
+        cprintf("Scheduled at  %d\n", whenScheduled);
 #endif
         cprintf("Scheduled for %d, priority %d\n", when(), _priority);
-    }
-    else {
+    } else {
         cprintf("Not Scheduled\n");
     }
 }

@@ -49,7 +49,7 @@ SimLoopExitEvent::process()
     // if this got scheduled on a different queue (e.g. the committed
     // instruction queue) then make a corresponding event on the main
     // queue.
-    if (theQueue() != &mainEventQueue) {
+    if (queue() != &mainEventQueue) {
         exitSimLoop(cause, code);
         delete this;
     }
