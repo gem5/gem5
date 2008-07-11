@@ -74,7 +74,20 @@ class Event : public Serializable, public FastAlloc
     friend class EventQueue;
 
   private:
-    Event *next;
+    // The event queue is now a linked list of linked lists.  The
+    // 'nextBin' pointer is to find the bin, where a bin is defined as
+    // when+priority.  All events in the same bin will be stored in a
+    // second circularly linked list maintained by the 'nextInBin'
+    // pointer.  The list will be accessed in FIFO order.  The end
+    // result is that the insert/removal in 'nextBin' is
+    // linear/constant, and the lookup/removal in 'nextInBin' is
+    // constant/constant.  Hopefully this is a significant improvement
+    // over the current fully linear insertion.
+    Event *nextBin;
+    Event *nextInBin;
+
+    friend void insertBefore(Event *event, Event *curr);
+    friend Event *removeItem(Event *event, Event *last);
 
     /// queue to which this event belongs (though it may or may not be
     /// scheduled on this queue yet)
@@ -99,6 +112,17 @@ class Event : public Serializable, public FastAlloc
     Tick whenCreated;   //!< time created
     Tick whenScheduled; //!< time scheduled
 #endif
+
+  protected:
+    void
+    setWhen(Tick when)
+    {
+        _when = when;
+#ifdef DEBUG_EVENTQ
+        whenScheduled = curTick;
+#endif
+    }
+
   protected:
     enum Flags {
         None = 0x0,
@@ -181,7 +205,7 @@ class Event : public Serializable, public FastAlloc
      * @param queue that the event gets scheduled on
      */
     Event(EventQueue *q, Priority p = Default_Pri)
-        : next(NULL), _queue(q), _priority(p), _flags(None)
+        : nextBin(NULL), nextInBin(NULL), _queue(q), _priority(p), _flags(None)
     {
 #ifndef NDEBUG
         instance = ++instanceCounter;
@@ -343,9 +367,9 @@ class EventQueue : public Serializable
     virtual const std::string name() const { return objName; }
 
     // schedule the given event on this queue
-    void schedule(Event *ev);
+    void schedule(Event *ev, Tick when);
     void deschedule(Event *ev);
-    void reschedule(Event *ev);
+    void reschedule(Event *ev, Tick when);
 
     Tick nextTick() const { return head->when(); }
     Event *serviceOne();
@@ -379,6 +403,8 @@ class EventQueue : public Serializable
 
     Tick nextEventTime() { return empty() ? curTick : head->when(); }
 
+    bool debugVerify() const;
+
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
@@ -396,53 +422,77 @@ class EventQueue : public Serializable
 // schedule at specified time (place on event queue specified via
 // constructor)
 inline void
-Event::schedule(Tick t)
+Event::schedule(Tick when)
 {
-    assert(!scheduled());
-    assert(t >= curTick);
-
-    setFlags(Scheduled);
-#ifdef DEBUG_EVENTQ
-    whenScheduled = curTick;
-#endif
-    _when = t;
-    _queue->schedule(this);
+    _queue->schedule(this, when);
 }
 
 inline void
 Event::deschedule()
 {
-    assert(scheduled());
-
-    clearFlags(Squashed);
-    clearFlags(Scheduled);
     _queue->deschedule(this);
 }
 
 inline void
-Event::reschedule(Tick t, bool always)
+Event::reschedule(Tick when, bool always)
 {
-    assert(scheduled() || always);
-    assert(t >= curTick);
-
-#ifdef DEBUG_EVENTQ
-    whenScheduled = curTick;
-#endif
-    _when = t;
-
     if (scheduled()) {
-        clearFlags(Squashed);
-        _queue->reschedule(this);
+        _queue->reschedule(this, when);
     } else {
-        setFlags(Scheduled);
-        _queue->schedule(this);
+        assert(always);
+        _queue->schedule(this, when);
     }
 }
 
-inline void
-EventQueue::schedule(Event *event)
+inline bool
+operator<(const Event &l, const Event &r)
 {
+    return l.when() < r.when() ||
+        (l.when() == r.when() && l.priority() < r.priority());
+}
+
+inline bool
+operator>(const Event &l, const Event &r)
+{
+    return l.when() > r.when() ||
+        (l.when() == r.when() && l.priority() > r.priority());
+}
+
+inline bool
+operator<=(const Event &l, const Event &r)
+{
+    return l.when() < r.when() ||
+        (l.when() == r.when() && l.priority() <= r.priority());
+}
+inline bool
+operator>=(const Event &l, const Event &r)
+{
+    return l.when() > r.when() ||
+        (l.when() == r.when() && l.priority() >= r.priority());
+}
+
+inline bool
+operator==(const Event &l, const Event &r)
+{
+    return l.when() == r.when() && l.priority() == r.priority();
+}
+
+inline bool
+operator!=(const Event &l, const Event &r)
+{
+    return l.when() != r.when() || l.priority() != r.priority();
+}
+
+inline void
+EventQueue::schedule(Event *event, Tick when)
+{
+    assert(when >= curTick);
+    assert(!event->scheduled());
+
+    event->setWhen(when);
     insert(event);
+    event->setFlags(Event::Scheduled);
+
     if (DTRACE(Event))
         event->trace("scheduled");
 }
@@ -450,19 +500,31 @@ EventQueue::schedule(Event *event)
 inline void
 EventQueue::deschedule(Event *event)
 {
+    assert(event->scheduled());
+
     remove(event);
-    if (DTRACE(Event))
-        event->trace("descheduled");
+
+    event->clearFlags(Event::Squashed);
+    event->clearFlags(Event::Scheduled);
 
     if (event->getFlags(Event::AutoDelete))
         delete event;
+
+    if (DTRACE(Event))
+        event->trace("descheduled");
 }
 
 inline void
-EventQueue::reschedule(Event *event)
+EventQueue::reschedule(Event *event, Tick when)
 {
+    assert(when >= curTick);
+    assert(event->scheduled());
+
     remove(event);
+    event->setWhen(when);
     insert(event);
+    event->clearFlags(Event::Squashed);
+
     if (DTRACE(Event))
         event->trace("rescheduled");
 }
