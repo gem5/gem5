@@ -113,13 +113,4 @@ __warn(const char *func, const char *file, int line, const std::string &format,
         }                                           \
     } while (0)
 
-//
-// assert() that prints out the current cycle
-//
-#define m5_assert(TEST) do {                                            \
-    if (!(TEST))                                                        \
-        ccprintf(std::cerr, "Assertion failure, curTick = %d\n", curTick); \
-    assert(TEST);                                                       \
-} while (0)
-
 #endif // __MISC_HH__
