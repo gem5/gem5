@@ -331,10 +331,10 @@ Bus::findPort(Addr addr)
 
         if (responderSet) {
             panic("Unable to find destination for addr (user set default "
-                  "responder): %#llx", addr);
+                  "responder): %#llx\n", addr);
         } else {
             DPRINTF(Bus, "Unable to find destination for addr: %#llx, will use "
-                    "default port", addr);
+                    "default port\n", addr);
 
             return defaultId;
         }
