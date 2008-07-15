@@ -81,7 +81,6 @@ class MemCmd
         ReadExReq,
         ReadExResp,
         LoadLockedReq,
-        LoadLockedResp,
         StoreCondReq,
         StoreCondResp,
         SwapReq,

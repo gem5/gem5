@@ -730,7 +730,9 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
         traceData = NULL;
     }
 
-    if (pkt->isRead() && pkt->isLocked()) {
+    // the locked flag may be cleared on the response packet, so check
+    // pkt->req and not pkt to see if it was a load-locked
+    if (pkt->isRead() && pkt->req->isLocked()) {
         TheISA::handleLockedRead(thread, pkt->req);
     }
 

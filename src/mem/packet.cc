@@ -101,12 +101,10 @@ MemCmd::commandInfo[] =
     /* ReadExResp */
     { SET4(IsRead, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "ReadExResp" },
-    /* LoadLockedReq */
+    /* LoadLockedReq: note that we use plain ReadResp as response, so that
+     *                we can also use ReadRespWithInvalidate when needed */
     { SET4(IsRead, IsLocked, IsRequest, NeedsResponse),
-            LoadLockedResp, "LoadLockedReq" },
-    /* LoadLockedResp */
-    { SET4(IsRead, IsLocked, IsResponse, HasData),
-            InvalidCmd, "LoadLockedResp" },
+            ReadResp, "LoadLockedReq" },
     /* StoreCondReq */
     { SET6(IsWrite, NeedsExclusive, IsLocked,
            IsRequest, NeedsResponse, HasData),
