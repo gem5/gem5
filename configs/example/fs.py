@@ -126,8 +126,7 @@ test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 if options.caches:
     test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
     test_sys.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
-    test_sys.iocache = IOCache(mem_side_filter_ranges=[AddrRange(0, Addr.max)],
-                       cpu_side_filter_ranges=[AddrRange(0x8000000000, Addr.max)])
+    test_sys.iocache = IOCache(addr_range=AddrRange(0, size='8GB'))
     test_sys.iocache.cpu_side = test_sys.iobus.port
     test_sys.iocache.mem_side = test_sys.membus.port
 

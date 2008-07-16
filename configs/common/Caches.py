@@ -50,3 +50,4 @@ class IOCache(BaseCache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
+    forward_snoops = False

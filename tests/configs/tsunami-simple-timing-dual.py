@@ -62,8 +62,8 @@ class IOCache(BaseCache):
     mshrs = 20
     size = '1kB'
     tgts_per_mshr = 12
-    mem_side_filter_ranges=[AddrRange(0, Addr.max)]
-    cpu_side_filter_ranges=[AddrRange(0x8000000000, Addr.max)]
+    addr_range=AddrRange(0, size='8GB')
+    forward_snoops = False
 
 #cpu
 cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(2) ]

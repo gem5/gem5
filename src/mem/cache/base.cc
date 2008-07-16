@@ -41,11 +41,10 @@
 using namespace std;
 
 BaseCache::CachePort::CachePort(const std::string &_name, BaseCache *_cache,
-                                const std::string &_label,
-                                std::vector<Range<Addr> > filter_ranges)
+                                const std::string &_label)
     : SimpleTimingPort(_name, _cache), cache(_cache),
       label(_label), otherPort(NULL),
-      blocked(false), mustSendRetry(false), filterRanges(filter_ranges)
+      blocked(false), mustSendRetry(false)
 {
 }
 
@@ -58,10 +57,12 @@ BaseCache::BaseCache(const Params *p)
       blkSize(p->block_size),
       hitLatency(p->latency),
       numTarget(p->tgts_per_mshr),
+      forwardSnoops(p->forward_snoops),
       blocked(0),
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
-      drainEvent(NULL)
+      drainEvent(NULL),
+      addrRange(p->addr_range)
 {
 }
 

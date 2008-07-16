@@ -38,6 +38,11 @@ class CowIdeDisk(IdeDisk):
     def childImage(self, ci):
         self.image.child.image_file = ci
 
+class MemBus(Bus):
+    badaddr_responder = BadAddr()
+    default = Self.badaddr_responder.pio
+
+
 def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
@@ -50,7 +55,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
         mdesc = SysConfig()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
-    self.membus = Bus(bus_id=1)
+    self.membus = MemBus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.bridge.side_a = self.iobus.port
@@ -90,7 +95,7 @@ def makeSparcSystem(mem_mode, mdesc = None):
         mdesc = SysConfig()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
-    self.membus = Bus(bus_id=1)
+    self.membus = MemBus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.t1000 = T1000()
     self.t1000.attachOnChipIO(self.membus)
@@ -130,7 +135,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
         mdesc = SysConfig()
     self.readfile = mdesc.script()
     self.iobus = Bus(bus_id=0)
-    self.membus = Bus(bus_id=1)
+    self.membus = MemBus(bus_id=1)
     self.bridge = Bridge(delay='50ns', nack_delay='4ns')
     self.physmem = PhysicalMemory(range = AddrRange('1GB'))
     self.bridge.side_a = self.iobus.port
@@ -170,7 +175,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     self.readfile = mdesc.script()
 
     # Physical memory
-    self.membus = Bus(bus_id=1)
+    self.membus = MemBus(bus_id=1)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.physmem.port = self.membus.port
 

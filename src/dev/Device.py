@@ -66,6 +66,7 @@ class IsaFake(BasicPioDevice):
     warn_access = Param.String("", "String to print when device is accessed")
 
 class BadAddr(IsaFake):
+    pio_addr = 0
     ret_bad_addr = Param.Bool(True, "Return pkt status bad address on access")
 
 

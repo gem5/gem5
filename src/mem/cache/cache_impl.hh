@@ -40,7 +40,7 @@
 #include "sim/host.hh"
 #include "base/fast_alloc.hh"
 #include "base/misc.hh"
-#include "base/range_ops.hh"
+#include "base/range.hh"
 
 #include "mem/cache/cache.hh"
 #include "mem/cache/blk.hh"
@@ -62,11 +62,9 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     tempBlock->data = new uint8_t[blkSize];
 
     cpuSidePort = new CpuSidePort(p->name + "-cpu_side_port", this,
-                                  "CpuSidePort",
-                                  p->cpu_side_filter_ranges);
+                                  "CpuSidePort");
     memSidePort = new MemSidePort(p->name + "-mem_side_port", this,
-                                  "MemSidePort",
-                                  p->mem_side_filter_ranges);
+                                  "MemSidePort");
     cpuSidePort->setOtherPort(memSidePort);
     memSidePort->setOtherPort(cpuSidePort);
 
@@ -96,8 +94,7 @@ Cache<TagStore>::getPort(const std::string &if_name, int idx)
     } else if (if_name == "functional") {
         CpuSidePort *funcPort =
             new CpuSidePort(name() + "-cpu_side_funcport", this,
-                            "CpuSideFuncPort",
-                            std::vector<Range<Addr> >());
+                            "CpuSideFuncPort");
         funcPort->setOtherPort(memSidePort);
         return funcPort;
     } else {
@@ -1063,35 +1060,37 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     assert(!(pending_inval && !is_deferred));
     assert(pkt->isRequest());
 
-    // first propagate snoop upward to see if anyone above us wants to
-    // handle it.  save & restore packet src since it will get
-    // rewritten to be relative to cpu-side bus (if any)
-    bool alreadyResponded = pkt->memInhibitAsserted();
-    if (is_timing) {
-        Packet *snoopPkt = new Packet(pkt, true);  // clear flags
-        snoopPkt->setExpressSnoop();
-        snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
-        cpuSidePort->sendTiming(snoopPkt);
-        if (snoopPkt->memInhibitAsserted()) {
-            // cache-to-cache response from some upper cache
-            assert(!alreadyResponded);
-            pkt->assertMemInhibit();
+    if (forwardSnoops) {
+        // first propagate snoop upward to see if anyone above us wants to
+        // handle it.  save & restore packet src since it will get
+        // rewritten to be relative to cpu-side bus (if any)
+        bool alreadyResponded = pkt->memInhibitAsserted();
+        if (is_timing) {
+            Packet *snoopPkt = new Packet(pkt, true);  // clear flags
+            snoopPkt->setExpressSnoop();
+            snoopPkt->senderState = new ForwardResponseRecord(pkt, this);
+            cpuSidePort->sendTiming(snoopPkt);
+            if (snoopPkt->memInhibitAsserted()) {
+                // cache-to-cache response from some upper cache
+                assert(!alreadyResponded);
+                pkt->assertMemInhibit();
+            } else {
+                delete snoopPkt->senderState;
+            }
+            if (snoopPkt->sharedAsserted()) {
+                pkt->assertShared();
+            }
+            delete snoopPkt;
         } else {
-            delete snoopPkt->senderState;
+            int origSrc = pkt->getSrc();
+            cpuSidePort->sendAtomic(pkt);
+            if (!alreadyResponded && pkt->memInhibitAsserted()) {
+                // cache-to-cache response from some upper cache:
+                // forward response to original requester
+                assert(pkt->isResponse());
+            }
+            pkt->setSrc(origSrc);
         }
-        if (snoopPkt->sharedAsserted()) {
-            pkt->assertShared();
-        }
-        delete snoopPkt;
-    } else {
-        int origSrc = pkt->getSrc();
-        cpuSidePort->sendAtomic(pkt);
-        if (!alreadyResponded && pkt->memInhibitAsserted()) {
-            // cache-to-cache response from some upper cache:
-            // forward response to original requester
-            assert(pkt->isResponse());
-        }
-        pkt->setSrc(origSrc);
     }
 
     if (!blk || !blk->isValid()) {
@@ -1385,11 +1384,10 @@ void
 Cache<TagStore>::CpuSidePort::
 getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
-    // CPU side port doesn't snoop; it's a target only.
-    bool dummy;
-    otherPort->getPeerAddressRanges(resp, dummy);
-    FilterRangeList(filterRanges, resp);
+    // CPU side port doesn't snoop; it's a target only.  It can
+    // potentially respond to any address.
     snoop = false;
+    resp.push_back(myCache()->getAddrRange());
 }
 
 
@@ -1428,9 +1426,8 @@ Cache<TagStore>::CpuSidePort::recvFunctional(PacketPtr pkt)
 template<class TagStore>
 Cache<TagStore>::
 CpuSidePort::CpuSidePort(const std::string &_name, Cache<TagStore> *_cache,
-                         const std::string &_label,
-                         std::vector<Range<Addr> > filterRanges)
-    : BaseCache::CachePort(_name, _cache, _label, filterRanges)
+                         const std::string &_label)
+    : BaseCache::CachePort(_name, _cache, _label)
 {
 }
 
@@ -1445,11 +1442,9 @@ void
 Cache<TagStore>::MemSidePort::
 getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
 {
-    otherPort->getPeerAddressRanges(resp, snoop);
-    FilterRangeList(filterRanges, resp);
-
-    // Memory-side port always snoops, so unconditionally set flag for
-    // caller.
+    // Memory-side port always snoops, but never passes requests
+    // through to targets on the cpu side (so we don't add anything to
+    // the address range list).
     snoop = true;
 }
 
@@ -1581,9 +1576,8 @@ Cache<TagStore>::MemSidePort::processSendEvent()
 template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
-                         const std::string &_label,
-                         std::vector<Range<Addr> > filterRanges)
-    : BaseCache::CachePort(_name, _cache, _label, filterRanges)
+                         const std::string &_label)
+    : BaseCache::CachePort(_name, _cache, _label)
 {
     // override default send event from SimpleTimingPort
     delete sendEvent;

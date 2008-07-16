@@ -100,8 +100,7 @@ class BaseCache : public MemObject
 
       protected:
         CachePort(const std::string &_name, BaseCache *_cache,
-                  const std::string &_label,
-                  std::vector<Range<Addr> > filter_ranges);
+                  const std::string &_label);
 
         virtual void recvStatusChange(Status status);
 
@@ -128,9 +127,6 @@ class BaseCache : public MemObject
         bool blocked;
 
         bool mustSendRetry;
-
-        /** filter ranges */
-        std::vector<Range<Addr> > filterRanges;
 
         void requestBus(RequestCause cause, Tick time)
         {
@@ -194,14 +190,17 @@ class BaseCache : public MemObject
     /** The number of targets for each MSHR. */
     const int numTarget;
 
-    /** Increasing order number assigned to each incoming request. */
-    uint64_t order;
+    /** Do we forward snoops from mem side port through to cpu side port? */
+    bool forwardSnoops;
 
     /**
      * Bit vector of the blocking reasons for the access path.
      * @sa #BlockedCause
      */
     uint8_t blocked;
+
+    /** Increasing order number assigned to each incoming request. */
+    uint64_t order;
 
     /** Stores time the cache blocked for statistics. */
     Tick blockedCycle;
@@ -214,6 +213,11 @@ class BaseCache : public MemObject
 
     /** The drain event. */
     Event *drainEvent;
+
+    /**
+     * The address range to which the cache responds on the CPU side.
+     * Normally this is all possible memory addresses. */
+    Range<Addr> addrRange;
 
   public:
     // Statistics
@@ -376,6 +380,8 @@ class BaseCache : public MemObject
 
     Addr blockAlign(Addr addr) const { return (addr & ~(blkSize - 1)); }
 
+
+    const Range<Addr> &getAddrRange() const { return addrRange; }
 
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {

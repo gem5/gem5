@@ -45,6 +45,8 @@ class BaseCache(MemObject):
         "always service demand misses first")
     repl = Param.Repl(NULL, "replacement policy")
     size = Param.MemorySize("capacity in bytes")
+    forward_snoops = Param.Bool(True,
+        "forward snoops from mem side to cpu side")
     subblock_size = Param.Int(0,
         "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")
@@ -74,8 +76,4 @@ class BaseCache(MemObject):
          "Only prefetch on data not on instruction accesses")
     cpu_side = Port("Port on side closer to CPU")
     mem_side = Port("Port on side closer to MEM")
-    cpu_side_filter_ranges = VectorParam.AddrRange([],
-            "What addresses shouldn't be passed through the side of the bridge")
-    mem_side_filter_ranges = VectorParam.AddrRange([],
-            "What addresses shouldn't be passed through the side of the bridge")
-    addr_range = VectorParam.AddrRange(AllMemory, "The address range in bytes")
+    addr_range = Param.AddrRange(AllMemory, "The address range for the CPU-side port")
