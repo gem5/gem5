@@ -1,4 +1,3 @@
-Hello world!
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -6,9 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2008 12:58:20
-M5 started Sun Feb 24 12:58:25 2008
-M5 executing on tater
+M5 compiled Jul 21 2008 20:12:56
+M5 started Mon Jul 21 20:24:22 2008
+M5 executing on zizzer
+M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
+M5 commit date Tue Jul 15 14:38:51 2008 -0400
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/tru64/simple-timing tests/run.py quick/00.hello/alpha/tru64/simple-timing
 Global frequency set at 1000000000000 ticks per second
+Hello world!
 Exiting @ tick 9950000 because target called exit()

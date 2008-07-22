@@ -1,3 +1,19 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jul 21 2008 20:33:06
+M5 started Mon Jul 21 20:34:33 2008
+M5 executing on zizzer
+M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
+M5 commit date Tue Jul 15 14:38:51 2008 -0400
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing tests/run.py long/70.twolf/sparc/linux/simple-timing
+Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sav
+Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sv2
+Global frequency set at 1000000000000 ticks per second
 
 TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
 Standard Cell Placement and Global Routing Program
@@ -11,18 +27,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 M5 Simulator System
-
-Copyright (c) 2001-2008
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Feb 24 2008 13:27:50
-M5 started Mon Feb 25 16:18:16 2008
-M5 executing on tater
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing tests/run.py long/70.twolf/sparc/linux/simple-timing
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sav
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sv2
-Global frequency set at 1000000000000 ticks per second
-Exiting @ tick 270416976000 because target called exit()
+122 123 124 Exiting @ tick 270416976000 because target called exit()

@@ -1,3 +1,17 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jul 21 2008 20:33:06
+M5 started Mon Jul 21 20:36:22 2008
+M5 executing on zizzer
+M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
+M5 commit date Tue Jul 15 14:38:51 2008 -0400
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-atomic tests/run.py long/10.mcf/sparc/linux/simple-atomic
+Global frequency set at 1000000000000 ticks per second
 
 MCF SPEC version 1.6.I
 by  Andreas Loebel
@@ -14,16 +28,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-M5 Simulator System
-
-Copyright (c) 2001-2006
-The Regents of The University of Michigan
-All Rights Reserved
-
-
-M5 compiled Nov 28 2007 18:29:37
-M5 started Wed Nov 28 18:29:38 2007
-M5 executing on nacho
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-atomic tests/run.py long/10.mcf/sparc/linux/simple-atomic
-Global frequency set at 1000000000000 ticks per second
 Exiting @ tick 122212687000 because target called exit()
