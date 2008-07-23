@@ -31,16 +31,13 @@
 %module debug
 
 %{
-// include these files when compiling debug_wrap.cc
 #include "sim/host.hh"
+#include "sim/debug.hh"
 %}
 
 %include "stdint.i"
 %include "sim/host.hh"
-
-%inline %{
-extern void schedBreakCycle(Tick when);
-%}
+%include "sim/debug.hh"
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package

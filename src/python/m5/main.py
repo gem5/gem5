@@ -102,6 +102,8 @@ add_option("--stats-file", metavar="FILE", default="m5stats.txt",
 set_group("Debugging Options")
 add_option("--debug-break", metavar="TIME[,TIME]", action='append', split=',',
     help="Cycle to create a breakpoint")
+add_option("--remote-gdb-port", type='int', default=7000,
+    help="Remote gdb base port")
 
 # Tracing options
 set_group("Trace Options")
@@ -256,6 +258,7 @@ def main():
     internal.stats.initText(options.stats_file)
 
     # set debugging options
+    internal.debug.setRemoteGDBPort(options.remote_gdb_port)
     for when in options.debug_break:
         internal.debug.schedBreakCycle(int(when))
 

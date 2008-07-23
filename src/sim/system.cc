@@ -42,6 +42,7 @@
 #include "mem/physical.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
+#include "sim/debug.hh"
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
 #include "kern/kernel_stats.hh"
@@ -183,9 +184,10 @@ System::registerThreadContext(ThreadContext *tc, int id)
     threadContexts[id] = tc;
     numcpus++;
 
-    if (rgdb_enable) {
+    int port = getRemoteGDBPort();
+    if (rgdb_enable && port) {
         RemoteGDB *rgdb = new RemoteGDB(this, tc);
-        GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
+        GDBListener *gdbl = new GDBListener(rgdb, port + id);
         gdbl->listen();
         /**
          * Uncommenting this line waits for a remote debugger to

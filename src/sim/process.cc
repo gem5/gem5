@@ -46,6 +46,7 @@
 #include "mem/translating_port.hh"
 #include "params/Process.hh"
 #include "params/LiveProcess.hh"
+#include "sim/debug.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
 #include "sim/stats.hh"
@@ -201,12 +202,14 @@ Process::registerThreadContext(ThreadContext *tc)
     int myIndex = threadContexts.size();
     threadContexts.push_back(tc);
 
-    RemoteGDB *rgdb = new RemoteGDB(system, tc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + myIndex);
-    gdbl->listen();
-    //gdbl->accept();
+    int port = getRemoteGDBPort();
+    if (port) {
+        RemoteGDB *rgdb = new RemoteGDB(system, tc);
+        GDBListener *gdbl = new GDBListener(rgdb, port + myIndex);
+        gdbl->listen();
 
-    remoteGDB.push_back(rgdb);
+        remoteGDB.push_back(rgdb);
+    }
 
     // return CPU number to caller
     return myIndex;
