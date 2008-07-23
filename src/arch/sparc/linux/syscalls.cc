@@ -147,7 +147,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  55 */ SyscallDesc("reboot", unimplementedFunc), //32 bit
     /*  56 */ SyscallDesc("mmap2", unimplementedFunc), //32 bit
     /*  57 */ SyscallDesc("symlink", unimplementedFunc),
-    /*  58 */ SyscallDesc("readlink", unimplementedFunc), //32 bit
+    /*  58 */ SyscallDesc("readlink", readlinkFunc), //32 bit
     /*  59 */ SyscallDesc("execve", unimplementedFunc), //32 bit
     /*  60 */ SyscallDesc("umask", unimplementedFunc), //32 bit
     /*  61 */ SyscallDesc("chroot", unimplementedFunc),
@@ -208,7 +208,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 116 */ SyscallDesc("gettimeofday", unimplementedFunc), //32 bit
     /* 117 */ SyscallDesc("getrusage", unimplementedFunc), //32 bit
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
-    /* 119 */ SyscallDesc("getcwd", unimplementedFunc),
+    /* 119 */ SyscallDesc("getcwd", getcwdFunc),
     /* 120 */ SyscallDesc("readv", unimplementedFunc),
     /* 121 */ SyscallDesc("writev", unimplementedFunc),
     /* 122 */ SyscallDesc("settimeofday", unimplementedFunc), //32 bit
@@ -225,7 +225,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
     /* 134 */ SyscallDesc("shutdown", unimplementedFunc),
     /* 135 */ SyscallDesc("socketpair", unimplementedFunc),
-    /* 136 */ SyscallDesc("mkdir", unimplementedFunc), //32 bit
+    /* 136 */ SyscallDesc("mkdir", mkdirFunc), //32 bit
     /* 137 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 138 */ SyscallDesc("utimes", unimplementedFunc), //32 bit
     /* 139 */ SyscallDesc("stat64", unimplementedFunc),
@@ -450,7 +450,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 55 */ SyscallDesc("reboot", unimplementedFunc),
     /* 56 */ SyscallDesc("mmap2", unimplementedFunc),
     /* 57 */ SyscallDesc("symlink", unimplementedFunc),
-    /* 58 */ SyscallDesc("readlink", unimplementedFunc),
+    /* 58 */ SyscallDesc("readlink", readlinkFunc),
     /* 59 */ SyscallDesc("execve", unimplementedFunc),
     /* 60 */ SyscallDesc("umask", unimplementedFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
@@ -528,7 +528,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
     /* 134 */ SyscallDesc("shutdown", unimplementedFunc),
     /* 135 */ SyscallDesc("socketpair", unimplementedFunc),
-    /* 136 */ SyscallDesc("mkdir", unimplementedFunc),
+    /* 136 */ SyscallDesc("mkdir", mkdirFunc),
     /* 137 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 138 */ SyscallDesc("utimes", unimplementedFunc),
     /* 139 */ SyscallDesc("stat64", unimplementedFunc),

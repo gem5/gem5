@@ -223,9 +223,21 @@ SyscallReturn munmapFunc(SyscallDesc *desc, int num,
 SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
                               LiveProcess *p, ThreadContext *tc);
 
+/// Target getcwd() handler.
+SyscallReturn getcwdFunc(SyscallDesc *desc, int num,
+                         LiveProcess *p, ThreadContext *tc);
+
+/// Target unlink() handler.
+SyscallReturn readlinkFunc(SyscallDesc *desc, int num,
+                           LiveProcess *p, ThreadContext *tc);
+
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
+
+/// Target mkdir() handler.
+SyscallReturn mkdirFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target rename() handler.
 SyscallReturn renameFunc(SyscallDesc *desc, int num,
@@ -240,6 +252,11 @@ SyscallReturn truncateFunc(SyscallDesc *desc, int num,
 /// Target ftruncate() handler.
 SyscallReturn ftruncateFunc(SyscallDesc *desc, int num,
                             LiveProcess *p, ThreadContext *tc);
+
+
+/// Target umask() handler.
+SyscallReturn umaskFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
 
 
 /// Target chown() handler.

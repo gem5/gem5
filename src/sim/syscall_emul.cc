@@ -240,6 +240,59 @@ gethostnameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 }
 
 SyscallReturn
+getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    int result = 0;
+    unsigned long size = tc->getSyscallArg(1);
+    BufferArg buf(tc->getSyscallArg(0), size);
+
+    // Is current working directory defined?
+    string cwd = p->getcwd();
+    if (!cwd.empty()) {
+        if (cwd.length() >= size) {
+            // Buffer too small
+            return -ERANGE;
+        }
+        strncpy((char *)buf.bufferPtr(), cwd.c_str(), size);
+        result = cwd.length();
+    }
+    else {
+        if (getcwd((char *)buf.bufferPtr(), size) != NULL) {
+            result = strlen((char *)buf.bufferPtr());
+        }
+        else {
+            result = -1;
+        }
+    }
+
+    buf.copyOut(tc->getMemPort());
+
+    return (result == -1) ? -errno : result;
+}
+
+
+SyscallReturn
+readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    string path;
+
+    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+        return (TheISA::IntReg)-EFAULT;
+
+    // Adjust path for current working directory
+    path = p->fullPath(path);
+
+    size_t bufsiz = tc->getSyscallArg(2);
+    BufferArg buf(tc->getSyscallArg(1), bufsiz);
+
+    int result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
+
+    buf.copyOut(tc->getMemPort());
+
+    return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
 unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     string path;
@@ -251,6 +304,24 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     path = p->fullPath(path);
 
     int result = unlink(path.c_str());
+    return (result == -1) ? -errno : result;
+}
+
+
+SyscallReturn
+mkdirFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+{
+    string path;
+
+    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+        return (TheISA::IntReg)-EFAULT;
+
+    // Adjust path for current working directory
+    path = p->fullPath(path);
+
+    mode_t mode = tc->getSyscallArg(1);
+
+    int result = mkdir(path.c_str(), mode);
     return (result == -1) ? -errno : result;
 }
 
@@ -304,6 +375,17 @@ ftruncateFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *t
 
     int result = ftruncate(fd, length);
     return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
+umaskFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
+{
+    // Letting the simulated program change the simulator's umask seems like
+    // a bad idea.  Compromise by just returning the current umask but not
+    // changing anything.
+    mode_t oldMask = umask(0);
+    umask(oldMask);
+    return oldMask;
 }
 
 SyscallReturn

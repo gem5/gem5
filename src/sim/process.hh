@@ -303,6 +303,8 @@ class LiveProcess : public Process
         return full + filename;
     }
 
+    std::string getcwd() const { return cwd; }
+
     virtual void syscall(int64_t callnum, ThreadContext *tc);
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
