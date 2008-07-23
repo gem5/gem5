@@ -37,6 +37,7 @@ if m5.build_env['FULL_SYSTEM']:
 
 from m5.objects import *
 import os, optparse, sys
+from os.path import join as joinpath
 m5.AddToPath('../common')
 import Simulation
 from Caches import *
@@ -51,13 +52,13 @@ parser = optparse.OptionParser()
 
 # Benchmark options
 parser.add_option("-c", "--cmd",
-                  default=os.path.join(m5_root, "tests/test-progs/hello/bin/alpha/linux/hello"),
-                  help="The binary to run in syscall emulation mode.")
+    default=joinpath(m5_root, "tests/test-progs/hello/bin/alpha/linux/hello"),
+    help="The binary to run in syscall emulation mode.")
 parser.add_option("-o", "--options", default="",
-                  help="The options to pass to the binary, use \" \" around the entire\
-                        string.")
-parser.add_option("-i", "--input", default="",
-                  help="A file of input to give to the binary.")
+    help='The options to pass to the binary, use " " around the entire string')
+parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
+parser.add_option("--output", default="", help="Redirect stdout to a file.")
+parser.add_option("--errout", default="", help="Redirect stderr to a file.")
 
 execfile(os.path.join(config_root, "common", "Options.py"))
 
@@ -85,6 +86,10 @@ else:
 
 if options.input != "":
     process.input = options.input
+if options.output != "":
+    process.output = options.output
+if options.errout != "":
+    process.errout = options.errout
 
 if options.detailed:
     #check for SMT workload
@@ -93,9 +98,15 @@ if options.detailed:
         process = []
         smt_idx = 0
         inputs = []
+        outputs = []
+        errouts = []
 
         if options.input != "":
             inputs = options.input.split(';')
+        if options.output != "":
+            outputs = options.output.split(';')
+        if options.errout != "":
+            errouts = options.errout.split(';')
 
         for wrkld in workloads:
             smt_process = LiveProcess()
@@ -103,6 +114,10 @@ if options.detailed:
             smt_process.cmd = wrkld + " " + options.options
             if inputs and inputs[smt_idx]:
                 smt_process.input = inputs[smt_idx]
+            if outputs and outputs[smt_idx]:
+                smt_process.output = outputs[smt_idx]
+            if errouts and errouts[smt_idx]:
+                smt_process.errout = errouts[smt_idx]
             process += [smt_process, ]
             smt_idx += 1
 

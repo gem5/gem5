@@ -92,6 +92,7 @@ Process::Process(ProcessParams * params)
 {
     string in = params->input;
     string out = params->output;
+    string err = params->errout;
 
     // initialize file descriptors to default: same as simulator
     int stdin_fd, stdout_fd, stderr_fd;
@@ -112,7 +113,16 @@ Process::Process(ProcessParams * params)
     else
         stdout_fd = Process::openOutputFile(out);
 
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+    if (err == "stdout" || err == "cout")
+        stderr_fd = STDOUT_FILENO;
+    else if (err == "stderr" || err == "cerr")
+        stderr_fd = STDERR_FILENO;
+    else if (err == "None")
+        stderr_fd = -1;
+    else if (err == out)
+        stderr_fd = stdout_fd;
+    else
+        stderr_fd = Process::openOutputFile(err);
 
     M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)
@@ -132,7 +142,7 @@ Process::Process(ProcessParams * params)
 
     fdo = &fd_map[STDERR_FILENO];
     fdo->fd = stderr_fd;
-    fdo->filename = "STDERR";
+    fdo->filename = err;
     fdo->flags = O_WRONLY;
     fdo->mode = -1;
     fdo->fileOffset = 0;
@@ -183,7 +193,7 @@ Process::openInputFile(const string &filename)
 int
 Process::openOutputFile(const string &filename)
 {
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0774);
+    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
     if (fd == -1) {
         perror(NULL);
@@ -355,6 +365,7 @@ Process::fix_file_offsets() {
     Process::FdMap *fdo_stderr = &fd_map[STDERR_FILENO];
     string in = fdo_stdin->filename;
     string out = fdo_stdout->filename;
+    string err = fdo_stderr->filename;
 
     // initialize file descriptors to default: same as simulator
     int stdin_fd, stdout_fd, stderr_fd;
@@ -378,11 +389,23 @@ Process::fix_file_offsets() {
         stdout_fd = -1;
     else{
         stdout_fd = Process::openOutputFile(out);
-        if (lseek(stdin_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
-            panic("Unable to seek to correct in file: %s", out);
+        if (lseek(stdout_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct location in file: %s", out);
     }
 
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+    if (err == "stdout" || err == "cout")
+        stderr_fd = STDOUT_FILENO;
+    else if (err == "stderr" || err == "cerr")
+        stderr_fd = STDERR_FILENO;
+    else if (err == "None")
+        stderr_fd = -1;
+    else if (err == out)
+        stderr_fd = stdout_fd;
+    else {
+        stderr_fd = Process::openOutputFile(err);
+        if (lseek(stderr_fd, fdo_stderr->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct location in file: %s", err);
+    }
 
     fdo_stdin->fd = stdin_fd;
     fdo_stdout->fd = stdout_fd;
