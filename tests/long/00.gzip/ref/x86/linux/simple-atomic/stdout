@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 21 2008 20:45:28
-M5 started Mon Jul 21 20:48:56 2008
-M5 executing on zizzer
-M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
-M5 commit date Tue Jul 15 14:38:51 2008 -0400
+M5 compiled Jul 23 2008 16:08:41
+M5 started Wed Jul 23 16:08:42 2008
+M5 executing on blue
+M5 revision 5515:47bf96eec2c6221cf91de8a078897c1b5e46cfbf
+M5 commit date Wed Jul 23 15:35:08 2008 -0700
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-atomic tests/run.py long/00.gzip/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 spec_init
@@ -43,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 955075963000 because target called exit()
+Exiting @ tick 955086010500 because target called exit()

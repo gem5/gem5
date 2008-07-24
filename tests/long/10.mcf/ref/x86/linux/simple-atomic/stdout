@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 21 2008 20:45:28
-M5 started Mon Jul 21 20:45:29 2008
-M5 executing on zizzer
-M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
-M5 commit date Tue Jul 15 14:38:51 2008 -0400
+M5 compiled Jul 23 2008 16:08:41
+M5 started Wed Jul 23 16:09:15 2008
+M5 executing on blue
+M5 revision 5515:47bf96eec2c6221cf91de8a078897c1b5e46cfbf
+M5 commit date Wed Jul 23 15:35:08 2008 -0700
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/simple-atomic tests/run.py long/10.mcf/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 
@@ -28,4 +28,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 165703651500 because target called exit()
+Exiting @ tick 165710415000 because target called exit()
