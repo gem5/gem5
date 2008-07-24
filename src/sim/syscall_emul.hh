@@ -380,6 +380,11 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_ino = host->st_ino;
     tgt->st_ino = htog(tgt->st_ino);
     tgt->st_mode = host->st_mode;
+    if (fakeTTY) {
+        // Claim to be a character device
+        tgt->st_mode &= ~S_IFMT;    // Clear S_IFMT
+        tgt->st_mode |= S_IFCHR;    // Set S_IFCHR
+    }
     tgt->st_mode = htog(tgt->st_mode);
     tgt->st_nlink = host->st_nlink;
     tgt->st_nlink = htog(tgt->st_nlink);
