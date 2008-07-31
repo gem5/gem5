@@ -30,7 +30,9 @@
 
 import imp
 import os
+import py_compile
 import sys
+import zipfile
 
 from os.path import basename, exists, isdir, isfile, join as joinpath
 
@@ -43,6 +45,8 @@ Import('*')
 
 # Children need to see the environment
 Export('env')
+
+build_env = dict([(opt, env[opt]) for opt in env.ExportOptions])
 
 def sort_list(_list):
     """return a sorted copy of '_list'"""
@@ -199,55 +203,171 @@ for opt in env.ExportOptions:
 # Prevent any SimObjects from being added after this point, they
 # should all have been added in the SConscripts above
 #
+class DictImporter(object):
+    '''This importer takes a dictionary of arbitrary module names that
+    map to arbitrary filenames.'''
+    def __init__(self, modules):
+        self.modules = modules
+        self.installed = set()
+
+    def __del__(self):
+        self.unload()
+
+    def unload(self):
+        import sys
+        for module in self.installed:
+            del sys.modules[module]
+        self.installed = set()
+
+    def find_module(self, fullname, path):
+        if fullname == '__scons':
+            return self
+
+        if fullname == 'm5.objects':
+            return self
+
+        if fullname.startswith('m5.internal'):
+            return None
+
+        if fullname in self.modules and exists(self.modules[fullname]):
+            return self
+
+        return None
+
+    def load_module(self, fullname):
+        mod = imp.new_module(fullname)
+        sys.modules[fullname] = mod
+        self.installed.add(fullname)
+
+        mod.__loader__ = self
+        if fullname == 'm5.objects':
+            mod.__path__ = fullname.split('.')
+            return mod
+
+        if fullname == '__scons':
+            mod.__dict__['m5_build_env'] = build_env
+            return mod
+
+        srcfile = self.modules[fullname]
+        if basename(srcfile) == '__init__.py':
+            mod.__path__ = fullname.split('.')
+        mod.__file__ = srcfile
+
+        exec file(srcfile, 'r') in mod.__dict__
+
+        return mod
+
+class ordered_dict(dict):
+    def keys(self):
+        keys = super(ordered_dict, self).keys()
+        keys.sort()
+        return keys
+
+    def values(self):
+        return [ self[key] for key in self.keys() ]
+
+    def items(self):
+        return [ (key,self[key]) for key in self.keys() ]
+
+    def iterkeys(self):
+        for key in self.keys():
+            yield key
+
+    def itervalues(self):
+        for value in self.values():
+            yield value
+
+    def iteritems(self):
+        for key,value in self.items():
+            yield key, value
+
+py_modules = {}
+for source in py_sources:
+    py_modules[source.modpath] = source.srcpath
+
+# install the python importer so we can grab stuff from the source
+# tree itself.  We can't have SimObjects added after this point or
+# else we won't know about them for the rest of the stuff.
 sim_objects_fixed = True
+importer = DictImporter(py_modules)
+sys.meta_path[0:0] = [ importer ]
 
-########################################################################
-#
-# Manually turn python/generate.py into a python module and import it
-#
-generate_file = File('python/generate.py')
-generate_module = imp.new_module('generate')
-sys.modules['generate'] = generate_module
-exec file(generate_file.srcnode().abspath, 'r') in generate_module.__dict__
+import m5
 
-########################################################################
-#
-# build a generate
-#
-from generate import Generate
-optionDict = dict([(opt, env[opt]) for opt in env.ExportOptions])
-generate = Generate(py_sources, sim_object_modfiles, optionDict)
-m5 = generate.m5
+# import all sim objects so we can populate the all_objects list
+# make sure that we're working with a list, then let's sort it
+sim_objects = list(sim_object_modfiles)
+sim_objects.sort()
+for simobj in sim_objects:
+    exec('from m5.objects import %s' % simobj)
+
+# we need to unload all of the currently imported modules so that they
+# will be re-imported the next time the sconscript is run
+importer.unload()
+sys.meta_path.remove(importer)
+
+sim_objects = m5.SimObject.allClasses
+all_enums = m5.params.allEnums
+
+all_params = {}
+for name,obj in sim_objects.iteritems():
+    for param in obj._params.local.values():
+        if not hasattr(param, 'swig_decl'):
+            continue
+        pname = param.ptype_str
+        if pname not in all_params:
+            all_params[pname] = param
 
 ########################################################################
 #
 # calculate extra dependencies
 #
 module_depends = ["m5", "m5.SimObject", "m5.params"]
-module_depends = [ File(generate.py_modules[dep]) for dep in module_depends ]
-file_depends = [ generate_file ]
-depends = module_depends + file_depends
+depends = [ File(py_modules[dep]) for dep in module_depends ]
 
 ########################################################################
 #
 # Commands for the basic automatically generated python files
 #
 
+# Generate Python file containing a dict specifying the current
+# build_env flags.
+def makeDefinesPyFile(target, source, env):
+    f = file(str(target[0]), 'w')
+    print >>f, "m5_build_env = ", source[0]
+    f.close()
+
+# Generate python file containing info about the M5 source code
+def makeInfoPyFile(target, source, env):
+    f = file(str(target[0]), 'w')
+    for src in source:
+        data = ''.join(file(src.srcnode().abspath, 'r').xreadlines())
+        print >>f, "%s = %s" % (src, repr(data))
+    f.close()
+
+# Generate the __init__.py file for m5.objects
+def makeObjectsInitFile(target, source, env):
+    f = file(str(target[0]), 'w')
+    print >>f, 'from params import *'
+    print >>f, 'from m5.SimObject import *'
+    for module in source:
+        print >>f, 'from %s import *' % module.get_contents()
+    f.close()
+
 # Generate a file with all of the compile options in it
-env.Command('python/m5/defines.py', Value(optionDict),
-            generate.makeDefinesPyFile)
+env.Command('python/m5/defines.py', Value(build_env), makeDefinesPyFile)
 PySource('m5', 'python/m5/defines.py')
 
 # Generate a file that wraps the basic top level files
 env.Command('python/m5/info.py',
             [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
-            generate.makeInfoPyFile)
+            makeInfoPyFile)
 PySource('m5', 'python/m5/info.py')
 
 # Generate an __init__.py file for the objects package
 env.Command('python/m5/objects/__init__.py',
             [ Value(o) for o in sort_list(sim_object_modfiles) ],
-            generate.makeObjectsInitFile)
+            makeObjectsInitFile)
 PySource('m5.objects', 'python/m5/objects/__init__.py')
 
 ########################################################################
@@ -255,19 +375,57 @@ PySource('m5.objects', 'python/m5/objects/__init__.py')
 # Create all of the SimObject param headers and enum headers
 #
 
+def createSimObjectParam(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    hh_file = file(target[0].abspath, 'w')
+    name = str(source[0].get_contents())
+    obj = sim_objects[name]
+
+    print >>hh_file, obj.cxx_decl()
+
+def createSwigParam(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    i_file = file(target[0].abspath, 'w')
+    name = str(source[0].get_contents())
+    param = all_params[name]
+
+    for line in param.swig_decl():
+        print >>i_file, line
+
+def createEnumStrings(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    cc_file = file(target[0].abspath, 'w')
+    name = str(source[0].get_contents())
+    obj = all_enums[name]
+
+    print >>cc_file, obj.cxx_def()
+    cc_file.close()
+
+def createEnumParam(target, source, env):
+    assert len(target) == 1 and len(source) == 1
+
+    hh_file = file(target[0].abspath, 'w')
+    name = str(source[0].get_contents())
+    obj = all_enums[name]
+
+    print >>hh_file, obj.cxx_decl()
+
 # Generate all of the SimObject param struct header files
 params_hh_files = []
-for name,simobj in generate.sim_objects.iteritems():
-    extra_deps = [ File(generate.py_modules[simobj.__module__]) ]
+for name,simobj in sim_objects.iteritems():
+    extra_deps = [ File(py_modules[simobj.__module__]) ]
 
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
-    env.Command(hh_file, Value(name), generate.createSimObjectParam)
+    env.Command(hh_file, Value(name), createSimObjectParam)
     env.Depends(hh_file, depends + extra_deps)
 
 # Generate any parameter header files needed
 params_i_files = []
-for name,param in generate.params.iteritems():
+for name,param in all_params.iteritems():
     if isinstance(param, m5.params.VectorParamDesc):
         ext = 'vptype'
     else:
@@ -275,28 +433,117 @@ for name,param in generate.params.iteritems():
 
     i_file = File('params/%s_%s.i' % (name, ext))
     params_i_files.append(i_file)
-    env.Command(i_file, Value(name), generate.createSwigParam)
+    env.Command(i_file, Value(name), createSwigParam)
     env.Depends(i_file, depends)
 
 # Generate all enum header files
-for name,enum in generate.enums.iteritems():
-    extra_deps = [ File(generate.py_modules[enum.__module__]) ]
+for name,enum in all_enums.iteritems():
+    extra_deps = [ File(py_modules[enum.__module__]) ]
 
     cc_file = File('enums/%s.cc' % name)
-    env.Command(cc_file, Value(name), generate.createEnumStrings)
+    env.Command(cc_file, Value(name), createEnumStrings)
     env.Depends(cc_file, depends + extra_deps)
     Source(cc_file)
 
     hh_file = File('enums/%s.hh' % name)
-    env.Command(hh_file, Value(name), generate.createEnumParam)
+    env.Command(hh_file, Value(name), createEnumParam)
     env.Depends(hh_file, depends + extra_deps)
 
 # Build the big monolithic swigged params module (wraps all SimObject
 # param structs and enum structs)
+def buildParams(target, source, env):
+    names = [ s.get_contents() for s in source ]
+    objs = [ sim_objects[name] for name in names ]
+    out = file(target[0].abspath, 'w')
+
+    ordered_objs = []
+    obj_seen = set()
+    def order_obj(obj):
+        name = str(obj)
+        if name in obj_seen:
+            return
+
+        obj_seen.add(name)
+        if str(obj) != 'SimObject':
+            order_obj(obj.__bases__[0])
+
+        ordered_objs.append(obj)
+
+    for obj in objs:
+        order_obj(obj)
+
+    enums = set()
+    predecls = []
+    pd_seen = set()
+
+    def add_pds(*pds):
+        for pd in pds:
+            if pd not in pd_seen:
+                predecls.append(pd)
+                pd_seen.add(pd)
+
+    for obj in ordered_objs:
+        params = obj._params.local.values()
+        for param in params:
+            ptype = param.ptype
+            if issubclass(ptype, m5.params.Enum):
+                if ptype not in enums:
+                    enums.add(ptype)
+            pds = param.swig_predecls()
+            if isinstance(pds, (list, tuple)):
+                add_pds(*pds)
+            else:
+                add_pds(pds)
+
+    print >>out, '%module params'
+
+    print >>out, '%{'
+    for obj in ordered_objs:
+        print >>out, '#include "params/%s.hh"' % obj
+    print >>out, '%}'
+
+    for pd in predecls:
+        print >>out, pd
+
+    enums = list(enums)
+    enums.sort()
+    for enum in enums:
+        print >>out, '%%include "enums/%s.hh"' % enum.__name__
+    print >>out
+
+    for obj in ordered_objs:
+        if obj.swig_objdecls:
+            for decl in obj.swig_objdecls:
+                print >>out, decl
+            continue
+
+        code = ''
+        base = obj.get_base()
+
+        code += '// stop swig from creating/wrapping default ctor/dtor\n'
+        code += '%%nodefault %s;\n' % obj.cxx_class
+        code += 'class %s ' % obj.cxx_class
+        if base:
+            code += ': public %s' % base
+        code += ' {};\n'
+
+        klass = obj.cxx_class;
+        if hasattr(obj, 'cxx_namespace'):
+            new_code = 'namespace %s {\n' % obj.cxx_namespace
+            new_code += code
+            new_code += '}\n'
+            code = new_code
+            klass = '%s::%s' % (obj.cxx_namespace, klass)
+
+        print >>out, code
+
+    print >>out, '%%include "src/sim/sim_object_params.hh"' % obj
+    for obj in ordered_objs:
+        print >>out, '%%include "params/%s.hh"' % obj
+
 params_file = File('params/params.i')
-names = sort_list(generate.sim_objects.keys())
-env.Command(params_file, [ Value(v) for v in names ],
-            generate.buildParams)
+names = sort_list(sim_objects.keys())
+env.Command(params_file, [ Value(v) for v in names ], buildParams)
 env.Depends(params_file, params_hh_files + params_i_files + depends)
 SwigSource('m5.objects', params_file)
 
@@ -322,28 +569,284 @@ for source,package in swig_sources:
     PySource(package, py_file)
 
 # Generate the main swig init file
-env.Command('swig/init.cc', swig_modules, generate.makeSwigInit)
+def makeSwigInit(target, source, env):
+    f = file(str(target[0]), 'w')
+    print >>f, 'extern "C" {'
+    for module in source:
+        print >>f, '    void init_%s();' % module.get_contents()
+    print >>f, '}'
+    print >>f, 'void init_swig() {'
+    for module in source:
+        print >>f, '    init_%s();' % module.get_contents()
+    print >>f, '}'
+    f.close()
+
+env.Command('swig/init.cc', swig_modules, makeSwigInit)
 Source('swig/init.cc')
 
 # Generate traceflags.py
+def traceFlagsPy(target, source, env):
+    assert(len(target) == 1)
+
+    f = file(str(target[0]), 'w')
+
+    allFlags = []
+    for s in source:
+        val = eval(s.get_contents())
+        allFlags.append(val)
+
+    print >>f, 'baseFlags = ['
+    for flag, compound, desc in allFlags:
+        if not compound:
+            print >>f, "    '%s'," % flag
+    print >>f, "    ]"
+    print >>f
+
+    print >>f, 'compoundFlags = ['
+    print >>f, "    'All',"
+    for flag, compound, desc in allFlags:
+        if compound:
+            print >>f, "    '%s'," % flag
+    print >>f, "    ]"
+    print >>f
+
+    print >>f, "allFlags = frozenset(baseFlags + compoundFlags)"
+    print >>f
+
+    print >>f, 'compoundFlagMap = {'
+    all = tuple([flag for flag,compound,desc in allFlags if not compound])
+    print >>f, "    'All' : %s," % (all, )
+    for flag, compound, desc in allFlags:
+        if compound:
+            print >>f, "    '%s' : %s," % (flag, compound)
+    print >>f, "    }"
+    print >>f
+
+    print >>f, 'flagDescriptions = {'
+    print >>f, "    'All' : 'All flags',"
+    for flag, compound, desc in allFlags:
+        print >>f, "    '%s' : '%s'," % (flag, desc)
+    print >>f, "    }"
+
+    f.close()
+
+def traceFlagsCC(target, source, env):
+    assert(len(target) == 1)
+
+    f = file(str(target[0]), 'w')
+
+    allFlags = []
+    for s in source:
+        val = eval(s.get_contents())
+        allFlags.append(val)
+
+    # file header
+    print >>f, '''
+/*
+ * DO NOT EDIT THIS FILE! Automatically generated
+ */
+
+#include "base/traceflags.hh"
+
+using namespace Trace;
+
+const char *Trace::flagStrings[] =
+{'''
+
+    # The string array is used by SimpleEnumParam to map the strings
+    # provided by the user to enum values.
+    for flag, compound, desc in allFlags:
+        if not compound:
+            print >>f, '    "%s",' % flag
+
+    print >>f, '    "All",'
+    for flag, compound, desc in allFlags:
+        if compound:
+            print >>f, '    "%s",' % flag
+
+    print >>f, '};'
+    print >>f
+    print >>f, 'const int Trace::numFlagStrings = %d;' % (len(allFlags) + 1)
+    print >>f
+
+    #
+    # Now define the individual compound flag arrays.  There is an array
+    # for each compound flag listing the component base flags.
+    #
+    all = tuple([flag for flag,compound,desc in allFlags if not compound])
+    print >>f, 'static const Flags AllMap[] = {'
+    for flag, compound, desc in allFlags:
+        if not compound:
+            print >>f, "    %s," % flag
+    print >>f, '};'
+    print >>f
+
+    for flag, compound, desc in allFlags:
+        if not compound:
+            continue
+        print >>f, 'static const Flags %sMap[] = {' % flag
+        for flag in compound:
+            print >>f, "    %s," % flag
+        print >>f, "    (Flags)-1"
+        print >>f, '};'
+        print >>f
+
+    #
+    # Finally the compoundFlags[] array maps the compound flags
+    # to their individual arrays/
+    #
+    print >>f, 'const Flags *Trace::compoundFlags[] ='
+    print >>f, '{'
+    print >>f, '    AllMap,'
+    for flag, compound, desc in allFlags:
+        if compound:
+            print >>f, '    %sMap,' % flag
+    # file trailer
+    print >>f, '};'
+
+    f.close()
+
+def traceFlagsHH(target, source, env):
+    assert(len(target) == 1)
+
+    f = file(str(target[0]), 'w')
+
+    allFlags = []
+    for s in source:
+        val = eval(s.get_contents())
+        allFlags.append(val)
+
+    # file header boilerplate
+    print >>f, '''
+/*
+ * DO NOT EDIT THIS FILE!
+ *
+ * Automatically generated from traceflags.py
+ */
+
+#ifndef __BASE_TRACE_FLAGS_HH__
+#define __BASE_TRACE_FLAGS_HH__
+
+namespace Trace {
+
+enum Flags {'''
+
+    # Generate the enum.  Base flags come first, then compound flags.
+    idx = 0
+    for flag, compound, desc in allFlags:
+        if not compound:
+            print >>f, '    %s = %d,' % (flag, idx)
+            idx += 1
+
+    numBaseFlags = idx
+    print >>f, '    NumFlags = %d,' % idx
+
+    # put a comment in here to separate base from compound flags
+    print >>f, '''
+// The remaining enum values are *not* valid indices for Trace::flags.
+// They are "compound" flags, which correspond to sets of base
+// flags, and are used by changeFlag.'''
+
+    print >>f, '    All = %d,' % idx
+    idx += 1
+    for flag, compound, desc in allFlags:
+        if compound:
+            print >>f, '    %s = %d,' % (flag, idx)
+            idx += 1
+
+    numCompoundFlags = idx - numBaseFlags
+    print >>f, '    NumCompoundFlags = %d' % numCompoundFlags
+
+    # trailer boilerplate
+    print >>f, '''\
+}; // enum Flags
+
+// Array of strings for SimpleEnumParam
+extern const char *flagStrings[];
+extern const int numFlagStrings;
+
+// Array of arraay pointers: for each compound flag, gives the list of
+// base flags to set.  Inidividual flag arrays are terminated by -1.
+extern const Flags *compoundFlags[];
+
+/* namespace Trace */ }
+
+#endif // __BASE_TRACE_FLAGS_HH__
+'''
+
+    f.close()
+
 flags = [ Value(f) for f in trace_flags ]
-env.Command('base/traceflags.py', flags, generate.traceFlagsPy)
+env.Command('base/traceflags.py', flags, traceFlagsPy)
 PySource('m5', 'base/traceflags.py')
 
-env.Command('base/traceflags.hh', flags, generate.traceFlagsHH)
-env.Command('base/traceflags.cc', flags, generate.traceFlagsCC)
+env.Command('base/traceflags.hh', flags, traceFlagsHH)
+env.Command('base/traceflags.cc', flags, traceFlagsCC)
 Source('base/traceflags.cc')
 
 # Generate program_info.cc
+def programInfo(target, source, env):
+    def gen_file(target, rev, node, date):
+        pi_stats = file(target, 'w')
+        print >>pi_stats, 'const char *hgRev = "%s:%s";' %  (rev, node)
+        print >>pi_stats, 'const char *hgDate = "%s";' % date
+        pi_stats.close()
+
+    target = str(target[0])
+    scons_dir = str(source[0].get_contents())
+    try:
+        import mercurial.demandimport, mercurial.hg, mercurial.ui
+        import mercurial.util, mercurial.node
+        if not exists(scons_dir) or not isdir(scons_dir) or \
+               not exists(joinpath(scons_dir, ".hg")):
+            raise ValueError
+        repo = mercurial.hg.repository(mercurial.ui.ui(), scons_dir)
+        rev = mercurial.node.nullrev + repo.changelog.count()
+        changenode = repo.changelog.node(rev)
+        changes = repo.changelog.read(changenode)
+        date = mercurial.util.datestr(changes[2])
+
+        gen_file(target, rev, mercurial.node.hex(changenode), date)
+
+        mercurial.demandimport.disable()
+    except ImportError:
+        gen_file(target, "Unknown", "Unknown", "Unknown")
+
+    except:
+        print "in except"
+        gen_file(target, "Unknown", "Unknown", "Unknown")
+        mercurial.demandimport.disable()
+
 env.Command('base/program_info.cc',
             Value(str(SCons.Node.FS.default_fs.SConstruct_dir)),
-            generate.programInfo)
+            programInfo)
 
 # Build the zip file
+def compilePyFile(target, source, env):
+    '''Action function to compile a .py into a .pyc'''
+    py_compile.compile(str(source[0]), str(target[0]))
+
+def buildPyZip(target, source, env):
+    '''Action function to build the zip archive.  Uses the
+    PyZipFile module included in the standard Python library.'''
+
+    py_compiled = {}
+    for s in py_sources:
+        compname = str(s.compiled)
+        assert compname not in py_compiled
+        py_compiled[compname] = s
+
+    zf = zipfile.ZipFile(str(target[0]), 'w')
+    for s in source:
+        zipname = str(s)
+        arcname = py_compiled[zipname].arcname
+        zf.write(zipname, arcname)
+    zf.close()
+
 py_compiled = []
 py_zip_depends = []
 for source in py_sources:
-    env.Command(source.compiled, source.source, generate.compilePyFile)
+    env.Command(source.compiled, source.source, compilePyFile)
     py_compiled.append(source.compiled)
 
     # make the zipfile depend on the archive name so that the archive
@@ -352,7 +855,7 @@ for source in py_sources:
 
 # Add the zip file target to the environment.
 m5zip = File('m5py.zip')
-env.Command(m5zip, py_compiled, generate.buildPyZip)
+env.Command(m5zip, py_compiled, buildPyZip)
 env.Depends(m5zip, py_zip_depends)
 
 ########################################################################
