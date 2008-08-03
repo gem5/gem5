@@ -257,30 +257,6 @@ class DictImporter(object):
 
         return mod
 
-class ordered_dict(dict):
-    def keys(self):
-        keys = super(ordered_dict, self).keys()
-        keys.sort()
-        return keys
-
-    def values(self):
-        return [ self[key] for key in self.keys() ]
-
-    def items(self):
-        return [ (key,self[key]) for key in self.keys() ]
-
-    def iterkeys(self):
-        for key in self.keys():
-            yield key
-
-    def itervalues(self):
-        for value in self.values():
-            yield value
-
-    def iteritems(self):
-        for key,value in self.items():
-            yield key, value
-
 py_modules = {}
 for source in py_sources:
     py_modules[source.modpath] = source.srcpath
