@@ -35,7 +35,7 @@ class PhysicalMemory(MemObject):
     port = VectorPort("the access port")
     range = Param.AddrRange(AddrRange('128MB'), "Device Address")
     file = Param.String('', "memory mapped file")
-    latency = Param.Latency('1t', "latency of an access")
+    latency = Param.Latency('30ns', "latency of an access")
     latency_var = Param.Latency('0ns', "access variablity")
     zero = Param.Bool(False, "zero initialize memory")
     null = Param.Bool(False, "do not store data, always return zero")

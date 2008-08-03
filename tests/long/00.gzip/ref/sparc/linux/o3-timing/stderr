@@ -1,2 +1,2 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7001
+0: system.remote_gdb.listener: listening for remote gdb on port 7005
 warn: Entering event queue @ 0.  Starting simulation...

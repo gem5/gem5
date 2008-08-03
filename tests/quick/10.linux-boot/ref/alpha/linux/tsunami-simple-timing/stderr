@@ -1,4 +1,4 @@
 warn: kernel located at: /dist/m5/system/binaries/vmlinux
-Listening for system connection on port 3457
-0: system.remote_gdb.listener: listening for remote gdb on port 7004
+Listening for system connection on port 3458
+0: system.remote_gdb.listener: listening for remote gdb on port 7007
 warn: Entering event queue @ 0.  Starting simulation...

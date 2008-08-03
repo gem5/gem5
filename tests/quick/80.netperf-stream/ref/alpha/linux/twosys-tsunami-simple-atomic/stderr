@@ -1,8 +1,8 @@
 warn: kernel located at: /dist/m5/system/binaries/vmlinux
-Listening for testsys connection on port 3457
+Listening for testsys connection on port 3456
 warn: kernel located at: /dist/m5/system/binaries/vmlinux
-Listening for drivesys connection on port 3461
-0: testsys.remote_gdb.listener: listening for remote gdb #0 on port 7006
-0: drivesys.remote_gdb.listener: listening for remote gdb #1 on port 7007
+Listening for drivesys connection on port 3457
+0: testsys.remote_gdb.listener: listening for remote gdb on port 7005
+0: drivesys.remote_gdb.listener: listening for remote gdb on port 7006
 warn: Entering event queue @ 0.  Starting simulation...
-warn: Obsolete M5 instruction ivlb encountered.
+warn: Obsolete M5 ivlb instruction encountered.
