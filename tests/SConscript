@@ -179,7 +179,7 @@ def test_builder(env, ref_dir):
     # mess with paths all it wants to and we still get the right
     # files.
     cmd = '${SOURCES[0]} -d $TARGET.dir'
-    cmd += ' -re --stdout-file ${TARGETS[0]} --stderr-file ${TARGETS[1]}'
+    cmd += ' -re --stdout-file stdout --stderr-file stderr'
     cmd += ' ${SOURCES[1]} %s' % tgt_dir
 
     # Prefix test run with batch job submission command if appropriate.
