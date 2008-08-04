@@ -180,8 +180,8 @@ def main():
         print 'Build information:'
         print
         print 'compiled %s' % internal.core.cvar.compileDate;
-        print 'started %s' % datetime.datetime.now().ctime()
-        print 'executing on %s' % socket.gethostname()
+        print "revision %s" % internal.core.cvar.hgRev
+        print "commit date %s" % internal.core.cvar.hgDate
         print 'build options:'
         keys = defines.m5_build_env.keys()
         keys.sort()
@@ -263,11 +263,11 @@ def main():
         print brief_copyright
         print
         print "M5 compiled %s" % internal.core.cvar.compileDate;
-        print "M5 started %s" % datetime.datetime.now().ctime()
-        print "M5 executing on %s" % socket.gethostname()
-
         print "M5 revision %s" % internal.core.cvar.hgRev
         print "M5 commit date %s" % internal.core.cvar.hgDate
+
+        print "M5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
+        print "M5 executing on %s" % socket.gethostname()
 
         print "command line:",
         for argv in sys.argv:
