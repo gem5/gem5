@@ -385,7 +385,7 @@ umaskFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
     // changing anything.
     mode_t oldMask = umask(0);
     umask(oldMask);
-    return oldMask;
+    return (int)oldMask;
 }
 
 SyscallReturn
