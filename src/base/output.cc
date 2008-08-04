@@ -60,12 +60,6 @@ OutputDirectory::setDirectory(const string &d)
 
     dir = d;
 
-    if (dir != ".") {
-        if (mkdir(dir.c_str(), 0777) < 0 && errno != EEXIST)
-            panic("couldn't make output dir %s: %s\n",
-                  dir, strerror(errno));
-    }
-
     // guarantee that directory ends with a '/'
     if (dir[dir.size() - 1] != '/')
         dir += "/";

@@ -82,6 +82,14 @@ add_option('-N', "--release-notes", action="store_true", default=False,
 # Options for configuring the base simulator
 add_option('-d', "--outdir", metavar="DIR", default=".",
     help="Set the output directory to DIR [Default: %default]")
+add_option('-r', "--redirect-stdout", action="store_true", default=False,
+           help="Redirect stdout (& stderr, without -e) to file")
+add_option('-e', "--redirect-stderr", action="store_true", default=False,
+           help="Redirect stderr to file")
+add_option("--stdout-file", metavar="FILE", default="simout",
+           help="Filename for -r redirection [Default: %default]")
+add_option("--stderr-file", metavar="FILE", default="simerr",
+           help="Filename for -e redirection [Default: %default]")
 add_option('-i', "--interactive", action="store_true", default=False,
     help="Invoke the interactive interpreter after running the script")
 add_option("--pdb", action="store_true", default=False,
@@ -137,6 +145,33 @@ def main():
         execfile(options_file, scope)
 
     arguments = options.parse_args()
+
+    if not os.path.isdir(options.outdir):
+        os.makedirs(options.outdir)
+
+    # These filenames are used only if the redirect_std* options are set
+    stdout_file = os.path.join(options.outdir, options.stdout_file)
+    stderr_file = os.path.join(options.outdir, options.stderr_file)
+
+    # Print redirection notices here before doing any redirection
+    if options.redirect_stdout and not options.redirect_stderr:
+        print "Redirecting stdout and stderr to", stdout_file
+    else:
+        if options.redirect_stdout:
+            print "Redirecting stdout to", stdout_file
+        if options.redirect_stderr:
+            print "Redirecting stderr to", stderr_file
+
+    # Now redirect stdout/stderr as desired
+    if options.redirect_stdout:
+        redir_fd = os.open(stdout_file, os. O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        os.dup2(redir_fd, sys.stdout.fileno())
+        if not options.redirect_stderr:
+            os.dup2(redir_fd, sys.stderr.fileno())
+
+    if options.redirect_stderr:
+        redir_fd = os.open(stderr_file, os. O_WRONLY | os.O_CREAT | os.O_TRUNC)
+        os.dup2(redir_fd, sys.stderr.fileno())
 
     done = False
 
