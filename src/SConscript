@@ -28,11 +28,13 @@
 #
 # Authors: Nathan Binkert
 
+import array
 import imp
+import marshal
 import os
-import py_compile
+import re
 import sys
-import zipfile
+import zlib
 
 from os.path import basename, exists, isdir, isfile, join as joinpath
 
@@ -58,39 +60,54 @@ def sort_list(_list):
     return _list
 
 class PySourceFile(object):
+    invalid_sym_char = re.compile('[^A-z0-9_]')
     def __init__(self, package, source):
         filename = str(source)
         pyname = basename(filename)
         assert pyname.endswith('.py')
         name = pyname[:-3]
-        path = package.split('.')
+        if package:
+            path = package.split('.')
+        else:
+            path = []
         modpath = path
         if name != '__init__':
             modpath += [name]
         modpath = '.'.join(modpath)
 
-        arcpath = package.split('.') + [ pyname + 'c' ]
+        arcpath = path + [ pyname ]
         arcname = joinpath(*arcpath)
 
-        self.source = source
+        self.tnode = source
+        self.snode = source.srcnode()
         self.pyname = pyname
-        self.srcpath = source.srcnode().abspath
         self.package = package
         self.modpath = modpath
         self.arcname = arcname
         self.filename = filename
         self.compiled = File(filename + 'c')
+        self.assembly = File(filename + '.s')
+        self.symname = "PyEMB_" + self.invalid_sym_char.sub('_', modpath)
+        
 
 ########################################################################
 # Code for adding source files of various types
 #
-cc_sources = []
+cc_lib_sources = []
 def Source(source):
-    '''Add a C/C++ source file to the build'''
+    '''Add a source file to the libm5 build'''
     if not isinstance(source, SCons.Node.FS.File):
         source = File(source)
 
-    cc_sources.append(source)
+    cc_lib_sources.append(source)
+
+cc_bin_sources = []
+def BinSource(source):
+    '''Add a source file to the m5 binary build'''
+    if not isinstance(source, SCons.Node.FS.File):
+        source = File(source)
+
+    cc_bin_sources.append(source)
 
 py_sources = []
 def PySource(package, source):
@@ -129,6 +146,7 @@ def SwigSource(package, source):
 
 # Children should have access
 Export('Source')
+Export('BinSource')
 Export('PySource')
 Export('SimObject')
 Export('SwigSource')
@@ -259,7 +277,7 @@ class DictImporter(object):
 
 py_modules = {}
 for source in py_sources:
-    py_modules[source.modpath] = source.srcpath
+    py_modules[source.modpath] = source.snode.abspath
 
 # install the python importer so we can grab stuff from the source
 # tree itself.  We can't have SimObjects added after this point or
@@ -551,14 +569,14 @@ def makeSwigInit(target, source, env):
     for module in source:
         print >>f, '    void init_%s();' % module.get_contents()
     print >>f, '}'
-    print >>f, 'void init_swig() {'
+    print >>f, 'void initSwig() {'
     for module in source:
         print >>f, '    init_%s();' % module.get_contents()
     print >>f, '}'
     f.close()
 
-env.Command('swig/init.cc', swig_modules, makeSwigInit)
-Source('swig/init.cc')
+env.Command('python/swig/init.cc', swig_modules, makeSwigInit)
+Source('python/swig/init.cc')
 
 # Generate traceflags.py
 def traceFlagsPy(target, source, env):
@@ -797,42 +815,95 @@ env.Command('base/program_info.cc',
             Value(str(SCons.Node.FS.default_fs.SConstruct_dir)),
             programInfo)
 
-# Build the zip file
-def compilePyFile(target, source, env):
-    '''Action function to compile a .py into a .pyc'''
-    py_compile.compile(str(source[0]), str(target[0]))
+# embed python files.  All .py files that have been indicated by a
+# PySource() call in a SConscript need to be embedded into the M5
+# library.  To do that, we compile the file to byte code, marshal the
+# byte code, compress it, and then generate an assembly file that
+# inserts the result into the data section with symbols indicating the
+# beginning, and end (and with the size at the end)
+py_sources_tnodes = {}
+for pysource in py_sources:
+    py_sources_tnodes[pysource.tnode] = pysource
 
-def buildPyZip(target, source, env):
-    '''Action function to build the zip archive.  Uses the
-    PyZipFile module included in the standard Python library.'''
+def objectifyPyFile(target, source, env):
+    '''Action function to compile a .py into a code object, marshal
+    it, compress it, and stick it into an asm file so the code appears
+    as just bytes with a label in the data section'''
 
-    py_compiled = {}
-    for s in py_sources:
-        compname = str(s.compiled)
-        assert compname not in py_compiled
-        py_compiled[compname] = s
+    src = file(str(source[0]), 'r').read()
+    dst = file(str(target[0]), 'w')
 
-    zf = zipfile.ZipFile(str(target[0]), 'w')
-    for s in source:
-        zipname = str(s)
-        arcname = py_compiled[zipname].arcname
-        zf.write(zipname, arcname)
-    zf.close()
+    pysource = py_sources_tnodes[source[0]]
+    compiled = compile(src, pysource.snode.path, 'exec')
+    marshalled = marshal.dumps(compiled)
+    compressed = zlib.compress(marshalled)
+    data = compressed
 
-py_compiled = []
-py_zip_depends = []
+    # Some C/C++ compilers prepend an underscore to global symbol
+    # names, so if they're going to do that, we need to prepend that
+    # leading underscore to globals in the assembly file.
+    if env['LEADING_UNDERSCORE']:
+        sym = '_' + pysource.symname
+    else:
+        sym = pysource.symname
+
+    step = 16
+    print >>dst, ".data"
+    print >>dst, ".globl %s_beg" % sym
+    print >>dst, ".globl %s_end" % sym
+    print >>dst, "%s_beg:" % sym
+    for i in xrange(0, len(data), step):
+        x = array.array('B', data[i:i+step])
+        print >>dst, ".byte", ','.join([str(d) for d in x])
+    print >>dst, "%s_end:" % sym
+    print >>dst, ".long %d" % len(marshalled)
+
 for source in py_sources:
-    env.Command(source.compiled, source.source, compilePyFile)
-    py_compiled.append(source.compiled)
+    env.Command(source.assembly, source.tnode, objectifyPyFile)
+    Source(source.assembly)
 
-    # make the zipfile depend on the archive name so that the archive
-    # is rebuilt if the name changes
-    py_zip_depends.append(Value(source.arcname))
+# Generate init_python.cc which creates a bunch of EmbeddedPyModule
+# structs that describe the embedded python code.  One such struct
+# contains information about the importer that python uses to get at
+# the embedded files, and then there's a list of all of the rest that
+# the importer uses to load the rest on demand.
+py_sources_symbols = {}
+for pysource in py_sources:
+    py_sources_symbols[pysource.symname] = pysource
+def pythonInit(target, source, env):
+    dst = file(str(target[0]), 'w')
 
-# Add the zip file target to the environment.
-m5zip = File('m5py.zip')
-env.Command(m5zip, py_compiled, buildPyZip)
-env.Depends(m5zip, py_zip_depends)
+    def dump_mod(sym, endchar=','):
+        pysource = py_sources_symbols[sym]
+        print >>dst, '    { "%s",' % pysource.arcname
+        print >>dst, '      "%s",' % pysource.modpath
+        print >>dst, '       %s_beg, %s_end,' % (sym, sym)
+        print >>dst, '       %s_end - %s_beg,' % (sym, sym)
+        print >>dst, '       *(int *)%s_end }%s'  % (sym, endchar)
+    
+    print >>dst, '#include "sim/init.hh"'
+
+    for sym in source:
+        sym = sym.get_contents()
+        print >>dst, "extern const char %s_beg[], %s_end[];" % (sym, sym)
+
+    print >>dst, "const EmbeddedPyModule embeddedPyImporter = "
+    dump_mod("PyEMB_importer", endchar=';');
+    print >>dst
+
+    print >>dst, "const EmbeddedPyModule embeddedPyModules[] = {"
+    for i,sym in enumerate(source):
+        sym = sym.get_contents()
+        if sym == "PyEMB_importer":
+            # Skip the importer since we've already exported it
+            continue
+        dump_mod(sym)
+    print >>dst, "    { 0, 0, 0, 0, 0, 0 }"
+    print >>dst, "};"
+
+symbols = [Value(s.symname) for s in py_sources]
+env.Command('sim/init_python.cc', symbols, pythonInit)
+Source('sim/init_python.cc')
 
 ########################################################################
 #
@@ -873,18 +944,28 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     newEnv = env.Copy(OBJSUFFIX=objsfx)
     newEnv.Label = label
     newEnv.Append(**kwargs)
+
+    # First make a library of everything but main() so other programs can
+    # link against m5.
+    #
+    # SCons doesn't know to append a library suffix when there is a '.' in the
+    # name.  Use '_' instead.
+    m5lib = newEnv.Library('m5_' + label, make_objs(cc_lib_sources, newEnv))
+
+    # Now link a stub with main() and the library.
     exe = 'm5.' + label  # final executable
-    bin = exe + '.bin'   # executable w/o appended Python zip archive
-    newEnv.Program(bin, make_objs(cc_sources, newEnv))
+    objects = [newEnv.Object(s) for s in cc_bin_sources] + m5lib
     if strip:
-        stripped_bin = bin + '.stripped'
+        unstripped_exe = exe + '.unstripped'
+        newEnv.Program(unstripped_exe, objects)
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
             cmd = 'strip $SOURCE -o $TARGET'
-        newEnv.Command(stripped_bin, bin, cmd)
-        bin = stripped_bin
-    targets = newEnv.Concat(exe, [bin, 'm5py.zip'])
+        targets = newEnv.Command(exe, unstripped_exe, cmd)
+    else:
+        targets = newEnv.Program(exe, objects)
+            
     newEnv.M5Binary = targets[0]
     envList.append(newEnv)
 

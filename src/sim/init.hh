@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,27 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __PYTHON_SWIG_INIT_HH__
-#define __PYTHON_SWIG_INIT_HH__
+#ifndef __SIM_INIT_HH__
+#define __SIM_INIT_HH__
 
-void init_swig();
+/*
+ * Data structure describing an embedded python file.
+ */
+struct EmbeddedPyModule
+{
+    const char *filename;
+    const char *modpath;
+    const char *code;
+    const char *code_end;
+    int zlen;
+    int mlen;
+};
 
-#endif // __PYTHON_SWIG_INIT_HH__
+extern const EmbeddedPyModule embeddedPyImporter;
+extern const EmbeddedPyModule embeddedPyModules[];
+
+void initSignals();
+int initM5Python();
+int m5Main(int argc, char **argv);
+
+#endif // __SIM_INIT_HH__

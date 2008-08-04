@@ -91,7 +91,7 @@ else:
 if running_m5:
     from event import *
     from simulate import *
-    from main import options
+    from main import options, main
     import stats
 
 import SimObject

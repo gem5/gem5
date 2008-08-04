@@ -34,6 +34,7 @@ Import('*')
 Source('swig/pyevent.cc')
 Source('swig/pyobject.cc')
 
+PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
 PySource('m5', 'm5/config.py')
