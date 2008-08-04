@@ -52,7 +52,6 @@ inline void disableAllListeners() { ListenSocket::disableAll(); }
 %include "sim/host.hh"
 
 void setOutputDir(const std::string &dir);
-void setOutputFile(const std::string &file);
 void SimStartup();
 void doExitCleanup();
 void disableAllListeners();

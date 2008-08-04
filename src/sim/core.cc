@@ -97,14 +97,6 @@ setOutputDir(const string &dir)
     simout.setDirectory(dir);
 }
 
-ostream *outputStream;
-
-void
-setOutputFile(const string &file)
-{
-    outputStream = simout.find(file);
-}
-
 /**
  * Queue of C++ callbacks to invoke on simulator exit.
  */

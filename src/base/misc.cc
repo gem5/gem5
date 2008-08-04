@@ -129,6 +129,4 @@ __warn(const char *func, const char *file, int line, const char *fmt,
 #endif
 
     ccprintf(cerr, format.c_str(), args);
-    if (simout.isFile(*outputStream))
-        ccprintf(*outputStream, format.c_str(), args);
 }
