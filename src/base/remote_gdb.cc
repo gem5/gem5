@@ -195,6 +195,11 @@ GDBListener::name()
 void
 GDBListener::listen()
 {
+    if (ListenSocket::allDisabled()) {
+        warn_once("Sockets disabled, not accepting gdb connections");
+        return;
+    }
+
     while (!listener.listen(port, true)) {
         DPRINTF(GDBMisc, "Can't bind port %d\n", port);
         port++;

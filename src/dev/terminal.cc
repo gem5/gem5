@@ -125,6 +125,11 @@ Terminal::~Terminal()
 void
 Terminal::listen(int port)
 {
+    if (ListenSocket::allDisabled()) {
+        warn_once("Sockets disabled, not accepting terminal connections");
+        return;
+    }
+
     while (!listener.listen(port, true)) {
         DPRINTF(Terminal,
                 ": can't bind address terminal port %d inuse PID %d\n",

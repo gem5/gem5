@@ -34,6 +34,14 @@
 class ListenSocket
 {
   protected:
+    static bool listeningDisabled;
+    static bool anyListening;
+
+  public:
+    static void disableAll();
+    static bool allDisabled();
+
+  protected:
     bool listening;
     int fd;
 

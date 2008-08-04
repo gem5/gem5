@@ -182,3 +182,5 @@ def switchCpus(cpuList):
 
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
+
+from internal.core import disableAllListeners

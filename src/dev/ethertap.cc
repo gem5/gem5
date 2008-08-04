@@ -130,6 +130,9 @@ EtherTap::EtherTap(const Params *p)
     : EtherObject(p), event(NULL), socket(-1), buflen(p->bufsz), dump(p->dump),
       interface(NULL), txEvent(this)
 {
+    if (ListenSocket::allDisabled())
+        fatal("All listeners are disabled! EtherTap can't work!");
+
     buffer = new char[buflen];
     listener = new TapListener(this, p->port);
     listener->listen();

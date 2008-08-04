@@ -43,6 +43,23 @@
 
 using namespace std;
 
+bool ListenSocket::listeningDisabled = false;
+bool ListenSocket::anyListening = false;
+
+void
+ListenSocket::disableAll()
+{
+    if (anyListening)
+        panic("Too late to disable all listeners, already have a listener");
+    listeningDisabled = true;
+}
+
+bool
+ListenSocket::allDisabled()
+{
+    return listeningDisabled;
+}
+
 ////////////////////////////////////////////////////////////////////////
 //
 //
@@ -92,6 +109,7 @@ ListenSocket::listen(int port, bool reuse)
 
     listening = true;
 
+    anyListening = true;
     return true;
 }
 

@@ -26,7 +26,12 @@
 #
 # Authors: Steve Reinhardt
 
-import os, sys
+import os
+import sys
+import m5
+
+# Since we're in batch mode, dont allow tcp socket connections
+m5.disableAllListeners()
 
 # single "path" arg encodes everything we need to know about test
 (category, name, isa, opsys, config) = sys.argv[1].split('/')
@@ -57,8 +62,7 @@ execfile(os.path.join(tests_root, 'configs', config + '.py'))
 
 # set default maxtick... script can override
 # -1 means run forever
-from m5 import MaxTick
-maxtick = MaxTick
+maxtick = m5.MaxTick
 
 # tweak configuration for specific test
 

@@ -34,6 +34,7 @@
 %{
 #include "python/swig/pyobject.hh"
 
+#include "base/socket.hh"
 #include "sim/core.hh"
 #include "sim/host.hh"
 #include "sim/startup.hh"
@@ -42,6 +43,7 @@ extern const char *compileDate;
 std::vector<std::string> compileFlags();
 extern const char *hgRev;
 extern const char *hgDate;
+inline void disableAllListeners() { ListenSocket::disableAll(); }
 %}
 
 %include "stdint.i"
@@ -53,6 +55,7 @@ void setOutputDir(const std::string &dir);
 void setOutputFile(const std::string &file);
 void SimStartup();
 void doExitCleanup();
+void disableAllListeners();
 
 %immutable compileDate;
 char *compileDate;
