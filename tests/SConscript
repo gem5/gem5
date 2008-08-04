@@ -178,23 +178,18 @@ def test_builder(env, ref_dir):
     # referring to files via SOURCES and TARGETS so that scons can
     # mess with paths all it wants to and we still get the right
     # files.
-    base_cmd = '${SOURCES[0]} -d $TARGET.dir ${SOURCES[1]} %s' % tgt_dir
-    # stdout and stderr files
-    cmd_stdout = '${TARGETS[0]}'
-    cmd_stderr = '${TARGETS[1]}'
+    cmd = '${SOURCES[0]} -d $TARGET.dir'
+    cmd += ' -re --stdout-file ${TARGETS[0]} --stderr-file ${TARGETS[1]}'
+    cmd += ' ${SOURCES[1]} %s' % tgt_dir
 
     # Prefix test run with batch job submission command if appropriate.
-    # Output redirection is also different for batch runs.
     # Batch command also supports timeout arg (in seconds, not minutes).
-    timeout = 15 # used to be a param, probably should be again
+    timeout = 15 * 60 # used to be a param, probably should be again
     if env['BATCH']:
-        cmd = [env['BATCH_CMD'], '-t', str(timeout * 60),
-               '-o', cmd_stdout, '-e', cmd_stderr, base_cmd]
-    else:
-        cmd = [base_cmd, '>', cmd_stdout, '2>', cmd_stderr]
+        cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
 
     env.Command([tgt('stdout'), tgt('stderr'), new_stats],
-                [env.M5Binary, 'run.py'], ' '.join(cmd))
+                [env.M5Binary, 'run.py'], cmd)
 
     # order of targets is important... see check_test
     env.Command([tgt('outdiff'), tgt('statsdiff'), status_file],
