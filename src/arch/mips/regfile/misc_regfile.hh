@@ -75,7 +75,8 @@ namespace MipsISA
 
         void clear(unsigned tid_or_vpn = 0);
 
-        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes, BaseCPU *_cpu);
+        void reset(std::string core_name, unsigned num_threads,
+                   unsigned num_vpes, BaseCPU *_cpu);
 
         void expandForMultithreading(unsigned num_threads, unsigned num_vpes);
 
@@ -98,7 +99,8 @@ namespace MipsISA
 
         MiscReg filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val);
         void setRegMask(int misc_reg, const MiscReg &val, unsigned tid = 0);
-        void setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
+        void setRegNoEffect(int misc_reg, const MiscReg &val,
+                            unsigned tid = 0);
 
         //template <class TC>
         void setReg(int misc_reg, const MiscReg &val,

@@ -322,12 +322,14 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
         return readFSReg(miscReg, tc);
 #else
       case MISCREG_HPSTATE:
-        //HPSTATE is special because because sometimes in privilege checks for instructions
-        //it will read HPSTATE to make sure the priv. level is ok
-        //So, we'll just have to tell it it isn't, instead of panicing.
+        //HPSTATE is special because because sometimes in privilege
+        //checks for instructions it will read HPSTATE to make sure
+        //the priv. level is ok So, we'll just have to tell it it
+        //isn't, instead of panicing.
         return 0;
 
-      panic("Accessing Fullsystem register %s in SE mode\n",getMiscRegName(miscReg));
+      panic("Accessing Fullsystem register %s in SE mode\n",
+            getMiscRegName(miscReg));
 #endif
 
     }
@@ -584,7 +586,8 @@ void MiscRegFile::setReg(int miscReg,
         //HPSTATE is special because normal trap processing saves HPSTATE when
         //it goes into a trap, and restores it when it returns.
         return;
-      panic("Accessing Fullsystem register %s to %#x in SE mode\n", getMiscRegName(miscReg), val);
+      panic("Accessing Fullsystem register %s to %#x in SE mode\n",
+            getMiscRegName(miscReg), val);
 #endif
     }
     setRegNoEffect(miscReg, new_val);

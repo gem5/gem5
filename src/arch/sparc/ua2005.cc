@@ -40,22 +40,24 @@ using namespace SparcISA;
 void
 MiscRegFile::checkSoftInt(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // If PIL < 14, copy over the tm and sm bits
     if (pil < 14 && softint & 0x10000)
-        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,16);
+        cpu->post_interrupt(IT_SOFT_INT, 16);
     else
-        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,16);
+        cpu->clear_interrupt(IT_SOFT_INT, 16);
     if (pil < 14 && softint & 0x1)
-        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,0);
+        cpu->post_interrupt(IT_SOFT_INT, 0);
     else
-        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,0);
+        cpu->clear_interrupt(IT_SOFT_INT, 0);
 
     // Copy over any of the other bits that are set
     for (int bit = 15; bit > 0; --bit) {
         if (1 << bit & softint && bit > pil)
-            tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,bit);
+            cpu->post_interrupt(IT_SOFT_INT, bit);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,bit);
+            cpu->clear_interrupt(IT_SOFT_INT, bit);
     }
 }
 
@@ -63,6 +65,8 @@ MiscRegFile::checkSoftInt(ThreadContext *tc)
 void
 MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     int64_t time;
     switch (miscReg) {
         /* Full system only ASRs */
@@ -85,7 +89,7 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
                 tickCompare->deschedule();
-            tickCompare->schedule(time * tc->getCpuPtr()->ticks(1));
+            tickCompare->schedule(time * cpu->ticks(1));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -97,11 +101,11 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
             sTickCompare->deschedule();
         time = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
-            tc->getCpuPtr()->instCount();
+            cpu->instCount();
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
                 sTickCompare->deschedule();
-            sTickCompare->schedule(time * tc->getCpuPtr()->ticks(1) + curTick);
+            sTickCompare->schedule(time * cpu->ticks(1) + curTick);
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -120,9 +124,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_HINTP:
         setRegNoEffect(miscReg, val);
         if (hintp)
-            tc->getCpuPtr()->post_interrupt(IT_HINTP,0);
+            cpu->post_interrupt(IT_HINTP, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_HINTP,0);
+            cpu->clear_interrupt(IT_HINTP, 0);
         break;
 
       case MISCREG_HTBA:
@@ -134,25 +138,25 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_QUEUE_CPU_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (cpu_mondo_head != cpu_mondo_tail)
-            tc->getCpuPtr()->post_interrupt(IT_CPU_MONDO,0);
+            cpu->post_interrupt(IT_CPU_MONDO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_CPU_MONDO,0);
+            cpu->clear_interrupt(IT_CPU_MONDO, 0);
         break;
       case MISCREG_QUEUE_DEV_MONDO_HEAD:
       case MISCREG_QUEUE_DEV_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (dev_mondo_head != dev_mondo_tail)
-            tc->getCpuPtr()->post_interrupt(IT_DEV_MONDO,0);
+            cpu->post_interrupt(IT_DEV_MONDO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_DEV_MONDO,0);
+            cpu->clear_interrupt(IT_DEV_MONDO, 0);
         break;
       case MISCREG_QUEUE_RES_ERROR_HEAD:
       case MISCREG_QUEUE_RES_ERROR_TAIL:
         setRegNoEffect(miscReg, val);
         if (res_error_head != res_error_tail)
-            tc->getCpuPtr()->post_interrupt(IT_RES_ERROR,0);
+            cpu->post_interrupt(IT_RES_ERROR, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_RES_ERROR,0);
+            cpu->clear_interrupt(IT_RES_ERROR, 0);
         break;
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
@@ -167,11 +171,11 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
             hSTickCompare->deschedule();
         time = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
-            tc->getCpuPtr()->instCount();
+            cpu->instCount();
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
                 hSTickCompare->deschedule();
-            hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->ticks(1));
+            hSTickCompare->schedule(curTick + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -181,9 +185,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         setRegNoEffect(miscReg, val | HPSTATE::id);
 #if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            cpu->post_interrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            cpu->clear_interrupt(IT_TRAP_LEVEL_ZERO, 0);
 #endif
         break;
       case MISCREG_HTSTATE:
@@ -200,11 +204,12 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             tc->suspend();
             if (tc->getKernelStats())
                 tc->getKernelStats()->quiesce();
-            }
+        }
         break;
 
       default:
-        panic("Invalid write to FS misc register %s\n", getMiscRegName(miscReg));
+        panic("Invalid write to FS misc register %s\n",
+              getMiscRegName(miscReg));
     }
 }
 
@@ -250,7 +255,8 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
         sys = tc->getSystemPtr();
 
         temp = readRegNoEffect(miscReg) & (STS::active | STS::speculative);
-        // Check that the CPU array is fully populated (by calling getNumCPus())
+        // Check that the CPU array is fully populated
+        // (by calling getNumCPus())
         assert(sys->getNumCPUs() > tc->readCpuId());
 
         temp |= tc->readCpuId()  << STS::shft_id;
@@ -280,16 +286,6 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
         panic("Invalid read to FS misc register\n");
     }
 }
-/*
-  In Niagra STICK==TICK so this isn't needed
-  case MISCREG_STICK:
-  SparcSystem *sys;
-  sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-  assert(sys != NULL);
-  return curTick/Clock::Int::ns - sys->sysTick | (stick & ~(mask(63)));
-*/
-
-
 
 void
 MiscRegFile::processTickCompare(ThreadContext *tc)

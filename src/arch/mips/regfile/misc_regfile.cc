@@ -45,39 +45,49 @@
 using namespace std;
 
 std::string MiscRegFile::miscRegNames[NumMiscRegs] =
-{"Index", "MVPControl", "MVPConf0", "MVPConf1", "", "", "", "",
- "Random", "VPEControl", "VPEConf0", "VPEConf1", "YQMask", "VPESchedule", "VPEScheFBack", "VPEOpt",
- "EntryLo0", "TCStatus", "TCBind", "TCRestart", "TCHalt", "TCContext", "TCSchedule", "TCScheFBack",
- "EntryLo1", "", "", "", "", "", "", "",
- "Context", "ContextConfig", "", "", "", "", "", "",
- "PageMask", "PageGrain", "", "", "", "", "", "",
- "Wired", "SRSConf0", "SRCConf1", "SRSConf2", "SRSConf3", "SRSConf4", "", "",
- "HWREna", "", "", "", "", "", "", "",
- "BadVAddr", "", "", "", "", "", "", "",
- "Count", "", "", "", "", "", "", "",
- "EntryHi", "", "", "", "", "", "", "",
- "Compare", "", "", "", "", "", "", "",
- "Status", "IntCtl", "SRSCtl", "SRSMap", "", "", "", "",
- "Cause", "", "", "", "", "", "", "",
- "EPC", "", "", "", "", "", "", "",
- "PRId", "EBase", "", "", "", "", "", "",
- "Config", "Config1", "Config2", "Config3", "", "", "", "",
- "LLAddr", "", "", "", "", "", "", "",
- "WatchLo0", "WatchLo1", "WatchLo2", "WatchLo3", "WatchLo4", "WatchLo5", "WatchLo6", "WatchLo7",
- "WatchHi0", "WatchHi1", "WatchHi2", "WatchHi3", "WatchHi4", "WatchHi5", "WatchHi6", "WatchHi7",
- "XCContext64", "", "", "", "", "", "", "",
- "", "", "", "", "", "", "", "",
- "", "", "", "", "", "", "", "",
- "Debug", "TraceControl1", "TraceControl2", "UserTraceData", "TraceBPC", "", "", "",
- "DEPC", "", "", "", "", "", "", "",
- "PerfCnt0", "PerfCnt1", "PerfCnt2", "PerfCnt3", "PerfCnt4", "PerfCnt5", "PerfCnt6", "PerfCnt7",
- "ErrCtl", "", "", "", "", "", "", "",
- "CacheErr0", "CacheErr1", "CacheErr2", "CacheErr3", "", "", "", "",
- "TagLo0", "DataLo1", "TagLo2", "DataLo3", "TagLo4", "DataLo5", "TagLo6", "DataLo7",
- "TagHi0", "DataHi1", "TagHi2", "DataHi3", "TagHi4", "DataHi5", "TagHi6", "DataHi7",
- "ErrorEPC", "", "", "", "", "", "", "",
- "DESAVE", "", "", "", "", "", "", "",
- "LLFlag"
+{
+    "Index", "MVPControl", "MVPConf0", "MVPConf1", "", "", "", "",
+    "Random", "VPEControl", "VPEConf0", "VPEConf1",
+        "YQMask", "VPESchedule", "VPEScheFBack", "VPEOpt",
+    "EntryLo0", "TCStatus", "TCBind", "TCRestart",
+        "TCHalt", "TCContext", "TCSchedule", "TCScheFBack",
+    "EntryLo1", "", "", "", "", "", "", "",
+    "Context", "ContextConfig", "", "", "", "", "", "",
+    "PageMask", "PageGrain", "", "", "", "", "", "",
+    "Wired", "SRSConf0", "SRCConf1", "SRSConf2",
+        "SRSConf3", "SRSConf4", "", "",
+    "HWREna", "", "", "", "", "", "", "",
+    "BadVAddr", "", "", "", "", "", "", "",
+    "Count", "", "", "", "", "", "", "",
+    "EntryHi", "", "", "", "", "", "", "",
+    "Compare", "", "", "", "", "", "", "",
+    "Status", "IntCtl", "SRSCtl", "SRSMap", "", "", "", "",
+    "Cause", "", "", "", "", "", "", "",
+    "EPC", "", "", "", "", "", "", "",
+    "PRId", "EBase", "", "", "", "", "", "",
+    "Config", "Config1", "Config2", "Config3", "", "", "", "",
+    "LLAddr", "", "", "", "", "", "", "",
+    "WatchLo0", "WatchLo1", "WatchLo2", "WatchLo3",
+        "WatchLo4", "WatchLo5", "WatchLo6", "WatchLo7",
+    "WatchHi0", "WatchHi1", "WatchHi2", "WatchHi3",
+        "WatchHi4", "WatchHi5", "WatchHi6", "WatchHi7",
+    "XCContext64", "", "", "", "", "", "", "",
+    "", "", "", "", "", "", "", "",
+    "", "", "", "", "", "", "", "",
+    "Debug", "TraceControl1", "TraceControl2", "UserTraceData",
+        "TraceBPC", "", "", "",
+    "DEPC", "", "", "", "", "", "", "",
+    "PerfCnt0", "PerfCnt1", "PerfCnt2", "PerfCnt3",
+        "PerfCnt4", "PerfCnt5", "PerfCnt6", "PerfCnt7",
+    "ErrCtl", "", "", "", "", "", "", "",
+    "CacheErr0", "CacheErr1", "CacheErr2", "CacheErr3", "", "", "", "",
+    "TagLo0", "DataLo1", "TagLo2", "DataLo3",
+        "TagLo4", "DataLo5", "TagLo6", "DataLo7",
+    "TagHi0", "DataHi1", "TagHi2", "DataHi3",
+        "TagHi4", "DataHi5", "TagHi6", "DataHi7",
+    "ErrorEPC", "", "", "", "", "", "", "",
+    "DESAVE", "", "", "", "", "", "", "",
+    "LLFlag"
 };
 
 MiscRegFile::MiscRegFile()
@@ -212,7 +222,8 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Config1
     MiscReg cfg1 = readRegNoEffect(Config1);
-    replaceBits(cfg1, Config1_MMUSize_HI, Config1_MMUSize_LO, cp.CP0_Config1_MMU);
+    replaceBits(cfg1, Config1_MMUSize_HI, Config1_MMUSize_LO,
+                cp.CP0_Config1_MMU);
     replaceBits(cfg1, Config1_IS_HI, Config1_IS_LO, cp.CP0_Config1_IS);
     replaceBits(cfg1, Config1_IL_HI, Config1_IL_LO, cp.CP0_Config1_IL);
     replaceBits(cfg1, Config1_IA_HI, Config1_IA_LO, cp.CP0_Config1_IA);
@@ -334,12 +345,18 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
     // Status
     MiscReg stat = readRegNoEffect(Status);
-    // Only CU0 and IE are modified on a reset - everything else needs to be controlled
-       // on a per CPU model basis
-    //    replaceBits(stat, Status_CU0_HI,Status_CU0_LO, 1); // Enable CP0 on reset
+    // Only CU0 and IE are modified on a reset - everything else needs
+    // to be controlled on a per CPU model basis
 
-    replaceBits(stat, Status_ERL_HI, Status_ERL_LO, 1); // Enable ERL bit on a reset
-    replaceBits(stat, Status_BEV_HI, Status_BEV_LO, 1); // Enable BEV bit on a reset
+    // Enable CP0 on reset
+    // replaceBits(stat, Status_CU0_HI,Status_CU0_LO, 1);
+
+    // Enable ERL bit on a reset
+    replaceBits(stat, Status_ERL_HI, Status_ERL_LO, 1);
+
+    // Enable BEV bit on a reset
+    replaceBits(stat, Status_BEV_HI, Status_BEV_LO, 1);
+
     setRegNoEffect(Status, stat);
     // Now, create Write Mask for the Status register
     MiscReg stat_Mask = 0xFF78FF17;
@@ -440,7 +457,8 @@ MiscRegFile::readRegNoEffect(int reg_idx, unsigned tid)
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) (%lx).\n",
-            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),miscRegFile[misc_reg][reg_sel]);
+            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),
+            miscRegFile[misc_reg][reg_sel]);
     return miscRegFile[misc_reg][reg_sel];
 }
 
@@ -454,8 +472,10 @@ MiscRegFile::readReg(int reg_idx,
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
-    DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
-            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),miscRegFile[misc_reg][reg_sel]);
+    DPRINTF(MipsPRA,
+            "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
+            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),
+            miscRegFile[misc_reg][reg_sel]);
 
 
     switch (misc_reg)
@@ -471,7 +491,9 @@ MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, unsigned tid)
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
-    DPRINTF(MipsPRA, "[tid:%i]: Setting (direct set) CP0 Register:%u Select:%u (%s) to %#x.\n",
+    DPRINTF(MipsPRA,
+            "[tid:%i]: Setting (direct set) CP0 Register:%u "
+            "Select:%u (%s) to %#x.\n",
             tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
 
     miscRegFile[misc_reg][reg_sel] = val;
@@ -483,7 +505,9 @@ MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, unsigned tid)
   int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
-    DPRINTF(MipsPRA,"[tid:%i]: Setting CP0 Register: %u Select: %u (%s) to %#x\n",tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
+    DPRINTF(MipsPRA,
+            "[tid:%i]: Setting CP0 Register: %u Select: %u (%s) to %#x\n",
+            tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
     miscRegFile_WriteMask[misc_reg][reg_sel] = val;
 }
 
@@ -500,7 +524,9 @@ MiscRegFile::setReg(int reg_idx, const MiscReg &val,
     int reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
 
-    DPRINTF(MipsPRA, "[tid:%i]: Setting CP0 Register:%u Select:%u (%s) to %#x, with effect.\n",
+    DPRINTF(MipsPRA,
+            "[tid:%i]: Setting CP0 Register:%u "
+            "Select:%u (%s) to %#x, with effect.\n",
             tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
 
     MiscReg cp0_val = filterCP0Write(misc_reg, reg_sel, val);
@@ -509,16 +535,28 @@ MiscRegFile::setReg(int reg_idx, const MiscReg &val,
 
     scheduleCP0Update(1);
 }
-/** This method doesn't need to adjust the Control Register Offset since
-    it has already been done in the calling method (setRegWithEffect) */
-MiscReg MiscRegFile::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
+/**
+ * This method doesn't need to adjust the Control Register Offset
+ * since it has already been done in the calling method
+ * (setRegWithEffect)
+*/
+MiscReg
+MiscRegFile::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
 {
   MiscReg retVal = val;
-  retVal &= miscRegFile_WriteMask[misc_reg][reg_sel]; // Mask off read-only regions
+
+  // Mask off read-only regions
+  retVal &= miscRegFile_WriteMask[misc_reg][reg_sel];
   MiscReg curVal = miscRegFile[misc_reg][reg_sel];
-  curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]); // Mask off current alue with inverse mask (clear writeable bits)
+  // Mask off current alue with inverse mask (clear writeable bits)
+  curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]);
   retVal |= curVal; // Combine the two
-  DPRINTF(MipsPRA,"filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, current val: %lx, written val: %x\n",miscRegFile_WriteMask[misc_reg][reg_sel],~miscRegFile_WriteMask[misc_reg][reg_sel],val,miscRegFile[misc_reg][reg_sel],retVal);
+  DPRINTF(MipsPRA,
+          "filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, "
+          "current val: %lx, written val: %x\n",
+          miscRegFile_WriteMask[misc_reg][reg_sel],
+          ~miscRegFile_WriteMask[misc_reg][reg_sel],
+          val, miscRegFile[misc_reg][reg_sel], retVal);
   return retVal;
 }
 void
@@ -563,7 +601,8 @@ MiscRegFile::updateCPU()
 }
 
 MiscRegFile::CP0Event::CP0Event(CP0 *_cp0, BaseCPU *_cpu, CP0EventType e_type)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cp0(_cp0), cpu(_cpu), cp0EventType(e_type)
+    : Event(&mainEventQueue, CPU_Tick_Pri), cp0(_cp0), cpu(_cpu),
+      cp0EventType(e_type)
 {  }
 
 void
