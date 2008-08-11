@@ -285,11 +285,7 @@ const char *System::MemoryModeStrings[3] = {"invalid", "atomic",
 System *
 SystemParams::create()
 {
-    System::Params *p = new System::Params;
-    p->name = name;
-    p->physmem = physmem;
-    p->mem_mode = mem_mode;
-    return new System(p);
+    return new System(this);
 }
 
 #endif

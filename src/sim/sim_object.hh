@@ -87,10 +87,6 @@ class SimObject : public Serializable, protected StartupCallback
     SimObject(const Params *_params);
     virtual ~SimObject() {}
 
-  protected:
-    // static: support for old-style constructors (call manually)
-    static Params *makeParams(const std::string &name);
-
   public:
 
     virtual const std::string name() const { return params()->name; }

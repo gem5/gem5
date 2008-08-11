@@ -35,14 +35,6 @@ MemObject::MemObject(const Params *params)
 {
 }
 
-MemObjectParams *
-MemObject::makeParams(const std::string &name)
-{
-    MemObjectParams *params = new MemObjectParams;
-    params->name = name;
-    return params;
-}
-
 void
 MemObject::deletePortRefs(Port *p)
 {

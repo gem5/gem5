@@ -69,14 +69,6 @@ SimObject::SimObject(const Params *p)
     state = Running;
 }
 
-SimObjectParams *
-SimObject::makeParams(const std::string &name)
-{
-    SimObjectParams *params = new SimObjectParams;
-    params->name = name;
-    return params;
-}
-
 void
 SimObject::init()
 {
