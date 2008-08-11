@@ -36,6 +36,8 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 
+class DerivO3CPUParams;
+
 /**
  * DefaultDecode class handles both single threaded and SMT
  * decode. Its width is specified by the parameters; each cycles it
@@ -50,7 +52,6 @@ class DefaultDecode
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
 
     // Typedefs from the CPU policy.
@@ -86,7 +87,7 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(O3CPU *_cpu, Params *params);
+    DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of decode. */
     std::string name() const;

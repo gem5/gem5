@@ -40,7 +40,6 @@
 #include "sim/stats.hh"
 
 #include "cpu/o3/alpha/cpu.hh"
-#include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/alpha/thread_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/thread_state.hh"
@@ -54,8 +53,11 @@
 #include "sim/system.hh"
 #endif
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
-AlphaO3CPU<Impl>::AlphaO3CPU(Params *params) : FullO3CPU<Impl>(this, params)
+AlphaO3CPU<Impl>::AlphaO3CPU(DerivO3CPUParams *params) :
+    FullO3CPU<Impl>(this, params)
 {
     DPRINTF(O3CPU, "Creating AlphaO3CPU object.\n");
 

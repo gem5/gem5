@@ -33,7 +33,6 @@
 
 #include "arch/sparc/isa_traits.hh"
 
-#include "cpu/o3/sparc/params.hh"
 #include "cpu/o3/cpu_policy.hh"
 
 
@@ -76,9 +75,6 @@ struct SparcSimpleImpl
      * case.
      */
     typedef O3CPU CPUType;
-
-    /** The Params to be passed to each stage. */
-    typedef SparcSimpleParams Params;
 
     enum {
       MaxWidth = 8,

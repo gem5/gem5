@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,23 +26,19 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.params import *
+from m5 import build_env
+from BaseCPU import BaseCPU
 
-need_simple_base = False
-if 'AtomicSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    SimObject('AtomicSimpleCPU.py')
-    Source('atomic.cc')
-
-if 'TimingSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    SimObject('TimingSimpleCPU.py')
-    Source('timing.cc')
-
-if 'AtomicSimpleCPU' in env['CPU_MODELS'] or \
-       'TimingSimpleCPU' in env['CPU_MODELS']:
-    TraceFlag('SimpleCPU')
-
-if need_simple_base:
-    Source('base.cc')
-    SimObject('BaseSimpleCPU.py')
+class CheckerCPU(BaseCPU):
+    type = 'CheckerCPU'
+    abstract = True
+    exitOnError = Param.Bool(False, "Exit on an error")
+    updateOnError = Param.Bool(False,
+        "Update the checker with the main CPU's state on an error")
+    warnOnlyOnLoadError = Param.Bool(False,
+        "If a load result is incorrect, only print a warning and do not exit")
+    function_trace = Param.Bool(False, "Enable function trace")
+    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+    if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")

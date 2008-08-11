@@ -41,6 +41,7 @@
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/lsq.hh"
 
+class DerivO3CPUParams;
 class FUPool;
 
 /**
@@ -70,7 +71,6 @@ class DefaultIEW
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     typedef typename CPUPol::IQ IQ;
     typedef typename CPUPol::RenameMap RenameMap;
@@ -115,7 +115,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(O3CPU *_cpu, Params *params);
+    DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;

@@ -32,18 +32,13 @@
 #define __CPU_SIMPLE_ATOMIC_HH__
 
 #include "cpu/simple/base.hh"
+#include "params/AtomicSimpleCPU.hh"
 
 class AtomicSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    struct Params : public BaseSimpleCPU::Params {
-        int width;
-        bool simulate_data_stalls;
-        bool simulate_inst_stalls;
-    };
-
-    AtomicSimpleCPU(Params *params);
+    AtomicSimpleCPU(AtomicSimpleCPUParams *params);
     virtual ~AtomicSimpleCPU();
 
     virtual void init();

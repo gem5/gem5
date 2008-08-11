@@ -28,9 +28,9 @@
 
 from m5.params import *
 from m5 import build_env
-from BaseCPU import BaseCPU
+from BaseSimpleCPU import BaseSimpleCPU
 
-class AtomicSimpleCPU(BaseCPU):
+class AtomicSimpleCPU(BaseSimpleCPU):
     type = 'AtomicSimpleCPU'
     width = Param.Int(1, "CPU width")
     simulate_data_stalls = Param.Bool(False, "Simulate dcache stall cycles")
@@ -42,5 +42,5 @@ class AtomicSimpleCPU(BaseCPU):
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")
     physmem_port = Port("Physical Memory Port")
-    _mem_ports = BaseCPU._mem_ports + \
+    _mem_ports = BaseSimpleCPU._mem_ports + \
                     ['icache_port', 'dcache_port', 'physmem_port']

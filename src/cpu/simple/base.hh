@@ -76,6 +76,8 @@ namespace Trace {
     class InstRecord;
 }
 
+class BaseSimpleCPUParams;
+
 
 class BaseSimpleCPU : public BaseCPU
 {
@@ -107,15 +109,7 @@ class BaseSimpleCPU : public BaseCPU
     };
 
   public:
-    struct Params : public BaseCPU::Params
-    {
-        TheISA::ITB *itb;
-        TheISA::DTB *dtb;
-#if !FULL_SYSTEM
-        Process *process;
-#endif
-    };
-    BaseSimpleCPU(Params *params);
+    BaseSimpleCPU(BaseSimpleCPUParams *params);
     virtual ~BaseSimpleCPU();
 
   public:

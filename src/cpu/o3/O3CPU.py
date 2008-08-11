@@ -38,10 +38,7 @@ if build_env['USE_CHECKER']:
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     activity = Param.Unsigned(0, "Initial count")
-    numThreads = Param.Unsigned(1, "number of HW thread contexts")
 
-    if build_env['FULL_SYSTEM']:
-        profile = Param.Latency('0ns', "trace the kernel stack")
     if build_env['USE_CHECKER']:
         if not build_env['FULL_SYSTEM']:
             checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
@@ -133,9 +130,6 @@ class DerivO3CPU(BaseCPU):
     numROBEntries = Param.Unsigned(192, "Number of reorder buffer entries")
 
     instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
-
-    function_trace = Param.Bool(False, "Enable function trace")
-    function_trace_start = Param.Tick(0, "Cycle to start function trace")
 
     smtNumFetchingThreads = Param.Unsigned(1, "SMT Number of Fetching Threads")
     smtFetchPolicy = Param.String('SingleThread', "SMT Fetch policy")

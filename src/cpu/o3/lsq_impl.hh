@@ -34,6 +34,8 @@
 
 #include "cpu/o3/lsq.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
 void
 LSQ<Impl>::DcachePort::setPeer(Port *port)
@@ -111,11 +113,11 @@ LSQ<Impl>::DcachePort::recvRetry()
 }
 
 template <class Impl>
-LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params)
+LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       retryTid(-1)
 {
     dcachePort.snoopRangeSent = false;

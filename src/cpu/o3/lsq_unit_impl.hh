@@ -112,8 +112,9 @@ LSQUnit<Impl>::LSQUnit()
 
 template<class Impl>
 void
-LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params, LSQ *lsq_ptr,
-                    unsigned maxLQEntries, unsigned maxSQEntries, unsigned id)
+LSQUnit<Impl>::init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
+        LSQ *lsq_ptr, unsigned maxLQEntries, unsigned maxSQEntries,
+        unsigned id)
 {
     cpu = cpu_ptr;
     iewStage = iew_ptr;

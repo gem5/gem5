@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,25 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from BaseCPU import BaseCPU
 
-need_simple_base = False
-if 'AtomicSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    SimObject('AtomicSimpleCPU.py')
-    Source('atomic.cc')
-
-if 'TimingSimpleCPU' in env['CPU_MODELS']:
-    need_simple_base = True
-    SimObject('TimingSimpleCPU.py')
-    Source('timing.cc')
-
-if 'AtomicSimpleCPU' in env['CPU_MODELS'] or \
-       'TimingSimpleCPU' in env['CPU_MODELS']:
-    TraceFlag('SimpleCPU')
-
-if need_simple_base:
-    Source('base.cc')
-    SimObject('BaseSimpleCPU.py')
+class BaseSimpleCPU(BaseCPU):
+    type = 'BaseSimpleCPU'
+    abstract = True

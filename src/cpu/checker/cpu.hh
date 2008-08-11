@@ -65,6 +65,7 @@ class Process;
 #endif // FULL_SYSTEM
 template <class>
 class BaseDynInst;
+class CheckerCPUParams;
 class ThreadContext;
 class MemInterface;
 class Checkpoint;
@@ -96,20 +97,10 @@ class CheckerCPU : public BaseCPU
   public:
     virtual void init();
 
-    struct Params : public BaseCPU::Params
-    {
-#if FULL_SYSTEM
-        TheISA::ITB *itb;
-        TheISA::DTB *dtb;
-#else
-        Process *process;
-#endif
-        bool exitOnError;
-        bool updateOnError;
-        bool warnOnlyOnLoadError;
-    };
-
   public:
+    typedef CheckerCPUParams Params;
+    const Params *params() const
+    { return reinterpret_cast<const Params *>(_params); }    
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 

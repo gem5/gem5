@@ -34,14 +34,13 @@
 #include "cpu/base.hh"
 #include "cpu/o3/alpha/cpu.hh"
 #include "cpu/o3/alpha/impl.hh"
-#include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "params/DerivO3CPU.hh"
 
 class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
 {
   public:
-    DerivO3CPU(AlphaSimpleParams *p)
+    DerivO3CPU(DerivO3CPUParams *p)
         : AlphaO3CPU<AlphaSimpleImpl>(p)
     { }
 };
@@ -49,8 +48,6 @@ class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
 DerivO3CPU *
 DerivO3CPUParams::create()
 {
-    DerivO3CPU *cpu;
-
 #if FULL_SYSTEM
     // Full-system only supports a single thread for the moment.
     int actual_num_threads = 1;
@@ -65,135 +62,18 @@ DerivO3CPUParams::create()
     }
 #endif
 
-    AlphaSimpleParams *params = new AlphaSimpleParams;
-
-    params->clock = clock;
-    params->phase = phase;
-
-    params->tracer = tracer;
-
-    params->name = name;
-    params->numberOfThreads = actual_num_threads;
-    params->cpu_id = cpu_id;
-    params->activity = activity;
-
-    params->itb = itb;
-    params->dtb = dtb;
-
-    params->system = system;
-#if FULL_SYSTEM
-    params->profile = profile;
-
-    params->do_quiesce = do_quiesce;
-    params->do_checkpoint_insts = do_checkpoint_insts;
-    params->do_statistics_insts = do_statistics_insts;
-#else
-    params->workload = workload;
-#endif // FULL_SYSTEM
-
-#if USE_CHECKER
-    params->checker = checker;
-#endif
-
-    params->max_insts_any_thread = max_insts_any_thread;
-    params->max_insts_all_threads = max_insts_all_threads;
-    params->max_loads_any_thread = max_loads_any_thread;
-    params->max_loads_all_threads = max_loads_all_threads;
-    params->progress_interval = progress_interval;
-
-    //
-    // Caches
-    //
-    params->cachePorts = cachePorts;
-
-    params->decodeToFetchDelay = decodeToFetchDelay;
-    params->renameToFetchDelay = renameToFetchDelay;
-    params->iewToFetchDelay = iewToFetchDelay;
-    params->commitToFetchDelay = commitToFetchDelay;
-    params->fetchWidth = fetchWidth;
-
-    params->renameToDecodeDelay = renameToDecodeDelay;
-    params->iewToDecodeDelay = iewToDecodeDelay;
-    params->commitToDecodeDelay = commitToDecodeDelay;
-    params->fetchToDecodeDelay = fetchToDecodeDelay;
-    params->decodeWidth = decodeWidth;
-
-    params->iewToRenameDelay = iewToRenameDelay;
-    params->commitToRenameDelay = commitToRenameDelay;
-    params->decodeToRenameDelay = decodeToRenameDelay;
-    params->renameWidth = renameWidth;
-
-    params->commitToIEWDelay = commitToIEWDelay;
-    params->renameToIEWDelay = renameToIEWDelay;
-    params->issueToExecuteDelay = issueToExecuteDelay;
-    params->dispatchWidth = dispatchWidth;
-    params->issueWidth = issueWidth;
-    params->wbWidth = wbWidth;
-    params->wbDepth = wbDepth;
-    params->fuPool = fuPool;
-
-    params->iewToCommitDelay = iewToCommitDelay;
-    params->renameToROBDelay = renameToROBDelay;
-    params->commitWidth = commitWidth;
-    params->squashWidth = squashWidth;
-    params->trapLatency = trapLatency;
-
-    params->backComSize = backComSize;
-    params->forwardComSize = forwardComSize;
-
-    params->predType = predType;
-    params->localPredictorSize = localPredictorSize;
-    params->localCtrBits = localCtrBits;
-    params->localHistoryTableSize = localHistoryTableSize;
-    params->localHistoryBits = localHistoryBits;
-    params->globalPredictorSize = globalPredictorSize;
-    params->globalCtrBits = globalCtrBits;
-    params->globalHistoryBits = globalHistoryBits;
-    params->choicePredictorSize = choicePredictorSize;
-    params->choiceCtrBits = choiceCtrBits;
-
-    params->BTBEntries = BTBEntries;
-    params->BTBTagSize = BTBTagSize;
-
-    params->RASSize = RASSize;
-
-    params->LQEntries = LQEntries;
-    params->SQEntries = SQEntries;
-
-    params->SSITSize = SSITSize;
-    params->LFSTSize = LFSTSize;
-
-    params->numPhysIntRegs = numPhysIntRegs;
-    params->numPhysFloatRegs = numPhysFloatRegs;
-    params->numIQEntries = numIQEntries;
-    params->numROBEntries = numROBEntries;
-
-    params->smtNumFetchingThreads = smtNumFetchingThreads;
+    numThreads = actual_num_threads;
 
     // Default smtFetchPolicy to "RoundRobin", if necessary.
     std::string round_robin_policy = "RoundRobin";
     std::string single_thread = "SingleThread";
 
     if (actual_num_threads > 1 && single_thread.compare(smtFetchPolicy) == 0)
-        params->smtFetchPolicy = round_robin_policy;
+        smtFetchPolicy = round_robin_policy;
     else
-        params->smtFetchPolicy = smtFetchPolicy;
+        smtFetchPolicy = smtFetchPolicy;
 
-    params->smtIQPolicy    = smtIQPolicy;
-    params->smtLSQPolicy    = smtLSQPolicy;
-    params->smtLSQThreshold = smtLSQThreshold;
-    params->smtROBPolicy   = smtROBPolicy;
-    params->smtROBThreshold = smtROBThreshold;
-    params->smtCommitPolicy = smtCommitPolicy;
+    instShiftAmt = 2;
 
-    params->instShiftAmt = 2;
-
-    params->deferRegistration = defer_registration;
-
-    params->functionTrace = function_trace;
-    params->functionTraceStart = function_trace_start;
-
-    cpu = new DerivO3CPU(params);
-
-    return cpu;
+    return new DerivO3CPU(this);
 }

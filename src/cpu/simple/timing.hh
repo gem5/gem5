@@ -33,14 +33,13 @@
 
 #include "cpu/simple/base.hh"
 
+#include "params/TimingSimpleCPU.hh"
+
 class TimingSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    struct Params : public BaseSimpleCPU::Params {
-    };
-
-    TimingSimpleCPU(Params *params);
+    TimingSimpleCPU(TimingSimpleCPUParams * params);
     virtual ~TimingSimpleCPU();
 
     virtual void init();

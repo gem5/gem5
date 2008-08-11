@@ -37,6 +37,8 @@
 #include "enums/OpClass.hh"
 #include "sim/core.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
                                                    int fu_idx,
@@ -65,7 +67,7 @@ InstructionQueue<Impl>::FUCompletion::description() const
 
 template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
-                                         Params *params)
+                                         DerivO3CPUParams *params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params->fuPool),
@@ -79,7 +81,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
 
     switchedOut = false;
 
-    numThreads = params->numberOfThreads;
+    numThreads = params->numThreads;
 
     // Set the number of physical registers as the number of int + float
     numPhysRegs = numPhysIntRegs + numPhysFloatRegs;

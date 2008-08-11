@@ -152,7 +152,7 @@ AtomicSimpleCPU::DcachePort::setPeer(Port *port)
 #endif
 }
 
-AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
+AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
     : BaseSimpleCPU(p), tickEvent(this), width(p->width),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
@@ -812,39 +812,10 @@ AtomicSimpleCPU::printAddr(Addr a)
 AtomicSimpleCPU *
 AtomicSimpleCPUParams::create()
 {
-    AtomicSimpleCPU::Params *params = new AtomicSimpleCPU::Params();
-    params->name = name;
-    params->numberOfThreads = 1;
-    params->max_insts_any_thread = max_insts_any_thread;
-    params->max_insts_all_threads = max_insts_all_threads;
-    params->max_loads_any_thread = max_loads_any_thread;
-    params->max_loads_all_threads = max_loads_all_threads;
-    params->progress_interval = progress_interval;
-    params->deferRegistration = defer_registration;
-    params->phase = phase;
-    params->clock = clock;
-    params->functionTrace = function_trace;
-    params->functionTraceStart = function_trace_start;
-    params->width = width;
-    params->simulate_data_stalls = simulate_data_stalls;
-    params->simulate_inst_stalls = simulate_inst_stalls;
-    params->system = system;
-    params->cpu_id = cpu_id;
-    params->tracer = tracer;
-
-    params->itb = itb;
-    params->dtb = dtb;
-#if FULL_SYSTEM
-    params->profile = profile;
-    params->do_quiesce = do_quiesce;
-    params->do_checkpoint_insts = do_checkpoint_insts;
-    params->do_statistics_insts = do_statistics_insts;
-#else
+    numThreads = 1;
+#if !FULL_SYSTEM
     if (workload.size() != 1)
         panic("only one workload allowed");
-    params->process = workload[0];
 #endif
-
-    AtomicSimpleCPU *cpu = new AtomicSimpleCPU(params);
-    return cpu;
+    return new AtomicSimpleCPU(this);
 }

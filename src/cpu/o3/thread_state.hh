@@ -80,8 +80,8 @@ struct O3ThreadState : public ThreadState {
         : ThreadState(_cpu, -1, _thread_num),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
-        if (cpu->params->profile) {
-            profile = new FunctionProfile(cpu->params->system->kernelSymtab);
+        if (cpu->params()->profile) {
+            profile = new FunctionProfile(cpu->params()->system->kernelSymtab);
             Callback *cb =
                 new MakeCallback<O3ThreadState,
                 &O3ThreadState::dumpFuncProfile>(this);

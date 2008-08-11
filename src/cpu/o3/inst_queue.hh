@@ -41,8 +41,10 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/op_class.hh"
+#include "sim/eventq.hh"
 #include "sim/host.hh"
 
+class DerivO3CPUParams;
 class FUPool;
 class MemInterface;
 
@@ -70,7 +72,6 @@ class InstructionQueue
     //Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
 
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::MemDepUnit MemDepUnit;
@@ -110,7 +111,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params);
+    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();

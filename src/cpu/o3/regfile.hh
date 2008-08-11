@@ -33,6 +33,7 @@
 #define __CPU_O3_REGFILE_HH__
 
 #include "arch/isa_traits.hh"
+#include "arch/regfile.hh"
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"

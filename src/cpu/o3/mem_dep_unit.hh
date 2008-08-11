@@ -48,6 +48,8 @@ struct SNHash {
     }
 };
 
+class DerivO3CPUParams;
+
 template <class Impl>
 class InstructionQueue;
 
@@ -65,14 +67,13 @@ class InstructionQueue;
 template <class MemDepPred, class Impl>
 class MemDepUnit {
   public:
-    typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     /** Empty constructor. Must call init() prior to using in this case. */
     MemDepUnit();
 
     /** Constructs a MemDepUnit with given parameters. */
-    MemDepUnit(Params *params);
+    MemDepUnit(DerivO3CPUParams *params);
 
     /** Frees up any memory allocated. */
     ~MemDepUnit();
@@ -81,7 +82,7 @@ class MemDepUnit {
     std::string name() const;
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(Params *params, int tid);
+    void init(DerivO3CPUParams *params, int tid);
 
     /** Registers statistics. */
     void regStats();

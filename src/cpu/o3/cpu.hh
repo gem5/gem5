@@ -53,6 +53,8 @@
 //#include "cpu/o3/thread_context.hh"
 #include "sim/process.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class>
 class Checker;
 class ThreadContext;
@@ -63,13 +65,13 @@ class Checkpoint;
 class MemObject;
 class Process;
 
+class BaseCPUParams;
+
 class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
-    typedef BaseCPU::Params Params;
-
-    BaseO3CPU(Params *params);
+    BaseO3CPU(BaseCPUParams *params);
 
     void regStats();
 
@@ -96,7 +98,6 @@ class FullO3CPU : public BaseO3CPU
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     typedef O3ThreadState<Impl> Thread;
 
@@ -256,7 +257,7 @@ class FullO3CPU : public BaseO3CPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    FullO3CPU(O3CPU *o3_cpu, Params *params);
+    FullO3CPU(O3CPU *o3_cpu, DerivO3CPUParams *params);
     /** Destructor. */
     ~FullO3CPU();
 

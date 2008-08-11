@@ -71,6 +71,7 @@ temp_cpu_list = env['CPU_MODELS'][:]
 
 if env['USE_CHECKER']:
     temp_cpu_list.append('CheckerCPU')
+    SimObject('CheckerCPU.py')
 
 # Generate header.
 def gen_cpu_exec_signatures(target, source, env):

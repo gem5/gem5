@@ -37,9 +37,11 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "params/BaseCPU.hh"
 
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
+#include "arch/stacktrace.hh"
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
@@ -48,11 +50,10 @@
 #include "cpu/quiesce_event.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
-#include "arch/stacktrace.hh"
 #else
+#include "mem/translating_port.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
-#include "mem/translating_port.hh"
 #endif
 
 using namespace std;
@@ -72,7 +73,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 
     regs.clear();
 
-    if (cpu->params->profile) {
+    if (cpu->params()->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
             new MakeCallback<SimpleThread,

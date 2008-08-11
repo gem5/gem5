@@ -43,6 +43,8 @@
 
 #include <list>
 
+class DerivO3CPUParams;
+
 /**
  * Basically a wrapper class to hold both the branch predictor
  * and the BTB.
@@ -51,7 +53,6 @@ template<class Impl>
 class BPredUnit
 {
   private:
-    typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     enum PredType {
@@ -66,7 +67,7 @@ class BPredUnit
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    BPredUnit(Params *params);
+    BPredUnit(DerivO3CPUParams *params);
 
     /**
      * Registers statistics.

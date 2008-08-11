@@ -65,16 +65,18 @@
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
 
+#include "params/BaseSimpleCPU.hh"
+
 using namespace std;
 using namespace TheISA;
 
-BaseSimpleCPU::BaseSimpleCPU(Params *p)
+BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     : BaseCPU(p), traceData(NULL), thread(NULL), predecoder(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
-    thread = new SimpleThread(this, /* thread_num */ 0, p->process,
+    thread = new SimpleThread(this, /* thread_num */ 0, p->workload[0],
             p->itb, p->dtb, /* asid */ 0);
 #endif // !FULL_SYSTEM
 

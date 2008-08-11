@@ -37,6 +37,8 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 
+class DerivO3CPUParams;
+
 template <class>
 class O3ThreadState;
 
@@ -69,7 +71,6 @@ class DefaultCommit
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
 
     typedef typename CPUPol::RenameMap RenameMap;
@@ -136,7 +137,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(O3CPU *_cpu, Params *params);
+    DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;

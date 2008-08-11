@@ -45,6 +45,7 @@
 #include "arch/interrupts.hh"
 #endif
 
+class BaseCPUParams;
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
@@ -162,40 +163,9 @@ class BaseCPU : public MemObject
    ThreadContext *getContext(int tn) { return threadContexts[tn]; }
 
   public:
-    struct Params
-    {
-        std::string name;
-        int numberOfThreads;
-        bool deferRegistration;
-        Counter max_insts_any_thread;
-        Counter max_insts_all_threads;
-        Counter max_loads_any_thread;
-        Counter max_loads_all_threads;
-        Tick clock;
-        bool functionTrace;
-        Tick functionTraceStart;
-        System *system;
-        int cpu_id;
-        Trace::InstTracer * tracer;
-
-        Tick phase;
-#if FULL_SYSTEM
-        Tick profile;
-
-        bool do_statistics_insts;
-        bool do_checkpoint_insts;
-        bool do_quiesce;
-#endif
-        Tick progress_interval;
-        BaseCPU *checker;
-
-        TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
-
-        Params();
-    };
-
-    const Params *params;
-
+    typedef BaseCPUParams Params;
+    const Params *params() const
+    { return reinterpret_cast<const Params *>(_params); }
     BaseCPU(Params *params);
     virtual ~BaseCPU();
 
@@ -220,6 +190,8 @@ class BaseCPU : public MemObject
      * This is a constant for the duration of the simulation.
      */
     int number_of_threads;
+
+    TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
 
     /**
      * Vector of per-thread instruction-based event queues.  Used for

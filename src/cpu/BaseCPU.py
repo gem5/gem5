@@ -26,7 +26,7 @@
 #
 # Authors: Nathan Binkert
 
-from m5.SimObject import SimObject
+from MemObject import MemObject
 from m5.params import *
 from m5.proxy import *
 from m5 import build_env
@@ -48,14 +48,21 @@ elif build_env['TARGET_ISA'] == 'mips':
 elif build_env['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB, ArmDTB, ArmITB, ArmUTB
 
-class BaseCPU(SimObject):
+class BaseCPU(MemObject):
     type = 'BaseCPU'
     abstract = True
 
     system = Param.System(Parent.any, "system object")
     cpu_id = Param.Int("CPU identifier")
+    numThreads = Param.Unsigned(1, "number of HW thread contexts")
+
+    function_trace = Param.Bool(False, "Enable function trace")
+    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+
+    checker = Param.BaseCPU("checker CPU")
 
     if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
         do_quiesce = Param.Bool(True, "enable quiesce instructions")
         do_checkpoint_insts = Param.Bool(True,
             "enable checkpoint pseudo instructions")

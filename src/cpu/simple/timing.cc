@@ -104,7 +104,7 @@ TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
     Event::schedule(t);
 }
 
-TimingSimpleCPU::TimingSimpleCPU(Params *p)
+TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
     : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
 {
     _status = Idle;
@@ -852,36 +852,10 @@ TimingSimpleCPU::printAddr(Addr a)
 TimingSimpleCPU *
 TimingSimpleCPUParams::create()
 {
-    TimingSimpleCPU::Params *params = new TimingSimpleCPU::Params();
-    params->name = name;
-    params->numberOfThreads = 1;
-    params->max_insts_any_thread = max_insts_any_thread;
-    params->max_insts_all_threads = max_insts_all_threads;
-    params->max_loads_any_thread = max_loads_any_thread;
-    params->max_loads_all_threads = max_loads_all_threads;
-    params->progress_interval = progress_interval;
-    params->deferRegistration = defer_registration;
-    params->clock = clock;
-    params->phase = phase;
-    params->functionTrace = function_trace;
-    params->functionTraceStart = function_trace_start;
-    params->system = system;
-    params->cpu_id = cpu_id;
-    params->tracer = tracer;
-
-    params->itb = itb;
-    params->dtb = dtb;
-#if FULL_SYSTEM
-    params->profile = profile;
-    params->do_quiesce = do_quiesce;
-    params->do_checkpoint_insts = do_checkpoint_insts;
-    params->do_statistics_insts = do_statistics_insts;
-#else
+    numThreads = 1;
+#if !FULL_SYSTEM
     if (workload.size() != 1)
         panic("only one workload allowed");
-    params->process = workload[0];
 #endif
-
-    TimingSimpleCPU *cpu = new TimingSimpleCPU(params);
-    return cpu;
+    return new TimingSimpleCPU(this);
 }

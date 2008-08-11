@@ -36,6 +36,8 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 
+class DerivO3CPUParams;
+
 /**
  * DefaultRename handles both single threaded and SMT rename. Its
  * width is specified by the parameters; each cycle it tries to rename
@@ -56,7 +58,6 @@ class DefaultRename
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     // Typedefs from the CPUPol
     typedef typename CPUPol::DecodeStruct DecodeStruct;
@@ -107,7 +108,7 @@ class DefaultRename
 
   public:
     /** DefaultRename constructor. */
-    DefaultRename(O3CPU *_cpu, Params *params);
+    DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of rename. */
     std::string name() const;

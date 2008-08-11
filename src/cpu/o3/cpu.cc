@@ -52,9 +52,11 @@
 #include "cpu/checker/cpu.hh"
 #endif
 
+class BaseCPUParams;
+
 using namespace TheISA;
 
-BaseO3CPU::BaseO3CPU(Params *params)
+BaseO3CPU::BaseO3CPU(BaseCPUParams *params)
     : BaseCPU(params), cpu_id(0)
 {
 }
@@ -147,7 +149,7 @@ FullO3CPU<Impl>::DeallocateContextEvent::description() const
 }
 
 template <class Impl>
-FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
+FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, DerivO3CPUParams *params)
     : BaseO3CPU(params),
       itb(params->itb),
       dtb(params->dtb),
@@ -162,16 +164,16 @@ FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
       regFile(o3_cpu, params->numPhysIntRegs,
               params->numPhysFloatRegs),
 
-      freeList(params->numberOfThreads,
+      freeList(params->numThreads,
                TheISA::NumIntRegs, params->numPhysIntRegs,
                TheISA::NumFloatRegs, params->numPhysFloatRegs),
 
       rob(o3_cpu,
           params->numROBEntries, params->squashWidth,
           params->smtROBPolicy, params->smtROBThreshold,
-          params->numberOfThreads),
+          params->numThreads),
 
-      scoreboard(params->numberOfThreads,
+      scoreboard(params->numThreads,
                  TheISA::NumIntRegs, params->numPhysIntRegs,
                  TheISA::NumFloatRegs, params->numPhysFloatRegs,
                  TheISA::NumMiscRegs * number_of_threads,
@@ -192,7 +194,7 @@ FullO3CPU<Impl>::FullO3CPU(O3CPU *o3_cpu, Params *params)
       physmem(system->physmem),
 #endif // FULL_SYSTEM
       drainCount(0),
-      deferRegistration(params->deferRegistration),
+      deferRegistration(params->defer_registration),
       numThreads(number_of_threads)
 {
     if (!deferRegistration) {

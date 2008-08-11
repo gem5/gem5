@@ -34,7 +34,6 @@
 
 #include "arch/mips/isa_traits.hh"
 
-#include "cpu/o3/mips/params.hh"
 #include "cpu/o3/cpu_policy.hh"
 
 
@@ -77,9 +76,6 @@ struct MipsSimpleImpl
      * case.
      */
     typedef O3CPU CPUType;
-
-    /** The Params to be passed to each stage. */
-    typedef MipsSimpleParams Params;
 
     enum {
       MaxWidth = 8,

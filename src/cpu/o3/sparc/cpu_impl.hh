@@ -41,7 +41,6 @@
 #include "sim/stats.hh"
 
 #include "cpu/o3/sparc/cpu.hh"
-#include "cpu/o3/sparc/params.hh"
 #include "cpu/o3/sparc/thread_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/thread_state.hh"
@@ -54,8 +53,11 @@
 #include "sim/system.hh"
 #endif
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
-SparcO3CPU<Impl>::SparcO3CPU(Params *params) : FullO3CPU<Impl>(this, params)
+SparcO3CPU<Impl>::SparcO3CPU(DerivO3CPUParams *params) :
+    FullO3CPU<Impl>(this, params)
 {
     DPRINTF(O3CPU, "Creating SparcO3CPU object.\n");
 

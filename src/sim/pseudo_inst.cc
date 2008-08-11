@@ -35,12 +35,13 @@
 #include <fstream>
 #include <string>
 
+#include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/annotate.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
-#include "arch/kernel_stats.hh"
+#include "params/BaseCPU.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
@@ -67,7 +68,7 @@ arm(ThreadContext *tc)
 void
 quiesce(ThreadContext *tc)
 {
-    if (!tc->getCpuPtr()->params->do_quiesce)
+    if (!tc->getCpuPtr()->params()->do_quiesce)
         return;
 
     DPRINTF(Quiesce, "%s: quiesce()\n", tc->getCpuPtr()->name());
@@ -80,7 +81,7 @@ quiesce(ThreadContext *tc)
 void
 quiesceNs(ThreadContext *tc, uint64_t ns)
 {
-    if (!tc->getCpuPtr()->params->do_quiesce || ns == 0)
+    if (!tc->getCpuPtr()->params()->do_quiesce || ns == 0)
         return;
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
@@ -100,7 +101,7 @@ quiesceNs(ThreadContext *tc, uint64_t ns)
 void
 quiesceCycles(ThreadContext *tc, uint64_t cycles)
 {
-    if (!tc->getCpuPtr()->params->do_quiesce || cycles == 0)
+    if (!tc->getCpuPtr()->params()->do_quiesce || cycles == 0)
         return;
 
     EndQuiesceEvent *quiesceEvent = tc->getQuiesceEvent();
@@ -181,7 +182,7 @@ loadsymbol(ThreadContext *tc)
 void
 resetstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    if (!tc->getCpuPtr()->params->do_statistics_insts)
+    if (!tc->getCpuPtr()->params()->do_statistics_insts)
         return;
 
 
@@ -194,7 +195,7 @@ resetstats(ThreadContext *tc, Tick delay, Tick period)
 void
 dumpstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    if (!tc->getCpuPtr()->params->do_statistics_insts)
+    if (!tc->getCpuPtr()->params()->do_statistics_insts)
         return;
 
 
@@ -219,7 +220,7 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
 void
 dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 {
-    if (!tc->getCpuPtr()->params->do_statistics_insts)
+    if (!tc->getCpuPtr()->params()->do_statistics_insts)
         return;
 
 
@@ -232,7 +233,7 @@ dumpresetstats(ThreadContext *tc, Tick delay, Tick period)
 void
 m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 {
-    if (!tc->getCpuPtr()->params->do_checkpoint_insts)
+    if (!tc->getCpuPtr()->params()->do_checkpoint_insts)
         return;
 
     Tick when = curTick + delay * Clock::Int::ns;

@@ -51,6 +51,8 @@
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::setPeer(Port *port)
@@ -111,7 +113,7 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 }
 
 template<class Impl>
-DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
+DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
       predecoder(NULL),
@@ -123,7 +125,7 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
       cacheBlocked(false),
       retryPkt(NULL),
       retryTid(-1),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
       drainPending(false),

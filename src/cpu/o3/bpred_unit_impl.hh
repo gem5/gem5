@@ -34,8 +34,10 @@
 #include "base/traceflags.hh"
 #include "cpu/o3/bpred_unit.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
-BPredUnit<Impl>::BPredUnit(Params *params)
+BPredUnit<Impl>::BPredUnit(DerivO3CPUParams *params)
   : BTB(params->BTBEntries,
         params->BTBTagSize,
         params->instShiftAmt)

@@ -33,6 +33,8 @@
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/mem_dep_unit.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit()
     : loadBarrier(false), loadBarrierSN(0), storeBarrier(false),
@@ -41,7 +43,7 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit()
 }
 
 template <class MemDepPred, class Impl>
-MemDepUnit<MemDepPred, Impl>::MemDepUnit(Params *params)
+MemDepUnit<MemDepPred, Impl>::MemDepUnit(DerivO3CPUParams *params)
     : depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
       loadBarrierSN(0), storeBarrier(false), storeBarrierSN(0), iqPtr(NULL)
 {
@@ -82,7 +84,7 @@ MemDepUnit<MemDepPred, Impl>::name() const
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::init(Params *params, int tid)
+MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, int tid)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 

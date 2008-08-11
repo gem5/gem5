@@ -40,10 +40,11 @@
 #include "mem/port.hh"
 #include "sim/sim_object.hh"
 
+class DerivO3CPUParams;
+
 template <class Impl>
 class LSQ {
   public:
-    typedef typename Impl::Params Params;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
@@ -57,7 +58,7 @@ class LSQ {
     };
 
     /** Constructs an LSQ with the given parameters. */
-    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params);
+    LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
 
     /** Returns the name of the LSQ. */
     std::string name() const;

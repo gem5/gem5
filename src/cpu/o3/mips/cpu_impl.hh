@@ -40,13 +40,14 @@
 #include "sim/stats.hh"
 
 #include "cpu/o3/mips/cpu.hh"
-#include "cpu/o3/mips/params.hh"
 #include "cpu/o3/mips/thread_context.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/thread_state.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
-MipsO3CPU<Impl>::MipsO3CPU(Params *params)
+MipsO3CPU<Impl>::MipsO3CPU(DerivO3CPUParams *params)
     : FullO3CPU<Impl>(this, params)
 {
     DPRINTF(O3CPU, "Creating MipsO3CPU object.\n");

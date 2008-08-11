@@ -39,6 +39,7 @@
 #include "sim/byteswap.hh"
 #include "sim/faults.hh"
 
+class DerivO3CPUParams;
 class EndQuiesceEvent;
 namespace Kernel {
     class Statistics;
@@ -60,10 +61,9 @@ class MipsO3CPU : public FullO3CPU<Impl>
   public:
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
-    typedef typename Impl::Params Params;
 
     /** Constructs an MipsO3CPU with the given parameters. */
-    MipsO3CPU(Params *params);
+    MipsO3CPU(DerivO3CPUParams *params);
 
     /** Registers statistics. */
     void regStats();

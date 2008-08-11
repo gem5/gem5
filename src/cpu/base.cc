@@ -37,16 +37,16 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
+#include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
+#include "params/BaseCPU.hh"
 #include "sim/sim_exit.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
 #include "sim/system.hh"
-
-#include "base/trace.hh"
 
 // Hack
 #include "sim/stat_control.hh"
@@ -95,13 +95,13 @@ CPUProgressEvent::description() const
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(makeParams(p->name)), clock(p->clock), instCnt(0),
-      params(p), number_of_threads(p->numberOfThreads), system(p->system),
+    : MemObject(p), clock(p->clock), instCnt(0),
+      number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(makeParams(p->name)), clock(p->clock), params(p),
-      number_of_threads(p->numberOfThreads), system(p->system),
+    : MemObject(p), clock(p->clock),
+      number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #endif
 {
@@ -166,34 +166,25 @@ BaseCPU::BaseCPU(Params *p)
     }
 
     functionTracingEnabled = false;
-    if (p->functionTrace) {
+    if (p->function_trace) {
         functionTraceStream = simout.find(csprintf("ftrace.%s", name()));
         currentFunctionStart = currentFunctionEnd = 0;
-        functionEntryTick = p->functionTraceStart;
+        functionEntryTick = p->function_trace_start;
 
-        if (p->functionTraceStart == 0) {
+        if (p->function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
-            new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
-                                                                     p->functionTraceStart,
-                                                                     true);
+            new EventWrapper<BaseCPU,
+                &BaseCPU::enableFunctionTrace>(
+                this, p->function_trace_start, true);
         }
     }
 #if FULL_SYSTEM
     profileEvent = NULL;
-    if (params->profile)
-        profileEvent = new ProfileEvent(this, params->profile);
+    if (params()->profile)
+        profileEvent = new ProfileEvent(this, params()->profile);
 #endif
-    tracer = params->tracer;
-}
-
-BaseCPU::Params::Params()
-{
-#if FULL_SYSTEM
-    profile = false;
-#endif
-    checker = NULL;
-    tracer = NULL;
+    tracer = params()->tracer;
 }
 
 void
@@ -209,7 +200,7 @@ BaseCPU::~BaseCPU()
 void
 BaseCPU::init()
 {
-    if (!params->deferRegistration)
+    if (!params()->defer_registration)
         registerThreadContexts();
 }
 
@@ -217,13 +208,13 @@ void
 BaseCPU::startup()
 {
 #if FULL_SYSTEM
-    if (!params->deferRegistration && profileEvent)
+    if (!params()->defer_registration && profileEvent)
         profileEvent->schedule(curTick);
 #endif
 
-    if (params->progress_interval) {
+    if (params()->progress_interval) {
         new CPUProgressEvent(&mainEventQueue,
-                             ticks(params->progress_interval),
+                             ticks(params()->progress_interval),
                              this);
     }
 }
@@ -281,7 +272,7 @@ BaseCPU::registerThreadContexts()
         ThreadContext *tc = threadContexts[i];
 
 #if FULL_SYSTEM
-        int id = params->cpu_id;
+        int id = params()->cpu_id;
         if (id != -1)
             id += i;
 

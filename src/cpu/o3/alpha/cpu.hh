@@ -37,6 +37,7 @@
 #include "cpu/o3/cpu.hh"
 #include "sim/byteswap.hh"
 
+class DerivO3CPUParams;
 class EndQuiesceEvent;
 namespace Kernel {
     class Statistics;
@@ -58,10 +59,9 @@ class AlphaO3CPU : public FullO3CPU<Impl>
   public:
     typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
-    typedef typename Impl::Params Params;
 
     /** Constructs an AlphaO3CPU with the given parameters. */
-    AlphaO3CPU(Params *params);
+    AlphaO3CPU(DerivO3CPUParams *params);
 
     /** Registers statistics. */
     void regStats();

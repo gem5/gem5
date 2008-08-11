@@ -46,6 +46,8 @@
 #include "mem/packet.hh"
 #include "mem/port.hh"
 
+class DerivO3CPUParams;
+
 /**
  * Class that implements the actual LQ and SQ for each specific
  * thread.  Both are circular queues; load entries are freed upon
@@ -63,7 +65,6 @@ class LSQUnit {
   protected:
     typedef TheISA::IntReg IntReg;
   public:
-    typedef typename Impl::Params Params;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
@@ -75,8 +76,9 @@ class LSQUnit {
     LSQUnit();
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params, LSQ *lsq_ptr,
-              unsigned maxLQEntries, unsigned maxSQEntries, unsigned id);
+    void init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
+            LSQ *lsq_ptr, unsigned maxLQEntries, unsigned maxSQEntries,
+            unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;

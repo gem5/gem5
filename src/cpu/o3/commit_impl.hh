@@ -46,6 +46,8 @@
 #include "cpu/checker/cpu.hh"
 #endif
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           unsigned _tid)
@@ -71,7 +73,7 @@ DefaultCommit<Impl>::TrapEvent::description() const
 }
 
 template <class Impl>
-DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
+DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       squashCounter(0),
       iewToCommitDelay(params->iewToCommitDelay),
@@ -80,7 +82,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
       fetchToCommitDelay(params->commitToFetchDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       drainPending(false),
       switchedOut(false),
       trapLatency(params->trapLatency)

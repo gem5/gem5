@@ -33,7 +33,6 @@
 
 #include "arch/alpha/isa_traits.hh"
 
-#include "cpu/o3/alpha/params.hh"
 #include "cpu/o3/cpu_policy.hh"
 
 
@@ -76,9 +75,6 @@ struct AlphaSimpleImpl
      * case.
      */
     typedef O3CPU CPUType;
-
-    /** The Params to be passed to each stage. */
-    typedef AlphaSimpleParams Params;
 
     enum {
       MaxWidth = 8,

@@ -41,6 +41,8 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
+class DerivO3CPUParams;
+
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch
@@ -58,7 +60,6 @@ class DefaultFetch
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     /** Typedefs from the CPU policy. */
     typedef typename CPUPol::BPredUnit BPredUnit;
@@ -160,7 +161,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(O3CPU *_cpu, Params *params);
+    DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of fetch. */
     std::string name() const;

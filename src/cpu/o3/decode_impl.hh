@@ -30,15 +30,17 @@
 
 #include "cpu/o3/decode.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
-DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, Params *params)
+DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       renameToDecodeDelay(params->renameToDecodeDelay),
       iewToDecodeDelay(params->iewToDecodeDelay),
       commitToDecodeDelay(params->commitToDecodeDelay),
       fetchToDecodeDelay(params->fetchToDecodeDelay),
       decodeWidth(params->decodeWidth),
-      numThreads(params->numberOfThreads)
+      numThreads(params->numThreads)
 {
     _status = Inactive;
 
