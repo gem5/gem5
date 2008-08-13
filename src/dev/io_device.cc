@@ -138,7 +138,10 @@ DmaPort::recvTiming(PacketPtr pkt)
         state->numBytes += pkt->req->getSize();
         assert(state->totBytes >= state->numBytes);
         if (state->totBytes == state->numBytes) {
-            state->completionEvent->process();
+            if (state->delay)
+                state->completionEvent->schedule(state->delay + curTick);
+            else
+                state->completionEvent->process();
             delete state;
         }
         delete pkt->req;
@@ -216,13 +219,13 @@ DmaPort::recvRetry()
 
 void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data)
+                   uint8_t *data, Tick delay)
 {
     assert(event);
 
     assert(device->getState() == SimObject::Running);
 
-    DmaReqState *reqState = new DmaReqState(event, this, size);
+    DmaReqState *reqState = new DmaReqState(event, this, size, delay);
 
 
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
@@ -314,7 +317,7 @@ DmaPort::sendDma()
 
         if (state->totBytes == state->numBytes) {
             assert(!state->completionEvent->scheduled());
-            state->completionEvent->schedule(curTick + lat);
+            state->completionEvent->schedule(curTick + lat + state->delay);
             delete state;
             delete pkt->req;
         }
