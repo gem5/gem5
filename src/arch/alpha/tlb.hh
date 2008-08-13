@@ -92,7 +92,7 @@ namespace AlphaISA
             return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
         }
 
-        static Fault checkCacheability(RequestPtr &req);
+        static Fault checkCacheability(RequestPtr &req, bool itb = false);
 
         // Checkpointing
         virtual void serialize(std::ostream &os);

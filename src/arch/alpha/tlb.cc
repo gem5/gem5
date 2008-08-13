@@ -116,7 +116,7 @@ TLB::lookup(Addr vpn, uint8_t asn)
 
 
 Fault
-TLB::checkCacheability(RequestPtr &req)
+TLB::checkCacheability(RequestPtr &req, bool itb)
 {
 // in Alpha, cacheability is controlled by upper-level bits of the
 // physical address
@@ -148,6 +148,12 @@ TLB::checkCacheability(RequestPtr &req)
             req->setPaddr(req->getPaddr() & PAddrUncachedMask);
 #endif
         }
+        // We shouldn't be able to read from an uncachable address in Alpha as
+        // we don't have a ROM and we don't want to try to fetch from a device 
+        // register as we destroy any data that is clear-on-read. 
+        if (req->isUncacheable() && itb) 
+            return new UnimpFault("CPU trying to fetch from uncached I/O");
+
     }
     return NoFault;
 }
@@ -390,7 +396,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     if (req->getPaddr() & ~PAddrImplMask)
         return genMachineCheckFault();
 
-    return checkCacheability(req);
+    return checkCacheability(req, true);
 
 }
 
