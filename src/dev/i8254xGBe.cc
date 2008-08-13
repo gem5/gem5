@@ -57,7 +57,11 @@ using namespace Net;
 IGbE::IGbE(const Params *p)
     : EtherDevice(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
-      txTick(false), txFifoTick(false), rxDmaPacket(false), rdtrEvent(this), radvEvent(this),
+      txTick(false), txFifoTick(false), rxDmaPacket(false), 
+      fetchDelay(p->fetch_delay), wbDelay(p->wb_delay), 
+      fetchCompDelay(p->fetch_comp_delay), wbCompDelay(p->wb_comp_delay), 
+      rxWriteDelay(p->rx_write_delay), txReadDelay(p->tx_read_delay),  
+      rdtrEvent(this), radvEvent(this),
       tadvEvent(this), tidvEvent(this), tickEvent(this), interEvent(this),
       rxDescCache(this, name()+".RxDesc", p->rx_desc_cache_size),
       txDescCache(this, name()+".TxDesc", p->tx_desc_cache_size),
@@ -714,7 +718,7 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
     pktPtr = packet;
     pktDone = false;
     igbe->dmaWrite(igbe->platform->pciToDma(unusedCache.front()->buf),
-            packet->length, &pktEvent, packet->data);
+            packet->length, &pktEvent, packet->data, igbe->rxWriteDelay);
 }
 
 void
@@ -932,7 +936,7 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
 
     DPRINTF(EthernetDesc, "Starting DMA of packet at offset %d\n", p->length);
     igbe->dmaRead(igbe->platform->pciToDma(TxdOp::getBuf(desc)),
-            TxdOp::getLen(desc), &pktEvent, p->data + p->length);
+            TxdOp::getLen(desc), &pktEvent, p->data + p->length, igbe->txReadDelay);
 
 
 }

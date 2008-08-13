@@ -83,6 +83,11 @@ class IGbE : public EtherDevice
 
     bool rxDmaPacket;
 
+    // Delays in managaging descriptors
+    Tick fetchDelay, wbDelay;
+    Tick fetchCompDelay, wbCompDelay;
+    Tick rxWriteDelay, txReadDelay;
+
     // Event and function to deal with RDTR timer expiring
     void rdtrProcess() {
         rxDescCache.writeback(0);
@@ -217,7 +222,8 @@ class IGbE : public EtherDevice
       public:
         DescCache(IGbE *i, const std::string n, int s)
             : igbe(i), _name(n), cachePnt(0), size(s), curFetching(0), wbOut(0),
-              pktPtr(NULL), fetchEvent(this), wbEvent(this)
+              pktPtr(NULL), wbDelayEvent(this), fetchDelayEvent(this), 
+              fetchEvent(this), wbEvent(this)
         {
             fetchBuf = new T[size];
             wbBuf = new T[size];
@@ -244,6 +250,21 @@ class IGbE : public EtherDevice
 
         void writeback(Addr aMask)
         {
+            if (wbOut) {
+                if (aMask < wbAlignment) {
+                    moreToWb = true;
+                    wbAlignment = aMask;
+                }
+                return;
+            }
+
+            wbAlignment = aMask;
+            if (!wbDelayEvent.scheduled())
+                wbDelayEvent.schedule(igbe->wbDelay + curTick);
+        }
+            
+        void writeback1()
+        {
             int curHead = descHead();
             int max_to_wb = usedCache.size();
 
@@ -252,26 +273,13 @@ class IGbE : public EtherDevice
                     curHead, descTail(), descLen(), cachePnt, max_to_wb,
                     descLeft());
 
-            // Check if this writeback is less restrictive that the previous
-            // and if so setup another one immediately following it
-            if (wbOut && (aMask < wbAlignment)) {
-                moreToWb = true;
-                wbAlignment = aMask;
-                DPRINTF(EthernetDesc, "Writing back already in process, returning\n");
-                return;
-            }
-
-
-            moreToWb = false;
-            wbAlignment = aMask;
-
             if (max_to_wb + curHead >= descLen()) {
                 max_to_wb = descLen() - curHead;
                 moreToWb = true;
                 // this is by definition aligned correctly
-            } else if (aMask != 0) {
+            } else if (wbAlignment != 0) {
                 // align the wb point to the mask
-                max_to_wb = max_to_wb & ~aMask;
+                max_to_wb = max_to_wb & ~wbAlignment;
             }
 
             DPRINTF(EthernetDesc, "Writing back %d descriptors\n", max_to_wb);
@@ -291,13 +299,22 @@ class IGbE : public EtherDevice
 
             assert(wbOut);
             igbe->dmaWrite(igbe->platform->pciToDma(descBase() + curHead * sizeof(T)),
-                    wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf);
+                    wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf,
+                    igbe->wbCompDelay);
         }
+        EventWrapper<DescCache, &DescCache::writeback1> wbDelayEvent;
 
         /** Fetch a chunk of descriptors into the descriptor cache.
          * Calls fetchComplete when the memory system returns the data
          */
+
         void fetchDescriptors()
+        {
+            if (!fetchDelayEvent.scheduled())
+                fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
+        }
+
+        void fetchDescriptors1()
         {
             size_t max_to_fetch;
 
@@ -331,9 +348,11 @@ class IGbE : public EtherDevice
                     curFetching * sizeof(T));
             assert(curFetching);
             igbe->dmaRead(igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
-                    curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf);
+                    curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf,
+                    igbe->fetchCompDelay);
         }
 
+        EventWrapper<DescCache, &DescCache::fetchDescriptors1> fetchDelayEvent;
 
         /** Called by event when dma to read descriptors is completed
          */
@@ -391,6 +410,7 @@ class IGbE : public EtherDevice
             // If we still have more to wb, call wb now
             intAfterWb();
             if (moreToWb) {
+                moreToWb = false;
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
                 writeback(wbAlignment);
             }
@@ -463,6 +483,16 @@ class IGbE : public EtherDevice
                 arrayParamOut(os, csprintf("unusedCache_%d", x),
                         (uint8_t*)unusedCache[x],sizeof(T));
             }
+
+            Tick fetch_delay = 0, wb_delay = 0;
+            if (fetchDelayEvent.scheduled())
+                fetch_delay = fetchDelayEvent.when();
+            SERIALIZE_SCALAR(fetch_delay);
+            if (wbDelayEvent.scheduled())
+                wb_delay = wbDelayEvent.when();
+            SERIALIZE_SCALAR(wb_delay);
+
+
         }
 
         virtual void unserialize(Checkpoint *cp, const std::string &section)
@@ -491,6 +521,15 @@ class IGbE : public EtherDevice
                         (uint8_t*)temp,sizeof(T));
                 unusedCache.push_back(temp);
             }
+            Tick fetch_delay = 0, wb_delay = 0;
+            UNSERIALIZE_SCALAR(fetch_delay);
+            UNSERIALIZE_SCALAR(wb_delay);
+            if (fetch_delay)
+                fetchDelayEvent.schedule(fetch_delay);
+            if (wb_delay)
+                wbDelayEvent.schedule(wb_delay);
+
+
         }
         virtual bool hasOutstandingEvents() {
             return wbEvent.scheduled() || fetchEvent.scheduled();

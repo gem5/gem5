@@ -98,6 +98,13 @@ class IGbE(EtherDevice):
     InterruptLine = 0x1e
     InterruptPin = 0x01
     BAR0Size = '128kB'
+    wb_delay = Param.Latency('10ns', "delay before desc writeback occurs")
+    fetch_delay = Param.Latency('10ns', "delay before desc fetch occurs")
+    fetch_comp_delay = Param.Latency('10ns', "delay after desc fetch occurs")
+    wb_comp_delay = Param.Latency('10ns', "delay after desc wb occurs")
+    tx_read_delay = Param.Latency('0ns', "delay after tx dma read")
+    rx_write_delay = Param.Latency('0ns', "delay after rx dma read")
+
 
 class EtherDevBase(EtherDevice):
     type = 'EtherDevBase'
