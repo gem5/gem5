@@ -588,7 +588,6 @@ IGbE::postInterrupt(IntTypes t, bool now)
         if (interEvent.scheduled()) {
             interEvent.deschedule();
         }
-        postedInterrupts++;
         cpuPostInt();
     } else {
        Tick int_time = lastInterrupt + itr_interval;
@@ -611,6 +610,8 @@ IGbE::delayIntEvent()
 void
 IGbE::cpuPostInt()
 {
+
+    postedInterrupts++;
 
     if (!(regs.icr() & regs.imr)) {
         DPRINTF(Ethernet, "Interrupt Masked. Not Posting\n");

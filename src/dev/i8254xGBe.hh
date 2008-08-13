@@ -87,7 +87,7 @@ class IGbE : public EtherDevice
     void rdtrProcess() {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting RXT interrupt because RDTR timer expired\n");
-        postInterrupt(iGbReg::IT_RXT, true);
+        postInterrupt(iGbReg::IT_RXT);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
@@ -97,7 +97,7 @@ class IGbE : public EtherDevice
     void radvProcess() {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting RXT interrupt because RADV timer expired\n");
-        postInterrupt(iGbReg::IT_RXT, true);
+        postInterrupt(iGbReg::IT_RXT);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
@@ -107,7 +107,7 @@ class IGbE : public EtherDevice
     void tadvProcess() {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting TXDW interrupt because TADV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW, true);
+        postInterrupt(iGbReg::IT_TXDW);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::tadvProcess>;
@@ -117,7 +117,7 @@ class IGbE : public EtherDevice
     void tidvProcess() {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting TXDW interrupt because TIDV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW, true);
+        postInterrupt(iGbReg::IT_TXDW);
     }
     //friend class EventWrapper<IGbE, &IGbE::tidvProcess>;
     EventWrapper<IGbE, &IGbE::tidvProcess> tidvEvent;
