@@ -357,7 +357,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
 
 #if FULL_SYSTEM
-BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
+BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
     : Event(&mainEventQueue), cpu(_cpu), interval(_interval)
 { }
 

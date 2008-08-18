@@ -122,10 +122,10 @@ class BaseCPU : public MemObject
     {
       private:
         BaseCPU *cpu;
-        int interval;
+        Tick interval;
 
       public:
-        ProfileEvent(BaseCPU *cpu, int interval);
+        ProfileEvent(BaseCPU *cpu, Tick interval);
         void process();
     };
     ProfileEvent *profileEvent;

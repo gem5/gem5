@@ -39,5 +39,3 @@ class OzoneChecker(BaseCPU):
         "If a load result is incorrect, only print a warning and do not exit")
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
-    if build_env['FULL_SYSTEM']:
-        profile = Param.Latency('0ns', "trace the kernel stack")
