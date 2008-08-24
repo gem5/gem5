@@ -587,6 +587,8 @@ IGbE::postInterrupt(IntTypes t, bool now)
     regs.icr = regs.icr() | t;
 
     Tick itr_interval = Clock::Int::ns * 256 * regs.itr.interval();
+    DPRINTF(EthernetIntr, "EINT: postInterrupt() curTick: %d itr: %d interval: %d\n",
+            curTick, regs.itr.interval(), itr_interval);
 
     if (regs.itr.interval() == 0 || now || lastInterrupt + itr_interval <= curTick) {
         if (interEvent.scheduled()) {
@@ -652,6 +654,7 @@ IGbE::cpuPostInt()
 
     intrPost();
 
+    lastInterrupt = curTick;
 }
 
 void
@@ -1404,6 +1407,7 @@ IGbE::txWire()
 
         txBytes += txFifo.front()->length;
         txPackets++;
+        txFifoTick = false;
 
         txFifo.pop();
     } else {

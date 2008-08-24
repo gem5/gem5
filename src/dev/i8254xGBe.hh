@@ -133,6 +133,8 @@ class IGbE : public EtherDevice
     EventWrapper<IGbE, &IGbE::tick> tickEvent;
 
 
+    uint64_t macAddr;
+
     void rxStateMachine();
     void txStateMachine();
     void txWire();
@@ -250,23 +252,23 @@ class IGbE : public EtherDevice
 
         void writeback(Addr aMask)
         {
+            int curHead = descHead();
+            int max_to_wb = usedCache.size();
+
+            // Check if this writeback is less restrictive that the previous
+            // and if so setup another one immediately following it
             if (wbOut) {
                 if (aMask < wbAlignment) {
                     moreToWb = true;
                     wbAlignment = aMask;
                 }
+                DPRINTF(EthernetDesc, "Writing back already in process, returning\n");
                 return;
             }
 
+            moreToWb = false;
             wbAlignment = aMask;
-            if (!wbDelayEvent.scheduled())
-                wbDelayEvent.schedule(igbe->wbDelay + curTick);
-        }
-            
-        void writeback1()
-        {
-            int curHead = descHead();
-            int max_to_wb = usedCache.size();
+   
 
             DPRINTF(EthernetDesc, "Writing back descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_wb: %d descleft: %d\n",
@@ -284,21 +286,35 @@ class IGbE : public EtherDevice
 
             DPRINTF(EthernetDesc, "Writing back %d descriptors\n", max_to_wb);
 
-            if (max_to_wb <= 0 || wbOut)
+            if (max_to_wb <= 0) {
                 return;
+            }
 
             wbOut = max_to_wb;
 
-            for (int x = 0; x < wbOut; x++) {
-                assert(usedCache.size());
-                memcpy(&wbBuf[x], usedCache[0], sizeof(T));
-                delete usedCache[0];
-                usedCache.pop_front();
+            assert(!wbDelayEvent.scheduled()); 
+            wbDelayEvent.schedule(igbe->wbDelay + curTick);
+        }
+            
+        void writeback1()
+        {
+            // If we're draining delay issuing this DMA
+            if (igbe->drainEvent) {
+                wbDelayEvent.schedule(igbe->wbDelay + curTick);
+                return;
             }
 
+            DPRINTF(EthernetDesc, "Beining DMA of %d descriptors\n", wbOut);
+            
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                memcpy(&wbBuf[x], usedCache[x], sizeof(T));
+                 //delete usedCache[0];
+                //usedCache.pop_front();
+            }
 
             assert(wbOut);
-            igbe->dmaWrite(igbe->platform->pciToDma(descBase() + curHead * sizeof(T)),
+            igbe->dmaWrite(igbe->platform->pciToDma(descBase() + descHead() * sizeof(T)),
                     wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf,
                     igbe->wbCompDelay);
         }
@@ -310,16 +326,12 @@ class IGbE : public EtherDevice
 
         void fetchDescriptors()
         {
-            if (!fetchDelayEvent.scheduled())
-                fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
-        }
-
-        void fetchDescriptors1()
-        {
             size_t max_to_fetch;
 
-            if (curFetching)
+            if (curFetching) {
+                DPRINTF(EthernetDesc, "Currently fetching %d descriptors, returning\n", curFetching);
                 return;
+            }
 
             if (descTail() >= cachePnt)
                 max_to_fetch = descTail() - cachePnt;
@@ -329,6 +341,7 @@ class IGbE : public EtherDevice
             size_t free_cache = size - usedCache.size() - unusedCache.size();
 
             max_to_fetch = std::min(max_to_fetch, free_cache);
+            
 
             DPRINTF(EthernetDesc, "Fetching descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_fetch: %d descleft: %d\n",
@@ -338,9 +351,21 @@ class IGbE : public EtherDevice
             // Nothing to do
             if (max_to_fetch == 0)
                 return;
-
+            
             // So we don't have two descriptor fetches going on at once
             curFetching = max_to_fetch;
+
+            assert(!fetchDelayEvent.scheduled());
+            fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
+        }
+
+        void fetchDescriptors1()
+        {
+            // If we're draining delay issuing this DMA
+            if (igbe->drainEvent) {
+                fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
+                return;
+            }
 
             DPRINTF(EthernetDesc, "Fetching descriptors at %#x (%#x), size: %#x\n",
                     descBase() + cachePnt * sizeof(T),
@@ -364,6 +389,7 @@ class IGbE : public EtherDevice
                 memcpy(newDesc, &fetchBuf[x], sizeof(T));
                 unusedCache.push_back(newDesc);
             }
+
 
 #ifndef NDEBUG
             int oldCp = cachePnt;
@@ -394,6 +420,12 @@ class IGbE : public EtherDevice
 #ifndef NDEBUG
             long oldHead = curHead;
 #endif
+            
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                delete usedCache[0];
+                usedCache.pop_front();
+            }
 
             curHead += wbOut;
             wbOut = 0;
