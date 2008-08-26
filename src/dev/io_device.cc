@@ -190,9 +190,9 @@ void
 DmaPort::recvRetry()
 {
     assert(transmitList.size());
-    PacketPtr pkt = transmitList.front();
     bool result = true;
     do {
+        PacketPtr pkt = transmitList.front();
         DPRINTF(DMA, "Retry on %s addr %#x\n",
                 pkt->cmdString(), pkt->getAddr());
         result = sendTiming(pkt);
