@@ -126,7 +126,8 @@ def macroop MOVSXD_R_P {
 };
 
 def macroop MOVSX_B_R_R {
-    sexti reg, regm, 7
+    mov t1, t1, regm, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_B_R_M {
@@ -160,7 +161,8 @@ def macroop MOVSX_W_R_P {
 #
 
 def macroop MOVZX_B_R_R {
-    zexti reg, regm, 7
+    mov t1, t1, regm, dataSize=1
+    zexti reg, t1, 7
 };
 
 def macroop MOVZX_B_R_M {
