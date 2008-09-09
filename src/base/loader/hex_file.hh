@@ -28,50 +28,31 @@
  * Authors: Jaidev Patwardhan
  */
 
-#ifndef __HEX_FILE_HH__
-#define __HEX_FILE_HH__
+#ifndef __BASE_LOADER_HEX_FILE_HH__
+#define __BASE_LOADER_HEX_FILE_HH__
 
+#include <cstdio>
 #include <limits>
 #include <string>
 
 #include "sim/host.hh"	// for Addr
-#include <fstream>
 
 class Port;
 
 class HexFile
 {
-  public:
-
-
   protected:
     const std::string filename;
     FILE *fp;
 
+    void parseLine(char *, Addr *, uint32_t *);
+
   public:
-    virtual ~HexFile();
     HexFile(const std::string _filename);
+    virtual ~HexFile();
 
     void close();
-
-    bool loadSections(Port *memPort, Addr addrMask =
-            std::numeric_limits<Addr>::max());
-
-  protected:
-
-  typedef struct {
-    Addr MemAddr;
-    uint32_t Data;
-  } HexLine;
-
-    Addr entry;
-    Addr globalPtr;
-
-  public:
-    void parseLine(char *,Addr *,uint32_t *);
-    Addr entryPoint() const { return entry; }
-    Addr globalPointer() const { return globalPtr; }
-
+    bool loadSections(Port *memPort);
 };
 
-#endif // __HEX_FILE_HH__
+#endif // __BASE_LOADER_HEX_FILE_HH__
