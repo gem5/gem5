@@ -82,33 +82,33 @@ objParamIn(Checkpoint *cp, const std::string &section,
 // These macros are streamlined to use in serialize/unserialize
 // functions.  It's assumed that serialize() has a parameter 'os' for
 // the ostream, and unserialize() has parameters 'cp' and 'section'.
-#define SERIALIZE_SCALAR(scalar)	paramOut(os, #scalar, scalar)
+#define SERIALIZE_SCALAR(scalar)        paramOut(os, #scalar, scalar)
 
-#define UNSERIALIZE_SCALAR(scalar)	paramIn(cp, section, #scalar, scalar)
+#define UNSERIALIZE_SCALAR(scalar)      paramIn(cp, section, #scalar, scalar)
 
 // ENUMs are like SCALARs, but we cast them to ints on the way out
-#define SERIALIZE_ENUM(scalar)		paramOut(os, #scalar, (int)scalar)
+#define SERIALIZE_ENUM(scalar)          paramOut(os, #scalar, (int)scalar)
 
-#define UNSERIALIZE_ENUM(scalar)		\
- do {						\
-    int tmp;					\
-    paramIn(cp, section, #scalar, tmp);		\
-    scalar = (typeof(scalar))tmp;		\
+#define UNSERIALIZE_ENUM(scalar)                \
+ do {                                           \
+    int tmp;                                    \
+    paramIn(cp, section, #scalar, tmp);         \
+    scalar = (typeof(scalar))tmp;               \
   } while (0)
 
-#define SERIALIZE_ARRAY(member, size)	\
+#define SERIALIZE_ARRAY(member, size)           \
         arrayParamOut(os, #member, member, size)
 
-#define UNSERIALIZE_ARRAY(member, size)	\
+#define UNSERIALIZE_ARRAY(member, size)         \
         arrayParamIn(cp, section, #member, member, size)
 
-#define SERIALIZE_OBJPTR(objptr)	paramOut(os, #objptr, (objptr)->name())
+#define SERIALIZE_OBJPTR(objptr)        paramOut(os, #objptr, (objptr)->name())
 
-#define UNSERIALIZE_OBJPTR(objptr)			\
-  do {							\
-    SimObject *sptr;				\
-    objParamIn(cp, section, #objptr, sptr);		\
-    objptr = dynamic_cast<typeof(objptr)>(sptr);	\
+#define UNSERIALIZE_OBJPTR(objptr)                      \
+  do {                                                  \
+    SimObject *sptr;                                    \
+    objParamIn(cp, section, #objptr, sptr);             \
+    objptr = dynamic_cast<typeof(objptr)>(sptr);        \
   } while (0)
 
 /*
@@ -211,8 +211,8 @@ class SerializableClass
 // SerializableBuilder and SerializableClass objects
 //
 
-#define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)			   \
-SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,			   \
+#define REGISTER_SERIALIZEABLE(CLASS_NAME, OBJ_CLASS)                      \
+SerializableClass the##OBJ_CLASS##Class(CLASS_NAME,                        \
                                          OBJ_CLASS::createForUnserialize);
 
 void

@@ -46,16 +46,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-ssize_t	atomicio(ssize_t (*)(), int, void *, size_t);
-void	readwrite(int);
-int	remote_connect(char *, char *, struct addrinfo);
+ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
+void    readwrite(int);
+int     remote_connect(char *, char *, struct addrinfo);
 
-struct	termios saved_ios;
-void	raw_term();
-void	restore_term();
+struct  termios saved_ios;
+void    raw_term();
+void    restore_term();
 
-char	progname[256];
-void	usage(int);
+char    progname[256];
+void    usage(int);
 
 int
 main(int argc, char *argv[])

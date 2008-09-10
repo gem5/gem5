@@ -110,15 +110,15 @@ namespace AlphaISA {
         TlbEntry()
         {}
 
-        Addr tag;			// virtual page number tag
-        Addr ppn;			// physical page number
-        uint8_t xre;		// read permissions - VMEM_PERM_* mask
-        uint8_t xwe;		// write permissions - VMEM_PERM_* mask
-        uint8_t asn;		// address space number
-        bool asma;			// address space match
-        bool fonr;			// fault on read
-        bool fonw;			// fault on write
-        bool valid;			// valid page table entry
+        Addr tag;               // virtual page number tag
+        Addr ppn;               // physical page number
+        uint8_t xre;            // read permissions - VMEM_PERM_* mask
+        uint8_t xwe;            // write permissions - VMEM_PERM_* mask
+        uint8_t asn;            // address space number
+        bool asma;              // address space match
+        bool fonr;              // fault on read
+        bool fonw;              // fault on write
+        bool valid;             // valid page table entry
 
         Addr pageStart()
         {

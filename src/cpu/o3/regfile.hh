@@ -265,7 +265,7 @@ class PhysRegFile
 
 #if FULL_SYSTEM
   private:
-    int intrflag;			// interrupt flag
+    int intrflag;                       // interrupt flag
 #endif
 
   private:

@@ -123,11 +123,11 @@ namespace AlphaISA
     // EV5 modes
     enum mode_type
     {
-        mode_kernel = 0,		// kernel
-        mode_executive = 1,		// executive (unused by unix)
-        mode_supervisor = 2,	// supervisor (unused by unix)
-        mode_user = 3,		// user mode
-        mode_number			// number of modes
+        mode_kernel = 0,        // kernel
+        mode_executive = 1,     // executive (unused by unix)
+        mode_supervisor = 2,    // supervisor (unused by unix)
+        mode_user = 3,          // user mode
+        mode_number             // number of modes
     };
 
     // Constants Related to the number of registers
@@ -148,7 +148,7 @@ namespace AlphaISA
     const int TotalDataRegs = NumIntRegs + NumFloatRegs;
 
     // semantically meaningful register indices
-    const int ZeroReg = 31;	// architecturally meaningful
+    const int ZeroReg = 31;     // architecturally meaningful
     // the rest of these depend on the ABI
     const int StackPointerReg = 30;
     const int GlobalPointerReg = 29;
@@ -164,7 +164,7 @@ namespace AlphaISA
     const int SyscallPseudoReturnReg = ArgumentReg[4];
     const int SyscallSuccessReg = 19;
 
-    const int LogVMPageSize = 13;	// 8K bytes
+    const int LogVMPageSize = 13;       // 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned

@@ -61,8 +61,8 @@ class IniFile
     ///
     class Entry
     {
-        std::string	value;		///< The entry value.
-        mutable bool	referenced;	///< Has this entry been used?
+        std::string     value;          ///< The entry value.
+        mutable bool    referenced;     ///< Has this entry been used?
 
       public:
         /// Constructor.
@@ -96,8 +96,8 @@ class IniFile
         /// EntryTable type.  Map of strings to Entry object pointers.
         typedef m5::hash_map<std::string, Entry *> EntryTable;
 
-        EntryTable	table;		///< Table of entries.
-        mutable bool	referenced;	///< Has this section been used?
+        EntryTable      table;          ///< Table of entries.
+        mutable bool    referenced;     ///< Has this section been used?
 
       public:
         /// Constructor.

@@ -141,9 +141,9 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         // Try to fetch the instruction
 
 #if FULL_SYSTEM
-#define IFETCH_FLAGS(pc)	((pc) & 1) ? PHYSICAL : 0
+#define IFETCH_FLAGS(pc)        ((pc) & 1) ? PHYSICAL : 0
 #else
-#define IFETCH_FLAGS(pc)	0
+#define IFETCH_FLAGS(pc)        0
 #endif
 
         uint64_t fetch_PC = thread->readPC() & ~3;

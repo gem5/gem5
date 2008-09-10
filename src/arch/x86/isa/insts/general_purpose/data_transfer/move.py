@@ -342,7 +342,7 @@ processDescriptor:
 '''
 #let {{
 #    class MOVD(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class MOVNTI(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

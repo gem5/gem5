@@ -77,8 +77,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	/// Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,	/// Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        /// Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      /// Max dest regs
     };
 
     /** The StaticInst used by this BaseDynInst. */
@@ -486,24 +486,24 @@ class BaseDynInst : public FastAlloc, public RefCounted
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //
-    bool isNop()	  const { return staticInst->isNop(); }
-    bool isMemRef()    	  const { return staticInst->isMemRef(); }
-    bool isLoad()	  const { return staticInst->isLoad(); }
-    bool isStore()	  const { return staticInst->isStore(); }
+    bool isNop()          const { return staticInst->isNop(); }
+    bool isMemRef()       const { return staticInst->isMemRef(); }
+    bool isLoad()         const { return staticInst->isLoad(); }
+    bool isStore()        const { return staticInst->isStore(); }
     bool isStoreConditional() const
     { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
     bool isCopy()         const { return staticInst->isCopy(); }
-    bool isInteger()	  const { return staticInst->isInteger(); }
-    bool isFloating()	  const { return staticInst->isFloating(); }
-    bool isControl()	  const { return staticInst->isControl(); }
-    bool isCall()	  const { return staticInst->isCall(); }
-    bool isReturn()	  const { return staticInst->isReturn(); }
-    bool isDirectCtrl()	  const { return staticInst->isDirectCtrl(); }
+    bool isInteger()      const { return staticInst->isInteger(); }
+    bool isFloating()     const { return staticInst->isFloating(); }
+    bool isControl()      const { return staticInst->isControl(); }
+    bool isCall()         const { return staticInst->isCall(); }
+    bool isReturn()       const { return staticInst->isReturn(); }
+    bool isDirectCtrl()   const { return staticInst->isDirectCtrl(); }
     bool isIndirectCtrl() const { return staticInst->isIndirectCtrl(); }
-    bool isCondCtrl()	  const { return staticInst->isCondCtrl(); }
-    bool isUncondCtrl()	  const { return staticInst->isUncondCtrl(); }
+    bool isCondCtrl()     const { return staticInst->isCondCtrl(); }
+    bool isUncondCtrl()   const { return staticInst->isUncondCtrl(); }
     bool isCondDelaySlot() const { return staticInst->isCondDelaySlot(); }
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
@@ -560,7 +560,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr branchTarget() const { return staticInst->branchTarget(PC); }
 
     /** Returns the number of source registers. */
-    int8_t numSrcRegs()	const { return staticInst->numSrcRegs(); }
+    int8_t numSrcRegs() const { return staticInst->numSrcRegs(); }
 
     /** Returns the number of destination registers. */
     int8_t numDestRegs() const { return staticInst->numDestRegs(); }

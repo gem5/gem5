@@ -55,7 +55,7 @@ bool uncacheBit39 = false;
 bool uncacheBit40 = false;
 #endif
 
-#define MODE2MASK(X)			(1 << (X))
+#define MODE2MASK(X)                    (1 << (X))
 
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)

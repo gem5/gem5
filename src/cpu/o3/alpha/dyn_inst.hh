@@ -67,8 +67,8 @@ class AlphaDynInst : public BaseDynInst<Impl>
     typedef TheISA::MiscReg  MiscReg;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,	//< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
     };
 
   public:

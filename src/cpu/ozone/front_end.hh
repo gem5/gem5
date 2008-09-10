@@ -307,7 +307,7 @@ class FrontEnd
     Stats::Formula idleRate;
     Stats::Formula branchRate;
     Stats::Formula fetchRate;
-    Stats::Scalar<> IFQCount;	// cumulative IFQ occupancy
+    Stats::Scalar<> IFQCount;   // cumulative IFQ occupancy
     Stats::Formula IFQOccupancy;
     Stats::Formula IFQLatency;
     Stats::Scalar<> IFQFcount; // cumulative IFQ full count

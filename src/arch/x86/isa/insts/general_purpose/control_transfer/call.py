@@ -103,5 +103,5 @@ def macroop CALL_NEAR_P
 '''
 #let {{
 #    class CALL(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

@@ -62,10 +62,10 @@ const uint8_t  EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
  * Ethernet device registers
  */
 struct dp_regs {
-    uint32_t	command;
-    uint32_t	config;
-    uint32_t	mear;
-    uint32_t	ptscr;
+    uint32_t    command;
+    uint32_t    config;
+    uint32_t    mear;
+    uint32_t    ptscr;
     uint32_t    isr;
     uint32_t    imr;
     uint32_t    ier;

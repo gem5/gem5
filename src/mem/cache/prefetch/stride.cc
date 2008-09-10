@@ -40,12 +40,12 @@ void
 StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                     std::list<Tick> &delays)
 {
-//	Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
+//      Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
     int cpuID = pkt->req->getCpuNum();
     if (!useCPUId) cpuID = 0;
 
     /* Scan Table for IAddr Match */
-/*	std::list<strideEntry*>::iterator iter;
+/*      std::list<strideEntry*>::iterator iter;
   for (iter=table[cpuID].begin();
   iter !=table[cpuID].end();
   iter++) {

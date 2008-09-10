@@ -62,7 +62,7 @@ class DebugBreakEvent : public Event
 
     DebugBreakEvent(EventQueue *q, Tick _when);
 
-    void process();	// process event
+    void process();     // process event
     virtual const char *description() const;
 };
 

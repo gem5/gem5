@@ -52,8 +52,8 @@ namespace AlphaISA
       public:
 
         union {
-            uint64_t q[NumFloatRegs];	// integer qword view
-            double d[NumFloatRegs];	// double-precision floating point view
+            uint64_t q[NumFloatRegs];   // integer qword view
+            double d[NumFloatRegs];     // double-precision floating point view
         };
 
         void serialize(std::ostream &os);

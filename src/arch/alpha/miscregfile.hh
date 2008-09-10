@@ -60,11 +60,11 @@ namespace AlphaISA
 
     class MiscRegFile {
       protected:
-        uint64_t	fpcr;		// floating point condition codes
-        uint64_t	uniq;		// process-unique register
-        bool		lock_flag;	// lock flag for LL/SC
-        Addr		lock_addr;	// lock address for LL/SC
-        int		intr_flag;
+        uint64_t        fpcr;           // floating point condition codes
+        uint64_t        uniq;           // process-unique register
+        bool            lock_flag;      // lock flag for LL/SC
+        Addr            lock_addr;      // lock address for LL/SC
+        int             intr_flag;
 
       public:
         MiscRegFile()

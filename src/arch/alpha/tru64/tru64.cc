@@ -33,34 +33,34 @@
 // open(2) flags translation table
 OpenFlagTransTable AlphaTru64::openFlagTable[] = {
 #ifdef _MSC_VER
-  { AlphaTru64::TGT_O_RDONLY,	_O_RDONLY },
-  { AlphaTru64::TGT_O_WRONLY,	_O_WRONLY },
-  { AlphaTru64::TGT_O_RDWR,	_O_RDWR },
-  { AlphaTru64::TGT_O_APPEND,	_O_APPEND },
-  { AlphaTru64::TGT_O_CREAT,	_O_CREAT },
-  { AlphaTru64::TGT_O_TRUNC,	_O_TRUNC },
-  { AlphaTru64::TGT_O_EXCL,	_O_EXCL },
+  { AlphaTru64::TGT_O_RDONLY,   _O_RDONLY },
+  { AlphaTru64::TGT_O_WRONLY,   _O_WRONLY },
+  { AlphaTru64::TGT_O_RDWR,     _O_RDWR },
+  { AlphaTru64::TGT_O_APPEND,   _O_APPEND },
+  { AlphaTru64::TGT_O_CREAT,    _O_CREAT },
+  { AlphaTru64::TGT_O_TRUNC,    _O_TRUNC },
+  { AlphaTru64::TGT_O_EXCL,     _O_EXCL },
 #ifdef _O_NONBLOCK
-  { AlphaTru64::TGT_O_NONBLOCK,	_O_NONBLOCK },
+  { AlphaTru64::TGT_O_NONBLOCK, _O_NONBLOCK },
 #endif
 #ifdef _O_NOCTTY
-  { AlphaTru64::TGT_O_NOCTTY,	_O_NOCTTY },
+  { AlphaTru64::TGT_O_NOCTTY,   _O_NOCTTY },
 #endif
 #ifdef _O_SYNC
-  { AlphaTru64::TGT_O_SYNC,	_O_SYNC },
+  { AlphaTru64::TGT_O_SYNC,     _O_SYNC },
 #endif
 #else /* !_MSC_VER */
-  { AlphaTru64::TGT_O_RDONLY,	O_RDONLY },
-  { AlphaTru64::TGT_O_WRONLY,	O_WRONLY },
-  { AlphaTru64::TGT_O_RDWR,	O_RDWR },
-  { AlphaTru64::TGT_O_APPEND,	O_APPEND },
-  { AlphaTru64::TGT_O_CREAT,	O_CREAT },
-  { AlphaTru64::TGT_O_TRUNC,	O_TRUNC },
-  { AlphaTru64::TGT_O_EXCL,	O_EXCL },
-  { AlphaTru64::TGT_O_NONBLOCK,	O_NONBLOCK },
-  { AlphaTru64::TGT_O_NOCTTY,	O_NOCTTY },
+  { AlphaTru64::TGT_O_RDONLY,   O_RDONLY },
+  { AlphaTru64::TGT_O_WRONLY,   O_WRONLY },
+  { AlphaTru64::TGT_O_RDWR,     O_RDWR },
+  { AlphaTru64::TGT_O_APPEND,   O_APPEND },
+  { AlphaTru64::TGT_O_CREAT,    O_CREAT },
+  { AlphaTru64::TGT_O_TRUNC,    O_TRUNC },
+  { AlphaTru64::TGT_O_EXCL,     O_EXCL },
+  { AlphaTru64::TGT_O_NONBLOCK, O_NONBLOCK },
+  { AlphaTru64::TGT_O_NOCTTY,   O_NOCTTY },
 #ifdef O_SYNC
-  { AlphaTru64::TGT_O_SYNC,	O_SYNC },
+  { AlphaTru64::TGT_O_SYNC,     O_SYNC },
 #endif
 #endif /* _MSC_VER */
 };

@@ -44,8 +44,8 @@ class OperatingSystem {};
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
 struct OpenFlagTransTable {
-    int tgtFlag;	//!< Target system flag value.
-    int hostFlag;	//!< Corresponding host system flag value.
+    int tgtFlag;        //!< Target system flag value.
+    int hostFlag;       //!< Corresponding host system flag value.
 };
 
 
@@ -71,23 +71,23 @@ class OperatingSystem {
 
     /// Interface struct for uname().
     typedef struct {
-        char sysname[_SYS_NMLN];	//!< System name.
-        char nodename[_SYS_NMLN];	//!< Node name.
-        char release[_SYS_NMLN];	//!< OS release.
-        char version[_SYS_NMLN];	//!< OS version.
-        char machine[_SYS_NMLN];	//!< Machine type.
+        char sysname[_SYS_NMLN];        //!< System name.
+        char nodename[_SYS_NMLN];       //!< Node name.
+        char release[_SYS_NMLN];        //!< OS release.
+        char version[_SYS_NMLN];        //!< OS version.
+        char machine[_SYS_NMLN];        //!< Machine type.
     } utsname;
 
     /// Limit struct for getrlimit/setrlimit.
     typedef struct {
-        uint64_t  rlim_cur;	//!< soft limit
-        uint64_t  rlim_max;	//!< hard limit
+        uint64_t  rlim_cur;     //!< soft limit
+        uint64_t  rlim_max;     //!< hard limit
     } rlimit;
 
     /// For gettimeofday().
     typedef struct {
-        int64_t tv_sec;		//!< seconds
-        int64_t tv_usec;	//!< microseconds
+        int64_t tv_sec;         //!< seconds
+        int64_t tv_usec;        //!< microseconds
     } timeval;
 
     // For writev/readv
@@ -99,22 +99,22 @@ class OperatingSystem {
 
     /// For getrusage().
     typedef struct {
-        timeval ru_utime;	//!< user time used
-        timeval ru_stime;	//!< system time used
-        int64_t ru_maxrss;		//!< max rss
-        int64_t ru_ixrss;		//!< integral shared memory size
-        int64_t ru_idrss;		//!< integral unshared data "
-        int64_t ru_isrss;		//!< integral unshared stack "
-        int64_t ru_minflt;		//!< page reclaims - total vmfaults
-        int64_t ru_majflt;		//!< page faults
-        int64_t ru_nswap;		//!< swaps
-        int64_t ru_inblock;		//!< block input operations
-        int64_t ru_oublock;		//!< block output operations
-        int64_t ru_msgsnd;		//!< messages sent
-        int64_t ru_msgrcv;		//!< messages received
-        int64_t ru_nsignals;		//!< signals received
-        int64_t ru_nvcsw;		//!< voluntary context switches
-        int64_t ru_nivcsw;		//!< involuntary "
+        timeval ru_utime;       //!< user time used
+        timeval ru_stime;       //!< system time used
+        int64_t ru_maxrss;              //!< max rss
+        int64_t ru_ixrss;               //!< integral shared memory size
+        int64_t ru_idrss;               //!< integral unshared data "
+        int64_t ru_isrss;               //!< integral unshared stack "
+        int64_t ru_minflt;              //!< page reclaims - total vmfaults
+        int64_t ru_majflt;              //!< page faults
+        int64_t ru_nswap;               //!< swaps
+        int64_t ru_inblock;             //!< block input operations
+        int64_t ru_oublock;             //!< block output operations
+        int64_t ru_msgsnd;              //!< messages sent
+        int64_t ru_msgrcv;              //!< messages received
+        int64_t ru_nsignals;            //!< signals received
+        int64_t ru_nvcsw;               //!< voluntary context switches
+        int64_t ru_nivcsw;              //!< involuntary "
     } rusage;
 
 };  // class OperatingSystem

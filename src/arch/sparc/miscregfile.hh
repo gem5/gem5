@@ -171,50 +171,50 @@ namespace SparcISA
       private:
 
         /* ASR Registers */
-        //uint64_t y;		// Y (used in obsolete multiplication)
-        //uint8_t ccr;		// Condition Code Register
-        uint8_t asi;		// Address Space Identifier
-        uint64_t tick;		// Hardware clock-tick counter
-        uint8_t	fprs;		// Floating-Point Register State
-        uint64_t gsr;		// General Status Register
+        //uint64_t y;           // Y (used in obsolete multiplication)
+        //uint8_t ccr;          // Condition Code Register
+        uint8_t asi;            // Address Space Identifier
+        uint64_t tick;          // Hardware clock-tick counter
+        uint8_t fprs;           // Floating-Point Register State
+        uint64_t gsr;           // General Status Register
         uint64_t softint;
-        uint64_t tick_cmpr;	// Hardware tick compare registers
-        uint64_t stick;		// Hardware clock-tick counter
-        uint64_t stick_cmpr;	// Hardware tick compare registers
+        uint64_t tick_cmpr;     // Hardware tick compare registers
+        uint64_t stick;         // Hardware clock-tick counter
+        uint64_t stick_cmpr;    // Hardware tick compare registers
 
 
         /* Privileged Registers */
-        uint64_t tpc[MaxTL];	// Trap Program Counter (value from
+        uint64_t tpc[MaxTL];    // Trap Program Counter (value from
                                 // previous trap level)
-        uint64_t tnpc[MaxTL];	// Trap Next Program Counter (value from
+        uint64_t tnpc[MaxTL];   // Trap Next Program Counter (value from
                                 // previous trap level)
-        uint64_t tstate[MaxTL];	// Trap State
-        uint16_t tt[MaxTL];	// Trap Type (Type of trap which occured
+        uint64_t tstate[MaxTL]; // Trap State
+        uint16_t tt[MaxTL];     // Trap Type (Type of trap which occured
                                 // on the previous level)
-        uint64_t tba;		// Trap Base Address
+        uint64_t tba;           // Trap Base Address
 
-        uint16_t pstate;	// Process State Register
-        uint8_t tl;		// Trap Level
-        uint8_t pil;		// Process Interrupt Register
-        uint8_t cwp;		// Current Window Pointer
-        //uint8_t cansave;	// Savable windows
-        //uint8_t canrestore;	// Restorable windows
-        //uint8_t cleanwin;	// Clean windows
-        //uint8_t otherwin;	// Other windows
-        //uint8_t wstate;		// Window State
+        uint16_t pstate;        // Process State Register
+        uint8_t tl;             // Trap Level
+        uint8_t pil;            // Process Interrupt Register
+        uint8_t cwp;            // Current Window Pointer
+        //uint8_t cansave;      // Savable windows
+        //uint8_t canrestore;   // Restorable windows
+        //uint8_t cleanwin;     // Clean windows
+        //uint8_t otherwin;     // Other windows
+        //uint8_t wstate;               // Window State
         uint8_t gl;             // Global level register
 
         /** Hyperprivileged Registers */
-        uint64_t hpstate;	// Hyperprivileged State Register
+        uint64_t hpstate;       // Hyperprivileged State Register
         uint64_t htstate[MaxTL];// Hyperprivileged Trap State Register
         uint64_t hintp;
-        uint64_t htba;		// Hyperprivileged Trap Base Address register
-        uint64_t hstick_cmpr;	// Hardware tick compare registers
+        uint64_t htba;          // Hyperprivileged Trap Base Address register
+        uint64_t hstick_cmpr;   // Hardware tick compare registers
 
         uint64_t strandStatusReg;// Per strand status register
 
         /** Floating point misc registers. */
-        uint64_t fsr;		// Floating-Point State Register
+        uint64_t fsr;           // Floating-Point State Register
 
         /** MMU Internal Registers */
         uint16_t priContext;

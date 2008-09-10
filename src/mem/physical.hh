@@ -89,9 +89,9 @@ class PhysicalMemory : public MemObject
 
         static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
 
-        Addr addr; 	// locked address
-        int cpuNum;	// locking CPU
-        int threadNum;	// locking thread ID within CPU
+        Addr addr;      // locked address
+        int cpuNum;     // locking CPU
+        int threadNum;  // locking thread ID within CPU
 
         // check for matching execution context
         bool matchesContext(Request *req)

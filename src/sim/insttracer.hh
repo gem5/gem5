@@ -34,7 +34,7 @@
 
 #include "base/bigint.hh"
 #include "base/trace.hh"
-#include "cpu/inst_seq.hh"	// for InstSeqNum
+#include "cpu/inst_seq.hh"      // for InstSeqNum
 #include "cpu/static_inst.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
@@ -71,7 +71,7 @@ class InstRecord
     } data;
     enum {
         DataInvalid = 0,
-        DataInt8 = 1,	// set to equal number of bytes
+        DataInt8 = 1,   // set to equal number of bytes
         DataInt16 = 2,
         DataInt32 = 4,
         DataInt64 = 8,

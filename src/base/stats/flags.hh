@@ -39,28 +39,28 @@ namespace Stats {
 typedef uint32_t StatFlags;
 
 /** Nothing extra to print. */
-const StatFlags none =		0x00000000;
+const StatFlags none =          0x00000000;
 /** This Stat is Initialized */
-const StatFlags init =		0x00000001;
+const StatFlags init =          0x00000001;
 /** Print this stat. */
-const StatFlags print =		0x00000002;
+const StatFlags print =         0x00000002;
 /** Print the total. */
-const StatFlags total =		0x00000010;
+const StatFlags total =         0x00000010;
 /** Print the percent of the total that this entry represents. */
-const StatFlags pdf =		0x00000020;
+const StatFlags pdf =           0x00000020;
 /** Print the cumulative percentage of total upto this entry. */
-const StatFlags cdf =		0x00000040;
+const StatFlags cdf =           0x00000040;
 /** Print the distribution. */
-const StatFlags dist = 		0x00000080;
+const StatFlags dist =          0x00000080;
 /** Don't print if this is zero. */
-const StatFlags nozero =	0x00000100;
+const StatFlags nozero =        0x00000100;
 /** Don't print if this is NAN */
-const StatFlags nonan =		0x00000200;
+const StatFlags nonan =         0x00000200;
 /** Used for SS compatability. */
-const StatFlags __substat = 	0x80000000;
+const StatFlags __substat =     0x80000000;
 
 /** Mask of flags that can't be set directly */
-const StatFlags __reserved =	init | print | __substat;
+const StatFlags __reserved =    init | print | __substat;
 
 enum DisplayMode
 {

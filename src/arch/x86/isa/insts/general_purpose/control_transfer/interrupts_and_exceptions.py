@@ -239,7 +239,7 @@ def macroop IRET_VIRT {
 '''
 #let {{
 #    class INT(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class INTO(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

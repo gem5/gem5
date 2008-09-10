@@ -48,13 +48,13 @@ func:
 #define END(func)     \
         .end func
 
-#define SIMPLE_OP(_f, _o)	\
-        LEAF(_f)		\
-                _o;		\
-                RET;		\
+#define SIMPLE_OP(_f, _o)       \
+        LEAF(_f)                \
+                _o;             \
+                RET;            \
         END(_f)
 
-#define	ARM(reg) INST(m5_op, reg, 0, arm_func)
+#define ARM(reg) INST(m5_op, reg, 0, arm_func)
 #define QUIESCE INST(m5_op, 0, 0, quiesce_func)
 #define QUIESCENS(r1) INST(m5_op, r1, 0, quiescens_func)
 #define QUIESCECYC(r1) INST(m5_op, r1, 0, quiescecycle_func)

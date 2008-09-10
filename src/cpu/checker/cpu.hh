@@ -180,7 +180,7 @@ class CheckerCPU : public BaseCPU
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
     void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
-    Addr getEA() 	{ panic("SimpleCPU::getEA() not implemented\n"); }
+    Addr getEA()        { panic("SimpleCPU::getEA() not implemented\n"); }
 
     void prefetch(Addr addr, unsigned flags)
     {

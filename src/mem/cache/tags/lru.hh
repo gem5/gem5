@@ -127,7 +127,7 @@ public:
      * @param _assoc The associativity of the cache.
      * @param _hit_latency The latency in cycles for a hit.
      */
-    LRU(int _numSets, int _blkSize,	int _assoc, int _hit_latency);
+    LRU(int _numSets, int _blkSize,     int _assoc, int _hit_latency);
 
     /**
      * Destructor

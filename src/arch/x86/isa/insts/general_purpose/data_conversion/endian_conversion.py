@@ -56,5 +56,5 @@
 microcode = ""
 #let {{
 #    class BSWAP(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

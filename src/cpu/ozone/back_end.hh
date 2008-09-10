@@ -447,7 +447,7 @@ class BackEnd
     Stats::Scalar<> ROB_fcount;
     Stats::Formula ROB_full_rate;
 
-    Stats::Vector<>  ROB_count;	 // cumulative ROB occupancy
+    Stats::Vector<>  ROB_count;  // cumulative ROB occupancy
     Stats::Formula ROB_occ_rate;
     Stats::VectorDistribution<> ROB_occ_dist;
   public:
@@ -482,8 +482,8 @@ BackEnd<Impl>::read(RequestPtr req, T &data, int load_idx)
 
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
-//	    status = DcacheMissStall;
+//          unscheduleTickEvent();
+//          status = DcacheMissStall;
             DPRINTF(OzoneCPU, "Dcache miss stall!\n");
         } else {
             // do functional access
@@ -524,8 +524,8 @@ BackEnd<Impl>::write(RequestPtr req, T &data, int store_idx)
         if (result != MA_HIT && dcacheInterface->doEvents()) {
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
-//	    status = DcacheMissStall;
+//          unscheduleTickEvent();
+//          status = DcacheMissStall;
             DPRINTF(OzoneCPU, "Dcache miss stall!\n");
         }
     }

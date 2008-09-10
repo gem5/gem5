@@ -558,7 +558,7 @@ getuidPseudoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     // EUID goes in r20.
     tc->setIntReg(SyscallPseudoReturnReg, process->euid()); //EUID
-    return process->uid();		// UID
+    return process->uid();              // UID
 }
 
 
@@ -604,14 +604,14 @@ SyscallReturn
 getuidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
-    return process->uid();		// UID
+    return process->uid();              // UID
 }
 
 SyscallReturn
 geteuidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
-    return process->euid();		// UID
+    return process->euid();             // UID
 }
 
 SyscallReturn

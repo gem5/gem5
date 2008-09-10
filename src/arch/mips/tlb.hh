@@ -84,11 +84,11 @@ class TLB : public BaseTLB
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;	// Quick lookup into page table
+    PageTable lookupTable;      // Quick lookup into page table
 
-    MipsISA::PTE *table;	// the Page Table
-    int size;			// TLB Size
-    int nlu;			// not last used entry (for replacement)
+    MipsISA::PTE *table;        // the Page Table
+    int size;                   // TLB Size
+    int nlu;                    // not last used entry (for replacement)
 
     void nextnlu() { if (++nlu >= size) nlu = 0; }
     MipsISA::PTE *lookup(Addr vpn, uint8_t asn) const;

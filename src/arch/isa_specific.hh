@@ -38,7 +38,7 @@
 //To use them, do something like:
 //
 //#if THE_ISA == YOUR_FAVORITE_ISA
-//	conditional_code
+//      conditional_code
 //#endif
 //
 //Note that this is how this file sets up the TheISA macro.

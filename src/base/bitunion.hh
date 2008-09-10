@@ -34,7 +34,7 @@
 #include <inttypes.h>
 #include "base/bitfield.hh"
 
-//	The following implements the BitUnion system of defining bitfields
+//      The following implements the BitUnion system of defining bitfields
 //on top of an underlying class. This is done through the pervasive use of
 //both named and unnamed unions which all contain the same actual storage.
 //Since they're unioned with each other, all of these storage locations

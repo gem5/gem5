@@ -407,7 +407,7 @@ class LWBackEnd
     Stats::Scalar<> ROBFcount;
     Stats::Formula ROBFullRate;
 
-    Stats::Vector<>  ROBCount;	 // cumulative ROB occupancy
+    Stats::Vector<>  ROBCount;   // cumulative ROB occupancy
     Stats::Formula ROBOccRate;
 //    Stats::VectorDistribution<> ROBOccDist;
   public:

@@ -52,7 +52,7 @@ class Tru64 {};
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <string.h>	// for memset()
+#include <string.h>     // for memset()
 #include <unistd.h>
 
 #include "cpu/base.hh"
@@ -102,7 +102,7 @@ class Tru64 : public OperatingSystem
         int32_t     f_retired5;
         int32_t     f_retired6;
         int32_t     f_retired7;
-        fsid_t	f_fsid;
+        fsid_t  f_fsid;
         int32_t     f_spare[9];
         char    f_retired8[90];
         char    f_retired9[90];
@@ -141,10 +141,10 @@ class Tru64 : public OperatingSystem
     /// For getdirentries().
     struct dirent
     {
-        ino_t d_ino;		//!< file number of entry
-        uint16_t d_reclen;	//!< length of this record
-        uint16_t d_namlen;	//!< length of string in d_name
-        char d_name[256];	//!< dummy name length
+        ino_t d_ino;            //!< file number of entry
+        uint16_t d_reclen;      //!< length of this record
+        uint16_t d_namlen;      //!< length of string in d_name
+        char d_name[256];       //!< dummy name length
     };
 
 
@@ -162,106 +162,106 @@ class Tru64 : public OperatingSystem
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit {
-        uint64_t  rlim_cur;	//!< soft limit
-        uint64_t  rlim_max;	//!< hard limit
+        uint64_t  rlim_cur;     //!< soft limit
+        uint64_t  rlim_max;     //!< hard limit
     };
 
 
     /// For getsysinfo() GSI_CPU_INFO option.
     struct cpu_info {
-        uint32_t     current_cpu;	//!< current_cpu
-        uint32_t     cpus_in_box;	//!< cpus_in_box
-        uint32_t     cpu_type;		//!< cpu_type
-        uint32_t     ncpus;		//!< ncpus
-        uint64_t     cpus_present;	//!< cpus_present
-        uint64_t     cpus_running;	//!< cpus_running
-        uint64_t     cpu_binding;	//!< cpu_binding
-        uint64_t     cpu_ex_binding;	//!< cpu_ex_binding
-        uint32_t     mhz;		//!< mhz
-        uint32_t     unused[3];		//!< future expansion
+        uint32_t     current_cpu;       //!< current_cpu
+        uint32_t     cpus_in_box;       //!< cpus_in_box
+        uint32_t     cpu_type;          //!< cpu_type
+        uint32_t     ncpus;             //!< ncpus
+        uint64_t     cpus_present;      //!< cpus_present
+        uint64_t     cpus_running;      //!< cpus_running
+        uint64_t     cpu_binding;       //!< cpu_binding
+        uint64_t     cpu_ex_binding;    //!< cpu_ex_binding
+        uint32_t     mhz;               //!< mhz
+        uint32_t     unused[3];         //!< future expansion
     };
 
     /// For gettimeofday.
     struct timeval {
-        uint32_t tv_sec;	//!< seconds
-        uint32_t tv_usec;	//!< microseconds
+        uint32_t tv_sec;        //!< seconds
+        uint32_t tv_usec;       //!< microseconds
     };
 
     /// For getrusage().
     struct rusage {
-        struct timeval ru_utime;	//!< user time used
-        struct timeval ru_stime;	//!< system time used
-        uint64_t ru_maxrss;		//!< ru_maxrss
-        uint64_t ru_ixrss;		//!< integral shared memory size
-        uint64_t ru_idrss;		//!< integral unshared data "
-        uint64_t ru_isrss;		//!< integral unshared stack "
-        uint64_t ru_minflt;		//!< page reclaims - total vmfaults
-        uint64_t ru_majflt;		//!< page faults
-        uint64_t ru_nswap;		//!< swaps
-        uint64_t ru_inblock;		//!< block input operations
-        uint64_t ru_oublock;		//!< block output operations
-        uint64_t ru_msgsnd;		//!< messages sent
-        uint64_t ru_msgrcv;		//!< messages received
-        uint64_t ru_nsignals;		//!< signals received
-        uint64_t ru_nvcsw;		//!< voluntary context switches
-        uint64_t ru_nivcsw;		//!< involuntary "
+        struct timeval ru_utime;        //!< user time used
+        struct timeval ru_stime;        //!< system time used
+        uint64_t ru_maxrss;             //!< ru_maxrss
+        uint64_t ru_ixrss;              //!< integral shared memory size
+        uint64_t ru_idrss;              //!< integral unshared data "
+        uint64_t ru_isrss;              //!< integral unshared stack "
+        uint64_t ru_minflt;             //!< page reclaims - total vmfaults
+        uint64_t ru_majflt;             //!< page faults
+        uint64_t ru_nswap;              //!< swaps
+        uint64_t ru_inblock;            //!< block input operations
+        uint64_t ru_oublock;            //!< block output operations
+        uint64_t ru_msgsnd;             //!< messages sent
+        uint64_t ru_msgrcv;             //!< messages received
+        uint64_t ru_nsignals;           //!< signals received
+        uint64_t ru_nvcsw;              //!< voluntary context switches
+        uint64_t ru_nivcsw;             //!< involuntary "
     };
 
     /// For sigreturn().
     struct sigcontext {
-        int64_t sc_onstack;		//!< sigstack state to restore
-        int64_t sc_mask;		//!< signal mask to restore
-        int64_t sc_pc;			//!< pc at time of signal
-        int64_t sc_ps;			//!< psl to retore
-        int64_t sc_regs[32];		//!< processor regs 0 to 31
-        int64_t sc_ownedfp;		//!< fp has been used
-        int64_t sc_fpregs[32];		//!< fp regs 0 to 31
-        uint64_t sc_fpcr;		//!< floating point control reg
-        uint64_t sc_fp_control;		//!< software fpcr
-        int64_t sc_reserved1;		//!< reserved for kernel
-        uint32_t sc_kreserved1;		//!< reserved for kernel
-        uint32_t sc_kreserved2;		//!< reserved for kernel
-        size_t  sc_ssize;		//!< stack size
-        caddr_t sc_sbase;		//!< stack start
-        uint64_t sc_traparg_a0;		//!< a0 argument to trap on exc
-        uint64_t sc_traparg_a1;		//!< a1 argument to trap on exc
-        uint64_t sc_traparg_a2;		//!< a2 argument to trap on exc
-        uint64_t sc_fp_trap_pc;		//!< imprecise pc
-        uint64_t sc_fp_trigger_sum;	//!< Exception summary at trigg
-        uint64_t sc_fp_trigger_inst; 	//!< Instruction at trigger pc
+        int64_t sc_onstack;             //!< sigstack state to restore
+        int64_t sc_mask;                //!< signal mask to restore
+        int64_t sc_pc;                  //!< pc at time of signal
+        int64_t sc_ps;                  //!< psl to retore
+        int64_t sc_regs[32];            //!< processor regs 0 to 31
+        int64_t sc_ownedfp;             //!< fp has been used
+        int64_t sc_fpregs[32];          //!< fp regs 0 to 31
+        uint64_t sc_fpcr;               //!< floating point control reg
+        uint64_t sc_fp_control;         //!< software fpcr
+        int64_t sc_reserved1;           //!< reserved for kernel
+        uint32_t sc_kreserved1;         //!< reserved for kernel
+        uint32_t sc_kreserved2;         //!< reserved for kernel
+        size_t  sc_ssize;               //!< stack size
+        caddr_t sc_sbase;               //!< stack start
+        uint64_t sc_traparg_a0;         //!< a0 argument to trap on exc
+        uint64_t sc_traparg_a1;         //!< a1 argument to trap on exc
+        uint64_t sc_traparg_a2;         //!< a2 argument to trap on exc
+        uint64_t sc_fp_trap_pc;         //!< imprecise pc
+        uint64_t sc_fp_trigger_sum;     //!< Exception summary at trigg
+        uint64_t sc_fp_trigger_inst;    //!< Instruction at trigger pc
     };
 
 
 
     /// For table().
     struct tbl_sysinfo {
-        uint64_t si_user;	//!< User time
-        uint64_t si_nice;	//!< Nice time
-        uint64_t si_sys;	//!< System time
-        uint64_t si_idle;	//!< Idle time
-        uint64_t si_hz;		//!< hz
-        uint64_t si_phz;	//!< phz
-        uint64_t si_boottime;	//!< Boot time in seconds
-        uint64_t wait;		//!< Wait time
-        uint32_t  si_max_procs;	//!< rpb->rpb_numprocs
-        uint32_t  pad;		//!< padding
+        uint64_t si_user;       //!< User time
+        uint64_t si_nice;       //!< Nice time
+        uint64_t si_sys;        //!< System time
+        uint64_t si_idle;       //!< Idle time
+        uint64_t si_hz;         //!< hz
+        uint64_t si_phz;        //!< phz
+        uint64_t si_boottime;   //!< Boot time in seconds
+        uint64_t wait;          //!< Wait time
+        uint32_t  si_max_procs; //!< rpb->rpb_numprocs
+        uint32_t  pad;          //!< padding
     };
 
 
     /// For stack_create.
     struct vm_stack {
         // was void *
-        Addr	address;	//!< address hint
-        size_t	rsize;		//!< red zone size
-        size_t	ysize;		//!< yellow zone size
-        size_t	gsize;		//!< green zone size
-        size_t	swap;		//!< amount of swap to reserve
-        size_t	incr;		//!< growth increment
-        uint64_t	align;		//!< address alignment
-        uint64_t	flags;		//!< MAP_FIXED etc.
+        Addr    address;        //!< address hint
+        size_t  rsize;          //!< red zone size
+        size_t  ysize;          //!< yellow zone size
+        size_t  gsize;          //!< green zone size
+        size_t  swap;           //!< amount of swap to reserve
+        size_t  incr;           //!< growth increment
+        uint64_t        align;          //!< address alignment
+        uint64_t        flags;          //!< MAP_FIXED etc.
         // was struct memalloc_attr *
-        Addr	attr;		//!< allocation policy
-        uint64_t reserved;	//!< reserved
+        Addr    attr;           //!< allocation policy
+        uint64_t reserved;      //!< reserved
     };
 
     /// Return values for nxm calls.
@@ -271,17 +271,17 @@ class Tru64 : public OperatingSystem
     };
 
     /// For nxm_task_init.
-    static const int NXM_TASK_INIT_VP = 2;	//!< initial thread is VP
+    static const int NXM_TASK_INIT_VP = 2;      //!< initial thread is VP
 
     /// Task attribute structure.
     struct nxm_task_attr {
-        int64_t nxm_callback;	//!< nxm_callback
-        unsigned int nxm_version;	//!< nxm_version
-        unsigned short nxm_uniq_offset;	//!< nxm_uniq_offset
-        unsigned short flags;	//!< flags
-        int nxm_quantum;	//!< nxm_quantum
-        int pad1;		//!< pad1
-        int64_t pad2;		//!< pad2
+        int64_t nxm_callback;   //!< nxm_callback
+        unsigned int nxm_version;       //!< nxm_version
+        unsigned short nxm_uniq_offset; //!< nxm_uniq_offset
+        unsigned short flags;   //!< flags
+        int nxm_quantum;        //!< nxm_quantum
+        int pad1;               //!< pad1
+        int64_t pad2;           //!< pad2
     };
 
     /// Signal set.
@@ -316,9 +316,9 @@ class Tru64 : public OperatingSystem
         // the kernel but are never context-switched by the library.
 
         int             nxm_ssig;       //!< scheduler's synchronous signals
-        int             reserved1;	//!< reserved1
+        int             reserved1;      //!< reserved1
         int64_t            nxm_active;     //!< scheduler active
-        int64_t            reserved2;	//!< reserved2
+        int64_t            reserved2;   //!< reserved2
     };
 
     struct nxm_sched_state {
@@ -328,14 +328,14 @@ class Tru64 : public OperatingSystem
         int             nxm_set_quantum;        //!< quantum reset value
         int             nxm_sysevent;           //!< syscall state
         // struct nxm_upcall *
-        Addr	    nxm_uc_ret; //!< stack ptr of null thread
+        Addr        nxm_uc_ret; //!< stack ptr of null thread
         // void *
         Addr nxm_tid;               //!< scheduler's thread id
         int64_t            nxm_va;                 //!< page fault address
         // struct nxm_pth_state *
         Addr nxm_pthid; //!< id of null thread
         uint64_t   nxm_bound_pcs_count;    //!< bound PCS thread count
-        int64_t            pad[2];	   //!< pad
+        int64_t            pad[2];         //!< pad
     };
 
     /// nxm_shared.
@@ -343,7 +343,7 @@ class Tru64 : public OperatingSystem
         int64_t nxm_callback;              //!< address of upcall routine
         unsigned int nxm_version;       //!< version number
         unsigned short nxm_uniq_offset; //!< correction factor for TEB
-        unsigned short pad1;		//!< pad1
+        unsigned short pad1;            //!< pad1
         int64_t space[2];                  //!< future growth
         struct nxm_sched_state nxm_ss[1]; //!< array of shared areas
     };
@@ -368,29 +368,29 @@ class Tru64 : public OperatingSystem
 
     /// For nxm_thread_create.
     enum nxm_thread_type {
-        NXM_TYPE_SCS	= 0,
-        NXM_TYPE_VP		= 1,
-        NXM_TYPE_MANAGER	= 2
+        NXM_TYPE_SCS    = 0,
+        NXM_TYPE_VP             = 1,
+        NXM_TYPE_MANAGER        = 2
     };
 
     /// Thread attributes.
     struct nxm_thread_attr {
-        int version;	//!< version
-        int type;	//!< type
-        int cancel_flags;	//!< cancel_flags
-        int priority;	//!< priority
-        int policy;	//!< policy
-        int signal_type;	//!< signal_type
+        int version;    //!< version
+        int type;       //!< type
+        int cancel_flags;       //!< cancel_flags
+        int priority;   //!< priority
+        int policy;     //!< policy
+        int signal_type;        //!< signal_type
         // void *
-        Addr pthid;	//!< pthid
-        sigset_t sigmask;	//!< sigmask
+        Addr pthid;     //!< pthid
+        sigset_t sigmask;       //!< sigmask
         /// Initial register values.
         struct {
-            uint64_t pc;	//!< pc
-            uint64_t sp;	//!< sp
-            uint64_t a0;	//!< a0
+            uint64_t pc;        //!< pc
+            uint64_t sp;        //!< sp
+            uint64_t a0;        //!< a0
         } registers;
-        uint64_t pad2[2];	//!< pad2
+        uint64_t pad2[2];       //!< pad2
     };
 
     /// Helper function to convert a host statfs buffer to a target statfs
@@ -605,7 +605,7 @@ class Tru64 : public OperatingSystem
             process->numCpus() * sizeof(Tru64::nxm_slot_state_t);
         cur_addr += slot_state_size;
         // now the per-RAD state struct (we only support one RAD)
-        cur_addr = 0x14000;	// bump up addr for alignment
+        cur_addr = 0x14000;     // bump up addr for alignment
         Addr rad_state_addr = cur_addr;
         int rad_state_size =
             (sizeof(Tru64::nxm_shared)
@@ -616,7 +616,7 @@ class Tru64 : public OperatingSystem
         TypedBufferArg<Tru64::nxm_config_info> config(config_addr);
 
         config->nxm_nslots_per_rad = htog(process->numCpus());
-        config->nxm_nrads = htog(1);	// only one RAD in our system!
+        config->nxm_nrads = htog(1);    // only one RAD in our system!
         config->nxm_slot_state = htog(slot_state_addr);
         config->nxm_rad[0] = htog(rad_state_addr);
 
@@ -1111,37 +1111,37 @@ class Tru64_F64 : public Tru64
     /// On some hosts (notably Linux) define st_atime, st_mtime, and
     /// st_ctime as macros, so we append an X to get around this.
     struct F64_stat {
-        dev_t	st_dev;			//!< st_dev
-        int32_t	st_retired1;		//!< st_retired1
-        mode_t	st_mode;		//!< st_mode
-        nlink_t	st_nlink;		//!< st_nlink
-        uint16_t st_nlink_reserved;	//!< st_nlink_reserved
-        uid_t	st_uid;			//!< st_uid
-        gid_t	st_gid;			//!< st_gid
-        dev_t	st_rdev;		//!< st_rdev
-        dev_t	st_ldev;		//!< st_ldev
-        off_t	st_size;		//!< st_size
-        time_t	st_retired2;		//!< st_retired2
-        int32_t	st_uatime;		//!< st_uatime
-        time_t	st_retired3;		//!< st_retired3
-        int32_t	st_umtime;		//!< st_umtime
-        time_t	st_retired4;		//!< st_retired4
-        int32_t	st_uctime;		//!< st_uctime
-        int32_t	st_retired5;		//!< st_retired5
-        int32_t	st_retired6;		//!< st_retired6
-        uint32_t	st_flags;	//!< st_flags
-        uint32_t	st_gen;		//!< st_gen
-        uint64_t	st_spare[4];	//!< st_spare[4]
-        ino_t	st_ino;			//!< st_ino
-        int32_t	st_ino_reserved;	//!< st_ino_reserved
-        time_t	st_atimeX;		//!< st_atime
-        int32_t	st_atime_reserved;	//!< st_atime_reserved
-        time_t	st_mtimeX;		//!< st_mtime
-        int32_t	st_mtime_reserved;	//!< st_mtime_reserved
-        time_t	st_ctimeX;		//!< st_ctime
-        int32_t	st_ctime_reserved;	//!< st_ctime_reserved
-        uint64_t	st_blksize;	//!< st_blksize
-        uint64_t	st_blocks;	//!< st_blocks
+        dev_t   st_dev;                 //!< st_dev
+        int32_t st_retired1;            //!< st_retired1
+        mode_t  st_mode;                //!< st_mode
+        nlink_t st_nlink;               //!< st_nlink
+        uint16_t st_nlink_reserved;     //!< st_nlink_reserved
+        uid_t   st_uid;                 //!< st_uid
+        gid_t   st_gid;                 //!< st_gid
+        dev_t   st_rdev;                //!< st_rdev
+        dev_t   st_ldev;                //!< st_ldev
+        off_t   st_size;                //!< st_size
+        time_t  st_retired2;            //!< st_retired2
+        int32_t st_uatime;              //!< st_uatime
+        time_t  st_retired3;            //!< st_retired3
+        int32_t st_umtime;              //!< st_umtime
+        time_t  st_retired4;            //!< st_retired4
+        int32_t st_uctime;              //!< st_uctime
+        int32_t st_retired5;            //!< st_retired5
+        int32_t st_retired6;            //!< st_retired6
+        uint32_t        st_flags;       //!< st_flags
+        uint32_t        st_gen;         //!< st_gen
+        uint64_t        st_spare[4];    //!< st_spare[4]
+        ino_t   st_ino;                 //!< st_ino
+        int32_t st_ino_reserved;        //!< st_ino_reserved
+        time_t  st_atimeX;              //!< st_atime
+        int32_t st_atime_reserved;      //!< st_atime_reserved
+        time_t  st_mtimeX;              //!< st_mtime
+        int32_t st_mtime_reserved;      //!< st_mtime_reserved
+        time_t  st_ctimeX;              //!< st_ctime
+        int32_t st_ctime_reserved;      //!< st_ctime_reserved
+        uint64_t        st_blksize;     //!< st_blksize
+        uint64_t        st_blocks;      //!< st_blocks
     };
 
     typedef F64_stat tgt_stat;

@@ -147,11 +147,11 @@ namespace MipsISA
     // MIPS modes
     enum mode_type
     {
-        mode_kernel = 0,		// kernel
-        mode_supervisor = 1,	// supervisor
-        mode_user = 2,		// user mode
+        mode_kernel = 0,        // kernel
+        mode_supervisor = 1,    // supervisor
+        mode_user = 2,          // user mode
         mode_debug = 3,         // debug mode
-        mode_number			// number of modes
+        mode_number             // number of modes
     };
 
   inline mode_type getOperatingMode(MiscReg Stat)
@@ -209,7 +209,7 @@ namespace MipsISA
     const int SyscallPseudoReturnReg = ReturnValueReg2;
     const int SyscallSuccessReg = ArgumentReg3;
 
-    const int LogVMPageSize = 13;	// 8K bytes
+    const int LogVMPageSize = 13;       // 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned

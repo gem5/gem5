@@ -100,101 +100,101 @@ using namespace TheISA;
         return retval;                                                  \
     } while (0)
 
-#define BUILD_CACHE_PANIC(x) do {			\
-        panic("%s not compiled into M5", x);		\
+#define BUILD_CACHE_PANIC(x) do {                       \
+        panic("%s not compiled into M5", x);            \
     } while (0)
 
 #if defined(USE_CACHE_FALRU)
-#define BUILD_FALRU_CACHE do {			    \
+#define BUILD_FALRU_CACHE do {                              \
         FALRU *tags = new FALRU(block_size, size, latency); \
-        BUILD_CACHE(FALRU, tags);		\
+        BUILD_CACHE(FALRU, tags);                           \
     } while (0)
 #else
 #define BUILD_FALRU_CACHE BUILD_CACHE_PANIC("falru cache")
 #endif
 
 #if defined(USE_CACHE_LRU)
-#define BUILD_LRU_CACHE do {				\
-        LRU *tags = new LRU(numSets, block_size, assoc, latency);	\
-        BUILD_CACHE(LRU, tags);			\
+#define BUILD_LRU_CACHE do {                                            \
+        LRU *tags = new LRU(numSets, block_size, assoc, latency);       \
+        BUILD_CACHE(LRU, tags);                                         \
     } while (0)
 #else
 #define BUILD_LRU_CACHE BUILD_CACHE_PANIC("lru cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT)
-#define BUILD_SPLIT_CACHE do {					\
+#define BUILD_SPLIT_CACHE do {                                                \
         Split *tags = new Split(numSets, block_size, assoc, split_size, lifo, \
-                                two_queue, latency);		\
-        BUILD_CACHE(Split, tags);			\
+                                two_queue, latency);                          \
+        BUILD_CACHE(Split, tags);                                             \
     } while (0)
 #else
 #define BUILD_SPLIT_CACHE BUILD_CACHE_PANIC("split cache")
 #endif
 
 #if defined(USE_CACHE_SPLIT_LIFO)
-#define BUILD_SPLIT_LIFO_CACHE do {				\
+#define BUILD_SPLIT_LIFO_CACHE do {                                     \
         SplitLIFO *tags = new SplitLIFO(block_size, size, assoc,        \
-                                        latency, two_queue, -1);	\
-        BUILD_CACHE(SplitLIFO, tags);			\
+                                        latency, two_queue, -1);        \
+        BUILD_CACHE(SplitLIFO, tags);                                   \
     } while (0)
 #else
 #define BUILD_SPLIT_LIFO_CACHE BUILD_CACHE_PANIC("lifo cache")
 #endif
 
 #if defined(USE_CACHE_IIC)
-#define BUILD_IIC_CACHE do {			\
-        IIC *tags = new IIC(iic_params);		\
-        BUILD_CACHE(IIC, tags);	\
+#define BUILD_IIC_CACHE do {                            \
+        IIC *tags = new IIC(iic_params);                \
+        BUILD_CACHE(IIC, tags);                         \
     } while (0)
 #else
 #define BUILD_IIC_CACHE BUILD_CACHE_PANIC("iic")
 #endif
 
-#define BUILD_CACHES do {				\
-        if (repl == NULL) {				\
-            if (numSets == 1) {				\
-                BUILD_FALRU_CACHE;		\
-            } else {					\
-                if (split == true) {			\
-                    BUILD_SPLIT_CACHE;		\
-                } else if (lifo == true) {		\
-                    BUILD_SPLIT_LIFO_CACHE;	\
-                } else {				\
-                    BUILD_LRU_CACHE;		\
-                }					\
-            }						\
-        } else {					\
-            BUILD_IIC_CACHE;			\
-        }						\
+#define BUILD_CACHES do {                               \
+        if (repl == NULL) {                             \
+            if (numSets == 1) {                         \
+                BUILD_FALRU_CACHE;                      \
+            } else {                                    \
+                if (split == true) {                    \
+                    BUILD_SPLIT_CACHE;                  \
+                } else if (lifo == true) {              \
+                    BUILD_SPLIT_LIFO_CACHE;             \
+                } else {                                \
+                    BUILD_LRU_CACHE;                    \
+                }                                       \
+            }                                           \
+        } else {                                        \
+            BUILD_IIC_CACHE;                            \
+        }                                               \
     } while (0)
 
-#define BUILD_COHERENCE(b) do {						\
+#define BUILD_COHERENCE(b) do {                                         \
     } while (0)
 
 #if defined(USE_TAGGED)
-#define BUILD_TAGGED_PREFETCHER(t)                              \
+#define BUILD_TAGGED_PREFETCHER(t)                                      \
     pf = new TaggedPrefetcher(this)
 #else
 #define BUILD_TAGGED_PREFETCHER(t) BUILD_CACHE_PANIC("Tagged Prefetcher")
 #endif
 
 #if defined(USE_STRIDED)
-#define BUILD_STRIDED_PREFETCHER(t)                             \
+#define BUILD_STRIDED_PREFETCHER(t)                                     \
     pf = new StridePrefetcher(this)
 #else
 #define BUILD_STRIDED_PREFETCHER(t) BUILD_CACHE_PANIC("Stride Prefetcher")
 #endif
 
 #if defined(USE_GHB)
-#define BUILD_GHB_PREFETCHER(t)                         \
+#define BUILD_GHB_PREFETCHER(t)                                         \
     pf = new GHBPrefetcher(this)
 #else
 #define BUILD_GHB_PREFETCHER(t) BUILD_CACHE_PANIC("GHB Prefetcher")
 #endif
 
 #if defined(USE_TAGGED)
-#define BUILD_NULL_PREFETCHER(t)                                \
+#define BUILD_NULL_PREFETCHER(t)                                        \
     pf = new TaggedPrefetcher(this)
 #else
 #define BUILD_NULL_PREFETCHER(t) BUILD_CACHE_PANIC("NULL Prefetcher (uses Tagged)")

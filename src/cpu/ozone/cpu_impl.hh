@@ -585,7 +585,7 @@ OzoneCPU<Impl>::post_interrupt(int int_num, int index)
 
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
-//	thread.activate();
+//      thread.activate();
         // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
         activateContext(thread.readTid(), 1);

@@ -176,7 +176,7 @@ AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
 AlphaISA::MiscReg
 AlphaISA::MiscRegFile::readIpr(int idx, ThreadContext *tc)
 {
-    uint64_t retval = 0;	// return value, default 0
+    uint64_t retval = 0;        // return value, default 0
 
     switch (idx) {
       case AlphaISA::IPR_PALtemp0:

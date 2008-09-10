@@ -113,7 +113,7 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
     // allocate data storage in one big chunk
     dataBlks = new uint8_t[numSets*assoc*blkSize];
 
-    blkIndex = 0;	// index into blks array
+    blkIndex = 0;       // index into blks array
     for (i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
@@ -160,7 +160,7 @@ LRU::probe(Addr addr) const
 
     LRUBlk *blk = sets[myset].findBlk(tag);
 
-    return (blk != NULL);	// true if in cache
+    return (blk != NULL);       // true if in cache
 }
 
 LRUBlk*

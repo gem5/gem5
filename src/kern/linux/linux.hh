@@ -65,46 +65,46 @@ class Linux : public OperatingSystem
     /// gets #defined to something else on some systems. This type
     /// can be specialized by architecture specific "Linux" classes
     typedef struct {
-        uint32_t	st_dev;		//!< device
-        uint32_t	st_ino;		//!< inode
-        uint32_t	st_mode;	//!< mode
-        uint32_t	st_nlink;	//!< link count
-        uint32_t	st_uid;		//!< owner's user ID
-        uint32_t	st_gid;		//!< owner's group ID
-        uint32_t	st_rdev;	//!< device number
-        int32_t		_pad1;		//!< for alignment
-        int64_t		st_size;	//!< file size in bytes
-        uint64_t	st_atimeX;	//!< time of last access
-        uint64_t	st_mtimeX;	//!< time of last modification
-        uint64_t	st_ctimeX;	//!< time of last status change
-        uint32_t	st_blksize;	//!< optimal I/O block size
-        int32_t		st_blocks;	//!< number of blocks allocated
-        uint32_t	st_flags;	//!< flags
-        uint32_t	st_gen;		//!< unknown
+        uint32_t        st_dev;         //!< device
+        uint32_t        st_ino;         //!< inode
+        uint32_t        st_mode;        //!< mode
+        uint32_t        st_nlink;       //!< link count
+        uint32_t        st_uid;         //!< owner's user ID
+        uint32_t        st_gid;         //!< owner's group ID
+        uint32_t        st_rdev;        //!< device number
+        int32_t         _pad1;          //!< for alignment
+        int64_t         st_size;        //!< file size in bytes
+        uint64_t        st_atimeX;      //!< time of last access
+        uint64_t        st_mtimeX;      //!< time of last modification
+        uint64_t        st_ctimeX;      //!< time of last status change
+        uint32_t        st_blksize;     //!< optimal I/O block size
+        int32_t         st_blocks;      //!< number of blocks allocated
+        uint32_t        st_flags;       //!< flags
+        uint32_t        st_gen;         //!< unknown
     } tgt_stat;
 
     // same for stat64
     typedef struct {
-        uint64_t	st_dev;
-        uint64_t	st_ino;
-        uint64_t	st_rdev;
-        int64_t		st_size;
-        uint64_t	st_blocks;
+        uint64_t        st_dev;
+        uint64_t        st_ino;
+        uint64_t        st_rdev;
+        int64_t         st_size;
+        uint64_t        st_blocks;
 
-        uint32_t	st_mode;
-        uint32_t	st_uid;
-        uint32_t	st_gid;
-        uint32_t	st_blksize;
-        uint32_t	st_nlink;
-        uint32_t	__pad0;
+        uint32_t        st_mode;
+        uint32_t        st_uid;
+        uint32_t        st_gid;
+        uint32_t        st_blksize;
+        uint32_t        st_nlink;
+        uint32_t        __pad0;
 
-        uint64_t	st_atimeX;
-        uint64_t 	st_atime_nsec;
-        uint64_t	st_mtimeX;
-        uint64_t	st_mtime_nsec;
-        uint64_t	st_ctimeX;
-        uint64_t	st_ctime_nsec;
-        int64_t		___unused[3];
+        uint64_t        st_atimeX;
+        uint64_t        st_atime_nsec;
+        uint64_t        st_mtimeX;
+        uint64_t        st_mtime_nsec;
+        uint64_t        st_ctimeX;
+        uint64_t        st_ctime_nsec;
+        int64_t         ___unused[3];
     } tgt_stat64;
 
     /// Length of strings in struct utsname (plus 1 for null char).
@@ -112,23 +112,23 @@ class Linux : public OperatingSystem
 
     /// Interface struct for uname().
     struct utsname {
-        char sysname[_SYS_NMLN];	//!< System name.
-        char nodename[_SYS_NMLN];	//!< Node name.
-        char release[_SYS_NMLN];	//!< OS release.
-        char version[_SYS_NMLN];	//!< OS version.
-        char machine[_SYS_NMLN];	//!< Machine type.
+        char sysname[_SYS_NMLN];        //!< System name.
+        char nodename[_SYS_NMLN];       //!< Node name.
+        char release[_SYS_NMLN];        //!< OS release.
+        char version[_SYS_NMLN];        //!< OS version.
+        char machine[_SYS_NMLN];        //!< Machine type.
     };
 
     /// Limit struct for getrlimit/setrlimit.
     struct rlimit {
-        uint64_t  rlim_cur;	//!< soft limit
-        uint64_t  rlim_max;	//!< hard limit
+        uint64_t  rlim_cur;     //!< soft limit
+        uint64_t  rlim_max;     //!< hard limit
     };
 
     /// For gettimeofday().
     struct timeval {
-        int64_t tv_sec;		//!< seconds
-        int64_t tv_usec;	//!< microseconds
+        int64_t tv_sec;         //!< seconds
+        int64_t tv_usec;        //!< microseconds
     };
 
     // For writev/readv
@@ -140,22 +140,22 @@ class Linux : public OperatingSystem
 
     /// For getrusage().
     struct rusage {
-        struct timeval ru_utime;	//!< user time used
-        struct timeval ru_stime;	//!< system time used
-        int64_t ru_maxrss;		//!< max rss
-        int64_t ru_ixrss;		//!< integral shared memory size
-        int64_t ru_idrss;		//!< integral unshared data "
-        int64_t ru_isrss;		//!< integral unshared stack "
-        int64_t ru_minflt;		//!< page reclaims - total vmfaults
-        int64_t ru_majflt;		//!< page faults
-        int64_t ru_nswap;		//!< swaps
-        int64_t ru_inblock;		//!< block input operations
-        int64_t ru_oublock;		//!< block output operations
-        int64_t ru_msgsnd;		//!< messages sent
-        int64_t ru_msgrcv;		//!< messages received
-        int64_t ru_nsignals;		//!< signals received
-        int64_t ru_nvcsw;		//!< voluntary context switches
-        int64_t ru_nivcsw;		//!< involuntary "
+        struct timeval ru_utime;        //!< user time used
+        struct timeval ru_stime;        //!< system time used
+        int64_t ru_maxrss;              //!< max rss
+        int64_t ru_ixrss;               //!< integral shared memory size
+        int64_t ru_idrss;               //!< integral unshared data "
+        int64_t ru_isrss;               //!< integral unshared stack "
+        int64_t ru_minflt;              //!< page reclaims - total vmfaults
+        int64_t ru_majflt;              //!< page faults
+        int64_t ru_nswap;               //!< swaps
+        int64_t ru_inblock;             //!< block input operations
+        int64_t ru_oublock;             //!< block output operations
+        int64_t ru_msgsnd;              //!< messages sent
+        int64_t ru_msgrcv;              //!< messages received
+        int64_t ru_nsignals;            //!< signals received
+        int64_t ru_nvcsw;               //!< voluntary context switches
+        int64_t ru_nivcsw;              //!< involuntary "
     };
 
 };  // class Linux

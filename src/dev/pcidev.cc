@@ -41,7 +41,7 @@
 #include "base/inifile.hh"
 #include "base/intmath.hh" // for isPowerOf2(
 #include "base/misc.hh"
-#include "base/str.hh"	// for to_number
+#include "base/str.hh"  // for to_number
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"

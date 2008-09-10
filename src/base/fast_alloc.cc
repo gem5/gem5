@@ -56,7 +56,7 @@ void *FastAlloc::moreStructs(int bucket)
     assert(bucket > 0 && bucket < Num_Buckets);
 
     int sz = bucket * Alloc_Quantum;
-    const int nstructs = Num_Structs_Per_New;	// how many to allocate?
+    const int nstructs = Num_Structs_Per_New;   // how many to allocate?
     char *p = ::new char[nstructs * sz];
 
 #if FAST_ALLOC_STATS

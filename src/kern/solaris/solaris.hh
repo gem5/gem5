@@ -76,39 +76,39 @@ class Solaris : public OperatingSystem
     /// Stat buffer.  Note that we can't call it 'stat' since that
     /// gets #defined to something else on some systems.
     typedef struct {
-        uint64_t	st_dev;		//!< device
-        uint64_t	st_ino;		//!< inode
-        uint32_t	st_mode;	//!< mode
-        uint32_t	st_nlink;	//!< link count
-        int32_t	        st_uid;		//!< owner's user ID
-        int32_t	        st_gid;		//!< owner's group ID
-        uint64_t	st_rdev;	//!< device number
-        int64_t		st_size;	//!< file size in bytes
-        //struct tgt_timespec	st_atimeX;	//!< time of last access
-        //struct tgt_timespec	st_mtimeX;	//!< time of last modification
-        //struct tgt_timespec	st_ctimeX;	//!< time of last status change
+        uint64_t        st_dev;         //!< device
+        uint64_t        st_ino;         //!< inode
+        uint32_t        st_mode;        //!< mode
+        uint32_t        st_nlink;       //!< link count
+        int32_t         st_uid;         //!< owner's user ID
+        int32_t         st_gid;         //!< owner's group ID
+        uint64_t        st_rdev;        //!< device number
+        int64_t         st_size;        //!< file size in bytes
+        //struct tgt_timespec   st_atimeX;      //!< time of last access
+        //struct tgt_timespec   st_mtimeX;      //!< time of last modification
+        //struct tgt_timespec   st_ctimeX;      //!< time of last status change
         int64_t st_atimeX, st_mtimeX, st_ctimeX;
-        int32_t	        st_blksize;	//!< optimal I/O block size
-        int64_t		st_blocks;	//!< number of blocks allocated
+        int32_t         st_blksize;     //!< optimal I/O block size
+        int64_t         st_blocks;      //!< number of blocks allocated
         char            st_fstype[16];
     } tgt_stat;
 
     // same for stat64
     typedef struct {
-        uint64_t	st_dev;		//!< device
-        uint64_t	st_ino;		//!< inode
-        uint32_t	st_mode;	//!< mode
-        uint32_t	st_nlink;	//!< link count
-        int32_t	        st_uid;		//!< owner's user ID
-        int32_t	        st_gid;		//!< owner's group ID
-        uint64_t	st_rdev;	//!< device number
-        int64_t		st_size;	//!< file size in bytes
-        //struct tgt_timespec	st_atimeX;	//!< time of last access
-        //struct tgt_timespec	st_mtimeX;	//!< time of last modification
-        //struct tgt_timespec	st_ctimeX;	//!< time of last status change
+        uint64_t        st_dev;         //!< device
+        uint64_t        st_ino;         //!< inode
+        uint32_t        st_mode;        //!< mode
+        uint32_t        st_nlink;       //!< link count
+        int32_t         st_uid;         //!< owner's user ID
+        int32_t         st_gid;         //!< owner's group ID
+        uint64_t        st_rdev;        //!< device number
+        int64_t         st_size;        //!< file size in bytes
+        //struct tgt_timespec   st_atimeX;      //!< time of last access
+        //struct tgt_timespec   st_mtimeX;      //!< time of last modification
+        //struct tgt_timespec   st_ctimeX;      //!< time of last status change
         int64_t st_atimeX, st_mtimeX, st_ctimeX;
-        int32_t	        st_blksize;	//!< optimal I/O block size
-        int64_t		st_blocks;	//!< number of blocks allocated
+        int32_t         st_blksize;     //!< optimal I/O block size
+        int64_t         st_blocks;      //!< number of blocks allocated
         char            st_fstype[16];
     } tgt_stat64;
 
@@ -117,11 +117,11 @@ class Solaris : public OperatingSystem
 
     /// Interface struct for uname().
     typedef struct utsname {
-        char sysname[_SYS_NMLN];	//!< System name.
-        char nodename[_SYS_NMLN];	//!< Node name.
-        char release[_SYS_NMLN];	//!< OS release.
-        char version[_SYS_NMLN];	//!< OS version.
-        char machine[_SYS_NMLN];	//!< Machine type.
+        char sysname[_SYS_NMLN];        //!< System name.
+        char nodename[_SYS_NMLN];       //!< Node name.
+        char release[_SYS_NMLN];        //!< OS release.
+        char version[_SYS_NMLN];        //!< OS version.
+        char machine[_SYS_NMLN];        //!< Machine type.
     } utsname;
 
 };  // class Solaris

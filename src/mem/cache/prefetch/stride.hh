@@ -50,7 +50,7 @@ class StridePrefetcher : public BasePrefetcher
         int stride;
         int64_t confidence;
 
-/*	bool operator < (strideEntry a,strideEntry b)
+/*      bool operator < (strideEntry a,strideEntry b)
         {
             if (a.confidence == b.confidence) {
                 return true; //??????

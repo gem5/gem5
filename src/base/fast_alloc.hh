@@ -84,7 +84,7 @@ class FastAlloc {
 
 #if FAST_ALLOC_DEBUG
     FastAlloc();
-    FastAlloc(FastAlloc*,FastAlloc*);	// for inUseHead, see below
+    FastAlloc(FastAlloc*,FastAlloc*);   // for inUseHead, see below
     virtual ~FastAlloc();
 #else
     virtual ~FastAlloc() {}
@@ -123,13 +123,13 @@ class FastAlloc {
 
 #if FAST_ALLOC_DEBUG
     // per-object debugging fields
-    bool inUse;			// in-use flag
-    FastAlloc *inUsePrev;	// ptrs to build list of in-use objects
+    bool inUse;                 // in-use flag
+    FastAlloc *inUsePrev;       // ptrs to build list of in-use objects
     FastAlloc *inUseNext;
 
     // static (global) debugging vars
-    static int numInUse;	// count in-use objects
-    static FastAlloc inUseHead;	// dummy head for list of in-use objects
+    static int numInUse;        // count in-use objects
+    static FastAlloc inUseHead; // dummy head for list of in-use objects
 
   public:
     // functions to dump debugging info (see fast_alloc.cc for C

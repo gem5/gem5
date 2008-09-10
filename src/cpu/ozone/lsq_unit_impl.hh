@@ -553,7 +553,7 @@ OzoneLSQ<Impl>::writebackStores()
         MemReqPtr req = storeQueue[storeWBIdx].req;
         storeQueue[storeWBIdx].committed = true;
 
-//	Fault fault = cpu->translateDataReadReq(req);
+//      Fault fault = cpu->translateDataReadReq(req);
         req->cmd = Write;
         req->completionEvent = NULL;
         req->time = curTick;

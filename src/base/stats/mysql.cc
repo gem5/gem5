@@ -458,7 +458,7 @@ InsertSubData::setup(MySqlRun *run)
 
     mysql.query(insert);
 //    if (mysql.error)
-//	panic("could not insert subdata\n%s\n", mysql.error);
+//      panic("could not insert subdata\n%s\n", mysql.error);
 
     if (mysql.commit())
         panic("could not commit transaction\n%s\n", mysql.error);
@@ -683,7 +683,7 @@ MySql::configure(const FormulaData &data)
 
     mysql.query(insert_formula);
 //    if (mysql.error)
-//	panic("could not insert formula\n%s\n", mysql.error);
+//      panic("could not insert formula\n%s\n", mysql.error);
 
     stringstream insert_ref;
     ccprintf(insert_ref,
@@ -692,7 +692,7 @@ MySql::configure(const FormulaData &data)
 
     mysql.query(insert_ref);
 //    if (mysql.error)
-//	panic("could not insert formula reference\n%s\n", mysql.error);
+//      panic("could not insert formula reference\n%s\n", mysql.error);
 
     if (mysql.commit())
         panic("could not commit transaction\n%s\n", mysql.error);

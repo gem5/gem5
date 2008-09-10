@@ -113,7 +113,7 @@ SplitLRU::SplitLRU(int _numSets, int _blkSize, int _assoc, int _hit_latency, int
     // allocate data storage in one big chunk
     dataBlks = new uint8_t[numSets*assoc*blkSize];
 
-    blkIndex = 0;	// index into blks array
+    blkIndex = 0;       // index into blks array
     for (i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
@@ -179,7 +179,7 @@ SplitLRU::probe(Addr addr) const
 
     SplitBlk *blk = sets[myset].findBlk(tag);
 
-    return (blk != NULL);	// true if in cache
+    return (blk != NULL);       // true if in cache
 }
 
 SplitBlk*

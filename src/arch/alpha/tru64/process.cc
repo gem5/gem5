@@ -85,7 +85,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
       case AlphaTru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(tc->getSyscallArg(1));
-          *physmem = htog((uint64_t)1024 * 1024);	// physical memory in KB
+          *physmem = htog((uint64_t)1024 * 1024);       // physical memory in KB
           physmem.copyOut(tc->getMemPort());
           return 1;
       }
@@ -168,11 +168,11 @@ SyscallReturn tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     using namespace std;
     using namespace TheISA;
 
-    int id = tc->getSyscallArg(0);		// table ID
-    int index = tc->getSyscallArg(1);	// index into table
+    int id = tc->getSyscallArg(0);      // table ID
+    int index = tc->getSyscallArg(1);   // index into table
     // arg 2 is buffer pointer; type depends on table ID
-    int nel = tc->getSyscallArg(3);		// number of elements
-    int lel = tc->getSyscallArg(4);		// expected element size
+    int nel = tc->getSyscallArg(3);     // number of elements
+    int lel = tc->getSyscallArg(4);     // expected element size
 
     switch (id) {
       case AlphaTru64::TBL_SYSINFO: {

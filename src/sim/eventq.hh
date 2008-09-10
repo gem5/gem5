@@ -48,7 +48,7 @@
 #include "sim/serialize.hh"
 #include "sim/host.hh"
 
-class EventQueue;	// forward declaration
+class EventQueue;       // forward declaration
 
 //////////////////////
 //
@@ -93,8 +93,8 @@ class Event : public Serializable, public FastAlloc
     /// scheduled on this queue yet)
     EventQueue *_queue;
 
-    Tick _when;		//!< timestamp when event should be processed
-    short _priority;	//!< event priority
+    Tick _when;         //!< timestamp when event should be processed
+    short _priority;    //!< event priority
     short _flags;
 
 #ifndef NDEBUG
@@ -141,7 +141,7 @@ class Event : public Serializable, public FastAlloc
     EventQueue *queue() const { return _queue; }
 
     // This function isn't really useful if TRACING_ON is not defined
-    virtual void trace(const char *action);	//!< trace event activity
+    virtual void trace(const char *action);     //!< trace event activity
 
   public:
     /// Event priorities, to provide tie-breakers for events scheduled
@@ -150,7 +150,7 @@ class Event : public Serializable, public FastAlloc
     /// be ordered within a cycle.
     enum Priority {
         /// Minimum priority
-        Minimum_Pri		= SHRT_MIN,
+        Minimum_Pri             = SHRT_MIN,
 
         /// If we enable tracing on a particular cycle, do that as the
         /// very first thing so we don't miss any of the events on
@@ -160,44 +160,44 @@ class Event : public Serializable, public FastAlloc
         /// Breakpoints should happen before anything else (except
         /// enabling trace output), so we don't miss any action when
         /// debugging.
-        Debug_Break_Pri		= -100,
+        Debug_Break_Pri         = -100,
 
         /// CPU switches schedule the new CPU's tick event for the
         /// same cycle (after unscheduling the old CPU's tick event).
         /// The switch needs to come before any tick events to make
         /// sure we don't tick both CPUs in the same cycle.
-        CPU_Switch_Pri		=   -31,
+        CPU_Switch_Pri          =   -31,
 
         /// For some reason "delayed" inter-cluster writebacks are
         /// scheduled before regular writebacks (which have default
         /// priority).  Steve?
-        Delayed_Writeback_Pri	=   -1,
+        Delayed_Writeback_Pri   =   -1,
 
         /// Default is zero for historical reasons.
-        Default_Pri		=    0,
+        Default_Pri             =    0,
 
         /// Serailization needs to occur before tick events also, so
         /// that a serialize/unserialize is identical to an on-line
         /// CPU switch.
-        Serialize_Pri		=   32,
+        Serialize_Pri           =   32,
 
         /// CPU ticks must come after other associated CPU events
         /// (such as writebacks).
-        CPU_Tick_Pri		=   50,
+        CPU_Tick_Pri            =   50,
 
         /// Statistics events (dump, reset, etc.) come after
         /// everything else, but before exit.
-        Stat_Event_Pri		=   90,
+        Stat_Event_Pri          =   90,
 
         /// Progress events come at the end.
         Progress_Event_Pri      =   95,
 
         /// If we want to exit on this cycle, it's the very last thing
         /// we do.
-        Sim_Exit_Pri		=  100,
+        Sim_Exit_Pri            =  100,
 
         /// Maximum priority
-        Maximum_Pri		= SHRT_MAX
+        Maximum_Pri             = SHRT_MAX
     };
 
     /*

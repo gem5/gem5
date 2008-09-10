@@ -365,7 +365,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
         tag_ptr->refCount = 0;
 
         if (tag_ptr->isDirty()) {
-/*	    PacketPtr writeback =
+/*          PacketPtr writeback =
                 buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
                                   tag_ptr->req->asid, tag_ptr->xc, blkSize,
                                   tag_ptr->data,

@@ -142,9 +142,9 @@ AlphaSystem::~AlphaSystem()
  * in the procedure value register (pv aka t12 == r27).  This sequence
  * looks like the following:
  *
- *			opcode Ra Rb offset
- *	ldah gp,X(pv)     09   29 27   X
- *	lda  gp,Y(gp)     08   29 29   Y
+ *                      opcode Ra Rb offset
+ *      ldah gp,X(pv)     09   29 27   X
+ *      lda  gp,Y(gp)     08   29 29   Y
  *
  * for some constant offsets X and Y.  The catch is that the linker
  * (or maybe even the compiler, I'm not sure) may recognize that the

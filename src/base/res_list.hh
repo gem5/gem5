@@ -635,7 +635,7 @@ res_list<T>::remove(iterator q)
 
     //  A little "garbage collection"
     if (++remove_count > 10) {
-        //	    free_extras();
+        //          free_extras();
         remove_count = 0;
     }
 

@@ -729,7 +729,7 @@ class SimObject(object):
             self._children[child].unproxy_all()
 
     def print_ini(self, ini_file):
-        print >>ini_file, '[' + self.path() + ']'	# .ini section header
+        print >>ini_file, '[' + self.path() + ']'       # .ini section header
 
         instanceDict[self.path()] = self
 
@@ -756,7 +756,7 @@ class SimObject(object):
             if port != None:
                 print >>ini_file, '%s=%s' % (port_name, port.ini_str())
 
-        print >>ini_file	# blank line between objects
+        print >>ini_file        # blank line between objects
 
         for child in child_names:
             self._children[child].print_ini(ini_file)

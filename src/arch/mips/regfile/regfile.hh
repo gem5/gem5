@@ -48,15 +48,15 @@ namespace MipsISA
 {
     class RegFile {
       protected:
-        Addr pc;			// program counter
-        Addr npc;			// next-cycle program counter
-        Addr nnpc;			// next-next-cycle program counter
+        Addr pc;                        // program counter
+        Addr npc;                       // next-cycle program counter
+        Addr nnpc;                      // next-next-cycle program counter
                                         // used to implement branch delay slot
                                         // not real register
 
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
+        IntRegFile intRegFile;          // (signed) integer register file
+        FloatRegFile floatRegFile;      // floating point register file
+        MiscRegFile miscRegFile;        // control register file
 
       public:
         void clear();

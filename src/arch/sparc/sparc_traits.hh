@@ -47,8 +47,8 @@ namespace SparcISA
 //    const int NumRegularIntRegs = MaxGL * 8 + NWindows * 16;
 //    const int NumMicroIntRegs = 1;
 //    const int NumIntRegs =
-//	NumRegularIntRegs +
-//	NumMicroIntRegs;
+//      NumRegularIntRegs +
+//      NumMicroIntRegs;
 //    const int NumFloatRegs = 64;
 //    const int NumMiscRegs = 40;
 }

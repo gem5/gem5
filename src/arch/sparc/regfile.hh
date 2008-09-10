@@ -48,8 +48,8 @@ namespace SparcISA
     class RegFile
     {
       protected:
-        Addr pc;		// Program Counter
-        Addr npc;		// Next Program Counter
+        Addr pc;                // Program Counter
+        Addr npc;               // Next Program Counter
         Addr nnpc;
 
       public:
@@ -63,9 +63,9 @@ namespace SparcISA
         void setNextNPC(Addr val);
 
       protected:
-        IntRegFile intRegFile;		// integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
+        IntRegFile intRegFile;          // integer register file
+        FloatRegFile floatRegFile;      // floating point register file
+        MiscRegFile miscRegFile;        // control register file
 
       public:
 

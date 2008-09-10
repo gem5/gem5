@@ -45,31 +45,31 @@ typedef unsigned long uint64_t;
 // This structure hacked up from simos
 struct AlphaAccess
 {
-    uint32_t	last_offset;		// 00: must be first field
-    uint32_t	version;		// 04:
-    uint32_t	numCPUs;		// 08:
-    uint32_t	intrClockFrequency;	// 0C: Hz
-    uint64_t	cpuClock;		// 10: MHz
-    uint64_t	mem_size;		// 18:
+    uint32_t    last_offset;            // 00: must be first field
+    uint32_t    version;                // 04:
+    uint32_t    numCPUs;                // 08:
+    uint32_t    intrClockFrequency;     // 0C: Hz
+    uint64_t    cpuClock;               // 10: MHz
+    uint64_t    mem_size;               // 18:
 
     // Loaded kernel
-    uint64_t	kernStart;		// 20:
-    uint64_t	kernEnd;		// 28:
-    uint64_t	entryPoint;		// 30:
+    uint64_t    kernStart;              // 20:
+    uint64_t    kernEnd;                // 28:
+    uint64_t    entryPoint;             // 30:
 
     // console disk stuff
-    uint64_t	diskUnit;		// 38:
-    uint64_t	diskCount;		// 40:
-    uint64_t	diskPAddr;		// 48:
-    uint64_t	diskBlock;		// 50:
-    uint64_t	diskOperation;		// 58:
+    uint64_t    diskUnit;               // 38:
+    uint64_t    diskCount;              // 40:
+    uint64_t    diskPAddr;              // 48:
+    uint64_t    diskBlock;              // 50:
+    uint64_t    diskOperation;          // 58:
 
     // console simple output stuff
-    uint64_t	outputChar;		// 60: Placeholder for output
-    uint64_t	inputChar;		// 68: Placeholder for input
+    uint64_t    outputChar;             // 60: Placeholder for output
+    uint64_t    inputChar;              // 68: Placeholder for input
 
     // MP boot
-    uint64_t	cpuStack[64];	        // 70:
+    uint64_t    cpuStack[64];           // 70:
 };
 
 #endif // __ALPHA_ACCESS_H__

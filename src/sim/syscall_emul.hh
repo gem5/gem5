@@ -44,15 +44,15 @@
 #include <errno.h>
 #include <string>
 #ifdef __CYGWIN32__
-#include <sys/fcntl.h>	// for O_BINARY
+#include <sys/fcntl.h>  // for O_BINARY
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/uio.h>
 
-#include "sim/host.hh"	// for Addr
+#include "sim/host.hh"  // for Addr
 #include "base/chunk_generator.hh"
-#include "base/intmath.hh"	// for RoundUp
+#include "base/intmath.hh"      // for RoundUp
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -72,9 +72,9 @@ class SyscallDesc {
     typedef SyscallReturn (*FuncPtr)(SyscallDesc *, int num,
                            LiveProcess *, ThreadContext *);
 
-    const char *name;	//!< Syscall name (e.g., "open").
-    FuncPtr funcPtr;	//!< Pointer to emulation function.
-    int flags;		//!< Flags (see Flags enum).
+    const char *name;   //!< Syscall name (e.g., "open").
+    FuncPtr funcPtr;    //!< Pointer to emulation function.
+    int flags;          //!< Flags (see Flags enum).
 
     /// Flag values for controlling syscall behavior.
     enum Flags {
@@ -117,7 +117,7 @@ class BaseBufferArg {
     virtual bool copyIn(TranslatingPort *memport)
     {
         memport->readBlob(addr, bufPtr, size);
-        return true;	// no EFAULT detection for now
+        return true;    // no EFAULT detection for now
     }
 
     //
@@ -126,7 +126,7 @@ class BaseBufferArg {
     virtual bool copyOut(TranslatingPort *memport)
     {
         memport->writeBlob(addr, bufPtr, size);
-        return true;	// no EFAULT detection for now
+        return true;    // no EFAULT detection for now
     }
 
   protected:
@@ -140,7 +140,7 @@ class BufferArg : public BaseBufferArg
 {
   public:
     BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
-    void *bufferPtr()	{ return bufPtr; }
+    void *bufferPtr()   { return bufPtr; }
 };
 
 template <class T>
@@ -158,8 +158,8 @@ class TypedBufferArg : public BaseBufferArg
     operator T*() { return (T *)bufPtr; }
 
     // dereference operators
-    T &operator*()	 { return *((T *)bufPtr); }
-    T* operator->()	 { return (T *)bufPtr; }
+    T &operator*()       { return *((T *)bufPtr); }
+    T* operator->()      { return (T *)bufPtr; }
     T &operator[](int i) { return ((T *)bufPtr)[i]; }
 };
 
@@ -994,7 +994,7 @@ SyscallReturn
 getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
-    int who = tc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
+    int who = tc->getSyscallArg(0);     // THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(tc->getSyscallArg(1));
 
     rup->ru_utime.tv_sec = 0;

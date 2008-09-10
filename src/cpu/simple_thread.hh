@@ -99,7 +99,7 @@ class SimpleThread : public ThreadState
     typedef ThreadContext::Status Status;
 
   protected:
-    RegFile regs;	// correct-path register context
+    RegFile regs;       // correct-path register context
 
   public:
     // pointer to CPU associated with this SimpleThread

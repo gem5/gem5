@@ -124,6 +124,6 @@ inline const std::string &name() { return Trace::DefaultName; }
 #define DPRINTFN(...) do {} while (0)
 #define DPRINTFNR(...) do {} while (0)
 
-#endif	// TRACING_ON
+#endif  // TRACING_ON
 
 #endif // __BASE_TRACE_HH__

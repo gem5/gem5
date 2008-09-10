@@ -51,8 +51,8 @@ namespace AlphaISA
     class RegFile {
 
       protected:
-        Addr pc;			// program counter
-        Addr npc;			// next-cycle program counter
+        Addr pc;                        // program counter
+        Addr npc;                       // next-cycle program counter
         Addr nnpc;
 
       public:
@@ -85,14 +85,14 @@ namespace AlphaISA
         { }
 
       protected:
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
+        IntRegFile intRegFile;          // (signed) integer register file
+        FloatRegFile floatRegFile;      // floating point register file
+        MiscRegFile miscRegFile;        // control register file
 
       public:
 
 #if FULL_SYSTEM
-        int intrflag;			// interrupt flag
+        int intrflag;                   // interrupt flag
         inline int instAsid()
         { return miscRegFile.getInstAsid(); }
         inline int dataAsid()

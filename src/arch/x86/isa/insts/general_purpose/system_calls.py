@@ -56,11 +56,11 @@
 microcode = ""
 #let {{
 #    class SYSENTER(Inst):
-# 	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class SYSEXIT(Inst):
-# 	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class SYSCALL(Inst):
-# 	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class SYSRET(Inst):
-# 	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

@@ -95,17 +95,17 @@ class Process : public SimObject
 
         WaitRec(Addr chan, ThreadContext *ctx)
             : waitChan(chan), waitingContext(ctx)
-        {	}
+        {       }
     };
 
     // list of all blocked contexts
     std::list<WaitRec> waitList;
 
-    Addr brk_point;		// top of the data segment
+    Addr brk_point;             // top of the data segment
 
-    Addr stack_base;		// stack segment base (highest address)
-    unsigned stack_size;	// initial stack size
-    Addr stack_min;		// lowest address accessed on the stack
+    Addr stack_base;            // stack segment base (highest address)
+    unsigned stack_size;        // initial stack size
+    Addr stack_min;             // lowest address accessed on the stack
 
     // The maximum size allowed for the stack.
     Addr max_stack_size;
@@ -121,9 +121,9 @@ class Process : public SimObject
     Addr nxm_start;
     Addr nxm_end;
 
-    std::string prog_fname;	// file name
+    std::string prog_fname;     // file name
 
-    Stats::Scalar<> num_syscalls;	// number of syscalls executed
+    Stats::Scalar<> num_syscalls;       // number of syscalls executed
 
 
   protected:

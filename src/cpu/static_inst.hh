@@ -105,38 +105,38 @@ class StaticInstBase : public RefCounted
     /// implement this behavior via the execute() methods.
     ///
     enum Flags {
-        IsNop,		///< Is a no-op (no effect at all).
+        IsNop,          ///< Is a no-op (no effect at all).
 
-        IsInteger,	///< References integer regs.
-        IsFloating,	///< References FP regs.
+        IsInteger,      ///< References integer regs.
+        IsFloating,     ///< References FP regs.
 
-        IsMemRef,	///< References memory (load, store, or prefetch).
-        IsLoad,		///< Reads from memory (load or prefetch).
-        IsStore,	///< Writes to memory.
+        IsMemRef,       ///< References memory (load, store, or prefetch).
+        IsLoad,         ///< Reads from memory (load or prefetch).
+        IsStore,        ///< Writes to memory.
         IsStoreConditional,    ///< Store conditional instruction.
         IsIndexed,      ///< Accesses memory with an indexed address computation
-        IsInstPrefetch,	///< Instruction-cache prefetch.
-        IsDataPrefetch,	///< Data-cache prefetch.
+        IsInstPrefetch, ///< Instruction-cache prefetch.
+        IsDataPrefetch, ///< Data-cache prefetch.
         IsCopy,         ///< Fast Cache block copy
 
-        IsControl,		///< Control transfer instruction.
-        IsDirectControl,	///< PC relative control transfer.
-        IsIndirectControl,	///< Register indirect control transfer.
-        IsCondControl,		///< Conditional control transfer.
-        IsUncondControl,	///< Unconditional control transfer.
-        IsCall,			///< Subroutine call.
-        IsReturn,		///< Subroutine return.
+        IsControl,              ///< Control transfer instruction.
+        IsDirectControl,        ///< PC relative control transfer.
+        IsIndirectControl,      ///< Register indirect control transfer.
+        IsCondControl,          ///< Conditional control transfer.
+        IsUncondControl,        ///< Unconditional control transfer.
+        IsCall,                 ///< Subroutine call.
+        IsReturn,               ///< Subroutine return.
 
         IsCondDelaySlot,///< Conditional Delay-Slot Instruction
 
-        IsThreadSync,	///< Thread synchronization operation.
+        IsThreadSync,   ///< Thread synchronization operation.
 
-        IsSerializing,	///< Serializes pipeline: won't execute until all
+        IsSerializing,  ///< Serializes pipeline: won't execute until all
                         /// older instructions have committed.
         IsSerializeBefore,
         IsSerializeAfter,
-        IsMemBarrier,	///< Is a memory barrier
-        IsWriteBarrier,	///< Is a write barrier
+        IsMemBarrier,   ///< Is a memory barrier
+        IsWriteBarrier, ///< Is a write barrier
         IsERET, /// <- Causes the IFU to stall (MIPS ISA)
 
         IsNonSpeculative, ///< Should not be executed speculatively
@@ -150,12 +150,12 @@ class StaticInstBase : public RefCounted
 
         //Flags for microcode
         IsMacroop,      ///< Is a macroop containing microops
-        IsMicroop,	///< Is a microop
-        IsDelayedCommit,	///< This microop doesn't commit right away
-        IsLastMicroop,	///< This microop ends a microop sequence
-        IsFirstMicroop,	///< This microop begins a microop sequence
+        IsMicroop,      ///< Is a microop
+        IsDelayedCommit,        ///< This microop doesn't commit right away
+        IsLastMicroop,  ///< This microop ends a microop sequence
+        IsFirstMicroop, ///< This microop begins a microop sequence
         //This flag doesn't do anything yet
-        IsMicroBranch,	///< This microop branches within the microcode for a macroop
+        IsMicroBranch,  ///< This microop branches within the microcode for a macroop
         IsDspOp,
 
         NumFlags
@@ -215,26 +215,26 @@ class StaticInstBase : public RefCounted
     /// of the individual flags.
     //@{
 
-    bool isNop() 	  const { return flags[IsNop]; }
+    bool isNop()          const { return flags[IsNop]; }
 
-    bool isMemRef()    	  const { return flags[IsMemRef]; }
-    bool isLoad()	  const { return flags[IsLoad]; }
-    bool isStore()	  const { return flags[IsStore]; }
-    bool isStoreConditional()	  const { return flags[IsStoreConditional]; }
+    bool isMemRef()       const { return flags[IsMemRef]; }
+    bool isLoad()         const { return flags[IsLoad]; }
+    bool isStore()        const { return flags[IsStore]; }
+    bool isStoreConditional()     const { return flags[IsStoreConditional]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
     bool isCopy()         const { return flags[IsCopy];}
 
-    bool isInteger()	  const { return flags[IsInteger]; }
-    bool isFloating()	  const { return flags[IsFloating]; }
+    bool isInteger()      const { return flags[IsInteger]; }
+    bool isFloating()     const { return flags[IsFloating]; }
 
-    bool isControl()	  const { return flags[IsControl]; }
-    bool isCall()	  const { return flags[IsCall]; }
-    bool isReturn()	  const { return flags[IsReturn]; }
-    bool isDirectCtrl()	  const { return flags[IsDirectControl]; }
+    bool isControl()      const { return flags[IsControl]; }
+    bool isCall()         const { return flags[IsCall]; }
+    bool isReturn()       const { return flags[IsReturn]; }
+    bool isDirectCtrl()   const { return flags[IsDirectControl]; }
     bool isIndirectCtrl() const { return flags[IsIndirectControl]; }
-    bool isCondCtrl()	  const { return flags[IsCondControl]; }
-    bool isUncondCtrl()	  const { return flags[IsUncondControl]; }
+    bool isCondCtrl()     const { return flags[IsCondControl]; }
+    bool isUncondCtrl()   const { return flags[IsUncondControl]; }
     bool isCondDelaySlot() const { return flags[IsCondDelaySlot]; }
 
     bool isThreadSync()   const { return flags[IsThreadSync]; }
@@ -287,8 +287,8 @@ class StaticInst : public StaticInstBase
     typedef TheISA::RegIndex RegIndex;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,	//< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
     };
 
 

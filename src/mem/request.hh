@@ -53,21 +53,21 @@ typedef Request* RequestPtr;
 /** ASI information for this request if it exsits. */
 const uint32_t ASI_BITS         = 0x000FF;
 /** The request is a Load locked/store conditional. */
-const uint32_t LOCKED		= 0x00100;
+const uint32_t LOCKED           = 0x00100;
 /** The virtual address is also the physical address. */
-const uint32_t PHYSICAL		= 0x00200;
+const uint32_t PHYSICAL         = 0x00200;
 /** The request is an ALPHA VPTE pal access (hw_ld). */
-const uint32_t VPTE		= 0x00400;
+const uint32_t VPTE             = 0x00400;
 /** Use the alternate mode bits in ALPHA. */
-const uint32_t ALTMODE		= 0x00800;
+const uint32_t ALTMODE          = 0x00800;
 /** The request is to an uncacheable address. */
-const uint32_t UNCACHEABLE	= 0x01000;
+const uint32_t UNCACHEABLE      = 0x01000;
 /** The request should not cause a page fault. */
 const uint32_t NO_FAULT         = 0x02000;
 /** The request should be prefetched into the exclusive state. */
-const uint32_t PF_EXCLUSIVE	= 0x10000;
+const uint32_t PF_EXCLUSIVE     = 0x10000;
 /** The request should be marked as LRU. */
-const uint32_t EVICT_NEXT	= 0x20000;
+const uint32_t EVICT_NEXT       = 0x20000;
 /** The request should ignore unaligned access faults */
 const uint32_t NO_ALIGN_FAULT   = 0x40000;
 /** The request was an instruction read. */

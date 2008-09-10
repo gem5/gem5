@@ -59,7 +59,7 @@ using namespace MipsISA;
 //  MIPS TLB
 //
 
-#define MODE2MASK(X)			(1 << (X))
+#define MODE2MASK(X)                    (1 << (X))
 
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
@@ -91,7 +91,7 @@ TLB::lookup(Addr vpn, uint8_t asn) const
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
             Addr VPN  = pte->VPN;
-            //	    warn("Valid: %d - %d\n",pte->V0,pte->V1);
+            //      warn("Valid: %d - %d\n",pte->V0,pte->V1);
             if(((vpn & InvMask) == (VPN & InvMask)) && (pte->G  || (asn == pte->asid)))
               { // We have a VPN + ASID Match
                 retval = pte;
@@ -389,7 +389,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
             }
           else
             {// Ok, this is really a match, set paddr
-              //	      hits++;
+              //              hits++;
               Addr PAddr;
               if(EvenOdd == 0){
                 PAddr = pte->PFN0;
@@ -406,7 +406,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         }
       else
         { // Didn't find any match, return a TLB Refill Exception
-          //	  misses++;
+          //      misses++;
           ItbRefillFault *Flt=new ItbRefillFault();
           /* EntryHi VPN, ASID fields must be set */
           Flt->EntryHi_Asid = Asid;
@@ -494,7 +494,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 
           if(Valid == false)
             {//Invalid entry
-              //	      invalids++;
+              //              invalids++;
               DtbInvalidFault *Flt = new DtbInvalidFault();
               /* EntryHi VPN, ASID fields must be set */
               Flt->EntryHi_Asid = Asid;
@@ -512,7 +512,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             }
           else
             {// Ok, this is really a match, set paddr
-              //	      hits++;
+              //              hits++;
               if(!Dirty)
                 {
                   TLBModifiedFault *Flt = new TLBModifiedFault();
@@ -544,7 +544,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         }
       else
         { // Didn't find any match, return a TLB Refill Exception
-          //	  misses++;
+          //      misses++;
           DtbRefillFault *Flt=new DtbRefillFault();
           /* EntryHi VPN, ASID fields must be set */
           Flt->EntryHi_Asid = Asid;
@@ -577,19 +577,19 @@ ITB::ITB(const Params *p)
 // ITB::regStats()
 // {
 //   /*    hits - causes failure for some reason
-// 	.name(name() + ".hits")
-// 	.desc("ITB hits");
+//      .name(name() + ".hits")
+//      .desc("ITB hits");
 //     misses
-// 	.name(name() + ".misses")
-// 	.desc("ITB misses");
+//      .name(name() + ".misses")
+//      .desc("ITB misses");
 //     acv
-// 	.name(name() + ".acv")
-// 	.desc("ITB acv");
+//      .name(name() + ".acv")
+//      .desc("ITB acv");
 //     accesses
-// 	.name(name() + ".accesses")
-// 	.desc("ITB accesses");
+//      .name(name() + ".accesses")
+//      .desc("ITB accesses");
 
-// 	accesses = hits + misses + invalids; */
+//      accesses = hits + misses + invalids; */
 // }
 
 

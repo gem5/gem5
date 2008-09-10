@@ -321,23 +321,23 @@ objParamIn(Checkpoint *cp, const std::string &section,
 }
 
 
-#define INSTANTIATE_PARAM_TEMPLATES(type)				\
-template void								\
-paramOut(ostream &os, const std::string &name, type const &param);	\
-template void								\
-paramIn(Checkpoint *cp, const std::string &section,			\
-        const std::string &name, type & param);				\
-template void								\
-arrayParamOut(ostream &os, const std::string &name,			\
-              type const *param, int size);				\
-template void								\
-arrayParamIn(Checkpoint *cp, const std::string &section,		\
+#define INSTANTIATE_PARAM_TEMPLATES(type)                               \
+template void                                                           \
+paramOut(ostream &os, const std::string &name, type const &param);      \
+template void                                                           \
+paramIn(Checkpoint *cp, const std::string &section,                     \
+        const std::string &name, type & param);                         \
+template void                                                           \
+arrayParamOut(ostream &os, const std::string &name,                     \
+              type const *param, int size);                             \
+template void                                                           \
+arrayParamIn(Checkpoint *cp, const std::string &section,                \
              const std::string &name, type *param, int size);           \
-template void								\
-arrayParamOut(ostream &os, const std::string &name,			\
-              const std::vector<type> &param);				\
-template void								\
-arrayParamIn(Checkpoint *cp, const std::string &section,		\
+template void                                                           \
+arrayParamOut(ostream &os, const std::string &name,                     \
+              const std::vector<type> &param);                          \
+template void                                                           \
+arrayParamIn(Checkpoint *cp, const std::string &section,                \
              const std::string &name, std::vector<type> &param);
 
 INSTANTIATE_PARAM_TEMPLATES(signed char)
