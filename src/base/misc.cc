@@ -28,6 +28,7 @@
  * Authors: Nathan Binkert
  */
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
 

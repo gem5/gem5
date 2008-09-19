@@ -31,8 +31,9 @@
 #ifndef __BASE_CPRINTF_FORMATS_HH__
 #define __BASE_CPRINTF_FORMATS_HH__
 
-#include <sstream>
+#include <cstring>
 #include <ostream>
+#include <sstream>
 
 namespace cp {
 

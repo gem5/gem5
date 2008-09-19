@@ -38,6 +38,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <map>
 #include <string>
 #include <vector>
