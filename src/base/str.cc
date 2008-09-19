@@ -28,10 +28,10 @@
  * Authors: Nathan Binkert
  */
 
-#include <ctype.h>
-
+#include <cctype>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -117,12 +117,11 @@ inline bool
 __to_number(string value, T &retval)
 {
     static const T maxnum = ((T)-1);
-    static const bool sign = maxnum < 0;
-    static const int bits = sizeof(T) * 8;
-    static const T hexmax = maxnum & (((T)1 << (bits - 4 - sign)) - 1);
-    static const T octmax = maxnum & (((T)1 << (bits - 3 - sign)) - 1);
-    static const T signmax =
-        (sign) ? maxnum & (((T)1 << (bits - 1)) - 1) : maxnum;
+    static const bool sign = numeric_limits<T>::is_signed;
+    static const int bits = numeric_limits<T>::digits;
+    static const T hexmax = maxnum & (((T)1 << (bits - 4)) - 1);
+    static const T octmax = maxnum & (((T)1 << (bits - 3)) - 1);
+    static const T signmax = numeric_limits<T>::max();
     static const T decmax = signmax / 10;
 
 #if 0

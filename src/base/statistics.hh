@@ -56,6 +56,7 @@
 #include <cmath>
 #include <functional>
 #include <iosfwd>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -75,6 +76,8 @@ extern Tick curTick;
 
 /* A namespace for all of the Statistics */
 namespace Stats {
+
+typedef std::numeric_limits<Counter> CounterLimits;
 
 /* Contains the statistic implementation details */
 //////////////////////////////////////////////////////////////////////
@@ -1454,8 +1457,8 @@ struct DistStor
         data->bucket_size = params.bucket_size;
         data->size = params.size;
 
-        data->min_val = (min_val == INT_MAX) ? 0 : min_val;
-        data->max_val = (max_val == INT_MIN) ? 0 : max_val;
+        data->min_val = (min_val == CounterLimits::max()) ? 0 : min_val;
+        data->max_val = (max_val == CounterLimits::min()) ? 0 : max_val;
         data->underflow = underflow;
         data->overflow = overflow;
         data->cvec.resize(params.size);
@@ -1472,8 +1475,8 @@ struct DistStor
      */
     void reset()
     {
-        min_val = INT_MAX;
-        max_val = INT_MIN;
+        min_val = CounterLimits::max();
+        max_val = CounterLimits::min();
         underflow = 0;
         overflow = 0;
 
