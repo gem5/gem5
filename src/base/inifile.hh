@@ -167,14 +167,6 @@ class IniFile
     /// @retval True if successful, false if errors were encountered.
     bool load(std::istream &f);
 
-    /// Load the specified file, passing it through the C preprocessor.
-    /// Parameter settings found in the file will be merged with any
-    /// already defined in this object.
-    /// @param file The path of the file to load.
-    /// @param cppFlags Vector of extra flags to pass to cpp.
-    /// @retval True if successful, false if errors were encountered.
-    bool loadCPP(const std::string &file, std::vector<char *> &cppFlags);
-
     /// Load the specified file.
     /// Parameter settings found in the file will be merged with any
     /// already defined in this object.
