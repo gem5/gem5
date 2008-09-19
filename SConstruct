@@ -332,12 +332,9 @@ Export('base_dir_list')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
-env['GCC'] = False
-env['SUNCC'] = False
-env['ICC'] = False
 env['GCC'] = subprocess.Popen(env['CXX'] + ' --version', shell=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-        close_fds=True).communicate()[0].find('GCC') >= 0
+        close_fds=True).communicate()[0].find('g++') >= 0
 env['SUNCC'] = subprocess.Popen(env['CXX'] + ' -V', shell=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
         close_fds=True).communicate()[0].find('Sun C++') >= 0
