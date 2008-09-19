@@ -62,7 +62,7 @@ enum ByteOrder {BigEndianByteOrder, LittleEndianByteOrder};
 
 //These functions actually perform the swapping for parameters
 //of various bit lengths
-static inline uint64_t
+inline uint64_t
 swap_byte64(uint64_t x)
 {
 #if defined(linux)
@@ -81,7 +81,7 @@ swap_byte64(uint64_t x)
 #endif
 }
 
-static inline uint32_t
+inline uint32_t
 swap_byte32(uint32_t x)
 {
 #if defined(linux)
@@ -95,7 +95,7 @@ swap_byte32(uint32_t x)
 #endif
 }
 
-static inline uint16_t
+inline uint16_t
 swap_byte16(uint16_t x)
 {
 #if defined(linux)
@@ -113,7 +113,7 @@ swap_byte16(uint16_t x)
 // sizeof() values are known at compile time, it should inline to a
 // direct call to the right swap_byteNN() function.
 template <typename T>
-static inline T swap_byte(T x) {
+inline T swap_byte(T x) {
     if (sizeof(T) == 8)
         return swap_byte64((uint64_t)x);
     else if (sizeof(T) == 4)
@@ -127,7 +127,7 @@ static inline T swap_byte(T x) {
 }
 
 template<>
-static inline Twin64_t swap_byte<Twin64_t>(Twin64_t x)
+inline Twin64_t swap_byte<Twin64_t>(Twin64_t x)
 {
     x.a = swap_byte(x.a);
     x.b = swap_byte(x.b);
@@ -135,7 +135,7 @@ static inline Twin64_t swap_byte<Twin64_t>(Twin64_t x)
 }
 
 template<>
-static inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
+inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
 {
     x.a = swap_byte(x.a);
     x.b = swap_byte(x.b);
@@ -144,23 +144,23 @@ static inline Twin32_t swap_byte<Twin32_t>(Twin32_t x)
 
 //The conversion functions with fixed endianness on both ends don't need to
 //be in a namespace
-template <typename T> static inline T betole(T value) {return swap_byte(value);}
-template <typename T> static inline T letobe(T value) {return swap_byte(value);}
+template <typename T> inline T betole(T value) {return swap_byte(value);}
+template <typename T> inline T letobe(T value) {return swap_byte(value);}
 
 //For conversions not involving the guest system, we can define the functions
 //conditionally based on the BYTE_ORDER macro and outside of the namespaces
 #if defined(_BIG_ENDIAN) || !defined(_LITTLE_ENDIAN) && BYTE_ORDER == BIG_ENDIAN
 const ByteOrder HostByteOrder = BigEndianByteOrder;
-template <typename T> static inline T htole(T value) {return swap_byte(value);}
-template <typename T> static inline T letoh(T value) {return swap_byte(value);}
-template <typename T> static inline T htobe(T value) {return value;}
-template <typename T> static inline T betoh(T value) {return value;}
+template <typename T> inline T htole(T value) {return swap_byte(value);}
+template <typename T> inline T letoh(T value) {return swap_byte(value);}
+template <typename T> inline T htobe(T value) {return value;}
+template <typename T> inline T betoh(T value) {return value;}
 #elif defined(_LITTLE_ENDIAN) || BYTE_ORDER == LITTLE_ENDIAN
 const ByteOrder HostByteOrder = LittleEndianByteOrder;
-template <typename T> static inline T htole(T value) {return value;}
-template <typename T> static inline T letoh(T value) {return value;}
-template <typename T> static inline T htobe(T value) {return swap_byte(value);}
-template <typename T> static inline T betoh(T value) {return swap_byte(value);}
+template <typename T> inline T htole(T value) {return value;}
+template <typename T> inline T letoh(T value) {return value;}
+template <typename T> inline T htobe(T value) {return swap_byte(value);}
+template <typename T> inline T betoh(T value) {return swap_byte(value);}
 #else
         #error Invalid Endianess
 #endif
@@ -169,33 +169,33 @@ namespace BigEndianGuest
 {
     const bool ByteOrderDiffers = (HostByteOrder != BigEndianByteOrder);
     template <typename T>
-    static inline T gtole(T value) {return betole(value);}
+    inline T gtole(T value) {return betole(value);}
     template <typename T>
-    static inline T letog(T value) {return letobe(value);}
+    inline T letog(T value) {return letobe(value);}
     template <typename T>
-    static inline T gtobe(T value) {return value;}
+    inline T gtobe(T value) {return value;}
     template <typename T>
-    static inline T betog(T value) {return value;}
+    inline T betog(T value) {return value;}
     template <typename T>
-    static inline T htog(T value) {return htobe(value);}
+    inline T htog(T value) {return htobe(value);}
     template <typename T>
-    static inline T gtoh(T value) {return betoh(value);}
+    inline T gtoh(T value) {return betoh(value);}
 }
 
 namespace LittleEndianGuest
 {
     const bool ByteOrderDiffers = (HostByteOrder != LittleEndianByteOrder);
     template <typename T>
-    static inline T gtole(T value) {return value;}
+    inline T gtole(T value) {return value;}
     template <typename T>
-    static inline T letog(T value) {return value;}
+    inline T letog(T value) {return value;}
     template <typename T>
-    static inline T gtobe(T value) {return letobe(value);}
+    inline T gtobe(T value) {return letobe(value);}
     template <typename T>
-    static inline T betog(T value) {return betole(value);}
+    inline T betog(T value) {return betole(value);}
     template <typename T>
-    static inline T htog(T value) {return htole(value);}
+    inline T htog(T value) {return htole(value);}
     template <typename T>
-    static inline T gtoh(T value) {return letoh(value);}
+    inline T gtoh(T value) {return letoh(value);}
 }
 #endif // __SIM_BYTE_SWAP_HH__

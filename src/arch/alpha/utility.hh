@@ -44,7 +44,7 @@ namespace AlphaISA
 
     uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
-    static inline bool
+    inline bool
     inUserMode(ThreadContext *tc)
     {
         return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
