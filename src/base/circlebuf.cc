@@ -29,12 +29,11 @@
  */
 
 #include <algorithm>
+#include <cstdio>
+#include <cstring>
 #include <string>
 
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-
+#include "base/atomicio.hh"
 #include "base/circlebuf.hh"
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
@@ -59,8 +58,8 @@ CircleBuf::dump()
     cprintf("start = %10d, stop = %10d, buflen = %10d\n",
             _start, _stop, _buflen);
     fflush(stdout);
-    ::write(STDOUT_FILENO, _buf, _buflen);
-    ::write(STDOUT_FILENO, "<\n", 2);
+    atomic_write(STDOUT_FILENO, _buf, _buflen);
+    atomic_write(STDOUT_FILENO, "<\n", 2);
 }
 
 void
@@ -106,19 +105,19 @@ CircleBuf::read(int fd, int len)
 
     if (_stop > _start) {
         len = min(len, _stop - _start);
-        ::write(fd, _buf + _start, len);
+        atomic_write(fd, _buf + _start, len);
         _start += len;
     }
     else {
         int endlen = _buflen - _start;
         if (endlen > len) {
-            ::write(fd, _buf + _start, len);
+            atomic_write(fd, _buf + _start, len);
             _start += len;
         }
         else {
-            ::write(fd, _buf + _start, endlen);
+            atomic_write(fd, _buf + _start, endlen);
             _start = min(len - endlen, _stop);
-            ::write(fd, _buf, _start);
+            atomic_write(fd, _buf, _start);
         }
     }
 }
@@ -129,11 +128,11 @@ CircleBuf::read(int fd)
     _size = 0;
 
     if (_stop > _start) {
-        ::write(fd, _buf + _start, _stop - _start);
+        atomic_write(fd, _buf + _start, _stop - _start);
     }
     else {
-        ::write(fd, _buf + _start, _buflen - _start);
-        ::write(fd, _buf, _stop);
+        atomic_write(fd, _buf + _start, _buflen - _start);
+        atomic_write(fd, _buf, _stop);
     }
 
     _start = _stop;
@@ -159,9 +158,9 @@ void
 CircleBuf::readall(int fd)
 {
     if (_rollover)
-        ::write(fd, _buf + _stop, _buflen - _stop);
+        atomic_write(fd, _buf + _stop, _buflen - _stop);
 
-    ::write(fd, _buf, _stop);
+    atomic_write(fd, _buf, _stop);
     _start = _stop;
 }
 

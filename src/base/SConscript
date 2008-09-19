@@ -31,6 +31,7 @@
 Import('*')
 
 Source('annotate.cc')
+Source('atomicio.cc')
 Source('bigint.cc')
 Source('circlebuf.cc')
 Source('cprintf.cc')

@@ -35,16 +35,17 @@
 
 #include <sys/ioctl.h>
 #include <sys/termios.h>
-#include <sys/types.h>
 #include <errno.h>
 #include <poll.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 
+#include "base/atomicio.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/socket.hh"
@@ -156,7 +157,7 @@ Terminal::accept()
     int fd = listener.accept(true);
     if (data_fd != -1) {
         char message[] = "terminal already attached!\n";
-        ::write(fd, message, sizeof(message));
+        atomic_write(fd, message, sizeof(message));
         ::close(fd);
         return;
     }
@@ -238,16 +239,9 @@ Terminal::write(const uint8_t *buf, size_t len)
     if (data_fd < 0)
         panic("Terminal not properly attached.\n");
 
-    size_t ret;
-    for (;;) {
-      ret = ::write(data_fd, buf, len);
-
-      if (ret >= 0)
-        break;
-
-      if (errno != EINTR)
-      detach();
-    }
+    ssize_t ret = atomic_write(data_fd, buf, len);
+    if (ret < len)
+        detach();
 
     return ret;
 }
