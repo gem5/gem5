@@ -65,7 +65,9 @@ HexFile::loadSections(Port *memPort)
     Addr MemAddr;
     uint32_t Data;
     while (!feof(fp)) {
-        fgets(Line, 64, fp);
+        char *ret = fgets(Line, sizeof(Line), fp);
+        if (!ret)
+            panic("malformed file");
         parseLine(Line, &MemAddr, &Data);
         if (MemAddr != 0) {
             // Now, write to memory

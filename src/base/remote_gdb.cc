@@ -346,14 +346,16 @@ uint8_t
 BaseRemoteGDB::getbyte()
 {
     uint8_t b;
-    ::read(fd, &b, 1);
+    if (::read(fd, &b, 1) != 1)
+        warn("could not read byte from debugger");
     return b;
 }
 
 void
 BaseRemoteGDB::putbyte(uint8_t b)
 {
-    ::write(fd, &b, 1);
+    if (::write(fd, &b, 1) != 1)
+        warn("could not write byte to debugger");
 }
 
 // Send a packet to gdb

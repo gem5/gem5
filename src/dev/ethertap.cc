@@ -182,8 +182,12 @@ EtherTap::recvPacket(EthPacketPtr packet)
     DPRINTF(Ethernet, "EtherTap output len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
     uint32_t len = htonl(packet->length);
-    write(socket, &len, sizeof(len));
-    write(socket, packet->data, packet->length);
+    ssize_t ret = write(socket, &len, sizeof(len));
+    if (ret != sizeof(len))
+        return false;
+    ret = write(socket, packet->data, packet->length);
+    if (ret != packet->length)
+        return false;
 
     interface->recvDone();
 
