@@ -543,6 +543,7 @@ SwigSource('m5.objects', params_file)
 
 # Build all swig modules
 swig_modules = []
+cc_swig_sources = []
 for source,package in swig_sources:
     filename = str(source)
     assert filename.endswith('.i')
@@ -559,7 +560,7 @@ for source,package in swig_sources:
     env.Depends(cc_file, source)
 
     swig_modules.append(Value(module))
-    Source(cc_file)
+    cc_swig_sources.append(File(cc_file))
     PySource(package, py_file)
 
 # Generate the main swig init file
@@ -945,12 +946,18 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     newEnv.Label = label
     newEnv.Append(**kwargs)
 
+    swig_env = newEnv.Copy()
+    swig_env.Append(CCFLAGS='-Wno-uninitialized')
+    swig_objs = [ swig_env.Object(s) for s in cc_swig_sources ]
+
     # First make a library of everything but main() so other programs can
     # link against m5.
     #
     # SCons doesn't know to append a library suffix when there is a '.' in the
     # name.  Use '_' instead.
-    m5lib = newEnv.Library('m5_' + label, make_objs(cc_lib_sources, newEnv))
+
+    m5lib = newEnv.Library('m5_' + label,
+        make_objs(cc_lib_sources, newEnv) + swig_objs)
 
     # Now link a stub with main() and the library.
     exe = 'm5.' + label  # final executable
