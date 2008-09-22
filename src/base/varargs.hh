@@ -150,7 +150,7 @@ struct Any : public Base<RECV>
 template <class RECV>
 struct Argument : public RefCountingPtr<Base<RECV> >
 {
-    typedef RefCountingPtr<Base<RECV> > Base;
+    typedef RefCountingPtr<VarArgs::Base<RECV> > Base;
 
     Argument() { }
     Argument(const Null &null) { }
@@ -169,7 +169,7 @@ template<class RECV>
 class List
 {
   public:
-    typedef Argument<RECV> Argument;
+    typedef VarArgs::Argument<RECV> Argument;
     typedef std::list<Argument> list;
     typedef typename list::iterator iterator;
     typedef typename list::const_iterator const_iterator;
