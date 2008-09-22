@@ -41,7 +41,6 @@
 
 namespace AlphaISA
 {
-
     uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
     inline bool
@@ -50,58 +49,71 @@ namespace AlphaISA
         return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
     }
 
-    inline bool isCallerSaveIntegerRegister(unsigned int reg) {
+    inline bool
+    isCallerSaveIntegerRegister(unsigned int reg)
+    {
         panic("register classification not implemented");
         return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
     }
 
-    inline bool isCalleeSaveIntegerRegister(unsigned int reg) {
+    inline bool
+    isCalleeSaveIntegerRegister(unsigned int reg)
+    {
         panic("register classification not implemented");
         return (reg >= 9 && reg <= 15);
     }
 
-    inline bool isCallerSaveFloatRegister(unsigned int reg) {
+    inline bool
+    isCallerSaveFloatRegister(unsigned int reg)
+    {
         panic("register classification not implemented");
         return false;
     }
 
-    inline bool isCalleeSaveFloatRegister(unsigned int reg) {
+    inline bool
+    isCalleeSaveFloatRegister(unsigned int reg)
+    {
         panic("register classification not implemented");
         return false;
     }
 
-    inline Addr alignAddress(const Addr &addr,
-                                         unsigned int nbytes) {
+    inline Addr
+    alignAddress(const Addr &addr, unsigned int nbytes)
+    {
         return (addr & ~(nbytes - 1));
     }
 
     // Instruction address compression hooks
-    inline Addr realPCToFetchPC(const Addr &addr) {
+    inline Addr
+    realPCToFetchPC(const Addr &addr)
+    {
         return addr;
     }
 
-    inline Addr fetchPCToRealPC(const Addr &addr) {
+    inline Addr
+    fetchPCToRealPC(const Addr &addr)
+    {
         return addr;
     }
 
     // the size of "fetched" instructions (not necessarily the size
     // of real instructions for PISA)
-    inline size_t fetchInstSize() {
+    inline size_t
+    fetchInstSize()
+    {
         return sizeof(MachInst);
     }
 
-    inline MachInst makeRegisterCopy(int dest, int src) {
+    inline MachInst
+    makeRegisterCopy(int dest, int src)
+    {
         panic("makeRegisterCopy not implemented");
         return 0;
     }
 
     // Machine operations
-
-    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file,
-                               int regnum);
-
-    void restoreMachineReg(RegFile &regs, const AnyReg &reg,
-                                  int regnum);
+    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file, int regnum);
+    void restoreMachineReg(RegFile &regs, const AnyReg &reg, int regnum);
 
     /**
      * Function to insure ISA semantics about 0 registers.
@@ -112,9 +124,7 @@ namespace AlphaISA
 
     // Alpha IPR register accessors
     inline bool PcPAL(Addr addr) { return addr & 0x3; }
-    inline void startupCPU(ThreadContext *tc, int cpuId) {
-        tc->activate(0);
-    }
+    inline void startupCPU(ThreadContext *tc, int cpuId) { tc->activate(0); }
 
     ////////////////////////////////////////////////////////////////////////
     //
