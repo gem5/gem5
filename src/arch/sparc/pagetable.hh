@@ -38,8 +38,8 @@
 
 class Checkpoint;
 
-namespace SparcISA
-{
+namespace SparcISA {
+
 struct VAddr
 {
     VAddr(Addr a) { panic("not implemented yet."); }
@@ -54,8 +54,15 @@ class TteTag
   public:
     TteTag() : entry(0), populated(false) {}
     TteTag(uint64_t e) : entry(e), populated(true) {}
-    const TteTag &operator=(uint64_t e) { populated = true;
-                                          entry = e; return *this; }
+
+    const TteTag &
+    operator=(uint64_t e) 
+    {
+        populated = true;
+        entry = e;
+        return *this;
+    }
+
     bool valid() const {assert(populated); return !bits(entry,62,62); }
     Addr va()    const {assert(populated); return bits(entry,41,0); }
 };
@@ -76,13 +83,13 @@ class PageTableEntry
     uint64_t entry4u;
     bool populated;
 
-
   public:
-    PageTableEntry() : entry(0), type(invalid), populated(false) {}
+    PageTableEntry()
+        : entry(0), type(invalid), populated(false)
+    {}
 
     PageTableEntry(uint64_t e, EntryType t = sun4u)
         : entry(e), type(t), populated(true)
-
     {
         populate(entry, type);
     }
@@ -113,49 +120,74 @@ class PageTableEntry
         }
     }
 
-    void clear()
+    void
+    clear()
     {
         populated = false;
     }
 
     static int pageSizes[6];
 
-
     uint64_t operator()() const { assert(populated); return entry4u; }
-    const PageTableEntry &operator=(uint64_t e) { populated = true;
-                                                  entry4u = e; return *this; }
+    const PageTableEntry &
+    operator=(uint64_t e)
+    {
+        populated = true;
+        entry4u = e;
+        return *this;
+    }
 
-    const PageTableEntry &operator=(const PageTableEntry &e)
-    { populated = true; entry4u = e.entry4u; type = e.type; return *this; }
+    const PageTableEntry &
+    operator=(const PageTableEntry &e)
+    {
+        populated = true;
+        entry4u = e.entry4u;
+        type = e.type;
+        return *this;
+    }
 
-    bool    valid()    const { return bits(entry4u,63,63) && populated; }
-    uint8_t _size()     const { assert(populated);
-                               return bits(entry4u, 62,61) |
-                                      bits(entry4u, 48,48) << 2; }
-    Addr    size()     const { assert(_size() < 6); return pageSizes[_size()]; }
-    Addr    sizeMask() const { assert(_size() < 6); return pageSizes[_size()]-1;}
-    bool    ie()       const { return bits(entry4u, 59,59); }
-    Addr    pfn()      const { assert(populated); return bits(entry4u,39,13); }
-    Addr    paddr()    const { assert(populated); return mbits(entry4u, 39,13);}
-    bool    locked()   const { assert(populated); return bits(entry4u,6,6); }
-    bool    cv()       const { assert(populated); return bits(entry4u,4,4); }
-    bool    cp()       const { assert(populated); return bits(entry4u,5,5); }
-    bool    priv()     const { assert(populated); return bits(entry4u,2,2); }
-    bool    writable() const { assert(populated); return bits(entry4u,1,1); }
-    bool    nofault()  const { assert(populated); return bits(entry4u,60,60); }
-    bool    sideffect() const { assert(populated); return bits(entry4u,3,3); }
-    Addr    paddrMask() const { assert(populated);
-                                return mbits(entry4u, 39,13) & ~sizeMask(); }
+    bool valid() const { return bits(entry4u,63,63) && populated; }
+
+    uint8_t
+    _size() const
+    {
+        assert(populated);
+        return bits(entry4u, 62,61) | bits(entry4u, 48,48) << 2;
+    }
+
+    Addr size()     const { assert(_size() < 6); return pageSizes[_size()]; }
+    Addr sizeMask() const { return size() - 1; }
+    bool ie()       const { return bits(entry4u, 59,59); }
+    Addr pfn()      const { assert(populated); return bits(entry4u,39,13); }
+    Addr paddr()    const { assert(populated); return mbits(entry4u, 39,13);}
+    bool locked()   const { assert(populated); return bits(entry4u,6,6); }
+    bool cv()       const { assert(populated); return bits(entry4u,4,4); }
+    bool cp()       const { assert(populated); return bits(entry4u,5,5); }
+    bool priv()     const { assert(populated); return bits(entry4u,2,2); }
+    bool writable() const { assert(populated); return bits(entry4u,1,1); }
+    bool nofault()  const { assert(populated); return bits(entry4u,60,60); }
+    bool sideffect() const { assert(populated); return bits(entry4u,3,3); }
+    Addr paddrMask() const { assert(populated); return paddr() & ~sizeMask(); }
+
+    Addr
+    translate(Addr vaddr) const
+    {
+        assert(populated);
+        Addr mask = sizeMask();
+        return (paddr() & ~mask) | (vaddr & mask);
+    }
 };
 
-struct TlbRange {
+struct TlbRange
+{
     Addr va;
     Addr size;
     int contextId;
     int partitionId;
     bool real;
 
-    inline bool operator<(const TlbRange &r2) const
+    inline bool
+    operator<(const TlbRange &r2) const
     {
         if (real && !r2.real)
             return true;
@@ -178,7 +210,9 @@ struct TlbRange {
             return true;
         return false;
     }
-    inline bool operator==(const TlbRange &r2) const
+
+    inline bool
+    operator==(const TlbRange &r2) const
     {
         return va == r2.va &&
                size == r2.size &&
@@ -189,7 +223,11 @@ struct TlbRange {
 };
 
 
-struct TlbEntry {
+struct TlbEntry
+{
+    TlbEntry()
+    {}
+
     TlbEntry(Addr asn, Addr vaddr, Addr paddr)
     {
         uint64_t entry = 0;
@@ -215,8 +253,7 @@ struct TlbEntry {
 
         valid = true;
     }
-    TlbEntry()
-    {}
+
     TlbRange range;
     PageTableEntry pte;
     bool used;
@@ -229,11 +266,9 @@ struct TlbEntry {
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
-
 };
 
-
-}; // namespace SparcISA
+} // namespace SparcISA
 
 #endif // __ARCH_SPARC_PAGE_TABLE_HH__
 
