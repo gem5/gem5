@@ -161,7 +161,15 @@ template <class Impl>
 void
 AlphaDynInst<Impl>::syscall(int64_t callnum)
 {
+    // HACK: check CPU's nextPC before and after syscall. If it
+    // changes, update this instruction's nextPC because the syscall
+    // must have changed the nextPC.
+    Addr cpu_next_pc = this->cpu->readNextPC(this->threadNumber);
     this->cpu->syscall(callnum, this->threadNumber);
+    Addr new_next_pc = this->cpu->readNextPC(this->threadNumber);
+    if (cpu_next_pc != new_next_pc) {
+        this->setNextPC(new_next_pc);
+    }
 }
 #endif
 
