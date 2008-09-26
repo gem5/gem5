@@ -584,17 +584,14 @@ LSQ<Impl>::hasStoresToWB()
     std::list<unsigned>::iterator threads = activeThreads->begin();
     std::list<unsigned>::iterator end = activeThreads->end();
 
-    if (threads == end)
-        return false;
-
     while (threads != end) {
         unsigned tid = *threads++;
 
-        if (!hasStoresToWB(tid))
-            return false;
+        if (hasStoresToWB(tid))
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 template<class Impl>
@@ -607,11 +604,11 @@ LSQ<Impl>::willWB()
     while (threads != end) {
         unsigned tid = *threads++;
 
-        if (!willWB(tid))
-            return false;
+        if (willWB(tid))
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 template<class Impl>

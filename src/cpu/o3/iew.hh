@@ -208,6 +208,9 @@ class DefaultIEW
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
 
+    /** Returns if the LSQ has any stores to writeback. */
+    bool hasStoresToWB(unsigned tid) { return ldstQueue.hasStoresToWB(tid); }
+
     void incrWb(InstSeqNum &sn)
     {
         if (++wbOutstanding == wbMax)

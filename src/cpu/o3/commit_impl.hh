@@ -814,7 +814,7 @@ DefaultCommit<Impl>::commit()
         // @todo: Make this handle multi-cycle communication between
         // commit and IEW.
         if (checkEmptyROB[tid] && rob->isEmpty(tid) &&
-            !iewStage->hasStoresToWB() && !committedStores[tid]) {
+            !iewStage->hasStoresToWB(tid) && !committedStores[tid]) {
             checkEmptyROB[tid] = false;
             toIEW->commitInfo[tid].usedROB = true;
             toIEW->commitInfo[tid].emptyROB = true;
@@ -968,7 +968,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                     "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
                     head_inst->seqNum, head_inst->readPC());
 
-            if (inst_num > 0 || iewStage->hasStoresToWB()) {
+            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
                 return false;
             }
@@ -983,7 +983,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
             return false;
         } else if (head_inst->isLoad()) {
-            if (inst_num > 0 || iewStage->hasStoresToWB()) {
+            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
                 return false;
             }
@@ -1038,7 +1038,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
                 head_inst->seqNum, head_inst->readPC());
 
-        if (iewStage->hasStoresToWB() || inst_num > 0) {
+        if (iewStage->hasStoresToWB(tid) || inst_num > 0) {
             DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
             return false;
         }
