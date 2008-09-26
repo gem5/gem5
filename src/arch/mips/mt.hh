@@ -220,7 +220,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
             warn("%i: Deactivating Hardware Thread Context #%i", curTick, tc->getThreadNum());
         }
     } else if (src_reg > 0) {
-        if (src_reg & !yield_mask != 0) {
+        if (src_reg && !yield_mask != 0) {
             unsigned vpe_control = tc->readMiscReg(VPEControl);
             tc->setMiscReg(VPEControl, insertBits(vpe_control, VPEC_EXCPT_HI, VPEC_EXCPT_LO, 2));
             fault = new ThreadFault();
