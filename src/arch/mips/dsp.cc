@@ -63,7 +63,7 @@ MipsISA::dspSaturate(uint64_t value, int32_t fmt, int32_t sign,
 {
     int64_t svalue = (int64_t)value;
 
-    switch(sign) {
+    switch (sign) {
       case SIGNED:
         if (svalue > (int64_t)FIXED_SMAX[fmt]) {
             *overflow = 1;
@@ -93,7 +93,7 @@ MipsISA::checkOverflow(uint64_t value, int32_t fmt, int32_t sign,
 {
     int64_t svalue = (int64_t)value;
 
-    switch(sign)
+    switch (sign)
     {
       case SIGNED:
         if (svalue > (int64_t)FIXED_SMAX[fmt] ||
@@ -431,7 +431,7 @@ MipsISA::dspMuleu(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl)
     simdUnpack(a, a_values, SIMD_FMT_QB, UNSIGNED);
     simdUnpack(b, b_values, SIMD_FMT_PH, UNSIGNED);
 
-    switch(mode) {
+    switch (mode) {
       case MODE_L:
         for (int i = 0; i < nvals; i++)
             b_values[i] = dspSaturate(a_values[i + 2] * b_values[i],
@@ -466,7 +466,7 @@ MipsISA::dspMuleq(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl)
     simdUnpack(a, a_values, SIMD_FMT_PH, SIGNED);
     simdUnpack(b, b_values, SIMD_FMT_PH, SIGNED);
 
-    switch(mode) {
+    switch (mode) {
       case MODE_L:
         for (int i = 0; i < nvals; i++)
             c_values[i] = dspSaturate(a_values[i + 1] * b_values[i + 1] << 1,
@@ -504,7 +504,7 @@ MipsISA::dspDpaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     simdUnpack(b, b_values, infmt, SIGNED);
 
     for (int i = 0; i < nvals; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_X:
             if (a_values[nvals - 1 - i] == FIXED_SMIN[infmt] &&
                 b_values[i] == FIXED_SMIN[infmt]) {
@@ -571,7 +571,7 @@ MipsISA::dspDpsq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     simdUnpack(b, b_values, infmt, SIGNED);
 
     for (int i = 0; i < nvals; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_X:
             if (a_values[nvals - 1 - i] == FIXED_SMIN[infmt] &&
                 b_values[i] == FIXED_SMIN[infmt]) {
@@ -634,7 +634,7 @@ MipsISA::dspDpa(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     simdUnpack(b, b_values, fmt, sign);
 
     for (int i = 0; i < 2; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_L:
             dspac += a_values[nvals - 1 - i] * b_values[nvals - 1 - i];
             break;
@@ -662,7 +662,7 @@ MipsISA::dspDps(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     simdUnpack(b, b_values, fmt, sign);
 
     for (int i = 0; i < 2; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_L:
             dspac -= a_values[nvals - 1 - i] * b_values[nvals - 1 - i];
             break;
@@ -692,7 +692,7 @@ MipsISA::dspMaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     simdUnpack(b, b_values, fmt, SIGNED);
 
     for (int i = 0; i < nvals; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_L:
             temp = a_values[i + 1] * b_values[i + 1] << 1;
             if (a_values[i + 1] == FIXED_SMIN[fmt] &&
@@ -780,7 +780,7 @@ MipsISA::dspCmp(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
     for (int i = 0; i < nvals; i++) {
         int cc = 0;
 
-        switch(op) {
+        switch (op) {
           case CMP_EQ:
             cc = (a_values[i] == b_values[i]);
             break;
@@ -812,7 +812,7 @@ MipsISA::dspCmpg(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op)
     for (int i = 0; i < nvals; i++) {
         int cc = 0;
 
-        switch(op) {
+        switch (op) {
           case CMP_EQ:
             cc = (a_values[i] == b_values[i]);
             break;
@@ -846,7 +846,7 @@ MipsISA::dspCmpgd(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
     for (int i = 0; i < nvals; i++) {
         int cc = 0;
 
-        switch(op) {
+        switch (op) {
           case CMP_EQ:
             cc = (a_values[i] == b_values[i]);
             break;
@@ -888,7 +888,7 @@ MipsISA::dspPrece(int32_t a, int32_t infmt, int32_t insign, int32_t outfmt,
     simdUnpack(a, in_values, infmt, insign);
 
     for (int i = 0; i<noutvals; i++) {
-        switch(mode) {
+        switch (mode) {
           case MODE_L:
             out_values[i] = in_values[i + (ninvals >> 1)] << sa;
             break;
@@ -1140,7 +1140,7 @@ MipsISA::simdUnpack(int32_t reg, uint64_t *values_ptr, int32_t fmt, int32_t sign
     int nvals = SIMD_NVALS[fmt];
     int nbits = SIMD_NBITS[fmt];
 
-    switch(sign) {
+    switch (sign) {
       case SIGNED:
         for (int i = 0; i < nvals; i++) {
             uint64_t tmp = (uint64_t)bits(reg, nbits * (i + 1) - 1, nbits * i);
