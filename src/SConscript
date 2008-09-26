@@ -947,7 +947,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     newEnv.Append(**kwargs)
 
     swig_env = newEnv.Copy()
-    swig_env.Append(CCFLAGS='-Wno-uninitialized')
+    if env['GCC']:
+        swig_env.Append(CCFLAGS='-Wno-uninitialized')
+        swig_env.Append(CCFLAGS='-Wno-sign-compare')
+        swig_env.Append(CCFLAGS='-Wno-parentheses')
     swig_objs = [ swig_env.Object(s) for s in cc_swig_sources ]
 
     # First make a library of everything but main() so other programs can
