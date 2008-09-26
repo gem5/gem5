@@ -130,7 +130,7 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
         return true;
     }
 
-    if (pkt->needsResponse())
+    if (pkt->needsResponse()) {
         if (respQueueFull()) {
             DPRINTF(BusBridge, "Local queue full, no space for response, nacking\n");
             DPRINTF(BusBridge, "queue size: %d outreq: %d outstanding resp: %d\n",
@@ -141,6 +141,7 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
             DPRINTF(BusBridge, "Request Needs response, reserving space\n");
             ++outstandingResponses;
         }
+    }
 
     otherPort->queueForSendTiming(pkt);
 
