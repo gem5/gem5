@@ -34,10 +34,10 @@
  * by permission.
  */
 
-#ifndef __FAST_ALLOC_H__
-#define __FAST_ALLOC_H__
+#ifndef __BASE_FAST_ALLOC_HH__
+#define __BASE_FAST_ALLOC_HH__
 
-#include <stddef.h>
+#include <cstddef>
 
 // Fast structure allocator.  Designed for small objects that are
 // frequently allocated and deallocated.  This code is derived from the
@@ -68,14 +68,15 @@
 
 #if NO_FAST_ALLOC
 
-class FastAlloc {
+class FastAlloc
+{
 };
 
 #else
 
-class FastAlloc {
+class FastAlloc
+{
   public:
-
     static void *allocate(size_t);
     static void deallocate(void *, size_t);
 
@@ -84,7 +85,7 @@ class FastAlloc {
 
 #if FAST_ALLOC_DEBUG
     FastAlloc();
-    FastAlloc(FastAlloc*,FastAlloc*);   // for inUseHead, see below
+    FastAlloc(FastAlloc *, FastAlloc *);   // for inUseHead, see below
     virtual ~FastAlloc();
 #else
     virtual ~FastAlloc() {}
@@ -139,16 +140,14 @@ class FastAlloc {
 #endif
 };
 
-
-inline
-int FastAlloc::bucketFor(size_t sz)
+inline int
+FastAlloc::bucketFor(size_t sz)
 {
     return (sz + Alloc_Quantum - 1) >> Log2_Alloc_Quantum;
 }
 
-
-inline
-void *FastAlloc::allocate(size_t sz)
+inline void *
+FastAlloc::allocate(size_t sz)
 {
     int b;
     void *p;
@@ -171,14 +170,12 @@ void *FastAlloc::allocate(size_t sz)
     return p;
 }
 
-
-inline
-void FastAlloc::deallocate(void *p, size_t sz)
+inline void
+FastAlloc::deallocate(void *p, size_t sz)
 {
     int b;
 
-    if (sz > Max_Alloc_Size)
-    {
+    if (sz > Max_Alloc_Size) {
         ::delete [] (char *)p;
         return;
     }
@@ -191,20 +188,18 @@ void FastAlloc::deallocate(void *p, size_t sz)
 #endif
 }
 
-
-inline
-void *FastAlloc::operator new(size_t sz)
+inline void *
+FastAlloc::operator new(size_t sz)
 {
     return allocate(sz);
 }
 
-
-inline
-void FastAlloc::operator delete(void *p, size_t sz)
+inline void
+FastAlloc::operator delete(void *p, size_t sz)
 {
     deallocate(p, sz);
 }
 
 #endif // NO_FAST_ALLOC
 
-#endif // __FAST_ALLOC_H__
+#endif // __BASE_FAST_ALLOC_HH__
