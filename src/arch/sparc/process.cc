@@ -354,7 +354,7 @@ SparcLiveProcess::argsInit(int pageSize)
 
     // figure out argc
     IntType argc = argv.size();
-    IntType guestArgc = TheISA::htog(argc);
+    IntType guestArgc = SparcISA::htog(argc);
 
     //Write out the sentry void *
     uint64_t sentry_NULL = 0;

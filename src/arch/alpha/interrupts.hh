@@ -78,7 +78,7 @@ class Interrupts
     {
         DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
-        if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
+        if (int_num < 0 || int_num >= AlphaISA::NumInterruptLevels)
             panic("int_num out of bounds\n");
 
         if (index < 0 || index >= (int)sizeof(uint64_t) * 8)

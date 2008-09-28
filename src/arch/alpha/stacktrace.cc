@@ -159,7 +159,7 @@ namespace AlphaISA
         }
 
         SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
-        Addr ksp = tc->readIntReg(TheISA::StackPointerReg);
+        Addr ksp = tc->readIntReg(AlphaISA::StackPointerReg);
         Addr bottom = ksp & ~0x3fff;
         Addr addr;
 

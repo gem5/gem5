@@ -366,12 +366,12 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
+    for (int i = 0; i < SparcISA::NumIntRegs; ++i) {
         dest->setIntReg(i, src->readIntReg(i));
     }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+    for (int i = 0; i < SparcISA::NumFloatRegs; ++i) {
         dest->setFloatRegBits(i, src->readFloatRegBits(i));
     }
 

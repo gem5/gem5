@@ -137,7 +137,7 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
+using namespace SparcISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : BaseRemoteGDB(_system, c, NumGDBRegs), nextBkpt(0)

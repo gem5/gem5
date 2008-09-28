@@ -55,7 +55,7 @@ class ThreadInfo
 
         CopyOut(tc, &data, addr, sizeof(T));
 
-        data = TheISA::gtoh(data);
+        data = MipsISA::gtoh(data);
 
         return true;
     }
@@ -77,7 +77,7 @@ class ThreadInfo
         Addr sp;
 
         if (!addr)
-            addr = tc->readMiscRegNoEffect(0/*TheISA::IPR_PALtemp23*/);
+            addr = tc->readMiscRegNoEffect(0/*MipsISA::IPR_PALtemp23*/);
 
         FunctionalPort *p = tc->getPhysPort();
         p->readBlob(addr, (uint8_t *)&sp, sizeof(Addr));

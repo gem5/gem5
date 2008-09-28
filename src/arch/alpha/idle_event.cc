@@ -33,7 +33,7 @@
 #include "arch/alpha/kernel_stats.hh"
 #include "cpu/thread_context.hh"
 
-using namespace TheISA;
+using namespace AlphaISA;
 
 void
 IdleStartEvent::process(ThreadContext *tc)

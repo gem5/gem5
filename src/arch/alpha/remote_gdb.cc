@@ -140,7 +140,7 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
+using namespace AlphaISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : BaseRemoteGDB(_system, c, KGDB_NUMREGS)
@@ -161,12 +161,12 @@ RemoteGDB::acc(Addr va, size_t len)
 #else
     Addr last_va;
 
-    va = TheISA::TruncPage(va);
-    last_va = TheISA::RoundPage(va + len);
+    va = AlphaISA::TruncPage(va);
+    last_va = AlphaISA::RoundPage(va + len);
 
     do  {
-        if (TheISA::IsK0Seg(va)) {
-            if (va < (TheISA::K0SegBase + pmem->size())) {
+        if (AlphaISA::IsK0Seg(va)) {
+            if (va < (AlphaISA::K0SegBase + pmem->size())) {
                 DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;
@@ -188,12 +188,12 @@ RemoteGDB::acc(Addr va, size_t len)
             return true;
 
         Addr ptbr = context->readMiscRegNoEffect(AlphaISA::IPR_PALtemp20);
-        TheISA::PageTableEntry pte = TheISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+        AlphaISA::PageTableEntry pte = AlphaISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
         }
-        va += TheISA::PageBytes;
+        va += AlphaISA::PageBytes;
     } while (va < last_va);
 
     DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
@@ -215,17 +215,17 @@ RemoteGDB::getregs()
 
     // @todo: Currently this is very Alpha specific.
     if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < AlphaISA::NumIntArchRegs; ++i) {
             gdbregs.regs[i] = context->readIntReg(AlphaISA::reg_redir[i]);
         }
     } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < AlphaISA::NumIntArchRegs; ++i) {
             gdbregs.regs[i] = context->readIntReg(i);
         }
     }
 
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
+    for (int i = 0; i < AlphaISA::NumFloatArchRegs; ++i) {
         gdbregs.regs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
     }
 #endif
@@ -242,17 +242,17 @@ RemoteGDB::setregs()
 {
     // @todo: Currently this is very Alpha specific.
     if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < AlphaISA::NumIntArchRegs; ++i) {
             context->setIntReg(AlphaISA::reg_redir[i], gdbregs.regs[i]);
         }
     } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < AlphaISA::NumIntArchRegs; ++i) {
             context->setIntReg(i, gdbregs.regs[i]);
         }
     }
 
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
+    for (int i = 0; i < AlphaISA::NumFloatArchRegs; ++i) {
         context->setFloatRegBits(i, gdbregs.regs[i + KGDB_REG_F0]);
     }
 #endif

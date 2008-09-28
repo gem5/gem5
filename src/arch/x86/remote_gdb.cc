@@ -157,7 +157,7 @@
 #include "cpu/thread_context.hh"
 
 using namespace std;
-using namespace TheISA;
+using namespace X86ISA;
 
 RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
     : BaseRemoteGDB(_system, c, NumGDBRegs)

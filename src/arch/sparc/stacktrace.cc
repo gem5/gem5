@@ -159,7 +159,7 @@ namespace SparcISA
         }
 
         SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
-        Addr ksp = tc->readIntReg(TheISA::StackPointerReg);
+        Addr ksp = tc->readIntReg(SparcISA::StackPointerReg);
         Addr bottom = ksp & ~0x3fff;
         Addr addr;
 

@@ -70,7 +70,7 @@ namespace AlphaISA
         }
 
         // Then loop through the floating point registers.
-        for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+        for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
             dest->setFloatRegBits(i, src->readFloatRegBits(i));
         }
 

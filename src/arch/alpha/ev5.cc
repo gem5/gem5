@@ -383,10 +383,10 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
 #if FULL_SYSTEM
         if (val & 0x18) {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(TheISA::Kernel::user, tc);
+                tc->getKernelStats()->mode(AlphaISA::Kernel::user, tc);
         } else {
             if (tc->getKernelStats())
-                tc->getKernelStats()->mode(TheISA::Kernel::kernel, tc);
+                tc->getKernelStats()->mode(AlphaISA::Kernel::kernel, tc);
         }
 #endif
 

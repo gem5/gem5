@@ -186,7 +186,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
             num_threads, num_vpes);
     cpu = _cpu;
 
-    TheISA::CoreSpecific &cp = cpu->coreParams;
+    MipsISA::CoreSpecific &cp = cpu->coreParams;
 
     // Do Default CP0 initialization HERE
 

@@ -166,7 +166,7 @@ SyscallReturn tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
 {
     using namespace std;
-    using namespace TheISA;
+    using namespace AlphaISA;
 
     int id = tc->getSyscallArg(0);      // table ID
     int index = tc->getSyscallArg(1);   // index into table

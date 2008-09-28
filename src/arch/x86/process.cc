@@ -105,8 +105,8 @@ using namespace X86ISA;
 
 M5_64_auxv_t::M5_64_auxv_t(int64_t type, int64_t val)
 {
-    a_type = TheISA::htog(type);
-    a_val = TheISA::htog(val);
+    a_type = X86ISA::htog(type);
+    a_val = X86ISA::htog(val);
 }
 
 X86LiveProcess::X86LiveProcess(LiveProcessParams * params,
@@ -424,7 +424,7 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     // figure out argc
     uint64_t argc = argv.size();
-    uint64_t guestArgc = TheISA::htog(argc);
+    uint64_t guestArgc = X86ISA::htog(argc);
 
     //Write out the sentry void *
     uint64_t sentry_NULL = 0;
