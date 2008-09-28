@@ -113,13 +113,13 @@ MipsISA::processInterrupts(CPU *cpu)
 /*int
 MipsISA::MiscRegFile::getInstAsid()
 {
-    return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
+    return AlphaISA::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
 }
 
 int
 MipsISA::MiscRegFile::getDataAsid()
 {
-    return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
+    return AlphaISA::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
     }*/
 
 

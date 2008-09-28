@@ -61,7 +61,7 @@ BadAddrEvent::process(ThreadContext *tc)
     tc->getPhysPort()->getPeerAddressRanges(resp, snoop);
     for(iter = resp.begin(); iter != resp.end(); iter++)
     {
-        if (*iter == (TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask))
+        if (*iter == (TheISA::K0Seg2Phys(a0) & AlphaISA::PAddrImplMask))
             found = true;
     }
 

@@ -36,10 +36,7 @@
 #include "config/alpha_tlaser.hh"
 #include "arch/alpha/isa_traits.hh"
 
-namespace EV5 {
-
-//It seems like a safe assumption EV5 only applies to alpha
-using namespace AlphaISA;
+namespace AlphaISA {
 
 #if ALPHA_TLASER
 const uint64_t AsnMask = ULL(0x7f);
@@ -120,6 +117,6 @@ inline int Ra(AlphaISA::MachInst inst) { return inst >> 21 & 0x1f; }
 const Addr PalBase = 0x4000;
 const Addr PalMax = 0x10000;
 
-/* namespace EV5 */ }
+} // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_EV5_HH__

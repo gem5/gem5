@@ -88,8 +88,8 @@ namespace AlphaISA
         // static helper functions... really EV5 VM traits
         static bool validVirtualAddress(Addr vaddr) {
             // unimplemented bits must be all 0 or all 1
-            Addr unimplBits = vaddr & EV5::VAddrUnImplMask;
-            return (unimplBits == 0) || (unimplBits == EV5::VAddrUnImplMask);
+            Addr unimplBits = vaddr & AlphaISA::VAddrUnImplMask;
+            return (unimplBits == 0) || (unimplBits == AlphaISA::VAddrUnImplMask);
         }
 
         static Fault checkCacheability(RequestPtr &req, bool itb = false);

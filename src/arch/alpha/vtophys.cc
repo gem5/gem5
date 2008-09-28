@@ -92,7 +92,7 @@ AlphaISA::vtophys(ThreadContext *tc, Addr addr)
     Addr paddr = 0;
     //@todo Andrew couldn't remember why he commented some of this code
     //so I put it back in. Perhaps something to do with gdb debugging?
-    if (AlphaISA::PcPAL(vaddr) && (vaddr < EV5::PalMax)) {
+    if (AlphaISA::PcPAL(vaddr) && (vaddr < AlphaISA::PalMax)) {
         paddr = vaddr & ~ULL(1);
     } else {
         if (AlphaISA::IsK0Seg(vaddr)) {

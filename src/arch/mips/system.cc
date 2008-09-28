@@ -185,7 +185,7 @@ MipsSystem::setMipsAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5MipsAccess", addr)) {
-      //        virtPort.write(addr, htog(EV5::Phys2K0Seg(access)));
+      //        virtPort.write(addr, htog(AlphaISA::Phys2K0Seg(access)));
     } else
     panic("could not find m5MipsAccess\n");
     }

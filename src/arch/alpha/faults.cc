@@ -148,8 +148,8 @@ void DtbFault::invoke(ThreadContext * tc)
 
         // set MM_STAT register flags
         tc->setMiscRegNoEffect(AlphaISA::IPR_MM_STAT,
-            (((EV5::Opcode(tc->getInst()) & 0x3f) << 11)
-             | ((EV5::Ra(tc->getInst()) & 0x1f) << 6)
+            (((AlphaISA::Opcode(tc->getInst()) & 0x3f) << 11)
+             | ((AlphaISA::Ra(tc->getInst()) & 0x1f) << 6)
              | (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address

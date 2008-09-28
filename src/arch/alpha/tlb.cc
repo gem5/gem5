@@ -43,7 +43,6 @@
 #include "cpu/thread_context.hh"
 
 using namespace std;
-using namespace EV5;
 
 namespace AlphaISA {
 ///////////////////////////////////////////////////////////////////////

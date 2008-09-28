@@ -44,9 +44,9 @@
 #include "sim/debug.hh"
 #include "sim/sim_exit.hh"
 
-#if FULL_SYSTEM
+using namespace AlphaISA;
 
-using namespace EV5;
+#if FULL_SYSTEM
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -146,13 +146,13 @@ SimpleThread::hwrei()
 int
 AlphaISA::MiscRegFile::getInstAsid()
 {
-    return EV5::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
+    return AlphaISA::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
 }
 
 int
 AlphaISA::MiscRegFile::getDataAsid()
 {
-    return EV5::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
+    return AlphaISA::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
 }
 
 #endif
@@ -168,7 +168,7 @@ AlphaISA::initIPRs(ThreadContext *tc, int cpuId)
         tc->setMiscRegNoEffect(i, 0);
     }
 
-    tc->setMiscRegNoEffect(IPR_PAL_BASE, EV5::PalBase);
+    tc->setMiscRegNoEffect(IPR_PAL_BASE, AlphaISA::PalBase);
     tc->setMiscRegNoEffect(IPR_MCSR, 0x6);
     tc->setMiscRegNoEffect(IPR_PALtemp16, cpuId);
 }
@@ -477,27 +477,27 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         ipr[idx] = val;
 
         tc->getDTBPtr()->flushAddr(val,
-                EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
+                AlphaISA::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]));
         break;
 
       case AlphaISA::IPR_DTB_TAG: {
           struct AlphaISA::TlbEntry entry;
 
           // FIXME: granularity hints NYI...
-          if (EV5::DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
+          if (AlphaISA::DTB_PTE_GH(ipr[AlphaISA::IPR_DTB_PTE]) != 0)
               panic("PTE GH field != 0");
 
           // write entire quad
           ipr[idx] = val;
 
           // construct PTE for new entry
-          entry.ppn = EV5::DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.xre = EV5::DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.xwe = EV5::DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.fonr = EV5::DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.fonw = EV5::DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.asma = EV5::DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
-          entry.asn = EV5::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
+          entry.ppn = AlphaISA::DTB_PTE_PPN(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.xre = AlphaISA::DTB_PTE_XRE(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.xwe = AlphaISA::DTB_PTE_XWE(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.fonr = AlphaISA::DTB_PTE_FONR(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.fonw = AlphaISA::DTB_PTE_FONW(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.asma = AlphaISA::DTB_PTE_ASMA(ipr[AlphaISA::IPR_DTB_PTE]);
+          entry.asn = AlphaISA::DTB_ASN_ASN(ipr[AlphaISA::IPR_DTB_ASN]);
 
           // insert new TAG/PTE value into data TLB
           tc->getDTBPtr()->insert(val, entry);
@@ -508,20 +508,20 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
           struct AlphaISA::TlbEntry entry;
 
           // FIXME: granularity hints NYI...
-          if (EV5::ITB_PTE_GH(val) != 0)
+          if (AlphaISA::ITB_PTE_GH(val) != 0)
               panic("PTE GH field != 0");
 
           // write entire quad
           ipr[idx] = val;
 
           // construct PTE for new entry
-          entry.ppn = EV5::ITB_PTE_PPN(val);
-          entry.xre = EV5::ITB_PTE_XRE(val);
+          entry.ppn = AlphaISA::ITB_PTE_PPN(val);
+          entry.xre = AlphaISA::ITB_PTE_XRE(val);
           entry.xwe = 0;
-          entry.fonr = EV5::ITB_PTE_FONR(val);
-          entry.fonw = EV5::ITB_PTE_FONW(val);
-          entry.asma = EV5::ITB_PTE_ASMA(val);
-          entry.asn = EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
+          entry.fonr = AlphaISA::ITB_PTE_FONR(val);
+          entry.fonw = AlphaISA::ITB_PTE_FONW(val);
+          entry.asma = AlphaISA::ITB_PTE_ASMA(val);
+          entry.asn = AlphaISA::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]);
 
           // insert new TAG/PTE value into data TLB
           tc->getITBPtr()->insert(ipr[AlphaISA::IPR_ITB_TAG], entry);
@@ -547,7 +547,7 @@ AlphaISA::MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         ipr[idx] = val;
 
         tc->getITBPtr()->flushAddr(val,
-                EV5::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
+                AlphaISA::ITB_ASN_ASN(ipr[AlphaISA::IPR_ITB_ASN]));
         break;
 
       default:
