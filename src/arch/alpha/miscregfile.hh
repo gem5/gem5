@@ -32,85 +32,85 @@
 #ifndef __ARCH_ALPHA_MISCREGFILE_HH__
 #define __ARCH_ALPHA_MISCREGFILE_HH__
 
+#include <iosfwd>
+
 #include "arch/alpha/ipr.hh"
 #include "arch/alpha/types.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 
-#include <iostream>
-
 class Checkpoint;
 class ThreadContext;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+enum MiscRegIndex
 {
-    enum MiscRegIndex
-    {
-        MISCREG_FPCR = NumInternalProcRegs,
-        MISCREG_UNIQ,
-        MISCREG_LOCKFLAG,
-        MISCREG_LOCKADDR,
-        MISCREG_INTR
-    };
+    MISCREG_FPCR = NumInternalProcRegs,
+    MISCREG_UNIQ,
+    MISCREG_LOCKFLAG,
+    MISCREG_LOCKADDR,
+    MISCREG_INTR
+};
 
-    static inline std::string getMiscRegName(RegIndex)
-    {
-        return "";
-    }
-
-    class MiscRegFile {
-      protected:
-        uint64_t        fpcr;           // floating point condition codes
-        uint64_t        uniq;           // process-unique register
-        bool            lock_flag;      // lock flag for LL/SC
-        Addr            lock_addr;      // lock address for LL/SC
-        int             intr_flag;
-
-      public:
-        MiscRegFile()
-        {
-            initializeIprTable();
-        }
-
-        MiscReg readRegNoEffect(int misc_reg);
-
-        MiscReg readReg(int misc_reg, ThreadContext *tc);
-
-        //These functions should be removed once the simplescalar cpu model
-        //has been replaced.
-        int getInstAsid();
-        int getDataAsid();
-
-        void setRegNoEffect(int misc_reg, const MiscReg &val);
-
-        void setReg(int misc_reg, const MiscReg &val,
-                ThreadContext *tc);
-
-        void clear()
-        {
-            fpcr = uniq = 0;
-            lock_flag = 0;
-            lock_addr = 0;
-            intr_flag = 0;
-        }
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-      protected:
-        typedef uint64_t InternalProcReg;
-
-        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
-
-      private:
-        InternalProcReg readIpr(int idx, ThreadContext *tc);
-
-        void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
-        friend class RegFile;
-    };
-
-    void copyIprs(ThreadContext *src, ThreadContext *dest);
-
+static inline std::string
+getMiscRegName(RegIndex)
+{
+    return "";
 }
 
-#endif
+class MiscRegFile
+{
+  public:
+    friend class RegFile;
+    typedef uint64_t InternalProcReg;
+
+  protected:
+    uint64_t fpcr;       // floating point condition codes
+    uint64_t uniq;       // process-unique register
+    bool lock_flag;      // lock flag for LL/SC
+    Addr lock_addr;      // lock address for LL/SC
+    int intr_flag;
+
+    InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
+
+  protected:
+    InternalProcReg readIpr(int idx, ThreadContext *tc);
+    void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
+
+  public:
+    MiscRegFile()
+    {
+        initializeIprTable();
+    }
+
+    // These functions should be removed once the simplescalar cpu
+    // model has been replaced.
+    int getInstAsid();
+    int getDataAsid();
+
+    MiscReg readRegNoEffect(int misc_reg);
+    MiscReg readReg(int misc_reg, ThreadContext *tc);
+
+    void setRegNoEffect(int misc_reg, const MiscReg &val);
+    void setReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
+
+    void
+    clear()
+    {
+        fpcr = 0;
+        uniq = 0;
+        lock_flag = 0;
+        lock_addr = 0;
+        intr_flag = 0;
+    }
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+void copyIprs(ThreadContext *src, ThreadContext *dest);
+
+} // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_MISCREGFILE_HH__

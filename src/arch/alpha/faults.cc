@@ -40,8 +40,7 @@
 #include "mem/page_table.hh"
 #endif
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 
 FaultName MachineCheckFault::_name = "mchk";
 FaultVect MachineCheckFault::_vect = 0x0401;
@@ -109,7 +108,8 @@ FaultStat IntegerOverflowFault::_count;
 
 #if FULL_SYSTEM
 
-void AlphaFault::invoke(ThreadContext * tc)
+void
+AlphaFault::invoke(ThreadContext *tc)
 {
     FaultBase::invoke(tc);
     countStat()++;
@@ -128,29 +128,31 @@ void AlphaFault::invoke(ThreadContext * tc)
     tc->setNextPC(tc->readPC() + sizeof(MachInst));
 }
 
-void ArithmeticFault::invoke(ThreadContext * tc)
+void
+ArithmeticFault::invoke(ThreadContext *tc)
 {
     FaultBase::invoke(tc);
     panic("Arithmetic traps are unimplemented!");
 }
 
-void DtbFault::invoke(ThreadContext * tc)
+void
+DtbFault::invoke(ThreadContext *tc)
 {
     // Set fault address and flags.  Even though we're modeling an
     // EV5, we use the EV6 technique of not latching fault registers
     // on VPTE loads (instead of locking the registers until IPR_VA is
     // read, like the EV5).  The EV6 approach is cleaner and seems to
     // work with EV5 PAL code, but not the other way around.
-    if (!tc->misspeculating()
-        && !(reqFlags & VPTE) && !(reqFlags & NO_FAULT)) {
+    if (!tc->misspeculating() &&
+        !(reqFlags & VPTE) && !(reqFlags & NO_FAULT)) {
         // set VA register with faulting address
         tc->setMiscRegNoEffect(IPR_VA, vaddr);
 
         // set MM_STAT register flags
         tc->setMiscRegNoEffect(IPR_MM_STAT,
-            (((Opcode(tc->getInst()) & 0x3f) << 11)
-             | ((Ra(tc->getInst()) & 0x1f) << 6)
-             | (flags & 0x3f)));
+            (((Opcode(tc->getInst()) & 0x3f) << 11) |
+             ((Ra(tc->getInst()) & 0x1f) << 6) |
+             (flags & 0x3f)));
 
         // set VA_FORM register with faulting formatted address
         tc->setMiscRegNoEffect(IPR_VA_FORM,
@@ -160,13 +162,13 @@ void DtbFault::invoke(ThreadContext * tc)
     AlphaFault::invoke(tc);
 }
 
-void ItbFault::invoke(ThreadContext * tc)
+void
+ItbFault::invoke(ThreadContext *tc)
 {
     if (!tc->misspeculating()) {
         tc->setMiscRegNoEffect(IPR_ITB_TAG, pc);
         tc->setMiscRegNoEffect(IPR_IFAULT_VA_FORM,
-                       tc->readMiscRegNoEffect(IPR_IVPTBR) |
-                       (VAddr(pc).vpn() << 3));
+            tc->readMiscRegNoEffect(IPR_IVPTBR) | (VAddr(pc).vpn() << 3));
     }
 
     AlphaFault::invoke(tc);
@@ -174,12 +176,13 @@ void ItbFault::invoke(ThreadContext * tc)
 
 #else
 
-void ItbPageFault::invoke(ThreadContext * tc)
+void
+ItbPageFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(pc, entry);
-    if(!success) {
+    if (!success) {
         panic("Tried to execute unmapped address %#x.\n", pc);
     } else {
         VAddr vaddr(pc);
@@ -187,16 +190,17 @@ void ItbPageFault::invoke(ThreadContext * tc)
     }
 }
 
-void NDtbMissFault::invoke(ThreadContext * tc)
+void
+NDtbMissFault::invoke(ThreadContext *tc)
 {
     Process *p = tc->getProcessPtr();
     TlbEntry entry;
     bool success = p->pTable->lookup(vaddr, entry);
-    if(!success) {
+    if (!success) {
         p->checkAndAllocNextPage(vaddr);
         success = p->pTable->lookup(vaddr, entry);
     }
-    if(!success) {
+    if (!success) {
         panic("Tried to access unmapped address %#x.\n", (Addr)vaddr);
     } else {
         tc->getDTBPtr()->insert(vaddr.page(), entry);

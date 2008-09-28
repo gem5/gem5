@@ -29,24 +29,20 @@
  *          Ali Saidi
  */
 
-#ifndef __ALPHA_PROCESS_HH__
-#define __ALPHA_PROCESS_HH__
+#ifndef __ARCH_ALPHA_PROCESS_HH__
+#define __ARCH_ALPHA_PROCESS_HH__
 
-#include <string>
-#include <vector>
 #include "sim/process.hh"
 
 class ObjectFile;
 class System;
 
-
 class AlphaLiveProcess : public LiveProcess
 {
   protected:
-    AlphaLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+    AlphaLiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
     void startup();
 };
 
-
-#endif // __ALPHA_PROCESS_HH__
+#endif // __ARCH_ALPHA_PROCESS_HH__

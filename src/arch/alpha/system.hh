@@ -49,10 +49,10 @@ class AlphaSystem : public System
     AlphaSystem(Params *p);
     ~AlphaSystem();
 
-/**
- * Serialization stuff
- */
   public:
+    /**
+     * Serialization stuff
+     */
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
@@ -77,26 +77,28 @@ class AlphaSystem : public System
     /** Event to halt the simulator if the console calls panic() */
     BreakPCEvent *consolePanicEvent;
 #endif
+
   protected:
     const Params *params() const { return (const Params *)_params; }
 
     /** Add a function-based event to PALcode. */
     template <class T>
-    T *addPalFuncEvent(const char *lbl)
+    T *
+    addPalFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(palSymtab, lbl);
     }
 
     /** Add a function-based event to the console code. */
     template <class T>
-    T *addConsoleFuncEvent(const char *lbl)
+    T *
+    addConsoleFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(consoleSymtab, lbl);
     }
 
     virtual Addr fixFuncEventAddr(Addr addr);
-
 };
 
-#endif
+#endif // __ARCH_ALPHA_SYSTEM_HH__
 

@@ -116,7 +116,6 @@ AlphaSystem::AlphaSystem(Params *p)
         virtPort.write(addr+0x58, data);
     } else
         panic("could not find hwrpb\n");
-
 }
 
 AlphaSystem::~AlphaSystem()
@@ -175,7 +174,7 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
 
     if ((i1 & inst_mask) == gp_ldah_pattern &&
         (i2 & inst_mask) == gp_lda_pattern) {
-        Addr new_addr = addr + 2* sizeof(MachInst);
+        Addr new_addr = addr + 2 * sizeof(MachInst);
         DPRINTF(Loader, "fixFuncEventAddr: %p -> %p", addr, new_addr);
         return new_addr;
     } else {
@@ -183,15 +182,15 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
     }
 }
 
-
 void
 AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
         virtPort.write(addr, htog(Phys2K0Seg(access)));
-    } else
+    } else {
         panic("could not find m5AlphaAccess\n");
+    }
 }
 
 void
@@ -201,7 +200,6 @@ AlphaSystem::serialize(std::ostream &os)
     consoleSymtab->serialize("console_symtab", os);
     palSymtab->serialize("pal_symtab", os);
 }
-
 
 void
 AlphaSystem::unserialize(Checkpoint *cp, const std::string &section)

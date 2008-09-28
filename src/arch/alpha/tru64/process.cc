@@ -32,10 +32,8 @@
 #include "arch/alpha/tru64/tru64.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/tru64/process.hh"
-
 #include "cpu/thread_context.hh"
 #include "kern/tru64/tru64.hh"
-
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
 
@@ -85,7 +83,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
       case AlphaTru64::GSI_PHYSMEM: {
           TypedBufferArg<uint64_t> physmem(tc->getSyscallArg(1));
-          *physmem = htog((uint64_t)1024 * 1024);       // physical memory in KB
+          *physmem = htog((uint64_t)1024 * 1024);  // physical memory in KB
           physmem.copyOut(tc->getMemPort());
           return 1;
       }
@@ -159,14 +157,12 @@ setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 0;
 }
 
-
 /// Target table() handler.
-static
-SyscallReturn tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
-                        ThreadContext *tc)
+static SyscallReturn
+tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+          ThreadContext *tc)
 {
     using namespace std;
-    using namespace AlphaISA;
 
     int id = tc->getSyscallArg(0);      // table ID
     int index = tc->getSyscallArg(1);   // index into table
@@ -472,15 +468,14 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 266 */ SyscallDesc("sendfile", unimplementedFunc),
 };
 
-
-
 SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 0 */  SyscallDesc("kern_invalid", unimplementedFunc),
     /* 1 */  SyscallDesc("m5_mutex_lock", AlphaTru64::m5_mutex_lockFunc),
     /* 2 */  SyscallDesc("m5_mutex_trylock", AlphaTru64::m5_mutex_trylockFunc),
     /* 3 */  SyscallDesc("m5_mutex_unlock", AlphaTru64::m5_mutex_unlockFunc),
     /* 4 */  SyscallDesc("m5_cond_signal", AlphaTru64::m5_cond_signalFunc),
-    /* 5 */  SyscallDesc("m5_cond_broadcast", AlphaTru64::m5_cond_broadcastFunc),
+    /* 5 */  SyscallDesc("m5_cond_broadcast",
+                         AlphaTru64::m5_cond_broadcastFunc),
     /* 6 */  SyscallDesc("m5_cond_wait", AlphaTru64::m5_cond_waitFunc),
     /* 7 */  SyscallDesc("m5_thread_exit", AlphaTru64::m5_thread_exitFunc),
     /* 8 */  SyscallDesc("kern_invalid", unimplementedFunc),
@@ -507,7 +502,8 @@ SyscallDesc AlphaTru64Process::machSyscallDescs[] = {
     /* 29 */ SyscallDesc("nxm_thread_destroy", unimplementedFunc),
     /* 30 */ SyscallDesc("lw_wire", unimplementedFunc),
     /* 31 */ SyscallDesc("lw_unwire", unimplementedFunc),
-    /* 32 */ SyscallDesc("nxm_thread_create", AlphaTru64::nxm_thread_createFunc),
+    /* 32 */ SyscallDesc("nxm_thread_create",
+                         AlphaTru64::nxm_thread_createFunc),
     /* 33 */ SyscallDesc("nxm_task_init", AlphaTru64::nxm_task_initFunc),
     /* 34 */ SyscallDesc("kern_invalid", unimplementedFunc),
     /* 35 */ SyscallDesc("nxm_idle", AlphaTru64::nxm_idleFunc),
@@ -572,9 +568,8 @@ AlphaTru64Process::getDesc(int callnum)
         return &syscallDescs[callnum];
 }
 
-
-AlphaTru64Process::AlphaTru64Process(LiveProcessParams * params,
-                                     ObjectFile *objFile)
+AlphaTru64Process::AlphaTru64Process(LiveProcessParams *params,
+    ObjectFile *objFile)
     : AlphaLiveProcess(params, objFile),
       Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
       Num_Mach_Syscall_Descs(sizeof(machSyscallDescs) / sizeof(SyscallDesc))

@@ -28,14 +28,13 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __ALPHA_ALPHA_TRU64_HH
-#define __ALPHA_ALPHA_TRU64_HH
+#ifndef __ALPHA_ALPHA_TRU64_TRU64_HH__
+#define __ALPHA_ALPHA_TRU64_TRU64_HH__
 
 #include "kern/tru64/tru64.hh"
 
 class AlphaTru64 : public Tru64
 {
-
   public:
     /// This table maps the target open() flags to the corresponding
     /// host open() flags.
@@ -68,13 +67,13 @@ class AlphaTru64 : public Tru64
 
     //@{
     /// For getsysinfo().
-    static const unsigned GSI_PLATFORM_NAME = 103;  //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;        //!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;       //!< get proc_type
-    static const unsigned GSI_MAX_CPU = 30;         //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55;     //!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;         //!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;         //!< clock freq in Hz
+    static const unsigned GSI_PLATFORM_NAME = 103; //!< platform name string
+    static const unsigned GSI_CPU_INFO = 59;     //!< CPU information
+    static const unsigned GSI_PROC_TYPE = 60;    //!< get proc_type
+    static const unsigned GSI_MAX_CPU = 30;      //!< max # CPUs on machine
+    static const unsigned GSI_CPUS_IN_BOX = 55;  //!< number of CPUs in system
+    static const unsigned GSI_PHYSMEM = 19;      //!< Physical memory in KB
+    static const unsigned GSI_CLK_TCK = 42;      //!< clock freq in Hz
     //@}
 
     //@{
@@ -124,6 +123,4 @@ class AlphaTru64 : public Tru64
     };
 };
 
-
-
-#endif
+#endif // __ALPHA_ALPHA_TRU64_TRU64_HH__

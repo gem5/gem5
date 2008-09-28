@@ -32,37 +32,36 @@
 #ifndef __ARCH_ALPHA_FLOATREGFILE_HH__
 #define __ARCH_ALPHA_FLOATREGFILE_HH__
 
+#include <iosfwd>
+#include <string>
+
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/types.hh"
 
-#include <cstring>
-#include <iostream>
-
 class Checkpoint;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+static inline std::string
+getFloatRegName(RegIndex)
 {
-    static inline std::string getFloatRegName(RegIndex)
-    {
-        return "";
-    }
-
-    class FloatRegFile
-    {
-      public:
-
-        union {
-            uint64_t q[NumFloatRegs];   // integer qword view
-            double d[NumFloatRegs];     // double-precision floating point view
-        };
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        { std::memset(d, 0, sizeof(d)); }
-    };
+    return "";
 }
 
-#endif
+class FloatRegFile
+{
+  public:
+    union {
+        uint64_t q[NumFloatRegs];   // integer qword view
+        double d[NumFloatRegs];     // double-precision floating point view
+    };
+
+    void clear();
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+} // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_FLOATREGFILE_HH__

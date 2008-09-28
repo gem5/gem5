@@ -43,8 +43,6 @@
 using namespace std;
 using namespace AlphaISA;
 
-
-
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,

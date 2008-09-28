@@ -32,47 +32,50 @@
 #ifndef __ARCH_ALPHA_TYPES_HH__
 #define __ARCH_ALPHA_TYPES_HH__
 
-#include <inttypes.h>
+#include "sim/host.hh"
 
-namespace AlphaISA
+namespace AlphaISA {
+
+typedef uint32_t MachInst;
+typedef uint64_t ExtMachInst;
+typedef uint8_t  RegIndex;
+
+typedef uint64_t IntReg;
+typedef uint64_t LargestRead;
+
+// floating point register file entry type
+typedef double FloatReg;
+typedef uint64_t FloatRegBits;
+
+// control register file contents
+typedef uint64_t MiscReg;
+
+union AnyReg
 {
+    IntReg  intreg;
+    FloatReg   fpreg;
+    MiscReg ctrlreg;
+};
 
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
-    typedef uint8_t  RegIndex;
+enum RegContextParam
+{
+    CONTEXT_PALMODE
+};
 
-    typedef uint64_t IntReg;
-    typedef uint64_t LargestRead;
+typedef bool RegContextVal;
 
-    // floating point register file entry type
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
+enum annotes
+{
+    ANNOTE_NONE = 0,
+    // An impossible number for instruction annotations
+    ITOUCH_ANNOTE = 0xffffffff,
+};
 
-    // control register file contents
-    typedef uint64_t MiscReg;
+struct CoreSpecific
+{
+    int core_type;
+};
 
-    typedef union {
-        IntReg  intreg;
-        FloatReg   fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
-
-    enum RegContextParam
-    {
-        CONTEXT_PALMODE
-    };
-
-    typedef bool RegContextVal;
-
-    enum annotes {
-        ANNOTE_NONE = 0,
-        // An impossible number for instruction annotations
-        ITOUCH_ANNOTE = 0xffffffff,
-    };
-
-    struct CoreSpecific {
-        int core_type;
-    };
 } // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_TYPES_HH__

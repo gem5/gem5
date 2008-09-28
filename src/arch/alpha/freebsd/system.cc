@@ -62,13 +62,11 @@ FreebsdAlphaSystem::FreebsdAlphaSystem(Params *p)
         addKernelFuncEvent<SkipCalibrateClocksEvent>("calibrate_clocks");
 }
 
-
 FreebsdAlphaSystem::~FreebsdAlphaSystem()
 {
     delete skipDelayEvent;
     delete skipCalibrateClocks;
 }
-
 
 void
 FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
@@ -83,7 +81,6 @@ FreebsdAlphaSystem::doCalibrateClocks(ThreadContext *tc)
     virtPort.write(ppc_vaddr, (uint32_t)Clock::Frequency);
     virtPort.write(timer_vaddr, (uint32_t)TIMER_FREQUENCY);
 }
-
 
 void
 FreebsdAlphaSystem::SkipCalibrateClocksEvent::process(ThreadContext *tc)

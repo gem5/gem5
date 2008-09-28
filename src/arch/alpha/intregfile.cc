@@ -30,36 +30,45 @@
  *          Kevin Lim
  */
 
+#include <cstring>
+
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/intregfile.hh"
 #include "sim/serialize.hh"
 
-namespace AlphaISA
-{
+namespace AlphaISA {
+
 #if FULL_SYSTEM
-    const int reg_redir[NumIntRegs] = {
-        /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
-        /*  8 */ 32, 33, 34, 35, 36, 37, 38, 15,
-        /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
-        /* 24 */ 24, 39, 26, 27, 28, 29, 30, 31 };
+const int reg_redir[NumIntRegs] = {
+    /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
+    /*  8 */ 32, 33, 34, 35, 36, 37, 38, 15,
+    /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
+    /* 24 */ 24, 39, 26, 27, 28, 29, 30, 31 };
 #else
-    const int reg_redir[NumIntRegs] = {
-        /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
-        /*  8 */ 8, 9, 10, 11, 12, 13, 14, 15,
-        /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
-        /* 24 */ 24, 25, 26, 27, 28, 29, 30, 31 };
+const int reg_redir[NumIntRegs] = {
+    /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
+    /*  8 */ 8, 9, 10, 11, 12, 13, 14, 15,
+    /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
+    /* 24 */ 24, 25, 26, 27, 28, 29, 30, 31 };
 #endif
 
-    void
-    IntRegFile::serialize(std::ostream &os)
-    {
-        SERIALIZE_ARRAY(regs, NumIntRegs);
-    }
-
-    void
-    IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_ARRAY(regs, NumIntRegs);
-    }
+void
+IntRegFile::clear()
+{
+    std::memset(regs, 0, sizeof(regs));
 }
+
+void
+IntRegFile::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(regs, NumIntRegs);
+}
+
+void
+IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(regs, NumIntRegs);
+}
+
+} // namespace AlphaISA
 

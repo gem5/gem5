@@ -38,8 +38,9 @@ using namespace AlphaISA;
 void
 IdleStartEvent::process(ThreadContext *tc)
 {
-    if (tc->getKernelStats())
-        tc->getKernelStats()->setIdleProcess(
-            tc->readMiscRegNoEffect(IPR_PALtemp23), tc);
+    if (tc->getKernelStats()) {
+        MiscReg val = tc->readMiscRegNoEffect(IPR_PALtemp23);
+        tc->getKernelStats()->setIdleProcess(val, tc);
+    }
     remove();
 }

@@ -65,7 +65,9 @@ const Addr PAddrUncachedBit39 = ULL(0x8000000000);
 const Addr PAddrUncachedBit40 = ULL(0x10000000000);
 const Addr PAddrUncachedBit43 = ULL(0x80000000000);
 const Addr PAddrUncachedMask = ULL(0x807ffffffff); // Clear PA<42:35>
-inline Addr Phys2K0Seg(Addr addr)
+
+inline Addr
+Phys2K0Seg(Addr addr)
 {
 #if !ALPHA_TLASER
     if (addr & PAddrUncachedBit43) {

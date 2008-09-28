@@ -30,8 +30,10 @@
 
 #include "arch/alpha/osfpal.hh"
 
-namespace {
-    const char *strings[PAL::NumCodes] = {
+const char *
+PAL::name(int index)
+{
+    static const char *strings[PAL::NumCodes] = {
         // Priviledged PAL instructions
         "halt",         // 0x00
         "cflush",       // 0x01
@@ -294,11 +296,7 @@ namespace {
         0               // 0xff
 #endif
     };
-}
 
-const char *
-PAL::name(int index)
-{
     if (index > NumCodes || index < 0)
         return 0;
 

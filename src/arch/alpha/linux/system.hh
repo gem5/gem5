@@ -54,22 +54,19 @@ using namespace Linux;
 class LinuxAlphaSystem : public AlphaSystem
 {
   private:
-    class SkipDelayLoopEvent : public SkipFuncEvent
+    struct SkipDelayLoopEvent : public SkipFuncEvent
     {
-      public:
         SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 
-    class PrintThreadInfo : public PCEvent
+    struct PrintThreadInfo : public PCEvent
     {
-      public:
         PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
             : PCEvent(q, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
-
 
     /**
      * Addresses defining where the kernel bootloader places various

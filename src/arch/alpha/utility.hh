@@ -32,137 +32,137 @@
 #ifndef __ARCH_ALPHA_UTILITY_HH__
 #define __ARCH_ALPHA_UTILITY_HH__
 
-#include "config/full_system.hh"
 #include "arch/alpha/types.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/regfile.hh"
 #include "base/misc.hh"
+#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 
-namespace AlphaISA
+namespace AlphaISA {
+
+uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+
+inline bool
+inUserMode(ThreadContext *tc)
 {
-    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+    return (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
+}
 
-    inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        return (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
-    }
+inline bool
+isCallerSaveIntegerRegister(unsigned int reg)
+{
+    panic("register classification not implemented");
+    return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
+}
 
-    inline bool
-    isCallerSaveIntegerRegister(unsigned int reg)
-    {
-        panic("register classification not implemented");
-        return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
-    }
+inline bool
+isCalleeSaveIntegerRegister(unsigned int reg)
+{
+    panic("register classification not implemented");
+    return (reg >= 9 && reg <= 15);
+}
 
-    inline bool
-    isCalleeSaveIntegerRegister(unsigned int reg)
-    {
-        panic("register classification not implemented");
-        return (reg >= 9 && reg <= 15);
-    }
+inline bool
+isCallerSaveFloatRegister(unsigned int reg)
+{
+    panic("register classification not implemented");
+    return false;
+}
 
-    inline bool
-    isCallerSaveFloatRegister(unsigned int reg)
-    {
-        panic("register classification not implemented");
-        return false;
-    }
+inline bool
+isCalleeSaveFloatRegister(unsigned int reg)
+{
+    panic("register classification not implemented");
+    return false;
+}
 
-    inline bool
-    isCalleeSaveFloatRegister(unsigned int reg)
-    {
-        panic("register classification not implemented");
-        return false;
-    }
+inline Addr
+alignAddress(const Addr &addr, unsigned int nbytes)
+{
+    return (addr & ~(nbytes - 1));
+}
 
-    inline Addr
-    alignAddress(const Addr &addr, unsigned int nbytes)
-    {
-        return (addr & ~(nbytes - 1));
-    }
+// Instruction address compression hooks
+inline Addr
+realPCToFetchPC(const Addr &addr)
+{
+    return addr;
+}
 
-    // Instruction address compression hooks
-    inline Addr
-    realPCToFetchPC(const Addr &addr)
-    {
-        return addr;
-    }
+inline Addr
+fetchPCToRealPC(const Addr &addr)
+{
+    return addr;
+}
 
-    inline Addr
-    fetchPCToRealPC(const Addr &addr)
-    {
-        return addr;
-    }
+// the size of "fetched" instructions (not necessarily the size
+// of real instructions for PISA)
+inline size_t
+fetchInstSize()
+{
+    return sizeof(MachInst);
+}
 
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    inline size_t
-    fetchInstSize()
-    {
-        return sizeof(MachInst);
-    }
+inline MachInst
+makeRegisterCopy(int dest, int src)
+{
+    panic("makeRegisterCopy not implemented");
+    return 0;
+}
 
-    inline MachInst
-    makeRegisterCopy(int dest, int src)
-    {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
+// Machine operations
+void saveMachineReg(AnyReg &savereg, const RegFile &reg_file, int regnum);
+void restoreMachineReg(RegFile &regs, const AnyReg &reg, int regnum);
 
-    // Machine operations
-    void saveMachineReg(AnyReg &savereg, const RegFile &reg_file, int regnum);
-    void restoreMachineReg(RegFile &regs, const AnyReg &reg, int regnum);
+/**
+ * Function to insure ISA semantics about 0 registers.
+ * @param tc The thread context.
+ */
+template <class TC>
+void zeroRegisters(TC *tc);
 
-    /**
-     * Function to insure ISA semantics about 0 registers.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void zeroRegisters(TC *tc);
+// Alpha IPR register accessors
+inline bool PcPAL(Addr addr) { return addr & 0x3; }
+inline void startupCPU(ThreadContext *tc, int cpuId) { tc->activate(0); }
 
-    // Alpha IPR register accessors
-    inline bool PcPAL(Addr addr) { return addr & 0x3; }
-    inline void startupCPU(ThreadContext *tc, int cpuId) { tc->activate(0); }
+////////////////////////////////////////////////////////////////////////
+//
+//  Translation stuff
+//
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Translation stuff
-    //
+inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
 
-    inline Addr PteAddr(Addr a) { return (a & PteMask) << PteShift; }
+// User Virtual
+inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
 
-    // User Virtual
-    inline bool IsUSeg(Addr a) { return USegBase <= a && a <= USegEnd; }
+// Kernel Direct Mapped
+inline bool IsK0Seg(Addr a) { return K0SegBase <= a && a <= K0SegEnd; }
+inline Addr K0Seg2Phys(Addr addr) { return addr & ~K0SegBase; }
 
-    // Kernel Direct Mapped
-    inline bool IsK0Seg(Addr a) { return K0SegBase <= a && a <= K0SegEnd; }
-    inline Addr K0Seg2Phys(Addr addr) { return addr & ~K0SegBase; }
+// Kernel Virtual
+inline bool IsK1Seg(Addr a) { return K1SegBase <= a && a <= K1SegEnd; }
 
-    // Kernel Virtual
-    inline bool IsK1Seg(Addr a) { return K1SegBase <= a && a <= K1SegEnd; }
+inline Addr
+TruncPage(Addr addr)
+{ return addr & ~(PageBytes - 1); }
 
-    inline Addr
-    TruncPage(Addr addr)
-    { return addr & ~(PageBytes - 1); }
+inline Addr
+RoundPage(Addr addr)
+{ return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
-    inline Addr
-    RoundPage(Addr addr)
-    { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
-
-    void initIPRs(ThreadContext *tc, int cpuId);
+void initIPRs(ThreadContext *tc, int cpuId);
 #if FULL_SYSTEM
-    void initCPU(ThreadContext *tc, int cpuId);
+void initCPU(ThreadContext *tc, int cpuId);
 
-    /**
-     * Function to check for and process any interrupts.
-     * @param tc The thread context.
-     */
-    template <class TC>
-    void processInterrupts(TC *tc);
+/**
+ * Function to check for and process any interrupts.
+ * @param tc The thread context.
+ */
+template <class TC>
+void processInterrupts(TC *tc);
 #endif
 
 } // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_UTILITY_HH__

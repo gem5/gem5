@@ -45,161 +45,190 @@
 class Checkpoint;
 class ThreadContext;
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 
-    class RegFile {
+class RegFile {
+  protected:
+    Addr pc;   // program counter
+    Addr npc;  // next-cycle program counter
+    Addr nnpc; // next next-cycle program counter
 
-      protected:
-        Addr pc;                        // program counter
-        Addr npc;                       // next-cycle program counter
-        Addr nnpc;
+  public:
+    Addr
+    readPC()
+    {
+        return pc;
+    }
 
-      public:
-        Addr readPC()
-        {
-            return pc;
-        }
+    void
+    setPC(Addr val)
+    {
+        pc = val;
+    }
 
-        void setPC(Addr val)
-        {
-            pc = val;
-        }
+    Addr
+    readNextPC()
+    {
+        return npc;
+    }
 
-        Addr readNextPC()
-        {
-            return npc;
-        }
+    void
+    setNextPC(Addr val)
+    {
+        npc = val;
+    }
 
-        void setNextPC(Addr val)
-        {
-            npc = val;
-        }
+    Addr
+    readNextNPC()
+    {
+        return npc + sizeof(MachInst);
+    }
 
-        Addr readNextNPC()
-        {
-            return npc + sizeof(MachInst);
-        }
+    void
+    setNextNPC(Addr val)
+    { }
 
-        void setNextNPC(Addr val)
-        { }
+  protected:
+    IntRegFile intRegFile;          // (signed) integer register file
+    FloatRegFile floatRegFile;      // floating point register file
+    MiscRegFile miscRegFile;        // control register file
 
-      protected:
-        IntRegFile intRegFile;          // (signed) integer register file
-        FloatRegFile floatRegFile;      // floating point register file
-        MiscRegFile miscRegFile;        // control register file
-
-      public:
-
+  public:
 #if FULL_SYSTEM
-        int intrflag;                   // interrupt flag
-        inline int instAsid()
-        { return miscRegFile.getInstAsid(); }
-        inline int dataAsid()
-        { return miscRegFile.getDataAsid(); }
+    int intrflag;                   // interrupt flag
+
+    int
+    instAsid()
+    {
+        return miscRegFile.getInstAsid();
+    }
+
+    int
+    dataAsid()
+    {
+        return miscRegFile.getDataAsid();
+    }
 #endif // FULL_SYSTEM
 
-        void clear()
-        {
-            intRegFile.clear();
-            floatRegFile.clear();
-            miscRegFile.clear();
-        }
-
-        MiscReg readMiscRegNoEffect(int miscReg)
-        {
-            return miscRegFile.readRegNoEffect(miscReg);
-        }
-
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc)
-        {
-            return miscRegFile.readReg(miscReg, tc);
-        }
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val)
-        {
-            miscRegFile.setRegNoEffect(miscReg, val);
-        }
-
-        void setMiscReg(int miscReg, const MiscReg &val,
-                ThreadContext * tc)
-        {
-            miscRegFile.setReg(miscReg, val, tc);
-        }
-
-        FloatReg readFloatReg(int floatReg)
-        {
-            return floatRegFile.d[floatReg];
-        }
-
-        FloatReg readFloatReg(int floatReg, int width)
-        {
-            return readFloatReg(floatReg);
-        }
-
-        FloatRegBits readFloatRegBits(int floatReg)
-        {
-            return floatRegFile.q[floatReg];
-        }
-
-        FloatRegBits readFloatRegBits(int floatReg, int width)
-        {
-            return readFloatRegBits(floatReg);
-        }
-
-        void setFloatReg(int floatReg, const FloatReg &val)
-        {
-            floatRegFile.d[floatReg] = val;
-        }
-
-        void setFloatReg(int floatReg, const FloatReg &val, int width)
-        {
-            setFloatReg(floatReg, val);
-        }
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val)
-        {
-            floatRegFile.q[floatReg] = val;
-        }
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-        {
-            setFloatRegBits(floatReg, val);
-        }
-
-        IntReg readIntReg(int intReg)
-        {
-            return intRegFile.readReg(intReg);
-        }
-
-        void setIntReg(int intReg, const IntReg &val)
-        {
-            intRegFile.setReg(intReg, val);
-        }
-
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void changeContext(RegContextParam param, RegContextVal val)
-        {
-            //This would be an alternative place to call/implement
-            //the swapPALShadow function
-        }
-    };
-
-    static inline int flattenIntIndex(ThreadContext * tc, int reg)
+    void
+    clear()
     {
-        return reg;
+        intRegFile.clear();
+        floatRegFile.clear();
+        miscRegFile.clear();
     }
 
-    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
+    MiscReg
+    readMiscRegNoEffect(int miscReg)
     {
-        return reg;
+        return miscRegFile.readRegNoEffect(miscReg);
     }
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
+    MiscReg
+    readMiscReg(int miscReg, ThreadContext *tc)
+    {
+        return miscRegFile.readReg(miscReg, tc);
+    }
 
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+    void
+    setMiscRegNoEffect(int miscReg, const MiscReg &val)
+    {
+        miscRegFile.setRegNoEffect(miscReg, val);
+    }
+
+    void
+    setMiscReg(int miscReg, const MiscReg &val, ThreadContext *tc)
+    {
+        miscRegFile.setReg(miscReg, val, tc);
+    }
+
+    FloatReg
+    readFloatReg(int floatReg)
+    {
+        return floatRegFile.d[floatReg];
+    }
+
+    FloatReg
+    readFloatReg(int floatReg, int width)
+    {
+        return readFloatReg(floatReg);
+    }
+
+    FloatRegBits
+    readFloatRegBits(int floatReg)
+    {
+        return floatRegFile.q[floatReg];
+    }
+
+    FloatRegBits
+    readFloatRegBits(int floatReg, int width)
+    {
+        return readFloatRegBits(floatReg);
+    }
+
+    void
+    setFloatReg(int floatReg, const FloatReg &val)
+    {
+        floatRegFile.d[floatReg] = val;
+    }
+
+    void
+    setFloatReg(int floatReg, const FloatReg &val, int width)
+    {
+        setFloatReg(floatReg, val);
+    }
+
+    void
+    setFloatRegBits(int floatReg, const FloatRegBits &val)
+    {
+        floatRegFile.q[floatReg] = val;
+    }
+
+    void
+    setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
+    {
+        setFloatRegBits(floatReg, val);
+    }
+
+    IntReg
+    readIntReg(int intReg)
+    {
+        return intRegFile.readReg(intReg);
+    }
+
+    void
+    setIntReg(int intReg, const IntReg &val)
+    {
+        intRegFile.setReg(intReg, val);
+    }
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+
+    void
+    changeContext(RegContextParam param, RegContextVal val)
+    {
+        //This would be an alternative place to call/implement
+        //the swapPALShadow function
+    }
+};
+
+static inline int
+flattenIntIndex(ThreadContext * tc, int reg)
+{
+    return reg;
+}
+
+static inline int
+flattenFloatIndex(ThreadContext * tc, int reg)
+{
+    return reg;
+}
+
+void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
 } // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_REGFILE_HH__

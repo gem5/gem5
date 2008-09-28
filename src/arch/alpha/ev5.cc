@@ -459,8 +459,7 @@ MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // really a control write
         ipr[idx] = val;
 
-        tc->getDTBPtr()->flushAddr(val,
-                DTB_ASN_ASN(ipr[IPR_DTB_ASN]));
+        tc->getDTBPtr()->flushAddr(val, DTB_ASN_ASN(ipr[IPR_DTB_ASN]));
         break;
 
       case IPR_DTB_TAG: {
@@ -529,8 +528,7 @@ MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
         // really a control write
         ipr[idx] = val;
 
-        tc->getITBPtr()->flushAddr(val,
-                ITB_ASN_ASN(ipr[IPR_ITB_ASN]));
+        tc->getITBPtr()->flushAddr(val, ITB_ASN_ASN(ipr[IPR_ITB_ASN]));
         break;
 
       default:
@@ -541,18 +539,17 @@ MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
     // no error...
 }
 
-
 void
 copyIprs(ThreadContext *src, ThreadContext *dest)
 {
-    for (int i = 0; i < NumInternalProcRegs; ++i) {
+    for (int i = 0; i < NumInternalProcRegs; ++i)
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
-    }
 }
 
 } // namespace AlphaISA
 
 #if FULL_SYSTEM
+
 using namespace AlphaISA;
 
 Fault

@@ -36,12 +36,11 @@
 #include "cpu/thread_context.hh"
 #include "sim/system.hh"
 
-
 using namespace AlphaISA;
 using namespace std;
 
-AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
+AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams *params,
+                                   ObjectFile *objFile)
     : LiveProcess(params, objFile)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
@@ -76,5 +75,4 @@ AlphaLiveProcess::startup()
     //Set this to 0 for now, but it should be unique for each process
     threadContexts[0]->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
 }
-
 

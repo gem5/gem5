@@ -117,9 +117,9 @@
  */
 
 #include <sys/signal.h>
+#include <unistd.h>
 
 #include <string>
-#include <unistd.h>
 
 #include "config/full_system.hh"
 #if FULL_SYSTEM
@@ -142,17 +142,15 @@
 using namespace std;
 using namespace AlphaISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, KGDB_NUMREGS)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
+    : BaseRemoteGDB(_system, tc, KGDB_NUMREGS)
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::acc
-//
-//      Determine if the mapping at va..(va+len) is valid.
-//
+/*
+ * Determine if the mapping at va..(va+len) is valid.
+ */
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
@@ -177,18 +175,20 @@ RemoteGDB::acc(Addr va, size_t len)
             }
         }
 
-    /**
-     * This code says that all accesses to palcode (instruction and data)
-     * are valid since there isn't a va->pa mapping because palcode is
-     * accessed physically. At some point this should probably be cleaned up
-     * but there is no easy way to do it.
-     */
+        /**
+         * This code says that all accesses to palcode (instruction
+         * and data) are valid since there isn't a va->pa mapping
+         * because palcode is accessed physically. At some point this
+         * should probably be cleaned up but there is no easy way to
+         * do it.
+         */
 
         if (PcPAL(va) || va < 0x10000)
             return true;
 
         Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
-        PageTableEntry pte = kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+        PageTableEntry pte =
+            kernel_pte_lookup(context->getPhysPort(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
@@ -201,11 +201,10 @@ RemoteGDB::acc(Addr va, size_t len)
 #endif
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::getregs
-//
-//      Translate the kernel debugger register format into
-//      the GDB register format.
+/*
+ * Translate the kernel debugger register format into the GDB register
+ * format.
+ */
 void
 RemoteGDB::getregs()
 {
@@ -231,12 +230,10 @@ RemoteGDB::getregs()
 #endif
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::setregs
-//
-//      Translate the GDB register format into the kernel
-//      debugger register format.
-//
+/*
+ * Translate the GDB register format into the kernel debugger register
+ * format.
+ */
 void
 RemoteGDB::setregs()
 {

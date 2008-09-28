@@ -33,118 +33,116 @@
 #include "arch/alpha/miscregfile.hh"
 #include "base/misc.hh"
 
-namespace AlphaISA
+namespace AlphaISA {
+
+void
+MiscRegFile::serialize(std::ostream &os)
 {
-
-    void
-    MiscRegFile::serialize(std::ostream &os)
-    {
-        SERIALIZE_SCALAR(fpcr);
-        SERIALIZE_SCALAR(uniq);
-        SERIALIZE_SCALAR(lock_flag);
-        SERIALIZE_SCALAR(lock_addr);
-        SERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-    }
-
-    void
-    MiscRegFile::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_SCALAR(fpcr);
-        UNSERIALIZE_SCALAR(uniq);
-        UNSERIALIZE_SCALAR(lock_flag);
-        UNSERIALIZE_SCALAR(lock_addr);
-        UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
-    }
-
-    MiscReg
-    MiscRegFile::readRegNoEffect(int misc_reg)
-    {
-        switch(misc_reg) {
-          case MISCREG_FPCR:
-            return fpcr;
-          case MISCREG_UNIQ:
-            return uniq;
-          case MISCREG_LOCKFLAG:
-            return lock_flag;
-          case MISCREG_LOCKADDR:
-            return lock_addr;
-          case MISCREG_INTR:
-            return intr_flag;
-          default:
-            assert(misc_reg < NumInternalProcRegs);
-            return ipr[misc_reg];
-        }
-    }
-
-    MiscReg
-    MiscRegFile::readReg(int misc_reg, ThreadContext *tc)
-    {
-        switch(misc_reg) {
-          case MISCREG_FPCR:
-            return fpcr;
-          case MISCREG_UNIQ:
-            return uniq;
-          case MISCREG_LOCKFLAG:
-            return lock_flag;
-          case MISCREG_LOCKADDR:
-            return lock_addr;
-          case MISCREG_INTR:
-            return intr_flag;
-          default:
-            return readIpr(misc_reg, tc);
-        }
-    }
-
-    void
-    MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val)
-    {
-        switch(misc_reg) {
-          case MISCREG_FPCR:
-            fpcr = val;
-            return;
-          case MISCREG_UNIQ:
-            uniq = val;
-            return;
-          case MISCREG_LOCKFLAG:
-            lock_flag = val;
-            return;
-          case MISCREG_LOCKADDR:
-            lock_addr = val;
-            return;
-          case MISCREG_INTR:
-            intr_flag = val;
-            return;
-          default:
-            assert(misc_reg < NumInternalProcRegs);
-            ipr[misc_reg] = val;
-            return;
-        }
-    }
-
-    void
-    MiscRegFile::setReg(int misc_reg, const MiscReg &val,
-            ThreadContext *tc)
-    {
-        switch(misc_reg) {
-          case MISCREG_FPCR:
-            fpcr = val;
-            return;
-          case MISCREG_UNIQ:
-            uniq = val;
-            return;
-          case MISCREG_LOCKFLAG:
-            lock_flag = val;
-            return;
-          case MISCREG_LOCKADDR:
-            lock_addr = val;
-            return;
-          case MISCREG_INTR:
-            intr_flag = val;
-            return;
-          default:
-            setIpr(misc_reg, val, tc);
-            return;
-        }
-    }
-
+    SERIALIZE_SCALAR(fpcr);
+    SERIALIZE_SCALAR(uniq);
+    SERIALIZE_SCALAR(lock_flag);
+    SERIALIZE_SCALAR(lock_addr);
+    SERIALIZE_ARRAY(ipr, NumInternalProcRegs);
 }
+
+void
+MiscRegFile::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(fpcr);
+    UNSERIALIZE_SCALAR(uniq);
+    UNSERIALIZE_SCALAR(lock_flag);
+    UNSERIALIZE_SCALAR(lock_addr);
+    UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
+}
+
+MiscReg
+MiscRegFile::readRegNoEffect(int misc_reg)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        return fpcr;
+      case MISCREG_UNIQ:
+        return uniq;
+      case MISCREG_LOCKFLAG:
+        return lock_flag;
+      case MISCREG_LOCKADDR:
+        return lock_addr;
+      case MISCREG_INTR:
+        return intr_flag;
+      default:
+        assert(misc_reg < NumInternalProcRegs);
+        return ipr[misc_reg];
+    }
+}
+
+MiscReg
+MiscRegFile::readReg(int misc_reg, ThreadContext *tc)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        return fpcr;
+      case MISCREG_UNIQ:
+        return uniq;
+      case MISCREG_LOCKFLAG:
+        return lock_flag;
+      case MISCREG_LOCKADDR:
+        return lock_addr;
+      case MISCREG_INTR:
+        return intr_flag;
+      default:
+        return readIpr(misc_reg, tc);
+    }
+}
+
+void
+MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        fpcr = val;
+        return;
+      case MISCREG_UNIQ:
+        uniq = val;
+        return;
+      case MISCREG_LOCKFLAG:
+        lock_flag = val;
+        return;
+      case MISCREG_LOCKADDR:
+        lock_addr = val;
+        return;
+      case MISCREG_INTR:
+        intr_flag = val;
+        return;
+      default:
+        assert(misc_reg < NumInternalProcRegs);
+        ipr[misc_reg] = val;
+        return;
+    }
+}
+
+void
+MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        fpcr = val;
+        return;
+      case MISCREG_UNIQ:
+        uniq = val;
+        return;
+      case MISCREG_LOCKFLAG:
+        lock_flag = val;
+        return;
+      case MISCREG_LOCKADDR:
+        lock_addr = val;
+        return;
+      case MISCREG_INTR:
+        intr_flag = val;
+        return;
+      default:
+        setIpr(misc_reg, val, tc);
+        return;
+    }
+}
+
+} // namespace AlphaISA

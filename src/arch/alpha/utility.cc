@@ -36,10 +36,10 @@
 #include "mem/vport.hh"
 #endif
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp)
+uint64_t
+getArgument(ThreadContext *tc, int number, bool fp)
 {
 #if FULL_SYSTEM
     if (number < NumArgumentRegs) {
@@ -56,7 +56,7 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp)
     }
 #else
     panic("getArgument() is Full system only\n");
-    M5_DUMMY_RETURN
+    M5_DUMMY_RETURN;
 #endif
 }
 

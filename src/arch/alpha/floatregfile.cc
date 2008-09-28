@@ -33,17 +33,23 @@
 #include "arch/alpha/floatregfile.hh"
 #include "sim/serialize.hh"
 
-namespace AlphaISA
+namespace AlphaISA {
+void
+FloatRegFile::clear()
 {
-    void
-    FloatRegFile::serialize(std::ostream &os)
-    {
-        SERIALIZE_ARRAY(q, NumFloatRegs);
-    }
-
-    void
-    FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_ARRAY(q, NumFloatRegs);
-    }
+    std::memset(d, 0, sizeof(d));
 }
+
+void
+FloatRegFile::serialize(std::ostream &os)
+{
+    SERIALIZE_ARRAY(q, NumFloatRegs);
+}
+
+void
+FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_ARRAY(q, NumFloatRegs);
+}
+
+} // namespace AlphaISA

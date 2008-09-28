@@ -32,47 +32,48 @@
 #ifndef __ARCH_ALPHA_INTREGFILE_HH__
 #define __ARCH_ALPHA_INTREGFILE_HH__
 
-#include "arch/alpha/types.hh"
+#include <iosfwd>
+#include <string>
 
-#include <iostream>
-#include <cstring>
+#include "arch/alpha/types.hh"
 
 class Checkpoint;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+static inline std::string
+getIntRegName(RegIndex)
 {
-    static inline std::string getIntRegName(RegIndex)
-    {
-        return "";
-    }
-
-    // redirected register map, really only used for the full system case.
-    extern const int reg_redir[NumIntRegs];
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-
-      public:
-
-        IntReg readReg(int intReg)
-        {
-            return regs[intReg];
-        }
-
-        void setReg(int intReg, const IntReg &val)
-        {
-            regs[intReg] = val;
-        }
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void clear()
-        { std::memset(regs, 0, sizeof(regs)); }
-    };
+    return "";
 }
 
-#endif
+// redirected register map, really only used for the full system case.
+extern const int reg_redir[NumIntRegs];
+
+class IntRegFile
+{
+  protected:
+    IntReg regs[NumIntRegs];
+
+  public:
+    IntReg
+    readReg(int intReg)
+    {
+        return regs[intReg];
+    }
+
+    void
+    setReg(int intReg, const IntReg &val)
+    {
+        regs[intReg] = val;
+    }
+
+    void clear();
+
+    void serialize(std::ostream &os);
+    void unserialize(Checkpoint *cp, const std::string &section);
+};
+
+} // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_INTREGFILE_HH__

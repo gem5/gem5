@@ -147,6 +147,6 @@ class ThreadInfo
     }
 };
 
-/* namespace Linux */ }
+} // namespace Linux
 
 #endif // __ARCH_ALPHA_LINUX_LINUX_THREADINFO_HH__

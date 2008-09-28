@@ -36,88 +36,90 @@
 
 class ThreadContext;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+class StackTrace;
+
+class ProcessInfo
 {
-    class StackTrace;
+  private:
+    ThreadContext *tc;
 
-    class ProcessInfo
+    int thread_info_size;
+    int task_struct_size;
+    int task_off;
+    int pid_off;
+    int name_off;
+
+  public:
+    ProcessInfo(ThreadContext *_tc);
+
+    Addr task(Addr ksp) const;
+    int pid(Addr ksp) const;
+    std::string name(Addr ksp) const;
+};
+
+class StackTrace
+{
+  private:
+    ThreadContext *tc;
+    std::vector<Addr> stack;
+
+  private:
+    bool isEntry(Addr addr);
+    bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
+    bool decodeSave(MachInst inst, int &reg, int &disp);
+    bool decodeStack(MachInst inst, int &disp);
+
+    void trace(ThreadContext *tc, bool is_call);
+
+  public:
+    StackTrace();
+    StackTrace(ThreadContext *tc, StaticInstPtr inst);
+    ~StackTrace();
+
+    void
+    clear()
     {
-      private:
-        ThreadContext *tc;
+        tc = 0;
+        stack.clear();
+    }
 
-        int thread_info_size;
-        int task_struct_size;
-        int task_off;
-        int pid_off;
-        int name_off;
+    bool valid() const { return tc != NULL; }
+    bool trace(ThreadContext *tc, StaticInstPtr inst);
 
-      public:
-        ProcessInfo(ThreadContext *_tc);
+  public:
+    const std::vector<Addr> &getstack() const { return stack; }
 
-        Addr task(Addr ksp) const;
-        int pid(Addr ksp) const;
-        std::string name(Addr ksp) const;
-    };
-
-    class StackTrace
-    {
-      private:
-        ThreadContext *tc;
-        std::vector<Addr> stack;
-
-      private:
-        bool isEntry(Addr addr);
-        bool decodePrologue(Addr sp, Addr callpc, Addr func, int &size, Addr &ra);
-        bool decodeSave(MachInst inst, int &reg, int &disp);
-        bool decodeStack(MachInst inst, int &disp);
-
-        void trace(ThreadContext *tc, bool is_call);
-
-      public:
-        StackTrace();
-        StackTrace(ThreadContext *tc, StaticInstPtr inst);
-        ~StackTrace();
-
-        void clear()
-        {
-            tc = 0;
-            stack.clear();
-        }
-
-        bool valid() const { return tc != NULL; }
-        bool trace(ThreadContext *tc, StaticInstPtr inst);
-
-      public:
-        const std::vector<Addr> &getstack() const { return stack; }
-
-        static const int user = 1;
-        static const int console = 2;
-        static const int unknown = 3;
+    static const int user = 1;
+    static const int console = 2;
+    static const int unknown = 3;
 
 #if TRACING_ON
-      private:
-        void dump();
+  private:
+    void dump();
 
-      public:
-        void dprintf() { if (DTRACE(Stack)) dump(); }
+  public:
+    void dprintf() { if (DTRACE(Stack)) dump(); }
 #else
-      public:
-        void dprintf() {}
+  public:
+    void dprintf() {}
 #endif
-    };
+};
 
-    inline bool
-    StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
-    {
-        if (!inst->isCall() && !inst->isReturn())
-            return false;
+inline bool
+StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
+{
+    if (!inst->isCall() && !inst->isReturn())
+        return false;
 
-        if (valid())
-            clear();
+    if (valid())
+        clear();
 
-        trace(tc, !inst->isReturn());
-        return true;
-    }
+    trace(tc, !inst->isReturn());
+    return true;
 }
+
+} // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_STACKTRACE_HH__

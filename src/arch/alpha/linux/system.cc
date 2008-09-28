@@ -157,7 +157,6 @@ LinuxAlphaSystem::~LinuxAlphaSystem()
     delete printThreadEvent;
 }
 
-
 void
 LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
 {
@@ -171,7 +170,6 @@ LinuxAlphaSystem::setDelayLoop(ThreadContext *tc)
         vp->writeHtoG(addr, (uint32_t)((cpuFreq / intrFreq) * 0.9988));
     }
 }
-
 
 void
 LinuxAlphaSystem::SkipDelayLoopEvent::process(ThreadContext *tc)

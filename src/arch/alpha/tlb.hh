@@ -29,8 +29,8 @@
  *          Steve Reinhardt
  */
 
-#ifndef __ALPHA_MEMORY_HH__
-#define __ALPHA_MEMORY_HH__
+#ifndef __ARCH_ALPHA_TLB_HH__
+#define __ARCH_ALPHA_TLB_HH__
 
 #include <map>
 
@@ -48,110 +48,116 @@
 
 class ThreadContext;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+class TlbEntry;
+
+class TLB : public BaseTLB
 {
-    class TlbEntry;
+  protected:
+    typedef std::multimap<Addr, int> PageTable;
+    PageTable lookupTable;  // Quick lookup into page table
 
-    class TLB : public BaseTLB
+    TlbEntry *table;        // the Page Table
+    int size;               // TLB Size
+    int nlu;                // not last used entry (for replacement)
+
+    void nextnlu() { if (++nlu >= size) nlu = 0; }
+    TlbEntry *lookup(Addr vpn, uint8_t asn);
+
+  public:
+    typedef AlphaTLBParams Params;
+    TLB(const Params *p);
+    virtual ~TLB();
+
+    int getsize() const { return size; }
+
+    TlbEntry &index(bool advance = true);
+    void insert(Addr vaddr, TlbEntry &entry);
+
+    void flushAll();
+    void flushProcesses();
+    void flushAddr(Addr addr, uint8_t asn);
+
+    void
+    demapPage(Addr vaddr, uint64_t asn)
     {
-      protected:
-        typedef std::multimap<Addr, int> PageTable;
-        PageTable lookupTable;  // Quick lookup into page table
+        assert(asn < (1 << 8));
+        flushAddr(vaddr, asn);
+    }
 
-        TlbEntry *table;        // the Page Table
-        int size;               // TLB Size
-        int nlu;                // not last used entry (for replacement)
-
-        void nextnlu() { if (++nlu >= size) nlu = 0; }
-        TlbEntry *lookup(Addr vpn, uint8_t asn);
-
-      public:
-        typedef AlphaTLBParams Params;
-        TLB(const Params *p);
-        virtual ~TLB();
-
-        int getsize() const { return size; }
-
-        TlbEntry &index(bool advance = true);
-        void insert(Addr vaddr, TlbEntry &entry);
-
-        void flushAll();
-        void flushProcesses();
-        void flushAddr(Addr addr, uint8_t asn);
-
-        void demapPage(Addr vaddr, uint64_t asn)
-        {
-            assert(asn < (1 << 8));
-            flushAddr(vaddr, asn);
-        }
-
-        // static helper functions... really EV5 VM traits
-        static bool validVirtualAddress(Addr vaddr) {
-            // unimplemented bits must be all 0 or all 1
-            Addr unimplBits = vaddr & VAddrUnImplMask;
-            return (unimplBits == 0) || (unimplBits == VAddrUnImplMask);
-        }
-
-        static Fault checkCacheability(RequestPtr &req, bool itb = false);
-
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-        // Most recently used page table entries
-        TlbEntry *EntryCache[3];
-        inline void flushCache()
-        {
-            memset(EntryCache, 0, 3 * sizeof(TlbEntry*));
-        }
-
-        inline TlbEntry* updateCache(TlbEntry *entry) {
-            EntryCache[2] = EntryCache[1];
-            EntryCache[1] = EntryCache[0];
-            EntryCache[0] = entry;
-            return entry;
-        }
-    };
-
-    class ITB : public TLB
+    // static helper functions... really EV5 VM traits
+    static bool
+    validVirtualAddress(Addr vaddr)
     {
-      protected:
-        mutable Stats::Scalar<> hits;
-        mutable Stats::Scalar<> misses;
-        mutable Stats::Scalar<> acv;
-        mutable Stats::Formula accesses;
+        // unimplemented bits must be all 0 or all 1
+        Addr unimplBits = vaddr & VAddrUnImplMask;
+        return unimplBits == 0 || unimplBits == VAddrUnImplMask;
+    }
 
-      public:
-        typedef AlphaITBParams Params;
-        ITB(const Params *p);
-        virtual void regStats();
+    static Fault checkCacheability(RequestPtr &req, bool itb = false);
 
-        Fault translate(RequestPtr &req, ThreadContext *tc);
-    };
+    // Checkpointing
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    class DTB : public TLB
+    // Most recently used page table entries
+    TlbEntry *EntryCache[3];
+    inline void
+    flushCache()
     {
-      protected:
-        mutable Stats::Scalar<> read_hits;
-        mutable Stats::Scalar<> read_misses;
-        mutable Stats::Scalar<> read_acv;
-        mutable Stats::Scalar<> read_accesses;
-        mutable Stats::Scalar<> write_hits;
-        mutable Stats::Scalar<> write_misses;
-        mutable Stats::Scalar<> write_acv;
-        mutable Stats::Scalar<> write_accesses;
-        Stats::Formula hits;
-        Stats::Formula misses;
-        Stats::Formula acv;
-        Stats::Formula accesses;
+        memset(EntryCache, 0, 3 * sizeof(TlbEntry*));
+    }
 
-      public:
-        typedef AlphaDTBParams Params;
-        DTB(const Params *p);
-        virtual void regStats();
+    inline TlbEntry *
+    updateCache(TlbEntry *entry) {
+        EntryCache[2] = EntryCache[1];
+        EntryCache[1] = EntryCache[0];
+        EntryCache[0] = entry;
+        return entry;
+    }
+};
 
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
-    };
-}
+class ITB : public TLB
+{
+  protected:
+    mutable Stats::Scalar<> hits;
+    mutable Stats::Scalar<> misses;
+    mutable Stats::Scalar<> acv;
+    mutable Stats::Formula accesses;
 
-#endif // __ALPHA_MEMORY_HH__
+  public:
+    typedef AlphaITBParams Params;
+    ITB(const Params *p);
+    virtual void regStats();
+
+    Fault translate(RequestPtr &req, ThreadContext *tc);
+};
+
+class DTB : public TLB
+{
+  protected:
+    mutable Stats::Scalar<> read_hits;
+    mutable Stats::Scalar<> read_misses;
+    mutable Stats::Scalar<> read_acv;
+    mutable Stats::Scalar<> read_accesses;
+    mutable Stats::Scalar<> write_hits;
+    mutable Stats::Scalar<> write_misses;
+    mutable Stats::Scalar<> write_acv;
+    mutable Stats::Scalar<> write_accesses;
+    Stats::Formula hits;
+    Stats::Formula misses;
+    Stats::Formula acv;
+    Stats::Formula accesses;
+
+  public:
+    typedef AlphaDTBParams Params;
+    DTB(const Params *p);
+    virtual void regStats();
+
+    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+};
+
+} // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_TLB_HH__

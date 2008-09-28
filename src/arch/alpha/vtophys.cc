@@ -115,4 +115,3 @@ vtophys(ThreadContext *tc, Addr addr)
 }
 
 } // namespace AlphaISA
-

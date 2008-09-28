@@ -28,9 +28,9 @@
  * Authors: Korey Sewell
  */
 
-#include "arch/alpha/linux/linux.hh"
-
 #include <fcntl.h>
+
+#include "arch/alpha/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable AlphaLinux::openFlagTable[] = {
@@ -68,7 +68,4 @@ OpenFlagTransTable AlphaLinux::openFlagTable[] = {
 };
 
 const int AlphaLinux::NUM_OPEN_FLAGS =
-        (sizeof(AlphaLinux::openFlagTable)/sizeof(AlphaLinux::openFlagTable[0]));
-
-
-
+    (sizeof(AlphaLinux::openFlagTable)/sizeof(AlphaLinux::openFlagTable[0]));

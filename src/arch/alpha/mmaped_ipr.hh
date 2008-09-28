@@ -39,9 +39,8 @@
 
 #include "mem/packet.hh"
 
+namespace AlphaISA {
 
-namespace AlphaISA
-{
 inline Tick
 handleIprRead(ThreadContext *xc, Packet *pkt)
 {
@@ -58,4 +57,4 @@ handleIprWrite(ThreadContext *xc, Packet *pkt)
 
 } // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_MMAPED_IPR_HH__
