@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug  2 2008 17:21:13
-M5 started Sat Aug  2 17:29:40 2008
-M5 executing on zizzer
-M5 revision 5517:3ad997252dd241f919fe7d9071a0a136e29ac424
-M5 commit date Thu Jul 31 08:01:38 2008 -0700
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing tests/run.py quick/02.insttest/sparc/linux/o3-timing
+M5 compiled Sep 27 2008 21:21:24
+M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
+M5 commit date Sat Sep 27 21:03:50 2008 -0700
+M5 started Sep 27 2008 21:32:53
+M5 executing on piton
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/02.insttest/sparc/linux/o3-timing -re --stdout-file stdout --stderr-file stderr tests/run.py quick/02.insttest/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 Begining test of difficult SPARC instructions...
 LDSTUB:		Passed

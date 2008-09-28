@@ -1,3 +1,4 @@
+warn: Sockets disabled, not accepting gdb connections
 warn: Entering event queue @ 0.  Starting simulation...
 
 gzip: stdout: Broken pipe

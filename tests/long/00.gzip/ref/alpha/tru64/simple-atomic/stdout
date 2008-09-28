@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 21 2008 20:12:56
-M5 started Mon Jul 21 20:12:59 2008
-M5 executing on zizzer
-M5 revision 5508:992aeed1374332d0933a68d1f1fe749e2fec0881
-M5 commit date Tue Jul 15 14:38:51 2008 -0400
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-atomic tests/run.py long/00.gzip/alpha/tru64/simple-atomic
+M5 compiled Sep 27 2008 21:08:21
+M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
+M5 commit date Sat Sep 27 21:03:50 2008 -0700
+M5 started Sep 27 2008 21:12:32
+M5 executing on piton
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/00.gzip/alpha/tru64/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/00.gzip/alpha/tru64/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 spec_init
 Loading Input Data

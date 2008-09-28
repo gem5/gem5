@@ -1,4 +1,4 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7005
+warn: Sockets disabled, not accepting gdb connections
 warn: Entering event queue @ 0.  Starting simulation...
 warn: Increasing stack size by one page.
 getting pixel output filename pixels_out.cook

@@ -1,4 +1,4 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7006
+warn: Sockets disabled, not accepting gdb connections
 warn: Entering event queue @ 0.  Starting simulation...
 
 gzip: stdout: Broken pipe

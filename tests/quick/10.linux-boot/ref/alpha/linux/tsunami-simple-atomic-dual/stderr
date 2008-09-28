@@ -1,6 +1,5 @@
 warn: kernel located at: /dist/m5/system/binaries/vmlinux
-Listening for system connection on port 3459
-0: system.remote_gdb.listener: listening for remote gdb on port 7004
-0: system.remote_gdb.listener: listening for remote gdb on port 7008
+warn: Sockets disabled, not accepting terminal connections
+warn: Sockets disabled, not accepting gdb connections
 warn: Entering event queue @ 0.  Starting simulation...
 warn: 97861500: Trying to launch CPU number 1!

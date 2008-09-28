@@ -1,4 +1,4 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7013
+warn: Sockets disabled, not accepting gdb connections
 warn: Entering event queue @ 0.  Starting simulation...
 warn: ignoring syscall time(4026527848, 4026528248, ...)
 warn: ignoring syscall time(4026527400, 1375098, ...)

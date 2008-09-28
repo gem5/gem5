@@ -5,14 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 23 2008 16:00:51
-M5 started Wed Jul 23 16:04:15 2008
-M5 executing on blue
-M5 revision 5515:47bf96eec2c6221cf91de8a078897c1b5e46cfbf
-M5 commit date Wed Jul 23 15:35:08 2008 -0700
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic tests/run.py long/70.twolf/sparc/linux/simple-atomic
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic/smred.sav
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic/smred.sv2
+M5 compiled Sep 27 2008 21:21:24
+M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
+M5 commit date Sat Sep 27 21:03:50 2008 -0700
+M5 started Sep 27 2008 21:31:36
+M5 executing on piton
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/sparc/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 
 TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988

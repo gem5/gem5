@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 31 2008 22:55:36
-M5 revision 5540:e8dde121a24fbf62092085d7d996cb8c965c3fe6
-M5 commit date Sun Aug 31 22:51:39 2008 -0400
-M5 started Aug 31 2008 22:56:04
-M5 executing on zizzer
+M5 compiled Sep 27 2008 21:33:04
+M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
+M5 commit date Sat Sep 27 21:03:50 2008 -0700
+M5 started Sep 27 2008 21:33:06
+M5 executing on piton
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/00.gzip/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 spec_init
