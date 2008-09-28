@@ -604,7 +604,7 @@ FullO3CPU<Impl>::suspendContext(int tid)
     DPRINTF(O3CPU,"[tid: %i]: Suspending Thread Context.\n", tid);
     bool deallocated = deallocateContext(tid, false, 1);
     // If this was the last thread then unschedule the tick event.
-    if (activeThreads.size() == 1 && !deallocated ||
+    if ((activeThreads.size() == 1 && !deallocated) ||
         activeThreads.size() == 0)
         unscheduleTickEvent();
     _status = Idle;

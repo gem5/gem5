@@ -562,7 +562,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     asi = (ASI)req->getAsi();
     bool implicit = false;
     bool hpriv = bits(tlbdata,0,0);
-    bool unaligned = (vaddr & size-1);
+    bool unaligned = vaddr & (size - 1);
 
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
@@ -801,8 +801,8 @@ handleIntRegAccess:
             return new PrivilegedAction;
     }
 
-    if (asi == ASI_SWVR_UDB_INTR_W && !write ||
-                    asi == ASI_SWVR_UDB_INTR_R && write) {
+    if ((asi == ASI_SWVR_UDB_INTR_W && !write) ||
+        (asi == ASI_SWVR_UDB_INTR_R && write)) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }
@@ -822,7 +822,7 @@ handleQueueRegAccess:
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new PrivilegedAction;
     }
-    if (!hpriv && vaddr & 0xF || vaddr > 0x3f8 || vaddr < 0x3c0) {
+    if ((!hpriv && vaddr & 0xF) || vaddr > 0x3f8 || vaddr < 0x3c0) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }

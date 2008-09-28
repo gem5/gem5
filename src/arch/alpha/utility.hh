@@ -53,14 +53,14 @@ inline bool
 isCallerSaveIntegerRegister(unsigned int reg)
 {
     panic("register classification not implemented");
-    return (reg >= 1 && reg <= 8 || reg >= 22 && reg <= 25 || reg == 27);
+    return (reg >= 1 && reg <= 8) || (reg >= 22 && reg <= 25) || reg == 27;
 }
 
 inline bool
 isCalleeSaveIntegerRegister(unsigned int reg)
 {
     panic("register classification not implemented");
-    return (reg >= 9 && reg <= 15);
+    return reg >= 9 && reg <= 15;
 }
 
 inline bool

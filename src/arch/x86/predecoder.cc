@@ -319,17 +319,17 @@ namespace X86ISA
         if (emi.mode.submode != SixtyFourBitMode &&
                 !csAttr.defaultSize) {
             //figure out 16 bit displacement size
-            if(modRM.mod == 0 && modRM.rm == 6 || modRM.mod == 2)
+            if ((modRM.mod == 0 && modRM.rm == 6) || modRM.mod == 2)
                 displacementSize = 2;
-            else if(modRM.mod == 1)
+            else if (modRM.mod == 1)
                 displacementSize = 1;
             else
                 displacementSize = 0;
         } else {
             //figure out 32/64 bit displacement size
-            if(modRM.mod == 0 && modRM.rm == 5 || modRM.mod == 2)
+            if ((modRM.mod == 0 && modRM.rm == 5) || modRM.mod == 2)
                 displacementSize = 4;
-            else if(modRM.mod == 1)
+            else if (modRM.mod == 1)
                 displacementSize = 1;
             else
                 displacementSize = 0;

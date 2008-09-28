@@ -214,7 +214,7 @@ int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
     //If we need to fold over the index to match byte semantics, do that.
     //Otherwise, just strip off any extra bits and pass it through.
     if (reg & (1 << 6))
-        return (reg & ~(1 << 6) - 0x4);
+        return (reg & (~(1 << 6) - 0x4));
     else
         return (reg & ~(1 << 6));
 }

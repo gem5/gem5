@@ -57,9 +57,9 @@ struct VAddr
     Addr level3() const
     { return PteAddr(addr >> PageShift); }
     Addr level2() const
-    { return PteAddr(addr >> NPtePageShift + PageShift); }
+    { return PteAddr(addr >> (NPtePageShift + PageShift)); }
     Addr level1() const
-    { return PteAddr(addr >> 2 * NPtePageShift + PageShift); }
+    { return PteAddr(addr >> (2 * NPtePageShift + PageShift)); }
 };
 
 struct PageTableEntry

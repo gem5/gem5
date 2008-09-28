@@ -294,8 +294,7 @@ Terminal::out(char c)
     if (DTRACE(Terminal)) {
         static char last = '\0';
 
-        if (c != '\n' && c != '\r' ||
-            last != '\n' && last != '\r') {
+        if ((c != '\n' && c != '\r') || (last != '\n' && last != '\r')) {
             if (c == '\n' || c == '\r') {
                 int size = linebuf.size();
                 char *buffer = new char[size + 1];

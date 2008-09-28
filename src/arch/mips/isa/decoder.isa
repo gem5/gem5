@@ -416,16 +416,16 @@ decode OPCODE_HI default Unknown::unknown() {
                                                                                Ctrl_Base_DepTag);
                                                  break;
                                                case 25:
-                                                 data = 0 | fcsr_val & 0xFE000000 >> 24
-                                                          | fcsr_val & 0x00800000 >> 23;
+                                                 data = (fcsr_val & 0xFE000000 >> 24)
+                                                     | (fcsr_val & 0x00800000 >> 23);
                                                  break;
                                                case 26:
-                                                 data = 0 | fcsr_val & 0x0003F07C;
+                                                 data = fcsr_val & 0x0003F07C;
                                                  break;
                                                case 28:
-                                                 data = 0 | fcsr_val & 0x00000F80
-                                                          | fcsr_val & 0x01000000 >> 21
-                                                          | fcsr_val & 0x00000003;
+                                                 data = (fcsr_val & 0x00000F80)
+                                                     | (fcsr_val & 0x01000000 >> 21)
+                                                     | (fcsr_val & 0x00000003);
                                                  break;
                                                case 31:
                                                  data = fcsr_val;
@@ -1963,7 +1963,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     0x0: decode OP_LO {
                         format IntOp {
                             0x0: append({{ Rt.uw = (Rt.uw << RD) | bits(Rs.uw,RD-1,0); }});
-                            0x1: prepend({{ Rt.uw = (Rt.uw >> RD) | (bits(Rs.uw,RD-1,0) << 32-RD); }});
+                            0x1: prepend({{ Rt.uw = (Rt.uw >> RD) | (bits(Rs.uw, RD - 1, 0) << (32 - RD)); }});
                         }
                     }
                     0x2: decode OP_LO {
@@ -2050,11 +2050,11 @@ decode OPCODE_HI default Unknown::unknown() {
         format LoadUnalignedMemory {
             0x2: lwl({{ uint32_t mem_shift = 24 - (8 * byte_offset);
                         Rt.uw = mem_word << mem_shift |
-                        Rt.uw & mask(mem_shift);
+                            (Rt.uw & mask(mem_shift));
                      }});
             0x6: lwr({{ uint32_t mem_shift = 8 * byte_offset;
-                        Rt.uw = Rt.uw & (mask(mem_shift) << (32 - mem_shift)) |
-                        mem_word >> mem_shift;
+                        Rt.uw = (Rt.uw & (mask(mem_shift) << (32 - mem_shift))) |
+                            (mem_word >> mem_shift);
                      }});
       }
     }
@@ -2069,12 +2069,12 @@ decode OPCODE_HI default Unknown::unknown() {
         format StoreUnalignedMemory {
             0x2: swl({{ uint32_t reg_shift = 24 - (8 * byte_offset);
                         uint32_t mem_shift = 32 - reg_shift;
-                        mem_word = mem_word & (mask(reg_shift) << mem_shift) |
-                                   Rt.uw >> reg_shift;
+                        mem_word = (mem_word & (mask(reg_shift) << mem_shift)) |
+                            (Rt.uw >> reg_shift);
                      }});
             0x6: swr({{ uint32_t reg_shift = 8 * byte_offset;
                         mem_word = Rt.uw << reg_shift |
-                                   mem_word & (mask(reg_shift));
+                            (mem_word & (mask(reg_shift)));
                      }});
         }
         format CP0Control {

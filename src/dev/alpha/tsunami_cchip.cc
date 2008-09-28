@@ -109,7 +109,7 @@ TsunamiCChip::read(PacketPtr pkt)
                   panic("TSDEV_CC_MTR not implemeted\n");
                    break;
               case TSDEV_CC_MISC:
-                  pkt->set((ipint << 8) & 0xF | (itint << 4) & 0xF |
+                  pkt->set(((ipint << 8) & 0xF) | ((itint << 4) & 0xF) |
                                      (pkt->req->getCpuNum() & 0x3));
                   break;
               case TSDEV_CC_AAR0:

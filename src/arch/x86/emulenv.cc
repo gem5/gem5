@@ -91,7 +91,7 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
     //Figure out what segment to use. This won't be entirely accurate since
     //the presence of a displacement is supposed to make the instruction
     //default to the data segment.
-    if (base != INTREG_RBP && base != INTREG_RSP ||
+    if ((base != INTREG_RBP && base != INTREG_RSP) ||
             0/*Has an immediate offset*/) {
         seg = SEGMENT_REG_DS;
         //Handle any segment override that might have been in the instruction

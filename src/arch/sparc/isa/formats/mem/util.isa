@@ -314,10 +314,11 @@ let {{
     # are split into ones that are available in priv and hpriv, and
     # those that are only available in hpriv
     AlternateASIPrivFaultCheck = '''
-        if(!bits(Pstate,2,2) && !bits(Hpstate,2,2) && !AsiIsUnPriv((ASI)EXT_ASI) ||
-                             !bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI))
-                fault = new PrivilegedAction;
-        else if(AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
+        if ((!bits(Pstate,2,2) && !bits(Hpstate,2,2) &&
+             !AsiIsUnPriv((ASI)EXT_ASI)) ||
+            (!bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI)))
+            fault = new PrivilegedAction;
+        else if (AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
             fault = new PrivilegedAction;
     '''
 

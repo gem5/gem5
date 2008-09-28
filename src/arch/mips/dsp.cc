@@ -923,10 +923,10 @@ MipsISA::dspPrecrqu(int32_t a, int32_t b, uint32_t *dspctl)
 
     for (int i = 0; i<2; i++) {
         r_values[i] =
-            dspSaturate((int64_t)b_values[i] >> SIMD_NBITS[SIMD_FMT_QB] - 1,
+            dspSaturate((int64_t)b_values[i] >> (SIMD_NBITS[SIMD_FMT_QB] - 1),
                         SIMD_FMT_QB, UNSIGNED, &ouflag);
         r_values[i + 2] =
-            dspSaturate((int64_t)a_values[i] >> SIMD_NBITS[SIMD_FMT_QB] - 1,
+            dspSaturate((int64_t)a_values[i] >> (SIMD_NBITS[SIMD_FMT_QB] - 1),
                         SIMD_FMT_QB, UNSIGNED, &ouflag);
     }
 

@@ -80,7 +80,7 @@ Phys2K0Seg(Addr addr)
 
 inline int DTB_ASN_ASN(uint64_t reg) { return reg >> 57 & AsnMask; }
 inline Addr DTB_PTE_PPN(uint64_t reg)
-{ return reg >> 32 & (ULL(1) << PAddrImplBits - PageShift) - 1; }
+{ return reg >> 32 & ((ULL(1) << (PAddrImplBits - PageShift)) - 1); }
 inline int DTB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
 inline int DTB_PTE_XWE(uint64_t reg) { return reg >> 12 & 0xf; }
 inline int DTB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
@@ -90,7 +90,7 @@ inline int DTB_PTE_ASMA(uint64_t reg) { return reg >> 4 & 0x1; }
 
 inline int ITB_ASN_ASN(uint64_t reg) { return reg >> 4 & AsnMask; }
 inline Addr ITB_PTE_PPN(uint64_t reg)
-{ return reg >> 32 & (ULL(1) << PAddrImplBits - PageShift) - 1; }
+{ return reg >> 32 & ((ULL(1) << (PAddrImplBits - PageShift)) - 1); }
 inline int ITB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
 inline bool ITB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
 inline bool ITB_PTE_FONW(uint64_t reg) { return reg >> 2 & 0x1; }

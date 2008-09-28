@@ -145,7 +145,7 @@ genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 {
     int cc_idx = (cc_num == 0) ? 23 : cc_num + 24;
 
-    fcsr = bits(fcsr, 31, cc_idx + 1) << cc_idx + 1 |
+    fcsr = bits(fcsr, 31, cc_idx + 1) << (cc_idx + 1) |
            cc_val << cc_idx |
            bits(fcsr, cc_idx - 1, 0);
 

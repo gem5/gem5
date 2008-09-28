@@ -191,8 +191,8 @@ struct ScalarPrint
 void
 ScalarPrint::operator()(ostream &stream) const
 {
-    if (flags & nozero && value == 0.0 ||
-        flags & nonan && isnan(value))
+    if ((flags & nozero && value == 0.0) ||
+        (flags & nonan && isnan(value)))
         return;
 
     stringstream pdfstr, cdfstr;
@@ -474,8 +474,8 @@ DistPrint::operator()(ostream &stream) const
         print.flags = flags | __substat;
 
         for (int i = 0; i < size; ++i) {
-            if (flags & nozero && vec[i] == 0.0 ||
-                flags & nonan && isnan(vec[i]))
+            if ((flags & nozero && vec[i] == 0.0) ||
+                (flags & nonan && isnan(vec[i])))
                 continue;
 
             _min = i * bucket_size + min;

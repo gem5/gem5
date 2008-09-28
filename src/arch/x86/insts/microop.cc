@@ -98,7 +98,7 @@ namespace X86ISA
           case ConditionTests::SxOF:
             return ccflags.sf ^ ccflags.of;
           case ConditionTests::SxOvZF:
-            return ccflags.sf ^ ccflags.of | ccflags.zf;
+            return (ccflags.sf ^ ccflags.of) | ccflags.zf;
           case ConditionTests::False:
             return false;
           case ConditionTests::NotECF:
@@ -131,7 +131,7 @@ namespace X86ISA
           case ConditionTests::NotSxOF:
             return !(ccflags.sf ^ ccflags.of);
           case ConditionTests::NotSxOvZF:
-            return !(ccflags.sf ^ ccflags.of | ccflags.zf);
+            return !((ccflags.sf ^ ccflags.of) | ccflags.zf);
         }
         panic("Unknown condition: %d\n", condition);
         return true;
