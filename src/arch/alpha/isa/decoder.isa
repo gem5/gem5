@@ -638,7 +638,7 @@ decode OPCODE default Unknown::unknown() {
         /* Rb is a fake dependency so here is a fun way to get
          * the parser to understand that.
          */
-                Ra = xc->readMiscReg(AlphaISA::IPR_CC) + (Rb & 0);
+                Ra = xc->readMiscReg(IPR_CC) + (Rb & 0);
 
 #else
                 Ra = curTick;
@@ -690,7 +690,7 @@ decode OPCODE default Unknown::unknown() {
     0x00: CallPal::call_pal({{
         if (!palValid ||
             (palPriv
-             && xc->readMiscReg(AlphaISA::IPR_ICM) != AlphaISA::mode_kernel)) {
+             && xc->readMiscReg(IPR_ICM) != mode_kernel)) {
             // invalid pal function code, or attempt to do privileged
             // PAL call in non-kernel mode
             fault = new UnimplementedOpcodeFault;
@@ -701,8 +701,8 @@ decode OPCODE default Unknown::unknown() {
             bool dopal = xc->simPalCheck(palFunc);
 
             if (dopal) {
-                xc->setMiscReg(AlphaISA::IPR_EXC_ADDR, NPC);
-                NPC = xc->readMiscReg(AlphaISA::IPR_PAL_BASE) + palOffset;
+                xc->setMiscReg(IPR_EXC_ADDR, NPC);
+                NPC = xc->readMiscReg(IPR_PAL_BASE) + palOffset;
             }
         }
     }}, IsNonSpeculative);

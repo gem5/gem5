@@ -54,11 +54,11 @@ namespace AlphaISA {
         Addr offset() const { return addr & PageOffset; }
 
         Addr level3() const
-        { return AlphaISA::PteAddr(addr >> PageShift); }
+        { return PteAddr(addr >> PageShift); }
         Addr level2() const
-        { return AlphaISA::PteAddr(addr >> NPtePageShift + PageShift); }
+        { return PteAddr(addr >> NPtePageShift + PageShift); }
         Addr level1() const
-        { return AlphaISA::PteAddr(addr >> 2 * NPtePageShift + PageShift); }
+        { return PteAddr(addr >> 2 * NPtePageShift + PageShift); }
     };
 
     struct PageTableEntry

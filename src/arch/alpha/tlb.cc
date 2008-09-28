@@ -622,7 +622,7 @@ TLB::index(bool advance)
     return *entry;
 }
 
-/* end namespace AlphaISA */ }
+} // namespace AlphaISA
 
 AlphaISA::ITB *
 AlphaITBParams::create()

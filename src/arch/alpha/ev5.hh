@@ -48,8 +48,8 @@ const int VAddrImplBits = 43;
 const Addr VAddrImplMask = (ULL(1) << VAddrImplBits) - 1;
 const Addr VAddrUnImplMask = ~VAddrImplMask;
 inline Addr VAddrImpl(Addr a) { return a & VAddrImplMask; }
-inline Addr VAddrVPN(Addr a) { return a >> AlphaISA::PageShift; }
-inline Addr VAddrOffset(Addr a) { return a & AlphaISA::PageOffset; }
+inline Addr VAddrVPN(Addr a) { return a >> PageShift; }
+inline Addr VAddrOffset(Addr a) { return a & PageOffset; }
 inline Addr VAddrSpaceEV5(Addr a) { return a >> 41 & 0x3; }
 inline Addr VAddrSpaceEV6(Addr a) { return a >> 41 & 0x7f; }
 
@@ -73,12 +73,12 @@ inline Addr Phys2K0Seg(Addr addr)
         addr |= PAddrUncachedBit40;
     }
 #endif
-    return addr | AlphaISA::K0SegBase;
+    return addr | K0SegBase;
 }
 
 inline int DTB_ASN_ASN(uint64_t reg) { return reg >> 57 & AsnMask; }
 inline Addr DTB_PTE_PPN(uint64_t reg)
-{ return reg >> 32 & (ULL(1) << PAddrImplBits - AlphaISA::PageShift) - 1; }
+{ return reg >> 32 & (ULL(1) << PAddrImplBits - PageShift) - 1; }
 inline int DTB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
 inline int DTB_PTE_XWE(uint64_t reg) { return reg >> 12 & 0xf; }
 inline int DTB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
@@ -88,7 +88,7 @@ inline int DTB_PTE_ASMA(uint64_t reg) { return reg >> 4 & 0x1; }
 
 inline int ITB_ASN_ASN(uint64_t reg) { return reg >> 4 & AsnMask; }
 inline Addr ITB_PTE_PPN(uint64_t reg)
-{ return reg >> 32 & (ULL(1) << PAddrImplBits - AlphaISA::PageShift) - 1; }
+{ return reg >> 32 & (ULL(1) << PAddrImplBits - PageShift) - 1; }
 inline int ITB_PTE_XRE(uint64_t reg) { return reg >> 8 & 0xf; }
 inline bool ITB_PTE_FONR(uint64_t reg) { return reg >> 1 & 0x1; }
 inline bool ITB_PTE_FONW(uint64_t reg) { return reg >> 2 & 0x1; }
@@ -111,8 +111,8 @@ const uint64_t MM_STAT_FONW_MASK = ULL(0x0008);
 const uint64_t MM_STAT_FONR_MASK = ULL(0x0004);
 const uint64_t MM_STAT_ACV_MASK = ULL(0x0002);
 const uint64_t MM_STAT_WR_MASK = ULL(0x0001);
-inline int Opcode(AlphaISA::MachInst inst) { return inst >> 26 & 0x3f; }
-inline int Ra(AlphaISA::MachInst inst) { return inst >> 21 & 0x1f; }
+inline int Opcode(MachInst inst) { return inst >> 26 & 0x3f; }
+inline int Ra(MachInst inst) { return inst >> 21 & 0x1f; }
 
 const Addr PalBase = 0x4000;
 const Addr PalMax = 0x10000;

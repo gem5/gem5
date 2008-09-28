@@ -61,8 +61,6 @@ namespace AlphaISA
 
     class StackTrace
     {
-      protected:
-        typedef AlphaISA::MachInst MachInst;
       private:
         ThreadContext *tc;
         std::vector<Addr> stack;

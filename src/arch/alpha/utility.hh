@@ -46,7 +46,7 @@ namespace AlphaISA
     inline bool
     inUserMode(ThreadContext *tc)
     {
-        return (tc->readMiscRegNoEffect(AlphaISA::IPR_DTB_CM) & 0x18) != 0;
+        return (tc->readMiscRegNoEffect(IPR_DTB_CM) & 0x18) != 0;
     }
 
     inline bool

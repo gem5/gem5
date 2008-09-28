@@ -42,8 +42,7 @@
 #include "params/AlphaSystem.hh"
 #include "sim/byteswap.hh"
 
-
-using namespace LittleEndianGuest;
+using namespace AlphaISA;
 
 AlphaSystem::AlphaSystem(Params *p)
     : System(p)
@@ -67,8 +66,8 @@ AlphaSystem::AlphaSystem(Params *p)
 
 
     // Load program sections into memory
-    pal->loadSections(&functionalPort, AlphaISA::LoadAddrMask);
-    console->loadSections(&functionalPort, AlphaISA::LoadAddrMask);
+    pal->loadSections(&functionalPort, LoadAddrMask);
+    console->loadSections(&functionalPort, LoadAddrMask);
 
     // load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))
@@ -172,11 +171,11 @@ AlphaSystem::fixFuncEventAddr(Addr addr)
     const uint32_t gp_lda_pattern  = (8 << 26) | (29 << 21) | (29 << 16);
 
     uint32_t i1 = virtPort.read<uint32_t>(addr);
-    uint32_t i2 = virtPort.read<uint32_t>(addr + sizeof(AlphaISA::MachInst));
+    uint32_t i2 = virtPort.read<uint32_t>(addr + sizeof(MachInst));
 
     if ((i1 & inst_mask) == gp_ldah_pattern &&
         (i2 & inst_mask) == gp_lda_pattern) {
-        Addr new_addr = addr + 2* sizeof(AlphaISA::MachInst);
+        Addr new_addr = addr + 2* sizeof(MachInst);
         DPRINTF(Loader, "fixFuncEventAddr: %p -> %p", addr, new_addr);
         return new_addr;
     } else {
@@ -190,7 +189,7 @@ AlphaSystem::setAlphaAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5AlphaAccess", addr)) {
-        virtPort.write(addr, htog(AlphaISA::Phys2K0Seg(access)));
+        virtPort.write(addr, htog(Phys2K0Seg(access)));
     } else
         panic("could not find m5AlphaAccess\n");
 }

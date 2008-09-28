@@ -70,7 +70,7 @@ namespace AlphaISA
         }
 
         // Then loop through the floating point registers.
-        for (int i = 0; i < AlphaISA::NumFloatRegs; ++i) {
+        for (int i = 0; i < NumFloatRegs; ++i) {
             dest->setFloatRegBits(i, src->readFloatRegBits(i));
         }
 
@@ -85,14 +85,14 @@ namespace AlphaISA
     void
     copyMiscRegs(ThreadContext *src, ThreadContext *dest)
     {
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_FPCR,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_FPCR));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_UNIQ));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR));
+        dest->setMiscRegNoEffect(MISCREG_FPCR,
+                src->readMiscRegNoEffect(MISCREG_FPCR));
+        dest->setMiscRegNoEffect(MISCREG_UNIQ,
+                src->readMiscRegNoEffect(MISCREG_UNIQ));
+        dest->setMiscRegNoEffect(MISCREG_LOCKFLAG,
+                src->readMiscRegNoEffect(MISCREG_LOCKFLAG));
+        dest->setMiscRegNoEffect(MISCREG_LOCKADDR,
+                src->readMiscRegNoEffect(MISCREG_LOCKADDR));
 
         copyIprs(src, dest);
     }

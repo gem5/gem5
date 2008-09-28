@@ -134,11 +134,11 @@ class InterruptFault : public AlphaFault
 class DtbFault : public AlphaFault
 {
   protected:
-    AlphaISA::VAddr vaddr;
+    VAddr vaddr;
     uint32_t reqFlags;
     uint64_t flags;
   public:
-    DtbFault(AlphaISA::VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
+    DtbFault(VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
         : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
     { }
     FaultName name() const = 0;
@@ -156,7 +156,7 @@ class NDtbMissFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    NDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    NDtbMissFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -174,7 +174,7 @@ class PDtbMissFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    PDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    PDtbMissFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -189,7 +189,7 @@ class DtbPageFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    DtbPageFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbPageFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -204,7 +204,7 @@ class DtbAcvFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    DtbAcvFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAcvFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -219,7 +219,7 @@ class DtbAlignmentFault : public DtbFault
     static FaultVect _vect;
     static FaultStat _count;
   public:
-    DtbAlignmentFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAlignmentFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}

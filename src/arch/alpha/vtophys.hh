@@ -42,7 +42,7 @@ class FunctionalPort;
 namespace AlphaISA {
 
     PageTableEntry
-    kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, AlphaISA::VAddr vaddr);
+    kernel_pte_lookup(FunctionalPort *mem, Addr ptbr, VAddr vaddr);
 
     Addr vtophys(Addr vaddr);
     Addr vtophys(ThreadContext *tc, Addr vaddr);

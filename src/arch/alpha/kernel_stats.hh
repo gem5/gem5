@@ -90,7 +90,7 @@ class Statistics : public ::Kernel::Statistics
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-} /* end namespace AlphaISA::Kernel */
-} /* end namespace AlphaISA */
+} // namespace Kernel
+} // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_KERNEL_STATS_HH__

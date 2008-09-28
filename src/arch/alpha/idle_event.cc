@@ -40,6 +40,6 @@ IdleStartEvent::process(ThreadContext *tc)
 {
     if (tc->getKernelStats())
         tc->getKernelStats()->setIdleProcess(
-            tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp23), tc);
+            tc->readMiscRegNoEffect(IPR_PALtemp23), tc);
     remove();
 }

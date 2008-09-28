@@ -152,7 +152,7 @@ Statistics::changeMode(cpu_mode newmode, ThreadContext *tc)
 void
 Statistics::mode(cpu_mode newmode, ThreadContext *tc)
 {
-    Addr pcbb = tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp23);
+    Addr pcbb = tc->readMiscRegNoEffect(IPR_PALtemp23);
 
     if (newmode == kernel && pcbb == idleProcess)
         newmode = idle;
@@ -213,5 +213,5 @@ Statistics::unserialize(Checkpoint *cp, const string &section)
     themode = (cpu_mode)exemode;
 }
 
-} /* end namespace AlphaISA::Kernel */
-} /* end namespace AlphaISA */
+} // namespace Kernel
+} // namespace AlphaISA
