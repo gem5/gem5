@@ -351,6 +351,7 @@ if env['GCC']:
     env.Append(CCFLAGS='-pipe')
     env.Append(CCFLAGS='-fno-strict-aliasing')
     env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+    env.Append(CXXFLAGS='-Wno-deprecated')
 elif env['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
 elif env['SUNCC']:
