@@ -30,6 +30,8 @@
  *          Kevin Lim
  */
 
+#include <cstring>
+
 #include "arch/alpha/floatregfile.hh"
 #include "sim/serialize.hh"
 
