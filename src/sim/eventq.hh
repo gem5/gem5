@@ -109,7 +109,7 @@ class Event : public Serializable, public FastAlloc
     Counter instance;
 #endif
 
-#ifdef DEBUG_EVENTQ
+#ifdef EVENTQ_DEBUG
     Tick whenCreated;   //!< time created
     Tick whenScheduled; //!< time scheduled
 #endif
@@ -119,7 +119,7 @@ class Event : public Serializable, public FastAlloc
     setWhen(Tick when)
     {
         _when = when;
-#ifdef DEBUG_EVENTQ
+#ifdef EVENTQ_DEBUG
         whenScheduled = curTick;
 #endif
     }
