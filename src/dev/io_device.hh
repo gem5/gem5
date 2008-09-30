@@ -212,7 +212,8 @@ class PioDevice : public MemObject
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
-                panic("pio port already connected to.");
+                fatal("%s: pio port already connected to %s",
+                      name(), pioPort->getPeer()->name());
             pioPort = new PioPort(this, sys);
             return pioPort;
         } else
@@ -289,12 +290,14 @@ class DmaDevice : public PioDevice
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
-                panic("pio port already connected to.");
+                fatal("%s: pio port already connected to %s",
+                      name(), pioPort->getPeer()->name());
             pioPort = new PioPort(this, sys);
             return pioPort;
         } else if (if_name == "dma") {
             if (dmaPort != NULL)
-                panic("dma port already connected to.");
+                fatal("%s: dma port already connected to %s",
+                      name(), pioPort->getPeer()->name());
             dmaPort = new DmaPort(this, sys);
             return dmaPort;
         } else

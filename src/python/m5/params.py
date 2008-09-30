@@ -1004,6 +1004,7 @@ class PortRef(object):
         if self.peer and not proxy.isproxy(self.peer):
             print "warning: overwriting port", self, \
                   "value", self.peer, "with", other
+            self.peer.peer = None
         self.peer = other
         if proxy.isproxy(other):
             other.set_param_desc(PortParamDesc())
@@ -1046,6 +1047,8 @@ class PortRef(object):
         if self.ccConnected: # already done this
             return
         peer = self.peer
+        if not self.peer: # nothing to connect to
+            return
         connectPorts(self.simobj.getCCObject(), self.name, self.index,
                      peer.simobj.getCCObject(), peer.name, peer.index)
         self.ccConnected = True
