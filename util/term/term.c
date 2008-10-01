@@ -139,54 +139,64 @@ remote_connect(char *host, char *port, struct addrinfo hints)
 
 /*
  * readwrite()
- * Loop that polls on the network file descriptor and stdin.
+ * Loop that selects on the network file descriptor and stdin.
+ * Changed from poll() by Ali Saidi to make work on Mac OS X >= 10.4
  */
 void
 readwrite(int nfd)
 {
-    struct pollfd pfd[2];
+    fd_set read_fds;
     char buf[BUFSIZ];
-    int wfd = fileno(stdin), n, ret;
+    int wfd = fileno(stdin), n, ret, max_fd;
     int lfd = fileno(stdout);
     int escape = 0;
+    struct timeval timeout;
 
-    /* Setup Network FD */
-    pfd[0].fd = nfd;
-    pfd[0].events = POLLIN;
+    if (nfd == -1)
+        return;
 
-    /* Setup STDIN FD */
-    pfd[1].fd = wfd;
-    pfd[1].events = POLLIN;
+    FD_ZERO(&read_fds);
 
-    while (pfd[0].fd != -1) {
-        if ((n = poll(pfd, 2, -1)) < 0) {
+    FD_SET(wfd, &read_fds);
+    FD_SET(nfd, &read_fds);
+    max_fd = nfd + 1;
+
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+
+    while (1) {
+        n = select(max_fd, &read_fds, NULL, NULL, &timeout);
+        if (n < 0) {
             close(nfd);
-            err(1, "Polling Error");
+            perror("Select Error:");
         }
 
-        if (n == 0)
+        if (n == 0) {
+            if (read(nfd, buf, 0) < 0)
+                return;
+            goto setup_select;
+        }
+
+        if (read(nfd, buf, 0) < 0)
             return;
 
-        if (pfd[0].revents & POLLIN) {
+        if (FD_ISSET(nfd, &read_fds)) {
             if ((n = read(nfd, buf, sizeof(buf))) < 0)
                 return;
             else if (n == 0) {
                 shutdown(nfd, SHUT_RD);
-                pfd[0].fd = -1;
-                pfd[0].events = 0;
+                return;
             } else {
                 if ((ret = atomicio(write, lfd, buf, n)) != n)
                     return;
             }
         }
 
-        if (pfd[1].revents & POLLIN) {
+        if (FD_ISSET(wfd, &read_fds)) {
             if ((n = read(wfd, buf, sizeof(buf))) < 0)
                 return;
             else if (n == 0) {
                 shutdown(nfd, SHUT_WR);
-                pfd[1].fd = -1;
-                pfd[1].events = 0;
             } else {
                 if (escape) {
                     char buf2[] = "~";
@@ -208,7 +218,13 @@ readwrite(int nfd)
                     return;
             }
         }
-    }
+setup_select:
+    FD_ZERO(&read_fds);
+    FD_SET(wfd, &read_fds);
+    FD_SET(nfd, &read_fds);
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 0;
+    } // while
 }
 
 void
