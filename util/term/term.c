@@ -155,16 +155,15 @@ readwrite(int nfd)
     if (nfd == -1)
         return;
 
-    FD_ZERO(&read_fds);
-
-    FD_SET(wfd, &read_fds);
-    FD_SET(nfd, &read_fds);
     max_fd = nfd + 1;
 
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
-
     while (1) {
+        FD_ZERO(&read_fds);
+        FD_SET(wfd, &read_fds);
+        FD_SET(nfd, &read_fds);
+        timeout.tv_sec = 1;
+        timeout.tv_usec = 0;
+
         n = select(max_fd, &read_fds, NULL, NULL, &timeout);
         if (n < 0) {
             close(nfd);
@@ -174,7 +173,7 @@ readwrite(int nfd)
         if (n == 0) {
             if (read(nfd, buf, 0) < 0)
                 return;
-            goto setup_select;
+            continue;
         }
 
         if (read(nfd, buf, 0) < 0)
@@ -218,12 +217,6 @@ readwrite(int nfd)
                     return;
             }
         }
-setup_select:
-    FD_ZERO(&read_fds);
-    FD_SET(wfd, &read_fds);
-    FD_SET(nfd, &read_fds);
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 0;
     } // while
 }
 
