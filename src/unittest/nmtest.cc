@@ -38,9 +38,6 @@
 #include "base/str.hh"
 
 using namespace std;
-Tick curTick;
-
-ostream *outputStream = &cout;
 
 int
 main(int argc, char *argv[])

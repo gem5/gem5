@@ -29,12 +29,13 @@
  */
 
 #include <fcntl.h>
-#include <iostream.h>
 #include <unistd.h>
+
+#include <iostream>
 
 #include "base/circlebuf.hh"
 
-char *strings[] = {
+const char *strings[] = {
     "This is the first test\n",
     "he went with his woman to the store\n",
     "the man with the bat hit the woman with the hat\n",

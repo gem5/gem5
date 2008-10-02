@@ -68,32 +68,14 @@ main(int argc, char *argv[])
 
     progname = argv[0];
 
-    vector<char *> cppArgs;
-
-    vector<char *> cpp_options;
-    cpp_options.reserve(argc * 2);
-
     for (int i = 1; i < argc; ++i) {
         char *arg_str = argv[i];
 
         // if arg starts with '-', parse as option,
         // else treat it as a configuration file name and load it
         if (arg_str[0] == '-') {
-
             // switch on second char
             switch (arg_str[1]) {
-              case 'D':
-              case 'U':
-              case 'I':
-                // cpp options: record & pass to cpp.  Note that these
-                // cannot have spaces, i.e., '-Dname=val' is OK, but
-                // '-D name=val' is not.  I don't consider this a
-                // problem, since even though gnu cpp accepts the
-                // latter, other cpp implementations do not (Tru64,
-                // for one).
-                cppArgs.push_back(arg_str);
-                break;
-
               case '-':
                 // command-line configuration parameter:
                 // '--<section>:<parameter>=<value>'
@@ -115,7 +97,7 @@ main(int argc, char *argv[])
         else {
             // no '-', treat as config file name
 
-            if (!simConfigDB.loadCPP(arg_str, cppArgs)) {
+            if (!simConfigDB.load(arg_str)) {
                 cprintf("Error processing file %s\n", arg_str);
                 exit(1);
             }

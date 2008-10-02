@@ -144,12 +144,26 @@ def SwigSource(package, source):
     val = source,package
     swig_sources.append(val)
 
+unit_tests = []
+def UnitTest(target, sources):
+    if not isinstance(sources, (list, tuple)):
+        sources = [ sources ]
+    
+    srcs = []
+    for source in sources:
+        if not isinstance(source, SCons.Node.FS.File):
+            source = File(source)
+        srcs.append(source)
+            
+    unit_tests.append((target, srcs))
+
 # Children should have access
 Export('Source')
 Export('BinSource')
 Export('PySource')
 Export('SimObject')
 Export('SwigSource')
+Export('UnitTest')
 
 ########################################################################
 #
@@ -961,6 +975,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
     m5lib = newEnv.Library('m5_' + label,
         make_objs(cc_lib_sources, newEnv) + swig_objs)
+
+    for target, sources in unit_tests:
+        objs = [ newEnv.StaticObject(s) for s in sources ]
+        newEnv.Program("unittest/%s.%s" % (target, label), objs + m5lib)
 
     # Now link a stub with main() and the library.
     exe = 'm5.' + label  # final executable

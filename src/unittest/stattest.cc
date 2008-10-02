@@ -30,9 +30,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <unistd.h>
 
 #include "base/cprintf.hh"
 #include "base/misc.hh"
@@ -43,9 +41,6 @@
 
 using namespace std;
 using namespace Stats;
-
-Tick curTick = 0;
-Tick ticksPerSecond = ULL(2000000000);
 
 Scalar<> s1;
 Scalar<> s2;
@@ -72,8 +67,6 @@ Value f5;
 Formula f6;
 Formula f7;
 
-ostream *outputStream = &cout;
-
 double
 testfunc()
 {
@@ -85,7 +78,7 @@ class TestClass {
     double operator()() { return 9.7; }
 };
 
-char *progname = "";
+const char *progname = "";
 
 void
 usage()
@@ -101,20 +94,31 @@ main(int argc, char *argv[])
     bool descriptions = false;
     bool compat = false;
     bool text = false;
+
+#if USE_MYSQL
     string mysql_name;
+    string mysql_db;
     string mysql_host;
     string mysql_user = "binkertn";
     string mysql_passwd;
+#endif
 
     char c;
     progname = argv[0];
-    while ((c = getopt(argc, argv, "cdh:P:p:s:tu:")) != -1) {
+    while ((c = getopt(argc, argv, "cD:dh:P:p:s:tu:")) != -1) {
         switch (c) {
           case 'c':
             compat = true;
             break;
           case 'd':
             descriptions = true;
+            break;
+          case 't':
+            text = true;
+            break;
+#if USE_MYSQL
+          case 'D':
+            mysql_db = optarg;
             break;
           case 'h':
             mysql_host = optarg;
@@ -125,12 +129,10 @@ main(int argc, char *argv[])
           case 's':
             mysql_name = optarg;
             break;
-          case 't':
-            text = true;
-            break;
           case 'u':
             mysql_user = optarg;
             break;
+#endif
           default:
             usage();
         }
@@ -545,12 +547,14 @@ main(int argc, char *argv[])
         out();
     }
 
+#if USE_MYSQL
     if (!mysql_name.empty()) {
         MySql out;
-        out.connect(mysql_host, mysql_user, mysql_passwd, "m5stats",
+        out.connect(mysql_host, mysql_db, mysql_user, mysql_passwd, "test",
                     mysql_name, "test");
         out();
     }
+#endif
 
     return 0;
 }

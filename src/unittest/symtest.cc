@@ -28,12 +28,12 @@
  * Authors: Nathan Binkert
  */
 
-#include <iostream.h>
+#include <iostream>
 
 #include "base/str.hh"
 #include "base/loader/symtab.hh"
 
-Tick curTick = 0;
+using namespace std;
 
 void
 usage(const char *progname)
