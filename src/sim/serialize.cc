@@ -405,6 +405,8 @@ Serializable::serializeAll(const std::string &cpt_dir)
     string cpt_file = dir + Checkpoint::baseFilename;
     ofstream outstream(cpt_file.c_str());
     time_t t = time(NULL);
+    if (!outstream.is_open())
+        fatal("Unable to open file %s for writing\n", cpt_file.c_str());
     outstream << "// checkpoint generated: " << ctime(&t);
 
     globals.serialize(outstream);

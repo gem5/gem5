@@ -107,7 +107,8 @@ Text::open(std::ostream &_stream)
 
     mystream = false;
     stream = &_stream;
-    assert(valid());
+    if (!valid())
+        fatal("Unable to open output stream for writing\n");
 }
 
 void
@@ -118,13 +119,14 @@ Text::open(const std::string &file)
 
     mystream = true;
     stream = new ofstream(file.c_str(), ios::trunc);
-    assert(valid());
+    if (!valid())
+        fatal("Unable to open statistics file for writing\n");
 }
 
 bool
 Text::valid() const
 {
-    return stream != NULL;
+    return stream != NULL && stream->good();
 }
 
 void
