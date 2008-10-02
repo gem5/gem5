@@ -1009,8 +1009,7 @@ class ScalarProxy
     std::string
     str() const
     {
-        return csprintf("%s[%d]", stat->str(), index);
-
+        return csprintf("%s[%d]", stat->statData()->name, index);
     }
 };
 
