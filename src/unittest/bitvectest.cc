@@ -35,34 +35,34 @@
 int
 main()
 {
-  vector<bool> v1(100);
+    vector<bool> v1(100);
 
-  v1[0] = true;
-  v1.resize(500);
-  v1[100] = true;
-  v1[499] = true;
-  v1.resize(10000);
-  v1[9999] = true;
+    v1[0] = true;
+    v1.resize(500);
+    v1[100] = true;
+    v1[499] = true;
+    v1.resize(10000);
+    v1[9999] = true;
 
-  cout << "v1.size() = " << v1.size() << "\n";
-  for (int i = 0; i < v1.size(); i++)
-    if (v1[i])
-      cout << "v1[" << i << "] = " << v1[i] << "\n";
+    cout << "v1.size() = " << v1.size() << "\n";
+    for (int i = 0; i < v1.size(); i++)
+        if (v1[i])
+            cout << "v1[" << i << "] = " << v1[i] << "\n";
 
-  cout << "\n";
+    cout << "\n";
 
-  vector<bool> v2 = v1;
+    vector<bool> v2 = v1;
 
-  for (int i = 0; i < v2.size(); i++)
-    if (v2[i])
-      cout << "v2[" << i << "] = " << v2[i] << "\n";
+    for (int i = 0; i < v2.size(); i++)
+        if (v2[i])
+            cout << "v2[" << i << "] = " << v2[i] << "\n";
 
-  cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
-  v2[8583] = true;
-  cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
-  v1[8583] = true;
-  cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
-  v1.resize(100000);
-  cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
-  cout << flush;
+    cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
+    v2[8583] = true;
+    cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
+    v1[8583] = true;
+    cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
+    v1.resize(100000);
+    cout << "v1 " << ((v1 == v2) ? "==" : "!=") << " v2" << "\n";
+    cout << flush;
 }

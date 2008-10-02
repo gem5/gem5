@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,32 +25,56 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Nathan Binkert
+ * Authors: Ali Saidi
  */
 
+#include <cassert>
+#include <iostream>
+
 #include "sim/host.hh"
-#include "base/trace.hh"
+#include "base/range_map.hh"
 
 using namespace std;
-
-Tick curTick = 0;
-
-struct foo
-{
-    foo()
-    {
-        char foo[9] = "testing";
-        DPRINTF(Loader, "%s\n", foo);
-    }
-};
 
 int
 main()
 {
-    Trace::flags[Trace::Loader] = true;
-    Trace::dprintf_stream = &cout;
+    typedef range_multimap<Addr, int> multimap_t;
 
-    foo f;
+    multimap_t r;
+    multimap_t::iterator i;
+    std::pair<multimap_t::iterator, multimap_t::iterator> jk;
 
-    return 0;
+    i = r.insert(RangeIn<Addr>(10,40),5);
+    assert(i != r.end());
+    i = r.insert(RangeIn<Addr>(10,40),6);
+    assert(i != r.end());
+    i = r.insert(RangeIn<Addr>(60,90),3);
+    assert(i != r.end());
+
+    jk = r.find(RangeIn(20,30));
+    assert(jk.first != r.end());
+    cout << jk.first->first << " " << jk.first->second << endl;
+    cout << jk.second->first << " " << jk.second->second << endl;
+
+    i = r.insert(RangeIn<Addr>(0,3),5);
+    assert(i != r.end());
+
+    for( i = r.begin(); i != r.end(); i++)
+        cout << i->first << " " << i->second << endl;
+
+    jk = r.find(RangeIn(20,30));
+    assert(jk.first != r.end());
+    cout << jk.first->first << " " << jk.first->second << endl;
+    cout << jk.second->first << " " << jk.second->second << endl;
+
+
 }
+
+
+
+
+
+
+
+

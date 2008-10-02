@@ -34,14 +34,15 @@
 
 #include "base/circlebuf.hh"
 
-char *strings[] =
-{ "This is the first test\n",
-  "he went with his woman to the store\n",
-  "the man with the bat hit the woman with the hat\n",
-  "that that is is that that was\n",
-  "sue sells sea shells by the sea shore\n",
-  "go to the store and buy me some milk and bread\n",
-  "the friendly flight attendants spoke soothingly to the frightened passengers in their native languages\n"
+char *strings[] = {
+    "This is the first test\n",
+    "he went with his woman to the store\n",
+    "the man with the bat hit the woman with the hat\n",
+    "that that is is that that was\n",
+    "sue sells sea shells by the sea shore\n",
+    "go to the store and buy me some milk and bread\n",
+    "the friendly flight attendants spoke soothingly to "
+    "the frightened passengers in their native languages\n"
 };
 
 const int num_strings = sizeof(strings) / sizeof(char *);
@@ -49,26 +50,26 @@ const int num_strings = sizeof(strings) / sizeof(char *);
 int
 main()
 {
-  CircleBuf buf(1024);
+    CircleBuf buf(1024);
 
-  for (int count = 0; count < 100; count++)
-    buf.write(strings[count % num_strings]);
-  buf.read(STDOUT_FILENO);
-  write(STDOUT_FILENO, "<\n", 2);
+    for (int count = 0; count < 100; count++)
+        buf.write(strings[count % num_strings]);
+    buf.read(STDOUT_FILENO);
+    write(STDOUT_FILENO, "<\n", 2);
 
-  for (int count = 0; count < 100; count++)
-    buf.write(strings[count % num_strings]);
-  buf.read(STDOUT_FILENO, 100);
-  write(STDOUT_FILENO, "<\n", 2);
+    for (int count = 0; count < 100; count++)
+        buf.write(strings[count % num_strings]);
+    buf.read(STDOUT_FILENO, 100);
+    write(STDOUT_FILENO, "<\n", 2);
 
-  buf.flush();
-  buf.write("asdfa asdf asd fasdf asdf\n");
-  buf.write("");
-  buf.write("");
-  buf.write("");
-  buf.write("");
-  buf.write("");
-  buf.write("");
-  buf.read(STDOUT_FILENO);
-  write(STDOUT_FILENO, "<\n", 2);
+    buf.flush();
+    buf.write("asdfa asdf asd fasdf asdf\n");
+    buf.write("");
+    buf.write("");
+    buf.write("");
+    buf.write("");
+    buf.write("");
+    buf.write("");
+    buf.read(STDOUT_FILENO);
+    write(STDOUT_FILENO, "<\n", 2);
 }

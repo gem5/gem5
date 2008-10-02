@@ -38,39 +38,40 @@ using namespace std;
 int
 main()
 {
-  Range<int> r1(make_pair(9, 28));
-  Range<unsigned> r2("0x1000:+0x100");
+    Range<int> r1(make_pair(9, 28));
+    Range<unsigned> r2("0x1000:+0x100");
 
-  cout << r1 << "\n"
-       << r2 << "\n";
+    cout << r1 << "\n"
+         << r2 << "\n";
 
-#define RANGETEST(X, C, Y) \
-  cout << X << " "#C" " << Y << " => " << ((X C Y) ? "true" : "false") << "\n"
+#define RANGETEST(X, C, Y)                                              \
+    cout << X << " "#C" " << Y << " => " <<                             \
+        ((X C Y) ? "true" : "false") << "\n"
 
 #define TESTEM(X, Y) do { \
-  RANGETEST(X, < , Y); \
-  RANGETEST(X, <=, Y); \
-  RANGETEST(X, > , Y); \
-  RANGETEST(X, >=, Y); \
-  RANGETEST(X, ==, Y); \
-  RANGETEST(X, !=, Y); \
-  RANGETEST(Y, < , X); \
-  RANGETEST(Y, <=, X); \
-  RANGETEST(Y, > , X); \
-  RANGETEST(Y, >=, X); \
-  RANGETEST(Y, ==, X); \
-  RANGETEST(Y, !=, X); \
-} while (0)
+        RANGETEST(X, < , Y);                    \
+        RANGETEST(X, <=, Y);                    \
+        RANGETEST(X, > , Y);                    \
+        RANGETEST(X, >=, Y);                    \
+        RANGETEST(X, ==, Y);                    \
+        RANGETEST(X, !=, Y);                    \
+        RANGETEST(Y, < , X);                    \
+        RANGETEST(Y, <=, X);                    \
+        RANGETEST(Y, > , X);                    \
+        RANGETEST(Y, >=, X);                    \
+        RANGETEST(Y, ==, X);                    \
+        RANGETEST(Y, !=, X);                    \
+    } while (0)
 
-  TESTEM(8, r1);
-  TESTEM(9, r1);
-  TESTEM(27, r1);
-  TESTEM(28, r1);
+    TESTEM(8, r1);
+    TESTEM(9, r1);
+    TESTEM(27, r1);
+    TESTEM(28, r1);
 
-  TESTEM(0x0fff, r2);
-  TESTEM(0x1000, r2);
-  TESTEM(0x10ff, r2);
-  TESTEM(0x1100, r2);
+    TESTEM(0x0fff, r2);
+    TESTEM(0x1000, r2);
+    TESTEM(0x10ff, r2);
+    TESTEM(0x1100, r2);
 
-  return 0;
+    return 0;
 }
