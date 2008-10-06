@@ -34,9 +34,7 @@ import sys
 
 from util import attrdict
 import config
-import defines
 from options import OptionParser
-import traceflags
 
 __all__ = [ 'options', 'arguments', 'main' ]
 
@@ -132,7 +130,6 @@ add_option("--list-sim-objects", action='store_true', default=False,
     help="List all built-in SimObjects, their parameters and default values")
 
 def main():
-    import defines
     import event
     import info
     import internal
@@ -176,6 +173,8 @@ def main():
     done = False
 
     if options.build_info:
+        import defines
+
         done = True
         print 'Build information:'
         print
@@ -217,6 +216,8 @@ def main():
         print
 
     if options.trace_help:
+        import traceflags
+
         done = True
         print "Base Flags:"
         print_list(traceflags.baseFlags, indent=4)
@@ -297,27 +298,30 @@ def main():
     for when in options.debug_break:
         internal.debug.schedBreakCycle(int(when))
 
-    on_flags = []
-    off_flags = []
-    for flag in options.trace_flags:
-        off = False
-        if flag.startswith('-'):
-            flag = flag[1:]
-            off = True
-        if flag not in traceflags.allFlags:
-            print >>sys.stderr, "invalid trace flag '%s'" % flag
-            sys.exit(1)
+    if options.trace_flags:
+        import traceflags
 
-        if off:
-            off_flags.append(flag)
-        else:
-            on_flags.append(flag)
+        on_flags = []
+        off_flags = []
+        for flag in options.trace_flags:
+            off = False
+            if flag.startswith('-'):
+                flag = flag[1:]
+                off = True
+            if flag not in traceflags.allFlags:
+                print >>sys.stderr, "invalid trace flag '%s'" % flag
+                sys.exit(1)
 
-    for flag in on_flags:
-        internal.trace.set(flag)
+            if off:
+                off_flags.append(flag)
+            else:
+                on_flags.append(flag)
 
-    for flag in off_flags:
-        internal.trace.clear(flag)
+        for flag in on_flags:
+            internal.trace.set(flag)
+
+        for flag in off_flags:
+            internal.trace.clear(flag)
 
     if options.trace_start:
         def enable_trace():
@@ -358,7 +362,14 @@ def main():
 if __name__ == '__main__':
     from pprint import pprint
 
-    parse_args()
+    # load the options.py config file to allow people to set their own
+    # default options
+    options_file = config.get('options.py')
+    if options_file:
+        scope = { 'options' : options }
+        execfile(options_file, scope)
+
+    arguments = options.parse_args()
 
     print 'opts:'
     pprint(options, indent=4)

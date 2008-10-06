@@ -28,7 +28,6 @@
 
 import optparse
 import sys
-import util
 
 from optparse import *
 
@@ -45,18 +44,19 @@ class splitter(object):
         else:
             dest.extend(values)
 
-class OptionParser(object):
+class OptionParser(dict):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('formatter', optparse.TitledHelpFormatter())
         self._optparse = optparse.OptionParser(*args, **kwargs)
         self._optparse.disable_interspersed_args()
 
         self._allopts = {}
-        self._defaults = {}
-        self._options = util.attrdict()
 
         # current option group
         self._group = self._optparse
+
+    def set_defaults(self, *args, **kwargs):
+        return self._optparse.set_defaults(*args, **kwargs)
 
     def set_group(self, *args, **kwargs):
         '''set the current option group'''
@@ -78,15 +78,10 @@ class OptionParser(object):
             kwargs['action'] = 'callback'
             kwargs['callback'] = splitter(split)
 
-        default = kwargs.pop('default', nodefault)
         option = self._group.add_option(*args, **kwargs)
         dest = option.dest
         if dest not in self._allopts:
             self._allopts[dest] = option
-
-        if default != nodefault:
-            if dest not in self._options:
-                self._options[dest] = default
 
         return option
 
@@ -113,28 +108,30 @@ class OptionParser(object):
 
     def __getattr__(self, attr):
         if attr.startswith('_'):
-            return super(OptionParser, self).__getattr__(attr)
+            return super(OptionParser, self).__getattribute__(attr)
 
-        if attr in self._options:
-            return self._options[attr]
+        if attr in self:
+            return self[attr]
 
-        raise AttributeError, "Option %s not found" % attr
+        return super(OptionParser, self).__getattribute__(attr)
 
     def __setattr__(self, attr, value):
         if attr.startswith('_'):
-            return super(OptionParser, self).__setattr__(attr, value)
-
-        if attr in self._options:
-            self._options[attr] = value
-
-        return super(OptionParser, self).__setattr__(attr, value)
+            super(OptionParser, self).__setattr__(attr, value)
+        elif attr in self._allopts:
+            defaults = { attr : value }
+            self.set_defaults(**defaults)
+            if attr in self:
+                self[attr] = value
+        else:
+            super(OptionParser, self).__setattr__(attr, value)
 
     def parse_args(self):
         opts,args = self._optparse.parse_args()
 
         for key,val in opts.__dict__.iteritems():
-            if val is not None or key not in self._options:
-                self._options[key] = val
+            if val is not None or key not in self:
+                self[key] = val
 
         return args
 
