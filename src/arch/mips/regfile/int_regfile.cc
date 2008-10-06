@@ -44,6 +44,12 @@ IntRegFile::clear()
     currShadowSet=0;
 }
 
+int
+IntRegFile::readShadowSet()
+{
+  return currShadowSet;
+}
+
 void
 IntRegFile::setShadowSet(int css)
 {
@@ -54,21 +60,17 @@ IntRegFile::setShadowSet(int css)
 IntReg
 IntRegFile::readReg(int intReg)
 {
-    if (intReg < NumIntRegs) {
+    if (intReg < NumIntArchRegs) {
         // Regular GPR Read
         DPRINTF(MipsPRA, "Reading Reg: %d, CurrShadowSet: %d\n", intReg,
-                currShadowSet);
+              currShadowSet);
 
-        if (intReg >= NumIntArchRegs * NumShadowRegSets) {
-            return regs[intReg + NumIntRegs * currShadowSet];
-        } else {
-            int index = intReg + NumIntArchRegs * currShadowSet;
-            index = index % NumIntArchRegs;
-            return regs[index];
-        }
+        return regs[intReg + NumIntArchRegs * currShadowSet];
     } else {
-        // Read from shadow GPR .. probably called by RDPGPR
-        return regs[intReg];
+        unsigned special_reg_num = intReg - NumIntArchRegs;
+
+        // Read A Special Reg
+        return regs[TotalArchRegs + special_reg_num];
     }
 }
 
@@ -76,13 +78,12 @@ Fault
 IntRegFile::setReg(int intReg, const IntReg &val)
 {
     if (intReg != ZeroReg) {
-        if (intReg < NumIntRegs) {
-            if (intReg >= NumIntArchRegs * NumShadowRegSets)
-                regs[intReg] = val;
-            else
-                regs[intReg + NumIntRegs * currShadowSet] = val;
+        if (intReg < NumIntArchRegs) {
+          regs[intReg + NumIntArchRegs * currShadowSet] = val;
         } else {
-            regs[intReg] = val;
+          unsigned special_reg_num = intReg - NumIntArchRegs;
+
+          regs[TotalArchRegs + special_reg_num] = val;
         }
     }
 

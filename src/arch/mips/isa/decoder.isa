@@ -603,7 +603,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     0xA: rdpgpr({{
                       if(Config_AR >= 1)
                         { // Rev 2 of the architecture
-                          Rd = xc->tcBase()->readIntReg(RT + NumIntRegs * SRSCtl_PSS);
+                          panic("Shadow Sets Not Fully Implemented.\n");
+                          //Rd = xc->tcBase()->readIntReg(RT + NumIntRegs * SRSCtl_PSS);
                         }
                       else
                         {
@@ -613,7 +614,8 @@ decode OPCODE_HI default Unknown::unknown() {
                     0xE: wrpgpr({{
                       if(Config_AR >= 1)
                         { // Rev 2 of the architecture
-                          xc->tcBase()->setIntReg(RD + NumIntRegs * SRSCtl_PSS,Rt);
+                          panic("Shadow Sets Not Fully Implemented.\n");
+                          //xc->tcBase()->setIntReg(RD + NumIntRegs * SRSCtl_PSS,Rt);
                           //			  warn("Writing %d to %d, PSS: %d, SRS: %x\n",Rt,RD + NumIntRegs * SRSCtl_PSS, SRSCtl_PSS,SRSCtl);
                         }
                       else

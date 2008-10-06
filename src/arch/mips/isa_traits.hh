@@ -181,6 +181,8 @@ namespace MipsISA
     const int NumIntRegs = NumIntArchRegs*NumShadowRegSets + NumIntSpecialRegs;        //HI & LO Regs
     const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
 
+    const int TotalArchRegs = NumIntArchRegs * NumShadowRegSets;
+
     // Static instruction parameters
     const int MaxInstSrcRegs = 10;
     const int MaxInstDestRegs = 8;

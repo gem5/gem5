@@ -40,7 +40,7 @@
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 
-#include "params/DerivO3CPU.hh"
+//#include "params/DerivO3CPU.hh"
 
 using namespace std;
 

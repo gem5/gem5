@@ -48,7 +48,7 @@ namespace MipsISA
     }
 
     enum MiscIntRegNums {
-       LO = NumIntArchRegs*NumShadowRegSets,
+       LO = NumIntArchRegs,
        HI,
        DSPACX0,
        DSPLo1,
@@ -72,6 +72,7 @@ namespace MipsISA
         int currShadowSet;
       public:
         void clear();
+        int readShadowSet();
         void setShadowSet(int css);
         IntReg readReg(int intReg);
         Fault setReg(int intReg, const IntReg &val);
