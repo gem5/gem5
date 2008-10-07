@@ -1,13 +1,26 @@
+October 6, 2008: m5_2.0_beta6
+--------------------
+New Features
+1. Support for gcc 4.3
+2. Core m5 code in libm5 for integration with other simulators
+3. Preliminary support for X86 SE mode
+4. Additional system calls emulated
+5. m5term updated to work on OS X
+6. Ability to disable listen sockets
+7. Event queue performance improvements and rewrite
+8. Better errors for unconnected memory ports
+
+Bug fixes
+1. ALPHA_SE O3 perlbmk benchmark
+2. Translation bug where O3 could fetch from uncachable memory
+3. Many minor bugs
+
 Outstanding issues for 2.0 release:
 --------------------
-1. Fix O3 CPU bug in SE 40.perlbmk fails
-2. Fix O3 processing nacks/coherence messages
-3. Better statistics for the caches.
-4. FS mode doesn't work under Cygwin
-5. memtest regression crashes under Cygwin
-6. Make repository public
-7. Testing
-8. Validation
+1. Statistics cleanup
+2. Improve regression system
+3. Testing
+4. Validation
 
 March 1, 2008: m5_2.0_beta5
 --------------------
