@@ -67,20 +67,25 @@ __SINIC_REG32(IntrStatus,    0x08); // 32: interrupt status
 __SINIC_REG32(IntrMask,      0x0c); // 32: interrupt mask
 __SINIC_REG32(RxMaxCopy,     0x10); // 32: max bytes per rx copy
 __SINIC_REG32(TxMaxCopy,     0x14); // 32: max bytes per tx copy
-__SINIC_REG32(RxMaxIntr,     0x18); // 32: max receives per interrupt
-__SINIC_REG32(VirtualCount,  0x1c); // 32: number of virutal NICs
-__SINIC_REG32(RxFifoSize,    0x20); // 32: rx fifo capacity in bytes
-__SINIC_REG32(TxFifoSize,    0x24); // 32: tx fifo capacity in bytes
-__SINIC_REG32(RxFifoMark,    0x28); // 32: rx fifo high watermark
-__SINIC_REG32(TxFifoMark,    0x2c); // 32: tx fifo low watermark
-__SINIC_REG32(RxData,        0x30); // 64: receive data
-__SINIC_REG32(RxDone,        0x38); // 64: receive done
-__SINIC_REG32(RxWait,        0x40); // 64: receive done (busy wait)
-__SINIC_REG32(TxData,        0x48); // 64: transmit data
-__SINIC_REG32(TxDone,        0x50); // 64: transmit done
-__SINIC_REG32(TxWait,        0x58); // 64: transmit done (busy wait)
-__SINIC_REG32(HwAddr,        0x60); // 64: mac address
-__SINIC_REG32(Size,          0x68); // register addres space size
+__SINIC_REG32(ZeroCopySize,  0x18); // 32: bytes to copy if below threshold
+__SINIC_REG32(ZeroCopyMark,  0x1c); // 32: only zero-copy above this threshold
+__SINIC_REG32(VirtualCount,  0x20); // 32: number of virutal NICs
+__SINIC_REG32(RxMaxIntr,     0x24); // 32: max receives per interrupt
+__SINIC_REG32(RxFifoSize,    0x28); // 32: rx fifo capacity in bytes
+__SINIC_REG32(TxFifoSize,    0x2c); // 32: tx fifo capacity in bytes
+__SINIC_REG32(RxFifoLow,     0x30); // 32: rx fifo low watermark
+__SINIC_REG32(TxFifoLow,     0x34); // 32: tx fifo low watermark
+__SINIC_REG32(RxFifoHigh,    0x38); // 32: rx fifo high watermark
+__SINIC_REG32(TxFifoHigh,    0x3c); // 32: tx fifo high watermark
+__SINIC_REG32(RxData,        0x40); // 64: receive data
+__SINIC_REG32(RxDone,        0x48); // 64: receive done
+__SINIC_REG32(RxWait,        0x50); // 64: receive done (busy wait)
+__SINIC_REG32(TxData,        0x58); // 64: transmit data
+__SINIC_REG32(TxDone,        0x60); // 64: transmit done
+__SINIC_REG32(TxWait,        0x68); // 64: transmit done (busy wait)
+__SINIC_REG32(HwAddr,        0x70); // 64: mac address
+__SINIC_REG32(RxStatus,      0x78);
+__SINIC_REG32(Size,          0x80); // register addres space size
 
 // Config register bits
 __SINIC_VAL32(Config_ZeroCopy, 12, 1); // enable zero copy
@@ -116,9 +121,10 @@ __SINIC_REG32(Intr_NoDelay,   0x01cc); // interrupts that aren't coalesced
 __SINIC_REG32(Intr_Res,      ~0x01ff); // reserved interrupt bits
 
 // RX Data Description
-__SINIC_VAL64(RxData_Vaddr, 60,  1); // Addr is virtual
-__SINIC_VAL64(RxData_Len,   40, 20); // 0 - 256k
-__SINIC_VAL64(RxData_Addr,   0, 40); // Address 1TB
+__SINIC_VAL64(RxData_NoDelay,  61,  1); // Don't Delay this copy
+__SINIC_VAL64(RxData_Vaddr,    60,  1); // Addr is virtual
+__SINIC_VAL64(RxData_Len,      40, 20); // 0 - 256k
+__SINIC_VAL64(RxData_Addr,      0, 40); // Address 1TB
 
 // TX Data Description
 __SINIC_VAL64(TxData_More,     63,  1); // Packet not complete (will dma more)
@@ -159,6 +165,11 @@ __SINIC_VAL64(TxDone_Res6,      21,  1); // reserved
 __SINIC_VAL64(TxDone_Res7,      20,  1); // reserved
 __SINIC_VAL64(TxDone_CopyLen,    0, 20); // up to 256k
 
+__SINIC_VAL64(RxStatus_Dirty,   48, 16);
+__SINIC_VAL64(RxStatus_Mapped,  32, 16);
+__SINIC_VAL64(RxStatus_Busy,    16, 16);
+__SINIC_VAL64(RxStatus_Head,     0, 16);
+
 struct Info
 {
     uint8_t size;
@@ -174,31 +185,37 @@ regInfo(Addr daddr)
 {
     static Regs::Info invalid = { 0, false, false, "invalid" };
     static Regs::Info info [] = {
-        { 4, true,  true,  "Config"     },
-        { 4, false, true,  "Command"    },
-        { 4, true,  true,  "IntrStatus" },
-        { 4, true,  true,  "IntrMask"   },
-        { 4, true,  false, "RxMaxCopy"  },
-        { 4, true,  false, "TxMaxCopy"  },
-        { 4, true,  false, "RxMaxIntr"  },
-        { 4, true,  false, "VirtualCount"  },
-        { 4, true,  false, "RxFifoSize" },
-        { 4, true,  false, "TxFifoSize" },
-        { 4, true,  false, "RxFifoMark" },
-        { 4, true,  false, "TxFifoMark" },
-        { 8, true,  true,  "RxData"     },
+        { 4, true,  true,  "Config"       },
+        { 4, false, true,  "Command"      },
+        { 4, true,  true,  "IntrStatus"   },
+        { 4, true,  true,  "IntrMask"     },
+        { 4, true,  false, "RxMaxCopy"    },
+        { 4, true,  false, "TxMaxCopy"    },
+        { 4, true,  false, "ZeroCopySize" },
+        { 4, true,  false, "ZeroCopyMark" },
+        { 4, true,  false, "VirtualCount" },
+        { 4, true,  false, "RxMaxIntr"    },
+        { 4, true,  false, "RxFifoSize"   },
+        { 4, true,  false, "TxFifoSize"   },
+        { 4, true,  false, "RxFifoLow"    },
+        { 4, true,  false, "TxFifoLow"    },
+        { 4, true,  false, "RxFifoHigh"   },
+        { 4, true,  false, "TxFifoHigh"   },
+        { 8, true,  true,  "RxData"       },
         invalid,
-        { 8, true,  false, "RxDone"     },
+        { 8, true,  false, "RxDone"       },
         invalid,
-        { 8, true,  false, "RxWait"     },
+        { 8, true,  false, "RxWait"       },
         invalid,
-        { 8, true,  true,  "TxData"     },
+        { 8, true,  true,  "TxData"       },
         invalid,
-        { 8, true,  false, "TxDone"     },
+        { 8, true,  false, "TxDone"       },
         invalid,
-        { 8, true,  false, "TxWait"     },
+        { 8, true,  false, "TxWait"       },
         invalid,
-        { 8, true,  false, "HwAddr"     },
+        { 8, true,  false, "HwAddr"       },
+        invalid,
+        { 8, true,  false, "RxStatus"     },
         invalid,
     };
 

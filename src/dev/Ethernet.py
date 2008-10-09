@@ -171,6 +171,9 @@ class Sinic(EtherDevBase):
     tx_fifo_high_mark = Param.MemorySize('384kB', "tx fifo high threshold")
     tx_fifo_threshold = Param.MemorySize('128kB', "tx fifo low threshold")
     virtual_count = Param.UInt32(1, "Virtualized SINIC")
+    zero_copy_size = Param.UInt32(64, "Bytes to copy if below threshold")
+    zero_copy_threshold = Param.UInt32(256,
+        "Only zero copy above this threshold")
     zero_copy = Param.Bool(False, "Zero copy receive")
     delay_copy = Param.Bool(False, "Delayed copy transmit")
     virtual_addr = Param.Bool(False, "Virtual addressing")

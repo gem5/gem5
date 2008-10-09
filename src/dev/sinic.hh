@@ -115,19 +115,24 @@ class Device : public Base
         uint32_t IntrMask;     // 0x0c
         uint32_t RxMaxCopy;    // 0x10
         uint32_t TxMaxCopy;    // 0x14
-        uint32_t RxMaxIntr;    // 0x18
-        uint32_t VirtualCount; // 0x1c
-        uint32_t RxFifoSize;   // 0x20
-        uint32_t TxFifoSize;   // 0x24
-        uint32_t RxFifoMark;   // 0x28
-        uint32_t TxFifoMark;   // 0x2c
-        uint64_t RxData;       // 0x30
-        uint64_t RxDone;       // 0x38
-        uint64_t RxWait;       // 0x40
-        uint64_t TxData;       // 0x48
-        uint64_t TxDone;       // 0x50
-        uint64_t TxWait;       // 0x58
-        uint64_t HwAddr;       // 0x60
+        uint32_t ZeroCopySize; // 0x18
+        uint32_t ZeroCopyMark; // 0x1c
+        uint32_t VirtualCount; // 0x20
+        uint32_t RxMaxIntr;    // 0x24
+        uint32_t RxFifoSize;   // 0x28
+        uint32_t TxFifoSize;   // 0x2c
+        uint32_t RxFifoLow;    // 0x30
+        uint32_t TxFifoLow;    // 0x34
+        uint32_t RxFifoHigh;   // 0x38
+        uint32_t TxFifoHigh;   // 0x3c
+        uint64_t RxData;       // 0x40
+        uint64_t RxDone;       // 0x48
+        uint64_t RxWait;       // 0x50
+        uint64_t TxData;       // 0x58
+        uint64_t TxDone;       // 0x60
+        uint64_t TxWait;       // 0x68
+        uint64_t HwAddr;       // 0x70
+        uint64_t RxStatus;     // 0x78
     } regs;
 
     struct VirtualReg {
@@ -136,7 +141,7 @@ class Device : public Base
         uint64_t TxData;
         uint64_t TxDone;
 
-        PacketFifo::iterator rxPacket;
+        PacketFifo::iterator rxIndex;
         int rxPacketOffset;
         int rxPacketBytes;
         uint64_t rxDoneData;
@@ -158,6 +163,10 @@ class Device : public Base
     VirtualList rxBusy;
     int rxActive;
     VirtualList txList;
+
+    int rxBusyCount;
+    int rxMappedCount;
+    int rxDirtyCount;
 
     uint8_t  &regData8(Addr daddr) { return *((uint8_t *)&regs + daddr); }
     uint32_t &regData32(Addr daddr) { return *(uint32_t *)&regData8(daddr); }
@@ -300,8 +309,16 @@ class Device : public Base
     Stats::Scalar<> txTcpChecksums;
     Stats::Scalar<> txUdpChecksums;
 
+    Stats::Scalar<> totalVnicDistance;
+    Stats::Scalar<> numVnicDistance;
+    Stats::Scalar<> maxVnicDistance;
+    Stats::Formula avgVnicDistance;
+
+    int _maxVnicDistance;
+
   public:
     virtual void regStats();
+    virtual void resetStats();
 
 /**
  * Serialization stuff
