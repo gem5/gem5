@@ -33,8 +33,8 @@
 #include "python/swig/pyevent.hh"
 #include "sim/async.hh"
 
-PythonEvent::PythonEvent(PyObject *obj, Tick when, Priority priority)
-    : Event(&mainEventQueue, priority), object(obj)
+PythonEvent::PythonEvent(PyObject *obj, Priority priority)
+    : Event(priority), object(obj)
 {
     if (object == NULL)
         panic("Passed in invalid object");
@@ -42,7 +42,6 @@ PythonEvent::PythonEvent(PyObject *obj, Tick when, Priority priority)
     Py_INCREF(object);
 
     setFlags(AutoDelete);
-    schedule(when);
 }
 
 PythonEvent::~PythonEvent()
@@ -67,3 +66,36 @@ PythonEvent::process()
         async_exception = true;
     }
 }
+
+Event *
+createCountedDrain()
+{
+    return new CountedDrainEvent();
+}
+
+void
+cleanupCountedDrain(Event *counted_drain)
+{
+    CountedDrainEvent *event =
+        dynamic_cast<CountedDrainEvent *>(counted_drain);
+    if (event == NULL) {
+        fatal("Called cleanupCountedDrain() on an event that was not "
+              "a CountedDrainEvent.");
+    }
+    assert(event->getCount() == 0);
+    delete event;
+}
+
+#if 0
+Event *
+create(PyObject *object, Event::Priority priority)
+{
+    return new PythonEvent(object, priority);
+}
+
+void
+destroy(Event *event)
+{
+    delete event;
+}
+#endif

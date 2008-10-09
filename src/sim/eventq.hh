@@ -51,16 +51,6 @@
 
 class EventQueue;       // forward declaration
 
-//////////////////////
-//
-// Main Event Queue
-//
-// Events on this queue are processed at the *beginning* of each
-// cycle, before the pipeline simulation is performed.
-//
-// defined in eventq.cc
-//
-//////////////////////
 extern EventQueue mainEventQueue;
 
 /*
@@ -90,10 +80,6 @@ class Event : public Serializable, public FastAlloc
     static Event *insertBefore(Event *event, Event *curr);
     static Event *removeItem(Event *event, Event *last);
 
-    /// queue to which this event belongs (though it may or may not be
-    /// scheduled on this queue yet)
-    EventQueue *_queue;
-
     Tick _when;         //!< timestamp when event should be processed
     short _priority;    //!< event priority
     short _flags;
@@ -107,6 +93,10 @@ class Event : public Serializable, public FastAlloc
     /// more difficult.  Thus we use a global counter value when
     /// debugging.
     Counter instance;
+
+    /// queue to which this event belongs (though it may or may not be
+    /// scheduled on this queue yet)
+    EventQueue *queue;
 #endif
 
 #ifdef EVENTQ_DEBUG
@@ -114,11 +104,13 @@ class Event : public Serializable, public FastAlloc
     Tick whenScheduled; //!< time scheduled
 #endif
 
-  protected:
     void
-    setWhen(Tick when)
+    setWhen(Tick when, EventQueue *q)
     {
         _when = when;
+#ifndef NDEBUG
+        queue = q;
+#endif
 #ifdef EVENTQ_DEBUG
         whenScheduled = curTick;
 #endif
@@ -131,7 +123,8 @@ class Event : public Serializable, public FastAlloc
         Scheduled = 0x2,
         AutoDelete = 0x4,
         AutoSerialize = 0x8,
-        IsExitEvent = 0x10
+        IsExitEvent = 0x10,
+        IsMainQueue = 0x20
     };
 
     bool getFlags(Flags f) const { return (_flags & f) == f; }
@@ -139,8 +132,6 @@ class Event : public Serializable, public FastAlloc
     void clearFlags(Flags f) { _flags &= ~f; }
 
   protected:
-    EventQueue *queue() const { return _queue; }
-
     // This function isn't really useful if TRACING_ON is not defined
     virtual void trace(const char *action);     //!< trace event activity
 
@@ -205,11 +196,12 @@ class Event : public Serializable, public FastAlloc
      * Event constructor
      * @param queue that the event gets scheduled on
      */
-    Event(EventQueue *q, Priority p = Default_Pri)
-        : nextBin(NULL), nextInBin(NULL), _queue(q), _priority(p), _flags(None)
+    Event(Priority p = Default_Pri)
+        : nextBin(NULL), nextInBin(NULL), _priority(p), _flags(None)
     {
 #ifndef NDEBUG
         instance = ++instanceCounter;
+        queue = NULL;
 #endif
 #ifdef EVENTQ_DEBUG
         whenCreated = curTick;
@@ -256,16 +248,6 @@ class Event : public Serializable, public FastAlloc
     /// Determine if the current event is scheduled
     bool scheduled() const { return getFlags(Scheduled); }
 
-    /// Schedule the event with the current priority or default priority
-    void schedule(Tick t);
-
-    /// Reschedule the event with the current priority
-    // always parameter means to schedule if not already scheduled
-    void reschedule(Tick t, bool always = false);
-
-    /// Remove the event from the current schedule
-    void deschedule();
-
     /// Squash the current event
     void squash() { setFlags(Squashed); }
 
@@ -281,6 +263,7 @@ class Event : public Serializable, public FastAlloc
     /// Get the event priority
     int priority() const { return _priority; }
 
+#ifndef SWIG
     struct priority_compare
         : public std::binary_function<Event *, Event *, bool>
     {
@@ -293,55 +276,7 @@ class Event : public Serializable, public FastAlloc
 
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
-};
-
-template <class T, void (T::* F)()>
-void
-DelayFunction(Tick when, T *object)
-{
-    class DelayEvent : public Event
-    {
-      private:
-        T *object;
-
-      public:
-        DelayEvent(Tick when, T *o)
-            : Event(&mainEventQueue), object(o)
-            { setFlags(this->AutoDestroy); schedule(when); }
-        void process() { (object->*F)(); }
-        const char *description() const { return "delay"; }
-    };
-
-    new DelayEvent(when, object);
-}
-
-template <class T, void (T::* F)()>
-class EventWrapper : public Event
-{
-  private:
-    T *object;
-
-  public:
-    EventWrapper(T *obj, bool del = false,
-                 EventQueue *q = &mainEventQueue,
-                 Priority p = Default_Pri)
-        : Event(q, p), object(obj)
-    {
-        if (del)
-            setFlags(AutoDelete);
-    }
-
-    EventWrapper(T *obj, Tick t, bool del = false,
-                 EventQueue *q = &mainEventQueue,
-                 Priority p = Default_Pri)
-        : Event(q, p), object(obj)
-    {
-        if (del)
-            setFlags(AutoDelete);
-        schedule(t);
-    }
-
-    void process() { (object->*F)(); }
+#endif
 };
 
 /*
@@ -349,18 +284,14 @@ class EventWrapper : public Event
  */
 class EventQueue : public Serializable
 {
-  protected:
-    std::string objName;
-
   private:
+    std::string objName;
     Event *head;
 
     void insert(Event *event);
     void remove(Event *event);
 
   public:
-
-    // constructor
     EventQueue(const std::string &n)
         : objName(n), head(NULL)
     {}
@@ -370,7 +301,7 @@ class EventQueue : public Serializable
     // schedule the given event on this queue
     void schedule(Event *ev, Tick when);
     void deschedule(Event *ev);
-    void reschedule(Event *ev, Tick when);
+    void reschedule(Event *ev, Tick when, bool always = false);
 
     Tick nextTick() const { return head->when(); }
     Event *serviceOne();
@@ -406,43 +337,159 @@ class EventQueue : public Serializable
 
     bool debugVerify() const;
 
+#ifndef SWIG
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+#endif
 };
 
-
-//////////////////////
-//
-// inline functions
-//
-// can't put these inside declaration due to circular dependence
-// between Event and EventQueue classes.
-//
-//////////////////////
-
-// schedule at specified time (place on event queue specified via
-// constructor)
-inline void
-Event::schedule(Tick when)
+#ifndef SWIG
+class EventManager
 {
-    _queue->schedule(this, when);
-}
+  protected:
+    /** A pointer to this object's event queue */
+    EventQueue *eventq;
 
-inline void
-Event::deschedule()
-{
-    _queue->deschedule(this);
-}
+  public:
+    EventManager(EventManager &em) : eventq(em.queue()) {}
+    EventManager(EventManager *em) : eventq(em ? em->queue() : NULL) {}
+    EventManager(EventQueue *eq) : eventq(eq) {}
 
-inline void
-Event::reschedule(Tick when, bool always)
-{
-    if (scheduled()) {
-        _queue->reschedule(this, when);
-    } else {
-        assert(always);
-        _queue->schedule(this, when);
+    EventQueue *
+    queue() const
+    {
+        return eventq;
     }
+
+    void
+    schedule(Event &event, Tick when)
+    {
+        eventq->schedule(&event, when);
+    }
+
+    void
+    deschedule(Event &event)
+    {
+        eventq->deschedule(&event);
+    }
+
+    void
+    reschedule(Event &event, Tick when, bool always = false)
+    {
+        eventq->reschedule(&event, when, always);
+    }
+
+    void
+    schedule(Event *event, Tick when)
+    {
+        eventq->schedule(event, when);
+    }
+
+    void
+    deschedule(Event *event)
+    {
+        eventq->deschedule(event);
+    }
+
+    void
+    reschedule(Event *event, Tick when, bool always = false)
+    {
+        eventq->reschedule(event, when, always);
+    }
+};
+
+template <class T, void (T::* F)()>
+void
+DelayFunction(EventQueue *eventq, Tick when, T *object)
+{
+    class DelayEvent : public Event
+    {
+      private:
+        T *object;
+
+      public:
+        DelayEvent(T *o)
+            : object(o)
+        { setFlags(this->AutoDestroy); }
+        void process() { (object->*F)(); }
+        const char *description() const { return "delay"; }
+    };
+
+    eventq->schedule(new DelayEvent(object), when);
+}
+
+template <class T, void (T::* F)()>
+class EventWrapper : public Event
+{
+  private:
+    T *object;
+
+  public:
+    EventWrapper(T *obj, bool del = false, Priority p = Default_Pri)
+        : Event(p), object(obj)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
+
+    void process() { (object->*F)(); }
+};
+
+inline void
+EventQueue::schedule(Event *event, Tick when)
+{
+    assert(when >= curTick);
+    assert(!event->scheduled());
+
+    event->setWhen(when, this);
+    insert(event);
+    event->setFlags(Event::Scheduled);
+    if (this == &mainEventQueue)
+        event->setFlags(Event::IsMainQueue);
+    else
+        event->clearFlags(Event::IsMainQueue);
+
+    if (DTRACE(Event))
+        event->trace("scheduled");
+}
+
+inline void
+EventQueue::deschedule(Event *event)
+{
+    assert(event->scheduled());
+
+    remove(event);
+
+    event->clearFlags(Event::Squashed);
+    event->clearFlags(Event::Scheduled);
+
+    if (event->getFlags(Event::AutoDelete))
+        delete event;
+
+    if (DTRACE(Event))
+        event->trace("descheduled");
+}
+
+inline void
+EventQueue::reschedule(Event *event, Tick when, bool always)
+{
+    assert(when >= curTick);
+    assert(always || event->scheduled());
+
+    if (event->scheduled())
+        remove(event);
+            
+    event->setWhen(when, this);
+    insert(event);
+    event->clearFlags(Event::Squashed);
+    event->setFlags(Event::Scheduled);
+    if (this == &mainEventQueue)
+        event->setFlags(Event::IsMainQueue);
+    else
+        event->clearFlags(Event::IsMainQueue);
+
+    if (DTRACE(Event))
+        event->trace("rescheduled");
 }
 
 inline bool
@@ -483,51 +530,6 @@ operator!=(const Event &l, const Event &r)
 {
     return l.when() != r.when() || l.priority() != r.priority();
 }
-
-inline void
-EventQueue::schedule(Event *event, Tick when)
-{
-    assert(when >= curTick);
-    assert(!event->scheduled());
-
-    event->setWhen(when);
-    insert(event);
-    event->setFlags(Event::Scheduled);
-
-    if (DTRACE(Event))
-        event->trace("scheduled");
-}
-
-inline void
-EventQueue::deschedule(Event *event)
-{
-    assert(event->scheduled());
-
-    remove(event);
-
-    event->clearFlags(Event::Squashed);
-    event->clearFlags(Event::Scheduled);
-
-    if (event->getFlags(Event::AutoDelete))
-        delete event;
-
-    if (DTRACE(Event))
-        event->trace("descheduled");
-}
-
-inline void
-EventQueue::reschedule(Event *event, Tick when)
-{
-    assert(when >= curTick);
-    assert(event->scheduled());
-
-    remove(event);
-    event->setWhen(when);
-    insert(event);
-    event->clearFlags(Event::Squashed);
-
-    if (DTRACE(Event))
-        event->trace("rescheduled");
-}
+#endif
 
 #endif // __SIM_EVENTQ_HH__

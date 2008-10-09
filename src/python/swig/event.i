@@ -32,34 +32,36 @@
 
 %{
 #include "python/swig/pyevent.hh"
-
+#include "sim/host.hh"
+#include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/simulate.hh"
 %}
 
+#pragma SWIG nowarn=350,351
+
+%import "base/fast_alloc.hh"
+%import "sim/serialize.hh"
+
 %include "stdint.i"
 %include "std_string.i"
 %include "sim/host.hh"
+%include "sim/eventq.hh"
+%include "python/swig/pyevent.hh"
 
-void create(PyObject *object, Tick when);
-
-class Event;
-class CountedDrainEvent : public Event {
-  public:
+struct CountedDrainEvent : public Event
+{
     void setCount(int _count);
 };
 
-CountedDrainEvent *createCountedDrain();
-void cleanupCountedDrain(Event *drain_event);
-
 // minimal definition of SimExitEvent interface to wrap
-class SimLoopExitEvent {
+class SimLoopExitEvent : public Event
+{
   public:
     std::string getCause();
     int getCode();
-    SimLoopExitEvent(EventQueue *q, Tick _when, Tick _repeat,
-                     const std::string &_cause, int c = 0);
+    SimLoopExitEvent(const std::string &_cause, int c, Tick _repeat = 0);
 };
 
 %exception simulate {

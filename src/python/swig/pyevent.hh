@@ -40,35 +40,13 @@ class PythonEvent : public Event
     PyObject *object;
 
   public:
-    PythonEvent(PyObject *obj, Tick when, Priority priority = Default_Pri);
+    PythonEvent(PyObject *obj, Event::Priority priority);
     ~PythonEvent();
 
     virtual void process();
 };
 
-inline void
-create(PyObject *object, Tick when)
-{
-    new PythonEvent(object, when);
-}
-
-inline Event *
-createCountedDrain()
-{
-    return new CountedDrainEvent();
-}
-
-inline void
-cleanupCountedDrain(Event *counted_drain)
-{
-    CountedDrainEvent *event =
-        dynamic_cast<CountedDrainEvent *>(counted_drain);
-    if (event == NULL) {
-        fatal("Called cleanupCountedDrain() on an event that was not "
-              "a CountedDrainEvent.");
-    }
-    assert(event->getCount() == 0);
-    delete event;
-}
+Event *createCountedDrain();
+void cleanupCountedDrain(Event *counted_drain);
 
 #endif // __PYTHON_SWIG_PYEVENT_HH__

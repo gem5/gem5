@@ -38,12 +38,14 @@ struct PyObject;
 
 #include <string>
 
+struct EventQueue;
 struct SimObjectParams
 {
     virtual ~SimObjectParams() {}
 
     std::string name;
     PyObject *pyobj;
+    EventQueue *eventq;
 };
 
 

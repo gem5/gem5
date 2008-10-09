@@ -49,7 +49,7 @@ class DefaultPeerPort : public Port
 
   public:
     DefaultPeerPort()
-        : Port("default_port")
+        : Port("default_port", NULL)
     { }
 
     bool recvTiming(PacketPtr)
@@ -90,13 +90,9 @@ class DefaultPeerPort : public Port
 
 DefaultPeerPort defaultPeerPort;
 
-Port::Port()
-    : peer(&defaultPeerPort), owner(NULL)
-{
-}
-
 Port::Port(const std::string &_name, MemObject *_owner)
-    : portName(_name), peer(&defaultPeerPort), owner(_owner)
+    : EventManager(_owner), portName(_name), peer(&defaultPeerPort),
+      owner(_owner)
 {
 }
 
@@ -110,6 +106,13 @@ Port::setPeer(Port *port)
     DPRINTF(Config, "setting peer to %s\n", port->name());
 
     peer = port;
+}
+
+void
+Port::setOwner(MemObject *_owner)
+{
+    eventq = _owner->queue();
+    owner = _owner;
 }
 
 void

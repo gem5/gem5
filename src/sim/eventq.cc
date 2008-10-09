@@ -51,7 +51,7 @@ using namespace std;
 // Events on this queue are processed at the *beginning* of each
 // cycle, before the pipeline simulation is performed.
 //
-EventQueue mainEventQueue("MainEventQueue");
+EventQueue mainEventQueue("Main Event Queue");
 
 #ifndef NDEBUG
 Counter Event::instanceCounter = 0;
@@ -209,8 +209,7 @@ Event::serialize(std::ostream &os)
 void
 Event::unserialize(Checkpoint *cp, const string &section)
 {
-    if (scheduled())
-        deschedule();
+    assert(!scheduled() && "we used to deschedule these events");
 
     UNSERIALIZE_SCALAR(_when);
     UNSERIALIZE_SCALAR(_priority);
@@ -224,7 +223,8 @@ Event::unserialize(Checkpoint *cp, const string &section)
 
     if (wasScheduled) {
         DPRINTF(Config, "rescheduling at %d\n", _when);
-        schedule(_when);
+        panic("need to figure out how to unserialize scheduled events");
+        //schedule(_when);
     }
 }
 

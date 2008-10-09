@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "params/SimObject.hh"
+#include "sim/eventq.hh"
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 
@@ -54,7 +55,8 @@ class Event;
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
  */
-class SimObject : public Serializable, protected StartupCallback
+class SimObject
+    : public EventManager, public Serializable, protected StartupCallback
 {
   public:
     enum State {
