@@ -57,8 +57,8 @@ EventQueue mainEventQueue("MainEventQueue");
 Counter Event::instanceCounter = 0;
 #endif
 
-inline Event *
-insertBefore(Event *event, Event *curr)
+Event *
+Event::insertBefore(Event *event, Event *curr)
 {
     // Either way, event will be the top element in the 'in bin' list
     // which is the pointer we need in order to look into the list, so
@@ -83,7 +83,7 @@ EventQueue::insert(Event *event)
 {
     // Deal with the head case
     if (!head || *event <= *head) {
-        head = insertBefore(event, head);
+        head = Event::insertBefore(event, head);
         return;
     }
 
@@ -98,11 +98,11 @@ EventQueue::insert(Event *event)
 
     // Note: this operation may render all nextBin pointers on the
     // prev 'in bin' list stale (except for the top one)
-    prev->nextBin = insertBefore(event, curr);
+    prev->nextBin = Event::insertBefore(event, curr);
 }
 
-inline Event *
-removeItem(Event *event, Event *top)
+Event *
+Event::removeItem(Event *event, Event *top)
 {
     Event *curr = top;
     Event *next = top->nextInBin;
@@ -141,7 +141,7 @@ EventQueue::remove(Event *event)
     // deal with an event on the head's 'in bin' list (event has the same
     // time as the head)
     if (*head == *event) {
-        head = removeItem(event, head);
+        head = Event::removeItem(event, head);
         return;
     }
 
@@ -159,7 +159,7 @@ EventQueue::remove(Event *event)
     // curr points to the top item of the the correct 'in bin' list, when
     // we remove an item, it returns the new top item (which may be
     // unchanged)
-    prev->nextBin = removeItem(event, curr);
+    prev->nextBin = Event::removeItem(event, curr);
 }
 
 Event *

@@ -87,8 +87,8 @@ class Event : public Serializable, public FastAlloc
     Event *nextBin;
     Event *nextInBin;
 
-    friend Event *insertBefore(Event *event, Event *curr);
-    friend Event *removeItem(Event *event, Event *last);
+    static Event *insertBefore(Event *event, Event *curr);
+    static Event *removeItem(Event *event, Event *last);
 
     /// queue to which this event belongs (though it may or may not be
     /// scheduled on this queue yet)
