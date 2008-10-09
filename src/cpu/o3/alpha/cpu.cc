@@ -29,10 +29,9 @@
  */
 
 #include "cpu/o3/alpha/impl.hh"
-#include "cpu/o3/alpha/cpu_impl.hh"
-#include "cpu/o3/alpha/dyn_inst.hh"
+#include "cpu/o3/cpu.hh"
 
 // Force instantiation of AlphaO3CPU for all the implemntations that are
 // needed.  Consider merging this and alpha_dyn_inst.cc, and maybe all
 // classes that depend on a certain impl, into one file (alpha_impl.cc?).
-template class AlphaO3CPU<AlphaSimpleImpl>;
+template class FullO3CPU<AlphaSimpleImpl>;

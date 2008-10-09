@@ -260,7 +260,51 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }
+#else
+    /** Returns pointer to the quiesce event. */
+    virtual EndQuiesceEvent *getQuiesceEvent()
+    {
+        return this->thread->quiesceEvent;
+    }
 #endif
+
+    virtual uint64_t readNextNPC()
+    {
+        return this->cpu->readNextNPC(this->thread->readTid());
+    }
+
+    virtual void setNextNPC(uint64_t val)
+    {
+#if THE_ISA == ALPHA_ISA
+        panic("Not supported on Alpha!");
+#endif
+        this->cpu->setNextNPC(val, this->thread->readTid());
+    }
+
+    virtual void changeRegFileContext(TheISA::RegContextParam param,
+                                      TheISA::RegContextVal val)
+    {
+#if THE_ISA != SPARC_ISA
+        panic("changeRegFileContext not implemented.");
+#endif
+    }
+
+
+    /** This function exits the thread context in the CPU and returns
+     * 1 if the CPU has no more active threads (meaning it's OK to exit);
+     * Used in syscall-emulation mode when a thread executes the 'exit'
+     * syscall.
+     */
+    virtual int exit()
+    {
+        this->deallocate();
+
+        // If there are still threads executing in the system
+        if (this->cpu->numActiveThreads())
+            return 0; // don't exit simulation
+        else
+            return 1; // exit simulation
+    }
 };
 
 #endif

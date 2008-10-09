@@ -35,7 +35,7 @@
 #include "arch/sparc/types.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/sparc/cpu.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/sparc/impl.hh"
 
 class Packet;

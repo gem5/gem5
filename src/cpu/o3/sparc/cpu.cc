@@ -28,11 +28,10 @@
  * Authors: Gabe Black
  */
 
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/sparc/impl.hh"
-#include "cpu/o3/sparc/cpu_impl.hh"
-#include "cpu/o3/sparc/dyn_inst.hh"
 
 // Force instantiation of SparcO3CPU for all the implementations that are
 // needed.  Consider merging this and sparc_dyn_inst.cc, and maybe all
 // classes that depend on a certain impl, into one file (sparc_impl.cc?).
-template class SparcO3CPU<SparcSimpleImpl>;
+template class FullO3CPU<SparcSimpleImpl>;

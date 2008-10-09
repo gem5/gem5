@@ -29,11 +29,10 @@
  *          Korey Sewell
  */
 
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/mips/impl.hh"
-#include "cpu/o3/mips/cpu_impl.hh"
-#include "cpu/o3/mips/dyn_inst.hh"
 
 // Force instantiation of MipsO3CPU for all the implemntations that are
 // needed.  Consider merging this and mips_dyn_inst.cc, and maybe all
 // classes that depend on a certain impl, into one file (mips_impl.cc?).
-template class MipsO3CPU<MipsSimpleImpl>;
+template class FullO3CPU<MipsSimpleImpl>;

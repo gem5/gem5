@@ -29,6 +29,7 @@
  */
 
 #include "cpu/base_dyn_inst_impl.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/isa_specific.hh"
 
 // Explicit instantiation

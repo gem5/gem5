@@ -30,18 +30,17 @@
 
 #include <string>
 
+#include "config/full_system.hh"
 #include "config/use_checker.hh"
-#include "cpu/base.hh"
-#include "cpu/o3/alpha/cpu.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/alpha/impl.hh"
-#include "cpu/o3/fu_pool.hh"
 #include "params/DerivO3CPU.hh"
 
-class DerivO3CPU : public AlphaO3CPU<AlphaSimpleImpl>
+class DerivO3CPU : public FullO3CPU<AlphaSimpleImpl>
 {
   public:
     DerivO3CPU(DerivO3CPUParams *p)
-        : AlphaO3CPU<AlphaSimpleImpl>(p)
+        : FullO3CPU<AlphaSimpleImpl>(p)
     { }
 };
 

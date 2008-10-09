@@ -31,18 +31,17 @@
 
 #include <string>
 
+#include "config/full_system.hh"
 #include "config/use_checker.hh"
-#include "cpu/base.hh"
-#include "cpu/o3/mips/cpu.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/mips/impl.hh"
-#include "cpu/o3/fu_pool.hh"
 #include "params/DerivO3CPU.hh"
 
-class DerivO3CPU : public MipsO3CPU<MipsSimpleImpl>
+class DerivO3CPU : public FullO3CPU<MipsSimpleImpl>
 {
   public:
     DerivO3CPU(DerivO3CPUParams *p)
-        : MipsO3CPU<MipsSimpleImpl>(p)
+        : FullO3CPU<MipsSimpleImpl>(p)
     { }
 };
 

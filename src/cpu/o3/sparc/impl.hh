@@ -41,7 +41,7 @@ template <class Impl>
 class SparcDynInst;
 
 template <class Impl>
-class SparcO3CPU;
+class FullO3CPU;
 
 /** Implementation specific struct that defines several key types to the
  *  CPU, the stages within the CPU, the time buffers, and the DynInst.
@@ -68,7 +68,7 @@ struct SparcSimpleImpl
     typedef RefCountingPtr<DynInst> DynInstPtr;
 
     /** The O3CPU type to be used. */
-    typedef SparcO3CPU<SparcSimpleImpl> O3CPU;
+    typedef FullO3CPU<SparcSimpleImpl> O3CPU;
 
     /** Same typedef, but for CPUType.  BaseDynInst may not always use
      * an O3 CPU, so it's clearer to call it CPUType instead in that
