@@ -46,7 +46,8 @@ class range_map
     typedef typename RangeMap::iterator iterator;
 
     template <class U>
-    const iterator find(const Range<U> &r)
+    const iterator
+    find(const Range<U> &r)
     {
         iterator i;
 
@@ -69,7 +70,8 @@ class range_map
     }
 
     template <class U>
-    bool intersect(const Range<U> &r)
+    bool
+    intersect(const Range<U> &r)
     {
         iterator i;
         i = find(r);
@@ -80,7 +82,8 @@ class range_map
 
 
     template <class U,class W>
-    iterator insert(const Range<U> &r, const W d)
+    iterator
+    insert(const Range<U> &r, const W d)
     {
         if (intersect(r))
             return tree.end();
@@ -88,42 +91,50 @@ class range_map
         return tree.insert(std::make_pair<Range<T>,V>(r, d)).first;
     }
 
-    size_t erase(T k)
+    size_t
+    erase(T k)
     {
         return tree.erase(k);
     }
 
-    void erase(iterator p)
+    void
+    erase(iterator p)
     {
         tree.erase(p);
     }
 
-    void erase(iterator p, iterator q)
+    void
+    erase(iterator p, iterator q)
     {
         tree.erase(p,q);
     }
 
-    void clear()
+    void
+    clear()
     {
         tree.erase(tree.begin(), tree.end());
     }
 
-    iterator begin()
+    iterator
+    begin()
     {
         return tree.begin();
     }
 
-    iterator end()
+    iterator
+    end()
     {
         return tree.end();
     }
 
-    size_t size()
+    size_t
+    size()
     {
         return tree.size();
     }
 
-    bool empty()
+    bool
+    empty()
     {
         return tree.empty();
     }
@@ -180,7 +191,8 @@ class range_multimap
     }
 
     template <class U>
-    bool intersect(const Range<U> &r)
+    bool
+    intersect(const Range<U> &r)
     {
         std::pair<iterator,iterator> p;
         p = find(r);
@@ -191,7 +203,8 @@ class range_multimap
 
 
     template <class U,class W>
-    iterator insert(const Range<U> &r, const W d)
+    iterator
+    insert(const Range<U> &r, const W d)
     {
         std::pair<iterator,iterator> p;
         p = find(r);
@@ -202,42 +215,50 @@ class range_multimap
             return tree.end();
     }
 
-    size_t erase(T k)
+    size_t
+    erase(T k)
     {
         return tree.erase(k);
     }
 
-    void erase(iterator p)
+    void
+    erase(iterator p)
     {
         tree.erase(p);
     }
 
-    void erase(iterator p, iterator q)
+    void
+    erase(iterator p, iterator q)
     {
         tree.erase(p,q);
     }
 
-    void clear()
+    void
+    clear()
     {
         tree.erase(tree.begin(), tree.end());
     }
 
-    iterator begin()
+    iterator
+    begin()
     {
         return tree.begin();
     }
 
-    iterator end()
+    iterator
+    end()
     {
         return tree.end();
     }
 
-    size_t size()
+    size_t
+    size()
     {
         return tree.size();
     }
 
-    bool empty()
+    bool
+    empty()
     {
         return tree.empty();
     }
