@@ -934,21 +934,26 @@ envList = []
 # Object nodes (including an extra one for date.cc).  We explicitly
 # add the Object nodes so we can set up special dependencies for
 # date.cc.
-def make_objs(sources, env):
-    objs = [env.Object(s) for s in sources]
+def make_objs(sources, env, static):
+    if static:
+        XObject = env.StaticObject
+    else:
+        XObject = env.SharedObject
+
+    objs = [ XObject(s) for s in sources ]
   
     # make date.cc depend on all other objects so it always gets
     # recompiled whenever anything else does
-    date_obj = env.Object('base/date.cc')
+    date_obj = XObject('base/date.cc')
 
     # Make the generation of program_info.cc dependend on all 
     # the other cc files and the compiling of program_info.cc 
     # dependent on all the objects but program_info.o 
-    pinfo_obj = env.Object('base/program_info.cc')
+    pinfo_obj = XObject('base/program_info.cc')
     env.Depends('base/program_info.cc', sources)
     env.Depends(date_obj, objs)
     env.Depends(pinfo_obj, objs)
-    objs.extend([date_obj,pinfo_obj])
+    objs.extend([date_obj, pinfo_obj])
     return objs
 
 # Function to create a new build environment as clone of current
@@ -956,46 +961,50 @@ def make_objs(sources, env):
 # binary.  Additional keyword arguments are appended to corresponding
 # build environment vars.
 def makeEnv(label, objsfx, strip = False, **kwargs):
-    newEnv = env.Copy(OBJSUFFIX=objsfx)
-    newEnv.Label = label
-    newEnv.Append(**kwargs)
+    # SCons doesn't know to append a library suffix when there is a '.' in the
+    # name.  Use '_' instead.
+    libname = 'm5_' + label
+    exename = 'm5.' + label
 
-    swig_env = newEnv.Copy()
+    new_env = env.Copy(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
+    new_env.Label = label
+    new_env.Append(**kwargs)
+
+    swig_env = new_env.Copy()
     if env['GCC']:
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
-    swig_objs = [ swig_env.Object(s) for s in cc_swig_sources ]
+
+    static_objs = make_objs(cc_lib_sources, new_env, static=True)
+    shared_objs = make_objs(cc_lib_sources, new_env, static=False)
+    static_objs += [ swig_env.StaticObject(s) for s in cc_swig_sources ]
+    shared_objs += [ swig_env.SharedObject(s) for s in cc_swig_sources ]
 
     # First make a library of everything but main() so other programs can
     # link against m5.
-    #
-    # SCons doesn't know to append a library suffix when there is a '.' in the
-    # name.  Use '_' instead.
-
-    m5lib = newEnv.Library('m5_' + label,
-        make_objs(cc_lib_sources, newEnv) + swig_objs)
+    static_lib = new_env.StaticLibrary(libname, static_objs + static_objs)
+    shared_lib = new_env.SharedLibrary(libname, shared_objs + shared_objs)
 
     for target, sources in unit_tests:
-        objs = [ newEnv.StaticObject(s) for s in sources ]
-        newEnv.Program("unittest/%s.%s" % (target, label), objs + m5lib)
+        objs = [ new_env.StaticObject(s) for s in sources ]
+        new_env.Program("unittest/%s.%s" % (target, label), objs + static_lib)
 
-    # Now link a stub with main() and the library.
-    exe = 'm5.' + label  # final executable
-    objects = [newEnv.Object(s) for s in cc_bin_sources] + m5lib
+    # Now link a stub with main() and the static library.
+    objects = [new_env.Object(s) for s in cc_bin_sources] + static_lib
     if strip:
-        unstripped_exe = exe + '.unstripped'
-        newEnv.Program(unstripped_exe, objects)
+        unstripped_exe = exename + '.unstripped'
+        new_env.Program(unstripped_exe, objects)
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
             cmd = 'strip $SOURCE -o $TARGET'
-        targets = newEnv.Command(exe, unstripped_exe, cmd)
+        targets = new_env.Command(exename, unstripped_exe, cmd)
     else:
-        targets = newEnv.Program(exe, objects)
+        targets = new_env.Program(exename, objects)
             
-    newEnv.M5Binary = targets[0]
-    envList.append(newEnv)
+    new_env.M5Binary = targets[0]
+    envList.append(new_env)
 
 # Debug binary
 ccflags = {}

@@ -110,7 +110,10 @@ m4env.M4(target=File('libelf_fsize.c'),
          source=[File('elf_types.m4'), File('libelf_fsize.m4')])
 m4env.M4(target=File('libelf_msize.c'),
          source=[File('elf_types.m4'), File('libelf_msize.m4')])
-m4env.Library('elf', elf_files)
+
+# Build libelf as a static library with PIC code so it can be linked
+# into either m5 or the library
+m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 
 env.Append(CPPPATH=Dir('.'))
 env.Append(LIBS=['elf'])

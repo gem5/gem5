@@ -200,3 +200,10 @@ m5Main(int argc, char **argv)
 
     return 0;
 }
+
+PyMODINIT_FUNC
+initm5(void)
+{
+    initM5Python();
+    PyImport_ImportModule(PyCC("m5"));
+}
