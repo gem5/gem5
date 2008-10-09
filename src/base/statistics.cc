@@ -117,8 +117,8 @@ StatData::less(StatData *stat1, StatData *stat2)
     tokenize(v1, name1, '.');
     tokenize(v2, name2, '.');
 
-    int last = min(v1.size(), v2.size()) - 1;
-    for (int i = 0; i < last; ++i)
+    size_type last = min(v1.size(), v2.size()) - 1;
+    for (off_type i = 0; i < last; ++i)
         if (v1[i] != v2[i])
             return v1[i] < v2[i];
 
@@ -164,7 +164,7 @@ FormulaBase::total() const
     return root ? root->total() : 0.0;
 }
 
-size_t
+size_type
 FormulaBase::size() const
 {
     if (!root)
@@ -183,7 +183,7 @@ FormulaBase::zero() const
 {
     VResult vec;
     result(vec);
-    for (int i = 0; i < vec.size(); ++i)
+    for (off_t i = 0; i < vec.size(); ++i)
         if (vec[i] != 0.0)
             return false;
     return true;
@@ -244,7 +244,7 @@ check()
             panic("stat check failed for %s\n", data->name);
     }
 
-    int j = 0;
+    off_t j = 0;
     for (i = Database::stats().begin(); i != end; ++i) {
         StatData *data = *i;
         if (!(data->flags & print))

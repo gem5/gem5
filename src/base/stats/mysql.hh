@@ -69,9 +69,9 @@ class InsertData
 {
   private:
     char *query;
-    int size;
+    size_type size;
     bool first;
-    static const int maxsize = 1024*1024;
+    static const size_type maxsize = 1024*1024;
 
   public:
     MySqlRun *run;
@@ -95,9 +95,9 @@ class InsertEvent
 {
   private:
     char *query;
-    int size;
+    size_type size;
     bool first;
-    static const int maxsize = 1024*1024;
+    static const size_type maxsize = 1024*1024;
 
     typedef std::map<std::string, uint32_t> event_map_t;
     event_map_t events;

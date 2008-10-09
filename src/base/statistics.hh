@@ -173,7 +173,7 @@ struct VectorData : public StatData
     mutable std::vector<std::string> subnames;
     mutable std::vector<std::string> subdescs;
 
-    virtual size_t size() const  = 0;
+    virtual size_type size() const  = 0;
     virtual const VCounter &value() const = 0;
     virtual const VResult &result() const = 0;
     virtual Result total() const  = 0;
@@ -182,7 +182,7 @@ struct VectorData : public StatData
     update()
     {
         if (!subnames.empty()) {
-            int s = size();
+            size_type s = size();
             if (subnames.size() < s)
                 subnames.resize(s);
 
@@ -207,7 +207,7 @@ class VectorStatData : public VectorData
     virtual bool zero() const { return s.zero(); }
     virtual void reset() { s.reset(); }
 
-    virtual size_t size() const { return s.size(); }
+    virtual size_type size() const { return s.size(); }
 
     virtual VCounter &
     value() const
@@ -248,7 +248,7 @@ struct DistDataData
     Counter min;
     Counter max;
     Counter bucket_size;
-    int size;
+    size_type size;
     bool fancy;
 };
 
@@ -290,12 +290,12 @@ struct VectorDistData : public StatData
     /** Local storage for the entry values, used for printing. */
     mutable VResult rvec;
 
-    virtual size_t size() const = 0;
+    virtual size_type size() const = 0;
 
     void
     update()
     {
-        int s = size();
+        size_type s = size();
         if (subnames.size() < s)
             subnames.resize(s);
 
@@ -315,7 +315,7 @@ class VectorDistStatData : public VectorDistData
 
     virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
-    virtual size_t size() const { return s.size(); }
+    virtual size_type size() const { return s.size(); }
     virtual bool zero() const { return s.zero(); }
 
     virtual void
@@ -336,8 +336,8 @@ struct Vector2dData : public StatData
 
     /** Local storage for the entry values, used for printing. */
     mutable VCounter cvec;
-    mutable int x;
-    mutable int y;
+    mutable size_type x;
+    mutable size_type y;
 
     void
     update()
@@ -506,7 +506,7 @@ class WrapVec : public Wrap<Parent, Child, Data>
      * @return A reference to this stat.
      */
     Parent &
-    subname(int index, const std::string &name)
+    subname(off_type index, const std::string &name)
     {
         std::vector<std::string> &subn = this->statData()->subnames;
         if (subn.size() <= index)
@@ -523,7 +523,7 @@ class WrapVec : public Wrap<Parent, Child, Data>
      * @return A reference to this stat.
      */
     Parent &
-    subdesc(int index, const std::string &desc)
+    subdesc(off_type index, const std::string &desc)
     {
         std::vector<std::string> &subd = this->statData()->subdescs;
         if (subd.size() <= index)
@@ -548,13 +548,13 @@ class WrapVec2d : public WrapVec<Parent, Child, Data>
     {
         Data<Child> *data = this->statData();
         data->y_subnames.resize(this->y);
-        for (int i = 0; i < this->y; ++i)
+        for (off_type i = 0; i < this->y; ++i)
             data->y_subnames[i] = names[i];
         return this->self();
     }
 
     Parent &
-    ysubname(int index, const std::string subname)
+    ysubname(off_type index, const std::string subname)
     {
         Data<Child> *data = this->statData();
         assert(index < this->y);
@@ -832,7 +832,7 @@ class ScalarBase : public DataAccess
      * Return the number of elements, always 1 for a scalar.
      * @return 1.
      */
-    size_t size() const { return 1; }
+    size_type size() const { return 1; }
 
     bool check() const { return true; }
 
@@ -856,7 +856,7 @@ class ProxyData : public ScalarData
   public:
     virtual void visit(Visit &visitor) { visitor.visit(*this); }
     virtual std::string str() const { return to_string(value()); }
-    virtual size_t size() const { return 1; }
+    virtual size_type size() const { return 1; }
     virtual bool zero() const { return value() == 0; }
     virtual bool check() const { return true; }
     virtual void reset() { }
@@ -916,7 +916,7 @@ class ValueBase : public DataAccess
     Counter value() { return proxy->value(); }
     Result result() const { return proxy->result(); }
     Result total() const { return proxy->total(); };
-    size_t size() const { return proxy->size(); }
+    size_type size() const { return proxy->size(); }
 
     std::string str() const { return proxy->str(); }
     bool zero() const { return proxy->zero(); }
@@ -942,7 +942,7 @@ class ScalarProxy
     Stat *stat;
 
     /** The index to access in the parent VectorBase. */
-    int index;
+    off_type index;
 
   public:
     /**
@@ -963,7 +963,7 @@ class ScalarProxy
      * @param p The params to use.
      * @param i The index to access.
      */
-    ScalarProxy(Stat *s, int i)
+    ScalarProxy(Stat *s, off_type i)
         : stat(s), index(i)
     {
         assert(stat);
@@ -1047,7 +1047,7 @@ class ScalarProxy
      * Return the number of elements, always 1 for a scalar.
      * @return 1.
      */
-    size_t size() const { return 1; }
+    size_type size() const { return 1; }
 
     /**
      * This stat has no state.  Nothing to reset
@@ -1083,7 +1083,7 @@ class VectorBase : public DataAccess
   protected:
     /** The storage of this stat. */
     Storage *storage;
-    size_t _size;
+    size_type _size;
 
     /** The parameters for this stat. */
     Params params;
@@ -1094,17 +1094,17 @@ class VectorBase : public DataAccess
      * @param index The vector index to access.
      * @return The storage object at the given index.
      */
-    Storage *data(int index) { return &storage[index]; }
+    Storage *data(off_type index) { return &storage[index]; }
 
     /**
      * Retrieve a const pointer to the storage.
      * @param index The vector index to access.
      * @return A const pointer to the storage object at the given index.
      */
-    const Storage *data(int index) const { return &storage[index]; }
+    const Storage *data(off_type index) const { return &storage[index]; }
 
     void
-    doInit(int s)
+    doInit(size_type s)
     {
         assert(s > 0 && "size must be positive!");
         assert(!storage && "already initialized");
@@ -1113,7 +1113,7 @@ class VectorBase : public DataAccess
         char *ptr = new char[_size * sizeof(Storage)];
         storage = reinterpret_cast<Storage *>(ptr);
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             new (&storage[i]) Storage(params);
 
         setInit();
@@ -1124,7 +1124,7 @@ class VectorBase : public DataAccess
     value(VCounter &vec) const
     {
         vec.resize(size());
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             vec[i] = data(i)->value(params);
     }
 
@@ -1136,7 +1136,7 @@ class VectorBase : public DataAccess
     result(VResult &vec) const
     {
         vec.resize(size());
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             vec[i] = data(i)->result(params);
     }
 
@@ -1148,7 +1148,7 @@ class VectorBase : public DataAccess
     total() const
     {
         Result total = 0.0;
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             total += data(i)->result(params);
         return total;
     }
@@ -1156,12 +1156,12 @@ class VectorBase : public DataAccess
     /**
      * @return the number of elements in this vector.
      */
-    size_t size() const { return _size; }
+    size_type size() const { return _size; }
 
     bool
     zero() const
     {
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             if (data(i)->zero())
                 return false;
         return true;
@@ -1176,7 +1176,7 @@ class VectorBase : public DataAccess
     void
     reset()
     {
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             data(i)->reset();
     }
 
@@ -1190,7 +1190,7 @@ class VectorBase : public DataAccess
         if (!storage)
             return;
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             data(i)->~Storage();
         delete [] reinterpret_cast<char *>(storage);
     }
@@ -1201,7 +1201,7 @@ class VectorBase : public DataAccess
      * @return A reference of the stat.
      */
     Proxy
-    operator[](int index)
+    operator[](off_type index)
     {
         assert (index >= 0 && index < size());
         return Proxy(this, index);
@@ -1215,21 +1215,21 @@ class VectorProxy
 {
   private:
     Stat *stat;
-    int offset;
-    int len;
+    off_type offset;
+    size_type len;
 
   private:
     mutable VResult vec;
 
     typename Stat::Storage *
-    data(int index)
+    data(off_type index)
     {
         assert(index < len);
         return stat->data(offset + index);
     }
 
     const typename Stat::Storage *
-    data(int index) const
+    data(off_type index) const
     {
         assert(index < len);
         return const_cast<Stat *>(stat)->data(offset + index);
@@ -1241,7 +1241,7 @@ class VectorProxy
     {
         vec.resize(size());
 
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             vec[i] = data(i)->result(stat->params);
 
         return vec;
@@ -1251,13 +1251,13 @@ class VectorProxy
     total() const
     {
         Result total = 0;
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             total += data(i)->result(stat->params);
         return total;
     }
 
   public:
-    VectorProxy(Stat *s, int o, int l)
+    VectorProxy(Stat *s, off_type o, size_type l)
         : stat(s), offset(o), len(l)
     {
     }
@@ -1277,13 +1277,13 @@ class VectorProxy
     }
 
     ScalarProxy<Stat>
-    operator[](int index)
+    operator[](off_type index)
     {
         assert (index >= 0 && index < size());
         return ScalarProxy<Stat>(stat, offset + index);
     }
 
-    size_t size() const { return len; }
+    size_type size() const { return len; }
 
     /**
      * This stat has no state.  Nothing to reset.
@@ -1302,18 +1302,18 @@ class Vector2dBase : public DataAccess
     friend class VectorProxy<Vector2dBase<Storage> >;
 
   protected:
-    size_t x;
-    size_t y;
-    size_t _size;
+    size_type x;
+    size_type y;
+    size_type _size;
     Storage *storage;
     Params params;
 
   protected:
-    Storage *data(int index) { return &storage[index]; }
-    const Storage *data(int index) const { return &storage[index]; }
+    Storage *data(off_type index) { return &storage[index]; }
+    const Storage *data(off_type index) const { return &storage[index]; }
 
     void
-    doInit(int _x, int _y)
+    doInit(size_type _x, size_type _y)
     {
         assert(_x > 0 && _y > 0 && "sizes must be positive!");
         assert(!storage && "already initialized");
@@ -1329,7 +1329,7 @@ class Vector2dBase : public DataAccess
         char *ptr = new char[_size * sizeof(Storage)];
         storage = reinterpret_cast<Storage *>(ptr);
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             new (&storage[i]) Storage(params);
 
         setInit();
@@ -1345,7 +1345,7 @@ class Vector2dBase : public DataAccess
         if (!storage)
             return;
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             data(i)->~Storage();
         delete [] reinterpret_cast<char *>(storage);
     }
@@ -1353,24 +1353,24 @@ class Vector2dBase : public DataAccess
     void
     update(Vector2dData *newdata)
     {
-        int size = this->size();
+        size_type size = this->size();
         newdata->cvec.resize(size);
-        for (int i = 0; i < size; ++i)
+        for (off_type i = 0; i < size; ++i)
             newdata->cvec[i] = data(i)->value(params);
     }
 
-    std::string ysubname(int i) const { return (*this->y_subnames)[i]; }
+    std::string ysubname(off_type i) const { return (*this->y_subnames)[i]; }
 
     Proxy
-    operator[](int index)
+    operator[](off_type index)
     {
-        int offset = index * y;
+        off_type offset = index * y;
         assert (index >= 0 && offset + index < size());
         return Proxy(this, offset, y);
     }
 
 
-    size_t
+    size_type
     size() const
     {
         return _size;
@@ -1381,7 +1381,7 @@ class Vector2dBase : public DataAccess
     {
         return data(0)->zero();
 #if 0
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             if (!data(i)->zero())
                 return false;
         return true;
@@ -1394,7 +1394,7 @@ class Vector2dBase : public DataAccess
     void
     reset()
     {
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             data(i)->reset();
     }
 
@@ -1427,7 +1427,7 @@ struct DistStor
         /** The number of entries in each bucket. */
         Counter bucket_size;
         /** The number of buckets. Equal to (max-min)/bucket_size. */
-        int size;
+        size_type size;
     };
     enum { fancy = false };
 
@@ -1470,7 +1470,8 @@ struct DistStor
         else if (val > params.max)
             overflow += number;
         else {
-            size_t index = std::floor((val - params.min) / params.bucket_size);
+            size_type index =
+                (size_type)std::floor((val - params.min) / params.bucket_size);
             assert(index < size(params));
             cvec[index] += number;
         }
@@ -1492,7 +1493,7 @@ struct DistStor
      * @return the number of buckets.
      * @todo Is it faster to return the size from the parameters?
      */
-    size_t size(const Params &) const { return cvec.size(); }
+    size_type size(const Params &) const { return cvec.size(); }
 
     /**
      * Returns true if any calls to sample have been made.
@@ -1518,7 +1519,7 @@ struct DistStor
         data->underflow = underflow;
         data->overflow = overflow;
         data->cvec.resize(params.size);
-        for (int i = 0; i < params.size; ++i)
+        for (off_type i = 0; i < params.size; ++i)
             data->cvec[i] = cvec[i];
 
         data->sum = sum;
@@ -1537,8 +1538,8 @@ struct DistStor
         underflow = 0;
         overflow = 0;
 
-        int size = cvec.size();
-        for (int i = 0; i < size; ++i)
+        size_type size = cvec.size();
+        for (off_type i = 0; i < size; ++i)
             cvec[i] = Counter();
 
         sum = Counter();
@@ -1605,7 +1606,7 @@ struct FancyStor
      * Return the number of entries in this stat, 1
      * @return 1.
      */
-    size_t size(const Params &) const { return 1; }
+    size_type size(const Params &) const { return 1; }
 
     /**
      * Return true if no samples have been added.
@@ -1675,7 +1676,7 @@ struct AvgFancy
      * Return the number of entries, in this case 1.
      * @return 1.
      */
-    size_t size(const Params &params) const { return 1; }
+    size_type size(const Params &params) const { return 1; }
 
     /**
      * Return true if no samples have been added.
@@ -1757,7 +1758,7 @@ class DistBase : public DataAccess
      * Return the number of entries in this stat.
      * @return The number of entries.
      */
-    size_t size() const { return data()->size(params); }
+    size_type size() const { return data()->size(params); }
     /**
      * Return true if no samples have been added.
      * @return True if there haven't been any samples.
@@ -1801,24 +1802,24 @@ class VectorDistBase : public DataAccess
 
   protected:
     Storage *storage;
-    size_t _size;
+    size_type _size;
     Params params;
 
   protected:
     Storage *
-    data(int index)
+    data(off_type index)
     {
         return &storage[index];
     }
 
     const Storage *
-    data(int index) const
+    data(off_type index) const
     {
         return &storage[index];
     }
 
     void
-    doInit(int s)
+    doInit(size_type s)
     {
         assert(s > 0 && "size must be positive!");
         assert(!storage && "already initialized");
@@ -1827,7 +1828,7 @@ class VectorDistBase : public DataAccess
         char *ptr = new char[_size * sizeof(Storage)];
         storage = reinterpret_cast<Storage *>(ptr);
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             new (&storage[i]) Storage(params);
 
         setInit();
@@ -1843,14 +1844,14 @@ class VectorDistBase : public DataAccess
         if (!storage)
             return ;
 
-        for (int i = 0; i < _size; ++i)
+        for (off_type i = 0; i < _size; ++i)
             data(i)->~Storage();
         delete [] reinterpret_cast<char *>(storage);
     }
 
-    Proxy operator[](int index);
+    Proxy operator[](off_type index);
 
-    size_t
+    size_type
     size() const
     {
         return _size;
@@ -1861,7 +1862,7 @@ class VectorDistBase : public DataAccess
     {
         return false;
 #if 0
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             if (!data(i)->zero(params))
                 return false;
         return true;
@@ -1874,7 +1875,7 @@ class VectorDistBase : public DataAccess
     void
     reset()
     {
-        for (int i = 0; i < size(); ++i)
+        for (off_type i = 0; i < size(); ++i)
             data(i)->reset();
     }
 
@@ -1887,9 +1888,9 @@ class VectorDistBase : public DataAccess
     void
     update(VectorDistData *base)
     {
-        int size = this->size();
+        size_type size = this->size();
         base->data.resize(size);
-        for (int i = 0; i < size; ++i) {
+        for (off_type i = 0; i < size; ++i) {
             base->data[i].fancy = Storage::fancy;
             data(i)->update(&(base->data[i]), params);
         }
@@ -1901,14 +1902,14 @@ class DistProxy
 {
   private:
     Stat *stat;
-    int index;
+    off_type index;
 
   protected:
     typename Stat::Storage *data() { return stat->data(index); }
     const typename Stat::Storage *data() const { return stat->data(index); }
 
   public:
-    DistProxy(Stat *s, int i)
+    DistProxy(Stat *s, off_type i)
         : stat(s), index(i)
     {}
 
@@ -1932,7 +1933,7 @@ class DistProxy
         data()->sample(v, n, stat->params);
     }
 
-    size_t
+    size_type
     size() const
     {
         return 1;
@@ -1952,7 +1953,7 @@ class DistProxy
 
 template <class Storage>
 inline typename VectorDistBase<Storage>::Proxy
-VectorDistBase<Storage>::operator[](int index)
+VectorDistBase<Storage>::operator[](off_type index)
 {
     assert (index >= 0 && index < size());
     return typename VectorDistBase<Storage>::Proxy(this, index);
@@ -1961,10 +1962,10 @@ VectorDistBase<Storage>::operator[](int index)
 #if 0
 template <class Storage>
 Result
-VectorDistBase<Storage>::total(int index) const
+VectorDistBase<Storage>::total(off_type index) const
 {
-    int total = 0;
-    for (int i = 0; i < x_size(); ++i)
+    Result total = 0;
+    for (off_type i = 0; i < x_size(); ++i)
         total += data(i)->result(stat->params);
 }
 #endif
@@ -1986,7 +1987,7 @@ class Node : public RefCounted
      * Return the number of nodes in the subtree starting at this node.
      * @return the number of nodes in this subtree.
      */
-    virtual size_t size() const = 0;
+    virtual size_type size() const = 0;
     /**
      * Return the result vector of this subtree.
      * @return The result vector of this subtree.
@@ -2025,7 +2026,7 @@ class ScalarStatNode : public Node
 
     virtual Result total() const { return data->result(); };
 
-    virtual size_t size() const { return 1; }
+    virtual size_type size() const { return 1; }
 
     /**
      *
@@ -2058,7 +2059,7 @@ class ScalarProxyNode : public Node
         return proxy.result();
     }
 
-    virtual size_t
+    virtual size_type
     size() const
     {
         return 1;
@@ -2084,7 +2085,7 @@ class VectorStatNode : public Node
     virtual const VResult &result() const { return data->result(); }
     virtual Result total() const { return data->total(); };
 
-    virtual size_t size() const { return data->size(); }
+    virtual size_type size() const { return data->size(); }
 
     virtual std::string str() const { return data->name; }
 };
@@ -2099,7 +2100,7 @@ class ConstNode : public Node
     ConstNode(T s) : vresult(1, (Result)s) {}
     const VResult &result() const { return vresult; }
     virtual Result total() const { return vresult[0]; };
-    virtual size_t size() const { return 1; }
+    virtual size_type size() const { return 1; }
     virtual std::string str() const { return to_string(vresult[0]); }
 };
 
@@ -2116,20 +2117,20 @@ class ConstVectorNode : public Node
     virtual Result
     total() const
     {
-        int size = this->size();
+        size_type size = this->size();
         Result tmp = 0;
-        for (int i = 0; i < size; i++)
+        for (off_type i = 0; i < size; i++)
             tmp += vresult[i];
         return tmp;
     }
 
-    virtual size_t size() const { return vresult.size(); }
+    virtual size_type size() const { return vresult.size(); }
     virtual std::string
     str() const
     {
-        int size = this->size();
+        size_type size = this->size();
         std::string tmp = "(";
-        for (int i = 0; i < size; i++)
+        for (off_type i = 0; i < size; i++)
             tmp += csprintf("%s ",to_string(vresult[i]));
         tmp += ")";
         return tmp;
@@ -2189,13 +2190,13 @@ class UnaryNode : public Node
     result() const
     {
         const VResult &lvec = l->result();
-        int size = lvec.size();
+        size_type size = lvec.size();
 
         assert(size > 0);
 
         vresult.resize(size);
         Op op;
-        for (int i = 0; i < size; ++i)
+        for (off_type i = 0; i < size; ++i)
             vresult[i] = op(lvec[i]);
 
         return vresult;
@@ -2206,12 +2207,12 @@ class UnaryNode : public Node
     {
         const VResult &vec = this->result();
         Result total = 0;
-        for (int i = 0; i < size(); i++)
+        for (off_type i = 0; i < size(); i++)
             total += vec[i];
         return total;
     }
 
-    virtual size_t size() const { return l->size(); }
+    virtual size_type size() const { return l->size(); }
 
     virtual std::string
     str() const
@@ -2244,19 +2245,19 @@ class BinaryNode : public Node
             vresult.resize(1);
             vresult[0] = op(lvec[0], rvec[0]);
         } else if (lvec.size() == 1) {
-            int size = rvec.size();
+            size_type size = rvec.size();
             vresult.resize(size);
-            for (int i = 0; i < size; ++i)
+            for (off_type i = 0; i < size; ++i)
                 vresult[i] = op(lvec[0], rvec[i]);
         } else if (rvec.size() == 1) {
-            int size = lvec.size();
+            size_type size = lvec.size();
             vresult.resize(size);
-            for (int i = 0; i < size; ++i)
+            for (off_type i = 0; i < size; ++i)
                 vresult[i] = op(lvec[i], rvec[0]);
         } else if (rvec.size() == lvec.size()) {
-            int size = rvec.size();
+            size_type size = rvec.size();
             vresult.resize(size);
-            for (int i = 0; i < size; ++i)
+            for (off_type i = 0; i < size; ++i)
                 vresult[i] = op(lvec[i], rvec[i]);
         }
 
@@ -2268,16 +2269,16 @@ class BinaryNode : public Node
     {
         const VResult &vec = this->result();
         Result total = 0;
-        for (int i = 0; i < size(); i++)
+        for (off_type i = 0; i < size(); i++)
             total += vec[i];
         return total;
     }
 
-    virtual size_t
+    virtual size_type
     size() const
     {
-        int ls = l->size();
-        int rs = r->size();
+        size_type ls = l->size();
+        size_type rs = r->size();
         if (ls == 1) {
             return rs;
         } else if (rs == 1) {
@@ -2309,13 +2310,13 @@ class SumNode : public Node
     result() const
     {
         const VResult &lvec = l->result();
-        int size = lvec.size();
+        size_type size = lvec.size();
         assert(size > 0);
 
         vresult[0] = 0.0;
 
         Op op;
-        for (int i = 0; i < size; ++i)
+        for (off_type i = 0; i < size; ++i)
             vresult[0] = op(vresult[0], lvec[i]);
 
         return vresult;
@@ -2325,19 +2326,19 @@ class SumNode : public Node
     total() const
     {
         const VResult &lvec = l->result();
-        int size = lvec.size();
+        size_type size = lvec.size();
         assert(size > 0);
 
         Result vresult = 0.0;
 
         Op op;
-        for (int i = 0; i < size; ++i)
+        for (off_type i = 0; i < size; ++i)
             vresult = op(vresult, lvec[i]);
 
         return vresult;
     }
 
-    virtual size_t size() const { return 1; }
+    virtual size_type size() const { return 1; }
 
     virtual std::string
     str() const
@@ -2452,7 +2453,7 @@ class Vector : public WrapVec<Vector<N>, VectorBase<StatStor>, VectorStatData>
      * @return A reference to this stat.
      */
     Vector &
-    init(size_t size)
+    init(size_type size)
     {
         this->doInit(size);
         return *this;
@@ -2474,7 +2475,7 @@ class AverageVector
      * @return A reference to this stat.
      */
     AverageVector &
-    init(size_t size)
+    init(size_type size)
     {
         this->doInit(size);
         return *this;
@@ -2491,7 +2492,7 @@ class Vector2d
 {
   public:
     Vector2d &
-    init(size_t x, size_t y)
+    init(size_type x, size_type y)
     {
         this->doInit(x, y);
         return *this;
@@ -2526,7 +2527,7 @@ class Distribution
         this->params.min = min;
         this->params.max = max;
         this->params.bucket_size = bkt;
-        this->params.size = (int)rint((max - min) / bkt + 1.0);
+        this->params.size = (size_type)rint((max - min) / bkt + 1.0);
         this->doInit();
         return *this;
     }
@@ -2606,12 +2607,12 @@ class VectorDistribution
      * @return A reference to this distribution.
      */
     VectorDistribution &
-    init(int size, Counter min, Counter max, Counter bkt)
+    init(size_type size, Counter min, Counter max, Counter bkt)
     {
         this->params.min = min;
         this->params.max = max;
         this->params.bucket_size = bkt;
-        this->params.size = (int)rint((max - min) / bkt + 1.0);
+        this->params.size = rint((max - min) / bkt + 1.0);
         this->doInit(size);
         return *this;
     }
@@ -2640,7 +2641,7 @@ class VectorStandardDeviation
      * @return A reference to this distribution.
      */
     VectorStandardDeviation &
-    init(int size)
+    init(size_type size)
     {
         this->doInit(size);
         return *this;
@@ -2670,7 +2671,7 @@ class VectorAverageDeviation
      * @return A reference to this distribution.
      */
     VectorAverageDeviation &
-    init(int size)
+    init(size_type size)
     {
         this->doInit(size);
         return *this;
@@ -2714,7 +2715,7 @@ class FormulaBase : public DataAccess
     /**
      * Return the number of elements in the tree.
      */
-    size_t size() const;
+    size_type size() const;
 
     bool check() const { return true; }
 
@@ -2757,7 +2758,7 @@ class FormulaStatData : public FormulaData
     virtual bool zero() const { return s.zero(); }
     virtual void reset() { s.reset(); }
 
-    virtual size_t size() const { return s.size(); }
+    virtual size_type size() const { return s.size(); }
 
     virtual const VResult &
     result() const
@@ -2822,7 +2823,7 @@ class FormulaNode : public Node
   public:
     FormulaNode(const Formula &f) : formula(f) {}
 
-    virtual size_t size() const { return formula.size(); }
+    virtual size_type size() const { return formula.size(); }
     virtual const VResult &result() const { formula.result(vec); return vec; }
     virtual Result total() const { return formula.total(); }
 

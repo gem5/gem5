@@ -568,7 +568,7 @@ MySql::configure(const VectorData &data)
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = 0;
-        for (int i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < data.subnames.size(); ++i) {
             subdata.x = i;
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
@@ -615,7 +615,7 @@ MySql::configure(const VectorDistData &data)
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = 0;
-        for (int i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < data.subnames.size(); ++i) {
             subdata.x = i;
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
@@ -639,7 +639,7 @@ MySql::configure(const Vector2dData &data)
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = -1;
-        for (int i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < data.subnames.size(); ++i) {
             subdata.x = i;
             subdata.name = data.subnames[i];
             subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
@@ -653,7 +653,7 @@ MySql::configure(const Vector2dData &data)
         subdata.stat = statid;
         subdata.x = -1;
         subdata.descr = "";
-        for (int i = 0; i < data.y_subnames.size(); ++i) {
+        for (off_type i = 0; i < data.y_subnames.size(); ++i) {
             subdata.y = i;
             subdata.name = data.y_subnames[i];
             if (!subdata.name.empty())
@@ -760,8 +760,8 @@ MySql::output(const VectorData &data)
     newdata.y = 0;
 
     const VCounter &cvec = data.value();
-    int size = data.size();
-    for (int x = 0; x < size; x++) {
+    size_type size = data.size();
+    for (off_type x = 0; x < size; x++) {
         newdata.x = x;
         newdata.data = cvec[x];
         newdata.insert();
@@ -808,8 +808,8 @@ MySql::output(const DistDataData &data)
         newdata.data = data.overflow;
         newdata.insert();
 
-        int size = data.cvec.size();
-        for (int x = 0; x < size; x++) {
+        size_type size = data.cvec.size();
+        for (off_type x = 0; x < size; x++) {
             newdata.x = x;
             newdata.data = data.cvec[x];
             newdata.insert();
@@ -837,8 +837,8 @@ MySql::output(const VectorDistData &data)
 
     newdata.stat = find(data.id);
 
-    int size = data.data.size();
-    for (int y = 0; y < size; ++y) {
+    size_type size = data.data.size();
+    for (off_type y = 0; y < size; ++y) {
         newdata.y = y;
         output(data.data[y]);
     }
@@ -852,10 +852,10 @@ MySql::output(const Vector2dData &data)
 
     newdata.stat = find(data.id);
 
-    int index = 0;
-    for (int x = 0; x < data.x; x++) {
+    off_type index = 0;
+    for (off_type x = 0; x < data.x; x++) {
         newdata.x = x;
-        for (int y = 0; y < data.y; y++) {
+        for (off_type y = 0; y < data.y; y++) {
             newdata.y = y;
             newdata.data = data.cvec[index++];
             newdata.insert();

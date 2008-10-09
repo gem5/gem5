@@ -47,6 +47,9 @@ typedef double Result;
 /** vector of results. */
 typedef std::vector<Result> VResult;
 
+typedef unsigned int size_type;
+typedef unsigned int off_type;
+
 /* namespace Stats */ }
 
 #endif // __BASE_STATS_TYPES_HH__

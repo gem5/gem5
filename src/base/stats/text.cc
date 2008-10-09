@@ -239,11 +239,11 @@ struct VectorPrint
 void
 VectorPrint::operator()(std::ostream &stream) const
 {
-    int _size = vec.size();
+    size_type _size = vec.size();
     Result _total = 0.0;
 
     if (flags & (pdf | cdf)) {
-        for (int i = 0; i < _size; ++i) {
+        for (off_type i = 0; i < _size; ++i) {
             _total += vec[i];
         }
     }
@@ -266,7 +266,7 @@ VectorPrint::operator()(std::ostream &stream) const
         print.value = vec[0];
         print(stream);
     } else if (!compat) {
-        for (int i = 0; i < _size; ++i) {
+        for (off_type i = 0; i < _size; ++i) {
             if (havesub && (i >= subnames.size() || subnames[i].empty()))
                 continue;
 
@@ -298,7 +298,7 @@ VectorPrint::operator()(std::ostream &stream) const
         Result _cdf = 0.0;
         if (flags & dist) {
             ccprintf(stream, "%s.start_dist\n", name);
-            for (int i = 0; i < _size; ++i) {
+            for (off_type i = 0; i < _size; ++i) {
                 print.name = havesub ? subnames[i] : to_string(i);
                 print.desc = subdescs.empty() ? desc : subdescs[i];
                 print.flags |= __substat;
@@ -318,7 +318,7 @@ VectorPrint::operator()(std::ostream &stream) const
             }
             ccprintf(stream, "%s.end_dist\n", name);
         } else {
-            for (int i = 0; i < _size; ++i) {
+            for (off_type i = 0; i < _size; ++i) {
                 if (havesub && subnames[i].empty())
                     continue;
 
@@ -366,7 +366,7 @@ struct DistPrint
     Counter min;
     Counter max;
     Counter bucket_size;
-    int size;
+    size_type size;
     bool fancy;
 
     void operator()(ostream &stream) const;
@@ -407,7 +407,7 @@ DistPrint::operator()(ostream &stream) const
     Result total = 0.0;
 
     total += underflow;
-    for (int i = 0; i < size; ++i)
+    for (off_type i = 0; i < size; ++i)
         total += vec[i];
     total += overflow;
 
@@ -448,7 +448,7 @@ DistPrint::operator()(ostream &stream) const
     }
 
     if (!compat) {
-        for (int i = 0; i < size; ++i) {
+        for (off_type i = 0; i < size; ++i) {
             stringstream namestr;
             namestr << name;
 
@@ -473,7 +473,7 @@ DistPrint::operator()(ostream &stream) const
 
         print.flags = flags | __substat;
 
-        for (int i = 0; i < size; ++i) {
+        for (off_type i = 0; i < size; ++i) {
             if ((flags & nozero && vec[i] == 0.0) ||
                 (flags & nonan && isnan(vec[i])))
                 continue;
@@ -560,7 +560,7 @@ Text::visit(const VectorData &data)
     if (noOutput(data))
         return;
 
-    int size = data.size();
+    size_type size = data.size();
     VectorPrint print;
 
     print.name = data.name;
@@ -573,11 +573,11 @@ Text::visit(const VectorData &data)
     print.total = data.total();
 
     if (!data.subnames.empty()) {
-        for (int i = 0; i < size; ++i) {
+        for (off_type i = 0; i < size; ++i) {
             if (!data.subnames[i].empty()) {
                 print.subnames = data.subnames;
                 print.subnames.resize(size);
-                for (int i = 0; i < size; ++i) {
+                for (off_type i = 0; i < size; ++i) {
                     if (!data.subnames[i].empty() &&
                         !data.subdescs[i].empty()) {
                         print.subdescs = data.subdescs;
@@ -609,22 +609,22 @@ Text::visit(const Vector2dData &data)
     print.precision = data.precision;
 
     if (!data.subnames.empty()) {
-        for (int i = 0; i < data.x; ++i)
+        for (off_type i = 0; i < data.x; ++i)
             if (!data.subnames[i].empty())
                 havesub = true;
     }
 
     VResult tot_vec(data.y);
     Result super_total = 0.0;
-    for (int i = 0; i < data.x; ++i) {
+    for (off_type i = 0; i < data.x; ++i) {
         if (havesub && (i >= data.subnames.size() || data.subnames[i].empty()))
             continue;
 
-        int iy = i * data.y;
+        off_type iy = i * data.y;
         VResult yvec(data.y);
 
         Result total = 0.0;
-        for (int j = 0; j < data.y; ++j) {
+        for (off_type j = 0; j < data.y; ++j) {
             yvec[j] = data.cvec[iy + j];
             tot_vec[j] += yvec[j];
             total += yvec[j];
@@ -668,7 +668,7 @@ Text::visit(const DistData &data)
     print.underflow = data.data.underflow;
     print.overflow = data.data.overflow;
     print.vec.resize(data.data.cvec.size());
-    for (int i = 0; i < print.vec.size(); ++i)
+    for (off_type i = 0; i < print.vec.size(); ++i)
         print.vec[i] = (Result)data.data.cvec[i];
     print.sum = data.data.sum;
     print.squares = data.data.squares;
@@ -689,7 +689,7 @@ Text::visit(const VectorDistData &data)
     if (noOutput(data))
         return;
 
-    for (int i = 0; i < data.size(); ++i) {
+    for (off_type i = 0; i < data.size(); ++i) {
         DistPrint print;
 
         print.name = data.name + "_" +
@@ -705,7 +705,7 @@ Text::visit(const VectorDistData &data)
         print.underflow = data.data[i].underflow;
         print.overflow = data.data[i].overflow;
         print.vec.resize(data.data[i].cvec.size());
-        for (int j = 0; j < print.vec.size(); ++j)
+        for (off_type j = 0; j < print.vec.size(); ++j)
             print.vec[j] = (Result)data.data[i].cvec[j];
         print.sum = data.data[i].sum;
         print.squares = data.data[i].squares;
