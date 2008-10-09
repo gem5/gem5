@@ -28,9 +28,9 @@
  * Authors: Gabe Black
  */
 
-#include "cpu/o3/sparc/dyn_inst_impl.hh"
+#include "cpu/o3/dyn_inst_impl.hh"
 #include "cpu/o3/sparc/impl.hh"
 
 // Force instantiation of SparcDynInst for all the implementations that
 // are needed.
-template class SparcDynInst<SparcSimpleImpl>;
+template class BaseO3DynInst<SparcSimpleImpl>;

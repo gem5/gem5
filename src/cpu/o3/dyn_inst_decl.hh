@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +25,32 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Kevin Lim
+ * Authors: Korey Sewell
  */
 
-#include "cpu/o3/alpha/impl.hh"
-#include "cpu/o3/dyn_inst_impl.hh"
+#ifndef __CPU_O3_DYN_INST_DECL_HH__
+#define __CPU_O3_DYN_INST_DECL_HH__
 
-// Force instantiation of AlphaDynInst for all the implementations that
-// are needed.
-template class BaseO3DynInst<AlphaSimpleImpl>;
+#include "arch/isa_specific.hh"
+
+template <class Impl> class BaseO3DynInst;
+#if THE_ISA == ALPHA_ISA
+    struct AlphaSimpleImpl;
+    typedef BaseO3DynInst<AlphaSimpleImpl> O3DynInst;
+#elif THE_ISA == MIPS_ISA
+    struct MipsSimpleImpl;
+    typedef BaseO3DynInst<MipsSimpleImpl> O3DynInst;
+#elif THE_ISA == SPARC_ISA
+    struct SparcSimpleImpl;
+    typedef BaseO3DynInst<SparcSimpleImpl> O3DynInst;
+#elif THE_ISA == X86_ISA
+    struct X86SimpleImpl;
+    typedef BaseO3DynInst<X86SimpleImpl> O3DynInst;
+#elif THE_ISA == ARM_ISA
+    struct ArmSimpleImpl;
+    typedef BaseO3DynInst<ArmSimpleImpl> O3DynInst;
+#else
+    #error "O3DynInst not defined for this ISA"
+#endif
+
+#endif // __CPU_O3_DYN_INST_DECL_HH__

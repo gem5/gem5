@@ -38,7 +38,7 @@
 
 // Forward declarations.
 template <class Impl>
-class SparcDynInst;
+class BaseO3DynInst;
 
 template <class Impl>
 class FullO3CPU;
@@ -60,7 +60,7 @@ struct SparcSimpleImpl
     typedef SimpleCPUPolicy<SparcSimpleImpl> CPUPol;
 
     /** The DynInst type to be used. */
-    typedef SparcDynInst<SparcSimpleImpl> DynInst;
+    typedef BaseO3DynInst<SparcSimpleImpl> DynInst;
 
     /** The refcounted DynInst pointer to be used.  In most cases this is
      *  what should be used, and not DynInst *.

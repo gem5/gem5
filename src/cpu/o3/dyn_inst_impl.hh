@@ -28,34 +28,34 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha/dyn_inst.hh"
+#include "cpu/o3/dyn_inst.hh"
 
 template <class Impl>
-AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr staticInst,
-                                 Addr PC, Addr NPC, Addr microPC,
-                                 Addr Pred_PC, Addr Pred_NPC,
-                                 Addr Pred_MicroPC,
-                                 InstSeqNum seq_num, O3CPU *cpu)
+BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr staticInst,
+                                   Addr PC, Addr NPC, Addr microPC,
+                                   Addr Pred_PC, Addr Pred_NPC,
+                                   Addr Pred_MicroPC,
+                                   InstSeqNum seq_num, O3CPU *cpu)
     : BaseDynInst<Impl>(staticInst, PC, NPC, microPC,
-            Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
+                        Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
 {
     initVars();
 }
 
 template <class Impl>
-AlphaDynInst<Impl>::AlphaDynInst(ExtMachInst inst,
-                                 Addr PC, Addr NPC, Addr microPC,
-                                 Addr Pred_PC, Addr Pred_NPC,
-                                 Addr Pred_MicroPC,
-                                 InstSeqNum seq_num, O3CPU *cpu)
+BaseO3DynInst<Impl>::BaseO3DynInst(ExtMachInst inst,
+                                   Addr PC, Addr NPC, Addr microPC,
+                                   Addr Pred_PC, Addr Pred_NPC,
+                                   Addr Pred_MicroPC,
+                                   InstSeqNum seq_num, O3CPU *cpu)
     : BaseDynInst<Impl>(inst, PC, NPC, microPC,
-            Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
+                        Pred_PC, Pred_NPC, Pred_MicroPC, seq_num, cpu)
 {
     initVars();
 }
 
 template <class Impl>
-AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr &_staticInst)
+BaseO3DynInst<Impl>::BaseO3DynInst(StaticInstPtr &_staticInst)
     : BaseDynInst<Impl>(_staticInst)
 {
     initVars();
@@ -63,7 +63,7 @@ AlphaDynInst<Impl>::AlphaDynInst(StaticInstPtr &_staticInst)
 
 template <class Impl>
 void
-AlphaDynInst<Impl>::initVars()
+BaseO3DynInst<Impl>::initVars()
 {
     // Make sure to have the renamed register entries set to the same
     // as the normal register entries.  It will allow the IQ to work
@@ -80,7 +80,7 @@ AlphaDynInst<Impl>::initVars()
 
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::execute()
+BaseO3DynInst<Impl>::execute()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
     // when using the TC during an instruction's execution
@@ -98,7 +98,7 @@ AlphaDynInst<Impl>::execute()
 
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::initiateAcc()
+BaseO3DynInst<Impl>::initiateAcc()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
     // when using the TC during an instruction's execution
@@ -116,7 +116,7 @@ AlphaDynInst<Impl>::initiateAcc()
 
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::completeAcc(PacketPtr pkt)
+BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 {
     this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
 
@@ -126,8 +126,9 @@ AlphaDynInst<Impl>::completeAcc(PacketPtr pkt)
 #if FULL_SYSTEM
 template <class Impl>
 Fault
-AlphaDynInst<Impl>::hwrei()
+BaseO3DynInst<Impl>::hwrei()
 {
+#if THE_ISA == ALPHA_ISA
     // Can only do a hwrei when in pal mode.
     if (!(this->readPC() & 0x3))
         return new AlphaISA::UnimplementedOpcodeFault;
@@ -138,28 +139,33 @@ AlphaDynInst<Impl>::hwrei()
 
     // Tell CPU to clear any state it needs to if a hwrei is taken.
     this->cpu->hwrei(this->threadNumber);
+#else
 
+#endif
     // FIXME: XXX check for interrupts? XXX
     return NoFault;
 }
 
 template <class Impl>
 void
-AlphaDynInst<Impl>::trap(Fault fault)
+BaseO3DynInst<Impl>::trap(Fault fault)
 {
     this->cpu->trap(fault, this->threadNumber);
 }
 
 template <class Impl>
 bool
-AlphaDynInst<Impl>::simPalCheck(int palFunc)
+BaseO3DynInst<Impl>::simPalCheck(int palFunc)
 {
+#if THE_ISA != ALPHA_ISA
+    panic("simPalCheck called, but PAL only exists in Alpha!\n");
+#endif
     return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
 #else
 template <class Impl>
 void
-AlphaDynInst<Impl>::syscall(int64_t callnum)
+BaseO3DynInst<Impl>::syscall(int64_t callnum)
 {
     // HACK: check CPU's nextPC before and after syscall. If it
     // changes, update this instruction's nextPC because the syscall

@@ -36,10 +36,9 @@
 
 #include "cpu/o3/cpu_policy.hh"
 
-
 // Forward declarations.
 template <class Impl>
-class MipsDynInst;
+class BaseO3DynInst;
 
 template <class Impl>
 class FullO3CPU;
@@ -61,7 +60,7 @@ struct MipsSimpleImpl
     typedef SimpleCPUPolicy<MipsSimpleImpl> CPUPol;
 
     /** The DynInst type to be used. */
-    typedef MipsDynInst<MipsSimpleImpl> DynInst;
+    typedef BaseO3DynInst<MipsSimpleImpl> DynInst;
 
     /** The refcounted DynInst pointer to be used.  In most cases this is
      *  what should be used, and not DynInst *.

@@ -29,9 +29,9 @@
  *          Korey Sewell
  */
 
-#include "cpu/o3/mips/dyn_inst_impl.hh"
+#include "cpu/o3/dyn_inst_impl.hh"
 #include "cpu/o3/mips/impl.hh"
 
 // Force instantiation of MipsDynInst for all the implementations that
 // are needed.
-template class MipsDynInst<MipsSimpleImpl>;
+template class BaseO3DynInst<MipsSimpleImpl>;

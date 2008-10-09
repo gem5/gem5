@@ -49,11 +49,10 @@ template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
-    unsigned tid = req->getThreadNum();
-    xc->setMiscRegNoEffect(LLAddr, req->getPaddr() & ~0xf, tid);
-    xc->setMiscRegNoEffect(LLFlag, true, tid);
+    xc->setMiscRegNoEffect(LLAddr, req->getPaddr() & ~0xf);
+    xc->setMiscRegNoEffect(LLFlag, true);
     DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link Address set to %x.\n",
-            tid, req->getPaddr() & ~0xf);
+            req->getThreadNum(), req->getPaddr() & ~0xf);
 }
 
 
@@ -61,22 +60,20 @@ template <class XC>
 inline bool
 handleLockedWrite(XC *xc, Request *req)
 {
-    unsigned tid = req->getThreadNum();
-
     if (req->isUncacheable()) {
         // Funky Turbolaser mailbox access...don't update
         // result register (see stq_c in decoder.isa)
         req->setExtraData(2);
     } else {
         // standard store conditional
-        bool lock_flag = xc->readMiscRegNoEffect(LLFlag, tid);
-        Addr lock_addr = xc->readMiscRegNoEffect(LLAddr, tid);
+        bool lock_flag = xc->readMiscRegNoEffect(LLFlag);
+        Addr lock_addr = xc->readMiscRegNoEffect(LLAddr);
 
         if (!lock_flag || (req->getPaddr() & ~0xf) != lock_addr) {
             // Lock flag not set or addr mismatch in CPU;
             // don't even bother sending to memory system
             req->setExtraData(0);
-            xc->setMiscRegNoEffect(LLFlag, false, tid);
+            xc->setMiscRegNoEffect(LLFlag, false);
 
             // the rest of this code is not architectural;
             // it's just a debugging aid to help detect
@@ -97,10 +94,10 @@ handleLockedWrite(XC *xc, Request *req)
 
             if (!lock_flag){
                 DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, Store Conditional Failed.\n",
-                        tid);
+                        req->getThreadNum());
             } else if ((req->getPaddr() & ~0xf) != lock_addr) {
                 DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, Store Conditional Failed.\n",
-                        tid);
+                        req->getThreadNum());
             }
             // store conditional failed already, so don't issue it to mem
             return false;
