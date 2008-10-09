@@ -30,6 +30,7 @@
 
 #ifndef __BASE_STATS_FLAGS_HH__
 #define __BASE_STATS_FLAGS_HH__
+
 namespace Stats {
 
 /**

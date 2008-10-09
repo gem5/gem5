@@ -177,7 +177,9 @@ struct VectorData : public StatData
     virtual const VCounter &value() const = 0;
     virtual const VResult &result() const = 0;
     virtual Result total() const  = 0;
-    void update()
+
+    void
+    update()
     {
         if (!subnames.empty()) {
             int s = size();
@@ -206,18 +208,25 @@ class VectorStatData : public VectorData
     virtual void reset() { s.reset(); }
 
     virtual size_t size() const { return s.size(); }
-    virtual VCounter &value() const
+
+    virtual VCounter &
+    value() const
     {
         s.value(cvec);
         return cvec;
     }
-    virtual const VResult &result() const
+
+    virtual const VResult &
+    result() const
     {
         s.result(rvec);
         return rvec;
     }
+
     virtual Result total() const { return s.total(); }
-    virtual void visit(Visit &visitor)
+
+    virtual void
+    visit(Visit &visitor)
     {
         update();
         s.update(this);
@@ -261,7 +270,9 @@ class DistStatData : public DistData
     virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
-    virtual void visit(Visit &visitor)
+
+    virtual void
+    visit(Visit &visitor)
     {
         s.update(this);
         visitor.visit(*this);
@@ -280,7 +291,9 @@ struct VectorDistData : public StatData
     mutable VResult rvec;
 
     virtual size_t size() const = 0;
-    void update()
+
+    void
+    update()
     {
         int s = size();
         if (subnames.size() < s)
@@ -304,7 +317,9 @@ class VectorDistStatData : public VectorDistData
     virtual void reset() { s.reset(); }
     virtual size_t size() const { return s.size(); }
     virtual bool zero() const { return s.zero(); }
-    virtual void visit(Visit &visitor)
+
+    virtual void
+    visit(Visit &visitor)
     {
         update();
         s.update(this);
@@ -324,7 +339,8 @@ struct Vector2dData : public StatData
     mutable int x;
     mutable int y;
 
-    void update()
+    void
+    update()
     {
         if (subnames.size() < x)
             subnames.resize(x);
@@ -343,7 +359,9 @@ class Vector2dStatData : public Vector2dData
     virtual bool check() const { return s.check(); }
     virtual void reset() { s.reset(); }
     virtual bool zero() const { return s.zero(); }
-    virtual void visit(Visit &visitor)
+
+    virtual void
+    visit(Visit &visitor)
     {
         update();
         s.update(this);
@@ -371,7 +389,8 @@ class Wrap : public Child
     Parent &self() { return *reinterpret_cast<Parent *>(this); }
 
   protected:
-    Data<Child> *statData()
+    Data<Child> *
+    statData()
     {
         StatData *__data = DataAccess::statData();
         Data<Child> *ptr = dynamic_cast<Data<Child> *>(__data);
@@ -380,7 +399,8 @@ class Wrap : public Child
     }
 
   public:
-    const Data<Child> *statData() const
+    const Data<Child> *
+    statData() const
     {
         const StatData *__data = DataAccess::statData();
         const Data<Child> *ptr = dynamic_cast<const Data<Child> *>(__data);
@@ -393,6 +413,7 @@ class Wrap : public Child
      * Copy constructor, copies are not allowed.
      */
     Wrap(const Wrap &stat);
+
     /**
      * Can't copy stats.
      */
@@ -409,7 +430,8 @@ class Wrap : public Child
      * @param name The new name.
      * @return A reference to this stat.
      */
-    Parent &name(const std::string &_name)
+    Parent &
+    name(const std::string &_name)
     {
         Data<Child> *data = this->statData();
         data->name = _name;
@@ -423,7 +445,8 @@ class Wrap : public Child
      * @param desc The new description.
      * @return A reference to this stat.
      */
-    Parent &desc(const std::string &_desc)
+    Parent &
+    desc(const std::string &_desc)
     {
         this->statData()->desc = _desc;
         return this->self();
@@ -434,7 +457,8 @@ class Wrap : public Child
      * @param p The new precision
      * @return A reference to this stat.
      */
-    Parent &precision(int _precision)
+    Parent &
+    precision(int _precision)
     {
         this->statData()->precision = _precision;
         return this->self();
@@ -445,7 +469,8 @@ class Wrap : public Child
      * @param f The new flags.
      * @return A reference to this stat.
      */
-    Parent &flags(StatFlags _flags)
+    Parent &
+    flags(StatFlags _flags)
     {
         this->statData()->flags |= _flags;
         return this->self();
@@ -458,7 +483,8 @@ class Wrap : public Child
      * @return A reference to this stat.
      */
     template <class Stat>
-    Parent &prereq(const Stat &prereq)
+    Parent &
+    prereq(const Stat &prereq)
     {
         this->statData()->prereq = prereq.statData();
         return this->self();
@@ -479,7 +505,8 @@ class WrapVec : public Wrap<Parent, Child, Data>
      * @param name The new name of the subfield.
      * @return A reference to this stat.
      */
-    Parent &subname(int index, const std::string &name)
+    Parent &
+    subname(int index, const std::string &name)
     {
         std::vector<std::string> &subn = this->statData()->subnames;
         if (subn.size() <= index)
@@ -495,7 +522,8 @@ class WrapVec : public Wrap<Parent, Child, Data>
      * @param desc The new description of the subfield
      * @return A reference to this stat.
      */
-    Parent &subdesc(int index, const std::string &desc)
+    Parent &
+    subdesc(int index, const std::string &desc)
     {
         std::vector<std::string> &subd = this->statData()->subdescs;
         if (subd.size() <= index)
@@ -515,7 +543,8 @@ class WrapVec2d : public WrapVec<Parent, Child, Data>
      * @warning This makes the assumption that if you're gonna subnames a 2d
      * vector, you're subnaming across all y
      */
-    Parent &ysubnames(const char **names)
+    Parent &
+    ysubnames(const char **names)
     {
         Data<Child> *data = this->statData();
         data->y_subnames.resize(this->y);
@@ -523,7 +552,9 @@ class WrapVec2d : public WrapVec<Parent, Child, Data>
             data->y_subnames[i] = names[i];
         return this->self();
     }
-    Parent &ysubname(int index, const std::string subname)
+
+    Parent &
+    ysubname(int index, const std::string subname)
     {
         Data<Child> *data = this->statData();
         assert(index < this->y);
@@ -633,7 +664,8 @@ struct AvgStor
      * @param val The new count.
      * @param p The parameters for this storage.
      */
-    void set(Counter val, Params &p) {
+    void
+    set(Counter val, Params &p) {
         total += current * (curTick - last);
         last = curTick;
         current = val;
@@ -665,7 +697,8 @@ struct AvgStor
      * @param p The parameters for this storage.
      * @return The current average.
      */
-    Result result(const Params &p) const
+    Result
+    result(const Params &p) const
     {
         total += current * (curTick - last);
         last = curTick;
@@ -675,7 +708,8 @@ struct AvgStor
     /**
      * Reset stat value to default
      */
-    void reset()
+    void
+    reset()
     {
         total = 0;
         last = curTick;
@@ -864,14 +898,16 @@ class ValueBase : public DataAccess
     ~ValueBase() { if (proxy) delete proxy; }
 
     template <class T>
-    void scalar(T &value)
+    void
+    scalar(T &value)
     {
         proxy = new ValueProxy<T>(value);
         setInit();
     }
 
     template <class T>
-    void functor(T &func)
+    void
+    functor(T &func)
     {
         proxy = new FunctorProxy<T>(func);
         setInit();
@@ -946,7 +982,8 @@ class ScalarProxy
      * @param sp The proxy to copy.
      * @return A reference to this proxy.
      */
-    const ScalarProxy &operator=(const ScalarProxy &sp) {
+    const ScalarProxy &
+    operator=(const ScalarProxy &sp) {
         stat = sp.stat;
         index = sp.index;
         return *this;
@@ -976,7 +1013,11 @@ class ScalarProxy
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U &v) { stat->data(index)->set(v, stat->params); }
+    void
+    operator=(const U &v)
+    {
+        stat->data(index)->set(v, stat->params);
+    }
 
     /**
      * Increment the stat by the given value. This calls the associated
@@ -984,7 +1025,11 @@ class ScalarProxy
      * @param v The value to add.
      */
     template <typename U>
-    void operator+=(const U &v) { stat->data(index)->inc(v, stat->params); }
+    void
+    operator+=(const U &v)
+    {
+        stat->data(index)->inc(v, stat->params);
+    }
 
     /**
      * Decrement the stat by the given value. This calls the associated
@@ -992,7 +1037,11 @@ class ScalarProxy
      * @param v The value to substract.
      */
     template <typename U>
-    void operator-=(const U &v) { stat->data(index)->dec(v, stat->params); }
+    void
+    operator-=(const U &v)
+    {
+        stat->data(index)->dec(v, stat->params);
+    }
 
     /**
      * Return the number of elements, always 1 for a scalar.
@@ -1071,7 +1120,8 @@ class VectorBase : public DataAccess
     }
 
   public:
-    void value(VCounter &vec) const
+    void
+    value(VCounter &vec) const
     {
         vec.resize(size());
         for (int i = 0; i < size(); ++i)
@@ -1082,7 +1132,8 @@ class VectorBase : public DataAccess
      * Copy the values to a local vector and return a reference to it.
      * @return A reference to a vector of the stat values.
      */
-    void result(VResult &vec) const
+    void
+    result(VResult &vec) const
     {
         vec.resize(size());
         for (int i = 0; i < size(); ++i)
@@ -1093,7 +1144,9 @@ class VectorBase : public DataAccess
      * Return a total of all entries in this vector.
      * @return The total of all vector entries.
      */
-    Result total() const {
+    Result
+    total() const
+    {
         Result total = 0.0;
         for (int i = 0; i < size(); ++i)
             total += data(i)->result(params);
@@ -1223,7 +1276,8 @@ class VectorProxy
         return *this;
     }
 
-    ScalarProxy<Stat> operator[](int index)
+    ScalarProxy<Stat>
+    operator[](int index)
     {
         assert (index >= 0 && index < size());
         return ScalarProxy<Stat>(stat, offset + index);
@@ -1408,14 +1462,15 @@ struct DistStor
      * @param number The number of times to add the value.
      * @param params The paramters of the distribution.
      */
-    void sample(Counter val, int number, const Params &params)
+    void
+    sample(Counter val, int number, const Params &params)
     {
         if (val < params.min)
             underflow += number;
         else if (val > params.max)
             overflow += number;
         else {
-            int index = (int)std::floor((val - params.min) / params.bucket_size);
+            size_t index = std::floor((val - params.min) / params.bucket_size);
             assert(index < size(params));
             cvec[index] += number;
         }
@@ -1444,12 +1499,14 @@ struct DistStor
      * @param params The paramters of the distribution.
      * @return True if any values have been sampled.
      */
-    bool zero(const Params &params) const
+    bool
+    zero(const Params &params) const
     {
         return samples == Counter();
     }
 
-    void update(DistDataData *data, const Params &params)
+    void
+    update(DistDataData *data, const Params &params)
     {
         data->min = params.min;
         data->max = params.max;
@@ -1472,7 +1529,8 @@ struct DistStor
     /**
      * Reset stat value to default
      */
-    void reset()
+    void
+    reset()
     {
         min_val = CounterLimits::max();
         max_val = CounterLimits::min();
@@ -1526,7 +1584,8 @@ struct FancyStor
      * @param number The number of times to add the value.
      * @param p The parameters of this stat.
      */
-    void sample(Counter val, int number, const Params &p)
+    void
+    sample(Counter val, int number, const Params &p)
     {
         Counter value = val * number;
         sum += value;
@@ -1534,7 +1593,8 @@ struct FancyStor
         samples += number;
     }
 
-    void update(DistDataData *data, const Params &params)
+    void
+    update(DistDataData *data, const Params &params)
     {
         data->sum = sum;
         data->squares = squares;
@@ -1556,7 +1616,8 @@ struct FancyStor
     /**
      * Reset stat value to default
      */
-    void reset()
+    void
+    reset()
     {
         sum = Counter();
         squares = Counter();
@@ -1594,14 +1655,16 @@ struct AvgFancy
      * @param number The number of times to add the value.
      * @param p The paramters of the distribution.
      */
-    void sample(Counter val, int number, const Params &p)
+    void
+    sample(Counter val, int number, const Params &p)
     {
         Counter value = val * number;
         sum += value;
         squares += value * value;
     }
 
-    void update(DistDataData *data, const Params &params)
+    void
+    update(DistDataData *data, const Params &params)
     {
         data->sum = sum;
         data->squares = squares;
@@ -1613,15 +1676,18 @@ struct AvgFancy
      * @return 1.
      */
     size_t size(const Params &params) const { return 1; }
+
     /**
      * Return true if no samples have been added.
      * @return True if the sum is zero.
      */
     bool zero(const Params &params) const { return sum == Counter(); }
+
     /**
      * Reset stat value to default
      */
-    void reset()
+    void
+    reset()
     {
         sum = Counter();
         squares = Counter();
@@ -1652,7 +1718,8 @@ class DistBase : public DataAccess
      * Retrieve the storage.
      * @return The storage object for this stat.
      */
-    Storage *data()
+    Storage *
+    data()
     {
         return reinterpret_cast<Storage *>(storage);
     }
@@ -1697,7 +1764,8 @@ class DistBase : public DataAccess
      */
     bool zero() const { return data()->zero(params); }
 
-    void update(DistData *base)
+    void
+    update(DistData *base)
     {
         base->data.fancy = Storage::fancy;
         data()->update(&(base->data), params);
@@ -1848,7 +1916,8 @@ class DistProxy
         : stat(sp.stat), index(sp.index)
     {}
 
-    const DistProxy &operator=(const DistProxy &sp)
+    const DistProxy &
+    operator=(const DistProxy &sp)
     {
         stat = sp.stat;
         index = sp.index;
@@ -1895,9 +1964,8 @@ Result
 VectorDistBase<Storage>::total(int index) const
 {
     int total = 0;
-    for (int i = 0; i < x_size(); ++i) {
+    for (int i = 0; i < x_size(); ++i)
         total += data(i)->result(stat->params);
-    }
 }
 #endif
 
@@ -1947,11 +2015,14 @@ class ScalarStatNode : public Node
 
   public:
     ScalarStatNode(const ScalarData *d) : data(d), vresult(1) {}
-    virtual const VResult &result() const
+
+    virtual const VResult &
+    result() const
     {
         vresult[0] = data->result();
         return vresult;
     }
+
     virtual Result total() const { return data->result(); };
 
     virtual size_t size() const { return 1; }
@@ -2041,25 +2112,25 @@ class ConstVectorNode : public Node
   public:
     ConstVectorNode(const T &s) : vresult(s.begin(), s.end()) {}
     const VResult &result() const { return vresult; }
-    virtual Result total() const
+
+    virtual Result
+    total() const
     {
         int size = this->size();
         Result tmp = 0;
         for (int i = 0; i < size; i++)
-        {
             tmp += vresult[i];
-        }
         return tmp;
     }
+
     virtual size_t size() const { return vresult.size(); }
-    virtual std::string str() const
+    virtual std::string
+    str() const
     {
         int size = this->size();
         std::string tmp = "(";
         for (int i = 0; i < size; i++)
-        {
             tmp += csprintf("%s ",to_string(vresult[i]));
-        }
         tmp += ")";
         return tmp;
     }
@@ -2114,7 +2185,8 @@ class UnaryNode : public Node
   public:
     UnaryNode(NodePtr &p) : l(p) {}
 
-    const VResult &result() const
+    const VResult &
+    result() const
     {
         const VResult &lvec = l->result();
         int size = lvec.size();
@@ -2129,7 +2201,8 @@ class UnaryNode : public Node
         return vresult;
     }
 
-    Result total() const
+    Result
+    total() const
     {
         const VResult &vec = this->result();
         Result total = 0;
@@ -2140,7 +2213,8 @@ class UnaryNode : public Node
 
     virtual size_t size() const { return l->size(); }
 
-    virtual std::string str() const
+    virtual std::string
+    str() const
     {
         return OpString<Op>::str() + l->str();
     }
@@ -2157,7 +2231,8 @@ class BinaryNode : public Node
   public:
     BinaryNode(NodePtr &a, NodePtr &b) : l(a), r(b) {}
 
-    const VResult &result() const
+    const VResult &
+    result() const
     {
         Op op;
         const VResult &lvec = l->result();
@@ -2188,7 +2263,8 @@ class BinaryNode : public Node
         return vresult;
     }
 
-    Result total() const
+    Result
+    total() const
     {
         const VResult &vec = this->result();
         Result total = 0;
@@ -2197,20 +2273,23 @@ class BinaryNode : public Node
         return total;
     }
 
-    virtual size_t size() const {
+    virtual size_t
+    size() const
+    {
         int ls = l->size();
         int rs = r->size();
-        if (ls == 1)
+        if (ls == 1) {
             return rs;
-        else if (rs == 1)
+        } else if (rs == 1) {
             return ls;
-        else {
+        } else {
             assert(ls == rs && "Node vector sizes are not equal");
             return ls;
         }
     }
 
-    virtual std::string str() const
+    virtual std::string
+    str() const
     {
         return csprintf("(%s %s %s)", l->str(), OpString<Op>::str(), r->str());
     }
@@ -2226,7 +2305,8 @@ class SumNode : public Node
   public:
     SumNode(NodePtr &p) : l(p), vresult(1) {}
 
-    const VResult &result() const
+    const VResult &
+    result() const
     {
         const VResult &lvec = l->result();
         int size = lvec.size();
@@ -2241,7 +2321,8 @@ class SumNode : public Node
         return vresult;
     }
 
-    Result total() const
+    Result
+    total() const
     {
         const VResult &lvec = l->result();
         int size = lvec.size();
@@ -2258,7 +2339,8 @@ class SumNode : public Node
 
     virtual size_t size() const { return 1; }
 
-    virtual std::string str() const
+    virtual std::string
+    str() const
     {
         return csprintf("total(%s)", l->str());
     }
@@ -2308,14 +2390,16 @@ class Value : public Wrap<Value, ValueBase, ScalarStatData>
     typedef ValueBase Base;
 
     template <class T>
-    Value &scalar(T &value)
+    Value &
+    scalar(T &value)
     {
         Base::scalar(value);
         return *this;
     }
 
     template <class T>
-    Value &functor(T &func)
+    Value &
+    functor(T &func)
     {
         Base::functor(func);
         return *this;
@@ -2344,7 +2428,11 @@ class Average : public Wrap<Average<N>, ScalarBase<AvgStor>, ScalarStatData>
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U &v) { Base::operator=(v); }
+    void
+    operator=(const U &v)
+    {
+        Base::operator=(v);
+    }
 };
 
 /**
@@ -2363,7 +2451,9 @@ class Vector : public WrapVec<Vector<N>, VectorBase<StatStor>, VectorStatData>
      * @param size The new size.
      * @return A reference to this stat.
      */
-    Vector &init(size_t size) {
+    Vector &
+    init(size_t size)
+    {
         this->doInit(size);
         return *this;
     }
@@ -2383,7 +2473,9 @@ class AverageVector
      * @param size The new size.
      * @return A reference to this stat.
      */
-    AverageVector &init(size_t size) {
+    AverageVector &
+    init(size_t size)
+    {
         this->doInit(size);
         return *this;
     }
@@ -2398,7 +2490,9 @@ class Vector2d
     : public WrapVec2d<Vector2d<N>, Vector2dBase<StatStor>, Vector2dStatData>
 {
   public:
-    Vector2d &init(size_t x, size_t y) {
+    Vector2d &
+    init(size_t x, size_t y)
+    {
         this->doInit(x, y);
         return *this;
     }
@@ -2426,7 +2520,9 @@ class Distribution
      * @param bkt The number of values in each bucket.
      * @return A reference to this distribution.
      */
-    Distribution &init(Counter min, Counter max, Counter bkt) {
+    Distribution &
+    init(Counter min, Counter max, Counter bkt)
+    {
         this->params.min = min;
         this->params.max = max;
         this->params.bucket_size = bkt;
@@ -2454,7 +2550,8 @@ class StandardDeviation
     /**
      * Construct and initialize this distribution.
      */
-    StandardDeviation() {
+    StandardDeviation()
+    {
         this->doInit();
     }
 };
@@ -2508,7 +2605,9 @@ class VectorDistribution
      * @param bkt The number of values in each bucket.
      * @return A reference to this distribution.
      */
-    VectorDistribution &init(int size, Counter min, Counter max, Counter bkt) {
+    VectorDistribution &
+    init(int size, Counter min, Counter max, Counter bkt)
+    {
         this->params.min = min;
         this->params.max = max;
         this->params.bucket_size = bkt;
@@ -2540,7 +2639,9 @@ class VectorStandardDeviation
      * @param size The size of the vector.
      * @return A reference to this distribution.
      */
-    VectorStandardDeviation &init(int size) {
+    VectorStandardDeviation &
+    init(int size)
+    {
         this->doInit(size);
         return *this;
     }
@@ -2568,7 +2669,9 @@ class VectorAverageDeviation
      * @param size The size of the vector.
      * @return A reference to this distribution.
      */
-    VectorAverageDeviation &init(int size) {
+    VectorAverageDeviation &
+    init(int size)
+    {
         this->doInit(size);
         return *this;
     }
@@ -2655,19 +2758,24 @@ class FormulaStatData : public FormulaData
     virtual void reset() { s.reset(); }
 
     virtual size_t size() const { return s.size(); }
-    virtual const VResult &result() const
+
+    virtual const VResult &
+    result() const
     {
         s.result(vec);
         return vec;
     }
     virtual Result total() const { return s.total(); }
     virtual VCounter &value() const { return cvec; }
-    virtual void visit(Visit &visitor)
+
+    virtual void
+    visit(Visit &visitor)
     {
         update();
         s.update(this);
         visitor.visit(*this);
     }
+
     virtual std::string str() const { return s.str(); }
 };
 
@@ -2752,14 +2860,16 @@ class Temp
      */
     template <int N>
     Temp(const Scalar<N> &s)
-        : node(new ScalarStatNode(s.statData())) { }
+        : node(new ScalarStatNode(s.statData()))
+    { }
 
     /**
      * Create a new ScalarStatNode.
      * @param s The ScalarStat to place in a node.
      */
     Temp(const Value &s)
-        : node(new ScalarStatNode(s.statData())) { }
+        : node(new ScalarStatNode(s.statData()))
+    { }
 
     /**
      * Create a new ScalarStatNode.
@@ -2767,7 +2877,8 @@ class Temp
      */
     template <int N>
     Temp(const Average<N> &s)
-        : node(new ScalarStatNode(s.statData())) { }
+        : node(new ScalarStatNode(s.statData()))
+    { }
 
     /**
      * Create a new VectorStatNode.
@@ -2775,13 +2886,15 @@ class Temp
      */
     template <int N>
     Temp(const Vector<N> &s)
-        : node(new VectorStatNode(s.statData())) { }
+        : node(new VectorStatNode(s.statData()))
+    { }
 
     /**
      *
      */
     Temp(const Formula &f)
-        : node(new FormulaNode(f)) { }
+        : node(new FormulaNode(f))
+    { }
 
     /**
      * Create a new ScalarProxyNode.
@@ -2789,91 +2902,104 @@ class Temp
      */
     template <class Stat>
     Temp(const ScalarProxy<Stat> &p)
-        : node(new ScalarProxyNode<Stat>(p)) { }
+        : node(new ScalarProxyNode<Stat>(p))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(signed char value)
-        : node(new ConstNode<signed char>(value)) {}
+        : node(new ConstNode<signed char>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(unsigned char value)
-        : node(new ConstNode<unsigned char>(value)) {}
+        : node(new ConstNode<unsigned char>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(signed short value)
-        : node(new ConstNode<signed short>(value)) {}
+        : node(new ConstNode<signed short>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(unsigned short value)
-        : node(new ConstNode<unsigned short>(value)) {}
+        : node(new ConstNode<unsigned short>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(signed int value)
-        : node(new ConstNode<signed int>(value)) {}
+        : node(new ConstNode<signed int>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(unsigned int value)
-        : node(new ConstNode<unsigned int>(value)) {}
+        : node(new ConstNode<unsigned int>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(signed long value)
-        : node(new ConstNode<signed long>(value)) {}
+        : node(new ConstNode<signed long>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(unsigned long value)
-        : node(new ConstNode<unsigned long>(value)) {}
+        : node(new ConstNode<unsigned long>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(signed long long value)
-        : node(new ConstNode<signed long long>(value)) {}
+        : node(new ConstNode<signed long long>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(unsigned long long value)
-        : node(new ConstNode<unsigned long long>(value)) {}
+        : node(new ConstNode<unsigned long long>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(float value)
-        : node(new ConstNode<float>(value)) {}
+        : node(new ConstNode<float>(value))
+    { }
 
     /**
      * Create a ConstNode
      * @param value The value of the const node.
      */
     Temp(double value)
-        : node(new ConstNode<double>(value)) {}
+        : node(new ConstNode<double>(value))
+    { }
 };
 
 

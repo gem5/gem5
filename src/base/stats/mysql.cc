@@ -930,7 +930,7 @@ MySql::visit(const FormulaData &data)
 
 bool
 initMySQL(string host, string user, string password, string database,
-          string project, string name, string sample)
+    string project, string name, string sample)
 {
     extern list<Output *> OutputList;
     static MySql mysql;

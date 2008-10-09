@@ -447,7 +447,6 @@ DistPrint::operator()(ostream &stream) const
         print(stream);
     }
 
-
     if (!compat) {
         for (int i = 0; i < size; ++i) {
             stringstream namestr;
@@ -467,7 +466,6 @@ DistPrint::operator()(ostream &stream) const
             }
             print(stream);
         }
-
     } else {
         Counter _min;
         Result _pdf;
@@ -633,7 +631,8 @@ Text::visit(const Vector2dData &data)
             super_total += yvec[j];
         }
 
-        print.name = data.name + "_" + (havesub ? data.subnames[i] : to_string(i));
+        print.name = data.name + "_" +
+            (havesub ? data.subnames[i] : to_string(i));
         print.desc = data.desc;
         print.vec = yvec;
         print.total = total;
@@ -693,8 +692,8 @@ Text::visit(const VectorDistData &data)
     for (int i = 0; i < data.size(); ++i) {
         DistPrint print;
 
-        print.name = data.name +
-            (data.subnames[i].empty() ? ("_" + to_string(i)) : data.subnames[i]);
+        print.name = data.name + "_" +
+            (data.subnames[i].empty() ? (to_string(i)) : data.subnames[i]);
         print.desc = data.subdescs[i].empty() ? data.desc : data.subdescs[i];
         print.flags = data.flags;
         print.compat = compat;
@@ -747,6 +746,5 @@ initText(const string &filename, bool desc, bool compat)
 
     return true;
 }
-
 
 /* namespace Stats */ }

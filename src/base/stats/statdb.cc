@@ -73,7 +73,8 @@ regPrint(void *stat)
     data->flags |= print;
 }
 
-TheDatabase &db()
+TheDatabase &
+db()
 {
     static TheDatabase db;
     return db;

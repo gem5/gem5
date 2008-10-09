@@ -127,13 +127,15 @@ class MySql : public Output
   protected:
     std::map<int, int> idmap;
 
-    void insert(int sim_id, int db_id)
+    void
+    insert(int sim_id, int db_id)
     {
         using namespace std;
         idmap.insert(make_pair(sim_id, db_id));
     }
 
-    int find(int sim_id)
+    int
+    find(int sim_id)
     {
         using namespace std;
         map<int,int>::const_iterator i = idmap.find(sim_id);
@@ -146,9 +148,9 @@ class MySql : public Output
     ~MySql();
 
     void connect(const std::string &host, const std::string &user,
-                 const std::string &passwd, const std::string &db,
-                 const std::string &name, const std::string &sample,
-                 const std::string &project);
+        const std::string &passwd, const std::string &db,
+        const std::string &name, const std::string &sample,
+        const std::string &project);
     bool connected() const;
 
   public:
@@ -188,14 +190,14 @@ class MySql : public Output
 };
 
 bool initMySQL(std::string host, std::string database, std::string user,
-               std::string passwd, std::string project, std::string name,
-               std::string sample);
+    std::string passwd, std::string project, std::string name,
+    std::string sample);
 
 #if !USE_MYSQL
 inline bool
 initMySQL(std::string host, std::string user, std::string password,
-          std::string database, std::string project, std::string name,
-          std::string sample)
+    std::string database, std::string project, std::string name,
+    std::string sample)
 {
     return false;
 }
