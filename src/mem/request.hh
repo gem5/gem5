@@ -221,6 +221,12 @@ class Request : public FastAlloc
     /** Accessor for time. */
     Tick getTime() { assert(validPaddr || validAsidVaddr); return time; }
     void resetTime() { assert(validPaddr || validAsidVaddr); time = curTick; }
+    void
+    setTime(Tick when)
+    {
+        assert(validPaddr || validAsidVaddr);
+        time = when;
+    }
 
     /** Accessor for flags. */
     uint32_t getFlags() { assert(validPaddr || validAsidVaddr); return flags; }
