@@ -141,7 +141,7 @@ def handle_statement(parser, container, statement):
         try:
             for label in statement.labels:
                 container.labels[label.text] = microop
-                if label.extern:
+                if label.is_extern:
                     container.externs[label.text] = microop
             container.add_microop(statement.mnemonic, microop)
         except:
