@@ -109,8 +109,8 @@ processDescriptor:
     chks t2, t3, IretCheck, dataSize=8
     # There should be validity checks on the RIP checks here, but I'll do
     # that later.
-    wrdl reg, t3, t2
-    wrsel reg, t2
+    wrdl cs, t3, t2
+    wrsel cs, t2
     wrip t0, t1
     bri t0, label("end")
 
