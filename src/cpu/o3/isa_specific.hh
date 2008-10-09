@@ -30,13 +30,5 @@
 
 #include "cpu/base.hh"
 
-#if THE_ISA == ALPHA_ISA
-    #include "cpu/o3/alpha/impl.hh"
-#elif THE_ISA == MIPS_ISA
-    #include "cpu/o3/mips/impl.hh"
-#elif THE_ISA == SPARC_ISA
-    #include "cpu/o3/sparc/impl.hh"
-#else
-    #error "ISA-specific header files O3CPU not defined ISA"
-#endif
+#include "cpu/o3/impl.hh"
 #include "cpu/o3/dyn_inst.hh"

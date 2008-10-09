@@ -28,9 +28,58 @@
  * Authors: Kevin Lim
  */
 
-#include "cpu/o3/alpha/impl.hh"
-#include "cpu/o3/dyn_inst_impl.hh"
+#ifndef __CPU_O3_IMPL_HH__
+#define __CPU_O3_IMPL_HH__
 
-// Force instantiation of AlphaDynInst for all the implementations that
-// are needed.
-template class BaseO3DynInst<AlphaSimpleImpl>;
+#include "arch/isa_traits.hh"
+
+#include "cpu/o3/cpu_policy.hh"
+
+
+// Forward declarations.
+template <class Impl>
+class BaseO3DynInst;
+
+template <class Impl>
+class FullO3CPU;
+
+/** Implementation specific struct that defines several key types to the
+ *  CPU, the stages within the CPU, the time buffers, and the DynInst.
+ *  The struct defines the ISA, the CPU policy, the specific DynInst, the
+ *  specific O3CPU, and all of the structs from the time buffers to do
+ *  communication.
+ *  This is one of the key things that must be defined for each hardware
+ *  specific CPU implementation.
+ */
+struct O3CPUImpl
+{
+    /** The type of MachInst. */
+    typedef TheISA::MachInst MachInst;
+
+    /** The CPU policy to be used, which defines all of the CPU stages. */
+    typedef SimpleCPUPolicy<O3CPUImpl> CPUPol;
+
+    /** The DynInst type to be used. */
+    typedef BaseO3DynInst<O3CPUImpl> DynInst;
+
+    /** The refcounted DynInst pointer to be used.  In most cases this is
+     *  what should be used, and not DynInst *.
+     */
+    typedef RefCountingPtr<DynInst> DynInstPtr;
+
+    /** The O3CPU type to be used. */
+    typedef FullO3CPU<O3CPUImpl> O3CPU;
+
+    /** Same typedef, but for CPUType.  BaseDynInst may not always use
+     * an O3 CPU, so it's clearer to call it CPUType instead in that
+     * case.
+     */
+    typedef O3CPU CPUType;
+
+    enum {
+      MaxWidth = 8,
+      MaxThreads = 4
+    };
+};
+
+#endif // __CPU_O3_SPARC_IMPL_HH__

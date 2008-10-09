@@ -42,7 +42,6 @@
 #include "base/misc.hh"
 #include "base/refcnt.hh"
 #include "cpu/op_class.hh"
-#include "cpu/o3/dyn_inst_decl.hh"
 #include "sim/faults.hh"
 #include "sim/host.hh"
 
@@ -53,6 +52,10 @@ struct SimpleImpl;
 class ThreadContext;
 class DynInst;
 class Packet;
+
+class O3CPUImpl;
+template <class Impl> class BaseO3DynInst;
+typedef BaseO3DynInst<O3CPUImpl> O3DynInst;
 
 template <class Impl>
 class OzoneDynInst;

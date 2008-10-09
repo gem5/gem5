@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2004-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
- *          Korey Sewell
  */
 
 #include <string>
@@ -34,14 +33,14 @@
 #include "config/full_system.hh"
 #include "config/use_checker.hh"
 #include "cpu/o3/cpu.hh"
-#include "cpu/o3/mips/impl.hh"
+#include "cpu/o3/impl.hh"
 #include "params/DerivO3CPU.hh"
 
-class DerivO3CPU : public FullO3CPU<MipsSimpleImpl>
+class DerivO3CPU : public FullO3CPU<O3CPUImpl>
 {
   public:
     DerivO3CPU(DerivO3CPUParams *p)
-        : FullO3CPU<MipsSimpleImpl>(p)
+        : FullO3CPU<O3CPUImpl>(p)
     { }
 };
 
