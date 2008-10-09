@@ -104,7 +104,7 @@ def template MicroDebugExecute {{
             %(op_decl)s
             %(op_rd)s
             if (%(cond_test)s) {
-                %(func)s(message + "\n");
+                %(func)s("%s\n", message);
             }
             return NoFault;
         }
