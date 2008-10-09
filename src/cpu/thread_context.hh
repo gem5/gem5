@@ -429,7 +429,7 @@ class ProxyThreadContext : public ThreadContext
 
     uint64_t readNextMicroPC() { return actualTC->readMicroPC(); }
 
-    void setNextMicroPC(uint64_t val) { actualTC->setMicroPC(val); }
+    void setNextMicroPC(uint64_t val) { actualTC->setNextMicroPC(val); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     { return actualTC->readMiscRegNoEffect(misc_reg); }
