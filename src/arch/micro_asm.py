@@ -242,7 +242,10 @@ def t_params_PARAMS(t):
 def t_asm_ID(t):
     r'[A-Za-z_]\w*'
     t.type = reserved_map.get(t.value, 'ID')
-    t.lexer.begin('params')
+    # If the ID is really "extern", we shouldn't start looking for parameters
+    # yet. The real ID, the label itself, is coming up.
+    if t.type != 'EXTERN':
+        t.lexer.begin('params')
     return t
 
 # If there is a label and you're -not- in the assembler (which would be caught
