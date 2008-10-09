@@ -326,7 +326,9 @@ def main():
     if options.trace_start:
         def enable_trace():
             internal.trace.cvar.enabled = True
-        event.create(enable_trace, int(options.trace_start))
+        
+        e = event.create(enable_trace)
+        event.mainq.schedule(e, options.trace_start)
     else:
         internal.trace.cvar.enabled = True
 

@@ -33,10 +33,12 @@
 #include "arch/alpha/regfile.hh"
 #include "cpu/thread_context.hh"
 
+using namespace std;
+
 namespace AlphaISA {
 
 void
-RegFile::serialize(std::ostream &os)
+RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
@@ -49,7 +51,7 @@ RegFile::serialize(std::ostream &os)
 }
 
 void
-RegFile::unserialize(Checkpoint *cp, const std::string &section)
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);

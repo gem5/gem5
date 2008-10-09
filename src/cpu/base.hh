@@ -65,7 +65,7 @@ class CPUProgressEvent : public Event
     BaseCPU *cpu;
 
   public:
-    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu);
+    CPUProgressEvent(BaseCPU *_cpu, Tick ival);
 
     void process();
 

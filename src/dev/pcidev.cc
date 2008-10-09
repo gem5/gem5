@@ -56,8 +56,8 @@ using namespace std;
 
 PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
         int funcid, Platform *p)
-    : SimpleTimingPort(dev->name() + "-pciconf"), device(dev), platform(p),
-      busId(busid), deviceId(devid), functionId(funcid)
+    : SimpleTimingPort(dev->name() + "-pciconf", dev), device(dev),
+      platform(p), busId(busid), deviceId(devid), functionId(funcid)
 {
     configAddr = platform->calcConfigAddr(busId, deviceId, functionId);
 }

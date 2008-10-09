@@ -97,20 +97,24 @@ Bus::init()
         intIter->second->sendStatusChange(Port::RangeChange);
 }
 
-Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
+Bus::BusFreeEvent::BusFreeEvent(Bus *_bus)
+    : bus(_bus)
 {}
 
-void Bus::BusFreeEvent::process()
+void
+Bus::BusFreeEvent::process()
 {
     bus->recvRetry(-1);
 }
 
-const char * Bus::BusFreeEvent::description() const
+const char *
+Bus::BusFreeEvent::description() const
 {
     return "bus became available";
 }
 
-Tick Bus::calcPacketTiming(PacketPtr pkt)
+Tick
+Bus::calcPacketTiming(PacketPtr pkt)
 {
     // Bring tickNextIdle up to the present tick.
     // There is some potential ambiguity where a cycle starts, which
@@ -155,12 +159,8 @@ void Bus::occupyBus(Tick until)
     }
 
     tickNextIdle = until;
+    reschedule(busIdle, tickNextIdle, true);
 
-    if (!busIdle.scheduled()) {
-        busIdle.schedule(tickNextIdle);
-    } else {
-        busIdle.reschedule(tickNextIdle);
-    }
     DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n",
             curTick, tickNextIdle);
 }
@@ -293,7 +293,7 @@ Bus::recvRetry(int id)
             //Burn a cycle for the missed grant.
             tickNextIdle += clock;
 
-            busIdle.reschedule(tickNextIdle, true);
+            reschedule(busIdle, tickNextIdle, true);
         }
     }
     //If we weren't able to drain before, we might be able to now.

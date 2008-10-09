@@ -148,9 +148,9 @@ class FullO3CPU : public BaseO3CPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(tickEvent, nextCycle(curTick + ticks(delay)));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(nextCycle(curTick + ticks(delay)));
+            schedule(tickEvent, nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule tick event, regardless of its current state. */
@@ -188,11 +188,11 @@ class FullO3CPU : public BaseO3CPU
     {
         // Schedule thread to activate, regardless of its current state.
         if (activateThreadEvent[tid].squashed())
-            activateThreadEvent[tid].
-                reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(activateThreadEvent[tid],
+                nextCycle(curTick + ticks(delay)));
         else if (!activateThreadEvent[tid].scheduled())
-            activateThreadEvent[tid].
-                schedule(nextCycle(curTick + ticks(delay)));
+            schedule(activateThreadEvent[tid],
+                nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule actiavte thread event, regardless of its current state. */
@@ -246,11 +246,11 @@ class FullO3CPU : public BaseO3CPU
     {
         // Schedule thread to activate, regardless of its current state.
         if (deallocateContextEvent[tid].squashed())
-            deallocateContextEvent[tid].
-                reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(deallocateContextEvent[tid],
+                nextCycle(curTick + ticks(delay)));
         else if (!deallocateContextEvent[tid].scheduled())
-            deallocateContextEvent[tid].
-                schedule(nextCycle(curTick + ticks(delay)));
+            schedule(deallocateContextEvent[tid],
+                nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule thread deallocation in CPU */

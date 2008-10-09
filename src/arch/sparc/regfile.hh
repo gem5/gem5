@@ -112,8 +112,9 @@ namespace SparcISA
 
         void setIntReg(int intReg, const IntReg &val);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+            const std::string &section);
 
       public:
 

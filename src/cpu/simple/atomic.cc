@@ -43,7 +43,7 @@ using namespace std;
 using namespace TheISA;
 
 AtomicSimpleCPU::TickEvent::TickEvent(AtomicSimpleCPU *c)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c)
+    : Event(CPU_Tick_Pri), cpu(c)
 {
 }
 
@@ -201,9 +201,8 @@ AtomicSimpleCPU::resume()
 
     changeState(SimObject::Running);
     if (thread->status() == ThreadContext::Active) {
-        if (!tickEvent.scheduled()) {
-            tickEvent.schedule(nextCycle());
-        }
+        if (!tickEvent.scheduled())
+            schedule(tickEvent, nextCycle());
     }
 }
 
@@ -230,7 +229,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(nextCycle());
+            schedule(tickEvent, nextCycle());
             break;
         }
     }
@@ -260,7 +259,7 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     numCycles += tickToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    tickEvent.schedule(nextCycle(curTick + ticks(delay)));
+    schedule(tickEvent, nextCycle(curTick + ticks(delay)));
     _status = Running;
 }
 
@@ -278,7 +277,7 @@ AtomicSimpleCPU::suspendContext(int thread_num)
     // tick event may not be scheduled if this gets called from inside
     // an instruction's execution, e.g. "quiesce"
     if (tickEvent.scheduled())
-        tickEvent.deschedule();
+        deschedule(tickEvent);
 
     notIdleFraction--;
     _status = Idle;
@@ -794,7 +793,7 @@ AtomicSimpleCPU::tick()
         latency = ticks(1);
 
     if (_status != Idle)
-        tickEvent.schedule(curTick + latency);
+        schedule(tickEvent, curTick + latency);
 }
 
 

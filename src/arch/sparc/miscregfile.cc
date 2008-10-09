@@ -593,7 +593,8 @@ void MiscRegFile::setReg(int miscReg,
     setRegNoEffect(miscReg, new_val);
 }
 
-void MiscRegFile::serialize(std::ostream & os)
+void
+MiscRegFile::serialize(EventManager *em, std::ostream &os)
 {
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
@@ -670,7 +671,9 @@ void MiscRegFile::serialize(std::ostream & os)
 #endif
 }
 
-void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
+void
+MiscRegFile::unserialize(EventManager *em, Checkpoint *cp,
+    const string &section)
 {
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tick);
@@ -729,15 +732,15 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
 
             if (tick_cmp) {
                 tickCompare = new TickCompareEvent(this, tc);
-                tickCompare->schedule(tick_cmp);
+                em->schedule(tickCompare, tick_cmp);
             }
             if (stick_cmp)  {
                 sTickCompare = new STickCompareEvent(this, tc);
-                sTickCompare->schedule(stick_cmp);
+                em->schedule(sTickCompare, stick_cmp);
             }
             if (hstick_cmp)  {
                 hSTickCompare = new HSTickCompareEvent(this, tc);
-                hSTickCompare->schedule(hstick_cmp);
+                em->schedule(hSTickCompare, hstick_cmp);
             }
         }
     }

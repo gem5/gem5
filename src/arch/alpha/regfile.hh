@@ -43,6 +43,7 @@
 //XXX These should be implemented by someone who knows the alpha stuff better
 
 class Checkpoint;
+class EventManager;
 class ThreadContext;
 
 namespace AlphaISA {
@@ -202,8 +203,9 @@ class RegFile {
         intRegFile.setReg(intReg, val);
     }
 
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+    void serialize(EventManager *em, std::ostream &os);
+    void unserialize(EventManager *em, Checkpoint *cp,
+        const std::string &section);
 
     void
     changeContext(RegContextParam param, RegContextVal val)

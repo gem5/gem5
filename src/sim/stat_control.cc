@@ -154,12 +154,10 @@ class _StatEvent : public Event
     Tick repeat;
 
   public:
-    _StatEvent(bool _dump, bool _reset, Tick _when, Tick _repeat)
-        : Event(&mainEventQueue, Stat_Event_Pri), dump(_dump), reset(_reset),
-          repeat(_repeat)
+    _StatEvent(bool _dump, bool _reset, Tick _repeat)
+        : Event(Stat_Event_Pri), dump(_dump), reset(_reset), repeat(_repeat)
     {
         setFlags(AutoDelete);
-        schedule(_when);
     }
 
     virtual void
@@ -171,15 +169,18 @@ class _StatEvent : public Event
         if (reset)
             Stats::reset();
 
-        if (repeat)
-            new _StatEvent(dump, reset, curTick + repeat, repeat);
+        if (repeat) {
+            Event *event = new _StatEvent(dump, reset, repeat);
+            mainEventQueue.schedule(event, curTick + repeat);
+        }
     }
 };
 
 void
 StatEvent(bool dump, bool reset, Tick when, Tick repeat)
 {
-    new _StatEvent(dump, reset, when, repeat);
+    Event *event = new _StatEvent(dump, reset, repeat);
+    mainEventQueue.schedule(event, when);
 }
 
 /* namespace Stats */ }

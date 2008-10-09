@@ -74,7 +74,7 @@ BaseO3CPU::regStats()
 
 template <class Impl>
 FullO3CPU<Impl>::TickEvent::TickEvent(FullO3CPU<Impl> *c)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c)
+    : Event(CPU_Tick_Pri), cpu(c)
 {
 }
 
@@ -94,7 +94,7 @@ FullO3CPU<Impl>::TickEvent::description() const
 
 template <class Impl>
 FullO3CPU<Impl>::ActivateThreadEvent::ActivateThreadEvent()
-    : Event(&mainEventQueue, CPU_Switch_Pri)
+    : Event(CPU_Switch_Pri)
 {
 }
 
@@ -123,7 +123,7 @@ FullO3CPU<Impl>::ActivateThreadEvent::description() const
 
 template <class Impl>
 FullO3CPU<Impl>::DeallocateContextEvent::DeallocateContextEvent()
-    : Event(&mainEventQueue, CPU_Tick_Pri), tid(0), remove(false), cpu(NULL)
+    : Event(CPU_Tick_Pri), tid(0), remove(false), cpu(NULL)
 {
 }
 
@@ -576,7 +576,7 @@ FullO3CPU<Impl>::tick()
             lastRunningCycle = curTick;
             timesIdled++;
         } else {
-            tickEvent.schedule(nextCycle(curTick + ticks(1)));
+            schedule(tickEvent, nextCycle(curTick + ticks(1)));
             DPRINTF(O3CPU, "Scheduling next tick!\n");
         }
     }
@@ -584,7 +584,6 @@ FullO3CPU<Impl>::tick()
 #if !FULL_SYSTEM
     updateThreadPriority();
 #endif
-
 }
 
 template <class Impl>
@@ -1121,7 +1120,7 @@ FullO3CPU<Impl>::resume()
 #endif
 
     if (!tickEvent.scheduled())
-        tickEvent.schedule(nextCycle());
+        schedule(tickEvent, nextCycle());
     _status = Running;
 }
 
@@ -1214,11 +1213,11 @@ FullO3CPU<Impl>::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(nextCycle());
+            schedule(tickEvent, nextCycle());
         }
     }
     if (!tickEvent.scheduled())
-        tickEvent.schedule(nextCycle());
+        schedule(tickEvent, nextCycle());
 }
 
 template <class Impl>
@@ -1687,7 +1686,7 @@ FullO3CPU<Impl>::wakeCPU()
     idleCycles += tickToCycles((curTick - 1) - lastRunningCycle);
     numCycles += tickToCycles((curTick - 1) - lastRunningCycle);
 
-    tickEvent.schedule(nextCycle());
+    schedule(tickEvent, nextCycle());
 }
 
 template <class Impl>

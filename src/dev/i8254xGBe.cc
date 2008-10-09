@@ -592,7 +592,7 @@ IGbE::postInterrupt(IntTypes t, bool now)
 
     if (regs.itr.interval() == 0 || now || lastInterrupt + itr_interval <= curTick) {
         if (interEvent.scheduled()) {
-            interEvent.deschedule();
+            deschedule(interEvent);
         }
         cpuPostInt();
     } else {
@@ -601,7 +601,7 @@ IGbE::postInterrupt(IntTypes t, bool now)
        DPRINTF(EthernetIntr, "EINT: Scheduling timer interrupt for tick %d\n",
                 int_time);
        if (!interEvent.scheduled()) {
-           interEvent.schedule(int_time);
+           schedule(interEvent, int_time);
        }
     }
 }
@@ -628,24 +628,24 @@ IGbE::cpuPostInt()
 
 
     if (interEvent.scheduled()) {
-        interEvent.deschedule();
+        deschedule(interEvent);
     }
 
     if (rdtrEvent.scheduled()) {
         regs.icr.rxt0(1);
-        rdtrEvent.deschedule();
+        deschedule(rdtrEvent);
     }
     if (radvEvent.scheduled()) {
         regs.icr.rxt0(1);
-        radvEvent.deschedule();
+        deschedule(radvEvent);
     }
     if (tadvEvent.scheduled()) {
         regs.icr.txdw(1);
-        tadvEvent.deschedule();
+        deschedule(tadvEvent);
     }
     if (tidvEvent.scheduled()) {
         regs.icr.txdw(1);
-        tidvEvent.deschedule();
+        deschedule(tidvEvent);
     }
 
     regs.icr.int_assert(1);
@@ -677,7 +677,7 @@ IGbE::chkInterrupt()
     if (!(regs.icr() & regs.imr)) {
         DPRINTF(Ethernet, "Mask cleaned all interrupts\n");
         if (interEvent.scheduled())
-           interEvent.deschedule();
+           deschedule(interEvent);
         if (regs.icr.int_assert())
             cpuClearInt();
     }
@@ -691,7 +691,8 @@ IGbE::chkInterrupt()
             if (!interEvent.scheduled()) {
                DPRINTF(Ethernet, "Scheduling for %d\n", curTick + Clock::Int::ns
                        * 256 * regs.itr.interval());
-               interEvent.schedule(curTick + Clock::Int::ns * 256 * regs.itr.interval());
+               schedule(interEvent,
+                   curTick + Clock::Int::ns * 256 * regs.itr.interval());
             }
         }
     }
@@ -799,16 +800,16 @@ IGbE::RxDescCache::pktComplete()
     if (igbe->regs.rdtr.delay()) {
         DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n",
                 igbe->regs.rdtr.delay() * igbe->intClock());
-        igbe->rdtrEvent.reschedule(curTick + igbe->regs.rdtr.delay() *
-                    igbe->intClock(),true);
+        igbe->reschedule(igbe->rdtrEvent,
+            curTick + igbe->regs.rdtr.delay() * igbe->intClock(), true);
     }
 
     if (igbe->regs.radv.idv()) {
         DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n",
                 igbe->regs.radv.idv() * igbe->intClock());
         if (!igbe->radvEvent.scheduled()) {
-            igbe->radvEvent.schedule(curTick + igbe->regs.radv.idv() *
-                    igbe->intClock());
+            igbe->schedule(igbe->radvEvent,
+                curTick + igbe->regs.radv.idv() * igbe->intClock());
         }
     }
 
@@ -1040,15 +1041,15 @@ IGbE::TxDescCache::pktComplete()
         DPRINTF(EthernetDesc, "Descriptor had IDE set\n");
         if (igbe->regs.tidv.idv()) {
             DPRINTF(EthernetDesc, "setting tidv\n");
-            igbe->tidvEvent.reschedule(curTick + igbe->regs.tidv.idv() *
-                        igbe->intClock(), true);
+            igbe->reschedule(igbe->tidvEvent,
+                curTick + igbe->regs.tidv.idv() * igbe->intClock(), true);
         }
 
         if (igbe->regs.tadv.idv() && igbe->regs.tidv.idv()) {
             DPRINTF(EthernetDesc, "setting tadv\n");
             if (!igbe->tadvEvent.scheduled()) {
-                igbe->tadvEvent.schedule(curTick + igbe->regs.tadv.idv() *
-                        igbe->intClock());
+                igbe->schedule(igbe->tadvEvent,
+                    curTick + igbe->regs.tadv.idv() * igbe->intClock());
             }
         }
     }
@@ -1126,9 +1127,9 @@ IGbE::TxDescCache::hasOutstandingEvents()
 void
 IGbE::restartClock()
 {
-    if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) && getState() ==
-            SimObject::Running)
-        tickEvent.schedule((curTick/ticks(1)) * ticks(1) + ticks(1));
+    if (!tickEvent.scheduled() && (rxTick || txTick || txFifoTick) &&
+        getState() == SimObject::Running)
+        schedule(tickEvent, (curTick / ticks(1)) * ticks(1) + ticks(1));
 }
 
 unsigned int
@@ -1147,7 +1148,7 @@ IGbE::drain(Event *de)
     rxTick = false;
 
     if (tickEvent.scheduled())
-        tickEvent.deschedule();
+        deschedule(tickEvent);
 
     if (count)
         changeState(Draining);
@@ -1432,7 +1433,7 @@ IGbE::tick()
 
 
     if (rxTick || txTick || txFifoTick)
-        tickEvent.schedule(curTick + ticks(1));
+        schedule(tickEvent, curTick + ticks(1));
 }
 
 void
@@ -1538,19 +1539,19 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(inter_time);
 
     if (rdtr_time)
-        rdtrEvent.schedule(rdtr_time);
+        schedule(rdtrEvent, rdtr_time);
 
     if (radv_time)
-        radvEvent.schedule(radv_time);
+        schedule(radvEvent, radv_time);
 
     if (tidv_time)
-        tidvEvent.schedule(tidv_time);
+        schedule(tidvEvent, tidv_time);
 
     if (tadv_time)
-        tadvEvent.schedule(tadv_time);
+        schedule(tadvEvent, tadv_time);
 
     if (inter_time)
-        interEvent.schedule(inter_time);
+        schedule(interEvent, inter_time);
 
     txDescCache.unserialize(cp, csprintf("%s.TxDescCache", section));
 

@@ -315,7 +315,7 @@ IdeDisk::doDmaTransfer()
               dmaState, devState);
 
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        dmaTransferEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaTransferEvent, curTick + DMA_BACKOFF_PERIOD);
         return;
     } else
         ctrl->dmaRead(curPrdAddr, sizeof(PrdEntry_t), &dmaPrdReadEvent,
@@ -349,7 +349,7 @@ IdeDisk::doDmaDataRead()
     DPRINTF(IdeDisk, "doDmaRead, diskDelay: %d totalDiskDelay: %d\n",
             diskDelay, totalDiskDelay);
 
-    dmaReadWaitEvent.schedule(curTick + totalDiskDelay);
+    schedule(dmaReadWaitEvent, curTick + totalDiskDelay);
 }
 
 void
@@ -395,7 +395,7 @@ IdeDisk::doDmaRead()
 
     }
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        dmaReadWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaReadWaitEvent, curTick + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaReadCG->done()) {
         assert(dmaReadCG->complete() < MAX_DMA_SIZE);
@@ -457,7 +457,7 @@ IdeDisk::doDmaDataWrite()
         cmdBytesLeft -= SectorSize;
     }
 
-    dmaWriteWaitEvent.schedule(curTick + totalDiskDelay);
+    schedule(dmaWriteWaitEvent, curTick + totalDiskDelay);
 }
 
 void
@@ -470,7 +470,7 @@ IdeDisk::doDmaWrite()
                 curPrd.getByteCount(), TheISA::PageBytes);
     }
     if (ctrl->dmaPending() || ctrl->getState() != SimObject::Running) {
-        dmaWriteWaitEvent.schedule(curTick + DMA_BACKOFF_PERIOD);
+        schedule(dmaWriteWaitEvent, curTick + DMA_BACKOFF_PERIOD);
         return;
     } else if (!dmaWriteCG->done()) {
         assert(dmaWriteCG->complete() < MAX_DMA_SIZE);
@@ -545,7 +545,7 @@ IdeDisk::startDma(const uint32_t &prdTableBase)
     dmaState = Dma_Transfer;
 
     // schedule dma transfer (doDmaTransfer)
-    dmaTransferEvent.schedule(curTick + 1);
+    schedule(dmaTransferEvent, curTick + 1);
 }
 
 void
@@ -1073,12 +1073,12 @@ IdeDisk::unserialize(Checkpoint *cp, const string &section)
 
     switch (event) {
       case None : break;
-      case Transfer : dmaTransferEvent.schedule(reschedule); break;
-      case ReadWait : dmaReadWaitEvent.schedule(reschedule); break;
-      case WriteWait : dmaWriteWaitEvent.schedule(reschedule); break;
-      case PrdRead : dmaPrdReadEvent.schedule(reschedule); break;
-      case DmaRead : dmaReadEvent.schedule(reschedule); break;
-      case DmaWrite : dmaWriteEvent.schedule(reschedule); break;
+      case Transfer : schedule(dmaTransferEvent, reschedule); break;
+      case ReadWait : schedule(dmaReadWaitEvent, reschedule); break;
+      case WriteWait : schedule(dmaWriteWaitEvent, reschedule); break;
+      case PrdRead : schedule(dmaPrdReadEvent, reschedule); break;
+      case DmaRead : schedule(dmaReadEvent, reschedule); break;
+      case DmaWrite : schedule(dmaWriteEvent, reschedule); break;
     }
 
     // Unserialize device registers

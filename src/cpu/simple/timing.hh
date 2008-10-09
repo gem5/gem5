@@ -80,8 +80,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
             PacketPtr pkt;
             TimingSimpleCPU *cpu;
 
-            TickEvent(TimingSimpleCPU *_cpu)
-                :Event(&mainEventQueue), cpu(_cpu) {}
+            TickEvent(TimingSimpleCPU *_cpu) : cpu(_cpu) {}
             const char *description() const { return "Timing CPU tick"; }
             void schedule(PacketPtr _pkt, Tick t);
         };

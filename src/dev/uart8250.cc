@@ -48,7 +48,7 @@ using namespace std;
 using namespace TheISA;
 
 Uart8250::IntrEvent::IntrEvent(Uart8250 *u, int bit)
-    : Event(&mainEventQueue), uart(u)
+    : uart(u)
 {
     DPRINTF(Uart, "UART Interrupt Event Initilizing\n");
     intrBit = bit;
@@ -93,9 +93,9 @@ Uart8250::IntrEvent::scheduleIntr()
     DPRINTF(Uart, "Scheduling IER interrupt for %#x, at cycle %lld\n", intrBit,
             curTick + interval);
     if (!scheduled())
-        schedule(curTick + interval);
+        uart->schedule(this, curTick + interval);
     else
-        reschedule(curTick + interval);
+        uart->reschedule(this, curTick + interval);
 }
 
 
@@ -231,7 +231,7 @@ Uart8250::write(PacketPtr pkt)
                 {
                     DPRINTF(Uart, "IER: IER_THRI cleared, descheduling TX intrrupt\n");
                     if (txIntrEvent.scheduled())
-                        txIntrEvent.deschedule();
+                        deschedule(txIntrEvent);
                     if (status & TX_INT)
                         platform->clearConsoleInt();
                     status &= ~TX_INT;
@@ -243,7 +243,7 @@ Uart8250::write(PacketPtr pkt)
                 } else {
                     DPRINTF(Uart, "IER: IER_RDI cleared, descheduling RX intrrupt\n");
                     if (rxIntrEvent.scheduled())
-                        rxIntrEvent.deschedule();
+                        deschedule(rxIntrEvent);
                     if (status & RX_INT)
                         platform->clearConsoleInt();
                     status &= ~RX_INT;
@@ -329,9 +329,9 @@ Uart8250::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(rxintrwhen);
     UNSERIALIZE_SCALAR(txintrwhen);
     if (rxintrwhen != 0)
-        rxIntrEvent.schedule(rxintrwhen);
+        schedule(rxIntrEvent, rxintrwhen);
     if (txintrwhen != 0)
-        txIntrEvent.schedule(txintrwhen);
+        schedule(txIntrEvent, txintrwhen);
 }
 
 Uart8250 *

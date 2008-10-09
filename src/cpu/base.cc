@@ -60,13 +60,12 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
-CPUProgressEvent::CPUProgressEvent(EventQueue *q, Tick ival,
-                                   BaseCPU *_cpu)
-    : Event(q, Event::Progress_Event_Pri), interval(ival),
-      lastNumInst(0), cpu(_cpu)
+CPUProgressEvent::CPUProgressEvent(BaseCPU *_cpu, Tick ival)
+    : Event(Event::Progress_Event_Pri), interval(ival), lastNumInst(0),
+      cpu(_cpu)
 {
     if (interval)
-        schedule(curTick + interval);
+        cpu->schedule(this, curTick + interval);
 }
 
 void
@@ -84,7 +83,7 @@ CPUProgressEvent::process()
             curTick, cpu->name(), temp - lastNumInst);
 #endif
     lastNumInst = temp;
-    schedule(curTick + interval);
+    cpu->schedule(this, curTick + interval);
 }
 
 const char *
@@ -121,22 +120,26 @@ BaseCPU::BaseCPU(Params *p)
     //
     // set up instruction-count-based termination events, if any
     //
-    if (p->max_insts_any_thread != 0)
-        for (int i = 0; i < number_of_threads; ++i)
-            schedExitSimLoop("a thread reached the max instruction count",
-                             p->max_insts_any_thread, 0,
-                             comInstEventQueue[i]);
+    if (p->max_insts_any_thread != 0) {
+        const char *cause = "a thread reached the max instruction count";
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new SimLoopExitEvent(cause, 0);
+            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+        }
+    }
 
     if (p->max_insts_all_threads != 0) {
+        const char *cause = "all threads reached the max instruction count";
+
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
         *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i)
-            new CountedExitEvent(comInstEventQueue[i],
-                "all threads reached the max instruction count",
-                p->max_insts_all_threads, *counter);
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+        }
     }
 
     // allocate per-thread load-based event queues
@@ -147,22 +150,25 @@ BaseCPU::BaseCPU(Params *p)
     //
     // set up instruction-count-based termination events, if any
     //
-    if (p->max_loads_any_thread != 0)
-        for (int i = 0; i < number_of_threads; ++i)
-            schedExitSimLoop("a thread reached the max load count",
-                             p->max_loads_any_thread, 0,
-                             comLoadEventQueue[i]);
+    if (p->max_loads_any_thread != 0) {
+        const char *cause = "a thread reached the max load count";
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new SimLoopExitEvent(cause, 0);
+            comLoadEventQueue[i]->schedule(event, p->max_loads_any_thread);
+        }
+    }
 
     if (p->max_loads_all_threads != 0) {
+        const char *cause = "all threads reached the max load count";
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
         *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i)
-            new CountedExitEvent(comLoadEventQueue[i],
-                "all threads reached the max load count",
-                p->max_loads_all_threads, *counter);
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            comLoadEventQueue[i]->schedule(event, p->max_loads_all_threads);
+        }
     }
 
     functionTracingEnabled = false;
@@ -174,9 +180,9 @@ BaseCPU::BaseCPU(Params *p)
         if (p->function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
-            new EventWrapper<BaseCPU,
-                &BaseCPU::enableFunctionTrace>(
-                this, p->function_trace_start, true);
+            typedef EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace> wrap;
+            Event *event = new wrap(this, true);
+            schedule(event, p->function_trace_start);
         }
     }
 #if FULL_SYSTEM
@@ -209,13 +215,13 @@ BaseCPU::startup()
 {
 #if FULL_SYSTEM
     if (!params()->defer_registration && profileEvent)
-        profileEvent->schedule(curTick);
+        schedule(profileEvent, curTick);
 #endif
 
     if (params()->progress_interval) {
-        new CPUProgressEvent(&mainEventQueue,
-                             ticks(params()->progress_interval),
-                             this);
+        Tick num_ticks = ticks(params()->progress_interval);
+        Event *event = new CPUProgressEvent(this, num_ticks);
+        schedule(event, curTick + num_ticks);
     }
 }
 
@@ -300,7 +306,7 @@ BaseCPU::switchOut()
 //    panic("This CPU doesn't support sampling!");
 #if FULL_SYSTEM
     if (profileEvent && profileEvent->scheduled())
-        profileEvent->deschedule();
+        deschedule(profileEvent);
 #endif
 }
 
@@ -336,7 +342,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         threadContexts[i]->profileClear();
 
     if (profileEvent)
-        profileEvent->schedule(curTick);
+        schedule(profileEvent, curTick);
 #endif
 
     // Connect new CPU to old CPU's memory only if new CPU isn't
@@ -358,7 +364,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
 #if FULL_SYSTEM
 BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
-    : Event(&mainEventQueue), cpu(_cpu), interval(_interval)
+    : cpu(_cpu), interval(_interval)
 { }
 
 void
@@ -369,7 +375,7 @@ BaseCPU::ProfileEvent::process()
         tc->profileSample();
     }
 
-    schedule(curTick + interval);
+    cpu->schedule(this, curTick + interval);
 }
 
 void

@@ -44,6 +44,7 @@
 #include "params/BaseCPU.hh"
 #include "sim/pseudo_inst.hh"
 #include "sim/serialize.hh"
+#include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
@@ -88,7 +89,7 @@ quiesceNs(ThreadContext *tc, uint64_t ns)
 
     Tick resume = curTick + Clock::Int::ns * ns;
 
-    quiesceEvent->reschedule(resume, true);
+    mainEventQueue.reschedule(quiesceEvent, resume, true);
 
     DPRINTF(Quiesce, "%s: quiesceNs(%d) until %d\n",
             tc->getCpuPtr()->name(), ns, resume);
@@ -108,7 +109,7 @@ quiesceCycles(ThreadContext *tc, uint64_t cycles)
 
     Tick resume = curTick + tc->getCpuPtr()->ticks(cycles);
 
-    quiesceEvent->reschedule(resume, true);
+    mainEventQueue.reschedule(quiesceEvent, resume, true);
 
     DPRINTF(Quiesce, "%s: quiesceCycles(%d) until %d\n",
             tc->getCpuPtr()->name(), cycles, resume);
@@ -128,7 +129,8 @@ void
 m5exit(ThreadContext *tc, Tick delay)
 {
     Tick when = curTick + delay * Clock::Int::ns;
-    schedExitSimLoop("m5_exit instruction encountered", when);
+    Event *event = new SimLoopExitEvent("m5_exit instruction encountered", 0);
+    mainEventQueue.schedule(event, when);
 }
 
 void
@@ -239,7 +241,8 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     Tick when = curTick + delay * Clock::Int::ns;
     Tick repeat = period * Clock::Int::ns;
 
-    schedExitSimLoop("checkpoint", when, repeat);
+    Event *event = new SimLoopExitEvent("checkpoint", 0, repeat);
+    mainEventQueue.schedule(event, when);
 }
 
 uint64_t

@@ -45,7 +45,7 @@
 template<class Impl>
 LSQUnit<Impl>::WritebackEvent::WritebackEvent(DynInstPtr &_inst, PacketPtr _pkt,
                                               LSQUnit *lsq_ptr)
-    : Event(&mainEventQueue), inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
+    : inst(_inst), pkt(_pkt), lsqPtr(lsq_ptr)
 {
     this->setFlags(Event::AutoDelete);
 }
@@ -684,7 +684,7 @@ LSQUnit<Impl>::writebackStores()
                         "Instantly completing it.\n",
                         inst->seqNum);
                 WritebackEvent *wb = new WritebackEvent(inst, data_pkt, this);
-                wb->schedule(curTick + 1);
+                cpu->schedule(wb, curTick + 1);
                 completeStore(storeWBIdx);
                 incrStIdx(storeWBIdx);
                 continue;

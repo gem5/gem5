@@ -40,6 +40,13 @@
 
 using namespace std;
 
+SimLoopExitEvent::SimLoopExitEvent(const std::string &_cause, int c, Tick r)
+    : Event(Sim_Exit_Pri), cause(_cause), code(c), repeat(r)
+{
+    setFlags(IsExitEvent);
+}
+
+
 //
 // handle termination event
 //
@@ -49,7 +56,7 @@ SimLoopExitEvent::process()
     // if this got scheduled on a different queue (e.g. the committed
     // instruction queue) then make a corresponding event on the main
     // queue.
-    if (queue() != &mainEventQueue) {
+    if (!getFlags(IsMainQueue)) {
         exitSimLoop(cause, code);
         delete this;
     }
@@ -59,7 +66,8 @@ SimLoopExitEvent::process()
 
     // but if you are doing this on intervals, don't forget to make another
     if (repeat) {
-        schedule(curTick + repeat);
+        assert(getFlags(IsMainQueue));
+        mainEventQueue.schedule(this, curTick + repeat);
     }
 }
 
@@ -70,43 +78,32 @@ SimLoopExitEvent::description() const
     return "simulation loop exit";
 }
 
-SimLoopExitEvent *
-schedExitSimLoop(const std::string &message, Tick when, Tick repeat,
-                 EventQueue *q, int exit_code)
-{
-    if (q == NULL)
-        q = &mainEventQueue;
-
-    return new SimLoopExitEvent(q, when, repeat, message, exit_code);
-}
-
 void
 exitSimLoop(const std::string &message, int exit_code)
 {
-    schedExitSimLoop(message, curTick, 0, NULL, exit_code);
+    Event *event = new SimLoopExitEvent(message, exit_code);
+    mainEventQueue.schedule(event, curTick);
 }
+
+CountedDrainEvent::CountedDrainEvent()
+    : SimLoopExitEvent("Finished drain", 0), count(0)
+{ }
 
 void
 CountedDrainEvent::process()
 {
-    if (--count == 0) {
-        exitSimLoop("Finished drain");
-    }
+    if (--count == 0)
+        exitSimLoop(cause, code);
 }
 
 //
 // constructor: automatically schedules at specified time
 //
-CountedExitEvent::CountedExitEvent(EventQueue *q, const std::string &_cause,
-                                   Tick _when, int &_downCounter)
-    : Event(q, Sim_Exit_Pri),
-      cause(_cause),
-      downCounter(_downCounter)
+CountedExitEvent::CountedExitEvent(const std::string &_cause, int &counter)
+    : Event(Sim_Exit_Pri), cause(_cause), downCounter(counter)
 {
     // catch stupid mistakes
     assert(downCounter > 0);
-
-    schedule(_when);
 }
 
 
@@ -128,9 +125,11 @@ CountedExitEvent::description() const
     return "counted exit";
 }
 
-#ifdef CHECK_SWAP_CYCLES
-new CheckSwapEvent(&mainEventQueue, CHECK_SWAP_CYCLES);
-#endif
+CheckSwapEvent::CheckSwapEvent(int ival)
+    : interval(ival)
+{
+    mainEventQueue.schedule(this, curTick + interval);
+}
 
 void
 CheckSwapEvent::process()
@@ -149,7 +148,8 @@ CheckSwapEvent::process()
         exitSimLoop("Lack of swap space");
     }
 
-    schedule(curTick + interval);
+    assert(getFlags(IsMainQueue));
+    mainEventQueue.schedule(this, curTick + interval);
 }
 
 const char *

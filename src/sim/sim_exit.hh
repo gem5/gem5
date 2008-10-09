@@ -46,14 +46,6 @@ class SimLoopExitEvent;
 void registerExitCallback(Callback *);
 
 /// Schedule an event to exit the simulation loop (returning to
-/// Python) at the indicated tick.  The message and exit_code
-/// parameters are saved in the SimLoopExitEvent to indicate why the
-/// exit occurred.
-SimLoopExitEvent *schedExitSimLoop(const std::string &message, Tick when,
-                                   Tick repeat = 0, EventQueue *q = NULL,
-                                   int exit_code = 0);
-
-/// Schedule an event to exit the simulation loop (returning to
 /// Python) at the end of the current cycle (curTick).  The message
 /// and exit_code parameters are saved in the SimLoopExitEvent to
 /// indicate why the exit occurred.

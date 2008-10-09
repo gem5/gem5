@@ -105,7 +105,7 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
     Tick quiesceEndTick;
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
-        quiesceEvent->schedule(quiesceEndTick);
+        baseCpu->schedule(quiesceEvent, quiesceEndTick);
     if (kernelStats)
         kernelStats->unserialize(cp, section);
 #endif

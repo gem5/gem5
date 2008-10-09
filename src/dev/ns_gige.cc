@@ -945,7 +945,8 @@ NSGigE::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, intrTick, true);
+    intrEvent = new IntrEvent(this, true);
+    schedule(intrEvent, intrTick);
 }
 
 void
@@ -1442,7 +1443,7 @@ NSGigE::rxKick()
             NsRxStateStrings[rxState]);
 
     if (clock && !rxKickEvent.scheduled())
-        rxKickEvent.schedule(rxKickTick);
+        schedule(rxKickEvent, rxKickTick);
 }
 
 void
@@ -1492,7 +1493,7 @@ NSGigE::transmit()
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       txEvent.schedule(curTick + retryTime);
+       schedule(txEvent, curTick + retryTime);
    }
 }
 
@@ -1885,7 +1886,7 @@ NSGigE::txKick()
             NsTxStateStrings[txState]);
 
     if (clock && !txKickEvent.scheduled())
-        txKickEvent.schedule(txKickTick);
+        schedule(txKickEvent, txKickTick);
 }
 
 /**
@@ -1999,7 +2000,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    txEvent.reschedule(curTick + ticks(1), true);
+    reschedule(txEvent, curTick + ticks(1), true);
 }
 
 bool
@@ -2400,7 +2401,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->txDmaState = (DmaState) txDmaState;
     UNSERIALIZE_SCALAR(txKickTick);
     if (txKickTick)
-        txKickEvent.schedule(txKickTick);
+        schedule(txKickEvent, txKickTick);
 
     /*
      * unserialize rx state machine
@@ -2418,7 +2419,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->rxDmaState = (DmaState) rxDmaState;
     UNSERIALIZE_SCALAR(rxKickTick);
     if (rxKickTick)
-        rxKickEvent.schedule(rxKickTick);
+        schedule(rxKickEvent, rxKickTick);
 
     /*
      * Unserialize EEPROM state machine
@@ -2438,7 +2439,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
-        txEvent.schedule(curTick + transmitTick);
+        schedule(txEvent, curTick + transmitTick);
 
     /*
      * unserialize receive address filter settings
@@ -2459,7 +2460,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, intrEventTick, true);
+        intrEvent = new IntrEvent(this, true);
+        schedule(intrEvent, intrEventTick);
     }
 }
 

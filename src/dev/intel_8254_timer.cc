@@ -35,9 +35,11 @@
 
 using namespace std;
 
-Intel8254Timer::Intel8254Timer(const string &name)
-    : _name(name), counter0(name + ".counter0"), counter1(name + ".counter1"),
-      counter2(name + ".counter2")
+Intel8254Timer::Intel8254Timer(EventManager *em, const string &name)
+    : EventManager(em), _name(name),
+      counter0(this, name + ".counter0"),
+      counter1(this, name + ".counter1"),
+      counter2(this, name + ".counter2")
 {
     counter[0] = &counter0;
     counter[1] = &counter0;
@@ -80,10 +82,10 @@ Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
     counter2.unserialize(base + ".counter2", cp, section);
 }
 
-Intel8254Timer::Counter::Counter(const string &name)
+Intel8254Timer::Counter::Counter(Intel8254Timer *p, const string &name)
     : _name(name), event(this), count(0), latched_count(0), period(0),
       mode(0), output_high(false), latch_on(false), read_byte(LSB),
-      write_byte(LSB)
+      write_byte(LSB), parent(p)
 {
 
 }
@@ -140,7 +142,7 @@ Intel8254Timer::Counter::write(const uint8_t data)
         count = (count & 0xFF00) | data;
 
         if (event.scheduled())
-          event.deschedule();
+            parent->deschedule(event);
         output_high = false;
         write_byte = MSB;
         break;
@@ -226,11 +228,10 @@ Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
     Tick event_tick;
     paramIn(cp, section, base + ".event_tick", event_tick);
     if (event_tick)
-        event.schedule(event_tick);
+        parent->schedule(event, event_tick);
 }
 
 Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
-    : Event(&mainEventQueue)
 {
     interval = (Tick)(Clock::Float::s / 1193180.0);
     counter = c_ptr;
@@ -260,7 +261,7 @@ Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
         panic("Timer can't be set to go off instantly.\n");
     DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
             clocks * interval);
-    schedule(curTick + clocks * interval);
+    counter->parent->schedule(this, curTick + clocks * interval);
 }
 
 const char *

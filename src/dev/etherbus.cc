@@ -49,7 +49,7 @@ using namespace std;
 
 EtherBus::EtherBus(const Params *p)
     : EtherObject(p), ticksPerByte(p->speed), loopback(p->loopback),
-      event(&mainEventQueue, this), sender(0), dump(p->dump)
+      event(this), sender(0), dump(p->dump)
 {
 }
 
@@ -99,7 +99,7 @@ EtherBus::send(EtherInt *sndr, EthPacketPtr &pkt)
     int delay = (int)ceil(((double)pkt->length * ticksPerByte) + 1.0);
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
-    event.schedule(curTick + delay);
+    schedule(event, curTick + delay);
 
     return true;
 }

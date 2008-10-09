@@ -56,8 +56,9 @@ simulate(Tick num_cycles)
     else
         num_cycles = curTick + num_cycles;
 
-    Event *limit_event;
-    limit_event = schedExitSimLoop("simulate() limit reached", num_cycles);
+    Event *limit_event =
+        new SimLoopExitEvent("simulate() limit reached", 0);
+    mainEventQueue.schedule(limit_event, num_cycles);
 
     while (1) {
         // there should always be at least one event (the SimLoopExitEvent
@@ -82,8 +83,8 @@ simulate(Tick num_cycles)
             // if we didn't hit limit_event, delete it
             if (se_event != limit_event) {
                 assert(limit_event->scheduled());
-                limit_event->deschedule();
-                delete limit_event;
+                limit_event->squash();
+                warn_once("be nice to actually delete the event here");
             }
 
             return se_event;

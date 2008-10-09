@@ -51,7 +51,7 @@
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           unsigned _tid)
-    : Event(&mainEventQueue, CPU_Tick_Pri), commit(_commit), tid(_tid)
+    : Event(CPU_Tick_Pri), commit(_commit), tid(_tid)
 {
     this->setFlags(Event::AutoDelete);
 }
@@ -462,7 +462,7 @@ DefaultCommit<Impl>::generateTrapEvent(unsigned tid)
 
     TrapEvent *trap = new TrapEvent(this, tid);
 
-    trap->schedule(curTick + trapLatency);
+    cpu->schedule(trap, curTick + trapLatency);
     trapInFlight[tid] = true;
 }
 

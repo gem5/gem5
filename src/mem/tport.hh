@@ -108,7 +108,8 @@ class SimpleTimingPort : public Port
     Tick deferredPacketReadyTime()
     { return transmitList.empty() ? MaxTick : transmitList.front().tick; }
 
-    void schedSendEvent(Tick when)
+    void
+    schedSendEvent(Tick when)
     {
         if (waitingOnRetry) {
             assert(!sendEvent->scheduled());
@@ -116,9 +117,9 @@ class SimpleTimingPort : public Port
         }
 
         if (!sendEvent->scheduled()) {
-            sendEvent->schedule(when);
+            schedule(sendEvent, when);
         } else if (sendEvent->when() > when) {
-            sendEvent->reschedule(when);
+            reschedule(sendEvent, when);
         }
     }
 
@@ -155,7 +156,7 @@ class SimpleTimingPort : public Port
 
   public:
 
-    SimpleTimingPort(std::string pname, MemObject *_owner = NULL)
+    SimpleTimingPort(std::string pname, MemObject *_owner)
         : Port(pname, _owner),
           sendEvent(new SendEvent(this)),
           drainEvent(NULL),

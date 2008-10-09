@@ -38,30 +38,14 @@
 //
 class SimLoopExitEvent : public Event
 {
-  private:
+  protected:
     // string explaining why we're terminating
     std::string cause;
     int code;
     Tick repeat;
 
   public:
-    // Default constructor.  Only really used for derived classes.
-    SimLoopExitEvent()
-        : Event(&mainEventQueue, Sim_Exit_Pri)
-    { }
-
-    SimLoopExitEvent(EventQueue *q,
-                     Tick _when, Tick _repeat, const std::string &_cause,
-                     int c = 0)
-        : Event(q, Sim_Exit_Pri), cause(_cause),
-          code(c), repeat(_repeat)
-    { setFlags(IsExitEvent); schedule(_when); }
-
-//     SimLoopExitEvent(EventQueue *q,
-//                   Tick _when, const std::string &_cause,
-//                   Tick _repeat = 0, int c = 0)
-//      : Event(q, Sim_Exit_Pri), cause(_cause), code(c), repeat(_repeat)
-//     { setFlags(IsExitEvent); schedule(_when); }
+    SimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
 
     std::string getCause() { return cause; }
     int getCode() { return code; }
@@ -76,10 +60,10 @@ class CountedDrainEvent : public SimLoopExitEvent
   private:
     // Count of how many objects have not yet drained
     int count;
+
   public:
-    CountedDrainEvent()
-        : count(0)
-    { }
+    CountedDrainEvent();
+
     void process();
 
     void setCount(int _count) { count = _count; }
@@ -99,8 +83,7 @@ class CountedExitEvent : public Event
     int &downCounter;   // decrement & terminate if zero
 
   public:
-    CountedExitEvent(EventQueue *q, const std::string &_cause,
-                     Tick _when, int &_downCounter);
+    CountedExitEvent(const std::string &_cause, int &_downCounter);
 
     void process();     // process event
 
@@ -116,10 +99,7 @@ class CheckSwapEvent : public Event
     int interval;
 
   public:
-    CheckSwapEvent(EventQueue *q, int ival)
-        : Event(q), interval(ival)
-    { schedule(curTick + interval); }
-
+    CheckSwapEvent(int ival);
     void process();     // process event
 
     virtual const char *description() const;

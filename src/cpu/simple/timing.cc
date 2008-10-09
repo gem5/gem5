@@ -101,7 +101,7 @@ void
 TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 {
     pkt = _pkt;
-    Event::schedule(t);
+    cpu->schedule(this, t);
 }
 
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
@@ -165,7 +165,7 @@ TimingSimpleCPU::resume()
         // Delete the old event if it existed.
         if (fetchEvent) {
             if (fetchEvent->scheduled())
-                fetchEvent->deschedule();
+                deschedule(fetchEvent);
 
             delete fetchEvent;
         }
@@ -186,7 +186,7 @@ TimingSimpleCPU::switchOut()
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
     if (fetchEvent && fetchEvent->scheduled())
-        fetchEvent->deschedule();
+        deschedule(fetchEvent);
 }
 
 
@@ -228,7 +228,8 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    fetchEvent = new FetchEvent(this, nextCycle(curTick + ticks(delay)));
+    fetchEvent = new FetchEvent(this);
+    schedule(fetchEvent, nextCycle(curTick + ticks(delay)));
 }
 
 
@@ -819,10 +820,11 @@ TimingSimpleCPU::DcachePort::recvRetry()
     }
 }
 
-TimingSimpleCPU::IprEvent::IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu, Tick t)
-    : Event(&mainEventQueue), pkt(_pkt), cpu(_cpu)
+TimingSimpleCPU::IprEvent::IprEvent(Packet *_pkt, TimingSimpleCPU *_cpu,
+    Tick t)
+    : pkt(_pkt), cpu(_cpu)
 {
-    schedule(t);
+    cpu->schedule(this, t);
 }
 
 void

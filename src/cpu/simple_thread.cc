@@ -189,7 +189,7 @@ void
 SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
-    regs.serialize(os);
+    regs.serialize(cpu, os);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -198,7 +198,7 @@ void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
-    regs.unserialize(cp, section);
+    regs.unserialize(cpu, cp, section);
     // thread_num and cpu_id are deterministic from the config
 }
 

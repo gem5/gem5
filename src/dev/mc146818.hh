@@ -37,7 +37,7 @@
 #include "sim/eventq.hh"
 
 /** Real-Time Clock (MC146818) */
-class MC146818
+class MC146818 : public EventManager
 {
   protected:
     virtual void handleEvent()
@@ -96,11 +96,9 @@ class MC146818
     uint8_t stat_regB;
 
   public:
-    virtual ~MC146818()
-    {}
-
-    MC146818(const std::string &name, const struct tm time,
+    MC146818(EventManager *em, const std::string &name, const struct tm time,
             bool bcd, Tick frequency);
+    virtual ~MC146818();
 
     /** RTC write data */
     void writeData(const uint8_t addr, const uint8_t data);

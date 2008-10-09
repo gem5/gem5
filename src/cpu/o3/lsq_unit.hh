@@ -584,7 +584,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
             // @todo: Need to make this a parameter.
-            wb->schedule(curTick);
+            cpu->schedule(wb, curTick);
 
             ++lsqForwLoads;
             return NoFault;

@@ -228,7 +228,8 @@ int X86ISA::flattenFloatIndex(ThreadContext * tc, int reg)
     return reg;
 }
 
-void RegFile::serialize(std::ostream &os)
+void
+RegFile::serialize(EventManager *em, std::ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
@@ -237,7 +238,8 @@ void RegFile::serialize(std::ostream &os)
     SERIALIZE_SCALAR(nextRip);
 }
 
-void RegFile::unserialize(Checkpoint *cp, const std::string &section)
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);

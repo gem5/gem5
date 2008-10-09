@@ -152,7 +152,7 @@ MemTest::MemTest(const Params *p)
     // set up counters
     noResponseCycles = 0;
     numReads = 0;
-    tickEvent.schedule(0);
+    schedule(tickEvent, 0);
 
     id = TESTER_ALLOCATOR++;
 
@@ -262,7 +262,7 @@ void
 MemTest::tick()
 {
     if (!tickEvent.scheduled())
-        tickEvent.schedule(curTick + ticks(1));
+        schedule(tickEvent, curTick + ticks(1));
 
     if (++noResponseCycles >= 500000) {
         cerr << name() << ": deadlocked at cycle " << curTick << endl;

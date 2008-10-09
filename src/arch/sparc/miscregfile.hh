@@ -288,9 +288,10 @@ namespace SparcISA
             return priContext | (uint32_t)partId << 13;
         }
 
-        void serialize(std::ostream & os);
+        void serialize(EventManager *em, std::ostream & os);
 
-        void unserialize(Checkpoint * cp, const std::string & section);
+        void unserialize(EventManager *em, Checkpoint *cp,
+                         const std::string & section);
 
         void copyMiscRegs(ThreadContext * tc);
 

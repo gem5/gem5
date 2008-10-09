@@ -39,8 +39,14 @@ struct PyObject;
 #include <string>
 
 struct EventQueue;
+
 struct SimObjectParams
 {
+    SimObjectParams()
+    {
+        extern EventQueue mainEventQueue;
+        eventq = &mainEventQueue;
+    }
     virtual ~SimObjectParams() {}
 
     std::string name;

@@ -146,11 +146,8 @@ class Bridge : public MemObject
             BridgePort *port;
 
           public:
-            SendEvent(BridgePort *p)
-                : Event(&mainEventQueue), port(p) {}
-
+            SendEvent(BridgePort *p) : port(p) {}
             virtual void process() { port->trySend(); }
-
             virtual const char *description() const { return "bridge send"; }
         };
 

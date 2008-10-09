@@ -117,7 +117,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         else if (backoffTime < device->maxBackoffDelay)
             backoffTime <<= 1;
 
-        backoffEvent.reschedule(curTick + backoffTime, true);
+        reschedule(backoffEvent, curTick + backoffTime, true);
 
         DPRINTF(DMA, "Backoff time set to %d ticks\n", backoffTime);
 
@@ -139,7 +139,7 @@ DmaPort::recvTiming(PacketPtr pkt)
         assert(state->totBytes >= state->numBytes);
         if (state->totBytes == state->numBytes) {
             if (state->delay)
-                state->completionEvent->schedule(state->delay + curTick);
+                schedule(state->completionEvent, curTick + state->delay);
             else
                 state->completionEvent->process();
             delete state;
@@ -209,7 +209,7 @@ DmaPort::recvRetry()
     if (transmitList.size() && backoffTime && !inRetry) {
         DPRINTF(DMA, "Scheduling backoff for %d\n", curTick+backoffTime);
         if (!backoffEvent.scheduled())
-            backoffEvent.schedule(backoffTime+curTick);
+            schedule(backoffEvent, backoffTime + curTick);
     }
     DPRINTF(DMA, "TransmitList: %d, backoffTime: %d inRetry: %d es: %d\n",
             transmitList.size(), backoffTime, inRetry,
@@ -297,7 +297,7 @@ DmaPort::sendDma()
                 !backoffEvent.scheduled()) {
             DPRINTF(DMA, "-- Scheduling backoff timer for %d\n",
                     backoffTime+curTick);
-            backoffEvent.schedule(backoffTime+curTick);
+            schedule(backoffEvent, backoffTime + curTick);
         }
     } else if (state == Enums::atomic) {
         transmitList.pop_front();
@@ -317,7 +317,7 @@ DmaPort::sendDma()
 
         if (state->totBytes == state->numBytes) {
             assert(!state->completionEvent->scheduled());
-            state->completionEvent->schedule(curTick + lat + state->delay);
+            schedule(state->completionEvent, curTick + lat + state->delay);
             delete state;
             delete pkt->req;
         }

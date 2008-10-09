@@ -695,7 +695,8 @@ Base::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, intrTick, true);
+    intrEvent = new IntrEvent(this, true);
+    schedule(intrEvent, intrTick);
 }
 
 void
@@ -1315,7 +1316,7 @@ Device::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    txEvent.reschedule(curTick + ticks(1), true);
+    reschedule(txEvent, curTick + ticks(1), true);
 }
 
 bool
@@ -1455,7 +1456,8 @@ Base::unserialize(Checkpoint *cp, const std::string &section)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, intrEventTick, true);
+        intrEvent = new IntrEvent(this, true);
+        schedule(intrEvent, intrEventTick);
     }
 }
 
@@ -1705,7 +1707,7 @@ Device::unserialize(Checkpoint *cp, const std::string &section)
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
-        txEvent.schedule(curTick + transmitTick);
+        schedule(txEvent, curTick + transmitTick);
 
     pioPort->sendStatusChange(Port::RangeChange);
 

@@ -41,8 +41,9 @@
 //#include "cpu/base.hh"
 #include "sim/faults.hh"
 
-class Checkpoint;
 class BaseCPU;
+class Checkpoint;
+class EventManager;
 
 namespace MipsISA
 {
@@ -99,8 +100,9 @@ namespace MipsISA
         Addr readNextNPC();
         void setNextNPC(Addr val);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+            const std::string &section);
 
         void changeContext(RegContextParam param, RegContextVal val)
         {

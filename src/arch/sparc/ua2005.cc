@@ -84,12 +84,12 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             tickCompare = new TickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((tick_cmpr & ~mask(63)) && tickCompare->scheduled())
-            tickCompare->deschedule();
+            cpu->deschedule(tickCompare);
         time = (tick_cmpr & mask(63)) - (tick & mask(63));
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
-                tickCompare->deschedule();
-            tickCompare->schedule(time * cpu->ticks(1));
+                cpu->deschedule(tickCompare);
+            cpu->schedule(tickCompare, curTick + time * cpu->ticks(1));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -99,13 +99,13 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             sTickCompare = new STickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
-            sTickCompare->deschedule();
+            cpu->deschedule(sTickCompare);
         time = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
             cpu->instCount();
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
-                sTickCompare->deschedule();
-            sTickCompare->schedule(time * cpu->ticks(1) + curTick);
+                cpu->deschedule(sTickCompare);
+            cpu->schedule(sTickCompare, curTick + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -169,13 +169,13 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             hSTickCompare = new HSTickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
-            hSTickCompare->deschedule();
+            cpu->deschedule(hSTickCompare);
         time = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
             cpu->instCount();
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
-                hSTickCompare->deschedule();
-            hSTickCompare->schedule(curTick + time * cpu->ticks(1));
+                cpu->deschedule(hSTickCompare);
+            cpu->schedule(hSTickCompare, curTick + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -296,12 +296,14 @@ MiscRegFile::processTickCompare(ThreadContext *tc)
 void
 MiscRegFile::processSTickCompare(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
     ticks = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
-        tc->getCpuPtr()->instCount();
+        cpu->instCount();
     assert(ticks >= 0 && "stick compare missed interrupt cycle");
 
     if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
@@ -311,12 +313,14 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
             setReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else
-        sTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
+        cpu->schedule(sTickCompare, curTick + ticks * cpu->ticks(1));
 }
 
 void
 MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
@@ -326,7 +330,7 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
        return;
 
     ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
-        tc->getCpuPtr()->instCount();
+        cpu->instCount();
     assert(ticks >= 0 && "hstick compare missed interrupt cycle");
 
     if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
@@ -337,6 +341,6 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else
-        hSTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
+        cpu->schedule(hSTickCompare, curTick + ticks * cpu->ticks(1));
 }
 

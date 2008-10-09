@@ -219,21 +219,23 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
     //return intRegFile.flattenIndex(reg);
 }
 
-void RegFile::serialize(std::ostream &os)
+void
+RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
-    miscRegFile.serialize(os);
+    miscRegFile.serialize(em, os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
 }
 
-void RegFile::unserialize(Checkpoint *cp, const std::string &section)
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);
-    miscRegFile.unserialize(cp, section);
+    miscRegFile.unserialize(em, cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

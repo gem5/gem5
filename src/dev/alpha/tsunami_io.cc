@@ -56,14 +56,15 @@ using namespace std;
 //Should this be AlphaISA?
 using namespace TheISA;
 
-TsunamiIO::TsunamiRTC::TsunamiRTC(const string &n, const TsunamiIOParams *p) :
-    MC146818(n, p->time, p->year_is_bcd, p->frequency), tsunami(p->tsunami)
+TsunamiIO::RTC::RTC(const string &n, const TsunamiIOParams *p)
+    : MC146818(p->tsunami, n, p->time, p->year_is_bcd, p->frequency),
+      tsunami(p->tsunami)
 {
 }
 
 TsunamiIO::TsunamiIO(const Params *p)
-    : BasicPioDevice(p), tsunami(p->tsunami), pitimer(p->name + "pitimer"),
-      rtc(p->name + ".rtc", p)
+    : BasicPioDevice(p), tsunami(p->tsunami),
+      pitimer(this, p->name + "pitimer"), rtc(p->name + ".rtc", p)
 {
     pioSize = 0x100;
 

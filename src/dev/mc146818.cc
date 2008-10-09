@@ -42,9 +42,9 @@
 
 using namespace std;
 
-MC146818::MC146818(const string &n, const struct tm time,
-        bool bcd, Tick frequency)
-    : _name(n), event(this, frequency)
+MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
+                   bool bcd, Tick frequency)
+    : EventManager(em), _name(n), event(this, frequency)
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
@@ -75,6 +75,10 @@ MC146818::MC146818(const string &n, const struct tm time,
     DPRINTFN("Real-time clock set to %s", asctime(&time));
 }
 
+MC146818::~MC146818()
+{
+}
+
 void
 MC146818::writeData(const uint8_t addr, const uint8_t data)
 {
@@ -96,7 +100,7 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
                     event.scheduleIntr();
             } else {
                 if (event.scheduled())
-                    event.deschedule();
+                    deschedule(event);
             }
             stat_regB = data;
             break;
@@ -153,27 +157,27 @@ MC146818::unserialize(const string &base, Checkpoint *cp,
     // We're not unserializing the event here, but we need to
     // rescehedule the event since curTick was moved forward by the
     // checkpoint
-    event.reschedule(curTick + event.interval);
+    reschedule(event, curTick + event.interval);
 }
 
 MC146818::RTCEvent::RTCEvent(MC146818 * _parent, Tick i)
-    : Event(&mainEventQueue), parent(_parent), interval(i)
+    : parent(_parent), interval(i)
 {
     DPRINTF(MC146818, "RTC Event Initilizing\n");
-    schedule(curTick + interval);
+    parent->schedule(this, curTick + interval);
 }
 
 void
 MC146818::RTCEvent::scheduleIntr()
 {
-  schedule(curTick + interval);
+    parent->schedule(this, curTick + interval);
 }
 
 void
 MC146818::RTCEvent::process()
 {
     DPRINTF(MC146818, "RTC Timer Interrupt\n");
-    schedule(curTick + interval);
+    parent->schedule(this, curTick + interval);
     parent->handleEvent();
 }
 

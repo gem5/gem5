@@ -293,14 +293,14 @@ class IGbE : public EtherDevice
             wbOut = max_to_wb;
 
             assert(!wbDelayEvent.scheduled()); 
-            wbDelayEvent.schedule(igbe->wbDelay + curTick);
+            igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
         }
             
         void writeback1()
         {
             // If we're draining delay issuing this DMA
             if (igbe->drainEvent) {
-                wbDelayEvent.schedule(igbe->wbDelay + curTick);
+                igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
                 return;
             }
 
@@ -356,14 +356,14 @@ class IGbE : public EtherDevice
             curFetching = max_to_fetch;
 
             assert(!fetchDelayEvent.scheduled());
-            fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
+            igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
         }
 
         void fetchDescriptors1()
         {
             // If we're draining delay issuing this DMA
             if (igbe->drainEvent) {
-                fetchDelayEvent.schedule(igbe->fetchDelay + curTick);
+                igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
                 return;
             }
 
@@ -557,9 +557,9 @@ class IGbE : public EtherDevice
             UNSERIALIZE_SCALAR(fetch_delay);
             UNSERIALIZE_SCALAR(wb_delay);
             if (fetch_delay)
-                fetchDelayEvent.schedule(fetch_delay);
+                igbe->schedule(fetchDelayEvent, fetch_delay);
             if (wb_delay)
-                wbDelayEvent.schedule(wb_delay);
+                igbe->schedule(wbDelayEvent, wb_delay);
 
 
         }

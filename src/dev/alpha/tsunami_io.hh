@@ -56,11 +56,11 @@ class TsunamiIO : public BasicPioDevice
 
   protected:
 
-    class TsunamiRTC : public MC146818
+    class RTC : public MC146818
     {
       public:
-        Tsunami * tsunami;
-        TsunamiRTC(const std::string &n, const TsunamiIOParams *p);
+        Tsunami *tsunami;
+        RTC(const std::string &n, const TsunamiIOParams *p);
 
       protected:
         void handleEvent()
@@ -94,7 +94,7 @@ class TsunamiIO : public BasicPioDevice
     /** Intel 8253 Periodic Interval Timer */
     Intel8254Timer pitimer;
 
-    TsunamiRTC rtc;
+    RTC rtc;
 
     uint8_t rtcAddr;
 

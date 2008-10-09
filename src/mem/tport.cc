@@ -138,7 +138,7 @@ SimpleTimingPort::sendDeferredPacket()
     if (success) {
         if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
-            sendEvent->schedule(time <= curTick ? curTick+1 : time);
+            schedule(sendEvent, time <= curTick ? curTick+1 : time);
         }
 
         if (transmitList.empty() && drainEvent) {

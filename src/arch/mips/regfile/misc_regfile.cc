@@ -567,7 +567,7 @@ MiscRegFile::scheduleCP0Update(int delay)
 
         //schedule UPDATE
         CP0Event *cp0_event = new CP0Event(this, cpu, UpdateCP0);
-        cp0_event->schedule(curTick + cpu->ticks(delay));
+        cpu->schedule(cp0_event, curTick + cpu->ticks(delay));
     }
 }
 
@@ -601,8 +601,7 @@ MiscRegFile::updateCPU()
 }
 
 MiscRegFile::CP0Event::CP0Event(CP0 *_cp0, BaseCPU *_cpu, CP0EventType e_type)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cp0(_cp0), cpu(_cpu),
-      cp0EventType(e_type)
+    : Event(CPU_Tick_Pri), cp0(_cp0), cpu(_cpu), cp0EventType(e_type)
 {  }
 
 void
@@ -627,10 +626,7 @@ MiscRegFile::CP0Event::description() const
 void
 MiscRegFile::CP0Event::scheduleEvent(int delay)
 {
-    if (squashed())
-        reschedule(curTick + cpu->ticks(delay));
-    else if (!scheduled())
-        schedule(curTick + cpu->ticks(delay));
+    cpu->reschedule(this, curTick + cpu->ticks(delay), true);
 }
 
 void

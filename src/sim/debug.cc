@@ -56,12 +56,9 @@ debug_break()
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle
 //
-class DebugBreakEvent : public Event
+struct DebugBreakEvent : public Event
 {
-  public:
-
-    DebugBreakEvent(EventQueue *q, Tick _when);
-
+    DebugBreakEvent();
     void process();     // process event
     virtual const char *description() const;
 };
@@ -69,11 +66,10 @@ class DebugBreakEvent : public Event
 //
 // constructor: schedule at specified time
 //
-DebugBreakEvent::DebugBreakEvent(EventQueue *q, Tick _when)
-    : Event(q, Debug_Break_Pri)
+DebugBreakEvent::DebugBreakEvent()
+    : Event(Debug_Break_Pri)
 {
     setFlags(AutoDelete);
-    schedule(_when);
 }
 
 //
@@ -99,13 +95,15 @@ DebugBreakEvent::description() const
 void
 schedBreakCycle(Tick when)
 {
-    new DebugBreakEvent(&mainEventQueue, when);
+    mainEventQueue.schedule(new DebugBreakEvent, when);
+    warn("need to stop all queues");
 }
 
 void
 eventqDump()
 {
     mainEventQueue.dump();
+    warn("need to dump all queues");
 }
 
 

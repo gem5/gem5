@@ -33,16 +33,16 @@
 #ifndef __DEV_8254_HH__
 #define __DEV_8254_HH__
 
+#include <string>
+#include <iostream>
+
 #include "base/bitunion.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
 
-#include <string>
-#include <iostream>
-
 /** Programmable Interval Timer (Intel 8254) */
-class Intel8254Timer
+class Intel8254Timer : public EventManager
 {
     BitUnion8(CtrlReg)
         Bitfield<7, 6> sel;
@@ -129,8 +129,11 @@ class Intel8254Timer
         /** Determine which byte of a 16-bit count value to read/write */
         uint8_t read_byte, write_byte;
 
+        /** Pointer to container */
+        Intel8254Timer *parent;
+
       public:
-        Counter(const std::string &name);
+        Counter(Intel8254Timer *p, const std::string &name);
 
         /** Latch the current count (if one is not already latched) */
         void latchCount();
@@ -183,7 +186,7 @@ class Intel8254Timer
     Counter counter1;
     Counter counter2;
 
-    Intel8254Timer(const std::string &name);
+    Intel8254Timer(EventManager *em, const std::string &name);
 
     /** Write control word */
     void writeControl(const CtrlReg data);

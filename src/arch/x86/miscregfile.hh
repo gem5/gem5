@@ -115,10 +115,8 @@ namespace X86ISA
         class ApicTimerEvent : public Event
         {
           public:
-            ApicTimerEvent() : Event(&mainEventQueue)
-            {}
-
-            void process()
+            void
+            process()
             {
                 warn("Local APIC timer event doesn't do anything!\n");
             }

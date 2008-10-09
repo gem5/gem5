@@ -74,10 +74,10 @@ class MemTest : public MemObject
     {
       private:
         MemTest *cpu;
+
       public:
-        TickEvent(MemTest *c)
-            : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c) {}
-        void process() {cpu->tick();}
+        TickEvent(MemTest *c) : Event(CPU_Tick_Pri), cpu(c) {}
+        void process() { cpu->tick(); }
         virtual const char *description() const { return "MemTest tick"; }
     };
 

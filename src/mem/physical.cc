@@ -383,7 +383,7 @@ PhysicalMemory::recvStatusChange(Port::Status status)
 
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
-    : SimpleTimingPort(_name), memory(_memory)
+    : SimpleTimingPort(_name, _memory), memory(_memory)
 { }
 
 void
