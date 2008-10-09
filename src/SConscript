@@ -61,8 +61,9 @@ def sort_list(_list):
 
 class PySourceFile(object):
     invalid_sym_char = re.compile('[^A-z0-9_]')
-    def __init__(self, package, source):
-        filename = str(source)
+    def __init__(self, package, tnode):
+        snode = tnode.srcnode()
+        filename = str(tnode)
         pyname = basename(filename)
         assert pyname.endswith('.py')
         name = pyname[:-3]
@@ -70,7 +71,8 @@ class PySourceFile(object):
             path = package.split('.')
         else:
             path = []
-        modpath = path
+
+        modpath = path[:]
         if name != '__init__':
             modpath += [name]
         modpath = '.'.join(modpath)
@@ -78,13 +80,17 @@ class PySourceFile(object):
         arcpath = path + [ pyname ]
         arcname = joinpath(*arcpath)
 
-        self.tnode = source
-        self.snode = source.srcnode()
+        debugname = snode.abspath
+        if not exists(debugname):
+            debugname = tnode.abspath
+
+        self.tnode = tnode
+        self.snode = snode
         self.pyname = pyname
         self.package = package
         self.modpath = modpath
         self.arcname = arcname
-        self.filename = filename
+        self.debugname = debugname
         self.compiled = File(filename + 'c')
         self.assembly = File(filename + '.s')
         self.symname = "PyEMB_" + self.invalid_sym_char.sub('_', modpath)
@@ -849,7 +855,7 @@ def objectifyPyFile(target, source, env):
     dst = file(str(target[0]), 'w')
 
     pysource = py_sources_tnodes[source[0]]
-    compiled = compile(src, pysource.snode.path, 'exec')
+    compiled = compile(src, pysource.debugname, 'exec')
     marshalled = marshal.dumps(compiled)
     compressed = zlib.compress(marshalled)
     data = compressed

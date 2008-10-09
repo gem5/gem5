@@ -338,7 +338,10 @@ def main():
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path
 
-    scope = { '__file__' : sys.argv[0],
+    filename = sys.argv[0]
+    filedata = file(filename, 'r').read()
+    filecode = compile(filedata, filename, 'exec')
+    scope = { '__file__' : filename,
               '__name__' : '__m5_main__' }
 
     # we want readline if we're doing anything interactive
@@ -348,11 +351,24 @@ def main():
     # if pdb was requested, execfile the thing under pdb, otherwise,
     # just do the execfile normally
     if options.pdb:
-        from pdb import Pdb
-        debugger = Pdb()
-        debugger.run('execfile("%s")' % sys.argv[0], scope)
+        import pdb
+        import traceback
+
+        pdb = pdb.Pdb()
+        try:
+            pdb.run(filecode, scope)
+        except SystemExit:
+            print "The program exited via sys.exit(). Exit status: ",
+            print sys.exc_info()[1]
+        except:
+            traceback.print_exc()
+            print "Uncaught exception. Entering post mortem debugging"
+            t = sys.exc_info()[2]
+            while t.tb_next is not None:
+                t = t.tb_next
+                pdb.interaction(t.tb_frame,t)
     else:
-        execfile(sys.argv[0], scope)
+        exec filecode in scope
 
     # once the script is done
     if options.interactive:
