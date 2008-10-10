@@ -26,16 +26,17 @@
 #
 # Authors: Nathan Binkert
 
-__all__ = [ 'attrdict', 'optiondict' ]
+__all__ = [ 'attrdict', 'multiattrdict', 'optiondict' ]
 
 class attrdict(dict):
+    """Wrap dict, so you can use attribute access to get/set elements"""
     def __getattr__(self, attr):
         if attr in self:
             return self.__getitem__(attr)
         return super(attrdict, self).__getattribute__(attr)
 
     def __setattr__(self, attr, value):
-        if attr in dir(self):
+        if attr in dir(self) or attr.startswith('_'):
             return super(attrdict, self).__setattr__(attr, value)
         return self.__setitem__(attr, value)
 
@@ -44,13 +45,23 @@ class attrdict(dict):
             return self.__delitem__(attr)
         return super(attrdict, self).__delattr__(attr, value)
 
+class multiattrdict(attrdict):
+    """Wrap attrdict so that nested attribute accesses automatically create
+    nested dictionaries."""
+    def __getattr__(self, attr):
+        try:
+            return super(multiattrdict, self).__getattr__(attr)
+        except AttributeError:
+            d = optiondict()
+            setattr(self, attr, d)
+            return d
+
 class optiondict(attrdict):
+    """Modify attrdict so that a missing attribute just returns None"""
     def __getattr__(self, attr):
         try:
             return super(optiondict, self).__getattr__(attr)
         except AttributeError:
-            #d = optionsdict()
-            #setattr(self, attr, d)
             return None
 
 if __name__ == '__main__':
@@ -68,3 +79,9 @@ if __name__ == '__main__':
     del x.z
     print dir(x)
     print(x)
+
+    x = multiattrdict()
+    x.y.z = 9
+    print x
+    print x.y
+    print x.y.z
