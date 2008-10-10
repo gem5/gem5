@@ -185,6 +185,10 @@ def makeX86System(mem_mode, mdesc = None, self = None):
 
     self.intrctrl = IntrControl()
 
+    # Add in a Bios information structure.
+    structures = [X86SMBiosBiosInformation()]
+    self.smbios_table.structures = structures
+
 
 def makeLinuxX86System(mem_mode, mdesc = None):
     self = LinuxX86System()

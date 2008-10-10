@@ -88,8 +88,13 @@
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/isa_traits.hh"
 #include "mem/port.hh"
+#include "params/X86SMBiosBiosInformation.hh"
+#include "params/X86SMBiosSMBiosStructure.hh"
+#include "params/X86SMBiosSMBiosTable.hh"
 #include "sim/byteswap.hh"
 #include "sim/host.hh"
+
+using namespace std;
 
 const char X86ISA::SMBios::SMBiosTable::SMBiosHeader::anchorString[] = "_SM_";
 const uint8_t X86ISA::SMBios::SMBiosTable::
@@ -100,6 +105,116 @@ const uint8_t X86ISA::SMBios::SMBiosTable::
         SMBiosHeader::entryPointRevision = 0;
 const char X86ISA::SMBios::SMBiosTable::
         SMBiosHeader::IntermediateHeader::anchorString[] = "_DMI_";
+
+template <class T>
+uint64_t
+composeBitVector(T vec)
+{
+    uint64_t val = 0;
+    typename T::iterator vecIt;
+    for (vecIt = vec.begin(); vecIt != vec.end(); vecIt++) {
+        val |= (1 << (*vecIt));
+    }
+    return val;
+}
+
+uint16_t
+X86ISA::SMBios::SMBiosStructure::writeOut(FunctionalPort * port, Addr addr)
+{
+    port->writeBlob(addr, (uint8_t *)(&type), 1);
+
+    uint8_t length = getLength();
+    port->writeBlob(addr + 1, (uint8_t *)(&length), 1);
+
+    uint16_t handleGuest = X86ISA::htog(handle);
+    port->writeBlob(addr + 2, (uint8_t *)(&handleGuest), 2);
+
+    return length + getStringLength();
+}
+
+X86ISA::SMBios::SMBiosStructure::SMBiosStructure(Params * p, uint8_t _type) :
+    SimObject(p), type(_type), handle(0), stringFields(false)
+{}
+
+void
+X86ISA::SMBios::SMBiosStructure::writeOutStrings(
+        FunctionalPort * port, Addr addr)
+{
+    std::vector<std::string>::iterator it;
+    Addr offset = 0;
+
+    const uint8_t nullTerminator = 0;
+
+    // If there are string fields but none of them are used, that's a
+    // special case which is handled by this if.
+    if (strings.size() == 0 && stringFields) {
+        port->writeBlob(addr + offset, (uint8_t *)(&nullTerminator), 1);
+        offset++;
+    } else {
+        for (it = strings.begin(); it != strings.end(); it++) {
+            port->writeBlob(addr + offset,
+                    (uint8_t *)it->c_str(), it->length() + 1);
+            offset += it->length() + 1;
+        }
+    }
+    port->writeBlob(addr + offset, (uint8_t *)(&nullTerminator), 1);
+}
+
+int
+X86ISA::SMBios::SMBiosStructure::getStringLength()
+{
+    int size = 0;
+    std::vector<std::string>::iterator it;
+
+    for (it = strings.begin(); it != strings.end(); it++) {
+        size += it->length() + 1;
+    }
+
+    return size + 1;
+}
+
+int
+X86ISA::SMBios::SMBiosStructure::addString(string & newString)
+{
+    stringFields = true;
+    // If a string is empty, treat it as not existing. The index for empty
+    // strings is 0.
+    if (newString.length() == 0)
+        return 0;
+    strings.push_back(newString);
+    return strings.size();
+}
+
+string
+X86ISA::SMBios::SMBiosStructure::readString(int n)
+{
+    assert(n > 0 && n <= strings.size());
+    return strings[n - 1];
+}
+
+void
+X86ISA::SMBios::SMBiosStructure::setString(int n, std::string & newString)
+{
+    assert(n > 0 && n <= strings.size());
+    strings[n - 1] = newString;
+}
+
+X86ISA::SMBios::BiosInformation::BiosInformation(Params * p) :
+        SMBiosStructure(p, Type),
+        startingAddrSegment(p->starting_addr_segment),
+        romSize(p->rom_size),
+        majorVer(p->major), minorVer(p->minor),
+        embContFirmwareMajor(p->emb_cont_firmware_major),
+        embContFirmwareMinor(p->emb_cont_firmware_minor)
+    {
+        vendor = addString(p->vendor);
+        version = addString(p->version);
+        releaseDate = addString(p->release_date);
+
+        characteristics = composeBitVector(p->characteristics);
+        characteristicExtBytes =
+            composeBitVector(p->characteristic_ext_bytes);
+    }
 
 uint16_t
 X86ISA::SMBios::BiosInformation::writeOut(FunctionalPort * port, Addr addr)
@@ -122,8 +237,8 @@ X86ISA::SMBios::BiosInformation::writeOut(FunctionalPort * port, Addr addr)
         X86ISA::htog(characteristicExtBytes);
     port->writeBlob(addr + 0x12, (uint8_t *)(&characteristicExtBytesGuest), 2);
 
-    port->writeBlob(addr + 0x14, (uint8_t *)(&major), 1);
-    port->writeBlob(addr + 0x15, (uint8_t *)(&minor), 1);
+    port->writeBlob(addr + 0x14, (uint8_t *)(&majorVer), 1);
+    port->writeBlob(addr + 0x15, (uint8_t *)(&minorVer), 1);
     port->writeBlob(addr + 0x16, (uint8_t *)(&embContFirmwareMajor), 1);
     port->writeBlob(addr + 0x17, (uint8_t *)(&embContFirmwareMinor), 1);
 
@@ -132,9 +247,22 @@ X86ISA::SMBios::BiosInformation::writeOut(FunctionalPort * port, Addr addr)
     return size;
 }
 
-void
-X86ISA::SMBios::SMBiosTable::writeOut(FunctionalPort * port, Addr addr)
+X86ISA::SMBios::SMBiosTable::SMBiosTable(Params * p) :
+    SimObject(p), structures(p->structures)
 {
+    smbiosHeader.majorVersion = p->major_version;
+    smbiosHeader.minorVersion = p->minor_version;
+    assert(p->major_version <= 9);
+    assert(p->minor_version <= 9);
+    smbiosHeader.intermediateHeader.smbiosBCDRevision =
+        (p->major_version << 4) | p->minor_version;
+}
+
+void
+X86ISA::SMBios::SMBiosTable::writeOut(FunctionalPort * port, Addr addr,
+        Addr &headerSize, Addr &structSize)
+{
+    headerSize = 0x1F;
 
     /*
      * The main header
@@ -205,13 +333,15 @@ X86ISA::SMBios::SMBiosTable::writeOut(FunctionalPort * port, Addr addr)
     Addr base = smbiosHeader.intermediateHeader.tableAddr;
     Addr offset = 0;
     uint16_t maxSize = 0;
-    std::vector<SMBiosStructure>::iterator it;
+    std::vector<SMBiosStructure *>::iterator it;
     for (it = structures.begin(); it != structures.end(); it++) {
-        uint16_t size = it->writeOut(port, base + offset);
+        uint16_t size = (*it)->writeOut(port, base + offset);
         if (size > maxSize)
             maxSize = size;
         offset += size;
     }
+
+    structSize = offset;
 
     /*
      * Header
@@ -242,4 +372,16 @@ X86ISA::SMBios::SMBiosTable::writeOut(FunctionalPort * port, Addr addr)
 
     intChecksum = -intChecksum;
     port->writeBlob(addr + 0x15, (uint8_t *)(&intChecksum), 1);
+}
+
+X86ISA::SMBios::BiosInformation *
+X86SMBiosBiosInformationParams::create()
+{
+    return new X86ISA::SMBios::BiosInformation(this);
+}
+
+X86ISA::SMBios::SMBiosTable *
+X86SMBiosSMBiosTableParams::create()
+{
+    return new X86ISA::SMBios::SMBiosTable(this);
 }

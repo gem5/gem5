@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -54,17 +54,87 @@
 # Authors: Gabe Black
 
 from m5.params import *
-from E820 import X86E820Table, X86E820Entry
-from SMBios import X86SMBiosSMBiosTable
-from System import System
+from m5.SimObject import SimObject
 
-class X86System(System):
-    type = 'X86System'
-    smbios_table = Param.X86SMBiosSMBiosTable(
-            X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
+class X86SMBiosSMBiosStructure(SimObject):
+    type = 'X86SMBiosSMBiosStructure'
+    cxx_class = 'X86ISA::SMBios::SMBiosStructure'
+    abstract = True
 
-class LinuxX86System(X86System):
-    type = 'LinuxX86System'
+class Characteristic(Enum):
+    map = {'Unknown' : 2,
+           'Unsupported' : 3,
+           'ISA' : 4,
+           'MCA' : 5,
+           'EISA' : 6,
+           'PCI' : 7,
+           'PCMCIA' : 8,
+           'PnP' : 9,
+           'APM' : 10,
+           'Flash' : 11,
+           'Shadow' : 12,
+           'VL_Vesa' : 13,
+           'ESCD' : 14,
+           'CDBoot' : 15,
+           'SelectBoot' : 16,
+           'Socketed' : 17,
+           'PCMCIABoot' : 18,
+           'EDD' : 19,
+           'NEC9800' : 20,
+           'Toshiba' : 21,
+           'Floppy_5_25_360KB' : 22,
+           'Floppy_5_25_1_2MB' : 23,
+           'Floppy_3_5_720KB' : 24,
+           'Floppy_3_5_2_88MB' : 25,
+           'PrintScreen' : 26,
+           'Keyboard8024' : 27,
+           'Serial' : 28,
+           'Printer' : 29,
+           'CGA_Mono' : 30,
+           'NEC_PC_98' : 31
+    }
 
-    e820_table = Param.X86E820Table(
-            X86E820Table(), 'E820 map of physical memory')
+class ExtCharacteristic(Enum):
+    map = {'ACPI' : 0,
+           'USBLegacy' : 1,
+           'AGP' : 2,
+           'I20Boot' : 3,
+           'LS_120Boot' : 4,
+           'ZIPBoot' : 5,
+           'FirewireBoot' : 6,
+           'SmartBattery' : 7,
+           'BootSpec' : 8,
+           'NetServiceBoot' : 9,
+           'TargetContent' : 10
+    }
+
+class X86SMBiosBiosInformation(X86SMBiosSMBiosStructure):
+    type = 'X86SMBiosBiosInformation'
+    cxx_class = 'X86ISA::SMBios::BiosInformation'
+
+    vendor = Param.String("", "vendor name string")
+    version = Param.String("", "version string")
+    starting_addr_segment = \
+        Param.UInt16(0, "segment location of bios starting address")
+    release_date = Param.String("06/08/2008", "release date")
+    rom_size = Param.UInt8(0, "rom size")
+    characteristics = VectorParam.Characteristic([],
+            "bios characteristic bit vector")
+    characteristic_ext_bytes = VectorParam.ExtCharacteristic([],
+            "extended bios characteristic bit vector")
+    major = Param.UInt8(0, "major version number")
+    minor = Param.UInt8(0, "minor version number")
+    emb_cont_firmware_major = Param.UInt8(0,
+            "embedded controller firmware major version number")
+
+    emb_cont_firmware_minor = Param.UInt8(0,
+            "embedded controller firmware minor version number")
+
+class X86SMBiosSMBiosTable(SimObject):
+    type = 'X86SMBiosSMBiosTable'
+    cxx_class = 'X86ISA::SMBios::SMBiosTable'
+
+    major_version = Param.UInt8(2, "major version number")
+    minor_version = Param.UInt8(5, "minor version number")
+
+    structures = VectorParam.X86SMBiosSMBiosStructure([], "smbios structures")

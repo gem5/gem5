@@ -65,4 +65,5 @@ if env['TARGET_ISA'] == 'x86':
         Source('e820.cc')
 
         # The DMI tables.
+        SimObject('SMBios.py')
 	Source('smbios.cc')
