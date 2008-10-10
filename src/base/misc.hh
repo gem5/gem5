@@ -135,14 +135,14 @@ extern bool want_hack, hack_verbose;
 
 #define warn(...) \
     cond_message(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
-#define info(...) \
+#define inform(...) \
     cond_message(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
 #define hack(...) \
     cond_message(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
 
 #define warn_once(...) \
     cond_message_once(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
-#define info_once(...) \
+#define inform_once(...) \
     cond_message_once(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
 #define hack_once(...) \
     cond_message_once(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)

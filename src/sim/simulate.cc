@@ -47,7 +47,7 @@
 SimLoopExitEvent *
 simulate(Tick num_cycles)
 {
-    info("Entering event queue @ %d.  Starting simulation...\n", curTick);
+    inform("Entering event queue @ %d.  Starting simulation...\n", curTick);
 
     if (num_cycles < 0)
         fatal("simulate: num_cycles must be >= 0 (was %d)\n", num_cycles);
