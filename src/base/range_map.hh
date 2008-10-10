@@ -70,6 +70,13 @@ class range_map
     }
 
     template <class U>
+    const iterator
+    find(const U &r)
+    {
+        return find(RangeSize(r, 1));
+    }
+
+    template <class U>
     bool
     intersect(const Range<U> &r)
     {
