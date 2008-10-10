@@ -28,8 +28,8 @@
 
 import sys
 
-from attrdict import attrdict, optiondict
-from misc import crossproduct, flatten
+from attrdict import optiondict
+from misc import crossproduct
 
 class Data(object):
     def __init__(self, name, desc, **kwargs):
@@ -41,9 +41,29 @@ class Data(object):
         if not isinstance(obj, Data):
             raise AttributeError, "can only update from Data object"
 
-        for k,v in obj.__dict__.iteritems():
-            if not k.startswith('_'):
-                self.__dict__[k] = v
+        for key,val in obj.__dict__.iteritems():
+            if key.startswith('_') or key in ('name', 'desc'):
+                continue
+
+            if key not in self.__dict__:
+                self.__dict__[key] = val
+                continue
+
+            if not isinstance(val, dict):
+                if self.__dict__[key] == val:
+                    continue
+
+                raise AttributeError, \
+                      "%s specified more than once old: %s new: %s" % \
+                      (key, self.__dict__[key], val)
+
+            d = self.__dict__[key]
+            for k,v in val.iteritems():
+                if k in d:
+                    raise AttributeError, \
+                          "%s specified more than once in %s" % (k, key)
+                d[k] = v
+
         if hasattr(self, 'system') and hasattr(obj, 'system'):
             if self.system != obj.system:
                 raise AttributeError, \
@@ -92,6 +112,14 @@ class Data(object):
         for key in self:
             result[key] = self[key]
         return result
+
+    def __repr__(self):
+        d = {}
+        for key,value in self.__dict__.iteritems():
+            if not key.startswith('_'):
+                d[key] = value
+
+        return "<%s: %s>" % (type(self).__name__, d)
 
     def __str__(self):
         return self.name
@@ -391,18 +419,12 @@ def JobFile(jobfile):
     execfile(filename, data)
     if 'conf' not in data:
         raise ImportError, 'cannot import name conf from %s' % jobfile
-    conf = data['conf']
-    import jobfile
-    if not isinstance(conf, Configuration):
-        raise AttributeError, \
-              'conf in jobfile: %s (%s) is not type %s' % \
-              (jobfile, type(conf), Configuration)
-    return conf
+    return data['conf']
 
 def main(conf=None):
-    import sys
-
-    usage = 'Usage: %s [-b] [-c] [-v] <jobfile>' % sys.argv[0]
+    usage = 'Usage: %s [-b] [-c] [-v]' % sys.argv[0]
+    if conf is None:
+        usage += ' <jobfile>'
 
     try:
         import getopt
