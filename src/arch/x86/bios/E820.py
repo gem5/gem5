@@ -58,8 +58,7 @@ from m5.SimObject import SimObject
 
 class X86E820Entry(SimObject):
     type = 'X86E820Entry'
-    cxx_namespace = 'X86ISA'
-    cxx_class = 'E820Entry'
+    cxx_class = 'X86ISA::E820Entry'
 
     addr = Param.Addr(0, 'address of the beginning of the region')
     size = Param.MemorySize('0B', 'size of the region')
@@ -67,7 +66,6 @@ class X86E820Entry(SimObject):
 
 class X86E820Table(SimObject):
     type = 'X86E820Table'
-    cxx_namespace = 'X86ISA'
-    cxx_class = 'E820Table'
+    cxx_class = 'X86ISA::E820Table'
 
     entries = VectorParam.X86E820Entry([], 'entries for the e820 table')

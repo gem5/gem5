@@ -32,5 +32,4 @@ from InstTracer import InstTracer
 
 class LegionTrace(InstTracer):
     type = 'LegionTrace'
-    cxx_namespace = 'Trace'
-    cxx_class = 'LegionTrace'
+    cxx_class = 'Trace::LegionTrace'

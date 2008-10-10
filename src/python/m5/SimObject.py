@@ -123,7 +123,6 @@ instanceDict = {}
 class MetaSimObject(type):
     # Attributes that can be set only at initialization time
     init_keywords = { 'abstract' : types.BooleanType,
-                      'cxx_namespace' : types.StringType,
                       'cxx_class' : types.StringType,
                       'cxx_type' : types.StringType,
                       'cxx_predecls' : types.ListType,
@@ -190,36 +189,31 @@ class MetaSimObject(type):
         # the following is not true is when we define the SimObject
         # class itself (in which case the multidicts have no parent).
         if isinstance(base, MetaSimObject):
+            cls._base = base
             cls._params.parent = base._params
             cls._ports.parent = base._ports
             cls._values.parent = base._values
             cls._port_refs.parent = base._port_refs
             # mark base as having been subclassed
             base._instantiated = True
+        else:
+            cls._base = None
 
         # default keyword values
         if 'type' in cls._value_dict:
-            _type = cls._value_dict['type']
             if 'cxx_class' not in cls._value_dict:
-                cls._value_dict['cxx_class'] = _type
+                cls._value_dict['cxx_class'] = cls._value_dict['type']
 
-            namespace = cls._value_dict.get('cxx_namespace', None)
-
-            _cxx_class = cls._value_dict['cxx_class']
-            if 'cxx_type' not in cls._value_dict:
-                t = _cxx_class + '*'
-                if namespace:
-                    t = '%s::%s' % (namespace, t)
-                cls._value_dict['cxx_type'] = t
+            cls._value_dict['cxx_type'] = '%s *' % cls._value_dict['cxx_class']
+                
             if 'cxx_predecls' not in cls._value_dict:
                 # A forward class declaration is sufficient since we are
                 # just declaring a pointer.
-                decl = 'class %s;' % _cxx_class
-                if namespace:
-                    namespaces = namespace.split('::')
-                    namespaces.reverse()
-                    for namespace in namespaces:
-                        decl = 'namespace %s { %s }' % (namespace, decl)
+                class_path = cls._value_dict['cxx_class'].split('::')
+                class_path.reverse()
+                decl = 'class %s;' % class_path[0]
+                for ns in class_path[1:]:
+                    decl = 'namespace %s { %s }' % (ns, decl)
                 cls._value_dict['cxx_predecls'] = [decl]
 
             if 'swig_predecls' not in cls._value_dict:
@@ -351,12 +345,6 @@ class MetaSimObject(type):
     def __str__(cls):
         return cls.__name__
 
-    def get_base(cls):
-        if str(cls) == 'SimObject':
-            return None
-
-        return  cls.__bases__[0].type
-
     def cxx_decl(cls):
         code = "#ifndef __PARAMS__%s\n" % cls
         code += "#define __PARAMS__%s\n\n" % cls
@@ -387,16 +375,15 @@ class MetaSimObject(type):
         code += "\n".join(predecls2)
         code += "\n\n";
 
-        base = cls.get_base()
-        if base:
-            code += '#include "params/%s.hh"\n\n' % base
+        if cls._base:
+            code += '#include "params/%s.hh"\n\n' % cls._base.type
 
         for ptype in ptypes:
             if issubclass(ptype, Enum):
                 code += '#include "enums/%s.hh"\n' % ptype.__name__
                 code += "\n\n"
 
-        code += cls.cxx_struct(base, params)
+        code += cls.cxx_struct(cls._base, params)
 
         # close #ifndef __PARAMS__* guard
         code += "\n#endif\n"
@@ -409,7 +396,7 @@ class MetaSimObject(type):
         # now generate the actual param struct
         code = "struct %sParams" % cls
         if base:
-            code += " : public %sParams" % base
+            code += " : public %sParams" % base.type
         code += "\n{\n"
         if not hasattr(cls, 'abstract') or not cls.abstract:
             if 'type' in cls.__dict__:
@@ -421,24 +408,7 @@ class MetaSimObject(type):
 
         return code
 
-    def cxx_type_decl(cls):
-        base = cls.get_base()
-        code = ''
-
-        if base:
-            code += '#include "%s_type.h"\n' % base
-
-        # now generate dummy code for inheritance
-        code += "struct %s" % cls.cxx_class
-        if base:
-            code += " : public %s" % base.cxx_class
-        code += "\n{};\n"
-
-        return code
-
     def swig_decl(cls):
-        base = cls.get_base()
-
         code = '%%module %s\n' % cls
 
         code += '%{\n'
@@ -466,8 +436,8 @@ class MetaSimObject(type):
         code += "\n".join(predecls2)
         code += "\n\n";
 
-        if base:
-            code += '%%import "params/%s.i"\n\n' % base
+        if cls._base:
+            code += '%%import "params/%s.i"\n\n' % cls._base.type
 
         for ptype in ptypes:
             if issubclass(ptype, Enum):

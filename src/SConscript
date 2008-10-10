@@ -531,23 +531,24 @@ def buildParams(target, source, env):
                 print >>out, decl
             continue
 
-        code = ''
-        base = obj.get_base()
+        class_path = obj.cxx_class.split('::')
+        class_path.reverse()
+        classname = class_path[0]
+        namespaces = class_path[1:]
 
+        code = ''
         code += '// stop swig from creating/wrapping default ctor/dtor\n'
-        code += '%%nodefault %s;\n' % obj.cxx_class
-        code += 'class %s ' % obj.cxx_class
-        if base:
-            code += ': public %s' % base
+        code += '%%nodefault %s;\n' % classname
+        code += 'class %s ' % classname
+        if obj._base:
+            code += ': public %s' % obj._base.cxx_class
         code += ' {};\n'
 
-        klass = obj.cxx_class;
-        if hasattr(obj, 'cxx_namespace'):
-            new_code = 'namespace %s {\n' % obj.cxx_namespace
+        for ns in namespaces:
+            new_code = 'namespace %s {\n' % ns
             new_code += code
             new_code += '}\n'
             code = new_code
-            klass = '%s::%s' % (obj.cxx_namespace, klass)
 
         print >>out, code
 

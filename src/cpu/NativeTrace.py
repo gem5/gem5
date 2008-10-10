@@ -32,5 +32,4 @@ from InstTracer import InstTracer
 
 class NativeTrace(InstTracer):
     type = 'NativeTrace'
-    cxx_namespace = 'Trace'
-    cxx_class = 'NativeTrace'
+    cxx_class = 'Trace::NativeTrace'
