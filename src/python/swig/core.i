@@ -34,6 +34,7 @@
 %{
 #include "python/swig/pyobject.hh"
 
+#include "base/misc.hh"
 #include "base/socket.hh"
 #include "sim/core.hh"
 #include "sim/host.hh"
@@ -75,6 +76,10 @@ void unserializeAll(const std::string &cpt_dir);
 
 void initAll();
 void regAllStats();
+
+bool want_warn, warn_verbose;
+bool want_info, info_verbose;
+bool want_hack, hack_verbose;
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package

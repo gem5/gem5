@@ -43,42 +43,24 @@
 
 using namespace std;
 
-void
-__panic(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
-{
-    string format = "panic: ";
-    format += fmt;
-    switch (format[format.size() - 1]) {
-      case '\n':
-      case '\r':
-        break;
-      default:
-        format += "\n";
-    }
+bool want_warn = true;
+bool want_info = true;
+bool want_hack = true;
 
-    format += " @ cycle %d\n[%s:%s, line %d]\n";
-
-    CPrintfArgsList args(VARARGS_ALLARGS);
-
-    args.push_back(curTick);
-    args.push_back(func);
-    args.push_back(file);
-    args.push_back(line);
-
-    ccprintf(cerr, format.c_str(), args);
-
-    abort();
-}
+bool warn_verbose = false;
+bool info_verbose = false;
+bool hack_verbose = false;
 
 void
-__fatal(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
+__exit_message(const char *prefix, int code,
+    const char *func, const char *file, int line,
+    const char *fmt, CPRINTF_DEFINITION)
 {
     CPrintfArgsList args(VARARGS_ALLARGS);
-    string format = "fatal: ";
-    format += fmt;
 
+    string format = prefix;
+    format += ": ";
+    format += fmt;
     switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
@@ -98,16 +80,22 @@ __fatal(const char *func, const char *file, int line, const char *fmt,
 
     ccprintf(cerr, format.c_str(), args);
 
-    exit(1);
+    if (code < 0)
+        abort();
+    else
+        exit(code);
 }
 
 void
-__warn(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
+__base_message(std::ostream &stream, const char *prefix, bool verbose,
+    const char *func, const char *file, int line,
+    const char *fmt, CPRINTF_DEFINITION)
 {
-    string format = "warn: ";
-    format += fmt;
+    CPrintfArgsList args(VARARGS_ALLARGS);
 
+    string format = prefix;
+    format += ": ";
+    format += fmt;
     switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
@@ -116,18 +104,13 @@ __warn(const char *func, const char *file, int line, const char *fmt,
         format += "\n";
     }
 
-#ifdef VERBOSE_WARN
-    format += " @ cycle %d\n[%s:%s, line %d]\n";
-#endif
+    if (verbose) {
+        format += " @ cycle %d\n[%s:%s, line %d]\n";
+        args.push_back(curTick);
+        args.push_back(func);
+        args.push_back(file);
+        args.push_back(line);
+    }
 
-    CPrintfArgsList args(VARARGS_ALLARGS);
-
-#ifdef VERBOSE_WARN
-    args.push_back(curTick);
-    args.push_back(func);
-    args.push_back(file);
-    args.push_back(line);
-#endif
-
-    ccprintf(cerr, format.c_str(), args);
+    ccprintf(stream, format.c_str(), args);
 }

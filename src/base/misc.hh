@@ -40,6 +40,30 @@
 #define __FUNCTION__ "how to fix me?"
 #endif
 
+// General exit message, these functions will never return and will
+// either abort() if code is < 0 or exit with the code if >= 0
+void __exit_message(const char *prefix, int code,
+    const char *func, const char *file, int line,
+    const char *format, CPRINTF_DECLARATION) M5_ATTR_NORETURN;
+
+void __exit_message(const char *prefix, int code,
+    const char *func, const char *file, int line,
+    const std::string &format, CPRINTF_DECLARATION) M5_ATTR_NORETURN;
+
+inline void
+__exit_message(const char *prefix, int code,
+    const char *func, const char *file, int line,
+    const std::string& format, CPRINTF_DEFINITION)
+{
+    __exit_message(prefix, code, func, file, line, format.c_str(),
+                   VARARGS_ALLARGS);
+}
+
+M5_PRAGMA_NORETURN(__exit_message)
+#define exit_message(prefix, code, ...)                            \
+    __exit_message(prefix, code, __FUNCTION__, __FILE__, __LINE__, \
+                   __VA_ARGS__)
+
 //
 // This implements a cprintf based panic() function.  panic() should
 // be called when something happens that should never ever happen
@@ -47,20 +71,7 @@
 // calls abort which can dump core or enter the debugger.
 //
 //
-void __panic(const char *func, const char *file, int line, const char *format,
-             CPRINTF_DECLARATION) M5_ATTR_NORETURN;
-void __panic(const char *func, const char *file, int line,
-             const std::string &format, CPRINTF_DECLARATION)
-M5_ATTR_NORETURN;
-
-inline void
-__panic(const char *func, const char *file, int line,
-        const std::string &format, CPRINTF_DEFINITION)
-{
-    __panic(func, file, line, format.c_str(), VARARGS_ALLARGS);
-}
-M5_PRAGMA_NORETURN(__panic)
-#define panic(...) __panic(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define panic(...) exit_message("panic", -1, __VA_ARGS__)
 
 //
 // This implements a cprintf based fatal() function.  fatal() should
@@ -70,45 +81,70 @@ M5_PRAGMA_NORETURN(__panic)
 // "normal" exit with an error code, as opposed to abort() like
 // panic() does.
 //
-void __fatal(const char *func, const char *file, int line, const char *format,
-             CPRINTF_DECLARATION) M5_ATTR_NORETURN;
-void __fatal(const char *func, const char *file, int line,
-             const std::string &format, CPRINTF_DECLARATION)
-    M5_ATTR_NORETURN;
+#define fatal(...) exit_message("fatal", 1, __VA_ARGS__)
+
+void
+__base_message(std::ostream &stream, const char *prefix, bool verbose,
+          const char *func, const char *file, int line,
+          const char *format, CPRINTF_DECLARATION);
 
 inline void
-__fatal(const char *func, const char *file, int line,
-        const std::string &format, CPRINTF_DEFINITION)
+__base_message(std::ostream &stream, const char *prefix, bool verbose,
+          const char *func, const char *file, int line,
+          const std::string &format, CPRINTF_DECLARATION)
 {
-    __fatal(func, file, line, format.c_str(), VARARGS_ALLARGS);
+    __base_message(stream, prefix, verbose, func, file, line, format.c_str(),
+              VARARGS_ALLARGS);
 }
-M5_PRAGMA_NORETURN(__fatal)
-#define fatal(...) __fatal(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
 
-//
-// This implements a cprintf based warn
-//
-void __warn(const char *func, const char *file, int line, const char *format,
-            CPRINTF_DECLARATION);
-inline void
-__warn(const char *func, const char *file, int line, const std::string &format,
-       CPRINTF_DECLARATION)
-{
-    __warn(func, file, line, format, VARARGS_ALLARGS);
-}
-#define warn(...) __warn(__FUNCTION__, __FILE__, __LINE__, __VA_ARGS__)
+#define base_message(stream, prefix, verbose, ...)                      \
+    __base_message(stream, prefix, verbose, __FUNCTION__, __FILE__, __LINE__, \
+                   __VA_ARGS__)
 
-// Only print the warning message the first time it is seen.  This
-// doesn't check the warning string itself, it just only lets one
-// warning come from the statement. So, even if the arguments change
-// and that would have resulted in a different warning message,
-// subsequent messages would still be supressed.
-#define warn_once(...) do {                         \
-        static bool once = false;                   \
-        if (!once) {                                \
-            warn(__VA_ARGS__);                       \
-            once = true;                            \
-        }                                           \
+// Only print the message the first time this expression is
+// encountered.  i.e.  This doesn't check the string itself and
+// prevent duplicate strings, this prevents the statement from
+// happening more than once. So, even if the arguments change and that
+// would have resulted in a different message thoes messages would be
+// supressed.
+#define base_message_once(...) do {                     \
+        static bool once = false;                       \
+        if (!once) {                                    \
+            base_message(__VA_ARGS__);                  \
+            once = true;                                \
+        }                                               \
     } while (0)
+
+#define cond_message(cond, ...) do {            \
+        if (cond)                               \
+            base_message(__VA_ARGS__);          \
+    } while (0)
+
+#define cond_message_once(cond, ...) do {               \
+        static bool once = false;                       \
+        if (!once && cond) {                            \
+            base_message(__VA_ARGS__);                  \
+            once = true;                                \
+        }                                               \
+    } while (0)
+
+
+extern bool want_warn, warn_verbose;
+extern bool want_info, info_verbose;
+extern bool want_hack, hack_verbose;
+
+#define warn(...) \
+    cond_message(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
+#define info(...) \
+    cond_message(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
+#define hack(...) \
+    cond_message(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
+
+#define warn_once(...) \
+    cond_message_once(want_warn, std::cerr, "warn", warn_verbose, __VA_ARGS__)
+#define info_once(...) \
+    cond_message_once(want_info, std::cout, "info", info_verbose, __VA_ARGS__)
+#define hack_once(...) \
+    cond_message_once(want_hack, std::cerr, "hack", hack_verbose, __VA_ARGS__)
 
 #endif // __BASE_MISC_HH__
