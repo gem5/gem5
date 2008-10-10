@@ -29,10 +29,8 @@
  *          Dave Greene
  */
 
-#ifndef __MISC_HH__
-#define __MISC_HH__
-
-#include <cassert>
+#ifndef __BASE_MISC_HH__
+#define __BASE_MISC_HH__
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
@@ -113,4 +111,4 @@ __warn(const char *func, const char *file, int line, const std::string &format,
         }                                           \
     } while (0)
 
-#endif // __MISC_HH__
+#endif // __BASE_MISC_HH__

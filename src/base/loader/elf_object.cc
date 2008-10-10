@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include <cassert>
 #include <string>
 
 #include "gelf.h"

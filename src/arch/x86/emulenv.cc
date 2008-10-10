@@ -55,6 +55,8 @@
  * Authors: Gabe Black
  */
 
+#include <cassert>
+
 #include "arch/x86/emulenv.hh"
 #include "base/misc.hh"
 

@@ -31,6 +31,8 @@
 #ifndef __ARCH_SPARC_PAGETABLE_HH__
 #define __ARCH_SPARC_PAGETABLE_HH__
 
+#include <cassert>
+
 #include "arch/sparc/isa_traits.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"

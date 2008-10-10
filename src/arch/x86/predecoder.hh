@@ -58,6 +58,8 @@
 #ifndef __ARCH_X86_PREDECODER_HH__
 #define __ARCH_X86_PREDECODER_HH__
 
+#include <cassert>
+
 #include "arch/x86/types.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"

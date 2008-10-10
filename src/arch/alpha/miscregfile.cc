@@ -30,6 +30,8 @@
  *          Kevin Lim
  */
 
+#include <cassert>
+
 #include "arch/alpha/miscregfile.hh"
 #include "base/misc.hh"
 
