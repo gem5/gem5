@@ -56,8 +56,9 @@ class Cmos : public SubDevice
     class X86RTC : public MC146818
     {
       public:
-        X86RTC(const std::string &n, const struct tm time,
-                bool bcd, Tick frequency) : MC146818(n, time, bcd, frequency)
+        X86RTC(EventManager *em, const std::string &n, const struct tm time,
+                bool bcd, Tick frequency) :
+            MC146818(em, n, time, bcd, frequency)
         {
         }
       protected:
@@ -69,22 +70,22 @@ class Cmos : public SubDevice
 
   public:
 
-    Cmos() : rtc("rtc", foo_time, true, ULL(5000000000))
+    Cmos(EventManager *em) : rtc(em, "rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
-    Cmos(Tick _latency) : SubDevice(_latency),
-        rtc("rtc", foo_time, true, ULL(5000000000))
+    Cmos(EventManager *em, Tick _latency) : SubDevice(_latency),
+        rtc(em, "rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
-    Cmos(Addr start, Addr size, Tick _latency) :
+    Cmos(EventManager *em, Addr start, Addr size, Tick _latency) :
         SubDevice(start, size, _latency),
-        rtc("rtc", foo_time, true, ULL(5000000000))
+        rtc(em, "rtc", foo_time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;

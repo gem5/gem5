@@ -85,16 +85,21 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SMBIOS_HH__
-#define __ARCH_X86_SMBIOS_HH__
+#ifndef __ARCH_X86_BIOS_SMBIOS_HH__
+#define __ARCH_X86_BIOS_SMBIOS_HH__
 
 #include <string>
 #include <vector>
 
-#include "arch/x86/isa_traits.hh"
-#include "mem/port.hh"
-#include "sim/byteswap.hh"
+#include "enums/Characteristic.hh"
+#include "enums/ExtCharacteristic.hh"
 #include "sim/host.hh"
+#include "sim/sim_object.hh"
+
+class FunctionalPort;
+class X86SMBiosBiosInformationParams;
+class X86SMBiosSMBiosStructureParams;
+class X86SMBiosSMBiosTableParams;
 
 namespace X86ISA
 {
@@ -102,8 +107,11 @@ namespace X86ISA
 namespace SMBios
 {
 
-class SMBiosStructure
+class SMBiosStructure : public SimObject
 {
+  protected:
+    typedef X86SMBiosSMBiosStructureParams Params;
+
   public:
 
     virtual
@@ -126,73 +134,33 @@ class SMBiosStructure
         return 4;
     }
 
-    virtual uint16_t
-    writeOut(FunctionalPort * port, Addr addr)
-    {
-        port->writeBlob(addr, (uint8_t *)(&type), 1);
-
-        uint8_t length = getLength();
-        port->writeBlob(addr + 1, (uint8_t *)(&length), 1);
-
-        uint16_t handleGuest = X86ISA::htog(handle);
-        port->writeBlob(addr + 2, (uint8_t *)(&handleGuest), 2);
-
-        return length + getStringLength();
-    }
+    virtual uint16_t writeOut(FunctionalPort * port, Addr addr);
 
   protected:
+    bool stringFields;
+
+    SMBiosStructure(Params * p, uint8_t _type);
+
     std::vector<std::string> strings;
 
-    void writeOutStrings(FunctionalPort * port, Addr addr)
-    {
-        std::vector<std::string>::iterator it;
-        Addr offset = 0;
+    void writeOutStrings(FunctionalPort * port, Addr addr);
 
-        for (it = strings.begin(); it != strings.end(); it++) {
-            port->writeBlob(addr + offset,
-                    (uint8_t *)it->c_str(), it->length() + 1);
-            offset += it->length() + 1;
-        }
-
-        const uint8_t nullTerminator = 0;
-        port->writeBlob(addr + offset, (uint8_t *)(&nullTerminator), 1);
-    }
-
-    int getStringLength()
-    {
-        int size = 0;
-        std::vector<std::string>::iterator it;
-
-        for (it = strings.begin(); it != strings.end(); it++) {
-            size += it->length() + 1;
-        }
-
-        return size + 1;
-    }
+    int getStringLength();
 
   public:
 
-    int addString(std::string & newString)
-    {
-        strings.push_back(newString);
-        return strings.size();
-    }
-
-    std::string readString(int n)
-    {
-        assert(n > 0 && n <= strings.size());
-        return strings[n - 1];
-    }
-
-    void setString(int n, std::string & newString)
-    {
-        assert(n > 0 && n <= strings.size());
-        strings[n - 1] = newString;
-    }
+    int addString(std::string & newString);
+    std::string readString(int n);
+    void setString(int n, std::string & newString);
 };
 
 class BiosInformation : public SMBiosStructure
 {
+  protected:
+    const static uint8_t Type = 0;
+
+    typedef X86SMBiosBiosInformationParams Params;
+
   public:
     // Offset 04h, 1 byte
     uint8_t vendor;
@@ -211,21 +179,25 @@ class BiosInformation : public SMBiosStructure
     // Offset 12h, 2 bytes
     uint16_t characteristicExtBytes;
     // Offset 14h, 1 byte
-    uint8_t major;
+    uint8_t majorVer;
     // Offset 15h, 1 byte
-    uint8_t minor;
+    uint8_t minorVer;
     // Offset 16h, 1 byte
     uint8_t embContFirmwareMajor;
     // Offset 17h, 1 byte
     uint8_t embContFirmwareMinor;
 
+    BiosInformation(Params * p);
+
     uint8_t getLength() { return 0x18; }
     uint16_t writeOut(FunctionalPort * port, Addr addr);
 };
 
-class SMBiosTable
+class SMBiosTable : public SimObject
 {
-  public:
+  protected:
+    typedef X86SMBiosSMBiosTableParams Params;
+
     struct SMBiosHeader
     {
         SMBiosHeader()
@@ -281,9 +253,23 @@ class SMBiosTable
         } intermediateHeader;
     } smbiosHeader;
 
-    void writeOut(FunctionalPort * port, Addr addr);
+    std::vector<SMBiosStructure *> structures;
 
-    std::vector<SMBiosStructure> structures;
+  public:
+    SMBiosTable(Params * p);
+
+    Addr getTableAddr()
+    {
+        return smbiosHeader.intermediateHeader.tableAddr;
+    }
+
+    void setTableAddr(Addr addr)
+    {
+        smbiosHeader.intermediateHeader.tableAddr = addr;
+    }
+
+    void writeOut(FunctionalPort * port, Addr addr,
+            Addr &headerSize, Addr &structSize);
 };
 
 } //SMBios

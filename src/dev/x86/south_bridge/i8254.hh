@@ -46,13 +46,14 @@ class I8254 : public SubDevice
   public:
     Intel8254Timer pit;
 
-    I8254(const std::string &name) : pit(name)
+    I8254(EventManager *em, const std::string &name) : pit(em, name)
     {}
-    I8254(const std::string &name, Tick _latency) :
-        SubDevice(_latency), pit(name)
+    I8254(EventManager *em, const std::string &name, Tick _latency) :
+        SubDevice(_latency), pit(em, name)
     {}
-    I8254(const std::string &name, Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency), pit(name)
+    I8254(EventManager *em, const std::string &name,
+            Addr start, Addr size, Tick _latency) :
+        SubDevice(start, size, _latency), pit(em, name)
     {}
 
     Tick read(PacketPtr pkt);

@@ -96,7 +96,8 @@ class X86System : public System
 
     X86ISA::SMBios::SMBiosTable * smbiosTable;
 
-    void writeOutSMBiosTable(Addr header, Addr table = 0);
+    void writeOutSMBiosTable(Addr header,
+            Addr &headerSize, Addr &tableSize, Addr table = 0);
 
     const Params *params() const { return (const Params *)_params; }
 

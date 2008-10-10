@@ -159,8 +159,10 @@ def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
 
-def makeLinuxX86System(mem_mode, mdesc = None):
-    self = LinuxX86System()
+def makeX86System(mem_mode, mdesc = None, self = None):
+    if self == None:
+        self = X86System()
+
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -170,6 +172,29 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.membus = Bus(bus_id=1)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
     self.physmem.port = self.membus.port
+
+    # North Bridge
+    self.iobus = Bus(bus_id=0)
+    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
+    self.bridge.side_a = self.iobus.port
+    self.bridge.side_b = self.membus.port
+
+    # Platform
+    self.pc = PC()
+    self.pc.attachIO(self.iobus)
+
+    self.intrctrl = IntrControl()
+
+    # Add in a Bios information structure.
+    structures = [X86SMBiosBiosInformation()]
+    self.smbios_table.structures = structures
+
+
+def makeLinuxX86System(mem_mode, mdesc = None):
+    self = LinuxX86System()
+
+    # Build up a generic x86 system and then specialize it for Linux
+    makeX86System(mem_mode, mdesc, self)
 
     # We assume below that there's at least 1MB of memory. We'll require 2
     # just to avoid corner cases.
@@ -187,20 +212,8 @@ def makeLinuxX86System(mem_mode, mdesc = None):
                 size = '%dB' % (self.physmem.range.second - 0x100000 - 1),
                 range_type = 1))
 
-    # North Bridge
-    self.iobus = Bus(bus_id=0)
-    self.bridge = Bridge(delay='50ns', nack_delay='4ns')
-    self.bridge.side_a = self.iobus.port
-    self.bridge.side_b = self.membus.port
-
     # Command line
     self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=9608015'
-
-    # Platform
-    self.pc = PC()
-    self.pc.attachIO(self.iobus)
-
-    self.intrctrl = IntrControl()
 
     return self
 

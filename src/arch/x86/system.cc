@@ -55,9 +55,9 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/bios/smbios.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/system.hh"
-#include "arch/x86/smbios.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"
@@ -73,13 +73,8 @@ using namespace LittleEndianGuest;
 using namespace X86ISA;
 
 X86System::X86System(Params *p)
-    : System(p)
-{
-    smbiosTable = new X86ISA::SMBios::SMBiosTable;
-    smbiosTable->smbiosHeader.majorVersion = 2;
-    smbiosTable->smbiosHeader.minorVersion = 5;
-    smbiosTable->smbiosHeader.intermediateHeader.smbiosBCDRevision = 0x25;
-}
+    : System(p), smbiosTable(p->smbios_table)
+{}
 
 void
 X86System::startup()
@@ -236,27 +231,33 @@ X86System::startup()
 
     // We should now be in long mode. Yay!
 
+    Addr ebdaPos = 0xF0000;
+
+    Addr headerSize, structSize;
     //Write out the SMBios/DMI table
-    writeOutSMBiosTable(0xF0000);
+    writeOutSMBiosTable(ebdaPos, headerSize, structSize);
+    ebdaPos += (headerSize + structSize);
 }
 
 void
-X86System::writeOutSMBiosTable(Addr header, Addr table)
+X86System::writeOutSMBiosTable(Addr header,
+        Addr &headerSize, Addr &structSize, Addr table)
 {
     // Get a port to write the table and header to memory.
     FunctionalPort * physPort = threadContexts[0]->getPhysPort();
 
     // If the table location isn't specified, just put it after the header.
     // The header size as of the 2.5 SMBios specification is 0x1F bytes
-    if (!table) {
-        if (!smbiosTable->smbiosHeader.intermediateHeader.tableAddr)
-            smbiosTable->smbiosHeader.
-                intermediateHeader.tableAddr = header + 0x1F;
-    } else {
-        smbiosTable->smbiosHeader.intermediateHeader.tableAddr = table;
-    }
+    if (!table)
+        table = header + 0x1F;
+    smbiosTable->setTableAddr(table);
 
-    smbiosTable->writeOut(physPort, header);
+    smbiosTable->writeOut(physPort, header, headerSize, structSize);
+
+    // Do some bounds checking to make sure we at least didn't step on
+    // ourselves.
+    assert(header > table || header + headerSize <= table);
+    assert(table > header || table + structSize <= header);
 }
 
 
