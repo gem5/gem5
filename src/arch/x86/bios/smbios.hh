@@ -85,8 +85,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SMBIOS_HH__
-#define __ARCH_X86_SMBIOS_HH__
+#ifndef __ARCH_X86_BIOS_SMBIOS_HH__
+#define __ARCH_X86_BIOS_SMBIOS_HH__
 
 #include <string>
 #include <vector>

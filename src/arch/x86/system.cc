@@ -55,9 +55,9 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/bios/smbios.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/system.hh"
-#include "arch/x86/smbios.hh"
 #include "arch/vtophys.hh"
 #include "base/remote_gdb.hh"
 #include "base/loader/object_file.hh"

@@ -85,7 +85,7 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/smbios.hh"
+#include "arch/x86/bios/smbios.hh"
 #include "arch/x86/isa_traits.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
