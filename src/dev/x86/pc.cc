@@ -41,7 +41,7 @@
 #include "dev/terminal.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/pc.hh"
-#include "dev/x86/south_bridge/south_bridge.hh"
+#include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
 
 using namespace std;

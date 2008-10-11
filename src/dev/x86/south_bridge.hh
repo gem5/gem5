@@ -28,8 +28,8 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_SOUTH_BRIDGE_HH__
-#define __DEV_X86_SOUTH_BRIDGE_SOUTH_BRIDGE_HH__
+#ifndef __DEV_X86_SOUTH_BRIDGE_HH__
+#define __DEV_X86_SOUTH_BRIDGE_HH__
 
 #include "sim/sim_object.hh"
 #include "params/SouthBridge.hh"
@@ -65,4 +65,4 @@ class SouthBridge : public SimObject
     }
 };
 
-#endif //__DEV_X86_SOUTH_BRIDGE_SOUTH_BRIDGE_HH__
+#endif //__DEV_X86_SOUTH_BRIDGE_HH__

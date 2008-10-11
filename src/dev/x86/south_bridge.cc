@@ -31,7 +31,7 @@
 #include <assert.h>
 
 #include "dev/x86/pc.hh"
-#include "dev/x86/south_bridge/south_bridge.hh"
+#include "dev/x86/south_bridge.hh"
 
 using namespace X86ISA;
 
