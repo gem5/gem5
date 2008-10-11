@@ -71,3 +71,7 @@ if env['TARGET_ISA'] == 'x86':
         # Intel Multiprocessor Specification Configuration Table
         SimObject('IntelMP.py')
         Source('intelmp.cc')
+
+        # ACPI system description tables
+	SimObject('ACPI.py')
+        Source('acpi.cc')

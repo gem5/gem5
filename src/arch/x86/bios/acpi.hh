@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -55,69 +55,93 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
+#ifndef __ARCH_X86_BIOS_ACPI_HH__
+#define __ARCH_X86_BIOS_ACPI_HH__
 
-#include <string>
-#include <vector>
-
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
-#include "params/X86System.hh"
+#include "sim/host.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
+
+#include <vector>
+#include <string>
+
+class Port;
+
+class X86ACPIRSDPParams;
+
+class X86ACPISysDescTableParams;
+class X86ACPIRSDTParams;
+class X86ACPIXSDTParams;
 
 namespace X86ISA
 {
-    namespace SMBios
-    {
-        class SMBiosTable;
-    }
-    namespace IntelMP
-    {
-        class FloatingPointer;
-        class ConfigTable;
-    }
-}
 
-class X86System : public System
+namespace ACPI
 {
-  public:
-    typedef X86SystemParams Params;
-    X86System(Params *p);
-    ~X86System();
 
-/**
- * Serialization stuff
- */
-  public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
+class RSDT;
+class XSDT;
+class SysDescTable;
 
-    void startup();
-
+class RSDP : public SimObject
+{
   protected:
+    typedef X86ACPIRSDPParams Params;
 
-    X86ISA::SMBios::SMBiosTable * smbiosTable;
-    X86ISA::IntelMP::FloatingPointer * mpFloatingPointer;
-    X86ISA::IntelMP::ConfigTable * mpConfigTable;
-    X86ISA::ACPI::RSDP * rsdp;
+    static const char signature[];
 
-    void writeOutSMBiosTable(Addr header,
-            Addr &headerSize, Addr &tableSize, Addr table = 0);
+    std::string oemID;
+    uint8_t revision;
 
-    void writeOutMPTable(Addr fp,
-            Addr &fpSize, Addr &tableSize, Addr table = 0);
+    RSDT * rsdt;
+    XSDT * xsdt;
 
-    const Params *params() const { return (const Params *)_params; }
-
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        //XXX This may eventually have to do something useful.
-        return addr;
-    }
+  public:
+    RSDP(Params *p);
 };
 
-#endif
+class SysDescTable : public SimObject
+{
+  protected:
+    typedef X86ACPISysDescTableParams Params;
 
+    const char * signature;
+    uint8_t revision;
+
+    std::string oemID;
+    std::string oemTableID;
+    uint32_t oemRevision;
+
+    std::string creatorID;
+    uint32_t creatorRevision;
+
+  public:
+    SysDescTable(Params *p, const char * _signature, uint8_t _revision);
+};
+
+class RSDT : public SysDescTable
+{
+  protected:
+    typedef X86ACPIRSDTParams Params;
+
+    std::vector<SysDescTable *> entries;
+
+  public:
+    RSDT(Params *p);
+};
+
+class XSDT : public SysDescTable
+{
+  protected:
+    typedef X86ACPIXSDTParams Params;
+
+    std::vector<SysDescTable *> entries;
+
+  public:
+    XSDT(Params *p);
+};
+
+} // namespace ACPI
+
+} // namespace X86ISA
+
+#endif // __ARCH_X86_BIOS_E820_HH__

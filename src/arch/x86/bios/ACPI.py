@@ -1,4 +1,4 @@
-# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -54,27 +54,46 @@
 # Authors: Gabe Black
 
 from m5.params import *
-from E820 import X86E820Table, X86E820Entry
-from SMBios import X86SMBiosSMBiosTable
-from IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
-from ACPI import X86ACPIRSDP
-from System import System
+from m5.SimObject import SimObject
 
-class X86System(System):
-    type = 'X86System'
-    smbios_table = Param.X86SMBiosSMBiosTable(
-            X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
-    intel_mp_pointer = Param.X86IntelMPFloatingPointer(
-            X86IntelMPFloatingPointer(),
-            'intel mp spec floating pointer structure')
-    intel_mp_table = Param.X86IntelMPConfigTable(
-            X86IntelMPConfigTable(),
-            'intel mp spec configuration table')
-    acpi_description_table_pointer = Param.X86ACPIRSDP(
-            X86ACPIRSDP(), 'ACPI root description pointer structure')
+# ACPI description table header. Subclasses contain and handle the actual
+# contents as appropriate for that type of table.
+class X86ACPISysDescTable(SimObject):
+    type = 'X86ACPISysDescTable'
+    cxx_class = 'X86ISA::ACPI::SysDescTable'
+    abstract = True
 
-class LinuxX86System(X86System):
-    type = 'LinuxX86System'
+    oem_id = Param.String('', 'string identifying the oem')
+    oem_table_id = Param.String('', 'oem table ID')
+    oem_revision = Param.UInt32(0, 'oem revision number for the table')
 
-    e820_table = Param.X86E820Table(
-            X86E820Table(), 'E820 map of physical memory')
+    creator_id = Param.String('',
+            'string identifying the generator of the table')
+    creator_revision = Param.UInt32(0,
+            'revision number for the creator of the table')
+
+class X86ACPIRSDT(X86ACPISysDescTable):
+    type = 'X86ACPIRSDT'
+    cxx_class = 'X86ISA::ACPI::RSDT'
+
+    entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
+
+class X86ACPIXSDT(X86ACPISysDescTable):
+    type = 'X86ACPIXSDT'
+    cxx_class = 'X86ISA::ACPI::XSDT'
+
+    entries = VectorParam.X86ACPISysDescTable([], 'system description tables')
+
+# Root System Description Pointer Structure
+class X86ACPIRSDP(SimObject):
+    type = 'X86ACPIRSDP'
+    cxx_class = 'X86ISA::ACPI::RSDP'
+
+    oem_id = Param.String('', 'string identifying the oem')
+    # Because 0 encodes ACPI 1.0, 2 encodes ACPI 3.0, the version implemented
+    # here.
+    revision = Param.UInt8(2, 'revision of ACPI being used, zero indexed')
+
+    rsdt = Param.X86ACPIRSDT('root system description table')
+    xsdt = Param.X86ACPIXSDT(X86ACPIXSDT(),
+            'extended system description table')

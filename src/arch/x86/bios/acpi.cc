@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -55,69 +55,55 @@
  * Authors: Gabe Black
  */
 
-#ifndef __ARCH_X86_SYSTEM_HH__
-#define __ARCH_X86_SYSTEM_HH__
-
-#include <string>
-#include <vector>
-
-#include "base/loader/symtab.hh"
-#include "cpu/pc_event.hh"
-#include "kern/system_events.hh"
-#include "params/X86System.hh"
+#include "arch/x86/bios/acpi.hh"
+#include "mem/port.hh"
+#include "sim/byteswap.hh"
 #include "sim/sim_object.hh"
-#include "sim/system.hh"
 
-namespace X86ISA
+#include "params/X86ACPIRSDP.hh"
+
+#include "params/X86ACPISysDescTable.hh"
+#include "params/X86ACPIRSDT.hh"
+#include "params/X86ACPIXSDT.hh"
+
+using namespace std;
+
+const char X86ISA::ACPI::RSDP::signature[] = "RSD PTR ";
+
+X86ISA::ACPI::RSDP::RSDP(Params *p) : SimObject(p), oemID(p->oem_id),
+    revision(p->revision), rsdt(p->rsdt), xsdt(p->xsdt)
+{}
+
+X86ISA::ACPI::SysDescTable::SysDescTable(Params *p,
+        const char * _signature, uint8_t _revision) : SimObject(p),
+    signature(_signature), revision(_revision),
+    oemID(p->oem_id), oemTableID(p->oem_table_id),
+    oemRevision(p->oem_revision),
+    creatorID(p->creator_id), creatorRevision(p->creator_revision)
+{}
+
+X86ISA::ACPI::RSDT::RSDT(Params *p) :
+    SysDescTable(p, "RSDT", 1), entries(p->entries)
+{}
+
+X86ISA::ACPI::XSDT::XSDT(Params *p) :
+    SysDescTable(p, "XSDT", 1), entries(p->entries)
+{}
+
+X86ISA::ACPI::RSDP *
+X86ACPIRSDPParams::create()
 {
-    namespace SMBios
-    {
-        class SMBiosTable;
-    }
-    namespace IntelMP
-    {
-        class FloatingPointer;
-        class ConfigTable;
-    }
+    return new X86ISA::ACPI::RSDP(this);
 }
 
-class X86System : public System
+X86ISA::ACPI::RSDT *
+X86ACPIRSDTParams::create()
 {
-  public:
-    typedef X86SystemParams Params;
-    X86System(Params *p);
-    ~X86System();
+    return new X86ISA::ACPI::RSDT(this);
+}
 
-/**
- * Serialization stuff
- */
-  public:
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-
-    void startup();
-
-  protected:
-
-    X86ISA::SMBios::SMBiosTable * smbiosTable;
-    X86ISA::IntelMP::FloatingPointer * mpFloatingPointer;
-    X86ISA::IntelMP::ConfigTable * mpConfigTable;
-    X86ISA::ACPI::RSDP * rsdp;
-
-    void writeOutSMBiosTable(Addr header,
-            Addr &headerSize, Addr &tableSize, Addr table = 0);
-
-    void writeOutMPTable(Addr fp,
-            Addr &fpSize, Addr &tableSize, Addr table = 0);
-
-    const Params *params() const { return (const Params *)_params; }
-
-    virtual Addr fixFuncEventAddr(Addr addr)
-    {
-        //XXX This may eventually have to do something useful.
-        return addr;
-    }
-};
-
-#endif
-
+X86ISA::ACPI::XSDT *
+X86ACPIXSDTParams::create()
+{
+    return new X86ISA::ACPI::XSDT(this);
+}

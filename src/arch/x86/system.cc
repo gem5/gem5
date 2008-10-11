@@ -77,7 +77,8 @@ using namespace X86ISA;
 X86System::X86System(Params *p) :
     System(p), smbiosTable(p->smbios_table),
     mpFloatingPointer(p->intel_mp_pointer),
-    mpConfigTable(p->intel_mp_table)
+    mpConfigTable(p->intel_mp_table),
+    rsdp(p->acpi_description_table_pointer)
 {}
 
 void
