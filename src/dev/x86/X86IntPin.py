@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,19 +26,12 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('PC.py')
-    Source('pc.cc')
+class X86IntPin(SimObject):
+    type = 'X86IntPin'
+    cxx_class = 'X86ISA::IntPin'
 
-    SimObject('Cmos.py')
-    Source('cmos.cc')
-    TraceFlag('CMOS', 'Accesses to CMOS devices')
-
-    SimObject('I8259.py')
-    Source('i8259.cc')
-    TraceFlag('I8259', 'Accesses to the I8259 PIC devices')
-
-    SimObject('X86IntPin.py')
-    Source('intdev.cc')
+    line = Param.Int("Interrupt line for this pin")
+    device = Param.SimObject("Device which handles interrupts")
