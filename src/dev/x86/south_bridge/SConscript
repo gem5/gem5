@@ -37,7 +37,6 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
 
     # Sub devices
     Source('i8254.cc')
-    Source('i8259.cc')
     Source('speaker.cc')
 
     TraceFlag('PCSpeaker')

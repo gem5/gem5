@@ -28,27 +28,36 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_I8259_HH__
-#define __DEV_X86_SOUTH_BRIDGE_I8259_HH__
+#ifndef __DEV_X86_I8259_HH__
+#define __DEV_X86_I8259_HH__
 
-#include "arch/x86/x86_traits.hh"
-#include "base/range.hh"
-#include "dev/x86/south_bridge/sub_device.hh"
+#include "dev/io_device.hh"
+#include "params/I8259.hh"
 
 namespace X86ISA
 {
 
-class I8259 : public SubDevice
+class I8259 : public BasicPioDevice
 {
-  public:
+  protected:
+    Tick latency;
+    bool master;
 
-    I8259()
-    {}
-    I8259(Tick _latency) : SubDevice(_latency)
-    {}
-    I8259(Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency)
-    {}
+  public:
+    typedef I8259Params Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    I8259(Params * p) : BasicPioDevice(p)
+    {
+        pioSize = 2;
+        latency = p->pio_latency;
+        master = p->master;
+    }
 
     Tick read(PacketPtr pkt);
 
@@ -57,4 +66,4 @@ class I8259 : public SubDevice
 
 }; // namespace X86ISA
 
-#endif //__DEV_X86_SOUTH_BRIDGE_I8259_HH__
+#endif //__DEV_X86_I8259_HH__

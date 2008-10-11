@@ -28,18 +28,24 @@
  * Authors: Gabe Black
  */
 
-#include "dev/x86/south_bridge/i8259.hh"
+#include "dev/x86/i8259.hh"
 
 Tick
 X86ISA::I8259::read(PacketPtr pkt)
 {
-    warn("Reading from PIC device.\n");
-    return SubDevice::read(pkt);
+    DPRINTF(I8259, "Reading from PIC device.\n");
+    return latency;
 }
 
 Tick
 X86ISA::I8259::write(PacketPtr pkt)
 {
-    warn("Writing to PIC device.\n");
-    return SubDevice::write(pkt);
+    DPRINTF(I8259, "Writing to PIC device.\n");
+    return latency;
+}
+
+X86ISA::I8259 *
+I8259Params::create()
+{
+    return new X86ISA::I8259(this);
 }

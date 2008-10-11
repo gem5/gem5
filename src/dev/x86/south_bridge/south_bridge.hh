@@ -34,7 +34,6 @@
 #include "base/range_map.hh"
 #include "dev/io_device.hh"
 #include "dev/x86/south_bridge/i8254.hh"
-#include "dev/x86/south_bridge/i8259.hh"
 #include "dev/x86/south_bridge/speaker.hh"
 #include "dev/x86/south_bridge/sub_device.hh"
 #include "params/SouthBridge.hh"
@@ -52,10 +51,6 @@ class SouthBridge : public PioDevice
     void addDevice(X86ISA::SubDevice &);
 
   public:
-    // PICs
-    X86ISA::I8259 pic1;
-    X86ISA::I8259 pic2;
-
     // I8254 Programmable Interval Timer
     X86ISA::I8254 pit;
 

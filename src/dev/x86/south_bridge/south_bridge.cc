@@ -67,13 +67,9 @@ SouthBridge::write(PacketPtr pkt)
 }
 
 SouthBridge::SouthBridge(const Params *p) : PioDevice(p),
-    pic1(0x20, 2, p->pio_latency),
-    pic2(0xA0, 2, p->pio_latency),
     pit(this, p->name + ".pit", 0x40, 4, p->pio_latency),
     speaker(&pit, 0x61, 1, p->pio_latency)
 {
-    addDevice(pic1);
-    addDevice(pic2);
     addDevice(pit);
     addDevice(speaker);
 

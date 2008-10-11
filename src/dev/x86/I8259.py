@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,16 +26,12 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from Device import BasicPioDevice
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('PC.py')
-    Source('pc.cc')
-
-    SimObject('Cmos.py')
-    Source('cmos.cc')
-    TraceFlag('CMOS', 'Accesses to CMOS devices')
-
-    SimObject('I8259.py')
-    Source('i8259.cc')
-    TraceFlag('I8259', 'Accesses to the I8259 PIC devices')
+class I8259(BasicPioDevice):
+    type = 'I8259'
+    cxx_class='X86ISA::I8259'
+    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
+    master = Param.Bool(True, 'If this PIC is the master or slave')
