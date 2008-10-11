@@ -32,5 +32,8 @@ Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
     SimObject('PC.py')
-
     Source('pc.cc')
+
+    SimObject('Cmos.py')
+    Source('cmos.cc')
+    TraceFlag('CMOS', 'Accesses to CMOS devices')

@@ -33,7 +33,6 @@
 
 #include "base/range_map.hh"
 #include "dev/io_device.hh"
-#include "dev/x86/south_bridge/cmos.hh"
 #include "dev/x86/south_bridge/i8254.hh"
 #include "dev/x86/south_bridge/i8259.hh"
 #include "dev/x86/south_bridge/speaker.hh"
@@ -59,9 +58,6 @@ class SouthBridge : public PioDevice
 
     // I8254 Programmable Interval Timer
     X86ISA::I8254 pit;
-
-    // CMOS apperature
-    X86ISA::Cmos cmos;
 
     // PC speaker
     X86ISA::Speaker speaker;

@@ -36,7 +36,6 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
     Source('south_bridge.cc')
 
     # Sub devices
-    Source('cmos.cc')
     Source('i8254.cc')
     Source('i8259.cc')
     Source('speaker.cc')

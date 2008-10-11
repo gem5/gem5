@@ -70,13 +70,11 @@ SouthBridge::SouthBridge(const Params *p) : PioDevice(p),
     pic1(0x20, 2, p->pio_latency),
     pic2(0xA0, 2, p->pio_latency),
     pit(this, p->name + ".pit", 0x40, 4, p->pio_latency),
-    cmos(this, 0x70, 2, p->pio_latency, p->time),
     speaker(&pit, 0x61, 1, p->pio_latency)
 {
     addDevice(pic1);
     addDevice(pic2);
     addDevice(pit);
-    addDevice(cmos);
     addDevice(speaker);
 
     // Let the platform know where we are

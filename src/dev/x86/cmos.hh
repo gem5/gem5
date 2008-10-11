@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,66 +28,61 @@
  * Authors: Gabe Black
  */
 
-#include "dev/x86/south_bridge/cmos.hh"
-#include "mem/packet_access.hh"
+#ifndef __DEV_X86_CMOS_HH__
+#define __DEV_X86_CMOS_HH__
 
-Tick
-X86ISA::Cmos::read(PacketPtr pkt)
+#include "dev/io_device.hh"
+#include "dev/mc146818.hh"
+#include "params/Cmos.hh"
+
+namespace X86ISA
 {
-    assert(pkt->getSize() == 1);
-    switch(pkt->getAddr() - addrRange.start)
+
+class Cmos : public BasicPioDevice
+{
+  protected:
+    Tick latency;
+
+    uint8_t address;
+
+    static const int numRegs = 128;
+
+    uint8_t regs[numRegs];
+
+    uint8_t readRegister(uint8_t reg);
+    void writeRegister(uint8_t reg, uint8_t val);
+
+    class X86RTC : public MC146818
     {
-      case 0x0:
-        pkt->set(address);
-        break;
-      case 0x1:
-        pkt->set(readRegister(address));
-        break;
-      default:
-        panic("Read from undefined CMOS port.\n");
-    }
-    return latency;
-}
+      public:
+        X86RTC(EventManager *em, const std::string &n, const struct tm time,
+                bool bcd, Tick frequency) :
+            MC146818(em, n, time, bcd, frequency)
+        {
+        }
+      protected:
+        void handleEvent()
+        {
+            return;
+        }
+    } rtc;
 
-Tick
-X86ISA::Cmos::write(PacketPtr pkt)
-{
-    assert(pkt->getSize() == 1);
-    switch(pkt->getAddr() - addrRange.start)
+  public:
+    typedef CmosParams Params;
+
+    Cmos(const Params *p) : BasicPioDevice(p), latency(p->pio_latency),
+        rtc(this, "rtc", p->time, true, ULL(5000000000))
     {
-      case 0x0:
-        address = pkt->get<uint8_t>();
-        break;
-      case 0x1:
-        writeRegister(address, pkt->get<uint8_t>());
-        break;
-      default:
-        panic("Write to undefined CMOS port.\n");
+        pioSize = 2;
+        memset(regs, 0, numRegs * sizeof(uint8_t));
+        address = 0;
     }
-    return latency;
-}
 
-uint8_t
-X86ISA::Cmos::readRegister(uint8_t reg)
-{
-    assert(reg < numRegs);
-    if (reg <= 0xD) {
-        return rtc.readData(reg);
-    } else {
-        warn("Reading non-volitile CMOS address %x as %x.\n", reg, regs[reg]);
-    }
-    return regs[reg];
-}
+    Tick read(PacketPtr pkt);
 
-void
-X86ISA::Cmos::writeRegister(uint8_t reg, uint8_t val)
-{
-    assert(reg < numRegs);
-    if (reg <= 0xD) {
-        rtc.writeData(reg, val);
-        return;
-    } else {
-        warn("Writing non-volitile CMOS address %x with %x.\n", reg, val);
-    }
-    regs[reg] = val;
-}
+    Tick write(PacketPtr pkt);
+};
+
+}; // namespace X86ISA
+
+#endif //__DEV_X86_CMOS_HH__
