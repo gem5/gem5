@@ -110,6 +110,12 @@ class BaseCPU : public MemObject
     TheISA::Interrupts interrupts;
 
   public:
+    TheISA::Interrupts *
+    getInterruptController()
+    {
+        return &interrupts;
+    }
+
     virtual void post_interrupt(int int_num, int index);
     virtual void clear_interrupt(int int_num, int index);
     virtual void clear_interrupts();
