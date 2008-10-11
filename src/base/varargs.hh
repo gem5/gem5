@@ -147,6 +147,20 @@ struct Any : public Base<RECV>
     }
 };
 
+template <typename T, class RECV>
+struct Any<T *, RECV> : public Base<RECV>
+{
+    const T *argument;
+
+    Any(const T *arg) : argument(arg) {}
+
+    virtual void
+    add_arg(RECV &receiver) const
+    {
+        receiver.add_arg(argument);
+    }
+};
+
 template <class RECV>
 struct Argument : public RefCountingPtr<Base<RECV> >
 {
@@ -156,6 +170,8 @@ struct Argument : public RefCountingPtr<Base<RECV> >
     Argument(const Null &null) { }
     template <typename T>
     Argument(const T& arg) : Base(new Any<T, RECV>(arg)) { }
+    template <typename T>
+    Argument(const T* arg) : Base(new Any<T *, RECV>(arg)) { }
 
     void
     add_arg(RECV &receiver) const

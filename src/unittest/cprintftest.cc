@@ -34,6 +34,7 @@
 #include <sstream>
 
 #include "base/cprintf.hh"
+#include "base/misc.hh"
 
 using namespace std;
 
@@ -42,6 +43,14 @@ main()
 {
     char foo[] = "foo";
     cprintf("%s\n", foo);
+
+    string _bar = "asdfkhasdlkfjhasdlkfhjalksdjfhalksdjhfalksdjfhalksdjhf";
+    int length = 11;
+    char bar[length + 1];
+    bar[length] = 0;
+    
+    memcpy(bar, _bar.c_str(), length);
+    warn("%s\n", bar);
 
     cprintf("%d\n", 'A');
     cprintf("%shits%%s + %smisses%%s\n", "test", "test");
