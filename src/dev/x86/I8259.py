@@ -29,9 +29,20 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
+from X86IntPin import X86IntPin
+
+class X86I8259CascadeMode(Enum):
+    map = {'I8259Master' : 0,
+           'I8259Slave' : 1,
+           'I8259Single' : 2
+    }
 
 class I8259(BasicPioDevice):
     type = 'I8259'
     cxx_class='X86ISA::I8259'
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
-    master = Param.I8259('The master PIC this PIC is cascaded with, if any')
+    output = Param.X86IntPin('The pin this I8259 drives')
+    mode = Param.X86I8259CascadeMode('How this I8259 is cascaded')
+
+    def pin(self, line):
+        return X86IntPin(device=self, line=line)

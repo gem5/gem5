@@ -32,16 +32,19 @@
 #define __DEV_X86_I8259_HH__
 
 #include "dev/io_device.hh"
+#include "dev/x86/intdev.hh"
 #include "params/I8259.hh"
+#include "enums/X86I8259CascadeMode.hh"
 
 namespace X86ISA
 {
 
-class I8259 : public BasicPioDevice
+class I8259 : public BasicPioDevice, public IntDev
 {
   protected:
     Tick latency;
-    I8259 *master;
+    IntPin *output;
+    Enums::X86I8259CascadeMode mode;
 
     // Interrupt Request Register
     uint8_t IRR;
@@ -71,13 +74,11 @@ class I8259 : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    I8259(Params * p) : BasicPioDevice(p)
+    I8259(Params * p) : BasicPioDevice(p), latency(p->pio_latency),
+                        output(p->output), mode(p->mode), readIRR(true),
+                        initControlWord(0)
     {
         pioSize = 2;
-        initControlWord = 0;
-        readIRR = true;
-        latency = p->pio_latency;
-        master = p->master;
     }
 
     Tick read(PacketPtr pkt);

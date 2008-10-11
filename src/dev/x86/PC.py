@@ -49,9 +49,10 @@ class PC(Platform):
     pciconfig = PciConfigAll()
 
     south_bridge = SouthBridge()
-    pic1 = I8259(pio_addr=x86IOAddress(0x20))
-    pic2 = I8259(pio_addr=x86IOAddress(0xA0), master=pic1)
-    cmos = Cmos(pio_addr=x86IOAddress(0x70), i8259=pic2)
+    pic1 = I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master')
+    pic2 = I8259(pio_addr=x86IOAddress(0xA0),
+            mode='I8259Slave', output=pic1.pin(2))
+    cmos = Cmos(pio_addr=x86IOAddress(0x70), int_pin=pic2.pin(0))
 
     # "Non-existant" port used for timing purposes by the linux kernel
     i_dont_exist = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)

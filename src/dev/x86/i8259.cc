@@ -139,7 +139,7 @@ X86ISA::I8259::write(PacketPtr pkt)
             break;
           case 0x2:
             DPRINTF(I8259, "Received initialization command word 3.\n");
-            if (master == NULL) {
+            if (mode == Enums::I8259Master) {
                 DPRINTF(I8259, "Slaves attached to IRQs:%s%s%s%s%s%s%s%s\n",
                         bits(val, 0) ? " 0" : "",
                         bits(val, 1) ? " 1" : "",
@@ -192,9 +192,14 @@ X86ISA::I8259::signalInterrupt(int line)
         fatal("Line number %d doesn't exist. The max is 7.\n");
     if (bits(IMR, line)) {
         DPRINTF(I8259, "Interrupt %d was masked.\n", line);
-    } else if (master != NULL) {
-        DPRINTF(I8259, "Propogating interrupt to master.\n");
-        master->signalInterrupt(cascadeBits);
+    } else {
+        if (output) {
+            DPRINTF(I8259, "Propogating interrupt.\n");
+            output->signalInterrupt();
+        } else {
+            warn("Received interrupt but didn't have "
+                    "anyone to tell about it.\n");
+        }
     }
 }
 

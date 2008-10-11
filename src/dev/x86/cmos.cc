@@ -29,13 +29,14 @@
  */
 
 #include "dev/x86/cmos.hh"
-#include "dev/x86/i8259.hh"
+#include "dev/x86/intdev.hh"
 #include "mem/packet_access.hh"
 
 void
 X86ISA::Cmos::X86RTC::handleEvent()
 {
-    i8259->signalInterrupt(intLine);
+    assert(intPin);
+    intPin->signalInterrupt();
 }
 
 Tick
