@@ -144,10 +144,6 @@ class ExecContext {
     void writeHint(Addr addr, int size, unsigned flags);
 
 #if FULL_SYSTEM
-    /** Somewhat Alpha-specific function that handles returning from
-     * an error or interrupt. */
-    Fault hwrei();
-
     /**
      * Check for special simulator handling of specific PAL calls.  If
      * return value is false, actual PAL call will be suppressed.

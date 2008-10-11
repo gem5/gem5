@@ -552,23 +552,6 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 
 using namespace AlphaISA;
 
-Fault
-SimpleThread::hwrei()
-{
-    if (!(readPC() & 0x3))
-        return new UnimplementedOpcodeFault;
-
-    setNextPC(readMiscRegNoEffect(IPR_EXC_ADDR));
-
-    if (!misspeculating()) {
-        if (kernelStats)
-            kernelStats->hwrei();
-    }
-
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
 /**
  * Check for special simulator handling of specific PAL calls.
  * If return value is false, actual PAL call will be suppressed.

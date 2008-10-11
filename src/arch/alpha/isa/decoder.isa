@@ -786,7 +786,16 @@ decode OPCODE default Unknown::unknown() {
     format BasicOperate {
         0x1e: decode PALMODE {
             0: OpcdecFault::hw_rei();
-            1:hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
+            1: hw_rei({{
+                NPC = ExcAddr;
+                ThreadContext * tc = xc->tcBase();
+                if (!tc->misspeculating()) {
+                    AlphaISA::Kernel::Statistics * kernelStats =
+                        tc->getKernelStats();
+                    if (kernelStats)
+                        kernelStats->hwrei();
+                }
+            }}, IsSerializing, IsSerializeBefore);
         }
 
         // M5 special opcodes use the reserved 0x01 opcode space

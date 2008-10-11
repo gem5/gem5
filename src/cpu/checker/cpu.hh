@@ -336,7 +336,6 @@ class CheckerCPU : public BaseCPU
     void translateDataReadReq(Request *req);
 
 #if FULL_SYSTEM
-    Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
     bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else

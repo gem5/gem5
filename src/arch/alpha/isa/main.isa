@@ -69,6 +69,7 @@ output exec {{
 #include <math.h>
 
 #if FULL_SYSTEM
+#include "arch/alpha/kernel_stats.hh"
 #include "sim/pseudo_inst.hh"
 #endif
 #include "arch/alpha/ipr.hh"
@@ -187,6 +188,7 @@ def operands {{
     'Runiq': ('ControlReg', 'uq', 'MISCREG_UNIQ', None, 1),
     'FPCR':  ('ControlReg', 'uq', 'MISCREG_FPCR', None, 1),
     'IntrFlag': ('ControlReg', 'uq', 'MISCREG_INTR', None, 1),
+    'ExcAddr': ('ControlReg', 'uq', 'IPR_EXC_ADDR', None, 1),
     # The next two are hacks for non-full-system call-pal emulation
     'R0':  ('IntReg', 'uq', '0', None, 1),
     'R16': ('IntReg', 'uq', '16', None, 1),

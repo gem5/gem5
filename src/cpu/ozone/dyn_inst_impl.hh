@@ -249,21 +249,6 @@ OzoneDynInst<Impl>::setMiscReg(int misc_reg, const MiscReg &val)
 #if FULL_SYSTEM
 
 template <class Impl>
-Fault
-OzoneDynInst<Impl>::hwrei()
-{
-    if (!(this->readPC() & 0x3))
-        return new AlphaISA::UnimplementedOpcodeFault;
-
-    this->setNextPC(this->thread->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR));
-
-    this->cpu->hwrei();
-
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
-template <class Impl>
 void
 OzoneDynInst<Impl>::trap(Fault fault)
 {

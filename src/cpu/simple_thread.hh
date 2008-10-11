@@ -185,8 +185,6 @@ class SimpleThread : public ThreadState
 
     void dumpFuncProfile();
 
-    Fault hwrei();
-
     bool simPalCheck(int palFunc);
 
 #endif

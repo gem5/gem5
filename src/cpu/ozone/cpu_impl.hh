@@ -669,21 +669,6 @@ OzoneCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 }
 #else
 template <class Impl>
-Fault
-OzoneCPU<Impl>::hwrei()
-{
-    // Need to move this to ISA code
-    // May also need to make this per thread
-
-    lockFlag = false;
-    lockAddrList.clear();
-    thread.kernelStats->hwrei();
-
-    // FIXME: XXX check for interrupts? XXX
-    return NoFault;
-}
-
-template <class Impl>
 void
 OzoneCPU<Impl>::processInterrupts()
 {
