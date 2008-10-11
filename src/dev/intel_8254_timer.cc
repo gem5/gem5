@@ -47,9 +47,9 @@ Intel8254Timer::Intel8254Timer(EventManager *em, const string &name,
 Intel8254Timer::Intel8254Timer(EventManager *em, const string &name) :
     EventManager(em), _name(name)
 {
-    counter[0] = new Counter(this, name + ".counter0");
-    counter[1] = new Counter(this, name + ".counter1");
-    counter[2] = new Counter(this, name + ".counter2");
+    counter[0] = new Counter(this, name + ".counter0", 0);
+    counter[1] = new Counter(this, name + ".counter1", 1);
+    counter[2] = new Counter(this, name + ".counter2", 2);
 }
 
 void
@@ -88,10 +88,11 @@ Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
     counter[2]->unserialize(base + ".counter2", cp, section);
 }
 
-Intel8254Timer::Counter::Counter(Intel8254Timer *p, const string &name)
-    : _name(name), event(this), count(0), latched_count(0), period(0),
-      mode(0), output_high(false), latch_on(false), read_byte(LSB),
-      write_byte(LSB), parent(p)
+Intel8254Timer::Counter::Counter(Intel8254Timer *p,
+        const string &name, unsigned int _num)
+    : _name(name), num(_num), event(this), count(0),
+      latched_count(0), period(0), mode(0), output_high(false),
+      latch_on(false), read_byte(LSB), write_byte(LSB), parent(p)
 {
 
 }
@@ -246,7 +247,6 @@ Intel8254Timer::Counter::CounterEvent::CounterEvent(Counter* c_ptr)
 void
 Intel8254Timer::Counter::CounterEvent::process()
 {
-    DPRINTF(Intel8254Timer, "Timer Interrupt\n");
     switch (counter->mode) {
       case InitTc:
         counter->output_high = true;
@@ -258,6 +258,7 @@ Intel8254Timer::Counter::CounterEvent::process()
       default:
         panic("Unimplemented PITimer mode.\n");
     }
+    counter->parent->counterInterrupt(counter->num);
 }
 
 void
@@ -273,5 +274,5 @@ Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
 const char *
 Intel8254Timer::Counter::CounterEvent::description() const
 {
-    return "tsunami 8254 Interval timer";
+    return "Intel 8254 Interval timer";
 }

@@ -90,7 +90,7 @@ class Intel8254Timer : public EventManager
             CounterEvent(Counter*);
 
             /** Event process */
-            virtual void process();
+            void process();
 
             /** Event description */
             virtual const char *description() const;
@@ -103,6 +103,8 @@ class Intel8254Timer : public EventManager
       private:
         std::string _name;
         const std::string &name() const { return _name; }
+
+        unsigned int num;
 
         CounterEvent event;
 
@@ -134,7 +136,7 @@ class Intel8254Timer : public EventManager
         Intel8254Timer *parent;
 
       public:
-        Counter(Intel8254Timer *p, const std::string &name);
+        Counter(Intel8254Timer *p, const std::string &name, unsigned int num);
 
         /** Latch the current count (if one is not already latched) */
         void latchCount();
@@ -181,7 +183,17 @@ class Intel8254Timer : public EventManager
     /** PIT has three seperate counters */
     Counter *counter[3];
 
+    virtual void
+    counterInterrupt(unsigned int num)
+    {
+        DPRINTF(Intel8254Timer, "Timer interrupt from counter %d.\n", num);
+    }
+
   public:
+
+    virtual
+    ~Intel8254Timer()
+    {}
 
     Intel8254Timer(EventManager *em, const std::string &name,
             Counter *counter0, Counter *counter1, Counter *counter2);

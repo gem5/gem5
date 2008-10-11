@@ -44,9 +44,29 @@ class I8254 : public BasicPioDevice
 {
   protected:
     Tick latency;
-    Intel8254Timer pit;
+    class X86Intel8254Timer : public Intel8254Timer
+    {
+      protected:
+        I8254 * parent;
+
+        void
+        counterInterrupt(unsigned int num)
+        {
+            parent->counterInterrupt(num);
+        }
+
+      public:
+        X86Intel8254Timer(const std::string &name, I8254 * _parent) :
+            Intel8254Timer(_parent, name), parent(_parent)
+        {}
+    };
+
+    
+    X86Intel8254Timer pit;
 
     IntPin *intPin;
+    
+    void counterInterrupt(unsigned int num);
 
   public:
     typedef I8254Params Params;
@@ -58,7 +78,7 @@ class I8254 : public BasicPioDevice
     }
 
     I8254(Params *p) : BasicPioDevice(p), latency(p->pio_latency),
-            pit(this, p->name), intPin(p->int_pin)
+            pit(p->name, this), intPin(p->int_pin)
     {
         pioSize = 4;
     }

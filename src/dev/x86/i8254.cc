@@ -29,8 +29,17 @@
  */
 
 #include "dev/x86/i8254.hh"
+#include "dev/x86/intdev.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+
+void
+X86ISA::I8254::counterInterrupt(unsigned int num)
+{
+    DPRINTF(I8254, "Interrupt from counter %d.\n", num);
+    if (num == 0)
+        intPin->signalInterrupt();
+}
 
 Tick
 X86ISA::I8254::read(PacketPtr pkt)
