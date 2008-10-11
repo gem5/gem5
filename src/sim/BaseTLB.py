@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,24 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Gabe Black
 
 from m5.SimObject import SimObject
-from m5.params import *
 
-from BaseTLB import BaseTLB
-
-class AlphaTLB(BaseTLB):
-    type = 'AlphaTLB'
+class BaseTLB(SimObject):
+    type = 'BaseTLB'
     abstract = True
-    size = Param.Int("TLB size")
-
-class AlphaDTB(AlphaTLB):
-    type = 'AlphaDTB'
-    cxx_class = 'AlphaISA::DTB'
-    size = 64
-
-class AlphaITB(AlphaTLB):
-    type = 'AlphaITB'
-    cxx_class = 'AlphaISA::ITB'
-    size = 48

@@ -32,7 +32,9 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
-class MipsTLB(SimObject):
+from BaseTLB import BaseTLB
+
+class MipsTLB(BaseTLB):
     type = 'MipsTLB'
     abstract = True
     size = Param.Int("TLB size")

@@ -30,6 +30,7 @@
 
 Import('*')
 
+SimObject('BaseTLB.py')
 SimObject('Root.py')
 SimObject('System.py')
 SimObject('InstTracer.py')

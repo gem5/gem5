@@ -54,10 +54,10 @@
 # Authors: Gabe Black
 
 from MemObject import MemObject
-from m5.SimObject import SimObject
 from m5.params import *
 from m5.proxy import *
 from m5 import build_env
+from BaseTLB import BaseTLB
 
 if build_env['FULL_SYSTEM']:
     class X86PagetableWalker(MemObject):
@@ -66,7 +66,7 @@ if build_env['FULL_SYSTEM']:
         port = Port("Port for the hardware table walker")
         system = Param.System(Parent.any, "system object")
 
-class X86TLB(SimObject):
+class X86TLB(BaseTLB):
     type = 'X86TLB'
     abstract = True
     size = Param.Int("TLB size")

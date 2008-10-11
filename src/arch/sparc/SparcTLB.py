@@ -28,7 +28,10 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-class SparcTLB(SimObject):
+
+from BaseTLB import BaseTLB
+
+class SparcTLB(BaseTLB):
     type = 'SparcTLB'
     abstract = True
     size = Param.Int("TLB size")
