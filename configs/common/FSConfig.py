@@ -189,6 +189,14 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     structures = [X86SMBiosBiosInformation()]
     self.smbios_table.structures = structures
 
+    # Set up the Intel MP table
+    bp = X86IntelMPProcessor(
+            local_apic_id = 0,
+            local_apic_version = 0x14,
+            enable = True,
+            bootstrap = True)
+    self.intel_mp_table.add_entry(bp)
+
 
 def makeLinuxX86System(mem_mode, mdesc = None):
     self = LinuxX86System()
