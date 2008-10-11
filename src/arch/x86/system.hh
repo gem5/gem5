@@ -74,6 +74,11 @@ namespace X86ISA
     {
         class SMBiosTable;
     }
+    namespace IntelMP
+    {
+        class FloatingPointer;
+        class ConfigTable;
+    }
 }
 
 class X86System : public System
@@ -95,9 +100,14 @@ class X86System : public System
   protected:
 
     X86ISA::SMBios::SMBiosTable * smbiosTable;
+    X86ISA::IntelMP::FloatingPointer * mpFloatingPointer;
+    X86ISA::IntelMP::ConfigTable * mpConfigTable;
 
     void writeOutSMBiosTable(Addr header,
             Addr &headerSize, Addr &tableSize, Addr table = 0);
+
+    void writeOutMPTable(Addr fp,
+            Addr &fpSize, Addr &tableSize, Addr table = 0);
 
     const Params *params() const { return (const Params *)_params; }
 

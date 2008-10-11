@@ -56,12 +56,19 @@
 from m5.params import *
 from E820 import X86E820Table, X86E820Entry
 from SMBios import X86SMBiosSMBiosTable
+from IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
 from System import System
 
 class X86System(System):
     type = 'X86System'
     smbios_table = Param.X86SMBiosSMBiosTable(
             X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
+    intel_mp_pointer = Param.X86IntelMPFloatingPointer(
+            X86IntelMPFloatingPointer(),
+            'intel mp spec floating pointer structure')
+    intel_mp_table = Param.X86IntelMPConfigTable(
+            X86IntelMPConfigTable(),
+            'intel mp spec configuration table')
 
 class LinuxX86System(X86System):
     type = 'LinuxX86System'

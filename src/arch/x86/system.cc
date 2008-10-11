@@ -56,12 +56,14 @@
  */
 
 #include "arch/x86/bios/smbios.hh"
+#include "arch/x86/bios/intelmp.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/system.hh"
 #include "arch/vtophys.hh"
-#include "base/remote_gdb.hh"
+#include "base/intmath.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/remote_gdb.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
@@ -72,8 +74,10 @@
 using namespace LittleEndianGuest;
 using namespace X86ISA;
 
-X86System::X86System(Params *p)
-    : System(p), smbiosTable(p->smbios_table)
+X86System::X86System(Params *p) :
+    System(p), smbiosTable(p->smbios_table),
+    mpFloatingPointer(p->intel_mp_pointer),
+    mpConfigTable(p->intel_mp_table)
 {}
 
 void
@@ -232,11 +236,16 @@ X86System::startup()
     // We should now be in long mode. Yay!
 
     Addr ebdaPos = 0xF0000;
+    Addr fixed, table;
 
-    Addr headerSize, structSize;
     //Write out the SMBios/DMI table
-    writeOutSMBiosTable(ebdaPos, headerSize, structSize);
-    ebdaPos += (headerSize + structSize);
+    writeOutSMBiosTable(ebdaPos, fixed, table);
+    ebdaPos += (fixed + table);
+    ebdaPos = roundUp(ebdaPos, 16);
+
+    //Write out the Intel MP Specification configuration table
+    writeOutMPTable(ebdaPos, fixed, table);
+    ebdaPos += (fixed + table);
 }
 
 void
@@ -258,6 +267,35 @@ X86System::writeOutSMBiosTable(Addr header,
     // ourselves.
     assert(header > table || header + headerSize <= table);
     assert(table > header || table + structSize <= header);
+}
+
+void
+X86System::writeOutMPTable(Addr fp,
+        Addr &fpSize, Addr &tableSize, Addr table)
+{
+    // Get a port to write the table and header to memory.
+    FunctionalPort * physPort = threadContexts[0]->getPhysPort();
+
+    // If the table location isn't specified and it exists, just put
+    // it after the floating pointer. The fp size as of the 1.4 Intel MP
+    // specification is 0x10 bytes.
+    if (mpConfigTable) {
+        if (!table)
+            table = fp + 0x10;
+        mpFloatingPointer->setTableAddr(table);
+    }
+
+    fpSize = mpFloatingPointer->writeOut(physPort, fp);
+    if (mpConfigTable)
+        tableSize = mpConfigTable->writeOut(physPort, table);
+    else
+        tableSize = 0;
+
+    // Do some bounds checking to make sure we at least didn't step on
+    // ourselves and the fp structure was the size we thought it was.
+    assert(fp > table || fp + fpSize <= table);
+    assert(table > fp || table + tableSize <= fp);
+    assert(fpSize == 0x10);
 }
 
 

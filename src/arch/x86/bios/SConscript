@@ -67,3 +67,7 @@ if env['TARGET_ISA'] == 'x86':
         # The DMI tables.
         SimObject('SMBios.py')
 	Source('smbios.cc')
+
+        # Intel Multiprocessor Specification Configuration Table
+        SimObject('IntelMP.py')
+        Source('intelmp.cc')
