@@ -532,11 +532,18 @@ def buildParams(target, source, env):
             continue
 
         class_path = obj.cxx_class.split('::')
-        class_path.reverse()
-        classname = class_path[0]
-        namespaces = class_path[1:]
+        classname = class_path[-1]
+        namespaces = class_path[:-1]
+        namespaces.reverse()
 
         code = ''
+
+        if namespaces:
+            code += '// avoid name conflicts\n'
+            sep_string = '_COLONS_'
+            flat_name = sep_string.join(class_path)
+            code += '%%rename(%s) %s;\n' % (flat_name, classname)
+
         code += '// stop swig from creating/wrapping default ctor/dtor\n'
         code += '%%nodefault %s;\n' % classname
         code += 'class %s ' % classname
