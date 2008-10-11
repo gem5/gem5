@@ -43,6 +43,19 @@ class I8259 : public BasicPioDevice
     Tick latency;
     bool master;
 
+    // Interrupt Request Register
+    uint8_t IRR;
+    // In Service Register
+    uint8_t ISR;
+    // Interrupt Mask Register
+    uint8_t IMR;
+
+    bool edgeTriggered;
+    bool cascadeMode;
+    bool expectICW4;
+    bool readIRR;
+    int initControlWord;
+
   public:
     typedef I8259Params Params;
 
@@ -55,6 +68,8 @@ class I8259 : public BasicPioDevice
     I8259(Params * p) : BasicPioDevice(p)
     {
         pioSize = 2;
+        initControlWord = 0;
+        readIRR = true;
         latency = p->pio_latency;
         master = p->master;
     }
