@@ -29,7 +29,14 @@
  */
 
 #include "dev/x86/cmos.hh"
+#include "dev/x86/i8259.hh"
 #include "mem/packet_access.hh"
+
+void
+X86ISA::Cmos::X86RTC::handleEvent()
+{
+    i8259->signalInterrupt(intLine);
+}
 
 Tick
 X86ISA::Cmos::read(PacketPtr pkt)

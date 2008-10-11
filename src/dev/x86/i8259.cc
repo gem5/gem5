@@ -133,12 +133,13 @@ X86ISA::I8259::write(PacketPtr pkt)
             if (cascadeMode) {
                 initControlWord++;
             } else {
+                cascadeBits = 0;
                 initControlWord = 0;
             }
             break;
           case 0x2:
             DPRINTF(I8259, "Received initialization command word 3.\n");
-            if (master) {
+            if (master == NULL) {
                 DPRINTF(I8259, "Slaves attached to IRQs:%s%s%s%s%s%s%s%s\n",
                         bits(val, 0) ? " 0" : "",
                         bits(val, 1) ? " 1" : "",
@@ -148,8 +149,10 @@ X86ISA::I8259::write(PacketPtr pkt)
                         bits(val, 5) ? " 5" : "",
                         bits(val, 6) ? " 6" : "",
                         bits(val, 7) ? " 7" : "");
+                cascadeBits = val;
             } else {
                 DPRINTF(I8259, "Slave ID is %d.\n", val & mask(3));
+                cascadeBits = val & mask(3);
             }
             if (expectICW4)
                 initControlWord++;
@@ -179,6 +182,20 @@ X86ISA::I8259::write(PacketPtr pkt)
         break;
     }
     return latency;
+}
+
+void
+X86ISA::I8259::signalInterrupt(int line)
+{
+    DPRINTF(I8259, "Interrupt raised on line %d.\n", line);
+    if (line > 7)
+        fatal("Line number %d doesn't exist. The max is 7.\n");
+    if (bits(IMR, line)) {
+        DPRINTF(I8259, "Interrupt %d was masked.\n", line);
+    } else if (master != NULL) {
+        DPRINTF(I8259, "Propogating interrupt to master.\n");
+        master->signalInterrupt(cascadeBits);
+    }
 }
 
 X86ISA::I8259 *

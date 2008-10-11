@@ -38,6 +38,8 @@
 namespace X86ISA
 {
 
+class I8259;
+
 class Cmos : public BasicPioDevice
 {
   protected:
@@ -54,24 +56,26 @@ class Cmos : public BasicPioDevice
 
     class X86RTC : public MC146818
     {
+      protected:
+        I8259 * i8259;
+        int intLine;
       public:
         X86RTC(EventManager *em, const std::string &n, const struct tm time,
-                bool bcd, Tick frequency) :
-            MC146818(em, n, time, bcd, frequency)
+                bool bcd, Tick frequency, I8259 *_i8259, int _intLine) :
+            MC146818(em, n, time, bcd, frequency),
+            i8259(_i8259), intLine(_intLine)
         {
         }
       protected:
-        void handleEvent()
-        {
-            return;
-        }
+        void handleEvent();
     } rtc;
 
   public:
     typedef CmosParams Params;
 
     Cmos(const Params *p) : BasicPioDevice(p), latency(p->pio_latency),
-        rtc(this, "rtc", p->time, true, ULL(5000000000))
+        rtc(this, "rtc", p->time, true, ULL(5000000000),
+                p->i8259, p->int_line)
     {
         pioSize = 2;
         memset(regs, 0, numRegs * sizeof(uint8_t));

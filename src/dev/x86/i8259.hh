@@ -41,7 +41,7 @@ class I8259 : public BasicPioDevice
 {
   protected:
     Tick latency;
-    bool master;
+    I8259 *master;
 
     // Interrupt Request Register
     uint8_t IRR;
@@ -50,10 +50,16 @@ class I8259 : public BasicPioDevice
     // Interrupt Mask Register
     uint8_t IMR;
 
-    bool edgeTriggered;
     bool cascadeMode;
-    bool expectICW4;
+    // A bit vector of lines with slaves attached, or the slave id, depending
+    // on if this is a master or slave PIC.
+    uint8_t cascadeBits;
+
+    bool edgeTriggered;
     bool readIRR;
+
+    // State machine information for reading in initialization control words.
+    bool expectICW4;
     int initControlWord;
 
   public:
@@ -77,6 +83,8 @@ class I8259 : public BasicPioDevice
     Tick read(PacketPtr pkt);
 
     Tick write(PacketPtr pkt);
+
+    void signalInterrupt(int line);
 };
 
 }; // namespace X86ISA

@@ -34,4 +34,4 @@ class I8259(BasicPioDevice):
     type = 'I8259'
     cxx_class='X86ISA::I8259'
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
-    master = Param.Bool(True, 'If this PIC is the master or slave')
+    master = Param.I8259('The master PIC this PIC is cascaded with, if any')

@@ -29,6 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
+from I8259 import I8259
 
 class Cmos(BasicPioDevice):
     type = 'Cmos'
@@ -36,3 +37,6 @@ class Cmos(BasicPioDevice):
     time = Param.Time('01/01/2009',
         "System time to use ('Now' for actual time)")
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
+    i8259 = Param.I8259('PIC to send RTC alarm interrupts to')
+    int_line = Param.Int(0,
+            'PIC relative interrupt line to use for alarm interrupts')
