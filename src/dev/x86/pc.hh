@@ -38,13 +38,13 @@
 #define __DEV_PC_HH__
 
 #include "dev/platform.hh"
-#include "params/PC.hh"
+#include "params/Pc.hh"
 
 class IdeController;
 class System;
 class SouthBridge;
 
-class PC : public Platform
+class Pc : public Platform
 {
   public:
     /** Pointer to the system */
@@ -52,14 +52,14 @@ class PC : public Platform
     SouthBridge *southBridge;
 
   public:
-    typedef PCParams Params;
+    typedef PcParams Params;
 
     /**
      * Do platform initialization stuff
      */
     void init();
 
-    PC(const Params *p);
+    Pc(const Params *p);
 
     /**
      * Return the interrupting frequency to AlphaAccess

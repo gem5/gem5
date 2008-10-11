@@ -47,7 +47,7 @@
 using namespace std;
 using namespace TheISA;
 
-PC::PC(const Params *p)
+Pc::Pc(const Params *p)
     : Platform(p), system(p->system)
 {
     southBridge = NULL;
@@ -56,7 +56,7 @@ PC::PC(const Params *p)
 }
 
 void
-PC::init()
+Pc::init()
 {
     assert(southBridge);
     I8254 & timer = *southBridge->pit;
@@ -70,40 +70,40 @@ PC::init()
 }
 
 Tick
-PC::intrFrequency()
+Pc::intrFrequency()
 {
     panic("Need implementation\n");
     M5_DUMMY_RETURN
 }
 
 void
-PC::postConsoleInt()
+Pc::postConsoleInt()
 {
     warn_once("Don't know what interrupt to post for console.\n");
     //panic("Need implementation\n");
 }
 
 void
-PC::clearConsoleInt()
+Pc::clearConsoleInt()
 {
     warn_once("Don't know what interrupt to clear for console.\n");
     //panic("Need implementation\n");
 }
 
 void
-PC::postPciInt(int line)
+Pc::postPciInt(int line)
 {
     panic("Need implementation\n");
 }
 
 void
-PC::clearPciInt(int line)
+Pc::clearPciInt(int line)
 {
     panic("Need implementation\n");
 }
 
 Addr
-PC::pciToDma(Addr pciAddr) const
+Pc::pciToDma(Addr pciAddr) const
 {
     panic("Need implementation\n");
     M5_DUMMY_RETURN
@@ -111,7 +111,7 @@ PC::pciToDma(Addr pciAddr) const
 
 
 Addr
-PC::calcConfigAddr(int bus, int dev, int func)
+Pc::calcConfigAddr(int bus, int dev, int func)
 {
     assert(func < 8);
     assert(dev < 32);
@@ -119,8 +119,8 @@ PC::calcConfigAddr(int bus, int dev, int func)
     return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
 }
 
-PC *
-PCParams::create()
+Pc *
+PcParams::create()
 {
-    return new PC(this);
+    return new Pc(this);
 }

@@ -180,7 +180,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     self.bridge.side_b = self.membus.port
 
     # Platform
-    self.pc = PC()
+    self.pc = Pc()
     self.pc.attachIO(self.iobus)
 
     self.intrctrl = IntrControl()

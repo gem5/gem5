@@ -40,8 +40,8 @@ def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
 
-class PC(Platform):
-    type = 'PC'
+class Pc(Platform):
+    type = 'Pc'
     system = Param.System(Parent.any, "system")
 
     pciconfig = PciConfigAll()
