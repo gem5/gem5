@@ -698,7 +698,28 @@ decode OPCODE default Unknown::unknown() {
         else {
             // check to see if simulator wants to do something special
             // on this PAL call (including maybe suppress it)
-            bool dopal = xc->simPalCheck(palFunc);
+            
+            bool dopal = true;
+
+            ThreadContext * tc = xc->tcBase();
+            AlphaISA::Kernel::Statistics * kernelStats = tc->getKernelStats();
+            System * system = tc->getSystemPtr();
+            if (kernelStats)
+                kernelStats->callpal(palFunc, tc);
+
+            switch (palFunc) {
+              case PAL::halt:
+                tc->halt();
+                if (--System::numSystemsRunning == 0)
+                    exitSimLoop("all cpus halted");
+                break;
+
+              case PAL::bpt:
+              case PAL::bugchk:
+                if (system->breakpoint())
+                    dopal = false;
+                break;
+            }
 
             if (dopal) {
                 xc->setMiscReg(IPR_EXC_ADDR, NPC);

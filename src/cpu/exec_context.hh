@@ -143,13 +143,7 @@ class ExecContext {
      * given flags. */
     void writeHint(Addr addr, int size, unsigned flags);
 
-#if FULL_SYSTEM
-    /**
-     * Check for special simulator handling of specific PAL calls.  If
-     * return value is false, actual PAL call will be suppressed.
-     */
-    bool simPalCheck(int palFunc);
-#else
+#if !FULL_SYSTEM
     /** Executes a syscall specified by the callnum. */
     void syscall(int64_t callnum);
 #endif

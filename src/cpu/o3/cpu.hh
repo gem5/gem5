@@ -414,8 +414,6 @@ class FullO3CPU : public BaseO3CPU
     /** Posts an interrupt. */
     void post_interrupt(int int_num, int index);
 
-    bool simPalCheck(int palFunc, unsigned tid);
-
     /** Returns the Fault for any valid interrupt. */
     Fault getInterrupts();
 

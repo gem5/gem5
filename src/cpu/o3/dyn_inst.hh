@@ -170,7 +170,6 @@ class BaseO3DynInst : public BaseDynInst<Impl>
 #if FULL_SYSTEM
     /** Traps to handle specified fault. */
     void trap(Fault fault);
-    bool simPalCheck(int palFunc);
 #else
     /** Calls a syscall. */
     void syscall(int64_t callnum);

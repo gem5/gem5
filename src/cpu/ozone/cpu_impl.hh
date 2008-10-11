@@ -685,31 +685,6 @@ OzoneCPU<Impl>::processInterrupts()
         interrupt->invoke(thread.getTC());
     }
 }
-
-template <class Impl>
-bool
-OzoneCPU<Impl>::simPalCheck(int palFunc)
-{
-    // Need to move this to ISA code
-    // May also need to make this per thread
-    thread.kernelStats->callpal(palFunc, tc);
-
-    switch (palFunc) {
-      case PAL::halt:
-        haltContext(thread.readTid());
-        if (--System::numSystemsRunning == 0)
-            exitSimLoop("all cpus halted");
-        break;
-
-      case PAL::bpt:
-      case PAL::bugchk:
-        if (system->breakpoint())
-            return false;
-        break;
-    }
-
-    return true;
-}
 #endif
 
 template <class Impl>

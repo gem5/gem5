@@ -254,13 +254,6 @@ OzoneDynInst<Impl>::trap(Fault fault)
 {
     fault->invoke(this->thread->getTC());
 }
-
-template <class Impl>
-bool
-OzoneDynInst<Impl>::simPalCheck(int palFunc)
-{
-    return this->cpu->simPalCheck(palFunc);
-}
 #else
 template <class Impl>
 void

@@ -241,7 +241,6 @@ class OzoneDynInst : public BaseDynInst<Impl>
 
 #if FULL_SYSTEM
     void trap(Fault fault);
-    bool simPalCheck(int palFunc);
 #else
     void syscall(uint64_t &callnum);
 #endif
