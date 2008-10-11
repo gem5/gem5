@@ -64,8 +64,8 @@ PC::init()
     //Timer 0, latch command
     timer.writeControl(0x00);
     //Write a 16 bit count of 0
-    timer.counter0.write(0);
-    timer.counter0.write(0);
+    timer.writeCounter(0, 0);
+    timer.writeCounter(0, 0);
 }
 
 Tick

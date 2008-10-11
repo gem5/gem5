@@ -39,7 +39,7 @@ X86ISA::Speaker::read(PacketPtr pkt)
 {
     assert(pkt->getAddr() == addrRange.start);
     assert(pkt->getSize() == 1);
-    controlVal.timer = timer->pit.counter2.outputHigh() ? 1 : 0;
+    controlVal.timer = timer->pit.outputHigh(2) ? 1 : 0;
     DPRINTF(PCSpeaker,
             "Reading from speaker device: gate %s, speaker %s, output %s.\n",
             controlVal.gate ? "on" : "off",

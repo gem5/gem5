@@ -38,13 +38,13 @@ X86ISA::I8254::read(PacketPtr pkt)
     switch(pkt->getAddr() - addrRange.start)
     {
       case 0x0:
-        pkt->set(pit.counter0.read());
+        pkt->set(pit.readCounter(0));
         break;
       case 0x1:
-        pkt->set(pit.counter1.read());
+        pkt->set(pit.readCounter(1));
         break;
       case 0x2:
-        pkt->set(pit.counter2.read());
+        pkt->set(pit.readCounter(2));
         break;
       case 0x3:
         pkt->set(uint8_t(-1));
@@ -62,13 +62,13 @@ X86ISA::I8254::write(PacketPtr pkt)
     switch(pkt->getAddr() - addrRange.start)
     {
       case 0x0:
-        pit.counter0.write(pkt->get<uint8_t>());
+        pit.writeCounter(0, pkt->get<uint8_t>());
         break;
       case 0x1:
-        pit.counter1.write(pkt->get<uint8_t>());
+        pit.writeCounter(1, pkt->get<uint8_t>());
         break;
       case 0x2:
-        pit.counter2.write(pkt->get<uint8_t>());
+        pit.writeCounter(2, pkt->get<uint8_t>());
         break;
       case 0x3:
         pit.writeControl(pkt->get<uint8_t>());

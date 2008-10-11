@@ -35,15 +35,21 @@
 
 using namespace std;
 
-Intel8254Timer::Intel8254Timer(EventManager *em, const string &name)
-    : EventManager(em), _name(name),
-      counter0(this, name + ".counter0"),
-      counter1(this, name + ".counter1"),
-      counter2(this, name + ".counter2")
+Intel8254Timer::Intel8254Timer(EventManager *em, const string &name,
+    Counter *counter0, Counter *counter1, Counter *counter2) :
+    EventManager(em), _name(name)
 {
-    counter[0] = &counter0;
-    counter[1] = &counter0;
-    counter[2] = &counter0;
+    counter[0] = counter0;
+    counter[1] = counter1;
+    counter[2] = counter2;
+}
+
+Intel8254Timer::Intel8254Timer(EventManager *em, const string &name) :
+    EventManager(em), _name(name)
+{
+    counter[0] = new Counter(this, name + ".counter0");
+    counter[1] = new Counter(this, name + ".counter1");
+    counter[2] = new Counter(this, name + ".counter2");
 }
 
 void
@@ -67,9 +73,9 @@ void
 Intel8254Timer::serialize(const string &base, ostream &os)
 {
     // serialize the counters
-    counter0.serialize(base + ".counter0", os);
-    counter1.serialize(base + ".counter1", os);
-    counter2.serialize(base + ".counter2", os);
+    counter[0]->serialize(base + ".counter0", os);
+    counter[1]->serialize(base + ".counter1", os);
+    counter[2]->serialize(base + ".counter2", os);
 }
 
 void
@@ -77,9 +83,9 @@ Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
         const string &section)
 {
     // unserialze the counters
-    counter0.unserialize(base + ".counter0", cp, section);
-    counter1.unserialize(base + ".counter1", cp, section);
-    counter2.unserialize(base + ".counter2", cp, section);
+    counter[0]->unserialize(base + ".counter0", cp, section);
+    counter[1]->unserialize(base + ".counter1", cp, section);
+    counter[2]->unserialize(base + ".counter2", cp, section);
 }
 
 Intel8254Timer::Counter::Counter(Intel8254Timer *p, const string &name)

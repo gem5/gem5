@@ -44,6 +44,7 @@
 /** Programmable Interval Timer (Intel 8254) */
 class Intel8254Timer : public EventManager
 {
+  protected:
     BitUnion8(CtrlReg)
         Bitfield<7, 6> sel;
         Bitfield<5, 4> rw;
@@ -173,7 +174,7 @@ class Intel8254Timer : public EventManager
                          const std::string &section);
     };
 
-  private:
+  protected:
     std::string _name;
     const std::string &name() const { return _name; }
 
@@ -181,15 +182,35 @@ class Intel8254Timer : public EventManager
     Counter *counter[3];
 
   public:
-    /** Public way to access individual counters (avoid array accesses) */
-    Counter counter0;
-    Counter counter1;
-    Counter counter2;
+
+    Intel8254Timer(EventManager *em, const std::string &name,
+            Counter *counter0, Counter *counter1, Counter *counter2);
 
     Intel8254Timer(EventManager *em, const std::string &name);
 
     /** Write control word */
     void writeControl(const CtrlReg data);
+
+    uint8_t
+    readCounter(unsigned int num)
+    {
+        assert(num < 3);
+        return counter[num]->read();
+    }
+
+    void
+    writeCounter(unsigned int num, const uint8_t data)
+    {
+        assert(num < 3);
+        counter[num]->write(data);
+    }
+
+    bool
+    outputHigh(unsigned int num)
+    {
+        assert(num < 3);
+        return counter[num]->outputHigh();
+    }
 
     /**
      * Serialize this object to the given output stream.

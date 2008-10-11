@@ -114,19 +114,19 @@ TsunamiIO::read(PacketPtr pkt)
               pkt->set(0x00);
               break;
           case TSDEV_TMR0_DATA:
-            pkt->set(pitimer.counter0.read());
+            pkt->set(pitimer.readCounter(0));
             break;
           case TSDEV_TMR1_DATA:
-            pkt->set(pitimer.counter1.read());
+            pkt->set(pitimer.readCounter(1));
             break;
           case TSDEV_TMR2_DATA:
-            pkt->set(pitimer.counter2.read());
+            pkt->set(pitimer.readCounter(2));
             break;
           case TSDEV_RTC_DATA:
             pkt->set(rtc.readData(rtcAddr));
             break;
           case TSDEV_CTRL_PORTB:
-            if (pitimer.counter2.outputHigh())
+            if (pitimer.outputHigh(2))
                 pkt->set(PORTB_SPKR_HIGH);
             else
                 pkt->set(0x00);
@@ -189,13 +189,13 @@ TsunamiIO::write(PacketPtr pkt)
         mode2 = pkt->get<uint8_t>();
         break;
       case TSDEV_TMR0_DATA:
-        pitimer.counter0.write(pkt->get<uint8_t>());
+        pitimer.writeCounter(0, pkt->get<uint8_t>());
         break;
       case TSDEV_TMR1_DATA:
-        pitimer.counter1.write(pkt->get<uint8_t>());
+        pitimer.writeCounter(1, pkt->get<uint8_t>());
         break;
       case TSDEV_TMR2_DATA:
-        pitimer.counter2.write(pkt->get<uint8_t>());
+        pitimer.writeCounter(2, pkt->get<uint8_t>());
         break;
       case TSDEV_TMR_CTRL:
         pitimer.writeControl(pkt->get<uint8_t>());
