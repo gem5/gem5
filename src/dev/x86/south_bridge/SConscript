@@ -34,9 +34,3 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
     # Main device
     SimObject('SouthBridge.py')
     Source('south_bridge.cc')
-
-    # Sub devices
-    Source('i8254.cc')
-    Source('speaker.cc')
-
-    TraceFlag('PCSpeaker')

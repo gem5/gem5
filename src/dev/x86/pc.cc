@@ -37,10 +37,11 @@
 #include <vector>
 
 #include "arch/x86/x86_traits.hh"
-#include "dev/intel_8254_timer.hh"
 #include "cpu/intr_control.hh"
 #include "dev/terminal.hh"
+#include "dev/x86/i8254.hh"
 #include "dev/x86/pc.hh"
+#include "dev/x86/south_bridge/south_bridge.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -58,7 +59,7 @@ void
 PC::init()
 {
     assert(southBridge);
-    Intel8254Timer & timer = southBridge->pit.pit;
+    I8254 & timer = *southBridge->pit;
     //Timer 0, mode 2, no bcd, 16 bit count
     timer.writeControl(0x34);
     //Timer 0, latch command

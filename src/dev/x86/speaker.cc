@@ -28,47 +28,50 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__
-#define __DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__
+#include "base/bitunion.hh"
+#include "base/trace.hh"
+#include "dev/x86/i8254.hh"
+#include "dev/x86/speaker.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 
-#include "arch/x86/x86_traits.hh"
-#include "base/range.hh"
-#include "dev/x86/south_bridge/sub_device.hh"
-
-namespace X86ISA
+Tick
+X86ISA::Speaker::read(PacketPtr pkt)
 {
+    assert(pkt->getAddr() == pioAddr);
+    assert(pkt->getSize() == 1);
+    controlVal.timer = timer->outputHigh(2) ? 1 : 0;
+    DPRINTF(PcSpeaker,
+            "Reading from speaker device: gate %s, speaker %s, output %s.\n",
+            controlVal.gate ? "on" : "off",
+            controlVal.speaker ? "on" : "off",
+            controlVal.timer ? "on" : "off");
+    pkt->set((uint8_t)controlVal);
+    return latency;
+}
 
-class I8254;
-
-class Speaker : public SubDevice
+Tick
+X86ISA::Speaker::write(PacketPtr pkt)
 {
-  protected:
-    BitUnion8(SpeakerControl)
-        Bitfield<0> gate;
-        Bitfield<1> speaker;
-        Bitfield<5> timer;
-    EndBitUnion(SpeakerControl)
+    assert(pkt->getAddr() == pioAddr);
+    assert(pkt->getSize() == 1);
+    SpeakerControl val = pkt->get<uint8_t>();
+    controlVal.gate = val.gate;
+    //Change the gate value in the timer.
+    if (!val.gate)
+        warn("The gate bit of the pc speaker isn't implemented and "
+                "is always on.\n");
+    //This would control whether the timer output is hooked up to a physical
+    //speaker. Since M5 can't make noise, it's value doesn't actually do
+    //anything.
+    controlVal.speaker = val.speaker;
+    DPRINTF(PcSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
+            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
+    return latency;
+}
 
-    SpeakerControl controlVal;
-
-    I8254 * timer;
-
-  public:
-
-    Speaker(I8254 * _timer) : timer(_timer)
-    {}
-    Speaker(I8254 * _timer, Tick _latency) :
-        SubDevice(_latency), timer(_timer)
-    {}
-    Speaker(I8254 * _timer, Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency), timer(_timer)
-    {}
-
-    Tick read(PacketPtr pkt);
-
-    Tick write(PacketPtr pkt);
-};
-
-}; // namespace X86ISA
-
-#endif //__DEV_X86_SOUTH_BRIDGE_SPEAKER_HH__
+X86ISA::Speaker *
+PcSpeakerParams::create()
+{
+    return new X86ISA::Speaker(this);
+}

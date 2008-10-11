@@ -28,51 +28,17 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/x86_traits.hh"
-#include "base/range.hh"
+#include <assert.h>
+
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge/south_bridge.hh"
 
 using namespace X86ISA;
 
-void
-SouthBridge::addDevice(X86ISA::SubDevice & sub)
+SouthBridge::SouthBridge(const Params *p) : SimObject(p),
+    platform(p->platform), pit(p->pit), pic1(p->pic1), pic2(p->pic2),
+    cmos(p->cmos), speaker(p->speaker)
 {
-    rangeList.push_back(sub.addrRange);
-    rangeMap.insert(sub.addrRange, &sub);
-}
-
-void
-SouthBridge::addressRanges(AddrRangeList &range_list)
-{
-    range_list = rangeList;
-}
-
-Tick
-SouthBridge::read(PacketPtr pkt)
-{
-    RangeMapIt sub =
-        rangeMap.find(RangeSize(pkt->getAddr(), 1));
-    assert(sub != rangeMap.end());
-    return sub->second->read(pkt);
-}
-
-Tick
-SouthBridge::write(PacketPtr pkt)
-{
-    RangeMapIt sub =
-        rangeMap.find(RangeSize(pkt->getAddr(), 1));
-    assert(sub != rangeMap.end());
-    return sub->second->write(pkt);
-}
-
-SouthBridge::SouthBridge(const Params *p) : PioDevice(p),
-    pit(this, p->name + ".pit", 0x40, 4, p->pio_latency),
-    speaker(&pit, 0x61, 1, p->pio_latency)
-{
-    addDevice(pit);
-    addDevice(speaker);
-
     // Let the platform know where we are
     PC * pc = dynamic_cast<PC *>(platform);
     assert(pc);

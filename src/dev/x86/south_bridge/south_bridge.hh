@@ -31,39 +31,30 @@
 #ifndef __DEV_X86_SOUTH_BRIDGE_SOUTH_BRIDGE_HH__
 #define __DEV_X86_SOUTH_BRIDGE_SOUTH_BRIDGE_HH__
 
-#include "base/range_map.hh"
-#include "dev/io_device.hh"
-#include "dev/x86/south_bridge/i8254.hh"
-#include "dev/x86/south_bridge/speaker.hh"
-#include "dev/x86/south_bridge/sub_device.hh"
+#include "sim/sim_object.hh"
 #include "params/SouthBridge.hh"
 
-class SouthBridge : public PioDevice
+namespace X86ISA
+{
+    class I8254;
+    class I8259;
+    class Cmos;
+    class Speaker;
+}
+
+class SouthBridge : public SimObject
 {
   protected:
-    AddrRangeList rangeList;
-
-    typedef range_map<Addr, X86ISA::SubDevice *> RangeMap;
-    typedef RangeMap::iterator RangeMapIt;
-    RangeMap rangeMap;
-
-
-    void addDevice(X86ISA::SubDevice &);
+    Platform * platform;
 
   public:
-    // I8254 Programmable Interval Timer
-    X86ISA::I8254 pit;
-
-    // PC speaker
-    X86ISA::Speaker speaker;
+    X86ISA::I8254 * pit;
+    X86ISA::I8259 * pic1;
+    X86ISA::I8259 * pic2;
+    X86ISA::Cmos * cmos;
+    X86ISA::Speaker * speaker;
 
   public:
-
-    void addressRanges(AddrRangeList &range_list);
-
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
-
     typedef SouthBridgeParams Params;
     SouthBridge(const Params *p);
 

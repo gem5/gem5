@@ -28,43 +28,69 @@
  * Authors: Gabe Black
  */
 
-#include "base/bitunion.hh"
-#include "base/trace.hh"
-#include "dev/x86/south_bridge/i8254.hh"
-#include "dev/x86/south_bridge/speaker.hh"
-#include "mem/packet_access.hh"
+#ifndef __DEV_X86_I8254_HH__
+#define __DEV_X86_I8254_HH__
 
-Tick
-X86ISA::Speaker::read(PacketPtr pkt)
-{
-    assert(pkt->getAddr() == addrRange.start);
-    assert(pkt->getSize() == 1);
-    controlVal.timer = timer->pit.outputHigh(2) ? 1 : 0;
-    DPRINTF(PCSpeaker,
-            "Reading from speaker device: gate %s, speaker %s, output %s.\n",
-            controlVal.gate ? "on" : "off",
-            controlVal.speaker ? "on" : "off",
-            controlVal.timer ? "on" : "off");
-    pkt->set((uint8_t)controlVal);
-    return latency;
-}
+#include "dev/intel_8254_timer.hh"
+#include "dev/io_device.hh"
+#include "params/I8254.hh"
 
-Tick
-X86ISA::Speaker::write(PacketPtr pkt)
+namespace X86ISA
 {
-    assert(pkt->getAddr() == addrRange.start);
-    assert(pkt->getSize() == 1);
-    SpeakerControl val = pkt->get<uint8_t>();
-    controlVal.gate = val.gate;
-    //Change the gate value in the timer.
-    if (!val.gate)
-        warn("The gate bit of the pc speaker isn't implemented and "
-                "is always on.\n");
-    //This would control whether the timer output is hooked up to a physical
-    //speaker. Since M5 can't make noise, it's value doesn't actually do
-    //anything.
-    controlVal.speaker = val.speaker;
-    DPRINTF(PCSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
-            controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
-    return latency;
-}
+
+class IntPin;
+
+class I8254 : public BasicPioDevice
+{
+  protected:
+    Tick latency;
+    Intel8254Timer pit;
+
+    IntPin *intPin;
+
+  public:
+    typedef I8254Params Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    I8254(Params *p) : BasicPioDevice(p), latency(p->pio_latency),
+            pit(this, p->name), intPin(p->int_pin)
+    {
+        pioSize = 4;
+    }
+    Tick read(PacketPtr pkt);
+
+    Tick write(PacketPtr pkt);
+
+    bool
+    outputHigh(unsigned int num)
+    {
+        return pit.outputHigh(num);
+    }
+
+    uint8_t
+    readCounter(unsigned int num)
+    {
+        return pit.readCounter(num);
+    }
+
+    void
+    writeCounter(unsigned int num, const uint8_t data)
+    {
+        pit.writeCounter(num, data);
+    }
+
+    void
+    writeControl(uint8_t val)
+    {
+        pit.writeControl(val);
+    }
+};
+
+}; // namespace X86ISA
+
+#endif //__DEV_X86_SOUTH_BRIDGE_I8254_HH__

@@ -28,39 +28,42 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_I8254_HH__
-#define __DEV_X86_SOUTH_BRIDGE_I8254_HH__
+#include "dev/x86/i8254.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 
-#include "arch/x86/x86_traits.hh"
-#include "base/range.hh"
-#include "dev/intel_8254_timer.hh"
-#include "dev/x86/south_bridge/sub_device.hh"
-
-#include <string>
-
-namespace X86ISA
+Tick
+X86ISA::I8254::read(PacketPtr pkt)
 {
+    assert(pkt->getSize() == 1);
+    Addr offset = pkt->getAddr() - pioAddr;
+    if (offset < 3) {
+        pkt->set(pit.readCounter(offset));
+    } else if (offset == 3) {
+        pkt->set(uint8_t(-1));
+    } else {
+        panic("Read from undefined i8254 register.\n");
+    }
+    return latency;
+}
 
-class I8254 : public SubDevice
+Tick
+X86ISA::I8254::write(PacketPtr pkt)
 {
-  public:
-    Intel8254Timer pit;
+    assert(pkt->getSize() == 1);
+    Addr offset = pkt->getAddr() - pioAddr;
+    if (offset < 3) {
+        pit.writeCounter(offset, pkt->get<uint8_t>());
+    } else if (offset == 3) {
+        pit.writeControl(pkt->get<uint8_t>());
+    } else {
+        panic("Write to undefined i8254 register.\n");
+    }
+    return latency;
+}
 
-    I8254(EventManager *em, const std::string &name) : pit(em, name)
-    {}
-    I8254(EventManager *em, const std::string &name, Tick _latency) :
-        SubDevice(_latency), pit(em, name)
-    {}
-    I8254(EventManager *em, const std::string &name,
-            Addr start, Addr size, Tick _latency) :
-        SubDevice(start, size, _latency), pit(em, name)
-    {}
-
-    Tick read(PacketPtr pkt);
-
-    Tick write(PacketPtr pkt);
-};
-
-}; // namespace X86ISA
-
-#endif //__DEV_X86_SOUTH_BRIDGE_I8254_HH__
+X86ISA::I8254 *
+I8254Params::create()
+{
+    return new X86ISA::I8254(this);
+}

@@ -38,18 +38,18 @@
 #define __DEV_PC_HH__
 
 #include "dev/platform.hh"
-#include "dev/x86/south_bridge/south_bridge.hh"
 #include "params/PC.hh"
 
 class IdeController;
 class System;
+class SouthBridge;
 
 class PC : public Platform
 {
   public:
     /** Pointer to the system */
     System *system;
-    SouthBridge * southBridge;
+    SouthBridge *southBridge;
 
   public:
     typedef PCParams Params;

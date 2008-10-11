@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,52 +28,52 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_SUB_DEVICE_HH__
-#define __DEV_X86_SOUTH_BRIDGE_SUB_DEVICE_HH__
+#ifndef __DEV_X86_SPEAKER_HH__
+#define __DEV_X86_SPEAKER_HH__
 
-#include "arch/x86/x86_traits.hh"
-#include "base/range.hh"
-#include "mem/packet.hh"
+#include "base/bitunion.hh"
+#include "params/PcSpeaker.hh"
 
 namespace X86ISA
 {
 
-class SubDevice
-{
-  public:
+class I8254;
 
-    Range<Addr> addrRange;
+class Speaker : public BasicPioDevice
+{
+  protected:
     Tick latency;
 
-    virtual
-    ~SubDevice()
-    {}
+    BitUnion8(SpeakerControl)
+        Bitfield<0> gate;
+        Bitfield<1> speaker;
+        Bitfield<5> timer;
+    EndBitUnion(SpeakerControl)
 
-    SubDevice()
-    {}
-    SubDevice(Tick _latency) : latency(_latency)
-    {}
-    SubDevice(Addr start, Addr size, Tick _latency) :
-        addrRange(RangeSize(x86IOAddress(start), size)), latency(_latency)
-    {}
+    SpeakerControl controlVal;
 
-    virtual Tick
-    read(PacketPtr pkt)
+    I8254 * timer;
+
+  public:
+    typedef PcSpeakerParams Params;
+
+    const Params *
+    params() const
     {
-        assert(pkt->getSize() <= 4);
-        pkt->allocate();
-        const uint32_t neg1 = -1;
-        pkt->setData((uint8_t *)(&neg1));
-        return latency;
+        return dynamic_cast<const Params *>(_params);
     }
 
-    virtual Tick
-    write(PacketPtr pkt)
+    Speaker(Params *p) : BasicPioDevice(p),
+        latency(p->pio_latency), timer(p->i8254)
     {
-        return latency;
+        pioSize = 1;
     }
+
+    Tick read(PacketPtr pkt);
+
+    Tick write(PacketPtr pkt);
 };
 
 }; // namespace X86ISA
 
-#endif //__DEV_X86_SOUTH_BRIDGE_SUB_DEVICE_HH__
+#endif //__DEV_X86_SPEAKER_HH__

@@ -29,10 +29,8 @@
 from m5.params import *
 from m5.proxy import *
 
-from Cmos import Cmos
 from Device import IsaFake
 from Pci import PciConfigAll
-from I8259 import I8259
 from Platform import Platform
 from SouthBridge import SouthBridge
 from Terminal import Terminal
@@ -49,10 +47,6 @@ class PC(Platform):
     pciconfig = PciConfigAll()
 
     south_bridge = SouthBridge()
-    pic1 = I8259(pio_addr=x86IOAddress(0x20), mode='I8259Master')
-    pic2 = I8259(pio_addr=x86IOAddress(0xA0),
-            mode='I8259Slave', output=pic1.pin(2))
-    cmos = Cmos(pio_addr=x86IOAddress(0x70), int_pin=pic2.pin(0))
 
     # "Non-existant" port used for timing purposes by the linux kernel
     i_dont_exist = IsaFake(pio_addr=x86IOAddress(0x80), pio_size=1)
@@ -68,10 +62,7 @@ class PC(Platform):
     com_1.terminal = terminal
 
     def attachIO(self, bus):
-        self.south_bridge.pio = bus.port
-	self.cmos.pio = bus.port
-	self.pic1.pio = bus.port
-	self.pic2.pio = bus.port
+        self.south_bridge.attachIO(bus)
         self.i_dont_exist.pio = bus.port
         self.behind_pci.pio = bus.port
         self.com_1.pio = bus.port
