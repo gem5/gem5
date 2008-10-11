@@ -39,6 +39,7 @@
 #include "arch/x86/x86_traits.hh"
 #include "cpu/intr_control.hh"
 #include "dev/terminal.hh"
+#include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8254.hh"
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge.hh"
@@ -59,6 +60,10 @@ void
 Pc::init()
 {
     assert(southBridge);
+
+    /*
+     * Initialize the timer.
+     */
     I8254 & timer = *southBridge->pit;
     //Timer 0, mode 2, no bcd, 16 bit count
     timer.writeControl(0x34);
@@ -67,6 +72,16 @@ Pc::init()
     //Write a 16 bit count of 0
     timer.writeCounter(0, 0);
     timer.writeCounter(0, 0);
+
+    /*
+     * Initialize the I/O APIC.
+     */
+    I82094AA & ioApic = *southBridge->ioApic;
+    I82094AA::RedirTableEntry entry = 0;
+    entry.deliveryMode = 0x7;
+    entry.vector = 0x20;
+    ioApic.writeReg(0x10, entry.bottomDW);
+    ioApic.writeReg(0x11, entry.topDW);
 }
 
 Tick

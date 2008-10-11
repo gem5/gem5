@@ -53,5 +53,9 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
     Source('speaker.cc')
     TraceFlag('PcSpeaker')
 
+    SimObject('I82094AA.py')
+    Source('i82094aa.cc')
+    TraceFlag('I82094AA')
+
     SimObject('X86IntPin.py')
     Source('intdev.cc')

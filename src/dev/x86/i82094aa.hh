@@ -28,43 +28,79 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_SOUTH_BRIDGE_HH__
-#define __DEV_X86_SOUTH_BRIDGE_HH__
+#ifndef __DEV_X86_I82094AA_HH__
+#define __DEV_X86_I82094AA_HH__
 
-#include "sim/sim_object.hh"
-#include "params/SouthBridge.hh"
+#include "base/bitunion.hh"
+#include "base/range_map.hh"
+#include "dev/io_device.hh"
+#include "dev/x86/intdev.hh"
+#include "params/I82094AA.hh"
 
 namespace X86ISA
 {
-    class I8254;
-    class I8259;
-    class Cmos;
-    class Speaker;
-    class I82094AA;
-}
 
-class SouthBridge : public SimObject
+class I82094AA : public PioDevice, public IntDev
 {
+  public:
+    BitUnion64(RedirTableEntry)
+        Bitfield<63, 32> topDW;
+        Bitfield<55, 32> topReserved;
+        Bitfield<31, 0> bottomDW;
+        Bitfield<31, 17> bottomReserved;
+        Bitfield<63, 56> dest;
+        Bitfield<16> mask;
+        Bitfield<15> trigger;
+        Bitfield<14> remoteIRR;
+        Bitfield<13> polarity;
+        Bitfield<12> deliveryStatus;
+        Bitfield<11> destMode;
+        Bitfield<10, 8> deliveryMode;
+        Bitfield<7, 0> vector;
+    EndBitUnion(RedirTableEntry)
+
   protected:
-    Platform * platform;
+    Tick latency;
+    Addr pioAddr;
+
+    uint8_t regSel;
+    uint8_t id;
+    uint8_t arbId;
+
+    static const uint8_t TableSize = 24;
+    // This implementation is based on version 0x11, but 0x14 avoids having
+    // to deal with the arbitration and APIC bus guck.
+    static const uint8_t APICVersion = 0x14;
+
+    RedirTableEntry redirTable[TableSize];
 
   public:
-    X86ISA::I8254 * pit;
-    X86ISA::I8259 * pic1;
-    X86ISA::I8259 * pic2;
-    X86ISA::Cmos * cmos;
-    X86ISA::Speaker * speaker;
-    X86ISA::I82094AA * ioApic;
-
-  public:
-    typedef SouthBridgeParams Params;
-    SouthBridge(const Params *p);
+    typedef I82094AAParams Params;
 
     const Params *
     params() const
     {
         return dynamic_cast<const Params *>(_params);
     }
+
+    I82094AA(Params *p);
+
+    Tick read(PacketPtr pkt);
+    Tick write(PacketPtr pkt);
+
+    void addressRanges(AddrRangeList &range_list)
+    {
+        range_list.clear();
+        range_list.push_back(RangeEx(pioAddr, pioAddr + 4));
+        range_list.push_back(RangeEx(pioAddr + 16, pioAddr + 20));
+    }
+
+    void writeReg(uint8_t offset, uint32_t value);
+    uint32_t readReg(uint8_t offset);
+
+    void signalInterrupt(int line);
 };
 
-#endif //__DEV_X86_SOUTH_BRIDGE_HH__
+}; // namespace X86ISA
+
+#endif //__DEV_X86_SOUTH_BRIDGE_I8254_HH__
