@@ -32,4 +32,6 @@ from Device import PioDevice
 
 class SouthBridge(PioDevice):
     type = 'SouthBridge'
+    time = Param.Time('01/01/2009',
+        "System time to use ('Now' for actual time)")
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")

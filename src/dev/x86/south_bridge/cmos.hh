@@ -44,8 +44,6 @@ class Cmos : public SubDevice
   protected:
     uint8_t address;
 
-    struct tm foo_time;
-
     static const int numRegs = 128;
 
     uint8_t regs[numRegs];
@@ -70,22 +68,17 @@ class Cmos : public SubDevice
 
   public:
 
-    Cmos(EventManager *em) : rtc(em, "rtc", foo_time, true, ULL(5000000000))
+    Cmos(EventManager *em, Tick _latency, struct tm time) :
+        SubDevice(_latency), rtc(em, "rtc", time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
     }
 
-    Cmos(EventManager *em, Tick _latency) : SubDevice(_latency),
-        rtc(em, "rtc", foo_time, true, ULL(5000000000))
-    {
-        memset(regs, 0, numRegs * sizeof(uint8_t));
-        address = 0;
-    }
-
-    Cmos(EventManager *em, Addr start, Addr size, Tick _latency) :
+    Cmos(EventManager *em, Addr start, Addr size,
+            Tick _latency, struct tm time) :
         SubDevice(start, size, _latency),
-        rtc(em, "rtc", foo_time, true, ULL(5000000000))
+        rtc(em, "rtc", time, true, ULL(5000000000))
     {
         memset(regs, 0, numRegs * sizeof(uint8_t));
         address = 0;
