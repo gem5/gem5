@@ -118,6 +118,11 @@ MemCmd::commandInfo[] =
     /* SwapResp -- for Swap ldstub type operations */
     { SET5(IsRead, IsWrite, NeedsExclusive, IsResponse, HasData),
             InvalidCmd, "SwapResp" },
+    /* IntReq -- for interrupts */
+    { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
+        MessageReq, "MessageReq" },
+    /* IntResp -- for interrupts */
+    { SET2(IsWrite, IsResponse), MessageResp, "MessageResp" },
     /* NetworkNackError  -- nacked at network layer (not by protocol) */
     { SET2(IsResponse, IsError), InvalidCmd, "NetworkNackError" },
     /* InvalidDestError  -- packet dest field invalid */

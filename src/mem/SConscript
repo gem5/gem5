@@ -47,6 +47,7 @@ Source('packet.cc')
 Source('physical.cc')
 Source('port.cc')
 Source('tport.cc')
+Source('mport.cc')
 
 if env['FULL_SYSTEM']:
     Source('vport.cc')

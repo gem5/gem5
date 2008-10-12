@@ -85,6 +85,8 @@ class MemCmd
         StoreCondResp,
         SwapReq,
         SwapResp,
+        MessageReq,
+        MessageResp,
         // Error responses
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards

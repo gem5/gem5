@@ -65,7 +65,7 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // code to hanldle nacks here, but I'm pretty sure it didn't work
     // correctly with the drain code, so that would need to be fixed
     // if we ever added it back.
-    assert(pkt->isRequest());
+    //assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
