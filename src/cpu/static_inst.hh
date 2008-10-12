@@ -74,6 +74,26 @@ namespace Trace {
 
 typedef uint32_t MicroPC;
 
+static const MicroPC MicroPCRomBit = 1 << (sizeof(MicroPC) * 8 - 1);
+
+static inline MicroPC
+romMicroPC(MicroPC upc)
+{
+    return upc | MicroPCRomBit;
+}
+
+static inline MicroPC
+normalMicroPC(MicroPC upc)
+{
+    return upc & ~MicroPCRomBit;
+}
+
+static inline bool
+isRomMicroPC(MicroPC upc)
+{
+    return MicroPCRomBit & upc;
+}
+
 /**
  * Base, ISA-independent static instruction class.
  *

@@ -368,9 +368,13 @@ BaseSimpleCPU::preExecute()
     // decode the instruction
     inst = gtoh(inst);
 
-    //If we're not in the middle of a macro instruction
-    if (!curMacroStaticInst) {
+    MicroPC upc = thread->readMicroPC();
 
+    if (isRomMicroPC(upc)) {
+        stayAtPC = false;
+        curStaticInst = microcodeRom.fetchMicroop(upc, curMacroStaticInst);
+    } else if (!curMacroStaticInst) {
+        //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
 
         //Predecode, ie bundle up an ExtMachInst
@@ -401,15 +405,13 @@ BaseSimpleCPU::preExecute()
         //out micro ops
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
-            curStaticInst = curMacroStaticInst->
-                fetchMicroop(thread->readMicroPC());
+            curStaticInst = curMacroStaticInst->fetchMicroop(upc);
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->
-            fetchMicroop(thread->readMicroPC());
+        curStaticInst = curMacroStaticInst->fetchMicroop(upc);
     }
 
     //If we decoded an instruction this "tick", record information about it.
@@ -469,22 +471,23 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         predecoder.reset();
-        thread->setMicroPC(0);
-        thread->setNextMicroPC(1);
+        thread->setMicroPC(normalMicroPC(0));
+        thread->setNextMicroPC(normalMicroPC(1));
         fault->invoke(tc);
     } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst && curStaticInst->isLastMicroop()) {
-            //We should be working with a macro op
-            assert(curMacroStaticInst);
+            //We should be working with a macro op or be in the ROM
+            assert(curMacroStaticInst ||
+                    isRomMicroPC(thread->readMicroPC()));
             //Close out this macro op, and clean up the
             //microcode state
             curMacroStaticInst = StaticInst::nullStaticInstPtr;
-            thread->setMicroPC(0);
-            thread->setNextMicroPC(1);
+            thread->setMicroPC(normalMicroPC(0));
+            thread->setNextMicroPC(normalMicroPC(1));
         }
         //If we're still in a macro op
-        if (curMacroStaticInst) {
+        if (curMacroStaticInst || isRomMicroPC(thread->readMicroPC())) {
             //Advance the micro pc
             thread->setMicroPC(thread->readNextMicroPC());
             //Advance the "next" micro pc. Note that there are no delay
