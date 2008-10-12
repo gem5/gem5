@@ -119,7 +119,6 @@ class BaseCPU : public MemObject
     virtual void post_interrupt(int int_num, int index);
     virtual void clear_interrupt(int int_num, int index);
     virtual void clear_interrupts();
-    virtual uint64_t get_interrupts(int int_num);
 
     bool check_interrupts(ThreadContext * tc) const
     { return interrupts.check_interrupts(tc); }

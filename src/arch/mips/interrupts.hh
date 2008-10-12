@@ -91,8 +91,6 @@ class Interrupts
       void updateIntrInfoCpuTimerIntr(ThreadContext *tc) const;
       bool onCpuTimerInterrupt(ThreadContext *tc) const;
 
-      uint64_t get_vec(int int_num);
-
       bool check_interrupts(ThreadContext * tc) const{
       //return (intstatus != 0) && !(tc->readPC() & 0x3);
       if (oncputimerintr == false){
@@ -159,8 +157,6 @@ class Interrupts
     void updateIntrInfo(ThreadContext *tc) const;
     bool interruptsPending(ThreadContext *tc) const;
     bool onCpuTimerInterrupt(ThreadContext *tc) const;
-
-    uint64_t get_vec(int int_num);
 
     bool check_interrupts(ThreadContext * tc) const{
         return interruptsPending(tc);

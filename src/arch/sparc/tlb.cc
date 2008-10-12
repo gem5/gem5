@@ -1008,12 +1008,22 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 itb->cx_config));
         break;
       case ASI_SWVR_INTR_RECEIVE:
-        pkt->set(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
+        {
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            pkt->set(interrupts->get_vec(IT_INT_VEC));
+        }
         break;
       case ASI_SWVR_UDB_INTR_R:
-        temp = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
-        tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, temp);
-        pkt->set(temp);
+        {
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
+            tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, temp);
+            pkt->set(temp);
+        }
         break;
       default:
 doMmuReadError:
@@ -1252,11 +1262,16 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         }
         break;
        case ASI_SWVR_INTR_RECEIVE:
-        int msb;
-        // clear all the interrupts that aren't set in the write
-        while(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data) {
-            msb = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data);
-            tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, msb);
+        {
+            int msb;
+            // clear all the interrupts that aren't set in the write
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            while(interrupts->get_vec(IT_INT_VEC) & data) {
+                msb = findMsbSet(interrupts->get_vec(IT_INT_VEC) & data);
+                tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, msb);
+            }
         }
         break;
       case ASI_SWVR_UDB_INTR_W:

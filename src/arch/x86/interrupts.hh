@@ -108,12 +108,6 @@ class Interrupts
         panic("Interrupts::updateIntrInfo unimplemented!\n");
     }
 
-    uint64_t get_vec(int int_num)
-    {
-        panic("Interrupts::get_vec unimplemented!\n");
-        return 0;
-    }
-
     void serialize(std::ostream & os)
     {
         panic("Interrupts::serialize unimplemented!\n");

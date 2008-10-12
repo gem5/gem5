@@ -156,12 +156,6 @@ static inline void setCauseIP_(ThreadContext *tc, uint8_t val) {
   return false;
   }
 
-
-  uint64_t Interrupts::get_vec(int int_num)
-  {
-  panic("MipsISA::Interrupts::get_vec() is not implemented. \n");
-  M5_DUMMY_RETURN
-  }
 */
 void Interrupts::post(int int_num, ThreadContext* tc)
 {
@@ -251,12 +245,6 @@ void Interrupts::updateIntrInfo(ThreadContext *tc) const
     //Nothing needs to be done.
     ;
 }
-
-uint64_t Interrupts::get_vec(int int_num)
-{
-    panic("MipsISA::Interrupts::get_vec() is not implemented. \n");
-    M5_DUMMY_RETURN
-        }
 
 bool Interrupts::interruptsPending(ThreadContext *tc) const
 {

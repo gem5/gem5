@@ -396,12 +396,6 @@ BaseCPU::clear_interrupts()
     interrupts.clear_all();
 }
 
-uint64_t
-BaseCPU::get_interrupts(int int_num)
-{
-    return interrupts.get_vec(int_num);
-}
-
 void
 BaseCPU::serialize(std::ostream &os)
 {

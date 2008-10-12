@@ -171,13 +171,6 @@ class Interrupts
         tc->setMiscRegNoEffect(IPR_INTID, newIpl);
         newInfoSet = false;
     }
-
-    uint64_t
-    get_vec(int int_num)
-    {
-        panic("Shouldn't be called for Alpha\n");
-        M5_DUMMY_RETURN;
-    }
 };
 
 } // namespace AlphaISA
