@@ -53,6 +53,9 @@ class I8259 : public BasicPioDevice, public IntDev
     // Interrupt Mask Register
     uint8_t IMR;
 
+    // The higher order bits of the vector to return
+    uint8_t vectorOffset;
+
     bool cascadeMode;
     // A bit vector of lines with slaves attached, or the slave id, depending
     // on if this is a master or slave PIC.
@@ -77,7 +80,7 @@ class I8259 : public BasicPioDevice, public IntDev
     I8259(Params * p) : BasicPioDevice(p), IntDev(this),
                         latency(p->pio_latency), output(p->output),
                         mode(p->mode), IRR(0), ISR(0), IMR(0),
-                        readIRR(true), initControlWord(0)
+                        vectorOffset(0), readIRR(true), initControlWord(0)
     {
         pioSize = 2;
     }

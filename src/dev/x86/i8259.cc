@@ -128,8 +128,9 @@ X86ISA::I8259::write(PacketPtr pkt)
             break;
           case 0x1:
             DPRINTF(I8259, "Received initialization command word 2.\n");
+            vectorOffset = val & ~mask(3);
             DPRINTF(I8259, "Responsible for vectors %#x-%#x.\n",
-                    val & ~mask(3), val | mask(3));
+                    vectorOffset, vectorOffset | mask(3));
             if (cascadeMode) {
                 initControlWord++;
             } else {
