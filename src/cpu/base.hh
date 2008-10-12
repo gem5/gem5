@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "sim/eventq.hh"
@@ -102,6 +103,8 @@ class BaseCPU : public MemObject
      * @param begin_tick The tick that the event is completing on.
      */
     Tick nextCycle(Tick begin_tick);
+
+    TheISA::MicrocodeRom microcodeRom;
 
 #if FULL_SYSTEM
   protected:
