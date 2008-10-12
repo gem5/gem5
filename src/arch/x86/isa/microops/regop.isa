@@ -843,10 +843,6 @@ let {{
         code = 'RIP = psrc1 + sop2 + CSBase'
         else_code="RIP = RIP;"
 
-    class Br(WrRegOp, CondRegOp):
-        code = 'nuIP = psrc1 + op2;'
-        else_code='nuIP = nuIP;'
-
     class Wruflags(WrRegOp):
         code = 'ccFlagBits = psrc1 ^ op2'
 

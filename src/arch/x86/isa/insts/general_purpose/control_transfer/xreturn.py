@@ -97,12 +97,12 @@ def macroop RET_FAR {
 
     # Do stuff if they're equal
     andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
-    bri t0, label("processDescriptor"), flags=(CEZF,)
+    br label("processDescriptor"), flags=(CEZF,)
     andi t3, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
-    bri t0, label("globalDescriptor"), flags=(CEZF,)
+    br label("globalDescriptor"), flags=(CEZF,)
     ld t3, tsl, [1, t0, t3], dataSize=8
-    bri t0, label("processDescriptor")
+    br label("processDescriptor")
 globalDescriptor:
     ld t3, tsg, [1, t0, t3], dataSize=8
 processDescriptor:
@@ -112,7 +112,7 @@ processDescriptor:
     wrdl cs, t3, t2
     wrsel cs, t2
     wrip t0, t1
-    bri t0, label("end")
+    br label("end")
 
     # Do other stuff if they're not.
 end:

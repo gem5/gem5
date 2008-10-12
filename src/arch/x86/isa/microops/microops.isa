@@ -68,6 +68,9 @@
 //Load/store microop definitions
 ##include "ldstop.isa"
 
+//Control flow microop definitions
+##include "seqop.isa"
+
 //Miscellaneous microop definitions
 ##include "specop.isa"
 

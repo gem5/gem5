@@ -246,7 +246,7 @@ def macroop DIV_B_R
 divLoopTop:
     div2 t1, rax, t1, dataSize=1
     div2 t1, rax, t1, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax, dataSize=1
@@ -269,7 +269,7 @@ def macroop DIV_B_M
 divLoopTop:
     div2 t1, rax, t1, dataSize=1
     div2 t1, rax, t1, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax, dataSize=1
@@ -293,7 +293,7 @@ def macroop DIV_B_P
 divLoopTop:
     div2 t1, rax, t1, dataSize=1
     div2 t1, rax, t1, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax, dataSize=1
@@ -321,7 +321,7 @@ divLoopTop:
     div2 t1, rax, t1
     div2 t1, rax, t1
     div2 t1, rax, t1, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax
@@ -347,7 +347,7 @@ divLoopTop:
     div2 t1, rax, t1
     div2 t1, rax, t1
     div2 t1, rax, t1, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax
@@ -374,7 +374,7 @@ divLoopTop:
     div2 t1, rax, t1
     div2 t1, rax, t1
     div2 t1, rax, t1, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq rax
@@ -422,7 +422,7 @@ def macroop IDIV_B_R
 divLoopTop:
     div2 t4, t1, t4, dataSize=1
     div2 t4, t1, t4, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5, dataSize=1
@@ -495,7 +495,7 @@ def macroop IDIV_B_M
 divLoopTop:
     div2 t4, t1, t4, dataSize=1
     div2 t4, t1, t4, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5, dataSize=1
@@ -569,7 +569,7 @@ def macroop IDIV_B_P
 divLoopTop:
     div2 t4, t1, t4, dataSize=1
     div2 t4, t1, t4, flags=(EZF,), dataSize=1
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5, dataSize=1
@@ -646,7 +646,7 @@ divLoopTop:
     div2 t4, t1, t4
     div2 t4, t1, t4
     div2 t4, t1, t4, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5
@@ -721,7 +721,7 @@ divLoopTop:
     div2 t4, t1, t4
     div2 t4, t1, t4
     div2 t4, t1, t4, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5
@@ -797,7 +797,7 @@ divLoopTop:
     div2 t4, t1, t4
     div2 t4, t1, t4
     div2 t4, t1, t4, flags=(EZF,)
-    bri t0, label("divLoopTop"), flags=(nCEZF,)
+    br label("divLoopTop"), flags=(nCEZF,)
 
     #Unload the answer
     divq t5

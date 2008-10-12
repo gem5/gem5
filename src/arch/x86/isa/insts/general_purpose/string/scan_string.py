@@ -74,7 +74,7 @@ def macroop SCAS_M {
 
 def macroop SCAS_E_M {
     and t0, rcx, rcx, flags=(EZF,), dataSize=asz
-    bri t0, label("end"), flags=(CEZF,)
+    br label("end"), flags=(CEZF,)
 
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
@@ -88,14 +88,14 @@ topOfLoop:
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(CSTRZnEZF,)
+    br label("topOfLoop"), flags=(CSTRZnEZF,)
 end:
     fault "NoFault"
 };
 
 def macroop SCAS_N_M {
     and t0, rcx, rcx, flags=(EZF,), dataSize=asz
-    bri t0, label("end"), flags=(CEZF,)
+    br label("end"), flags=(CEZF,)
 
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
@@ -109,7 +109,7 @@ topOfLoop:
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(CSTRnZnEZF,)
+    br label("topOfLoop"), flags=(CSTRnZnEZF,)
 end:
     fault "NoFault"
 };

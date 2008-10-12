@@ -1,0 +1,208 @@
+// Copyright (c) 2008 The Hewlett-Packard Development Company
+// All rights reserved.
+//
+// Redistribution and use of this software in source and binary forms,
+// with or without modification, are permitted provided that the
+// following conditions are met:
+//
+// The software must be used only for Non-Commercial Use which means any
+// use which is NOT directed to receiving any direct monetary
+// compensation for, or commercial advantage from such use.  Illustrative
+// examples of non-commercial use are academic research, personal study,
+// teaching, education and corporate research & development.
+// Illustrative examples of commercial use are distributing products for
+// commercial advantage and providing services using the software for
+// commercial advantage.
+//
+// If you wish to use this software or functionality therein that may be
+// covered by patents for commercial use, please contact:
+//     Director of Intellectual Property Licensing
+//     Office of Strategy and Technology
+//     Hewlett-Packard Company
+//     1501 Page Mill Road
+//     Palo Alto, California  94304
+//
+// Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.  Redistributions
+// in binary form must reproduce the above copyright notice, this list of
+// conditions and the following disclaimer in the documentation and/or
+// other materials provided with the distribution.  Neither the name of
+// the COPYRIGHT HOLDER(s), HEWLETT-PACKARD COMPANY, nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.  No right of
+// sublicense is granted herewith.  Derivatives of the software and
+// output created using the software may be prepared, but only for
+// Non-Commercial Uses.  Derivatives of the software may be shared with
+// others provided: (i) the others agree to abide by the list of
+// conditions herein which includes the Non-Commercial Use restrictions;
+// and (ii) such Derivatives of the software include the above copyright
+// notice to acknowledge the contribution from this software where
+// applicable, this list of conditions and the disclaimer below.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+output header {{
+    class SeqOpBase : public X86ISA::X86MicroopBase
+    {
+      protected:
+        uint16_t target;
+        uint8_t cc;
+
+      public:
+        SeqOpBase(ExtMachInst _machInst, const char * instMnem,
+                const char * mnemonic,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                uint16_t _target, uint8_t _cc);
+
+        SeqOpBase(ExtMachInst _machInst, const char * instMnem,
+                const char * mnemonic,
+                uint16_t _target, uint8_t _cc);
+
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+    };
+}};
+
+def template SeqOpDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        void buildMe();
+      public:
+        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                uint16_t _target, uint8_t _cc);
+
+        %(class_name)s(ExtMachInst _machInst, const char * instMnem,
+                uint16_t _target, uint8_t _cc);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template SeqOpExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            %(op_decl)s;
+            %(op_rd)s;
+            if (%(cond_test)s) {
+                %(code)s;
+            } else {
+                %(else_code)s;
+            }
+            %(op_wb)s;
+            return NoFault;
+        }
+}};
+
+output decoder {{
+    inline SeqOpBase::SeqOpBase(
+            ExtMachInst machInst, const char * mnemonic, const char * instMnem,
+            uint16_t _target, uint8_t _cc) :
+        X86MicroopBase(machInst, mnemonic, instMnem,
+                false, false, false, false, No_OpClass),
+        target(_target), cc(_cc)
+    {
+    }
+
+    inline SeqOpBase::SeqOpBase(
+            ExtMachInst machInst, const char * mnemonic, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            uint16_t _target, uint8_t _cc) :
+        X86MicroopBase(machInst, mnemonic, instMnem,
+                isMicro, isDelayed, isFirst, isLast, No_OpClass),
+                target(_target), cc(_cc)
+    {
+    }
+}};
+
+def template SeqOpConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            uint16_t _target, uint8_t _cc) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem, _target, _cc)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            uint16_t _target, uint8_t _cc) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast, _target, _cc)
+    {
+        buildMe();
+    }
+}};
+
+output decoder {{
+    std::string SeqOpBase::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
+
+        printMnemonic(response, instMnem, mnemonic);
+        ccprintf(response, "%#x", target);
+
+        return response.str();
+    }
+}};
+
+let {{
+    class Br(X86Microop):
+        className = "MicroBranch"
+        def __init__(self, target, flags=None):
+            self.target = target
+            if flags:
+                if not isinstance(flags, (list, tuple)):
+                    raise Exception, "flags must be a list or tuple of flags"
+                self.cond = " | ".join(flags)
+                self.className += "Flags"
+            else:
+                self.cond = "0"
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, mnemonic
+                    %(flags)s, %(target)s, %(cc)s)''' % {
+                "class_name" : self.className,
+                "flags" : self.microFlagsText(microFlags),
+                "target" : self.target,
+                "cc" : self.cond}
+            return allocator
+
+    iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
+            {"code": "nuIP = target",
+             "else_code": "nuIP = nuIP",
+             "cond_test": "checkCondition(ccFlagBits, cc)"})
+    exec_output += SeqOpExecute.subst(iop)
+    header_output += SeqOpDeclare.subst(iop)
+    decoder_output += SeqOpConstructor.subst(iop)
+    iop = InstObjParams("br", "MicroBranch", "SeqOpBase",
+            {"code": "nuIP = target",
+             "else_code": "nuIP = nuIP",
+             "cond_test": "true"})
+    exec_output += SeqOpExecute.subst(iop)
+    header_output += SeqOpDeclare.subst(iop)
+    decoder_output += SeqOpConstructor.subst(iop)
+    microopClasses["br"] = Br
+}};

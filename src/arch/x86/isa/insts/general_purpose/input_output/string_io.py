@@ -71,7 +71,7 @@ def macroop INS_M_R {
 
 def macroop INS_E_M_R {
     and t0, rcx, rcx, flags=(EZF,), dataSize=asz
-    bri t0, label("end"), flags=(CEZF,)
+    br label("end"), flags=(CEZF,)
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
@@ -86,7 +86,7 @@ topOfLoop:
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t3, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    br label("topOfLoop"), flags=(nCEZF,)
 end:
     fault "NoFault"
 };
@@ -108,7 +108,7 @@ def macroop OUTS_R_M {
 
 def macroop OUTS_E_R_M {
     and t0, rcx, rcx, flags=(EZF,), dataSize=asz
-    bri t0, label("end"), flags=(CEZF,)
+    br label("end"), flags=(CEZF,)
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
@@ -123,7 +123,7 @@ topOfLoop:
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rsi, rsi, t3, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    br label("topOfLoop"), flags=(nCEZF,)
 end:
     fault "NoFault"
 };

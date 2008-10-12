@@ -175,11 +175,11 @@ def macroop ENTER_I_I {
 
     # If the nesting level is zero, skip all this stuff.
     subi t0, t1, t0, flags=(EZF,), dataSize=2
-    bri t0, label("skipLoop"), flags=(CEZF,)
+    br label("skipLoop"), flags=(CEZF,)
 
     # If the level was 1, only push the saved rbp
     subi t0, t1, 1, flags=(EZF,)
-    bri t0, label("bottomOfLoop"), flags=(CEZF,)
+    br label("bottomOfLoop"), flags=(CEZF,)
 
     limm t4, "ULL(-1)", dataSize=8
 topOfLoop:
@@ -189,7 +189,7 @@ topOfLoop:
     # If we're not done yet, loop
     subi t4, t4, 1, dataSize=8
     add t0, t4, t1, flags=(EZF,)
-    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    br label("topOfLoop"), flags=(nCEZF,)
 
 bottomOfLoop:
     # Push the old rbp onto the stack

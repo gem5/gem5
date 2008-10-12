@@ -86,16 +86,16 @@ def macroop IRET_PROT {
 
     #temp_RFLAGS.VM != 1
     rcri t0, t3, 18, flags=(ECF,)
-    bri t0, label("protToVirtFallThrough"), flags=(nCECF,)
+    br label("protToVirtFallThrough"), flags=(nCECF,)
 
     #CPL=0
     rdm5reg t4
     andi t0, t4, 0x30, flags=(EZF,)
-    bri t0, label("protToVirtFallThrough"), flags=(nCEZF,)
+    br label("protToVirtFallThrough"), flags=(nCEZF,)
 
     #(LEGACY_MODE)
     rcri t0, t4, 1, flags=(ECF,)
-    bri t0, label("protToVirtFallThrough"), flags=(nCECF,)
+    br label("protToVirtFallThrough"), flags=(nCECF,)
 
     panic "iret to virtual mode not supported"
 
@@ -113,12 +113,12 @@ protToVirtFallThrough:
 
     #CS = READ_DESCRIPTOR (temp_CS, iret_chk)
     andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
-    bri t0, label("processCSDescriptor"), flags=(CEZF,)
+    br label("processCSDescriptor"), flags=(CEZF,)
     andi t6, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
-    bri t0, label("globalCSDescriptor"), flags=(CEZF,)
+    br label("globalCSDescriptor"), flags=(CEZF,)
     ld t6, tsl, [1, t0, t6], dataSize=8
-    bri t0, label("processCSDescriptor")
+    br label("processCSDescriptor")
 globalCSDescriptor:
     ld t6, tsg, [1, t0, t6], dataSize=8
 processCSDescriptor:
@@ -143,7 +143,7 @@ processCSDescriptor:
     andi t0, t4, 0xE, flags=(EZF,)
     # Since we just found out we're in 64 bit mode, take advantage and
     # do the appropriate RIP checks.
-    bri t0, label("doPopStackStuffAndCheckRIP"), flags=(CEZF,)
+    br label("doPopStackStuffAndCheckRIP"), flags=(CEZF,)
 
     # Here, we know we're -not- in 64 bit mode, so we should do the
     # appropriate/other RIP checks.
@@ -156,17 +156,17 @@ processCSDescriptor:
     srli t7, t4, 4
     xor t7, t7, t5
     andi t0, t7, 0x3, flags=(EZF,)
-    bri t0, label("doPopStackStuff"), flags=(nCEZF,)
+    br label("doPopStackStuff"), flags=(nCEZF,)
     # We can modify user visible state here because we're know
     # we're done with things that can fault.
     addi rsp, rsp, "3 * env.stackSize"
-    bri t0, label("fallThroughPopStackStuff")
+    br label("fallThroughPopStackStuff")
 
 doPopStackStuffAndCheckRIP:
     # Check if the RIP is canonical.
     sra t7, t1, 47, flags=(EZF,), dataSize=ssz
     # if t7 isn't 0 or -1, it wasn't canonical.
-    bri t0, label("doPopStackStuff"), flags=(CEZF,)
+    br label("doPopStackStuff"), flags=(CEZF,)
     addi t0, t7, 1, flags=(EZF,), dataSize=ssz
     fault "new GeneralProtection(0)", flags=(nCEZF,)
 
@@ -177,12 +177,12 @@ doPopStackStuff:
     ld t2, ss, [1, t0, rsp], "4 * env.dataSize", dataSize=ssz
     #    SS = READ_DESCRIPTOR (temp_SS, ss_chk)
     andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
-    bri t0, label("processSSDescriptor"), flags=(CEZF,)
+    br label("processSSDescriptor"), flags=(CEZF,)
     andi t7, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
-    bri t0, label("globalSSDescriptor"), flags=(CEZF,)
+    br label("globalSSDescriptor"), flags=(CEZF,)
     ld t7, tsl, [1, t0, t7], dataSize=8
-    bri t0, label("processSSDescriptor")
+    br label("processSSDescriptor")
 globalSSDescriptor:
     ld t7, tsg, [1, t0, t7], dataSize=8
 processSSDescriptor:
@@ -208,7 +208,7 @@ fallThroughPopStackStuff:
     srli t7, t4, 4
     xor t7, t7, t5
     andi t0, t7, 0x3, flags=(EZF,)
-    bri t0, label("skipSegmentSquashing"), flags=(CEZF,)
+    br label("skipSegmentSquashing"), flags=(CEZF,)
 
     # The attribute register needs to keep track of more info before this will
     # work the way it needs to.
