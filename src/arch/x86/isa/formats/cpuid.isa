@@ -1,32 +1,4 @@
-// Copyright (c) 2007 The Regents of The University of Michigan
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met: redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer;
-// redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution;
-// neither the name of the copyright holders nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Authors: Gabe Black
-
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -81,31 +53,58 @@
 //
 // Authors: Gabe Black
 
-//Include the basic format
-//Templates from this format are used later
-##include "basic.isa"
+output header {{
+    class CPUIDInst : public X86ISA::X86StaticInst
+    {
+      public:
+        static const RegIndex foldOBit = 0;
+        /// Constructor
+        CPUIDInst(const char *_mnemonic, ExtMachInst _machInst,
+                OpClass __opClass) :
+            X86ISA::X86StaticInst(_mnemonic, _machInst, __opClass)
+        {
+        }
 
-//Include a format to generate a CPUID instruction.
-##include "cpuid.isa"
+        std::string generateDisassembly(Addr pc,
+                const SymbolTable *symtab) const;
+    };
+}};
 
-//Include the "unknown" format
-##include "unknown.isa"
+output decoder {{
+    std::string CPUIDInst::generateDisassembly(Addr PC,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream response;
 
-//Include the "unimp" format
-##include "unimp.isa"
+        printMnemonic(response, mnemonic);
+        ccprintf(response, " ");
+        printReg(response, _srcRegIdx[0], machInst.opSize);
+        return response.str();
+    }
+}};
 
-//Include a format to signal m5 internal errors. This is used to indicate a
-//malfunction of the decode mechanism.
-##include "error.isa"
+def template CPUIDExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+            Trace::InstRecord *traceData) const
+    {
+        // If the CPUID instruction used a valid function number, this will
+        // be set to true. Otherwise, the instruction does nothing.
+        bool success;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+        if (success) {
+            %(op_wb)s;
+        }
+        return NoFault;
+    }
+}};
 
-//Include a format which implements a batch of instructions which do the same
-//thing on a variety of inputs
-##include "multi.isa"
+def format CPUIDInst(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'CPUIDInst', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = CPUIDExecute.subst(iop)
+}};
 
-//Include a format which implements an extra layer of decoding to handle the
-//repe and repne prefixes
-##include "string.isa"
-
-//Include a format which makes instructions who's sole purpose is to generate
-//a syscall.
-##include "syscall.isa"

@@ -168,7 +168,7 @@
 #if FULL_SYSTEM
                 0x05: syscall();
 #else
-                0x05: SyscallInst::syscall('xc->syscall(rax)', IsSyscall);
+                0x05: SyscallInst::syscall('xc->syscall(Rax)', IsSyscall);
 #endif
                 0x06: clts();
                 //sandpile.org says (AMD) after sysret, so I might want to check
@@ -707,7 +707,14 @@
             0x14: decode OPCODE_OP_BOTTOM3 {
                 0x0: push_fs();
                 0x1: pop_fs();
-                0x2: Inst::CPUID(rAd);
+                0x2: CPUIDInst::CPUID({{
+                    CpuidResult result;
+                    success = doCpuid(xc->tcBase(), Rax, result);
+                    Rax = result.rax;
+                    Rbx = result.rbx;
+                    Rcx = result.rcx;
+                    Rdx = result.rdx;
+                    }});
                 0x3: Inst::BT(Ev,Gv);
                 0x4: shld_Ev_Gv_Ib();
                 0x5: shld_Ev_Gv_rCl();

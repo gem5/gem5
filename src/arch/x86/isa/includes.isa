@@ -145,6 +145,7 @@ output exec {{
 #include <limits>
 
 #include <cmath>
+#include "arch/x86/cpuid.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
