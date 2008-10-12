@@ -317,7 +317,7 @@ namespace X86ISA
         {}
     };
 
-    class AlignmentCheck : X86Fault
+    class AlignmentCheck : public X86Fault
     {
       public:
         AlignmentCheck() :
@@ -325,7 +325,7 @@ namespace X86ISA
         {}
     };
 
-    class MachineCheck : X86Abort
+    class MachineCheck : public X86Abort
     {
       public:
         MachineCheck() :
@@ -333,7 +333,7 @@ namespace X86ISA
         {}
     };
 
-    class SIMDFloatingPointFault : X86Fault
+    class SIMDFloatingPointFault : public X86Fault
     {
       public:
         SIMDFloatingPointFault() :
@@ -341,7 +341,7 @@ namespace X86ISA
         {}
     };
 
-    class SecurityException : X86FaultBase
+    class SecurityException : public X86FaultBase
     {
       public:
         SecurityException() :
@@ -349,7 +349,7 @@ namespace X86ISA
         {}
     };
 
-    class ExternalInterrupt : X86Interrupt
+    class ExternalInterrupt : public X86Interrupt
     {
       public:
         ExternalInterrupt() :
@@ -357,7 +357,7 @@ namespace X86ISA
         {}
     };
 
-    class SoftwareInterrupt : X86Interrupt
+    class SoftwareInterrupt : public X86Interrupt
     {
       public:
         SoftwareInterrupt() :
