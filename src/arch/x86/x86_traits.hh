@@ -92,8 +92,8 @@ namespace X86ISA
 
     const Addr PhysAddrPrefixIO = ULL(0x8000000000000000);
     const Addr PhysAddrPrefixPciConfig = ULL(0xC000000000000000);
-    const Addr PhysAddrPrefixLocalAPIC = ULL(0xA000000000000000);
-    const Addr PhysAddrPrefixInterrupts = ULL(0x2000000000000000);
+    const Addr PhysAddrPrefixLocalAPIC = ULL(0x2000000000000000);
+    const Addr PhysAddrPrefixInterrupts = ULL(0xA000000000000000);
     // Each APIC gets two pages. One page is used for local apics to field
     // accesses from the CPU, and the other is for all APICs to communicate.
     const Addr PhysAddrAPICRangeSize = 1 << 12;

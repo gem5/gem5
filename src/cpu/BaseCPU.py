@@ -97,7 +97,7 @@ class BaseCPU(MemObject):
         dtb = Param.X86DTB(X86DTB(), "Data TLB")
         itb = Param.X86ITB(X86ITB(), "Instruction TLB")
         if build_env['FULL_SYSTEM']:
-            _localApic = X86LocalApic(pio_addr=0xa000000000000000)
+            _localApic = X86LocalApic(pio_addr=0x2000000000000000)
             interrupts = \
                 Param.X86LocalApic(_localApic, "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'mips':
