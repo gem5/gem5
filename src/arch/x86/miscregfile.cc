@@ -106,21 +106,9 @@ void MiscRegFile::clear()
 {
     // Blank everything. 0 might not be an appropriate value for some things.
     memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
-    //Set the local apic DFR to the flat model.
-    regVal[MISCREG_APIC_DESTINATION_FORMAT] = (MiscReg)(-1);
 }
 
-int divideFromConf(MiscReg conf)
-{
-    // This figures out what division we want from the division configuration
-    // register in the local APIC. The encoding is a little odd but it can
-    // be deciphered fairly easily.
-    int shift = ((conf & 0x8) >> 1) | (conf & 0x3);
-    shift = (shift + 1) % 8;
-    return 1 << shift;
-};
-
-MiscReg MiscRegFile::readRegNoEffect(int miscReg)
+MiscReg MiscRegFile::readRegNoEffect(MiscRegIndex miscReg)
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
@@ -131,52 +119,30 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
             !(miscReg > MISCREG_CR8 &&
               miscReg <= MISCREG_CR15));
 
+    if (isApicReg(miscReg)) {
+        panic("Can't readRegNoEffect from the local APIC.\n");
+    }
     return regVal[miscReg];
 }
 
-MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
+MiscReg MiscRegFile::readReg(MiscRegIndex miscReg, ThreadContext * tc)
 {
-    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
-        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
-                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
-            panic("Local APIC Trigger Mode registers are unimplemented.\n");
-        }
-        switch (miscReg) {
-          case MISCREG_APIC_ARBITRATION_PRIORITY:
-            panic("Local APIC Arbitration Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_PROCESSOR_PRIORITY:
-            panic("Local APIC Processor Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_EOI:
-            panic("Local APIC EOI register unimplemented.\n");
-            break;
-          case MISCREG_APIC_ERROR_STATUS:
-            regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(0x1);
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
-            panic("Local APIC Interrupt Command low"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
-            panic("Local APIC Interrupt Command high"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_CURRENT_COUNT:
-            return (regVal[miscReg] - tc->getCpuPtr()->curCycle()) /
-                (16 * divideFromConf(
-                    regVal[MISCREG_APIC_DIVIDE_CONFIGURATION]));
-            break;
-        }
+#if FULL_SYSTEM
+    if (isApicReg(miscReg)) {
+        Interrupts * interrupts = dynamic_cast<Interrupts *>(
+                tc->getCpuPtr()->getInterruptController());
+        assert(interrupts);
+        return interrupts->readReg(
+                (ApicRegIndex)(miscReg - MISCREG_APIC_START), tc);
     }
-    switch (miscReg) {
-      case MISCREG_TSC:
+#endif
+    if (miscReg == MISCREG_TSC) {
         return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
     }
     return readRegNoEffect(miscReg);
 }
 
-void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
+void MiscRegFile::setRegNoEffect(MiscRegIndex miscReg, const MiscReg &val)
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
@@ -186,108 +152,26 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
               miscReg < MISCREG_CR8) &&
             !(miscReg > MISCREG_CR8 &&
               miscReg <= MISCREG_CR15));
+    if (isApicReg(miscReg)) {
+        panic("Can't setRegNoEffect from the local APIC.\n");
+    }
     regVal[miscReg] = val;
 }
 
-void MiscRegFile::setReg(int miscReg,
+void MiscRegFile::setReg(MiscRegIndex miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     MiscReg newVal = val;
-    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
-        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
-                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
-            panic("Local APIC In-Service registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
-                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
-            panic("Local APIC Trigger Mode registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
-                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
-            panic("Local APIC Interrupt Request registers "
-                    "are unimplemented.\n");
-        }
-        switch (miscReg) {
-          case MISCREG_APIC_ID:
-            newVal = val & 0xFF;
-            break;
-          case MISCREG_APIC_VERSION:
-            // The Local APIC Version register is read only.
-            return;
-          case MISCREG_APIC_TASK_PRIORITY:
-            newVal = val & 0xFF;
-            break;
-          case MISCREG_APIC_ARBITRATION_PRIORITY:
-            panic("Local APIC Arbitration Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_PROCESSOR_PRIORITY:
-            panic("Local APIC Processor Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_EOI:
-            panic("Local APIC EOI register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LOGICAL_DESTINATION:
-            newVal = val & 0xFF000000;
-            break;
-          case MISCREG_APIC_DESTINATION_FORMAT:
-            newVal = val | 0x0FFFFFFF;
-            break;
-          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
-            regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(1 << 1);
-            regVal[MISCREG_APIC_INTERNAL_STATE] |= val & (1 << 8);
-            if (val & (1 << 9))
-                warn("Focus processor checking not implemented.\n");
-            break;
-          case MISCREG_APIC_ERROR_STATUS:
-            {
-                if (regVal[MISCREG_APIC_INTERNAL_STATE] & 0x1) {
-                    regVal[MISCREG_APIC_INTERNAL_STATE] &= ~ULL(0x1);
-                    newVal = 0;
-                } else {
-                    regVal[MISCREG_APIC_INTERNAL_STATE] |= ULL(0x1);
-                    return;
-                }
-
-            }
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
-            panic("Local APIC Interrupt Command low"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
-            panic("Local APIC Interrupt Command high"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_TIMER:
-          case MISCREG_APIC_LVT_THERMAL_SENSOR:
-          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
-          case MISCREG_APIC_LVT_LINT0:
-          case MISCREG_APIC_LVT_LINT1:
-          case MISCREG_APIC_LVT_ERROR:
-            {
-                uint64_t readOnlyMask = (1 << 12) | (1 << 14);
-                newVal = (val & ~readOnlyMask) |
-                         (regVal[miscReg] & readOnlyMask);
-            }
-            break;
-          case MISCREG_APIC_INITIAL_COUNT:
-            newVal = bits(val, 31, 0);
-            regVal[MISCREG_APIC_CURRENT_COUNT] =
-                tc->getCpuPtr()->curCycle() +
-                (16 * divideFromConf(
-                    regVal[MISCREG_APIC_DIVIDE_CONFIGURATION])) * newVal;
-            //FIXME This should schedule the timer event.
-            break;
-          case MISCREG_APIC_CURRENT_COUNT:
-            //Local APIC Current Count register is read only.
-            return;
-          case MISCREG_APIC_DIVIDE_CONFIGURATION:
-            newVal = val & 0xB;
-            break;
-        }
-        setRegNoEffect(miscReg, newVal);
+#if FULL_SYSTEM
+    if (isApicReg(miscReg)) {
+        Interrupts * interrupts = dynamic_cast<Interrupts *>(
+                tc->getCpuPtr()->getInterruptController());
+        assert(interrupts);
+        interrupts->setReg(
+                ApicRegIndex(miscReg - MISCREG_APIC_START), val, tc);
         return;
     }
+#endif
     switch(miscReg)
     {
       case MISCREG_CR0:
@@ -408,6 +292,8 @@ void MiscRegFile::setReg(int miscReg,
       case MISCREG_TSC:
         regVal[MISCREG_TSC] = val - tc->getCpuPtr()->curCycle();
         return;
+      default:
+        break;
     }
     setRegNoEffect(miscReg, newVal);
 }

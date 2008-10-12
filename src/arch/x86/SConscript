@@ -109,9 +109,11 @@ if env['TARGET_ISA'] == 'x86':
     TraceFlag('X86')
 
     if env['FULL_SYSTEM']:
+        SimObject('X86LocalApic.py')
         SimObject('X86System.py')
 
         # Full-system sources
+        Source('interrupts.cc')
         Source('linux/system.cc')
         Source('pagetable_walker.cc')
         Source('system.cc')

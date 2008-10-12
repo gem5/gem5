@@ -94,7 +94,7 @@ CPUProgressEvent::description() const
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p), clock(p->clock), instCnt(0),
+    : MemObject(p), clock(p->clock), instCnt(0), interrupts(p->interrupts),
       number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #else
@@ -381,33 +381,33 @@ BaseCPU::ProfileEvent::process()
 void
 BaseCPU::post_interrupt(int int_num, int index)
 {
-    interrupts.post(int_num, index);
+    interrupts->post(int_num, index);
 }
 
 void
 BaseCPU::clear_interrupt(int int_num, int index)
 {
-    interrupts.clear(int_num, index);
+    interrupts->clear(int_num, index);
 }
 
 void
 BaseCPU::clear_interrupts()
 {
-    interrupts.clear_all();
+    interrupts->clear_all();
 }
 
 void
 BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(instCnt);
-    interrupts.serialize(os);
+    interrupts->serialize(os);
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(instCnt);
-    interrupts.unserialize(cp, section);
+    interrupts->unserialize(cp, section);
 }
 
 #endif // FULL_SYSTEM

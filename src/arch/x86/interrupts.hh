@@ -58,17 +58,57 @@
 #ifndef __ARCH_X86_INTERRUPTS_HH__
 #define __ARCH_X86_INTERRUPTS_HH__
 
+#include "arch/x86/apicregs.hh"
 #include "arch/x86/faults.hh"
 #include "cpu/thread_context.hh"
+#include "params/X86LocalApic.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_object.hh"
+
+class ThreadContext;
 
 namespace X86ISA
 {
 
-class Interrupts
+class Interrupts : public SimObject
 {
-  public:
-    Interrupts()
+  protected:
+    uint32_t regs[NUM_APIC_REGS];
+
+    class ApicTimerEvent : public Event
     {
+      public:
+        ApicTimerEvent() : Event()
+        {}
+
+        void process()
+        {
+            warn("Local APIC timer event doesn't do anything!\n");
+        }
+    };
+
+    ApicTimerEvent apicTimerEvent;
+
+  public:
+    typedef X86LocalApicParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    uint32_t readRegNoEffect(ApicRegIndex reg);
+    uint32_t readReg(ApicRegIndex miscReg, ThreadContext *tc);
+
+    void setRegNoEffect(ApicRegIndex reg, uint32_t val);
+    void setReg(ApicRegIndex reg, uint32_t val, ThreadContext *tc);
+
+    Interrupts(Params * p) : SimObject(p)
+    {
+        //Set the local apic DFR to the flat model.
+        regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
+        memset(regs, 0, sizeof(regs));
         clear_all();
     }
 

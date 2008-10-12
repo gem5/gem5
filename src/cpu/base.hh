@@ -107,13 +107,13 @@ class BaseCPU : public MemObject
   protected:
 //    uint64_t interrupts[TheISA::NumInterruptLevels];
 //    uint64_t intstatus;
-    TheISA::Interrupts interrupts;
+    TheISA::Interrupts * interrupts;
 
   public:
     TheISA::Interrupts *
     getInterruptController()
     {
-        return &interrupts;
+        return interrupts;
     }
 
     virtual void post_interrupt(int int_num, int index);
@@ -121,7 +121,7 @@ class BaseCPU : public MemObject
     virtual void clear_interrupts();
 
     bool check_interrupts(ThreadContext * tc) const
-    { return interrupts.check_interrupts(tc); }
+    { return interrupts->check_interrupts(tc); }
 
     class ProfileEvent : public Event
     {

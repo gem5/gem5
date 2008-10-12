@@ -663,31 +663,31 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         switch (paddr - baseAddr)
         {
           case 0x20:
-            regNum = MISCREG_APIC_ID;
+            regNum = APIC_ID;
             break;
           case 0x30:
-            regNum = MISCREG_APIC_VERSION;
+            regNum = APIC_VERSION;
             break;
           case 0x80:
-            regNum = MISCREG_APIC_TASK_PRIORITY;
+            regNum = APIC_TASK_PRIORITY;
             break;
           case 0x90:
-            regNum = MISCREG_APIC_ARBITRATION_PRIORITY;
+            regNum = APIC_ARBITRATION_PRIORITY;
             break;
           case 0xA0:
-            regNum = MISCREG_APIC_PROCESSOR_PRIORITY;
+            regNum = APIC_PROCESSOR_PRIORITY;
             break;
           case 0xB0:
-            regNum = MISCREG_APIC_EOI;
+            regNum = APIC_EOI;
             break;
           case 0xD0:
-            regNum = MISCREG_APIC_LOGICAL_DESTINATION;
+            regNum = APIC_LOGICAL_DESTINATION;
             break;
           case 0xE0:
-            regNum = MISCREG_APIC_DESTINATION_FORMAT;
+            regNum = APIC_DESTINATION_FORMAT;
             break;
           case 0xF0:
-            regNum = MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR;
+            regNum = APIC_SPURIOUS_INTERRUPT_VECTOR;
             break;
           case 0x100:
           case 0x108:
@@ -705,8 +705,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
           case 0x168:
           case 0x170:
           case 0x178:
-            regNum = MISCREG_APIC_IN_SERVICE(
-                    (paddr - baseAddr - 0x100) / 0x8);
+            regNum = APIC_IN_SERVICE((paddr - baseAddr - 0x100) / 0x8);
             break;
           case 0x180:
           case 0x188:
@@ -724,8 +723,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
           case 0x1E8:
           case 0x1F0:
           case 0x1F8:
-            regNum = MISCREG_APIC_TRIGGER_MODE(
-                    (paddr - baseAddr - 0x180) / 0x8);
+            regNum = APIC_TRIGGER_MODE((paddr - baseAddr - 0x180) / 0x8);
             break;
           case 0x200:
           case 0x208:
@@ -743,50 +741,50 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
           case 0x268:
           case 0x270:
           case 0x278:
-            regNum = MISCREG_APIC_INTERRUPT_REQUEST(
-                    (paddr - baseAddr - 0x200) / 0x8);
+            regNum = APIC_INTERRUPT_REQUEST((paddr - baseAddr - 0x200) / 0x8);
             break;
           case 0x280:
-            regNum = MISCREG_APIC_ERROR_STATUS;
+            regNum = APIC_ERROR_STATUS;
             break;
           case 0x300:
-            regNum = MISCREG_APIC_INTERRUPT_COMMAND_LOW;
+            regNum = APIC_INTERRUPT_COMMAND_LOW;
             break;
           case 0x310:
-            regNum = MISCREG_APIC_INTERRUPT_COMMAND_HIGH;
+            regNum = APIC_INTERRUPT_COMMAND_HIGH;
             break;
           case 0x320:
-            regNum = MISCREG_APIC_LVT_TIMER;
+            regNum = APIC_LVT_TIMER;
             break;
           case 0x330:
-            regNum = MISCREG_APIC_LVT_THERMAL_SENSOR;
+            regNum = APIC_LVT_THERMAL_SENSOR;
             break;
           case 0x340:
-            regNum = MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
+            regNum = APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
             break;
           case 0x350:
-            regNum = MISCREG_APIC_LVT_LINT0;
+            regNum = APIC_LVT_LINT0;
             break;
           case 0x360:
-            regNum = MISCREG_APIC_LVT_LINT1;
+            regNum = APIC_LVT_LINT1;
             break;
           case 0x370:
-            regNum = MISCREG_APIC_LVT_ERROR;
+            regNum = APIC_LVT_ERROR;
             break;
           case 0x380:
-            regNum = MISCREG_APIC_INITIAL_COUNT;
+            regNum = APIC_INITIAL_COUNT;
             break;
           case 0x390:
-            regNum = MISCREG_APIC_CURRENT_COUNT;
+            regNum = APIC_CURRENT_COUNT;
             break;
           case 0x3E0:
-            regNum = MISCREG_APIC_DIVIDE_CONFIGURATION;
+            regNum = APIC_DIVIDE_CONFIGURATION;
             break;
           default:
             // A reserved register field.
             return new GeneralProtection(0);
             break;
         }
+        regNum += MISCREG_APIC_START;
         req->setPaddr(regNum * sizeof(MiscReg) + offset);
     }
 #endif

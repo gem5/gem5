@@ -35,11 +35,13 @@
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "cpu/thread_context.hh"
+#include "params/SparcInterrupts.hh"
+#include "sim/sim_object.hh"
 
 namespace SparcISA
 {
 
-class Interrupts
+class Interrupts : public SimObject
 {
 
   private:
@@ -48,7 +50,15 @@ class Interrupts
     uint64_t intStatus;
 
   public:
-    Interrupts()
+    typedef SparcInterruptsParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    Interrupts(Params * p) : SimObject(p)
     {
         clear_all();
     }

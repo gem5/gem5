@@ -35,11 +35,14 @@
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "base/compiler.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "params/AlphaInterrupts.hh"
+#include "sim/sim_object.hh"
 
 namespace AlphaISA {
 
-class Interrupts
+class Interrupts : public SimObject
 {
   private:
     bool newInfoSet;
@@ -51,7 +54,15 @@ class Interrupts
     uint64_t intstatus;
 
   public:
-    Interrupts()
+    typedef AlphaInterruptsParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    Interrupts(Params * p) : SimObject(p)
     {
         memset(interrupts, 0, sizeof(interrupts));
         intstatus = 0;

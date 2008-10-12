@@ -135,23 +135,23 @@ void RegFile::clear()
 
 MiscReg RegFile::readMiscRegNoEffect(int miscReg)
 {
-    return miscRegFile.readRegNoEffect(miscReg);
+    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
 }
 
 MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc)
 {
-    return miscRegFile.readReg(miscReg, tc);
+    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
 }
 
 void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val)
 {
-    miscRegFile.setRegNoEffect(miscReg, val);
+    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
 }
 
 void RegFile::setMiscReg(int miscReg, const MiscReg &val,
         ThreadContext * tc)
 {
-    miscRegFile.setReg(miscReg, val, tc);
+    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)

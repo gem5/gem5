@@ -91,7 +91,6 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
-#include "sim/eventq.hh"
 #include "sim/host.hh"
 
 #include <string>
@@ -112,18 +111,6 @@ namespace X86ISA
       protected:
         MiscReg regVal[NumMiscRegs];
 
-        class ApicTimerEvent : public Event
-        {
-          public:
-            void
-            process()
-            {
-                warn("Local APIC timer event doesn't do anything!\n");
-            }
-        };
-
-        ApicTimerEvent apicTimerEvent;
-
       public:
         void clear();
 
@@ -132,13 +119,13 @@ namespace X86ISA
             clear();
         }
 
-        MiscReg readRegNoEffect(int miscReg);
+        MiscReg readRegNoEffect(MiscRegIndex miscReg);
 
-        MiscReg readReg(int miscReg, ThreadContext *tc);
+        MiscReg readReg(MiscRegIndex miscReg, ThreadContext *tc);
 
-        void setRegNoEffect(int miscReg, const MiscReg &val);
+        void setRegNoEffect(MiscRegIndex miscReg, const MiscReg &val);
 
-        void setReg(int miscReg,
+        void setReg(MiscRegIndex miscReg,
                 const MiscReg &val, ThreadContext *tc);
 
         void serialize(std::ostream & os);

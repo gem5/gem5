@@ -678,10 +678,10 @@ OzoneCPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    Fault interrupt = this->interrupts.getInterrupt(thread.getTC());
+    Fault interrupt = this->interrupts->getInterrupt(thread.getTC());
 
     if (interrupt != NoFault) {
-        this->interrupts.updateIntrInfo(thread.getTC());
+        this->interrupts->updateIntrInfo(thread.getTC());
         interrupt->invoke(thread.getTC());
     }
 }

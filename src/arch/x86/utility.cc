@@ -55,11 +55,17 @@
  * Authors: Gabe Black
  */
 
+#include "config/full_system.hh"
+
+#if FULL_SYSTEM
+#include "arch/x86/interrupts.hh"
+#endif
 #include "arch/x86/intregs.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/segmentregs.hh"
 #include "arch/x86/utility.hh"
 #include "arch/x86/x86_traits.hh"
+#include "cpu/base.hh"
 #include "sim/system.hh"
 
 namespace X86ISA {
@@ -254,9 +260,13 @@ void initCPU(ThreadContext *tc, int cpuId)
     lApicBase.bsp = (cpuId == 0);
     tc->setMiscReg(MISCREG_APIC_BASE, lApicBase);
 
-    tc->setMiscRegNoEffect(MISCREG_APIC_ID, cpuId << 24);
+    Interrupts * interrupts = dynamic_cast<Interrupts *>(
+            tc->getCpuPtr()->getInterruptController());
+    assert(interrupts);
 
-    tc->setMiscRegNoEffect(MISCREG_APIC_VERSION, (5 << 16) | 0x14);
+    interrupts->setRegNoEffect(APIC_ID, cpuId << 24);
+
+    interrupts->setRegNoEffect(APIC_VERSION, (5 << 16) | 0x14);
 
     // TODO Set the SMRAM base address (SMBASE) to 0x00030000
 

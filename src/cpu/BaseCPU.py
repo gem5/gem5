@@ -39,14 +39,24 @@ default_tracer = ExeTracer()
 
 if build_env['TARGET_ISA'] == 'alpha':
     from AlphaTLB import AlphaDTB, AlphaITB
+    if build_env['FULL_SYSTEM']:
+        from AlphaInterrupts import AlphaInterrupts
 elif build_env['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcDTB, SparcITB
+    if build_env['FULL_SYSTEM']:
+        from SparcInterrupts import SparcInterrupts
 elif build_env['TARGET_ISA'] == 'x86':
     from X86TLB import X86DTB, X86ITB
+    if build_env['FULL_SYSTEM']:
+        from X86LocalApic import X86LocalApic
 elif build_env['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB,MipsDTB, MipsITB, MipsUTB
+    if build_env['FULL_SYSTEM']:
+        from MipsInterrupts import MipsInterrupts
 elif build_env['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB, ArmDTB, ArmITB, ArmUTB
+    if build_env['FULL_SYSTEM']:
+        from ArmInterrupts import ArmInterrupts
 
 class BaseCPU(MemObject):
     type = 'BaseCPU'
@@ -74,22 +84,37 @@ class BaseCPU(MemObject):
     if build_env['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
         itb = Param.SparcITB(SparcITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.SparcInterrupts(
+                SparcInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.AlphaInterrupts(
+                AlphaInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'x86':
         dtb = Param.X86DTB(X86DTB(), "Data TLB")
         itb = Param.X86ITB(X86ITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.X86LocalApic(
+                    X86LocalApic(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'mips':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
         itb = Param.MipsITB(MipsITB(), "Instruction TLB")
         tlb = Param.MipsUTB(MipsUTB(), "Unified TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.MipsInterrupts(
+                    MipsInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'arm':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.ArmDTB(ArmDTB(), "Data TLB")
         itb = Param.ArmITB(ArmITB(), "Instruction TLB")
         tlb = Param.ArmUTB(ArmUTB(), "Unified TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.ArmInterrupts(
+                    ArmInterrupts(), "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             build_env['TARGET_ISA']
