@@ -109,6 +109,8 @@ if env['TARGET_ISA'] == 'x86':
     TraceFlag('X86')
 
     if env['FULL_SYSTEM']:
+        TraceFlag('LocalApic')
+
         SimObject('X86LocalApic.py')
         SimObject('X86System.py')
 
