@@ -169,8 +169,7 @@ output decoder {{
 }};
 
 let {{
-    class Br(X86Microop):
-        className = "MicroBranch"
+    class SeqOp(X86Microop):
         def __init__(self, target, flags=None):
             self.target = target
             if flags:
@@ -189,6 +188,15 @@ let {{
                 "target" : self.target,
                 "cc" : self.cond}
             return allocator
+
+    class Br(SeqOp):
+        className = "MicroBranch"
+
+        def getAllocator(self, *microFlags):
+            (is_micro, is_delayed, is_first, is_last) = microFlags
+            is_last = False
+            microFlags = (is_micro, is_delayed, is_first, is_last)
+            return super(Br, self).getAllocator(*microFlags)
 
     iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
             {"code": "nuIP = target",
