@@ -97,8 +97,9 @@ class BaseCPU(MemObject):
         dtb = Param.X86DTB(X86DTB(), "Data TLB")
         itb = Param.X86ITB(X86ITB(), "Instruction TLB")
         if build_env['FULL_SYSTEM']:
-            interrupts = Param.X86LocalApic(
-                    X86LocalApic(), "Interrupt Controller")
+            _localApic = X86LocalApic(pio_addr=0xa000000000000000)
+            interrupts = \
+                Param.X86LocalApic(_localApic, "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'mips':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
@@ -141,7 +142,9 @@ class BaseCPU(MemObject):
 
     _mem_ports = []
     if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
-        _mem_ports = ["itb.walker.port", "dtb.walker.port"]
+        _mem_ports = ["itb.walker.port",
+                      "dtb.walker.port",
+                      "interrupts.pio"]
 
     def connectMemPorts(self, bus):
         for p in self._mem_ports:

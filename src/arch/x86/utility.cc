@@ -267,6 +267,8 @@ void initCPU(ThreadContext *tc, int cpuId)
     interrupts->setRegNoEffect(APIC_ID, cpuId << 24);
 
     interrupts->setRegNoEffect(APIC_VERSION, (5 << 16) | 0x14);
+    
+    interrupts->setClock(tc->getCpuPtr()->ticks(16));
 
     // TODO Set the SMRAM base address (SMBASE) to 0x00030000
 

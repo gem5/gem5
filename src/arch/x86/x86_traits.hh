@@ -55,10 +55,12 @@
  * Authors: Gabe Black
  */
 
-#include "sim/host.hh"
-
 #ifndef __ARCH_X86_X86TRAITS_HH__
 #define __ARCH_X86_X86TRAITS_HH__
+
+#include <assert.h>
+
+#include "sim/host.hh"
 
 namespace X86ISA
 {
@@ -90,6 +92,10 @@ namespace X86ISA
 
     const Addr PhysAddrPrefixIO = ULL(0x8000000000000000);
     const Addr PhysAddrPrefixPciConfig = ULL(0xC000000000000000);
+    const Addr PhysAddrPrefixLocalAPIC = ULL(0xA000000000000000);
+    // Each APIC gets two pages. One page is used for local apics to field
+    // accesses from the CPU, and the other is for all APICs to communicate.
+    const Addr PhysAddrAPICRangeSize = 1 << 12;
 
     static inline Addr
     x86IOAddress(const uint32_t port)
@@ -101,6 +107,13 @@ namespace X86ISA
     x86PciConfigAddress(const uint32_t addr)
     {
         return PhysAddrPrefixPciConfig | addr;
+    }
+
+    static inline Addr
+    x86LocalAPICAddress(const uint8_t id, const uint16_t addr)
+    {
+        assert(addr < (1 << 12));
+        return PhysAddrPrefixLocalAPIC | (id * (1 << 12)) | addr;
     }
 }
 

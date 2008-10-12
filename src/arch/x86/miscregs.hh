@@ -58,7 +58,6 @@
 #ifndef __ARCH_X86_MISCREGS_HH__
 #define __ARCH_X86_MISCREGS_HH__
 
-#include "arch/x86/apicregs.hh"
 #include "arch/x86/segmentregs.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
@@ -369,21 +368,11 @@ namespace X86ISA
 
         MISCREG_APIC_BASE,
 
-        // Space for the APIC registers
-        MISCREG_APIC_START,
-        MISCREG_APIC_END = MISCREG_APIC_START + NUM_APIC_REGS - 1,
-
         // "Fake" MSRs for internally implemented devices
         MISCREG_PCI_CONFIG_ADDRESS,
 
         NUM_MISCREGS
     };
-
-    static inline bool
-    isApicReg(MiscRegIndex index)
-    {
-        return index >= MISCREG_APIC_START && index <= MISCREG_APIC_END;
-    }
 
     static inline MiscRegIndex
     MISCREG_CR(int index)

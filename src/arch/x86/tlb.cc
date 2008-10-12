@@ -638,10 +638,9 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     // Check for an access to the local APIC
 #if FULL_SYSTEM
     LocalApicBase localApicBase = tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
-    Addr baseAddr = localApicBase.base << 12;
+    Addr baseAddr = localApicBase.base * PageBytes;
     Addr paddr = req->getPaddr();
-    if (baseAddr <= paddr && baseAddr + (1 << 12) > paddr) {
-        req->setMmapedIpr(true);
+    if (baseAddr <= paddr && baseAddr + PageBytes > paddr) {
         // The Intel developer's manuals say the below restrictions apply,
         // but the linux kernel, because of a compiler optimization, breaks
         // them.
@@ -653,139 +652,9 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         if (req->getSize() != (32/8))
             return new GeneralProtection(0);
         */
-
-        //Make sure we're at least only accessing one register.
-        if ((paddr & ~mask(3)) != ((paddr + req->getSize()) & ~mask(3)))
-            panic("Accessed more than one register at a time in the APIC!\n");
-        MiscReg regNum;
-        Addr offset = paddr & mask(3);
-        paddr &= ~mask(3);
-        switch (paddr - baseAddr)
-        {
-          case 0x20:
-            regNum = APIC_ID;
-            break;
-          case 0x30:
-            regNum = APIC_VERSION;
-            break;
-          case 0x80:
-            regNum = APIC_TASK_PRIORITY;
-            break;
-          case 0x90:
-            regNum = APIC_ARBITRATION_PRIORITY;
-            break;
-          case 0xA0:
-            regNum = APIC_PROCESSOR_PRIORITY;
-            break;
-          case 0xB0:
-            regNum = APIC_EOI;
-            break;
-          case 0xD0:
-            regNum = APIC_LOGICAL_DESTINATION;
-            break;
-          case 0xE0:
-            regNum = APIC_DESTINATION_FORMAT;
-            break;
-          case 0xF0:
-            regNum = APIC_SPURIOUS_INTERRUPT_VECTOR;
-            break;
-          case 0x100:
-          case 0x108:
-          case 0x110:
-          case 0x118:
-          case 0x120:
-          case 0x128:
-          case 0x130:
-          case 0x138:
-          case 0x140:
-          case 0x148:
-          case 0x150:
-          case 0x158:
-          case 0x160:
-          case 0x168:
-          case 0x170:
-          case 0x178:
-            regNum = APIC_IN_SERVICE((paddr - baseAddr - 0x100) / 0x8);
-            break;
-          case 0x180:
-          case 0x188:
-          case 0x190:
-          case 0x198:
-          case 0x1A0:
-          case 0x1A8:
-          case 0x1B0:
-          case 0x1B8:
-          case 0x1C0:
-          case 0x1C8:
-          case 0x1D0:
-          case 0x1D8:
-          case 0x1E0:
-          case 0x1E8:
-          case 0x1F0:
-          case 0x1F8:
-            regNum = APIC_TRIGGER_MODE((paddr - baseAddr - 0x180) / 0x8);
-            break;
-          case 0x200:
-          case 0x208:
-          case 0x210:
-          case 0x218:
-          case 0x220:
-          case 0x228:
-          case 0x230:
-          case 0x238:
-          case 0x240:
-          case 0x248:
-          case 0x250:
-          case 0x258:
-          case 0x260:
-          case 0x268:
-          case 0x270:
-          case 0x278:
-            regNum = APIC_INTERRUPT_REQUEST((paddr - baseAddr - 0x200) / 0x8);
-            break;
-          case 0x280:
-            regNum = APIC_ERROR_STATUS;
-            break;
-          case 0x300:
-            regNum = APIC_INTERRUPT_COMMAND_LOW;
-            break;
-          case 0x310:
-            regNum = APIC_INTERRUPT_COMMAND_HIGH;
-            break;
-          case 0x320:
-            regNum = APIC_LVT_TIMER;
-            break;
-          case 0x330:
-            regNum = APIC_LVT_THERMAL_SENSOR;
-            break;
-          case 0x340:
-            regNum = APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
-            break;
-          case 0x350:
-            regNum = APIC_LVT_LINT0;
-            break;
-          case 0x360:
-            regNum = APIC_LVT_LINT1;
-            break;
-          case 0x370:
-            regNum = APIC_LVT_ERROR;
-            break;
-          case 0x380:
-            regNum = APIC_INITIAL_COUNT;
-            break;
-          case 0x390:
-            regNum = APIC_CURRENT_COUNT;
-            break;
-          case 0x3E0:
-            regNum = APIC_DIVIDE_CONFIGURATION;
-            break;
-          default:
-            // A reserved register field.
-            return new GeneralProtection(0);
-            break;
-        }
-        regNum += MISCREG_APIC_START;
-        req->setPaddr(regNum * sizeof(MiscReg) + offset);
+        // Force the access to be uncacheable.
+        req->setFlags(req->getFlags() | UNCACHEABLE);
+        req->setPaddr(x86LocalAPICAddress(tc->readCpuId(), paddr - baseAddr));
     }
 #endif
     return NoFault;

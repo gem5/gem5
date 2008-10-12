@@ -119,23 +119,11 @@ MiscReg MiscRegFile::readRegNoEffect(MiscRegIndex miscReg)
             !(miscReg > MISCREG_CR8 &&
               miscReg <= MISCREG_CR15));
 
-    if (isApicReg(miscReg)) {
-        panic("Can't readRegNoEffect from the local APIC.\n");
-    }
     return regVal[miscReg];
 }
 
 MiscReg MiscRegFile::readReg(MiscRegIndex miscReg, ThreadContext * tc)
 {
-#if FULL_SYSTEM
-    if (isApicReg(miscReg)) {
-        Interrupts * interrupts = dynamic_cast<Interrupts *>(
-                tc->getCpuPtr()->getInterruptController());
-        assert(interrupts);
-        return interrupts->readReg(
-                (ApicRegIndex)(miscReg - MISCREG_APIC_START), tc);
-    }
-#endif
     if (miscReg == MISCREG_TSC) {
         return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
     }
@@ -152,9 +140,6 @@ void MiscRegFile::setRegNoEffect(MiscRegIndex miscReg, const MiscReg &val)
               miscReg < MISCREG_CR8) &&
             !(miscReg > MISCREG_CR8 &&
               miscReg <= MISCREG_CR15));
-    if (isApicReg(miscReg)) {
-        panic("Can't setRegNoEffect from the local APIC.\n");
-    }
     regVal[miscReg] = val;
 }
 
@@ -162,16 +147,6 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     MiscReg newVal = val;
-#if FULL_SYSTEM
-    if (isApicReg(miscReg)) {
-        Interrupts * interrupts = dynamic_cast<Interrupts *>(
-                tc->getCpuPtr()->getInterruptController());
-        assert(interrupts);
-        interrupts->setReg(
-                ApicRegIndex(miscReg - MISCREG_APIC_START), val, tc);
-        return;
-    }
-#endif
     switch(miscReg)
     {
       case MISCREG_CR0:

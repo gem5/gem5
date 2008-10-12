@@ -61,6 +61,7 @@
 #include "arch/x86/apicregs.hh"
 #include "arch/x86/faults.hh"
 #include "cpu/thread_context.hh"
+#include "dev/io_device.hh"
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_object.hh"
@@ -70,10 +71,12 @@ class ThreadContext;
 namespace X86ISA
 {
 
-class Interrupts : public SimObject
+class Interrupts : public BasicPioDevice
 {
   protected:
     uint32_t regs[NUM_APIC_REGS];
+    Tick latency;
+    Tick clock;
 
     class ApicTimerEvent : public Event
     {
@@ -92,20 +95,38 @@ class Interrupts : public SimObject
   public:
     typedef X86LocalApicParams Params;
 
+    void setClock(Tick newClock)
+    {
+        clock = newClock;
+    }
+
     const Params *
     params() const
     {
         return dynamic_cast<const Params *>(_params);
     }
 
-    uint32_t readRegNoEffect(ApicRegIndex reg);
-    uint32_t readReg(ApicRegIndex miscReg, ThreadContext *tc);
+    Tick read(PacketPtr pkt);
+    Tick write(PacketPtr pkt);
 
-    void setRegNoEffect(ApicRegIndex reg, uint32_t val);
-    void setReg(ApicRegIndex reg, uint32_t val, ThreadContext *tc);
-
-    Interrupts(Params * p) : SimObject(p)
+    void addressRanges(AddrRangeList &range_list)
     {
+        range_list.clear();
+        range_list.push_back(RangeEx(x86LocalAPICAddress(0, 0),
+                                     x86LocalAPICAddress(0, 0) + PageBytes));
+    }
+
+    uint32_t readReg(ApicRegIndex miscReg);
+    void setReg(ApicRegIndex reg, uint32_t val);
+    void setRegNoEffect(ApicRegIndex reg, uint32_t val)
+    {
+        regs[reg] = val;
+    }
+
+    Interrupts(Params * p) : BasicPioDevice(p),
+                             latency(p->pio_latency), clock(0)
+    {
+        pioSize = PageBytes;
         //Set the local apic DFR to the flat model.
         regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
         memset(regs, 0, sizeof(regs));

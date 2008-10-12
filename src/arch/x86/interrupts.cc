@@ -55,10 +55,12 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/apicregs.hh"
 #include "arch/x86/interrupts.hh"
 #include "cpu/base.hh"
 
-int divideFromConf(uint32_t conf)
+int
+divideFromConf(uint32_t conf)
 {
     // This figures out what division we want from the division configuration
     // register in the local APIC. The encoding is a little odd but it can
@@ -68,14 +70,171 @@ int divideFromConf(uint32_t conf)
     return 1 << shift;
 }
 
-uint32_t
-X86ISA::Interrupts::readRegNoEffect(ApicRegIndex reg)
+namespace X86ISA
 {
-    return regs[reg];
+
+ApicRegIndex
+decodeAddr(Addr paddr)
+{
+    ApicRegIndex regNum;
+    paddr &= ~mask(3);
+    switch (paddr)
+    {
+      case 0x20:
+        regNum = APIC_ID;
+        break;
+      case 0x30:
+        regNum = APIC_VERSION;
+        break;
+      case 0x80:
+        regNum = APIC_TASK_PRIORITY;
+        break;
+      case 0x90:
+        regNum = APIC_ARBITRATION_PRIORITY;
+        break;
+      case 0xA0:
+        regNum = APIC_PROCESSOR_PRIORITY;
+        break;
+      case 0xB0:
+        regNum = APIC_EOI;
+        break;
+      case 0xD0:
+        regNum = APIC_LOGICAL_DESTINATION;
+        break;
+      case 0xE0:
+        regNum = APIC_DESTINATION_FORMAT;
+        break;
+      case 0xF0:
+        regNum = APIC_SPURIOUS_INTERRUPT_VECTOR;
+        break;
+      case 0x100:
+      case 0x108:
+      case 0x110:
+      case 0x118:
+      case 0x120:
+      case 0x128:
+      case 0x130:
+      case 0x138:
+      case 0x140:
+      case 0x148:
+      case 0x150:
+      case 0x158:
+      case 0x160:
+      case 0x168:
+      case 0x170:
+      case 0x178:
+        regNum = APIC_IN_SERVICE((paddr - 0x100) / 0x8);
+        break;
+      case 0x180:
+      case 0x188:
+      case 0x190:
+      case 0x198:
+      case 0x1A0:
+      case 0x1A8:
+      case 0x1B0:
+      case 0x1B8:
+      case 0x1C0:
+      case 0x1C8:
+      case 0x1D0:
+      case 0x1D8:
+      case 0x1E0:
+      case 0x1E8:
+      case 0x1F0:
+      case 0x1F8:
+        regNum = APIC_TRIGGER_MODE((paddr - 0x180) / 0x8);
+        break;
+      case 0x200:
+      case 0x208:
+      case 0x210:
+      case 0x218:
+      case 0x220:
+      case 0x228:
+      case 0x230:
+      case 0x238:
+      case 0x240:
+      case 0x248:
+      case 0x250:
+      case 0x258:
+      case 0x260:
+      case 0x268:
+      case 0x270:
+      case 0x278:
+        regNum = APIC_INTERRUPT_REQUEST((paddr - 0x200) / 0x8);
+        break;
+      case 0x280:
+        regNum = APIC_ERROR_STATUS;
+        break;
+      case 0x300:
+        regNum = APIC_INTERRUPT_COMMAND_LOW;
+        break;
+      case 0x310:
+        regNum = APIC_INTERRUPT_COMMAND_HIGH;
+        break;
+      case 0x320:
+        regNum = APIC_LVT_TIMER;
+        break;
+      case 0x330:
+        regNum = APIC_LVT_THERMAL_SENSOR;
+        break;
+      case 0x340:
+        regNum = APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
+        break;
+      case 0x350:
+        regNum = APIC_LVT_LINT0;
+        break;
+      case 0x360:
+        regNum = APIC_LVT_LINT1;
+        break;
+      case 0x370:
+        regNum = APIC_LVT_ERROR;
+        break;
+      case 0x380:
+        regNum = APIC_INITIAL_COUNT;
+        break;
+      case 0x390:
+        regNum = APIC_CURRENT_COUNT;
+        break;
+      case 0x3E0:
+        regNum = APIC_DIVIDE_CONFIGURATION;
+        break;
+      default:
+        // A reserved register field.
+        panic("Accessed reserved register field %#x.\n", paddr);
+        break;
+    }
+    return regNum;
+}
+}
+
+Tick
+X86ISA::Interrupts::read(PacketPtr pkt)
+{
+    Addr offset = pkt->getAddr() - pioAddr;
+    //Make sure we're at least only accessing one register.
+    if ((offset & ~mask(3)) != ((offset + pkt->getSize()) & ~mask(3)))
+        panic("Accessed more than one register at a time in the APIC!\n");
+    ApicRegIndex reg = decodeAddr(offset);
+    uint32_t val = htog(readReg(reg));
+    pkt->setData(((uint8_t *)&val) + (offset & mask(3)));
+    return latency;
+}
+
+Tick
+X86ISA::Interrupts::write(PacketPtr pkt)
+{
+    Addr offset = pkt->getAddr() - pioAddr;
+    //Make sure we're at least only accessing one register.
+    if ((offset & ~mask(3)) != ((offset + pkt->getSize()) & ~mask(3)))
+        panic("Accessed more than one register at a time in the APIC!\n");
+    ApicRegIndex reg = decodeAddr(offset);
+    uint32_t val = regs[reg];
+    pkt->writeData(((uint8_t *)&val) + (offset & mask(3)));
+    setReg(reg, gtoh(val));
+    return latency;
 }
 
 uint32_t
-X86ISA::Interrupts::readReg(ApicRegIndex reg, ThreadContext * tc)
+X86ISA::Interrupts::readReg(ApicRegIndex reg)
 {
     if (reg >= APIC_TRIGGER_MODE(0) &&
             reg <= APIC_TRIGGER_MODE(15)) {
@@ -104,24 +263,19 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg, ThreadContext * tc)
         break;
       case APIC_CURRENT_COUNT:
         {
-            uint32_t val = regs[reg] - tc->getCpuPtr()->curCycle();
+            assert(clock);
+            uint32_t val = regs[reg] - curTick / clock;
             val /= (16 * divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]));
             return val;
         }
       default:
         break;
     }
-    return readRegNoEffect(reg);
+    return regs[reg];
 }
 
 void
-X86ISA::Interrupts::setRegNoEffect(ApicRegIndex reg, uint32_t val)
-{
-    regs[reg] = val;
-}
-
-void
-X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val, ThreadContext *tc)
+X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 {
     uint32_t newVal = val;
     if (reg >= APIC_IN_SERVICE(0) &&
@@ -201,11 +355,24 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val, ThreadContext *tc)
         }
         break;
       case APIC_INITIAL_COUNT:
-        newVal = bits(val, 31, 0);
-        regs[APIC_CURRENT_COUNT] =
-            tc->getCpuPtr()->curCycle() +
-            (16 * divideFromConf(regs[APIC_DIVIDE_CONFIGURATION])) * newVal;
-        //FIXME This should schedule the timer event.
+        {
+            assert(clock);
+            newVal = bits(val, 31, 0);
+            uint32_t newCount = newVal *
+                (divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]) * 16);
+            regs[APIC_CURRENT_COUNT] = newCount + curTick / clock;
+            // Find out how long a "tick" of the timer should take.
+            Tick timerTick = 16 * clock;
+            // Schedule on the edge of the next tick plus the new count.
+            Tick offset = curTick % timerTick;
+            if (offset) {
+                reschedule(apicTimerEvent,
+                        curTick + (newCount + 1) * timerTick - offset, true);
+            } else {
+                reschedule(apicTimerEvent,
+                        curTick + newCount * timerTick, true);
+            }
+        }
         break;
       case APIC_CURRENT_COUNT:
         //Local APIC Current Count register is read only.
@@ -216,7 +383,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val, ThreadContext *tc)
       default:
         break;
     }
-    setRegNoEffect(reg, newVal);
+    regs[reg] = newVal;
     return;
 }
 

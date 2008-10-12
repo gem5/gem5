@@ -97,11 +97,7 @@ namespace X86ISA
         Addr offset = pkt->getAddr() & mask(3);
         MiscRegIndex index = (MiscRegIndex)(pkt->getAddr() / sizeof(MiscReg));
         MiscReg data;
-        if (isApicReg(index)) {
-            data = htog(xc->readMiscReg(index));
-        } else {
-            data = htog(xc->readMiscRegNoEffect(index));
-        }
+        data = htog(xc->readMiscRegNoEffect(index));
         // Make sure we don't trot off the end of data.
         assert(offset + pkt->getSize() <= sizeof(MiscReg));
         pkt->writeData(((uint8_t *)&data) + offset);
