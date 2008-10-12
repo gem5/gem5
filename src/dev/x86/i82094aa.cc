@@ -42,7 +42,11 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
     assert(id <= 0xf);
     arbId = id;
     regSel = 0;
-    memset(redirTable, 0, sizeof(RedirTableEntry) * TableSize);
+    RedirTableEntry entry = 0;
+    entry.mask = 1;
+    for (int i = 0; i < TableSize; i++) {
+        redirTable[i] = entry;
+    }
 }
 
 Tick
