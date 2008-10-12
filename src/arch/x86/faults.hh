@@ -215,9 +215,10 @@ namespace X86ISA
 
     class NonMaskableInterrupt : public X86Interrupt
     {
+        uint8_t vector;
       public:
-        NonMaskableInterrupt() :
-            X86Interrupt("Non-Maskable-Interrupt", "#NMI")
+        NonMaskableInterrupt(uint8_t _vector) :
+            X86Interrupt("Non Maskable Interrupt", "#NMI"), vector(_vector)
         {}
     };
 
@@ -355,6 +356,23 @@ namespace X86ISA
       public:
         ExternalInterrupt(uint8_t _vector) :
             X86Interrupt("External Interrupt", "#INTR"), vector(_vector)
+        {}
+    };
+
+    class SystemManagementInterrupt : public X86Interrupt
+    {
+      public:
+        SystemManagementInterrupt() :
+            X86Interrupt("System Management Interrupt", "#SMI")
+        {}
+    };
+
+    class InitInterrupt : public X86Interrupt
+    {
+        uint8_t vector;
+      public:
+        InitInterrupt(uint8_t _vector) :
+            X86Interrupt("INIT Interrupt", "#INIT"), vector(_vector)
         {}
     };
 

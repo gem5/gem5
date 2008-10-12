@@ -259,12 +259,15 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
             // Make sure we're really supposed to get this.
             assert((message.destMode == 0 && message.destination == id) ||
                    (bits((int)message.destination, id)));
-            if (DeliveryMode::isUnmaskable(message.deliveryMode)) {
-                DPRINTF(LocalApic, "Interrupt is an %s and unmaskable.\n",
-                        DeliveryMode::names[message.deliveryMode]);
-                panic("Unmaskable interrupts aren't implemented.\n");
-            } else if (DeliveryMode::isMaskable(message.deliveryMode)) {
-                DPRINTF(LocalApic, "Interrupt is an %s and maskable.\n",
+
+            /*
+             * Fixed and lowest-priority delivery mode interrupts are handled
+             * using the IRR/ISR registers, checking against the TPR, etc.
+             * The SMI, NMI, ExtInt, INIT, etc interrupts go straight through.
+             */
+            if (message.deliveryMode == DeliveryMode::Fixed ||
+                    message.deliveryMode == DeliveryMode::LowestPriority) {
+                DPRINTF(LocalApic, "Interrupt is an %s.\n",
                         DeliveryMode::names[message.deliveryMode]);
                 // Queue up the interrupt in the IRR.
                 if (vector > IRRV)
@@ -279,7 +282,27 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
                         clearRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
                     }
                 }
-            }
+            } else if (!DeliveryMode::isReserved(message.deliveryMode)) {
+                DPRINTF(LocalApic, "Interrupt is an %s.\n",
+                        DeliveryMode::names[message.deliveryMode]);
+                if (message.deliveryMode == DeliveryMode::SMI &&
+                        !pendingSmi) {
+                    pendingUnmaskableInt = pendingSmi = true;
+                    smiMessage = message;
+                } else if (message.deliveryMode == DeliveryMode::NMI &&
+                        !pendingNmi) {
+                    pendingUnmaskableInt = pendingNmi = true;
+                    nmiMessage = message;
+                } else if (message.deliveryMode == DeliveryMode::ExtInt &&
+                        !pendingExtInt) {
+                    pendingExtInt = true;
+                    extIntMessage = message;
+                } else if (message.deliveryMode == DeliveryMode::INIT &&
+                        !pendingInit) {
+                    pendingUnmaskableInt = pendingInit = true;
+                    initMessage = message;
+                }
+            } 
         }
         break;
       default:
@@ -451,9 +474,14 @@ bool
 X86ISA::Interrupts::check_interrupts(ThreadContext * tc) const
 {
     RFLAGS rflags = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
-    if (IRRV > ISRV && rflags.intf &&
-            bits(IRRV, 7, 4) > bits(regs[APIC_TASK_PRIORITY], 7, 4)) {
+    if (pendingUnmaskableInt)
         return true;
+    if (rflags.intf) {
+        if (pendingExtInt)
+            return true;
+        if (IRRV > ISRV && bits(IRRV, 7, 4) >
+               bits(regs[APIC_TASK_PRIORITY], 7, 4))
+            return true;
     }
     return false;
 }
@@ -462,19 +490,52 @@ Fault
 X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
 {
     assert(check_interrupts(tc));
-    return new ExternalInterrupt(IRRV);
+    // These are all probably fairly uncommon, so we'll make them easier to
+    // check for.
+    if (pendingUnmaskableInt) {
+        if (pendingSmi) {
+            return new SystemManagementInterrupt();
+        } else if (pendingNmi) {
+            return new NonMaskableInterrupt(nmiMessage.vector);
+        } else if (pendingInit) {
+            return new InitInterrupt(initMessage.vector);
+        } else {
+            panic("pendingUnmaskableInt set, but no unmaskable "
+                    "ints were pending.\n");
+            return NoFault;
+        }
+    } else if (pendingExtInt) {
+        return new ExternalInterrupt(extIntMessage.vector);
+    } else {
+        // The only thing left are fixed and lowest priority interrupts.
+        return new ExternalInterrupt(IRRV);
+    }
 }
 
 void
 X86ISA::Interrupts::updateIntrInfo(ThreadContext * tc)
 {
     assert(check_interrupts(tc));
-    // Mark the interrupt as "in service".
-    ISRV = IRRV;
-    setRegArrayBit(APIC_IN_SERVICE_BASE, ISRV);
-    // Clear it out of the IRR.
-    clearRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, IRRV);
-    updateIRRV();
+    if (pendingUnmaskableInt) {
+        if (pendingSmi) {
+            pendingSmi = false;
+        } else if (pendingNmi) {
+            pendingNmi = false;
+        } else if (pendingInit) {
+            pendingInit = false;
+        }
+        if (!(pendingSmi || pendingNmi || pendingInit))
+            pendingUnmaskableInt = false;
+    } else if (pendingExtInt) {
+        pendingExtInt = false;
+    } else {
+        // Mark the interrupt as "in service".
+        ISRV = IRRV;
+        setRegArrayBit(APIC_IN_SERVICE_BASE, ISRV);
+        // Clear it out of the IRR.
+        clearRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, IRRV);
+        updateIRRV();
+    }
 }
 
 X86ISA::Interrupts *

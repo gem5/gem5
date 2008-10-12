@@ -66,22 +66,9 @@ namespace X86ISA
         };
 
         static inline bool
-        isUnmaskable(int mode)
-        {
-            return (mode == SMI || mode == NMI ||
-                    mode == INIT || mode == ExtInt);
-        }
-
-        static inline bool
-        isMaskable(int mode)
-        {
-            return (mode == Fixed || mode == LowestPriority);
-        }
-
-        static inline bool
         isReserved(int mode)
         {
-            return !(isMaskable(mode) || isUnmaskable(mode));
+            return mode == 3 || mode == 6;
         }
     }
 

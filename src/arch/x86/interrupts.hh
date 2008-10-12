@@ -60,6 +60,7 @@
 
 #include "arch/x86/apicregs.hh"
 #include "arch/x86/faults.hh"
+#include "arch/x86/intmessage.hh"
 #include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 #include "dev/io_device.hh"
@@ -97,6 +98,22 @@ class Interrupts : public BasicPioDevice, IntDev
     };
 
     ApicTimerEvent apicTimerEvent;
+
+    /*
+     * A set of variables to keep track of interrupts that don't go through
+     * the IRR.
+     */
+    bool pendingSmi;
+    TriggerIntMessage smiMessage;
+    bool pendingNmi;
+    TriggerIntMessage nmiMessage;
+    bool pendingExtInt;
+    TriggerIntMessage extIntMessage;
+    bool pendingInit;
+    TriggerIntMessage initMessage;
+
+    // This is a quick check whether any of the above (except ExtInt) are set.
+    bool pendingUnmaskableInt;
 
     /*
      * IRR and ISR maintenance.
@@ -207,7 +224,12 @@ class Interrupts : public BasicPioDevice, IntDev
      */
 
     Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
-                             latency(p->pio_latency), clock(0)
+                             latency(p->pio_latency), clock(0),
+                             pendingSmi(false), smiMessage(0),
+                             pendingNmi(false), nmiMessage(0),
+                             pendingExtInt(false), extIntMessage(0),
+                             pendingInit(false), initMessage(0),
+                             pendingUnmaskableInt(false)
     {
         pioSize = PageBytes;
         memset(regs, 0, sizeof(regs));
