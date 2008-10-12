@@ -29,7 +29,27 @@
  */
 
 #include "base/bitfield.hh"
+#include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
+
+X86ISA::I8259::I8259(Params * p) : BasicPioDevice(p), IntDev(this),
+                    latency(p->pio_latency), output(p->output),
+                    mode(p->mode), slave(NULL),
+                    IRR(0), ISR(0), IMR(0),
+                    readIRR(true), initControlWord(0)
+{
+    if (output) {
+        I8259 * master;
+        master = dynamic_cast<I8259 *>(output->getDevice());
+        if (master)
+            master->setSlave(this);
+        I82094AA * ioApic;
+        ioApic = dynamic_cast<I82094AA *>(output->getDevice());
+        if (ioApic)
+            ioApic->setExtIntPic(this);
+    }
+    pioSize = 2;
+}
 
 Tick
 X86ISA::I8259::read(PacketPtr pkt)
@@ -189,19 +209,44 @@ void
 X86ISA::I8259::signalInterrupt(int line)
 {
     DPRINTF(I8259, "Interrupt raised on line %d.\n", line);
-    if (line > 7)
-        fatal("Line number %d doesn't exist. The max is 7.\n");
+    if (line >= NumLines)
+        fatal("Line number %d doesn't exist. The max is %d.\n",
+                line, NumLines - 1);
     if (bits(IMR, line)) {
         DPRINTF(I8259, "Interrupt %d was masked.\n", line);
     } else {
-        if (output) {
-            DPRINTF(I8259, "Propogating interrupt.\n");
-            output->signalInterrupt();
-        } else {
-            warn("Received interrupt but didn't have "
-                    "anyone to tell about it.\n");
+        IRR |= 1 << line;
+        if (bits(ISR, 7, line) == 0) {
+            if (output) {
+                DPRINTF(I8259, "Propogating interrupt.\n");
+                output->signalInterrupt();
+            } else {
+                warn("Received interrupt but didn't have "
+                        "anyone to tell about it.\n");
+            }
         }
     }
+}
+
+int
+X86ISA::I8259::getVector()
+{
+    /*
+     * This code only handles one slave. Since that's how the PC platform
+     * always uses the 8259 PIC, there shouldn't be any need for more. If
+     * there -is- a need for more for some reason, "slave" can become a
+     * vector of slaves.
+     */
+    int line = findMsbSet(IRR);
+    IRR &= ~(1 << line);
+    DPRINTF(I8259, "Interrupt %d was accepted.\n", line);
+    ISR |= 1 << line;
+    if (slave && bits(cascadeBits, line)) {
+        DPRINTF(I8259, "Interrupt was from slave who will "
+                "provide the vector.\n");
+        return slave->getVector();
+    }
+    return line | vectorOffset;
 }
 
 X86ISA::I8259 *

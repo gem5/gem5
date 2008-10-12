@@ -30,12 +30,13 @@
 
 #include "arch/x86/intmessage.hh"
 #include "dev/x86/i82094aa.hh"
+#include "dev/x86/i8259.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
 X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
-   latency(p->pio_latency), pioAddr(p->pio_addr)
+   latency(p->pio_latency), pioAddr(p->pio_addr), extIntPic(NULL)
 {
     // This assumes there's only one I/O APIC in the system
     id = sys->getNumCPUs();
@@ -145,24 +146,27 @@ X86ISA::I82094AA::signalInterrupt(int line)
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
     } else {
-        if (DTRACE(I82094AA)) {
-            if (DeliveryMode::isReserved(entry.deliveryMode)) {
-                fatal("Tried to use reserved delivery mode "
-                        "for IO APIC entry %d.\n", line);
-            } else {
-                DPRINTF(I82094AA, "Delivery mode is: %s.\n",
-                        DeliveryMode::names[entry.deliveryMode]);
-            }
-            DPRINTF(I82094AA, "Vector is %#x.\n", entry.vector);
-        }
-
         TriggerIntMessage message;
         message.destination = entry.dest;
-        message.vector = entry.vector;
+        if (entry.deliveryMode == DeliveryMode::ExtInt) {
+            assert(extIntPic);
+            message.vector = extIntPic->getVector();
+        } else {
+            message.vector = entry.vector;
+        }
         message.deliveryMode = entry.deliveryMode;
         message.destMode = entry.destMode;
         message.level = entry.polarity;
         message.trigger = entry.trigger;
+
+        if (DeliveryMode::isReserved(entry.deliveryMode)) {
+            fatal("Tried to use reserved delivery mode "
+                    "for IO APIC entry %d.\n", line);
+        } else if (DTRACE(I82094AA)) {
+            DPRINTF(I82094AA, "Delivery mode is: %s.\n",
+                    DeliveryMode::names[entry.deliveryMode]);
+            DPRINTF(I82094AA, "Vector is %#x.\n", message.vector);
+        }
 
         if (entry.destMode == 0) {
             DPRINTF(I82094AA,

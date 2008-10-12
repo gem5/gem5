@@ -39,12 +39,17 @@
 namespace X86ISA
 {
 
+class I82094AA;
+
 class I8259 : public BasicPioDevice, public IntDev
 {
   protected:
+    static const int NumLines = 8;
+
     Tick latency;
     IntPin *output;
     Enums::X86I8259CascadeMode mode;
+    I8259 * slave;
 
     // Interrupt Request Register
     uint8_t IRR;
@@ -77,19 +82,19 @@ class I8259 : public BasicPioDevice, public IntDev
         return dynamic_cast<const Params *>(_params);
     }
 
-    I8259(Params * p) : BasicPioDevice(p), IntDev(this),
-                        latency(p->pio_latency), output(p->output),
-                        mode(p->mode), IRR(0), ISR(0), IMR(0),
-                        vectorOffset(0), readIRR(true), initControlWord(0)
+    I8259(Params * p);
+
+    void
+    setSlave(I8259 * _slave)
     {
-        pioSize = 2;
+        slave = _slave;
     }
 
     Tick read(PacketPtr pkt);
-
     Tick write(PacketPtr pkt);
 
     void signalInterrupt(int line);
+    int getVector();
 };
 
 }; // namespace X86ISA

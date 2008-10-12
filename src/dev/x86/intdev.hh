@@ -122,6 +122,12 @@ class IntPin : public SimObject
   public:
     typedef X86IntPinParams Params;
 
+    IntDev *
+    getDevice() const
+    {
+        return device;
+    }
+
     const Params *
     params() const
     {

@@ -40,6 +40,8 @@
 namespace X86ISA
 {
 
+class I8259;
+
 class I82094AA : public PioDevice, public IntDev
 {
   public:
@@ -60,9 +62,10 @@ class I82094AA : public PioDevice, public IntDev
     EndBitUnion(RedirTableEntry)
 
   protected:
-    System * system;
     Tick latency;
     Addr pioAddr;
+
+    I8259 * extIntPic;
 
     uint8_t regSel;
     uint8_t id;
@@ -85,6 +88,12 @@ class I82094AA : public PioDevice, public IntDev
     }
 
     I82094AA(Params *p);
+
+    void
+    setExtIntPic(I8259 * pic)
+    {
+        extIntPic = pic;
+    }
 
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
