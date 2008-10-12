@@ -198,6 +198,25 @@ let {{
             microFlags = (is_micro, is_delayed, is_first, is_last)
             return super(Br, self).getAllocator(*microFlags)
 
+    class Eret(SeqOp):
+        target = "normalMicroPC(0)"
+        className = "Eret"
+
+        def __init__(self, flags=None):
+            if flags:
+                if not isinstance(flags, (list, tuple)):
+                    raise Exception, "flags must be a list or tuple of flags"
+                self.cond = " | ".join(flags)
+                self.className += "Flags"
+            else:
+                self.cond = "0"
+
+        def getAllocator(self, *microFlags):
+            (is_micro, is_delayed, is_first, is_last) = microFlags
+            is_last = True
+            microFlags = (is_micro, is_delayed, is_first, is_last)
+            return super(Eret, self).getAllocator(*microFlags)
+
     iop = InstObjParams("br", "MicroBranchFlags", "SeqOpBase",
             {"code": "nuIP = target",
              "else_code": "nuIP = nuIP",
@@ -213,4 +232,18 @@ let {{
     header_output += SeqOpDeclare.subst(iop)
     decoder_output += SeqOpConstructor.subst(iop)
     microopClasses["br"] = Br
+
+    iop = InstObjParams("eret", "EretFlags", "SeqOpBase",
+            {"code": "", "else_code": "",
+             "cond_test": "checkCondition(ccFlagBits, cc)"})
+    exec_output += SeqOpExecute.subst(iop)
+    header_output += SeqOpDeclare.subst(iop)
+    decoder_output += SeqOpConstructor.subst(iop)
+    iop = InstObjParams("eret", "Eret", "SeqOpBase",
+            {"code": "", "else_code": "",
+             "cond_test": "true"})
+    exec_output += SeqOpExecute.subst(iop)
+    header_output += SeqOpDeclare.subst(iop)
+    decoder_output += SeqOpConstructor.subst(iop)
+    microopClasses["eret"] = Eret
 }};
