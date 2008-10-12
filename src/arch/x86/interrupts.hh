@@ -60,6 +60,7 @@
 
 #include "arch/x86/apicregs.hh"
 #include "arch/x86/faults.hh"
+#include "base/bitfield.hh"
 #include "cpu/thread_context.hh"
 #include "dev/io_device.hh"
 #include "dev/x86/intdev.hh"
@@ -74,7 +75,12 @@ namespace X86ISA
 class Interrupts : public BasicPioDevice, IntDev
 {
   protected:
+    // Storage for the APIC registers
     uint32_t regs[NUM_APIC_REGS];
+
+    /*
+     * Timing related stuff.
+     */
     Tick latency;
     Tick clock;
 
@@ -92,7 +98,58 @@ class Interrupts : public BasicPioDevice, IntDev
 
     ApicTimerEvent apicTimerEvent;
 
+    /*
+     * IRR and ISR maintenance.
+     */
+    uint8_t IRRV;
+    uint8_t ISRV;
+
+    int
+    findRegArrayMSB(ApicRegIndex base)
+    {
+        int offset = 7;
+        do {
+            if (regs[base + offset] != 0) {
+                return offset * 32 + findMsbSet(regs[base + offset]);
+            }
+        } while (offset--);
+        return 0;
+    }
+
+    void
+    updateIRRV()
+    {
+        IRRV = findRegArrayMSB(APIC_INTERRUPT_REQUEST_BASE);
+    }
+
+    void
+    updateISRV()
+    {
+        ISRV = findRegArrayMSB(APIC_IN_SERVICE_BASE);
+    }
+
+    void
+    setRegArrayBit(ApicRegIndex base, uint8_t vector)
+    {
+        regs[base + (vector % 32)] |= (1 << (vector >> 5));
+    }
+
+    void
+    clearRegArrayBit(ApicRegIndex base, uint8_t vector)
+    {
+        regs[base + (vector % 32)] &= ~(1 << (vector >> 5));
+    }
+
+    bool
+    getRegArrayBit(ApicRegIndex base, uint8_t vector)
+    {
+        return bits(regs[base + (vector % 32)], vector >> 5);
+    }
+
   public:
+    /*
+     * Params stuff.
+     */
     typedef X86LocalApicParams Params;
 
     void setClock(Tick newClock)
@@ -106,6 +163,9 @@ class Interrupts : public BasicPioDevice, IntDev
         return dynamic_cast<const Params *>(_params);
     }
 
+    /*
+     * Functions to interact with the interrupt port from IntDev.
+     */
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
     Tick recvMessage(PacketPtr pkt);
@@ -124,23 +184,6 @@ class Interrupts : public BasicPioDevice, IntDev
                     x86InterruptAddress(0, 0) + PhysAddrAPICRangeSize));
     }
 
-    uint32_t readReg(ApicRegIndex miscReg);
-    void setReg(ApicRegIndex reg, uint32_t val);
-    void setRegNoEffect(ApicRegIndex reg, uint32_t val)
-    {
-        regs[reg] = val;
-    }
-
-    Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
-                             latency(p->pio_latency), clock(0)
-    {
-        pioSize = PageBytes;
-        //Set the local apic DFR to the flat model.
-        regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
-        memset(regs, 0, sizeof(regs));
-        clear_all();
-    }
-
     Port *getPort(const std::string &if_name, int idx = -1)
     {
         if (if_name == "int_port")
@@ -148,41 +191,43 @@ class Interrupts : public BasicPioDevice, IntDev
         return BasicPioDevice::getPort(if_name, idx);
     }
 
-    int InterruptLevel(uint64_t softint)
+    /*
+     * Functions to access and manipulate the APIC's registers.
+     */
+
+    uint32_t readReg(ApicRegIndex miscReg);
+    void setReg(ApicRegIndex reg, uint32_t val);
+    void setRegNoEffect(ApicRegIndex reg, uint32_t val)
     {
-        panic("Interrupts::InterruptLevel unimplemented!\n");
-        return 0;
+        regs[reg] = val;
     }
 
-    void post(int int_num, int index)
+    /*
+     * Constructor.
+     */
+
+    Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
+                             latency(p->pio_latency), clock(0)
     {
-        panic("Interrupts::post unimplemented!\n");
+        pioSize = PageBytes;
+        memset(regs, 0, sizeof(regs));
+        //Set the local apic DFR to the flat model.
+        regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
+        ISRV = 0;
+        IRRV = 0;
     }
 
-    void clear(int int_num, int index)
-    {
-        warn("Interrupts::clear unimplemented!\n");
-    }
+    /*
+     * Functions for retrieving interrupts for the CPU to handle.
+     */
 
-    void clear_all()
-    {
-        warn("Interrupts::clear_all unimplemented!\n");
-    }
+    bool check_interrupts(ThreadContext * tc) const;
+    Fault getInterrupt(ThreadContext * tc);
+    void updateIntrInfo(ThreadContext * tc);
 
-    bool check_interrupts(ThreadContext * tc) const
-    {
-        return false;
-    }
-
-    Fault getInterrupt(ThreadContext * tc)
-    {
-        return NoFault;
-    }
-
-    void updateIntrInfo(ThreadContext * tc)
-    {
-        panic("Interrupts::updateIntrInfo unimplemented!\n");
-    }
+    /*
+     * Serialization.
+     */
 
     void serialize(std::ostream & os)
     {
@@ -192,6 +237,25 @@ class Interrupts : public BasicPioDevice, IntDev
     void unserialize(Checkpoint * cp, const std::string & section)
     {
         panic("Interrupts::unserialize unimplemented!\n");
+    }
+
+    /*
+     * Old functions needed for compatability but which will be phased out
+     * eventually.
+     */
+    void post(int int_num, int index)
+    {
+        panic("Interrupts::post unimplemented!\n");
+    }
+
+    void clear(int int_num, int index)
+    {
+        panic("Interrupts::clear unimplemented!\n");
+    }
+
+    void clear_all()
+    {
+        panic("Interrupts::clear_all unimplemented!\n");
     }
 };
 

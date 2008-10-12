@@ -76,7 +76,8 @@ class I8259 : public BasicPioDevice, public IntDev
 
     I8259(Params * p) : BasicPioDevice(p), IntDev(this),
                         latency(p->pio_latency), output(p->output),
-                        mode(p->mode), readIRR(true), initControlWord(0)
+                        mode(p->mode), IRR(0), ISR(0), IMR(0),
+                        readIRR(true), initControlWord(0)
     {
         pioSize = 2;
     }

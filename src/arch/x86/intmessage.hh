@@ -44,7 +44,46 @@ namespace X86ISA
         Bitfield<15, 8> vector;
         Bitfield<18, 16> deliveryMode;
         Bitfield<19> destMode;
+        Bitfield<20> level;
+        Bitfield<21> trigger;
     EndBitUnion(TriggerIntMessage)
+
+    namespace DeliveryMode
+    {
+        enum IntDeliveryMode {
+            Fixed = 0,
+            LowestPriority = 1,
+            SMI = 2,
+            NMI = 4,
+            INIT = 5,
+            ExtInt = 7,
+            NumModes
+        };
+
+        static const char * const names[NumModes] = {
+            "Fixed", "LowestPriority", "SMI", "Reserved",
+            "NMI", "INIT", "Reserved", "ExtInt"
+        };
+
+        static inline bool
+        isUnmaskable(int mode)
+        {
+            return (mode == SMI || mode == NMI ||
+                    mode == INIT || mode == ExtInt);
+        }
+
+        static inline bool
+        isMaskable(int mode)
+        {
+            return (mode == Fixed || mode == LowestPriority);
+        }
+
+        static inline bool
+        isReserved(int mode)
+        {
+            return !(isMaskable(mode) || isUnmaskable(mode));
+        }
+    }
 
     static const Addr TriggerIntOffset = 0;
 

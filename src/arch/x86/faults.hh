@@ -351,9 +351,10 @@ namespace X86ISA
 
     class ExternalInterrupt : public X86Interrupt
     {
+        uint8_t vector;
       public:
-        ExternalInterrupt() :
-            X86Interrupt("External Interrupt", "#INTR")
+        ExternalInterrupt(uint8_t _vector) :
+            X86Interrupt("External Interrupt", "#INTR"), vector(_vector)
         {}
     };
 

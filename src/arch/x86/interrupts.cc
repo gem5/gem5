@@ -57,7 +57,9 @@
 
 #include "arch/x86/apicregs.hh"
 #include "arch/x86/interrupts.hh"
+#include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
+#include "mem/packet_access.hh"
 
 int
 divideFromConf(uint32_t conf)
@@ -242,12 +244,43 @@ X86ISA::Interrupts::write(PacketPtr pkt)
 Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 {
-    Addr offset = pkt->getAddr() - x86InterruptAddress(0, 0);
+    uint8_t id = 0;
+    Addr offset = pkt->getAddr() - x86InterruptAddress(id, 0);
     assert(pkt->cmd == MemCmd::MessageReq);
     switch(offset)
     {
       case 0:
-        DPRINTF(LocalApic, "Got Trigger Interrupt message.\n");
+        {
+            TriggerIntMessage message = pkt->get<TriggerIntMessage>();
+            uint8_t vector = message.vector;
+            DPRINTF(LocalApic,
+                    "Got Trigger Interrupt message with vector %#x.\n",
+                    vector);
+            // Make sure we're really supposed to get this.
+            assert((message.destMode == 0 && message.destination == id) ||
+                   (bits((int)message.destination, id)));
+            if (DeliveryMode::isUnmaskable(message.deliveryMode)) {
+                DPRINTF(LocalApic, "Interrupt is an %s and unmaskable.\n",
+                        DeliveryMode::names[message.deliveryMode]);
+                panic("Unmaskable interrupts aren't implemented.\n");
+            } else if (DeliveryMode::isMaskable(message.deliveryMode)) {
+                DPRINTF(LocalApic, "Interrupt is an %s and maskable.\n",
+                        DeliveryMode::names[message.deliveryMode]);
+                // Queue up the interrupt in the IRR.
+                if (vector > IRRV)
+                    IRRV = vector;
+                if (!getRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector)) {
+                    setRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector);
+                    if (message.trigger) {
+                        // Level triggered.
+                        setRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
+                    } else {
+                        // Edge triggered.
+                        clearRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
+                    }
+                }
+            }
+        }
         break;
       default:
         panic("Local apic got unknown interrupt message at offset %#x.\n",
@@ -412,6 +445,36 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
     }
     regs[reg] = newVal;
     return;
+}
+
+bool
+X86ISA::Interrupts::check_interrupts(ThreadContext * tc) const
+{
+    RFLAGS rflags = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
+    if (IRRV > ISRV && rflags.intf &&
+            bits(IRRV, 7, 4) > bits(regs[APIC_TASK_PRIORITY], 7, 4)) {
+        return true;
+    }
+    return false;
+}
+
+Fault
+X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
+{
+    assert(check_interrupts(tc));
+    return new ExternalInterrupt(IRRV);
+}
+
+void
+X86ISA::Interrupts::updateIntrInfo(ThreadContext * tc)
+{
+    assert(check_interrupts(tc));
+    // Mark the interrupt as "in service".
+    ISRV = IRRV;
+    setRegArrayBit(APIC_IN_SERVICE_BASE, ISRV);
+    // Clear it out of the IRR.
+    clearRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, IRRV);
+    updateIRRV();
 }
 
 X86ISA::Interrupts *

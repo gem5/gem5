@@ -146,33 +146,12 @@ X86ISA::I82094AA::signalInterrupt(int line)
         return;
     } else {
         if (DTRACE(I82094AA)) {
-            switch(entry.deliveryMode) {
-              case 0:
-                DPRINTF(I82094AA, "Delivery mode is: Fixed.\n");
-                break;
-              case 1:
-                DPRINTF(I82094AA, "Delivery mode is: Lowest Priority.\n");
-                break;
-              case 2:
-                DPRINTF(I82094AA, "Delivery mode is: SMI.\n");
-                break;
-              case 3:
+            if (DeliveryMode::isReserved(entry.deliveryMode)) {
                 fatal("Tried to use reserved delivery mode "
                         "for IO APIC entry %d.\n", line);
-                break;
-              case 4:
-                DPRINTF(I82094AA, "Delivery mode is: NMI.\n");
-                break;
-              case 5:
-                DPRINTF(I82094AA, "Delivery mode is: INIT.\n");
-                break;
-              case 6:
-                fatal("Tried to use reserved delivery mode "
-                        "for IO APIC entry %d.\n", line);
-                break;
-              case 7:
-                DPRINTF(I82094AA, "Delivery mode is: ExtINT.\n");
-                break;
+            } else {
+                DPRINTF(I82094AA, "Delivery mode is: %s.\n",
+                        DeliveryMode::names[entry.deliveryMode]);
             }
             DPRINTF(I82094AA, "Vector is %#x.\n", entry.vector);
         }
@@ -182,6 +161,8 @@ X86ISA::I82094AA::signalInterrupt(int line)
         message.vector = entry.vector;
         message.deliveryMode = entry.deliveryMode;
         message.destMode = entry.destMode;
+        message.level = entry.polarity;
+        message.trigger = entry.trigger;
 
         if (entry.destMode == 0) {
             DPRINTF(I82094AA,

@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 
+#include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
 #include "cpu/intr_control.hh"
 #include "dev/terminal.hh"
@@ -78,7 +79,7 @@ Pc::init()
      */
     I82094AA & ioApic = *southBridge->ioApic;
     I82094AA::RedirTableEntry entry = 0;
-    entry.deliveryMode = 0x7;
+    entry.deliveryMode = DeliveryMode::ExtInt;
     entry.vector = 0x20;
     ioApic.writeReg(0x10, entry.bottomDW);
     ioApic.writeReg(0x11, entry.topDW);
