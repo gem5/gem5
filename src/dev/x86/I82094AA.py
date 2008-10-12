@@ -36,6 +36,7 @@ class I82094AA(BasicPioDevice):
     cxx_class = 'X86ISA::I82094AA'
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     pio_addr = Param.Addr("Device address")
+    int_port = Port("Port for sending and receiving interrupt messages")
 
     def pin(self, line):
         return X86IntPin(device=self, line=line)

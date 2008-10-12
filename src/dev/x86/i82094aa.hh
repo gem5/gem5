@@ -60,6 +60,7 @@ class I82094AA : public PioDevice, public IntDev
     EndBitUnion(RedirTableEntry)
 
   protected:
+    System * system;
     Tick latency;
     Addr pioAddr;
 
@@ -95,8 +96,22 @@ class I82094AA : public PioDevice, public IntDev
         range_list.push_back(RangeEx(pioAddr + 16, pioAddr + 20));
     }
 
+    void getIntAddrRange(AddrRangeList &range_list)
+    {
+        range_list.clear();
+        range_list.push_back(RangeEx(x86InterruptAddress(1, 0),
+                    x86InterruptAddress(1, 0) + PhysAddrAPICRangeSize));
+    }
+
     void writeReg(uint8_t offset, uint32_t value);
     uint32_t readReg(uint8_t offset);
+
+    Port *getPort(const std::string &if_name, int idx = -1)
+    {
+        if (if_name == "int_port")
+            return intPort;
+        return PioDevice::getPort(if_name, idx);
+    }
 
     void signalInterrupt(int line);
 };

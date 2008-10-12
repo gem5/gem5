@@ -32,7 +32,11 @@
 #define __DEV_X86_INTDEV_HH__
 
 #include <assert.h>
+#include <string>
 
+#include "arch/x86/x86_traits.hh"
+#include "mem/mem_object.hh"
+#include "mem/mport.hh"
 #include "sim/sim_object.hh"
 #include "params/X86IntPin.hh"
 
@@ -40,11 +44,73 @@ namespace X86ISA {
 
 class IntDev
 {
+  protected:
+    class IntPort : public MessagePort
+    {
+        IntDev * device;
+        Tick latency;
+        Addr intAddr;
+      public:
+        IntPort(const std::string &_name, MemObject * _parent,
+                IntDev *dev, Tick _latency) :
+            MessagePort(_name, _parent), device(dev), latency(_latency)
+        {
+        }
+
+        void getDeviceAddressRanges(AddrRangeList &resp, bool &snoop)
+        {
+            snoop = false;
+            device->getIntAddrRange(resp);
+        }
+
+        Tick recvMessage(PacketPtr pkt)
+        {
+            return device->recvMessage(pkt);
+        }
+
+        void recvStatusChange(Status status)
+        {
+            if (status == RangeChange) {
+                sendStatusChange(Port::RangeChange);
+            }
+        }
+
+    };
+
+    IntPort * intPort;
+
   public:
+    IntDev(MemObject * parent, Tick latency = 0)
+    {
+        if (parent != NULL) {
+            intPort = new IntPort(parent->name() + ".int_port",
+                    parent, this, latency);
+        } else {
+            intPort = NULL;
+        }
+    }
+
     virtual ~IntDev()
     {}
+
     virtual void
-    signalInterrupt(int line) = 0;
+    signalInterrupt(int line)
+    {
+        panic("signalInterrupt not implemented.\n");
+    }
+
+    virtual Tick
+    recvMessage(PacketPtr pkt)
+    {
+        panic("recvMessage not implemented.\n");
+        return 0;
+    }
+
+    virtual void
+    getIntAddrRange(AddrRangeList &range_list)
+    {
+        panic("intAddrRange not implemented.\n");
+    }
 };
 
 class IntPin : public SimObject

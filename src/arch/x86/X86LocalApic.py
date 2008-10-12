@@ -33,3 +33,4 @@ class X86LocalApic(BasicPioDevice):
     type = 'X86LocalApic'
     cxx_class = 'X86ISA::Interrupts'
     pio_latency = Param.Latency('1ns', 'Programmed IO latency in simticks')
+    int_port = Port("Port for sending and receiving interrupt messages")

@@ -144,7 +144,8 @@ class BaseCPU(MemObject):
     if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
         _mem_ports = ["itb.walker.port",
                       "dtb.walker.port",
-                      "interrupts.pio"]
+                      "interrupts.pio",
+                      "interrupts.int_port"]
 
     def connectMemPorts(self, bus):
         for p in self._mem_ports:

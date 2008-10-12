@@ -28,12 +28,13 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/intmessage.hh"
 #include "dev/x86/i82094aa.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
+X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
    latency(p->pio_latency), pioAddr(p->pio_addr)
 {
     // This assumes there's only one I/O APIC in the system
@@ -140,11 +141,56 @@ X86ISA::I82094AA::signalInterrupt(int line)
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
     } else {
+        if (DTRACE(I82094AA)) {
+            switch(entry.deliveryMode) {
+              case 0:
+                DPRINTF(I82094AA, "Delivery mode is: Fixed.\n");
+                break;
+              case 1:
+                DPRINTF(I82094AA, "Delivery mode is: Lowest Priority.\n");
+                break;
+              case 2:
+                DPRINTF(I82094AA, "Delivery mode is: SMI.\n");
+                break;
+              case 3:
+                fatal("Tried to use reserved delivery mode "
+                        "for IO APIC entry %d.\n", line);
+                break;
+              case 4:
+                DPRINTF(I82094AA, "Delivery mode is: NMI.\n");
+                break;
+              case 5:
+                DPRINTF(I82094AA, "Delivery mode is: INIT.\n");
+                break;
+              case 6:
+                fatal("Tried to use reserved delivery mode "
+                        "for IO APIC entry %d.\n", line);
+                break;
+              case 7:
+                DPRINTF(I82094AA, "Delivery mode is: ExtINT.\n");
+                break;
+            }
+            DPRINTF(I82094AA, "Vector is %#x.\n", entry.vector);
+        }
+
+        TriggerIntMessage message;
+        message.destination = entry.dest;
+        message.vector = entry.vector;
+        message.deliveryMode = entry.deliveryMode;
+        message.destMode = entry.destMode;
+
         if (entry.destMode == 0) {
             DPRINTF(I82094AA,
-                    "Would send interrupt to APIC ID %d.\n", entry.dest);
+                    "Sending interrupt to APIC ID %d.\n", entry.dest);
+            PacketPtr pkt = buildIntRequest(entry.dest, message);
+            if (sys->getMemoryMode() == Enums::timing)
+                intPort->sendMessageTiming(pkt, latency);
+            else if (sys->getMemoryMode() == Enums::atomic)
+                intPort->sendMessageAtomic(pkt);
+            else
+                panic("Unrecognized memory mode.\n");
         } else {
-            DPRINTF(I82094AA, "Would send interrupts to APIC IDs:"
+            DPRINTF(I82094AA, "Sending interrupts to APIC IDs:"
                     "%s%s%s%s%s%s%s%s\n",
                     bits((int)entry.dest, 0) ? " 0": "",
                     bits((int)entry.dest, 1) ? " 1": "",
@@ -155,36 +201,22 @@ X86ISA::I82094AA::signalInterrupt(int line)
                     bits((int)entry.dest, 6) ? " 6": "",
                     bits((int)entry.dest, 7) ? " 7": ""
                     );
+            uint8_t dests = entry.dest;
+            uint8_t id = 0;
+            while(dests) {
+                if (dests & 0x1) {
+                    PacketPtr pkt = buildIntRequest(id, message);
+                    if (sys->getMemoryMode() == Enums::timing)
+                        intPort->sendMessageTiming(pkt, latency);
+                    else if (sys->getMemoryMode() == Enums::atomic)
+                        intPort->sendMessageAtomic(pkt);
+                    else
+                        panic("Unrecognized memory mode.\n");
+                }
+                dests >>= 1;
+                id++;
+            }
         }
-        switch(entry.deliveryMode) {
-          case 0:
-            DPRINTF(I82094AA, "Delivery mode is: Fixed.\n");
-            break;
-          case 1:
-            DPRINTF(I82094AA, "Delivery mode is: Lowest Priority.\n");
-            break;
-          case 2:
-            DPRINTF(I82094AA, "Delivery mode is: SMI.\n");
-            break;
-          case 3:
-            fatal("Tried to use reserved delivery mode "
-                    "for IO APIC entry %d.\n", line);
-            break;
-          case 4:
-            DPRINTF(I82094AA, "Delivery mode is: NMI.\n");
-            break;
-          case 5:
-            DPRINTF(I82094AA, "Delivery mode is: INIT.\n");
-            break;
-          case 6:
-            fatal("Tried to use reserved delivery mode "
-                    "for IO APIC entry %d.\n", line);
-            break;
-          case 7:
-            DPRINTF(I82094AA, "Delivery mode is: ExtINT.\n");
-            break;
-        }
-        DPRINTF(I82094AA, "Vector is %#x.\n", entry.vector);
     }
 }
 

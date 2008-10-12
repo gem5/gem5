@@ -239,6 +239,27 @@ X86ISA::Interrupts::write(PacketPtr pkt)
     return latency;
 }
 
+Tick
+X86ISA::Interrupts::recvMessage(PacketPtr pkt)
+{
+    Addr offset = pkt->getAddr() - x86InterruptAddress(0, 0);
+    assert(pkt->cmd == MemCmd::MessageReq);
+    switch(offset)
+    {
+      case 0:
+        DPRINTF(LocalApic, "Got Trigger Interrupt message.\n");
+        break;
+      default:
+        panic("Local apic got unknown interrupt message at offset %#x.\n",
+                offset);
+        break;
+    }
+    delete pkt->req;
+    delete pkt;
+    return latency;
+}
+
+
 uint32_t
 X86ISA::Interrupts::readReg(ApicRegIndex reg)
 {

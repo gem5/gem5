@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,66 +28,57 @@
  * Authors: Gabe Black
  */
 
-#ifndef __DEV_X86_I8259_HH__
-#define __DEV_X86_I8259_HH__
+#ifndef __ARCH_X86_INTMESSAGE_HH__
+#define __ARCH_X86_INTMESSAGE_HH__
 
-#include "dev/io_device.hh"
-#include "dev/x86/intdev.hh"
-#include "params/I8259.hh"
-#include "enums/X86I8259CascadeMode.hh"
+#include "arch/x86/x86_traits.hh"
+#include "base/bitunion.hh"
+#include "mem/packet.hh"
+#include "mem/request.hh"
+#include "sim/host.hh"
 
 namespace X86ISA
 {
+    BitUnion32(TriggerIntMessage)
+        Bitfield<7, 0> destination;
+        Bitfield<15, 8> vector;
+        Bitfield<18, 16> deliveryMode;
+        Bitfield<19> destMode;
+    EndBitUnion(TriggerIntMessage)
 
-class I8259 : public BasicPioDevice, public IntDev
-{
-  protected:
-    Tick latency;
-    IntPin *output;
-    Enums::X86I8259CascadeMode mode;
+    static const Addr TriggerIntOffset = 0;
 
-    // Interrupt Request Register
-    uint8_t IRR;
-    // In Service Register
-    uint8_t ISR;
-    // Interrupt Mask Register
-    uint8_t IMR;
-
-    bool cascadeMode;
-    // A bit vector of lines with slaves attached, or the slave id, depending
-    // on if this is a master or slave PIC.
-    uint8_t cascadeBits;
-
-    bool edgeTriggered;
-    bool readIRR;
-
-    // State machine information for reading in initialization control words.
-    bool expectICW4;
-    int initControlWord;
-
-  public:
-    typedef I8259Params Params;
-
-    const Params *
-    params() const
+    static inline PacketPtr
+    prepIntRequest(const uint8_t id, Addr offset, Addr size)
     {
-        return dynamic_cast<const Params *>(_params);
+        RequestPtr req = new Request(x86InterruptAddress(id, offset),
+                                     size, UNCACHEABLE);
+        PacketPtr pkt = new Packet(req, MemCmd::MessageReq, Packet::Broadcast);
+        pkt->allocate();
+        return pkt;
     }
 
-    I8259(Params * p) : BasicPioDevice(p), IntDev(this),
-                        latency(p->pio_latency), output(p->output),
-                        mode(p->mode), readIRR(true), initControlWord(0)
+    template<class T>
+    PacketPtr
+    buildIntRequest(const uint8_t id, T payload, Addr offset, Addr size)
     {
-        pioSize = 2;
+        PacketPtr pkt = prepIntRequest(id, offset, size);
+        pkt->set<T>(payload);
+        return pkt;
     }
 
-    Tick read(PacketPtr pkt);
+    static inline PacketPtr
+    buildIntRequest(const uint8_t id, TriggerIntMessage payload)
+    {
+        return buildIntRequest(id, payload, TriggerIntOffset,
+                sizeof(TriggerIntMessage));
+    }
 
-    Tick write(PacketPtr pkt);
+    static inline PacketPtr
+    buildIntResponse()
+    {
+        panic("buildIntResponse not implemented.\n");
+    }
+}
 
-    void signalInterrupt(int line);
-};
-
-}; // namespace X86ISA
-
-#endif //__DEV_X86_I8259_HH__
+#endif

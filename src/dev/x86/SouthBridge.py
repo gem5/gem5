@@ -72,3 +72,4 @@ class SouthBridge(SimObject):
         self.pit.pio = bus.port
         self.speaker.pio = bus.port
         self.io_apic.pio = bus.port
+        self.io_apic.int_port = bus.port

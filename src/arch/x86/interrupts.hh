@@ -62,16 +62,16 @@
 #include "arch/x86/faults.hh"
 #include "cpu/thread_context.hh"
 #include "dev/io_device.hh"
+#include "dev/x86/intdev.hh"
 #include "params/X86LocalApic.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_object.hh"
 
 class ThreadContext;
 
 namespace X86ISA
 {
 
-class Interrupts : public BasicPioDevice
+class Interrupts : public BasicPioDevice, IntDev
 {
   protected:
     uint32_t regs[NUM_APIC_REGS];
@@ -108,12 +108,20 @@ class Interrupts : public BasicPioDevice
 
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
+    Tick recvMessage(PacketPtr pkt);
 
     void addressRanges(AddrRangeList &range_list)
     {
         range_list.clear();
         range_list.push_back(RangeEx(x86LocalAPICAddress(0, 0),
                                      x86LocalAPICAddress(0, 0) + PageBytes));
+    }
+
+    void getIntAddrRange(AddrRangeList &range_list)
+    {
+        range_list.clear();
+        range_list.push_back(RangeEx(x86InterruptAddress(0, 0),
+                    x86InterruptAddress(0, 0) + PhysAddrAPICRangeSize));
     }
 
     uint32_t readReg(ApicRegIndex miscReg);
@@ -123,7 +131,7 @@ class Interrupts : public BasicPioDevice
         regs[reg] = val;
     }
 
-    Interrupts(Params * p) : BasicPioDevice(p),
+    Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
                              latency(p->pio_latency), clock(0)
     {
         pioSize = PageBytes;
@@ -131,6 +139,13 @@ class Interrupts : public BasicPioDevice
         regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
         memset(regs, 0, sizeof(regs));
         clear_all();
+    }
+
+    Port *getPort(const std::string &if_name, int idx = -1)
+    {
+        if (if_name == "int_port")
+            return intPort;
+        return BasicPioDevice::getPort(if_name, idx);
     }
 
     int InterruptLevel(uint64_t softint)
