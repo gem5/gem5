@@ -91,6 +91,12 @@ namespace X86ISA
         {
             return mnem;
         }
+
+        void
+        invoke(ThreadContext * tc)
+        {
+            panic("Unimplemented fault %s.\n", name());
+        }
     };
 
     // Base class for x86 faults which behave as if the underlying instruction
