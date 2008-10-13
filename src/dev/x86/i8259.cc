@@ -107,8 +107,12 @@ X86ISA::I8259::write(PacketPtr pkt)
                 DPRINTF(I8259, "Subcommand: No operation.\n");
                 break;
               case 0x3:
-                DPRINTF(I8259, "Subcommand: Specific EIO.");
-                DPRINTF(I8259, "Reset In-Service bit %d.\n", bits(val, 2, 0));
+                {
+                    int line = bits(val, 2, 0);
+                    DPRINTF(I8259, "Subcommand: Specific EIO on line %d.\n",
+                            line);
+                    handleEOI(line);
+                }
                 break;
               case 0x4:
                 DPRINTF(I8259, "Subcommand: Rotate in auto-EOI mode (set).\n");
@@ -206,6 +210,30 @@ X86ISA::I8259::write(PacketPtr pkt)
 }
 
 void
+X86ISA::I8259::handleEOI(int line)
+{
+    ISR &= ~(1 << line);
+    // There may be an interrupt that was waiting which can
+    // now be sent.
+    if (IRR)
+        requestInterrupt(findMsbSet(IRR));
+}
+
+void
+X86ISA::I8259::requestInterrupt(int line)
+{
+    if (bits(ISR, 7, line) == 0) {
+        if (output) {
+            DPRINTF(I8259, "Propogating interrupt.\n");
+            output->signalInterrupt();
+        } else {
+            warn("Received interrupt but didn't have "
+                    "anyone to tell about it.\n");
+        }
+    }
+}
+
+void
 X86ISA::I8259::signalInterrupt(int line)
 {
     DPRINTF(I8259, "Interrupt raised on line %d.\n", line);
@@ -216,15 +244,7 @@ X86ISA::I8259::signalInterrupt(int line)
         DPRINTF(I8259, "Interrupt %d was masked.\n", line);
     } else {
         IRR |= 1 << line;
-        if (bits(ISR, 7, line) == 0) {
-            if (output) {
-                DPRINTF(I8259, "Propogating interrupt.\n");
-                output->signalInterrupt();
-            } else {
-                warn("Received interrupt but didn't have "
-                        "anyone to tell about it.\n");
-            }
-        }
+        requestInterrupt(line);
     }
 }
 

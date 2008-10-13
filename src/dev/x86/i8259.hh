@@ -73,6 +73,9 @@ class I8259 : public BasicPioDevice, public IntDev
     bool expectICW4;
     int initControlWord;
 
+    void requestInterrupt(int line);
+    void handleEOI(int line);
+
   public:
     typedef I8259Params Params;
 
