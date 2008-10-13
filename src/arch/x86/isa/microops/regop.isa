@@ -236,6 +236,15 @@ output header {{
       SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
       SegSSCheck, SegIretCheck, SegIntCSCheck
     };
+
+    enum LongModeDescriptorType {
+        LDT64 = 2,
+        AvailableTSS64 = 9,
+        BusyTSS64 = 0xb,
+        CallGate64 = 0xc,
+        IntGate64 = 0xe,
+        TrapGate64 = 0xf
+    };
 }};
 
 output decoder {{
@@ -1098,7 +1107,26 @@ let {{
 
     class Wrdh(RegOp):
         code = '''
+            SegDescriptor desc = SrcReg1;
 
+            uint64_t target = bits(SrcReg2, 31, 0) << 32;
+            switch(desc.type) {
+              case LDT64:
+              case AvailableTSS64:
+              case BusyTSS64:
+                replaceBits(target, 23, 0, desc.baseLow);
+                replaceBits(target, 31, 24, desc.baseHigh);
+                break;
+              case CallGate64:
+              case IntGate64:
+              case TrapGate64:
+                replaceBits(target, 15, 0, bits(desc, 15, 0));
+                replaceBits(target, 31, 16, bits(desc, 63, 48));
+                break;
+              default:
+                panic("Wrdh used with wrong descriptor type!\\n");
+            }
+            DestReg = target;
         '''
 
     class Wrtsc(WrRegOp):
