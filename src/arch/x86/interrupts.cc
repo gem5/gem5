@@ -474,14 +474,20 @@ bool
 X86ISA::Interrupts::check_interrupts(ThreadContext * tc) const
 {
     RFLAGS rflags = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
-    if (pendingUnmaskableInt)
+    if (pendingUnmaskableInt) {
+        DPRINTF(LocalApic, "Reported pending unmaskable interrupt.\n");
         return true;
+    }
     if (rflags.intf) {
-        if (pendingExtInt)
+        if (pendingExtInt) {
+            DPRINTF(LocalApic, "Reported pending external interrupt.\n");
             return true;
+        }
         if (IRRV > ISRV && bits(IRRV, 7, 4) >
-               bits(regs[APIC_TASK_PRIORITY], 7, 4))
+               bits(regs[APIC_TASK_PRIORITY], 7, 4)) {
+            DPRINTF(LocalApic, "Reported pending regular interrupt.\n");
             return true;
+        }
     }
     return false;
 }
@@ -494,10 +500,13 @@ X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
     // check for.
     if (pendingUnmaskableInt) {
         if (pendingSmi) {
+            DPRINTF(LocalApic, "Generated SMI fault object.\n");
             return new SystemManagementInterrupt();
         } else if (pendingNmi) {
+            DPRINTF(LocalApic, "Generated NMI fault object.\n");
             return new NonMaskableInterrupt(nmiMessage.vector);
         } else if (pendingInit) {
+            DPRINTF(LocalApic, "Generated INIT fault object.\n");
             return new InitInterrupt(initMessage.vector);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
@@ -505,8 +514,10 @@ X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
             return NoFault;
         }
     } else if (pendingExtInt) {
+        DPRINTF(LocalApic, "Generated external interrupt fault object.\n");
         return new ExternalInterrupt(extIntMessage.vector);
     } else {
+        DPRINTF(LocalApic, "Generated regular interrupt fault object.\n");
         // The only thing left are fixed and lowest priority interrupts.
         return new ExternalInterrupt(IRRV);
     }
@@ -518,10 +529,13 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext * tc)
     assert(check_interrupts(tc));
     if (pendingUnmaskableInt) {
         if (pendingSmi) {
+            DPRINTF(LocalApic, "SMI sent to core.\n");
             pendingSmi = false;
         } else if (pendingNmi) {
+            DPRINTF(LocalApic, "NMI sent to core.\n");
             pendingNmi = false;
         } else if (pendingInit) {
+            DPRINTF(LocalApic, "Init sent to core.\n");
             pendingInit = false;
         }
         if (!(pendingSmi || pendingNmi || pendingInit))
@@ -529,6 +543,7 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext * tc)
     } else if (pendingExtInt) {
         pendingExtInt = false;
     } else {
+        DPRINTF(LocalApic, "Interrupt %d sent to core.\n", IRRV);
         // Mark the interrupt as "in service".
         ISRV = IRRV;
         setRegArrayBit(APIC_IN_SERVICE_BASE, ISRV);
