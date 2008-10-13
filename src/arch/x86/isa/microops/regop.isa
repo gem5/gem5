@@ -1001,7 +1001,7 @@ let {{
 
     class Rdbase(SegOp):
         code = '''
-            DestReg = SegBaseDest;
+            DestReg = SegBaseSrc1;
         '''
 
     class Rdlimit(SegOp):
