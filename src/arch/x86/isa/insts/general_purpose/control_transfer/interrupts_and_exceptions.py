@@ -190,8 +190,8 @@ processSSDescriptor:
 
     # This actually updates state which is wrong. It should wait until we know
     # we're not going to fault. Unfortunately, that's hard to do.
-    wrdl cs, t7, t2
-    wrsel cs, t2
+    wrdl ss, t7, t2
+    wrsel ss, t2
 
 ###
 ### From this point downwards, we can't fault. We can update user visible state.
@@ -224,6 +224,7 @@ skipSegmentSquashing:
 
     # Ignore this for now.
     #RFLAGS.v = temp_RFLAGS
+    wrflags t0, t3
     #  VIF,VIP,IOPL only changed if (old_CPL = 0)
     #  IF only changed if (old_CPL <= old_RFLAGS.IOPL)
     #  VM unchanged
