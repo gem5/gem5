@@ -718,31 +718,37 @@ AtomicSimpleCPU::tick()
 
         checkPcEventQueue();
 
-        Fault fault = setupFetchRequest(&ifetch_req);
+        Fault fault = NoFault;
+
+        bool fromRom = isRomMicroPC(thread->readMicroPC());
+        if (!fromRom)
+            fault = setupFetchRequest(&ifetch_req);
 
         if (fault == NoFault) {
             Tick icache_latency = 0;
             bool icache_access = false;
             dcache_access = false; // assume no dcache access
 
-            //Fetch more instruction memory if necessary
-            //if(predecoder.needMoreBytes())
-            //{
-                icache_access = true;
-                Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
-                                           Packet::Broadcast);
-                ifetch_pkt.dataStatic(&inst);
+            if (!fromRom) {
+                //Fetch more instruction memory if necessary
+                //if(predecoder.needMoreBytes())
+                //{
+                    icache_access = true;
+                    Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
+                                               Packet::Broadcast);
+                    ifetch_pkt.dataStatic(&inst);
 
-                if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
-                    icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
-                else
-                    icache_latency = icachePort.sendAtomic(&ifetch_pkt);
+                    if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
+                        icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
+                    else
+                        icache_latency = icachePort.sendAtomic(&ifetch_pkt);
 
-                assert(!ifetch_pkt.isError());
+                    assert(!ifetch_pkt.isError());
 
-                // ifetch_req is initialized to read the instruction directly
-                // into the CPU object's inst field.
-            //}
+                    // ifetch_req is initialized to read the instruction directly
+                    // into the CPU object's inst field.
+                //}
+            }
 
             preExecute();
 

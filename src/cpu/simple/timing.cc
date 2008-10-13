@@ -531,28 +531,35 @@ TimingSimpleCPU::fetch()
 
     checkPcEventQueue();
 
-    Request *ifetch_req = new Request();
-    ifetch_req->setThreadContext(cpuId, /* thread ID */ 0);
-    Fault fault = setupFetchRequest(ifetch_req);
+    bool fromRom = isRomMicroPC(thread->readMicroPC());
 
-    ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
-    ifetch_pkt->dataStatic(&inst);
+    if (!fromRom) {
+        Request *ifetch_req = new Request();
+        ifetch_req->setThreadContext(cpuId, /* thread ID */ 0);
+        Fault fault = setupFetchRequest(ifetch_req);
 
-    if (fault == NoFault) {
-        if (!icachePort.sendTiming(ifetch_pkt)) {
-            // Need to wait for retry
-            _status = IcacheRetry;
+        ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);
+        ifetch_pkt->dataStatic(&inst);
+
+        if (fault == NoFault) {
+            if (!icachePort.sendTiming(ifetch_pkt)) {
+                // Need to wait for retry
+                _status = IcacheRetry;
+            } else {
+                // Need to wait for cache to respond
+                _status = IcacheWaitResponse;
+                // ownership of packet transferred to memory system
+                ifetch_pkt = NULL;
+            }
         } else {
-            // Need to wait for cache to respond
-            _status = IcacheWaitResponse;
-            // ownership of packet transferred to memory system
-            ifetch_pkt = NULL;
+            delete ifetch_req;
+            delete ifetch_pkt;
+            // fetch fault: advance directly to next instruction (fault handler)
+            advanceInst(fault);
         }
     } else {
-        delete ifetch_req;
-        delete ifetch_pkt;
-        // fetch fault: advance directly to next instruction (fault handler)
-        advanceInst(fault);
+        _status = IcacheWaitResponse;
+        completeIfetch(NULL);
     }
 
     numCycles += tickToCycles(curTick - previousTick);
@@ -581,7 +588,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
 
     // received a response from the icache: execute the received
     // instruction
-    assert(!pkt->isError());
+
+    assert(!pkt || !pkt->isError());
     assert(_status == IcacheWaitResponse);
 
     _status = Running;
@@ -590,8 +598,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
     previousTick = curTick;
 
     if (getState() == SimObject::Draining) {
-        delete pkt->req;
-        delete pkt;
+        if (pkt) {
+            delete pkt->req;
+            delete pkt;
+        }
 
         completeDrain();
         return;
@@ -658,8 +668,10 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
         advanceInst(fault);
     }
 
-    delete pkt->req;
-    delete pkt;
+    if (pkt) {
+        delete pkt->req;
+        delete pkt;
+    }
 }
 
 void
