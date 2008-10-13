@@ -36,7 +36,7 @@ X86ISA::I8259::I8259(Params * p) : BasicPioDevice(p), IntDev(this),
                     latency(p->pio_latency), output(p->output),
                     mode(p->mode), slave(NULL),
                     IRR(0), ISR(0), IMR(0),
-                    readIRR(true), initControlWord(0)
+                    readIRR(true), initControlWord(0), autoEOI(false)
 {
     if (output) {
         I8259 * master;
@@ -91,6 +91,9 @@ X86ISA::I8259::write(PacketPtr pkt)
             DPRINTF(I8259, "%s mode.\n",
                     cascadeMode ? "Cascade" : "Single");
             expectICW4 = bits(val, 0);
+            if (!expectICW4) {
+                autoEOI = false;
+            }
             initControlWord = 1;
             DPRINTF(I8259, "Expecting %d more bytes.\n", expectICW4 ? 3 : 2);
         } else if (bits(val, 4, 3) == 0) {
@@ -203,8 +206,10 @@ X86ISA::I8259::write(PacketPtr pkt)
             } else {
                 DPRINTF(I8259, "Unrecognized buffer mode.\n");
             }
+            autoEOI = bits(val, 1);
             DPRINTF(I8259, "%s End Of Interrupt.\n",
-                    bits(val, 1) ? "Automatic" : "Normal");
+                    autoEOI ? "Automatic" : "Normal");
+
             DPRINTF(I8259, "%s mode.\n", bits(val, 0) ? "80x86" : "MCX-80/85");
             initControlWord = 0;
             break;
@@ -265,7 +270,11 @@ X86ISA::I8259::getVector()
     int line = findMsbSet(IRR);
     IRR &= ~(1 << line);
     DPRINTF(I8259, "Interrupt %d was accepted.\n", line);
-    ISR |= 1 << line;
+    if (autoEOI) {
+        handleEOI(line);
+    } else {
+        ISR |= 1 << line;
+    }
     if (slave && bits(cascadeBits, line)) {
         DPRINTF(I8259, "Interrupt was from slave who will "
                 "provide the vector.\n");

@@ -73,6 +73,9 @@ class I8259 : public BasicPioDevice, public IntDev
     bool expectICW4;
     int initControlWord;
 
+    // Whether or not the PIC is in auto EOI mode.
+    bool autoEOI;
+
     void requestInterrupt(int line);
     void handleEOI(int line);
 
