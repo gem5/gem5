@@ -167,4 +167,12 @@ def macroop LIDT_16_P
     wrbase idtr, t2
     wrlimit idtr, t1
 };
+
+def macroop SWAPGS
+{
+    rdval t1, kernel_gs_base, dataSize=8
+    rdbase t2, gs, dataSize=8
+    wrbase gs, t1, dataSize=8
+    wrval kernel_gs_base, t2, dataSize=8
+};
 '''

@@ -128,7 +128,7 @@
                         0x4: smsw_Rv();
                         0x6: lmsw_Rv();
                         0x7: decode MODRM_RM {
-                            0x0: swapgs();
+                            0x0: Inst::SWAPGS();
                             0x1: rdtscp();
                             default: Inst::UD2();
                         }
