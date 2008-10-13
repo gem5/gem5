@@ -153,7 +153,9 @@ def operands {{
         'GDTRLimit':     ('ControlReg', 'uqw', 'MISCREG_TSG_LIMIT', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 206),
         'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_EFF_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 207),
         'CSAttr':        ('ControlReg', 'udw', 'MISCREG_CS_ATTR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 208),
-        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 209),
-        'M5Reg':         ('ControlReg', 'udw', 'MISCREG_M5_REG', (None, None, None), 210),
+        'MiscRegDest':   ('ControlReg', 'uqw', 'dest', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 209),
+        'MiscRegSrc1':   ('ControlReg', 'uqw', 'src1', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 210),
+        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 211),
+        'M5Reg':         ('ControlReg', 'udw', 'MISCREG_M5_REG', (None, None, None), 212),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 300)
 }};

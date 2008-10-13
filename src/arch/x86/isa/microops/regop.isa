@@ -1028,6 +1028,22 @@ let {{
             DestReg = SegSelSrc1;
         '''
 
+    class Rdval(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Rdval, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            DestReg = MiscRegSrc1;
+        '''
+
+    class Wrval(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrval, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            MiscRegDest = SrcReg1;
+        '''
+
     class Chks(RegOp):
         def __init__(self, dest, src1, src2=0,
                 flags=None, dataSize="env.dataSize"):

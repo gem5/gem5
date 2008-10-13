@@ -159,6 +159,11 @@ let {{
     assembler.symbols["CTrue"] = "ConditionTests::True"
     assembler.symbols["CFalse"] = "ConditionTests::False"
 
+    for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
+                'star', 'lstar', 'cstar', 'sf_mask',
+                'kernel_gs_base'):
+        assembler.symbols[reg] = "MISCREG_%s" % reg.upper()
+
     # Code literal which forces a default 64 bit operand size in 64 bit mode.
     assembler.symbols["oszIn64Override"] = '''
     if (machInst.mode.submode == SixtyFourBitMode &&
