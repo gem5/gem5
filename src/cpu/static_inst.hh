@@ -72,7 +72,7 @@ namespace Trace {
     class InstRecord;
 }
 
-typedef uint32_t MicroPC;
+typedef uint16_t MicroPC;
 
 static const MicroPC MicroPCRomBit = 1 << (sizeof(MicroPC) * 8 - 1);
 
