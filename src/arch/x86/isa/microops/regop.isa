@@ -1048,7 +1048,8 @@ let {{
                         return new StackFault;
                     }
                 } else {
-                    if ((m5reg.mode != SixtyFourBitMode || m5reg.cpl == 3) ||
+                    if ((m5reg.submode != SixtyFourBitMode ||
+                                m5reg.cpl == 3) ||
                             !(desc.s == 1 &&
                             desc.type.codeOrData == 0 && desc.type.w) ||
                             (desc.dpl != m5reg.cpl) ||
