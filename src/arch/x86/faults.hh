@@ -137,9 +137,10 @@ namespace X86ISA
     class X86Interrupt : public X86FaultBase
     {
       protected:
-        X86Interrupt(const char * name, const char * mnem,
+        uint8_t vector;
+        X86Interrupt(const char * name, const char * mnem, uint8_t _vector,
                 uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+            X86FaultBase(name, mnem, _errorCode), vector(_vector)
         {}
 
 #if FULL_SYSTEM
@@ -215,10 +216,9 @@ namespace X86ISA
 
     class NonMaskableInterrupt : public X86Interrupt
     {
-        uint8_t vector;
       public:
         NonMaskableInterrupt(uint8_t _vector) :
-            X86Interrupt("Non Maskable Interrupt", "#NMI"), vector(_vector)
+            X86Interrupt("Non Maskable Interrupt", "#NMI", _vector)
         {}
     };
 
@@ -352,10 +352,9 @@ namespace X86ISA
 
     class ExternalInterrupt : public X86Interrupt
     {
-        uint8_t vector;
       public:
         ExternalInterrupt(uint8_t _vector) :
-            X86Interrupt("External Interrupt", "#INTR"), vector(_vector)
+            X86Interrupt("External Interrupt", "#INTR", _vector)
         {}
     };
 
@@ -363,7 +362,7 @@ namespace X86ISA
     {
       public:
         SystemManagementInterrupt() :
-            X86Interrupt("System Management Interrupt", "#SMI")
+            X86Interrupt("System Management Interrupt", "#SMI", 0)
         {}
     };
 
@@ -372,15 +371,15 @@ namespace X86ISA
         uint8_t vector;
       public:
         InitInterrupt(uint8_t _vector) :
-            X86Interrupt("INIT Interrupt", "#INIT"), vector(_vector)
+            X86Interrupt("INIT Interrupt", "#INIT", _vector)
         {}
     };
 
     class SoftwareInterrupt : public X86Interrupt
     {
       public:
-        SoftwareInterrupt() :
-            X86Interrupt("Software Interrupt", "INTn")
+        SoftwareInterrupt(uint8_t _vector) :
+            X86Interrupt("Software Interrupt", "INTn", _vector)
         {}
     };
 

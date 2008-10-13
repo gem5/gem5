@@ -85,6 +85,7 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/decoder.hh"
 #include "arch/x86/faults.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
@@ -112,7 +113,18 @@ namespace X86ISA
 
     void X86Interrupt::invoke(ThreadContext * tc)
     {
-        panic("X86 faults are not implemented!");
+        using namespace X86ISAInst::RomLabels;
+        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        MicroPC entry;
+        if (m5reg.mode == LongMode) {
+            entry = extern_label_longModeInterrupt;
+        } else {
+            entry = extern_label_legacyModeInterrupt;
+        }
+        tc->setIntReg(INTREG_MICRO(1), vector);
+        tc->setIntReg(INTREG_MICRO(7), tc->readPC());
+        tc->setMicroPC(romMicroPC(entry));
+        tc->setNextMicroPC(romMicroPC(entry) + 1);
     }
 
     void FakeITLBFault::invoke(ThreadContext * tc)
