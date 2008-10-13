@@ -978,7 +978,7 @@ let {{
             '''
 
     # Microops for manipulating segmentation registers
-    class SegOp(RegOp):
+    class SegOp(CondRegOp):
         abstract = True
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(SegOp, self).__init__(dest, \
