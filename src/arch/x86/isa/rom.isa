@@ -55,6 +55,9 @@ let {{
 
         def getDeclaration(self):
             declareLabels = "namespace RomLabels {\n"
+            for (label, microop) in self.labels.items():
+                declareLabels += "const static uint64_t label_%s = %d;\n" \
+                                  % (label, microop.micropc)
             for (label, microop) in self.externs.items():
                 declareLabels += \
                     "const static MicroPC extern_label_%s = %d;\n" \
