@@ -101,7 +101,12 @@ X86ISA::I8259::write(PacketPtr pkt)
                         "Subcommand: Rotate in auto-EOI mode (clear).\n");
                 break;
               case 0x1:
-                DPRINTF(I8259, "Subcommand: Nonspecific EOI.\n");
+                {
+                    int line = findMsbSet(ISR);
+                    DPRINTF(I8259, "Subcommand: Nonspecific EOI on line %d.\n",
+                            line);
+                    handleEOI(line);
+                }
                 break;
               case 0x2:
                 DPRINTF(I8259, "Subcommand: No operation.\n");
