@@ -1,0 +1,201 @@
+# Copyright (c) 2008 The Regents of The University of Michigan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Gabe Black
+
+microcode = '''
+def rom
+{
+    # This vectors the CPU into an interrupt handler in long mode.
+    # On entry, t1 is set to the vector of the interrupt and t7 is the current
+    # ip. We need that because rdip returns the next ip.
+    extern longModeInterrupt:
+
+    #
+    # Get the 64 bit interrupt or trap gate descriptor from the IDT
+    #
+
+    # Load the gate descriptor from the IDT
+    slli t4, t1, 4, dataSize=8
+    ld t2, idtr, [1, t0, t4], 8, dataSize=8, addressSize=8
+    ld t4, idtr, [1, t0, t4], dataSize=8, addressSize=8
+
+    # Check permissions
+    chks t1, t4, IntGateCheck
+
+    mov t1, t1, t4, dataSize=8
+
+    # Check that it's the right type
+    srli t4, t1, 40, dataSize=8
+    andi t4, t4, 0xe, dataSize=8
+    xori t4, t4, 0xe, flags=(EZF,), dataSize=8
+    fault "new GeneralProtection(0)", flags=(nCEZF,)
+
+
+    #
+    # Get the target CS descriptor using the selector in the gate
+    # descriptor.
+    #
+    srli t4, t1, 16, dataSize=8
+    andi t5, t4, 0xF8, dataSize=8
+    andi t0, t4, 0x4, flags=(EZF,), dataSize=2
+    br rom_local_label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t5], dataSize=8, addressSize=8
+    br rom_local_label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t5], dataSize=8, addressSize=8
+processDescriptor:
+    chks t4, t3, IntCSCheck, dataSize=8
+    wrdl hs, t3, t4, dataSize=8
+
+    # Check that the target offset is in canonical form
+    wrdh t4, t1, t2, dataSize=8
+    srli t4, t4, 47, dataSize=8
+    addi t4, t4, 1, dataSize=8
+    srli t4, t4, 1, dataSize=8
+    or t4, t4, t4, flags=(EZF,), dataSize=2
+    fault "new GeneralProtection(0)", flags=(nCEZF,)
+
+
+    # 
+    # Figure out where the stack should be
+    #
+
+    # Record what we might set the stack selector to.
+    rdsel t6, ss
+    wrsel hs, t6
+
+    # Check if we're changing privelege level. At this point we can assume
+    # we're going to a DPL that's less than or equal to the CPL. 
+    rdattr t4, hs, dataSize=8
+    srli t4, t4, 3, dataSize=8
+    andi t4, t4, 3, dataSize=8
+    rdattr t5, cs, dataSize=8
+    srli t5, t5, 3, dataSize=8
+    sub t5, t5, t4, dataSize=8
+    andi t0, t5, 0x3, flags=(EZF,), dataSize=8
+    # We're going to change priviledge, so zero out the stack selector. We
+    # need to let the IST have priority so we don't branch yet.
+    limm t4, 0
+    wrsel hs, t4, flags=(nCEZF,)
+
+    # Check the IST field of the gate descriptor
+    srli t4, t1, 32, dataSize=8
+    andi t4, t4, 0x7, dataSize=8
+    subi t0, t4, 1, flags=(ECF,), dataSize=8
+    br rom_local_label("istStackSwitch"), flags=(nCECF,)
+    br rom_local_label("cplStackSwitch"), flags=(nCEZF,)
+
+    # If we're here, it's because the stack isn't being switched.
+    # Set t6 to the new rsp.
+    subi t6, rsp, 40, dataSize=8
+
+    # Align the stack
+    andi t6, t6, 0xF0, dataSize=1
+
+    # Check that we can access everything we need to on the stack
+    ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
+    ldst t0, hs, [1, t0, t6], 32, dataSize=8, addressSize=8
+    br rom_local_label("stackSwitched")
+
+istStackSwitch:
+    panic "IST based stack switching isn't implemented"
+    br rom_local_label("stackSwitched")
+
+cplStackSwitch:
+    panic "CPL change initiated stack switching isn't implemented"
+
+stackSwitched:
+
+
+    ##
+    ## Point of no return.
+    ## We're now going to irrevocably modify visible state.
+    ## Anything bad that's going to happen should have happened by now.
+    ##
+
+
+    #
+    # Build up the interrupt stack frame
+    #
+
+    # Write out the contents of memory
+    st t7, hs, [1, t0, t6], dataSize=8
+    limm t5, 0, dataSize=8
+    rdsel t5, cs, dataSize=2
+    st t5, hs, [1, t0, t6], 8, dataSize=8
+    rflags t4, dataSize=8
+    st t4, hs, [1, t0, t6], 16, dataSize=8
+    st rsp, hs, [1, t0, t6], 24, dataSize=8
+    rdsel t5, ss, dataSize=2
+    st t5, hs, [1, t0, t6], 32, dataSize=8
+
+    # Set the stack segment
+    mov rsp, rsp, t6, dataSize=8
+    rdsel t7, hs, dataSize=2
+    wrsel ss, t7, dataSize=2
+
+    #
+    # Set up the target code segment
+    #
+    srli t5, t1, 16, dataSize=8
+    andi t5, t5, 0xFF, dataSize=8
+    wrdl cs, t3, t5, dataSize=8
+    wrsel cs, t5, dataSize=2
+    wrdh t7, t1, t2, dataSize=8
+    wrip t0, t7, dataSize=8
+
+    #
+    # Adjust rflags which is still in t4 from above
+    #
+
+    # Set IF to the lowest bit of the original gate type.
+    # The type field of the original gate starts at bit 40.
+
+    # Set the TF, NT, and RF bits. We'll flip them at the end.
+    limm t6, (1 << 8) | (1 << 14) | (1 << 16)
+    or t4, t4, t6
+    srli t5, t1, 40, dataSize=8
+    srli t7, t4, 9, dataSize=8
+    xor t5, t7, t5, dataSize=8
+    andi t5, t5, 1, dataSize=8
+    slli t5, t5, 9, dataSize=8
+    or t6, t5, t6, dataSize=8
+
+    # Put the results into rflags
+    wrflags t6, t4
+    
+    eret
+};
+
+def rom
+{
+    # This vectors the CPU into an interrupt handler in legacy mode.
+    extern legacyModeInterrupt:
+    panic "Legacy mode interrupts not implemented (in microcode)"
+    eret
+};
+'''

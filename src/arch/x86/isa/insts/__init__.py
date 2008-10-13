@@ -53,7 +53,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["general_purpose",
+categories = ["romutil",
+              "general_purpose",
               "simd128",
               "simd64",
               "system",

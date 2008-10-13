@@ -185,6 +185,7 @@ if env['TARGET_ISA'] == 'x86':
         'general_purpose/string/scan_string.py',
         'general_purpose/string/store_string.py',
         'general_purpose/system_calls.py',
+        'romutil.py',
         'system/__init__.py',
         'system/halt.py',
         'system/invlpg.py',
