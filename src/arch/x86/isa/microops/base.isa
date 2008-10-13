@@ -118,7 +118,7 @@ let {{
         def getGeneratorDef(self, micropc):
             return self.generatorTemplate % \
                 (self.className, micropc, \
-                 self.getAllocator(True, False, False, False))
+                 self.getAllocator(True, True, False, False))
 
         def getGenerator(self, micropc):
             return self.generatorNameTemplate % (self.className, micropc)

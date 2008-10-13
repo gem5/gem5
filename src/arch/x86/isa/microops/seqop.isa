@@ -195,6 +195,7 @@ let {{
         def getAllocator(self, *microFlags):
             (is_micro, is_delayed, is_first, is_last) = microFlags
             is_last = False
+            is_delayed = True
             microFlags = (is_micro, is_delayed, is_first, is_last)
             return super(Br, self).getAllocator(*microFlags)
 
@@ -214,6 +215,7 @@ let {{
         def getAllocator(self, *microFlags):
             (is_micro, is_delayed, is_first, is_last) = microFlags
             is_last = True
+            is_delayed = False
             microFlags = (is_micro, is_delayed, is_first, is_last)
             return super(Eret, self).getAllocator(*microFlags)
 
