@@ -183,6 +183,11 @@ let {{
 
     assembler.symbols["label"] = labeler
 
+    def rom_labeler(labelStr):
+        return "romMicroPC(RomLabels::extern_label_%s)" % labelStr
+
+    assembler.symbols["rom_label"] = rom_labeler
+
     def stack_index(index):
         return "(NUM_FLOATREGS + (((%s) + 8) %% 8))" % index
 
