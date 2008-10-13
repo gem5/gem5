@@ -272,9 +272,6 @@ class ThreadContext
     virtual int exit() { return 1; };
 #endif
 
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val) = 0;
-
     /** function to compare two thread contexts (for debugging) */
     static void compare(ThreadContext *one, ThreadContext *two);
 };
@@ -467,12 +464,6 @@ class ProxyThreadContext : public ThreadContext
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
-
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        actualTC->changeRegFileContext(param, val);
-    }
 };
 
 #endif

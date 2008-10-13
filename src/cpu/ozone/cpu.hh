@@ -271,9 +271,6 @@ class OzoneCPU : public BaseCPU
         void setFuncExeInst(Counter new_val)
         { thread->funcExeInst = new_val; }
 #endif
-        void changeRegFileContext(TheISA::RegContextParam param,
-                                          TheISA::RegContextVal val)
-        { panic("Not supported on Alpha!"); }
     };
 
     // Ozone specific thread context

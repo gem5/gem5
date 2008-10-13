@@ -206,13 +206,6 @@ class RegFile {
     void serialize(EventManager *em, std::ostream &os);
     void unserialize(EventManager *em, Checkpoint *cp,
         const std::string &section);
-
-    void
-    changeContext(RegContextParam param, RegContextVal val)
-    {
-        //This would be an alternative place to call/implement
-        //the swapPALShadow function
-    }
 };
 
 static inline int

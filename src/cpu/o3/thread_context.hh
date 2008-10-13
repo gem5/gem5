@@ -281,15 +281,6 @@ class O3ThreadContext : public ThreadContext
         this->cpu->setNextNPC(val, this->thread->readTid());
     }
 
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-                                      TheISA::RegContextVal val)
-    {
-#if THE_ISA != SPARC_ISA
-        panic("changeRegFileContext not implemented.");
-#endif
-    }
-
-
     /** This function exits the thread context in the CPU and returns
      * 1 if the CPU has no more active threads (meaning it's OK to exit);
      * Used in syscall-emulation mode when a thread executes the 'exit'

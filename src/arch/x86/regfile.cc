@@ -248,11 +248,6 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(nextRip);
 }
 
-void RegFile::changeContext(RegContextParam param, RegContextVal val)
-{
-    panic("changeContext not implemented for x86!\n");
-}
-
 void X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
     panic("copyMiscRegs not implemented for x86!\n");

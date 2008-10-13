@@ -57,13 +57,6 @@ union AnyReg
     MiscReg ctrlreg;
 };
 
-enum RegContextParam
-{
-    CONTEXT_PALMODE
-};
-
-typedef bool RegContextVal;
-
 enum annotes
 {
     ANNOTE_NONE = 0,

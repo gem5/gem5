@@ -51,14 +51,6 @@ namespace SparcISA
         MiscReg ctrlreg;
     } AnyReg;
 
-    enum RegContextParam
-    {
-        CONTEXT_CWP,
-        CONTEXT_GLOBALS
-    };
-
-    typedef int RegContextVal;
-
     typedef uint16_t RegIndex;
 
     struct CoreSpecific {

@@ -145,8 +145,6 @@ namespace X86ISA
             const std::string &section);
 
       public:
-
-        void changeContext(RegContextParam param, RegContextVal val);
     };
 
     int flattenIntIndex(ThreadContext * tc, int reg);

@@ -241,21 +241,6 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
     UNSERIALIZE_SCALAR(nnpc);
 }
 
-void RegFile::changeContext(RegContextParam param, RegContextVal val)
-{
-    switch(param)
-    {
-      case CONTEXT_CWP:
-        intRegFile.setCWP(val);
-        break;
-      case CONTEXT_GLOBALS:
-        intRegFile.setGlobals(val);
-        break;
-      default:
-        panic("Tried to set illegal context parameter in the SPARC regfile.\n");
-    }
-}
-
 void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
 

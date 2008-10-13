@@ -294,12 +294,6 @@ class CheckerThreadContext : public ThreadContext
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        actualTC->changeRegFileContext(param, val);
-        checkerTC->changeRegFileContext(param, val);
-    }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

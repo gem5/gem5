@@ -551,11 +551,8 @@ void MiscRegFile::setReg(int miscReg,
         new_val = val >= NWindows ? NWindows - 1 : val;
         if (val >= NWindows)
             new_val = NWindows - 1;
-
-        tc->changeRegFileContext(CONTEXT_CWP, new_val);
         break;
       case MISCREG_GL:
-        tc->changeRegFileContext(CONTEXT_GLOBALS, val);
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:

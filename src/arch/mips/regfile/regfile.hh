@@ -104,10 +104,6 @@ namespace MipsISA
         void unserialize(EventManager *em, Checkpoint *cp,
             const std::string &section);
 
-        void changeContext(RegContextParam param, RegContextVal val)
-        {
-        }
-
     };
 
 } // namespace MipsISA

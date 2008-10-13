@@ -405,12 +405,6 @@ class SimpleThread : public ThreadState
         process->syscall(callnum, tc);
     }
 #endif
-
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        regs.changeContext(param, val);
-    }
 };
 
 
