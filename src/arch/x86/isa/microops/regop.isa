@@ -233,7 +233,7 @@ output header {{
             uint64_t &quotient, uint64_t &remainder);
 
     enum SegmentSelectorCheck {
-      SegNoCheck, SegCSCheck, SegCallGateCheck,
+      SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
       SegSSCheck, SegIretCheck, SegIntCSCheck
     };
 }};
@@ -1040,6 +1040,11 @@ let {{
               case SegCallGateCheck:
                 panic("CS checks for far calls/jumps through call gates"
                         "not implemented.\\n");
+                break;
+              case SegIntGateCheck:
+                if (desc.dpl < m5reg.cpl) {
+                    return new GeneralProtection((uint16_t)selector);
+                }
                 break;
               case SegSSCheck:
                 if (selector.si || selector.ti) {
