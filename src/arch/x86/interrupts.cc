@@ -330,9 +330,6 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg)
       case APIC_PROCESSOR_PRIORITY:
         panic("Local APIC Processor Priority register unimplemented.\n");
         break;
-      case APIC_EOI:
-        panic("Local APIC EOI register unimplemented.\n");
-        break;
       case APIC_ERROR_STATUS:
         regs[APIC_INTERNAL_STATE] &= ~ULL(0x1);
         break;
@@ -391,8 +388,10 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         panic("Local APIC Processor Priority register unimplemented.\n");
         break;
       case APIC_EOI:
-        panic("Local APIC EOI register unimplemented.\n");
-        break;
+        // Remove the interrupt that just completed from the local apic state.
+        clearRegArrayBit(APIC_IN_SERVICE_BASE, ISRV);
+        updateISRV();
+        return;
       case APIC_LOGICAL_DESTINATION:
         newVal = val & 0xFF000000;
         break;
