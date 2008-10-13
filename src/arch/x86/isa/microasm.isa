@@ -81,7 +81,7 @@ let {{
     for num in range(7):
         assembler.symbols["ufp%d" % num] = "FLOATREG_MICROFP(%d)" % num
     # Add in symbols for the segment descriptor registers
-    for letter in ("C", "D", "E", "F", "G", "S"):
+    for letter in ("C", "D", "E", "F", "G", "H", "S"):
         assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
 
     # Add in symbols for the various checks of segment selectors.
