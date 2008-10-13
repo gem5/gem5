@@ -69,6 +69,28 @@ let {{
 
 let {{
     class X86Microop(object):
+ 
+        generatorNameTemplate = "generate_%s_%d"
+
+        generatorTemplate = '''
+            StaticInstPtr
+            ''' + generatorNameTemplate + '''(StaticInstPtr curMacroop)
+            {
+                static const char * mnemonic = romMnemonic;
+                static const ExtMachInst dummyExtMachInst;
+                static const EmulEnv dummyEmulEnv(0, 0, 1, 1, 1);
+
+                Macroop * macroop = dynamic_cast<Macroop *>(curMacroop.get());
+                const ExtMachInst &machInst =
+                    macroop ? macroop->getExtMachInst() : dummyExtMachInst;
+                const EmulEnv &env =
+                    macroop ? macroop->getEmulEnv() : dummyEmulEnv;
+                // env may not be used in the microop's constructor.
+                RegIndex reg = env.reg;
+                reg = reg;
+                return %s;
+            }
+        '''
 
         def __init__(self, name):
             self.name = name
@@ -91,4 +113,12 @@ let {{
         def getAllocator(self, mnemonic, *microFlags):
             return 'new %s(machInst, %s)' % \
                 (self.className, mnemonic, self.microFlagsText(microFlags))
+
+        def getGeneratorDef(self, micropc):
+            return self.generatorTemplate % \
+                (self.className, micropc, \
+                 self.getAllocator(True, False, False, False))
+
+        def getGenerator(self, micropc):
+            return self.generatorNameTemplate % (self.className, micropc)
 }};

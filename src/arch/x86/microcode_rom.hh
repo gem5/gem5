@@ -31,11 +31,44 @@
 #ifndef __ARCH_X86_MICROCODE_ROM_HH__
 #define __ARCH_X86_MICROCODE_ROM_HH__
 
-#include "sim/microcode_rom.hh"
+#include "arch/x86/emulenv.hh"
+#include "cpu/static_inst.hh"
+
+namespace X86ISAInst
+{
+    class MicrocodeRom
+    {
+      protected:
+
+        typedef StaticInstPtr (*GenFunc)(StaticInstPtr);
+
+        static const MicroPC numMicroops;
+
+        GenFunc * genFuncs;
+
+      public:
+        //Constructor.
+        MicrocodeRom();
+
+        //Destructor.
+        ~MicrocodeRom()
+        {
+            delete [] genFuncs;
+        }
+
+        StaticInstPtr
+        fetchMicroop(MicroPC microPC, StaticInstPtr curMacroop)
+        {
+            microPC = normalMicroPC(microPC);
+            assert(microPC < numMicroops);
+            return genFuncs[microPC](curMacroop);
+        }
+    };
+}
 
 namespace X86ISA
 {
-    using ::MicrocodeRom;
+    using X86ISAInst::MicrocodeRom;
 }
 
 #endif // __ARCH_X86_MICROCODE_ROM_HH__

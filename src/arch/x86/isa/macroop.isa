@@ -76,12 +76,13 @@ output header {{
         {
           protected:
             const uint32_t numMicroops;
+            X86ISA::EmulEnv emulEnv;
 
             //Constructor.
             Macroop(const char *mnem, ExtMachInst _machInst,
-                    uint32_t _numMicroops)
+                    uint32_t _numMicroops, X86ISA::EmulEnv _emulEnv)
                         : StaticInst(mnem, _machInst, No_OpClass),
-                        numMicroops(_numMicroops)
+                        numMicroops(_numMicroops), emulEnv(_emulEnv)
             {
                 assert(numMicroops);
                 microops = new StaticInstPtr[numMicroops];
@@ -107,7 +108,20 @@ output header {{
                 return mnemonic;
             }
 
+          public:
             %(MacroExecPanic)s
+
+            ExtMachInst
+            getExtMachInst()
+            {
+                return machInst;
+            }
+
+            X86ISA::EmulEnv
+            getEmulEnv()
+            {
+                return emulEnv;
+            }
         };
 }};
 
@@ -139,7 +153,7 @@ def template MacroDeclare {{
 def template MacroConstructor {{
         inline X86Macroop::%(class_name)s::%(class_name)s(
                 ExtMachInst machInst, EmulEnv env)
-            : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s)
+            : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s, env)
         {
             %(adjust_env)s;
             %(adjust_imm)s;

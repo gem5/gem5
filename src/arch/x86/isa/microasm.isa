@@ -64,13 +64,16 @@
 //Include code to build macroops in both C++ and python.
 ##include "macroop.isa"
 
+//Include code to fill out the microcode ROM in both C++ and python.
+##include "rom.isa"
+
 let {{
     import sys
     sys.path[0:0] = ["src/arch/x86/isa/"]
     from insts import microcode
     # print microcode
-    from micro_asm import MicroAssembler, Rom_Macroop, Rom
-    mainRom = Rom('main ROM')
+    from micro_asm import MicroAssembler, Rom_Macroop
+    mainRom = X86MicrocodeRom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
     # Add in symbols for the microcode registers
     for num in range(15):
@@ -186,4 +189,7 @@ let {{
     assembler.symbols["st"] = stack_index
 
     macroopDict = assembler.assemble(microcode)
+
+    decoder_output += mainRom.getDefinition()
+    header_output += mainRom.getDeclaration()
 }};
