@@ -240,6 +240,48 @@ X86ISA::Interrupts::write(PacketPtr pkt)
     setReg(reg, gtoh(val));
     return latency;
 }
+void
+X86ISA::Interrupts::requestInterrupt(uint8_t vector,
+        uint8_t deliveryMode, bool level)
+{
+    /*
+     * Fixed and lowest-priority delivery mode interrupts are handled
+     * using the IRR/ISR registers, checking against the TPR, etc.
+     * The SMI, NMI, ExtInt, INIT, etc interrupts go straight through.
+     */
+    if (deliveryMode == DeliveryMode::Fixed ||
+            deliveryMode == DeliveryMode::LowestPriority) {
+        DPRINTF(LocalApic, "Interrupt is an %s.\n",
+                DeliveryMode::names[deliveryMode]);
+        // Queue up the interrupt in the IRR.
+        if (vector > IRRV)
+            IRRV = vector;
+        if (!getRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector)) {
+            setRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector);
+            if (level) {
+                setRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
+            } else {
+                clearRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
+            }
+        }
+    } else if (!DeliveryMode::isReserved(deliveryMode)) {
+        DPRINTF(LocalApic, "Interrupt is an %s.\n",
+                DeliveryMode::names[deliveryMode]);
+        if (deliveryMode == DeliveryMode::SMI && !pendingSmi) {
+            pendingUnmaskableInt = pendingSmi = true;
+            smiVector = vector;
+        } else if (deliveryMode == DeliveryMode::NMI && !pendingNmi) {
+            pendingUnmaskableInt = pendingNmi = true;
+            nmiVector = vector;
+        } else if (deliveryMode == DeliveryMode::ExtInt && !pendingExtInt) {
+            pendingExtInt = true;
+            extIntVector = vector;
+        } else if (deliveryMode == DeliveryMode::INIT && !pendingInit) {
+            pendingUnmaskableInt = pendingInit = true;
+            initVector = vector;
+        }
+    } 
+}
 
 Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
@@ -260,49 +302,8 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
             assert((message.destMode == 0 && message.destination == id) ||
                    (bits((int)message.destination, id)));
 
-            /*
-             * Fixed and lowest-priority delivery mode interrupts are handled
-             * using the IRR/ISR registers, checking against the TPR, etc.
-             * The SMI, NMI, ExtInt, INIT, etc interrupts go straight through.
-             */
-            if (message.deliveryMode == DeliveryMode::Fixed ||
-                    message.deliveryMode == DeliveryMode::LowestPriority) {
-                DPRINTF(LocalApic, "Interrupt is an %s.\n",
-                        DeliveryMode::names[message.deliveryMode]);
-                // Queue up the interrupt in the IRR.
-                if (vector > IRRV)
-                    IRRV = vector;
-                if (!getRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector)) {
-                    setRegArrayBit(APIC_INTERRUPT_REQUEST_BASE, vector);
-                    if (message.trigger) {
-                        // Level triggered.
-                        setRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
-                    } else {
-                        // Edge triggered.
-                        clearRegArrayBit(APIC_TRIGGER_MODE_BASE, vector);
-                    }
-                }
-            } else if (!DeliveryMode::isReserved(message.deliveryMode)) {
-                DPRINTF(LocalApic, "Interrupt is an %s.\n",
-                        DeliveryMode::names[message.deliveryMode]);
-                if (message.deliveryMode == DeliveryMode::SMI &&
-                        !pendingSmi) {
-                    pendingUnmaskableInt = pendingSmi = true;
-                    smiMessage = message;
-                } else if (message.deliveryMode == DeliveryMode::NMI &&
-                        !pendingNmi) {
-                    pendingUnmaskableInt = pendingNmi = true;
-                    nmiMessage = message;
-                } else if (message.deliveryMode == DeliveryMode::ExtInt &&
-                        !pendingExtInt) {
-                    pendingExtInt = true;
-                    extIntMessage = message;
-                } else if (message.deliveryMode == DeliveryMode::INIT &&
-                        !pendingInit) {
-                    pendingUnmaskableInt = pendingInit = true;
-                    initMessage = message;
-                }
-            } 
+            requestInterrupt(message.vector,
+                    message.deliveryMode, message.trigger);
         }
         break;
       default:
@@ -503,10 +504,10 @@ X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
             return new SystemManagementInterrupt();
         } else if (pendingNmi) {
             DPRINTF(LocalApic, "Generated NMI fault object.\n");
-            return new NonMaskableInterrupt(nmiMessage.vector);
+            return new NonMaskableInterrupt(nmiVector);
         } else if (pendingInit) {
             DPRINTF(LocalApic, "Generated INIT fault object.\n");
-            return new InitInterrupt(initMessage.vector);
+            return new InitInterrupt(initVector);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");
@@ -514,7 +515,7 @@ X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
         }
     } else if (pendingExtInt) {
         DPRINTF(LocalApic, "Generated external interrupt fault object.\n");
-        return new ExternalInterrupt(extIntMessage.vector);
+        return new ExternalInterrupt(extIntVector);
     } else {
         DPRINTF(LocalApic, "Generated regular interrupt fault object.\n");
         // The only thing left are fixed and lowest priority interrupts.

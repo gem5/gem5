@@ -79,6 +79,17 @@ class Interrupts : public BasicPioDevice, IntDev
     // Storage for the APIC registers
     uint32_t regs[NUM_APIC_REGS];
 
+    BitUnion32(LVTEntry)
+        Bitfield<7, 0> vector;
+        Bitfield<10, 8> deliveryMode;
+        Bitfield<12> status;
+        Bitfield<13> polarity;
+        Bitfield<14> remoteIRR;
+        Bitfield<15> trigger;
+        Bitfield<16> masked;
+        Bitfield<17> periodic;
+    EndBitUnion(LVTEntry)
+
     /*
      * Timing related stuff.
      */
@@ -87,13 +98,20 @@ class Interrupts : public BasicPioDevice, IntDev
 
     class ApicTimerEvent : public Event
     {
+      private:
+        Interrupts *localApic;
       public:
-        ApicTimerEvent() : Event()
+        ApicTimerEvent(Interrupts *_localApic) :
+            Event(), localApic(_localApic)
         {}
 
         void process()
         {
-            warn("Local APIC timer event doesn't do anything!\n");
+            assert(localApic);
+            if (localApic->triggerTimerInterrupt()) {
+                localApic->setReg(APIC_INITIAL_COUNT,
+                        localApic->readReg(APIC_INITIAL_COUNT));
+            }
         }
     };
 
@@ -104,13 +122,13 @@ class Interrupts : public BasicPioDevice, IntDev
      * the IRR.
      */
     bool pendingSmi;
-    TriggerIntMessage smiMessage;
+    uint8_t smiVector;
     bool pendingNmi;
-    TriggerIntMessage nmiMessage;
+    uint8_t nmiVector;
     bool pendingExtInt;
-    TriggerIntMessage extIntMessage;
+    uint8_t extIntVector;
     bool pendingInit;
-    TriggerIntMessage initMessage;
+    uint8_t initVector;
 
     // This is a quick check whether any of the above (except ExtInt) are set.
     bool pendingUnmaskableInt;
@@ -163,6 +181,8 @@ class Interrupts : public BasicPioDevice, IntDev
         return bits(regs[base + (vector % 32)], vector >> 5);
     }
 
+    void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
+
   public:
     /*
      * Params stuff.
@@ -186,6 +206,15 @@ class Interrupts : public BasicPioDevice, IntDev
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
     Tick recvMessage(PacketPtr pkt);
+
+    bool
+    triggerTimerInterrupt()
+    {
+        LVTEntry entry = regs[APIC_LVT_TIMER];
+        if (!entry.masked)
+            requestInterrupt(entry.vector, entry.deliveryMode, entry.trigger);
+        return entry.periodic;
+    }
 
     void addressRanges(AddrRangeList &range_list)
     {
@@ -225,10 +254,11 @@ class Interrupts : public BasicPioDevice, IntDev
 
     Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
                              latency(p->pio_latency), clock(0),
-                             pendingSmi(false), smiMessage(0),
-                             pendingNmi(false), nmiMessage(0),
-                             pendingExtInt(false), extIntMessage(0),
-                             pendingInit(false), initMessage(0),
+                             apicTimerEvent(this),
+                             pendingSmi(false), smiVector(0),
+                             pendingNmi(false), nmiVector(0),
+                             pendingExtInt(false), extIntVector(0),
+                             pendingInit(false), initVector(0),
                              pendingUnmaskableInt(false)
     {
         pioSize = PageBytes;
