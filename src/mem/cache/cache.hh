@@ -144,16 +144,6 @@ class Cache : public BaseCache
     const bool prefetchMiss;
 
     /**
-     * Handle a replacement for the given request.
-     * @param blk A pointer to the block, usually NULL
-     * @param pkt The memory request to satisfy.
-     * @param new_state The new state of the block.
-     * @param writebacks A list to store any generated writebacks.
-     */
-    BlkType* doReplacement(BlkType *blk, PacketPtr pkt,
-                           CacheBlk::State new_state, PacketList &writebacks);
-
-    /**
      * Does all the processing necessary to perform the provided request.
      * @param pkt The memory request to perform.
      * @param lat The latency of the access.
