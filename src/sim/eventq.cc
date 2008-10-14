@@ -209,7 +209,8 @@ Event::serialize(std::ostream &os)
 void
 Event::unserialize(Checkpoint *cp, const string &section)
 {
-    assert(!scheduled() && "we used to deschedule these events");
+    if (scheduled())
+        mainEventQueue.deschedule(this);
 
     UNSERIALIZE_SCALAR(_when);
     UNSERIALIZE_SCALAR(_priority);
@@ -223,8 +224,7 @@ Event::unserialize(Checkpoint *cp, const string &section)
 
     if (wasScheduled) {
         DPRINTF(Config, "rescheduling at %d\n", _when);
-        panic("need to figure out how to unserialize scheduled events");
-        //schedule(_when);
+        mainEventQueue.schedule(this, _when);
     }
 }
 
