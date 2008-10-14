@@ -26,6 +26,7 @@
 #
 # Authors: Nathan Binkert
 
+import m5
 import internal.event
 
 from internal.event import PythonEvent, SimLoopExitEvent as SimExit
@@ -41,7 +42,7 @@ class Event(PythonEvent):
     def __init__(self, priority=None):
         if priority is None:
             priority = internal.event.Event.Default_Pri
-        super(PythonEvent, self).__init__(self, priority)
+        super(Event, self).__init__(self, priority)
 
 class ProgressEvent(Event):
     def __init__(self, eventq, period):
