@@ -31,6 +31,8 @@
 #include "base/bitfield.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
+#include "mem/packet.hh"
+#include "mem/packet_access.hh"
 
 X86ISA::I8259::I8259(Params * p) : BasicPioDevice(p), IntDev(this),
                     latency(p->pio_latency), output(p->output),

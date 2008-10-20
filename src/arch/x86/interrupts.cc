@@ -294,10 +294,9 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
       case 0:
         {
             TriggerIntMessage message = pkt->get<TriggerIntMessage>();
-            uint8_t vector = message.vector;
             DPRINTF(LocalApic,
                     "Got Trigger Interrupt message with vector %#x.\n",
-                    vector);
+                    message.vector);
             // Make sure we're really supposed to get this.
             assert((message.destMode == 0 && message.destination == id) ||
                    (bits((int)message.destination, id)));
