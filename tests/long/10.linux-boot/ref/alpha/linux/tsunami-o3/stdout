@@ -1,0 +1,16 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Oct 20 2008 18:39:58
+M5 revision 5701:8ba6b8d32acac2674657b9f414b60d23fcb41fe6
+M5 commit date Sun Oct 19 22:50:53 2008 -0400
+M5 started Oct 20 2008 18:47:58
+M5 executing on zizzer
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3 -re --stdout-file stdout --stderr-file stderr tests/run.py long/10.linux-boot/alpha/linux/tsunami-o3
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+Exiting @ tick 1867358550500 because m5_exit instruction encountered

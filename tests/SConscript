@@ -216,7 +216,8 @@ if env['FULL_SYSTEM']:
                         'tsunami-simple-timing',
                         'tsunami-simple-atomic-dual',
                         'tsunami-simple-timing-dual',
-                        'twosys-tsunami-simple-atomic']
+                        'twosys-tsunami-simple-atomic',
+                        'tsunami-o3', 'tsunami-o3-dual']
     if env['TARGET_ISA'] == 'sparc':
         configs += ['t1000-simple-atomic',
                     't1000-simple-timing']
