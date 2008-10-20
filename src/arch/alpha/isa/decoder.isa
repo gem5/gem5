@@ -698,28 +698,7 @@ decode OPCODE default Unknown::unknown() {
         else {
             // check to see if simulator wants to do something special
             // on this PAL call (including maybe suppress it)
-            
-            bool dopal = true;
-
-            ThreadContext * tc = xc->tcBase();
-            AlphaISA::Kernel::Statistics * kernelStats = tc->getKernelStats();
-            System * system = tc->getSystemPtr();
-            if (kernelStats)
-                kernelStats->callpal(palFunc, tc);
-
-            switch (palFunc) {
-              case PAL::halt:
-                tc->halt();
-                if (--System::numSystemsRunning == 0)
-                    exitSimLoop("all cpus halted");
-                break;
-
-              case PAL::bpt:
-              case PAL::bugchk:
-                if (system->breakpoint())
-                    dopal = false;
-                break;
-            }
+            bool dopal = xc->simPalCheck(palFunc);
 
             if (dopal) {
                 xc->setMiscReg(IPR_EXC_ADDR, NPC);
@@ -807,16 +786,7 @@ decode OPCODE default Unknown::unknown() {
     format BasicOperate {
         0x1e: decode PALMODE {
             0: OpcdecFault::hw_rei();
-            1: hw_rei({{
-                NPC = ExcAddr;
-                ThreadContext * tc = xc->tcBase();
-                if (!tc->misspeculating()) {
-                    AlphaISA::Kernel::Statistics * kernelStats =
-                        tc->getKernelStats();
-                    if (kernelStats)
-                        kernelStats->hwrei();
-                }
-            }}, IsSerializing, IsSerializeBefore);
+            1:hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
         }
 
         // M5 special opcodes use the reserved 0x01 opcode space

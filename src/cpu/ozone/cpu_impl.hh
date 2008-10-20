@@ -669,6 +669,21 @@ OzoneCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
 }
 #else
 template <class Impl>
+Fault
+OzoneCPU<Impl>::hwrei()
+{
+    // Need to move this to ISA code
+    // May also need to make this per thread
+
+    lockFlag = false;
+    lockAddrList.clear();
+    thread.kernelStats->hwrei();
+
+    // FIXME: XXX check for interrupts? XXX
+    return NoFault;
+}
+
+template <class Impl>
 void
 OzoneCPU<Impl>::processInterrupts()
 {
@@ -684,6 +699,31 @@ OzoneCPU<Impl>::processInterrupts()
         this->interrupts->updateIntrInfo(thread.getTC());
         interrupt->invoke(thread.getTC());
     }
+}
+
+template <class Impl>
+bool
+OzoneCPU<Impl>::simPalCheck(int palFunc)
+{
+    // Need to move this to ISA code
+    // May also need to make this per thread
+    thread.kernelStats->callpal(palFunc, tc);
+
+    switch (palFunc) {
+      case PAL::halt:
+        haltContext(thread.readTid());
+        if (--System::numSystemsRunning == 0)
+            exitSimLoop("all cpus halted");
+        break;
+
+      case PAL::bpt:
+      case PAL::bugchk:
+        if (system->breakpoint())
+            return false;
+        break;
+    }
+
+    return true;
 }
 #endif
 

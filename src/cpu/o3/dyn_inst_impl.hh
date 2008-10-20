@@ -125,10 +125,42 @@ BaseO3DynInst<Impl>::completeAcc(PacketPtr pkt)
 
 #if FULL_SYSTEM
 template <class Impl>
+Fault
+BaseO3DynInst<Impl>::hwrei()
+{
+#if THE_ISA == ALPHA_ISA
+    // Can only do a hwrei when in pal mode.
+    if (!(this->readPC() & 0x3))
+        return new AlphaISA::UnimplementedOpcodeFault;
+
+    // Set the next PC based on the value of the EXC_ADDR IPR.
+    this->setNextPC(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
+                                           this->threadNumber));
+
+    // Tell CPU to clear any state it needs to if a hwrei is taken.
+    this->cpu->hwrei(this->threadNumber);
+#else
+
+#endif
+    // FIXME: XXX check for interrupts? XXX
+    return NoFault;
+}
+
+template <class Impl>
 void
 BaseO3DynInst<Impl>::trap(Fault fault)
 {
     this->cpu->trap(fault, this->threadNumber);
+}
+
+template <class Impl>
+bool
+BaseO3DynInst<Impl>::simPalCheck(int palFunc)
+{
+#if THE_ISA != ALPHA_ISA
+    panic("simPalCheck called, but PAL only exists in Alpha!\n");
+#endif
+    return this->cpu->simPalCheck(palFunc, this->threadNumber);
 }
 #else
 template <class Impl>

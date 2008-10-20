@@ -507,6 +507,8 @@ class OzoneCPU : public BaseCPU
     void dumpInsts() { frontEnd->dumpInsts(); }
 
 #if FULL_SYSTEM
+    Fault hwrei();
+    bool simPalCheck(int palFunc);
     void processInterrupts();
 #else
     void syscall(uint64_t &callnum);

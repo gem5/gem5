@@ -547,3 +547,53 @@ copyIprs(ThreadContext *src, ThreadContext *dest)
 }
 
 } // namespace AlphaISA
+
+#if FULL_SYSTEM
+
+using namespace AlphaISA;
+
+Fault
+SimpleThread::hwrei()
+{
+    if (!(readPC() & 0x3))
+        return new UnimplementedOpcodeFault;
+
+    setNextPC(readMiscRegNoEffect(IPR_EXC_ADDR));
+
+    if (!misspeculating()) {
+        if (kernelStats)
+            kernelStats->hwrei();
+    }
+
+    // FIXME: XXX check for interrupts? XXX
+    return NoFault;
+}
+
+/**
+ * Check for special simulator handling of specific PAL calls.
+ * If return value is false, actual PAL call will be suppressed.
+ */
+bool
+SimpleThread::simPalCheck(int palFunc)
+{
+    if (kernelStats)
+        kernelStats->callpal(palFunc, tc);
+
+    switch (palFunc) {
+      case PAL::halt:
+        halt();
+        if (--System::numSystemsRunning == 0)
+            exitSimLoop("all cpus halted");
+        break;
+
+      case PAL::bpt:
+      case PAL::bugchk:
+        if (system->breakpoint())
+            return false;
+        break;
+    }
+
+    return true;
+}
+
+#endif // FULL_SYSTEM

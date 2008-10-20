@@ -336,7 +336,9 @@ class CheckerCPU : public BaseCPU
     void translateDataReadReq(Request *req);
 
 #if FULL_SYSTEM
+    Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
+    bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
     // Assume that the normal CPU's call to syscall was successful.
     // The checker's state would have already been updated by the syscall.

@@ -413,7 +413,9 @@ class BaseSimpleCPU : public BaseCPU
     //Fault CacheOp(uint8_t Op, Addr EA);
 
 #if FULL_SYSTEM
+    Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }
+    bool simPalCheck(int palFunc) { return thread->simPalCheck(palFunc); }
 #else
     void syscall(int64_t callnum) { thread->syscall(callnum); }
 #endif
