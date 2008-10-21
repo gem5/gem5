@@ -303,9 +303,9 @@ BaseSimpleCPU::dbg_vtophys(Addr addr)
 
 #if FULL_SYSTEM
 void
-BaseSimpleCPU::post_interrupt(int int_num, int index)
+BaseSimpleCPU::postInterrupt(int int_num, int index)
 {
-    BaseCPU::post_interrupt(int_num, index);
+    BaseCPU::postInterrupt(int_num, index);
 
     if (thread->status() == ThreadContext::Suspended) {
                 DPRINTF(Quiesce,"Suspended Processor awoke\n");
@@ -318,7 +318,7 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (check_interrupts(tc)) {
+    if (checkInterrupts(tc)) {
         Fault interrupt = interrupts->getInterrupt(tc);
 
         if (interrupt != NoFault) {

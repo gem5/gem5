@@ -45,7 +45,6 @@ class Interrupts : public SimObject
 {
 
   private:
-
     uint64_t interrupts[NumInterruptTypes];
     uint64_t intStatus;
 
@@ -60,10 +59,11 @@ class Interrupts : public SimObject
 
     Interrupts(Params * p) : SimObject(p)
     {
-        clear_all();
+        clearAll();
     }
 
-    int InterruptLevel(uint64_t softint)
+    int
+    InterruptLevel(uint64_t softint)
     {
         if (softint & 0x10000 || softint & 0x1)
             return 14;
@@ -76,7 +76,8 @@ class Interrupts : public SimObject
         return 0;
     }
 
-    void post(int int_num, int index)
+    void
+    post(int int_num, int index)
     {
         DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
         assert(int_num >= 0 && int_num < NumInterruptTypes);
@@ -86,7 +87,8 @@ class Interrupts : public SimObject
         intStatus |= ULL(1) << int_num;
     }
 
-    void clear(int int_num, int index)
+    void
+    clear(int int_num, int index)
     {
         DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
         assert(int_num >= 0 && int_num < NumInterruptTypes);
@@ -97,7 +99,8 @@ class Interrupts : public SimObject
             intStatus &= ~(ULL(1) << int_num);
     }
 
-    void clear_all()
+    void
+    clearAll()
     {
         for (int i = 0; i < NumInterruptTypes; ++i) {
             interrupts[i] = 0;
@@ -105,12 +108,14 @@ class Interrupts : public SimObject
         intStatus = 0;
     }
 
-    bool check_interrupts(ThreadContext * tc) const
+    bool
+    checkInterrupts(ThreadContext *tc) const
     {
         return intStatus;
     }
 
-    Fault getInterrupt(ThreadContext * tc)
+    Fault
+    getInterrupt(ThreadContext *tc)
     {
         int hpstate = tc->readMiscRegNoEffect(MISCREG_HPSTATE);
         int pstate = tc->readMiscRegNoEffect(MISCREG_PSTATE);
@@ -153,8 +158,8 @@ class Interrupts : public SimObject
                     return new DevMondo;
                 }
                 if (interrupts[IT_SOFT_INT]) {
-                    return new
-                        InterruptLevelN(InterruptLevel(interrupts[IT_SOFT_INT]));
+                    int level = InterruptLevel(interrupts[IT_SOFT_INT]);
+                    return new InterruptLevelN(level);
                 }
 
                 if (interrupts[IT_RES_ERROR]) {
@@ -165,24 +170,28 @@ class Interrupts : public SimObject
         return NoFault;
     }
 
-    void updateIntrInfo(ThreadContext * tc)
+    void
+    updateIntrInfo(ThreadContext *tc)
     {
 
     }
 
-    uint64_t get_vec(int int_num)
+    uint64_t
+    get_vec(int int_num)
     {
         assert(int_num >= 0 && int_num < NumInterruptTypes);
         return interrupts[int_num];
     }
 
-    void serialize(std::ostream &os)
+    void
+    serialize(std::ostream &os)
     {
         SERIALIZE_ARRAY(interrupts,NumInterruptTypes);
         SERIALIZE_SCALAR(intStatus);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
     {
         UNSERIALIZE_ARRAY(interrupts,NumInterruptTypes);
         UNSERIALIZE_SCALAR(intStatus);

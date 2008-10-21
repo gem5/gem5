@@ -470,7 +470,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
 }
 
 bool
-X86ISA::Interrupts::check_interrupts(ThreadContext * tc) const
+X86ISA::Interrupts::checkInterrupts(ThreadContext *tc) const
 {
     RFLAGS rflags = tc->readMiscRegNoEffect(MISCREG_RFLAGS);
     if (pendingUnmaskableInt) {
@@ -492,9 +492,9 @@ X86ISA::Interrupts::check_interrupts(ThreadContext * tc) const
 }
 
 Fault
-X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
+X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
 {
-    assert(check_interrupts(tc));
+    assert(checkInterrupts(tc));
     // These are all probably fairly uncommon, so we'll make them easier to
     // check for.
     if (pendingUnmaskableInt) {
@@ -523,9 +523,9 @@ X86ISA::Interrupts::getInterrupt(ThreadContext * tc)
 }
 
 void
-X86ISA::Interrupts::updateIntrInfo(ThreadContext * tc)
+X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
 {
-    assert(check_interrupts(tc));
+    assert(checkInterrupts(tc));
     if (pendingUnmaskableInt) {
         if (pendingSmi) {
             DPRINTF(LocalApic, "SMI sent to core.\n");

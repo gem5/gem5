@@ -50,7 +50,7 @@ IntrControl::post(int cpu_id, int int_num, int index)
     DPRINTF(IntrControl, "post  %d:%d (cpu %d)\n", int_num, index, cpu_id);
     std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *cpu = tcvec[cpu_id]->getCpuPtr();
-    cpu->post_interrupt(int_num, index);
+    cpu->postInterrupt(int_num, index);
 }
 
 void
@@ -59,7 +59,7 @@ IntrControl::clear(int cpu_id, int int_num, int index)
     DPRINTF(IntrControl, "clear %d:%d (cpu %d)\n", int_num, index, cpu_id);
     std::vector<ThreadContext *> &tcvec = sys->threadContexts;
     BaseCPU *cpu = tcvec[cpu_id]->getCpuPtr();
-    cpu->clear_interrupt(int_num, index);
+    cpu->clearInterrupt(int_num, index);
 }
 
 IntrControl *

@@ -132,7 +132,7 @@ O3ThreadContext<Impl>::suspend(int delay)
 /*
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
-    if (cpu->check_interrupts()) {
+    if (cpu->checkInterrupts()) {
         assert(status() == ThreadContext::Active);
         return;
     }

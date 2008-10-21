@@ -70,8 +70,7 @@
 
 class ThreadContext;
 
-namespace X86ISA
-{
+namespace X86ISA {
 
 class Interrupts : public BasicPioDevice, IntDev
 {
@@ -189,7 +188,8 @@ class Interrupts : public BasicPioDevice, IntDev
      */
     typedef X86LocalApicParams Params;
 
-    void setClock(Tick newClock)
+    void
+    setClock(Tick newClock)
     {
         clock = newClock;
     }
@@ -243,7 +243,8 @@ class Interrupts : public BasicPioDevice, IntDev
 
     uint32_t readReg(ApicRegIndex miscReg);
     void setReg(ApicRegIndex reg, uint32_t val);
-    void setRegNoEffect(ApicRegIndex reg, uint32_t val)
+    void
+    setRegNoEffect(ApicRegIndex reg, uint32_t val)
     {
         regs[reg] = val;
     }
@@ -252,14 +253,14 @@ class Interrupts : public BasicPioDevice, IntDev
      * Constructor.
      */
 
-    Interrupts(Params * p) : BasicPioDevice(p), IntDev(this),
-                             latency(p->pio_latency), clock(0),
-                             apicTimerEvent(this),
-                             pendingSmi(false), smiVector(0),
-                             pendingNmi(false), nmiVector(0),
-                             pendingExtInt(false), extIntVector(0),
-                             pendingInit(false), initVector(0),
-                             pendingUnmaskableInt(false)
+    Interrupts(Params * p)
+        : BasicPioDevice(p), IntDev(this), latency(p->pio_latency), clock(0),
+          apicTimerEvent(this),
+          pendingSmi(false), smiVector(0),
+          pendingNmi(false), nmiVector(0),
+          pendingExtInt(false), extIntVector(0),
+          pendingInit(false), initVector(0),
+          pendingUnmaskableInt(false)
     {
         pioSize = PageBytes;
         memset(regs, 0, sizeof(regs));
@@ -273,20 +274,22 @@ class Interrupts : public BasicPioDevice, IntDev
      * Functions for retrieving interrupts for the CPU to handle.
      */
 
-    bool check_interrupts(ThreadContext * tc) const;
-    Fault getInterrupt(ThreadContext * tc);
-    void updateIntrInfo(ThreadContext * tc);
+    bool checkInterrupts(ThreadContext *tc) const;
+    Fault getInterrupt(ThreadContext *tc);
+    void updateIntrInfo(ThreadContext *tc);
 
     /*
      * Serialization.
      */
 
-    void serialize(std::ostream & os)
+    void
+    serialize(std::ostream &os)
     {
         panic("Interrupts::serialize unimplemented!\n");
     }
 
-    void unserialize(Checkpoint * cp, const std::string & section)
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
     {
         panic("Interrupts::unserialize unimplemented!\n");
     }
@@ -295,22 +298,25 @@ class Interrupts : public BasicPioDevice, IntDev
      * Old functions needed for compatability but which will be phased out
      * eventually.
      */
-    void post(int int_num, int index)
+    void
+    post(int int_num, int index)
     {
         panic("Interrupts::post unimplemented!\n");
     }
 
-    void clear(int int_num, int index)
+    void
+    clear(int int_num, int index)
     {
         panic("Interrupts::clear unimplemented!\n");
     }
 
-    void clear_all()
+    void
+    clearAll()
     {
-        panic("Interrupts::clear_all unimplemented!\n");
+        panic("Interrupts::clearAll unimplemented!\n");
     }
 };
 
-};
+} // namespace X86ISA
 
 #endif // __ARCH_X86_INTERRUPTS_HH__

@@ -412,7 +412,7 @@ class FullO3CPU : public BaseO3CPU
 
 #if FULL_SYSTEM
     /** Posts an interrupt. */
-    void post_interrupt(int int_num, int index);
+    void postInterrupt(int int_num, int index);
 
     /** HW return from error interrupt. */
     Fault hwrei(unsigned tid);

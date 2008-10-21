@@ -379,21 +379,21 @@ BaseCPU::ProfileEvent::process()
 }
 
 void
-BaseCPU::post_interrupt(int int_num, int index)
+BaseCPU::postInterrupt(int int_num, int index)
 {
     interrupts->post(int_num, index);
 }
 
 void
-BaseCPU::clear_interrupt(int int_num, int index)
+BaseCPU::clearInterrupt(int int_num, int index)
 {
     interrupts->clear(int_num, index);
 }
 
 void
-BaseCPU::clear_interrupts()
+BaseCPU::clearInterrupts()
 {
-    interrupts->clear_all();
+    interrupts->clearAll();
 }
 
 void

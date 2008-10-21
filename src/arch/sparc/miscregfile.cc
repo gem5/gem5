@@ -542,9 +542,9 @@ void MiscRegFile::setReg(int miscReg,
         tl = val;
 #if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            tc->getCpuPtr()->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            tc->getCpuPtr()->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
 #endif
         return;
       case MISCREG_CWP:

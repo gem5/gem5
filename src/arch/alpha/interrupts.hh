@@ -101,7 +101,7 @@ class Interrupts : public SimObject
     }
 
     void
-    clear_all()
+    clearAll()
     {
         DPRINTF(Interrupt, "Interrupts all cleared\n");
 
@@ -124,7 +124,7 @@ class Interrupts : public SimObject
     }
 
     bool
-    check_interrupts(ThreadContext *tc) const
+    checkInterrupts(ThreadContext *tc) const
     {
         return (intstatus != 0) && !(tc->readPC() & 0x3);
     }

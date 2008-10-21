@@ -108,9 +108,7 @@ class BaseCPU : public MemObject
 
 #if FULL_SYSTEM
   protected:
-//    uint64_t interrupts[TheISA::NumInterruptLevels];
-//    uint64_t intstatus;
-    TheISA::Interrupts * interrupts;
+    TheISA::Interrupts *interrupts;
 
   public:
     TheISA::Interrupts *
@@ -119,12 +117,15 @@ class BaseCPU : public MemObject
         return interrupts;
     }
 
-    virtual void post_interrupt(int int_num, int index);
-    virtual void clear_interrupt(int int_num, int index);
-    virtual void clear_interrupts();
+    virtual void postInterrupt(int int_num, int index);
+    virtual void clearInterrupt(int int_num, int index);
+    virtual void clearInterrupts();
 
-    bool check_interrupts(ThreadContext * tc) const
-    { return interrupts->check_interrupts(tc); }
+    bool
+    checkInterrupts(ThreadContext *tc) const
+    {
+        return interrupts->checkInterrupts(tc);
+    }
 
     class ProfileEvent : public Event
     {

@@ -44,20 +44,20 @@ MiscRegFile::checkSoftInt(ThreadContext *tc)
 
     // If PIL < 14, copy over the tm and sm bits
     if (pil < 14 && softint & 0x10000)
-        cpu->post_interrupt(IT_SOFT_INT, 16);
+        cpu->postInterrupt(IT_SOFT_INT, 16);
     else
-        cpu->clear_interrupt(IT_SOFT_INT, 16);
+        cpu->clearInterrupt(IT_SOFT_INT, 16);
     if (pil < 14 && softint & 0x1)
-        cpu->post_interrupt(IT_SOFT_INT, 0);
+        cpu->postInterrupt(IT_SOFT_INT, 0);
     else
-        cpu->clear_interrupt(IT_SOFT_INT, 0);
+        cpu->clearInterrupt(IT_SOFT_INT, 0);
 
     // Copy over any of the other bits that are set
     for (int bit = 15; bit > 0; --bit) {
         if (1 << bit & softint && bit > pil)
-            cpu->post_interrupt(IT_SOFT_INT, bit);
+            cpu->postInterrupt(IT_SOFT_INT, bit);
         else
-            cpu->clear_interrupt(IT_SOFT_INT, bit);
+            cpu->clearInterrupt(IT_SOFT_INT, bit);
     }
 }
 
@@ -124,9 +124,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_HINTP:
         setRegNoEffect(miscReg, val);
         if (hintp)
-            cpu->post_interrupt(IT_HINTP, 0);
+            cpu->postInterrupt(IT_HINTP, 0);
         else
-            cpu->clear_interrupt(IT_HINTP, 0);
+            cpu->clearInterrupt(IT_HINTP, 0);
         break;
 
       case MISCREG_HTBA:
@@ -138,25 +138,25 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_QUEUE_CPU_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (cpu_mondo_head != cpu_mondo_tail)
-            cpu->post_interrupt(IT_CPU_MONDO, 0);
+            cpu->postInterrupt(IT_CPU_MONDO, 0);
         else
-            cpu->clear_interrupt(IT_CPU_MONDO, 0);
+            cpu->clearInterrupt(IT_CPU_MONDO, 0);
         break;
       case MISCREG_QUEUE_DEV_MONDO_HEAD:
       case MISCREG_QUEUE_DEV_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (dev_mondo_head != dev_mondo_tail)
-            cpu->post_interrupt(IT_DEV_MONDO, 0);
+            cpu->postInterrupt(IT_DEV_MONDO, 0);
         else
-            cpu->clear_interrupt(IT_DEV_MONDO, 0);
+            cpu->clearInterrupt(IT_DEV_MONDO, 0);
         break;
       case MISCREG_QUEUE_RES_ERROR_HEAD:
       case MISCREG_QUEUE_RES_ERROR_TAIL:
         setRegNoEffect(miscReg, val);
         if (res_error_head != res_error_tail)
-            cpu->post_interrupt(IT_RES_ERROR, 0);
+            cpu->postInterrupt(IT_RES_ERROR, 0);
         else
-            cpu->clear_interrupt(IT_RES_ERROR, 0);
+            cpu->clearInterrupt(IT_RES_ERROR, 0);
         break;
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
@@ -185,9 +185,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         setRegNoEffect(miscReg, val | HPSTATE::id);
 #if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            cpu->post_interrupt(IT_TRAP_LEVEL_ZERO, 0);
+            cpu->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
-            cpu->clear_interrupt(IT_TRAP_LEVEL_ZERO, 0);
+            cpu->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
 #endif
         break;
       case MISCREG_HTSTATE:

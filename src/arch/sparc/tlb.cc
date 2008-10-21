@@ -1021,7 +1021,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 dynamic_cast<SparcISA::Interrupts *>(
                         tc->getCpuPtr()->getInterruptController());
             temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
-            tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, temp);
+            tc->getCpuPtr()->clearInterrupt(IT_INT_VEC, temp);
             pkt->set(temp);
         }
         break;
@@ -1268,15 +1268,15 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
             SparcISA::Interrupts * interrupts =
                 dynamic_cast<SparcISA::Interrupts *>(
                         tc->getCpuPtr()->getInterruptController());
-            while(interrupts->get_vec(IT_INT_VEC) & data) {
+            while (interrupts->get_vec(IT_INT_VEC) & data) {
                 msb = findMsbSet(interrupts->get_vec(IT_INT_VEC) & data);
-                tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, msb);
+                tc->getCpuPtr()->clearInterrupt(IT_INT_VEC, msb);
             }
         }
         break;
       case ASI_SWVR_UDB_INTR_W:
             tc->getSystemPtr()->threadContexts[bits(data,12,8)]->getCpuPtr()->
-            post_interrupt(bits(data,5,0),0);
+            postInterrupt(bits(data, 5, 0), 0);
         break;
       default:
 doMmuWriteError:

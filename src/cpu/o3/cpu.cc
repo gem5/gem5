@@ -895,9 +895,9 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
 #if FULL_SYSTEM
 template <class Impl>
 void
-FullO3CPU<Impl>::post_interrupt(int int_num, int index)
+FullO3CPU<Impl>::postInterrupt(int int_num, int index)
 {
-    BaseCPU::post_interrupt(int_num, index);
+    BaseCPU::postInterrupt(int_num, index);
 
     if (this->thread[0]->status() == ThreadContext::Suspended) {
         DPRINTF(IPI,"Suspended Processor awoke\n");

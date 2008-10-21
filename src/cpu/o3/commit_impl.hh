@@ -665,7 +665,7 @@ DefaultCommit<Impl>::handleInterrupt()
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
     } else if (commitStatus[0] != TrapPending &&
-               cpu->check_interrupts(cpu->tcBase(0)) &&
+               cpu->checkInterrupts(cpu->tcBase(0)) &&
                !trapSquash[0] &&
                !tcSquash[0]) {
         // Process interrupts if interrupts are enabled, not in PAL
@@ -695,7 +695,7 @@ DefaultCommit<Impl>::commit()
     // Check for any interrupt, and start processing it.  Or if we
     // have an outstanding interrupt and are at a point when it is
     // valid to take an interrupt, process it.
-    if (cpu->check_interrupts(cpu->tcBase(0))) {
+    if (cpu->checkInterrupts(cpu->tcBase(0))) {
         handleInterrupt();
     }
 #endif // FULL_SYSTEM
