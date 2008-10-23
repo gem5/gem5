@@ -76,13 +76,13 @@ class BaseO3CPU : public BaseCPU
     void regStats();
 
     /** Sets this CPU's ID. */
-    void setCpuId(int id) { cpu_id = id; }
+    void setCpuId(int id) { cpuId = id; }
 
     /** Reads this CPU's ID. */
-    int readCpuId() { return cpu_id; }
+    int readCpuId() { return cpuId; }
 
   protected:
-    int cpu_id;
+    int cpuId;
 };
 
 /**

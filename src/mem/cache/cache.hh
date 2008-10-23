@@ -137,7 +137,7 @@ class Cache : public BaseCache
     BlkType *tempBlock;
 
     /**
-     * Can this cache should allocate a block on a line-sized write miss.
+     * This cache should allocate a block on a line-sized write miss.
      */
     const bool doFastWrites;
 
@@ -149,8 +149,7 @@ class Cache : public BaseCache
      * @param lat The latency of the access.
      * @param writebacks List for any writebacks that need to be performed.
      * @param update True if the replacement data should be updated.
-     * @return Pointer to the cache block touched by the request. NULL if it
-     * was a miss.
+     * @return Boolean indicating whether the request was satisfied.
      */
     bool access(PacketPtr pkt, BlkType *&blk,
                 int &lat, PacketList &writebacks);

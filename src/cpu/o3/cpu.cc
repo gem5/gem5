@@ -62,7 +62,7 @@ class BaseCPUParams;
 using namespace TheISA;
 
 BaseO3CPU::BaseO3CPU(BaseCPUParams *params)
-    : BaseCPU(params), cpu_id(0)
+    : BaseCPU(params), cpuId(0)
 {
 }
 
