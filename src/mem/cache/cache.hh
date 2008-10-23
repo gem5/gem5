@@ -172,7 +172,6 @@ class Cache : public BaseCache
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
-     * Used for Cache::probe.
      * @param pkt The memory request with the fill data.
      * @param blk The cache block if it already exists.
      * @param writebacks List for any writebacks that need to be performed.

@@ -165,14 +165,6 @@ public:
     void regStats(const std::string &name);
 
     /**
-     * Return true if the address is found in the cache.
-     * @param asid The address space ID.
-     * @param addr The address to look for.
-     * @return True if the address is in the cache.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Invalidate a cache block.
      * @param blk The block to invalidate.
      */

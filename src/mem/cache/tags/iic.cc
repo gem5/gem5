@@ -219,12 +219,6 @@ IIC::regStats(const string &name)
         ;
 }
 
-// probe cache for presence of given block.
-bool
-IIC::probe(Addr addr) const
-{
-    return (findBlock(addr) != NULL);
-}
 
 IICTag*
 IIC::findBlock(Addr addr, int &lat)

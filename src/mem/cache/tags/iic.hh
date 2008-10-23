@@ -385,14 +385,6 @@ class IIC : public BaseTags
     }
 
     /**
-     * Check for the address in the tagstore.
-     * @param asid The address space ID.
-     * @param addr The address to find.
-     * @return true if it is found.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Swap the position of two tags.
      * @param index1 The first tag location.
      * @param index2 The second tag location.

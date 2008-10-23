@@ -144,14 +144,6 @@ FALRU::hashLookup(Addr addr) const
     return NULL;
 }
 
-bool
-FALRU::probe(Addr addr) const
-{
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = hashLookup(blkAddr);
-    return blk && blk->tag == blkAddr && blk->isValid();
-}
-
 void
 FALRU::invalidateBlk(FALRU::BlkType *blk)
 {

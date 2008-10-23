@@ -154,14 +154,6 @@ public:
     }
 
     /**
-     * Search for the address in the cache.
-     * @param asid The address space ID.
-     * @param addr The address to find.
-     * @return True if the address is in the cache.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */

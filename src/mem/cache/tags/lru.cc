@@ -150,19 +150,6 @@ LRU::~LRU()
     delete [] sets;
 }
 
-// probe cache for presence of given block.
-bool
-LRU::probe(Addr addr) const
-{
-    //  return(findBlock(Read, addr, asid) != 0);
-    Addr tag = extractTag(addr);
-    unsigned myset = extractSet(addr);
-
-    LRUBlk *blk = sets[myset].findBlk(tag);
-
-    return (blk != NULL);       // true if in cache
-}
-
 LRUBlk*
 LRU::findBlock(Addr addr, int &lat)
 {
