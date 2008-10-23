@@ -38,8 +38,6 @@ class BaseCache(MemObject):
     block_size = Param.Int("block size in bytes")
     latency = Param.Latency("Latency")
     hash_delay = Param.Int(1, "time in cycles of hash access")
-    lifo = Param.Bool(False,
-        "whether this NIC partition should use LIFO repl. policy")
     max_miss_count = Param.Counter(0,
         "number of misses to handle before calling exit")
     mshrs = Param.Int("number of MSHRs (max outstanding requests)")
@@ -47,9 +45,6 @@ class BaseCache(MemObject):
         "always service demand misses first")
     repl = Param.Repl(NULL, "replacement policy")
     size = Param.MemorySize("capacity in bytes")
-    split = Param.Bool(False, "whether or not this cache is split")
-    split_size = Param.Int(0,
-        "How many ways of the cache belong to CPU/LRU partition")
     subblock_size = Param.Int(0,
         "Size of subblock in IIC used for compression")
     tgts_per_mshr = Param.Int("max number of accesses per MSHR")

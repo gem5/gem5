@@ -57,14 +57,6 @@
 #include "mem/cache/tags/iic.hh"
 #endif
 
-#if defined(USE_CACHE_SPLIT)
-#include "mem/cache/tags/split.hh"
-#endif
-
-#if defined(USE_CACHE_SPLIT_LIFO)
-#include "mem/cache/tags/split_lifo.hh"
-#endif
-
 //Prefetcher Headers
 #if defined(USE_GHB)
 #include "mem/cache/prefetch/ghb.hh"
@@ -122,26 +114,6 @@ using namespace TheISA;
 #define BUILD_LRU_CACHE BUILD_CACHE_PANIC("lru cache")
 #endif
 
-#if defined(USE_CACHE_SPLIT)
-#define BUILD_SPLIT_CACHE do {                                                \
-        Split *tags = new Split(numSets, block_size, assoc, split_size, lifo, \
-                                two_queue, latency);                          \
-        BUILD_CACHE(Split, tags);                                             \
-    } while (0)
-#else
-#define BUILD_SPLIT_CACHE BUILD_CACHE_PANIC("split cache")
-#endif
-
-#if defined(USE_CACHE_SPLIT_LIFO)
-#define BUILD_SPLIT_LIFO_CACHE do {                                     \
-        SplitLIFO *tags = new SplitLIFO(block_size, size, assoc,        \
-                                        latency, two_queue, -1);        \
-        BUILD_CACHE(SplitLIFO, tags);                                   \
-    } while (0)
-#else
-#define BUILD_SPLIT_LIFO_CACHE BUILD_CACHE_PANIC("lifo cache")
-#endif
-
 #if defined(USE_CACHE_IIC)
 #define BUILD_IIC_CACHE do {                            \
         IIC *tags = new IIC(iic_params);                \
@@ -156,13 +128,7 @@ using namespace TheISA;
             if (numSets == 1) {                         \
                 BUILD_FALRU_CACHE;                      \
             } else {                                    \
-                if (split == true) {                    \
-                    BUILD_SPLIT_CACHE;                  \
-                } else if (lifo == true) {              \
-                    BUILD_SPLIT_LIFO_CACHE;             \
-                } else {                                \
-                    BUILD_LRU_CACHE;                    \
-                }                                       \
+               BUILD_LRU_CACHE;                    \
             }                                           \
         } else {                                        \
             BUILD_IIC_CACHE;                            \
