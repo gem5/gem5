@@ -369,8 +369,11 @@ else:
 # Do this after we save setting back, or else we'll tack on an
 # extra 'qdo' every time we run scons.
 if env['BATCH']:
-    env['CC']  = env['BATCH_CMD'] + ' ' + env['CC']
-    env['CXX'] = env['BATCH_CMD'] + ' ' + env['CXX']
+    env['CC']     = env['BATCH_CMD'] + ' ' + env['CC']
+    env['CXX']    = env['BATCH_CMD'] + ' ' + env['CXX']
+    env['AS']     = env['BATCH_CMD'] + ' ' + env['AS']
+    env['AR']     = env['BATCH_CMD'] + ' ' + env['AR']
+    env['RANLIB'] = env['BATCH_CMD'] + ' ' + env['RANLIB']
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
