@@ -105,7 +105,7 @@ TimingSimpleCPU::CpuPort::TickEvent::schedule(PacketPtr _pkt, Tick t)
 }
 
 TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
-    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock)
+    : BaseSimpleCPU(p), icachePort(this, p->clock), dcachePort(this, p->clock), fetchEvent(this)
 {
     _status = Idle;
 
@@ -114,7 +114,6 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
 
     ifetch_pkt = dcache_pkt = NULL;
     drainEvent = NULL;
-    fetchEvent = NULL;
     previousTick = 0;
     changeState(SimObject::Running);
 }
@@ -162,15 +161,10 @@ TimingSimpleCPU::resume()
     if (_status != SwitchedOut && _status != Idle) {
         assert(system->getMemoryMode() == Enums::timing);
 
-        // Delete the old event if it existed.
-        if (fetchEvent) {
-            if (fetchEvent->scheduled())
-                deschedule(fetchEvent);
+        if (fetchEvent.scheduled())
+           deschedule(fetchEvent);
 
-            delete fetchEvent;
-        }
-
-        fetchEvent = new FetchEvent(this, nextCycle());
+        schedule(fetchEvent, nextCycle());
     }
 
     changeState(SimObject::Running);
@@ -185,7 +179,7 @@ TimingSimpleCPU::switchOut()
 
     // If we've been scheduled to resume but are then told to switch out,
     // we'll need to cancel it.
-    if (fetchEvent && fetchEvent->scheduled())
+    if (fetchEvent.scheduled())
         deschedule(fetchEvent);
 }
 
@@ -228,7 +222,6 @@ TimingSimpleCPU::activateContext(int thread_num, int delay)
     _status = Running;
 
     // kick things off by initiating the fetch of the next instruction
-    fetchEvent = new FetchEvent(this);
     schedule(fetchEvent, nextCycle(curTick + ticks(delay)));
 }
 

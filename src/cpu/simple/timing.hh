@@ -192,7 +192,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
   private:
 
     typedef EventWrapper<TimingSimpleCPU, &TimingSimpleCPU::fetch> FetchEvent;
-    FetchEvent *fetchEvent;
+    FetchEvent fetchEvent;
 
     struct IprEvent : Event {
         Packet *pkt;
