@@ -46,7 +46,7 @@ class PythonEvent : public Event
     virtual void process();
 };
 
-Event *createCountedDrain();
+CountedDrainEvent *createCountedDrain();
 void cleanupCountedDrain(Event *counted_drain);
 
 #endif // __PYTHON_SWIG_PYEVENT_HH__

@@ -67,7 +67,7 @@ PythonEvent::process()
     }
 }
 
-Event *
+CountedDrainEvent *
 createCountedDrain()
 {
     return new CountedDrainEvent();
