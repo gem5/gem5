@@ -82,7 +82,7 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setCpuId(id);
     }
 
-    int readCpuId() { return actualTC->readCpuId(); }
+    int cpuId() { return actualTC->cpuId(); }
 
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 

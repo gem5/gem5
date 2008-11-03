@@ -219,7 +219,7 @@ class System : public SimObject
 
 #endif // FULL_SYSTEM
 
-    int registerThreadContext(ThreadContext *tc, int tcIndex);
+    int registerThreadContext(ThreadContext *tc);
     void replaceThreadContext(ThreadContext *tc, int tcIndex);
 
     void serialize(std::ostream &os);

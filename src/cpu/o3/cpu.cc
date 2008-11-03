@@ -62,7 +62,7 @@ class BaseCPUParams;
 using namespace TheISA;
 
 BaseO3CPU::BaseO3CPU(BaseCPUParams *params)
-    : BaseCPU(params), cpuId(0)
+    : BaseCPU(params)
 {
 }
 
@@ -404,7 +404,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 #endif
         // Give the thread the TC.
         this->thread[i]->tc = tc;
-        this->thread[i]->setCpuId(params->cpu_id);
 
         // Add the TC to the CPU's list of TC's.
         this->threadContexts.push_back(tc);
@@ -611,7 +610,7 @@ FullO3CPU<Impl>::init()
         }
 
 #if FULL_SYSTEM
-        TheISA::initCPU(src_tc, src_tc->readCpuId());
+        TheISA::initCPU(src_tc, src_tc->cpuId());
 #endif
     }
 

@@ -116,10 +116,6 @@ class OzoneCPU : public BaseCPU
 
         BaseCPU *getCpuPtr();
 
-        void setCpuId(int id);
-
-        int readCpuId() { return thread->readCpuId(); }
-
         TheISA::ITB *getITBPtr() { return cpu->itb; }
 
         TheISA::DTB * getDTBPtr() { return cpu->dtb; }
@@ -352,12 +348,6 @@ class OzoneCPU : public BaseCPU
 
   public:
     BaseCPU *getCpuPtr() { return this; }
-
-    void setCpuId(int id) { cpuId = id; }
-
-    int readCpuId() { return cpuId; }
-
-    int cpuId;
 
     void switchOut();
     void signalSwitched();

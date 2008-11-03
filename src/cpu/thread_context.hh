@@ -115,9 +115,7 @@ class ThreadContext
 
     virtual BaseCPU *getCpuPtr() = 0;
 
-    virtual void setCpuId(int id) = 0;
-
-    virtual int readCpuId() = 0;
+    virtual int cpuId() = 0;
 
     virtual TheISA::ITB *getITBPtr() = 0;
 
@@ -300,9 +298,7 @@ class ProxyThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    void setCpuId(int id) { actualTC->setCpuId(id); }
-
-    int readCpuId() { return actualTC->readCpuId(); }
+    int cpuId() { return actualTC->cpuId(); }
 
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 

@@ -34,6 +34,7 @@
 #include "arch/types.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
+#include "cpu/base.hh"
 
 #if !FULL_SYSTEM
 #include "mem/mem_object.hh"
@@ -51,7 +52,6 @@ namespace TheISA {
 };
 #endif
 
-class BaseCPU;
 class Checkpoint;
 class Port;
 class TranslatingPort;
@@ -66,9 +66,9 @@ struct ThreadState {
     typedef ThreadContext::Status Status;
 
 #if FULL_SYSTEM
-    ThreadState(BaseCPU *cpu, int _cpuId, int _tid);
+    ThreadState(BaseCPU *cpu, int _tid);
 #else
-    ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+    ThreadState(BaseCPU *cpu, int _tid, Process *_process,
                 short _asid);
 #endif
 
@@ -78,9 +78,7 @@ struct ThreadState {
 
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    void setCpuId(int id) { cpuId = id; }
-
-    int readCpuId() { return cpuId; }
+    int cpuId() { return baseCpu->cpuId(); }
 
     void setTid(int id) { tid = id; }
 
@@ -170,10 +168,6 @@ struct ThreadState {
 
     // Pointer to the base CPU.
     BaseCPU *baseCpu;
-
-    // ID of this context w.r.t. the System or Process object to which
-    // it belongs.  For full-system mode, this is the system CPU ID.
-    int cpuId;
 
     // Index of hardware thread context on the CPU that this represents.
     int tid;

@@ -74,8 +74,8 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     if (npc1 != npc2)
         panic("NPCs doesn't match, one: %#x, two: %#x", npc1, npc2);
 
-    int id1 = one->readCpuId();
-    int id2 = two->readCpuId();
+    int id1 = one->cpuId();
+    int id2 = two->cpuId();
     if (id1 != id2)
         panic("CPU ids don't match, one: %d, two: %d", id1, id2);
 }

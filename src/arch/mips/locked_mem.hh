@@ -85,7 +85,7 @@ handleLockedWrite(XC *xc, Request *req)
             if (stCondFailures % 10 == 0) {
                 warn("%i: cpu %d: %d consecutive "
                      "store conditional failures\n",
-                     curTick, xc->readCpuId(), stCondFailures);
+                     curTick, xc->cpuId(), stCondFailures);
             }
 
             if (stCondFailures == 5000) {

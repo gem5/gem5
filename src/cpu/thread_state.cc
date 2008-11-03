@@ -43,15 +43,15 @@
 #endif
 
 #if FULL_SYSTEM
-ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid)
-    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+ThreadState::ThreadState(BaseCPU *cpu, int _tid)
+    : baseCpu(cpu), tid(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), physPort(NULL), virtPort(NULL),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+ThreadState::ThreadState(BaseCPU *cpu, int _tid, Process *_process,
                          short _asid)
-    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+    : baseCpu(cpu), tid(_tid), lastActivate(0), lastSuspend(0),
       port(NULL), process(_process), asid(_asid),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif

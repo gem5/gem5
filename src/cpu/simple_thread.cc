@@ -63,7 +63,7 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::ITB *_itb, TheISA::DTB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(_cpu, -1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
+    : ThreadState(_cpu, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)
 
 {
@@ -93,7 +93,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
                            TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid)
-    : ThreadState(_cpu, -1, _thread_num, _process, _asid),
+    : ThreadState(_cpu, _thread_num, _process, _asid),
       cpu(_cpu), itb(_itb), dtb(_dtb)
 {
     regs.clear();
@@ -104,9 +104,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
 
 SimpleThread::SimpleThread()
 #if FULL_SYSTEM
-    : ThreadState(NULL, -1, -1)
+    : ThreadState(NULL, -1)
 #else
-    : ThreadState(NULL, -1, -1, NULL, -1)
+    : ThreadState(NULL, -1, NULL, -1)
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -178,7 +178,6 @@ SimpleThread::copyState(ThreadContext *oldContext)
     // copy over functional state
     _status = oldContext->status();
     copyArchRegs(oldContext);
-    cpuId = oldContext->readCpuId();
 #if !FULL_SYSTEM
     funcExeInst = oldContext->readFuncExeInst();
 #endif

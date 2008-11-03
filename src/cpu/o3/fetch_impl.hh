@@ -593,7 +593,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // Set the appropriate read size and flags as well.
     // Build request here.
     RequestPtr mem_req = new Request(tid, block_PC, cacheBlkSize, 0,
-                                     fetch_PC, cpu->readCpuId(), tid);
+                                     fetch_PC, cpu->cpuId(), tid);
 
     memReq[tid] = mem_req;
 

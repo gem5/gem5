@@ -87,7 +87,7 @@ handleLockedWrite(XC *xc, Request *req)
             if (stCondFailures % 100000 == 0) {
                 warn("cpu %d: %d consecutive "
                      "store conditional failures\n",
-                     xc->readCpuId(), stCondFailures);
+                     xc->cpuId(), stCondFailures);
             }
 
             // store conditional failed already, so don't issue it to mem

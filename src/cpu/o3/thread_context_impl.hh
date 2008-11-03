@@ -63,7 +63,6 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     // copy over functional state
     setStatus(old_context->status());
     copyArchRegs(old_context);
-    setCpuId(old_context->readCpuId());
 
 #if !FULL_SYSTEM
     thread->funcExeInst = old_context->readFuncExeInst();

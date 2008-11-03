@@ -75,11 +75,8 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to this CPU. */
     virtual BaseCPU *getCpuPtr() { return cpu; }
 
-    /** Sets this CPU's ID. */
-    virtual void setCpuId(int id) { cpu->setCpuId(id); }
-
     /** Reads this CPU's ID. */
-    virtual int readCpuId() { return cpu->readCpuId(); }
+    virtual int cpuId() { return cpu->cpuId(); }
 
 #if FULL_SYSTEM
     /** Returns a pointer to the system. */

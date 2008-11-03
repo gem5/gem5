@@ -121,7 +121,6 @@ class BaseSimpleCPU : public BaseCPU
      */
     ThreadContext *tc;
   protected:
-    int cpuId;
 
     enum Status {
         Idle,

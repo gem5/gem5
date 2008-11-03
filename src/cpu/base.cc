@@ -94,20 +94,28 @@ CPUProgressEvent::description() const
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p), clock(p->clock), instCnt(0), interrupts(p->interrupts),
+    : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
+      interrupts(p->interrupts),
       number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(p), clock(p->clock),
+    : MemObject(p), clock(p->clock), _cpuId(p->cpu_id),
       number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #endif
 {
 //    currentTick = curTick;
 
+    // if Python did not provide a valid ID, do it here
+    if (_cpuId == -1 ) {
+        _cpuId = cpuList.size();
+    }
+
     // add self to global list of CPUs
     cpuList.push_back(this);
+
+    DPRINTF(SyscallVerbose, "Constructing CPU with id %d\n", _cpuId);
 
     if (number_of_threads > maxThreadsPerCPU)
         maxThreadsPerCPU = number_of_threads;
@@ -278,13 +286,9 @@ BaseCPU::registerThreadContexts()
         ThreadContext *tc = threadContexts[i];
 
 #if FULL_SYSTEM
-        int id = params()->cpu_id;
-        if (id != -1)
-            id += i;
-
-        tc->setCpuId(system->registerThreadContext(tc, id));
+        system->registerThreadContext(tc);
 #else
-        tc->setCpuId(tc->getProcessPtr()->registerThreadContext(tc));
+        tc->getProcessPtr()->registerThreadContext(tc);
 #endif
     }
 }
@@ -315,6 +319,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
 
+    _cpuId = oldCPU->cpuId();
+
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *newTC = threadContexts[i];
         ThreadContext *oldTC = oldCPU->threadContexts[i];
@@ -323,12 +329,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
         CpuEvent::replaceThreadContext(oldTC, newTC);
 
-        assert(newTC->readCpuId() == oldTC->readCpuId());
+        assert(newTC->cpuId() == oldTC->cpuId());
 #if FULL_SYSTEM
-        system->replaceThreadContext(newTC, newTC->readCpuId());
+        system->replaceThreadContext(newTC, newTC->cpuId());
 #else
         assert(newTC->getProcessPtr() == oldTC->getProcessPtr());
-        newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
+        newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->cpuId());
 #endif
 
         if (DTRACE(Context))

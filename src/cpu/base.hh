@@ -80,8 +80,16 @@ class BaseCPU : public MemObject
     Tick clock;
     // @todo remove me after debugging with legion done
     Tick instCnt;
+    // every cpu has an id, put it in the base cpu
+    // Set at initialization, only time a cpuId might change is during a
+    // takeover (which should be done from within the BaseCPU anyway, 
+    // therefore no setCpuId() method is provided
+    int _cpuId;
 
   public:
+    /** Reads this CPU's ID. */
+    int cpuId() { return _cpuId; }
+
 //    Tick currentTick;
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick ticks(int numCycles) const { return clock * numCycles; }

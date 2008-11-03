@@ -57,13 +57,12 @@ void
 TimingSimpleCPU::init()
 {
     BaseCPU::init();
-    cpuId = tc->readCpuId();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, cpuId);
+        TheISA::initCPU(tc, _cpuId);
     }
 #endif
 }
@@ -203,7 +202,7 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
-    cpuId = tc->readCpuId();
+    _cpuId = tc->cpuId();
     previousTick = curTick;
 }
 
@@ -250,7 +249,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    cpuId, /* thread ID */ 0);
+                    _cpuId, /* thread ID */ 0);
 
     if (traceData) {
         traceData->setAddr(req->getVaddr());
@@ -301,7 +300,7 @@ TimingSimpleCPU::translateDataReadAddr(Addr vaddr, Addr &paddr,
         int size, unsigned flags)
 {
     Request *req =
-        new Request(0, vaddr, size, flags, thread->readPC(), cpuId, 0);
+        new Request(0, vaddr, size, flags, thread->readPC(), _cpuId, 0);
 
     if (traceData) {
         traceData->setAddr(vaddr);
@@ -373,7 +372,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     Request *req =
         new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    cpuId, /* thread ID */ 0);
+                    _cpuId, /* thread ID */ 0);
 
     if (traceData) {
         traceData->setAddr(req->getVaddr());
@@ -442,7 +441,7 @@ TimingSimpleCPU::translateDataWriteAddr(Addr vaddr, Addr &paddr,
         int size, unsigned flags)
 {
     Request *req =
-        new Request(0, vaddr, size, flags, thread->readPC(), cpuId, 0);
+        new Request(0, vaddr, size, flags, thread->readPC(), _cpuId, 0);
 
     if (traceData) {
         traceData->setAddr(vaddr);
@@ -528,7 +527,7 @@ TimingSimpleCPU::fetch()
 
     if (!fromRom) {
         Request *ifetch_req = new Request();
-        ifetch_req->setThreadContext(cpuId, /* thread ID */ 0);
+        ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         Fault fault = setupFetchRequest(ifetch_req);
 
         ifetch_pkt = new Packet(ifetch_req, MemCmd::ReadReq, Packet::Broadcast);

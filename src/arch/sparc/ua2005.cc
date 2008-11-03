@@ -257,11 +257,11 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
         temp = readRegNoEffect(miscReg) & (STS::active | STS::speculative);
         // Check that the CPU array is fully populated
         // (by calling getNumCPus())
-        assert(sys->getNumCPUs() > tc->readCpuId());
+        assert(sys->getNumCPUs() > tc->cpuId());
 
-        temp |= tc->readCpuId()  << STS::shft_id;
+        temp |= tc->cpuId()  << STS::shft_id;
 
-        for (x = tc->readCpuId() & ~3; x < sys->threadContexts.size(); x++) {
+        for (x = tc->cpuId() & ~3; x < sys->threadContexts.size(); x++) {
             switch (sys->threadContexts[x]->status()) {
               case ThreadContext::Active:
                 temp |= STS::st_run << (STS::shft_fsm0 -

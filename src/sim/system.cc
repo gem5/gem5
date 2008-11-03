@@ -166,13 +166,12 @@ bool System::breakpoint()
 }
 
 int
-System::registerThreadContext(ThreadContext *tc, int id)
+System::registerThreadContext(ThreadContext *tc)
 {
-    if (id == -1) {
-        for (id = 0; id < threadContexts.size(); id++) {
-            if (!threadContexts[id])
-                break;
-        }
+    int id;
+    for (id = 0; id < threadContexts.size(); id++) {
+        if (!threadContexts[id])
+            break;
     }
 
     if (threadContexts.size() <= id)

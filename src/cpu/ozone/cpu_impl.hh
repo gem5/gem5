@@ -417,7 +417,7 @@ OzoneCPU<Impl>::init()
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, tc->readCpuId());
+        TheISA::initCPU(tc, tc->cpuId());
     }
 #endif
     frontEnd->renameTable.copyFrom(thread.renameTable);
@@ -803,7 +803,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     // copy over functional state
     setStatus(old_context->status());
     copyArchRegs(old_context);
-    setCpuId(old_context->readCpuId());
+    setCpuId(old_context->cpuId());
 
     thread->setInst(old_context->getInst());
 #if !FULL_SYSTEM
