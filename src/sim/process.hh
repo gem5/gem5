@@ -77,7 +77,7 @@ class Process : public SimObject
     bool checkpointRestored;
 
     // thread contexts associated with this process
-    std::vector<ThreadContext *> threadContexts;
+    std::vector<int> contextIds;
 
     // remote gdb objects
     std::vector<TheISA::RemoteGDB *> remoteGDB;
@@ -85,7 +85,7 @@ class Process : public SimObject
     bool breakpoint();
 
     // number of CPUs (esxec contexts, really) assigned to this process.
-    unsigned int numCpus() { return threadContexts.size(); }
+    unsigned int numCpus() { return contextIds.size(); }
 
     // record of blocked context
     struct WaitRec
@@ -187,12 +187,15 @@ class Process : public SimObject
     // override of virtual SimObject method: register statistics
     virtual void regStats();
 
-    // register a thread context for this process.
-    // returns tc's cpu number (index into threadContexts[])
-    int registerThreadContext(ThreadContext *tc);
+    // After getting registered with system object, tell process which
+    // system-wide context id it is assigned.
+    void assignThreadContext(int context_id)
+    {
+        contextIds.push_back(context_id);
+    }
 
-
-    void replaceThreadContext(ThreadContext *tc, int tcIndex);
+    // Find a free context to use
+    ThreadContext * findFreeContext();
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);

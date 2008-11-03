@@ -208,22 +208,24 @@ System::registerThreadContext(ThreadContext *tc)
 void
 System::startup()
 {
+#if FULL_SYSTEM
     int i;
     for (i = 0; i < threadContexts.size(); i++)
         TheISA::startupCPU(threadContexts[i], i);
+#endif
 }
 
 void
-System::replaceThreadContext(ThreadContext *tc, int id)
+System::replaceThreadContext(ThreadContext *tc, int context_id)
 {
-    if (id >= threadContexts.size()) {
+    if (context_id >= threadContexts.size()) {
         panic("replaceThreadContext: bad id, %d >= %d\n",
-              id, threadContexts.size());
+              context_id, threadContexts.size());
     }
 
-    threadContexts[id] = tc;
-    if (id < remoteGDB.size())
-        remoteGDB[id]->replaceThreadContext(tc);
+    threadContexts[context_id] = tc;
+    if (context_id < remoteGDB.size())
+        remoteGDB[context_id]->replaceThreadContext(tc);
 }
 
 #if !FULL_SYSTEM

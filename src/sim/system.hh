@@ -89,6 +89,11 @@ class System : public SimObject
     std::vector<ThreadContext *> threadContexts;
     int numcpus;
 
+    ThreadContext * getThreadContext(int tid)
+    {
+        return threadContexts[tid];
+    }
+
     int getNumCPUs()
     {
         if (numcpus != threadContexts.size())
@@ -220,7 +225,7 @@ class System : public SimObject
 #endif // FULL_SYSTEM
 
     int registerThreadContext(ThreadContext *tc);
-    void replaceThreadContext(ThreadContext *tc, int tcIndex);
+    void replaceThreadContext(ThreadContext *tc, int context_id);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

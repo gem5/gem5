@@ -204,35 +204,29 @@ Process::openOutputFile(const string &filename)
     return fd;
 }
 
-
-int
-Process::registerThreadContext(ThreadContext *tc)
+ThreadContext *
+Process::findFreeContext()
 {
-    // add to list
-    int myIndex = threadContexts.size();
-    threadContexts.push_back(tc);
-
-    int port = getRemoteGDBPort();
-    if (port) {
-        RemoteGDB *rgdb = new RemoteGDB(system, tc);
-        GDBListener *gdbl = new GDBListener(rgdb, port + myIndex);
-        gdbl->listen();
-
-        remoteGDB.push_back(rgdb);
+    int size = contextIds.size();
+    ThreadContext *tc;
+    for (int i = 0; i < size; ++i) {
+        tc = system->getThreadContext(contextIds[i]);
+        if (tc->status() == ThreadContext::Unallocated) {
+            // inactive context, free to use
+            return tc;
+        }
     }
-
-    // return CPU number to caller
-    return myIndex;
+    return NULL;
 }
 
 void
 Process::startup()
 {
-    if (threadContexts.empty())
-        fatal("Process %s is not associated with any CPUs!\n", name());
+    if (contextIds.empty())
+        fatal("Process %s is not associated with any HW contexts!\n", name());
 
     // first thread context for this process... initialize & enable
-    ThreadContext *tc = threadContexts[0];
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     // mark this context as active so it will start ticking.
     tc->activate(0);
@@ -243,17 +237,6 @@ Process::startup()
             TranslatingPort::Always);
     mem_port->setPeer(initVirtMem);
     initVirtMem->setPeer(mem_port);
-}
-
-void
-Process::replaceThreadContext(ThreadContext *tc, int tcIndex)
-{
-    if (tcIndex >= threadContexts.size()) {
-        panic("replaceThreadContext: bad tcIndex, %d >= %d\n",
-              tcIndex, threadContexts.size());
-    }
-
-    threadContexts[tcIndex] = tc;
 }
 
 // map simulator fd sim_fd to target fd tgt_fd
@@ -624,16 +607,19 @@ LiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
     assert(NumArgumentRegs >= 2);
-    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
-    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
-    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
+
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+
+    tc->setIntReg(ArgumentReg[0], argc);
+    tc->setIntReg(ArgumentReg[1], argv_array_base);
+    tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
-    threadContexts[0]->setPC(prog_entry);
-    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    tc->setPC(prog_entry);
+    tc->setNextPC(prog_entry + sizeof(MachInst));
 
 #if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
-    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 #endif
 
     num_processes++;

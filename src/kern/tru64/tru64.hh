@@ -789,21 +789,18 @@ class Tru64 : public OperatingSystem
             slot_state.copyOut(tc->getMemPort());
 
             // Find a free simulator thread context.
-            for (int i = 0; i < process->numCpus(); ++i) {
-                ThreadContext *tc = process->threadContexts[i];
+            ThreadContext *tc = process->findFreeContext();
+            if (tc) {
+                // inactive context... grab it
+                init_thread_context(tc, attrp, uniq_val);
 
-                if (tc->status() == ThreadContext::Unallocated) {
-                    // inactive context... grab it
-                    init_thread_context(tc, attrp, uniq_val);
+                // This is supposed to be a port number, but we'll try
+                // and get away with just sticking the thread index
+                // here.
+                *kidp = htog(thread_index);
+                kidp.copyOut(tc->getMemPort());
 
-                    // This is supposed to be a port number, but we'll try
-                    // and get away with just sticking the thread index
-                    // here.
-                    *kidp = htog(thread_index);
-                    kidp.copyOut(tc->getMemPort());
-
-                    return 0;
-                }
+                return 0;
             }
 
             // fell out of loop... no available inactive context

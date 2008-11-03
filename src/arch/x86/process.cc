@@ -146,8 +146,8 @@ X86LiveProcess::startup()
 
     argsInit(sizeof(IntReg), VMPageSize);
 
-    for (int i = 0; i < threadContexts.size(); i++) {
-        ThreadContext * tc = threadContexts[i];
+    for (int i = 0; i < contextIds.size(); i++) {
+        ThreadContext * tc = system->getThreadContext(contextIds[i]);
 
         SegAttr dataAttr = 0;
         dataAttr.writable = 1;
@@ -458,14 +458,15 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
 
     initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register
-    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
+    tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
     // There doesn't need to be any segment base added in since we're dealing
     // with the flat segmentation model.
-    threadContexts[0]->setPC(prog_entry);
-    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    tc->setPC(prog_entry);
+    tc->setNextPC(prog_entry + sizeof(MachInst));
 
     //Align the "stack_min" to a page boundary.
     stack_min = roundDown(stack_min, pageSize);

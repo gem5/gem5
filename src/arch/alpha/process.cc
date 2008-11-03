@@ -67,12 +67,13 @@ AlphaLiveProcess::startup()
 
     argsInit(MachineBytes, VMPageSize);
 
-    threadContexts[0]->setIntReg(GlobalPointerReg, objFile->globalPointer());
-    //Opperate in user mode
-    threadContexts[0]->setMiscRegNoEffect(IPR_ICM, 0x18);
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    tc->setIntReg(GlobalPointerReg, objFile->globalPointer());
+    //Operate in user mode
+    tc->setMiscRegNoEffect(IPR_ICM, 0x18);
     //No super page mapping
-    threadContexts[0]->setMiscRegNoEffect(IPR_MCSR, 0);
+    tc->setMiscRegNoEffect(IPR_MCSR, 0);
     //Set this to 0 for now, but it should be unique for each process
-    threadContexts[0]->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
+    tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
 }
 
