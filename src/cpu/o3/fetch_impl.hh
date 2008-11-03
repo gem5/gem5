@@ -362,7 +362,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 {
-    unsigned tid = pkt->req->getThreadNum();
+    unsigned tid = pkt->req->threadId();
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n",tid);
 
@@ -593,7 +593,8 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // Set the appropriate read size and flags as well.
     // Build request here.
     RequestPtr mem_req = new Request(tid, block_PC, cacheBlkSize, 0,
-                                     fetch_PC, cpu->cpuId(), tid);
+                                     fetch_PC, cpu->thread[tid]->contextId(),
+                                     tid);
 
     memReq[tid] = mem_req;
 

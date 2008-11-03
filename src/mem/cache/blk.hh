@@ -108,18 +108,16 @@ class CacheBlk
      */
     class Lock {
       public:
-        int cpuNum;     // locking CPU
-        int threadNum;  // locking thread ID within CPU
+        int contextId;     // locking context
 
         // check for matching execution context
         bool matchesContext(Request *req)
         {
-            return (cpuNum == req->getCpuNum() &&
-                    threadNum == req->getThreadNum());
+            return (contextId == req->contextId());
         }
 
         Lock(Request *req)
-            : cpuNum(req->getCpuNum()), threadNum(req->getThreadNum())
+            : contextId(req->contextId())
         {
         }
     };

@@ -115,10 +115,10 @@ class Request : public FastAlloc
      * store conditional or the compare value for a CAS. */
     uint64_t extraData;
 
-    /** The cpu number (for statistics, typically). */
-    int cpuNum;
-    /** The requesting thread id (for statistics, typically). */
-    int  threadNum;
+    /** The context ID (for statistics, typically). */
+    int _contextId;
+    /** The thread ID (id within this CPU) */
+    int _threadId;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr pc;
@@ -129,8 +129,8 @@ class Request : public FastAlloc
     bool validAsidVaddr;
     /** Whether or not the sc result is valid. */
     bool validExData;
-    /** Whether or not the cpu number & thread ID are valid. */
-    bool validCpuAndThreadNums;
+    /** Whether or not the context ID is valid. */
+    bool validContextAndThreadIds;
     /** Whether or not the pc is valid. */
     bool validPC;
 
@@ -138,7 +138,7 @@ class Request : public FastAlloc
     /** Minimal constructor.  No fields are initialized. */
     Request()
         : validPaddr(false), validAsidVaddr(false),
-          validExData(false), validCpuAndThreadNums(false), validPC(false)
+          validExData(false), validContextAndThreadIds(false), validPC(false)
     {}
 
     /**
@@ -146,13 +146,13 @@ class Request : public FastAlloc
      * just physical address, size, flags, and timestamp (to curTick).
      * These fields are adequate to perform a request.  */
     Request(Addr _paddr, int _size, int _flags)
-        : validCpuAndThreadNums(false)
+        : validContextAndThreadIds(false)
     { setPhys(_paddr, _size, _flags); }
 
     Request(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc,
-            int _cpuNum, int _threadNum)
+            int _context_id, int _thread_id)
     {
-        setThreadContext(_cpuNum, _threadNum);
+        setThreadContext(_context_id, _thread_id);
         setVirt(_asid, _vaddr, _size, _flags, _pc);
     }
 
@@ -160,11 +160,11 @@ class Request : public FastAlloc
 
     /**
      * Set up CPU and thread numbers. */
-    void setThreadContext(int _cpuNum, int _threadNum)
+    void setThreadContext(int _context_id, int _thread_id)
     {
-        cpuNum = _cpuNum;
-        threadNum = _threadNum;
-        validCpuAndThreadNums = true;
+        _contextId = _context_id;
+        _threadId = _thread_id;
+        validContextAndThreadIds = true;
     }
 
     /**
@@ -261,10 +261,10 @@ class Request : public FastAlloc
     void setExtraData(uint64_t _extraData)
     { extraData = _extraData; validExData = true; }
 
-    /** Accessor function for cpu number.*/
-    int getCpuNum() { assert(validCpuAndThreadNums); return cpuNum; }
-    /** Accessor function for thread number.*/
-    int getThreadNum()  { assert(validCpuAndThreadNums); return threadNum; }
+    /** Accessor function for context ID.*/
+    int contextId() { assert(validContextAndThreadIds); return _contextId; }
+    /** Accessor function for thread ID. */
+    int threadId() { assert(validContextAndThreadIds); return _threadId; }
 
     /** Accessor function for pc.*/
     Addr getPC() { assert(validPC); return pc; }

@@ -78,4 +78,11 @@ ThreadContext::compare(ThreadContext *one, ThreadContext *two)
     int id2 = two->cpuId();
     if (id1 != id2)
         panic("CPU ids don't match, one: %d, two: %d", id1, id2);
+
+    id1 = one->contextId();
+    id2 = two->contextId();
+    if (id1 != id2)
+        panic("Context ids don't match, one: %d, two: %d", id1, id2);
+
+
 }

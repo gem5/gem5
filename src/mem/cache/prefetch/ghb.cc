@@ -42,16 +42,16 @@ GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                  std::list<Tick> &delays)
 {
     Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
-    int cpuID = pkt->req->getCpuNum();
-    if (!useCPUId) cpuID = 0;
+    int contextId = pkt->req->contextId();
+    if (!useContextId) contextId = 0;
 
 
-    int new_stride = blkAddr - last_miss_addr[cpuID];
-    int old_stride = last_miss_addr[cpuID] -
-        second_last_miss_addr[cpuID];
+    int new_stride = blkAddr - last_miss_addr[contextId];
+    int old_stride = last_miss_addr[contextId] -
+        second_last_miss_addr[contextId];
 
-    second_last_miss_addr[cpuID] = last_miss_addr[cpuID];
-    last_miss_addr[cpuID] = blkAddr;
+    second_last_miss_addr[contextId] = last_miss_addr[contextId];
+    last_miss_addr[contextId] = blkAddr;
 
     if (new_stride == old_stride) {
         for (int d=1; d <= degree; d++) {

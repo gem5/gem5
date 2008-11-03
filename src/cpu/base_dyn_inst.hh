@@ -414,6 +414,9 @@ class BaseDynInst : public FastAlloc, public RefCounted
     /** Read this CPU's ID. */
     int cpuId() { return cpu->cpuId(); }
 
+    /** Read this context's system-wide ID **/
+    int contextId() { return thread->contextId(); }
+
     /** Returns the fault type. */
     Fault getFault() { return fault; }
 
@@ -868,7 +871,7 @@ BaseDynInst<Impl>::translateDataReadAddr(Addr vaddr, Addr &paddr,
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, vaddr, size, flags, PC);
-    req->setThreadContext(thread->cpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
     fault = cpu->translateDataReadReq(req, thread);
 
@@ -887,7 +890,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->cpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
     fault = cpu->translateDataReadReq(req, thread);
 
@@ -942,7 +945,7 @@ BaseDynInst<Impl>::translateDataWriteAddr(Addr vaddr, Addr &paddr,
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, vaddr, size, flags, PC);
-    req->setThreadContext(thread->cpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
     fault = cpu->translateDataWriteReq(req, thread);
 
@@ -966,7 +969,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->cpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
     fault = cpu->translateDataWriteReq(req, thread);
 

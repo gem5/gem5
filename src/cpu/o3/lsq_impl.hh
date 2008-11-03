@@ -85,7 +85,7 @@ LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
     if (pkt->isError())
         DPRINTF(LSQ, "Got error packet back for address: %#X\n", pkt->getAddr());
     if (pkt->isResponse()) {
-        lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
+        lsq->thread[pkt->req->threadId()].completeDataAccess(pkt);
     }
     else {
         // must be a snoop

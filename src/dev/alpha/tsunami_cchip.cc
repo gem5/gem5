@@ -110,7 +110,13 @@ TsunamiCChip::read(PacketPtr pkt)
                    break;
               case TSDEV_CC_MISC:
                   pkt->set(((ipint << 8) & 0xF) | ((itint << 4) & 0xF) |
-                                     (pkt->req->getCpuNum() & 0x3));
+                                     (pkt->req->contextId() & 0x3));
+                  // currently, FS cannot handle MT so contextId and
+                  // cpuId are effectively the same, don't know if it will
+                  // matter if FS becomes MT enabled.  I suspect no because
+                  // we are currently able to boot up to 64 procs anyway
+                  // which would render the CPUID of this register useless
+                  // anyway
                   break;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:

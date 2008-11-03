@@ -41,18 +41,18 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                     std::list<Tick> &delays)
 {
 //      Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-    int cpuID = pkt->req->getCpuNum();
-    if (!useCPUId) cpuID = 0;
+    int contextId = pkt->req->contextId();
+    if (!useContextId) contextId = 0;
 
     /* Scan Table for IAddr Match */
 /*      std::list<strideEntry*>::iterator iter;
-  for (iter=table[cpuID].begin();
-  iter !=table[cpuID].end();
+  for (iter=table[contextId].begin();
+  iter !=table[contextId].end();
   iter++) {
   if ((*iter)->IAddr == pkt->pc) break;
   }
 
-  if (iter != table[cpuID].end()) {
+  if (iter != table[contextId].end()) {
   //Hit in table
 
   int newStride = blkAddr - (*iter)->MAddr;

@@ -285,9 +285,9 @@ BaseCPU::registerThreadContexts()
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
-        system->registerThreadContext(tc);
+        tc->setContextId(system->registerThreadContext(tc));
 #if !FULL_SYSTEM
-        tc->getProcessPtr()->assignThreadContext(tc->cpuId());
+        tc->getProcessPtr()->assignThreadContext(tc->contextId());
 #endif
     }
 }
@@ -328,8 +328,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
         CpuEvent::replaceThreadContext(oldTC, newTC);
 
-        assert(newTC->cpuId() == oldTC->cpuId());
-        system->replaceThreadContext(newTC, newTC->cpuId());
+        assert(newTC->contextId() == oldTC->contextId());
+        system->replaceThreadContext(newTC, newTC->contextId());
 
         if (DTRACE(Context))
             ThreadContext::compare(oldTC, newTC);

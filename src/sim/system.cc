@@ -58,7 +58,7 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p), physmem(p->physmem), numcpus(0),
+    : SimObject(p), physmem(p->physmem), _numContexts(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
       functionalPort(p->name + "-fport"),
@@ -181,7 +181,7 @@ System::registerThreadContext(ThreadContext *tc)
         panic("Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
-    numcpus++;
+    _numContexts++;
 
     int port = getRemoteGDBPort();
     if (rgdb_enable && port) {

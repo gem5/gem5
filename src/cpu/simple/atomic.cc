@@ -84,7 +84,7 @@ AtomicSimpleCPU::init()
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, _cpuId);
+        TheISA::initCPU(tc, tc->contextId());
     }
 #endif
     if (hasPhysMemPort) {
@@ -93,6 +93,7 @@ AtomicSimpleCPU::init()
         physmemPort.getPeerAddressRanges(pmAddrList, snoop);
         physMemAddr = *pmAddrList.begin();
     }
+    // Atomic doesn't do MT right now, so contextId == threadId
     ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
     data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
     data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too

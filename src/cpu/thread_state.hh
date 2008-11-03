@@ -80,6 +80,10 @@ struct ThreadState {
 
     int cpuId() { return baseCpu->cpuId(); }
 
+    int contextId() { return _contextId; }
+
+    void setContextId(int id) { _contextId = id; }
+
     void setTid(int id) { tid = id; }
 
     int readTid() { return tid; }
@@ -168,6 +172,9 @@ struct ThreadState {
 
     // Pointer to the base CPU.
     BaseCPU *baseCpu;
+
+    // system wide HW context id
+    int _contextId;
 
     // Index of hardware thread context on the CPU that this represents.
     int tid;

@@ -117,6 +117,12 @@ class ThreadContext
 
     virtual int cpuId() = 0;
 
+    virtual int getThreadNum() = 0;
+
+    virtual int contextId() = 0;
+
+    virtual void setContextId(int id) = 0;
+
     virtual TheISA::ITB *getITBPtr() = 0;
 
     virtual TheISA::DTB *getDTBPtr() = 0;
@@ -176,8 +182,6 @@ class ThreadContext
     virtual void profileClear() = 0;
     virtual void profileSample() = 0;
 #endif
-
-    virtual int getThreadNum() = 0;
 
     // Also somewhat obnoxious.  Really only used for the TLB fault.
     // However, may be quite useful in SPARC.
@@ -300,6 +304,12 @@ class ProxyThreadContext : public ThreadContext
 
     int cpuId() { return actualTC->cpuId(); }
 
+    int getThreadNum() { return actualTC->getThreadNum(); }
+
+    int contextId() { return actualTC->contextId(); }
+
+    void setContextId(int id) { actualTC->setContextId(id); }
+
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
@@ -360,9 +370,6 @@ class ProxyThreadContext : public ThreadContext
     void profileClear() { return actualTC->profileClear(); }
     void profileSample() { return actualTC->profileSample(); }
 #endif
-
-    int getThreadNum() { return actualTC->getThreadNum(); }
-
     // @todo: Do I need this?
     MachInst getInst() { return actualTC->getInst(); }
 

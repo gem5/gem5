@@ -139,16 +139,16 @@ PhysicalMemory::trackLoadLocked(PacketPtr pkt)
 
     for (i = lockedAddrList.begin(); i != lockedAddrList.end(); ++i) {
         if (i->matchesContext(req)) {
-            DPRINTF(LLSC, "Modifying lock record: cpu %d thread %d addr %#x\n",
-                    req->getCpuNum(), req->getThreadNum(), paddr);
+            DPRINTF(LLSC, "Modifying lock record: context %d addr %#x\n",
+                    req->contextId(), paddr);
             i->addr = paddr;
             return;
         }
     }
 
     // no record for this xc: need to allocate a new one
-    DPRINTF(LLSC, "Adding lock record: cpu %d thread %d addr %#x\n",
-            req->getCpuNum(), req->getThreadNum(), paddr);
+    DPRINTF(LLSC, "Adding lock record: context %d addr %#x\n",
+            req->contextId(), paddr);
     lockedAddrList.push_front(LockedAddr(req));
 }
 
@@ -183,14 +183,14 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
                 // it's a store conditional, and as far as the memory
                 // system can tell, the requesting context's lock is
                 // still valid.
-                DPRINTF(LLSC, "StCond success: cpu %d thread %d addr %#x\n",
-                        req->getCpuNum(), req->getThreadNum(), paddr);
+                DPRINTF(LLSC, "StCond success: context %d addr %#x\n",
+                        req->contextId(), paddr);
                 success = true;
             }
 
             // Get rid of our record of this lock and advance to next
-            DPRINTF(LLSC, "Erasing lock record: cpu %d thread %d addr %#x\n",
-                    i->cpuNum, i->threadNum, paddr);
+            DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
+                    i->contextId, paddr);
             i = lockedAddrList.erase(i);
         }
         else {

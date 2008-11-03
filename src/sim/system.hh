@@ -87,19 +87,19 @@ class System : public SimObject
     PCEventQueue pcEventQueue;
 
     std::vector<ThreadContext *> threadContexts;
-    int numcpus;
+    int _numContexts;
 
     ThreadContext * getThreadContext(int tid)
     {
         return threadContexts[tid];
     }
 
-    int getNumCPUs()
+    int numContexts()
     {
-        if (numcpus != threadContexts.size())
+        if (_numContexts != threadContexts.size())
             panic("cpu array not fully populated!");
 
-        return numcpus;
+        return _numContexts;
     }
 
 #if FULL_SYSTEM

@@ -152,7 +152,8 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         memReq = new Request(inst->threadNumber, fetch_PC,
                              sizeof(uint32_t),
                              IFETCH_FLAGS(thread->readPC()),
-                             fetch_PC, thread->cpuId(), inst->threadNumber);
+                             fetch_PC, thread->contextId(),
+                             inst->threadNumber);
 
         bool succeeded = translateInstReq(memReq);
 

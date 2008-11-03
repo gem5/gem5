@@ -379,7 +379,7 @@ Device::read(PacketPtr pkt)
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
 
-    int cpu = pkt->req->getCpuNum();
+    int cpu = pkt->req->contextId();
     Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;
@@ -466,7 +466,7 @@ Device::write(PacketPtr pkt)
     assert(config.command & PCI_CMD_MSE);
     assert(pkt->getAddr() >= BARAddrs[0] && pkt->getSize() < BARSize[0]);
 
-    int cpu = pkt->req->getCpuNum();
+    int cpu = pkt->req->contextId();
     Addr daddr = pkt->getAddr() - BARAddrs[0];
     Addr index = daddr >> Regs::VirtualShift;
     Addr raddr = daddr & Regs::VirtualMask;

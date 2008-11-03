@@ -78,6 +78,10 @@ class O3ThreadContext : public ThreadContext
     /** Reads this CPU's ID. */
     virtual int cpuId() { return cpu->cpuId(); }
 
+    virtual int contextId() { return thread->contextId(); }
+
+    virtual void setContextId(int id) { thread->setContextId(id); }
+
 #if FULL_SYSTEM
     /** Returns a pointer to the system. */
     virtual System *getSystemPtr() { return cpu->system; }

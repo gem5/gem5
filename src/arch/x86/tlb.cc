@@ -654,7 +654,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         */
         // Force the access to be uncacheable.
         req->setFlags(req->getFlags() | UNCACHEABLE);
-        req->setPaddr(x86LocalAPICAddress(tc->cpuId(), paddr - baseAddr));
+        req->setPaddr(x86LocalAPICAddress(tc->contextId(), paddr - baseAddr));
     }
 #endif
     return NoFault;

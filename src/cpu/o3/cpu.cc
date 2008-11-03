@@ -589,9 +589,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::init()
 {
-    if (!deferRegistration) {
-        registerThreadContexts();
-    }
+    BaseCPU::init();
 
     // Set inSyscall so that the CPU doesn't squash when initially
     // setting up registers.
@@ -610,7 +608,7 @@ FullO3CPU<Impl>::init()
         }
 
 #if FULL_SYSTEM
-        TheISA::initCPU(src_tc, src_tc->cpuId());
+        TheISA::initCPU(src_tc, src_tc->contextId());
 #endif
     }
 

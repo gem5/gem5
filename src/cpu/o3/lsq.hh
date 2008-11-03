@@ -371,7 +371,7 @@ template <class T>
 Fault
 LSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 {
-    unsigned tid = req->getThreadNum();
+    unsigned tid = req->threadId();
 
     return thread[tid].read(req, data, load_idx);
 }
@@ -381,7 +381,7 @@ template <class T>
 Fault
 LSQ<Impl>::write(RequestPtr req, T &data, int store_idx)
 {
-    unsigned tid = req->getThreadNum();
+    unsigned tid = req->threadId();
 
     return thread[tid].write(req, data, store_idx);
 }

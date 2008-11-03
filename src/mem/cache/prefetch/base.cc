@@ -203,8 +203,8 @@ BasePrefetcher::handleMiss(PacketPtr &pkt, Tick time)
             PacketPtr prefetch;
             prefetch = new Packet(prefetchReq, MemCmd::HardPFReq, -1);
             prefetch->allocate();
-            prefetch->req->setThreadContext(pkt->req->getCpuNum(),
-                                            pkt->req->getThreadNum());
+            prefetch->req->setThreadContext(pkt->req->contextId(),
+                                            pkt->req->threadId());
 
             prefetch->time = time + (*delay); //@todo ADD LATENCY HERE
             //... initialize

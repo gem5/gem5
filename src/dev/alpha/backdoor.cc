@@ -84,7 +84,7 @@ void
 AlphaBackdoor::startup()
 {
     system->setAlphaAccess(pioAddr);
-    alphaAccess->numCPUs = system->getNumCPUs();
+    alphaAccess->numCPUs = system->numContexts();
     alphaAccess->kernStart = system->getKernelStart();
     alphaAccess->kernEnd = system->getKernelEnd();
     alphaAccess->entryPoint = system->getKernelEntry();

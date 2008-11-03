@@ -202,7 +202,6 @@ TimingSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
-    _cpuId = tc->cpuId();
     previousTick = curTick;
 }
 
