@@ -319,6 +319,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 incMissCount(pkt);
                 return false;
             }
+            tags->insertBlock(pkt->getAddr(), blk);
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
@@ -879,7 +880,7 @@ template<class TagStore>
 typename Cache<TagStore>::BlkType*
 Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
 {
-    BlkType *blk = tags->findReplacement(addr, writebacks);
+    BlkType *blk = tags->findVictim(addr, writebacks);
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
@@ -890,6 +891,7 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
             assert(!blk->isWritable());
             assert(repl_mshr->needsExclusive());
             // too hard to replace block with transient state
+            // allocation failed, block not inserted
             return NULL;
         } else {
             DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
@@ -903,8 +905,6 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
         }
     }
 
-    // Set tag for new block.  Caller is responsible for setting status.
-    blk->tag = tags->extractTag(addr);
     return blk;
 }
 
@@ -937,6 +937,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tempBlock->set = tags->extractSet(addr);
             tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
+        } else {
+            tags->insertBlock(addr, blk);
         }
     } else {
         // existing block... probably an upgrade

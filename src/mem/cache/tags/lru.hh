@@ -180,12 +180,20 @@ public:
     LRUBlk* findBlock(Addr addr) const;
 
     /**
-     * Find a replacement block for the address provided.
-     * @param pkt The request to a find a replacement candidate for.
+     * Find a block to evict for the address provided.
+     * @param addr The addr to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
-     * @return The block to place the replacement in.
+     * @return The candidate block.
      */
-    LRUBlk* findReplacement(Addr addr, PacketList &writebacks);
+    LRUBlk* findVictim(Addr addr, PacketList &writebacks);
+
+    /**
+     * Insert the new block into the cache.  For LRU this means inserting into
+     * the MRU position of the set.
+     * @param addr The address to update.
+     * @param blk The block to update.
+     */
+     void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Generate the tag from the given address.

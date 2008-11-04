@@ -207,7 +207,7 @@ FALRU::findBlock(Addr addr) const
 }
 
 FALRUBlk*
-FALRU::findReplacement(Addr addr, PacketList &writebacks)
+FALRU::findVictim(Addr addr, PacketList &writebacks)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);
@@ -226,6 +226,11 @@ FALRU::findReplacement(Addr addr, PacketList &writebacks)
     }
     //assert(check());
     return blk;
+}
+
+void
+FALRU::insertBlock(Addr addr, FALRU::BlkType *blk)
+{
 }
 
 void

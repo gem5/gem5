@@ -183,12 +183,11 @@ LRU::findBlock(Addr addr) const
 }
 
 LRUBlk*
-LRU::findReplacement(Addr addr, PacketList &writebacks)
+LRU::findVictim(Addr addr, PacketList &writebacks)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate
     LRUBlk *blk = sets[set].blks[assoc-1];
-    sets[set].moveToHead(blk);
     if (blk->isValid()) {
         replacements[0]++;
         totalRefs += blk->refCount;
@@ -197,7 +196,14 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
 
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
                 set, regenerateBlkAddr(blk->tag, set));
-    } else if (!blk->isTouched) {
+    }
+    return blk;
+}
+
+void
+LRU::insertBlock(Addr addr, LRU::BlkType *blk)
+{
+    if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
         if (!warmedUp && tagsInUse.value() >= warmupBound) {
@@ -206,7 +212,11 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
         }
     }
 
-    return blk;
+    // Set tag for new block.  Caller is responsible for setting status.
+    blk->tag = extractTag(addr);
+
+    unsigned set = extractSet(addr);
+    sets[set].moveToHead(blk);
 }
 
 void

@@ -435,7 +435,9 @@ class IIC : public BaseTags
      * @param writebacks List for any writebacks to be performed.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(Addr addr, PacketList &writebacks);
+    IICTag* findVictim(Addr addr, PacketList &writebacks);
+
+    void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Read the data from the internal storage of the given cache block.

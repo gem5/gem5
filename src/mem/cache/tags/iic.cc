@@ -297,7 +297,7 @@ IIC::findBlock(Addr addr) const
 
 
 IICTag*
-IIC::findReplacement(Addr addr, PacketList &writebacks)
+IIC::findVictim(Addr addr, PacketList &writebacks)
 {
     DPRINTF(IIC, "Finding Replacement for %x\n", addr);
     unsigned set = hash(addr);
@@ -337,6 +337,11 @@ IIC::findReplacement(Addr addr, PacketList &writebacks)
     tag_ptr->re = (void*)repl->add(tag_ptr-tagStore);
 
     return tag_ptr;
+}
+
+void
+IIC::insertBlock(Addr addr, BlkType* blk)
+{
 }
 
 void

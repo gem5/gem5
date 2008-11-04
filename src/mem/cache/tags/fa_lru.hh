@@ -197,7 +197,9 @@ public:
      * @param writebacks List for any writebacks to be performed.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findReplacement(Addr addr, PacketList & writebacks);
+    FALRUBlk* findVictim(Addr addr, PacketList & writebacks);
+
+    void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Return the hit latency of this cache.
