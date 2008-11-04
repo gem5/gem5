@@ -155,7 +155,7 @@ FALRU::invalidateBlk(FALRU::BlkType *blk)
 }
 
 FALRUBlk*
-FALRU::findBlock(Addr addr, int &lat, int *inCache)
+FALRU::accessBlock(Addr addr, int &lat, int *inCache)
 {
     accesses++;
     int tmp_in_cache = 0;

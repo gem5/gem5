@@ -410,14 +410,16 @@ class IIC : public BaseTags
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Find the block and update the replacement data. This call also returns
-     * the access latency as a side effect.
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such.
+     * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Addr addr, int &lat);
+    IICTag* accessBlock(Addr addr, int &lat);
 
     /**
      * Find the block, do not update the replacement data.

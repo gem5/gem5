@@ -269,7 +269,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         return false;
     }
 
-    blk = tags->findBlock(pkt->getAddr(), lat);
+    blk = tags->accessBlock(pkt->getAddr(), lat);
 
     if (prefetchAccess) {
         //We are determining prefetches on access stream, call prefetcher

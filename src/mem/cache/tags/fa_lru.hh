@@ -171,15 +171,17 @@ public:
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Find the block in the cache and update the replacement data. Returns
-     * the access latency and the in cache flags as a side effect
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such.
+     * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to look for.
      * @param asid The address space ID.
      * @param lat The latency of the access.
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Addr addr, int &lat, int *inCache = 0);
+    FALRUBlk* accessBlock(Addr addr, int &lat, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.

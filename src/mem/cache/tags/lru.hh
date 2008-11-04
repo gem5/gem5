@@ -160,17 +160,19 @@ public:
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Finds the given address in the cache and update replacement data.
-     * Returns the access latency as a side effect.
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such. Returns the access latency as a side effect.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Addr addr, int &lat);
+    LRUBlk* accessBlock(Addr addr, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
+     * i.e. This is a no-side-effect find of a block.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.

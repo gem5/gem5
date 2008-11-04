@@ -221,7 +221,7 @@ IIC::regStats(const string &name)
 
 
 IICTag*
-IIC::findBlock(Addr addr, int &lat)
+IIC::accessBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);

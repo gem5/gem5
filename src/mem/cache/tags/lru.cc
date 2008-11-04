@@ -151,7 +151,7 @@ LRU::~LRU()
 }
 
 LRUBlk*
-LRU::findBlock(Addr addr, int &lat)
+LRU::accessBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
