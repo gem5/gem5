@@ -52,7 +52,7 @@ handleLockedRead(XC *xc, Request *req)
     xc->setMiscRegNoEffect(LLAddr, req->getPaddr() & ~0xf);
     xc->setMiscRegNoEffect(LLFlag, true);
     DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link Address set to %x.\n",
-            req->getThreadNum(), req->getPaddr() & ~0xf);
+            req->threadId(), req->getPaddr() & ~0xf);
 }
 
 
@@ -94,10 +94,10 @@ handleLockedWrite(XC *xc, Request *req)
 
             if (!lock_flag){
                 DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, Store Conditional Failed.\n",
-                        req->getThreadNum());
+                        req->threadId());
             } else if ((req->getPaddr() & ~0xf) != lock_addr) {
                 DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, Store Conditional Failed.\n",
-                        req->getThreadNum());
+                        req->threadId());
             }
             // store conditional failed already, so don't issue it to mem
             return false;

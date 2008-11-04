@@ -588,7 +588,7 @@ OzoneCPU<Impl>::postInterrupt(int int_num, int index)
 //      thread.activate();
         // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
-        activateContext(thread.readTid(), 1);
+        activateContext(thread.threadId(), 1);
     }
 }
 #endif // FULL_SYSTEM
@@ -711,7 +711,7 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 
     switch (palFunc) {
       case PAL::halt:
-        haltContext(thread.readTid());
+        haltContext(thread.threadId());
         if (--System::numSystemsRunning == 0)
             exitSimLoop("all cpus halted");
         break;
@@ -745,7 +745,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::activate(int delay)
 {
-    cpu->activateContext(thread->readTid(), delay);
+    cpu->activateContext(thread->threadId(), delay);
 }
 
 /// Set the status to Suspended.
@@ -753,7 +753,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::suspend()
 {
-    cpu->suspendContext(thread->readTid());
+    cpu->suspendContext(thread->threadId());
 }
 
 /// Set the status to Unallocated.
@@ -761,7 +761,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::deallocate(int delay)
 {
-    cpu->deallocateContext(thread->readTid(), delay);
+    cpu->deallocateContext(thread->threadId(), delay);
 }
 
 /// Set the status to Halted.
@@ -769,7 +769,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::halt()
 {
-    cpu->haltContext(thread->readTid());
+    cpu->haltContext(thread->threadId());
 }
 
 #if FULL_SYSTEM
@@ -884,9 +884,9 @@ OzoneCPU<Impl>::OzoneTC::profileSample()
 
 template <class Impl>
 int
-OzoneCPU<Impl>::OzoneTC::getThreadNum()
+OzoneCPU<Impl>::OzoneTC::threadId()
 {
-    return thread->readTid();
+    return thread->threadId();
 }
 
 template <class Impl>

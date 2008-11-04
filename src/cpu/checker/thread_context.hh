@@ -153,7 +153,7 @@ class CheckerThreadContext : public ThreadContext
     void profileSample() { return actualTC->profileSample(); }
 #endif
 
-    int getThreadNum() { return actualTC->getThreadNum(); }
+    int threadId() { return actualTC->threadId(); }
 
     // @todo: Do I need this?
     MachInst getInst() { return actualTC->getInst(); }

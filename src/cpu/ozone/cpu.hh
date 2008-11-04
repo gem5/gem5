@@ -176,7 +176,7 @@ class OzoneCPU : public BaseCPU
         void profileSample();
 #endif
 
-        int getThreadNum();
+        int threadId();
 
         // Also somewhat obnoxious.  Really only used for the TLB fault.
         TheISA::MachInst getInst();
@@ -260,7 +260,7 @@ class OzoneCPU : public BaseCPU
         }
 
         void setSyscallReturn(SyscallReturn return_value)
-        { cpu->setSyscallReturn(return_value, thread->readTid()); }
+        { cpu->setSyscallReturn(return_value, thread->threadId()); }
 
         Counter readFuncExeInst() { return thread->funcExeInst; }
 

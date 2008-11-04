@@ -183,6 +183,7 @@ SimpleThread::copyState(ThreadContext *oldContext)
 #endif
     inst = oldContext->getInst();
 
+    _threadId = oldContext->threadId();
     _contextId = oldContext->contextId();
 }
 
@@ -221,14 +222,14 @@ SimpleThread::activate(int delay)
     lastActivate = curTick;
 
 //    if (status() == ThreadContext::Unallocated) {
-//      cpu->activateWhenReady(tid);
+//      cpu->activateWhenReady(_threadId);
 //      return;
 //   }
 
     _status = ThreadContext::Active;
 
     // status() == Suspended
-    cpu->activateContext(tid, delay);
+    cpu->activateContext(_threadId, delay);
 }
 
 void
@@ -249,7 +250,7 @@ SimpleThread::suspend()
 #endif
 */
     _status = ThreadContext::Suspended;
-    cpu->suspendContext(tid);
+    cpu->suspendContext(_threadId);
 }
 
 void
@@ -259,7 +260,7 @@ SimpleThread::deallocate()
         return;
 
     _status = ThreadContext::Unallocated;
-    cpu->deallocateContext(tid);
+    cpu->deallocateContext(_threadId);
 }
 
 void
@@ -269,7 +270,7 @@ SimpleThread::halt()
         return;
 
     _status = ThreadContext::Halted;
-    cpu->haltContext(tid);
+    cpu->haltContext(_threadId);
 }
 
 

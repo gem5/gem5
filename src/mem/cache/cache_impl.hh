@@ -296,7 +296,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
-            hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             satisfyCpuSideRequest(pkt, blk);
             return true;
         }
@@ -325,7 +325,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         blk->status |= BlkDirty;
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+        hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
         return true;
     }
 
@@ -467,8 +467,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         if (mshr) {
             // MSHR hit
             //@todo remove hw_pf here
-            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
-            if (mshr->threadNum != 0/*pkt->req->getThreadNum()*/) {
+            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+            if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                 mshr->threadNum = -1;
             }
             mshr->allocateTarget(pkt, time, order++);
@@ -482,7 +482,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
             // be changed.
@@ -740,10 +740,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     PacketList writebacks;
 
     if (pkt->req->isUncacheable()) {
-        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
             miss_latency;
     } else {
-        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
             miss_latency;
     }
 
@@ -784,7 +784,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
-                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->threadId()*/] +=
                     completion_time - target->recvTime;
             } else {
                 // not a cache fill, just forwarding response
@@ -862,7 +862,7 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
-    writebacks[0/*pkt->req->getThreadNum()*/]++;
+    writebacks[0/*pkt->req->threadId()*/]++;
 
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
@@ -1261,7 +1261,7 @@ Cache<TagStore>::getNextMSHR()
         if (pkt) {
             // Update statistic on number of prefetches issued
             // (hwpf_mshr_misses)
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             // Don't request bus, since we already have it
             return allocateMissBuffer(pkt, curTick, false);
         }

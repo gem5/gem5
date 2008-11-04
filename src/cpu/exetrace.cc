@@ -59,7 +59,7 @@ Trace::ExeTracerRecord::dump()
         outs << (misspeculating ? "-" : "+") << " ";
 
     if (IsOn(ExecThread))
-        outs << "T" << thread->getThreadNum() << " : ";
+        outs << "T" << thread->threadId() << " : ";
 
 
     std::string sym_str;

@@ -481,7 +481,7 @@ class BaseCache : public MemObject
 
     void incMissCount(PacketPtr pkt)
     {
-        misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+        misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
 
         if (missCount) {
             --missCount;

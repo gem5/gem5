@@ -64,6 +64,7 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     setStatus(old_context->status());
     copyArchRegs(old_context);
     setContextId(old_context->contextId());
+    setThreadId(old_context->threadId());
 
 #if !FULL_SYSTEM
     thread->funcExeInst = old_context->readFuncExeInst();
@@ -95,7 +96,7 @@ void
 O3ThreadContext<Impl>::activate(int delay)
 {
     DPRINTF(O3CPU, "Calling activate on Thread Context %d\n",
-            getThreadNum());
+            threadId());
 
     if (thread->status() == ThreadContext::Active)
         return;
@@ -105,14 +106,14 @@ O3ThreadContext<Impl>::activate(int delay)
 #endif
 
     if (thread->status() == ThreadContext::Unallocated) {
-        cpu->activateWhenReady(thread->readTid());
+        cpu->activateWhenReady(thread->threadId());
         return;
     }
 
     thread->setStatus(ThreadContext::Active);
 
     // status() == Suspended
-    cpu->activateContext(thread->readTid(), delay);
+    cpu->activateContext(thread->threadId(), delay);
 }
 
 template <class Impl>
@@ -120,7 +121,7 @@ void
 O3ThreadContext<Impl>::suspend(int delay)
 {
     DPRINTF(O3CPU, "Calling suspend on Thread Context %d\n",
-            getThreadNum());
+            threadId());
 
     if (thread->status() == ThreadContext::Suspended)
         return;
@@ -139,7 +140,7 @@ O3ThreadContext<Impl>::suspend(int delay)
 #endif
 */
     thread->setStatus(ThreadContext::Suspended);
-    cpu->suspendContext(thread->readTid());
+    cpu->suspendContext(thread->threadId());
 }
 
 template <class Impl>
@@ -147,13 +148,13 @@ void
 O3ThreadContext<Impl>::deallocate(int delay)
 {
     DPRINTF(O3CPU, "Calling deallocate on Thread Context %d delay %d\n",
-            getThreadNum(), delay);
+            threadId(), delay);
 
     if (thread->status() == ThreadContext::Unallocated)
         return;
 
     thread->setStatus(ThreadContext::Unallocated);
-    cpu->deallocateContext(thread->readTid(), true, delay);
+    cpu->deallocateContext(thread->threadId(), true, delay);
 }
 
 template <class Impl>
@@ -161,13 +162,13 @@ void
 O3ThreadContext<Impl>::halt(int delay)
 {
     DPRINTF(O3CPU, "Calling halt on Thread Context %d\n",
-            getThreadNum());
+            threadId());
 
     if (thread->status() == ThreadContext::Halted)
         return;
 
     thread->setStatus(ThreadContext::Halted);
-    cpu->haltContext(thread->readTid());
+    cpu->haltContext(thread->threadId());
 }
 
 template <class Impl>
@@ -245,7 +246,7 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
     // This function will mess things up unless the ROB is empty and
     // there are no instructions in the pipeline.
-    unsigned tid = thread->readTid();
+    unsigned tid = thread->threadId();
     PhysRegIndex renamed_reg;
 
     // First loop through the integer registers.
@@ -292,7 +293,7 @@ uint64_t
 O3ThreadContext<Impl>::readIntReg(int reg_idx)
 {
     reg_idx = TheISA::flattenIntIndex(this, reg_idx);
-    return cpu->readArchIntReg(reg_idx, thread->readTid());
+    return cpu->readArchIntReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -302,9 +303,9 @@ O3ThreadContext<Impl>::readFloatReg(int reg_idx, int width)
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     switch(width) {
       case 32:
-        return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
+        return cpu->readArchFloatRegSingle(reg_idx, thread->threadId());
       case 64:
-        return cpu->readArchFloatRegDouble(reg_idx, thread->readTid());
+        return cpu->readArchFloatRegDouble(reg_idx, thread->threadId());
       default:
         panic("Unsupported width!");
         return 0;
@@ -316,7 +317,7 @@ TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx)
 {
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    return cpu->readArchFloatRegSingle(reg_idx, thread->readTid());
+    return cpu->readArchFloatRegSingle(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -325,7 +326,7 @@ O3ThreadContext<Impl>::readFloatRegBits(int reg_idx, int width)
 {
     DPRINTF(Fault, "Reading floatint register through the TC!\n");
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
+    return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -333,7 +334,7 @@ TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
 {
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    return cpu->readArchFloatRegInt(reg_idx, thread->readTid());
+    return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
 }
 
 template <class Impl>
@@ -341,11 +342,11 @@ void
 O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
     reg_idx = TheISA::flattenIntIndex(this, reg_idx);
-    cpu->setArchIntReg(reg_idx, val, thread->readTid());
+    cpu->setArchIntReg(reg_idx, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -356,16 +357,16 @@ O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val, int width)
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
     switch(width) {
       case 32:
-        cpu->setArchFloatRegSingle(reg_idx, val, thread->readTid());
+        cpu->setArchFloatRegSingle(reg_idx, val, thread->threadId());
         break;
       case 64:
-        cpu->setArchFloatRegDouble(reg_idx, val, thread->readTid());
+        cpu->setArchFloatRegDouble(reg_idx, val, thread->threadId());
         break;
     }
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -374,10 +375,10 @@ void
 O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    cpu->setArchFloatRegSingle(reg_idx, val, thread->readTid());
+    cpu->setArchFloatRegSingle(reg_idx, val, thread->threadId());
 
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -388,11 +389,11 @@ O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val,
 {
     DPRINTF(Fault, "Setting floatint register through the TC!\n");
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    cpu->setArchFloatRegInt(reg_idx, val, thread->readTid());
+    cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -401,11 +402,11 @@ void
 O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    cpu->setArchFloatRegInt(reg_idx, val, thread->readTid());
+    cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -413,11 +414,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setPC(uint64_t val)
 {
-    cpu->setPC(val, thread->readTid());
+    cpu->setPC(val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -425,11 +426,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setNextPC(uint64_t val)
 {
-    cpu->setNextPC(val, thread->readTid());
+    cpu->setNextPC(val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -437,11 +438,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setMicroPC(uint64_t val)
 {
-    cpu->setMicroPC(val, thread->readTid());
+    cpu->setMicroPC(val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -449,11 +450,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setNextMicroPC(uint64_t val)
 {
-    cpu->setNextMicroPC(val, thread->readTid());
+    cpu->setNextMicroPC(val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -461,11 +462,11 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
-    cpu->setMiscRegNoEffect(misc_reg, val, thread->readTid());
+    cpu->setMiscRegNoEffect(misc_reg, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -474,11 +475,11 @@ void
 O3ThreadContext<Impl>::setMiscReg(int misc_reg,
                                                 const MiscReg &val)
 {
-    cpu->setMiscReg(misc_reg, val, thread->readTid());
+    cpu->setMiscReg(misc_reg, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->readTid());
+        cpu->squashFromTC(thread->threadId());
     }
 }
 
@@ -488,21 +489,21 @@ template <class Impl>
 TheISA::IntReg
 O3ThreadContext<Impl>::getSyscallArg(int i)
 {
-    return cpu->getSyscallArg(i, thread->readTid());
+    return cpu->getSyscallArg(i, thread->threadId());
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::setSyscallArg(int i, IntReg val)
 {
-    cpu->setSyscallArg(i, val, thread->readTid());
+    cpu->setSyscallArg(i, val, thread->threadId());
 }
 
 template <class Impl>
 void
 O3ThreadContext<Impl>::setSyscallReturn(SyscallReturn return_value)
 {
-    cpu->setSyscallReturn(return_value, thread->readTid());
+    cpu->setSyscallReturn(return_value, thread->threadId());
 }
 
 #endif // FULL_SYSTEM

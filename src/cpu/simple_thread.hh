@@ -197,8 +197,6 @@ class SimpleThread : public ThreadState
 
     BaseCPU *getCpuPtr() { return cpu; }
 
-    int getThreadNum() { return tid; }
-
     TheISA::ITB *getITBPtr() { return itb; }
 
     TheISA::DTB *getDTBPtr() { return dtb; }

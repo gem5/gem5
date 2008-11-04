@@ -82,6 +82,10 @@ class O3ThreadContext : public ThreadContext
 
     virtual void setContextId(int id) { thread->setContextId(id); }
 
+    /** Returns this thread's ID number. */
+    virtual int threadId() { return thread->threadId(); }
+    virtual void setThreadId(int id) { return thread->setThreadId(id); }
+
 #if FULL_SYSTEM
     /** Returns a pointer to the system. */
     virtual System *getSystemPtr() { return cpu->system; }
@@ -152,9 +156,6 @@ class O3ThreadContext : public ThreadContext
     /** Samples the function profiling information. */
     virtual void profileSample();
 #endif
-    /** Returns this thread's ID number. */
-    virtual int getThreadNum() { return thread->readTid(); }
-
     /** Returns the instruction this thread is currently committing.
      *  Only used when an instruction faults.
      */
@@ -190,36 +191,36 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads this thread's PC. */
     virtual uint64_t readPC()
-    { return cpu->readPC(thread->readTid()); }
+    { return cpu->readPC(thread->threadId()); }
 
     /** Sets this thread's PC. */
     virtual void setPC(uint64_t val);
 
     /** Reads this thread's next PC. */
     virtual uint64_t readNextPC()
-    { return cpu->readNextPC(thread->readTid()); }
+    { return cpu->readNextPC(thread->threadId()); }
 
     /** Sets this thread's next PC. */
     virtual void setNextPC(uint64_t val);
 
     virtual uint64_t readMicroPC()
-    { return cpu->readMicroPC(thread->readTid()); }
+    { return cpu->readMicroPC(thread->threadId()); }
 
     virtual void setMicroPC(uint64_t val);
 
     virtual uint64_t readNextMicroPC()
-    { return cpu->readNextMicroPC(thread->readTid()); }
+    { return cpu->readNextMicroPC(thread->threadId()); }
 
     virtual void setNextMicroPC(uint64_t val);
 
     /** Reads a miscellaneous register. */
     virtual MiscReg readMiscRegNoEffect(int misc_reg)
-    { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
+    { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
     virtual MiscReg readMiscReg(int misc_reg)
-    { return cpu->readMiscReg(misc_reg, thread->readTid()); }
+    { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
     virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
@@ -257,7 +258,7 @@ class O3ThreadContext : public ThreadContext
 
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
-    { return cpu->syscall(callnum, thread->readTid()); }
+    { return cpu->syscall(callnum, thread->threadId()); }
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }
@@ -271,7 +272,7 @@ class O3ThreadContext : public ThreadContext
 
     virtual uint64_t readNextNPC()
     {
-        return this->cpu->readNextNPC(this->thread->readTid());
+        return this->cpu->readNextNPC(this->thread->threadId());
     }
 
     virtual void setNextNPC(uint64_t val)
@@ -279,7 +280,7 @@ class O3ThreadContext : public ThreadContext
 #if THE_ISA == ALPHA_ISA
         panic("Not supported on Alpha!");
 #endif
-        this->cpu->setNextNPC(val, this->thread->readTid());
+        this->cpu->setNextNPC(val, this->thread->threadId());
     }
 
     /** This function exits the thread context in the CPU and returns

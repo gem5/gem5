@@ -78,7 +78,7 @@ haltThread(TC *tc)
         // @TODO: Needs to check if this is a branch and if so, take previous instruction
         tc->setMiscReg(TCRestart, tc->readNextPC());
 
-        warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x", curTick, tc->getThreadNum(), tc->getCpuPtr()->name(),
+        warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x", curTick, tc->threadId(), tc->getCpuPtr()->name(),
              tc->readPC(), tc->readNextPC());
     }
 }
@@ -98,7 +98,7 @@ restoreThread(TC *tc)
         tc->setNextNPC(pc + 8);
         tc->activate(0);
 
-        warn("%i: Restoring thread %i in %s @ PC %x", curTick, tc->getThreadNum(), tc->getCpuPtr()->name(),
+        warn("%i: Restoring thread %i in %s @ PC %x", curTick, tc->threadId(), tc->getCpuPtr()->name(),
              tc->readPC());
     }
 }
@@ -217,7 +217,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
         if (ok == 1) {
             unsigned tcstatus = tc->readMiscRegNoEffect(TCStatus);
             tc->setMiscReg(TCStatus, insertBits(tcstatus, TCS_A, TCS_A, 0));
-            warn("%i: Deactivating Hardware Thread Context #%i", curTick, tc->getThreadNum());
+            warn("%i: Deactivating Hardware Thread Context #%i", curTick, tc->threadId());
         }
     } else if (src_reg > 0) {
         if (src_reg && !yield_mask != 0) {
@@ -238,7 +238,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
             fault = new ThreadFault();
         } else {
             //tc->ScheduleOtherThreads();
-            //std::cerr << "T" << tc->getThreadNum() << "YIELD: Schedule Other Threads.\n" << std::endl;
+            //std::cerr << "T" << tc->threadId() << "YIELD: Schedule Other Threads.\n" << std::endl;
             //tc->suspend();
             // Save last known PC in TCRestart
             // @TODO: Needs to check if this is a branch and if so, take previous instruction

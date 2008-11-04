@@ -84,9 +84,9 @@ struct ThreadState {
 
     void setContextId(int id) { _contextId = id; }
 
-    void setTid(int id) { tid = id; }
+    void setThreadId(int id) { _threadId = id; }
 
-    int readTid() { return tid; }
+    int threadId() { return _threadId; }
 
     Tick readLastActivate() { return lastActivate; }
 
@@ -177,7 +177,7 @@ struct ThreadState {
     int _contextId;
 
     // Index of hardware thread context on the CPU that this represents.
-    int tid;
+    int _threadId;
 
   public:
     /** Last time activate was called on this thread. */

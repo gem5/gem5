@@ -82,7 +82,7 @@ class BaseCPU : public MemObject
     Tick instCnt;
     // every cpu has an id, put it in the base cpu
     // Set at initialization, only time a cpuId might change is during a
-    // takeover (which should be done from within the BaseCPU anyway, 
+    // takeover (which should be done from within the BaseCPU anyway,
     // therefore no setCpuId() method is provided
     int _cpuId;
 

@@ -44,14 +44,14 @@
 
 #if FULL_SYSTEM
 ThreadState::ThreadState(BaseCPU *cpu, int _tid)
-    : baseCpu(cpu), tid(_tid), lastActivate(0), lastSuspend(0),
+    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), physPort(NULL), virtPort(NULL),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
 ThreadState::ThreadState(BaseCPU *cpu, int _tid, Process *_process,
                          short _asid)
-    : baseCpu(cpu), tid(_tid), lastActivate(0), lastSuspend(0),
+    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       port(NULL), process(_process), asid(_asid),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif
@@ -129,7 +129,7 @@ ThreadState::connectPhysPort()
         physPort->removeConn();
     else
         physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           baseCpu->name(), tid));
+                                           baseCpu->name(), _threadId));
     connectToMemFunc(physPort);
 }
 
@@ -143,7 +143,7 @@ ThreadState::connectVirtPort(ThreadContext *tc)
         virtPort->removeConn();
     else
         virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        baseCpu->name(), tid), tc);
+                                        baseCpu->name(), _threadId), tc);
     connectToMemFunc(virtPort);
 }
 
@@ -169,7 +169,7 @@ ThreadState::getMemPort()
         return port;
 
     /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), tid),
+    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), _threadId),
                                process, TranslatingPort::NextPage);
 
     connectToMemFunc(port);

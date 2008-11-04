@@ -329,6 +329,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         CpuEvent::replaceThreadContext(oldTC, newTC);
 
         assert(newTC->contextId() == oldTC->contextId());
+        assert(newTC->threadId() == oldTC->threadId());
         system->replaceThreadContext(newTC, newTC->contextId());
 
         if (DTRACE(Context))

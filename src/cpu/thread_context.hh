@@ -117,7 +117,9 @@ class ThreadContext
 
     virtual int cpuId() = 0;
 
-    virtual int getThreadNum() = 0;
+    virtual int threadId() = 0;
+
+    virtual void setThreadId(int id) = 0;
 
     virtual int contextId() = 0;
 
@@ -304,7 +306,9 @@ class ProxyThreadContext : public ThreadContext
 
     int cpuId() { return actualTC->cpuId(); }
 
-    int getThreadNum() { return actualTC->getThreadNum(); }
+    int threadId() { return actualTC->threadId(); }
+
+    void setThreadId(int id) { return actualTC->setThreadId(id); }
 
     int contextId() { return actualTC->contextId(); }
 

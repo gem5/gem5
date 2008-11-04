@@ -259,7 +259,7 @@ zeroRegisters(CPU *cpu)
 void
 startupCPU(ThreadContext *tc, int cpuId)
 {
-    tc->activate(0/*tc->getThreadNum()*/);
+    tc->activate(0/*tc->threadId()*/);
 }
 
 } // namespace MipsISA
