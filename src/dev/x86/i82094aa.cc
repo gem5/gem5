@@ -39,7 +39,7 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
    latency(p->pio_latency), pioAddr(p->pio_addr), extIntPic(NULL)
 {
     // This assumes there's only one I/O APIC in the system
-    id = sys->getNumCPUs();
+    id = sys->numContexts();
     assert(id <= 0xf);
     arbId = id;
     regSel = 0;
