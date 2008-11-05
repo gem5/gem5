@@ -276,7 +276,7 @@ void
 Iob::generateIpi(Type type, int cpu_id, int vector)
 {
     SparcISA::SparcFault<SparcISA::PowerOnReset> *por = new SparcISA::PowerOnReset();
-    if (cpu_id >= sys->getNumCPUs())
+    if (cpu_id >= sys->numContexts())
         return;
 
     switch (type) {
