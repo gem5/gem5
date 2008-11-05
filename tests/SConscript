@@ -223,7 +223,8 @@ if env['FULL_SYSTEM']:
                     't1000-simple-timing']
 
 else:
-    configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest']
+    configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
+                'simple-atomic-mp', 'simple-timing-mp']
 
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))
