@@ -166,16 +166,22 @@ bool System::breakpoint()
 }
 
 int
-System::registerThreadContext(ThreadContext *tc)
+System::registerThreadContext(ThreadContext *tc, int assigned)
 {
     int id;
-    for (id = 0; id < threadContexts.size(); id++) {
-        if (!threadContexts[id])
-            break;
-    }
+    if (assigned == -1) {
+        for (id = 0; id < threadContexts.size(); id++) {
+            if (!threadContexts[id])
+                break;
+        }
 
-    if (threadContexts.size() <= id)
-        threadContexts.resize(id + 1);
+        if (threadContexts.size() <= id)
+            threadContexts.resize(id + 1);
+    } else {
+        if (threadContexts.size() <= assigned)
+            threadContexts.resize(assigned + 1);
+        id = assigned;
+    }
 
     if (threadContexts[id])
         panic("Cannot have two CPUs with the same id (%d)\n", id);

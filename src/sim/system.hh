@@ -224,7 +224,7 @@ class System : public SimObject
 
 #endif // FULL_SYSTEM
 
-    int registerThreadContext(ThreadContext *tc);
+    int registerThreadContext(ThreadContext *tc, int assigned=-1);
     void replaceThreadContext(ThreadContext *tc, int context_id);
 
     void serialize(std::ostream &os);
