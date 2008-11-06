@@ -1,4 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
 warn: Increasing stack size by one page.
 warn: ignoring syscall sigprocmask(1, 18446744073709547831, ...)
+warn: be nice to actually delete the event here

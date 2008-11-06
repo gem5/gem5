@@ -5,11 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 27 2008 21:21:09
-M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
-M5 commit date Sat Sep 27 21:03:50 2008 -0700
-M5 started Sep 27 2008 21:21:11
-M5 executing on piton
+M5 compiled Nov  5 2008 15:59:58
+M5 revision 5718:323cfbfec1a4ee56f71bd7e4cfad02af7e11c17e
+M5 commit date Wed Nov 05 15:30:49 2008 -0500
+M5 started Nov  5 2008 16:00:22
+M5 executing on zizzer
 command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 2233777512 because m5_exit instruction encountered

@@ -1,4 +1,3 @@
-warn: Entering event queue @ 0.  Starting simulation...
 system.cpu3: completed 10000 read accesses @26226880
 system.cpu6: completed 10000 read accesses @26416342
 system.cpu2: completed 10000 read accesses @26427251
@@ -72,3 +71,4 @@ system.cpu5: completed 90000 read accesses @243633950
 system.cpu4: completed 90000 read accesses @243710816
 system.cpu2: completed 90000 read accesses @243974160
 system.cpu6: completed 100000 read accesses @268915439
+warn: be nice to actually delete the event here

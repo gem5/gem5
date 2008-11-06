@@ -5,15 +5,16 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct  8 2008 20:20:37
-M5 revision 5641:1033c9f7de3f63b99accb1f06962921c3b61b617
-M5 commit date Wed Oct 08 20:18:02 2008 -0700
-M5 started Oct  8 2008 20:20:39
-M5 executing on tater
+M5 compiled Nov  5 2008 23:03:02
+M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
+M5 commit date Wed Nov 05 16:19:17 2008 -0500
+M5 started Nov  6 2008 00:16:46
+M5 executing on zizzer
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/x86/linux/simple-atomic
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sav
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
 
 TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
 Standard Cell Placement and Global Routing Program

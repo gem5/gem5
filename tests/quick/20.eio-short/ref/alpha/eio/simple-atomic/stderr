@@ -1,4 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
+warn: be nice to actually delete the event here
 
 gzip: stdout: Broken pipe

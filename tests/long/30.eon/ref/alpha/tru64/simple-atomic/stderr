@@ -1,5 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
 warn: Increasing stack size by one page.
 getting pixel output filename pixels_out.cook
 opening control file chair.control.cook

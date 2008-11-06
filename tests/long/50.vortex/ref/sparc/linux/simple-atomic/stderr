@@ -1,5 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
 warn: ignoring syscall time(4026527848, 4026528248, ...)
 warn: ignoring syscall time(4026527400, 1375098, ...)
 warn: ignoring syscall time(4026527312, 1, ...)
@@ -562,3 +561,4 @@ warn: ignoring syscall time(4026525968, 4026526436, ...)
 warn: ignoring syscall time(4026526056, 7004192, ...)
 warn: ignoring syscall time(4026527512, 4, ...)
 warn: ignoring syscall time(4026525760, 0, ...)
+warn: be nice to actually delete the event here

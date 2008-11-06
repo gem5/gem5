@@ -1,4 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
 warn: instruction 'fnstcw_Mw' unimplemented
 warn: instruction 'fldcw_Mw' unimplemented
+warn: be nice to actually delete the event here

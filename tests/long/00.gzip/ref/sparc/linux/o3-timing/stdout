@@ -5,13 +5,14 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 27 2008 21:21:24
-M5 revision 5571:7f81bb1690686883c5b93e8343068a001faf5083
-M5 commit date Sat Sep 27 21:03:50 2008 -0700
-M5 started Sep 27 2008 21:21:26
-M5 executing on piton
+M5 compiled Nov  5 2008 22:40:47
+M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
+M5 commit date Wed Nov 05 16:19:17 2008 -0500
+M5 started Nov  5 2008 22:55:58
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
 spec_init
 Loading Input Data
 Duplicating 262144 bytes
