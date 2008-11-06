@@ -1,5 +1,5 @@
 warn: kernel located at: /dist/m5/system/binaries/vmlinux
 warn: Sockets disabled, not accepting terminal connections
 warn: Sockets disabled, not accepting gdb connections
-warn: Entering event queue @ 0.  Starting simulation...
 warn: 591544000: Trying to launch CPU number 1!
+warn: be nice to actually delete the event here
