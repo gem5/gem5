@@ -28,7 +28,9 @@
 # Authors: Steve Reinhardt
 
 # Script to simplify using rundiff on trace outputs from two
-# invocations of m5.
+# invocations of m5.  Takes a common m5 command line with embedded
+# alternatives and executes the two alternative commands in separate
+# subdirectories with output piped to rundiff.
 #
 # ******Note that you need to enable some trace flags in the args in order
 # to do anything useful!******
@@ -40,6 +42,10 @@
 #   of the '|' is appended to the respective command lines.  Note that
 #   you'll have to quote the arg or escape the '|' with a backslash
 #   so that the shell doesn't think you're doing a pipe.
+# - Arguments with '#' characters are split at those characters,
+#   processed for alternatives ('|'s) as independent terms, then
+#   pasted back into a single argument (without the '#'s).  (Sort of
+#   inspired by the C preprocessor '##' token pasting operator.)
 #
 # In other words, the arguments should look like the command line you
 # want to run, with "|" used to list the alternatives for the parts
@@ -47,34 +53,64 @@
 #
 # For example:
 #
-# % tracediff m5.opt --opt1 "--opt2|--opt3" --opt4
+# % tracediff m5.opt --opt1 '--opt2|--opt3' --opt4
 # would compare these two runs:
 # m5.opt --opt1 --opt2 --opt4
 # m5.opt --opt1 --opt3 --opt4
 #
-# If you want to compare two different simulator binaries, put a '|'
-# in the first script argument ("path1/m5.opt|path2/m5.opt").  If you
-# want to add arguments to one run only, just put a '|' in with text
-# only on one side ("--onlyOn1|").  You can do this with multiple
-# arguments together too ("|-a -b -c" adds three args to the second
+# % tracediff 'path1|path2#/m5.opt' --opt1 --opt2
+# would compare these two runs:
+# path1/m5.opt --opt1 --opt2
+# path2/m5.opt --opt1 --opt2
+#
+# If you want to add arguments to one run only, just put a '|' in with
+# text only on one side ('--onlyOn1|').  You can do this with multiple
+# arguments together too ('|-a -b -c' adds three args to the second
 # run only).
+#
+# The '-n' argument to tracediff allows you to preview the two
+# generated command lines without running them.
 #
 
 use FindBin;
 
-if (@ARGV < 2) {
-    die "Usage: tracediff \"sim1|sim2\" [common-arg \"arg1|arg2\" ...]\n";
+$dryrun = 0;
+
+if (@ARGV >= 1 && $ARGV[0] eq '-n') {
+    $dryrun = 1;
+    shift @ARGV;
+}
+
+if (@ARGV < 1) {
+    die "Usage: tracediff [-n] \"sim1|sim2\" [common-arg \"arg1|arg2\" ...]\n";
 }
 
 foreach $arg (@ARGV) {
-    @pair = split('\|', $arg, -1); # -1 enables null trailing fields
-    if ($#pair > 0) {
-	push @cmd1, $pair[0];
-	push @cmd2, $pair[1];
-    } else {
-	push @cmd1, $arg;
-	push @cmd2, $arg;
+    $a1 = $a2 = '';
+    @subargs = split('#', $arg, -1);
+    foreach $subarg (@subargs) {
+        @pair = split('\|', $subarg, -1); # -1 enables null trailing fields
+        if (@pair == 1) {
+            $a1 .= $subarg;
+            $a2 .= $subarg;
+        } elsif (@pair == 2) {
+            $a1 .= $pair[0];
+            $a2 .= $pair[1];
+        } else {
+            print 'Parse error: too many |s in ', $arg, '\n';
+            exit(1);
+        }
     }
+
+    push @cmd1, $a1;
+    push @cmd2, $a2;
+}
+
+
+if ($dryrun) {
+    print "CMD1: ", join(' ', @cmd1), "\n";
+    print "CMD2: ", join(' ', @cmd2), "\n";
+    exit(0);
 }
 
 # First two args are the two simulator binaries to compare
