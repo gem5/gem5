@@ -561,7 +561,8 @@ TimingSimpleCPU::fetch()
 void
 TimingSimpleCPU::advanceInst(Fault fault)
 {
-    advancePC(fault);
+    if (fault != NoFault || !stayAtPC)
+        advancePC(fault);
 
     if (_status == Running) {
         // kick off fetch of next instruction... callback from icache
@@ -599,7 +600,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
     }
 
     preExecute();
-    if (curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
+    if (curStaticInst &&
+            curStaticInst->isMemRef() && !curStaticInst->isDataPrefetch()) {
         // load or store: just send to dcache
         Fault fault = curStaticInst->initiateAcc(this, traceData);
         if (_status != Running) {
@@ -638,7 +640,7 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
                 instCnt++;
             advanceInst(fault);
         }
-    } else {
+    } else if (curStaticInst) {
         // non-memory instruction: execute completely now
         Fault fault = curStaticInst->execute(this, traceData);
 
@@ -657,6 +659,8 @@ TimingSimpleCPU::completeIfetch(PacketPtr pkt)
                     curStaticInst->isFirstMicroop()))
             instCnt++;
         advanceInst(fault);
+    } else {
+        advanceInst(NoFault);
     }
 
     if (pkt) {
