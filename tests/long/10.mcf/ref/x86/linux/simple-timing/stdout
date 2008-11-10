@@ -1,0 +1,32 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Nov  7 2008 03:21:37
+M5 revision 5728:a583591131186a0f2de150efdfc82a154d166fb5
+M5 commit date Thu Nov 06 23:13:50 2008 -0800
+M5 started Nov  8 2008 01:13:22
+M5 executing on tater
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/10.mcf/x86/linux/simple-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+
+MCF SPEC version 1.6.I
+by  Andreas Loebel
+Copyright (c) 1998,1999   ZIB Berlin
+All Rights Reserved.
+
+nodes                      : 500
+active arcs                : 1905
+simplex iterations         : 1502
+flow value                 : 4990014995
+new implicit arcs          : 23867
+active arcs                : 25772
+simplex iterations         : 2663
+flow value                 : 3080014995
+checksum                   : 68389
+optimal
+Exiting @ tick 495387670000 because target called exit()

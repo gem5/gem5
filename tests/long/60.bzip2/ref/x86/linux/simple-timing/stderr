@@ -1,0 +1,7 @@
+warn: Sockets disabled, not accepting gdb connections
+warn: instruction 'fnstcw_Mw' unimplemented
+warn: instruction 'fldcw_Mw' unimplemented
+warn: Increasing stack size by one page.
+warn: Increasing stack size by one page.
+warn: Increasing stack size by one page.
+warn: be nice to actually delete the event here
