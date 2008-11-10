@@ -49,6 +49,63 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
   private:
 
+    /*
+     * If an access needs to be broken into fragments, currently at most two,
+     * the the following two classes are used as the sender state of the
+     * packets so the CPU can keep track of everything. In the main packet
+     * sender state, there's an array with a spot for each fragment. If a
+     * fragment has already been accepted by the CPU, aka isn't waiting for
+     * a retry, it's pointer is NULL. After each fragment has successfully
+     * been processed, the "outstanding" counter is decremented. Once the
+     * count is zero, the entire larger access is complete.
+     */
+    class SplitMainSenderState : public Packet::SenderState
+    {
+      public:
+        int outstanding;
+        PacketPtr fragments[2];
+
+        SplitMainSenderState()
+        {
+            fragments[0] = NULL;
+            fragments[1] = NULL;
+        }
+
+        int
+        getPendingFragment()
+        {
+            if (fragments[0]) {
+                return 0;
+            } else if (fragments[1]) {
+                return 1;
+            } else {
+                return -1;
+            }
+        }
+    };
+
+    class SplitFragmentSenderState : public Packet::SenderState
+    {
+      public:
+        SplitFragmentSenderState(PacketPtr _bigPkt, int _index) :
+            bigPkt(_bigPkt), index(_index)
+        {}
+        PacketPtr bigPkt;
+        int index;
+
+        void
+        clearFromParent()
+        {
+            SplitMainSenderState * main_send_state =
+                dynamic_cast<SplitMainSenderState *>(bigPkt->senderState);
+            main_send_state->fragments[index] = NULL;
+        }
+    };
+
+    bool handleReadPacket(PacketPtr pkt);
+    // This function always implicitly uses dcache_pkt.
+    bool handleWritePacket();
+
     class CpuPort : public Port
     {
       protected:

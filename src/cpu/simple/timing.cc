@@ -241,57 +241,135 @@ TimingSimpleCPU::suspendContext(int thread_num)
     _status = Idle;
 }
 
+bool
+TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
+{
+    RequestPtr req = pkt->req;
+    if (req->isMmapedIpr()) {
+        Tick delay;
+        delay = TheISA::handleIprRead(thread->getTC(), pkt);
+        new IprEvent(pkt, this, nextCycle(curTick + delay));
+        _status = DcacheWaitResponse;
+        dcache_pkt = NULL;
+    } else if (!dcachePort.sendTiming(pkt)) {
+        _status = DcacheRetry;
+        dcache_pkt = pkt;
+    } else {
+        _status = DcacheWaitResponse;
+        // memory system takes ownership of packet
+        dcache_pkt = NULL;
+    }
+    return dcache_pkt == NULL;
+}
 
 template <class T>
 Fault
 TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
-    Request *req =
-        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    _cpuId, /* thread ID */ 0);
+    Fault fault;
+    const int asid = 0;
+    const int thread_id = 0;
+    const Addr pc = thread->readPC();
 
-    if (traceData) {
-        traceData->setAddr(req->getVaddr());
-    }
+    PacketPtr pkt;
+    RequestPtr req;
 
-   // translate to physical address
-    Fault fault = thread->translateDataReadReq(req);
+    int block_size = dcachePort.peerBlockSize();
+    int data_size = sizeof(T);
 
-    // Now do the access.
-    if (fault == NoFault) {
-        PacketPtr pkt =
-            new Packet(req,
-                       (req->isLocked() ?
-                        MemCmd::LoadLockedReq : MemCmd::ReadReq),
-                       Packet::Broadcast);
-        pkt->dataDynamic<T>(new T);
+    Addr second_addr = roundDown(addr + data_size - 1, block_size);
 
-        if (req->isMmapedIpr()) {
-            Tick delay;
-            delay = TheISA::handleIprRead(thread->getTC(), pkt);
-            new IprEvent(pkt, this, nextCycle(curTick + delay));
-            _status = DcacheWaitResponse;
-            dcache_pkt = NULL;
-        } else if (!dcachePort.sendTiming(pkt)) {
-            _status = DcacheRetry;
-            dcache_pkt = pkt;
-        } else {
-            _status = DcacheWaitResponse;
-            // memory system takes ownership of packet
-            dcache_pkt = NULL;
+    if (second_addr > addr) {
+        Addr first_size = second_addr - addr;
+        Addr second_size = data_size - first_size;
+        // Make sure we'll only need two accesses.
+        assert(roundDown(second_addr + second_size - 1, block_size) ==
+                second_addr);
+
+        /*
+         * Do the translations. If something isn't going to work, find out
+         * before we waste time setting up anything else.
+         */
+        req = new Request(asid, addr, first_size,
+                          flags, pc, _cpuId, thread_id);
+        fault = thread->translateDataReadReq(req);
+        if (fault != NoFault) {
+            delete req;
+            return fault;
+        }
+        Request *second_req =
+            new Request(asid, second_addr, second_size,
+                        flags, pc, _cpuId, thread_id);
+        fault = thread->translateDataReadReq(second_req);
+        if (fault != NoFault) {
+            delete req;
+            delete second_req;
+            return fault;
         }
 
-        // This will need a new way to tell if it has a dcache attached.
-        if (req->isUncacheable())
-            recordEvent("Uncached Read");
+        T * data_ptr = new T;
+
+        /*
+         * This is the big packet that will hold the data we've gotten so far,
+         * if any, and also act as the response we actually give to the
+         * instruction.
+         */
+        Request *orig_req =
+            new Request(asid, addr, data_size, flags, pc, _cpuId, thread_id);
+        orig_req->setPhys(req->getPaddr(), data_size, flags);
+        PacketPtr big_pkt =
+            new Packet(orig_req, MemCmd::ReadResp, Packet::Broadcast);
+        big_pkt->dataDynamic<T>(data_ptr);
+        SplitMainSenderState * main_send_state = new SplitMainSenderState;
+        big_pkt->senderState = main_send_state;
+        main_send_state->outstanding = 2;
+
+        // This is the packet we'll process now.
+        pkt = new Packet(req, MemCmd::ReadReq, Packet::Broadcast);
+        pkt->dataStatic<uint8_t>((uint8_t *)data_ptr);
+        pkt->senderState = new SplitFragmentSenderState(big_pkt, 0);
+
+        // This is the second half of the access we'll deal with later.
+        PacketPtr second_pkt =
+            new Packet(second_req, MemCmd::ReadReq, Packet::Broadcast);
+        second_pkt->dataStatic<uint8_t>((uint8_t *)data_ptr + first_size);
+        second_pkt->senderState = new SplitFragmentSenderState(big_pkt, 1);
+        if (!handleReadPacket(pkt)) {
+            main_send_state->fragments[1] = second_pkt;
+        } else {
+            handleReadPacket(second_pkt);
+        }
     } else {
-        delete req;
+        req = new Request(asid, addr, data_size,
+                          flags, pc, _cpuId, thread_id);
+
+        // translate to physical address
+        Fault fault = thread->translateDataReadReq(req);
+
+        if (fault != NoFault) {
+            delete req;
+            return fault;
+        }
+
+        pkt = new Packet(req,
+                         (req->isLocked() ?
+                          MemCmd::LoadLockedReq : MemCmd::ReadReq),
+                          Packet::Broadcast);
+        pkt->dataDynamic<T>(new T);
+
+        handleReadPacket(pkt);
     }
 
     if (traceData) {
         traceData->setData(data);
+        traceData->setAddr(addr);
     }
-    return fault;
+
+    // This will need a new way to tell if it has a dcache attached.
+    if (req->isUncacheable())
+        recordEvent("Uncached Read");
+
+    return NoFault;
 }
 
 Fault
@@ -364,26 +442,117 @@ TimingSimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
     return read(addr, (uint32_t&)data, flags);
 }
 
+bool
+TimingSimpleCPU::handleWritePacket()
+{
+    RequestPtr req = dcache_pkt->req;
+    if (req->isMmapedIpr()) {
+        Tick delay;
+        delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
+        new IprEvent(dcache_pkt, this, nextCycle(curTick + delay));
+        _status = DcacheWaitResponse;
+        dcache_pkt = NULL;
+    } else if (!dcachePort.sendTiming(dcache_pkt)) {
+        _status = DcacheRetry;
+    } else {
+        _status = DcacheWaitResponse;
+        // memory system takes ownership of packet
+        dcache_pkt = NULL;
+    }
+    return dcache_pkt == NULL;
+}
 
 template <class T>
 Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
-    Request *req =
-        new Request(/* asid */ 0, addr, sizeof(T), flags, thread->readPC(),
-                    _cpuId, /* thread ID */ 0);
+    const int asid = 0;
+    const int thread_id = 0;
+    bool do_access = true;  // flag to suppress cache access
+    const Addr pc = thread->readPC();
 
-    if (traceData) {
-        traceData->setAddr(req->getVaddr());
-    }
+    RequestPtr req;
 
-    // translate to physical address
-    Fault fault = thread->translateDataWriteReq(req);
+    int block_size = dcachePort.peerBlockSize();
+    int data_size = sizeof(T);
 
-    // Now do the access.
-    if (fault == NoFault) {
+    Addr second_addr = roundDown(addr + data_size - 1, block_size);
+
+    if (second_addr > addr) {
+        Fault fault;
+        Addr first_size = second_addr - addr;
+        Addr second_size = data_size - first_size;
+        // Make sure we'll only need two accesses.
+        assert(roundDown(second_addr + second_size - 1, block_size) == 
+                second_addr);
+
+        req = new Request(asid, addr, first_size,
+                          flags, pc, _cpuId, thread_id);
+        fault = thread->translateDataWriteReq(req);
+        if (fault != NoFault) {
+            delete req;
+            return fault;
+        }
+        RequestPtr second_req = new Request(asid, second_addr, second_size,
+                                            flags, pc, _cpuId, thread_id);
+        fault = thread->translateDataWriteReq(second_req);
+        if (fault != NoFault) {
+            delete req;
+            delete second_req;
+            return fault;
+        }
+
+        if (req->isLocked() || req->isSwap() || 
+                second_req->isLocked() || second_req->isSwap()) {
+            panic("LL/SCs and swaps can't be split.");
+        }
+
+        T * data_ptr = new T;
+
+        /*
+         * This is the big packet that will hold the data we've gotten so far,
+         * if any, and also act as the response we actually give to the
+         * instruction.
+         */
+        RequestPtr orig_req = 
+            new Request(asid, addr, data_size, flags, pc, _cpuId, thread_id);
+        orig_req->setPhys(req->getPaddr(), data_size, flags);
+        PacketPtr big_pkt =
+            new Packet(orig_req, MemCmd::WriteResp, Packet::Broadcast);
+        big_pkt->dataDynamic<T>(data_ptr);
+        big_pkt->set(data);
+        SplitMainSenderState * main_send_state = new SplitMainSenderState;
+        big_pkt->senderState = main_send_state;
+        main_send_state->outstanding = 2;
+
+        assert(dcache_pkt == NULL);
+        // This is the packet we'll process now.
+        dcache_pkt = new Packet(req, MemCmd::WriteReq, Packet::Broadcast);
+        dcache_pkt->dataStatic<uint8_t>((uint8_t *)data_ptr);
+        dcache_pkt->senderState = new SplitFragmentSenderState(big_pkt, 0);
+
+        // This is the second half of the access we'll deal with later.
+        PacketPtr second_pkt =
+            new Packet(second_req, MemCmd::WriteReq, Packet::Broadcast);
+        second_pkt->dataStatic<uint8_t>((uint8_t *)data_ptr + first_size);
+        second_pkt->senderState = new SplitFragmentSenderState(big_pkt, 1);
+        if (!handleWritePacket()) {
+            main_send_state->fragments[1] = second_pkt;
+        } else {
+            dcache_pkt = second_pkt;
+            handleWritePacket();
+        }
+    } else {
+        req = new Request(asid, addr, data_size, flags, pc, _cpuId, thread_id);
+
+        // translate to physical address
+        Fault fault = thread->translateDataWriteReq(req);
+        if (fault != NoFault) {
+            delete req;
+            return fault;
+        }
+
         MemCmd cmd = MemCmd::WriteReq; // default
-        bool do_access = true;  // flag to suppress cache access
 
         if (req->isLocked()) {
             cmd = MemCmd::StoreCondReq;
@@ -401,38 +570,27 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         assert(dcache_pkt == NULL);
         dcache_pkt = new Packet(req, cmd, Packet::Broadcast);
         dcache_pkt->allocate();
-        dcache_pkt->set(data);
+        if (req->isMmapedIpr())
+            dcache_pkt->set(htog(data));
+        else
+            dcache_pkt->set(data);
 
-        if (do_access) {
-            if (req->isMmapedIpr()) {
-                Tick delay;
-                dcache_pkt->set(htog(data));
-                delay = TheISA::handleIprWrite(thread->getTC(), dcache_pkt);
-                new IprEvent(dcache_pkt, this, nextCycle(curTick + delay));
-                _status = DcacheWaitResponse;
-                dcache_pkt = NULL;
-            } else if (!dcachePort.sendTiming(dcache_pkt)) {
-                _status = DcacheRetry;
-            } else {
-                _status = DcacheWaitResponse;
-                // memory system takes ownership of packet
-                dcache_pkt = NULL;
-            }
-        }
-        // This will need a new way to tell if it's hooked up to a cache or not.
-        if (req->isUncacheable())
-            recordEvent("Uncached Write");
-    } else {
-        delete req;
+        if (do_access)
+            handleWritePacket();
     }
 
     if (traceData) {
+        traceData->setAddr(req->getVaddr());
         traceData->setData(data);
     }
 
+    // This will need a new way to tell if it's hooked up to a cache or not.
+    if (req->isUncacheable())
+        recordEvent("Uncached Write");
+
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
-    return fault;
+    return NoFault;
 }
 
 Fault
@@ -721,11 +879,37 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
     // received a response from the dcache: complete the load or store
     // instruction
     assert(!pkt->isError());
-    assert(_status == DcacheWaitResponse);
-    _status = Running;
 
     numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
+
+    if (pkt->senderState) {
+        SplitFragmentSenderState * send_state =
+            dynamic_cast<SplitFragmentSenderState *>(pkt->senderState);
+        assert(send_state);
+        delete pkt->req;
+        delete pkt;
+        PacketPtr big_pkt = send_state->bigPkt;
+        delete send_state;
+        
+        SplitMainSenderState * main_send_state =
+            dynamic_cast<SplitMainSenderState *>(big_pkt->senderState);
+        assert(main_send_state);
+        // Record the fact that this packet is no longer outstanding.
+        assert(main_send_state->outstanding != 0);
+        main_send_state->outstanding--;
+
+        if (main_send_state->outstanding) {
+            return;
+        } else {
+            delete main_send_state;
+            big_pkt->senderState = NULL;
+            pkt = big_pkt;
+        }
+    }
+
+    assert(_status == DcacheWaitResponse);
+    _status = Running;
 
     Fault fault = curStaticInst->completeAcc(pkt, this, traceData);
 
@@ -787,10 +971,11 @@ TimingSimpleCPU::DcachePort::recvTiming(PacketPtr pkt)
         // delay processing of returned data until next CPU clock edge
         Tick next_tick = cpu->nextCycle(curTick);
 
-        if (next_tick == curTick)
+        if (next_tick == curTick) {
             cpu->completeDataAccess(pkt);
-        else
+        } else {
             tickEvent.schedule(pkt, next_tick);
+        }
 
         return true;
     }
@@ -820,7 +1005,36 @@ TimingSimpleCPU::DcachePort::recvRetry()
     assert(cpu->dcache_pkt != NULL);
     assert(cpu->_status == DcacheRetry);
     PacketPtr tmp = cpu->dcache_pkt;
-    if (sendTiming(tmp)) {
+    if (tmp->senderState) {
+        // This is a packet from a split access.
+        SplitFragmentSenderState * send_state =
+            dynamic_cast<SplitFragmentSenderState *>(tmp->senderState);
+        assert(send_state);
+        PacketPtr big_pkt = send_state->bigPkt;
+        
+        SplitMainSenderState * main_send_state =
+            dynamic_cast<SplitMainSenderState *>(big_pkt->senderState);
+        assert(main_send_state);
+
+        if (sendTiming(tmp)) {
+            // If we were able to send without retrying, record that fact
+            // and try sending the other fragment.
+            send_state->clearFromParent();
+            int other_index = main_send_state->getPendingFragment();
+            if (other_index > 0) {
+                tmp = main_send_state->fragments[other_index];
+                cpu->dcache_pkt = tmp;
+                if ((big_pkt->isRead() && cpu->handleReadPacket(tmp)) ||
+                        (big_pkt->isWrite() && cpu->handleWritePacket())) {
+                    main_send_state->fragments[other_index] = NULL;
+                }
+            } else {
+                cpu->_status = DcacheWaitResponse;
+                // memory system takes ownership of packet
+                cpu->dcache_pkt = NULL;
+            }
+        }
+    } else if (sendTiming(tmp)) {
         cpu->_status = DcacheWaitResponse;
         // memory system takes ownership of packet
         cpu->dcache_pkt = NULL;
