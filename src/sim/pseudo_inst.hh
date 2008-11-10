@@ -47,6 +47,7 @@ void quiesce(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);
+uint64_t rpns(ThreadContext *tc);
 void m5exit(ThreadContext *tc, Tick delay);
 void loadsymbol(ThreadContext *xc);
 void resetstats(ThreadContext *tc, Tick delay, Tick period);

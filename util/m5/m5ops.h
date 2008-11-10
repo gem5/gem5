@@ -34,6 +34,7 @@
 #define quiescens_func          0x02
 #define quiescecycle_func       0x03
 #define quiescetime_func        0x04
+#define rpns_func               0x07
 #define deprecated1_func        0x10 // obsolete ivlb
 #define deprecated2_func        0x11 // obsolete ivle
 #define deprecated3_func        0x20 // deprecated exit function

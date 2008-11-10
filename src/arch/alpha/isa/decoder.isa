@@ -806,6 +806,9 @@ decode OPCODE default Unknown::unknown() {
             0x04: quiesceTime({{
                 R0 = PseudoInst::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
+            0x07: rpns({{
+                R0 = PseudoInst::rpns(xc->tcBase());
+            }}, IsNonSpeculative, IsUnverifiable);
             0x10: deprecated_ivlb({{
                 warn_once("Obsolete M5 ivlb instruction encountered.\n");
             }});

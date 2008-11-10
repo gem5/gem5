@@ -125,6 +125,12 @@ quiesceTime(ThreadContext *tc)
     return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
 }
 
+uint64_t
+rpns(ThreadContext *tc)
+{
+    return curTick / Clock::Int::ns;
+}
+
 void
 m5exit(ThreadContext *tc, Tick delay)
 {
