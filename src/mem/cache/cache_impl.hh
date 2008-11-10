@@ -613,38 +613,53 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
 
     if (!access(pkt, blk, lat, writebacks)) {
         // MISS
-        PacketPtr busPkt = getBusPacket(pkt, blk, pkt->needsExclusive());
+        PacketPtr bus_pkt = getBusPacket(pkt, blk, pkt->needsExclusive());
 
-        bool isCacheFill = (busPkt != NULL);
+        bool is_forward = (bus_pkt == NULL);
 
-        if (busPkt == NULL) {
+        if (is_forward) {
             // just forwarding the same request to the next level
             // no local cache operation involved
-            busPkt = pkt;
+            bus_pkt = pkt;
         }
 
         DPRINTF(Cache, "Sending an atomic %s for %x\n",
-                busPkt->cmdString(), busPkt->getAddr());
+                bus_pkt->cmdString(), bus_pkt->getAddr());
 
 #if TRACING_ON
         CacheBlk::State old_state = blk ? blk->status : 0;
 #endif
 
-        lat += memSidePort->sendAtomic(busPkt);
+        lat += memSidePort->sendAtomic(bus_pkt);
 
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
-                busPkt->cmdString(), busPkt->getAddr(), old_state);
+                bus_pkt->cmdString(), bus_pkt->getAddr(), old_state);
 
-        bool is_error = busPkt->isError();
-        assert(!busPkt->wasNacked());
+        assert(!bus_pkt->wasNacked());
 
-        if (is_error && pkt->needsResponse()) {
-            pkt->makeAtomicResponse();
-            pkt->copyError(busPkt);
-        } else if (isCacheFill && !is_error) {
-            blk = handleFill(busPkt, blk, writebacks);
-            satisfyCpuSideRequest(pkt, blk);
-            delete busPkt;
+        // If packet was a forward, the response (if any) is already
+        // in place in the bus_pkt == pkt structure, so we don't need
+        // to do anything.  Otherwise, use the separate bus_pkt to
+        // generate response to pkt and then delete it.
+        if (!is_forward) {
+            if (pkt->needsResponse()) {
+                assert(bus_pkt->isResponse());
+                if (bus_pkt->isError()) {
+                    pkt->makeAtomicResponse();
+                    pkt->copyError(bus_pkt);
+                } else if (bus_pkt->isRead() ||
+                           bus_pkt->cmd == MemCmd::UpgradeResp) {
+                    // we're updating cache state to allow us to
+                    // satisfy the upstream request from the cache
+                    blk = handleFill(bus_pkt, blk, writebacks);
+                    satisfyCpuSideRequest(pkt, blk);
+                } else {
+                    // we're satisfying the upstream request without
+                    // modifying cache state, e.g., a write-through
+                    pkt->makeAtomicResponse();
+                }
+            }
+            delete bus_pkt;
         }
     }
 
@@ -748,7 +763,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
             miss_latency;
     }
 
-    if (mshr->isCacheFill && !is_error) {
+    bool is_fill = !mshr->isForward &&
+        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+
+    if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
 
@@ -771,7 +789,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
         if (target->isCpuSide()) {
             Tick completion_time;
-            if (blk != NULL) {
+            if (is_fill) {
                 satisfyCpuSideRequest(target->pkt, blk);
                 // How many bytes past the first request is this one
                 int transfer_offset =
@@ -1287,7 +1305,7 @@ Cache<TagStore>::getTimingPacket()
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
 
-    if (mshr->isSimpleForward()) {
+    if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
         assert(tags->findBlock(mshr->addr) == NULL);
         pkt = tgt_pkt;
@@ -1295,11 +1313,10 @@ Cache<TagStore>::getTimingPacket()
         BlkType *blk = tags->findBlock(mshr->addr);
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
 
-        mshr->isCacheFill = (pkt != NULL);
+        mshr->isForward = (pkt == NULL);
 
-        if (pkt == NULL) {
+        if (mshr->isForward) {
             // not a cache block request, but a response is expected
-            assert(!mshr->isSimpleForward());
             // make copy of current packet to forward, keep current
             // copy for response handling
             pkt = new Packet(tgt_pkt);
@@ -1473,7 +1490,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
             waitingOnRetry = !success;
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");
-                if (!mshr->isSimpleForward()) {
+                if (!mshr->isForwardNoResponse()) {
                     delete pkt;
                 }
             } else {

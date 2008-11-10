@@ -118,8 +118,8 @@ class MSHR : public Packet::SenderState, public Printable
     /** True if the request has been sent to the bus. */
     bool inService;
 
-    /** True if we will be putting the returned block in the cache */
-    bool isCacheFill;
+    /** True if the request is just a simple forward from an upper level */
+    bool isForward;
 
     /** True if we need to get an exclusive copy of the block. */
     bool needsExclusive() const { return targets->needsExclusive; }
@@ -200,7 +200,7 @@ public:
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets() { return ntargets; }
+    int getNumTargets() const { return ntargets; }
 
     /**
      * Returns a pointer to the target list.
@@ -212,13 +212,17 @@ public:
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets() { return !targets->empty(); }
+    bool hasTargets() const { return !targets->empty(); }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() { assert(hasTargets());  return &targets->front(); }
+    Target *getTarget() const
+    {
+        assert(hasTargets());
+        return &targets->front();
+    }
 
     /**
      * Pop first target.
@@ -229,7 +233,7 @@ public:
         targets->pop_front();
     }
 
-    bool isSimpleForward()
+    bool isForwardNoResponse() const
     {
         if (getNumTargets() != 1)
             return false;

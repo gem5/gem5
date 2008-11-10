@@ -156,7 +156,7 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     readyTime = whenReady;
     order = _order;
     assert(target);
-    isCacheFill = false;
+    isForward = false;
     _isUncacheable = target->req->isUncacheable();
     inService = false;
     downstreamPending = false;
@@ -187,7 +187,7 @@ bool
 MSHR::markInService()
 {
     assert(!inService);
-    if (isSimpleForward()) {
+    if (isForwardNoResponse()) {
         // we just forwarded the request packet & don't expect a
         // response, so get rid of it
         assert(getNumTargets() == 1);
@@ -403,7 +403,8 @@ MSHR::print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
     ccprintf(os, "%s[%x:%x] %s %s %s state: %s %s %s %s\n",
              prefix, addr, addr+size-1,
-             isCacheFill ? "Fill" : "",
+             isForward ? "Forward" : "",
+             isForwardNoResponse() ? "ForwNoResp" : "",
              needsExclusive() ? "Excl" : "",
              _isUncacheable ? "Unc" : "",
              inService ? "InSvc" : "",
