@@ -121,17 +121,16 @@ class Serializable
     void nameOut(std::ostream &os, const std::string &_name);
 
   public:
-    Serializable() {}
-    virtual ~Serializable() {}
+    Serializable();
+    virtual ~Serializable();
 
     // manditory virtual function, so objects must provide names
     virtual const std::string name() const = 0;
 
-    virtual void serialize(std::ostream &os) {}
-    virtual void unserialize(Checkpoint *cp, const std::string &section) {}
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 
-    static Serializable *create(Checkpoint *cp,
-                                 const std::string &section);
+    static Serializable *create(Checkpoint *cp, const std::string &section);
 
     static int ckptCount;
     static int ckptMaxCount;

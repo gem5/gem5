@@ -394,6 +394,24 @@ Globals::unserialize(Checkpoint *cp)
     mainEventQueue.unserialize(cp, "MainEventQueue");
 }
 
+Serializable::Serializable()
+{
+}
+
+Serializable::~Serializable()
+{
+}
+
+void
+Serializable::serialize(std::ostream &os)
+{
+}
+
+void
+Serializable::unserialize(Checkpoint *cp, const std::string &section)
+{
+}
+
 void
 Serializable::serializeAll(const std::string &cpt_dir)
 {
