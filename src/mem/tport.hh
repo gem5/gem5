@@ -85,9 +85,6 @@ class SimpleTimingPort : public Port
      * When the event time expires it attempts to send the packet.
      * If it cannot, the packet sent when recvRetry() is called.
      **/
-    typedef EventWrapper<SimpleTimingPort, &SimpleTimingPort::processSendEvent>
-            SendEvent;
-
     Event *sendEvent;
 
     /** If we need to drain, keep the drain event around until we're done
@@ -155,15 +152,8 @@ class SimpleTimingPort : public Port
 
 
   public:
-
-    SimpleTimingPort(std::string pname, MemObject *_owner)
-        : Port(pname, _owner),
-          sendEvent(new SendEvent(this)),
-          drainEvent(NULL),
-          waitingOnRetry(false)
-    {}
-
-    ~SimpleTimingPort() { delete sendEvent; }
+    SimpleTimingPort(std::string pname, MemObject *_owner);
+    ~SimpleTimingPort();
 
     /** Hook for draining timing accesses from the system.  The
      * associated SimObject's drain() functions should be implemented

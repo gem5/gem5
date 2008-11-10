@@ -30,6 +30,21 @@
 
 #include "mem/tport.hh"
 
+using namespace std;
+
+SimpleTimingPort::SimpleTimingPort(string pname, MemObject *_owner)
+    : Port(pname, _owner), sendEvent(0), drainEvent(NULL),
+      waitingOnRetry(false)
+{
+    sendEvent =  new EventWrapper<SimpleTimingPort,
+        &SimpleTimingPort::processSendEvent>(this);
+}
+
+SimpleTimingPort::~SimpleTimingPort()
+{
+    delete sendEvent;
+}
+
 bool
 SimpleTimingPort::checkFunctional(PacketPtr pkt)
 {
