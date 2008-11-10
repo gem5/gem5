@@ -297,7 +297,7 @@ class DmaDevice : public PioDevice
         } else if (if_name == "dma") {
             if (dmaPort != NULL)
                 fatal("%s: dma port already connected to %s",
-                      name(), pioPort->getPeer()->name());
+                      name(), dmaPort->getPeer()->name());
             dmaPort = new DmaPort(this, sys);
             return dmaPort;
         } else
