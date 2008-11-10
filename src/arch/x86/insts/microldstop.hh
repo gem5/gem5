@@ -59,6 +59,7 @@
 #define __ARCH_X86_INSTS_MICROLDSTOP_HH__
 
 #include "arch/x86/insts/microop.hh"
+#include "mem/packet.hh"
 
 namespace X86ISA
 {
@@ -148,6 +149,25 @@ namespace X86ISA
                 panic("Bad operand size %d for write at %#x.\n", dataSize, EA);
             }
             return fault;
+        }
+
+        uint64_t
+        get(PacketPtr pkt) const
+        {
+            switch(dataSize)
+            {
+              case 1:
+                return pkt->get<uint8_t>();
+              case 2:
+                return pkt->get<uint16_t>();
+              case 4:
+                return pkt->get<uint32_t>();
+              case 8:
+                return pkt->get<uint64_t>();
+              default:
+                panic("Bad operand size %d for read at %#x.\n",
+                        dataSize, pkt->getAddr());
+            }
         }
     };
 }

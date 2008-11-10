@@ -194,7 +194,7 @@ def template MicroLoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        Mem = pkt->get<typeof(Mem)>();
+        Mem = get(pkt);
 
         %(code)s;
 
