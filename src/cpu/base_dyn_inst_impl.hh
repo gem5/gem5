@@ -168,18 +168,21 @@ BaseDynInst<Impl>::initVars()
     // Initialize the fault to be NoFault.
     fault = NoFault;
 
-    ++instcount;
+#ifndef NDEBUG
+    ++cpu->instcount;
 
-    if (instcount > 1500) {
+    if (cpu->instcount > 1500) {
 #ifdef DEBUG
         cpu->dumpInsts();
         dumpSNList();
 #endif
-        assert(instcount <= 1500);
+        assert(cpu->instcount <= 1500);
     }
 
-    DPRINTF(DynInst, "DynInst: [sn:%lli] Instruction created. Instcount=%i\n",
-            seqNum, instcount);
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction created. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
 
 #ifdef DEBUG
     cpu->snList.insert(seqNum);
@@ -199,10 +202,13 @@ BaseDynInst<Impl>::~BaseDynInst()
 
     fault = NoFault;
 
-    --instcount;
+#ifndef NDEBUG
+    --cpu->instcount;
 
-    DPRINTF(DynInst, "DynInst: [sn:%lli] Instruction destroyed. Instcount=%i\n",
-            seqNum, instcount);
+    DPRINTF(DynInst,
+        "DynInst: [sn:%lli] Instruction destroyed. Instcount for %s = %i\n",
+        seqNum, cpu->name(), cpu->instcount);
+#endif
 #ifdef DEBUG
     cpu->snList.erase(seqNum);
 #endif

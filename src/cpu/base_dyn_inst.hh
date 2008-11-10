@@ -258,9 +258,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 
   public:
 
-    /** Count of total number of dynamic instructions. */
-    static int instcount;
-
 #ifdef DEBUG
     void dumpSNList();
 #endif

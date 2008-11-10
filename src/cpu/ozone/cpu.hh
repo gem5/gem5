@@ -287,6 +287,11 @@ class OzoneCPU : public BaseCPU
     // main simulation loop (one cycle)
     void tick();
 
+#ifndef NDEBUG
+    /** Count of total number of dynamic instructions in flight. */
+    int instcount;
+#endif
+
     std::set<InstSeqNum> snList;
     std::set<Addr> lockAddrList;
   private:

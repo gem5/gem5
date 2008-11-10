@@ -34,7 +34,3 @@
 
 // Explicit instantiation
 template class BaseDynInst<O3CPUImpl>;
-
-template <>
-int
-BaseDynInst<O3CPUImpl>::instcount = 0;

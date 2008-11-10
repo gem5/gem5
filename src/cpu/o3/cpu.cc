@@ -159,6 +159,9 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       itb(params->itb),
       dtb(params->dtb),
       tickEvent(this),
+#ifndef NDEBUG
+      instcount(0),
+#endif
       removeInstsThisCycle(false),
       fetch(this, params),
       decode(this, params),

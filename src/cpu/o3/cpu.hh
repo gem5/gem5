@@ -576,6 +576,11 @@ class FullO3CPU : public BaseO3CPU
     void dumpInsts();
 
   public:
+#ifndef NDEBUG
+    /** Count of total number of dynamic instructions in flight. */
+    int instcount;
+#endif
+
     /** List of all the instructions in flight. */
     std::list<DynInstPtr> instList;
 

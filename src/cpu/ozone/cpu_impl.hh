@@ -95,6 +95,9 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     : BaseCPU(p), thread(this, 0, p->workload[0], 0),
       tickEvent(this, p->width),
 #endif
+#ifndef NDEBUG
+      instcount(0),
+#endif
       comm(5, 5)
 {
     frontEnd = new FrontEnd(p);
