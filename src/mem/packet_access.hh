@@ -46,7 +46,7 @@ template <typename T>
 inline T
 Packet::get()
 {
-    assert(staticData || dynamicData);
+    assert(flags.any(STATIC_DATA|DYNAMIC_DATA));
     assert(sizeof(T) <= size);
     return TheISA::gtoh(*(T*)data);
 }
@@ -56,6 +56,7 @@ template <typename T>
 inline void
 Packet::set(T v)
 {
+    assert(flags.any(STATIC_DATA|DYNAMIC_DATA));
     assert(sizeof(T) <= size);
     *(T*)data = TheISA::htog(v);
 }

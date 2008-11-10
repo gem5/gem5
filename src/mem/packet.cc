@@ -42,6 +42,8 @@
 #include "base/trace.hh"
 #include "mem/packet.hh"
 
+using namespace std;
+
 // The one downside to bitsets is that static initializers can get ugly.
 #define SET1(a1)                     (1 << (a1))
 #define SET2(a1, a2)                 (SET1(a1) | SET1(a2))
@@ -133,35 +135,6 @@ MemCmd::commandInfo[] =
     { SET2(IsRequest, IsPrint), InvalidCmd, "PrintReq" }
 };
 
-
-/** delete the data pointed to in the data pointer. Ok to call to matter how
- * data was allocted. */
-void
-Packet::deleteData()
-{
-    assert(staticData || dynamicData);
-    if (staticData)
-        return;
-
-    if (arrayData)
-        delete [] data;
-    else
-        delete data;
-}
-
-/** If there isn't data in the packet, allocate some. */
-void
-Packet::allocate()
-{
-    if (data)
-        return;
-    assert(!staticData);
-    dynamicData = true;
-    arrayData = true;
-    data = new uint8_t[getSize()];
-}
-
-
 bool
 Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
 {
@@ -193,7 +166,7 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
     if (isRead()) {
         if (func_start >= val_start && func_end <= val_end) {
             allocate();
-            std::memcpy(getPtr<uint8_t>(), data + offset, getSize());
+            memcpy(getPtr<uint8_t>(), data + offset, getSize());
             makeResponse();
             return true;
         } else {
@@ -208,11 +181,12 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
         }
     } else if (isWrite()) {
         if (offset >= 0) {
-            std::memcpy(data + offset, getPtr<uint8_t>(),
-                        (std::min(func_end, val_end) - func_start) + 1);
-        } else { // val_start > func_start
-            std::memcpy(data, getPtr<uint8_t>() - offset,
-                        (std::min(func_end, val_end) - val_start) + 1);
+            memcpy(data + offset, getPtr<uint8_t>(),
+                   (min(func_end, val_end) - func_start) + 1);
+        } else {
+            // val_start > func_start
+            memcpy(data, getPtr<uint8_t>() - offset,
+                   (min(func_end, val_end) - val_start) + 1);
         }
     } else {
         panic("Don't know how to handle command %s\n", cmdString());
@@ -222,22 +196,18 @@ Packet::checkFunctional(Printable *obj, Addr addr, int size, uint8_t *data)
     return false;
 }
 
-
 void
-Packet::print(std::ostream &o, const int verbosity,
-              const std::string &prefix) const
+Packet::print(ostream &o, const int verbosity, const string &prefix) const
 {
     ccprintf(o, "%s[%x:%x] %s\n", prefix,
              getAddr(), getAddr() + getSize() - 1, cmdString());
 }
 
-
-Packet::PrintReqState::PrintReqState(std::ostream &_os, int _verbosity)
-    : curPrefixPtr(new std::string("")), os(_os), verbosity(_verbosity)
+Packet::PrintReqState::PrintReqState(ostream &_os, int _verbosity)
+    : curPrefixPtr(new string("")), os(_os), verbosity(_verbosity)
 {
     labelStack.push_back(LabelStackEntry("", curPrefixPtr));
 }
-
 
 Packet::PrintReqState::~PrintReqState()
 {
@@ -246,21 +216,17 @@ Packet::PrintReqState::~PrintReqState()
     delete curPrefixPtr;
 }
 
-
 Packet::PrintReqState::
-LabelStackEntry::LabelStackEntry(const std::string &_label,
-                                 std::string *_prefix)
+LabelStackEntry::LabelStackEntry(const string &_label, string *_prefix)
     : label(_label), prefix(_prefix), labelPrinted(false)
 {
 }
 
-
 void
-Packet::PrintReqState::pushLabel(const std::string &lbl,
-                                 const std::string &prefix)
+Packet::PrintReqState::pushLabel(const string &lbl, const string &prefix)
 {
     labelStack.push_back(LabelStackEntry(lbl, curPrefixPtr));
-    curPrefixPtr = new std::string(*curPrefixPtr);
+    curPrefixPtr = new string(*curPrefixPtr);
     *curPrefixPtr += prefix;
 }
 
