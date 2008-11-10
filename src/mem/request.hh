@@ -172,6 +172,7 @@ class Request : public FastAlloc
      * allocated Request object. */
     void setPhys(Addr _paddr, int _size, int _flags)
     {
+        assert(_size >= 0);
         paddr = _paddr;
         size = _size;
         flags = _flags;
@@ -188,6 +189,7 @@ class Request : public FastAlloc
      * allocated Request object. */
     void setVirt(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc)
     {
+        assert(_size >= 0);
         asid = _asid;
         vaddr = _vaddr;
         size = _size;
