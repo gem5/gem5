@@ -279,7 +279,7 @@ MemTest::tick()
     unsigned base = random() % 2;
     uint64_t data = random();
     unsigned access_size = random() % 4;
-    unsigned cacheable = random() % 100;
+    bool uncacheable = (random() % 100) < percentUncacheable;
 
     //If we aren't doing copies, use id as offset, and do a false sharing
     //mem tester
@@ -290,17 +290,16 @@ MemTest::tick()
     access_size = 0;
 
     Request *req = new Request();
-    uint32_t flags = 0;
+    Request::Flags flags;
     Addr paddr;
 
-    if (cacheable < percentUncacheable) {
-        flags |= UNCACHEABLE;
+    if (uncacheable) {
+        flags.set(Request::UNCACHEABLE);
         paddr = uncacheAddr + offset;
     } else {
         paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
     }
-    bool probe = (random() % 100 < percentFunctional) && !(flags & UNCACHEABLE);
-    //bool probe = false;
+    bool probe = (random() % 100 < percentFunctional) && !uncacheable;
 
     paddr &= ~((1 << access_size) - 1);
     req->setPhys(paddr, 1 << access_size, flags);

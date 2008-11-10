@@ -594,7 +594,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
                     if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(req->getFlags() | UNCACHEABLE);
+                        req->setFlags(Request::UNCACHEABLE);
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
@@ -607,7 +607,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                     (!write || ce->pte.writable())) {
                     req->setPaddr(ce->pte.translate(vaddr));
                     if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                        req->setFlags(req->getFlags() | UNCACHEABLE);
+                        req->setFlags(Request::UNCACHEABLE);
                     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
                     return NoFault;
                 } // if matched
@@ -769,7 +769,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
     if (e->pte.sideffect() || (e->pte.paddr() >> 39) & 1)
-        req->setFlags(req->getFlags() | UNCACHEABLE);
+        req->setFlags(Request::UNCACHEABLE);
 
     // cache translation date for next translation
     cacheState = tlbdata;

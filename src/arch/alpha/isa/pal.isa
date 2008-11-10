@@ -174,11 +174,11 @@ output decoder {{
         : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
         disp(HW_LDST_DISP)
     {
-        memAccessFlags = 0;
-        if (HW_LDST_PHYS) memAccessFlags |= PHYSICAL;
-        if (HW_LDST_ALT)  memAccessFlags |= ALTMODE;
-        if (HW_LDST_VPTE) memAccessFlags |= VPTE;
-        if (HW_LDST_LOCK) memAccessFlags |= LOCKED;
+        memAccessFlags.clear();
+        if (HW_LDST_PHYS) memAccessFlags.set(Request::PHYSICAL);
+        if (HW_LDST_ALT)  memAccessFlags.set(Request::ALTMODE);
+        if (HW_LDST_VPTE) memAccessFlags.set(Request::VPTE);
+        if (HW_LDST_LOCK) memAccessFlags.set(Request::LOCKED);
     }
 
     std::string

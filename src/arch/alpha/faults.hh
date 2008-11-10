@@ -140,11 +140,11 @@ class DtbFault : public AlphaFault
 {
   protected:
     VAddr vaddr;
-    uint32_t reqFlags;
+    Request::Flags reqFlags;
     uint64_t flags;
 
   public:
-    DtbFault(VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
+    DtbFault(VAddr _vaddr, Request::Flags _reqFlags, uint64_t _flags)
         : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
     { }
     FaultName name() const = 0;
@@ -163,7 +163,7 @@ class NDtbMissFault : public DtbFault
     static FaultStat _count;
 
   public:
-    NDtbMissFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    NDtbMissFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -182,7 +182,7 @@ class PDtbMissFault : public DtbFault
     static FaultStat _count;
 
   public:
-    PDtbMissFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    PDtbMissFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -198,7 +198,7 @@ class DtbPageFault : public DtbFault
     static FaultStat _count;
 
   public:
-    DtbPageFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbPageFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -214,7 +214,7 @@ class DtbAcvFault : public DtbFault
     static FaultStat _count;
 
   public:
-    DtbAcvFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAcvFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -230,7 +230,7 @@ class DtbAlignmentFault : public DtbFault
     static FaultStat _count;
 
   public:
-    DtbAlignmentFault(VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAlignmentFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}

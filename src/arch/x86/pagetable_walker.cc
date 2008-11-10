@@ -298,11 +298,8 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
     }
     PacketPtr oldRead = read;
     //If we didn't return, we're setting up another read.
-    uint32_t flags = oldRead->req->getFlags();
-    if (uncacheable)
-        flags |= UNCACHEABLE;
-    else
-        flags &= ~UNCACHEABLE;
+    Request::Flags flags = oldRead->req->getFlags();
+    flags.set(Request::UNCACHEABLE, uncacheable);
     RequestPtr request =
         new Request(nextRead, oldRead->getSize(), flags);
     read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
@@ -365,8 +362,10 @@ Walker::start(ThreadContext * _tc, Addr vaddr)
 
     enableNX = efer.nxe;
 
-    RequestPtr request =
-        new Request(top, size, PHYSICAL | cr3.pcd ? UNCACHEABLE : 0);
+    Request::Flags flags = Request::PHYSICAL;
+    if (cr3.pcd)
+        flags.set(Request::UNCACHEABLE);
+    RequestPtr request = new Request(top, size, flags);
     read = new Packet(request, MemCmd::ReadExReq, Packet::Broadcast);
     read->allocate();
     Enums::MemoryMode memMode = sys->getMemoryMode();

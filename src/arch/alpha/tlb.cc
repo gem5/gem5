@@ -142,7 +142,7 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
             return new UnimpFault("IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
-            req->setFlags(req->getFlags() | UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE);
 
 #if !ALPHA_TLASER
             // Clear bits 42:35 of the physical address (10-2 in
@@ -321,7 +321,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if (FULL_SYSTEM && PcPAL(req->getPC()))
-        req->setFlags(req->getFlags() | PHYSICAL);
+        req->setFlags(Request::PHYSICAL);
 
     if (PcPAL(req->getPC())) {
         // strip off PAL PC marker (lsb is 1)
@@ -330,7 +330,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return NoFault;
     }
 
-    if (req->getFlags() & PHYSICAL) {
+    if (req->getFlags() & Request::PHYSICAL) {
         req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
@@ -497,13 +497,13 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
     if (PcPAL(pc)) {
-        mode = (req->getFlags() & ALTMODE) ?
+        mode = (req->getFlags() & Request::ALTMODE) ?
             (mode_type)ALT_MODE_AM(
                 tc->readMiscRegNoEffect(IPR_ALT_MODE))
             : mode_kernel;
     }
 
-    if (req->getFlags() & PHYSICAL) {
+    if (req->getFlags() & Request::PHYSICAL) {
         req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
@@ -560,7 +560,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                 if (write) { write_misses++; } else { read_misses++; }
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                     MM_STAT_DTB_MISS_MASK;
-                return (req->getFlags() & VPTE) ?
+                return (req->getFlags() & Request::VPTE) ?
                     (Fault)(new PDtbMissFault(req->getVaddr(), req->getFlags(),
                                               flags)) :
                     (Fault)(new NDtbMissFault(req->getVaddr(), req->getFlags(),
