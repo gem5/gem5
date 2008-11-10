@@ -36,7 +36,7 @@ mainq = internal.event.cvar.mainEventQueue
 def create(obj, priority=None):
     if priority is None:
         priority = internal.event.Event.Default_Pri
-    return internal.event.PythonEvent(obj, priority)
+    return PythonEvent(obj, priority)
 
 class Event(PythonEvent):
     def __init__(self, priority=None):

@@ -43,6 +43,9 @@ class PythonEvent : public Event
     PythonEvent(PyObject *obj, Event::Priority priority);
     ~PythonEvent();
 
+    void incref() { Py_INCREF(object); }
+    void decref() { Py_DECREF(object); }
+
     virtual void process();
 };
 

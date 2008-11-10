@@ -41,6 +41,35 @@
 
 #pragma SWIG nowarn=350,351
 
+%extend EventQueue {
+    void
+    schedule(Event *event, Tick when)
+    {
+        // Any python event that are scheduled must have their
+        // internal object's refcount incremented so that the object
+        // sticks around while it is in the event queue.
+        PythonEvent *pyevent = dynamic_cast<PythonEvent *>(event);
+        if (pyevent)
+            pyevent->incref();
+        $self->schedule(event, when);
+    }
+    
+    void
+    deschedule(Event *event)
+    {
+        $self->deschedule(event); 
+
+        // Now that we're removing the python object from the event
+        // queue, we need to decrement its reference count.
+        PythonEvent *pyevent = dynamic_cast<PythonEvent *>(event);
+        if (pyevent)
+            pyevent->decref();
+    }
+}
+
+%ignore EventQueue::schedule;
+%ignore EventQueue::deschedule;
+
 %import "base/fast_alloc.hh"
 %import "sim/serialize.hh"
 

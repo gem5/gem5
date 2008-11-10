@@ -38,15 +38,10 @@ PythonEvent::PythonEvent(PyObject *obj, Priority priority)
 {
     if (object == NULL)
         panic("Passed in invalid object");
-
-    Py_INCREF(object);
-
-    setFlags(AutoDelete);
 }
 
 PythonEvent::~PythonEvent()
 {
-    Py_DECREF(object);
 }
 
 void
@@ -65,6 +60,10 @@ PythonEvent::process()
         async_event = true;
         async_exception = true;
     }
+
+    // Since the object has been removed from the event queue, its
+    // reference count must be decremented.
+    Py_DECREF(object);
 }
 
 CountedDrainEvent *
@@ -85,17 +84,3 @@ cleanupCountedDrain(Event *counted_drain)
     assert(event->getCount() == 0);
     delete event;
 }
-
-#if 0
-Event *
-create(PyObject *object, Event::Priority priority)
-{
-    return new PythonEvent(object, priority);
-}
-
-void
-destroy(Event *event)
-{
-    delete event;
-}
-#endif

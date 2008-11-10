@@ -299,9 +299,9 @@ class EventQueue : public Serializable
     virtual const std::string name() const { return objName; }
 
     // schedule the given event on this queue
-    void schedule(Event *ev, Tick when);
-    void deschedule(Event *ev);
-    void reschedule(Event *ev, Tick when, bool always = false);
+    void schedule(Event *event, Tick when);
+    void deschedule(Event *event);
+    void reschedule(Event *event, Tick when, bool always = false);
 
     Tick nextTick() const { return head->when(); }
     Event *serviceOne();
