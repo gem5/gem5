@@ -36,7 +36,7 @@ import re
 import sys
 import zlib
 
-from os.path import basename, exists, isdir, isfile, join as joinpath
+from os.path import basename, dirname, exists, isdir, isfile, join as joinpath
 
 import SCons
 
@@ -214,6 +214,9 @@ Export('CompoundFlag')
 # files.
 env.Append(CPPPATH=Dir('.'))
 
+for extra_dir in extras_dir_list:
+    env.Append(CPPPATH=Dir(extra_dir))
+
 # Add a flag defining what THE_ISA should be for all compilation
 env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 
@@ -222,15 +225,21 @@ env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
 # Walk the tree and execute all SConscripts in subdirectories
 #
 
-for base_dir in base_dir_list:
-    here = Dir('.').srcnode().abspath
-    for root, dirs, files in os.walk(base_dir, topdown=True):
-        if root == here:
-            # we don't want to recurse back into this SConscript
-            continue
+here = Dir('.').srcnode().abspath
+for root, dirs, files in os.walk(base_dir, topdown=True):
+    if root == here:
+        # we don't want to recurse back into this SConscript
+        continue
 
+    if 'SConscript' in files:
+        build_dir = joinpath(env['BUILDDIR'], root[len(base_dir) + 1:])
+        SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
+
+for extra_dir in extras_dir_list:
+    prefix_len = len(dirname(extra_dir)) + 1
+    for root, dirs, files in os.walk(extra_dir, topdown=True):
         if 'SConscript' in files:
-            build_dir = joinpath(env['BUILDDIR'], root[len(base_dir) + 1:])
+            build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
             SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 
 for opt in env.ExportOptions:

@@ -324,11 +324,14 @@ global_sticky_opts.Save(global_sticky_opts_file, env)
 
 # Parse EXTRAS option to build list of all directories where we're
 # look for sources etc.  This list is exported as base_dir_list.
-base_dir_list = [joinpath(ROOT, 'src')]
+base_dir = joinpath(ROOT, 'src')
 if env['EXTRAS']:
-    base_dir_list += env['EXTRAS'].split(':')
+    extras_dir_list = env['EXTRAS'].split(':')
+else:
+    extras_dir_list = []
 
-Export('base_dir_list')
+Export('base_dir')
+Export('extras_dir_list')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
@@ -594,8 +597,8 @@ Export('nonsticky_opts')
 
 # Walk the tree and execute all SConsopts scripts that wil add to the
 # above options
-for base_dir in base_dir_list:
-    for root, dirs, files in os.walk(base_dir):
+for bdir in [ base_dir ] + extras_dir_list:
+    for root, dirs, files in os.walk(bdir):
         if 'SConsopts' in files:
             print "Reading", joinpath(root, 'SConsopts')
             SConscript(joinpath(root, 'SConsopts'))
