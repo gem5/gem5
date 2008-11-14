@@ -53,6 +53,8 @@ typedef Request* RequestPtr;
 
 class Request : public FastAlloc
 {
+    friend class Packet;
+
   public:
     typedef uint32_t FlagsType;
     typedef ::Flags<FlagsType> Flags;
@@ -455,8 +457,6 @@ class Request : public FastAlloc
 
         return false;
     }
-
-    friend class Packet;
 };
 
 #endif // __MEM_REQUEST_HH__

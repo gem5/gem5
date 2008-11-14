@@ -61,16 +61,14 @@ class Flags
     
     bool any() const { return _flags; }
     bool any(Type flags) const { return (_flags & flags); }
-    bool all() const { return (~_flags); }
-    bool all(Type flags) const { return (_flags & flags) != flags; }
+    bool all() const { return !(~_flags); }
+    bool all(Type flags) const { return (_flags & flags) == flags; }
     bool none() const { return _flags == 0; }
     bool none(Type flags) const { return (_flags & flags) == 0; }
-    bool exact(Type flags) const { return _flags = flags; }
     void clear() { _flags = 0; }
     void clear(Type flags) { _flags &= ~flags; }
-    void reset(Type flags) { _flags = flags;}
     void set(Type flags) { _flags |= flags; }
-    void set(Type f, bool val) { _flags = (_flags & f) | (val ? f : 0); }
+    void set(Type f, bool val) { _flags = (_flags & ~f) | (val ? f : 0); }
     void
     update(Type flags, Type mask)
     {

@@ -461,9 +461,12 @@ class Packet : public FastAlloc, public Printable
      * supplied.
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest)
-        :  cmd(_cmd), req(_req), data(NULL), addr(_req->paddr),
-           size(_req->size), dest(_dest), time(curTick), senderState(NULL)
+        :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
+           addr(_req->paddr), size(_req->size), dest(_dest), time(curTick),
+           senderState(NULL)
     {
+        if (req->flags.any(Request::VALID_PADDR))
+            flags.set(VALID_ADDR|VALID_SIZE);
     }
 
     /**
@@ -472,10 +475,12 @@ class Packet : public FastAlloc, public Printable
      * req.  this allows for overriding the size/addr of the req.
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest, int _blkSize)
-        :  cmd(_cmd), req(_req), data(NULL),
+        :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
            addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
            time(curTick), senderState(NULL)
     {
+        if (req->flags.any(Request::VALID_PADDR))
+            flags.set(VALID_ADDR|VALID_SIZE);
     }
 
     /**
@@ -544,13 +549,10 @@ class Packet : public FastAlloc, public Printable
         assert(isRequest());
         origCmd = cmd;
         cmd = cmd.responseCommand();
-        if (flags.any(VALID_SRC)) {
-            dest = src;
-            flags.set(VALID_DST);
-            flags.clear(VALID_SRC);
-        } else {
-            flags.clear(VALID_DST);
-        }
+
+        dest = src;
+        flags.set(VALID_DST, flags.any(VALID_SRC));
+        flags.clear(VALID_SRC);
     }
 
     void
@@ -690,7 +692,6 @@ class Packet : public FastAlloc, public Printable
         if (flags.any(ARRAY_DATA))
             delete [] data;
         else if (flags.any(DYNAMIC_DATA))
-
             delete data;
 
         flags.clear(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA);
@@ -702,11 +703,13 @@ class Packet : public FastAlloc, public Printable
     allocate()
     {
         if (data) {
-            assert(flags.none(STATIC_DATA|DYNAMIC_DATA));
-        } else {
-            flags.set(DYNAMIC_DATA|ARRAY_DATA);
-            data = new uint8_t[getSize()];
+            assert(flags.any(STATIC_DATA|DYNAMIC_DATA));
+            return;
         }
+
+        assert(flags.none(STATIC_DATA|DYNAMIC_DATA));
+        flags.set(DYNAMIC_DATA|ARRAY_DATA);
+        data = new uint8_t[getSize()];
     }
 
 
