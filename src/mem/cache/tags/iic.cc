@@ -634,66 +634,6 @@ IIC::invalidateBlk(IIC::BlkType *tag_ptr)
 }
 
 void
-IIC::readData(IICTag *blk, uint8_t *data)
-{
-    assert(blk->size <= trivialSize || blk->numData > 0);
-    int data_size = blk->size;
-    if (data_size > trivialSize) {
-        for (int i = 0; i < blk->numData; ++i){
-            memcpy(data+i*subSize,
-                   &(dataBlks[blk->data_ptr[i]][0]),
-                   (data_size>subSize)?subSize:data_size);
-            data_size -= subSize;
-        }
-    } else {
-        memcpy(data,blk->trivialData,data_size);
-    }
-}
-
-void
-IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
-               PacketList & writebacks)
-{
-    DPRINTF(IIC, "Writing %d bytes to %x\n", size,
-            blk->tag<<tagShift);
-    // Find the number of subblocks needed, (round up)
-    int num_subs = (size + (subSize -1))/subSize;
-    if (size <= trivialSize) {
-        num_subs = 0;
-    }
-    assert(num_subs <= numSub);
-    if (num_subs > blk->numData) {
-        // need to allocate more data blocks
-        for (int i = blk->numData; i < num_subs; ++i){
-            blk->data_ptr[i] = getFreeDataBlock(writebacks);
-            dataReferenceCount[blk->data_ptr[i]] += 1;
-        }
-    } else if (num_subs < blk->numData){
-        // can free data blocks
-        for (int i=num_subs; i < blk->numData; ++i){
-            // decrement reference count and compare to zero
-            if (--dataReferenceCount[blk->data_ptr[i]] == 0) {
-                freeDataBlock(blk->data_ptr[i]);
-            }
-        }
-    }
-
-    blk->numData = num_subs;
-    blk->size = size;
-    assert(size <= trivialSize || blk->numData > 0);
-    if (size > trivialSize){
-        for (int i = 0; i < blk->numData; ++i){
-            memcpy(&dataBlks[blk->data_ptr[i]][0], write_data + i*subSize,
-                   (size>subSize)?subSize:size);
-            size -= subSize;
-        }
-    } else {
-        memcpy(blk->trivialData,write_data,size);
-    }
-}
-
-
-void
 IIC::cleanupRefs()
 {
     for (int i = 0; i < numTags; ++i) {

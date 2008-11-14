@@ -279,31 +279,6 @@ public:
     {
         return (tag);
     }
-
-    /**
-     * Read the data out of the internal storage of a cache block. FALRU
-     * currently doesn't support data storage.
-     * @param blk The cache block to read.
-     * @param data The buffer to read the data into.
-     * @return The data from the cache block.
-     */
-    void readData(FALRUBlk *blk, uint8_t *data)
-    {
-    }
-
-    /**
-     * Write data into the internal storage of a cache block. FALRU
-     * currently doesn't support data storage.
-     * @param blk The cache block to be written.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(FALRUBlk *blk, uint8_t *data, int size,
-                   PacketList &writebacks)
-    {
-    }
 };
 
 #endif

@@ -256,33 +256,6 @@ public:
     }
 
     /**
-     * Read the data out of the internal storage of the given cache block.
-     * @param blk The cache block to read.
-     * @param data The buffer to read the data into.
-     * @return The cache block's data.
-     */
-    void readData(LRUBlk *blk, uint8_t *data)
-    {
-        std::memcpy(data, blk->data, blk->size);
-    }
-
-    /**
-     * Write data into the internal storage of the given cache block. Since in
-     * LRU does not store data differently this just needs to update the size.
-     * @param blk The cache block to write.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(LRUBlk *blk, uint8_t *data, int size,
-                   PacketList & writebacks)
-    {
-        assert(size <= blkSize);
-        blk->size = size;
-    }
-
-    /**
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();

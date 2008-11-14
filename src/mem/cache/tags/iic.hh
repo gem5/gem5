@@ -440,28 +440,10 @@ class IIC : public BaseTags
     void insertBlock(Addr addr, BlkType *blk);
 
     /**
-     * Read the data from the internal storage of the given cache block.
-     * @param blk The block to read the data from.
-     * @param data The buffer to read the data into.
-     * @return The cache block's data.
-     */
-    void readData(IICTag *blk, uint8_t *data);
-
-    /**
-     * Write the data into the internal storage of the given cache block.
-     * @param blk The block to write to.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(IICTag *blk, uint8_t *data, int size,
-                   PacketList & writebacks);
-
-    /**
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();
+
 private:
     /**
      * Return the hash of the address.
