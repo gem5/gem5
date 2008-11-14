@@ -43,6 +43,7 @@
 
 #include "base/fast_alloc.hh"
 #include "base/flags.hh"
+#include "base/misc.hh"
 #include "sim/host.hh"
 #include "sim/core.hh"
 
@@ -230,6 +231,24 @@ class Request : public FastAlloc
         assert(flags.any(VALID_VADDR));
         paddr = _paddr;
         flags.set(VALID_PADDR);
+    }
+
+    /**
+     * Generate two requests as if this request had been split into two
+     * pieces. The original request can't have been translated already.
+     */
+    void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
+    {
+        assert(flags.any(VALID_VADDR));
+        assert(flags.none(VALID_PADDR));
+        assert(split_addr > vaddr && split_addr < vaddr + size);
+        req1 = new Request;
+        *req1 = *this;
+        req2 = new Request;
+        *req2 = *this;
+        req1->size = split_addr - vaddr;
+        req2->vaddr = split_addr;
+        req2->size = size - req1->size;
     }
 
     /**

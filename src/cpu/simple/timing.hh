@@ -65,12 +65,6 @@ class TimingSimpleCPU : public BaseSimpleCPU
         int outstanding;
         PacketPtr fragments[2];
 
-        SplitMainSenderState()
-        {
-            fragments[0] = NULL;
-            fragments[1] = NULL;
-        }
-
         int
         getPendingFragment()
         {
@@ -101,6 +95,10 @@ class TimingSimpleCPU : public BaseSimpleCPU
             main_send_state->fragments[index] = NULL;
         }
     };
+
+    Fault buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2, RequestPtr &req,
+            Addr split_addr, uint8_t *data, bool read);
+    Fault buildPacket(PacketPtr &pkt, RequestPtr &req, bool read);
 
     bool handleReadPacket(PacketPtr pkt);
     // This function always implicitly uses dcache_pkt.
