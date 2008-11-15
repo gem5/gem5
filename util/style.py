@@ -314,14 +314,16 @@ def do_check_whitespace(ui, repo, *files, **args):
 
         fctx = wctx.filectx(fname)
         pctx = fctx.parents()
-        assert len(pctx) in (1, 2)
 
         file_data = fctx.data()
         lines = mdiff.splitnewlines(file_data)
-        mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
-        if len(pctx) == 2:
-            m2 = modified_lines(pctx[1].data(), file_data, len(lines))
-            mod_lines = mod_lines & m2 # only the lines that are new in both
+        if len(pctx) in (1, 2):
+            mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
+            if len(pctx) == 2:
+                m2 = modified_lines(pctx[1].data(), file_data, len(lines))
+                mod_lines = mod_lines & m2 # only the lines that are new in both
+        else:
+            mod_lines = xrange(0, len(lines))
 
         fixonly = set()
         for i,line in enumerate(lines):
