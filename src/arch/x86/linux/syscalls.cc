@@ -135,7 +135,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*   9 */ SyscallDesc("mmap", mmapFunc<X86Linux64>),
     /*  10 */ SyscallDesc("mprotect", unimplementedFunc),
     /*  11 */ SyscallDesc("munmap", munmapFunc),
-    /*  12 */ SyscallDesc("brk", obreakFunc),
+    /*  12 */ SyscallDesc("brk", brkFunc),
     /*  13 */ SyscallDesc("rt_sigaction", unimplementedFunc),
     /*  14 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
     /*  15 */ SyscallDesc("rt_sigreturn", unimplementedFunc),

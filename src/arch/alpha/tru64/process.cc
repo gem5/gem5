@@ -215,7 +215,7 @@ SyscallDesc AlphaTru64Process::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", unimplementedFunc),
     /* 16 */ SyscallDesc("chown", unimplementedFunc),
-    /* 17 */ SyscallDesc("obreak", obreakFunc),
+    /* 17 */ SyscallDesc("obreak", brkFunc),
     /* 18 */ SyscallDesc("pre_F64_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidPseudoFunc),

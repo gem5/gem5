@@ -136,7 +136,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<AlphaLinux>),
     /* 16 */ SyscallDesc("chown", chownFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("osf_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getxpid", getpidPseudoFunc),

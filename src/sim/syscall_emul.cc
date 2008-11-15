@@ -107,21 +107,27 @@ getpagesizeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
 
 SyscallReturn
-obreakFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
+brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
-    Addr junk;
-
     // change brk addr to first arg
     Addr new_brk = tc->getSyscallArg(0);
-    if (new_brk != 0) {
+
+    // in Linux at least, brk(0) returns the current break value
+    // (note that the syscall and the glibc function have different behavior)
+    if (new_brk == 0)
+        return p->brk_point;
+
+    if (new_brk > p->brk_point) {
+        // might need to allocate some new pages
         for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
                                 VMPageSize); !gen.done(); gen.next()) {
-            if (!p->pTable->translate(gen.addr(), junk))
+            if (!p->pTable->translate(gen.addr()))
                 p->pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                     VMPageSize);
         }
-        p->brk_point = new_brk;
     }
+
+    p->brk_point = new_brk;
     DPRINTF(SyscallVerbose, "Break Point changed to: %#X\n", p->brk_point);
     return p->brk_point;
 }

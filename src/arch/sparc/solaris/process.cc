@@ -80,7 +80,7 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<Solaris>),
     /* 16 */ SyscallDesc("chown", chownFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("stat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),

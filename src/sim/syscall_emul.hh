@@ -191,9 +191,9 @@ SyscallReturn exitFunc(SyscallDesc *desc, int num,
 SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num,
                               LiveProcess *p, ThreadContext *tc);
 
-/// Target obreak() handler: set brk address.
-SyscallReturn obreakFunc(SyscallDesc *desc, int num,
-                         LiveProcess *p, ThreadContext *tc);
+/// Target brk() handler: set brk address.
+SyscallReturn brkFunc(SyscallDesc *desc, int num,
+                      LiveProcess *p, ThreadContext *tc);
 
 /// Target close() handler.
 SyscallReturn closeFunc(SyscallDesc *desc, int num,

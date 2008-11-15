@@ -106,7 +106,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  14 */ SyscallDesc("mknod", unimplementedFunc),
     /*  15 */ SyscallDesc("chmod", unimplementedFunc),
     /*  16 */ SyscallDesc("lchown", unimplementedFunc), //32 bit
-    /*  17 */ SyscallDesc("brk", obreakFunc),
+    /*  17 */ SyscallDesc("brk", brkFunc),
     /*  18 */ SyscallDesc("perfctr", unimplementedFunc), //32 bit
     /*  19 */ SyscallDesc("lseek", lseekFunc), //32 bit
     /*  20 */ SyscallDesc("getpid", getpidFunc),
@@ -409,7 +409,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<Linux>),
     /* 16 */ SyscallDesc("lchown", unimplementedFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("perfctr", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
