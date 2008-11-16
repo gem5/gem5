@@ -31,7 +31,7 @@
 #ifndef __BASE_OUTPUT_HH__
 #define __BASE_OUTPUT_HH__
 
-#include <iosfwd>
+#include <ios>
 #include <map>
 #include <string>
 
@@ -43,14 +43,19 @@ class OutputDirectory
     map_t files;
     std::string dir;
 
-    std::string resolve(const std::string &name);
+    std::string resolve(const std::string &name) const;
+
+  protected:
+    std::ostream *checkForStdio(const std::string &name) const;
+    std::ostream *openFile(const std::string &filename,
+                        std::ios_base::openmode mode = std::ios::trunc) const;
 
   public:
     OutputDirectory();
     ~OutputDirectory();
 
     void setDirectory(const std::string &dir);
-    const std::string &directory();
+    const std::string &directory() const;
 
     std::ostream *create(const std::string &name, bool binary = false);
     std::ostream *find(const std::string &name);

@@ -726,6 +726,11 @@ env.SConscript('ext/libelf/SConscript',
                build_dir = joinpath(build_root, 'libelf'),
                exports = 'env')
 
+# gzstream build is shared across all configs in the build root.
+env.SConscript('ext/gzstream/SConscript',
+               build_dir = joinpath(build_root, 'gzstream'),
+               exports = 'env')
+
 ###################################################
 #
 # This function is used to set up a directory with switching headers

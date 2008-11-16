@@ -36,6 +36,8 @@
 
 #include <fstream>
 
+#include <gzstream.hh>
+
 #include "base/misc.hh"
 #include "base/output.hh"
 
@@ -50,7 +52,45 @@ OutputDirectory::OutputDirectory()
 {}
 
 OutputDirectory::~OutputDirectory()
-{}
+{
+    for (map_t::iterator i = files.begin(); i != files.end(); i++) {
+        if (i->second)
+            delete i->second;
+    }
+}
+
+std::ostream *
+OutputDirectory::checkForStdio(const string &name) const
+{
+    if (name == "cerr" || name == "stderr")
+        return &cerr;
+
+    if (name == "cout" || name == "stdout")
+        return &cout;
+
+    return NULL;
+}
+
+ostream *
+OutputDirectory::openFile(const string &filename,
+                          ios_base::openmode mode) const
+{
+    if (filename.find(".gz", filename.length()-3) < filename.length()) {
+        ogzstream *file = new ogzstream(filename.c_str(), mode);
+
+        if (!file->is_open())
+            fatal("Cannot open file %s", filename);
+
+        return file;
+    } else {
+        ofstream *file = new ofstream(filename.c_str(), mode);
+
+        if (!file->is_open())
+            fatal("Cannot open file %s", filename);
+
+        return file;
+    }
+}
 
 void
 OutputDirectory::setDirectory(const string &d)
@@ -66,7 +106,7 @@ OutputDirectory::setDirectory(const string &d)
 }
 
 const string &
-OutputDirectory::directory()
+OutputDirectory::directory() const
 {
     if (dir.empty())
         panic("Output directory not set!");
@@ -74,8 +114,8 @@ OutputDirectory::directory()
     return dir;
 }
 
-string
-OutputDirectory::resolve(const string &name)
+inline string
+OutputDirectory::resolve(const string &name) const
 {
     return (name[0] != '/') ? dir + name : name;
 }
@@ -83,16 +123,14 @@ OutputDirectory::resolve(const string &name)
 ostream *
 OutputDirectory::create(const string &name, bool binary)
 {
-    if (name == "cerr" || name == "stderr")
-        return &cerr;
+    ostream *file = checkForStdio(name);
+    if (file)
+        return file;
 
-    if (name == "cout" || name == "stdout")
-        return &cout;
-
-    ofstream *file = new ofstream(resolve(name).c_str(),
-            ios::trunc | binary ?  ios::binary : (ios::openmode)0);
-    if (!file->is_open())
-        fatal("Cannot open file %s", name);
+    string filename = resolve(name);
+    ios_base::openmode mode =
+        ios::trunc | binary ?  ios::binary : (ios::openmode)0;
+    file = openFile(filename, mode);
 
     return file;
 }
@@ -100,21 +138,16 @@ OutputDirectory::create(const string &name, bool binary)
 ostream *
 OutputDirectory::find(const string &name)
 {
-    if (name == "cerr" || name == "stderr")
-        return &cerr;
-
-    if (name == "cout" || name == "stdout")
-        return &cout;
+    ostream *file = checkForStdio(name);
+    if (file)
+        return file;
 
     string filename = resolve(name);
     map_t::iterator i = files.find(filename);
     if (i != files.end())
         return (*i).second;
 
-    ofstream *file = new ofstream(filename.c_str(), ios::trunc);
-    if (!file->is_open())
-        fatal("Cannot open file %s", filename);
-
+    file = openFile(filename);
     files[filename] = file;
     return file;
 }
