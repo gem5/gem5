@@ -220,9 +220,11 @@ def main():
 
         done = True
         print "Base Flags:"
+        traceflags.baseFlags.sort()
         print_list(traceflags.baseFlags, indent=4)
         print
         print "Compound Flags:"
+        traceflags.compoundFlags.sort()
         for flag in traceflags.compoundFlags:
             if flag == 'All':
                 continue
