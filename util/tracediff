@@ -87,8 +87,11 @@ if (@ARGV < 1) {
 
 foreach $arg (@ARGV) {
     $a1 = $a2 = '';
-    @subargs = split('#', $arg, -1);
+    @subargs = split('#', $arg);
     foreach $subarg (@subargs) {
+        if ($subarg eq '') {
+            next;
+        }
         @pair = split('\|', $subarg, -1); # -1 enables null trailing fields
         if (@pair == 1) {
             $a1 .= $subarg;
@@ -97,7 +100,7 @@ foreach $arg (@ARGV) {
             $a1 .= $pair[0];
             $a2 .= $pair[1];
         } else {
-            print 'Parse error: too many |s in ', $arg, '\n';
+            print 'Parse error: too many |s in ', $arg, "\n";
             exit(1);
         }
     }
