@@ -5,14 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 22:40:47
-M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
-M5 commit date Wed Nov 05 16:19:17 2008 -0500
-M5 started Nov  5 2008 22:41:20
+M5 compiled Nov 17 2008 13:45:49
+M5 revision 5749:7015e400bd1deffa6e51e839baf2ed6d9bd3e31f
+M5 commit date Sat Nov 15 23:42:11 2008 -0500
+M5 started Nov 17 2008 13:46:11
 M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/sparc/linux/simple-timing
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sav
-Couldn't unlink  build/SPARC_SE/tests/fast/long/70.twolf/sparc/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -28,4 +26,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 270578958000 because target called exit()
+122 123 124 Exiting @ tick 270578573000 because target called exit()
