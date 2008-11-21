@@ -655,18 +655,22 @@ LiveProcess::create(LiveProcessParams * params)
              "executable as a static binary and try again.\n");
 
 #if THE_ISA == ALPHA_ISA
+    if (objFile->getArch() != ObjectFile::Alpha)
+        fatal("Object file architecture does not match compiled ISA (Alpha).");
+
     if (objFile->hasTLS())
         fatal("Object file has a TLS section and single threaded TLS is not\n"
               "       currently supported for Alpha! Please recompile your "
               "executable with \n       a non-TLS toolchain.\n");
 
-    if (objFile->getArch() != ObjectFile::Alpha)
-        fatal("Object file architecture does not match compiled ISA (Alpha).");
     switch (objFile->getOpSys()) {
       case ObjectFile::Tru64:
         process = new AlphaTru64Process(params, objFile);
         break;
 
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new AlphaLinuxProcess(params, objFile);
         break;
@@ -675,9 +679,13 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == SPARC_ISA
-    if (objFile->getArch() != ObjectFile::SPARC64 && objFile->getArch() != ObjectFile::SPARC32)
+    if (objFile->getArch() != ObjectFile::SPARC64 &&
+        objFile->getArch() != ObjectFile::SPARC32)
         fatal("Object file architecture does not match compiled ISA (SPARC).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         if (objFile->getArch() == ObjectFile::SPARC64) {
             process = new Sparc64LinuxProcess(params, objFile);
@@ -690,6 +698,7 @@ LiveProcess::create(LiveProcessParams * params)
       case ObjectFile::Solaris:
         process = new SparcSolarisProcess(params, objFile);
         break;
+
       default:
         fatal("Unknown/unsupported operating system.");
     }
@@ -697,9 +706,13 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::X86)
         fatal("Object file architecture does not match compiled ISA (x86).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new X86LinuxProcess(params, objFile);
         break;
+
       default:
         fatal("Unknown/unsupported operating system.");
     }
@@ -707,6 +720,9 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::Mips)
         fatal("Object file architecture does not match compiled ISA (MIPS).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(params, objFile);
         break;
@@ -718,6 +734,9 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::Arm)
         fatal("Object file architecture does not match compiled ISA (ARM).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new ArmLinuxProcess(params, objFile);
         break;
