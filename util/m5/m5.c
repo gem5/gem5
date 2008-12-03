@@ -29,6 +29,8 @@
  */
 
 #include <inttypes.h>
+#include <err.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -37,154 +39,192 @@
 #include "m5op.h"
 
 char *progname;
+char *command = "unspecified";
+void usage();
+
+void
+parse_int_args(int argc, char *argv[], uint64_t ints[], int len)
+{
+    if (argc > len)
+        usage();
+
+    int i;
+    for (i = 0; i < len; ++i)
+        ints[i] = (i < argc) ? strtoul(argv[i], NULL, 0) : 0;
+}
+
+int
+read_file(int dest_fid)
+{
+    char buf[256*1024];
+    int offset = 0;
+    int len;
+
+    while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
+        write(dest_fid, buf, len);
+        offset += len;
+    }
+}
+
+void
+do_exit(int argc, char *argv[])
+{
+    if (argc > 1)
+        usage();
+
+    m5_exit((argc > 0) ? strtoul(argv[0], NULL, 0) : 0);
+}
+
+void
+do_reset_stats(int argc, char *argv[])
+{
+    uint64_t ints[2];
+    parse_int_args(argc, argv, ints, 2);
+    m5_reset_stats(ints[0], ints[1]);
+}
+
+void
+do_dump_stats(int argc, char *argv[])
+{
+    uint64_t ints[2];
+    parse_int_args(argc, argv, ints, 2);
+    m5_dump_stats(ints[0], ints[1]);
+}
+
+void
+do_dump_reset_stats(int argc, char *argv[])
+{
+    uint64_t ints[2];
+    parse_int_args(argc, argv, ints, 2);
+    m5_dumpreset_stats(ints[0], ints[1]);
+}
+
+void
+do_read_file(int argc, char *argv[])
+{
+    if (argc > 0)
+        usage();
+
+    read_file(STDOUT_FILENO);
+}
+
+void
+do_exec_file(int argc, char *argv[])
+{
+    if (argc > 0)
+        usage();
+
+    const char *destname = "/tmp/execfile";
+
+    int fid = open(destname, O_WRONLY, 0777);
+    int len = read_file(fid);
+    close(fid);
+    if (len > 0) {
+        execl(destname, "execfile", NULL);
+        err(1, "execl failed!");
+    }
+}
+
+void
+do_checkpoint(int argc, char *argv[])
+{
+    uint64_t ints[2];
+    parse_int_args(argc, argv, ints, 2);
+    m5_checkpoint(ints[0], ints[1]);
+}
+
+void
+do_load_symbol(int argc, char *argv[])
+{
+    if (argc != 2)
+        usage();
+
+    uint64_t addr = strtoul(argv[0], NULL, 0);
+    char *symbol = argv[1];
+    m5_loadsymbol(addr, symbol);
+}
+
+void
+do_initparam(int argc, char *argv[])
+{
+    if (argc != 0)
+        usage();
+
+ 
+    printf("%ld", m5_initparam());
+}
+
+void
+do_sw99param(int argc, char *argv[])
+{
+    if (argc != 0)
+        usage();
+
+    uint64_t param = m5_initparam();
+
+    // run-time, rampup-time, rampdown-time, warmup-time, connections
+    printf("%d %d %d %d %d", (param >> 48) & 0xfff,
+           (param >> 36) & 0xfff, (param >> 24) & 0xfff,
+           (param >> 12) & 0xfff, (param >> 0) & 0xfff);
+}
+
+struct MainFunc
+{
+    char *name;
+    void (*func)(int argc, char *argv[]);
+    char *usage;
+};
+
+struct MainFunc mainfuncs[] = {
+    { "exit",           do_exit,             "[delay]" },
+    { "resetstats",     do_reset_stats,      "[delay [period]]" },
+    { "dumpstats",      do_dump_stats,       "[delay [period]]" },
+    { "dumpresetstats", do_dump_reset_stats, "[delay [period]]" },
+    { "readfile",       do_read_file,        "[filename]" },
+    { "execfile",       do_exec_file,        "<filename>" },
+    { "checkpoint",     do_checkpoint,       "[delay [period]]" },
+    { "loadsymbol",     do_load_symbol,      "<address> <symbol>" },
+    { "initparam",      do_initparam,        "" },
+    { "sw99param",      do_sw99param,        "" },
+};
+int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
 
 void
 usage()
 {
-    printf("usage: m5 initparam\n"
-           "       m5 sw99param\n"
-           "       m5 exit [delay]\n"
-           "       m5 resetstats [delay [period]]\n"
-           "       m5 dumpstats [delay [period]]\n"
-           "       m5 dumpresetstats [delay [period]]\n"
-           "       m5 checkpoint [delay [period]]\n"
-           "       m5 readfile\n"
-           "\n"
-           "All times in nanoseconds!\n");
+    int i;
+
+    for (i = 0; i < numfuncs; ++i) {
+        char *header = i ? "" : "usage:";
+        fprintf(stderr, "%-6s %s %s %s\n",
+                header, progname, mainfuncs[i].name, mainfuncs[i].usage);
+    }
+    fprintf(stderr, "\n");
+    fprintf(stderr, "All times in nanoseconds!\n");
+
     exit(1);
 }
-
-#define COMPARE(X) (strcmp(X, command) == 0)
 
 int
 main(int argc, char *argv[])
 {
-    char *command;
-    uint64_t param;
-    uint64_t arg1 = 0;
-    uint64_t arg2 = 0;
-
     progname = argv[0];
     if (argc < 2)
-        usage();
+        usage(1);
 
     command = argv[1];
 
-    if (COMPARE("initparam")) {
-        if (argc != 2)
-            usage();
+    argv += 2;
+    argc -= 2;
 
-        printf("%ld", m5_initparam());
-        return 0;
+    int i;
+    for (i = 0; i < numfuncs; ++i) {
+        if (strcmp(command, mainfuncs[i].name) != 0)
+            continue;
+
+        mainfuncs[i].func(argc, argv);
+        exit(0);
     }
 
-    if (COMPARE("sw99param")) {
-        if (argc != 2)
-            usage();
-
-        param = m5_initparam();
-        // run-time, rampup-time, rampdown-time, warmup-time, connections
-        printf("%d %d %d %d %d", (param >> 48) & 0xfff,
-               (param >> 36) & 0xfff, (param >> 24) & 0xfff,
-               (param >> 12) & 0xfff, (param >> 0) & 0xfff);
-
-        return 0;
-    }
-
-    if (COMPARE("exit")) {
-        switch (argc) {
-          case 3:
-            arg1 = strtoul(argv[2], NULL, 0);
-          case 2:
-            m5_exit(arg1);
-            return 0;
-
-          default:
-            usage();
-        }
-    }
-
-    if (COMPARE("resetstats")) {
-        switch (argc) {
-          case 4:
-            arg2 = strtoul(argv[3], NULL, 0);
-          case 3:
-            arg1 = strtoul(argv[2], NULL, 0);
-          case 2:
-            m5_reset_stats(arg1, arg2);
-            return 0;
-
-          default:
-            usage();
-        }
-    }
-
-    if (COMPARE("dumpstats")) {
-        switch (argc) {
-          case 4:
-            arg2 = strtoul(argv[3], NULL, 0);
-          case 3:
-            arg1 = strtoul(argv[2], NULL, 0);
-          case 2:
-            m5_dump_stats(arg1, arg2);
-            return 0;
-
-          default:
-            usage();
-        }
-    }
-
-    if (COMPARE("dumpresetstats")) {
-        switch (argc) {
-          case 4:
-            arg2 = strtoul(argv[3], NULL, 0);
-          case 3:
-            arg1 = strtoul(argv[2], NULL, 0);
-          case 2:
-            m5_dumpreset_stats(arg1, arg2);
-            return 0;
-
-          default:
-            usage();
-        }
-    }
-
-    if (COMPARE("readfile")) {
-            char buf[256*1024];
-            int offset = 0;
-            int len;
-
-            if (argc != 2)
-                    usage();
-
-            while ((len = m5_readfile(buf, sizeof(buf), offset)) > 0) {
-                    write(STDOUT_FILENO, buf, len);
-                    offset += len;
-            }
-
-            return 0;
-    }
-
-    if (COMPARE("checkpoint")) {
-        switch (argc) {
-          case 4:
-            arg2 = strtoul(argv[3], NULL, 0);
-          case 3:
-            arg1 = strtoul(argv[2], NULL, 0);
-          case 2:
-            m5_checkpoint(arg1, arg2);
-            return 0;
-
-          default:
-            usage();
-        }
-
-        return 0;
-    }
-
-    if (COMPARE("loadsymbol")) {
-        m5_loadsymbol(arg1);
-        return 0;
-    }
-    usage();
+    usage(1);
 }
