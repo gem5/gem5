@@ -28,6 +28,11 @@
  * Authors: Nathan Binkert
  */
 
+#ifdef linux
+#define _GNU_SOURCE
+#include <sched.h>
+#endif
+
 #include <inttypes.h>
 #include <err.h>
 #include <fcntl.h>
@@ -168,6 +173,31 @@ do_sw99param(int argc, char *argv[])
            (param >> 12) & 0xfff, (param >> 0) & 0xfff);
 }
 
+#ifdef linux
+void
+do_pin(int argc, char *argv[])
+{
+    if (argc < 2)
+        usage();
+
+    cpu_set_t mask;  
+    CPU_ZERO(&mask);
+
+    const char *sep = ",";
+    char *target = strtok(argv[0], sep);
+    while (target) {
+        CPU_SET(atoi(target), &mask);
+        target = strtok(NULL, sep);
+    }            
+
+    if (sched_setaffinity(0, sizeof(cpu_set_t), &mask) < 0)
+        err(1, "setaffinity");
+
+    execvp(argv[1], &argv[1]);
+    err(1, "execvp failed!");
+}
+#endif
+
 struct MainFunc
 {
     char *name;
@@ -186,6 +216,9 @@ struct MainFunc mainfuncs[] = {
     { "loadsymbol",     do_load_symbol,      "<address> <symbol>" },
     { "initparam",      do_initparam,        "" },
     { "sw99param",      do_sw99param,        "" },
+#ifdef linux
+    { "pin",            do_pin,              "<cpu> <program> [args ...]" }
+#endif
 };
 int numfuncs = sizeof(mainfuncs) / sizeof(mainfuncs[0]);
 
