@@ -167,6 +167,13 @@ main()
 
     cprintf("%c  %c\n", 'c', 65);
 
-    cout << '9';
+    cout << '9' << endl;
+
+    cout << endl;
+
+    cprintf("%08.4f\n", 99.99);
+    cprintf("%0*.*f\n", 8, 4, 99.99);
+    cprintf("%07.*f\n", 4, 1.234);
+    cprintf("%#0*x\n", 9, 123412);
     return 0;
 }
