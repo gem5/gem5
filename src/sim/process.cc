@@ -86,6 +86,16 @@ using namespace TheISA;
 // current number of allocated processes
 int num_processes = 0;
 
+template<class IntType>
+M5_auxv_t<IntType>::M5_auxv_t(IntType type, IntType val)
+{
+    a_type = TheISA::htog(type);
+    a_val = TheISA::htog(val);
+}
+
+template class M5_auxv_t<uint32_t>;
+template class M5_auxv_t<uint64_t>;
+
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system), checkpointRestored(false),
     max_stack_size(params->max_stack_size)

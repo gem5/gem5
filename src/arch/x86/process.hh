@@ -64,26 +64,10 @@
 
 namespace X86ISA
 {
-    struct M5_64_auxv_t
-    {
-        int64_t a_type;
-        union {
-            int64_t a_val;
-            int64_t a_ptr;
-            int64_t a_fcn;
-        };
-
-        M5_64_auxv_t()
-        {}
-
-        M5_64_auxv_t(int64_t type, int64_t val);
-    };
 
     class X86LiveProcess : public LiveProcess
     {
       protected:
-        std::vector<M5_64_auxv_t> auxv;
-
         X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
         void startup();
