@@ -462,8 +462,8 @@ class IGbE : public EtherDevice
         int descLeft() const
         {
             int left = unusedCache.size();
-            if (cachePnt - descTail() >= 0)
-                left += (cachePnt - descTail());
+            if (cachePnt >= descTail())
+                left += (descLen() - cachePnt + descTail());
             else
                 left += (descTail() - cachePnt);
 
@@ -636,6 +636,21 @@ class IGbE : public EtherDevice
         bool pktWaiting;
         bool pktMultiDesc;
 
+        // tso variables
+        bool useTso;
+        Addr tsoHeaderLen;
+        Addr tsoMss;
+        Addr tsoTotalLen;
+        Addr tsoUsedLen;
+        Addr tsoPrevSeq;;
+        Addr tsoPktPayloadBytes;
+        bool tsoLoadedHeader;
+        bool tsoPktHasHeader;
+        uint8_t tsoHeader[256];
+        Addr tsoDescBytesUsed;
+        Addr tsoCopyBytes;
+        int tsoPkts;
+
       public:
         TxDescCache(IGbE *i, std::string n, int s);
 
@@ -643,8 +658,9 @@ class IGbE : public EtherDevice
          * return the size the of the packet to reserve space in tx fifo.
          * @return size of the packet
          */
-        int getPacketSize();
+        int getPacketSize(EthPacketPtr p);
         void getPacketData(EthPacketPtr p);
+        void processContextDesc();
 
         /** Ask if the packet has been transfered so the state machine can give
          * it to the fifo.
@@ -669,6 +685,9 @@ class IGbE : public EtherDevice
          */
         void pktComplete();
         EventWrapper<TxDescCache, &TxDescCache::pktComplete> pktEvent;
+
+        void headerComplete();
+        EventWrapper<TxDescCache, &TxDescCache::headerComplete> headerEvent;
 
         virtual bool hasOutstandingEvents();
 

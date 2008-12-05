@@ -200,6 +200,7 @@ int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
 int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
 int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
 int hdrlen(TxDesc *d) { assert(isContext(d)); return bits(d->d2,47,40); }
+int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
 } // namespace TxdOp
 
 
