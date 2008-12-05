@@ -162,6 +162,9 @@ struct IpHdr : public ip_hdr
     uint32_t dst() const { return ntohl(ip_dst); }
 
     void sum(uint16_t sum) { ip_sum = sum; }
+    void id(uint16_t _id) { ip_id = htons(_id); }
+    void len(uint16_t _len) { ip_len = htons(_len); }
+
 
     bool options(std::vector<const IpOpt *> &vec) const;
 
@@ -260,6 +263,8 @@ struct TcpHdr : public tcp_hdr
     uint16_t urp() const { return ntohs(th_urp); }
 
     void sum(uint16_t sum) { th_sum = sum; }
+    void seq(uint32_t _seq) { th_seq = htonl(_seq); }
+    void flags(uint8_t _flags) { th_flags  = _flags; } 
 
     bool options(std::vector<const TcpOpt *> &vec) const;
 
@@ -348,6 +353,7 @@ struct UdpHdr : public udp_hdr
     uint16_t sum() const { return uh_sum; }
 
     void sum(uint16_t sum) { uh_sum = sum; }
+    void len(uint16_t _len) { uh_ulen = htons(_len); }
 
     int size() const { return sizeof(udp_hdr); }
     const uint8_t *bytes() const { return (const uint8_t *)this; }
