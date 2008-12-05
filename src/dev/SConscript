@@ -98,7 +98,7 @@ if env['FULL_SYSTEM']:
     CompoundFlag('DiskImageAll', [ 'DiskImageRead', 'DiskImageWrite' ])
     CompoundFlag('EthernetAll', [ 'Ethernet', 'EthernetPIO', 'EthernetDMA',
         'EthernetData' , 'EthernetDesc', 'EthernetIntr', 'EthernetSM',
-        'EthernetCksum' ])
+        'EthernetCksum', 'EthernetEEPROM' ])
     CompoundFlag('EthernetNoData', [ 'Ethernet', 'EthernetPIO', 'EthernetDesc',
         'EthernetIntr', 'EthernetSM', 'EthernetCksum' ])
     CompoundFlag('IdeAll', [ 'IdeCtrl', 'IdeDisk' ])

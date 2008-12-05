@@ -59,11 +59,14 @@ const uint32_t REG_FCTTV    = 0x00170;
 const uint32_t REG_TIPG     = 0x00410;
 const uint32_t REG_AIFS     = 0x00458;
 const uint32_t REG_LEDCTL   = 0x00e00;
+const uint32_t REG_EICR     = 0x01580;
+const uint32_t REG_IVAR0    = 0x01700;
 const uint32_t REG_FCRTL    = 0x02160;
 const uint32_t REG_FCRTH    = 0x02168;
 const uint32_t REG_RDBAL    = 0x02800;
 const uint32_t REG_RDBAH    = 0x02804;
 const uint32_t REG_RDLEN    = 0x02808;
+const uint32_t REG_SRRCTL   = 0x0280C;
 const uint32_t REG_RDH      = 0x02810;
 const uint32_t REG_RDT      = 0x02818;
 const uint32_t REG_RDTR     = 0x02820;
@@ -74,12 +77,17 @@ const uint32_t REG_TDBAL    = 0x03800;
 const uint32_t REG_TDBAH    = 0x03804;
 const uint32_t REG_TDLEN    = 0x03808;
 const uint32_t REG_TDH      = 0x03810;
+const uint32_t REG_TXDCA_CTL = 0x03814;
 const uint32_t REG_TDT      = 0x03818;
 const uint32_t REG_TIDV     = 0x03820;
 const uint32_t REG_TXDCTL   = 0x03828;
 const uint32_t REG_TADV     = 0x0382C;
+const uint32_t REG_TDWBAL   = 0x03838;
+const uint32_t REG_TDWBAH   = 0x0383C;
 const uint32_t REG_CRCERRS  = 0x04000;
 const uint32_t REG_RXCSUM   = 0x05000;
+const uint32_t REG_RLPML    = 0x05004;
+const uint32_t REG_RFCTL    = 0x05008;
 const uint32_t REG_MTA      = 0x05200;
 const uint32_t REG_RAL      = 0x05400;
 const uint32_t REG_RAH      = 0x05404;
@@ -87,6 +95,9 @@ const uint32_t REG_VFTA     = 0x05600;
 
 const uint32_t REG_WUC      = 0x05800;
 const uint32_t REG_MANC     = 0x05820;
+const uint32_t REG_SWSM     = 0x05B50;
+const uint32_t REG_FWSM     = 0x05B54;
+const uint32_t REG_SWFWSYNC = 0x05B5C;
 
 const uint8_t EEPROM_READ_OPCODE_SPI    = 0x03;
 const uint8_t EEPROM_RDSR_OPCODE_SPI    = 0x05;
@@ -94,9 +105,9 @@ const uint8_t EEPROM_SIZE               = 64;
 const uint16_t EEPROM_CSUM              = 0xBABA;
 
 const uint8_t VLAN_FILTER_TABLE_SIZE    = 128;
-const uint8_t RCV_ADDRESS_TABLE_SIZE    = 16;
+const uint8_t RCV_ADDRESS_TABLE_SIZE    = 24;
 const uint8_t MULTICAST_TABLE_SIZE      = 128;
-const uint32_t STATS_REGS_SIZE           = 0x124;
+const uint32_t STATS_REGS_SIZE           = 0x228;
 
 
 // Registers in that are accessed in the PHY
@@ -108,14 +119,17 @@ const uint8_t PHY_EPSTATUS      = 15;
 const uint8_t PHY_AGC           = 18;
 
 // Receive Descriptor Status Flags
-const uint8_t RXDS_PIF         = 0x80;
-const uint8_t RXDS_IPCS        = 0x40;
-const uint8_t RXDS_TCPCS       = 0x20;
-const uint8_t RXDS_UDPCS       = 0x10;
-const uint8_t RXDS_VP          = 0x08;
-const uint8_t RXDS_IXSM        = 0x04;
-const uint8_t RXDS_EOP         = 0x02;
-const uint8_t RXDS_DD          = 0x01;
+const uint16_t RXDS_DYNINT      = 0x800;
+const uint16_t RXDS_UDPV        = 0x400;
+const uint16_t RXDS_CRCV        = 0x100;
+const uint16_t RXDS_PIF         = 0x080;
+const uint16_t RXDS_IPCS        = 0x040;
+const uint16_t RXDS_TCPCS       = 0x020;
+const uint16_t RXDS_UDPCS       = 0x010;
+const uint16_t RXDS_VP          = 0x008;
+const uint16_t RXDS_IXSM        = 0x004;
+const uint16_t RXDS_EOP         = 0x002;
+const uint16_t RXDS_DD          = 0x001;
 
 // Receive Descriptor Error Flags
 const uint8_t RXDE_RXE         = 0x80;
@@ -124,6 +138,32 @@ const uint8_t RXDE_TCPE        = 0x20;
 const uint8_t RXDE_SEQ         = 0x04;
 const uint8_t RXDE_SE          = 0x02;
 const uint8_t RXDE_CE          = 0x01;
+
+// Receive Descriptor Extended Error Flags
+const uint16_t RXDEE_HBO       = 0x008;
+const uint16_t RXDEE_CE        = 0x010;
+const uint16_t RXDEE_LE        = 0x020;
+const uint16_t RXDEE_PE        = 0x080;
+const uint16_t RXDEE_OSE       = 0x100;
+const uint16_t RXDEE_USE       = 0x200;
+const uint16_t RXDEE_TCPE      = 0x400;
+const uint16_t RXDEE_IPE       = 0x800;
+
+
+// Receive Descriptor Types
+const uint8_t RXDT_LEGACY      = 0x00;
+const uint8_t RXDT_ADV_ONEBUF  = 0x01;
+const uint8_t RXDT_ADV_SPLIT_A = 0x05;
+
+// Receive Descriptor Packet Types
+const uint16_t RXDP_IPV4       = 0x001;
+const uint16_t RXDP_IPV4E      = 0x002;
+const uint16_t RXDP_IPV6       = 0x004;
+const uint16_t RXDP_IPV6E      = 0x008;
+const uint16_t RXDP_TCP        = 0x010;
+const uint16_t RXDP_UDP        = 0x020;
+const uint16_t RXDP_SCTP       = 0x040;
+const uint16_t RXDP_NFS        = 0x080;
 
 // Interrupt types
 enum IntTypes
@@ -147,12 +187,38 @@ enum IntTypes
 
 // Receive Descriptor struct
 struct RxDesc {
-    Addr buf;
-    uint16_t len;
-    uint16_t csum;
-    uint8_t status;
-    uint8_t errors;
-    uint16_t vlan;
+    union { 
+        struct {
+            Addr buf;
+            uint16_t len;
+            uint16_t csum;
+            uint8_t status;
+            uint8_t errors;
+            uint16_t vlan;
+        } legacy;
+        struct {
+            Addr pkt;
+            Addr hdr;
+        } adv_read;
+        struct {
+            uint16_t rss_type:4;
+            uint16_t pkt_type:12;
+            uint16_t __reserved1:5;
+            uint16_t header_len:10;
+            uint16_t sph:1;
+            union {
+                struct {
+                    uint16_t id;
+                    uint16_t csum;
+                };
+                uint32_t rss_hash;
+            };
+            uint32_t status:20;
+            uint32_t errors:12;
+            uint16_t pkt_len;
+            uint16_t vlan_tag;
+        } adv_wb ;
+    };
 };
 
 struct TxDesc {
@@ -163,24 +229,33 @@ struct TxDesc {
 namespace TxdOp {
 const uint8_t TXD_CNXT = 0x0;
 const uint8_t TXD_DATA = 0x1;
+const uint8_t TXD_ADVCNXT = 0x2;
+const uint8_t TXD_ADVDATA = 0x3;
 
 bool isLegacy(TxDesc *d) { return !bits(d->d2,29,29); }
 uint8_t getType(TxDesc *d) { return bits(d->d2, 23,20); }
-bool isContext(TxDesc *d) { return !isLegacy(d) && getType(d) == TXD_CNXT; }
-bool isData(TxDesc *d) { return !isLegacy(d) && getType(d) == TXD_DATA; }
+bool isType(TxDesc *d, uint8_t type) { return getType(d) == type; }
+bool isTypes(TxDesc *d, uint8_t t1, uint8_t t2) { return isType(d, t1) || isType(d, t2); }
+bool isAdvDesc(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_ADVDATA,TXD_ADVCNXT);  }
+bool isContext(TxDesc *d) { return !isLegacy(d) && isTypes(d,TXD_CNXT, TXD_ADVCNXT); }
+bool isData(TxDesc *d) { return !isLegacy(d) && isTypes(d, TXD_DATA, TXD_ADVDATA); }
 
 Addr getBuf(TxDesc *d) { assert(isLegacy(d) || isData(d)); return d->d1; }
 Addr getLen(TxDesc *d) { if (isLegacy(d)) return bits(d->d2,15,0); else return bits(d->d2, 19,0); }
-void setDd(TxDesc *d)
-{
-    replaceBits(d->d2, 35, 32, ULL(1));
-}
+void setDd(TxDesc *d) { replaceBits(d->d2, 35, 32, ULL(1)); }
 
-bool ide(TxDesc *d)  { return bits(d->d2, 31,31); }
+bool ide(TxDesc *d)  { return bits(d->d2, 31,31) && (getType(d) == TXD_DATA || isLegacy(d)); }
 bool vle(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 30,30); }
 bool rs(TxDesc *d)   { return bits(d->d2, 27,27); }
 bool ic(TxDesc *d)   { assert(isLegacy(d) || isData(d)); return isLegacy(d) && bits(d->d2, 26,26); }
-bool tse(TxDesc *d)  { return (isData(d) || isContext(d)) && bits(d->d2, 26,26); }
+bool tse(TxDesc *d)  { 
+    if (isTypes(d, TXD_CNXT, TXD_DATA))
+        return bits(d->d2, 26,26); 
+    if (isType(d, TXD_ADVDATA))
+        return bits(d->d2, 31, 31);
+    return false;
+}
+
 bool ifcs(TxDesc *d) { assert(isLegacy(d) || isData(d)); return bits(d->d2, 25,25); }
 bool eop(TxDesc *d)  { assert(isLegacy(d) || isData(d)); return bits(d->d2, 24,24); }
 bool ip(TxDesc *d)   { assert(isContext(d)); return bits(d->d2, 25,25); }
@@ -199,7 +274,14 @@ int ipcse(TxDesc *d) { assert(isContext(d)); return bits(d->d1,31,16); }
 int ipcso(TxDesc *d) { assert(isContext(d)); return bits(d->d1,15,8); }
 int ipcss(TxDesc *d) { assert(isContext(d)); return bits(d->d1,7,0); }
 int mss(TxDesc *d) { assert(isContext(d)); return bits(d->d2,63,48); }
-int hdrlen(TxDesc *d) { assert(isContext(d)); return bits(d->d2,47,40); }
+int hdrlen(TxDesc *d) { 
+    assert(isContext(d)); 
+    if (!isAdvDesc(d))
+        return bits(d->d2,47,40);
+    return bits(d->d2, 47,40) + bits(d->d1, 8,0) + bits(d->d1, 15, 9); 
+}
+
+int getTsoLen(TxDesc *d) { assert(isType(d, TXD_ADVDATA)); return bits(d->d2, 63,46); }
 int utcmd(TxDesc *d) { assert(isContext(d)); return bits(d->d2,24,31); }
 } // namespace TxdOp
 
@@ -304,8 +386,8 @@ struct Regs {
     struct EERD : public Reg<uint32_t> { // 0x0014 EERD Register
         using Reg<uint32_t>::operator=;
         ADD_FIELD32(start,0,1);  // start read
-        ADD_FIELD32(done,4,1);   // done read
-        ADD_FIELD32(addr,8,8);   // address
+        ADD_FIELD32(done,1,1);   // done read
+        ADD_FIELD32(addr,2,14);   // address
         ADD_FIELD32(data,16,16); // data
     };
     EERD eerd;
@@ -471,6 +553,17 @@ struct Regs {
     };
     RDLEN rdlen;
 
+    struct SRRCTL : public Reg<uint32_t> { // 0x280C SRRCTL Register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(pktlen, 0, 7);
+        ADD_FIELD32(hdrlen, 16, 7); // guess based on header, not documented
+        ADD_FIELD32(desctype, 25,3); // type of descriptor 000 legacy, 001 adv,
+                                     //101 hdr split
+        int bufLen() { return pktlen() << 10; }
+        int hdrLen() { return hdrlen() << 6; }
+    };
+    SRRCTL srrctl;
+
     struct RDH : public Reg<uint32_t> { // 0x2810 RDH Register
         using Reg<uint32_t>::operator=;
         ADD_FIELD32(rdh,0,16); // head of the descriptor ring
@@ -532,6 +625,14 @@ struct Regs {
     };
     TDH tdh;
 
+    struct TXDCA_CTL : public Reg<uint32_t> { // 0x3814 TXDCA_CTL Register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(cpu_mask, 0, 5);
+        ADD_FIELD32(enabled, 5,1);
+        ADD_FIELD32(relax_ordering, 6, 1);
+    };
+    TXDCA_CTL txdca_ctl;
+
     struct TDT : public Reg<uint32_t> { // 0x3818 TDT Register
         using Reg<uint32_t>::operator=;
         ADD_FIELD32(tdt,0,16); // tail of the descriptor ring
@@ -564,14 +665,41 @@ struct Regs {
         ADD_FIELD32(idv,0,16); // absolute interrupt delay
     };
     TADV tadv;
+/*
+    struct TDWBA : public Reg<uint64_t> { // 0x3838 TDWBA Register
+        using Reg<uint64_t>::operator=;
+        ADD_FIELD64(en,0,1); // enable  transmit description ring address writeback
+        ADD_FIELD64(tdwbal,2,32); // base address of transmit descriptor ring address writeback
+        ADD_FIELD64(tdwbah,32,32); // base address of transmit descriptor ring
+    };
+    TDWBA tdwba;*/
+    uint64_t tdwba;
 
     struct RXCSUM : public Reg<uint32_t> { // 0x5000 RXCSUM Register
         using Reg<uint32_t>::operator=;
         ADD_FIELD32(pcss,0,8);
         ADD_FIELD32(ipofld,8,1);
         ADD_FIELD32(tuofld,9,1);
+        ADD_FIELD32(pcsd, 13,1);
     };
     RXCSUM rxcsum;
+
+    uint32_t rlpml; // 0x5004 RLPML probably maximum accepted packet size
+
+    struct RFCTL : public Reg<uint32_t> { // 0x5008 RFCTL Register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(iscsi_dis,0,1);
+        ADD_FIELD32(iscsi_dwc,1,5);
+        ADD_FIELD32(nfsw_dis,6,1);
+        ADD_FIELD32(nfsr_dis,7,1);
+        ADD_FIELD32(nfs_ver,8,2);
+        ADD_FIELD32(ipv6_dis,10,1);
+        ADD_FIELD32(ipv6xsum_dis,11,1);
+        ADD_FIELD32(ackdis,13,1);
+        ADD_FIELD32(ipfrsp_dis,14,1);
+        ADD_FIELD32(exsten,15,1);
+    };
+    RFCTL rfctl;
 
     struct MANC : public Reg<uint32_t> { // 0x5820 MANC Register
         using Reg<uint32_t>::operator=;
@@ -605,6 +733,32 @@ struct Regs {
     };
     MANC manc;
 
+    struct SWSM : public Reg<uint32_t> { // 0x5B50 SWSM register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(smbi,0,1); // Semaphone bit
+        ADD_FIELD32(swesmbi, 1,1); // Software eeporm semaphore
+        ADD_FIELD32(wmng, 2,1); // Wake MNG clock
+        ADD_FIELD32(reserved, 3, 29);
+    };
+    SWSM swsm;
+
+    struct FWSM : public Reg<uint32_t> { // 0x5B54 FWSM register
+        using Reg<uint32_t>::operator=;
+        ADD_FIELD32(eep_fw_semaphore,0,1); 
+        ADD_FIELD32(fw_mode, 1,3); 
+        ADD_FIELD32(ide, 4,1); 
+        ADD_FIELD32(sol, 5,1);
+        ADD_FIELD32(eep_roload, 6,1);
+        ADD_FIELD32(reserved, 7,8);
+        ADD_FIELD32(fw_val_bit, 15, 1);
+        ADD_FIELD32(reset_cnt, 16, 3);
+        ADD_FIELD32(ext_err_ind, 19, 6);
+        ADD_FIELD32(reserved2, 25, 7);
+    };
+    FWSM fwsm;
+
+    uint32_t sw_fw_sync;
+
     void serialize(std::ostream &os)
     {
         paramOut(os, "ctrl", ctrl._data);
@@ -625,6 +779,7 @@ struct Regs {
         paramOut(os, "fcrth", fcrth._data);
         paramOut(os, "rdba", rdba._data);
         paramOut(os, "rdlen", rdlen._data);
+        paramOut(os, "srrctl", srrctl._data);
         paramOut(os, "rdh", rdh._data);
         paramOut(os, "rdt", rdt._data);
         paramOut(os, "rdtr", rdtr._data);
@@ -634,12 +789,20 @@ struct Regs {
         paramOut(os, "tdba", tdba._data);
         paramOut(os, "tdlen", tdlen._data);
         paramOut(os, "tdh", tdh._data);
+        paramOut(os, "txdca_ctl", txdca_ctl._data);
         paramOut(os, "tdt", tdt._data);
         paramOut(os, "tidv", tidv._data);
         paramOut(os, "txdctl", txdctl._data);
         paramOut(os, "tadv", tadv._data);
+        //paramOut(os, "tdwba", tdwba._data);
+        SERIALIZE_SCALAR(tdwba);
         paramOut(os, "rxcsum", rxcsum._data);
+        SERIALIZE_SCALAR(rlpml);
+        paramOut(os, "rfctl", rfctl._data);
         paramOut(os, "manc", manc._data);
+        paramOut(os, "swsm", swsm._data);
+        paramOut(os, "fwsm", fwsm._data);
+        SERIALIZE_SCALAR(sw_fw_sync);
     }
 
     void unserialize(Checkpoint *cp, const std::string &section)
@@ -662,6 +825,7 @@ struct Regs {
         paramIn(cp, section, "fcrth", fcrth._data);
         paramIn(cp, section, "rdba", rdba._data);
         paramIn(cp, section, "rdlen", rdlen._data);
+        paramIn(cp, section, "srrctl", srrctl._data);
         paramIn(cp, section, "rdh", rdh._data);
         paramIn(cp, section, "rdt", rdt._data);
         paramIn(cp, section, "rdtr", rdtr._data);
@@ -671,12 +835,20 @@ struct Regs {
         paramIn(cp, section, "tdba", tdba._data);
         paramIn(cp, section, "tdlen", tdlen._data);
         paramIn(cp, section, "tdh", tdh._data);
+        paramIn(cp, section, "txdca_ctl", txdca_ctl._data);
         paramIn(cp, section, "tdt", tdt._data);
         paramIn(cp, section, "tidv", tidv._data);
         paramIn(cp, section, "txdctl", txdctl._data);
         paramIn(cp, section, "tadv", tadv._data);
+        UNSERIALIZE_SCALAR(tdwba);
+        //paramIn(cp, section, "tdwba", tdwba._data);
         paramIn(cp, section, "rxcsum", rxcsum._data);
+        UNSERIALIZE_SCALAR(rlpml);
+        paramIn(cp, section, "rfctl", rfctl._data);
         paramIn(cp, section, "manc", manc._data);
+        paramIn(cp, section, "swsm", swsm._data);
+        paramIn(cp, section, "fwsm", fwsm._data);
+        UNSERIALIZE_SCALAR(sw_fw_sync);
     }
 };
 } // iGbReg namespace

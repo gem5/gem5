@@ -183,7 +183,7 @@ class IGbE : public EtherDevice
         virtual long descLen() const = 0;
         virtual void updateHead(long h) = 0;
         virtual void enableSm() = 0;
-        virtual void intAfterWb() const {}
+        virtual void actionAfterWb() {}
         virtual void fetchAfterWb() = 0;
 
         std::deque<T*> usedCache;
@@ -440,7 +440,7 @@ class IGbE : public EtherDevice
                     oldHead, curHead);
 
             // If we still have more to wb, call wb now
-            intAfterWb();
+            actionAfterWb();
             if (moreToWb) {
                 moreToWb = false;
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
@@ -625,16 +625,22 @@ class IGbE : public EtherDevice
         virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
         virtual void updateHead(long h) { igbe->regs.tdh(h); }
         virtual void enableSm();
-        virtual void intAfterWb() const { igbe->postInterrupt(iGbReg::IT_TXDW); }
+        virtual void actionAfterWb();
         virtual void fetchAfterWb() {
             if (!igbe->txTick && igbe->getState() == SimObject::Running)
                 fetchDescriptors();
         }
+        
+
 
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
         bool pktMultiDesc;
+        Addr completionAddress;
+        bool completionEnabled;
+        uint32_t descEnd;
+        
 
         // tso variables
         bool useTso;
@@ -662,6 +668,11 @@ class IGbE : public EtherDevice
         void getPacketData(EthPacketPtr p);
         void processContextDesc();
 
+        /** Return the number of dsecriptors in a cache block for threshold
+         * operations.
+         */
+        int descInBlock(int num_desc) { return num_desc / 
+            igbe->cacheBlockSize() / sizeof(iGbReg::TxDesc); }
         /** Ask if the packet has been transfered so the state machine can give
          * it to the fifo.
          * @return packet available in descriptor cache
@@ -689,7 +700,18 @@ class IGbE : public EtherDevice
         void headerComplete();
         EventWrapper<TxDescCache, &TxDescCache::headerComplete> headerEvent;
 
+
+        void completionWriteback(Addr a, bool enabled) {
+            DPRINTF(EthernetDesc, "Completion writeback Addr: %#x enabled: %d\n", 
+                    a, enabled);
+            completionAddress = a;
+            completionEnabled = enabled;
+        }
+
         virtual bool hasOutstandingEvents();
+
+        void nullCallback() { DPRINTF(EthernetDesc, "Completion writeback complete\n"); }
+        EventWrapper<TxDescCache, &TxDescCache::nullCallback> nullEvent;
 
         virtual void serialize(std::ostream &os);
         virtual void unserialize(Checkpoint *cp, const std::string &section);

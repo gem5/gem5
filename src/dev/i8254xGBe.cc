@@ -85,6 +85,9 @@ IGbE::IGbE(const Params *p)
     regs.rxdctl.gran(1);
     regs.rxdctl.wthresh(1);
     regs.fcrth(1);
+    regs.tdwba = 0;
+    regs.rlpml = 0;
+    regs.sw_fw_sync = 0;
 
     regs.pba.rxa(0x30);
     regs.pba.txa(0x10);
@@ -197,6 +200,11 @@ IGbE::read(PacketPtr pkt)
             regs.imr &= ~regs.iam;
         chkInterrupt();
         break;
+      case REG_EICR:
+        // This is only useful for MSI, but the driver reads it every time
+        // Just don't do anything
+        pkt->set<uint32_t>(0);
+        break;
       case REG_ITR:
         pkt->set<uint32_t>(regs.itr());
         break;
@@ -231,6 +239,9 @@ IGbE::read(PacketPtr pkt)
       case REG_RDLEN:
         pkt->set<uint32_t>(regs.rdlen());
         break;
+      case REG_SRRCTL:
+        pkt->set<uint32_t>(regs.srrctl());
+        break;
       case REG_RDH:
         pkt->set<uint32_t>(regs.rdh());
         break;
@@ -245,6 +256,9 @@ IGbE::read(PacketPtr pkt)
             postInterrupt(IT_RXT);
             regs.rdtr.fpd(0);
         }
+        break;
+      case REG_RXDCTL:
+        pkt->set<uint32_t>(regs.rxdctl());
         break;
       case REG_RADV:
         pkt->set<uint32_t>(regs.radv());
@@ -261,6 +275,9 @@ IGbE::read(PacketPtr pkt)
       case REG_TDH:
         pkt->set<uint32_t>(regs.tdh());
         break;
+      case REG_TXDCA_CTL:
+        pkt->set<uint32_t>(regs.txdca_ctl());
+        break;
       case REG_TDT:
         pkt->set<uint32_t>(regs.tdt());
         break;
@@ -273,11 +290,33 @@ IGbE::read(PacketPtr pkt)
       case REG_TADV:
         pkt->set<uint32_t>(regs.tadv());
         break;
+      case REG_TDWBAL:
+        pkt->set<uint32_t>(regs.tdwba & mask(32));
+        break;
+      case REG_TDWBAH:
+        pkt->set<uint32_t>(regs.tdwba >> 32);
+        break;
       case REG_RXCSUM:
         pkt->set<uint32_t>(regs.rxcsum());
         break;
+      case REG_RLPML:
+        pkt->set<uint32_t>(regs.rlpml);
+        break;
+      case REG_RFCTL:
+        pkt->set<uint32_t>(regs.rfctl());
+        break;
       case REG_MANC:
         pkt->set<uint32_t>(regs.manc());
+        break;
+      case REG_SWSM:
+        pkt->set<uint32_t>(regs.swsm());
+        regs.swsm.smbi(1);
+        break;
+      case REG_FWSM:
+        pkt->set<uint32_t>(regs.fwsm());
+        break;
+      case REG_SWFWSYNC:
+        pkt->set<uint32_t>(regs.sw_fw_sync);
         break;
       default:
         if (!(daddr >= REG_VFTA && daddr < (REG_VFTA + VLAN_FILTER_TABLE_SIZE*4)) &&
@@ -385,6 +424,14 @@ IGbE::write(PacketPtr pkt)
         break;
       case REG_EERD:
         regs.eerd = val;
+        if (regs.eerd.start()) {
+            regs.eerd.done(1);
+            assert(regs.eerd.addr() < EEPROM_SIZE);
+            regs.eerd.data(flash[regs.eerd.addr()]);
+            regs.eerd.start(0);
+            DPRINTF(EthernetEEPROM, "EEPROM: read addr: %#X data %#x\n",
+                    regs.eerd.addr(), regs.eerd.data());
+        }
         break;
       case REG_MDIC:
         regs.mdic = val;
@@ -399,10 +446,16 @@ IGbE::write(PacketPtr pkt)
                 regs.mdic.data(0x796D); // link up
                 break;
             case PHY_PID:
-                regs.mdic.data(0x02A8);
+                if (params()->is8257)
+                    regs.mdic.data(0x0141);
+                else
+                    regs.mdic.data(0x02A8);
                 break;
             case PHY_EPID:
-                regs.mdic.data(0x0380);
+                if (params()->is8257)
+                    regs.mdic.data(0x0CC0);
+                else
+                    regs.mdic.data(0x0380);
                 break;
             case PHY_GSTATUS:
                 regs.mdic.data(0x7C00);
@@ -485,6 +538,9 @@ IGbE::write(PacketPtr pkt)
       case REG_TIPG:
         ; // We don't care, so don't store anything
         break;
+      case REG_IVAR0:
+        warn("Writing to IVAR0, ignoring...\n");
+        break;
       case REG_FCRTL:
         regs.fcrtl = val;
         break;
@@ -502,6 +558,9 @@ IGbE::write(PacketPtr pkt)
       case REG_RDLEN:
         regs.rdlen = val & ~mask(7);
         rxDescCache.areaChanged();
+        break;
+      case REG_SRRCTL:
+        regs.srrctl = val;
         break;
       case REG_RDH:
         regs.rdh = val;
@@ -523,6 +582,9 @@ IGbE::write(PacketPtr pkt)
       case REG_RADV:
         regs.radv = val;
         break;
+      case REG_RXDCTL:
+        regs.rxdctl = val;
+        break;
       case REG_TDBAL:
         regs.tdba.tdbal( val & ~mask(4));
         txDescCache.areaChanged();
@@ -538,6 +600,11 @@ IGbE::write(PacketPtr pkt)
       case REG_TDH:
         regs.tdh = val;
         txDescCache.areaChanged();
+        break;
+      case REG_TXDCA_CTL:
+        regs.txdca_ctl = val;
+        if (regs.txdca_ctl.enabled())
+            panic("No support for DCA\n");
         break;
       case REG_TDT:
         regs.tdt = val;
@@ -558,11 +625,37 @@ IGbE::write(PacketPtr pkt)
       case REG_TADV:
         regs.tadv = val;
         break;
+      case REG_TDWBAL:
+        regs.tdwba &= ~mask(32);
+        regs.tdwba |= val;
+        txDescCache.completionWriteback(regs.tdwba & ~mask(1), regs.tdwba & mask(1));
+        break;
+      case REG_TDWBAH:
+        regs.tdwba &= mask(32);
+        regs.tdwba |= (uint64_t)val << 32;
+        txDescCache.completionWriteback(regs.tdwba & ~mask(1), regs.tdwba & mask(1));
+        break;
       case REG_RXCSUM:
         regs.rxcsum = val;
         break;
+      case REG_RLPML:
+        regs.rlpml = val;
+        break;
+      case REG_RFCTL:
+        regs.rfctl = val;
+        if (regs.rfctl.exsten())
+            panic("Extended RX descriptors not implemented\n");
+        break;
       case REG_MANC:
         regs.manc = val;
+        break;
+      case REG_SWSM:
+        regs.swsm = val;
+        if (regs.fwsm.eep_fw_semaphore())
+            regs.swsm.swesmbi(0);
+        break;
+      case REG_SWFWSYNC:
+        regs.sw_fw_sync = val;
         break;
       default:
        if (!(daddr >= REG_VFTA && daddr < (REG_VFTA + VLAN_FILTER_TABLE_SIZE*4)) &&
@@ -710,19 +803,38 @@ IGbE::RxDescCache::RxDescCache(IGbE *i, const std::string n, int s)
 void
 IGbE::RxDescCache::writePacket(EthPacketPtr packet)
 {
-    // We shouldn't have to deal with any of these yet
-    DPRINTF(EthernetDesc, "Packet Length: %d Desc Size: %d\n",
-            packet->length, igbe->regs.rctl.descSize());
-    assert(packet->length < igbe->regs.rctl.descSize());
-
-    assert(unusedCache.size());
+        assert(unusedCache.size());
     //if (!unusedCache.size())
     //    return false;
 
     pktPtr = packet;
     pktDone = false;
-    igbe->dmaWrite(igbe->platform->pciToDma(unusedCache.front()->buf),
-            packet->length, &pktEvent, packet->data, igbe->rxWriteDelay);
+
+    Addr buf;
+    RxDesc *desc = unusedCache.front();
+    switch (igbe->regs.srrctl.desctype()) {
+      case RXDT_LEGACY:
+        buf = desc->legacy.buf;
+        DPRINTF(EthernetDesc, "Packet Length: %d Desc Size: %d\n",
+            packet->length, igbe->regs.rctl.descSize());
+        assert(packet->length < igbe->regs.rctl.descSize());
+        break;
+      case RXDT_ADV_ONEBUF:
+        int buf_len;
+        buf_len = igbe->regs.rctl.lpe() ? igbe->regs.srrctl.bufLen() :
+                                              igbe->regs.rctl.descSize();
+        DPRINTF(EthernetDesc, "Packet Length: %d srrctl: %#x Desc Size: %d\n",
+            packet->length, igbe->regs.srrctl(), buf_len);
+        assert(packet->length < buf_len);
+        buf = desc->adv_read.pkt;
+        break;
+      default:
+        panic("Unimplemnted RX receive buffer type: %d\n",
+                igbe->regs.srrctl.desctype());
+    }
+
+    igbe->dmaWrite(igbe->platform->pciToDma(buf), packet->length, &pktEvent,
+                packet->data, igbe->rxWriteDelay);
 }
 
 void
@@ -733,7 +845,6 @@ IGbE::RxDescCache::pktComplete()
     desc = unusedCache.front();
 
     uint16_t crcfixup = igbe->regs.rctl.secrc() ? 0 : 4 ;
-    desc->len = htole((uint16_t)(pktPtr->length + crcfixup));
     DPRINTF(EthernetDesc, "pktPtr->length: %d stripcrc offset: %d value written: %d %d\n",
             pktPtr->length, crcfixup,
             htole((uint16_t)(pktPtr->length + crcfixup)),
@@ -744,21 +855,28 @@ IGbE::RxDescCache::pktComplete()
 
     DPRINTF(EthernetDesc, "Packet written to memory updating Descriptor\n");
 
-    uint8_t status = RXDS_DD | RXDS_EOP;
+    uint16_t status = RXDS_DD | RXDS_EOP;
     uint8_t err = 0;
+    uint16_t ext_err = 0;
+    uint16_t csum = 0;
+    uint16_t ptype = 0;
+    uint16_t ip_id = 0;
 
     IpPtr ip(pktPtr);
 
     if (ip) {
         DPRINTF(EthernetDesc, "Proccesing Ip packet with Id=%d\n", ip->id());
+        ptype |= RXDP_IPV4;
+        ip_id = ip->id();
 
         if (igbe->regs.rxcsum.ipofld()) {
             DPRINTF(EthernetDesc, "Checking IP checksum\n");
             status |= RXDS_IPCS;
-            desc->csum = htole(cksum(ip));
+            csum = htole(cksum(ip));
             igbe->rxIpChecksums++;
             if (cksum(ip) != 0) {
                 err |= RXDE_IPE;
+                ext_err |= RXDEE_IPE;
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
             }
         }
@@ -766,11 +884,13 @@ IGbE::RxDescCache::pktComplete()
         if (tcp && igbe->regs.rxcsum.tuofld()) {
             DPRINTF(EthernetDesc, "Checking TCP checksum\n");
             status |= RXDS_TCPCS;
-            desc->csum = htole(cksum(tcp));
+            ptype |= RXDP_TCP;
+            csum = htole(cksum(tcp));
             igbe->rxTcpChecksums++;
             if (cksum(tcp) != 0) {
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
                 err |= RXDE_TCPE;
+                ext_err |= RXDEE_TCPE;
             }
         }
 
@@ -778,10 +898,12 @@ IGbE::RxDescCache::pktComplete()
         if (udp && igbe->regs.rxcsum.tuofld()) {
             DPRINTF(EthernetDesc, "Checking UDP checksum\n");
             status |= RXDS_UDPCS;
-            desc->csum = htole(cksum(udp));
+            ptype |= RXDP_UDP;
+            csum = htole(cksum(udp));
             igbe->rxUdpChecksums++;
             if (cksum(udp) != 0) {
                 DPRINTF(EthernetDesc, "Checksum is bad!!\n");
+                ext_err |= RXDEE_TCPE;
                 err |= RXDE_TCPE;
             }
         }
@@ -789,12 +911,38 @@ IGbE::RxDescCache::pktComplete()
         DPRINTF(EthernetSM, "Proccesing Non-Ip packet\n");
     }
 
+    switch (igbe->regs.srrctl.desctype()) {
+      case RXDT_LEGACY:
+        desc->legacy.len = htole((uint16_t)(pktPtr->length + crcfixup));
+        desc->legacy.status = htole(status);
+        desc->legacy.errors = htole(err);
+        // No vlan support at this point... just set it to 0
+        desc->legacy.vlan = 0;
+        break;
+      case RXDT_ADV_ONEBUF:
+        desc->adv_wb.pkt_len = htole((uint16_t)(pktPtr->length + crcfixup));
+        desc->adv_wb.rss_type = htole(0);
+        desc->adv_wb.pkt_type = htole(ptype);
+        // no header splititng support yet
+        desc->adv_wb.header_len = htole(0);
+        desc->adv_wb.sph = htole(0);
+        if (igbe->regs.rxcsum.pcsd()) {
+            // no rss support right now
+            desc->adv_wb.rss_hash = htole(0);
+        } else {
+            desc->adv_wb.id = htole(ip_id);
+            desc->adv_wb.csum = htole(csum);
+        }
+        desc->adv_wb.status = htole(status);
+        desc->adv_wb.errors = htole(ext_err);
+        // no vlan support
+        desc->adv_wb.vlan_tag = htole(0); 
+        break;
+      default:
+        panic("Unimplemnted RX receive buffer type %d\n",
+                igbe->regs.srrctl.desctype());
+    }
 
-    desc->status = htole(status);
-    desc->errors = htole(err);
-
-    // No vlan support at this point... just set it to 0
-    desc->vlan = 0;
 
     // Deal with the rx timer interrupts
     if (igbe->regs.rdtr.delay()) {
@@ -883,7 +1031,7 @@ IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
 
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false), pktWaiting(false),
-       useTso(false), pktEvent(this), headerEvent(this)
+       useTso(false), pktEvent(this), headerEvent(this), nullEvent(this)
 
 {
 }
@@ -907,13 +1055,15 @@ IGbE::TxDescCache::processContextDesc()
         // is this going to be a tcp or udp packet?
         isTcp = TxdOp::tcp(desc) ? true : false;
 
-        if (TxdOp::tse(desc)) {
+        // setup all the TSO variables, they'll be ignored if we don't use 
+        // tso for this connection
+        tsoHeaderLen = TxdOp::hdrlen(desc);
+        tsoMss  = TxdOp::mss(desc);
+
+        if (TxdOp::isType(desc, TxdOp::TXD_CNXT) && TxdOp::tse(desc)) {
             DPRINTF(EthernetDesc, "TCP offload enabled for packet hdrlen: %d mss: %d paylen %d\n", 
                     TxdOp::hdrlen(desc), TxdOp::mss(desc), TxdOp::getLen(desc));
-            // setup all the TSO variables
             useTso = true;
-            tsoHeaderLen = TxdOp::hdrlen(desc);
-            tsoMss  = TxdOp::mss(desc);
             tsoTotalLen = TxdOp::getLen(desc);
             tsoLoadedHeader = false;
             tsoDescBytesUsed = 0;
@@ -921,6 +1071,7 @@ IGbE::TxDescCache::processContextDesc()
             tsoPrevSeq = 0;
             tsoPktHasHeader = false;
             tsoPkts = 0;
+
         }
 
         TxdOp::setDd(desc);
@@ -931,10 +1082,23 @@ IGbE::TxDescCache::processContextDesc()
     if (!unusedCache.size())
         return;
 
+    desc = unusedCache.front();
+    if (!useTso && TxdOp::isType(desc, TxdOp::TXD_ADVDATA) && TxdOp::tse(desc)) {
+        DPRINTF(EthernetDesc, "TCP offload(adv) enabled for packet hdrlen: %d mss: %d paylen %d\n", 
+                tsoHeaderLen, tsoMss, TxdOp::getTsoLen(desc));
+        useTso = true;
+        tsoTotalLen = TxdOp::getTsoLen(desc);
+        tsoLoadedHeader = false;
+        tsoDescBytesUsed = 0;
+        tsoUsedLen = 0;
+        tsoPrevSeq = 0;
+        tsoPktHasHeader = false;
+        tsoPkts = 0;
+    }
+
     if (useTso && !tsoLoadedHeader) {
         // we need to fetch a header
         DPRINTF(EthernetDesc, "Starting DMA of TSO header\n");
-        desc = unusedCache.front();
         assert(TxdOp::isData(desc) && TxdOp::getLen(desc) >= tsoHeaderLen);
         pktWaiting = true;
         assert(tsoHeaderLen <= 256);
@@ -1015,6 +1179,7 @@ IGbE::TxDescCache::getPacketData(EthPacketPtr p)
     TxDesc *desc;
     desc = unusedCache.front();
 
+    DPRINTF(EthernetDesc, "getPacketData(): TxDescriptor data d1: %#llx d2: %#llx\n", desc->d1, desc->d2);
     assert((TxdOp::isLegacy(desc) || TxdOp::isData(desc)) && TxdOp::getLen(desc));
 
     pktPtr = p;
@@ -1216,12 +1381,32 @@ IGbE::TxDescCache::pktComplete()
     if (igbe->regs.txdctl.wthresh() == 0) {
         DPRINTF(EthernetDesc, "WTHRESH == 0, writing back descriptor\n");
         writeback(0);
+    } else if (igbe->regs.txdctl.gran() && igbe->regs.txdctl.wthresh() >=
+            descInBlock(usedCache.size())) {
+        DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
+        writeback((igbe->cacheBlockSize()-1)>>4);
     } else if (igbe->regs.txdctl.wthresh() >= usedCache.size()) {
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
+
     enableSm();
     igbe->checkDrain();
+}
+
+void
+IGbE::TxDescCache::actionAfterWb() 
+{
+    DPRINTF(EthernetDesc, "actionAfterWb() completionEnabled: %d\n",
+            completionEnabled);
+    igbe->postInterrupt(iGbReg::IT_TXDW);
+    if (completionEnabled) { 
+        descEnd = igbe->regs.tdh();
+        DPRINTF(EthernetDesc, "Completion writing back value: %d to addr: %#x\n", descEnd,
+                completionAddress);
+        igbe->dmaWrite(igbe->platform->pciToDma(mbits(completionAddress, 63, 2)),
+                    sizeof(descEnd), &nullEvent, (uint8_t*)&descEnd, 0);
+    }
 }
 
 void
@@ -1247,7 +1432,9 @@ IGbE::TxDescCache::serialize(std::ostream &os)
     SERIALIZE_SCALAR(tsoCopyBytes);
     SERIALIZE_SCALAR(tsoPkts);
 
-
+    SERIALIZE_SCALAR(completionAddress);
+    SERIALIZE_SCALAR(completionEnabled);
+    SERIALIZE_SCALAR(descEnd);
 }
 
 void
@@ -1272,6 +1459,10 @@ IGbE::TxDescCache::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(tsoDescBytesUsed);
     UNSERIALIZE_SCALAR(tsoCopyBytes);
     UNSERIALIZE_SCALAR(tsoPkts);
+
+    UNSERIALIZE_SCALAR(completionAddress);
+    UNSERIALIZE_SCALAR(completionEnabled);
+    UNSERIALIZE_SCALAR(descEnd);
 }
 
 bool
@@ -1391,7 +1582,6 @@ IGbE::txStateMachine()
     }
 
     // Only support descriptor granularity
-    assert(regs.txdctl.gran());
     if (regs.txdctl.lwthresh() && txDescCache.descLeft() < (regs.txdctl.lwthresh() * 8)) {
         DPRINTF(EthernetSM, "TXS: LWTHRESH caused posting of TXDLOW\n");
         postInterrupt(IT_TXDLOW);

@@ -67,7 +67,9 @@ class EtherDevice(PciDevice):
     interface = Port("Ethernet Interrface")
 
 class IGbE(EtherDevice):
+    # Base class for two IGbE adapters listed above
     type = 'IGbE'
+    #abstract = True
     hardware_address = Param.EthernetAddr(NextEthernetAddr,
         "Ethernet Hardware Address")
     use_flow_control = Param.Bool(False,
@@ -80,7 +82,6 @@ class IGbE(EtherDevice):
         "Number of enteries in the rx descriptor cache")
     clock = Param.Clock('500MHz', "Clock speed of the device")
     VendorID = 0x8086
-    DeviceID = 0x1075
     SubsystemID = 0x1008
     SubsystemVendorID = 0x8086
     Status = 0x0000
@@ -104,7 +105,20 @@ class IGbE(EtherDevice):
     wb_comp_delay = Param.Latency('10ns', "delay after desc wb occurs")
     tx_read_delay = Param.Latency('0ns', "delay after tx dma read")
     rx_write_delay = Param.Latency('0ns', "delay after rx dma read")
+    is8257 = Param.Bool("Select between and 8254x and 8257x device")
 
+
+class IGbE_e1000(IGbE):
+    # Older Intel 8254x based gigabit ethernet adapter
+    # Uses Intel e1000 driver
+    DeviceID = 0x1075
+    is8257 = False
+
+class IGbE_igb(IGbE):
+    # Newer Intel 8257x based gigabit ethernet adapter
+    # Uses Intel igb driver and in theory supports packet splitting and LRO
+    DeviceID = 0x10C9
+    is8257 = True 
 
 class EtherDevBase(EtherDevice):
     type = 'EtherDevBase'
