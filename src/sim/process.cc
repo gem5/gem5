@@ -668,11 +668,6 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
 
-    if (objFile->hasTLS())
-        fatal("Object file has a TLS section and single threaded TLS is not\n"
-              "       currently supported for Alpha! Please recompile your "
-              "executable with \n       a non-TLS toolchain.\n");
-
     switch (objFile->getOpSys()) {
       case ObjectFile::Tru64:
         process = new AlphaTru64Process(params, objFile);

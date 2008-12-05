@@ -16,10 +16,10 @@ global.BPredUnit.lookups                     10092697                       # Nu
 global.BPredUnit.lookups                      5530798                       # Number of BP lookups
 global.BPredUnit.usedRAS                       690318                       # Number of times the RAS was used to get a target.
 global.BPredUnit.usedRAS                       415111                       # Number of times the RAS was used to get a target.
-host_inst_rate                                 130617                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 292856                       # Number of bytes of host memory used
-host_seconds                                   429.91                       # Real time elapsed on the host
-host_tick_rate                             4437424208                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 121094                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 292872                       # Number of bytes of host memory used
+host_seconds                                   463.72                       # Real time elapsed on the host
+host_tick_rate                             4113887240                       # Simulator tick rate (ticks/s)
 memdepunit.memDep.conflictingLoads            2050196                       # Number of conflicting loads.
 memdepunit.memDep.conflictingLoads             902547                       # Number of conflicting loads.
 memdepunit.memDep.conflictingStores           1831551                       # Number of conflicting stores.

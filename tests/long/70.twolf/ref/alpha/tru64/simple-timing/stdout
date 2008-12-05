@@ -5,14 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 18:30:06
-M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
-M5 commit date Wed Nov 05 16:19:17 2008 -0500
-M5 started Nov  5 2008 18:41:43
+M5 compiled Dec  4 2008 21:21:43
+M5 revision 5755:d6a5329ec79b40f273fe6dacb70354f281725652
+M5 commit date Thu Dec 04 18:04:32 2008 -0500
+M5 started Dec  4 2008 21:28:54
 M5 executing on zizzer
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/alpha/tru64/simple-timing
-Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-timing/smred.sav
-Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

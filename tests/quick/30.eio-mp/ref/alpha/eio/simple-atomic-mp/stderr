@@ -1,7 +1,4 @@
-0: system.remote_gdb.listener: listening for remote gdb on port 7002
-0: system.remote_gdb.listener: listening for remote gdb on port 7003
-0: system.remote_gdb.listener: listening for remote gdb on port 7000
-0: system.remote_gdb.listener: listening for remote gdb on port 7001
+warn: Sockets disabled, not accepting gdb connections
 warn: be nice to actually delete the event here
 
 gzip: stdout: Broken pipe

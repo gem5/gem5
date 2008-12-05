@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1993278                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 201176                       # Number of bytes of host memory used
-host_seconds                                   301.94                       # Real time elapsed on the host
-host_tick_rate                             2576653236                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1797646                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 201208                       # Number of bytes of host memory used
+host_seconds                                   334.80                       # Real time elapsed on the host
+host_tick_rate                             2323765799                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   601856964                       # Number of instructions simulated
 sim_seconds                                  0.778004                       # Number of seconds simulated
@@ -150,7 +150,7 @@ system.cpu.icache.prefetcher.num_hwpf_squashed_from_miss            0           
 system.cpu.icache.replacements                     24                       # number of replacements
 system.cpu.icache.sampled_refs                    795                       # Sample count of references to valid blocks.
 system.cpu.icache.soft_prefetch_mshr_full            0                       # number of mshr full events for SW prefetching instrutions
-system.cpu.icache.tagsinuse                673.225224                       # Cycle average of tags in use
+system.cpu.icache.tagsinuse                673.225223                       # Cycle average of tags in use
 system.cpu.icache.total_refs                601861103                       # Total number of references to valid blocks.
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
