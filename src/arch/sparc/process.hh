@@ -71,26 +71,6 @@ class SparcLiveProcess : public LiveProcess
     virtual void flushWindows(ThreadContext *tc) = 0;
 };
 
-template<class IntType>
-struct M5_auxv_t
-{
-    IntType a_type;
-    union {
-        IntType a_val;
-        IntType a_ptr;
-        IntType a_fcn;
-    };
-
-    M5_auxv_t()
-    {}
-
-    M5_auxv_t(IntType type, IntType val)
-    {
-        a_type = SparcISA::htog(type);
-        a_val = SparcISA::htog(val);
-    }
-};
-
 class Sparc32LiveProcess : public SparcLiveProcess
 {
   protected:

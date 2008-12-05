@@ -86,6 +86,16 @@ using namespace TheISA;
 // current number of allocated processes
 int num_processes = 0;
 
+template<class IntType>
+M5_auxv_t<IntType>::M5_auxv_t(IntType type, IntType val)
+{
+    a_type = TheISA::htog(type);
+    a_val = TheISA::htog(val);
+}
+
+template class M5_auxv_t<uint32_t>;
+template class M5_auxv_t<uint64_t>;
+
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system), checkpointRestored(false),
     max_stack_size(params->max_stack_size)
@@ -657,11 +667,6 @@ LiveProcess::create(LiveProcessParams * params)
 #if THE_ISA == ALPHA_ISA
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
-
-    if (objFile->hasTLS())
-        fatal("Object file has a TLS section and single threaded TLS is not\n"
-              "       currently supported for Alpha! Please recompile your "
-              "executable with \n       a non-TLS toolchain.\n");
 
     switch (objFile->getOpSys()) {
       case ObjectFile::Tru64:

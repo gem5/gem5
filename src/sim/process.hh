@@ -61,6 +61,22 @@ namespace TheISA
     class RemoteGDB;
 }
 
+template<class IntType>
+struct M5_auxv_t
+{
+    IntType a_type;
+    union {
+        IntType a_val;
+        IntType a_ptr;
+        IntType a_fcn;
+    };
+
+    M5_auxv_t()
+    {}
+
+    M5_auxv_t(IntType type, IntType val);
+};
+
 class Process : public SimObject
 {
   public:

@@ -291,6 +291,8 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
         } else {
+            // If it's none of the above but is loadable, 
+            // load the filesize worth of data
             Segment extra;
             extra.baseAddr = phdr.p_paddr;
             extra.size = phdr.p_filesz;

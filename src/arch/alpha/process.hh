@@ -34,15 +34,14 @@
 
 #include "sim/process.hh"
 
-class ObjectFile;
-class System;
-
 class AlphaLiveProcess : public LiveProcess
 {
   protected:
     AlphaLiveProcess(LiveProcessParams *params, ObjectFile *objFile);
 
     void startup();
+
+    void argsInit(int intSize, int pageSize);
 };
 
 #endif // __ARCH_ALPHA_PROCESS_HH__

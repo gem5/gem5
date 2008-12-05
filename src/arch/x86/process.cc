@@ -103,11 +103,6 @@
 using namespace std;
 using namespace X86ISA;
 
-M5_64_auxv_t::M5_64_auxv_t(int64_t type, int64_t val)
-{
-    a_type = X86ISA::htog(type);
-    a_val = X86ISA::htog(val);
-}
 
 X86LiveProcess::X86LiveProcess(LiveProcessParams * params,
         ObjectFile *objFile)
@@ -205,7 +200,9 @@ X86LiveProcess::startup()
 void
 X86LiveProcess::argsInit(int intSize, int pageSize)
 {
-    typedef M5_64_auxv_t auxv_t;
+    typedef M5_auxv_t<uint64_t> auxv_t;
+    std::vector<auxv_t>  auxv;
+
     Process::startup();
 
     string filename;
