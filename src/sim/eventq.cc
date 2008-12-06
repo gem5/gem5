@@ -182,7 +182,7 @@ EventQueue::serviceOne()
 {
     Event *event = head;
     Event *next = head->nextInBin;
-    event->clearFlags(Event::Scheduled);
+    event->flags.clear(Event::Scheduled);
 
     if (next) {
         // update the next bin pointer since it could be stale
@@ -200,14 +200,14 @@ EventQueue::serviceOne()
     if (!event->squashed()) {
         event->process();
         if (event->isExitEvent()) {
-            assert(!event->getFlags(Event::AutoDelete)); // would be silly
+            assert(!event->flags.isSet(Event::AutoDelete)); // would be silly
             return event;
         }
     } else {
-        event->clearFlags(Event::Squashed);
+        event->flags.clear(Event::Squashed);
     }
 
-    if (event->getFlags(Event::AutoDelete) && !event->scheduled())
+    if (event->flags.isSet(Event::AutoDelete) && !event->scheduled())
         delete event;
 
     return NULL;
@@ -218,7 +218,8 @@ Event::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(_when);
     SERIALIZE_SCALAR(_priority);
-    SERIALIZE_ENUM(_flags);
+    short _flags = flags;
+    SERIALIZE_SCALAR(_flags);
 }
 
 void
@@ -233,9 +234,12 @@ Event::unserialize(Checkpoint *cp, const string &section)
     // need to see if original event was in a scheduled, unsquashed
     // state, but don't want to restore those flags in the current
     // object itself (since they aren't immediately true)
-    UNSERIALIZE_ENUM(_flags);
-    bool wasScheduled = (_flags & Scheduled) && !(_flags & Squashed);
-    _flags &= ~(Squashed | Scheduled);
+    short _flags;
+    UNSERIALIZE_SCALAR(_flags);
+    flags = _flags;
+
+    bool wasScheduled = flags.isSet(Scheduled) && !flags.isSet(Squashed);
+    flags.clear(Squashed | Scheduled);
 
     if (wasScheduled) {
         DPRINTF(Config, "rescheduling at %d\n", _when);
@@ -254,7 +258,7 @@ EventQueue::serialize(ostream &os)
         Event *nextInBin = nextBin;
 
         while (nextInBin) {
-            if (nextInBin->getFlags(Event::AutoSerialize)) {
+            if (nextInBin->flags.isSet(Event::AutoSerialize)) {
                 eventPtrs.push_back(nextInBin);
                 paramOut(os, csprintf("event%d", numEvents++),
                          nextInBin->name());
@@ -389,7 +393,7 @@ void
 Event::dump() const
 {
     cprintf("Event %s (%s)\n", name(), description());
-    cprintf("Flags: %#x\n", _flags);
+    cprintf("Flags: %#x\n", flags);
 #ifdef EVENTQ_DEBUG
     cprintf("Created: %d\n", whenCreated);
 #endif

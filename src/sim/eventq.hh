@@ -44,6 +44,7 @@
 #include <vector>
 
 #include "base/fast_alloc.hh"
+#include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "sim/serialize.hh"
@@ -64,6 +65,19 @@ class Event : public Serializable, public FastAlloc
 {
     friend class EventQueue;
 
+  protected:   
+    typedef short FlagsType;
+    typedef ::Flags<FlagsType> Flags;
+
+    static const FlagsType PublicRead    = 0x003f;
+    static const FlagsType PublicWrite   = 0x001d;
+    static const FlagsType Squashed      = 0x0001;
+    static const FlagsType Scheduled     = 0x0002;
+    static const FlagsType AutoDelete    = 0x0004;
+    static const FlagsType AutoSerialize = 0x0008;
+    static const FlagsType IsExitEvent   = 0x0010;
+    static const FlagsType IsMainQueue   = 0x0020;
+
   private:
     // The event queue is now a linked list of linked lists.  The
     // 'nextBin' pointer is to find the bin, where a bin is defined as
@@ -82,7 +96,7 @@ class Event : public Serializable, public FastAlloc
 
     Tick _when;         //!< timestamp when event should be processed
     short _priority;    //!< event priority
-    short _flags;
+    Flags flags;
 
 #ifndef NDEBUG
     /// Global counter to generate unique IDs for Event instances
@@ -117,21 +131,48 @@ class Event : public Serializable, public FastAlloc
     }
 
   protected:
-    enum Flags {
-        None = 0x0,
-        Squashed = 0x1,
-        Scheduled = 0x2,
-        AutoDelete = 0x4,
-        AutoSerialize = 0x8,
-        IsExitEvent = 0x10,
-        IsMainQueue = 0x20
-    };
+    /// Accessor for flags.
+    Flags
+    getFlags() const
+    {
+        return flags & PublicRead;
+    }
 
-    bool getFlags(Flags f) const { return (_flags & f) == f; }
-    void setFlags(Flags f) { _flags |= f; }
-    void clearFlags(Flags f) { _flags &= ~f; }
+    Flags
+    getFlags(Flags _flags) const
+    {
+        assert(flags.noneSet(~PublicRead));
+        return flags.isSet(_flags);
+    }
 
-  protected:
+    Flags
+    allFlags(Flags _flags) const
+    {
+        assert(_flags.noneSet(~PublicRead));
+        return flags.allSet(_flags);
+    }
+
+    /// Accessor for flags.
+    void
+    setFlags(Flags _flags)
+    {
+        assert(_flags.noneSet(~PublicWrite));
+        flags.set(_flags);
+    }
+
+    void
+    clearFlags(Flags _flags)
+    {
+        assert(_flags.noneSet(~PublicWrite));
+        flags.clear(_flags);
+    }
+
+    void
+    clearFlags()
+    {
+        flags.clear(PublicWrite);
+    }
+
     // This function isn't really useful if TRACING_ON is not defined
     virtual void trace(const char *action);     //!< trace event activity
 
@@ -197,7 +238,7 @@ class Event : public Serializable, public FastAlloc
      * @param queue that the event gets scheduled on
      */
     Event(Priority p = Default_Pri)
-        : nextBin(NULL), nextInBin(NULL), _priority(p), _flags(None)
+        : nextBin(NULL), nextInBin(NULL), _priority(p)
     {
 #ifndef NDEBUG
         instance = ++instanceCounter;
@@ -234,16 +275,16 @@ class Event : public Serializable, public FastAlloc
     virtual void process() = 0;
 
     /// Determine if the current event is scheduled
-    bool scheduled() const { return getFlags(Scheduled); }
+    bool scheduled() const { return flags.isSet(Scheduled); }
 
     /// Squash the current event
-    void squash() { setFlags(Squashed); }
+    void squash() { flags.set(Squashed); }
 
     /// Check whether the event is squashed
-    bool squashed() const { return getFlags(Squashed); }
+    bool squashed() const { return flags.isSet(Squashed); }
 
     /// See if this is a SimExitEvent (without resorting to RTTI)
-    bool isExitEvent() const { return getFlags(IsExitEvent); }
+    bool isExitEvent() const { return flags.isSet(IsExitEvent); }
 
     /// Get the time that the event is scheduled
     Tick when() const { return _when; }
@@ -398,7 +439,7 @@ DelayFunction(EventQueue *eventq, Tick when, T *object)
       public:
         DelayEvent(T *o)
             : object(o)
-        { setFlags(this->AutoDestroy); }
+        { this->setFlags(AutoDelete); }
         void process() { (object->*F)(); }
         const char *description() const { return "delay"; }
     };
@@ -431,11 +472,11 @@ EventQueue::schedule(Event *event, Tick when)
 
     event->setWhen(when, this);
     insert(event);
-    event->setFlags(Event::Scheduled);
+    event->flags.set(Event::Scheduled);
     if (this == &mainEventQueue)
-        event->setFlags(Event::IsMainQueue);
+        event->flags.set(Event::IsMainQueue);
     else
-        event->clearFlags(Event::IsMainQueue);
+        event->flags.clear(Event::IsMainQueue);
 
     if (DTRACE(Event))
         event->trace("scheduled");
@@ -448,10 +489,10 @@ EventQueue::deschedule(Event *event)
 
     remove(event);
 
-    event->clearFlags(Event::Squashed);
-    event->clearFlags(Event::Scheduled);
+    event->flags.clear(Event::Squashed);
+    event->flags.clear(Event::Scheduled);
 
-    if (event->getFlags(Event::AutoDelete))
+    if (event->flags.isSet(Event::AutoDelete))
         delete event;
 
     if (DTRACE(Event))
@@ -469,12 +510,12 @@ EventQueue::reschedule(Event *event, Tick when, bool always)
             
     event->setWhen(when, this);
     insert(event);
-    event->clearFlags(Event::Squashed);
-    event->setFlags(Event::Scheduled);
+    event->flags.clear(Event::Squashed);
+    event->flags.set(Event::Scheduled);
     if (this == &mainEventQueue)
-        event->setFlags(Event::IsMainQueue);
+        event->flags.set(Event::IsMainQueue);
     else
-        event->clearFlags(Event::IsMainQueue);
+        event->flags.clear(Event::IsMainQueue);
 
     if (DTRACE(Event))
         event->trace("rescheduled");

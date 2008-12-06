@@ -53,7 +53,7 @@ DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           unsigned _tid)
     : Event(CPU_Tick_Pri), commit(_commit), tid(_tid)
 {
-    this->setFlags(Event::AutoDelete);
+    this->setFlags(AutoDelete);
 }
 
 template <class Impl>
