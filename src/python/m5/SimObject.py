@@ -27,7 +27,9 @@
 # Authors: Steve Reinhardt
 #          Nathan Binkert
 
-import sys, types
+import math
+import sys
+import types
 
 import proxy
 import m5
@@ -627,8 +629,9 @@ class SimObject(object):
             if len(value) == 1:
                 value[0]._maybe_set_parent(self, attr)
             else:
+                width = int(math.ceil(math.log(len(value))/math.log(10)))
                 for i,v in enumerate(value):
-                    v._maybe_set_parent(self, "%s%d" % (attr, i))
+                    v._maybe_set_parent(self, "%s%0*d" % (attr, width, i))
 
         self._values[attr] = value
 
