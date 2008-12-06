@@ -209,20 +209,8 @@ class Event : public Serializable, public FastAlloc
 #endif
     }
 
-    virtual
-    ~Event()
-    {
-    }
-
-    virtual const std::string
-    name() const
-    {
-#ifndef NDEBUG
-        return csprintf("Event_%d", instance);
-#else
-        return csprintf("Event_%x", (uintptr_t)this);
-#endif
-    }
+    virtual ~Event();
+    virtual const std::string name() const;
 
     /// Return a C string describing the event.  This string should
     /// *not* be dynamically allocated; just a const char array

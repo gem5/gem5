@@ -57,6 +57,21 @@ EventQueue mainEventQueue("Main Event Queue");
 Counter Event::instanceCounter = 0;
 #endif
 
+Event::~Event()
+{
+}
+
+const std::string
+Event::name() const
+{
+#ifndef NDEBUG
+    return csprintf("Event_%d", instance);
+#else
+    return csprintf("Event_%x", (uintptr_t)this);
+#endif
+}
+
+
 Event *
 Event::insertBefore(Event *event, Event *curr)
 {
