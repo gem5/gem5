@@ -88,7 +88,11 @@ ElfFile('libelf_fsize.c')
 ElfFile('libelf_msize.c')
 
 m4env = env.Copy()
-m4env.Append(CCFLAGS=['-Wno-pointer-sign', '-Wno-implicit'])
+if env['GCC']:
+    major,minor,dot = [ int(x) for x in env['CXXVERSION'].split('.')]
+    if major >= 4:
+        m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
+m4env.Append(CCFLAGS=['-Wno-implicit'])
 del m4env['CPPPATH']
 
 # If we have gm4 use it
