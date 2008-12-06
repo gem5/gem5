@@ -144,7 +144,7 @@ DtbFault::invoke(ThreadContext *tc)
     // read, like the EV5).  The EV6 approach is cleaner and seems to
     // work with EV5 PAL code, but not the other way around.
     if (!tc->misspeculating() &&
-        reqFlags.none(Request::VPTE|Request::NO_FAULT)) {
+        reqFlags.noneSet(Request::VPTE|Request::NO_FAULT)) {
         // set VA register with faulting address
         tc->setMiscRegNoEffect(IPR_VA, vaddr);
 

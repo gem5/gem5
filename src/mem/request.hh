@@ -230,7 +230,7 @@ class Request : public FastAlloc
     void
     setPaddr(Addr _paddr)
     {
-        assert(flags.any(VALID_VADDR));
+        assert(flags.isSet(VALID_VADDR));
         paddr = _paddr;
         flags.set(VALID_PADDR);
     }
@@ -241,8 +241,8 @@ class Request : public FastAlloc
      */
     void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
     {
-        assert(flags.any(VALID_VADDR));
-        assert(flags.none(VALID_PADDR));
+        assert(flags.isSet(VALID_VADDR));
+        assert(flags.noneSet(VALID_PADDR));
         assert(split_addr > vaddr && split_addr < vaddr + size);
         req1 = new Request;
         *req1 = *this;
@@ -259,7 +259,7 @@ class Request : public FastAlloc
     Addr
     getPaddr()
     {
-        assert(flags.any(VALID_PADDR));
+        assert(flags.isSet(VALID_PADDR));
         return paddr;
     }
 
@@ -269,7 +269,7 @@ class Request : public FastAlloc
     int
     getSize()
     {
-        assert(flags.any(VALID_SIZE));
+        assert(flags.isSet(VALID_SIZE));
         return size;
     }
 
@@ -277,64 +277,62 @@ class Request : public FastAlloc
     Tick
     getTime()
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
         return time;
     }
 
     void
     setTime(Tick when)
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
         time = when;
     }
-
-    void resetTime() { setTime(curTick); }
 
     /** Accessor for flags. */
     Flags
     getFlags()
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
         return flags & PUBLIC_FLAGS;
     }
 
     Flags
     anyFlags(Flags _flags)
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
-        assert(_flags.none(~PUBLIC_FLAGS));
-        return flags.any(_flags);
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        return flags.isSet(_flags);
     }
 
     Flags
     allFlags(Flags _flags)
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
-        assert(_flags.none(~PUBLIC_FLAGS));
-        return flags.all(_flags);
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        return flags.allSet(_flags);
     }
 
     /** Accessor for flags. */
     void
     setFlags(Flags _flags)
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
-        assert(_flags.none(~PUBLIC_FLAGS));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
         flags.set(_flags);
     }
 
     void
     clearFlags(Flags _flags)
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
-        assert(_flags.none(~PUBLIC_FLAGS));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
         flags.clear(_flags);
     }
 
     void
     clearFlags()
     {
-        assert(flags.any(VALID_PADDR|VALID_VADDR));
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
         flags.clear(PUBLIC_FLAGS);
     }
 
@@ -342,7 +340,7 @@ class Request : public FastAlloc
     Addr
     getVaddr()
     {
-        assert(flags.any(VALID_VADDR));
+        assert(flags.isSet(VALID_VADDR));
         return vaddr;
     }
 
@@ -350,7 +348,7 @@ class Request : public FastAlloc
     int
     getAsid()
     {
-        assert(flags.any(VALID_VADDR));
+        assert(flags.isSet(VALID_VADDR));
         return asid;
     }
 
@@ -358,7 +356,7 @@ class Request : public FastAlloc
     uint8_t
     getAsi()
     {
-        assert(flags.any(VALID_VADDR));
+        assert(flags.isSet(VALID_VADDR));
         return flags & ASI_BITS;
     }
 
@@ -366,7 +364,7 @@ class Request : public FastAlloc
     void
     setAsi(uint8_t a)
     {
-        assert(flags.any(VALID_VADDR));
+        assert(flags.isSet(VALID_VADDR));
         flags.update(a, ASI_BITS);
     }
 
@@ -374,8 +372,8 @@ class Request : public FastAlloc
     bool
     isMmapedIpr()
     {
-        assert(flags.any(VALID_PADDR));
-        return flags.any(MMAPED_IPR);
+        assert(flags.isSet(VALID_PADDR));
+        return flags.isSet(MMAPED_IPR);
     }
 
     /** Accessor function for asi.*/
@@ -390,14 +388,14 @@ class Request : public FastAlloc
     bool
     extraDataValid()
     {
-        return flags.any(VALID_EXTRA_DATA);
+        return flags.isSet(VALID_EXTRA_DATA);
     }
 
     /** Accessor function for store conditional return value.*/
     uint64_t
     getExtraData() const
     {
-        assert(flags.any(VALID_EXTRA_DATA));
+        assert(flags.isSet(VALID_EXTRA_DATA));
         return extraData;
     }
 
@@ -413,7 +411,7 @@ class Request : public FastAlloc
     int
     contextId() const
     {
-        assert(flags.any(VALID_CONTEXT_ID));
+        assert(flags.isSet(VALID_CONTEXT_ID));
         return _contextId;
     }
 
@@ -421,7 +419,7 @@ class Request : public FastAlloc
     int
     threadId() const
     {
-        assert(flags.any(VALID_THREAD_ID));
+        assert(flags.isSet(VALID_THREAD_ID));
         return _threadId;
     }
 
@@ -429,27 +427,27 @@ class Request : public FastAlloc
     Addr
     getPC() const
     {
-        assert(flags.any(VALID_PC));
+        assert(flags.isSet(VALID_PC));
         return pc;
     }
 
     /** Accessor Function to Check Cacheability. */
-    bool isUncacheable() const { return flags.any(UNCACHEABLE); }
-    bool isInstRead() const { return flags.any(INST_READ); }
-    bool isLocked() const { return flags.any(LOCKED); }
-    bool isSwap() const { return flags.any(MEM_SWAP|MEM_SWAP_COND); }
-    bool isCondSwap() const { return flags.any(MEM_SWAP_COND); }
+    bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
+    bool isInstRead() const { return flags.isSet(INST_READ); }
+    bool isLocked() const { return flags.isSet(LOCKED); }
+    bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
+    bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }
 
     bool
     isMisaligned() const
     {
-        if (flags.any(NO_ALIGN_FAULT))
+        if (flags.isSet(NO_ALIGN_FAULT))
             return false;
 
         if ((vaddr & 0x1))
             return true;
 
-        if (flags.any(NO_HALF_WORD_ALIGN_FAULT))
+        if (flags.isSet(NO_HALF_WORD_ALIGN_FAULT))
             return false;
 
         if ((vaddr & 0x2))

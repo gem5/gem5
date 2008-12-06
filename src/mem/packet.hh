@@ -407,15 +407,15 @@ class Packet : public FastAlloc, public Printable
 
     // Snoop flags
     void assertMemInhibit()     { flags.set(MEM_INHIBIT); }
-    bool memInhibitAsserted()   { return flags.any(MEM_INHIBIT); }
+    bool memInhibitAsserted()   { return flags.isSet(MEM_INHIBIT); }
     void assertShared()         { flags.set(SHARED); }
-    bool sharedAsserted()       { return flags.any(SHARED); }
+    bool sharedAsserted()       { return flags.isSet(SHARED); }
 
     // Special control flags
     void setExpressSnoop()      { flags.set(EXPRESS_SNOOP); }
-    bool isExpressSnoop()       { return flags.any(EXPRESS_SNOOP); }
+    bool isExpressSnoop()       { return flags.isSet(EXPRESS_SNOOP); }
     void setSupplyExclusive()   { flags.set(SUPPLY_EXCLUSIVE); }
-    bool isSupplyExclusive()    { return flags.any(SUPPLY_EXCLUSIVE); }
+    bool isSupplyExclusive()    { return flags.isSet(SUPPLY_EXCLUSIVE); }
 
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
@@ -439,19 +439,19 @@ class Packet : public FastAlloc, public Printable
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
     /// Accessor function to get the source index of the packet.
-    NodeID getSrc() const    { assert(flags.any(VALID_SRC)); return src; }
+    NodeID getSrc() const    { assert(flags.isSet(VALID_SRC)); return src; }
     /// Accessor function to set the source index of the packet.
     void setSrc(NodeID _src) { src = _src; flags.set(VALID_SRC); }
     /// Reset source field, e.g. to retransmit packet on different bus.
     void clearSrc() { flags.clear(VALID_SRC); }
 
     /// Accessor function for the destination index of the packet.
-    NodeID getDest() const     { assert(flags.any(VALID_DST)); return dest; }
+    NodeID getDest() const     { assert(flags.isSet(VALID_DST)); return dest; }
     /// Accessor function to set the destination index of the packet.
     void setDest(NodeID _dest) { dest = _dest; flags.set(VALID_DST); }
 
-    Addr getAddr() const { assert(flags.all(VALID_ADDR)); return addr; }
-    int getSize() const  { assert(flags.all(VALID_SIZE)); return size; }
+    Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
+    int getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
 
     /**
@@ -465,7 +465,7 @@ class Packet : public FastAlloc, public Printable
            addr(_req->paddr), size(_req->size), dest(_dest), time(curTick),
            senderState(NULL)
     {
-        if (req->flags.any(Request::VALID_PADDR))
+        if (req->flags.isSet(Request::VALID_PADDR))
             flags.set(VALID_ADDR|VALID_SIZE);
     }
 
@@ -479,7 +479,7 @@ class Packet : public FastAlloc, public Printable
            addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
            time(curTick), senderState(NULL)
     {
-        if (req->flags.any(Request::VALID_PADDR))
+        if (req->flags.isSet(Request::VALID_PADDR))
             flags.set(VALID_ADDR|VALID_SIZE);
     }
 
@@ -492,7 +492,7 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Packet *pkt, bool clearFlags = false)
         :  cmd(pkt->cmd), req(pkt->req),
-           data(pkt->flags.any(STATIC_DATA) ? pkt->data : NULL),
+           data(pkt->flags.isSet(STATIC_DATA) ? pkt->data : NULL),
            addr(pkt->addr), size(pkt->size), src(pkt->src), dest(pkt->dest),
            time(curTick), senderState(pkt->senderState)
     {
@@ -526,7 +526,7 @@ class Packet : public FastAlloc, public Printable
     void
     reinitFromRequest()
     {
-        assert(req->flags.any(Request::VALID_PADDR));
+        assert(req->flags.isSet(Request::VALID_PADDR));
         flags = 0;
         addr = req->paddr;
         size = req->size;
@@ -551,7 +551,7 @@ class Packet : public FastAlloc, public Printable
         cmd = cmd.responseCommand();
 
         dest = src;
-        flags.set(VALID_DST, flags.any(VALID_SRC));
+        flags.set(VALID_DST, flags.isSet(VALID_SRC));
         flags.clear(VALID_SRC);
     }
 
@@ -590,7 +590,7 @@ class Packet : public FastAlloc, public Printable
     void
     dataStatic(T *p)
     {
-        assert(flags.none(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
         data = (PacketDataPtr)p;
         flags.set(STATIC_DATA);
     }
@@ -603,7 +603,7 @@ class Packet : public FastAlloc, public Printable
     void
     dataDynamicArray(T *p)
     {
-        assert(flags.none(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
         data = (PacketDataPtr)p;
         flags.set(DYNAMIC_DATA|ARRAY_DATA);
     }
@@ -616,7 +616,7 @@ class Packet : public FastAlloc, public Printable
     void
     dataDynamic(T *p)
     {
-        assert(flags.none(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA));
         data = (PacketDataPtr)p;
         flags.set(DYNAMIC_DATA);
     }
@@ -628,7 +628,7 @@ class Packet : public FastAlloc, public Printable
     T*
     getPtr()
     {
-        assert(flags.any(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
         return (T*)data;
     }
 
@@ -689,9 +689,9 @@ class Packet : public FastAlloc, public Printable
     void
     deleteData()
     {
-        if (flags.any(ARRAY_DATA))
+        if (flags.isSet(ARRAY_DATA))
             delete [] data;
-        else if (flags.any(DYNAMIC_DATA))
+        else if (flags.isSet(DYNAMIC_DATA))
             delete data;
 
         flags.clear(STATIC_DATA|DYNAMIC_DATA|ARRAY_DATA);
@@ -703,11 +703,11 @@ class Packet : public FastAlloc, public Printable
     allocate()
     {
         if (data) {
-            assert(flags.any(STATIC_DATA|DYNAMIC_DATA));
+            assert(flags.isSet(STATIC_DATA|DYNAMIC_DATA));
             return;
         }
 
-        assert(flags.none(STATIC_DATA|DYNAMIC_DATA));
+        assert(flags.noneSet(STATIC_DATA|DYNAMIC_DATA));
         flags.set(DYNAMIC_DATA|ARRAY_DATA);
         data = new uint8_t[getSize()];
     }

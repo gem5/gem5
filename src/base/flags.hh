@@ -59,12 +59,12 @@ class Flags
         return *this;
     }
     
-    bool any() const { return _flags; }
-    bool any(Type flags) const { return (_flags & flags); }
-    bool all() const { return !(~_flags); }
-    bool all(Type flags) const { return (_flags & flags) == flags; }
-    bool none() const { return _flags == 0; }
-    bool none(Type flags) const { return (_flags & flags) == 0; }
+    bool isSet() const { return _flags; }
+    bool isSet(Type flags) const { return (_flags & flags); }
+    bool allSet() const { return !(~_flags); }
+    bool allSet(Type flags) const { return (_flags & flags) == flags; }
+    bool noneSet() const { return _flags == 0; }
+    bool noneSet(Type flags) const { return (_flags & flags) == 0; }
     void clear() { _flags = 0; }
     void clear(Type flags) { _flags &= ~flags; }
     void set(Type flags) { _flags |= flags; }
