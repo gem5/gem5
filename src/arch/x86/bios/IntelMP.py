@@ -86,6 +86,15 @@ class X86IntelMPConfigTable(SimObject):
     ext_entries = VectorParam.X86IntelMPExtConfigEntry([],
             'extended configuration table entries')
 
+    def add_entry(self, entry):
+        if isinstance(entry, X86IntelMPBaseConfigEntry):
+            self.base_entries.append(entry)
+        elif isinstance(entry, X86IntelMPExtConfigEntry):
+            self.base_entries.append(entry)
+        else:
+            panic("Don't know what type of Intel MP entry %s is." \
+                    % entry.__class__.__name__)
+
 class X86IntelMPBaseConfigEntry(SimObject):
     type = 'X86IntelMPBaseConfigEntry'
     cxx_class = 'X86ISA::IntelMP::BaseConfigEntry'
