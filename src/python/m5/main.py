@@ -310,7 +310,7 @@ def main():
             if flag.startswith('-'):
                 flag = flag[1:]
                 off = True
-            if flag not in traceflags.allFlags:
+            if flag not in traceflags.allFlags and flag != "All":
                 print >>sys.stderr, "invalid trace flag '%s'" % flag
                 sys.exit(1)
 
