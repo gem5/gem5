@@ -200,7 +200,7 @@ X86LiveProcess::startup()
 void
 X86LiveProcess::argsInit(int intSize, int pageSize)
 {
-    typedef M5_auxv_t<uint64_t> auxv_t;
+    typedef AuxVector<uint64_t> auxv_t;
     std::vector<auxv_t>  auxv;
 
     Process::startup();

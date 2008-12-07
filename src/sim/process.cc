@@ -87,14 +87,14 @@ using namespace TheISA;
 int num_processes = 0;
 
 template<class IntType>
-M5_auxv_t<IntType>::M5_auxv_t(IntType type, IntType val)
+AuxVector<IntType>::AuxVector(IntType type, IntType val)
 {
     a_type = TheISA::htog(type);
     a_val = TheISA::htog(val);
 }
 
-template class M5_auxv_t<uint32_t>;
-template class M5_auxv_t<uint64_t>;
+template class AuxVector<uint32_t>;
+template class AuxVector<uint64_t>;
 
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system), checkpointRestored(false),

@@ -62,19 +62,15 @@ namespace TheISA
 }
 
 template<class IntType>
-struct M5_auxv_t
+struct AuxVector
 {
     IntType a_type;
-    union {
-        IntType a_val;
-        IntType a_ptr;
-        IntType a_fcn;
-    };
+    IntType a_val;
 
-    M5_auxv_t()
+    AuxVector()
     {}
 
-    M5_auxv_t(IntType type, IntType val);
+    AuxVector(IntType type, IntType val);
 };
 
 class Process : public SimObject

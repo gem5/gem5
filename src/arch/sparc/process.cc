@@ -189,7 +189,7 @@ SparcLiveProcess::argsInit(int pageSize)
 {
     int intSize = sizeof(IntType);
 
-    typedef M5_auxv_t<IntType> auxv_t;
+    typedef AuxVector<IntType> auxv_t;
 
     std::vector<auxv_t> auxv;
 

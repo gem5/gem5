@@ -67,7 +67,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
 {
     objFile->loadSections(initVirtMem);
 
-    typedef M5_auxv_t<uint64_t> auxv_t;
+    typedef AuxVector<uint64_t> auxv_t;
     std::vector<auxv_t>  auxv;
 
     ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
