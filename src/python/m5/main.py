@@ -78,7 +78,7 @@ add_option('-N', "--release-notes", action="store_true", default=False,
     help="Show the release notes")
 
 # Options for configuring the base simulator
-add_option('-d', "--outdir", metavar="DIR", default=".",
+add_option('-d', "--outdir", metavar="DIR", default="m5out",
     help="Set the output directory to DIR [Default: %default]")
 add_option('-r', "--redirect-stdout", action="store_true", default=False,
            help="Redirect stdout (& stderr, without -e) to file")
@@ -101,8 +101,13 @@ add_option('-v', "--verbose", action="count", default=0,
 
 # Statistics options
 set_group("Statistics Options")
-add_option("--stats-file", metavar="FILE", default="m5stats.txt",
+add_option("--stats-file", metavar="FILE", default="stats.txt",
     help="Sets the output file for statistics [Default: %default]")
+
+# Configuration Options
+set_group("Configuration Options")
+add_option("--dump-config", metavar="FILE", default="config.ini",
+    help="Dump configuration output file [Default: %default]")
 
 # Debugging options
 set_group("Debugging Options")

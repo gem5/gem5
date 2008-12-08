@@ -46,9 +46,10 @@ def instantiate(root):
 
     root.unproxy_all()
 
-    ini_file = file(os.path.join(options.outdir, 'config.ini'), 'w')
-    root.print_ini(ini_file)
-    ini_file.close() # close config.ini
+    if options.dump_config:
+        ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
+        root.print_ini(ini_file)
+        ini_file.close()
 
     # Initialize the global statistics
     internal.stats.initSimStats()

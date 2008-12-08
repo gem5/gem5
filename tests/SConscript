@@ -58,7 +58,7 @@ def check_test(target, source, env):
         if os.path.exists(t.abspath):
             Execute(Delete(t.abspath))
     # Run diff on output & ref directories to find differences.
-    # Exclude m5stats.txt since we will use diff-out on that.
+    # Exclude the stats file since we will use diff-out on that.
     Execute(env.subst('diff -ubr ${SOURCES[0].dir} ${SOURCES[1].dir} ' +
                       '-I "^command line:" ' +		# for stdout file
                       '-I "^M5 compiled " ' +		# for stderr file
@@ -67,12 +67,12 @@ def check_test(target, source, env):
                       '-I "^Simulation complete at" ' +	# for stderr file
                       '-I "^Listening for" ' +		# for stderr file
                       '-I "listening for remote gdb" ' + # for stderr file
-                      '--exclude=m5stats.txt --exclude=SCCS ' +
+                      '--exclude=stats.txt --exclude=SCCS ' +
                       '--exclude=${TARGETS[0].file} ' +
                       '> ${TARGETS[0]}', target=target, source=source), None)
     print "===== Output differences ====="
     print contents(target[0])
-    # Run diff-out on m5stats.txt file
+    # Run diff-out on stats.txt file
     status = Execute(env.subst('$DIFFOUT $SOURCES > ${TARGETS[1]}',
                                target=target, source=source),
                      strfunction=None)
@@ -111,14 +111,14 @@ Note: The following file(s) will not be copied.  New non-standard
       inputs and are ignored.
 '''
 # - reference files always needed
-needed_files = set(['stdout', 'stderr', 'm5stats.txt', 'config.ini'])
+needed_files = set(['simout', 'simerr', 'stats.txt', 'config.ini'])
 # - source files we always want to ignore
 known_ignores = set(['status', 'outdiff', 'statsdiff'])
 
 def update_test(target, source, env):
     """Update reference test outputs.
 
-    Target is phony.  First two sources are the ref & new m5stats.txt
+    Target is phony.  First two sources are the ref & new stats.txt file
     files, respectively.  We actually copy everything in the
     respective directories except the status & diff output files.
 
@@ -170,17 +170,15 @@ def test_builder(env, ref_dir):
     def tgt(f):
         return os.path.join(tgt_dir, f)
 
-    ref_stats = os.path.join(ref_dir, 'm5stats.txt')
-    new_stats = tgt('m5stats.txt')
+    ref_stats = os.path.join(ref_dir, 'stats.txt')
+    new_stats = tgt('stats.txt')
     status_file = tgt('status')
 
     # Base command for running test.  We mess around with indirectly
     # referring to files via SOURCES and TARGETS so that scons can
     # mess with paths all it wants to and we still get the right
     # files.
-    cmd = '${SOURCES[0]} -d $TARGET.dir'
-    cmd += ' -re --stdout-file stdout --stderr-file stderr'
-    cmd += ' ${SOURCES[1]} %s' % tgt_dir
+    cmd = '${SOURCES[0]} -d $TARGET.dir -re ${SOURCES[1]} %s' % tgt_dir
 
     # Prefix test run with batch job submission command if appropriate.
     # Batch command also supports timeout arg (in seconds, not minutes).
@@ -188,7 +186,7 @@ def test_builder(env, ref_dir):
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
 
-    env.Command([tgt('stdout'), tgt('stderr'), new_stats],
+    env.Command([tgt('simout'), tgt('simerr'), new_stats],
                 [env.M5Binary, 'run.py'], cmd)
 
     # order of targets is important... see check_test
