@@ -59,6 +59,7 @@ Counter Event::instanceCounter = 0;
 
 Event::~Event()
 {
+    assert(!scheduled());
 }
 
 const std::string

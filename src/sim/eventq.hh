@@ -77,6 +77,9 @@ class Event : public Serializable, public FastAlloc
     static const FlagsType AutoSerialize = 0x0008;
     static const FlagsType IsExitEvent   = 0x0010;
     static const FlagsType IsMainQueue   = 0x0020;
+#ifdef EVENTQ_DEBUG
+    static const FlagsType Initialized   = 0xf000;
+#endif
 
   private:
     // The event queue is now a linked list of linked lists.  The
@@ -245,6 +248,7 @@ class Event : public Serializable, public FastAlloc
         queue = NULL;
 #endif
 #ifdef EVENTQ_DEBUG
+        flags.set(Initialized);
         whenCreated = curTick;
         whenScheduled = 0;
 #endif
@@ -469,6 +473,9 @@ EventQueue::schedule(Event *event, Tick when)
 {
     assert(when >= curTick);
     assert(!event->scheduled());
+#ifdef EVENTQ_DEBUG
+    assert((event->flags & Event::Initialized) == Event::Initialized);
+#endif
 
     event->setWhen(when, this);
     insert(event);
@@ -486,6 +493,9 @@ inline void
 EventQueue::deschedule(Event *event)
 {
     assert(event->scheduled());
+#ifdef EVENTQ_DEBUG
+    assert((event->flags & Event::Initialized) == Event::Initialized);
+#endif
 
     remove(event);
 
@@ -504,6 +514,9 @@ EventQueue::reschedule(Event *event, Tick when, bool always)
 {
     assert(when >= curTick);
     assert(always || event->scheduled());
+#ifdef EVENTQ_DEBUG
+    assert((event->flags & Event::Initialized) == Event::Initialized);
+#endif
 
     if (event->scheduled())
         remove(event);
