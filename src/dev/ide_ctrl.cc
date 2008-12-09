@@ -524,9 +524,11 @@ IdeController::Channel::serialize(std::ostream &os)
     SERIALIZE_SCALAR(cmdSize);
     SERIALIZE_SCALAR(ctrlAddr);
     SERIALIZE_SCALAR(ctrlSize);
-    SERIALIZE_SCALAR((uint8_t)bmiRegs.command);
+    uint8_t command = bmiRegs.command;
+    SERIALIZE_SCALAR(command);
     SERIALIZE_SCALAR(bmiRegs.reserved0);
-    SERIALIZE_SCALAR((uint8_t)bmiRegs.status);
+    uint8_t status = bmiRegs.status;
+    SERIALIZE_SCALAR(status);
     SERIALIZE_SCALAR(bmiRegs.reserved1);
     SERIALIZE_SCALAR(bmiRegs.bmidtp);
     SERIALIZE_SCALAR(selectBit);
@@ -559,16 +561,17 @@ void
 IdeController::Channel::unserialize(
         Checkpoint *cp, const std::string &section)
 {
-    uint8_t temp;
     UNSERIALIZE_SCALAR(cmdAddr);
     UNSERIALIZE_SCALAR(cmdSize);
     UNSERIALIZE_SCALAR(ctrlAddr);
     UNSERIALIZE_SCALAR(ctrlSize);
-    UNSERIALIZE_SCALAR(temp);
-    bmiRegs.command = temp;
+    uint8_t command;
+    UNSERIALIZE_SCALAR(command);
+    bmiRegs.command = command;
     UNSERIALIZE_SCALAR(bmiRegs.reserved0);
-    UNSERIALIZE_SCALAR(temp);
-    bmiRegs.status = temp;
+    uint8_t status;
+    UNSERIALIZE_SCALAR(status);
+    bmiRegs.status = status;
     UNSERIALIZE_SCALAR(bmiRegs.reserved1);
     UNSERIALIZE_SCALAR(bmiRegs.bmidtp);
     UNSERIALIZE_SCALAR(selectBit);
