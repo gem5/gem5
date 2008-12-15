@@ -111,10 +111,13 @@ class IdeController : public PciDev
         Channel(std::string newName, Addr _cmdSize, Addr _ctrlSize);
         ~Channel();
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(const std::string &base, std::ostream &os);
+        void unserialize(const std::string &base, Checkpoint *cp,
+            const std::string &section);
+    };
 
-    } primary, secondary;
+    Channel primary;
+    Channel secondary;
 
     /** Bus master interface (BMI) registers */
     Addr bmiAddr, bmiSize;
