@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec  4 2008 21:30:58
-M5 revision 5755:d6a5329ec79b40f273fe6dacb70354f281725652
-M5 commit date Thu Dec 04 18:04:32 2008 -0500
-M5 started Dec  4 2008 21:37:23
-M5 executing on zizzer
-command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual -re --stdout-file stdout --stderr-file stderr tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
+M5 compiled Dec 14 2008 21:47:07
+M5 revision 5776:07905796d7bea4187139808b7de687a99cbc3141
+M5 commit date Sun Dec 14 21:45:15 2008 -0800
+M5 started Dec 14 2008 21:48:26
+M5 executing on tater
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual -re tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 1870335522500 because m5_exit instruction encountered

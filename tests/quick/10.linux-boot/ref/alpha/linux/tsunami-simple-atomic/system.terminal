@@ -55,6 +55,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 loop: loaded (max 8 devices)
 nbd: registered device at major 43
 ns83820.c: National Semiconductor DP83820 10/100/1000 driver.
+PCI: Setting latency timer of device 0000:00:01.0 to 64
 eth0: ns83820.c: 0x22c: 00000000, subsystem: 0000:0000
 eth0: enabling optical transceiver
 eth0: using 64 bit addressing.
@@ -66,6 +67,7 @@ M5 console: m5AlphaAccess @ 0xFFFFFD0200000000
 PIIX4: IDE controller at PCI slot 0000:00:00.0
 PIIX4: chipset revision 0
 PIIX4: 100% native mode on irq 31
+PCI: Setting latency timer of device 0000:00:00.0 to 64
     ide0: BM-DMA at 0x8400-0x8407, BIOS settings: hda:DMA, hdb:DMA
     ide1: BM-DMA at 0x8408-0x840f, BIOS settings: hdc:DMA, hdd:DMA
 hda: M5 IDE Disk, ATA DISK drive
