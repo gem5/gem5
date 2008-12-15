@@ -216,8 +216,10 @@ PciDev::writeConfig(PacketPtr pkt)
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
             config.interruptLine = pkt->get<uint8_t>();
+            break;
           case PCI_CACHE_LINE_SIZE:
             config.cacheLineSize = pkt->get<uint8_t>();
+            break;
           case PCI_LATENCY_TIMER:
             config.latencyTimer = pkt->get<uint8_t>();
             break;
@@ -240,8 +242,10 @@ PciDev::writeConfig(PacketPtr pkt)
         switch (offset) {
           case PCI_COMMAND:
             config.command = pkt->get<uint8_t>();
+            break;
           case PCI_STATUS:
             config.status = pkt->get<uint8_t>();
+            break;
           case PCI_CACHE_LINE_SIZE:
             config.cacheLineSize = pkt->get<uint8_t>();
             break;
