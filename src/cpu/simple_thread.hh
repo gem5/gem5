@@ -385,8 +385,15 @@ class SimpleThread : public ThreadState
     TheISA::IntReg getSyscallArg(int i)
     {
         assert(i < TheISA::NumArgumentRegs);
-        return regs.readIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg[i]));
+        TheISA::IntReg val = regs.readIntReg(
+                TheISA::flattenIntIndex(getTC(), TheISA::ArgumentReg[i]));
+#if THE_ISA == SPARC_ISA
+        if (bits(this->readMiscRegNoEffect(
+                        SparcISA::MISCREG_PSTATE), 3, 3)) {
+            val = bits(val, 31, 0);
+        }
+#endif
+        return val;
     }
 
     // used to shift args for indirect syscall
