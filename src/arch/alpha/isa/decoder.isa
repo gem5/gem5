@@ -783,14 +783,19 @@ decode OPCODE default Unknown::unknown() {
         }
     }
 
-    format BasicOperate {
-        0x1e: decode PALMODE {
-            0: OpcdecFault::hw_rei();
-            1:hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
+  0x1e: decode PALMODE {
+      0: OpcdecFault::hw_rei();
+        format BasicOperate {
+          1: hw_rei({{ xc->hwrei(); }}, IsSerializing, IsSerializeBefore);
         }
+    }
 
+#endif
+
+    format BasicOperate {
         // M5 special opcodes use the reserved 0x01 opcode space
         0x01: decode M5FUNC {
+#if FULL_SYSTEM
             0x00: arm({{
                 PseudoInst::arm(xc->tcBase());
             }}, IsNonSpeculative);
@@ -806,6 +811,7 @@ decode OPCODE default Unknown::unknown() {
             0x04: quiesceTime({{
                 R0 = PseudoInst::quiesceTime(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
+#endif
             0x07: rpns({{
                 R0 = PseudoInst::rpns(xc->tcBase());
             }}, IsNonSpeculative, IsUnverifiable);
@@ -822,12 +828,14 @@ decode OPCODE default Unknown::unknown() {
             0x21: m5exit({{
                 PseudoInst::m5exit(xc->tcBase(), R16);
             }}, No_OpClass, IsNonSpeculative);
+#if FULL_SYSTEM
             0x31: loadsymbol({{
                 PseudoInst::loadsymbol(xc->tcBase());
             }}, No_OpClass, IsNonSpeculative);
             0x30: initparam({{
                 Ra = xc->tcBase()->getCpuPtr()->system->init_param;
             }});
+#endif
             0x40: resetstats({{
                 PseudoInst::resetstats(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
@@ -840,18 +848,22 @@ decode OPCODE default Unknown::unknown() {
             0x43: m5checkpoint({{
                 PseudoInst::m5checkpoint(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
+#if FULL_SYSTEM
             0x50: m5readfile({{
                 R0 = PseudoInst::readfile(xc->tcBase(), R16, R17, R18);
             }}, IsNonSpeculative);
+#endif
             0x51: m5break({{
                 PseudoInst::debugbreak(xc->tcBase());
             }}, IsNonSpeculative);
             0x52: m5switchcpu({{
                 PseudoInst::switchcpu(xc->tcBase());
             }}, IsNonSpeculative);
+#if FULL_SYSTEM
             0x53: m5addsymbol({{
                 PseudoInst::addsymbol(xc->tcBase(), R16, R17);
             }}, IsNonSpeculative);
+#endif
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());
             }}, IsNonSpeculative);
@@ -872,5 +884,4 @@ decode OPCODE default Unknown::unknown() {
             }}, IsNonSpeculative);
         }
     }
-#endif
 }

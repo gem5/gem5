@@ -43,6 +43,7 @@ Source('eventq.cc')
 Source('faults.cc')
 Source('init.cc')
 BinSource('main.cc')
+Source('pseudo_inst.cc')
 Source('root.cc')
 Source('serialize.cc')
 Source('sim_events.cc')
@@ -54,7 +55,6 @@ Source('system.cc')
 
 if env['FULL_SYSTEM']:
     Source('arguments.cc')
-    Source('pseudo_inst.cc')
 else:
     Source('tlb.cc')
     SimObject('Process.py')

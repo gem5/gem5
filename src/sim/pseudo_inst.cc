@@ -50,7 +50,9 @@
 #include "sim/stats.hh"
 #include "sim/system.hh"
 #include "sim/debug.hh"
+#if FULL_SYSTEM
 #include "sim/vptr.hh"
+#endif
 
 using namespace std;
 
@@ -58,6 +60,8 @@ using namespace Stats;
 using namespace TheISA;
 
 namespace PseudoInst {
+
+#if FULL_SYSTEM
 
 void
 arm(ThreadContext *tc)
@@ -125,6 +129,8 @@ quiesceTime(ThreadContext *tc)
     return (tc->readLastActivate() - tc->readLastSuspend()) / Clock::Int::ns;
 }
 
+#endif
+
 uint64_t
 rpns(ThreadContext *tc)
 {
@@ -138,6 +144,8 @@ m5exit(ThreadContext *tc, Tick delay)
     Event *event = new SimLoopExitEvent("m5_exit instruction encountered", 0);
     mainEventQueue.schedule(event, when);
 }
+
+#if FULL_SYSTEM
 
 void
 loadsymbol(ThreadContext *tc)
@@ -188,6 +196,21 @@ loadsymbol(ThreadContext *tc)
 }
 
 void
+addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
+{
+    char symb[100];
+    CopyStringOut(tc, symb, symbolAddr, 100);
+    std::string symbol(symb);
+
+    DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
+
+    tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+}
+
+#endif
+
+
+void
 resetstats(ThreadContext *tc, Tick delay, Tick period)
 {
     if (!tc->getCpuPtr()->params()->do_statistics_insts)
@@ -211,18 +234,6 @@ dumpstats(ThreadContext *tc, Tick delay, Tick period)
     Tick repeat = period * Clock::Int::ns;
 
     Stats::StatEvent(true, false, when, repeat);
-}
-
-void
-addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
-{
-    char symb[100];
-    CopyStringOut(tc, symb, symbolAddr, 100);
-    std::string symbol(symb);
-
-    DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
-
-    tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
 }
 
 void
@@ -250,6 +261,8 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
     Event *event = new SimLoopExitEvent("checkpoint", 0, repeat);
     mainEventQueue.schedule(event, when);
 }
+
+#if FULL_SYSTEM
 
 uint64_t
 readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
@@ -285,6 +298,8 @@ readfile(ThreadContext *tc, Addr vaddr, uint64_t len, uint64_t offset)
     delete [] buf;
     return result;
 }
+
+#endif
 
 void
 debugbreak(ThreadContext *tc)

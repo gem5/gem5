@@ -42,22 +42,25 @@ extern bool doStatisticsInsts;
 extern bool doCheckpointInsts;
 extern bool doQuiesce;
 
+#if FULL_SYSTEM
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
 void quiesceNs(ThreadContext *tc, uint64_t ns);
 void quiesceCycles(ThreadContext *tc, uint64_t cycles);
 uint64_t quiesceTime(ThreadContext *tc);
+uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
+    uint64_t offset);
+void loadsymbol(ThreadContext *xc);
+void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
+#endif
+
 uint64_t rpns(ThreadContext *tc);
 void m5exit(ThreadContext *tc, Tick delay);
-void loadsymbol(ThreadContext *xc);
 void resetstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpresetstats(ThreadContext *tc, Tick delay, Tick period);
 void m5checkpoint(ThreadContext *tc, Tick delay, Tick period);
-uint64_t readfile(ThreadContext *tc, Addr vaddr, uint64_t len,
-    uint64_t offset);
 void debugbreak(ThreadContext *tc);
 void switchcpu(ThreadContext *tc);
-void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
 
-/* namespace PsuedoInst */ }
+/* namespace PseudoInst */ }

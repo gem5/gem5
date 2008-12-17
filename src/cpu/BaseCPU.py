@@ -71,13 +71,14 @@ class BaseCPU(MemObject):
 
     checker = Param.BaseCPU("checker CPU")
 
+    do_checkpoint_insts = Param.Bool(True,
+        "enable checkpoint pseudo instructions")
+    do_statistics_insts = Param.Bool(True,
+        "enable statistics pseudo instructions")
+
     if build_env['FULL_SYSTEM']:
         profile = Param.Latency('0ns', "trace the kernel stack")
         do_quiesce = Param.Bool(True, "enable quiesce instructions")
-        do_checkpoint_insts = Param.Bool(True,
-            "enable checkpoint pseudo instructions")
-        do_statistics_insts = Param.Bool(True,
-            "enable statistics pseudo instructions")
     else:
         workload = VectorParam.Process("processes to run")
 

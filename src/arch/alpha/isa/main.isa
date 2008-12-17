@@ -68,9 +68,7 @@ using namespace AlphaISA;
 output exec {{
 #include <math.h>
 
-#if FULL_SYSTEM
 #include "sim/pseudo_inst.hh"
-#endif
 #include "arch/alpha/ipr.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
