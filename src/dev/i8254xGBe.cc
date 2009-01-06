@@ -446,16 +446,10 @@ IGbE::write(PacketPtr pkt)
                 regs.mdic.data(0x796D); // link up
                 break;
             case PHY_PID:
-                if (params()->is8257)
-                    regs.mdic.data(0x0141);
-                else
-                    regs.mdic.data(0x02A8);
+                regs.mdic.data(params()->phy_pid);
                 break;
             case PHY_EPID:
-                if (params()->is8257)
-                    regs.mdic.data(0x0CC0);
-                else
-                    regs.mdic.data(0x0380);
+                regs.mdic.data(params()->phy_epid);
                 break;
             case PHY_GSTATUS:
                 regs.mdic.data(0x7C00);
