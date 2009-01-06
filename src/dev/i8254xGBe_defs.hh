@@ -555,8 +555,8 @@ struct Regs {
 
     struct SRRCTL : public Reg<uint32_t> { // 0x280C SRRCTL Register
         using Reg<uint32_t>::operator=;
-        ADD_FIELD32(pktlen, 0, 7);
-        ADD_FIELD32(hdrlen, 16, 7); // guess based on header, not documented
+        ADD_FIELD32(pktlen, 0, 8);
+        ADD_FIELD32(hdrlen, 8, 8); // guess based on header, not documented
         ADD_FIELD32(desctype, 25,3); // type of descriptor 000 legacy, 001 adv,
                                      //101 hdr split
         int bufLen() { return pktlen() << 10; }

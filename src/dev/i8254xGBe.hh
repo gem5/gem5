@@ -83,6 +83,9 @@ class IGbE : public EtherDevice
 
     bool rxDmaPacket;
 
+    // Number of bytes copied from current RX packet
+    int pktOffset;
+
     // Delays in managaging descriptors
     Tick fetchDelay, wbDelay;
     Tick fetchCompDelay, wbCompDelay;
@@ -586,6 +589,12 @@ class IGbE : public EtherDevice
 
         bool pktDone;
 
+        /** Variable to head with header/data completion events */
+        int splitCount;
+
+        /** Bytes of packet that have been copied, so we know when to set EOP */
+        int bytesCopied;
+
       public:
         RxDescCache(IGbE *i, std::string n, int s);
 
@@ -593,19 +602,27 @@ class IGbE : public EtherDevice
          * descriptor and update the book keeping. Should only be called when
          * there are no dma's pending.
          * @param packet ethernet packet to write
-         * @return if the packet could be written (there was a free descriptor)
+         * @param pkt_offset bytes already copied from the packet to memory
+         * @return pkt_offset + number of bytes copied during this call
          */
-        void writePacket(EthPacketPtr packet);
+        int writePacket(EthPacketPtr packet, int pkt_offset);
+
         /** Called by event when dma to write packet is completed
          */
         void pktComplete();
 
-        /** Check if the dma on the packet has completed.
+        /** Check if the dma on the packet has completed and RX state machine
+         * can continue
          */
-
         bool packetDone();
 
         EventWrapper<RxDescCache, &RxDescCache::pktComplete> pktEvent;
+
+        // Event to handle issuing header and data write at the same time
+        // and only callking pktComplete() when both are completed
+        void pktSplitDone();
+        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktHdrEvent;
+        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktDataEvent;
 
         virtual bool hasOutstandingEvents();
 

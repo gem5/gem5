@@ -57,7 +57,7 @@ using namespace Net;
 IGbE::IGbE(const Params *p)
     : EtherDevice(p), etherInt(NULL),  drainEvent(NULL), useFlowControl(p->use_flow_control),
       rxFifo(p->rx_fifo_size), txFifo(p->tx_fifo_size), rxTick(false),
-      txTick(false), txFifoTick(false), rxDmaPacket(false), 
+      txTick(false), txFifoTick(false), rxDmaPacket(false), pktOffset(0),
       fetchDelay(p->fetch_delay), wbDelay(p->wb_delay), 
       fetchCompDelay(p->fetch_comp_delay), wbCompDelay(p->wb_comp_delay), 
       rxWriteDelay(p->rx_write_delay), txReadDelay(p->tx_read_delay),  
@@ -789,13 +789,27 @@ IGbE::chkInterrupt()
 
 
 IGbE::RxDescCache::RxDescCache(IGbE *i, const std::string n, int s)
-    : DescCache<RxDesc>(i, n, s), pktDone(false), pktEvent(this)
+    : DescCache<RxDesc>(i, n, s), pktDone(false), splitCount(0), 
+      pktEvent(this), pktHdrEvent(this), pktDataEvent(this)
 
 {
 }
 
 void
-IGbE::RxDescCache::writePacket(EthPacketPtr packet)
+IGbE::RxDescCache::pktSplitDone()
+{
+    splitCount++;
+    DPRINTF(EthernetDesc, "Part of split packet done: splitcount now %d\n", splitCount);
+    assert(splitCount <= 2);
+    if (splitCount != 2)
+        return;
+    splitCount = 0;
+    DPRINTF(EthernetDesc, "Part of split packet done: calling pktComplete()\n");
+    pktComplete();
+}
+
+int
+IGbE::RxDescCache::writePacket(EthPacketPtr packet, int pkt_offset)
 {
         assert(unusedCache.size());
     //if (!unusedCache.size())
@@ -803,32 +817,90 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet)
 
     pktPtr = packet;
     pktDone = false;
+    int buf_len, hdr_len;
 
-    Addr buf;
     RxDesc *desc = unusedCache.front();
     switch (igbe->regs.srrctl.desctype()) {
       case RXDT_LEGACY:
-        buf = desc->legacy.buf;
+        assert(pkt_offset == 0);
+        bytesCopied = packet->length;
         DPRINTF(EthernetDesc, "Packet Length: %d Desc Size: %d\n",
             packet->length, igbe->regs.rctl.descSize());
         assert(packet->length < igbe->regs.rctl.descSize());
+        igbe->dmaWrite(igbe->platform->pciToDma(desc->legacy.buf), packet->length, &pktEvent,
+                packet->data, igbe->rxWriteDelay);
         break;
       case RXDT_ADV_ONEBUF:
-        int buf_len;
+        assert(pkt_offset == 0);
+        bytesCopied = packet->length;
         buf_len = igbe->regs.rctl.lpe() ? igbe->regs.srrctl.bufLen() :
                                               igbe->regs.rctl.descSize();
         DPRINTF(EthernetDesc, "Packet Length: %d srrctl: %#x Desc Size: %d\n",
             packet->length, igbe->regs.srrctl(), buf_len);
         assert(packet->length < buf_len);
-        buf = desc->adv_read.pkt;
+        igbe->dmaWrite(igbe->platform->pciToDma(desc->adv_read.pkt), packet->length, &pktEvent,
+                packet->data, igbe->rxWriteDelay);
+        desc->adv_wb.header_len = htole(0);
+        desc->adv_wb.sph = htole(0);
+        desc->adv_wb.pkt_len = htole((uint16_t)(pktPtr->length));
+        break;
+      case RXDT_ADV_SPLIT_A:
+        int split_point;
+        
+        buf_len = igbe->regs.rctl.lpe() ? igbe->regs.srrctl.bufLen() :
+                                              igbe->regs.rctl.descSize();
+        hdr_len = igbe->regs.rctl.lpe() ? igbe->regs.srrctl.hdrLen() : 0; 
+        DPRINTF(EthernetDesc, "lpe: %d Packet Length: %d offset: %d srrctl: %#x hdr addr: %#x Hdr Size: %d desc addr: %#x Desc Size: %d\n",
+            igbe->regs.rctl.lpe(), packet->length, pkt_offset, igbe->regs.srrctl(), desc->adv_read.hdr, hdr_len, desc->adv_read.pkt, buf_len);
+
+        split_point = hsplit(pktPtr);
+
+        if (packet->length <= hdr_len) {
+            bytesCopied = packet->length;
+            assert(pkt_offset == 0);
+            DPRINTF(EthernetDesc, "Header Splitting: Entire packet being placed in header\n");
+            igbe->dmaWrite(igbe->platform->pciToDma(desc->adv_read.hdr), packet->length, &pktEvent,
+                    packet->data, igbe->rxWriteDelay);
+            desc->adv_wb.header_len = htole((uint16_t)packet->length);
+            desc->adv_wb.sph = htole(0);
+            desc->adv_wb.pkt_len = htole(0);
+        } else if (split_point) {
+            if (pkt_offset) {
+                // we are only copying some data, header/data has already been
+                // copied
+                int max_to_copy = std::min(packet->length - pkt_offset, buf_len);
+                bytesCopied += max_to_copy;
+                DPRINTF(EthernetDesc, "Header Splitting: Continuing data buffer copy\n");
+                igbe->dmaWrite(igbe->platform->pciToDma(desc->adv_read.pkt),max_to_copy, &pktEvent,
+                        packet->data + pkt_offset, igbe->rxWriteDelay);
+                desc->adv_wb.header_len = htole(0);
+                desc->adv_wb.pkt_len = htole((uint16_t)max_to_copy);
+                desc->adv_wb.sph = htole(0);
+            } else {
+                int max_to_copy = std::min(packet->length - split_point, buf_len);
+                bytesCopied += max_to_copy + split_point;
+                
+                DPRINTF(EthernetDesc, "Header Splitting: splitting at %d\n",
+                        split_point);
+                igbe->dmaWrite(igbe->platform->pciToDma(desc->adv_read.hdr), split_point, &pktHdrEvent,
+                        packet->data, igbe->rxWriteDelay);
+                igbe->dmaWrite(igbe->platform->pciToDma(desc->adv_read.pkt),
+                        max_to_copy, &pktDataEvent, packet->data + split_point, igbe->rxWriteDelay);
+                desc->adv_wb.header_len = htole(split_point);
+                desc->adv_wb.sph = 1;
+                desc->adv_wb.pkt_len = htole((uint16_t)(max_to_copy));
+            }
+        } else {
+            panic("Header split not fitting within header buffer or undecodable"
+                  " packet not fitting in header unsupported\n");
+        }
         break;
       default:
         panic("Unimplemnted RX receive buffer type: %d\n",
                 igbe->regs.srrctl.desctype());
     }
+    return bytesCopied;
 
-    igbe->dmaWrite(igbe->platform->pciToDma(buf), packet->length, &pktEvent,
-                packet->data, igbe->rxWriteDelay);
 }
 
 void
@@ -839,8 +911,8 @@ IGbE::RxDescCache::pktComplete()
     desc = unusedCache.front();
 
     uint16_t crcfixup = igbe->regs.rctl.secrc() ? 0 : 4 ;
-    DPRINTF(EthernetDesc, "pktPtr->length: %d stripcrc offset: %d value written: %d %d\n",
-            pktPtr->length, crcfixup,
+    DPRINTF(EthernetDesc, "pktPtr->length: %d bytesCopied: %d stripcrc offset: %d value written: %d %d\n",
+            pktPtr->length, bytesCopied, crcfixup,
             htole((uint16_t)(pktPtr->length + crcfixup)),
             (uint16_t)(pktPtr->length + crcfixup));
 
@@ -849,12 +921,16 @@ IGbE::RxDescCache::pktComplete()
 
     DPRINTF(EthernetDesc, "Packet written to memory updating Descriptor\n");
 
-    uint16_t status = RXDS_DD | RXDS_EOP;
+    uint16_t status = RXDS_DD;
     uint8_t err = 0;
     uint16_t ext_err = 0;
     uint16_t csum = 0;
     uint16_t ptype = 0;
     uint16_t ip_id = 0;
+
+    assert(bytesCopied <= pktPtr->length);
+    if (bytesCopied == pktPtr->length)
+        status |= RXDS_EOP;
 
     IpPtr ip(pktPtr);
 
@@ -913,13 +989,10 @@ IGbE::RxDescCache::pktComplete()
         // No vlan support at this point... just set it to 0
         desc->legacy.vlan = 0;
         break;
+      case RXDT_ADV_SPLIT_A:
       case RXDT_ADV_ONEBUF:
-        desc->adv_wb.pkt_len = htole((uint16_t)(pktPtr->length + crcfixup));
         desc->adv_wb.rss_type = htole(0);
         desc->adv_wb.pkt_type = htole(ptype);
-        // no header splititng support yet
-        desc->adv_wb.header_len = htole(0);
-        desc->adv_wb.sph = htole(0);
         if (igbe->regs.rxcsum.pcsd()) {
             // no rss support right now
             desc->adv_wb.rss_hash = htole(0);
@@ -937,47 +1010,51 @@ IGbE::RxDescCache::pktComplete()
                 igbe->regs.srrctl.desctype());
     }
 
+    DPRINTF(EthernetDesc, "Descriptor complete w0: %#x w1: %#x\n",
+            desc->adv_read.pkt, desc->adv_read.hdr);
 
-    // Deal with the rx timer interrupts
-    if (igbe->regs.rdtr.delay()) {
-        DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n",
-                igbe->regs.rdtr.delay() * igbe->intClock());
-        igbe->reschedule(igbe->rdtrEvent,
-            curTick + igbe->regs.rdtr.delay() * igbe->intClock(), true);
-    }
-
-    if (igbe->regs.radv.idv()) {
-        DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n",
-                igbe->regs.radv.idv() * igbe->intClock());
-        if (!igbe->radvEvent.scheduled()) {
-            igbe->schedule(igbe->radvEvent,
-                curTick + igbe->regs.radv.idv() * igbe->intClock());
+    if (bytesCopied == pktPtr->length) {
+        DPRINTF(EthernetDesc, "Packet completely written to descriptor buffers\n");
+        // Deal with the rx timer interrupts
+        if (igbe->regs.rdtr.delay()) {
+            DPRINTF(EthernetSM, "RXS: Scheduling DTR for %d\n",
+                    igbe->regs.rdtr.delay() * igbe->intClock());
+            igbe->reschedule(igbe->rdtrEvent,
+                curTick + igbe->regs.rdtr.delay() * igbe->intClock(), true);
         }
+
+        if (igbe->regs.radv.idv()) {
+            DPRINTF(EthernetSM, "RXS: Scheduling ADV for %d\n",
+                    igbe->regs.radv.idv() * igbe->intClock());
+            if (!igbe->radvEvent.scheduled()) {
+                igbe->schedule(igbe->radvEvent,
+                    curTick + igbe->regs.radv.idv() * igbe->intClock());
+            }
+        }
+
+        // if neither radv or rdtr, maybe itr is set...
+        if (!igbe->regs.rdtr.delay() && !igbe->regs.radv.idv()) {
+            DPRINTF(EthernetSM, "RXS: Receive interrupt delay disabled, posting IT_RXT\n");
+            igbe->postInterrupt(IT_RXT);
+        }
+
+        // If the packet is small enough, interrupt appropriately
+        // I wonder if this is delayed or not?!
+        if (pktPtr->length <= igbe->regs.rsrpd.idv()) {
+            DPRINTF(EthernetSM, "RXS: Posting IT_SRPD beacuse small packet received\n");
+            igbe->postInterrupt(IT_SRPD);
+        }
+        bytesCopied = 0;
     }
 
-    // if neither radv or rdtr, maybe itr is set...
-    if (!igbe->regs.rdtr.delay() && !igbe->regs.radv.idv()) {
-        DPRINTF(EthernetSM, "RXS: Receive interrupt delay disabled, posting IT_RXT\n");
-        igbe->postInterrupt(IT_RXT);
-    }
-
-    // If the packet is small enough, interrupt appropriately
-    // I wonder if this is delayed or not?!
-    if (pktPtr->length <= igbe->regs.rsrpd.idv()) {
-        DPRINTF(EthernetSM, "RXS: Posting IT_SRPD beacuse small packet received\n");
-        igbe->postInterrupt(IT_SRPD);
-    }
+    pktPtr = NULL;
+    igbe->checkDrain();
+    enableSm();
+    pktDone = true;
 
     DPRINTF(EthernetDesc, "Processing of this descriptor complete\n");
     unusedCache.pop_front();
     usedCache.push_back(desc);
-
-
-    pktPtr = NULL;
-    enableSm();
-    pktDone = true;
-    igbe->checkDrain();
-
 }
 
 void
@@ -1003,7 +1080,9 @@ bool
 IGbE::RxDescCache::hasOutstandingEvents()
 {
     return pktEvent.scheduled() || wbEvent.scheduled() ||
-        fetchEvent.scheduled();
+        fetchEvent.scheduled() || pktHdrEvent.scheduled() ||
+        pktDataEvent.scheduled();
+         
 }
 
 void
@@ -1011,6 +1090,8 @@ IGbE::RxDescCache::serialize(std::ostream &os)
 {
     DescCache<RxDesc>::serialize(os);
     SERIALIZE_SCALAR(pktDone);
+    SERIALIZE_SCALAR(splitCount);
+    SERIALIZE_SCALAR(bytesCopied);
 }
 
 void
@@ -1018,6 +1099,8 @@ IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
 {
     DescCache<RxDesc>::unserialize(cp, section);
     UNSERIALIZE_SCALAR(pktDone);
+    UNSERIALIZE_SCALAR(splitCount);
+    UNSERIALIZE_SCALAR(bytesCopied);
 }
 
 
@@ -1680,6 +1763,8 @@ IGbE::rxStateMachine()
         rxDmaPacket = false;
         DPRINTF(EthernetSM, "RXS: Packet completed DMA to memory\n");
         int descLeft = rxDescCache.descLeft();
+        DPRINTF(EthernetSM, "RXS: descLeft: %d rdmts: %d rdlen: %d\n",
+                descLeft, regs.rctl.rdmts(), regs.rdlen());
         switch (regs.rctl.rdmts()) {
             case 2: if (descLeft > .125 * regs.rdlen()) break;
             case 1: if (descLeft > .250 * regs.rdlen()) break;
@@ -1688,6 +1773,9 @@ IGbE::rxStateMachine()
                 postInterrupt(IT_RXDMT);
                 break;
         }
+
+        if (rxFifo.empty())
+            rxDescCache.writeback(0);
 
         if (descLeft == 0) {
             rxDescCache.writeback(0);
@@ -1746,10 +1834,14 @@ IGbE::rxStateMachine()
     pkt = rxFifo.front();
 
 
-    rxDescCache.writePacket(pkt);
+    pktOffset = rxDescCache.writePacket(pkt, pktOffset);
     DPRINTF(EthernetSM, "RXS: Writing packet into memory\n");
-    DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
-    rxFifo.pop();
+    if (pktOffset == pkt->length) {
+        DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
+        pktOffset = 0;
+        rxFifo.pop();
+    }
+
     DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
     rxTick = false;
     rxDmaPacket = true;
@@ -1866,6 +1958,8 @@ IGbE::serialize(std::ostream &os)
        inter_time = interEvent.when();
     SERIALIZE_SCALAR(inter_time);
 
+    SERIALIZE_SCALAR(pktOffset);
+
     nameOut(os, csprintf("%s.TxDescCache", name()));
     txDescCache.serialize(os);
 
@@ -1922,6 +2016,8 @@ IGbE::unserialize(Checkpoint *cp, const std::string &section)
 
     if (inter_time)
         schedule(interEvent, inter_time);
+
+    UNSERIALIZE_SCALAR(pktOffset);
 
     txDescCache.unserialize(cp, csprintf("%s.TxDescCache", section));
 
