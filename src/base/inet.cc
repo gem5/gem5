@@ -206,4 +206,25 @@ TcpOpt::sack(vector<SackRange> &vec) const
     return false;
 }
 
+int 
+hsplit(const EthPacketPtr &ptr)
+{
+    int split_point = 0;
+
+    IpPtr ip(ptr);
+    if (ip) {
+        split_point = ip.pstart();
+
+        TcpPtr tcp(ip);
+        if (tcp)
+            split_point = tcp.pstart();
+
+        UdpPtr udp(ip);
+        if (udp)
+            split_point = udp.pstart();
+    }
+    return split_point;
+}
+
+
 /* namespace Net */ }

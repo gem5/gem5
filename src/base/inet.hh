@@ -140,6 +140,8 @@ class EthPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
+    int off() const { return 0; }
+    int pstart() const { return off() + ((const EthHdr*)p->data)->size(); }
 };
 
 /*
@@ -216,6 +218,8 @@ class IpPtr
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
+    int off() const { return sizeof(eth_hdr); }
+    int pstart() const { return off() + get()->size(); }
 };
 
 uint16_t cksum(const IpPtr &ptr);
@@ -279,9 +283,9 @@ class TcpPtr
 {
   protected:
     EthPacketPtr p;
-    int off;
+    int _off;
 
-    void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
+    void set(const EthPacketPtr &ptr, int offset) { p = ptr; _off = offset; }
     void set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_TCP)
@@ -291,25 +295,27 @@ class TcpPtr
     }
 
   public:
-    TcpPtr() : p(0), off(0) {}
-    TcpPtr(const IpPtr &ptr) : p(0), off(0) { set(ptr); }
-    TcpPtr(const TcpPtr &ptr) : p(ptr.p), off(ptr.off) {}
+    TcpPtr() : p(0), _off(0) {}
+    TcpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+    TcpPtr(const TcpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
 
-    TcpHdr *get() { return (TcpHdr *)(p->data + off); }
+    TcpHdr *get() { return (TcpHdr *)(p->data + _off); }
     TcpHdr *operator->() { return get(); }
     TcpHdr &operator*() { return *get(); }
 
-    const TcpHdr *get() const { return (const TcpHdr *)(p->data + off); }
+    const TcpHdr *get() const { return (const TcpHdr *)(p->data + _off); }
     const TcpHdr *operator->() const { return get(); }
     const TcpHdr &operator*() const { return *get(); }
 
     const TcpPtr &operator=(const IpPtr &i) { set(i); return *this; }
-    const TcpPtr &operator=(const TcpPtr &t) { set(t.p, t.off); return *this; }
+    const TcpPtr &operator=(const TcpPtr &t) { set(t.p, t._off); return *this; }
 
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
+    int off() const { return _off; }
+    int pstart() const { return off() + get()->size(); }
 };
 
 uint16_t cksum(const TcpPtr &ptr);
@@ -366,9 +372,9 @@ class UdpPtr
 {
   protected:
     EthPacketPtr p;
-    int off;
+    int _off;
 
-    void set(const EthPacketPtr &ptr, int offset) { p = ptr; off = offset; }
+    void set(const EthPacketPtr &ptr, int offset) { p = ptr; _off = offset; }
     void set(const IpPtr &ptr)
     {
         if (ptr && ptr->proto() == IP_PROTO_UDP)
@@ -378,28 +384,32 @@ class UdpPtr
     }
 
   public:
-    UdpPtr() : p(0), off(0) {}
-    UdpPtr(const IpPtr &ptr) : p(0), off(0) { set(ptr); }
-    UdpPtr(const UdpPtr &ptr) : p(ptr.p), off(ptr.off) {}
+    UdpPtr() : p(0), _off(0) {}
+    UdpPtr(const IpPtr &ptr) : p(0), _off(0) { set(ptr); }
+    UdpPtr(const UdpPtr &ptr) : p(ptr.p), _off(ptr._off) {}
 
-    UdpHdr *get() { return (UdpHdr *)(p->data + off); }
+    UdpHdr *get() { return (UdpHdr *)(p->data + _off); }
     UdpHdr *operator->() { return get(); }
     UdpHdr &operator*() { return *get(); }
 
-    const UdpHdr *get() const { return (const UdpHdr *)(p->data + off); }
+    const UdpHdr *get() const { return (const UdpHdr *)(p->data + _off); }
     const UdpHdr *operator->() const { return get(); }
     const UdpHdr &operator*() const { return *get(); }
 
     const UdpPtr &operator=(const IpPtr &i) { set(i); return *this; }
-    const UdpPtr &operator=(const UdpPtr &t) { set(t.p, t.off); return *this; }
+    const UdpPtr &operator=(const UdpPtr &t) { set(t.p, t._off); return *this; }
 
     const EthPacketPtr packet() const { return p; }
     EthPacketPtr packet() { return p; }
     bool operator!() const { return !p; }
     operator bool() const { return p; }
+    int off() const { return _off; }
+    int pstart() const { return off() + get()->size(); }
 };
 
 uint16_t cksum(const UdpPtr &ptr);
+
+int hsplit(const EthPacketPtr &ptr);
 
 /* namespace Net */ }
 
