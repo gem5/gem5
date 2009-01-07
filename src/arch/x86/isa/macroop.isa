@@ -72,56 +72,14 @@ def template MacroExecPanic {{
 output header {{
 
         // Base class for combinationally generated macroops
-        class Macroop : public StaticInst
+        class Macroop : public X86ISA::MacroopBase
         {
-          protected:
-            const uint32_t numMicroops;
-            X86ISA::EmulEnv emulEnv;
-
-            //Constructor.
+          public:
             Macroop(const char *mnem, ExtMachInst _machInst,
                     uint32_t _numMicroops, X86ISA::EmulEnv _emulEnv)
-                        : StaticInst(mnem, _machInst, No_OpClass),
-                        numMicroops(_numMicroops), emulEnv(_emulEnv)
-            {
-                assert(numMicroops);
-                microops = new StaticInstPtr[numMicroops];
-                flags[IsMacroop] = true;
-            }
-
-            ~Macroop()
-            {
-                delete [] microops;
-            }
-
-            StaticInstPtr * microops;
-
-            StaticInstPtr fetchMicroop(MicroPC microPC)
-            {
-                assert(microPC < numMicroops);
-                return microops[microPC];
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const
-            {
-                return mnemonic;
-            }
-
-          public:
+                        : MacroopBase(mnem, _machInst, _numMicroops, _emulEnv)
+            {}
             %(MacroExecPanic)s
-
-            ExtMachInst
-            getExtMachInst()
-            {
-                return machInst;
-            }
-
-            X86ISA::EmulEnv
-            getEmulEnv()
-            {
-                return emulEnv;
-            }
         };
 }};
 
