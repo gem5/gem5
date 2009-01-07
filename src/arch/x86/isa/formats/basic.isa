@@ -147,3 +147,11 @@ def template BasicDecode {{
 def template BasicDecodeWithMnemonic {{
     return new %(class_name)s("%(mnemonic)s", machInst);
 }};
+
+def format BasicOperate(code, *flags) {{
+        iop = InstObjParams(name, Name, 'X86ISA::X86StaticInst', code, flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+}};
