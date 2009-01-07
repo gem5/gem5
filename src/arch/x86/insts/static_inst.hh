@@ -89,6 +89,9 @@ namespace X86ISA
         void printReg(std::ostream &os, int reg, int size) const;
         void printSrcReg(std::ostream &os, int reg, int size) const;
         void printDestReg(std::ostream &os, int reg, int size) const;
+        void printMem(std::ostream &os, uint8_t segment,
+                uint8_t scale, RegIndex index, RegIndex base,
+                uint64_t disp, uint8_t addressSize, bool rip) const;
 
         inline uint64_t merge(uint64_t into, uint64_t val, int size) const
         {
