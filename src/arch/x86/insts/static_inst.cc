@@ -63,13 +63,13 @@ namespace X86ISA
     void X86StaticInst::printMnemonic(std::ostream &os,
             const char * mnemonic) const
     {
-        ccprintf(os, "\t%s   ", mnemonic);
+        ccprintf(os, "  %s   ", mnemonic);
     }
 
     void X86StaticInst::printMnemonic(std::ostream &os,
             const char * instMnemonic, const char * mnemonic) const
     {
-        ccprintf(os, "\t%s : %s   ", instMnemonic, mnemonic);
+        ccprintf(os, "  %s : %s   ", instMnemonic, mnemonic);
     }
 
     void X86StaticInst::printSegment(std::ostream &os, int segment) const
