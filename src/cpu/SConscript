@@ -170,10 +170,12 @@ TraceFlag('ExecSpeculative')
 TraceFlag('ExecSymbol')
 TraceFlag('ExecThread')
 TraceFlag('ExecTicks')
+TraceFlag('ExecMicro')
+TraceFlag('ExecMacro')
 TraceFlag('Fetch')
 TraceFlag('IntrControl')
 TraceFlag('PCEvent')
 TraceFlag('Quiesce')
 
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecSymbol' ])
+    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro' ])

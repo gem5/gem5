@@ -55,6 +55,8 @@ class InstRecord
     // dump the record
     StaticInstPtr staticInst;
     Addr PC;
+    StaticInstPtr macroStaticInst;
+    MicroPC upc;
     bool misspeculating;
 
     // The remaining fields are only valid for particular instruction
@@ -86,10 +88,13 @@ class InstRecord
 
   public:
     InstRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr &_staticInst,
-               Addr _pc, bool spec)
+               const StaticInstPtr _staticInst,
+               Addr _pc, bool spec,
+               const StaticInstPtr _macroStaticInst = NULL,
+               MicroPC _upc = 0)
         : when(_when), thread(_thread),
           staticInst(_staticInst), PC(_pc),
+          macroStaticInst(_macroStaticInst), upc(_upc),
           misspeculating(spec)
     {
         data_status = DataInvalid;
@@ -137,7 +142,9 @@ class InstTracer : public SimObject
 
     virtual InstRecord *
         getInstRecord(Tick when, ThreadContext *tc,
-                const StaticInstPtr staticInst, Addr pc) = 0;
+                const StaticInstPtr staticInst, Addr pc,
+                const StaticInstPtr macroStaticInst = NULL,
+                MicroPC _upc = 0) = 0;
 };
 
 

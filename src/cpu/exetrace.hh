@@ -47,10 +47,14 @@ class ExeTracerRecord : public InstRecord
 {
   public:
     ExeTracerRecord(Tick _when, ThreadContext *_thread,
-               const StaticInstPtr &_staticInst, Addr _pc, bool spec)
-        : InstRecord(_when, _thread, _staticInst, _pc, spec)
+               const StaticInstPtr _staticInst, Addr _pc, bool spec,
+               const StaticInstPtr _macroStaticInst = NULL, MicroPC _upc = 0)
+        : InstRecord(_when, _thread, _staticInst, _pc, spec,
+                _macroStaticInst, _upc)
     {
     }
+
+    void traceInst(StaticInstPtr inst, bool ran);
 
     void dump();
 };
@@ -64,7 +68,8 @@ class ExeTracer : public InstTracer
 
     InstRecord *
     getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, Addr pc)
+            const StaticInstPtr staticInst, Addr pc,
+            const StaticInstPtr macroStaticInst = NULL, MicroPC upc = 0)
     {
         if (!IsOn(ExecEnable))
             return NULL;
@@ -76,7 +81,7 @@ class ExeTracer : public InstTracer
             return NULL;
 
         return new ExeTracerRecord(when, tc,
-                staticInst, pc, tc->misspeculating());
+                staticInst, pc, tc->misspeculating(), macroStaticInst, upc);
     }
 };
 

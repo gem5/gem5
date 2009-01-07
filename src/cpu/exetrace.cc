@@ -46,7 +46,7 @@ using namespace TheISA;
 namespace Trace {
 
 void
-Trace::ExeTracerRecord::dump()
+Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 {
     ostream &outs = Trace::output();
 
@@ -61,7 +61,6 @@ Trace::ExeTracerRecord::dump()
     if (IsOn(ExecThread))
         outs << "T" << thread->threadId() << " : ";
 
-
     std::string sym_str;
     Addr sym_addr;
     if (debugSymbolTable
@@ -69,41 +68,75 @@ Trace::ExeTracerRecord::dump()
         && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
         if (PC != sym_addr)
             sym_str += csprintf("+%d", PC - sym_addr);
-        outs << "@" << sym_str << " : ";
+        outs << "@" << sym_str;
     }
     else {
-        outs << "0x" << hex << PC << " : ";
+        outs << "0x" << hex << PC;
     }
+
+    if (inst->isMicroop()) {
+        outs << "." << setw(2) << dec << upc;
+    } else {
+        outs << "   ";
+    }
+
+    outs << " : ";
 
     //
     //  Print decoded instruction
     //
 
     outs << setw(26) << left;
-    outs << staticInst->disassemble(PC, debugSymbolTable);
-    outs << " : ";
+    outs << inst->disassemble(PC, debugSymbolTable);
 
-    if (IsOn(ExecOpClass)) {
-        outs << Enums::OpClassStrings[staticInst->opClass()] << " : ";
+    if (ran) {
+        outs << " : ";
+
+        if (IsOn(ExecOpClass)) {
+            outs << Enums::OpClassStrings[inst->opClass()] << " : ";
+        }
+
+        if (IsOn(ExecResult) && data_status != DataInvalid) {
+            ccprintf(outs, " D=%#018x", data.as_int);
+        }
+
+        if (IsOn(ExecEffAddr) && addr_valid)
+            outs << " A=0x" << hex << addr;
+
+        if (IsOn(ExecFetchSeq) && fetch_seq_valid)
+            outs << "  FetchSeq=" << dec << fetch_seq;
+
+        if (IsOn(ExecCPSeq) && cp_seq_valid)
+            outs << "  CPSeq=" << dec << cp_seq;
     }
-
-    if (IsOn(ExecResult) && data_status != DataInvalid) {
-        ccprintf(outs, " D=%#018x", data.as_int);
-    }
-
-    if (IsOn(ExecEffAddr) && addr_valid)
-        outs << " A=0x" << hex << addr;
-
-    if (IsOn(ExecFetchSeq) && fetch_seq_valid)
-        outs << "  FetchSeq=" << dec << fetch_seq;
-
-    if (IsOn(ExecCPSeq) && cp_seq_valid)
-        outs << "  CPSeq=" << dec << cp_seq;
 
     //
     //  End of line...
     //
     outs << endl;
+}
+
+void
+Trace::ExeTracerRecord::dump()
+{
+    /*
+     * The behavior this check tries to achieve is that if ExecMacro is on,
+     * the macroop will be printed. If it's on and microops are also on, it's
+     * printed before the microops start printing to give context. If the
+     * microops aren't printed, then it's printed only when the final microop
+     * finishes. Macroops then behave like regular instructions and don't
+     * complete/print when they fault.
+     */
+    if (IsOn(ExecMacro) && staticInst->isMicroop() &&
+            (IsOn(ExecMicro) &&
+             macroStaticInst && staticInst->isFirstMicroop()) ||
+            (!IsOn(ExecMicro) &&
+             macroStaticInst && staticInst->isLastMicroop())) {
+        traceInst(macroStaticInst, false);
+    }
+    if (IsOn(ExecMicro) || !staticInst->isMicroop()) {
+        traceInst(staticInst, true);
+    }
 }
 
 /* namespace Trace */ }
