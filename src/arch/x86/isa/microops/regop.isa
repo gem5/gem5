@@ -438,7 +438,7 @@ let {{
             className = self.className
             if self.mnemonic == self.base_mnemonic + 'i':
                 className += "Imm"
-            allocator = '''new %(class_name)s(machInst, mnemonic
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(src1)s, %(op2)s, %(dest)s,
                     %(dataSize)s, %(ext)s)''' % {
                 "class_name" : className,

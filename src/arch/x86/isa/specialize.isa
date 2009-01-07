@@ -86,8 +86,17 @@ let {{
 let {{
     def doRipRelativeDecode(Name, opTypes, env):
         # print "RIPing %s with opTypes %s" % (Name, opTypes)
-        normBlocks = specializeInst(Name + "_M", copy.copy(opTypes), copy.copy(env))
-        ripBlocks = specializeInst(Name + "_P", copy.copy(opTypes), copy.copy(env))
+        env.memoryInst = True
+        normEnv = copy.copy(env)
+        normEnv.addToDisassembly(
+                '''printMem(out, env.seg, env.scale, env.index, env.base,
+                    machInst.displacement, env.addressSize, false);''')
+        normBlocks = specializeInst(Name + "_M", copy.copy(opTypes), normEnv)
+        ripEnv = copy.copy(env)
+        ripEnv.addToDisassembly(
+                '''printMem(out, env.seg, 1, 0, 0,
+                    machInst.displacement, env.addressSize, true);''')
+        ripBlocks = specializeInst(Name + "_P", copy.copy(opTypes), ripEnv)
 
         blocks = OutputBlocks()
         blocks.append(normBlocks)
@@ -138,12 +147,17 @@ let {{
                 #Figure out what to do with fixed register operands
                 #This is the index to use, so we should stick it some place.
                 if opType.reg in ("A", "B", "C", "D"):
-                    env.addReg("INTREG_R%sX" % opType.reg)
+                    regString = "INTREG_R%sX" % opType.reg
                 else:
-                    env.addReg("INTREG_R%s" % opType.reg)
+                    regString = "INTREG_R%s" % opType.reg
+                env.addReg(regString)
+                env.addToDisassembly(
+                        "printReg(out, %s, regSize);\n" % regString)
                 Name += "_R"
             elif opType.tag == "B":
                 # This refers to registers whose index is encoded as part of the opcode
+                env.addToDisassembly(
+                        "printReg(out, %s, regSize);\n" % InstRegIndex)
                 Name += "_R"
                 env.addReg(InstRegIndex)
             elif opType.tag == "M":
@@ -156,24 +170,34 @@ let {{
             elif opType.tag == "C":
                 # A control register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
+                env.addToDisassembly(
+                        "ccprintf(out, \"CR%%d\", %s);\n" % ModRMRegIndex)
                 Name += "_C"
             elif opType.tag == "D":
                 # A debug register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
+                env.addToDisassembly(
+                        "ccprintf(out, \"DR%%d\", %s);\n" % ModRMRegIndex)
                 Name += "_D"
             elif opType.tag == "S":
                 # A segment selector register indexed by the "reg" field
                 env.addReg(ModRMRegIndex)
+                env.addToDisassembly(
+                        "printSegment(out, %s);\n" % ModRMRegIndex)
                 Name += "_S"
             elif opType.tag in ("G", "P", "T", "V"):
                 # Use the "reg" field of the ModRM byte to select the register
                 env.addReg(ModRMRegIndex)
+                env.addToDisassembly(
+                        "printReg(out, %s, regSize);\n" % ModRMRegIndex)
                 Name += "_R"
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
                 regEnv = copy.copy(env)
                 regEnv.addReg(ModRMRMIndex)
+                regEnv.addToDisassembly(
+                        "printReg(out, %s, regSize);\n" % ModRMRMIndex)
                 # This refers to memory. The macroop constructor should set up
                 # modrm addressing.
                 memEnv = copy.copy(env)
@@ -183,6 +207,8 @@ let {{
                            (doRipRelativeDecode, Name, copy.copy(opTypes), memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
+                env.addToDisassembly(
+                        "ccprintf(out, \"%#x\", machInst.immediate);\n")
                 Name += "_I"
             elif opType.tag == "O":
                 # Immediate containing a memory offset
@@ -190,10 +216,22 @@ let {{
             elif opType.tag in ("PR", "R", "VR"):
                 # Non register modrm settings should cause an error
                 env.addReg(ModRMRMIndex)
+                env.addToDisassembly(
+                        "printReg(out, %s, regSize);\n" % ModRMRMIndex)
                 Name += "_R"
             elif opType.tag in ("X", "Y"):
                 # This type of memory addressing is for string instructions.
                 # They'll use the right index and segment internally.
+                if opType.tag == "X":
+                    env.addToDisassembly(
+                            '''printMem(out, env.seg,
+                                1, X86ISA::ZeroReg, X86ISA::INTREG_RSI, 0,
+                                env.addressSize, false);''')
+                else:
+                    env.addToDisassembly(
+                            '''printMem(out, SEGMENT_REG_ES,
+                                1, X86ISA::ZeroReg, X86ISA::INTREG_RDI, 0,
+                                env.addressSize, false);''')
                 Name += "_M"
             else:
                 raise Exception, "Unrecognized tag %s." % opType.tag

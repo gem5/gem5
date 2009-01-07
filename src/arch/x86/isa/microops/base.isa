@@ -76,7 +76,7 @@ let {{
             StaticInstPtr
             ''' + generatorNameTemplate + '''(StaticInstPtr curMacroop)
             {
-                static const char * mnemonic = romMnemonic;
+                static const char *macrocodeBlock = romMnemonic;
                 static const ExtMachInst dummyExtMachInst;
                 static const EmulEnv dummyEmulEnv(0, 0, 1, 1, 1);
 

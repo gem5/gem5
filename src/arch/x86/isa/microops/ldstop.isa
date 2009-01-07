@@ -362,7 +362,7 @@ let {{
             self.addressSize = addressSize
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, mnemonic
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(scale)s, %(index)s, %(base)s,
                     %(disp)s, %(segment)s, %(data)s,
                     %(dataSize)s, %(addressSize)s)''' % {

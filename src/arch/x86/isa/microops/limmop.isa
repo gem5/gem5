@@ -154,7 +154,7 @@ let {{
             self.dataSize = dataSize
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, mnemonic
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
                 "class_name" : self.className,
                 "mnemonic" : self.mnemonic,

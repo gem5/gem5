@@ -65,17 +65,19 @@
 namespace X86ISA
 {
 // Base class for combinationally generated macroops
-class MacroopBase : public StaticInst
+class MacroopBase : public X86StaticInst
 {
   protected:
+    const char *macrocodeBlock;
+
     const uint32_t numMicroops;
-    X86ISA::EmulEnv emulEnv;
+    X86ISA::EmulEnv env;
 
     //Constructor.
     MacroopBase(const char *mnem, ExtMachInst _machInst,
-            uint32_t _numMicroops, X86ISA::EmulEnv _emulEnv)
-                : StaticInst(mnem, _machInst, No_OpClass),
-                numMicroops(_numMicroops), emulEnv(_emulEnv)
+            uint32_t _numMicroops, X86ISA::EmulEnv _env) :
+                X86StaticInst(mnem, _machInst, No_OpClass),
+                numMicroops(_numMicroops), env(_env)
     {
         assert(numMicroops);
         microops = new StaticInstPtr[numMicroops];
@@ -95,8 +97,8 @@ class MacroopBase : public StaticInst
         return microops[microPC];
     }
 
-    std::string generateDisassembly(Addr pc,
-            const SymbolTable *symtab) const
+    std::string
+    generateDisassembly(Addr pc, const SymbolTable *symtab) const
     {
         return mnemonic;
     }
@@ -111,7 +113,7 @@ class MacroopBase : public StaticInst
     X86ISA::EmulEnv
     getEmulEnv()
     {
-        return emulEnv;
+        return env;
     }
 };
 }

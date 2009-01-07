@@ -230,7 +230,7 @@ let {{
                 self.cond = "0"
 
         def getAllocator(self, *microFlags):
-            allocator = '''new %(class_name)s(machInst, mnemonic
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(fault)s, %(cc)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
@@ -257,7 +257,7 @@ let {{
             pass
 
         def getAllocator(self, *microFlags):
-            return "new MicroHalt(machInst, mnemonic %s)" % \
+            return "new MicroHalt(machInst, macrocodeBlock %s)" % \
                     self.microFlagsText(microFlags)
 
     microopClasses["halt"] = Halt
