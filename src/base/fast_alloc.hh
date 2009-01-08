@@ -74,6 +74,10 @@ class FastAlloc
 
 #else
 
+#if FAST_ALLOC_DEBUG
+#include "sim/host.hh"   // for Tick
+#endif
+
 class FastAlloc
 {
   public:
@@ -127,6 +131,7 @@ class FastAlloc
     bool inUse;                 // in-use flag
     FastAlloc *inUsePrev;       // ptrs to build list of in-use objects
     FastAlloc *inUseNext;
+    Tick whenAllocated;
 
     // static (global) debugging vars
     static int numInUse;        // count in-use objects
@@ -137,6 +142,7 @@ class FastAlloc
     // versions that might be more agreeable to call from gdb)
     static void dump_summary();
     static void dump_oldest(int n);
+    static void dump_oldest_of_type(int n, const char *type_name);
 #endif
 };
 

@@ -75,11 +75,12 @@ FastAlloc::moreStructs(int bucket)
 
 #if FAST_ALLOC_DEBUG
 
-#include <iomanip>
-#include <iostream>
 #include <map>
 #include <string>
 #include <typeinfo>
+
+#include "base/cprintf.hh"
+#include "sim/core.hh"   // for curTick
 
 using namespace std;
 
@@ -103,6 +104,7 @@ FastAlloc::FastAlloc()
 {
     // mark this object in use
     inUse = true;
+    whenAllocated = curTick;
 
     // update count
     ++numInUse;
@@ -131,6 +133,13 @@ FastAlloc::~FastAlloc()
     inUseNext->inUsePrev = inUsePrev;
 }
 
+
+// Note that in all the display functions below we suppress anything
+// with a zero allocation timestamp... there are a bunch of static or
+// quasi-static structures that get allocated during initialization
+// and we generally don't care about them so this gets them out of the
+// way.
+
 // summarize in-use list
 void
 FastAlloc::dump_summary()
@@ -139,16 +148,18 @@ FastAlloc::dump_summary()
 
     for (FastAlloc *p = inUseHead.inUseNext; p != &inUseHead; p = p->inUseNext)
     {
-        ++typemap[typeid(*p).name()];
+        if (p->whenAllocated != 0)
+            ++typemap[typeid(*p).name()];
     }
 
     map<string, int>::const_iterator mapiter;
 
-    cout << " count  type\n"
-         << " -----  ----\n";
+    cprintf(" count  type\n"
+            " -----  ----\n");
     for (mapiter = typemap.begin(); mapiter != typemap.end(); ++mapiter)
-        cout << setw(6) << mapiter->second << "  " << mapiter->first << endl;
+        cprintf("%6d  %s\n",mapiter->second, mapiter->first);
 }
+
 
 // show oldest n items on in-use list
 void
@@ -157,16 +168,44 @@ FastAlloc::dump_oldest(int n)
     // sanity check: don't want to crash the debugger if you forget to
     // pass in a parameter
     if (n < 0 || n > numInUse) {
-        cout << "FastAlloc::dump_oldest: bad arg " << n
-             << " (" << numInUse << " objects in use" << endl;
+        cprintf("FastAlloc::dump_oldest: bad arg %d (%d objects in use)\n",
+                n, numInUse);
         return;
     }
 
     for (FastAlloc *p = inUseHead.inUseNext;
          p != &inUseHead && n > 0;
-         p = p->inUseNext, --n)
-        cout << p << " " << typeid(*p).name() << endl;
+         p = p->inUseNext, --n) {
+        if (p->whenAllocated != 0)
+            cprintf("%x %15d %s\n", p, p->whenAllocated, typeid(*p).name());
+    }
 }
+
+
+// show oldest n items on in-use list for specified type
+void
+FastAlloc::dump_oldest_of_type(int n, const char *type_name)
+{
+    // sanity check: don't want to crash the debugger if you forget to
+    // pass in a parameter
+    if (n < 0 || n > numInUse) {
+        cprintf("FastAlloc::dump_oldest_of_type: bad arg %d "
+                "(%d objects in use)\n",
+                n, numInUse);
+        return;
+    }
+
+    for (FastAlloc *p = inUseHead.inUseNext;
+         p != &inUseHead && n > 0;
+         p = p->inUseNext) {
+        if (p->whenAllocated != 0 &&
+            strcmp(typeid(*p).name(), type_name) == 0) {
+            cprintf("%x %15d\n", p, p->whenAllocated);
+            --n;
+        }
+    }
+}
+
 
 //
 // C interfaces to FastAlloc::dump_summary() and FastAlloc::dump_oldest().
