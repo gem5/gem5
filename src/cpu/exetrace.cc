@@ -128,10 +128,10 @@ Trace::ExeTracerRecord::dump()
      * complete/print when they fault.
      */
     if (IsOn(ExecMacro) && staticInst->isMicroop() &&
-            (IsOn(ExecMicro) &&
+            ((IsOn(ExecMicro) &&
              macroStaticInst && staticInst->isFirstMicroop()) ||
             (!IsOn(ExecMicro) &&
-             macroStaticInst && staticInst->isLastMicroop())) {
+             macroStaticInst && staticInst->isLastMicroop()))) {
         traceInst(macroStaticInst, false);
     }
     if (IsOn(ExecMicro) || !staticInst->isMicroop()) {
