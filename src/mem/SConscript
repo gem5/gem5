@@ -35,10 +35,6 @@ SimObject('Bus.py')
 SimObject('PhysicalMemory.py')
 SimObject('MemObject.py')
 
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308
-Dir('config')
-
 Source('bridge.cc')
 Source('bus.cc')
 Source('dram.cc')

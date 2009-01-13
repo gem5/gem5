@@ -357,17 +357,3 @@ if env['TARGET_ISA'] == 'x86':
         # Only non-header files need to be compiled.
         if not f.path.endswith('.hh'):
             Source(f)
-
-    # Workaround for bug in SCons version > 0.97d20071212
-    # Scons bug id: 2006 M5 Bug id: 308
-    from os.path import dirname, join as joinpath
-
-    Dir('isa')
-    Dir('isa/microops')
-    Dir('isa/decoder')
-    Dir('isa/formats')
-    Dir('isa/insts')
-    isa_dirs = set(map(lambda x:dirname(x), python_files))
-    for d in isa_dirs:
-        Dir(joinpath('isa/insts', d))
-     

@@ -33,9 +33,6 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'mips':
-# Workaround for bug in SCons version > 0.97d20071212
-# Scons bug id: 2006 M5 Bug id: 308 
-    Dir('isa/formats')
     Source('faults.cc')
     Source('regfile/int_regfile.cc')
     Source('regfile/float_regfile.cc')
