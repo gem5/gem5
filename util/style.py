@@ -304,7 +304,12 @@ def do_check_whitespace(ui, repo, *files, **args):
             if prompt(fname):
                 return True
 
-    wctx = repo.workingctx()
+    try:
+        wctx = repo.workingctx()
+    except:
+        from mercurial import context
+        wctx = context.workingctx(repo)
+
     for fname in modified:
         if skip(fname):
             continue
