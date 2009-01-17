@@ -33,6 +33,7 @@ Import('*')
 
 if env['FULL_SYSTEM']:
     SimObject('BadDevice.py')
+    SimObject('CopyEngine.py')
     SimObject('Device.py')
     SimObject('DiskImage.py')
     SimObject('Ethernet.py')
@@ -44,6 +45,7 @@ if env['FULL_SYSTEM']:
     SimObject('Uart.py')
 
     Source('baddev.cc')
+    Source('copy_engine.cc')
     Source('disk_image.cc')
     Source('etherbus.cc')
     Source('etherdevice.cc')
@@ -73,6 +75,7 @@ if env['FULL_SYSTEM']:
     TraceFlag('DiskImageRead')
     TraceFlag('DiskImageWrite')
     TraceFlag('DMA')
+    TraceFlag('DMACopyEngine')
     TraceFlag('Ethernet')
     TraceFlag('EthernetCksum')
     TraceFlag('EthernetDMA')
