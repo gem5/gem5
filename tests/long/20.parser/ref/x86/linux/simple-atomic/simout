@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 23:03:02
-M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
-M5 commit date Wed Nov 05 16:19:17 2008 -0500
-M5 started Nov  5 2008 23:22:32
+M5 compiled Jan 16 2009 20:04:39
+M5 revision Unknown:Unknown
+M5 commit date Unknown
+M5 started Jan 16 2009 21:36:48
 M5 executing on zizzer
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/20.parser/x86/linux/simple-atomic
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic -re tests/run.py long/20.parser/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -72,4 +72,4 @@ Echoing of input sentence turned on.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 868687490500 because target called exit()
+Exiting @ tick 868687391000 because target called exit()
