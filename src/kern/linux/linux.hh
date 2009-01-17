@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
+ * Copyright (c) 2004-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,8 +39,12 @@ class Linux {};
 #else //!FULL_SYSTEM
 
 #include <inttypes.h>
+#include <string>
 
 #include "kern/operatingsystem.hh"
+
+class ThreadContext;
+class LiveProcess;
 
 ///
 /// This class encapsulates the types, structures, constants,
@@ -157,6 +161,9 @@ class Linux : public OperatingSystem
         int64_t ru_nvcsw;               //!< voluntary context switches
         int64_t ru_nivcsw;              //!< involuntary "
     };
+
+    static int openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc);
+    static std::string procMeminfo(LiveProcess *process, ThreadContext *tc);
 
 };  // class Linux
 

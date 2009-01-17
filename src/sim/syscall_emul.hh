@@ -537,10 +537,18 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
 
-    // open the file
-    int fd = open(path.c_str(), hostFlags, mode);
+    int fd;
+    if (!path.compare(0, 6, "/proc/") || !path.compare(0, 8, "/system/") ||
+        !path.compare(0, 10, "/platform/") || !path.compare(0, 5, "/sys/")) {
+        // It's a proc/sys entery and requires special handling
+        fd = OS::openSpecialFile(path, process, tc);
+        return (fd == -1) ? -1 : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+     } else {
+        // open the file
+        fd = open(path.c_str(), hostFlags, mode);
+        return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+     }
 
-    return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
 }
 
 

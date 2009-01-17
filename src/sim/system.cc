@@ -244,6 +244,19 @@ System::new_page()
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
+
+Addr
+System::memSize()
+{
+    return physmem->size();
+}
+
+Addr
+System::freeMemSize()
+{
+   return physmem->size() - (page_ptr << LogVMPageSize);
+}
+
 #endif
 
 void

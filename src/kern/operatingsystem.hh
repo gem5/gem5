@@ -40,6 +40,10 @@
 class OperatingSystem {};
 
 #else //!FULL_SYSTEM
+#include <string>
+
+class LiveProcess;
+class ThreadContext;
 
 /// This struct is used to build an target-OS-dependent table that
 /// maps the target's open() flags to the host open() flags.
@@ -116,6 +120,8 @@ class OperatingSystem {
         int64_t ru_nvcsw;               //!< voluntary context switches
         int64_t ru_nivcsw;              //!< involuntary "
     } rusage;
+
+    static int openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc);
 
 };  // class OperatingSystem
 

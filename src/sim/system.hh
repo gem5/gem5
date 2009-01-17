@@ -139,6 +139,12 @@ class System : public SimObject
         return next_PID++;
     }
 
+    /** Amount of physical memory that is still free */
+    Addr freeMemSize();
+
+    /** Amount of physical memory that exists */
+    Addr memSize();
+
 
 #endif // FULL_SYSTEM
 

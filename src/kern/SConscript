@@ -47,3 +47,6 @@ if env['FULL_SYSTEM']:
         Source('tru64/tru64_events.cc')
         Source('tru64/tru64_syscalls.cc')
         TraceFlag('BADADDR')
+else:
+    Source('linux/linux.cc')
+    Source('operatingsystem.cc')
