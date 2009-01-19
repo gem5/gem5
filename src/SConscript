@@ -1011,8 +1011,8 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
     # First make a library of everything but main() so other programs can
     # link against m5.
-    static_lib = new_env.StaticLibrary(libname, static_objs + static_objs)
-    shared_lib = new_env.SharedLibrary(libname, shared_objs + shared_objs)
+    static_lib = new_env.StaticLibrary(libname, static_objs)
+    shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
     for target, sources in unit_tests:
         objs = [ new_env.StaticObject(s) for s in sources ]
