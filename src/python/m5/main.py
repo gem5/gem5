@@ -147,7 +147,7 @@ def main():
         if defines.TRACING_ON:
             return
 
-        panic("Tracing is not enabled.  Compile with TRACING_ON")
+        fatal("Tracing is not enabled.  Compile with TRACING_ON")
 
     # load the options.py config file to allow people to set their own
     # default options

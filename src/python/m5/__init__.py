@@ -36,8 +36,19 @@ import smartdict
 MaxTick = 2**63 - 1
 
 # define this here so we can use it right away if necessary
+
+# panic() should be called when something happens that should never
+# ever happen regardless of what the user does (i.e., an acutal m5
+# bug).
 def panic(string):
     print >>sys.stderr, 'panic:', string
+    sys.exit(1)
+
+# fatal() should be called when the simulation cannot continue due to
+# some condition that is the user's fault (bad configuration, invalid
+# arguments, etc.) and not a simulator bug.
+def fatal(string):
+    print >>sys.stderr, 'fatal:', string
     sys.exit(1)
 
 # force scalars to one-element lists for uniformity
