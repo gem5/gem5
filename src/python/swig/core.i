@@ -41,15 +41,24 @@
 #include "sim/startup.hh"
 
 extern const char *compileDate;
-std::vector<std::string> compileFlags();
-extern const char *hgRev;
-extern const char *hgDate;
+
+#ifdef DEBUG
+const bool flag_DEBUG = true;
+#else
+const bool flag_DEBUG = false;
+#endif
+#ifdef NDEBUG
+const bool flag_NDEBUG = true;
+#else
+const bool flag_NDEBUG = false;
+#endif
+const bool flag_TRACING_ON = TRACING_ON;
+
 inline void disableAllListeners() { ListenSocket::disableAll(); }
 %}
 
 %include "stdint.i"
 %include "std_string.i"
-%include "std_vector.i"
 %include "sim/host.hh"
 
 void setOutputDir(const std::string &dir);
@@ -59,12 +68,9 @@ void disableAllListeners();
 
 %immutable compileDate;
 char *compileDate;
-
-namespace std { %template(StringVector) vector<string>; }
-std::vector<std::string> compileFlags();
-
-char *hgRev;
-char *hgDate;
+const bool flag_DEBUG;
+const bool flag_NDEBUG;
+const bool flag_TRACING_ON;
 
 void setClockFrequency(Tick ticksPerSecond);
 

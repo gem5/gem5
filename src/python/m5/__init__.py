@@ -77,18 +77,18 @@ env.update(os.environ)
 #    importing *you*).
 try:
     import internal
-    running_m5 = True
 except ImportError:
-    running_m5 = False
+    internal = None
 
-if running_m5:
-    import defines
-    build_env.update(defines.m5_build_env)
-else:
-    import __scons
-    build_env.update(__scons.m5_build_env)
+import defines
+build_env.update(defines.buildEnv)
 
-if running_m5:
+if internal:
+    defines.compileDate = internal.core.compileDate
+    for k,v in internal.core.__dict__.iteritems():
+        if k.startswith('flag_'):
+            setattr(defines, k[5:], v)
+
     from event import *
     from simulate import *
     from main import options, main

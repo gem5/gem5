@@ -272,7 +272,7 @@ class DictImporter(object):
         self.installed = set()
 
     def find_module(self, fullname, path):
-        if fullname == '__scons':
+        if fullname == 'defines':
             return self
 
         if fullname == 'm5.objects':
@@ -296,8 +296,8 @@ class DictImporter(object):
             mod.__path__ = fullname.split('.')
             return mod
 
-        if fullname == '__scons':
-            mod.__dict__['m5_build_env'] = build_env
+        if fullname == 'defines':
+            mod.__dict__['buildEnv'] = build_env
             return mod
 
         srcfile = self.modules[fullname]
@@ -358,12 +358,50 @@ depends = [ File(py_modules[dep]) for dep in module_depends ]
 # Commands for the basic automatically generated python files
 #
 
+scons_dir = str(SCons.Node.FS.default_fs.SConstruct_dir)
+
+hg_info = ("Unknown", "Unknown", "Unknown")
+hg_demandimport = False
+try:
+    if not exists(scons_dir) or not isdir(scons_dir) or \
+           not exists(joinpath(scons_dir, ".hg")):
+        raise ValueError(".hg directory not found")
+
+    import mercurial.demandimport, mercurial.hg, mercurial.ui
+    import mercurial.util, mercurial.node
+    hg_demandimport = True
+
+    repo = mercurial.hg.repository(mercurial.ui.ui(), scons_dir)
+    rev = mercurial.node.nullrev + repo.changelog.count()
+    changenode = repo.changelog.node(rev)
+    changes = repo.changelog.read(changenode)
+    id = mercurial.node.hex(changenode)
+    date = mercurial.util.datestr(changes[2])
+
+    hg_info = (rev, id, date)
+except ImportError, e:
+    print "Mercurial not found"
+except ValueError, e:
+    print e
+except Exception, e:
+    print "Other mercurial exception: %s" % e
+
+if hg_demandimport:
+    mercurial.demandimport.disable()
+
 # Generate Python file containing a dict specifying the current
 # build_env flags.
 def makeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
-    print >>f, "m5_build_env = ", source[0]
+    build_env, hg_info = [ x.get_contents() for x in source ]
+    print >>f, "buildEnv = %s" % build_env
+    print >>f, "hgRev, hgId, hgDate = %s" % hg_info
     f.close()
+
+defines_info = [ Value(build_env), Value(hg_info) ]
+# Generate a file with all of the compile options in it
+env.Command('python/m5/defines.py', defines_info, makeDefinesPyFile)
+PySource('m5', 'python/m5/defines.py')
 
 # Generate python file containing info about the M5 source code
 def makeInfoPyFile(target, source, env):
@@ -373,6 +411,12 @@ def makeInfoPyFile(target, source, env):
         print >>f, "%s = %s" % (src, repr(data))
     f.close()
 
+# Generate a file that wraps the basic top level files
+env.Command('python/m5/info.py',
+            [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
+            makeInfoPyFile)
+PySource('m5', 'python/m5/info.py')
+
 # Generate the __init__.py file for m5.objects
 def makeObjectsInitFile(target, source, env):
     f = file(str(target[0]), 'w')
@@ -381,16 +425,6 @@ def makeObjectsInitFile(target, source, env):
     for module in source:
         print >>f, 'from %s import *' % module.get_contents()
     f.close()
-
-# Generate a file with all of the compile options in it
-env.Command('python/m5/defines.py', Value(build_env), makeDefinesPyFile)
-PySource('m5', 'python/m5/defines.py')
-
-# Generate a file that wraps the basic top level files
-env.Command('python/m5/info.py',
-            [ '#/AUTHORS', '#/LICENSE', '#/README', '#/RELEASE_NOTES' ],
-            makeInfoPyFile)
-PySource('m5', 'python/m5/info.py')
 
 # Generate an __init__.py file for the objects package
 env.Command('python/m5/objects/__init__.py',
@@ -821,43 +855,6 @@ env.Command('base/traceflags.hh', flags, traceFlagsHH)
 env.Command('base/traceflags.cc', flags, traceFlagsCC)
 Source('base/traceflags.cc')
 
-# Generate program_info.cc
-def programInfo(target, source, env):
-    def gen_file(target, rev, node, date):
-        pi_stats = file(target, 'w')
-        print >>pi_stats, 'const char *hgRev = "%s:%s";' %  (rev, node)
-        print >>pi_stats, 'const char *hgDate = "%s";' % date
-        pi_stats.close()
-
-    target = str(target[0])
-    scons_dir = str(source[0].get_contents())
-    try:
-        import mercurial.demandimport, mercurial.hg, mercurial.ui
-        import mercurial.util, mercurial.node
-        if not exists(scons_dir) or not isdir(scons_dir) or \
-               not exists(joinpath(scons_dir, ".hg")):
-            raise ValueError
-        repo = mercurial.hg.repository(mercurial.ui.ui(), scons_dir)
-        rev = mercurial.node.nullrev + repo.changelog.count()
-        changenode = repo.changelog.node(rev)
-        changes = repo.changelog.read(changenode)
-        date = mercurial.util.datestr(changes[2])
-
-        gen_file(target, rev, mercurial.node.hex(changenode), date)
-
-        mercurial.demandimport.disable()
-    except ImportError:
-        gen_file(target, "Unknown", "Unknown", "Unknown")
-
-    except:
-        print "in except"
-        gen_file(target, "Unknown", "Unknown", "Unknown")
-        mercurial.demandimport.disable()
-
-env.Command('base/program_info.cc',
-            Value(str(SCons.Node.FS.default_fs.SConstruct_dir)),
-            programInfo)
-
 # embed python files.  All .py files that have been indicated by a
 # PySource() call in a SConscript need to be embedded into the M5
 # library.  To do that, we compile the file to byte code, marshal the
@@ -974,14 +971,8 @@ def make_objs(sources, env, static):
     # recompiled whenever anything else does
     date_obj = XObject('base/date.cc')
 
-    # Make the generation of program_info.cc dependend on all 
-    # the other cc files and the compiling of program_info.cc 
-    # dependent on all the objects but program_info.o 
-    pinfo_obj = XObject('base/program_info.cc')
-    env.Depends('base/program_info.cc', sources)
     env.Depends(date_obj, objs)
-    env.Depends(pinfo_obj, objs)
-    objs.extend([date_obj, pinfo_obj])
+    objs.append(date_obj)
     return objs
 
 # Function to create a new build environment as clone of current
