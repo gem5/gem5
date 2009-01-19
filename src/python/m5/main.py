@@ -135,9 +135,12 @@ add_option("--list-sim-objects", action='store_true', default=False,
     help="List all built-in SimObjects, their parameters and default values")
 
 def main():
+    import core
+    import debug
+    import defines
     import event
     import info
-    import internal
+    import stats
     import trace
 
     def check_tracing():
@@ -185,19 +188,17 @@ def main():
     done = False
 
     if options.build_info:
-        import defines
-
         done = True
         print 'Build information:'
         print
-        print 'compiled %s' % internal.core.cvar.compileDate;
-        print "revision %s" % internal.core.cvar.hgRev
-        print "commit date %s" % internal.core.cvar.hgDate
+        print 'compiled %s' % defines.compileDate;
+        print "revision %s:%s" % (defines.hgRev, defines.hgId)
+        print "commit date %s" % defines.hgDate
         print 'build options:'
-        keys = defines.m5_build_env.keys()
+        keys = defines.buildEnv.keys()
         keys.sort()
         for key in keys:
-            val = defines.m5_build_env[key]
+            val = defines.buildEnv[key]
             print '    %s = %s' % (key, val)
         print
 
@@ -265,9 +266,10 @@ def main():
         print "M5 Simulator System"
         print brief_copyright
         print
-        print "M5 compiled %s" % internal.core.cvar.compileDate;
-        print "M5 revision %s" % internal.core.cvar.hgRev
-        print "M5 commit date %s" % internal.core.cvar.hgDate
+
+        print "M5 compiled %s" % defines.compileDate;
+        print "M5 revision %s:%s" % (defines.hgRev, defines.hgId)
+        print "M5 commit date %s" % defines.hgDate
 
         print "M5 started %s" % datetime.datetime.now().strftime("%b %e %Y %X")
         print "M5 executing on %s" % socket.gethostname()
@@ -285,20 +287,18 @@ def main():
         options.usage(2)
 
     # tell C++ about output directory
-    internal.core.setOutputDir(options.outdir)
+    core.setOutputDir(options.outdir)
 
     # update the system path with elements from the -p option
     sys.path[0:0] = options.path
 
-    import objects
-
     # set stats options
-    internal.stats.initText(options.stats_file)
+    stats.initText(options.stats_file)
 
     # set debugging options
-    internal.debug.setRemoteGDBPort(options.remote_gdb_port)
+    debug.setRemoteGDBPort(options.remote_gdb_port)
     for when in options.debug_break:
-        internal.debug.schedBreakCycle(int(when))
+        debug.schedBreakCycle(int(when))
 
     if options.trace_flags:
         check_tracing()

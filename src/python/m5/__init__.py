@@ -93,6 +93,7 @@ if internal:
     from simulate import *
     from main import options, main
     import stats
+    import core
 
 import SimObject
 import params
