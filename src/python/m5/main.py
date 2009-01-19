@@ -138,6 +138,13 @@ def main():
     import event
     import info
     import internal
+    import trace
+
+    def check_tracing():
+        if defines.TRACING_ON:
+            return
+
+        panic("Tracing is not enabled.  Compile with TRACING_ON")
 
     # load the options.py config file to allow people to set their own
     # default options
@@ -221,21 +228,9 @@ def main():
         print
 
     if options.trace_help:
-        import traceflags
-
         done = True
-        print "Base Flags:"
-        traceflags.baseFlags.sort()
-        print_list(traceflags.baseFlags, indent=4)
-        print
-        print "Compound Flags:"
-        traceflags.compoundFlags.sort()
-        for flag in traceflags.compoundFlags:
-            if flag == 'All':
-                continue
-            print "    %s:" % flag
-            print_list(traceflags.compoundFlagMap[flag], indent=8)
-            print
+        check_tracing()
+        trace.help()
 
     if options.list_sim_objects:
         import SimObject
@@ -306,7 +301,7 @@ def main():
         internal.debug.schedBreakCycle(int(when))
 
     if options.trace_flags:
-        import traceflags
+        check_tracing()
 
         on_flags = []
         off_flags = []
@@ -315,7 +310,7 @@ def main():
             if flag.startswith('-'):
                 flag = flag[1:]
                 off = True
-            if flag not in traceflags.allFlags and flag != "All":
+            if flag not in trace.flags.all and flag != "All":
                 print >>sys.stderr, "invalid trace flag '%s'" % flag
                 sys.exit(1)
 
@@ -325,24 +320,23 @@ def main():
                 on_flags.append(flag)
 
         for flag in on_flags:
-            internal.trace.set(flag)
+            trace.set(flag)
 
         for flag in off_flags:
-            internal.trace.clear(flag)
+            trace.clear(flag)
 
     if options.trace_start:
-        def enable_trace():
-            internal.trace.cvar.enabled = True
-        
-        e = event.create(enable_trace)
+        check_tracing()
+        e = event.create(trace.enable)
         event.mainq.schedule(e, options.trace_start)
     else:
-        internal.trace.cvar.enabled = True
+        trace.enable()
 
-    internal.trace.output(options.trace_file)
+    trace.output(options.trace_file)
 
     for ignore in options.trace_ignore:
-        internal.trace.ignore(ignore)
+        check_tracing()
+        trace.ignore(ignore)
 
     sys.argv = arguments
     sys.path = [ os.path.dirname(sys.argv[0]) ] + sys.path

@@ -175,30 +175,25 @@ Export('UnitTest')
 #
 # Trace Flags
 #
-all_flags = {}
-trace_flags = []
-def TraceFlag(name, desc=''):
-    if name in all_flags:
+trace_flags = {}
+def TraceFlag(name, desc=None):
+    if name in trace_flags:
         raise AttributeError, "Flag %s already specified" % name
-    flag = (name, (), desc)
-    trace_flags.append(flag)
-    all_flags[name] = ()
+    trace_flags[name] = (name, (), desc)
 
-def CompoundFlag(name, flags, desc=''):
-    if name in all_flags:
+def CompoundFlag(name, flags, desc=None):
+    if name in trace_flags:
         raise AttributeError, "Flag %s already specified" % name
 
     compound = tuple(flags)
     for flag in compound:
-        if flag not in all_flags:
+        if flag not in trace_flags:
             raise AttributeError, "Trace flag %s not found" % flag
-        if all_flags[flag]:
+        if trace_flags[flag][1]:
             raise AttributeError, \
                 "Compound flag can't point to another compound flag"
 
-    flag = (name, compound, desc)
-    trace_flags.append(flag)
-    all_flags[name] = compound
+    trace_flags[name] = (name, compound, desc)
 
 Export('TraceFlag')
 Export('CompoundFlag')
@@ -666,14 +661,16 @@ def traceFlagsPy(target, source, env):
         val = eval(s.get_contents())
         allFlags.append(val)
 
-    print >>f, 'baseFlags = ['
+    allFlags.sort()
+
+    print >>f, 'basic = ['
     for flag, compound, desc in allFlags:
         if not compound:
             print >>f, "    '%s'," % flag
     print >>f, "    ]"
     print >>f
 
-    print >>f, 'compoundFlags = ['
+    print >>f, 'compound = ['
     print >>f, "    'All',"
     for flag, compound, desc in allFlags:
         if compound:
@@ -681,10 +678,10 @@ def traceFlagsPy(target, source, env):
     print >>f, "    ]"
     print >>f
 
-    print >>f, "allFlags = frozenset(baseFlags + compoundFlags)"
+    print >>f, "all = frozenset(basic + compound)"
     print >>f
 
-    print >>f, 'compoundFlagMap = {'
+    print >>f, 'compoundMap = {'
     all = tuple([flag for flag,compound,desc in allFlags if not compound])
     print >>f, "    'All' : %s," % (all, )
     for flag, compound, desc in allFlags:
@@ -693,7 +690,7 @@ def traceFlagsPy(target, source, env):
     print >>f, "    }"
     print >>f
 
-    print >>f, 'flagDescriptions = {'
+    print >>f, 'descriptions = {'
     print >>f, "    'All' : 'All flags',"
     for flag, compound, desc in allFlags:
         print >>f, "    '%s' : '%s'," % (flag, desc)
@@ -847,7 +844,7 @@ extern const Flags *compoundFlags[];
 
     f.close()
 
-flags = [ Value(f) for f in trace_flags ]
+flags = [ Value(f) for f in trace_flags.values() ]
 env.Command('base/traceflags.py', flags, traceFlagsPy)
 PySource('m5', 'base/traceflags.py')
 
