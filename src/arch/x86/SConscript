@@ -106,11 +106,11 @@ if env['TARGET_ISA'] == 'x86':
     Source('utility.cc')
 
     SimObject('X86TLB.py')
-    TraceFlag('Predecoder')
-    TraceFlag('X86')
+    TraceFlag('Predecoder', "Predecoder debug output")
+    TraceFlag('X86', "Generic X86 ISA debugging")
 
     if env['FULL_SYSTEM']:
-        TraceFlag('LocalApic')
+        TraceFlag('LocalApic', "Local APIC debugging")
 
         SimObject('X86LocalApic.py')
         SimObject('X86System.py')
