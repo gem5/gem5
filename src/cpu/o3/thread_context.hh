@@ -86,10 +86,10 @@ class O3ThreadContext : public ThreadContext
     virtual int threadId() { return thread->threadId(); }
     virtual void setThreadId(int id) { return thread->setThreadId(id); }
 
-#if FULL_SYSTEM
     /** Returns a pointer to the system. */
     virtual System *getSystemPtr() { return cpu->system; }
 
+#if FULL_SYSTEM
     /** Returns a pointer to physical memory. */
     virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
 

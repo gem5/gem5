@@ -129,9 +129,9 @@ class ThreadContext
 
     virtual TheISA::DTB *getDTBPtr() = 0;
 
-#if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
 
+#if FULL_SYSTEM
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
     virtual FunctionalPort *getPhysPort() = 0;
@@ -318,9 +318,9 @@ class ProxyThreadContext : public ThreadContext
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-#if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
+#if FULL_SYSTEM
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 

@@ -201,9 +201,9 @@ class SimpleThread : public ThreadState
 
     TheISA::DTB *getDTBPtr() { return dtb; }
 
-#if FULL_SYSTEM
     System *getSystemPtr() { return system; }
 
+#if FULL_SYSTEM
     FunctionalPort *getPhysPort() { return physPort; }
 
     /** Return a virtual port. This port cannot be cached locally in an object.
