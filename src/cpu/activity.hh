@@ -49,9 +49,11 @@
  * idle.  If count is zero, then the CPU can safely idle as it has no
  * more outstanding work to do.
  */
-class ActivityRecorder {
+class ActivityRecorder
+{
   public:
-    ActivityRecorder(int num_stages, int longest_latency, int count);
+    ActivityRecorder(const std::string &name, int num_stages,
+                     int longest_latency, int count);
 
     /** Records that there is activity this cycle. */
     void activity();
@@ -92,6 +94,10 @@ class ActivityRecorder {
     void validate();
 
   private:
+    // provide name() for DPRINTF.
+    std::string _name;
+    const std::string &name() { return _name; }
+
     /** Time buffer that tracks if any cycles has active communication
      *  in them.  It should be as long as the longest communication
      *  latency in the system.  Each time any time buffer is written,

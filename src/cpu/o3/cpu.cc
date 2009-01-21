@@ -192,7 +192,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       decodeQueue(params->backComSize, params->forwardComSize),
       renameQueue(params->backComSize, params->forwardComSize),
       iewQueue(params->backComSize, params->forwardComSize),
-      activityRec(NumStages,
+      activityRec(name(), NumStages,
                   params->backComSize + params->forwardComSize,
                   params->activity),
 
