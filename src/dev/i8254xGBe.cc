@@ -1108,6 +1108,7 @@ IGbE::RxDescCache::unserialize(Checkpoint *cp, const std::string &section)
 
 IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
     : DescCache<TxDesc>(i,n, s), pktDone(false), isTcp(false), pktWaiting(false),
+       completionAddress(0), completionEnabled(false),
        useTso(false), pktEvent(this), headerEvent(this), nullEvent(this)
 
 {
@@ -1319,7 +1320,8 @@ IGbE::TxDescCache::pktComplete()
 
 
     if ((!TxdOp::eop(desc) && !useTso) || 
-            (pktPtr->length < ( tsoMss + tsoHeaderLen) && tsoTotalLen != tsoUsedLen)) {
+            (pktPtr->length < ( tsoMss + tsoHeaderLen) &&
+             tsoTotalLen != tsoUsedLen && useTso)) {
         assert(!useTso || (tsoDescBytesUsed == TxdOp::getLen(desc)));
         unusedCache.pop_front();
         usedCache.push_back(desc);
