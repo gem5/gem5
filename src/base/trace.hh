@@ -97,6 +97,12 @@ inline const std::string &name() { return Trace::DefaultName; }
         Trace::dprintf(curTick, name(), __VA_ARGS__);           \
 } while (0)
 
+#define DPRINTFS(x,s, ...) do {                                    \
+    if (DTRACE(x))                                              \
+        Trace::dprintf(curTick, s->name(), __VA_ARGS__);           \
+} while (0)
+
+
 #define DPRINTFR(x, ...) do {                                   \
     if (DTRACE(x))                                              \
         Trace::dprintf((Tick)-1, std::string(), __VA_ARGS__);   \
@@ -119,6 +125,7 @@ inline const std::string &name() { return Trace::DefaultName; }
 #define DTRACE(x) (false)
 #define DDUMP(x, data, count) do {} while (0)
 #define DPRINTF(x, ...) do {} while (0)
+#define DPRINTFS(x, ...) do {} while (0)
 #define DPRINTFR(...) do {} while (0)
 #define DDUMPN(data, count) do {} while (0)
 #define DPRINTFN(...) do {} while (0)
