@@ -894,18 +894,6 @@ FullO3CPU<Impl>::activateWhenReady(int tid)
 
 #if FULL_SYSTEM
 template <class Impl>
-void
-FullO3CPU<Impl>::postInterrupt(int int_num, int index)
-{
-    BaseCPU::postInterrupt(int_num, index);
-
-    if (this->thread[0]->status() == ThreadContext::Suspended) {
-        DPRINTF(IPI,"Suspended Processor awoke\n");
-        this->threadContexts[0]->activate();
-    }
-}
-
-template <class Impl>
 Fault
 FullO3CPU<Impl>::hwrei(unsigned tid)
 {
@@ -1688,6 +1676,21 @@ FullO3CPU<Impl>::wakeCPU()
 
     schedule(tickEvent, nextCycle());
 }
+
+#if FULL_SYSTEM
+template <class Impl>
+void
+FullO3CPU<Impl>::wakeup()
+{
+    if (this->thread[0]->status() != ThreadContext::Suspended)
+        return;
+
+    this->wakeCPU();
+
+    DPRINTF(Quiesce, "Suspended Processor woken\n");
+    this->threadContexts[0]->activate();
+}
+#endif
 
 template <class Impl>
 int

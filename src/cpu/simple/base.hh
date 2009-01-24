@@ -98,7 +98,7 @@ class BaseSimpleCPU : public BaseCPU
     }
 
   public:
-    void postInterrupt(int int_num, int index);
+    void wakeup();
 
     void zero_fill_64(Addr addr) {
       static int warned = 0;

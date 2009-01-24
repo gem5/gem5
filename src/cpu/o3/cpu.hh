@@ -402,9 +402,6 @@ class FullO3CPU : public BaseO3CPU
     void trap(Fault fault, unsigned tid);
 
 #if FULL_SYSTEM
-    /** Posts an interrupt. */
-    void postInterrupt(int int_num, int index);
-
     /** HW return from error interrupt. */
     Fault hwrei(unsigned tid);
 
@@ -700,6 +697,10 @@ class FullO3CPU : public BaseO3CPU
 
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
+
+#if FULL_SYSTEM
+    virtual void wakeup();
+#endif
 
     /** Gets a free thread id. Use if thread ids change across system. */
     int getFreeTid();

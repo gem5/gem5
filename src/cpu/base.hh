@@ -125,9 +125,26 @@ class BaseCPU : public MemObject
         return interrupts;
     }
 
-    virtual void postInterrupt(int int_num, int index);
-    virtual void clearInterrupt(int int_num, int index);
-    virtual void clearInterrupts();
+    virtual void wakeup() = 0;
+
+    void
+    postInterrupt(int int_num, int index)
+    {
+        interrupts->post(int_num, index);
+        wakeup();
+    }
+
+    void
+    clearInterrupt(int int_num, int index)
+    {
+        interrupts->clear(int_num, index);
+    }
+
+    void
+    clearInterrupts()
+    {
+        interrupts->clearAll();
+    }
 
     bool
     checkInterrupts(ThreadContext *tc) const

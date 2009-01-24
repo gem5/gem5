@@ -582,10 +582,8 @@ OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 #if FULL_SYSTEM
 template <class Impl>
 void
-OzoneCPU<Impl>::postInterrupt(int int_num, int index)
+OzoneCPU<Impl>::wakeup()
 {
-    BaseCPU::postInterrupt(int_num, index);
-
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
 //      thread.activate();

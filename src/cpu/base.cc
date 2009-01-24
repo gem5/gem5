@@ -390,24 +390,6 @@ BaseCPU::ProfileEvent::process()
 }
 
 void
-BaseCPU::postInterrupt(int int_num, int index)
-{
-    interrupts->post(int_num, index);
-}
-
-void
-BaseCPU::clearInterrupt(int int_num, int index)
-{
-    interrupts->clear(int_num, index);
-}
-
-void
-BaseCPU::clearInterrupts()
-{
-    interrupts->clearAll();
-}
-
-void
 BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(instCnt);
