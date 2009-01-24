@@ -40,6 +40,7 @@ void quiesceNs(uint64_t ns);
 void quiesceCycle(uint64_t cycles);
 uint64_t quiesceTime(void);
 uint64_t rpns();
+void wakeCPU(uint64_t cpuid);
 
 void m5_exit(uint64_t ns_delay);
 uint64_t m5_initparam(void);

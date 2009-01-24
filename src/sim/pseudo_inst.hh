@@ -55,6 +55,7 @@ void addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr);
 #endif
 
 uint64_t rpns(ThreadContext *tc);
+void wakeCPU(ThreadContext *tc, uint64_t cpuid);
 void m5exit(ThreadContext *tc, Tick delay);
 void resetstats(ThreadContext *tc, Tick delay, Tick period);
 void dumpstats(ThreadContext *tc, Tick delay, Tick period);

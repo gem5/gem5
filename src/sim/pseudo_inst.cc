@@ -138,6 +138,15 @@ rpns(ThreadContext *tc)
 }
 
 void
+wakeCPU(ThreadContext *tc, uint64_t cpuid)
+{
+    System *sys = tc->getSystemPtr();
+    ThreadContext *other_tc = sys->threadContexts[cpuid];
+    if (other_tc->status() == ThreadContext::Suspended)
+        other_tc->activate();
+}
+
+void
 m5exit(ThreadContext *tc, Tick delay)
 {
     Tick when = curTick + delay * Clock::Int::ns;
