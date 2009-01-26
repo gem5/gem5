@@ -281,6 +281,7 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
             initVector = vector;
         }
     } 
+    cpu->wakeup();
 }
 
 Tick
