@@ -194,6 +194,8 @@ BaseCPU::BaseCPU(Params *p)
         }
     }
 #if FULL_SYSTEM
+    interrupts->setCPU(this);
+
     profileEvent = NULL;
     if (params()->profile)
         profileEvent = new ProfileEvent(this, params()->profile);
@@ -348,6 +350,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
 #if FULL_SYSTEM
     interrupts = oldCPU->interrupts;
+    interrupts->setCPU(this);
 
     for (int i = 0; i < threadContexts.size(); ++i)
         threadContexts[i]->profileClear();

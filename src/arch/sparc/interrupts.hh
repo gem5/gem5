@@ -43,12 +43,20 @@ namespace SparcISA
 
 class Interrupts : public SimObject
 {
-
   private:
+    BaseCPU * cpu;
+
     uint64_t interrupts[NumInterruptTypes];
     uint64_t intStatus;
 
   public:
+
+    void
+    setCPU(BaseCPU * _cpu)
+    {
+        cpu = _cpu;
+    }
+
     typedef SparcInterruptsParams Params;
 
     const Params *
@@ -57,7 +65,7 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p)
+    Interrupts(Params * p) : SimObject(p), cpu(NULL)
     {
         clearAll();
     }

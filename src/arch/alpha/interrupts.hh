@@ -48,6 +48,7 @@ class Interrupts : public SimObject
     bool newInfoSet;
     int newIpl;
     int newSummary;
+    BaseCPU * cpu;
 
   protected:
     uint64_t interrupts[NumInterruptLevels];
@@ -62,11 +63,17 @@ class Interrupts : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    Interrupts(Params * p) : SimObject(p)
+    Interrupts(Params * p) : SimObject(p), cpu(NULL)
     {
         memset(interrupts, 0, sizeof(interrupts));
         intstatus = 0;
         newInfoSet = false;
+    }
+
+    void
+    setCPU(BaseCPU * _cpu)
+    {
+        cpu = _cpu;
     }
 
     void

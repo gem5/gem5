@@ -69,6 +69,7 @@
 #include "sim/eventq.hh"
 
 class ThreadContext;
+class BaseCPU;
 
 namespace X86ISA {
 
@@ -182,11 +183,19 @@ class Interrupts : public BasicPioDevice, IntDev
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
 
+    BaseCPU *cpu;
+
   public:
     /*
      * Params stuff.
      */
     typedef X86LocalApicParams Params;
+
+    void
+    setCPU(BaseCPU * newCPU)
+    {
+        cpu = newCPU;
+    }
 
     void
     setClock(Tick newClock)
