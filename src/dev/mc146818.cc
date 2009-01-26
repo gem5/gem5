@@ -35,6 +35,7 @@
 
 #include <string>
 
+#include "base/bitfield.hh"
 #include "base/time.hh"
 #include "base/trace.hh"
 #include "dev/mc146818.hh"
@@ -87,9 +88,10 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
     else {
         switch (addr) {
           case RTC_STAT_REGA:
-            if (data != (RTCA_32768HZ | RTCA_1024HZ))
+            // The "update in progress" bit is read only.
+            if ((data & ~RTCA_UIP) != (RTCA_32768HZ | RTCA_1024HZ))
                 panic("Unimplemented RTC register A value write!\n");
-            stat_regA = data;
+            replaceBits(stat_regA, data, 6, 0);
             break;
           case RTC_STAT_REGB:
             if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
