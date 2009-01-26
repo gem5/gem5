@@ -870,8 +870,8 @@
                 0x7: Inst::MOVSX_W(Gv,Ev);
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
-                0x0: xadd_Eb_Gb();
-                0x1: xadd_Ev_Gv();
+                0x0: Inst::XADD(Eb,Gb);
+                0x1: Inst::XADD(Ev,Gv);
                 //0x7: group9();
                 0x7: decode MODRM_REG {
                     0x1: cmpxchg_Mq();

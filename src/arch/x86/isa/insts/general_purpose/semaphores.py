@@ -78,10 +78,30 @@ def macroop CMPXCHG_P_R {
     st t1, seg, riprel, disp
     mov rax, rax, t1, flags=(nCZF,)
 };
+
+def macroop XADD_M_R {
+    ldst t1, seg, sib, disp
+    add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    st t2, seg, sib, disp
+    mov reg, reg, t1
+};
+
+def macroop XADD_P_R {
+    rdip t7
+    ldst t1, seg, riprel, disp
+    add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    st t2, seg, riprel, disp
+    mov reg, reg, t1
+};
+
+def macroop XADD_R_R {
+    add t2, regm, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    mov regm, regm, reg
+    mov reg, reg, t2
+};
+
 '''
 #let {{
-#    class XADD(Inst):
-#       "GenFault ${new UnimpInstFault}"
 #    class XCHG(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #}};
