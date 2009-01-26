@@ -53,7 +53,25 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop BSWAP_D_R
+{
+    roli reg, reg, 8, dataSize=2
+    roli reg, reg, 16, dataSize=4
+    roli reg, reg, 8, dataSize=2
+};
+
+def macroop BSWAP_Q_R
+{
+    roli reg, reg, 8, dataSize=2
+    roli reg, reg, 16, dataSize=4
+    roli reg, reg, 8, dataSize=2
+    roli reg, reg, 32, dataSize=8
+    roli reg, reg, 8, dataSize=2
+    roli reg, reg, 16, dataSize=4
+    roli reg, reg, 8, dataSize=2
+};
+'''
 #let {{
 #    class BSWAP(Inst):
 #       "GenFault ${new UnimpInstFault}"

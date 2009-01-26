@@ -915,7 +915,11 @@
                     default: Inst::UD2();
                 }
             }
-            0x19: bswap_B();
+            0x19: decode OPSIZE {
+                4: Inst::BSWAP_D(Bd);
+                8: Inst::BSWAP_Q(Bq);
+                default: Inst::UD2();
+            }
             0x1A: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
