@@ -81,7 +81,7 @@ class CopyEngine : public PciDev
         Event *drainEvent;
       public:
         CopyEngineChannel(CopyEngine *_ce, int cid);
-        ~CopyEngineChannel();
+        virtual ~CopyEngineChannel();
         void init();
 
         std::string name() { assert(ce); return ce->name() + csprintf("-chan%d", channelId); }
