@@ -75,6 +75,8 @@ def macroop IRET_PROT {
     ld t2, ss, [1, t0, rsp], "1 * env.stackSize", dataSize=ssz
     ld t3, ss, [1, t0, rsp], "2 * env.stackSize", dataSize=ssz
 
+    # Read the handy m5 register for use later
+    rdm5reg t4
 
 
 ###
@@ -89,7 +91,6 @@ def macroop IRET_PROT {
     br label("protToVirtFallThrough"), flags=(nCECF,)
 
     #CPL=0
-    rdm5reg t4
     andi t0, t4, 0x30, flags=(EZF,)
     br label("protToVirtFallThrough"), flags=(nCEZF,)
 
