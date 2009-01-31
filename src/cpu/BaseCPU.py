@@ -69,7 +69,7 @@ class BaseCPU(MemObject):
     function_trace = Param.Bool(False, "Enable function trace")
     function_trace_start = Param.Tick(0, "Cycle to start function trace")
 
-    checker = Param.BaseCPU("checker CPU")
+    checker = Param.BaseCPU(NULL, "checker CPU")
 
     do_checkpoint_insts = Param.Bool(True,
         "enable checkpoint pseudo instructions")
