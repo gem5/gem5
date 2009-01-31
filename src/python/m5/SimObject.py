@@ -748,8 +748,8 @@ class SimObject(object):
         for param in param_names:
             value = self._values.get(param)
             if value is None:
-                m5.fatal("%s.%s without default or user set value" \
-                        % (self.path(), param))
+                m5.fatal("%s.%s without default or user set value",
+                        self.path(), param)
 
             value = value.getValue()
             if isinstance(self._params[param], VectorParamDesc):

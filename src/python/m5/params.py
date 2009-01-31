@@ -327,8 +327,8 @@ class CheckedIntType(MetaParamValue):
         if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
             if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
                 panic("CheckedInt subclass %s must define either\n" \
-                      "    'min' and 'max' or 'size' and 'unsigned'\n" \
-                      % name);
+                      "    'min' and 'max' or 'size' and 'unsigned'\n",
+                      name);
             if cls.unsigned:
                 cls.min = 0
                 cls.max = 2 ** cls.size - 1

@@ -37,18 +37,30 @@ MaxTick = 2**63 - 1
 
 # define this here so we can use it right away if necessary
 
+def errorURL(prefix, s):
+    try:
+        import zlib
+        hashstr = "%x" % zlib.crc32(s)
+    except:
+        hashstr = "UnableToHash"
+    return "For more information see: http://www.m5sim.org/%s/%s" % \
+            (prefix, hashstr)
+
+
 # panic() should be called when something happens that should never
 # ever happen regardless of what the user does (i.e., an acutal m5
 # bug).
-def panic(string):
-    print >>sys.stderr, 'panic:', string
+def panic(fmt, *args):
+    print >>sys.stderr, 'panic:', fmt % args
+    print >>sys.stderr, errorURL('panic',fmt)
     sys.exit(1)
 
 # fatal() should be called when the simulation cannot continue due to
 # some condition that is the user's fault (bad configuration, invalid
 # arguments, etc.) and not a simulator bug.
-def fatal(string):
-    print >>sys.stderr, 'fatal:', string
+def fatal(fmt, *args):
+    print >>sys.stderr, 'fatal:', fmt % args
+    print >>sys.stderr, errorURL('fatal',fmt)
     sys.exit(1)
 
 # force scalars to one-element lists for uniformity
