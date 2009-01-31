@@ -84,7 +84,7 @@ simulate(Tick num_cycles)
             if (se_event != limit_event) {
                 assert(limit_event->scheduled());
                 limit_event->squash();
-                warn_once("be nice to actually delete the event here");
+                hack_once("be nice to actually delete the event here");
             }
 
             return se_event;

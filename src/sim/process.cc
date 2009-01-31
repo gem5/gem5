@@ -343,7 +343,7 @@ Process::checkAndAllocNextPage(Addr vaddr)
             if(stack_base - stack_min > 8*1024*1024)
                 fatal("Over max stack size for one thread\n");
             pTable->allocate(stack_min, TheISA::PageBytes);
-            warn("Increasing stack size by one page.");
+            inform("Increasing stack size by one page.");
         };
         return true;
     }

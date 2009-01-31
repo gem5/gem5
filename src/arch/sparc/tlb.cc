@@ -1129,7 +1129,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_SPARC_ERROR_EN_REG:
       case ASI_SPARC_ERROR_STATUS_REG:
-        warn("Ignoring write to SPARC ERROR regsiter\n");
+        inform("Ignoring write to SPARC ERROR regsiter\n");
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:

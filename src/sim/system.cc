@@ -95,12 +95,12 @@ System::System(Params *p)
      * Load the kernel code into memory
      */
     if (params()->kernel == "") {
-        warn("No kernel set for full system simulation. Assuming you know what"
+        inform("No kernel set for full system simulation. Assuming you know what"
                 " you're doing...\n");
     } else {
         // Load kernel code
         kernel = createObjectFile(params()->kernel);
-        warn("kernel located at: %s", params()->kernel);
+        inform("kernel located at: %s", params()->kernel);
 
         if (kernel == NULL)
             fatal("Could not load kernel file %s", params()->kernel);
@@ -115,16 +115,16 @@ System::System(Params *p)
 
         // load symbols
         if (!kernel->loadGlobalSymbols(kernelSymtab))
-            panic("could not load kernel symbols\n");
+            fatal("could not load kernel symbols\n");
 
         if (!kernel->loadLocalSymbols(kernelSymtab))
-            panic("could not load kernel local symbols\n");
+            fatal("could not load kernel local symbols\n");
 
         if (!kernel->loadGlobalSymbols(debugSymbolTable))
-            panic("could not load kernel symbols\n");
+            fatal("could not load kernel symbols\n");
 
         if (!kernel->loadLocalSymbols(debugSymbolTable))
-            panic("could not load kernel local symbols\n");
+            fatal("could not load kernel local symbols\n");
 
         DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
         DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
@@ -184,7 +184,7 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
     }
 
     if (threadContexts[id])
-        panic("Cannot have two CPUs with the same id (%d)\n", id);
+        fatal("Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
     _numContexts++;
