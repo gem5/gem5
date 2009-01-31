@@ -355,25 +355,16 @@ depends = [ File(py_modules[dep]) for dep in module_depends ]
 
 scons_dir = str(SCons.Node.FS.default_fs.SConstruct_dir)
 
-hg_info = ("Unknown", "Unknown", "Unknown")
+hg_info = "Unknown"
 hg_demandimport = False
 try:
     if not exists(scons_dir) or not isdir(scons_dir) or \
            not exists(joinpath(scons_dir, ".hg")):
         raise ValueError(".hg directory not found")
-
-    import mercurial.demandimport, mercurial.hg, mercurial.ui
-    import mercurial.util, mercurial.node
-    hg_demandimport = True
-
-    repo = mercurial.hg.repository(mercurial.ui.ui(), scons_dir)
-    rev = mercurial.node.nullrev + repo.changelog.count()
-    changenode = repo.changelog.node(rev)
-    changes = repo.changelog.read(changenode)
-    id = mercurial.node.hex(changenode)
-    date = mercurial.util.datestr(changes[2])
-
-    hg_info = (rev, id, date)
+    import subprocess    
+    output = subprocess.Popen("hg id -n -i -t -b".split(), 
+                              stdout=subprocess.PIPE).communicate()[0]
+    hg_info = output.strip()
 except ImportError, e:
     print "Mercurial not found"
 except ValueError, e:
@@ -381,16 +372,13 @@ except ValueError, e:
 except Exception, e:
     print "Other mercurial exception: %s" % e
 
-if hg_demandimport:
-    mercurial.demandimport.disable()
-
 # Generate Python file containing a dict specifying the current
 # build_env flags.
 def makeDefinesPyFile(target, source, env):
     f = file(str(target[0]), 'w')
     build_env, hg_info = [ x.get_contents() for x in source ]
     print >>f, "buildEnv = %s" % build_env
-    print >>f, "hgRev, hgId, hgDate = %s" % hg_info
+    print >>f, "hgRev = '%s'" % hg_info
     f.close()
 
 defines_info = [ Value(build_env), Value(hg_info) ]
