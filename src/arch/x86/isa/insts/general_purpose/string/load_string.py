@@ -61,9 +61,9 @@ def macroop LODS_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    ld rax, seg, [1, t0, rdi]
+    ld rax, seg, [1, t0, rsi]
 
-    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
 };
 
 def macroop LODS_E_M {
@@ -76,10 +76,10 @@ def macroop LODS_E_M {
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
 topOfLoop:
-    ld rax, seg, [1, t0, rdi]
+    ld rax, seg, [1, t0, rsi]
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
-    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
     br label("topOfLoop"), flags=(nCEZF,)
 end:
     fault "NoFault"
