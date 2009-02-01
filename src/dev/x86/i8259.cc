@@ -242,7 +242,7 @@ X86ISA::I8259::requestInterrupt(int line)
 void
 X86ISA::I8259::signalInterrupt(int line)
 {
-    DPRINTF(I8259, "Interrupt raised on line %d.\n", line);
+    DPRINTF(I8259, "Interrupt requested for line %d.\n", line);
     if (line >= NumLines)
         fatal("Line number %d doesn't exist. The max is %d.\n",
                 line, NumLines - 1);
@@ -257,6 +257,7 @@ X86ISA::I8259::signalInterrupt(int line)
 void
 X86ISA::I8259::raiseInterruptPin(int number)
 {
+    DPRINTF(I8259, "Interrupt signal raised for pin %d.\n", number);
     if (number >= NumLines)
         fatal("Line number %d doesn't exist. The max is %d.\n",
                 number, NumLines - 1);
@@ -268,6 +269,7 @@ X86ISA::I8259::raiseInterruptPin(int number)
 void
 X86ISA::I8259::lowerInterruptPin(int number)
 {
+    DPRINTF(I8259, "Interrupt signal lowered for pin %d.\n", number);
     if (number >= NumLines)
         fatal("Line number %d doesn't exist. The max is %d.\n",
                 number, NumLines - 1);

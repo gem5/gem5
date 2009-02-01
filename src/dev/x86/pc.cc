@@ -42,6 +42,7 @@
 #include "dev/terminal.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8254.hh"
+#include "dev/x86/i8259.hh"
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge.hh"
 #include "sim/system.hh"
@@ -112,8 +113,8 @@ Pc::intrFrequency()
 void
 Pc::postConsoleInt()
 {
-    warn_once("Don't know what interrupt to post for console.\n");
-    //panic("Need implementation\n");
+    southBridge->ioApic->signalInterrupt(4);
+    southBridge->pic1->signalInterrupt(4);
 }
 
 void
