@@ -472,8 +472,6 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         predecoder.reset();
-        thread->setMicroPC(normalMicroPC(0));
-        thread->setNextMicroPC(normalMicroPC(1));
         fault->invoke(tc);
     } else {
         //If we're at the last micro op for this instruction
