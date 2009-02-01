@@ -90,7 +90,7 @@ class X86IntelMPConfigTable(SimObject):
         if isinstance(entry, X86IntelMPBaseConfigEntry):
             self.base_entries.append(entry)
         elif isinstance(entry, X86IntelMPExtConfigEntry):
-            self.base_entries.append(entry)
+            self.ext_entries.append(entry)
         else:
             panic("Don't know what type of Intel MP entry %s is." \
                     % entry.__class__.__name__)
