@@ -38,7 +38,7 @@
 namespace X86ISA
 {
 
-class IntPin;
+class IntSourcePin;
 
 class Cmos : public BasicPioDevice
 {
@@ -57,10 +57,10 @@ class Cmos : public BasicPioDevice
     class X86RTC : public MC146818
     {
       protected:
-        IntPin * intPin;
+        IntSourcePin * intPin;
       public:
         X86RTC(EventManager *em, const std::string &n, const struct tm time,
-                bool bcd, Tick frequency, IntPin * _intPin) :
+                bool bcd, Tick frequency, IntSourcePin * _intPin) :
             MC146818(em, n, time, bcd, frequency), intPin(_intPin)
         {
         }

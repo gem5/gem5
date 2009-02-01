@@ -77,6 +77,7 @@ class I82094AA : public PioDevice, public IntDev
     static const uint8_t APICVersion = 0x14;
 
     RedirTableEntry redirTable[TableSize];
+    bool pinStates[TableSize];
 
   public:
     typedef I82094AAParams Params;
@@ -88,12 +89,6 @@ class I82094AA : public PioDevice, public IntDev
     }
 
     I82094AA(Params *p);
-
-    void
-    setExtIntPic(I8259 * pic)
-    {
-        extIntPic = pic;
-    }
 
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
@@ -123,6 +118,8 @@ class I82094AA : public PioDevice, public IntDev
     }
 
     void signalInterrupt(int line);
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
 };
 
 }; // namespace X86ISA

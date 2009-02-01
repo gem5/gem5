@@ -36,20 +36,12 @@
 
 X86ISA::I8259::I8259(Params * p) : BasicPioDevice(p), IntDev(this),
                     latency(p->pio_latency), output(p->output),
-                    mode(p->mode), slave(NULL),
+                    mode(p->mode), slave(p->slave),
                     IRR(0), ISR(0), IMR(0),
                     readIRR(true), initControlWord(0), autoEOI(false)
 {
-    if (output) {
-        I8259 * master;
-        master = dynamic_cast<I8259 *>(output->getDevice());
-        if (master)
-            master->setSlave(this);
-        I82094AA * ioApic;
-        ioApic = dynamic_cast<I82094AA *>(output->getDevice());
-        if (ioApic)
-            ioApic->setExtIntPic(this);
-    }
+    for (int i = 0; i < NumLines; i++)
+        pinStates[i] = false;
     pioSize = 2;
 }
 
@@ -237,7 +229,9 @@ X86ISA::I8259::requestInterrupt(int line)
     if (bits(ISR, 7, line) == 0) {
         if (output) {
             DPRINTF(I8259, "Propogating interrupt.\n");
-            output->signalInterrupt();
+            output->raise();
+            //XXX This is a hack.
+            output->lower();
         } else {
             warn("Received interrupt but didn't have "
                     "anyone to tell about it.\n");
@@ -258,6 +252,26 @@ X86ISA::I8259::signalInterrupt(int line)
         IRR |= 1 << line;
         requestInterrupt(line);
     }
+}
+
+void
+X86ISA::I8259::raiseInterruptPin(int number)
+{
+    if (number >= NumLines)
+        fatal("Line number %d doesn't exist. The max is %d.\n",
+                number, NumLines - 1);
+    if (!pinStates[number])
+        signalInterrupt(number);
+    pinStates[number] = true;
+}
+
+void
+X86ISA::I8259::lowerInterruptPin(int number)
+{
+    if (number >= NumLines)
+        fatal("Line number %d doesn't exist. The max is %d.\n",
+                number, NumLines - 1);
+    pinStates[number] = false;
 }
 
 int

@@ -36,7 +36,9 @@ void
 X86ISA::Cmos::X86RTC::handleEvent()
 {
     assert(intPin);
-    intPin->signalInterrupt();
+    intPin->raise();
+    //XXX This is a hack.
+    intPin->lower();
 }
 
 Tick

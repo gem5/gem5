@@ -29,7 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
-from X86IntPin import X86IntPin
+from X86IntPin import X86IntSinkPin
 
 class I82094AA(BasicPioDevice):
     type = 'I82094AA'
@@ -37,6 +37,7 @@ class I82094AA(BasicPioDevice):
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     pio_addr = Param.Addr("Device address")
     int_port = Port("Port for sending and receiving interrupt messages")
+    external_int_pic = Param.I8259("External PIC, if any")
 
     def pin(self, line):
-        return X86IntPin(device=self, line=line)
+        return X86IntSinkPin(device=self, number=line)

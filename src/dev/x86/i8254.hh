@@ -38,7 +38,7 @@
 namespace X86ISA
 {
 
-class IntPin;
+class IntSourcePin;
 
 class I8254 : public BasicPioDevice
 {
@@ -64,7 +64,7 @@ class I8254 : public BasicPioDevice
     
     X86Intel8254Timer pit;
 
-    IntPin *intPin;
+    IntSourcePin *intPin;
     
     void counterInterrupt(unsigned int num);
 

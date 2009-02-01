@@ -45,9 +45,10 @@ class I8259 : public BasicPioDevice, public IntDev
 {
   protected:
     static const int NumLines = 8;
+    bool pinStates[NumLines];
 
     Tick latency;
-    IntPin *output;
+    IntSourcePin *output;
     Enums::X86I8259CascadeMode mode;
     I8259 * slave;
 
@@ -90,16 +91,12 @@ class I8259 : public BasicPioDevice, public IntDev
 
     I8259(Params * p);
 
-    void
-    setSlave(I8259 * _slave)
-    {
-        slave = _slave;
-    }
-
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
 
     void signalInterrupt(int line);
+    void raiseInterruptPin(int number);
+    void lowerInterruptPin(int number);
     int getVector();
 };
 

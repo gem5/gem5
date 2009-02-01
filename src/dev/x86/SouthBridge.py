@@ -34,6 +34,7 @@ from I8237 import I8237
 from I8254 import I8254
 from I8259 import I8259
 from PcSpeaker import PcSpeaker
+from X86IntPin import X86IntLine
 from m5.SimObject import SimObject
 
 def x86IOAddress(port):
@@ -52,6 +53,9 @@ class SouthBridge(SimObject):
     _pit = I8254(pio_addr=x86IOAddress(0x40))
     _speaker = PcSpeaker(pio_addr=x86IOAddress(0x61))
     _io_apic = I82094AA(pio_addr=0xFEC00000)
+    # This is to make sure the interrupt lines are instantiated. Don't use
+    # it for anything directly.
+    int_lines = VectorParam.X86IntLine([], "Interrupt lines")
 
     pic1 = Param.I8259(_pic1, "Master PIC")
     pic2 = Param.I8259(_pic2, "Slave PIC")
@@ -61,13 +65,20 @@ class SouthBridge(SimObject):
     speaker = Param.PcSpeaker(_speaker, "PC speaker")
     io_apic = Param.I82094AA(_io_apic, "I/O APIC")
 
+    def connectPins(self, source, sink):
+        self.int_lines.append(X86IntLine(source=source, sink=sink))
+
     def attachIO(self, bus):
-        # Make internal connections
-        self.pic1.output = self.io_apic.pin(0)
-        self.pic2.output = self.pic1.pin(2)
-        self.cmos.int_pin = self.pic2.pin(0)
-        self.pit.int_pin = self.pic1.pin(0)
+        # Route interupt signals
+        self.connectPins(self.pic1.output, self.io_apic.pin(0))
+        self.connectPins(self.pic2.output, self.pic1.pin(2))
+        self.connectPins(self.cmos.int_pin, self.pic2.pin(0))
+        self.connectPins(self.pit.int_pin, self.pic1.pin(0))
+        self.connectPins(self.pit.int_pin, self.io_apic.pin(2))
+        # Tell the devices about each other
+        self.pic1.slave = self.pic2
         self.speaker.i8254 = self.pit
+        self.io_apic.external_int_pic = self.pic1
         # Connect to the bus
         self.cmos.pio = bus.port
         self.dma1.pio = bus.port

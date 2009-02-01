@@ -38,7 +38,9 @@
 #include "mem/mem_object.hh"
 #include "mem/mport.hh"
 #include "sim/sim_object.hh"
-#include "params/X86IntPin.hh"
+#include "params/X86IntSourcePin.hh"
+#include "params/X86IntSinkPin.hh"
+#include "params/X86IntLine.hh"
 
 namespace X86ISA {
 
@@ -99,6 +101,18 @@ class IntDev
         panic("signalInterrupt not implemented.\n");
     }
 
+    virtual void
+    raiseInterruptPin(int number)
+    {
+        panic("raiseInterruptPin not implemented.\n");
+    }
+
+    virtual void
+    lowerInterruptPin(int number)
+    {
+        panic("lowerInterruptPin not implemented.\n");
+    }
+
     virtual Tick
     recvMessage(PacketPtr pkt)
     {
@@ -113,20 +127,13 @@ class IntDev
     }
 };
 
-class IntPin : public SimObject
+class IntSinkPin : public SimObject
 {
-  protected:
-    IntDev * device;
-    int line;
-
   public:
-    typedef X86IntPinParams Params;
+    IntDev * device;
+    int number;
 
-    IntDev *
-    getDevice() const
-    {
-        return device;
-    }
+    typedef X86IntSinkPinParams Params;
 
     const Params *
     params() const
@@ -134,16 +141,73 @@ class IntPin : public SimObject
         return dynamic_cast<const Params *>(_params);
     }
 
-    IntPin(Params *p) : SimObject(p),
-            device(dynamic_cast<IntDev *>(p->device)), line(p->line)
+    IntSinkPin(Params *p) : SimObject(p),
+            device(dynamic_cast<IntDev *>(p->device)), number(p->number)
     {
         assert(device);
     }
+};
+
+class IntSourcePin : public SimObject
+{
+  protected:
+    std::vector<IntSinkPin *> sinks;
+
+  public:
+    typedef X86IntSourcePinParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
 
     void
-    signalInterrupt()
+    addSink(IntSinkPin *sink)
     {
-        device->signalInterrupt(line);
+        sinks.push_back(sink);
+    }
+
+    void
+    raise()
+    {
+        for (int i = 0; i < sinks.size(); i++) {
+            const IntSinkPin &pin = *sinks[i];
+            pin.device->raiseInterruptPin(pin.number);
+        }
+    }
+    
+    void
+    lower()
+    {
+        for (int i = 0; i < sinks.size(); i++) {
+            const IntSinkPin &pin = *sinks[i];
+            pin.device->lowerInterruptPin(pin.number);
+        }
+    }
+
+    IntSourcePin(Params *p) : SimObject(p)
+    {}
+};
+
+class IntLine : public SimObject
+{
+  protected:
+    IntSourcePin *source;
+    IntSinkPin *sink;
+
+  public:
+    typedef X86IntLineParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    IntLine(Params *p) : SimObject(p), source(p->source), sink(p->sink)
+    {
+        source->addSink(sink);
     }
 };
 

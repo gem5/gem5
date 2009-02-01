@@ -36,7 +36,8 @@
 #include "sim/system.hh"
 
 X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
-   latency(p->pio_latency), pioAddr(p->pio_addr), extIntPic(NULL)
+    latency(p->pio_latency), pioAddr(p->pio_addr),
+    extIntPic(p->external_int_pic)
 {
     // This assumes there's only one I/O APIC in the system
     id = sys->numContexts();
@@ -47,6 +48,7 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
     entry.mask = 1;
     for (int i = 0; i < TableSize; i++) {
         redirTable[i] = entry;
+        pinStates[i] = false;
     }
 }
 
@@ -207,6 +209,22 @@ X86ISA::I82094AA::signalInterrupt(int line)
             }
         }
     }
+}
+
+void
+X86ISA::I82094AA::raiseInterruptPin(int number)
+{
+    assert(number < TableSize);
+    if (!pinStates[number])
+        signalInterrupt(number);
+    pinStates[number] = true;
+}
+
+void
+X86ISA::I82094AA::lowerInterruptPin(int number)
+{
+    assert(number < TableSize);
+    pinStates[number] = false;
 }
 
 X86ISA::I82094AA *

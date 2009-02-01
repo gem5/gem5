@@ -29,9 +29,11 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice
+from X86IntPin import X86IntSourcePin
 
 class I8254(BasicPioDevice):
     type = 'I8254'
     cxx_class = 'X86ISA::I8254'
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
-    int_pin = Param.X86IntPin('Pin to signal timer interrupts to')
+    int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
+            'Pin to signal timer interrupts to')
