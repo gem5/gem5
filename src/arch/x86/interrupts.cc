@@ -344,10 +344,19 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg)
         break;
       case APIC_CURRENT_COUNT:
         {
-            assert(clock);
-            uint32_t val = regs[reg] - curTick / clock;
-            val /= (16 * divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]));
-            return val;
+            if (apicTimerEvent.scheduled()) {
+                assert(clock);
+                // Compute how many m5 ticks happen per count.
+                uint64_t ticksPerCount = clock *
+                    divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]);
+                // Compute how many m5 ticks are left.
+                uint64_t val = apicTimerEvent.when() - curTick;
+                // Turn that into a count.
+                val = (val + ticksPerCount - 1) / ticksPerCount;
+                return val;
+            } else {
+                return 0;
+            }
         }
       default:
         break;
@@ -441,19 +450,17 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         {
             assert(clock);
             newVal = bits(val, 31, 0);
-            uint32_t newCount = newVal *
-                (divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]) * 16);
-            regs[APIC_CURRENT_COUNT] = newCount + curTick / clock;
-            // Find out how long a "tick" of the timer should take.
-            Tick timerTick = 16 * clock;
+            // Compute how many timer ticks we're being programmed for.
+            uint64_t newCount = newVal *
+                (divideFromConf(regs[APIC_DIVIDE_CONFIGURATION]));
             // Schedule on the edge of the next tick plus the new count.
-            Tick offset = curTick % timerTick;
+            Tick offset = curTick % clock;
             if (offset) {
                 reschedule(apicTimerEvent,
-                        curTick + (newCount + 1) * timerTick - offset, true);
+                        curTick + (newCount + 1) * clock - offset, true);
             } else {
                 reschedule(apicTimerEvent,
-                        curTick + newCount * timerTick, true);
+                        curTick + newCount * clock, true);
             }
         }
         break;
