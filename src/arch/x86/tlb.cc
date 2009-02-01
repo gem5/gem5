@@ -547,7 +547,8 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                     tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
                 if (bits(configAddress, 31, 31)) {
                     req->setPaddr(PhysAddrPrefixPciConfig |
-                            bits(configAddress, 30, 0));
+                            mbits(configAddress, 30, 2) |
+                            (IOPort & mask(2)));
                 }
             } else {
                 req->setPaddr(PhysAddrPrefixIO | IOPort);
