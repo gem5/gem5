@@ -64,7 +64,7 @@ class Speaker : public BasicPioDevice
     }
 
     Speaker(Params *p) : BasicPioDevice(p),
-        latency(p->pio_latency), timer(p->i8254)
+        latency(p->pio_latency), controlVal(0), timer(p->i8254)
     {
         pioSize = 1;
     }
