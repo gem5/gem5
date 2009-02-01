@@ -112,7 +112,7 @@ Pc::init()
 Tick
 Pc::intrFrequency()
 {
-    panic("Need implementation\n");
+    panic("Need implementation for intrFrequency\n");
     M5_DUMMY_RETURN
 }
 
@@ -145,8 +145,7 @@ Pc::clearPciInt(int line)
 Addr
 Pc::pciToDma(Addr pciAddr) const
 {
-    panic("Need implementation\n");
-    M5_DUMMY_RETURN
+    return pciAddr;
 }
 
 Addr
