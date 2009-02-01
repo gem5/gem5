@@ -159,7 +159,7 @@ def operands {{
         'CSAttr':        ('ControlReg', 'udw', 'MISCREG_CS_ATTR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 208),
         'MiscRegDest':   ('ControlReg', 'uqw', 'dest', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 209),
         'MiscRegSrc1':   ('ControlReg', 'uqw', 'src1', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 210),
-        'TscOp':         ('ControlReg', 'udw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 211),
-        'M5Reg':         ('ControlReg', 'udw', 'MISCREG_M5_REG', (None, None, None), 212),
+        'TscOp':         ('ControlReg', 'uqw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 211),
+        'M5Reg':         ('ControlReg', 'uqw', 'MISCREG_M5_REG', (None, None, None), 212),
         'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 300)
 }};
