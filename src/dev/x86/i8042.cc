@@ -36,78 +36,11 @@
 // The 8042 has a whopping 32 bytes of internal RAM.
 const uint8_t RamSize = 32;
 const uint8_t NumOutputBits = 14;
-const uint8_t KeyboardID[] = {0xab, 0x83};
-const uint8_t MouseID[] = {0x00};
+const uint8_t X86ISA::PS2Keyboard::ID[] = {0xab, 0x83};
+const uint8_t X86ISA::PS2Mouse::ID[] = {0x00};
 const uint8_t CommandAck = 0xfa;
 const uint8_t CommandNack = 0xfe;
 const uint8_t BatSuccessful = 0xaa;
-
-enum Port64Command
-{
-    GetCommandByte = 0x20,
-    ReadControllerRamBase = 0x20,
-    WriteCommandByte = 0x60,
-    WriteControllerRamBase = 0x60,
-    CheckForPassword = 0xA4,
-    LoadPassword = 0xA5,
-    CheckPassword = 0xA6,
-    DisableMouse = 0xA7,
-    EnableMouse = 0xA8,
-    TestMouse = 0xA9,
-    SelfTest = 0xAA,
-    InterfaceTest = 0xAB,
-    DiagnosticDump = 0xAC,
-    DisableKeyboard = 0xAD,
-    EnableKeyboard = 0xAE,
-    ReadInputPort = 0xC0,
-    ContinuousPollLow = 0xC1,
-    ContinuousPollHigh = 0xC2,
-    ReadOutputPort = 0xD0,
-    WriteOutputPort = 0xD1,
-    WriteKeyboardOutputBuff = 0xD2,
-    WriteMouseOutputBuff = 0xD3,
-    WriteToMouse = 0xD4,
-    DisableA20 = 0xDD,
-    EnableA20 = 0xDF,
-    ReadTestInputs = 0xE0,
-    PulseOutputBitBase = 0xF0,
-    SystemReset = 0xFE
-};
-
-enum Port60Command
-{
-    MouseScale1to1 = 0xE6,
-    MouseScale2to1 = 0xE7,
-    SetMouseResolution = 0xE8,
-    MouseGetStatus = 0xE9,
-    MouseReadData = 0xEB,
-    MouseResetWrapMode = 0xEC,
-    LEDWrite = 0xED,
-    DiagnosticEcho = 0xEE,
-    MouseWrapMode = 0xEE,
-    AlternateScanCodes = 0xF0,
-    MouseRemoteMode = 0xF0,
-    ReadKeyboardID = 0xF2,
-    ReadMouseID = 0xF2,
-    TypematicInfo = 0xF3,
-    MouseSampleRate = 0xF3,
-    KeyboardEnable = 0xF4,
-    MouseEnableReporting = 0xF4,
-    KeyboardDisable = 0xF5,
-    MouseDisableReporting = 0xF5,
-    DefaultsAndDisableKeyboard = 0xF6,
-    DefaultsAndDisableMouse = 0xF6,
-    AllKeysToTypematic = 0xF7,
-    AllKeysToMakeRelease = 0xF8,
-    AllKeysToMake = 0xF9,
-    AllKeysToTypematicMakeRelease = 0xFA,
-    KeyToTypematic = 0xFB,
-    KeyToMakeRelease = 0xFC,
-    KeyToMakeOnly = 0xFD,
-    Resend = 0xFE,
-    KeyboardReset = 0xFF,
-    MouseReset = 0xFF
-};
 
 void
 X86ISA::I8042::addressRanges(AddrRangeList &range_list)
@@ -117,79 +50,45 @@ X86ISA::I8042::addressRanges(AddrRangeList &range_list)
     range_list.push_back(RangeSize(commandPort, 1));
 }
 
-bool
+void
 X86ISA::I8042::writeData(uint8_t newData, bool mouse)
 {
-    if (!statusReg.outputFull) {
-        DPRINTF(I8042, "Set data %#02x.\n", newData);
-        dataReg = newData;
-        statusReg.outputFull = 1;
-        statusReg.mouseOutputFull = (mouse ? 1 : 0);
-        return true;
-    } else {
-        return false;
+    DPRINTF(I8042, "Set data %#02x.\n", newData);
+    dataReg = newData;
+    statusReg.outputFull = 1;
+    statusReg.mouseOutputFull = (mouse ? 1 : 0);
+    if (!mouse && commandByte.keyboardFullInt) {
+        DPRINTF(I8042, "Sending keyboard interrupt.\n");
+        keyboardIntPin->raise();
+        //This is a hack
+        keyboardIntPin->lower();
+    } else if (mouse && commandByte.mouseFullInt) {
+        DPRINTF(I8042, "Sending mouse interrupt.\n");
+        mouseIntPin->raise();
+        //This is a hack
+        mouseIntPin->lower();
     }
 }
 
 void
-X86ISA::I8042::keyboardAck()
+X86ISA::PS2Device::ack()
 {
-    while (!keyboardBuffer.empty())
-        keyboardBuffer.pop();
-    writeKeyboardData(&CommandAck, sizeof(CommandAck));
+    bufferData(&CommandAck, sizeof(CommandAck));
 }
 
 void
-X86ISA::I8042::writeKeyboardData(const uint8_t *data, int size)
+X86ISA::PS2Device::nack()
+{
+    bufferData(&CommandNack, sizeof(CommandNack));
+}
+
+void
+X86ISA::PS2Device::bufferData(const uint8_t *data, int size)
 {
     assert(data || size == 0);
     while (size) {
-        keyboardBuffer.push(*(data++));
+        outBuffer.push(*(data++));
         size--;
-    }
-    if (writeData(keyboardBuffer.front())) {
-        keyboardBuffer.pop();
-        if (commandByte.keyboardFullInt) {
-            DPRINTF(I8042, "Sending keyboard interrupt.\n");
-            keyboardIntPin->raise();
-            //XXX This is a hack.
-            keyboardIntPin->lower();
-        }
-    }
-}
-
-void
-X86ISA::I8042::mouseAck()
-{
-    while (!mouseBuffer.empty())
-        mouseBuffer.pop();
-    writeMouseData(&CommandAck, sizeof(CommandAck));
-}
-
-void
-X86ISA::I8042::mouseNack()
-{
-    while (!mouseBuffer.empty())
-        mouseBuffer.pop();
-    writeMouseData(&CommandNack, sizeof(CommandAck));
-}
-
-void
-X86ISA::I8042::writeMouseData(const uint8_t *data, int size)
-{
-    assert(data || size == 0);
-    while (size) {
-        mouseBuffer.push(*(data++));
-        size--;
-    }
-    if (writeData(mouseBuffer.front(), true)) {
-        mouseBuffer.pop();
-        if (commandByte.mouseFullInt) {
-            DPRINTF(I8042, "Sending mouse interrupt.\n");
-            mouseIntPin->raise();
-            //XXX This is a hack
-            mouseIntPin->lower();
-        }
     }
 }
 
@@ -199,14 +98,195 @@ X86ISA::I8042::readDataOut()
     uint8_t data = dataReg;
     statusReg.outputFull = 0;
     statusReg.mouseOutputFull = 0;
-    if (!keyboardBuffer.empty()) {
-        writeKeyboardData(NULL, 0);
-    }
-    if (!mouseBuffer.empty()) {
-        writeMouseData(NULL, 0);
+    if (keyboard.hasData()) {
+        writeData(keyboard.getData(), false);
+    } else if (mouse.hasData()) {
+        writeData(mouse.getData(), true);
     }
     return data;
 }
+
+bool
+X86ISA::PS2Keyboard::processData(uint8_t data)
+{
+    if (lastCommand != NoCommand) {
+        switch (lastCommand) {
+          case LEDWrite:
+            DPRINTF(I8042, "Setting LEDs: "
+                    "caps lock %s, num lock %s, scroll lock %s\n",
+                    bits(data, 2) ? "on" : "off",
+                    bits(data, 1) ? "on" : "off",
+                    bits(data, 0) ? "on" : "off");
+            ack();
+            lastCommand = NoCommand;
+            break;
+          case TypematicInfo:
+            DPRINTF(I8042, "Setting typematic info to %#02x.\n", data);
+            ack();
+            lastCommand = NoCommand;
+            break;
+        }
+        return hasData();
+    }
+    switch (data) {
+      case LEDWrite:
+        DPRINTF(I8042, "Got LED write command.\n");
+        ack();
+        lastCommand = LEDWrite;
+        break;
+      case DiagnosticEcho:
+        panic("Keyboard diagnostic echo unimplemented.\n");
+      case AlternateScanCodes:
+        panic("Accessing alternate scan codes unimplemented.\n");
+      case ReadID:
+        DPRINTF(I8042, "Got keyboard read ID command.\n");
+        ack();
+        bufferData((uint8_t *)&ID, sizeof(ID));
+        break;
+      case TypematicInfo:
+        DPRINTF(I8042, "Setting typematic info.\n");
+        ack();
+        lastCommand = TypematicInfo;
+        break;
+      case Enable:
+        DPRINTF(I8042, "Enabling the keyboard.\n");
+        ack();
+        break;
+      case Disable:
+        DPRINTF(I8042, "Disabling the keyboard.\n");
+        ack();
+        break;
+      case DefaultsAndDisable:
+        DPRINTF(I8042, "Disabling and resetting the keyboard.\n");
+        ack();
+        break;
+      case AllKeysToTypematic:
+        panic("Setting all keys to typemantic unimplemented.\n");
+      case AllKeysToMakeRelease:
+        panic("Setting all keys to make/release unimplemented.\n");
+      case AllKeysToMake:
+        panic("Setting all keys to make unimplemented.\n");
+      case AllKeysToTypematicMakeRelease:
+        panic("Setting all keys to "
+                "typematic/make/release unimplemented.\n");
+      case KeyToTypematic:
+        panic("Setting a key to typematic unimplemented.\n");
+      case KeyToMakeRelease:
+        panic("Setting a key to make/release unimplemented.\n");
+      case KeyToMakeOnly:
+        panic("Setting key to make only unimplemented.\n");
+      case Resend:
+        panic("Keyboard resend unimplemented.\n");
+      case Reset:
+        panic("Keyboard reset unimplemented.\n");
+      default:
+        panic("Unknown keyboard command %#02x.\n", data);
+    }
+    return hasData();
+}
+
+bool
+X86ISA::PS2Mouse::processData(uint8_t data)
+{
+    if (lastCommand != NoCommand) {
+        switch(lastCommand) {
+          case SetResolution:
+            DPRINTF(I8042, "Mouse resolution set to %d.\n", data);
+            resolution = data;
+            ack();
+            lastCommand = NoCommand;
+            break;
+          case SampleRate:
+            DPRINTF(I8042, "Mouse sample rate %d samples "
+                    "per second.\n", data);
+            sampleRate = data;
+            ack();
+            lastCommand = NoCommand;
+            break;
+          default:
+            panic("Not expecting data for a mouse command.\n");
+        }
+        return hasData();
+    }
+    switch (data) {
+      case Scale1to1:
+        DPRINTF(I8042, "Setting mouse scale to 1:1.\n");
+        status.twoToOne = 0;
+        ack();
+        break;
+      case Scale2to1:
+        DPRINTF(I8042, "Setting mouse scale to 2:1.\n");
+        status.twoToOne = 1;
+        ack();
+        break;
+      case SetResolution:
+        DPRINTF(I8042, "Setting mouse resolution.\n");
+        lastCommand = SetResolution;
+        ack();
+        break;
+      case GetStatus:
+        DPRINTF(I8042, "Getting mouse status.\n");
+        ack();
+        bufferData((uint8_t *)&(status), 1);
+        bufferData(&resolution, sizeof(resolution));
+        bufferData(&sampleRate, sizeof(sampleRate));
+        break;
+      case ReadData:
+        panic("Reading mouse data unimplemented.\n");
+      case ResetWrapMode:
+        panic("Resetting mouse wrap mode unimplemented.\n");
+      case WrapMode:
+        panic("Setting mouse wrap mode unimplemented.\n");
+      case RemoteMode:
+        panic("Setting mouse remote mode unimplemented.\n");
+      case ReadID:
+        DPRINTF(I8042, "Mouse ID requested.\n");
+        ack();
+        bufferData(ID, sizeof(ID));
+        break;
+      case SampleRate:
+        DPRINTF(I8042, "Setting mouse sample rate.\n");
+        lastCommand = SampleRate;
+        ack();
+        break;
+      case DisableReporting:
+        DPRINTF(I8042, "Disabling data reporting.\n");
+        status.enabled = 0;
+        ack();
+        break;
+      case EnableReporting:
+        DPRINTF(I8042, "Enabling data reporting.\n");
+        status.enabled = 1;
+        ack();
+        break;
+      case DefaultsAndDisable:
+        DPRINTF(I8042, "Disabling and resetting mouse.\n");
+        sampleRate = 100;
+        resolution = 4;
+        status.twoToOne = 0;
+        status.enabled = 0;
+        ack();
+        break;
+      case Resend:
+        panic("Mouse resend unimplemented.\n");
+      case Reset:
+        DPRINTF(I8042, "Resetting the mouse.\n");
+        sampleRate = 100;
+        resolution = 4;
+        status.twoToOne = 0;
+        status.enabled = 0;
+        ack();
+        bufferData(&BatSuccessful, sizeof(BatSuccessful));
+        bufferData(ID, sizeof(ID));
+        break;
+      default:
+        warn("Unknown mouse command %#02x.\n", data);
+        nack();
+        break;
+    }
+    return hasData();
+}
+
 
 Tick
 X86ISA::I8042::read(PacketPtr pkt)
@@ -236,178 +316,13 @@ X86ISA::I8042::write(PacketPtr pkt)
         statusReg.commandLast = 0;
         switch (lastCommand) {
           case NoCommand:
-            if (lastKeyboardCommand != NoCommand) {
-                switch (lastKeyboardCommand) {
-                  case LEDWrite:
-                    DPRINTF(I8042, "Setting LEDs: "
-                            "caps lock %s, num lock %s, scroll lock %s\n",
-                            bits(data, 2) ? "on" : "off",
-                            bits(data, 1) ? "on" : "off",
-                            bits(data, 0) ? "on" : "off");
-                    keyboardAck();
-                    lastKeyboardCommand = NoCommand;
-                    break;
-                  case TypematicInfo:
-                    DPRINTF(I8042,
-                            "Setting typematic info to %#02x.\n", data);
-                    keyboardAck();
-                    lastKeyboardCommand = NoCommand;
-                    break;
-                }
-                break;
-            }
-            DPRINTF(I8042, "Got port 0x60 command %#02x.\n", data);
-            switch (data) {
-              case LEDWrite:
-                DPRINTF(I8042, "Got LED write command.\n");
-                keyboardAck();
-                lastKeyboardCommand = LEDWrite;
-                break;
-              case DiagnosticEcho:
-                panic("Keyboard diagnostic echo unimplemented.\n");
-              case AlternateScanCodes:
-                panic("Accessing alternate scan codes unimplemented.\n");
-              case ReadKeyboardID:
-                DPRINTF(I8042, "Got keyboard read ID command.\n");
-                keyboardAck();
-                writeKeyboardData((uint8_t *)&KeyboardID, sizeof(KeyboardID));
-                break;
-              case TypematicInfo:
-                DPRINTF(I8042, "Setting typematic info.\n");
-                keyboardAck();
-                lastKeyboardCommand = TypematicInfo;
-                break;
-              case KeyboardEnable:
-                DPRINTF(I8042, "Enabling the keyboard.\n");
-                keyboardAck();
-                break;
-              case KeyboardDisable:
-                DPRINTF(I8042, "Disabling the keyboard.\n");
-                keyboardAck();
-                break;
-              case DefaultsAndDisableKeyboard:
-                DPRINTF(I8042, "Disabling and resetting the keyboard.\n");
-                keyboardAck();
-                break;
-              case AllKeysToTypematic:
-                panic("Setting all keys to typemantic unimplemented.\n");
-              case AllKeysToMakeRelease:
-                panic("Setting all keys to make/release unimplemented.\n");
-              case AllKeysToMake:
-                panic("Setting all keys to make unimplemented.\n");
-              case AllKeysToTypematicMakeRelease:
-                panic("Setting all keys to "
-                        "typematic/make/release unimplemented.\n");
-              case KeyToTypematic:
-                panic("Setting a key to typematic unimplemented.\n");
-              case KeyToMakeRelease:
-                panic("Setting a key to make/release unimplemented.\n");
-              case KeyToMakeOnly:
-                panic("Setting key to make only unimplemented.\n");
-              case Resend:
-                panic("Keyboard resend unimplemented.\n");
-              case KeyboardReset:
-                panic("Keyboard reset unimplemented.\n");
-              default:
-                panic("Unknown keyboard command %#02x.\n", data);
+            if (keyboard.processData(data)) {
+                writeData(keyboard.getData(), false);
             }
             break;
           case WriteToMouse:
-            if (lastMouseCommand != NoCommand) {
-                switch(lastMouseCommand) {
-                  case SetMouseResolution:
-                    DPRINTF(I8042, "Mouse resolution set to %d.\n", data);
-                    mouseResolution = data;
-                    mouseAck();
-                    lastMouseCommand = NoCommand;
-                    break;
-                  case MouseSampleRate:
-                    DPRINTF(I8042, "Mouse sample rate %d samples "
-                            "per second.\n", data);
-                    mouseSampleRate = data;
-                    mouseAck();
-                    lastMouseCommand = NoCommand;
-                    break;
-                  default:
-                    panic("Not expecting data for a mouse command.\n");
-                }
-                break;
-            }
-            switch (data) {
-              case MouseScale1to1:
-                DPRINTF(I8042, "Setting mouse scale to 1:1.\n");
-                mouseStatus.twoToOne = 0;
-                mouseAck();
-                break;
-              case MouseScale2to1:
-                DPRINTF(I8042, "Setting mouse scale to 2:1.\n");
-                mouseStatus.twoToOne = 1;
-                mouseAck();
-                break;
-              case SetMouseResolution:
-                DPRINTF(I8042, "Setting mouse resolution.\n");
-                lastMouseCommand = SetMouseResolution;
-                mouseAck();
-                break;
-              case MouseGetStatus:
-                DPRINTF(I8042, "Getting mouse status.\n");
-                mouseAck();
-                writeMouseData((uint8_t *)&(mouseStatus), 1);
-                writeMouseData(&mouseResolution, sizeof(mouseResolution));
-                writeMouseData(&mouseSampleRate, sizeof(mouseSampleRate));
-                break;
-              case MouseReadData:
-                panic("Reading mouse data unimplemented.\n");
-              case MouseResetWrapMode:
-                panic("Resetting mouse wrap mode unimplemented.\n");
-              case MouseWrapMode:
-                panic("Setting mouse wrap mode unimplemented.\n");
-              case MouseRemoteMode:
-                panic("Setting mouse remote mode unimplemented.\n");
-              case ReadMouseID:
-                DPRINTF(I8042, "Mouse ID requested.\n");
-                mouseAck();
-                writeMouseData(MouseID, sizeof(MouseID));
-                break;
-              case MouseSampleRate:
-                DPRINTF(I8042, "Setting mouse sample rate.\n");
-                lastMouseCommand = MouseSampleRate;
-                mouseAck();
-                break;
-              case MouseDisableReporting:
-                DPRINTF(I8042, "Disabling data reporting.\n");
-                mouseStatus.enabled = 0;
-                mouseAck();
-                break;
-              case MouseEnableReporting:
-                DPRINTF(I8042, "Enabling data reporting.\n");
-                mouseStatus.enabled = 1;
-                mouseAck();
-                break;
-              case DefaultsAndDisableMouse:
-                DPRINTF(I8042, "Disabling and resetting mouse.\n");
-                mouseSampleRate = 100;
-                mouseResolution = 4;
-                mouseStatus.twoToOne = 0;
-                mouseStatus.enabled = 0;
-                mouseAck();
-                break;
-              case Resend:
-                panic("Keyboard resent unimplemented.\n");
-              case MouseReset:
-                DPRINTF(I8042, "Resetting the mouse.\n");
-                mouseSampleRate = 100;
-                mouseResolution = 4;
-                mouseStatus.twoToOne = 0;
-                mouseStatus.enabled = 0;
-                mouseAck();
-                writeMouseData(&BatSuccessful, sizeof(BatSuccessful));
-                writeMouseData(MouseID, sizeof(MouseID));
-                break;
-              default:
-                warn("Unknown mouse command %#02x.\n", data);
-                mouseNack();
-                break;
+            if (mouse.processData(data)) {
+                writeData(mouse.getData(), true);
             }
             break;
           case WriteCommandByte:
@@ -419,7 +334,7 @@ X86ISA::I8042::write(PacketPtr pkt)
           case WriteMouseOutputBuff:
             DPRINTF(I8042, "Got data %#02x for \"Write "
                     "mouse output buffer\" command.\n", data);
-            writeMouseData(&data, sizeof(data));
+            writeData(data, true);
             break;
           default:
             panic("Data written for unrecognized "
