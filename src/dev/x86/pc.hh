@@ -93,7 +93,17 @@ class Pc : public Platform
     /**
      * Calculate the configuration address given a bus/dev/func.
      */
-    virtual Addr calcConfigAddr(int bus, int dev, int func);
+    virtual Addr calcPciConfigAddr(int bus, int dev, int func);
+
+    /**
+     * Calculate the address for an IO location on the PCI bus.
+     */
+    virtual Addr calcPciIOAddr(Addr addr);
+
+    /**
+     * Calculate the address for a memory location on the PCI bus.
+     */
+    virtual Addr calcPciMemAddr(Addr addr);
 };
 
 #endif // __DEV_PC_HH__

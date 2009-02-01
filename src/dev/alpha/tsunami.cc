@@ -96,9 +96,21 @@ Tsunami::pciToDma(Addr pciAddr) const
 
 
 Addr
-Tsunami::calcConfigAddr(int bus, int dev, int func)
+Tsunami::calcPciConfigAddr(int bus, int dev, int func)
 {
    return pchip->calcConfigAddr(bus, dev, func);
+}
+
+Addr
+Tsunami::calcPciIOAddr(Addr addr)
+{
+   return pchip->calcIOAddr(addr);
+}
+
+Addr
+Tsunami::calcPciMemAddr(Addr addr)
+{
+   return pchip->calcMemAddr(addr);
 }
 
 void

@@ -69,7 +69,9 @@ class Platform : public SimObject
     virtual void postPciInt(int line);
     virtual void clearPciInt(int line);
     virtual Addr pciToDma(Addr pciAddr) const;
-    virtual Addr calcConfigAddr(int bus, int dev, int func) = 0;
+    virtual Addr calcPciConfigAddr(int bus, int dev, int func) = 0;
+    virtual Addr calcPciIOAddr(Addr addr) = 0;
+    virtual Addr calcPciMemAddr(Addr addr) = 0;
     virtual void registerPciDevice(uint8_t bus, uint8_t dev, uint8_t func,
             uint8_t intr);
 

@@ -300,6 +300,7 @@ TsunamiPChip::translatePciToDma(Addr busAddr)
     // if no match was found, then return the original address
     return busAddr;
 }
+
 Addr
 TsunamiPChip::calcConfigAddr(int bus, int dev, int func)
 {
@@ -310,7 +311,17 @@ TsunamiPChip::calcConfigAddr(int bus, int dev, int func)
     return TsunamiPciBus0Config | (func << 8) | (dev << 11);
 }
 
+Addr
+TsunamiPChip::calcIOAddr(Addr addr)
+{
+    return TSUNAMI_PCI0_IO + addr;
+}
 
+Addr
+TsunamiPChip::calcMemAddr(Addr addr)
+{
+    return TSUNAMI_PCI0_MEMORY + addr;
+}
 
 void
 TsunamiPChip::serialize(std::ostream &os)

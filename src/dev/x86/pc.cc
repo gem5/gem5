@@ -143,14 +143,25 @@ Pc::pciToDma(Addr pciAddr) const
     M5_DUMMY_RETURN
 }
 
-
 Addr
-Pc::calcConfigAddr(int bus, int dev, int func)
+Pc::calcPciConfigAddr(int bus, int dev, int func)
 {
     assert(func < 8);
     assert(dev < 32);
     assert(bus == 0);
     return (PhysAddrPrefixPciConfig | (func << 8) | (dev << 11));
+}
+
+Addr
+Pc::calcPciIOAddr(Addr addr)
+{
+    return PhysAddrPrefixIO + addr;
+}
+
+Addr
+Pc::calcPciMemAddr(Addr addr)
+{
+    return addr;
 }
 
 Pc *
