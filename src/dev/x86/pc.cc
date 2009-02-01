@@ -83,6 +83,23 @@ Pc::init()
     entry.vector = 0x20;
     ioApic.writeReg(0x10, entry.bottomDW);
     ioApic.writeReg(0x11, entry.topDW);
+    entry.deliveryMode = DeliveryMode::Fixed;
+    entry.vector = 0x24;
+    ioApic.writeReg(0x18, entry.bottomDW);
+    ioApic.writeReg(0x19, entry.topDW);
+    entry.mask = 1;
+    entry.vector = 0x21;
+    ioApic.writeReg(0x12, entry.bottomDW);
+    ioApic.writeReg(0x13, entry.topDW);
+    entry.vector = 0x20;
+    ioApic.writeReg(0x14, entry.bottomDW);
+    ioApic.writeReg(0x15, entry.topDW);
+    entry.vector = 0x28;
+    ioApic.writeReg(0x20, entry.bottomDW);
+    ioApic.writeReg(0x21, entry.topDW);
+    entry.vector = 0x2C;
+    ioApic.writeReg(0x28, entry.bottomDW);
+    ioApic.writeReg(0x29, entry.topDW);
 }
 
 Tick
