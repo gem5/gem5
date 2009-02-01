@@ -166,6 +166,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     if not mdesc:
         # generic system
         mdesc = SysConfig()
+    mdesc.diskname = 'x86root.img'
     self.readfile = mdesc.script()
 
     # Physical memory
@@ -184,6 +185,13 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     self.pc.attachIO(self.iobus)
 
     self.intrctrl = IntrControl()
+
+    # Disks
+    disk0 = CowIdeDisk(driveID='master')
+    disk2 = CowIdeDisk(driveID='master')
+    disk0.childImage(mdesc.disk())
+    disk2.childImage(disk('linux-bigswap2.img'))
+    self.pc.south_bridge.ide.disks = [disk0, disk2]
 
     # Add in a Bios information structure.
     structures = [X86SMBiosBiosInformation()]
