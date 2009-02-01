@@ -29,6 +29,7 @@
 from m5.params import *
 from m5.proxy import *
 from Cmos import Cmos
+from I8042 import I8042
 from I82094AA import I82094AA
 from I8237 import I8237
 from I8254 import I8254
@@ -50,6 +51,8 @@ class SouthBridge(SimObject):
     _pic2 = I8259(pio_addr=x86IOAddress(0xA0), mode='I8259Slave')
     _cmos = Cmos(pio_addr=x86IOAddress(0x70))
     _dma1 = I8237(pio_addr=x86IOAddress(0x0))
+    _keyboard = I8042(data_port=x86IOAddress(0x60), \
+            command_port=x86IOAddress(0x64))
     _pit = I8254(pio_addr=x86IOAddress(0x40))
     _speaker = PcSpeaker(pio_addr=x86IOAddress(0x61))
     _io_apic = I82094AA(pio_addr=0xFEC00000)
@@ -61,6 +64,7 @@ class SouthBridge(SimObject):
     pic2 = Param.I8259(_pic2, "Slave PIC")
     cmos = Param.Cmos(_cmos, "CMOS memory and real time clock device")
     dma1 = Param.I8237(_dma1, "The first dma controller")
+    keyboard = Param.I8042(_keyboard, "The keyboard controller")
     pit = Param.I8254(_pit, "Programmable interval timer")
     speaker = Param.PcSpeaker(_speaker, "PC speaker")
     io_apic = Param.I82094AA(_io_apic, "I/O APIC")
@@ -75,6 +79,14 @@ class SouthBridge(SimObject):
         self.connectPins(self.cmos.int_pin, self.pic2.pin(0))
         self.connectPins(self.pit.int_pin, self.pic1.pin(0))
         self.connectPins(self.pit.int_pin, self.io_apic.pin(2))
+#        self.connectPins(self.keyboard.keyboard_int_pin,
+#                         self.pic1.pin(1))
+        self.connectPins(self.keyboard.keyboard_int_pin,
+                         self.io_apic.pin(1))
+#        self.connectPins(self.keyboard.mouse_int_pin,
+#                         self.pic2.pin(4))
+        self.connectPins(self.keyboard.mouse_int_pin,
+                         self.io_apic.pin(12))
         # Tell the devices about each other
         self.pic1.slave = self.pic2
         self.speaker.i8254 = self.pit
@@ -82,6 +94,7 @@ class SouthBridge(SimObject):
         # Connect to the bus
         self.cmos.pio = bus.port
         self.dma1.pio = bus.port
+        self.keyboard.pio = bus.port
         self.pic1.pio = bus.port
         self.pic2.pio = bus.port
         self.pit.pio = bus.port

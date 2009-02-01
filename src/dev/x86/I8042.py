@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,42 +26,18 @@
 #
 # Authors: Gabe Black
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
+from Device import BasicPioDevice
+from X86IntPin import X86IntSourcePin
 
-if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('Pc.py')
-    Source('pc.cc')
-
-    SimObject('SouthBridge.py')
-    Source('south_bridge.cc')
-
-    SimObject('Cmos.py')
-    Source('cmos.cc')
-    TraceFlag('CMOS', 'Accesses to CMOS devices')
-
-    SimObject('I8259.py')
-    Source('i8259.cc')
-    TraceFlag('I8259', 'Accesses to the I8259 PIC devices')
-
-    SimObject('I8254.py')
-    Source('i8254.cc')
-    TraceFlag('I8254', 'Interrupts from the I8254 timer');
-
-    SimObject('I8237.py')
-    Source('i8237.cc')
-    TraceFlag('I8237', 'The I8237 dma controller');
-
-    SimObject('I8042.py')
-    Source('i8042.cc')
-    TraceFlag('I8042', 'The I8042 keyboard controller');
-
-    SimObject('PcSpeaker.py')
-    Source('speaker.cc')
-    TraceFlag('PcSpeaker')
-
-    SimObject('I82094AA.py')
-    Source('i82094aa.cc')
-    TraceFlag('I82094AA')
-
-    SimObject('X86IntPin.py')
-    Source('intdev.cc')
+class I8042(BasicPioDevice):
+    type = 'I8042'
+    cxx_class = 'X86ISA::I8042'
+    pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
+    data_port = Param.Addr('Data port address')
+    command_port = Param.Addr('Command/status port address')
+    mouse_int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
+            'Pin to signal the mouse has data')
+    keyboard_int_pin = Param.X86IntSourcePin(X86IntSourcePin(),
+            'Pin to signal the keyboard has data')
