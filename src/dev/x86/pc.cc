@@ -101,6 +101,12 @@ Pc::init()
     entry.vector = 0x2C;
     ioApic.writeReg(0x28, entry.bottomDW);
     ioApic.writeReg(0x29, entry.topDW);
+    entry.vector = 0x2E;
+    ioApic.writeReg(0x2C, entry.bottomDW);
+    ioApic.writeReg(0x2D, entry.topDW);
+    entry.vector = 0x30;
+    ioApic.writeReg(0x30, entry.bottomDW);
+    ioApic.writeReg(0x31, entry.topDW);
 }
 
 Tick

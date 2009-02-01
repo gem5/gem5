@@ -212,6 +212,19 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     self.intel_mp_table.add_entry(io_apic)
     isa_bus = X86IntelMPBus(bus_id = 0, bus_type='ISA')
     self.intel_mp_table.add_entry(isa_bus)
+    pci_bus = X86IntelMPBus(bus_id = 1, bus_type='PCI')
+    self.intel_mp_table.add_entry(pci_bus)
+    connect_busses = X86IntelMPBusHierarchy(bus_id=0,
+            subtractive_decode=True, parent_bus=1)
+    self.intel_mp_table.add_entry(connect_busses)
+    pci_dev4_inta = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 1,
+            source_bus_irq = 0 + (4 << 2),
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 16)
     assign_8259_0_to_apic = X86IntelMPIOIntAssignment(
             interrupt_type = 'ExtInt',
             polarity = 'ConformPolarity',
@@ -266,6 +279,24 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             dest_io_apic_id = 1,
             dest_io_apic_intin = 12)
     self.intel_mp_table.add_entry(assign_12_to_apic)
+    assign_8259_14_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 14,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_14_to_apic)
+    assign_14_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 14,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 14)
+    self.intel_mp_table.add_entry(assign_14_to_apic)
 
 
 def makeLinuxX86System(mem_mode, mdesc = None):
