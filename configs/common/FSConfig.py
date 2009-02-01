@@ -284,7 +284,7 @@ def makeLinuxX86System(mem_mode, mdesc = None):
 
     # Command line
     self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=9608015 ' + \
-                        'ide0=noprobe ide1=noprobe ' + \
+                        'ide1=noprobe ' + \
                         'ide2=noprobe ide3=noprobe ' + \
                         'ide4=noprobe ide5=noprobe'
     return self

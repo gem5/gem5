@@ -34,6 +34,7 @@ from I82094AA import I82094AA
 from I8237 import I8237
 from I8254 import I8254
 from I8259 import I8259
+from Ide import IdeController
 from PcSpeaker import PcSpeaker
 from X86IntPin import X86IntLine
 from m5.SimObject import SimObject
@@ -72,6 +73,21 @@ class SouthBridge(SimObject):
     def connectPins(self, source, sink):
         self.int_lines.append(X86IntLine(source=source, sink=sink))
 
+    # IDE controller
+    ide = IdeController(disks=[], pci_func=0, pci_dev=4, pci_bus=0)
+    ide.BAR0 = 0x1f0
+    ide.BAR0LegacyIO = True
+    ide.BAR1 = 0x3f4
+    ide.BAR1Size = '3B'
+    ide.BAR1LegacyIO = True
+    ide.BAR2 = 0x170
+    ide.BAR2LegacyIO = True
+    ide.BAR3 = 0x374
+    ide.BAR3Size = '3B'
+    ide.BAR3LegacyIO = True
+    ide.BAR4 = 1
+    ide.Command = 1
+
     def attachIO(self, bus):
         # Route interupt signals
         self.connectPins(self.pic1.output, self.io_apic.pin(0))
@@ -94,6 +110,7 @@ class SouthBridge(SimObject):
         # Connect to the bus
         self.cmos.pio = bus.port
         self.dma1.pio = bus.port
+        self.ide.pio = bus.port
         self.keyboard.pio = bus.port
         self.pic1.pio = bus.port
         self.pic2.pio = bus.port

@@ -67,7 +67,7 @@ class Pc(Platform):
     fake_com_4 = IsaFake(pio_addr=x86IOAddress(0x2e8), pio_size=8)
 
     # A device to catch accesses to the non-existant floppy controller.
-    fake_floppy = IsaFake(pio_addr=x86IOAddress(0x3f2), pio_size=4)
+    fake_floppy = IsaFake(pio_addr=x86IOAddress(0x3f2), pio_size=2)
 
     def attachIO(self, bus):
         self.south_bridge.attachIO(bus)
