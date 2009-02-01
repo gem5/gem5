@@ -321,6 +321,7 @@ BaseSimpleCPU::checkForInterrupts()
         Fault interrupt = interrupts->getInterrupt(tc);
 
         if (interrupt != NoFault) {
+            predecoder.reset();
             interrupts->updateIntrInfo(tc);
             interrupt->invoke(tc);
         }
