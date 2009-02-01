@@ -322,7 +322,8 @@ def makeLinuxX86System(mem_mode, mdesc = None):
                 range_type = 1))
 
     # Command line
-    self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=9608015'
+    self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=9608015 ' + \
+                        'root=/dev/hda1'
     return self
 
 
