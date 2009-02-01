@@ -204,7 +204,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
     self.intel_mp_table.add_entry(io_apic)
     isa_bus = X86IntelMPBus(bus_id = 0, bus_type='ISA')
     self.intel_mp_table.add_entry(isa_bus)
-    assign_8259_to_apic = X86IntelMPIOIntAssignment(
+    assign_8259_0_to_apic = X86IntelMPIOIntAssignment(
             interrupt_type = 'ExtInt',
             polarity = 'ConformPolarity',
             trigger = 'ConformTrigger',
@@ -212,7 +212,52 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             source_bus_irq = 0,
             dest_io_apic_id = 1,
             dest_io_apic_intin = 0)
-    self.intel_mp_table.add_entry(assign_8259_to_apic)
+    self.intel_mp_table.add_entry(assign_8259_0_to_apic)
+    assign_0_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 0,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 2)
+    self.intel_mp_table.add_entry(assign_0_to_apic)
+    assign_8259_1_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 1,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_1_to_apic)
+    assign_1_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 1,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 1)
+    self.intel_mp_table.add_entry(assign_1_to_apic)
+    assign_8259_12_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 12,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_12_to_apic)
+    assign_12_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 12,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 12)
+    self.intel_mp_table.add_entry(assign_12_to_apic)
 
 
 def makeLinuxX86System(mem_mode, mdesc = None):
