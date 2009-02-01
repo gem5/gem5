@@ -127,13 +127,13 @@ Pc::clearConsoleInt()
 void
 Pc::postPciInt(int line)
 {
-    panic("Need implementation\n");
+    southBridge->ioApic->signalInterrupt(line);
 }
 
 void
 Pc::clearPciInt(int line)
 {
-    panic("Need implementation\n");
+    warn_once("Tried to clear PCI interrupt %d\n", line);
 }
 
 Addr

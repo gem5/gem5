@@ -87,6 +87,7 @@ class SouthBridge(SimObject):
     ide.BAR3LegacyIO = True
     ide.BAR4 = 1
     ide.Command = 1
+    ide.InterruptLine = 20
 
     def attachIO(self, bus):
         # Route interupt signals
