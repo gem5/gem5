@@ -69,11 +69,13 @@ namespace X86ISA
       protected:
         const char * faultName;
         const char * mnem;
+        uint8_t vector;
         uint64_t errorCode;
 
         X86FaultBase(const char * _faultName, const char * _mnem,
-                uint64_t _errorCode = 0) :
-            faultName(_faultName), mnem(_mnem), errorCode(_errorCode)
+                const uint8_t _vector, uint64_t _errorCode = 0) :
+            faultName(_faultName), mnem(_mnem),
+            vector(_vector), errorCode(_errorCode)
         {
         }
 
@@ -105,8 +107,8 @@ namespace X86ISA
     {
       protected:
         X86Fault(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, vector, _errorCode)
         {}
     };
 
@@ -116,8 +118,8 @@ namespace X86ISA
     {
       protected:
         X86Trap(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -130,8 +132,8 @@ namespace X86ISA
     {
       protected:
         X86Abort(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -143,10 +145,9 @@ namespace X86ISA
     class X86Interrupt : public X86FaultBase
     {
       protected:
-        uint8_t vector;
-        X86Interrupt(const char * name, const char * mnem, uint8_t _vector,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode), vector(_vector)
+        X86Interrupt(const char * name, const char * mnem,
+                const uint8_t _vector, uint64_t _errorCode = 0) :
+            X86FaultBase(name, mnem, _vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -208,7 +209,7 @@ namespace X86ISA
     {
       public:
         DivideByZero() :
-            X86Fault("Divide-by-Zero-Error", "#DE")
+            X86Fault("Divide-by-Zero-Error", "#DE", 0)
         {}
     };
 
@@ -216,7 +217,7 @@ namespace X86ISA
     {
       public:
         DebugException() :
-            X86FaultBase("Debug", "#DB")
+            X86FaultBase("Debug", "#DB", 1)
         {}
     };
 
@@ -224,7 +225,7 @@ namespace X86ISA
     {
       public:
         NonMaskableInterrupt(uint8_t _vector) :
-            X86Interrupt("Non Maskable Interrupt", "#NMI", _vector)
+            X86Interrupt("Non Maskable Interrupt", "#NMI", 2, _vector)
         {}
     };
 
@@ -232,7 +233,7 @@ namespace X86ISA
     {
       public:
         Breakpoint() :
-            X86Trap("Breakpoint", "#BP")
+            X86Trap("Breakpoint", "#BP", 3)
         {}
     };
 
@@ -240,7 +241,7 @@ namespace X86ISA
     {
       public:
         OverflowTrap() :
-            X86Trap("Overflow", "#OF")
+            X86Trap("Overflow", "#OF", 4)
         {}
     };
 
@@ -248,7 +249,7 @@ namespace X86ISA
     {
       public:
         BoundRange() :
-            X86Fault("Bound-Range", "#BR")
+            X86Fault("Bound-Range", "#BR", 5)
         {}
     };
 
@@ -256,7 +257,7 @@ namespace X86ISA
     {
       public:
         InvalidOpcode() :
-            X86Fault("Invalid-Opcode", "#UD")
+            X86Fault("Invalid-Opcode", "#UD", 6)
         {}
     };
 
@@ -264,7 +265,7 @@ namespace X86ISA
     {
       public:
         DeviceNotAvailable() :
-            X86Fault("Device-Not-Available", "#NM")
+            X86Fault("Device-Not-Available", "#NM", 7)
         {}
     };
 
@@ -272,7 +273,7 @@ namespace X86ISA
     {
       public:
         DoubleFault() :
-            X86Abort("Double-Fault", "#DF")
+            X86Abort("Double-Fault", "#DF", 8)
         {}
     };
 
@@ -280,7 +281,7 @@ namespace X86ISA
     {
       public:
         InvalidTSS() :
-            X86Fault("Invalid-TSS", "#TS")
+            X86Fault("Invalid-TSS", "#TS", 10)
         {}
     };
 
@@ -288,7 +289,7 @@ namespace X86ISA
     {
       public:
         SegmentNotPresent() :
-            X86Fault("Segment-Not-Present", "#NP")
+            X86Fault("Segment-Not-Present", "#NP", 11)
         {}
     };
 
@@ -296,7 +297,7 @@ namespace X86ISA
     {
       public:
         StackFault() :
-            X86Fault("Stack", "#SS")
+            X86Fault("Stack", "#SS", 12)
         {}
     };
 
@@ -304,7 +305,7 @@ namespace X86ISA
     {
       public:
         GeneralProtection(uint64_t _errorCode) :
-            X86Fault("General-Protection", "#GP", _errorCode)
+            X86Fault("General-Protection", "#GP", 13, _errorCode)
         {}
     };
 
@@ -312,7 +313,7 @@ namespace X86ISA
     {
       public:
         PageFault() :
-            X86Fault("Page-Fault", "#PF")
+            X86Fault("Page-Fault", "#PF", 14)
         {}
     };
 
@@ -320,7 +321,7 @@ namespace X86ISA
     {
       public:
         X87FpExceptionPending() :
-            X86Fault("x87 Floating-Point Exception Pending", "#MF")
+            X86Fault("x87 Floating-Point Exception Pending", "#MF", 16)
         {}
     };
 
@@ -328,7 +329,7 @@ namespace X86ISA
     {
       public:
         AlignmentCheck() :
-            X86Fault("Alignment-Check", "#AC")
+            X86Fault("Alignment-Check", "#AC", 17)
         {}
     };
 
@@ -336,7 +337,7 @@ namespace X86ISA
     {
       public:
         MachineCheck() :
-            X86Abort("Machine-Check", "#MC")
+            X86Abort("Machine-Check", "#MC", 18)
         {}
     };
 
@@ -344,7 +345,7 @@ namespace X86ISA
     {
       public:
         SIMDFloatingPointFault() :
-            X86Fault("SIMD Floating-Point", "#XF")
+            X86Fault("SIMD Floating-Point", "#XF", 19)
         {}
     };
 
@@ -352,7 +353,7 @@ namespace X86ISA
     {
       public:
         SecurityException() :
-            X86FaultBase("Security Exception", "#SX")
+            X86FaultBase("Security Exception", "#SX", 30)
         {}
     };
 
@@ -397,7 +398,7 @@ namespace X86ISA
         Addr vaddr;
       public:
         FakeITLBFault(Addr _vaddr) :
-            X86Fault("fake instruction tlb fault", "itlb"),
+            X86Fault("fake instruction tlb fault", "itlb", 0),
             vaddr(_vaddr)
         {}
 
@@ -410,7 +411,7 @@ namespace X86ISA
         Addr vaddr;
       public:
         FakeDTLBFault(Addr _vaddr) :
-            X86Fault("fake data tlb fault", "dtlb"),
+            X86Fault("fake data tlb fault", "dtlb", 0),
             vaddr(_vaddr)
         {}
 
