@@ -59,25 +59,20 @@ def rom
     # Get the target CS descriptor using the selector in the gate
     # descriptor.
     #
-    srli t4, t1, 16, dataSize=8
-    andi t5, t4, 0xF8, dataSize=8
-    andi t0, t4, 0x4, flags=(EZF,), dataSize=2
+    srli t10, t4, 16, dataSize=8
+    andi t5, t10, 0xF8, dataSize=8
+    andi t0, t10, 0x4, flags=(EZF,), dataSize=2
     br rom_local_label("globalDescriptor"), flags=(CEZF,)
     ld t3, tsl, [1, t0, t5], dataSize=8, addressSize=8
     br rom_local_label("processDescriptor")
 globalDescriptor:
     ld t3, tsg, [1, t0, t5], dataSize=8, addressSize=8
 processDescriptor:
-    chks t4, t3, IntCSCheck, dataSize=8
-    wrdl hs, t3, t4, dataSize=8
+    chks t10, t3, IntCSCheck, dataSize=8
+    wrdl hs, t3, t10, dataSize=8
 
-    # Check that the target offset is in canonical form
-    wrdh t4, t1, t2, dataSize=8
-    srli t4, t4, 47, dataSize=8
-    addi t4, t4, 1, dataSize=8
-    srli t4, t4, 1, dataSize=8
-    or t4, t4, t4, flags=(EZF,), dataSize=2
-    fault "new GeneralProtection(0)", flags=(nCEZF,)
+    # Stick the target offset in t9.
+    wrdh t9, t4, t2, dataSize=8
 
 
     # 
@@ -85,27 +80,25 @@ processDescriptor:
     #
 
     # Record what we might set the stack selector to.
-    rdsel t6, ss
-    wrsel hs, t6
+    rdsel t11, ss
 
     # Check if we're changing privelege level. At this point we can assume
     # we're going to a DPL that's less than or equal to the CPL. 
-    rdattr t4, hs, dataSize=8
-    srli t4, t4, 3, dataSize=8
-    andi t4, t4, 3, dataSize=8
+    rdattr t10, hs, dataSize=8
+    srli t10, t10, 3, dataSize=8
+    andi t10, t10, 3, dataSize=8
     rdattr t5, cs, dataSize=8
     srli t5, t5, 3, dataSize=8
-    sub t5, t5, t4, dataSize=8
+    sub t5, t5, t10, dataSize=8
     andi t0, t5, 0x3, flags=(EZF,), dataSize=8
     # We're going to change priviledge, so zero out the stack selector. We
     # need to let the IST have priority so we don't branch yet.
-    limm t4, 0
-    wrsel hs, t4, flags=(nCEZF,)
+    wrsel t11, t0, flags=(nCEZF,)
 
     # Check the IST field of the gate descriptor
-    srli t4, t1, 32, dataSize=8
-    andi t4, t4, 0x7, dataSize=8
-    subi t0, t4, 1, flags=(ECF,), dataSize=8
+    srli t10, t4, 32, dataSize=8
+    andi t10, t10, 0x7, dataSize=8
+    subi t0, t10, 1, flags=(ECF,), dataSize=8
     br rom_local_label("istStackSwitch"), flags=(nCECF,)
     br rom_local_label("cplStackSwitch"), flags=(nCEZF,)
 
@@ -134,42 +127,42 @@ stackSwitched:
     ##
     ## Point of no return.
     ## We're now going to irrevocably modify visible state.
-    ## Anything bad that's going to happen should have happened by now.
+    ## Anything bad that's going to happen should have happened by now or will
+    ## happen right now.
     ##
+    wrip t0, t9, dataSize=8
 
 
     #
     # Build up the interrupt stack frame
     #
 
+    
     # Write out the contents of memory
     st t7, hs, [1, t0, t6], dataSize=8
     limm t5, 0, dataSize=8
     rdsel t5, cs, dataSize=2
     st t5, hs, [1, t0, t6], 8, dataSize=8
-    rflags t4, dataSize=8
-    st t4, hs, [1, t0, t6], 16, dataSize=8
+    rflags t10, dataSize=8
+    st t10, hs, [1, t0, t6], 16, dataSize=8
     st rsp, hs, [1, t0, t6], 24, dataSize=8
     rdsel t5, ss, dataSize=2
     st t5, hs, [1, t0, t6], 32, dataSize=8
 
     # Set the stack segment
     mov rsp, rsp, t6, dataSize=8
-    rdsel t7, hs, dataSize=2
-    wrsel ss, t7, dataSize=2
+    wrsel ss, t11, dataSize=2
 
     #
     # Set up the target code segment
     #
-    srli t5, t1, 16, dataSize=8
+    srli t5, t4, 16, dataSize=8
     andi t5, t5, 0xFF, dataSize=8
     wrdl cs, t3, t5, dataSize=8
     wrsel cs, t5, dataSize=2
-    wrdh t7, t1, t2, dataSize=8
-    wrip t0, t7, dataSize=8
 
     #
-    # Adjust rflags which is still in t4 from above
+    # Adjust rflags which is still in t10 from above
     #
 
     # Set IF to the lowest bit of the original gate type.
@@ -177,16 +170,16 @@ stackSwitched:
 
     # Set the TF, NT, and RF bits. We'll flip them at the end.
     limm t6, (1 << 8) | (1 << 14) | (1 << 16)
-    or t4, t4, t6
-    srli t5, t1, 40, dataSize=8
-    srli t7, t4, 9, dataSize=8
+    or t10, t10, t6
+    srli t5, t4, 40, dataSize=8
+    srli t7, t10, 9, dataSize=8
     xor t5, t7, t5, dataSize=8
     andi t5, t5, 1, dataSize=8
     slli t5, t5, 9, dataSize=8
     or t6, t5, t6, dataSize=8
 
     # Put the results into rflags
-    wrflags t6, t4
+    wrflags t6, t10
     
     eret
 };
