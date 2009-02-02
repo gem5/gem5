@@ -44,7 +44,7 @@ class I8259(BasicPioDevice):
     output = Param.X86IntSourcePin(X86IntSourcePin(),
             'The pin this I8259 drives')
     mode = Param.X86I8259CascadeMode('How this I8259 is cascaded')
-    slave = Param.I8259('Slave I8259, if any')
+    slave = Param.I8259(NULL, 'Slave I8259, if any')
 
     def pin(self, line):
         return X86IntSinkPin(device=self, number=line)

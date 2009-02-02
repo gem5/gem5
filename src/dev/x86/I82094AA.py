@@ -37,7 +37,7 @@ class I82094AA(BasicPioDevice):
     pio_latency = Param.Latency('1ns', "Programmed IO latency in simticks")
     pio_addr = Param.Addr("Device address")
     int_port = Port("Port for sending and receiving interrupt messages")
-    external_int_pic = Param.I8259("External PIC, if any")
+    external_int_pic = Param.I8259(NULL, "External PIC, if any")
 
     def pin(self, line):
         return X86IntSinkPin(device=self, number=line)
