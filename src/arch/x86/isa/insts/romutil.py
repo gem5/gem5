@@ -95,7 +95,7 @@ def rom
 
     # If we're here, it's because the stack isn't being switched.
     # Set t6 to the new aligned rsp.
-    mov t6, rsp, dataSize=8
+    mov t6, t6, rsp, dataSize=8
     andi t6, t6, 0xF0, dataSize=1
     subi t6, t6, 40 + %(errorCodeSize)d, dataSize=8
 

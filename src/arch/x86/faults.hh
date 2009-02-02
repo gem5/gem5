@@ -95,11 +95,14 @@ namespace X86ISA
             return mnem;
         }
 
-        void
-        invoke(ThreadContext * tc)
+        virtual bool isSoft()
         {
-            panic("Unimplemented fault %s.\n", name());
+            return false;
         }
+
+#if FULL_SYSTEM
+        void invoke(ThreadContext * tc);
+#endif
     };
 
     // Base class for x86 faults which behave as if the underlying instruction
@@ -150,10 +153,6 @@ namespace X86ISA
                 const uint8_t _vector, uint64_t _errorCode = -1) :
             X86FaultBase(name, mnem, _vector, _errorCode)
         {}
-
-#if FULL_SYSTEM
-        void invoke(ThreadContext * tc);
-#endif
     };
 
     class UnimpInstFault : public FaultBase
@@ -321,13 +320,16 @@ namespace X86ISA
             Bitfield<4> fetch;
         EndBitUnion(PageFaultErrorCode)
 
+        Addr addr;
+
       public:
-        PageFault(uint32_t _errorCode) :
-            X86Fault("Page-Fault", "#PF", 14, _errorCode)
+        PageFault(Addr _addr, uint32_t _errorCode) :
+            X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
         {}
-        PageFault(bool present, bool write, bool user,
-                bool reserved, bool fetch) :
-            X86Fault("Page-Fault", "#PF", 14, 0)
+
+        PageFault(Addr _addr, bool present, bool write,
+                bool user, bool reserved, bool fetch) :
+            X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
         {
             PageFaultErrorCode code = 0;
             code.present = present;
@@ -337,6 +339,10 @@ namespace X86ISA
             code.fetch = fetch;
             errorCode = code;
         }
+
+#if FULL_SYSTEM
+        void invoke(ThreadContext * tc);
+#endif
     };
 
     class X87FpExceptionPending : public X86Fault
@@ -410,6 +416,11 @@ namespace X86ISA
         SoftwareInterrupt(uint8_t _vector) :
             X86Interrupt("Software Interrupt", "INTn", _vector)
         {}
+
+        bool isSoft()
+        {
+            return true;
+        }
     };
 
     // These faults aren't part of the ISA definition. They trigger filling
