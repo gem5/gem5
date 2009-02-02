@@ -123,6 +123,7 @@ namespace X86ISA
         }
         tc->setIntReg(INTREG_MICRO(1), vector);
         tc->setIntReg(INTREG_MICRO(7), tc->readPC());
+        tc->setIntReg(INTREG_MICRO(15), (uint64_t)(-1));
         tc->setMicroPC(romMicroPC(entry));
         tc->setNextMicroPC(romMicroPC(entry) + 1);
     }

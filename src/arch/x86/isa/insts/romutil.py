@@ -26,13 +26,13 @@
 #
 # Authors: Gabe Black
 
-microcode = '''
+intCodeTemplate = '''
 def rom
 {
     # This vectors the CPU into an interrupt handler in long mode.
     # On entry, t1 is set to the vector of the interrupt and t7 is the current
     # ip. We need that because rdip returns the next ip.
-    extern longModeInterrupt:
+    extern %(startLabel)s:
 
     #
     # Get the 64 bit interrupt or trap gate descriptor from the IDT
@@ -44,7 +44,7 @@ def rom
     ld t4, idtr, [1, t0, t4], dataSize=8, addressSize=8
 
     # Make sure the descriptor is a legal gate.
-    chks t1, t4, IntGateCheck
+    chks t1, t4, %(gateCheckType)s
 
     #
     # Get the target CS descriptor using the selector in the gate
@@ -53,12 +53,12 @@ def rom
     srli t10, t4, 16, dataSize=8
     andi t5, t10, 0xF8, dataSize=8
     andi t0, t10, 0x4, flags=(EZF,), dataSize=2
-    br rom_local_label("globalDescriptor"), flags=(CEZF,)
+    br rom_local_label("%(startLabel)s_globalDescriptor"), flags=(CEZF,)
     ld t3, tsl, [1, t0, t5], dataSize=8, addressSize=8
-    br rom_local_label("processDescriptor")
-globalDescriptor:
+    br rom_local_label("%(startLabel)s_processDescriptor")
+%(startLabel)s_globalDescriptor:
     ld t3, tsg, [1, t0, t5], dataSize=8, addressSize=8
-processDescriptor:
+%(startLabel)s_processDescriptor:
     chks t10, t3, IntCSCheck, dataSize=8
     wrdl hs, t3, t10, dataSize=8
 
@@ -90,29 +90,29 @@ processDescriptor:
     srli t10, t4, 32, dataSize=8
     andi t10, t10, 0x7, dataSize=8
     subi t0, t10, 1, flags=(ECF,), dataSize=8
-    br rom_local_label("istStackSwitch"), flags=(nCECF,)
-    br rom_local_label("cplStackSwitch"), flags=(nCEZF,)
+    br rom_local_label("%(startLabel)s_istStackSwitch"), flags=(nCECF,)
+    br rom_local_label("%(startLabel)s_cplStackSwitch"), flags=(nCEZF,)
 
     # If we're here, it's because the stack isn't being switched.
-    # Set t6 to the new rsp.
-    subi t6, rsp, 40, dataSize=8
-
-    # Align the stack
+    # Set t6 to the new aligned rsp.
+    mov t6, rsp, dataSize=8
     andi t6, t6, 0xF0, dataSize=1
+    subi t6, t6, 40 + %(errorCodeSize)d, dataSize=8
 
     # Check that we can access everything we need to on the stack
     ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
-    ldst t0, hs, [1, t0, t6], 32, dataSize=8, addressSize=8
-    br rom_local_label("stackSwitched")
+    ldst t0, hs, [1, t0, t6], \
+         32 + %(errorCodeSize)d, dataSize=8, addressSize=8
+    br rom_local_label("%(startLabel)s_stackSwitched")
 
-istStackSwitch:
+%(startLabel)s_istStackSwitch:
     panic "IST based stack switching isn't implemented"
-    br rom_local_label("stackSwitched")
+    br rom_local_label("%(startLabel)s_stackSwitched")
 
-cplStackSwitch:
+%(startLabel)s_cplStackSwitch:
     panic "CPL change initiated stack switching isn't implemented"
 
-stackSwitched:
+%(startLabel)s_stackSwitched:
 
 
     ##
@@ -130,15 +130,16 @@ stackSwitched:
 
     
     # Write out the contents of memory
-    st t7, hs, [1, t0, t6], dataSize=8
+    %(errorCodeCode)s
+    st t7, hs, [1, t0, t6], %(errorCodeSize)d, dataSize=8, addressSize=8
     limm t5, 0, dataSize=8
     rdsel t5, cs, dataSize=2
-    st t5, hs, [1, t0, t6], 8, dataSize=8
+    st t5, hs, [1, t0, t6], 8 + %(errorCodeSize)d, dataSize=8, addressSize=8
     rflags t10, dataSize=8
-    st t10, hs, [1, t0, t6], 16, dataSize=8
-    st rsp, hs, [1, t0, t6], 24, dataSize=8
+    st t10, hs, [1, t0, t6], 16 + %(errorCodeSize)d, dataSize=8, addressSize=8
+    st rsp, hs, [1, t0, t6], 24 + %(errorCodeSize)d, dataSize=8, addressSize=8
     rdsel t5, ss, dataSize=2
-    st t5, hs, [1, t0, t6], 32, dataSize=8
+    st t5, hs, [1, t0, t6], 32 + %(errorCodeSize)d, dataSize=8, addressSize=8
 
     # Set the stack segment
     mov rsp, rsp, t6, dataSize=8
@@ -174,7 +175,30 @@ stackSwitched:
     
     eret
 };
+'''
 
+microcode = \
+intCodeTemplate % {\
+    "startLabel" : "longModeInterrupt",
+    "gateCheckType" : "IntGateCheck",
+    "errorCodeSize" : 0,
+    "errorCodeCode" : ""
+} + \
+intCodeTemplate % {\
+    "startLabel" : "longModeSoftInterrupt",
+    "gateCheckType" : "SoftIntGateCheck",
+    "errorCodeSize" : 0,
+    "errorCodeCode" : ""
+} + \
+intCodeTemplate % {\
+    "startLabel" : "longModeInterruptWithError",
+    "gateCheckType" : "IntGateCheck",
+    "errorCodeSize" : 8,
+    "errorCodeCode" : '''
+    st t15, hs, [1, t0, t6], dataSize=8, addressSize=8
+    '''
+} + \
+'''
 def rom
 {
     # This vectors the CPU into an interrupt handler in legacy mode.
