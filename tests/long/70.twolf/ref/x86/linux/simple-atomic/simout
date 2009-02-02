@@ -5,14 +5,14 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 23:03:02
-M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
-M5 commit date Wed Nov 05 16:19:17 2008 -0500
-M5 started Nov  6 2008 00:16:46
-M5 executing on zizzer
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/x86/linux/simple-atomic
-Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sav
-Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic/smred.sv2
+M5 compiled Dec 26 2008 18:29:56
+M5 revision 5818:e9a95a3440197489c28a655f2de72dc8e98259b9
+M5 commit date Fri Dec 26 18:25:21 2008 -0800
+M5 started Dec 26 2008 19:57:21
+M5 executing on fajita
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-atomic -re tests/run.py long/70.twolf/x86/linux/simple-atomic
+Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-atomic/smred.sav
+Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-atomic/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -28,4 +28,4 @@ Authors: Carl Sechen, Bill Swartz
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 130009373500 because target called exit()
+122 123 124 Exiting @ tick 130009362500 because target called exit()

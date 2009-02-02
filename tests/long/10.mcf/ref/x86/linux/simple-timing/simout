@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov 13 2008 21:51:42
-M5 revision 5729:f186533c0dc2d948be0523b452356918124d7f57
-M5 commit date Sun Nov 09 21:57:15 2008 -0800
-M5 started Nov 13 2008 21:51:43
-M5 executing on tater
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/10.mcf/x86/linux/simple-timing
+M5 compiled Dec 26 2008 18:29:56
+M5 revision 5818:e9a95a3440197489c28a655f2de72dc8e98259b9
+M5 commit date Fri Dec 26 18:25:21 2008 -0800
+M5 started Dec 26 2008 20:14:49
+M5 executing on fajita
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/10.mcf/x86/linux/simple-timing -re tests/run.py long/10.mcf/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -29,4 +29,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 495387670000 because target called exit()
+Exiting @ tick 495377140000 because target called exit()

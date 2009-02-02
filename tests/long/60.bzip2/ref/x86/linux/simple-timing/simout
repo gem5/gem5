@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  7 2008 03:21:37
-M5 revision 5728:a583591131186a0f2de150efdfc82a154d166fb5
-M5 commit date Thu Nov 06 23:13:50 2008 -0800
-M5 started Nov  8 2008 10:43:38
-M5 executing on tater
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/60.bzip2/x86/linux/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/60.bzip2/x86/linux/simple-timing
+M5 compiled Dec 26 2008 18:29:56
+M5 revision 5818:e9a95a3440197489c28a655f2de72dc8e98259b9
+M5 commit date Fri Dec 26 18:25:21 2008 -0800
+M5 started Dec 26 2008 18:30:11
+M5 executing on fajita
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/60.bzip2/x86/linux/simple-timing -re tests/run.py long/60.bzip2/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
@@ -27,4 +27,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 7645253019000 because target called exit()
+Exiting @ tick 7645209486000 because target called exit()
