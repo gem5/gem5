@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_FAULTS_HH__
 #define __ARCH_X86_FAULTS_HH__
 
+#include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
 
@@ -73,7 +74,7 @@ namespace X86ISA
         uint64_t errorCode;
 
         X86FaultBase(const char * _faultName, const char * _mnem,
-                const uint8_t _vector, uint64_t _errorCode = 0) :
+                const uint8_t _vector, uint64_t _errorCode = -1) :
             faultName(_faultName), mnem(_mnem),
             vector(_vector), errorCode(_errorCode)
         {
@@ -107,7 +108,7 @@ namespace X86ISA
     {
       protected:
         X86Fault(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = 0) :
+                const uint8_t vector, uint64_t _errorCode = -1) :
             X86FaultBase(name, mnem, vector, _errorCode)
         {}
     };
@@ -118,7 +119,7 @@ namespace X86ISA
     {
       protected:
         X86Trap(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = 0) :
+                const uint8_t vector, uint64_t _errorCode = -1) :
             X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
@@ -132,7 +133,7 @@ namespace X86ISA
     {
       protected:
         X86Abort(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = 0) :
+                const uint8_t vector, uint64_t _errorCode = -1) :
             X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
@@ -146,7 +147,7 @@ namespace X86ISA
     {
       protected:
         X86Interrupt(const char * name, const char * mnem,
-                const uint8_t _vector, uint64_t _errorCode = 0) :
+                const uint8_t _vector, uint64_t _errorCode = -1) :
             X86FaultBase(name, mnem, _vector, _errorCode)
         {}
 
@@ -273,48 +274,69 @@ namespace X86ISA
     {
       public:
         DoubleFault() :
-            X86Abort("Double-Fault", "#DF", 8)
+            X86Abort("Double-Fault", "#DF", 8, 0)
         {}
     };
 
     class InvalidTSS : public X86Fault
     {
       public:
-        InvalidTSS() :
-            X86Fault("Invalid-TSS", "#TS", 10)
+        InvalidTSS(uint32_t _errorCode) :
+            X86Fault("Invalid-TSS", "#TS", 10, _errorCode)
         {}
     };
 
     class SegmentNotPresent : public X86Fault
     {
       public:
-        SegmentNotPresent() :
-            X86Fault("Segment-Not-Present", "#NP", 11)
+        SegmentNotPresent(uint32_t _errorCode) :
+            X86Fault("Segment-Not-Present", "#NP", 11, _errorCode)
         {}
     };
 
     class StackFault : public X86Fault
     {
       public:
-        StackFault() :
-            X86Fault("Stack", "#SS", 12)
+        StackFault(uint32_t _errorCode) :
+            X86Fault("Stack", "#SS", 12, _errorCode)
         {}
     };
 
     class GeneralProtection : public X86Fault
     {
       public:
-        GeneralProtection(uint64_t _errorCode) :
+        GeneralProtection(uint32_t _errorCode) :
             X86Fault("General-Protection", "#GP", 13, _errorCode)
         {}
     };
 
     class PageFault : public X86Fault
     {
+      protected:
+        BitUnion32(PageFaultErrorCode)
+            Bitfield<0> present;
+            Bitfield<1> write;
+            Bitfield<2> user;
+            Bitfield<3> reserved;
+            Bitfield<4> fetch;
+        EndBitUnion(PageFaultErrorCode)
+
       public:
-        PageFault() :
-            X86Fault("Page-Fault", "#PF", 14)
+        PageFault(uint32_t _errorCode) :
+            X86Fault("Page-Fault", "#PF", 14, _errorCode)
         {}
+        PageFault(bool present, bool write, bool user,
+                bool reserved, bool fetch) :
+            X86Fault("Page-Fault", "#PF", 14, 0)
+        {
+            PageFaultErrorCode code = 0;
+            code.present = present;
+            code.write = write;
+            code.user = user;
+            code.reserved = reserved;
+            code.fetch = fetch;
+            errorCode = code;
+        }
     };
 
     class X87FpExceptionPending : public X86Fault
@@ -329,7 +351,7 @@ namespace X86ISA
     {
       public:
         AlignmentCheck() :
-            X86Fault("Alignment-Check", "#AC", 17)
+            X86Fault("Alignment-Check", "#AC", 17, 0)
         {}
     };
 

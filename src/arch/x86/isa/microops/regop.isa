@@ -1069,7 +1069,7 @@ let {{
               case SegSoftIntGateCheck:
                 // Check permissions.
                 if (desc.dpl < m5reg.cpl) {
-                    fault = new GeneralProtection((uint16_t)selector);
+                    fault = new GeneralProtection(selector);
                 }
                 // Fall through on purpose
               case SegIntGateCheck:
@@ -1082,8 +1082,7 @@ let {{
               case SegSSCheck:
                 if (selector.si || selector.ti) {
                     if (!desc.p) {
-                        //FIXME This needs to also push the selector.
-                        fault = new StackFault;
+                        fault = new StackFault(selector);
                     }
                 } else {
                     if ((m5reg.submode != SixtyFourBitMode ||
@@ -1092,7 +1091,7 @@ let {{
                             desc.type.codeOrData == 0 && desc.type.w) ||
                             (desc.dpl != m5reg.cpl) ||
                             (selector.rpl != m5reg.cpl)) {
-                        fault = new GeneralProtection(psrc1 & 0xFFFF);
+                        fault = new GeneralProtection(selector);
                     }
                 }
                 break;
@@ -1103,9 +1102,9 @@ let {{
                             !(desc.s == 1 && desc.type.codeOrData == 1) ||
                             (!desc.type.c && desc.dpl != selector.rpl) ||
                             (desc.type.c && desc.dpl > selector.rpl)) {
-                        fault = new GeneralProtection(psrc1 & 0xFFFF);
+                        fault = new GeneralProtection(selector);
                     } else if (!desc.p) {
-                        fault = new SegmentNotPresent;
+                        fault = new SegmentNotPresent(selector);
                     }
                     break;
                 }
