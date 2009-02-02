@@ -76,9 +76,9 @@ let {{
     mainRom = X86MicrocodeRom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
     # Add in symbols for the microcode registers
-    for num in range(15):
+    for num in range(16):
         assembler.symbols["t%d" % num] = "NUM_INTREGS+%d" % num
-    for num in range(7):
+    for num in range(8):
         assembler.symbols["ufp%d" % num] = "FLOATREG_MICROFP(%d)" % num
     # Add in symbols for the segment descriptor registers
     for letter in ("C", "D", "E", "F", "G", "H", "S"):
@@ -140,7 +140,7 @@ let {{
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
 
-    for reg in range(15):
+    for reg in range(16):
         assembler.symbols["cr%d" % reg] = "MISCREG_CR%d" % reg
 
     for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF', \
