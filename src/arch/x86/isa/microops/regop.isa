@@ -1067,8 +1067,14 @@ let {{
                         "not implemented.\\n");
                 break;
               case SegIntGateCheck:
+                // Check permissions.
                 if (desc.dpl < m5reg.cpl) {
                     fault = new GeneralProtection((uint16_t)selector);
+                }
+                // Make sure the gate's the right type.
+                if (m5reg.mode == LongMode && ((desc.type & 0xe) != 0xe) ||
+                        ((desc.type & 0x6) != 0x6)) {
+                    fault = new GeneralProtection(0);
                 }
                 break;
               case SegSSCheck:

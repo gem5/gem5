@@ -43,17 +43,8 @@ def rom
     ld t2, idtr, [1, t0, t4], 8, dataSize=8, addressSize=8
     ld t4, idtr, [1, t0, t4], dataSize=8, addressSize=8
 
-    # Check permissions
+    # Make sure the descriptor is a legal gate.
     chks t1, t4, IntGateCheck
-
-    mov t1, t1, t4, dataSize=8
-
-    # Check that it's the right type
-    srli t4, t1, 40, dataSize=8
-    andi t4, t4, 0xe, dataSize=8
-    xori t4, t4, 0xe, flags=(EZF,), dataSize=8
-    fault "new GeneralProtection(0)", flags=(nCEZF,)
-
 
     #
     # Get the target CS descriptor using the selector in the gate
