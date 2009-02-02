@@ -234,7 +234,7 @@ output header {{
 
     enum SegmentSelectorCheck {
       SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
-      SegSSCheck, SegIretCheck, SegIntCSCheck
+      SegSoftIntGateCheck, SegSSCheck, SegIretCheck, SegIntCSCheck
     };
 
     enum LongModeDescriptorType {
@@ -1066,11 +1066,13 @@ let {{
                 panic("CS checks for far calls/jumps through call gates"
                         "not implemented.\\n");
                 break;
-              case SegIntGateCheck:
+              case SegSoftIntGateCheck:
                 // Check permissions.
                 if (desc.dpl < m5reg.cpl) {
                     fault = new GeneralProtection((uint16_t)selector);
                 }
+                // Fall through on purpose
+              case SegIntGateCheck:
                 // Make sure the gate's the right type.
                 if (m5reg.mode == LongMode && ((desc.type & 0xe) != 0xe) ||
                         ((desc.type & 0x6) != 0x6)) {

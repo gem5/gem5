@@ -86,7 +86,7 @@ let {{
 
     # Add in symbols for the various checks of segment selectors.
     for check in ("NoCheck", "CSCheck", "CallGateCheck", "IntGateCheck",
-                  "SSCheck", "IretCheck", "IntCSCheck"):
+                  "SoftIntGateCheck", "SSCheck", "IretCheck", "IntCSCheck"):
         assembler.symbols[check] = "Seg%s" % check
 
     for reg in ("TR", "IDTR"):
