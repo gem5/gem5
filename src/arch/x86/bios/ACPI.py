@@ -94,6 +94,6 @@ class X86ACPIRSDP(SimObject):
     # here.
     revision = Param.UInt8(2, 'revision of ACPI being used, zero indexed')
 
-    rsdt = Param.X86ACPIRSDT('root system description table')
+    rsdt = Param.X86ACPIRSDT(NULL, 'root system description table')
     xsdt = Param.X86ACPIXSDT(X86ACPIXSDT(),
             'extended system description table')

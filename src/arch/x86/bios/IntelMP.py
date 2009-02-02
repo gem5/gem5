@@ -115,9 +115,9 @@ class X86IntelMPProcessor(X86IntelMPBaseConfigEntry):
     enable = Param.Bool(True, 'if this processor is usable')
     bootstrap = Param.Bool(False, 'if this is the bootstrap processor')
 
-    stepping = Param.UInt8(0)
-    model = Param.UInt8(0)
-    family = Param.UInt8(0)
+    stepping = Param.UInt8(0, 'Processor stepping')
+    model = Param.UInt8(0, 'Processor model')
+    family = Param.UInt8(0, 'Processor family')
 
     feature_flags = Param.UInt32(0, 'flags returned by the CPUID instruction')
 
