@@ -46,12 +46,18 @@ using namespace TheISA;
 namespace Trace {
 
 void
+ExeTracerRecord::dumpTicks(ostream &outs)
+{
+    ccprintf(outs, "%7d: ", when);
+}
+
+void
 Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
 {
     ostream &outs = Trace::output();
 
     if (IsOn(ExecTicks))
-        ccprintf(outs, "%7d: ", when);
+        dumpTicks(outs);
 
     outs << thread->getCpuPtr()->name() << " ";
 
