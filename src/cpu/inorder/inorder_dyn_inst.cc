@@ -1,0 +1,780 @@
+/*
+ * Copyright (c) 2007 MIPS Technologies, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
+ *
+ */
+
+#include <iostream>
+#include <set>
+#include <string>
+#include <sstream>
+
+#include "base/cprintf.hh"
+#include "base/trace.hh"
+
+#include "arch/faults.hh"
+#include "cpu/exetrace.hh"
+#include "mem/request.hh"
+
+#include "cpu/inorder/inorder_dyn_inst.hh"
+#include "cpu/inorder/cpu.hh"
+
+using namespace std;
+using namespace TheISA;
+using namespace ThePipeline;
+
+InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
+                               Addr pred_PC, InstSeqNum seq_num,
+                               InOrderCPU *cpu)
+  : staticInst(machInst, inst_PC), traceData(NULL), cpu(cpu)
+{
+    seqNum = seq_num;
+
+    PC = inst_PC;
+    nextPC = PC + sizeof(MachInst);
+    nextNPC = nextPC + sizeof(MachInst);
+    predPC = pred_PC;
+
+    initVars();
+}
+
+InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
+                           InOrderThreadState *state,
+                           InstSeqNum seq_num,
+                           unsigned tid)
+    : traceData(NULL), cpu(cpu)
+{
+    seqNum = seq_num;
+    thread = state;
+    threadNumber = tid;
+    initVars();
+}
+
+InOrderDynInst::InOrderDynInst(StaticInstPtr &_staticInst)
+    : staticInst(_staticInst), traceData(NULL)
+{
+    seqNum = 0;
+    initVars();
+}
+
+InOrderDynInst::InOrderDynInst()
+    : traceData(NULL), cpu(cpu)
+{     initVars(); }
+
+int InOrderDynInst::instcount = 0;
+
+
+void
+InOrderDynInst::setMachInst(ExtMachInst machInst)
+{
+    staticInst = StaticInst::decode(machInst, PC);
+
+    for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
+        _destRegIdx[i] = this->staticInst->destRegIdx(i);
+    }
+
+    for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
+        _srcRegIdx[i] = this->staticInst->srcRegIdx(i);
+        this->_readySrcRegIdx[i] = 0;
+    }
+}
+
+void
+InOrderDynInst::initVars()
+{
+    req = NULL;
+    effAddr = 0;
+    physEffAddr = 0;
+
+    readyRegs = 0;
+
+    nextStage = 0;
+    nextInstStageNum = 0;
+
+    for(int i = 0; i < MaxInstDestRegs; i++)
+        instResult[i].val.integer = 0;
+
+    status.reset();
+
+    memAddrReady = false;
+    eaCalcDone = false;
+    memOpDone = false;
+
+    predictTaken = false;
+    procDelaySlotOnMispred = false;
+
+    lqIdx = -1;
+    sqIdx = -1;
+
+    // Also make this a parameter, or perhaps get it from xc or cpu.
+    asid = 0;
+
+    virtProcNumber = 0;
+
+    // Initialize the fault to be NoFault.
+    fault = NoFault;
+
+    // Make sure to have the renamed register entries set to the same
+    // as the normal register entries.  It will allow the IQ to work
+    // without any modifications.
+    if (this->staticInst) {
+        for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
+            _destRegIdx[i] = this->staticInst->destRegIdx(i);
+        }
+
+        for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
+            _srcRegIdx[i] = this->staticInst->srcRegIdx(i);
+            this->_readySrcRegIdx[i] = 0;
+        }
+    }
+
+    // Update Instruction Count for this instruction
+    ++instcount;
+    if (instcount > 500) {
+        fatal("Number of Active Instructions in CPU is too high. "
+                "(Not Dereferencing Ptrs. Correctly?)\n");
+    }
+
+
+
+    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created. (active insts: %i)\n",
+            threadNumber, seqNum, instcount);
+
+#ifdef DEBUG
+    cpu->snList.insert(seqNum);
+#endif
+}
+
+
+InOrderDynInst::~InOrderDynInst()
+{
+    if (req) {
+        delete req;
+    }
+
+    if (traceData) {
+        delete traceData;
+    }
+
+    fault = NoFault;
+
+    --instcount;
+
+    deleteStages();
+
+    DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction destroyed. (active insts: %i)\n",
+            threadNumber, seqNum, instcount);
+#ifdef DEBUG
+    cpu->snList.erase(seqNum);
+#endif
+}
+
+void
+InOrderDynInst::setStaticInst(StaticInstPtr &static_inst)
+{
+    this->staticInst = static_inst;
+
+    // Make sure to have the renamed register entries set to the same
+    // as the normal register entries.  It will allow the IQ to work
+    // without any modifications.
+    if (this->staticInst) {
+        for (int i = 0; i < this->staticInst->numDestRegs(); i++) {
+            _destRegIdx[i] = this->staticInst->destRegIdx(i);
+        }
+
+        for (int i = 0; i < this->staticInst->numSrcRegs(); i++) {
+            _srcRegIdx[i] = this->staticInst->srcRegIdx(i);
+            this->_readySrcRegIdx[i] = 0;
+        }
+    }
+}
+
+Fault
+InOrderDynInst::execute()
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool in_syscall = this->thread->inSyscall;
+    this->thread->inSyscall = true;
+
+    this->fault = this->staticInst->execute(this, this->traceData);
+
+    this->thread->inSyscall = in_syscall;
+
+    return this->fault;
+}
+
+Fault
+InOrderDynInst::initiateAcc()
+{
+    // @todo: Pretty convoluted way to avoid squashing from happening
+    // when using the TC during an instruction's execution
+    // (specifically for instructions that have side-effects that use
+    // the TC).  Fix this.
+    bool in_syscall = this->thread->inSyscall;
+    this->thread->inSyscall = true;
+
+    this->fault = this->staticInst->initiateAcc(this, this->traceData);
+
+    this->thread->inSyscall = in_syscall;
+
+    return this->fault;
+}
+
+
+Fault
+InOrderDynInst::completeAcc(Packet *pkt)
+{
+    this->fault = this->staticInst->completeAcc(pkt, this, this->traceData);
+
+    return this->fault;
+}
+
+InstStage *InOrderDynInst::addStage()
+{
+    this->currentInstStage = new InstStage(this, nextInstStageNum++);
+    instStageList.push_back( this->currentInstStage );
+    return this->currentInstStage;
+}
+
+InstStage *InOrderDynInst::addStage(int stage_num)
+{
+    nextInstStageNum = stage_num;
+    return InOrderDynInst::addStage();
+}
+
+void InOrderDynInst::deleteStages() {
+    std::list<InstStage*>::iterator list_it = instStageList.begin();
+    std::list<InstStage*>::iterator list_end = instStageList.end();
+
+    while(list_it != list_end) {
+        delete *list_it;
+        list_it++;
+    }
+}
+
+Fault
+InOrderDynInst::calcEA()
+{
+    return staticInst->eaCompInst()->execute(this, this->traceData);
+}
+
+Fault
+InOrderDynInst::memAccess()
+{
+    //return staticInst->memAccInst()->execute(this, this->traceData);
+    return initiateAcc( );
+}
+
+void
+InOrderDynInst::syscall(int64_t callnum)
+{
+    cpu->syscall(callnum, this->threadNumber);
+}
+
+void
+InOrderDynInst::prefetch(Addr addr, unsigned flags)
+{
+    // This is the "functional" implementation of prefetch.  Not much
+    // happens here since prefetches don't affect the architectural
+    // state.
+/*
+    // Generate a MemReq so we can translate the effective address.
+    MemReqPtr req = new MemReq(addr, thread->getXCProxy(), 1, flags);
+    req->asid = asid;
+
+    // Prefetches never cause faults.
+    fault = NoFault;
+
+    // note this is a local, not InOrderDynInst::fault
+    Fault trans_fault = cpu->translateDataReadReq(req);
+
+    if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
+        // It's a valid address to cacheable space.  Record key MemReq
+        // parameters so we can generate another one just like it for
+        // the timing access without calling translate() again (which
+        // might mess up the TLB).
+        effAddr = req->vaddr;
+        physEffAddr = req->paddr;
+        memReqFlags = req->flags;
+    } else {
+        // Bogus address (invalid or uncacheable space).  Mark it by
+        // setting the eff_addr to InvalidAddr.
+        effAddr = physEffAddr = MemReq::inval_addr;
+    }
+
+    if (traceData) {
+        traceData->setAddr(addr);
+    }
+*/
+}
+
+void
+InOrderDynInst::writeHint(Addr addr, int size, unsigned flags)
+{
+    // Not currently supported.
+}
+
+/**
+ * @todo Need to find a way to get the cache block size here.
+ */
+Fault
+InOrderDynInst::copySrcTranslate(Addr src)
+{
+    // Not currently supported.
+    return NoFault;
+}
+
+/**
+ * @todo Need to find a way to get the cache block size here.
+ */
+Fault
+InOrderDynInst::copy(Addr dest)
+{
+    // Not currently supported.
+    return NoFault;
+}
+
+void
+InOrderDynInst::releaseReq(ResourceRequest* req)
+{
+    std::list<ResourceRequest*>::iterator list_it = reqList.begin();
+    std::list<ResourceRequest*>::iterator list_end = reqList.end();
+
+    while(list_it != list_end) {
+        if((*list_it)->getResIdx() == req->getResIdx() &&
+           (*list_it)->getSlot() == req->getSlot()) {
+            DPRINTF(InOrderDynInst, "[tid:%u]: [sn:%i] Done with request to %s.\n",
+                    threadNumber, seqNum, req->res->name());
+            reqList.erase(list_it);
+            return;
+        }
+        list_it++;
+    }
+
+    panic("Releasing Res. Request That Isnt There!\n");
+}
+
+/** Records an integer source register being set to a value. */
+void
+InOrderDynInst::setIntSrc(int idx, uint64_t val)
+{
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i being set to %#x.\n",
+            threadNumber, seqNum, idx, val);
+    instSrc[idx].integer = val;
+}
+
+/** Records an fp register being set to a value. */
+void
+InOrderDynInst::setFloatSrc(int idx, FloatReg val, int width)
+{
+    if (width == 32)
+        instSrc[idx].fp = val;
+    else if (width == 64)
+        instSrc[idx].dbl = val;
+    else
+        panic("Unsupported width!");
+}
+
+/** Records an fp register being set to an integer value. */
+void
+InOrderDynInst::setFloatRegBitsSrc(int idx, uint64_t val)
+{
+    instSrc[idx].integer = val;
+}
+
+/** Reads a integer register. */
+IntReg
+InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, unsigned tid)
+{
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i read as %#x.\n",
+            threadNumber, seqNum, idx, instSrc[idx].integer);
+    return instSrc[idx].integer;
+}
+
+/** Reads a FP register. */
+FloatReg
+InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx, int width)
+{
+   return instSrc[idx].fp;
+}
+
+
+/** Reads a FP register as a integer. */
+FloatRegBits
+InOrderDynInst::readFloatRegOperandBits(const StaticInst *si, int idx, int width)
+{
+    return instSrc[idx].integer;
+}
+
+/** Reads a miscellaneous register. */
+MiscReg
+InOrderDynInst::readMiscReg(int misc_reg)
+{
+    return this->cpu->readMiscReg(misc_reg, threadNumber);
+}
+
+/** Reads a misc. register, including any side-effects the read
+ * might have as defined by the architecture.
+ */
+MiscReg
+InOrderDynInst::readMiscRegNoEffect(int misc_reg)
+{
+    return this->cpu->readMiscRegNoEffect(misc_reg, threadNumber);
+}
+
+/** Reads a miscellaneous register. */
+MiscReg
+InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
+{
+    return this->cpu->readMiscRegNoEffect(
+        si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+        this->threadNumber);
+}
+
+/** Reads a misc. register, including any side-effects the read
+ * might have as defined by the architecture.
+ */
+MiscReg
+InOrderDynInst::readMiscRegOperand(const StaticInst *si, int idx)
+{
+    return this->cpu->readMiscReg(
+        si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+        this->threadNumber);
+}
+
+/** Sets a misc. register. */
+void
+InOrderDynInst::setMiscRegOperandNoEffect(const StaticInst * si, int idx, const MiscReg &val)
+{
+    instResult[si->destRegIdx(idx)].val.integer = val;
+    instResult[si->destRegIdx(idx)].tick = curTick;
+
+    this->cpu->setMiscRegNoEffect(
+        si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+        val, this->threadNumber);
+}
+
+/** Sets a misc. register, including any side-effects the write
+ * might have as defined by the architecture.
+ */
+void
+InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
+                       const MiscReg &val)
+{
+    instResult[si->destRegIdx(idx)].val.integer = val;
+    instResult[si->destRegIdx(idx)].tick = curTick;
+
+    this->cpu->setMiscReg(
+        si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
+        val, this->threadNumber);
+}
+
+MiscReg
+InOrderDynInst::readRegOtherThread(unsigned reg_idx, int tid)
+{
+    if (tid == -1) {
+        tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
+    }
+
+    if (reg_idx < FP_Base_DepTag) {                   // Integer Register File
+        return this->cpu->readIntReg(reg_idx, tid);
+    } else if (reg_idx < Ctrl_Base_DepTag) {          // Float Register File
+        reg_idx -= FP_Base_DepTag;
+        return this->cpu->readFloatRegBits(reg_idx, tid);
+    } else {
+        reg_idx -= Ctrl_Base_DepTag;
+        return this->cpu->readMiscReg(reg_idx, tid);  // Misc. Register File
+    }
+}
+
+/** Sets a Integer register. */
+void
+InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
+{
+    instResult[idx].val.integer = val;
+    instResult[idx].tick = curTick;
+}
+
+/** Sets a FP register. */
+void
+InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val, int width)
+{
+    if (width == 32)
+        instResult[idx].val.fp = val;
+    else if (width == 64)
+        instResult[idx].val.dbl = val;
+    else
+        panic("Unsupported Floating Point Width!");
+
+    instResult[idx].tick = curTick;
+}
+
+/** Sets a FP register as a integer. */
+void
+InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
+                              FloatRegBits val, int width)
+{
+    instResult[idx].val.integer = val;
+    instResult[idx].tick = curTick;
+}
+
+/** Sets a misc. register. */
+/* Alter this when wanting to *speculate* on Miscellaneous registers */
+void
+InOrderDynInst::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+{
+    this->cpu->setMiscRegNoEffect(misc_reg, val, threadNumber);
+}
+
+/** Sets a misc. register, including any side-effects the write
+ * might have as defined by the architecture.
+ */
+/* Alter this if/when wanting to *speculate* on Miscellaneous registers */
+void
+InOrderDynInst::setMiscReg(int misc_reg, const MiscReg &val)
+{
+    this->cpu->setMiscReg(misc_reg, val, threadNumber);
+}
+
+void
+InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val, int tid)
+{
+    if (tid == -1) {
+        tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
+    }
+
+    if (reg_idx < FP_Base_DepTag) {            // Integer Register File
+        this->cpu->setIntReg(reg_idx, val, tid);
+    } else if (reg_idx < Ctrl_Base_DepTag) {   // Float Register File
+        reg_idx -= FP_Base_DepTag;
+        this->cpu->setFloatRegBits(reg_idx, val, tid);
+    } else {
+        reg_idx -= Ctrl_Base_DepTag;
+        this->cpu->setMiscReg(reg_idx, val, tid); // Misc. Register File
+    }
+}
+
+void
+InOrderDynInst::deallocateContext(int thread_num)
+{
+    this->cpu->deallocateContext(thread_num);
+}
+
+void
+InOrderDynInst::enableVirtProcElement(unsigned vpe)
+{
+    this->cpu->enableVirtProcElement(vpe);
+}
+
+void
+InOrderDynInst::disableVirtProcElement(unsigned vpe)
+{
+    this->cpu->disableVirtProcElement(threadNumber, vpe);
+}
+
+void
+InOrderDynInst::enableMultiThreading(unsigned vpe)
+{
+    this->cpu->enableMultiThreading(vpe);
+}
+
+void
+InOrderDynInst::disableMultiThreading(unsigned vpe)
+{
+    this->cpu->disableMultiThreading(threadNumber, vpe);
+}
+
+void
+InOrderDynInst::setThreadRescheduleCondition(uint32_t cond)
+{
+    this->cpu->setThreadRescheduleCondition(cond);
+}
+
+template<class T>
+inline Fault
+InOrderDynInst::read(Addr addr, T &data, unsigned flags)
+{
+    return cpu->read(this);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+InOrderDynInst::read(Addr addr, uint64_t &data, unsigned flags);
+
+template
+Fault
+InOrderDynInst::read(Addr addr, uint32_t &data, unsigned flags);
+
+template
+Fault
+InOrderDynInst::read(Addr addr, uint16_t &data, unsigned flags);
+
+template
+Fault
+InOrderDynInst::read(Addr addr, uint8_t &data, unsigned flags);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+InOrderDynInst::read(Addr addr, double &data, unsigned flags)
+{
+    return read(addr, *(uint64_t*)&data, flags);
+}
+
+template<>
+Fault
+InOrderDynInst::read(Addr addr, float &data, unsigned flags)
+{
+    return read(addr, *(uint32_t*)&data, flags);
+}
+
+template<>
+Fault
+InOrderDynInst::read(Addr addr, int32_t &data, unsigned flags)
+{
+    return read(addr, (uint32_t&)data, flags);
+}
+
+template<class T>
+inline Fault
+InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
+{
+    //memcpy(memData, gtoh(data), sizeof(T));
+    storeData  = data;
+
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
+            threadNumber, seqNum, memData);
+    return cpu->write(this);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+template
+Fault
+InOrderDynInst::write(uint64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderDynInst::write(uint32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderDynInst::write(uint16_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderDynInst::write(uint8_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+InOrderDynInst::write(double data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(*(uint64_t*)&data, addr, flags, res);
+}
+
+template<>
+Fault
+InOrderDynInst::write(float data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(*(uint32_t*)&data, addr, flags, res);
+}
+
+
+template<>
+Fault
+InOrderDynInst::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write((uint32_t)data, addr, flags, res);
+}
+
+
+void
+InOrderDynInst::dump()
+{
+    cprintf("T%d : %#08d `", threadNumber, PC);
+    cout << staticInst->disassemble(PC);
+    cprintf("'\n");
+}
+
+void
+InOrderDynInst::dump(std::string &outstring)
+{
+    std::ostringstream s;
+    s << "T" << threadNumber << " : 0x" << PC << " "
+      << staticInst->disassemble(PC);
+
+    outstring = s.str();
+}
+
+
+#define NOHASH
+#ifndef NOHASH
+
+#include "base/hashmap.hh"
+
+unsigned int MyHashFunc(const InOrderDynInst *addr)
+{
+    unsigned a = (unsigned)addr;
+    unsigned hash = (((a >> 14) ^ ((a >> 2) & 0xffff))) & 0x7FFFFFFF;
+
+    return hash;
+}
+
+typedef m5::hash_map<const InOrderDynInst *, const InOrderDynInst *, MyHashFunc>
+my_hash_t;
+
+my_hash_t thishash;
+#endif
+
+#ifdef DEBUG
+
+void
+InOrderDynInst::dumpSNList()
+{
+    std::set<InstSeqNum>::iterator sn_it = cpu->snList.begin();
+
+    int count = 0;
+    while (sn_it != cpu->snList.end()) {
+        cprintf("%i: [sn:%lli] not destroyed\n", count, (*sn_it));
+        count++;
+        sn_it++;
+    }
+}
+#endif
+

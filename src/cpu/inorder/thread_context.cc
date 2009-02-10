@@ -1,0 +1,371 @@
+/*
+ * Copyright (c) 2007 MIPS Technologies, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Korey Sewell
+ *
+ */
+
+#include "arch/isa_traits.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/inorder/thread_context.hh"
+
+using namespace TheISA;
+
+void
+InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
+{
+    // some things should already be set up
+    assert(getProcessPtr() == old_context->getProcessPtr());
+
+    // copy over functional state
+    setStatus(old_context->status());
+    copyArchRegs(old_context);
+    //setCpuId(0/*old_context->readCpuId()*/);
+
+    thread->funcExeInst = old_context->readFuncExeInst();
+    old_context->setStatus(ThreadContext::Unallocated);
+    thread->inSyscall = false;
+    thread->trapPending = false;
+}
+
+void
+InOrderThreadContext::activate(int delay)
+{
+    DPRINTF(InOrderCPU, "Calling activate on Thread Context %d\n",
+            getThreadNum());
+
+    if (thread->status() == ThreadContext::Active)
+        return;
+
+    // @TODO: Make this process useful again...
+    //if (thread->status() == ThreadContext::Unallocated) {
+        // Allows the CPU to drain partitioned resources
+        // before inserting thread into the CPU
+        // (e.g. bind physical registers)
+        //cpu->activateWhenReady(thread->readTid());
+        //return;
+    //}
+
+    thread->setStatus(ThreadContext::Active);
+
+    // status() == Suspended
+    cpu->activateContext(thread->readTid(), delay);
+}
+
+
+void
+InOrderThreadContext::suspend(int delay)
+{
+    DPRINTF(InOrderCPU, "Calling suspend on Thread Context %d\n",
+            getThreadNum());
+
+    if (thread->status() == ThreadContext::Suspended)
+        return;
+
+    thread->setStatus(ThreadContext::Suspended);
+    cpu->suspendContext(thread->readTid(), delay);
+}
+
+void
+InOrderThreadContext::deallocate(int delay)
+{
+    DPRINTF(InOrderCPU, "Calling deallocate on Thread Context %d\n",
+            getThreadNum());
+
+    if (thread->status() == ThreadContext::Unallocated)
+        return;
+
+    thread->setStatus(ThreadContext::Unallocated);
+    cpu->deallocateContext(thread->readTid(), delay);
+}
+
+void
+InOrderThreadContext::halt(int delay)
+{
+    DPRINTF(InOrderCPU, "Calling halt on Thread Context %d\n",
+            getThreadNum());
+
+    if (thread->status() == ThreadContext::Halted)
+        return;
+
+    thread->setStatus(ThreadContext::Halted);
+    cpu->haltContext(thread->readTid(), delay);
+}
+
+
+void
+InOrderThreadContext::regStats(const std::string &name)
+{
+#if FULL_SYSTEM
+    thread->kernelStats = new Kernel::Statistics(cpu->system);
+    thread->kernelStats->regStats(name + ".kern");
+#endif
+    ;
+}
+
+
+void
+InOrderThreadContext::serialize(std::ostream &os)
+{
+#if FULL_SYSTEM
+    if (thread->kernelStats)
+        thread->kernelStats->serialize(os);
+#endif
+    ;
+}
+
+
+void
+InOrderThreadContext::unserialize(Checkpoint *cp, const std::string &section)
+{
+#if FULL_SYSTEM
+    if (thread->kernelStats)
+        thread->kernelStats->unserialize(cp, section);
+#endif
+    ;
+}
+
+TheISA::MachInst
+InOrderThreadContext:: getInst()
+{
+    return thread->getInst();
+}
+
+
+void
+InOrderThreadContext::copyArchRegs(ThreadContext *tc)
+{
+    unsigned tid = thread->readTid();
+    PhysRegIndex renamed_reg;
+
+    // First loop through the integer registers.
+    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
+        renamed_reg = cpu->renameMap[tid].lookup(i);
+
+        DPRINTF(InOrderCPU, "Copying over register %i, had data %lli, "
+                "now has data %lli.\n",
+                renamed_reg, cpu->readIntReg(renamed_reg, tid),
+                tc->readIntReg(i));
+
+        cpu->setIntReg(renamed_reg, tc->readIntReg(i), tid);
+    }
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+        renamed_reg = cpu->renameMap[tid].lookup(i + TheISA::FP_Base_DepTag);
+        cpu->setFloatRegBits(renamed_reg, tc->readFloatRegBits(i), tid);
+    }
+
+    // Copy the misc regs.
+    TheISA::copyMiscRegs(tc, this);
+
+    // Then finally set the PC and the next PC.
+    cpu->setPC(tc->readPC(), tid);
+    cpu->setNextPC(tc->readNextPC(), tid);
+    cpu->setNextNPC(tc->readNextNPC(), tid);
+    this->thread->funcExeInst = tc->readFuncExeInst();
+}
+
+
+void
+InOrderThreadContext::clearArchRegs()
+{}
+
+
+uint64_t
+InOrderThreadContext::readIntReg(int reg_idx)
+{
+    return cpu->readIntReg(reg_idx, thread->readTid());
+}
+
+FloatReg
+InOrderThreadContext::readFloatReg(int reg_idx, int width)
+{
+    return cpu->readFloatReg(reg_idx, thread->readTid(), width);
+}
+
+FloatReg
+InOrderThreadContext::readFloatReg(int reg_idx)
+{
+    return cpu->readFloatReg(reg_idx, thread->readTid());
+}
+
+FloatRegBits
+InOrderThreadContext::readFloatRegBits(int reg_idx, int width)
+{
+    return cpu->readFloatRegBits(reg_idx, thread->readTid(), width);
+}
+
+FloatRegBits
+InOrderThreadContext::readFloatRegBits(int reg_idx)
+{
+    return cpu->readFloatRegBits(reg_idx, thread->readTid());
+}
+
+uint64_t
+InOrderThreadContext::readRegOtherThread(int reg_idx, unsigned tid)
+{
+    return cpu->readRegOtherThread(reg_idx, tid);
+}
+
+void
+InOrderThreadContext::setIntReg(int reg_idx, uint64_t val)
+{
+    cpu->setIntReg(reg_idx, val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //  cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val, int width)
+{
+    cpu->setFloatReg(reg_idx, val, thread->readTid(), width);
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val)
+{
+    cpu->setFloatReg(reg_idx, val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val,
+                                    int width)
+{
+    cpu->setFloatRegBits(reg_idx, val, thread->readTid(), width);
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val)
+{
+    cpu->setFloatRegBits(reg_idx, val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid)
+{
+    cpu->setRegOtherThread(misc_reg, val, tid);
+}
+
+void
+InOrderThreadContext::setPC(uint64_t val)
+{
+    DPRINTF(InOrderCPU, "Setting PC to %08p\n", val);
+    cpu->setPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setNextPC(uint64_t val)
+{
+    DPRINTF(InOrderCPU, "Setting NPC to %08p\n", val);
+    cpu->setNextPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setNextNPC(uint64_t val)
+{
+    DPRINTF(InOrderCPU, "Setting NNPC to %08p\n", val);
+    cpu->setNextNPC(val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+{
+    cpu->setMiscRegNoEffect(misc_reg, val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+void
+InOrderThreadContext::setMiscReg(int misc_reg, const MiscReg &val)
+{
+    cpu->setMiscReg(misc_reg, val, thread->readTid());
+
+    // Squash if we're not already in a state update mode.
+    //if (!thread->trapPending && !thread->inSyscall) {
+    //cpu->squashFromTC(thread->readTid());
+    //}
+}
+
+TheISA::IntReg
+InOrderThreadContext::getSyscallArg(int i)
+{
+    return cpu->getSyscallArg(i, thread->readTid());
+}
+
+void
+InOrderThreadContext::setSyscallArg(int i, IntReg val)
+{
+    cpu->setSyscallArg(i, val, thread->readTid());
+}
+
+void
+InOrderThreadContext::setSyscallReturn(SyscallReturn return_value)
+{
+    cpu->setSyscallReturn(return_value, thread->readTid());
+}
