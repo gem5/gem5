@@ -175,7 +175,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("umount2", unimplementedFunc),
     /* 53 */ SyscallDesc("lock", unimplementedFunc),
-    /* 54 */ SyscallDesc("ioctl", unimplementedFunc/*ioctlFunc<MipsLinux>*/),
+    /* 54 */ SyscallDesc("ioctl", ioctlFunc<MipsLinux>),
     /* 55 */ SyscallDesc("fcntl", fcntlFunc),
     /* 56 */ SyscallDesc("mpx", unimplementedFunc),
     /* 57 */ SyscallDesc("setpgid", unimplementedFunc),
