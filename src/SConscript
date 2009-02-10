@@ -992,10 +992,10 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
 
     for target, sources in unit_tests:
         objs = [ new_env.StaticObject(s) for s in sources ]
-        new_env.Program("unittest/%s.%s" % (target, label), objs + static_lib)
+        new_env.Program("unittest/%s.%s" % (target, label), objs + static_objs)
 
     # Now link a stub with main() and the static library.
-    objects = [new_env.Object(s) for s in cc_bin_sources] + static_lib
+    objects = [new_env.Object(s) for s in cc_bin_sources] + static_objs
     if strip:
         unstripped_exe = exename + '.unstripped'
         new_env.Program(unstripped_exe, objects)
