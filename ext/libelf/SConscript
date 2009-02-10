@@ -87,7 +87,7 @@ ElfFile('libelf_convert.c')
 ElfFile('libelf_fsize.c')
 ElfFile('libelf_msize.c')
 
-m4env = env.Copy()
+m4env = env.Clone()
 if env['GCC']:
     major,minor,dot = [ int(x) for x in env['CXXVERSION'].split('.')]
     if major >= 4:

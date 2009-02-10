@@ -48,7 +48,7 @@ Import('*')
 # Children need to see the environment
 Export('env')
 
-build_env = dict([(opt, env[opt]) for opt in env.ExportOptions])
+build_env = dict([(opt, env[opt]) for opt in env.ExportVariables])
 
 def sort_list(_list):
     """return a sorted copy of '_list'"""
@@ -242,7 +242,7 @@ for extra_dir in extras_dir_list:
             build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
             SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 
-for opt in env.ExportOptions:
+for opt in env.ExportVariables:
     env.ConfigFile(opt)
 
 ########################################################################
@@ -353,25 +353,6 @@ depends = [ File(py_modules[dep]) for dep in module_depends ]
 # Commands for the basic automatically generated python files
 #
 
-scons_dir = str(SCons.Node.FS.default_fs.SConstruct_dir)
-
-hg_info = "Unknown"
-hg_demandimport = False
-try:
-    if not exists(scons_dir) or not isdir(scons_dir) or \
-           not exists(joinpath(scons_dir, ".hg")):
-        raise ValueError(".hg directory not found")
-    import subprocess    
-    output = subprocess.Popen("hg id -n -i -t -b".split(), 
-                              stdout=subprocess.PIPE).communicate()[0]
-    hg_info = output.strip()
-except ImportError, e:
-    print "Mercurial not found"
-except ValueError, e:
-    print e
-except Exception, e:
-    print "Other mercurial exception: %s" % e
-
 # Generate Python file containing a dict specifying the current
 # build_env flags.
 def makeDefinesPyFile(target, source, env):
@@ -381,7 +362,7 @@ def makeDefinesPyFile(target, source, env):
     print >>f, "hgRev = '%s'" % hg_info
     f.close()
 
-defines_info = [ Value(build_env), Value(hg_info) ]
+defines_info = [ Value(build_env), Value(env['HG_INFO']) ]
 # Generate a file with all of the compile options in it
 env.Command('python/m5/defines.py', defines_info, makeDefinesPyFile)
 PySource('m5', 'python/m5/defines.py')
@@ -970,11 +951,11 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     libname = 'm5_' + label
     exename = 'm5.' + label
 
-    new_env = env.Copy(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
+    new_env = env.Clone(OBJSUFFIX=objsfx, SHOBJSUFFIX=objsfx + 's')
     new_env.Label = label
     new_env.Append(**kwargs)
 
-    swig_env = new_env.Copy()
+    swig_env = new_env.Clone()
     if env['GCC']:
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
