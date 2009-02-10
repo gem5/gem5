@@ -54,7 +54,8 @@ typedef CacheRequest* CacheReqPtr;
 class CacheReqPacket;
 typedef CacheReqPacket* CacheReqPktPtr;
 
-class CacheUnit : public Resource {
+class CacheUnit : public Resource
+{
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
 
@@ -88,8 +89,9 @@ class CacheUnit : public Resource {
       public:
         /** Default constructor. */
         CachePort(CacheUnit *_cachePortUnit)
-          : Port(_cachePortUnit->name() + "-cache-port", (MemObject*)_cachePortUnit->cpu),
-              cachePortUnit(_cachePortUnit)
+          : Port(_cachePortUnit->name() + "-cache-port",
+                 (MemObject*)_cachePortUnit->cpu),
+            cachePortUnit(_cachePortUnit)
         { }
 
         bool snoopRangeSent;
@@ -214,23 +216,25 @@ class CacheUnit : public Resource {
     /** @todo: Add Resource Stats Here */
 };
 
-struct CacheSchedEntry : public ThePipeline::ScheduleEntry {
+struct CacheSchedEntry : public ThePipeline::ScheduleEntry
+{
     enum EntryType {
         FetchAccess,
         DataAccess
     };
 
-    CacheSchedEntry(int stage_num, int _priority, int res_num, MemCmd::Command pkt_cmd,
-                    EntryType _type = FetchAccess) :
-        ScheduleEntry(stage_num, _priority, res_num), pktCmd(pkt_cmd),
-        type(_type)
+    CacheSchedEntry(int stage_num, int _priority, int res_num,
+                    MemCmd::Command pkt_cmd, EntryType _type = FetchAccess)
+        : ScheduleEntry(stage_num, _priority, res_num), pktCmd(pkt_cmd),
+          type(_type)
     { }
 
     MemCmd::Command pktCmd;
     EntryType type;
 };
 
-class CacheRequest : public ResourceRequest {
+class CacheRequest : public ResourceRequest
+{
   public:
     CacheRequest(CacheUnit *cres, DynInstPtr inst, int stage_num, int res_idx,
                  int slot_num, unsigned cmd, int req_size,
@@ -246,10 +250,10 @@ class CacheRequest : public ResourceRequest {
 
     virtual ~CacheRequest()
     {
-        /*
+#if 0
         delete reqData;
 
-        Can get rid of packet and packet request now
+        // Can get rid of packet and packet request now
         if (*dataPkt) {
             if (*dataPkt->req) {
                 delete dataPkt->req;
@@ -263,17 +267,22 @@ class CacheRequest : public ResourceRequest {
                 delete retryPkt->req;
             }
             delete retryPkt;
-            }*/
-
-        if (memReq) {
-            delete memReq;
         }
+#endif
+
+        if (memReq)
+            delete memReq;
     }
 
     virtual PacketDataPtr getData()
     { 	return reqData; }
 
-    void setMemAccCompleted(bool completed = true) { memAccComplete = completed; }
+    void
+    setMemAccCompleted(bool completed = true)
+    {
+        memAccComplete = completed;
+    }
+
     bool isMemAccComplete() { return memAccComplete; }
 
     void setMemAccPending(bool pending = true) { memAccPending = pending; }
@@ -290,7 +299,8 @@ class CacheRequest : public ResourceRequest {
     bool memAccPending;
 };
 
-class CacheReqPacket : public Packet {
+class CacheReqPacket : public Packet
+{
   public:
     CacheReqPacket(CacheRequest *_req,
                    Command _cmd, short _dest)

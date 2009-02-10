@@ -312,6 +312,13 @@ class InOrderCPU : public BaseCPU
     void deallocateThread(unsigned tid);
     void deactivateThread(unsigned tid);
 
+    int
+    contextId()
+    {
+        hack_once("return a bogus context id");
+        return 0;
+    }
+
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
@@ -414,20 +421,20 @@ class InOrderCPU : public BaseCPU
                          int width = TheISA::SingleWidth);
 
     /** Reads a miscellaneous register. */
-    MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
+    MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid = 0);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscReg(int misc_reg, unsigned tid);
+    MiscReg readMiscReg(int misc_reg, unsigned tid = 0);
 
     /** Sets a miscellaneous register. */
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid);
+    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid = 0);
 
     /** Reads a int/fp/misc reg. from another thread depending on ISA-defined
      *  target thread

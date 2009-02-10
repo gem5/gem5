@@ -29,6 +29,7 @@
 # system options
 parser.add_option("-d", "--detailed", action="store_true")
 parser.add_option("-t", "--timing", action="store_true")
+parser.add_option("--inorder", action="store_true")
 parser.add_option("-n", "--num-cpus", type="int", default=1)
 parser.add_option("--caches", action="store_true")
 parser.add_option("--l2cache", action="store_true")

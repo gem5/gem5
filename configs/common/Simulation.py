@@ -43,6 +43,11 @@ def setCPUClass(options):
             print "O3 CPU must be used with caches"
             sys.exit(1)
         class TmpClass(DerivO3CPU): pass
+    elif options.inorder:
+        if not options.caches:
+            print "InOrder CPU must be used with caches"
+            sys.exit(1)
+        class TmpClass(InOrderCPU): pass
     else:
         class TmpClass(AtomicSimpleCPU): pass
         atomic = True

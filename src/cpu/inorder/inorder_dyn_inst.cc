@@ -454,9 +454,8 @@ InOrderDynInst::readMiscRegNoEffect(int misc_reg)
 MiscReg
 InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
 {
-    return this->cpu->readMiscRegNoEffect(
-        si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-        this->threadNumber);
+    int reg = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+    return cpu->readMiscRegNoEffect(reg, this->threadNumber);
 }
 
 /** Reads a misc. register, including any side-effects the read
@@ -465,9 +464,8 @@ InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
 MiscReg
 InOrderDynInst::readMiscRegOperand(const StaticInst *si, int idx)
 {
-    return this->cpu->readMiscReg(
-        si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-        this->threadNumber);
+    int reg = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
+    return this->cpu->readMiscReg(reg, this->threadNumber);
 }
 
 /** Sets a misc. register. */

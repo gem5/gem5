@@ -43,7 +43,6 @@ using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
 
-
 Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
 {
@@ -80,7 +79,7 @@ CacheUnit::CachePort::recvRetry()
 }
 
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
-                     int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
+        int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       retryPkt(NULL), retrySlot(-1)
 {
@@ -92,9 +91,8 @@ CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
     cacheBlocked = false;
 }
 
-
 Port *
-CacheUnit::getPort(const std::string &if_name, int idx)
+CacheUnit::getPort(const string &if_name, int idx)
 {
     if (if_name == resName)
         return cachePort;
@@ -106,7 +104,7 @@ int
 CacheUnit::getSlot(DynInstPtr inst)
 {
     if (!inst->validMemAddr()) {
-        panic("Mem. Addr. must be set before requesting cache access.\n");
+        panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
     Addr req_addr = inst->getMemAddr();
@@ -116,20 +114,19 @@ CacheUnit::getSlot(DynInstPtr inst)
 
         int new_slot = Resource::getSlot(inst);
 
-        if (new_slot != -1) {
-            inst->memTime = curTick;
-            addrList.push_back(req_addr);
-            addrMap[req_addr] = inst->seqNum;
-            DPRINTF(InOrderCachePort, "[tid:%i]: [sn:%i]: Address %08p added to dependency list.\n",
-                    inst->readTid(), inst->seqNum, req_addr);
-            return new_slot;
-        } else {
+        if (new_slot == -1)
             return -1;
-        }
 
-
+        inst->memTime = curTick;
+        addrList.push_back(req_addr);
+        addrMap[req_addr] = inst->seqNum;
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
+                inst->readTid(), inst->seqNum, req_addr);
+        return new_slot;
     } else {
-        DPRINTF(InOrderCachePort,"Denying request because there is an outstanding"
+        DPRINTF(InOrderCachePort,
+                "Denying request because there is an outstanding"
                 " request to/for addr. %08p. by [sn:%i] @ tick %i\n",
                 req_addr, addrMap[req_addr], inst->memTime);
         return -1;
@@ -139,11 +136,12 @@ CacheUnit::getSlot(DynInstPtr inst)
 void
 CacheUnit::freeSlot(int slot_num)
 {
-    std::vector<Addr>::iterator vect_it = find(addrList.begin(), addrList.end(),
-                                               reqMap[slot_num]->inst->getMemAddr());
+    vector<Addr>::iterator vect_it = find(addrList.begin(), addrList.end(),
+            reqMap[slot_num]->inst->getMemAddr());
     assert(vect_it != addrList.end());
 
-    DPRINTF(InOrderCachePort, "[tid:%i]: Address %08p removed from dependency list.\n",
+    DPRINTF(InOrderCachePort,
+            "[tid:%i]: Address %08p removed from dependency list\n",
             reqMap[slot_num]->inst->readTid(), (*vect_it));
 
     addrList.erase(vect_it);
@@ -158,7 +156,7 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
     ScheduleEntry* sched_entry = inst->resSched.top();
 
     if (!inst->validMemAddr()) {
-        panic("Mem. Addr. must be set before requesting cache access.\n");
+        panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
     int req_size = 0;
@@ -168,23 +166,26 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
         pkt_cmd = MemCmd::ReadReq;
         req_size = inst->getMemAccSize();
 
-        DPRINTF(InOrderCachePort, "[tid:%i]: %i byte Read request from [sn:%i] for addr %08p.\n",
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: %i byte Read request from [sn:%i] for addr %08p\n",
                 inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
     } else if (sched_entry->cmd == InitiateWriteData) {
         pkt_cmd = MemCmd::WriteReq;
         req_size = inst->getMemAccSize();
 
-
-        DPRINTF(InOrderCachePort, "[tid:%i]: %i byte Write request from [sn:%i] for addr %08p.\n",
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: %i byte Write request from [sn:%i] for addr %08p\n",
                 inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
     } else if (sched_entry->cmd == InitiateFetch){
         pkt_cmd = MemCmd::ReadReq;
         req_size = sizeof(MachInst); //@TODO: mips16e
 
-        DPRINTF(InOrderCachePort, "[tid:%i]: %i byte Fetch request from [sn:%i] for addr %08p.\n",
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: %i byte Fetch request from [sn:%i] for addr %08p\n",
                 inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
     } else {
-        panic("%i: Unexpected request type (%i) to %s", curTick, sched_entry->cmd, name());
+        panic("%i: Unexpected request type (%i) to %s", curTick,
+              sched_entry->cmd, name());
     }
 
     return new CacheRequest(this, inst, stage_num, id, slot_num,
@@ -205,26 +206,27 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
     if (cache_req->cmd != inst->resSched.top()->cmd) {
         // If different, then update command in the request
         cache_req->cmd = inst->resSched.top()->cmd;
-        DPRINTF(InOrderCachePort, "[tid:%i]: [sn:%i]: Updating the command for this "
-                "instruction.\n", inst->readTid(), inst->seqNum);
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: the command for this instruction\n",
+                inst->readTid(), inst->seqNum);
 
         service_request = true;
     } else {
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
-        DPRINTF(InOrderCachePort, "[tid:%i]: [sn:%i]: requesting this resource again.\n",
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: requesting this resource again\n",
                 inst->readTid(), inst->seqNum);
 
         service_request = true;
     }
-
 }
 
 void
 CacheUnit::execute(int slot_num)
 {
     if (cacheBlocked) {
-        DPRINTF(InOrderCachePort, "Cache Blocked. Cannot Access.\n");
+        DPRINTF(InOrderCachePort, "Cache Blocked. Cannot Access\n");
         return;
     }
 
@@ -243,89 +245,85 @@ CacheUnit::execute(int slot_num)
     switch (cache_req->cmd)
     {
       case InitiateFetch:
-        {
-            DPRINTF(InOrderCachePort,
-                    "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
-                    tid, name(), cache_req->inst->getMemAddr());
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
+                tid, name(), cache_req->inst->getMemAddr());
 
-            DPRINTF(InOrderCachePort,
-                    "[tid:%u]: Fetching new cache block from addr: %08p\n",
-                    tid, cache_req->memReq->getVaddr());
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: Fetching new cache block from addr: %08p\n",
+                tid, cache_req->memReq->getVaddr());
 
-            inst->setCurResSlot(slot_num);
-            doDataAccess(inst);
-        }
+        inst->setCurResSlot(slot_num);
+        doDataAccess(inst);
         break;
 
       case CompleteFetch:
-        {
-            if (cache_req->isMemAccComplete()) {
-                DPRINTF(InOrderCachePort,
-                        "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
-                        tid, inst->seqNum);
-
-                MachInst mach_inst = cache_req->dataPkt->get<MachInst>();
-
-                //@TODO: May Need This Function for Endianness-Compatibility
-                //mach_inst = gtoh(*reinterpret_cast<MachInst *>(&cacheData[tid][offset]));
-
-                DPRINTF(InOrderCachePort,
-                        "[tid:%i]: Fetched instruction is %08p\n",
-                        tid, mach_inst);
-
-                //ExtMachInst ext_inst
-                //  = TheISA::makeExtMI(mach_inst, cpu->tcBase(tid));
-
-                inst->setMachInst(mach_inst);
-                inst->setASID(tid);
-                inst->setThreadState(cpu->thread[tid]);
-
-                DPRINTF(InOrderStage, "[tid:%i]: Instruction [sn:%i] is: %s\n",
-                        tid, seq_num, inst->staticInst->disassemble(inst->PC));
-
-                // Set Up More TraceData info
-                if (inst->traceData) {
-                    inst->traceData->setStaticInst(inst->staticInst);
-                    inst->traceData->setPC(inst->readPC());
-                }
-
-                cache_req->done();
-            } else {
-                DPRINTF(InOrderCachePort, "[tid:%i]: [sn:%i]: Unable to Complete Fetch Access.\n",
+        if (cache_req->isMemAccComplete()) {
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
                     tid, inst->seqNum);
-                DPRINTF(InOrderStall, "STALL: [tid:%i]: Fetch miss from %08p.\n",
-                        tid, cache_req->inst->readPC());
-                cache_req->setCompleted(false);
+
+            MachInst mach_inst = cache_req->dataPkt->get<MachInst>();
+
+            /**
+             * @TODO: May Need This Function for Endianness-Compatibility
+             *  mach_inst =
+             *    gtoh(*reinterpret_cast<MachInst *>(&cacheData[tid][offset]));
+             */
+
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i]: Fetched instruction is %08p\n",
+                    tid, mach_inst);
+
+            // ExtMachInst ext_inst = makeExtMI(mach_inst, cpu->tcBase(tid));
+
+            inst->setMachInst(mach_inst);
+            inst->setASID(tid);
+            inst->setThreadState(cpu->thread[tid]);
+
+            DPRINTF(InOrderStage, "[tid:%i]: Instruction [sn:%i] is: %s\n",
+                    tid, seq_num, inst->staticInst->disassemble(inst->PC));
+
+            // Set Up More TraceData info
+            if (inst->traceData) {
+                inst->traceData->setStaticInst(inst->staticInst);
+                inst->traceData->setPC(inst->readPC());
             }
+
+            cache_req->done();
+        } else {
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i]: [sn:%i]: Unable to Complete Fetch Access\n",
+                    tid, inst->seqNum);
+            DPRINTF(InOrderStall,
+                    "STALL: [tid:%i]: Fetch miss from %08p\n",
+                    tid, cache_req->inst->readPC());
+            cache_req->setCompleted(false);
         }
         break;
 
       case InitiateReadData:
       case InitiateWriteData:
-        {
-            DPRINTF(InOrderCachePort, "[tid:%u]: Initiating data access to %s "
-                    "for addr. %08p\n",
-                    tid, name(), cache_req->inst->getMemAddr());
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: Initiating data access to %s for addr. %08p\n",
+                tid, name(), cache_req->inst->getMemAddr());
 
-            inst->setCurResSlot(slot_num);
-            //inst->memAccess();
-            inst->initiateAcc();
-        }
+        inst->setCurResSlot(slot_num);
+        //inst->memAccess();
+        inst->initiateAcc();
         break;
 
       case CompleteReadData:
       case CompleteWriteData:
-        {
-            DPRINTF(InOrderCachePort,
-                    "[tid:%i]: [sn:%i]: Trying to Complete Data Access.\n",
-                    tid, inst->seqNum);
-            if (cache_req->isMemAccComplete()) {
-                cache_req->done();
-            } else {
-                DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
-                        tid, cache_req->inst->getMemAddr());
-                cache_req->setCompleted(false);
-            }
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Trying to Complete Data Access\n",
+                tid, inst->seqNum);
+        if (cache_req->isMemAccComplete()) {
+            cache_req->done();
+        } else {
+            DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
+                    tid, cache_req->inst->getMemAddr());
+            cache_req->setCompleted(false);
         }
         break;
 
@@ -364,12 +362,13 @@ CacheUnit::doDataAccess(DynInstPtr inst)
 
     if (cache_req->dataPkt->isWrite() && memReq->isLocked()) {
         assert(cache_req->inst->isStoreConditional());
-        DPRINTF(InOrderCachePort, "Evaluating Store Conditional access.\n");
+        DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
         do_access = TheISA::handleLockedWrite(cpu, memReq);
     }
 
-
-            DPRINTF(InOrderCachePort, "[tid:%i] [sn:%i] attempting to access cache..\n", tid, inst->seqNum);
+    DPRINTF(InOrderCachePort,
+            "[tid:%i] [sn:%i] attempting to access cache\n",
+            tid, inst->seqNum);
 
     //@TODO: If you want to ignore failed store conditional accesses, then
     //       enable this. However, this might skew memory stats because
@@ -377,7 +376,9 @@ CacheUnit::doDataAccess(DynInstPtr inst)
     // - Remove optionality here ...
     if (1/*do_access*/) {
         if (!cachePort->sendTiming(cache_req->dataPkt)) {
-            DPRINTF(InOrderCachePort, "[tid:%i] [sn:%i] is waiting to retry request.\n", tid, inst->seqNum);
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i] [sn:%i] is waiting to retry request\n",
+                    tid, inst->seqNum);
 
             retrySlot = cache_req->getSlot();
             retryReq = cache_req;
@@ -391,7 +392,9 @@ CacheUnit::doDataAccess(DynInstPtr inst)
 
             cache_req->setCompleted(false);
         } else {
-            DPRINTF(InOrderCachePort, "[tid:%i] [sn:%i] is now waiting for cache response.\n", tid, inst->seqNum);
+            DPRINTF(InOrderCachePort,
+                    "[tid:%i] [sn:%i] is now waiting for cache response\n",
+                    tid, inst->seqNum);
             cache_req->setCompleted();
             cache_req->setMemAccPending();
             cacheStatus = cacheWaitResponse;
@@ -402,7 +405,8 @@ CacheUnit::doDataAccess(DynInstPtr inst)
         assert(cache_req->inst->isStoreConditional());
         cache_req->setCompleted(true);
 
-        DPRINTF(LLSC, "[tid:%i]: T%i Ignoring Failed Store Conditional Access.\n",
+        DPRINTF(LLSC,
+                "[tid:%i]: T%i Ignoring Failed Store Conditional Access\n",
                 tid, tid);
 
         cache_req->dataPkt->req->setExtraData(0);
@@ -431,19 +435,19 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
     if (cache_pkt->cacheReq->isSquashed()) {
         DPRINTF(InOrderCachePort,
-                "Ignoring completion of squashed access, [tid:%i] [sn:%i].\n",
+                "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
                 cache_pkt->cacheReq->getInst()->readTid(),
                 cache_pkt->cacheReq->getInst()->seqNum);
 
         cache_pkt->cacheReq->done();
         return;
-    } else {
-        DPRINTF(InOrderCachePort,
-                "[tid:%u]: [sn:%i]: Waking from cache access to addr. %08p.\n",
-                cache_pkt->cacheReq->getInst()->readTid(),
-                cache_pkt->cacheReq->getInst()->seqNum,
-                cache_pkt->cacheReq->getInst()->getMemAddr());
     }
+
+    DPRINTF(InOrderCachePort,
+            "[tid:%u]: [sn:%i]: Waking from cache access to addr. %08p\n",
+            cache_pkt->cacheReq->getInst()->readTid(),
+            cache_pkt->cacheReq->getInst()->seqNum,
+            cache_pkt->cacheReq->getInst()->getMemAddr());
 
     // Cast to correct request type
     CacheRequest *cache_req = dynamic_cast<CacheReqPtr>(
@@ -462,11 +466,11 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     if (!cache_req->isSquashed()) {
         if (inst->resSched.top()->cmd == CompleteFetch) {
             DPRINTF(InOrderCachePort,
-                    "[tid:%u]: [sn:%i]: Processing fetch access.\n",
+                    "[tid:%u]: [sn:%i]: Processing fetch access\n",
                     tid, inst->seqNum);
         } else if (inst->staticInst && inst->isMemRef()) {
             DPRINTF(InOrderCachePort,
-                    "[tid:%u]: [sn:%i]: Processing cache access.\n",
+                    "[tid:%u]: [sn:%i]: Processing cache access\n",
                     tid, inst->seqNum);
 
             inst->completeAcc(pkt);
@@ -475,21 +479,22 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 assert(cache_pkt->isRead());
 
                 if (cache_pkt->req->isLocked()) {
-                    DPRINTF(InOrderCachePort, "[tid:%u]: Handling Load-Linked "
-                            "access for [sn:%u].\n", tid, inst->seqNum);
+                    DPRINTF(InOrderCachePort,
+                            "[tid:%u]: Handling Load-Linked for [sn:%u]\n",
+                            tid, inst->seqNum);
                     TheISA::handleLockedRead(cpu, cache_pkt->req);
                 }
 
                 // @TODO: Hardcoded to for load instructions. Assumes that
                 // the dest. idx 0 is always where the data is loaded to.
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Data loaded was: %08p.\n",
+                        "[tid:%u]: [sn:%i]: Data loaded was: %08p\n",
                         tid, inst->seqNum, inst->readIntResult(0));
             } else if(inst->isStore()) {
                 assert(cache_pkt->isWrite());
 
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Data stored was: %08p.\n",
+                        "[tid:%u]: [sn:%i]: Data stored was: %08p\n",
                         tid, inst->seqNum,
                         getMemData(cache_pkt));
 
@@ -509,8 +514,8 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         cpu->switchToActive(stage_num);
     } else {
         DPRINTF(InOrderCachePort,
-                "[tid:%u] Cache miss on memory access to block @ %08p "
-                "completed, but squashed.\n", tid, cache_req->inst->readPC());
+                "[tid:%u] Miss on block @ %08p completed, but squashed\n",
+                tid, cache_req->inst->readPC());
         cache_req->setMemAccCompleted();
     }
 
@@ -520,7 +525,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 void
 CacheUnit::recvRetry()
 {
-    DPRINTF(InOrderCachePort, "Retrying Request for [tid:%i] [sn:%i].\n",
+    DPRINTF(InOrderCachePort, "Retrying Request for [tid:%i] [sn:%i]\n",
             retryReq->inst->readTid(), retryReq->inst->seqNum);
 
     assert(retryPkt != NULL);
@@ -532,20 +537,20 @@ CacheUnit::recvRetry()
         retryPkt = NULL;
         cacheBlocked = false;
     } else {
-        DPRINTF(InOrderCachePort, "Retry Request for [tid:%i] [sn:%i] failed.\n",
+        DPRINTF(InOrderCachePort,
+                "Retry Request for [tid:%i] [sn:%i] failed\n",
                 retryReq->inst->readTid(), retryReq->inst->seqNum);
     }
-
 }
 
 void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, unsigned tid)
 {
-    std::vector<int> slot_remove_list;
+    vector<int> slot_remove_list;
 
-    std::map<int, ResReqPtr>::iterator map_it = reqMap.begin();
-    std::map<int, ResReqPtr>::iterator map_end = reqMap.end();
+    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
+    map<int, ResReqPtr>::iterator map_end = reqMap.end();
 
     while (map_it != map_end) {
         ResReqPtr req_ptr = (*map_it).second;
@@ -555,7 +560,7 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
             req_ptr->getInst()->seqNum > squash_seq_num) {
 
             DPRINTF(InOrderCachePort,
-                    "[tid:%i] Squashing request from [sn:%i].\n",
+                    "[tid:%i] Squashing request from [sn:%i]\n",
                     req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
 
             req_ptr->setSquashed();
@@ -578,13 +583,13 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
     }
 
     // Now Delete Slot Entry from Req. Map
-    for (int i = 0; i < slot_remove_list.size(); i++) {
+    for (int i = 0; i < slot_remove_list.size(); i++)
         freeSlot(slot_remove_list[i]);
-    }
-
 }
 
-uint64_t CacheUnit::getMemData(Packet *packet) {
+uint64_t
+CacheUnit::getMemData(Packet *packet)
+{
     switch (packet->getSize())
     {
       case 8:
@@ -600,10 +605,7 @@ uint64_t CacheUnit::getMemData(Packet *packet) {
         return packet->get<uint64_t>();
 
       default:
-        std::cerr << "bad store data size = " << packet->getSize() << std::endl;
-
-        assert(0);
-        return 0;
+        panic("bad store data size = %d\n", packet->getSize());
     }
 }
 
