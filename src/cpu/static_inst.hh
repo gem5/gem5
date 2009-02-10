@@ -56,9 +56,8 @@ class Packet;
 class O3CPUImpl;
 template <class Impl> class BaseO3DynInst;
 typedef BaseO3DynInst<O3CPUImpl> O3DynInst;
-
-template <class Impl>
-class OzoneDynInst;
+template <class Impl> class OzoneDynInst;
+class InOrderDynInst;
 
 class CheckerCPU;
 class FastCPU;
@@ -433,6 +432,12 @@ class StaticInst : public StaticInstBase
      * return the target address as well.
      */
     bool hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const;
+
+    virtual Request::Flags memAccFlags()
+    {
+        panic("StaticInst::memAccFlags called on non-memory instruction");
+        return 0;
+    };
 
     /**
      * Return string representation of disassembled instruction.

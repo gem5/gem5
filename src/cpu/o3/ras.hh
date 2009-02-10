@@ -71,6 +71,9 @@ class ReturnAddrStack
      */
     void restore(unsigned top_entry_idx, const Addr &restored_target);
 
+     bool empty() { return usedEntries == 0; }
+
+     bool full() { return usedEntries == numEntries; }
   private:
     /** Increments the top of stack index. */
     inline void incrTos()

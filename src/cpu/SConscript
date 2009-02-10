@@ -48,12 +48,14 @@ execfile(models_db.srcnode().abspath)
 
 # Template for execute() signature.
 exec_sig_template = '''
-virtual Fault execute(%s *xc, Trace::InstRecord *traceData) const = 0;
-virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const
+virtual Fault execute(%(type)s *xc, Trace::InstRecord *traceData) const = 0;
+virtual Fault initiateAcc(%(type)s *xc, Trace::InstRecord *traceData) const
 { panic("initiateAcc not defined!"); M5_DUMMY_RETURN };
-virtual Fault completeAcc(Packet *pkt, %s *xc,
+virtual Fault completeAcc(Packet *pkt, %(type)s *xc,
                           Trace::InstRecord *traceData) const
 { panic("completeAcc not defined!"); M5_DUMMY_RETURN };
+virtual int memAccSize(%(type)s *xc)
+{ panic("memAccSize not defined!"); M5_DUMMY_RETURN };
 '''
 
 mem_ini_sig_template = '''
@@ -82,7 +84,7 @@ def gen_cpu_exec_signatures(target, source, env):
 '''
     for cpu in temp_cpu_list:
         xc_type = CpuModel.dict[cpu].strings['CPU_exec_context']
-        print >> f, exec_sig_template % (xc_type, xc_type, xc_type)
+        print >> f, exec_sig_template % { 'type' : xc_type }
     print >> f, '''
 #endif  // __CPU_STATIC_INST_EXEC_SIGS_HH__
 '''
