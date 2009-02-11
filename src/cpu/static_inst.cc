@@ -40,11 +40,17 @@ StaticInst::DecodeCache StaticInst::decodeCache;
 StaticInst::AddrDecodeCache StaticInst::addrDecodeCache;
 StaticInst::cacheElement StaticInst::recentDecodes[2];
 
+using namespace std;
+
+StaticInst::~StaticInst()
+{
+    if (cachedDisassembly)
+        delete cachedDisassembly;
+}
+
 void
 StaticInst::dumpDecodeCacheStats()
 {
-    using namespace std;
-
     cerr << "Decode hash table stats @ " << curTick << ":" << endl;
     cerr << "\tnum entries = " << decodeCache.size() << endl;
     cerr << "\tnum buckets = " << decodeCache.bucket_count() << endl;
@@ -81,6 +87,37 @@ StaticInstPtr
 StaticInst::fetchMicroop(MicroPC micropc)
 {
     panic("StaticInst::fetchMicroop() called on instruction "
-            "that is not microcoded.");
+          "that is not microcoded.");
 }
 
+Addr
+StaticInst::branchTarget(Addr branchPC) const
+{
+    panic("StaticInst::branchTarget() called on instruction "
+          "that is not a PC-relative branch.");
+    M5_DUMMY_RETURN;
+}
+
+Addr
+StaticInst::branchTarget(ThreadContext *tc) const
+{
+    panic("StaticInst::branchTarget() called on instruction "
+          "that is not an indirect branch.");
+    M5_DUMMY_RETURN;
+}
+
+Request::Flags
+StaticInst::memAccFlags()
+{
+    panic("StaticInst::memAccFlags called on non-memory instruction");
+    return 0;
+}
+
+const string &
+StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
+{
+    if (!cachedDisassembly)
+        cachedDisassembly = new string(generateDisassembly(pc, symtab));
+
+    return *cachedDisassembly;
+}
