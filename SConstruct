@@ -1,5 +1,6 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2009 The Hewlett-Packard Development Company
 # Copyright (c) 2004-2005 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -106,12 +107,27 @@ from os.path import exists,  isdir, isfile
 from os.path import join as joinpath, split as splitpath
 
 import SCons
+import SCons.Node
 
-def read_command(cmd):
+def read_command(cmd, **kwargs):
     """run the command cmd, read the results and return them
     this is sorta like `cmd` in shell"""
     from subprocess import Popen, PIPE, STDOUT
-    subp = Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, close_fds=True)
+
+    no_exception = 'exception' in kwargs
+    exception = kwargs.pop('exception', None)
+    
+    kwargs.setdefault('shell', False)
+    kwargs.setdefault('stdout', PIPE)
+    kwargs.setdefault('stderr', STDOUT)
+    kwargs.setdefault('close_fds', True)
+    try:
+        subp = Popen(cmd, **kwargs)
+    except Exception, e:
+        if no_exception:
+            return exception
+        raise
+
     return subp.communicate()[0]
 
 # helper function: compare arrays or strings of version numbers.
@@ -137,40 +153,34 @@ def compare_versions(v1, v2):
     if len(v1) > len(v2): return  1
     return 0
 
-# The absolute path to the current directory (where this file lives).
-ROOT = Dir('.').abspath
+########################################################################
+#
+# Set up the base build environment.
+#
+########################################################################
+use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'PATH', 'RANLIB' ])
 
-# Path to the M5 source tree.
-SRCDIR = joinpath(ROOT, 'src')
+use_env = {}
+for key,val in os.environ.iteritems():
+    if key in use_vars or key.startswith("M5"):
+        use_env[key] = val
 
-# tell python where to find m5 python code
-sys.path.append(joinpath(ROOT, 'src/python'))
+env = Environment(ENV=use_env)
+env.root = Dir(".")          # The current directory (where this file lives).
+env.srcdir = Dir("src")      # The source directory
 
-###################################################
+########################################################################
+#
 # Mercurial Stuff.
-# 1) Grab repository revision if we know it.
-# 2) Ensure that the style hook is in place.
-###################################################
+#
+# If the M5 directory is a mercurial repository, we should do some
+# extra things.
+#
+########################################################################
 
-hg_info = "Unknown"
-try:
-    if not exists(ROOT) or not isdir(ROOT) or \
-           not exists(joinpath(ROOT, ".hg")):
-        raise ValueError(".hg directory not found")
-    hg_info = read_command("cd %s; hg id -n -i -t -b" % ROOT).strip()
-except ImportError, e:
-    print "Mercurial not found"
-except ValueError, e:
-    print e
-except Exception, e:
-    print "Other mercurial exception: %s" % e
+hgdir = env.root.Dir(".hg")
 
-def check_style_hook(ui):
-    ui.readconfig(joinpath(ROOT, '.hg', 'hgrc'))
-    style_hook = ui.config('hooks', 'pretxncommit.style', None)
-
-    if not style_hook:
-        print """\
+mercurial_style_message = """
 You're missing the M5 style hook.
 Please install the hook so we can ensure that all code fits a common style.
 
@@ -183,16 +193,50 @@ style = %s/util/style.py
 
 [hooks]
 pretxncommit.style = python:style.check_whitespace
-""" % (ROOT)
-        sys.exit(1)
+""" % (env.root)
 
-if ARGUMENTS.get('IGNORE_STYLE') != 'True' and isdir(joinpath(ROOT, '.hg')):
+mercurial_bin_not_found = """
+Mercurial binary cannot be found, unfortunately this means that we
+cannot easily determine the version of M5 that you are running and
+this makes error messages more difficult to collect.  Please consider
+installing mercurial if you choose to post an error message
+"""
+
+mercurial_lib_not_found = """
+Mercurial libraries cannot be found, ignoring style hook
+If you are actually a M5 developer, please fix this and
+run the style hook. It is important.
+"""
+
+if hgdir.exists():
+    # 1) Grab repository revision if we know it.
+    cmd = "hg id -n -i -t -b"
     try:
-        from mercurial import ui
-        check_style_hook(ui.ui())
-    except ImportError:
-        pass
+        hg_info = read_command(cmd, cwd=env.root.abspath).strip()
+    except OSError:
+        hg_info = "Unknown"
+        print mercurial_bin_not_found
 
+    env['HG_INFO'] = hg_info
+
+    # 2) Ensure that the style hook is in place.
+    try:
+        ui = None
+        if ARGUMENTS.get('IGNORE_STYLE') != 'True':
+            from mercurial import ui
+            ui = ui.ui()
+    except ImportError:
+        print mercurial_lib_not_found
+
+    if ui is not None:
+        ui.readconfig(hgdir.File('hgrc').abspath)
+        style_hook = ui.config('hooks', 'pretxncommit.style', None)
+
+        if not style_hook:
+            print mercurial_style_message
+            sys.exit(1)
+else:
+    print ".hg directory not found"
 
 ###################################################
 #
@@ -257,18 +301,6 @@ for t in abs_targets:
 if not isdir(build_root):
     mkdir(build_root)
 
-###################################################
-#
-# Set up the default build environment.  This environment is copied
-# and modified according to each selected configuration.
-#
-###################################################
-
-env = Environment(ENV = environ,  # inherit user's environment vars
-                  ROOT = ROOT,
-                  SRCDIR = SRCDIR,
-                  HG_INFO = hg_info)
-
 Export('env')
 
 env.SConsignFile(joinpath(build_root, "sconsign"))
@@ -329,7 +361,7 @@ global_sticky_vars.Save(global_sticky_vars_file, env)
 
 # Parse EXTRAS variable to build list of all directories where we're
 # look for sources etc.  This list is exported as base_dir_list.
-base_dir = joinpath(ROOT, 'src')
+base_dir = env.srcdir.abspath
 if env['EXTRAS']:
     extras_dir_list = env['EXTRAS'].split(':')
 else:
@@ -340,9 +372,13 @@ Export('extras_dir_list')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
-env['GCC'] = read_command(env['CXX'] + ' --version').find('g++') >= 0
-env['SUNCC'] = read_command(env['CXX'] + ' -V').find('Sun C++') >= 0
-env['ICC'] = read_command(env['CXX'] + ' -V').find('Intel') >= 0
+
+CXX_version = read_command([env['CXX'],'--version'], exception=False)
+CXX_V = read_command([env['CXX'],'-V'], exception=False)
+
+env['GCC'] = CXX_version and CXX_version.find('g++') >= 0
+env['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
+env['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
 if env['GCC'] + env['SUNCC'] + env['ICC'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
@@ -361,7 +397,7 @@ elif env['SUNCC']:
     env.Append(CCFLAGS='-features=extensions')
     env.Append(CCFLAGS='-library=stlport4')
     env.Append(CCFLAGS='-xar')
-#    env.Append(CCFLAGS='-instances=semiexplicit')
+    #env.Append(CCFLAGS='-instances=semiexplicit')
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'
@@ -388,7 +424,7 @@ if not env.has_key('SWIG'):
     Exit(1)
 
 # Check for appropriate SWIG version
-swig_version = read_command('swig -version').split()
+swig_version = read_command(('swig', '-version'), exception='').split()
 # First 3 words should be "SWIG Version x.y.z"
 if len(swig_version) < 3 or \
         swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
@@ -597,6 +633,8 @@ env = conf.Finish()
 # Collect all non-global variables
 #
 
+Export('env')
+
 # Define the universe of supported ISAs
 all_isa_list = [ ]
 Export('all_isa_list')
@@ -708,13 +746,11 @@ env.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
 # libelf build is shared across all configs in the build root.
 env.SConscript('ext/libelf/SConscript',
-               variant_dir = joinpath(build_root, 'libelf'),
-               exports = 'env')
+               variant_dir = joinpath(build_root, 'libelf'))
 
 # gzstream build is shared across all configs in the build root.
 env.SConscript('ext/gzstream/SConscript',
-               variant_dir = joinpath(build_root, 'gzstream'),
-               exports = 'env')
+               variant_dir = joinpath(build_root, 'gzstream'))
 
 ###################################################
 #
@@ -859,12 +895,3 @@ for variant_path in variant_paths:
                    exports = { 'env' : e }, duplicate = False)
 
 Help(help_text)
-
-
-###################################################
-#
-# Let SCons do its thing.  At this point SCons will use the defined
-# build environments to build the requested targets.
-#
-###################################################
-
