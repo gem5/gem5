@@ -30,3 +30,16 @@ from attrdict import attrdict, optiondict
 from misc import *
 from multidict import multidict
 import jobfile
+
+def print_list(items, indent=4):
+    line = ' ' * indent
+    for i,item in enumerate(items):
+        if len(line) + len(item) > 76:
+            print line
+            line = ' ' * indent
+
+        if i < len(items) - 1:
+            line += '%s, ' % item
+        else:
+            line += item
+            print line

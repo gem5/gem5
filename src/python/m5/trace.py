@@ -28,6 +28,7 @@
 
 import internal
 import traceflags as flags
+import util
 
 from internal.trace import clear, output, set, ignore
 
@@ -36,13 +37,13 @@ def enable():
 
 def help():
     print "Base Flags:"
-    for flag in trace.flags.basic:
-        print "    %s: %s" % (flag, trace.flags.descriptions[flag])
+    for flag in flags.basic:
+        print "    %s: %s" % (flag, flags.descriptions[flag])
     print
     print "Compound Flags:"
-    for flag in trace.flags.compound:
+    for flag in flags.compound:
         if flag == 'All':
             continue
-        print "    %s: %s" % (flag, trace.flags.descriptions[flag])
-        print_list(trace.flags.compoundMap[flag], indent=8)
+        print "    %s: %s" % (flag, flags.descriptions[flag])
+        util.print_list(flags.compoundMap[flag], indent=8)
         print

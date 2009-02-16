@@ -38,19 +38,6 @@ from options import OptionParser
 
 __all__ = [ 'options', 'arguments', 'main' ]
 
-def print_list(items, indent=4):
-    line = ' ' * indent
-    for i,item in enumerate(items):
-        if len(line) + len(item) > 76:
-            print line
-            line = ' ' * indent
-
-        if i < len(items) - 1:
-            line += '%s, ' % item
-        else:
-            line += item
-            print line
-
 usage="%prog [m5 options] script.py [script options]"
 version="%prog 2.0"
 brief_copyright='''
