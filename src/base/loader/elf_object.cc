@@ -89,10 +89,10 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             }
         } else if (ehdr.e_machine == EM_X86_64 &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            //In the future, we might want to differentiate between 32 bit
-            //and 64 bit x86 processes in case there are differences in their
-            //initial stack frame.
-            arch = ObjectFile::X86;
+            arch = ObjectFile::X86_64;
+        } else if (ehdr.e_machine == EM_386 &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+            arch = ObjectFile::I386;
         } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             arch = ObjectFile::Alpha;
         } else if (ehdr.e_machine == EM_ARM) {

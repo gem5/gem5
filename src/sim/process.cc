@@ -708,14 +708,19 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == X86_ISA
-    if (objFile->getArch() != ObjectFile::X86)
+    if (objFile->getArch() != ObjectFile::X86_64 &&
+        objFile->getArch() != ObjectFile::I386)
         fatal("Object file architecture does not match compiled ISA (x86).");
     switch (objFile->getOpSys()) {
       case ObjectFile::UnknownOpSys:
         warn("Unknown operating system; assuming Linux.");
         // fall through
       case ObjectFile::Linux:
-        process = new X86LinuxProcess(params, objFile);
+        if (objFile->getArch() == ObjectFile::X86_64) {
+            process = new X86LinuxProcess(params, objFile);
+        } else {
+            panic("32 bit x86 Linux process aren't implemented.\n");
+        }
         break;
 
       default:
