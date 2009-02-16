@@ -42,8 +42,10 @@ class GHBPrefetcher : public BasePrefetcher
 {
   protected:
 
-    Addr second_last_miss_addr[64/*MAX_CPUS*/];
-    Addr last_miss_addr[64/*MAX_CPUS*/];
+    static const int Max_Contexts = 64;
+
+    Addr secondLastMissAddr[Max_Contexts];
+    Addr lastMissAddr[Max_Contexts];
 
     Tick latency;
     int degree;

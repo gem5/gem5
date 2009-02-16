@@ -64,9 +64,9 @@ MSHR::TargetList::TargetList()
 
 inline void
 MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
-                      Counter order, bool cpuSide, bool markPending)
+                      Counter order, Target::Source source, bool markPending)
 {
-    if (cpuSide) {
+    if (source != Target::FromSnoop) {
         if (pkt->needsExclusive()) {
             needsExclusive = true;
         }
@@ -84,7 +84,7 @@ MSHR::TargetList::add(PacketPtr pkt, Tick readyTime,
         }
     }
 
-    push_back(Target(pkt, readyTime, order, cpuSide, markPending));
+    push_back(Target(pkt, readyTime, order, source, markPending));
 }
 
 
@@ -141,7 +141,14 @@ print(std::ostream &os, int verbosity, const std::string &prefix) const
 {
     ConstIterator end_i = end();
     for (ConstIterator i = begin(); i != end_i; ++i) {
-        ccprintf(os, "%s%s: ", prefix, i->isCpuSide() ? "cpu" : "mem");
+        const char *s;
+        switch (i->source) {
+          case Target::FromCPU: s = "FromCPU";
+          case Target::FromSnoop: s = "FromSnoop";
+          case Target::FromPrefetcher: s = "FromPrefetcher";
+          default: s = "";
+        }
+        ccprintf(os, "%s%s: ", prefix, s);
         i->pkt->print(os, verbosity, "");
     }
 }
@@ -162,10 +169,12 @@ MSHR::allocate(Addr _addr, int _size, PacketPtr target,
     downstreamPending = false;
     threadNum = 0;
     ntargets = 1;
-    // Don't know of a case where we would allocate a new MSHR for a
-    // snoop (mem-side request), so set cpuSide to true here.
     assert(targets->isReset());
-    targets->add(target, whenReady, _order, true, true);
+    // Don't know of a case where we would allocate a new MSHR for a
+    // snoop (mem-side request), so set source according to request here
+    Target::Source source = (target->cmd == MemCmd::HardPFReq) ?
+        Target::FromPrefetcher : Target::FromCPU;
+    targets->add(target, whenReady, _order, source, true);
     assert(deferredTargets->isReset());
     pendingInvalidate = false;
     pendingShared = false;
@@ -230,17 +239,22 @@ MSHR::allocateTarget(PacketPtr pkt, Tick whenReady, Counter _order)
     //   comes back (but before this target is processed)
     // - the outstanding request is for a non-exclusive block and this
     //   target requires an exclusive block
+
+    // assume we'd never issue a prefetch when we've got an
+    // outstanding miss
+    assert(pkt->cmd != MemCmd::HardPFReq);
+
     if (inService &&
         (!deferredTargets->empty() || pendingInvalidate ||
          (!targets->needsExclusive && pkt->needsExclusive()))) {
         // need to put on deferred list
-        deferredTargets->add(pkt, whenReady, _order, true, true);
+        deferredTargets->add(pkt, whenReady, _order, Target::FromCPU, true);
     } else {
         // No request outstanding, or still OK to append to
         // outstanding request: append to regular target list.  Only
         // mark pending if current request hasn't been issued yet
         // (isn't in service).
-        targets->add(pkt, whenReady, _order, true, !inService);
+        targets->add(pkt, whenReady, _order, Target::FromCPU, !inService);
     }
 
     ++ntargets;
@@ -291,7 +305,7 @@ MSHR::handleSnoop(PacketPtr pkt, Counter _order)
         // actual target device (typ. PhysicalMemory) will delete the
         // packet on reception, so we need to save a copy here
         PacketPtr cp_pkt = new Packet(pkt, true);
-        targets->add(cp_pkt, curTick, _order, false,
+        targets->add(cp_pkt, curTick, _order, Target::FromSnoop,
                      downstreamPending && targets->needsExclusive);
         ++ntargets;
 

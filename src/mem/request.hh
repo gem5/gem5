@@ -424,6 +424,12 @@ class Request : public FastAlloc
     }
 
     /** Accessor function for pc.*/
+    bool
+    hasPC() const
+    {
+        return flags.isSet(VALID_PC);
+    }
+
     Addr
     getPC() const
     {

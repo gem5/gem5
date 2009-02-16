@@ -36,35 +36,35 @@
 #ifndef __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 #define __MEM_CACHE_PREFETCH_STRIDE_PREFETCHER_HH__
 
+#include <limits.h>
 #include "mem/cache/prefetch/base.hh"
 
 class StridePrefetcher : public BasePrefetcher
 {
   protected:
 
-    class strideEntry
+    static const int Max_Contexts = 64;
+
+    // These constants need to be changed with the type of the
+    // 'confidence' field below.
+    static const int Max_Conf = INT_MAX;
+    static const int Min_Conf = INT_MIN;
+
+    class StrideEntry
     {
       public:
-        Addr IAddr;
-        Addr MAddr;
+        Addr instAddr;
+        Addr missAddr;
         int stride;
-        int64_t confidence;
-
-/*      bool operator < (strideEntry a,strideEntry b)
-        {
-            if (a.confidence == b.confidence) {
-                return true; //??????
-            }
-            else return a.confidence < b.confidence;
-            }*/
+        int confidence;
     };
-    Addr* lastMissAddr[64/*MAX_CPUS*/];
 
-    std::list<strideEntry*> table[64/*MAX_CPUS*/];
+    Addr *lastMissAddr[Max_Contexts];
+
+    std::list<StrideEntry*> table[Max_Contexts];
     Tick latency;
     int degree;
     bool useContextId;
-
 
   public:
 

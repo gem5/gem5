@@ -53,11 +53,10 @@
 template<class TagStore>
 Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     : BaseCache(p),
-      prefetchAccess(p->prefetch_access),
       tags(tags),
       prefetcher(pf),
       doFastWrites(true),
-      prefetchMiss(p->prefetch_miss)
+      prefetchOnAccess(p->prefetch_on_access)
 {
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
@@ -72,7 +71,8 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     memSidePort->setOtherPort(cpuSidePort);
 
     tags->setCache(this);
-    prefetcher->setCache(this);
+    if (prefetcher)
+        prefetcher->setCache(this);
 }
 
 template<class TagStore>
@@ -81,7 +81,8 @@ Cache<TagStore>::regStats()
 {
     BaseCache::regStats();
     tags->regStats(name());
-    prefetcher->regStats(name());
+    if (prefetcher)
+        prefetcher->regStats(name());
 }
 
 template<class TagStore>
@@ -271,28 +272,10 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
     blk = tags->accessBlock(pkt->getAddr(), lat);
 
-    if (prefetchAccess) {
-        //We are determining prefetches on access stream, call prefetcher
-        prefetcher->handleMiss(pkt, curTick);
-    }
-
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
             (blk) ? "hit" : "miss");
 
     if (blk != NULL) {
-
-        if (blk->isPrefetch()) {
-            //Signal that this was a hit under prefetch (no need for
-            //use prefetch (only can get here if true)
-            DPRINTF(HWPrefetch, "Hit a block that was prefetched\n");
-            blk->status &= ~BlkHWPrefetched;
-            if (prefetchMiss) {
-                //If we are using the miss stream, signal the
-                //prefetcher otherwise the access stream would have
-                //already signaled this hit
-                prefetcher->handleMiss(pkt, curTick);
-            }
-        }
 
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
@@ -448,6 +431,9 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 #endif
 
+    // track time of availability of next prefetch, if any
+    Tick next_pf_time = 0;
+
     bool needsResponse = pkt->needsResponse();
 
     if (satisfied) {
@@ -457,10 +443,14 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         } else {
             delete pkt;
         }
+
+        if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
+            if (blk)
+                blk->status &= ~BlkHWPrefetched;
+            next_pf_time = prefetcher->notify(pkt, time);
+        }
     } else {
         // miss
-        if (prefetchMiss)
-            prefetcher->handleMiss(pkt, time);
 
         Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
@@ -512,8 +502,15 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
                 allocateMissBuffer(pkt, time, true);
             }
+
+            if (prefetcher) {
+                next_pf_time = prefetcher->notify(pkt, time);
+            }
         }
     }
+
+    if (next_pf_time != 0)
+        requestMemSideBus(Request_PF, std::max(time, next_pf_time));
 
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
@@ -663,6 +660,17 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         }
     }
 
+    // Note that we don't invoke the prefetcher at all in atomic mode.
+    // It's not clear how to do it properly, particularly for
+    // prefetchers that aggressively generate prefetch candidates and
+    // rely on bandwidth contention to throttle them; these will tend
+    // to pollute the cache in atomic mode since there is no bandwidth
+    // contention.  If we ever do want to enable prefetching in atomic
+    // mode, though, this is the place to do it... see timingAccess()
+    // for an example (though we'd want to issue the prefetch(es)
+    // immediately rather than calling requestMemSideBus() as we do
+    // there).
+
     // Handle writebacks if needed
     while (!writebacks.empty()){
         PacketPtr wbPkt = writebacks.front();
@@ -787,7 +795,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
 
-        if (target->isCpuSide()) {
+        switch (target->source) {
+          case MSHR::Target::FromCPU:
             Tick completion_time;
             if (is_fill) {
                 satisfyCpuSideRequest(target->pkt, blk);
@@ -825,13 +834,27 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
             cpuSidePort->respond(target->pkt, completion_time);
-        } else {
+            break;
+
+          case MSHR::Target::FromPrefetcher:
+            assert(target->pkt->cmd == MemCmd::HardPFReq);
+            if (blk)
+                blk->status |= BlkHWPrefetched;
+            delete target->pkt->req;
+            delete target->pkt;
+            break;
+
+          case MSHR::Target::FromSnoop:
             // I don't believe that a snoop can be in an error state
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
             handleSnoop(target->pkt, blk, true, true,
                         mshr->pendingInvalidate || pkt->isInvalidate());
+            break;
+
+          default:
+            panic("Illegal target->source enum %d\n", target->source);
         }
 
         mshr->popTarget();
@@ -1330,6 +1353,22 @@ Cache<TagStore>::getTimingPacket()
     assert(pkt != NULL);
     pkt->senderState = mshr;
     return pkt;
+}
+
+
+template<class TagStore>
+Tick
+Cache<TagStore>::nextMSHRReadyTime()
+{
+    Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
+                              writeBuffer.nextMSHRReadyTime());
+
+    if (prefetcher) {
+        nextReady = std::min(nextReady,
+                             prefetcher->nextPrefetchReadyTime());
+    }
+
+    return nextReady;
 }
 
 

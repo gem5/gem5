@@ -64,8 +64,6 @@ class Cache : public BaseCache
     /** A typedef for a list of BlkType pointers. */
     typedef typename TagStore::BlkList BlkList;
 
-    bool prefetchAccess;
-
   protected:
 
     class CpuSidePort : public CachePort
@@ -141,7 +139,10 @@ class Cache : public BaseCache
      */
     const bool doFastWrites;
 
-    const bool prefetchMiss;
+    /**
+     * Notify the prefetcher on every access, not just misses.
+     */
+    const bool prefetchOnAccess;
 
     /**
      * Does all the processing necessary to perform the provided request.
@@ -320,6 +321,11 @@ class Cache : public BaseCache
     bool inMissQueue(Addr addr) {
         return (mshrQueue.findMatch(addr) != 0);
     }
+
+    /**
+     * Find next request ready time from among possible sources.
+     */
+    Tick nextMSHRReadyTime();
 };
 
 #endif // __CACHE_HH__

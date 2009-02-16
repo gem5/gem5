@@ -73,7 +73,9 @@ class BasePrefetcher
     bool cacheCheckPush;
 
     /** Do we prefetch on only data reads, or on inst reads as well. */
-    bool only_data;
+    bool onlyData;
+
+    std::string _name;
 
   public:
 
@@ -90,13 +92,21 @@ class BasePrefetcher
     void regStats(const std::string &name);
 
   public:
+
     BasePrefetcher(const BaseCacheParams *p);
 
     virtual ~BasePrefetcher() {}
 
+    const std::string name() const { return _name; }
+
     void setCache(BaseCache *_cache);
 
-    void handleMiss(PacketPtr &pkt, Tick time);
+    /**
+     * Notify prefetcher of cache access (may be any access or just
+     * misses, depending on cache parameters.)
+     * @retval Time of next prefetch availability, or 0 if none.
+     */
+    Tick notify(PacketPtr &pkt, Tick time);
 
     bool inCache(Addr addr);
 
@@ -109,11 +119,21 @@ class BasePrefetcher
         return !pf.empty();
     }
 
+    Tick nextPrefetchReadyTime()
+    {
+        return pf.empty() ? MaxTick : pf.front()->time;
+    }
+
     virtual void calculatePrefetch(PacketPtr &pkt,
                                    std::list<Addr> &addresses,
                                    std::list<Tick> &delays) = 0;
 
     std::list<PacketPtr>::iterator inPrefetch(Addr address);
+
+    /**
+     * Utility function: are addresses a and b on the same VM page?
+     */
+    bool samePage(Addr a, Addr b);
 };
 
 

@@ -205,7 +205,7 @@ class CacheBlk
      * be touched.
      * @return True if the block was a hardware prefetch, unaccesed.
      */
-    bool isPrefetch() const
+    bool wasPrefetched() const
     {
         return (status & BlkHWPrefetched) != 0;
     }

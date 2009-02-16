@@ -344,8 +344,12 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
         assert(newTC->threadId() == oldTC->threadId());
         system->replaceThreadContext(newTC, newTC->contextId());
 
-        if (DTRACE(Context))
+        /* This code no longer works since the zero register (e.g.,
+         * r31 on Alpha) doesn't necessarily contain zero at this
+         * point.
+           if (DTRACE(Context))
             ThreadContext::compare(oldTC, newTC);
+        */
     }
 
 #if FULL_SYSTEM

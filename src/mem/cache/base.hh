@@ -445,12 +445,6 @@ class BaseCache : public MemObject
         }
     }
 
-    Tick nextMSHRReadyTime()
-    {
-        return std::min(mshrQueue.nextMSHRReadyTime(),
-                        writeBuffer.nextMSHRReadyTime());
-    }
-
     /**
      * Request the master bus for the given cause and time.
      * @param cause The reason for the request.
@@ -467,10 +461,11 @@ class BaseCache : public MemObject
      */
     void deassertMemSideBusRequest(RequestCause cause)
     {
-        // obsolete!!
-        assert(false);
-        // memSidePort->deassertBusRequest(cause);
-        // checkDrain();
+        // Obsolete... we no longer signal bus requests explicitly so
+        // we can't deassert them.  Leaving this in as a no-op since
+        // the prefetcher calls it to indicate that it no longer wants
+        // to request a prefetch, and someday that might be
+        // interesting again.
     }
 
     virtual unsigned int drain(Event *de);

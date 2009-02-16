@@ -34,59 +34,92 @@
  * Stride Prefetcher template instantiations.
  */
 
+#include "base/trace.hh"
 #include "mem/cache/prefetch/stride.hh"
 
 void
 StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                     std::list<Tick> &delays)
 {
-//      Addr blkAddr = pkt->paddr & ~(Addr)(this->blkSize-1);
-    int contextId = pkt->req->contextId();
-    if (!useContextId) contextId = 0;
+    if (!pkt->req->hasPC()) {
+        DPRINTF(HWPrefetch, "ignoring request with no PC");
+        return;
+    }
 
-    /* Scan Table for IAddr Match */
-/*      std::list<strideEntry*>::iterator iter;
-  for (iter=table[contextId].begin();
-  iter !=table[contextId].end();
-  iter++) {
-  if ((*iter)->IAddr == pkt->pc) break;
-  }
+    Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
+    int ctx_id = useContextId ? pkt->req->contextId() : 0;
+    Addr pc = pkt->req->getPC();
+    assert(ctx_id < Max_Contexts);
+    std::list<StrideEntry*> &tab = table[ctx_id];
 
-  if (iter != table[contextId].end()) {
-  //Hit in table
+    /* Scan Table for instAddr Match */
+    std::list<StrideEntry*>::iterator iter;
+    for (iter = tab.begin(); iter != tab.end(); iter++) {
+        if ((*iter)->instAddr == pc)
+            break;
+    }
 
-  int newStride = blkAddr - (*iter)->MAddr;
-  if (newStride == (*iter)->stride) {
-  (*iter)->confidence++;
-  }
-  else {
-  (*iter)->stride = newStride;
-  (*iter)->confidence--;
-  }
+    if (iter != tab.end()) {
+        // Hit in table
 
-  (*iter)->MAddr = blkAddr;
+        int new_stride = blk_addr - (*iter)->missAddr;
+        bool stride_match = (new_stride == (*iter)->stride);
 
-  for (int d=1; d <= degree; d++) {
-  Addr newAddr = blkAddr + d * newStride;
-  if (this->pageStop &&
-  (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-  (newAddr & ~(TheISA::VMPageSize - 1)))
-  {
-  //Spanned the page, so now stop
-  this->pfSpanPage += degree - d + 1;
-  return;
-  }
-  else
-  {
-  addresses.push_back(newAddr);
-  delays.push_back(latency);
-  }
-  }
-  }
-  else {
-  //Miss in table
-  //Find lowest confidence and replace
+        if (stride_match && new_stride != 0) {
+            if ((*iter)->confidence < Max_Conf)
+                (*iter)->confidence++;
+        } else {
+            (*iter)->stride = new_stride;
+            if ((*iter)->confidence > Min_Conf)
+                (*iter)->confidence = 0;
+        }
 
-  }
-*/
+        DPRINTF(HWPrefetch, "hit: PC %x blk_addr %x stride %d (%s), conf %d\n",
+                pc, blk_addr, new_stride, stride_match ? "match" : "change",
+                (*iter)->confidence);
+
+        (*iter)->missAddr = blk_addr;
+
+        if ((*iter)->confidence <= 0)
+            return;
+
+        for (int d = 1; d <= degree; d++) {
+            Addr new_addr = blk_addr + d * new_stride;
+            if (pageStop && !samePage(blk_addr, new_addr)) {
+                // Spanned the page, so now stop
+                pfSpanPage += degree - d + 1;
+                return;
+            } else {
+                DPRINTF(HWPrefetch, "  queuing prefetch to %x @ %d\n",
+                        new_addr, latency);
+                addresses.push_back(new_addr);
+                delays.push_back(latency);
+            }
+        }
+    } else {
+        // Miss in table
+        // Find lowest confidence and replace
+
+        DPRINTF(HWPrefetch, "miss: PC %x blk_addr %x\n", pc, blk_addr);
+
+        if (tab.size() >= 256) { //set default table size is 256
+            std::list<StrideEntry*>::iterator min_pos = tab.begin();
+            int min_conf = (*min_pos)->confidence;
+            for (iter = min_pos, ++iter; iter != tab.end(); ++iter) {
+                if ((*iter)->confidence < min_conf){
+                    min_pos = iter;
+                    min_conf = (*iter)->confidence;
+                }
+            }
+            DPRINTF(HWPrefetch, "  replacing PC %x\n", (*min_pos)->instAddr);
+            tab.erase(min_pos);
+        }
+
+        StrideEntry *new_entry = new StrideEntry;
+        new_entry->instAddr = pc;
+        new_entry->missAddr = blk_addr;
+        new_entry->stride = 0;
+        new_entry->confidence = 0;
+        tab.push_back(new_entry);
+    }
 }
