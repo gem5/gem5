@@ -114,6 +114,9 @@ def read_command(cmd, **kwargs):
     this is sorta like `cmd` in shell"""
     from subprocess import Popen, PIPE, STDOUT
 
+    if isinstance(cmd, str):
+        cmd = cmd.split()
+
     no_exception = 'exception' in kwargs
     exception = kwargs.pop('exception', None)
     
