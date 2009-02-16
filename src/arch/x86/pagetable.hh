@@ -113,6 +113,12 @@ namespace X86ISA
         TlbEntry(Addr asn, Addr _vaddr, Addr _paddr);
         TlbEntry() {}
 
+        void
+        updateVaddr(Addr new_vaddr)
+        {
+            vaddr = new_vaddr;
+        }
+
         Addr pageStart()
         {
             return paddr;

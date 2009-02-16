@@ -463,7 +463,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 338 */ SyscallDesc("afs_syscall", unimplementedFunc),
     /* 339 */ SyscallDesc("uname", unameFunc),
     /* 340 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 341 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 341 */ SyscallDesc("mremap", mremapFunc<AlphaLinux>),
     /* 342 */ SyscallDesc("nfsservctl", unimplementedFunc),
     /* 343 */ SyscallDesc("setresuid", unimplementedFunc),
     /* 344 */ SyscallDesc("getresuid", unimplementedFunc),

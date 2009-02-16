@@ -80,6 +80,8 @@ class PageTable
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
     void allocate(Addr vaddr, int64_t size);
+    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
+    void deallocate(Addr vaddr, int64_t size);
 
     /**
      * Lookup function

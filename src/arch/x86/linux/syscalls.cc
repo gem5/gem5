@@ -148,7 +148,7 @@ SyscallDesc X86LinuxProcess::syscallDescs[] = {
     /*  22 */ SyscallDesc("pipe", unimplementedFunc),
     /*  23 */ SyscallDesc("select", unimplementedFunc),
     /*  24 */ SyscallDesc("sched_yield", unimplementedFunc),
-    /*  25 */ SyscallDesc("mremap", unimplementedFunc),
+    /*  25 */ SyscallDesc("mremap", mremapFunc<X86Linux64>),
     /*  26 */ SyscallDesc("msync", unimplementedFunc),
     /*  27 */ SyscallDesc("mincore", unimplementedFunc),
     /*  28 */ SyscallDesc("madvise", unimplementedFunc),

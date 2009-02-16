@@ -607,6 +607,51 @@ fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 0;
 }
 
+/// Target mremap() handler.
+template <class OS>
+SyscallReturn
+mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *tc)
+{
+    Addr start = tc->getSyscallArg(0);
+    uint64_t old_length = tc->getSyscallArg(1);
+    uint64_t new_length = tc->getSyscallArg(2);
+    uint64_t flags = tc->getSyscallArg(3);
+
+    if ((start % TheISA::VMPageSize != 0) ||
+            (new_length % TheISA::VMPageSize != 0)) {
+        warn("mremap failing: arguments not page aligned");
+        return -EINVAL;
+    }
+
+    if (new_length > old_length) {
+        if ((start + old_length) == process->mmap_end) {
+            uint64_t diff = new_length - old_length;
+            process->pTable->allocate(process->mmap_end, diff);
+            process->mmap_end += diff;
+            return start;
+        } else {
+            // sys/mman.h defined MREMAP_MAYMOVE
+            if (!(flags & 1)) {
+                warn("can't remap here and MREMAP_MAYMOVE flag not set\n");
+                return -ENOMEM;
+            } else {
+                process->pTable->remap(start, old_length, process->mmap_end);
+                warn("mremapping to totally new vaddr %08p-%08p, adding %d\n", 
+                        process->mmap_end, process->mmap_end + new_length, new_length);
+                start = process->mmap_end;
+                // add on the remaining unallocated pages
+                process->pTable->allocate(start + old_length, new_length - old_length);
+                process->mmap_end += new_length;
+                warn("returning %08p as start\n", start);
+                return start;
+            }
+        }
+    } else {
+        process->pTable->deallocate(start + new_length, old_length -
+                new_length);
+        return start;
+    }
+}
 
 /// Target stat() handler.
 template <class OS>
@@ -892,6 +937,7 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     // int fd = p->sim_fd(tc->getSyscallArg(4));
     // int offset = tc->getSyscallArg(5);
 
+
     if ((start  % TheISA::VMPageSize) != 0 ||
         (length % TheISA::VMPageSize) != 0) {
         warn("mmap failing: arguments not page-aligned: "
@@ -929,8 +975,15 @@ getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     switch (resource) {
         case OS::TGT_RLIMIT_STACK:
-            // max stack size in bytes: make up a number (2MB for now)
+            // max stack size in bytes: make up a number (8MB for now)
             rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+            rlp->rlim_cur = htog(rlp->rlim_cur);
+            rlp->rlim_max = htog(rlp->rlim_max);
+            break;
+
+        case OS::TGT_RLIMIT_DATA:
+            // max data segment size in bytes: make up a number
+            rlp->rlim_cur = rlp->rlim_max = 256 * 1024 * 1024;
             rlp->rlim_cur = htog(rlp->rlim_cur);
             rlp->rlim_max = htog(rlp->rlim_max);
             break;

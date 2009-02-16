@@ -339,7 +339,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 247 */ SyscallDesc("sched_get_priority_min", unimplementedFunc), //32 bit
     /* 248 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc), //32 bit
     /* 249 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 250 */ SyscallDesc("mremap", unimplementedFunc), //32 bit
+    /* 250 */ SyscallDesc("mremap", mremapFunc<Sparc32Linux>), //32 bit
     /* 251 */ SyscallDesc("_sysctl", unimplementedFunc), //32 bit
     /* 252 */ SyscallDesc("getsid", unimplementedFunc), //32 bit
     /* 253 */ SyscallDesc("fdatasync", unimplementedFunc),
@@ -642,7 +642,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 247 */ SyscallDesc("sched_get_priority_min", unimplementedFunc),
     /* 248 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc),
     /* 249 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 250 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 250 */ SyscallDesc("mremap", mremapFunc<SparcLinux>),
     /* 251 */ SyscallDesc("_sysctl", unimplementedFunc),
     /* 252 */ SyscallDesc("getsid", unimplementedFunc),
     /* 253 */ SyscallDesc("fdatasync", unimplementedFunc),

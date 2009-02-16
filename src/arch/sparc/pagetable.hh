@@ -266,6 +266,12 @@ struct TlbEntry
         return pte.paddr();
     }
 
+    void
+    updateVaddr(Addr new_vaddr)
+    {
+        range.va = new_vaddr;
+    }
+
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 };

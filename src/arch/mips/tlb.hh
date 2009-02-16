@@ -68,6 +68,9 @@ struct TlbEntry
         return _pageStart;
     }
 
+    void
+    updateVaddr(Addr new_vaddr) {}
+    
     void serialize(std::ostream &os)
     {
         SERIALIZE_SCALAR(_pageStart);

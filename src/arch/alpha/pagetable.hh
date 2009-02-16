@@ -123,6 +123,13 @@ struct TlbEntry
     TlbEntry()
     {}
 
+    void
+    updateVaddr(Addr new_vaddr)
+    {
+        VAddr vaddr(new_vaddr);
+        tag = vaddr.vpn();
+    }
+
     Addr
     pageStart()
     {

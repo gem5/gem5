@@ -288,7 +288,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 164 */ SyscallDesc("sched_get_priority_min", unimplementedFunc),
     /* 165 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc),
     /* 166 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 167 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 167 */ SyscallDesc("mremap", mremapFunc<MipsLinux>),
     /* 168 */ SyscallDesc("accept", unimplementedFunc),
     /* 169 */ SyscallDesc("bind", unimplementedFunc),
     /* 170 */ SyscallDesc("connect", unimplementedFunc),
