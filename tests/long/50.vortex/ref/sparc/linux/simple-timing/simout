@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 22:40:47
-M5 revision 5719:c9056088f1516d097f7e73673f990175ad238d69
-M5 commit date Wed Nov 05 16:19:17 2008 -0500
-M5 started Nov  5 2008 22:43:57
+M5 compiled Feb 16 2009 00:17:12
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 00:54:04
 M5 executing on zizzer
-command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/50.vortex/sparc/linux/simple-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/50.vortex/sparc/linux/simple-timing
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/50.vortex/sparc/linux/simple-timing -re tests/run.py long/50.vortex/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
 Exiting @ tick 205116920000 because target called exit()

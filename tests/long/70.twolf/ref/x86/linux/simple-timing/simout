@@ -5,14 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec 26 2008 18:29:56
-M5 revision 5818:e9a95a3440197489c28a655f2de72dc8e98259b9
-M5 commit date Fri Dec 26 18:25:21 2008 -0800
-M5 started Dec 26 2008 19:12:20
-M5 executing on fajita
-command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-timing -re tests/run.py long/70.twolf/x86/linux/simple-timing
-Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-timing/smred.sav
-Couldn't unlink  build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-timing/smred.sv2
+M5 compiled Feb 16 2009 00:19:15
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 01:27:21
+M5 executing on zizzer
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing -re tests/run.py long/70.twolf/x86/linux/simple-timing
+Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing/smred.sav
+Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
@@ -20,6 +19,8 @@ TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
 Standard Cell Placement and Global Routing Program
 Authors: Carl Sechen, Bill Swartz
          Yale University
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15 
  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30 
  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45 

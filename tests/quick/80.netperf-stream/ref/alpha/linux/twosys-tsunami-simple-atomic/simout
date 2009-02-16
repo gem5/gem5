@@ -5,12 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec 14 2008 21:47:07
-M5 revision 5776:07905796d7bea4187139808b7de687a99cbc3141
-M5 commit date Sun Dec 14 21:45:15 2008 -0800
-M5 started Dec 14 2008 21:48:20
-M5 executing on tater
+M5 compiled Feb 16 2009 00:15:24
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 00:15:51
+M5 executing on zizzer
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic -re tests/run.py quick/80.netperf-stream/alpha/linux/twosys-tsunami-simple-atomic
 Global frequency set at 1000000000000 ticks per second
+info: kernel located at: /dist/m5/system/binaries/vmlinux
+info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...
 Exiting @ tick 4300236804024 because checkpoint

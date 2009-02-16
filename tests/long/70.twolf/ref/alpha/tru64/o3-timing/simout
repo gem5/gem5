@@ -5,14 +5,14 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec  4 2008 21:21:43
-M5 revision 5755:d6a5329ec79b40f273fe6dacb70354f281725652
-M5 commit date Thu Dec 04 18:04:32 2008 -0500
-M5 started Dec  4 2008 21:29:52
+M5 compiled Feb 16 2009 00:22:05
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 00:37:34
 M5 executing on zizzer
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing -re --stdout-file stdout --stderr-file stderr tests/run.py long/70.twolf/alpha/tru64/o3-timing
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/o3-timing -re tests/run.py long/70.twolf/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
 
 TimberWolfSC version:v4.3a date:Mon Jan 25 18:50:36 EST 1988
 Standard Cell Placement and Global Routing Program

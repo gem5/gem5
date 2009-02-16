@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb  1 2009 00:35:14
-M5 revision ddc342563140 5849 default qtip upconfaultstats.patch tip qbase
-M5 started Feb  1 2009 01:31:23
-M5 executing on fajita
+M5 compiled Feb 16 2009 00:19:15
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 01:09:31
+M5 executing on zizzer
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic -re tests/run.py long/20.parser/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 715830                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 287924                       # Number of bytes of host memory used
-host_seconds                                    78.52                       # Real time elapsed on the host
-host_tick_rate                            24582295405                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1953289                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 288556                       # Number of bytes of host memory used
+host_seconds                                    28.78                       # Real time elapsed on the host
+host_tick_rate                            67077404616                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    56205703                       # Number of instructions simulated
 sim_seconds                                  1.930165                       # Number of seconds simulated
@@ -88,15 +88,6 @@ system.cpu.dcache.overall_mshr_miss_rate     0.097749                       # ms
 system.cpu.dcache.overall_mshr_misses         1471029                       # number of overall MSHR misses
 system.cpu.dcache.overall_mshr_uncacheable_latency   2064006500                       # number of overall MSHR uncacheable cycles
 system.cpu.dcache.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
-system.cpu.dcache.prefetcher.num_hwpf_already_in_cache            0                       # number of hwpf that were already in the cache
-system.cpu.dcache.prefetcher.num_hwpf_already_in_mshr            0                       # number of hwpf that were already in mshr
-system.cpu.dcache.prefetcher.num_hwpf_already_in_prefetcher            0                       # number of hwpf that were already in the prefetch queue
-system.cpu.dcache.prefetcher.num_hwpf_evicted            0                       # number of hwpf removed due to no buffer left
-system.cpu.dcache.prefetcher.num_hwpf_identified            0                       # number of hwpf identified
-system.cpu.dcache.prefetcher.num_hwpf_issued            0                       # number of hwpf issued
-system.cpu.dcache.prefetcher.num_hwpf_removed_MSHR_hit            0                       # number of hwpf removed because MSHR allocated
-system.cpu.dcache.prefetcher.num_hwpf_span_page            0                       # number of hwpf spanning a virtual page
-system.cpu.dcache.prefetcher.num_hwpf_squashed_from_miss            0                       # number of hwpf that got squashed due to a miss aborting calculation time
 system.cpu.dcache.replacements                1391606                       # number of replacements
 system.cpu.dcache.sampled_refs                1392118                       # Sample count of references to valid blocks.
 system.cpu.dcache.soft_prefetch_mshr_full            0                       # number of mshr full events for SW prefetching instrutions
@@ -162,15 +153,6 @@ system.cpu.icache.overall_mshr_miss_rate     0.016562                       # ms
 system.cpu.icache.overall_mshr_misses          931101                       # number of overall MSHR misses
 system.cpu.icache.overall_mshr_uncacheable_latency            0                       # number of overall MSHR uncacheable cycles
 system.cpu.icache.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
-system.cpu.icache.prefetcher.num_hwpf_already_in_cache            0                       # number of hwpf that were already in the cache
-system.cpu.icache.prefetcher.num_hwpf_already_in_mshr            0                       # number of hwpf that were already in mshr
-system.cpu.icache.prefetcher.num_hwpf_already_in_prefetcher            0                       # number of hwpf that were already in the prefetch queue
-system.cpu.icache.prefetcher.num_hwpf_evicted            0                       # number of hwpf removed due to no buffer left
-system.cpu.icache.prefetcher.num_hwpf_identified            0                       # number of hwpf identified
-system.cpu.icache.prefetcher.num_hwpf_issued            0                       # number of hwpf issued
-system.cpu.icache.prefetcher.num_hwpf_removed_MSHR_hit            0                       # number of hwpf removed because MSHR allocated
-system.cpu.icache.prefetcher.num_hwpf_span_page            0                       # number of hwpf spanning a virtual page
-system.cpu.icache.prefetcher.num_hwpf_squashed_from_miss            0                       # number of hwpf that got squashed due to a miss aborting calculation time
 system.cpu.icache.replacements                 930429                       # number of replacements
 system.cpu.icache.sampled_refs                 930940                       # Sample count of references to valid blocks.
 system.cpu.icache.soft_prefetch_mshr_full            0                       # number of mshr full events for SW prefetching instrutions
@@ -337,15 +319,6 @@ system.iocache.overall_mshr_miss_rate               1                       # ms
 system.iocache.overall_mshr_misses              41725                       # number of overall MSHR misses
 system.iocache.overall_mshr_uncacheable_latency            0                       # number of overall MSHR uncacheable cycles
 system.iocache.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
-system.iocache.prefetcher.num_hwpf_already_in_cache            0                       # number of hwpf that were already in the cache
-system.iocache.prefetcher.num_hwpf_already_in_mshr            0                       # number of hwpf that were already in mshr
-system.iocache.prefetcher.num_hwpf_already_in_prefetcher            0                       # number of hwpf that were already in the prefetch queue
-system.iocache.prefetcher.num_hwpf_evicted            0                       # number of hwpf removed due to no buffer left
-system.iocache.prefetcher.num_hwpf_identified            0                       # number of hwpf identified
-system.iocache.prefetcher.num_hwpf_issued            0                       # number of hwpf issued
-system.iocache.prefetcher.num_hwpf_removed_MSHR_hit            0                       # number of hwpf removed because MSHR allocated
-system.iocache.prefetcher.num_hwpf_span_page            0                       # number of hwpf spanning a virtual page
-system.iocache.prefetcher.num_hwpf_squashed_from_miss            0                       # number of hwpf that got squashed due to a miss aborting calculation time
 system.iocache.replacements                     41685                       # number of replacements
 system.iocache.sampled_refs                     41701                       # Sample count of references to valid blocks.
 system.iocache.soft_prefetch_mshr_full              0                       # number of mshr full events for SW prefetching instrutions
@@ -423,15 +396,6 @@ system.l2c.overall_mshr_miss_rate            0.263528                       # ms
 system.l2c.overall_mshr_misses                 612229                       # number of overall MSHR misses
 system.l2c.overall_mshr_uncacheable_latency   1857972500                       # number of overall MSHR uncacheable cycles
 system.l2c.overall_mshr_uncacheable_misses            0                       # number of overall MSHR uncacheable misses
-system.l2c.prefetcher.num_hwpf_already_in_cache            0                       # number of hwpf that were already in the cache
-system.l2c.prefetcher.num_hwpf_already_in_mshr            0                       # number of hwpf that were already in mshr
-system.l2c.prefetcher.num_hwpf_already_in_prefetcher            0                       # number of hwpf that were already in the prefetch queue
-system.l2c.prefetcher.num_hwpf_evicted              0                       # number of hwpf removed due to no buffer left
-system.l2c.prefetcher.num_hwpf_identified            0                       # number of hwpf identified
-system.l2c.prefetcher.num_hwpf_issued               0                       # number of hwpf issued
-system.l2c.prefetcher.num_hwpf_removed_MSHR_hit            0                       # number of hwpf removed because MSHR allocated
-system.l2c.prefetcher.num_hwpf_span_page            0                       # number of hwpf spanning a virtual page
-system.l2c.prefetcher.num_hwpf_squashed_from_miss            0                       # number of hwpf that got squashed due to a miss aborting calculation time
 system.l2c.replacements                        394928                       # number of replacements
 system.l2c.sampled_refs                        425903                       # Sample count of references to valid blocks.
 system.l2c.soft_prefetch_mshr_full                  0                       # number of mshr full events for SW prefetching instrutions

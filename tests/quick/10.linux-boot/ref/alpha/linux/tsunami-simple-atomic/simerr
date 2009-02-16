@@ -1,4 +1,5 @@
-warn: kernel located at: /dist/m5/system/binaries/vmlinux
 warn: Sockets disabled, not accepting terminal connections
+For more information see: http://www.m5sim.org/warn/8742226b
 warn: Sockets disabled, not accepting gdb connections
-warn: be nice to actually delete the event here
+For more information see: http://www.m5sim.org/warn/d946bea6
+hack: be nice to actually delete the event here

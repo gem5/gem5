@@ -1,3 +1,2 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Increasing stack size by one page.
-warn: Increasing stack size by one page.
+For more information see: http://www.m5sim.org/warn/d946bea6

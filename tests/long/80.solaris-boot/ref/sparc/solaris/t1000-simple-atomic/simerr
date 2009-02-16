@@ -2,14 +2,14 @@ Warning: rounding error > tolerance
     0.002000 rounded to 0
 Warning: rounding error > tolerance
     0.002000 rounded to 0
-warn: No kernel set for full system simulation. Assuming you know what you're doing...
 Warning: rounding error > tolerance
     0.002000 rounded to 0
 warn: Sockets disabled, not accepting terminal connections
+For more information see: http://www.m5sim.org/warn/8742226b
 Warning: rounding error > tolerance
     0.002000 rounded to 0
 warn: Sockets disabled, not accepting gdb connections
-warn: Ignoring write to SPARC ERROR regsiter
-warn: Ignoring write to SPARC ERROR regsiter
+For more information see: http://www.m5sim.org/warn/d946bea6
 warn: Don't know what interrupt to clear for console.
-warn: be nice to actually delete the event here
+For more information see: http://www.m5sim.org/warn/7fe1004f
+hack: be nice to actually delete the event here

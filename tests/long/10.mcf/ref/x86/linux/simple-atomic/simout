@@ -5,12 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec 26 2008 18:29:56
-M5 revision 5818:e9a95a3440197489c28a655f2de72dc8e98259b9
-M5 commit date Fri Dec 26 18:25:21 2008 -0800
-M5 started Dec 26 2008 19:05:48
-M5 executing on fajita
-command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/10.mcf/x86/linux/simple-atomic -re tests/run.py long/10.mcf/x86/linux/simple-atomic
+M5 compiled Feb 16 2009 00:19:15
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 01:06:25
+M5 executing on zizzer
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/simple-atomic -re tests/run.py long/10.mcf/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

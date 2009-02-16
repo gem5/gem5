@@ -1,3 +1,3 @@
 warn: Sockets disabled, not accepting gdb connections
-warn: Increasing stack size by one page.
-warn: be nice to actually delete the event here
+For more information see: http://www.m5sim.org/warn/d946bea6
+hack: be nice to actually delete the event here

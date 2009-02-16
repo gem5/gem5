@@ -5,12 +5,14 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  5 2008 15:59:58
-M5 revision 5718:323cfbfec1a4ee56f71bd7e4cfad02af7e11c17e
-M5 commit date Wed Nov 05 15:30:49 2008 -0500
-M5 started Nov  5 2008 16:00:22
+M5 compiled Feb 16 2009 01:00:04
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 01:00:27
 M5 executing on zizzer
-command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re --stdout-file stdout --stderr-file stderr tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
+command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re tests/run.py long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
+info: No kernel set for full system simulation. Assuming you know what you're doing...
 info: Entering event queue @ 0.  Starting simulation...
+info: Ignoring write to SPARC ERROR regsiter
+info: Ignoring write to SPARC ERROR regsiter
 Exiting @ tick 2233777512 because m5_exit instruction encountered
