@@ -75,30 +75,17 @@ struct pcap_pkthdr {
 void
 EtherDump::init()
 {
-    curtime = time(NULL);
     struct pcap_file_header hdr;
     hdr.magic = TCPDUMP_MAGIC;
     hdr.version_major = PCAP_VERSION_MAJOR;
     hdr.version_minor = PCAP_VERSION_MINOR;
 
-    hdr.thiszone = -5 * 3600;
+    hdr.thiszone = 0;
     hdr.snaplen = 1500;
     hdr.sigfigs = 0;
     hdr.linktype = DLT_EN10MB;
 
     stream->write(reinterpret_cast<char *>(&hdr), sizeof(hdr));
-
-    /*
-     * output an empty packet with the current time so that we know
-     * when the simulation began.  This allows us to correlate packets
-     * to sim_cycles.
-     */
-    pcap_pkthdr pkthdr;
-    pkthdr.seconds = curtime;
-    pkthdr.microseconds = 0;
-    pkthdr.caplen = 0;
-    pkthdr.len = 0;
-    stream->write(reinterpret_cast<char *>(&pkthdr), sizeof(pkthdr));
 
     stream->flush();
 }
@@ -107,7 +94,7 @@ void
 EtherDump::dumpPacket(EthPacketPtr &packet)
 {
     pcap_pkthdr pkthdr;
-    pkthdr.seconds = curtime + (curTick / Clock::Int::s);
+    pkthdr.seconds = curTick / Clock::Int::s;
     pkthdr.microseconds = (curTick / Clock::Int::us) % ULL(1000000);
     pkthdr.caplen = std::min(packet->length, maxlen);
     pkthdr.len = packet->length;

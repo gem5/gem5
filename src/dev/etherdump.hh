@@ -51,8 +51,6 @@ class EtherDump : public SimObject
     void dumpPacket(EthPacketPtr &packet);
     void init();
 
-    Tick curtime;
-
   public:
     typedef EtherDumpParams Params;
     EtherDump(const Params *p);
