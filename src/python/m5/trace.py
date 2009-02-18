@@ -32,6 +32,9 @@ import util
 
 from internal.trace import clear, output, set, ignore
 
+def disable():
+    internal.trace.cvar.enabled = False
+
 def enable():
     internal.trace.cvar.enabled = True
 

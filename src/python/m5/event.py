@@ -35,13 +35,16 @@ mainq = internal.event.cvar.mainEventQueue
 
 def create(obj, priority=None):
     if priority is None:
-        priority = internal.event.Event.Default_Pri
+        priority = Event.Default_Pri
     return PythonEvent(obj, priority)
 
+
+# As a reminder, priorities found in sim/eventq.hh are stuck into the
+# Event class by swig
 class Event(PythonEvent):
     def __init__(self, priority=None):
         if priority is None:
-            priority = internal.event.Event.Default_Pri
+            priority = Event.Default_Pri
         super(Event, self).__init__(self, priority)
 
 class ProgressEvent(Event):
