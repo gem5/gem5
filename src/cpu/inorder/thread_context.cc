@@ -44,7 +44,6 @@ InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
     // copy over functional state
     setStatus(old_context->status());
     copyArchRegs(old_context);
-    //setCpuId(0/*old_context->readCpuId()*/);
 
     thread->funcExeInst = old_context->readFuncExeInst();
     old_context->setStatus(ThreadContext::Unallocated);
@@ -61,18 +60,8 @@ InOrderThreadContext::activate(int delay)
     if (thread->status() == ThreadContext::Active)
         return;
 
-    // @TODO: Make this process useful again...
-    //if (thread->status() == ThreadContext::Unallocated) {
-        // Allows the CPU to drain partitioned resources
-        // before inserting thread into the CPU
-        // (e.g. bind physical registers)
-        //cpu->activateWhenReady(thread->readTid());
-        //return;
-    //}
-
     thread->setStatus(ThreadContext::Active);
 
-    // status() == Suspended
     cpu->activateContext(thread->readTid(), delay);
 }
 
@@ -157,37 +146,9 @@ InOrderThreadContext:: getInst()
 
 
 void
-InOrderThreadContext::copyArchRegs(ThreadContext *tc)
+InOrderThreadContext::copyArchRegs(ThreadContext *src_tc)
 {
-    unsigned tid = thread->readTid();
-    PhysRegIndex renamed_reg;
-
-    // First loop through the integer registers.
-    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
-        renamed_reg = cpu->renameMap[tid].lookup(i);
-
-        DPRINTF(InOrderCPU, "Copying over register %i, had data %lli, "
-                "now has data %lli.\n",
-                renamed_reg, cpu->readIntReg(renamed_reg, tid),
-                tc->readIntReg(i));
-
-        cpu->setIntReg(renamed_reg, tc->readIntReg(i), tid);
-    }
-
-    // Then loop through the floating point registers.
-    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-        renamed_reg = cpu->renameMap[tid].lookup(i + TheISA::FP_Base_DepTag);
-        cpu->setFloatRegBits(renamed_reg, tc->readFloatRegBits(i), tid);
-    }
-
-    // Copy the misc regs.
-    TheISA::copyMiscRegs(tc, this);
-
-    // Then finally set the PC and the next PC.
-    cpu->setPC(tc->readPC(), tid);
-    cpu->setNextPC(tc->readNextPC(), tid);
-    cpu->setNextNPC(tc->readNextNPC(), tid);
-    this->thread->funcExeInst = tc->readFuncExeInst();
+    TheISA::copyRegs(src_tc, this);
 }
 
 
@@ -236,33 +197,18 @@ void
 InOrderThreadContext::setIntReg(int reg_idx, uint64_t val)
 {
     cpu->setIntReg(reg_idx, val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //  cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
 InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val, int width)
 {
     cpu->setFloatReg(reg_idx, val, thread->readTid(), width);
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
 InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val)
 {
     cpu->setFloatReg(reg_idx, val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
@@ -270,22 +216,12 @@ InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val,
                                     int width)
 {
     cpu->setFloatRegBits(reg_idx, val, thread->readTid(), width);
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
 InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
     cpu->setFloatRegBits(reg_idx, val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
@@ -299,11 +235,6 @@ InOrderThreadContext::setPC(uint64_t val)
 {
     DPRINTF(InOrderCPU, "Setting PC to %08p\n", val);
     cpu->setPC(val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
@@ -311,11 +242,6 @@ InOrderThreadContext::setNextPC(uint64_t val)
 {
     DPRINTF(InOrderCPU, "Setting NPC to %08p\n", val);
     cpu->setNextPC(val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
@@ -323,33 +249,18 @@ InOrderThreadContext::setNextNPC(uint64_t val)
 {
     DPRINTF(InOrderCPU, "Setting NNPC to %08p\n", val);
     cpu->setNextNPC(val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
 InOrderThreadContext::setMiscRegNoEffect(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscRegNoEffect(misc_reg, val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 void
 InOrderThreadContext::setMiscReg(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->readTid());
-
-    // Squash if we're not already in a state update mode.
-    //if (!thread->trapPending && !thread->inSyscall) {
-    //cpu->squashFromTC(thread->readTid());
-    //}
 }
 
 TheISA::IntReg

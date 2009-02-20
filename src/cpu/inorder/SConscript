@@ -42,13 +42,12 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	TraceFlag('InOrderCPU')
 	TraceFlag('InOrderMDU')
 	TraceFlag('RegDepMap')
-	TraceFlag('Rename')
 	TraceFlag('InOrderDynInst')
 	TraceFlag('Resource')
 	TraceFlag('RefCount')
 
 	CompoundFlag('InOrderCPUAll', [ 'InOrderStage', 'InOrderStall', 'InOrderCPU',
-	       'InOrderMDU', 'RegDepMap', 'Resource', 'Rename'])
+	       'InOrderMDU', 'RegDepMap', 'Resource'])
 
 	Source('pipeline_traits.cc')        
 	Source('inorder_dyn_inst.cc')
@@ -74,8 +73,6 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	Source('../o3/btb.cc')
 	Source('../o3/tournament_pred.cc')
 	Source('../o3/2bit_local_pred.cc')
-	Source('../o3/free_list.cc')
-	Source('../o3/rename_map.cc')
 	Source('../o3/ras.cc')
 	Source('thread_context.cc')
 	Source('cpu.cc')

@@ -147,7 +147,7 @@ class InOrderThreadContext : public ThreadContext
     virtual TheISA::MachInst getInst();
 
     /** Copies the architectural registers from another TC into this TC. */
-    virtual void copyArchRegs(ThreadContext *tc);
+    virtual void copyArchRegs(ThreadContext *src_tc);
 
     /** Resets all architectural registers to 0. */
     virtual void clearArchRegs();

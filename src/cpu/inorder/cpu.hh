@@ -77,7 +77,6 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::RegFile RegFile;
-    typedef SimpleRenameMap RenameMap;
 
     //DynInstPtr TypeDefs
     typedef ThePipeline::DynInstPtr DynInstPtr;
@@ -585,14 +584,6 @@ class InOrderCPU : public BaseCPU
     Tick lastSquashCycle[ThePipeline::MaxThreads];
 
     std::list<unsigned> fetchPriorityList;
-
-     /** Rename Map for architectural-to-physical register mappings.
-      *  In a In-order processor, the mapping is fixed
-      *  (e.g. Thread 1: 0-31, Thread 1: 32-63, etc.)
-      *  In a Out-of-Order processor, this is used to maintain
-      *  sequential consistency (?right word here?).
-      */
-     RenameMap renameMap[ThePipeline::MaxThreads];
 
   protected:
     /** Active Threads List */
