@@ -55,7 +55,6 @@
 #include <cmath>
 #include <functional>
 #include <iosfwd>
-#include <limits>
 #include <list>
 #include <string>
 #include <vector>
@@ -78,9 +77,7 @@ extern Tick curTick;
 /* A namespace for all of the Statistics */
 namespace Stats {
 
-typedef std::numeric_limits<Counter> CounterLimits;
 
-/* Contains the statistic implementation details */
 //////////////////////////////////////////////////////////////////////
 //
 // Statistics Framework Base classes

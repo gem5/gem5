@@ -31,6 +31,7 @@
 #ifndef __BASE_STATS_TYPES_HH__
 #define __BASE_STATS_TYPES_HH__
 
+#include <limits>
 #include <vector>
 
 #include "sim/host.hh"
@@ -41,6 +42,8 @@ namespace Stats {
 typedef double Counter;
 /** vector of counters. */
 typedef std::vector<Counter> VCounter;
+
+typedef std::numeric_limits<Counter> CounterLimits;
 
 /** All results are doubles. */
 typedef double Result;
