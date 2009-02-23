@@ -44,14 +44,6 @@
 
 using namespace std;
 
-Stats::Formula hostInstRate;
-Stats::Formula hostTickRate;
-Stats::Value hostMemory;
-Stats::Value hostSeconds;
-
-Stats::Value simTicks;
-Stats::Value simInsts;
-Stats::Value simFreq;
 Stats::Formula simSeconds;
 
 namespace Stats {
@@ -84,8 +76,21 @@ statElapsedTicks()
 
 SimTicksReset simTicksReset;
 
-void
-initSimStats()
+struct Global
+{
+    Stats::Formula hostInstRate;
+    Stats::Formula hostTickRate;
+    Stats::Value hostMemory;
+    Stats::Value hostSeconds;
+
+    Stats::Value simTicks;
+    Stats::Value simInsts;
+    Stats::Value simFreq;
+
+    Global();
+};
+
+Global::Global()
 {
     simInsts
         .functor(BaseCPU::numSimulatedInstructions)
@@ -144,6 +149,12 @@ initSimStats()
     hostTickRate = simTicks / hostSeconds;
 
     registerResetCallback(&simTicksReset);
+}
+
+void
+initSimStats()
+{
+    static Global global;
 }
 
 class _StatEvent : public Event
