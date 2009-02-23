@@ -56,6 +56,7 @@
 #include <functional>
 #include <iosfwd>
 #include <limits>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -382,7 +383,6 @@ class Vector2dInfo : public Vector2dInfoBase
 class InfoAccess
 {
   protected:
-    Info *find() const;
     /** Set up an info class for this statistic */
     void setInfo(Info *info);
     /** Save Storage class parameters if any */
@@ -1339,7 +1339,7 @@ class Vector2dBase : public InfoAccess
         assert(_x > 0 && _y > 0 && "sizes must be positive!");
         assert(!storage && "already initialized");
 
-        Vector2dInfoBase *info = dynamic_cast<Vector2dInfoBase *>(find());
+        Vector2dInfoBase *info = safe_cast<Vector2dInfoBase *>(this->info());
 
         x = _x;
         y = _y;
@@ -3083,6 +3083,8 @@ sum(Temp val)
 {
     return NodePtr(new SumNode<std::plus<Result> >(val));
 }
+
+std::list<Info *> &statsList();
 
 /* namespace Stats */ }
 

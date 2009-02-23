@@ -74,7 +74,6 @@ Source('loader/symtab.cc')
 
 Source('stats/events.cc')
 Source('stats/output.cc')
-Source('stats/statdb.cc')
 Source('stats/text.cc')
 Source('stats/visit.cc')
 

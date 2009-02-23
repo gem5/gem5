@@ -40,7 +40,6 @@
 #include "base/stats/flags.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"
-#include "base/stats/statdb.hh"
 #include "base/stats/types.hh"
 #include "base/str.hh"
 #include "base/userinfo.hh"
@@ -493,16 +492,14 @@ MySql::configure()
     /*
      * set up all stats!
      */
-    using namespace Database;
-
     MySQL::Connection &mysql = run->conn();
 
-    stat_list_t::const_iterator i, end = stats().end();
-    for (i = stats().begin(); i != end; ++i) {
+    list<Info *>::const_iterator i, end = statsList().end();
+    for (i = statsList().begin(); i != end; ++i) {
         (*i)->visit(*this);
     }
 
-    for (i = stats().begin(); i != end; ++i) {
+    for (i = statsList().begin(); i != end; ++i) {
         Info *info = *i;
         if (info->prereq) {
             // update the prerequisite
@@ -706,7 +703,6 @@ MySql::valid() const
 void
 MySql::output()
 {
-    using namespace Database;
     assert(valid());
 
     if (!configured)
@@ -717,8 +713,8 @@ MySql::output()
 
     MySQL::Connection &mysql = run->conn();
 
-    Database::stat_list_t::const_iterator i, end = Database::stats().end();
-    for (i = Database::stats().begin(); i != end; ++i) {
+    list<Info *>::const_iterator i, end = statsList().end();
+    for (i = statsList().begin(); i != end; ++i) {
         Info *stat = *i;
         stat->visit(*this);
         if (mysql.commit())

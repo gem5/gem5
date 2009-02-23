@@ -43,7 +43,6 @@
 
 #include "base/misc.hh"
 #include "base/statistics.hh"
-#include "base/stats/statdb.hh"
 #include "base/stats/text.hh"
 #include "base/stats/visit.hh"
 
@@ -132,11 +131,9 @@ Text::valid() const
 void
 Text::output()
 {
-    using namespace Database;
-
     ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
-    stat_list_t::const_iterator i, end = stats().end();
-    for (i = stats().begin(); i != end; ++i)
+    list<Info *>::const_iterator i, end = statsList().end();
+    for (i = statsList().begin(); i != end; ++i)
         (*i)->visit(*this);
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();

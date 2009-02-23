@@ -42,28 +42,42 @@
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "base/stats/statdb.hh"
 
 using namespace std;
 
 namespace Stats {
 
-Info *
-InfoAccess::find() const
+typedef map<const void *, Info *> MapType;
+
+// We wrap these in a function to make sure they're built in time.
+list<Info *> &
+statsList()
 {
-    return Database::find(const_cast<void *>((const void *)this));
+    static list<Info *> the_list;
+    return the_list;
 }
 
-const Info *
-getInfo(const void *stat)
+MapType &
+statsMap()
 {
-    return Database::find(const_cast<void *>(stat));
+    static MapType the_map;
+    return the_map;
 }
 
 void
 InfoAccess::setInfo(Info *info)
 {
-    Database::regStat(this, info);
+    if (statsMap().find(this) != statsMap().end())
+        panic("shouldn't register stat twice!");
+
+    statsList().push_back(info);
+
+#ifndef NDEBUG
+    pair<MapType::iterator, bool> result =
+#endif
+        statsMap().insert(make_pair(this, info));
+    assert(result.second && "this should never fail");
+    assert(statsMap().find(this) != statsMap().end());
 }
 
 void
@@ -75,17 +89,17 @@ InfoAccess::setInit()
 Info *
 InfoAccess::info()
 {
-    Info *info = find();
-    assert(info);
-    return info;
+    MapType::const_iterator i = statsMap().find(this);
+    assert(i != statsMap().end());
+    return (*i).second;
 }
 
 const Info *
 InfoAccess::info() const
 {
-    const Info *info = find();
-    assert(info);
-    return info;
+    MapType::const_iterator i = statsMap().find(this);
+    assert(i != statsMap().end());
+    return (*i).second;
 }
 
 Info::Info()
@@ -228,10 +242,10 @@ Formula::operator+=(Temp r)
 void
 check()
 {
-    typedef Database::stat_list_t::iterator iter_t;
+    typedef list<Info *>::iterator iter_t;
 
-    iter_t i, end = Database::stats().end();
-    for (i = Database::stats().begin(); i != end; ++i) {
+    iter_t i, end = statsList().end();
+    for (i = statsList().begin(); i != end; ++i) {
         Info *info = *i;
         assert(info);
         if (!info->check() || !info->baseCheck())
@@ -239,13 +253,13 @@ check()
     }
 
     off_t j = 0;
-    for (i = Database::stats().begin(); i != end; ++i) {
+    for (i = statsList().begin(); i != end; ++i) {
         Info *info = *i;
         if (!(info->flags & print))
             info->name = "__Stat" + to_string(j++);
     }
 
-    Database::stats().sort(Info::less);
+    statsList().sort(Info::less);
 
     if (i == end)
         return;
@@ -253,7 +267,7 @@ check()
     iter_t last = i;
     ++i;
 
-    for (i = Database::stats().begin(); i != end; ++i) {
+    for (i = statsList().begin(); i != end; ++i) {
         if ((*i)->name == (*last)->name)
             panic("same name used twice! name=%s\n", (*i)->name);
 
@@ -266,8 +280,8 @@ CallbackQueue resetQueue;
 void
 reset()
 {
-    Database::stat_list_t::iterator i = Database::stats().begin();
-    Database::stat_list_t::iterator end = Database::stats().end();
+    list<Info *>::iterator i = statsList().begin();
+    list<Info *>::iterator end = statsList().end();
     while (i != end) {
         Info *info = *i;
         info->reset();
