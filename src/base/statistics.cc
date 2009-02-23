@@ -48,65 +48,59 @@ using namespace std;
 
 namespace Stats {
 
-StatData *
-DataAccess::find() const
+Info *
+InfoAccess::find() const
 {
     return Database::find(const_cast<void *>((const void *)this));
 }
 
-const StatData *
-getStatData(const void *stat)
+const Info *
+getInfo(const void *stat)
 {
     return Database::find(const_cast<void *>(stat));
 }
 
 void
-DataAccess::map(StatData *data)
+InfoAccess::setInfo(Info *info)
 {
-    Database::regStat(this, data);
-}
-
-StatData *
-DataAccess::statData()
-{
-    StatData *ptr = find();
-    assert(ptr);
-    return ptr;
-}
-
-const StatData *
-DataAccess::statData() const
-{
-    const StatData *ptr = find();
-    assert(ptr);
-    return ptr;
+    Database::regStat(this, info);
 }
 
 void
-DataAccess::setInit()
+InfoAccess::setInit()
 {
-    statData()->flags |= init;
+    info()->flags |= init;
 }
 
-void
-DataAccess::setPrint()
+Info *
+InfoAccess::info()
 {
-    Database::regPrint(this);
+    Info *info = find();
+    assert(info);
+    return info;
 }
 
-StatData::StatData()
+const Info *
+InfoAccess::info() const
+{
+    const Info *info = find();
+    assert(info);
+    return info;
+}
+
+Info::Info()
     : flags(none), precision(-1), prereq(0)
 {
     static int count = 0;
     id = count++;
 }
 
-StatData::~StatData()
+Info::~Info()
 {
 }
 
 bool
-StatData::less(StatData *stat1, StatData *stat2)
+Info::less(Info *stat1, Info *stat2)
 {
     const string &name1 = stat1->name;
     const string &name2 = stat2->name;
@@ -132,7 +126,7 @@ StatData::less(StatData *stat1, StatData *stat2)
 }
 
 bool
-StatData::baseCheck() const
+Info::baseCheck() const
 {
     if (!(flags & init)) {
 #ifdef DEBUG
@@ -190,7 +184,7 @@ FormulaBase::zero() const
 }
 
 void
-FormulaBase::update(StatData *)
+FormulaBase::update(Info *)
 {
 }
 
@@ -238,20 +232,20 @@ check()
 
     iter_t i, end = Database::stats().end();
     for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *data = *i;
-        assert(data);
-        if (!data->check() || !data->baseCheck())
-            panic("stat check failed for %s\n", data->name);
+        Info *info = *i;
+        assert(info);
+        if (!info->check() || !info->baseCheck())
+            panic("stat check failed for %s\n", info->name);
     }
 
     off_t j = 0;
     for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *data = *i;
-        if (!(data->flags & print))
-            data->name = "__Stat" + to_string(j++);
+        Info *info = *i;
+        if (!(info->flags & print))
+            info->name = "__Stat" + to_string(j++);
     }
 
-    Database::stats().sort(StatData::less);
+    Database::stats().sort(Info::less);
 
     if (i == end)
         return;
@@ -275,8 +269,8 @@ reset()
     Database::stat_list_t::iterator i = Database::stats().begin();
     Database::stat_list_t::iterator end = Database::stats().end();
     while (i != end) {
-        StatData *data = *i;
-        data->reset();
+        Info *info = *i;
+        info->reset();
         ++i;
     }
 

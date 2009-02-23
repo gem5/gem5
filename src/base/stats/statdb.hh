@@ -40,12 +40,12 @@ class Python;
 
 namespace Stats {
 
-class StatData;
+class Info;
 
 namespace Database {
 
-typedef std::map<void *, StatData *> stat_map_t;
-typedef std::list<StatData *> stat_list_t;
+typedef std::map<void *, Info *> stat_map_t;
+typedef std::list<Info *> stat_list_t;
 
 // We wrap the database in a struct to make sure it is built in time.
 struct TheDatabase
@@ -58,8 +58,8 @@ TheDatabase &db();
 inline stat_map_t &map() { return db().map; }
 inline stat_list_t &stats() { return db().stats; }
 
-StatData *find(void *stat);
-void regStat(void *stat, StatData *data);
+Info *find(void *stat);
+void regStat(void *stat, Info *data);
 void regPrint(void *stat);
 
 inline std::string name() { return "Statistics Database"; }

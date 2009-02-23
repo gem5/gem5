@@ -143,12 +143,12 @@ Text::output()
 }
 
 bool
-Text::noOutput(const StatData &data)
+Text::noOutput(const Info &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return true;
 
-    if (data.prereq && data.prereq->zero())
+    if (info.prereq && info.prereq->zero())
         return true;
 
     return false;
@@ -535,19 +535,19 @@ DistPrint::operator()(ostream &stream) const
 }
 
 void
-Text::visit(const ScalarData &data)
+Text::visit(const ScalarInfoBase &info)
 {
-    if (noOutput(data))
+    if (noOutput(info))
         return;
 
     ScalarPrint print;
-    print.value = data.result();
-    print.name = data.name;
-    print.desc = data.desc;
-    print.flags = data.flags;
+    print.value = info.result();
+    print.name = info.name;
+    print.desc = info.desc;
+    print.flags = info.flags;
     print.compat = compat;
     print.descriptions = descriptions;
-    print.precision = data.precision;
+    print.precision = info.precision;
     print.pdf = NAN;
     print.cdf = NAN;
 
@@ -555,32 +555,32 @@ Text::visit(const ScalarData &data)
 }
 
 void
-Text::visit(const VectorData &data)
+Text::visit(const VectorInfoBase &info)
 {
-    if (noOutput(data))
+    if (noOutput(info))
         return;
 
-    size_type size = data.size();
+    size_type size = info.size();
     VectorPrint print;
 
-    print.name = data.name;
-    print.desc = data.desc;
-    print.flags = data.flags;
+    print.name = info.name;
+    print.desc = info.desc;
+    print.flags = info.flags;
     print.compat = compat;
     print.descriptions = descriptions;
-    print.precision = data.precision;
-    print.vec = data.result();
-    print.total = data.total();
+    print.precision = info.precision;
+    print.vec = info.result();
+    print.total = info.total();
 
-    if (!data.subnames.empty()) {
+    if (!info.subnames.empty()) {
         for (off_type i = 0; i < size; ++i) {
-            if (!data.subnames[i].empty()) {
-                print.subnames = data.subnames;
+            if (!info.subnames[i].empty()) {
+                print.subnames = info.subnames;
                 print.subnames.resize(size);
                 for (off_type i = 0; i < size; ++i) {
-                    if (!data.subnames[i].empty() &&
-                        !data.subdescs[i].empty()) {
-                        print.subdescs = data.subdescs;
+                    if (!info.subnames[i].empty() &&
+                        !info.subdescs[i].empty()) {
+                        print.subdescs = info.subdescs;
                         print.subdescs.resize(size);
                         break;
                     }
@@ -594,54 +594,54 @@ Text::visit(const VectorData &data)
 }
 
 void
-Text::visit(const Vector2dData &data)
+Text::visit(const Vector2dInfoBase &info)
 {
-    if (noOutput(data))
+    if (noOutput(info))
         return;
 
     bool havesub = false;
     VectorPrint print;
 
-    print.subnames = data.y_subnames;
-    print.flags = data.flags;
+    print.subnames = info.y_subnames;
+    print.flags = info.flags;
     print.compat = compat;
     print.descriptions = descriptions;
-    print.precision = data.precision;
+    print.precision = info.precision;
 
-    if (!data.subnames.empty()) {
-        for (off_type i = 0; i < data.x; ++i)
-            if (!data.subnames[i].empty())
+    if (!info.subnames.empty()) {
+        for (off_type i = 0; i < info.x; ++i)
+            if (!info.subnames[i].empty())
                 havesub = true;
     }
 
-    VResult tot_vec(data.y);
+    VResult tot_vec(info.y);
     Result super_total = 0.0;
-    for (off_type i = 0; i < data.x; ++i) {
-        if (havesub && (i >= data.subnames.size() || data.subnames[i].empty()))
+    for (off_type i = 0; i < info.x; ++i) {
+        if (havesub && (i >= info.subnames.size() || info.subnames[i].empty()))
             continue;
 
-        off_type iy = i * data.y;
-        VResult yvec(data.y);
+        off_type iy = i * info.y;
+        VResult yvec(info.y);
 
         Result total = 0.0;
-        for (off_type j = 0; j < data.y; ++j) {
-            yvec[j] = data.cvec[iy + j];
+        for (off_type j = 0; j < info.y; ++j) {
+            yvec[j] = info.cvec[iy + j];
             tot_vec[j] += yvec[j];
             total += yvec[j];
             super_total += yvec[j];
         }
 
-        print.name = data.name + "_" +
-            (havesub ? data.subnames[i] : to_string(i));
-        print.desc = data.desc;
+        print.name = info.name + "_" +
+            (havesub ? info.subnames[i] : to_string(i));
+        print.desc = info.desc;
         print.vec = yvec;
         print.total = total;
         print(*stream);
     }
 
-    if ((data.flags & ::Stats::total) && (data.x > 1)) {
-        print.name = data.name;
-        print.desc = data.desc;
+    if ((info.flags & ::Stats::total) && (info.x > 1)) {
+        print.name = info.name;
+        print.desc = info.desc;
         print.vec = tot_vec;
         print.total = super_total;
         print(*stream);
@@ -649,82 +649,84 @@ Text::visit(const Vector2dData &data)
 }
 
 void
-Text::visit(const DistData &data)
+Text::visit(const DistInfoBase &info)
 {
-    if (noOutput(data))
+    if (noOutput(info))
         return;
 
     DistPrint print;
 
-    print.name = data.name;
-    print.desc = data.desc;
-    print.flags = data.flags;
+    print.name = info.name;
+    print.desc = info.desc;
+    print.flags = info.flags;
     print.compat = compat;
     print.descriptions = descriptions;
-    print.precision = data.precision;
+    print.precision = info.precision;
 
-    print.min_val = data.data.min_val;
-    print.max_val = data.data.max_val;
-    print.underflow = data.data.underflow;
-    print.overflow = data.data.overflow;
-    print.vec.resize(data.data.cvec.size());
+    const DistData &data = info.data;
+
+    print.min_val = data.min_val;
+    print.max_val = data.max_val;
+    print.underflow = data.underflow;
+    print.overflow = data.overflow;
+    print.vec.resize(data.cvec.size());
     for (off_type i = 0; i < print.vec.size(); ++i)
-        print.vec[i] = (Result)data.data.cvec[i];
-    print.sum = data.data.sum;
-    print.squares = data.data.squares;
-    print.samples = data.data.samples;
+        print.vec[i] = (Result)data.cvec[i];
+    print.sum = data.sum;
+    print.squares = data.squares;
+    print.samples = data.samples;
 
-    print.min = data.data.min;
-    print.max = data.data.max;
-    print.bucket_size = data.data.bucket_size;
-    print.size = data.data.size;
-    print.fancy = data.data.fancy;
+    print.min = data.min;
+    print.max = data.max;
+    print.bucket_size = data.bucket_size;
+    print.size = data.size;
+    print.fancy = data.fancy;
 
     print(*stream);
 }
 
 void
-Text::visit(const VectorDistData &data)
+Text::visit(const VectorDistInfoBase &info)
 {
-    if (noOutput(data))
+    if (noOutput(info))
         return;
 
-    for (off_type i = 0; i < data.size(); ++i) {
+    for (off_type i = 0; i < info.size(); ++i) {
         DistPrint print;
 
-        print.name = data.name + "_" +
-            (data.subnames[i].empty() ? (to_string(i)) : data.subnames[i]);
-        print.desc = data.subdescs[i].empty() ? data.desc : data.subdescs[i];
-        print.flags = data.flags;
+        print.name = info.name + "_" +
+            (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
+        print.desc = info.subdescs[i].empty() ? info.desc : info.subdescs[i];
+        print.flags = info.flags;
         print.compat = compat;
         print.descriptions = descriptions;
-        print.precision = data.precision;
+        print.precision = info.precision;
 
-        print.min_val = data.data[i].min_val;
-        print.max_val = data.data[i].max_val;
-        print.underflow = data.data[i].underflow;
-        print.overflow = data.data[i].overflow;
-        print.vec.resize(data.data[i].cvec.size());
+        print.min_val = info.data[i].min_val;
+        print.max_val = info.data[i].max_val;
+        print.underflow = info.data[i].underflow;
+        print.overflow = info.data[i].overflow;
+        print.vec.resize(info.data[i].cvec.size());
         for (off_type j = 0; j < print.vec.size(); ++j)
-            print.vec[j] = (Result)data.data[i].cvec[j];
-        print.sum = data.data[i].sum;
-        print.squares = data.data[i].squares;
-        print.samples = data.data[i].samples;
+            print.vec[j] = (Result)info.data[i].cvec[j];
+        print.sum = info.data[i].sum;
+        print.squares = info.data[i].squares;
+        print.samples = info.data[i].samples;
 
-        print.min = data.data[i].min;
-        print.max = data.data[i].max;
-        print.bucket_size = data.data[i].bucket_size;
-        print.size = data.data[i].size;
-        print.fancy = data.data[i].fancy;
+        print.min = info.data[i].min;
+        print.max = info.data[i].max;
+        print.bucket_size = info.data[i].bucket_size;
+        print.size = info.data[i].size;
+        print.fancy = info.data[i].fancy;
 
         print(*stream);
     }
 }
 
 void
-Text::visit(const FormulaData &data)
+Text::visit(const FormulaInfoBase &info)
 {
-    visit((const VectorData &)data);
+    visit((const VectorInfoBase &)info);
 }
 
 bool

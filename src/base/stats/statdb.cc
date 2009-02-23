@@ -38,7 +38,7 @@ using namespace std;
 namespace Stats {
 namespace Database {
 
-StatData *
+Info *
 find(void *stat)
 {
     stat_map_t::const_iterator i = map().find(stat);
@@ -50,7 +50,7 @@ find(void *stat)
 }
 
 void
-regStat(void *stat, StatData *data)
+regStat(void *stat, Info *data)
 {
     if (map().find(stat) != map().end())
         panic("shouldn't register stat twice!");
@@ -68,7 +68,7 @@ regStat(void *stat, StatData *data)
 void
 regPrint(void *stat)
 {
-    StatData *data = find(stat);
+    Info *data = find(stat);
     assert(data);
     data->flags |= print;
 }

@@ -503,11 +503,11 @@ MySql::configure()
     }
 
     for (i = stats().begin(); i != end; ++i) {
-        StatData *data = *i;
-        if (data->prereq) {
+        Info *info = *i;
+        if (info->prereq) {
             // update the prerequisite
-            uint16_t stat_id = find(data->id);
-            uint16_t prereq_id = find(data->prereq->id);
+            uint16_t stat_id = find(info->id);
+            uint16_t prereq_id = find(info->prereq->id);
             assert(stat_id && prereq_id);
 
             stringstream update;
@@ -528,153 +528,152 @@ MySql::configure()
     configured = true;
 }
 
-
 bool
-MySql::configure(const StatData &data, string type)
+MySql::configure(const Info &info, string type)
 {
     stat.init();
-    stat.name = data.name;
-    stat.descr = data.desc;
+    stat.name = info.name;
+    stat.descr = info.desc;
     stat.type = type;
-    stat.print = data.flags & print;
-    stat.prec = data.precision;
-    stat.nozero = data.flags & nozero;
-    stat.nonan = data.flags & nonan;
-    stat.total = data.flags & total;
-    stat.pdf = data.flags & pdf;
-    stat.cdf = data.flags & cdf;
+    stat.print = info.flags & print;
+    stat.prec = info.precision;
+    stat.nozero = info.flags & nozero;
+    stat.nonan = info.flags & nonan;
+    stat.total = info.flags & total;
+    stat.pdf = info.flags & pdf;
+    stat.cdf = info.flags & cdf;
 
     return stat.print;
 }
 
 void
-MySql::configure(const ScalarData &data)
+MySql::configure(const ScalarInfoBase &info)
 {
-    if (!configure(data, "SCALAR"))
+    if (!configure(info, "SCALAR"))
         return;
 
-    insert(data.id, stat.setup(run));
+    insert(info.id, stat.setup(run));
 }
 
 void
-MySql::configure(const VectorData &data)
+MySql::configure(const VectorInfoBase &info)
 {
-    if (!configure(data, "VECTOR"))
+    if (!configure(info, "VECTOR"))
         return;
 
     uint16_t statid = stat.setup(run);
 
-    if (!data.subnames.empty()) {
+    if (!info.subnames.empty()) {
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = 0;
-        for (off_type i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < info.subnames.size(); ++i) {
             subdata.x = i;
-            subdata.name = data.subnames[i];
-            subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
+            subdata.name = info.subnames[i];
+            subdata.descr = info.subdescs.empty() ? "" : info.subdescs[i];
 
             if (!subdata.name.empty() || !subdata.descr.empty())
                 subdata.setup(run);
         }
     }
 
-    insert(data.id, statid);
+    insert(info.id, statid);
 }
 
 void
-MySql::configure(const DistData &data)
+MySql::configure(const DistInfoBase &info)
 {
-    if (!configure(data, "DIST"))
+    if (!configure(info, "DIST"))
         return;
 
-    if (!data.data.fancy) {
-        stat.size = data.data.size;
-        stat.min = data.data.min;
-        stat.max = data.data.max;
-        stat.bktsize = data.data.bucket_size;
+    if (!info.data.fancy) {
+        stat.size = info.data.size;
+        stat.min = info.data.min;
+        stat.max = info.data.max;
+        stat.bktsize = info.data.bucket_size;
     }
-    insert(data.id, stat.setup(run));
+    insert(info.id, stat.setup(run));
 }
 
 void
-MySql::configure(const VectorDistData &data)
+MySql::configure(const VectorDistInfoBase &info)
 {
-    if (!configure(data, "VECTORDIST"))
+    if (!configure(info, "VECTORDIST"))
         return;
 
-    if (!data.data[0].fancy) {
-        stat.size = data.data[0].size;
-        stat.min = data.data[0].min;
-        stat.max = data.data[0].max;
-        stat.bktsize = data.data[0].bucket_size;
+    if (!info.data[0].fancy) {
+        stat.size = info.data[0].size;
+        stat.min = info.data[0].min;
+        stat.max = info.data[0].max;
+        stat.bktsize = info.data[0].bucket_size;
     }
 
     uint16_t statid = stat.setup(run);
 
-    if (!data.subnames.empty()) {
+    if (!info.subnames.empty()) {
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = 0;
-        for (off_type i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < info.subnames.size(); ++i) {
             subdata.x = i;
-            subdata.name = data.subnames[i];
-            subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
+            subdata.name = info.subnames[i];
+            subdata.descr = info.subdescs.empty() ? "" : info.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
                 subdata.setup(run);
         }
     }
 
-    insert(data.id, statid);
+    insert(info.id, statid);
 }
 
 void
-MySql::configure(const Vector2dData &data)
+MySql::configure(const Vector2dInfoBase &info)
 {
-    if (!configure(data, "VECTOR2D"))
+    if (!configure(info, "VECTOR2D"))
         return;
 
     uint16_t statid = stat.setup(run);
 
-    if (!data.subnames.empty()) {
+    if (!info.subnames.empty()) {
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.y = -1;
-        for (off_type i = 0; i < data.subnames.size(); ++i) {
+        for (off_type i = 0; i < info.subnames.size(); ++i) {
             subdata.x = i;
-            subdata.name = data.subnames[i];
-            subdata.descr = data.subdescs.empty() ? "" : data.subdescs[i];
+            subdata.name = info.subnames[i];
+            subdata.descr = info.subdescs.empty() ? "" : info.subdescs[i];
             if (!subdata.name.empty() || !subdata.descr.empty())
                 subdata.setup(run);
         }
     }
 
-    if (!data.y_subnames.empty()) {
+    if (!info.y_subnames.empty()) {
         InsertSubData subdata;
         subdata.stat = statid;
         subdata.x = -1;
         subdata.descr = "";
-        for (off_type i = 0; i < data.y_subnames.size(); ++i) {
+        for (off_type i = 0; i < info.y_subnames.size(); ++i) {
             subdata.y = i;
-            subdata.name = data.y_subnames[i];
+            subdata.name = info.y_subnames[i];
             if (!subdata.name.empty())
                 subdata.setup(run);
         }
     }
 
-    insert(data.id, statid);
+    insert(info.id, statid);
 }
 
 void
-MySql::configure(const FormulaData &data)
+MySql::configure(const FormulaInfoBase &info)
 {
     MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
 
-    configure(data, "FORMULA");
-    insert(data.id, stat.setup(run));
+    configure(info, "FORMULA");
+    insert(info.id, stat.setup(run));
 
-    uint16_t stat = find(data.id);
-    string formula = data.str();
+    uint16_t stat = find(info.id);
+    string formula = info.str();
 
     stringstream insert_formula;
     ccprintf(insert_formula,
@@ -720,7 +719,7 @@ MySql::output()
 
     Database::stat_list_t::const_iterator i, end = Database::stats().end();
     for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *stat = *i;
+        Info *stat = *i;
         stat->visit(*this);
         if (mysql.commit())
             panic("could not commit transaction\n%s\n", mysql.error);
@@ -735,32 +734,31 @@ MySql::event(const std::string &event)
     newevent.insert(event);
 }
 
-
 void
-MySql::output(const ScalarData &data)
+MySql::output(const ScalarInfoBase &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return;
 
-    newdata.stat = find(data.id);
+    newdata.stat = find(info.id);
     newdata.x = 0;
     newdata.y = 0;
-    newdata.data = data.value();
+    newdata.data = info.value();
 
     newdata.insert();
 }
 
 void
-MySql::output(const VectorData &data)
+MySql::output(const VectorInfoBase &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return;
 
-    newdata.stat = find(data.id);
+    newdata.stat = find(info.id);
     newdata.y = 0;
 
-    const VCounter &cvec = data.value();
-    size_type size = data.size();
+    const VCounter &cvec = info.value();
+    size_type size = info.size();
     for (off_type x = 0; x < size; x++) {
         newdata.x = x;
         newdata.data = cvec[x];
@@ -769,7 +767,7 @@ MySql::output(const VectorData &data)
 }
 
 void
-MySql::output(const DistDataData &data)
+MySql::output(const DistData &data)
 {
     const int db_sum = -1;
     const int db_squares = -2;
@@ -817,54 +815,53 @@ MySql::output(const DistDataData &data)
     }
 }
 
-
 void
-MySql::output(const DistData &data)
+MySql::output(const DistInfoBase &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return;
 
-    newdata.stat = find(data.id);
+    newdata.stat = find(info.id);
     newdata.y = 0;
-    output(data.data);
+    output(info.data);
 }
 
 void
-MySql::output(const VectorDistData &data)
+MySql::output(const VectorDistInfoBase &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return;
 
-    newdata.stat = find(data.id);
+    newdata.stat = find(info.id);
 
-    size_type size = data.data.size();
+    size_type size = info.data.size();
     for (off_type y = 0; y < size; ++y) {
         newdata.y = y;
-        output(data.data[y]);
+        output(info.data[y]);
     }
 }
 
 void
-MySql::output(const Vector2dData &data)
+MySql::output(const Vector2dInfoBase &info)
 {
-    if (!(data.flags & print))
+    if (!(info.flags & print))
         return;
 
-    newdata.stat = find(data.id);
+    newdata.stat = find(info.id);
 
     off_type index = 0;
-    for (off_type x = 0; x < data.x; x++) {
+    for (off_type x = 0; x < info.x; x++) {
         newdata.x = x;
-        for (off_type y = 0; y < data.y; y++) {
+        for (off_type y = 0; y < info.y; y++) {
             newdata.y = y;
-            newdata.data = data.cvec[index++];
+            newdata.data = info.cvec[index++];
             newdata.insert();
         }
     }
 }
 
 void
-MySql::output(const FormulaData &data)
+MySql::output(const FormulaInfoBase &info)
 {
 }
 
@@ -872,60 +869,60 @@ MySql::output(const FormulaData &data)
  * Implement the visitor
  */
 void
-MySql::visit(const ScalarData &data)
+MySql::visit(const ScalarInfoBase &info)
 {
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 void
-MySql::visit(const VectorData &data)
+MySql::visit(const VectorInfoBase &info)
 {
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 void
-MySql::visit(const DistData &data)
+MySql::visit(const DistInfoBase &info)
 {
     return;
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 void
-MySql::visit(const VectorDistData &data)
+MySql::visit(const VectorDistInfoBase &info)
 {
     return;
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 void
-MySql::visit(const Vector2dData &data)
+MySql::visit(const Vector2dInfoBase &info)
 {
     return;
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 void
-MySql::visit(const FormulaData &data)
+MySql::visit(const FormulaInfoBase &info)
 {
     if (!configured)
-        configure(data);
+        configure(info);
     else
-        output(data);
+        output(info);
 }
 
 bool
