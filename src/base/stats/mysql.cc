@@ -584,10 +584,11 @@ MySql::configure(const DistInfoBase &info)
         return;
 
     if (!info.data.fancy) {
-        stat.size = info.data.size;
-        stat.min = info.data.min;
-        stat.max = info.data.max;
-        stat.bktsize = info.data.bucket_size;
+        const Params *params = safe_cast<const Params *>(info.storageParams);
+        stat.size = params->buckets;
+        stat.min = params->min;
+        stat.max = params->max;
+        stat.bktsize = params->bucket_size;
     }
     insert(info.id, stat.setup(run));
 }
@@ -599,10 +600,11 @@ MySql::configure(const VectorDistInfoBase &info)
         return;
 
     if (!info.data[0].fancy) {
-        stat.size = info.data[0].size;
-        stat.min = info.data[0].min;
-        stat.max = info.data[0].max;
-        stat.bktsize = info.data[0].bucket_size;
+        const Params *params = safe_cast<const Params *>(info.storageParams);
+        stat.size = params->buckets;
+        stat.min = params->min;
+        stat.max = params->max;
+        stat.bktsize = params->bucket_size;
     }
 
     uint16_t statid = stat.setup(run);

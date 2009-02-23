@@ -77,6 +77,10 @@ extern Tick curTick;
 /* A namespace for all of the Statistics */
 namespace Stats {
 
+struct StorageParams
+{
+    virtual ~StorageParams();
+};
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -100,7 +104,11 @@ class Info
      * A unique stat ID for each stat in the simulator.
      * Can be used externally for lookups as well as for debugging.
      */
+    static int id_count;
     int id;
+
+  public:
+    const StorageParams *storageParams;
 
   public:
     Info();
@@ -247,10 +255,6 @@ struct DistData
     Counter squares;
     Counter samples;
 
-    Counter min;
-    Counter max;
-    Counter bucket_size;
-    size_type size;
     bool fancy;
 };
 
@@ -383,9 +387,13 @@ class InfoAccess
     /** Set up an info class for this statistic */
     void setInfo(Info *info);
     /** Save Storage class parameters if any */
+    void setParams(const StorageParams *params);
+    /** Save Storage class parameters if any */
     void setInit();
 
+    /** Grab the information class for this statistic */
     Info *info();
+    /** Grab the information class for this statistic */
     const Info *info() const;
 };
 
@@ -591,55 +599,51 @@ class WrapVec2d : public WrapVec<Parent, Child, Info>
  */
 class StatStor
 {
-  public:
-    /** The paramaters for this storage type, none for a scalar. */
-    struct Params { };
-
   private:
     /** The statistic value. */
     Counter data;
+
+  public:
+    struct Params : public StorageParams {};
 
   public:
     /**
      * Builds this storage element and calls the base constructor of the
      * datatype.
      */
-    StatStor(const Params &) : data(Counter()) {}
+    StatStor(Info *info)
+        : data(Counter())
+    { }
 
     /**
      * The the stat to the given value.
      * @param val The new value.
-     * @param p The paramters of this storage type.
      */
-    void set(Counter val, const Params &p) { data = val; }
+    void set(Counter val) { data = val; }
     /**
      * Increment the stat by the given value.
      * @param val The new value.
-     * @param p The paramters of this storage type.
      */
-    void inc(Counter val, const Params &p) { data += val; }
+    void inc(Counter val) { data += val; }
     /**
      * Decrement the stat by the given value.
      * @param val The new value.
-     * @param p The paramters of this storage type.
      */
-    void dec(Counter val, const Params &p) { data -= val; }
+    void dec(Counter val) { data -= val; }
     /**
      * Return the value of this stat as its base type.
-     * @param p The params of this storage type.
      * @return The value of this stat.
      */
-    Counter value(const Params &p) const { return data; }
+    Counter value() const { return data; }
     /**
      * Return the value of this stat as a result type.
-     * @param p The parameters of this storage type.
      * @return The value of this stat.
      */
-    Result result(const Params &p) const { return (Result)data; }
+    Result result() const { return (Result)data; }
     /**
      * Reset stat value to default
      */
-    void reset() { data = Counter(); }
+    void reset(Info *info) { data = Counter(); }
 
     /**
      * @return true if zero value
@@ -656,10 +660,6 @@ class StatStor
  */
 class AvgStor
 {
-  public:
-    /** The paramaters for this storage type */
-    struct Params { };
-
   private:
     /** The current count. */
     Counter current;
@@ -669,19 +669,23 @@ class AvgStor
     mutable Tick last;
 
   public:
+    struct Params : public StorageParams {};
+
+  public:
     /**
      * Build and initializes this stat storage.
      */
-    AvgStor(Params &p) : current(0), total(0), last(0) { }
+    AvgStor(Info *info)
+        : current(0), total(0), last(0)
+    { }
 
     /**
      * Set the current count to the one provided, update the total and last
      * set values.
      * @param val The new count.
-     * @param p The parameters for this storage.
      */
     void
-    set(Counter val, Params &p)
+    set(Counter val)
     {
         total += current * (curTick - last);
         last = curTick;
@@ -691,31 +695,27 @@ class AvgStor
     /**
      * Increment the current count by the provided value, calls set.
      * @param val The amount to increment.
-     * @param p The parameters for this storage.
      */
-    void inc(Counter val, Params &p) { set(current + val, p); }
+    void inc(Counter val) { set(current + val); }
 
     /**
      * Deccrement the current count by the provided value, calls set.
      * @param val The amount to decrement.
-     * @param p The parameters for this storage.
      */
-    void dec(Counter val, Params &p) { set(current - val, p); }
+    void dec(Counter val) { set(current - val); }
 
     /**
      * Return the current count.
-     * @param p The parameters for this storage.
      * @return The current count.
      */
-    Counter value(const Params &p) const { return current; }
+    Counter value() const { return current; }
 
     /**
      * Return the current average.
-     * @param p The parameters for this storage.
      * @return The current average.
      */
     Result
-    result(const Params &p) const
+    result() const
     {
         total += current * (curTick - last);
         last = curTick;
@@ -726,7 +726,7 @@ class AvgStor
      * Reset stat value to default
      */
     void
-    reset()
+    reset(Info *info)
     {
         total = 0;
         last = curTick;
@@ -747,16 +747,11 @@ class ScalarBase : public InfoAccess
 {
   public:
     typedef Stor Storage;
-
-    /** Define the params of the storage class. */
-    typedef typename Storage::Params Params;
+    typedef typename Stor::Params Params;
 
   protected:
     /** The storage of this stat. */
     char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
-
-    /** The parameters for this stat. */
-    Params params;
 
   protected:
     /**
@@ -785,7 +780,7 @@ class ScalarBase : public InfoAccess
     void
     doInit()
     {
-        new (storage) Storage(params);
+        new (storage) Storage(info());
         setInit();
     }
 
@@ -794,14 +789,10 @@ class ScalarBase : public InfoAccess
      * Return the current value of this stat as its base type.
      * @return The current value.
      */
-    Counter value() const { return data()->value(params); }
+    Counter value() const { return data()->value(); }
 
   public:
-    /**
-     * Create and initialize this stat, register it with the database.
-     */
-    ScalarBase()
-    { }
+    ScalarBase() { }
 
   public:
     // Common operators for stats
@@ -809,12 +800,12 @@ class ScalarBase : public InfoAccess
      * Increment the stat by 1. This calls the associated storage object inc
      * function.
      */
-    void operator++() { data()->inc(1, params); }
+    void operator++() { data()->inc(1); }
     /**
      * Decrement the stat by 1. This calls the associated storage object dec
      * function.
      */
-    void operator--() { data()->dec(1, params); }
+    void operator--() { data()->dec(1); }
 
     /** Increment the stat by 1. */
     void operator++(int) { ++*this; }
@@ -827,7 +818,7 @@ class ScalarBase : public InfoAccess
      * @param v The new value.
      */
     template <typename U>
-    void operator=(const U &v) { data()->set(v, params); }
+    void operator=(const U &v) { data()->set(v); }
 
     /**
      * Increment the stat by the given value. This calls the associated
@@ -835,7 +826,7 @@ class ScalarBase : public InfoAccess
      * @param v The value to add.
      */
     template <typename U>
-    void operator+=(const U &v) { data()->inc(v, params); }
+    void operator+=(const U &v) { data()->inc(v); }
 
     /**
      * Decrement the stat by the given value. This calls the associated
@@ -843,7 +834,7 @@ class ScalarBase : public InfoAccess
      * @param v The value to substract.
      */
     template <typename U>
-    void operator-=(const U &v) { data()->dec(v, params); }
+    void operator-=(const U &v) { data()->dec(v); }
 
     /**
      * Return the number of elements, always 1 for a scalar.
@@ -856,11 +847,11 @@ class ScalarBase : public InfoAccess
     /**
      * Reset stat value to default
      */
-    void reset() { data()->reset(); }
+    void reset() { data()->reset(info()); }
 
-    Counter value() { return data()->value(params); }
+    Counter value() { return data()->value(); }
 
-    Result result() { return data()->result(params); }
+    Result result() { return data()->result(); }
 
     Result total() { return result(); }
 
@@ -966,18 +957,17 @@ class ScalarProxy
      * Return the current value of this stat as its base type.
      * @return The current value.
      */
-    Counter value() const { return stat->data(index)->value(stat->params); }
+    Counter value() const { return stat->data(index)->value(); }
 
     /**
      * Return the current value of this statas a result type.
      * @return The current value.
      */
-    Result result() const { return stat->data(index)->result(stat->params); }
+    Result result() const { return stat->data(index)->result(); }
 
   public:
     /**
      * Create and initialize this proxy, do not register it with the database.
-     * @param p The params to use.
      * @param i The index to access.
      */
     ScalarProxy(Stat *s, off_type i)
@@ -1013,12 +1003,12 @@ class ScalarProxy
      * Increment the stat by 1. This calls the associated storage object inc
      * function.
      */
-    void operator++() { stat->data(index)->inc(1, stat->params); }
+    void operator++() { stat->data(index)->inc(1); }
     /**
      * Decrement the stat by 1. This calls the associated storage object dec
      * function.
      */
-    void operator--() { stat->data(index)->dec(1, stat->params); }
+    void operator--() { stat->data(index)->dec(1); }
 
     /** Increment the stat by 1. */
     void operator++(int) { ++*this; }
@@ -1034,7 +1024,7 @@ class ScalarProxy
     void
     operator=(const U &v)
     {
-        stat->data(index)->set(v, stat->params);
+        stat->data(index)->set(v);
     }
 
     /**
@@ -1046,7 +1036,7 @@ class ScalarProxy
     void
     operator+=(const U &v)
     {
-        stat->data(index)->inc(v, stat->params);
+        stat->data(index)->inc(v);
     }
 
     /**
@@ -1058,7 +1048,7 @@ class ScalarProxy
     void
     operator-=(const U &v)
     {
-        stat->data(index)->dec(v, stat->params);
+        stat->data(index)->dec(v);
     }
 
     /**
@@ -1089,9 +1079,7 @@ class VectorBase : public InfoAccess
 {
   public:
     typedef Stor Storage;
-
-    /** Define the params of the storage class. */
-    typedef typename Storage::Params Params;
+    typedef typename Stor::Params Params;
 
     /** Proxy type */
     typedef ScalarProxy<VectorBase<Storage> > Proxy;
@@ -1102,9 +1090,6 @@ class VectorBase : public InfoAccess
     /** The storage of this stat. */
     Storage *storage;
     size_type _size;
-
-    /** The parameters for this stat. */
-    Params params;
 
   protected:
     /**
@@ -1132,7 +1117,7 @@ class VectorBase : public InfoAccess
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(params);
+            new (&storage[i]) Storage(info());
 
         setInit();
     }
@@ -1143,7 +1128,7 @@ class VectorBase : public InfoAccess
     {
         vec.resize(size());
         for (off_type i = 0; i < size(); ++i)
-            vec[i] = data(i)->value(params);
+            vec[i] = data(i)->value();
     }
 
     /**
@@ -1155,7 +1140,7 @@ class VectorBase : public InfoAccess
     {
         vec.resize(size());
         for (off_type i = 0; i < size(); ++i)
-            vec[i] = data(i)->result(params);
+            vec[i] = data(i)->result();
     }
 
     /**
@@ -1167,7 +1152,7 @@ class VectorBase : public InfoAccess
     {
         Result total = 0.0;
         for (off_type i = 0; i < size(); ++i)
-            total += data(i)->result(params);
+            total += data(i)->result();
         return total;
     }
 
@@ -1195,7 +1180,7 @@ class VectorBase : public InfoAccess
     reset()
     {
         for (off_type i = 0; i < size(); ++i)
-            data(i)->reset();
+            data(i)->reset(info());
     }
 
   public:
@@ -1260,7 +1245,7 @@ class VectorProxy
         vec.resize(size());
 
         for (off_type i = 0; i < size(); ++i)
-            vec[i] = data(i)->result(stat->params);
+            vec[i] = data(i)->result();
 
         return vec;
     }
@@ -1270,7 +1255,7 @@ class VectorProxy
     {
         Result total = 0;
         for (off_type i = 0; i < size(); ++i)
-            total += data(i)->result(stat->params);
+            total += data(i)->result();
         return total;
     }
 
@@ -1314,7 +1299,7 @@ class Vector2dBase : public InfoAccess
 {
   public:
     typedef Stor Storage;
-    typedef typename Storage::Params Params;
+    typedef typename Stor::Params Params;
     typedef VectorProxy<Vector2dBase<Storage> > Proxy;
     friend class ScalarProxy<Vector2dBase<Storage> >;
     friend class VectorProxy<Vector2dBase<Storage> >;
@@ -1324,7 +1309,6 @@ class Vector2dBase : public InfoAccess
     size_type y;
     size_type _size;
     Storage *storage;
-    Params params;
 
   protected:
     Storage *data(off_type index) { return &storage[index]; }
@@ -1348,7 +1332,7 @@ class Vector2dBase : public InfoAccess
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(params);
+            new (&storage[i]) Storage(info);
 
         setInit();
     }
@@ -1413,7 +1397,7 @@ class Vector2dBase : public InfoAccess
     reset()
     {
         for (off_type i = 0; i < size(); ++i)
-            data(i)->reset();
+            data(i)->reset(info());
     }
 
     bool
@@ -1436,7 +1420,7 @@ class DistStor
 {
   public:
     /** The parameters for a distribution stat. */
-    struct Params
+    struct Params : public StorageParams
     {
         /** The minimum value to track. */
         Counter min;
@@ -1445,11 +1429,20 @@ class DistStor
         /** The number of entries in each bucket. */
         Counter bucket_size;
         /** The number of buckets. Equal to (max-min)/bucket_size. */
-        size_type size;
+        size_type buckets;
     };
     enum { fancy = false };
 
   private:
+    /** The minimum value to track. */
+    Counter min_track;
+    /** The maximum value to track. */
+    Counter max_track;
+    /** The number of entries in each bucket. */
+    Counter bucket_size;
+    /** The number of buckets. Equal to (max-min)/bucket_size. */
+    size_type buckets;
+
     /** The smallest value sampled. */
     Counter min_val;
     /** The largest value sampled. */
@@ -1468,10 +1461,10 @@ class DistStor
     VCounter cvec;
 
   public:
-    DistStor(const Params &params)
-        : cvec(params.size)
+    DistStor(Info *info)
+        : cvec(safe_cast<const Params *>(info->storageParams)->buckets)
     {
-        reset();
+        reset(info);
     }
 
     /**
@@ -1481,16 +1474,16 @@ class DistStor
      * @param params The paramters of the distribution.
      */
     void
-    sample(Counter val, int number, const Params &params)
+    sample(Counter val, int number)
     {
-        if (val < params.min)
+        if (val < min_track)
             underflow += number;
-        else if (val > params.max)
+        else if (val > max_track)
             overflow += number;
         else {
             size_type index =
-                (size_type)std::floor((val - params.min) / params.bucket_size);
-            assert(index < size(params));
+                (size_type)std::floor((val - min_track) / bucket_size);
+            assert(index < size());
             cvec[index] += number;
         }
 
@@ -1509,48 +1502,50 @@ class DistStor
     /**
      * Return the number of buckets in this distribution.
      * @return the number of buckets.
-     * @todo Is it faster to return the size from the parameters?
      */
-    size_type size(const Params &) const { return cvec.size(); }
+    size_type size() const { return cvec.size(); }
 
     /**
      * Returns true if any calls to sample have been made.
-     * @param params The paramters of the distribution.
      * @return True if any values have been sampled.
      */
     bool
-    zero(const Params &params) const
+    zero() const
     {
         return samples == Counter();
     }
 
     void
-    update(DistData *data, const Params &params)
+    update(Info *info, DistData &data)
     {
-        data->min = params.min;
-        data->max = params.max;
-        data->bucket_size = params.bucket_size;
-        data->size = params.size;
+        const Params *params = safe_cast<const Params *>(info->storageParams);
 
-        data->min_val = (min_val == CounterLimits::max()) ? 0 : min_val;
-        data->max_val = (max_val == CounterLimits::min()) ? 0 : max_val;
-        data->underflow = underflow;
-        data->overflow = overflow;
-        data->cvec.resize(params.size);
-        for (off_type i = 0; i < params.size; ++i)
-            data->cvec[i] = cvec[i];
+        data.min_val = (min_val == CounterLimits::max()) ? 0 : min_val;
+        data.max_val = (max_val == CounterLimits::min()) ? 0 : max_val;
+        data.underflow = underflow;
+        data.overflow = overflow;
 
-        data->sum = sum;
-        data->squares = squares;
-        data->samples = samples;
+        int buckets = params->buckets;
+        data.cvec.resize(buckets);
+        for (off_type i = 0; i < buckets; ++i)
+            data.cvec[i] = cvec[i];
+
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = samples;
     }
 
     /**
      * Reset stat value to default
      */
     void
-    reset()
+    reset(Info *info)
     {
+        const Params *params = safe_cast<const Params *>(info->storageParams);
+        min_track = params->min;
+        max_track = params->max;
+        bucket_size = params->bucket_size;
+
         min_val = CounterLimits::max();
         max_val = CounterLimits::min();
         underflow = 0;
@@ -1573,10 +1568,9 @@ class DistStor
 class FancyStor
 {
   public:
-    /**
-     * No paramters for this storage.
-     */
-    struct Params {};
+    struct Params : public StorageParams {};
+
+  public:
     enum { fancy = true };
 
   private:
@@ -1591,7 +1585,7 @@ class FancyStor
     /**
      * Create and initialize this storage.
      */
-    FancyStor(const Params &)
+    FancyStor(Info *info)
         : sum(Counter()), squares(Counter()), samples(Counter())
     { }
 
@@ -1604,7 +1598,7 @@ class FancyStor
      * @param p The parameters of this stat.
      */
     void
-    sample(Counter val, int number, const Params &p)
+    sample(Counter val, int number)
     {
         Counter value = val * number;
         sum += value;
@@ -1613,30 +1607,30 @@ class FancyStor
     }
 
     void
-    update(DistData *data, const Params &params)
+    update(Info *info, DistData &data)
     {
-        data->sum = sum;
-        data->squares = squares;
-        data->samples = samples;
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = samples;
     }
 
     /**
      * Return the number of entries in this stat, 1
      * @return 1.
      */
-    size_type size(const Params &) const { return 1; }
+    size_type size() const { return 1; }
 
     /**
      * Return true if no samples have been added.
      * @return True if no samples have been added.
      */
-    bool zero(const Params &) const { return samples == Counter(); }
+    bool zero() const { return samples == Counter(); }
 
     /**
      * Reset stat value to default
      */
     void
-    reset()
+    reset(Info *info)
     {
         sum = Counter();
         squares = Counter();
@@ -1651,8 +1645,9 @@ class FancyStor
 class AvgFancy
 {
   public:
-    /** No parameters for this storage. */
-    struct Params {};
+    struct Params : public StorageParams {};
+
+  public:
     enum { fancy = true };
 
   private:
@@ -1665,17 +1660,18 @@ class AvgFancy
     /**
      * Create and initialize this storage.
      */
-    AvgFancy(const Params &) : sum(Counter()), squares(Counter()) {}
+    AvgFancy(Info *info)
+        : sum(Counter()), squares(Counter())
+    {}
 
     /**
      * Add a value to the distribution for the given number of times.
      * Update the running sum and sum of squares.
      * @param val The value to add.
      * @param number The number of times to add the value.
-     * @param p The paramters of the distribution.
      */
     void
-    sample(Counter val, int number, const Params &p)
+    sample(Counter val, int number)
     {
         Counter value = val * number;
         sum += value;
@@ -1683,30 +1679,30 @@ class AvgFancy
     }
 
     void
-    update(DistData *data, const Params &params)
+    update(Info *info, DistData &data)
     {
-        data->sum = sum;
-        data->squares = squares;
-        data->samples = curTick;
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = curTick;
     }
 
     /**
      * Return the number of entries, in this case 1.
      * @return 1.
      */
-    size_type size(const Params &params) const { return 1; }
+    size_type size() const { return 1; }
 
     /**
      * Return true if no samples have been added.
      * @return True if the sum is zero.
      */
-    bool zero(const Params &params) const { return sum == Counter(); }
+    bool zero() const { return sum == Counter(); }
 
     /**
      * Reset stat value to default
      */
     void
-    reset()
+    reset(Info *info)
     {
         sum = Counter();
         squares = Counter();
@@ -1722,15 +1718,11 @@ class DistBase : public InfoAccess
 {
   public:
     typedef Stor Storage;
-    /** Define the params of the storage class. */
-    typedef typename Storage::Params Params;
+    typedef typename Stor::Params Params;
 
   protected:
     /** The storage for this stat. */
     char storage[sizeof(Storage)] __attribute__ ((aligned (8)));
-
-    /** The parameters for this stat. */
-    Params params;
 
   protected:
     /**
@@ -1756,7 +1748,7 @@ class DistBase : public InfoAccess
     void
     doInit()
     {
-        new (storage) Storage(params);
+        new (storage) Storage(info());
         setInit();
     }
 
@@ -1770,24 +1762,24 @@ class DistBase : public InfoAccess
      * @param n The number of times to add it, defaults to 1.
      */
     template <typename U>
-    void sample(const U &v, int n = 1) { data()->sample(v, n, params); }
+    void sample(const U &v, int n = 1) { data()->sample(v, n); }
 
     /**
      * Return the number of entries in this stat.
      * @return The number of entries.
      */
-    size_type size() const { return data()->size(params); }
+    size_type size() const { return data()->size(); }
     /**
      * Return true if no samples have been added.
      * @return True if there haven't been any samples.
      */
-    bool zero() const { return data()->zero(params); }
+    bool zero() const { return data()->zero(); }
 
     void
     update(DistInfoBase *base)
     {
         base->data.fancy = Storage::fancy;
-        data()->update(&(base->data), params);
+        data()->update(info(), base->data);
     }
 
     /**
@@ -1796,7 +1788,7 @@ class DistBase : public InfoAccess
     void
     reset()
     {
-        data()->reset();
+        data()->reset(info());
     }
 
     bool
@@ -1814,14 +1806,13 @@ class VectorDistBase : public InfoAccess
 {
   public:
     typedef Stor Storage;
-    typedef typename Storage::Params Params;
+    typedef typename Stor::Params Params;
     typedef DistProxy<VectorDistBase<Storage> > Proxy;
     friend class DistProxy<VectorDistBase<Storage> >;
 
   protected:
     Storage *storage;
     size_type _size;
-    Params params;
 
   protected:
     Storage *
@@ -1847,7 +1838,7 @@ class VectorDistBase : public InfoAccess
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(params);
+            new (&storage[i]) Storage(info());
 
         setInit();
     }
@@ -1881,7 +1872,7 @@ class VectorDistBase : public InfoAccess
         return false;
 #if 0
         for (off_type i = 0; i < size(); ++i)
-            if (!data(i)->zero(params))
+            if (!data(i)->zero())
                 return false;
         return true;
 #endif
@@ -1894,7 +1885,7 @@ class VectorDistBase : public InfoAccess
     reset()
     {
         for (off_type i = 0; i < size(); ++i)
-            data(i)->reset();
+            data(i)->reset(info());
     }
 
     bool
@@ -1910,7 +1901,7 @@ class VectorDistBase : public InfoAccess
         base->data.resize(size);
         for (off_type i = 0; i < size; ++i) {
             base->data[i].fancy = Storage::fancy;
-            data(i)->update(&(base->data[i]), params);
+            data(i)->update(info(), base->data[i]);
         }
     }
 };
@@ -1948,7 +1939,7 @@ class DistProxy
     void
     sample(const U &v, int n = 1)
     {
-        data()->sample(v, n, stat->params);
+        data()->sample(v, n);
     }
 
     size_type
@@ -1960,7 +1951,7 @@ class DistProxy
     bool
     zero() const
     {
-        return data()->zero(stat->params);
+        return data()->zero();
     }
 
     /**
@@ -1984,7 +1975,7 @@ VectorDistBase<Storage>::total(off_type index) const
 {
     Result total = 0;
     for (off_type i = 0; i < x_size(); ++i)
-        total += data(i)->result(stat->params);
+        total += data(i)->result();
 }
 #endif
 
@@ -2528,8 +2519,6 @@ class Distribution
   public:
     /** Base implementation. */
     typedef DistBase<DistStor> Base;
-    /** The Parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**
@@ -2542,10 +2531,12 @@ class Distribution
     Distribution &
     init(Counter min, Counter max, Counter bkt)
     {
-        this->params.min = min;
-        this->params.max = max;
-        this->params.bucket_size = bkt;
-        this->params.size = (size_type)rint((max - min) / bkt + 1.0);
+        DistStor::Params *params = new DistStor::Params;
+        params->min = min;
+        params->max = max;
+        params->bucket_size = bkt;
+        params->buckets = (size_type)rint((max - min) / bkt + 1.0);
+        this->setParams(params);
         this->doInit();
         return *this;
     }
@@ -2562,8 +2553,6 @@ class StandardDeviation
   public:
     /** The base implementation */
     typedef DistBase<DistStor> Base;
-    /** The parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**
@@ -2586,8 +2575,6 @@ class AverageDeviation
   public:
     /** The base implementation */
     typedef DistBase<DistStor> Base;
-    /** The parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**
@@ -2612,8 +2599,6 @@ class VectorDistribution
   public:
     /** The base implementation */
     typedef VectorDistBase<DistStor> Base;
-    /** The parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**
@@ -2627,10 +2612,12 @@ class VectorDistribution
     VectorDistribution &
     init(size_type size, Counter min, Counter max, Counter bkt)
     {
-        this->params.min = min;
-        this->params.max = max;
-        this->params.bucket_size = bkt;
-        this->params.size = rint((max - min) / bkt + 1.0);
+        DistStor::Params *params = new DistStor::Params;
+        params->min = min;
+        params->max = max;
+        params->bucket_size = bkt;
+        params->buckets = rint((max - min) / bkt + 1.0);
+        this->setParams(params);
         this->doInit(size);
         return *this;
     }
@@ -2649,8 +2636,6 @@ class VectorStandardDeviation
   public:
     /** The base implementation */
     typedef VectorDistBase<FancyStor> Base;
-    /** The parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**
@@ -2679,8 +2664,6 @@ class VectorAverageDeviation
   public:
     /** The base implementation */
     typedef VectorDistBase<AvgFancy> Base;
-    /** The parameter type. */
-    typedef DistStor::Params Params;
 
   public:
     /**

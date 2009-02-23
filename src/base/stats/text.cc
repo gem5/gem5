@@ -673,11 +673,17 @@ Text::visit(const DistInfoBase &info)
     print.squares = data.squares;
     print.samples = data.samples;
 
-    print.min = data.min;
-    print.max = data.max;
-    print.bucket_size = data.bucket_size;
-    print.size = data.size;
     print.fancy = data.fancy;
+
+    if (!data.fancy) {
+        const DistStor::Params *params =
+            safe_cast<const DistStor::Params *>(info.storageParams);
+
+        print.min = params->min;
+        print.max = params->max;
+        print.bucket_size = params->bucket_size;
+        print.size = params->buckets;
+    }
 
     print(*stream);
 }
@@ -710,11 +716,16 @@ Text::visit(const VectorDistInfoBase &info)
         print.squares = info.data[i].squares;
         print.samples = info.data[i].samples;
 
-        print.min = info.data[i].min;
-        print.max = info.data[i].max;
-        print.bucket_size = info.data[i].bucket_size;
-        print.size = info.data[i].size;
         print.fancy = info.data[i].fancy;
+        if (!print.fancy) {
+            const DistStor::Params *params =
+                safe_cast<const DistStor::Params *>(info.storageParams);
+
+            print.min = params->min;
+            print.max = params->max;
+            print.bucket_size = params->bucket_size;
+            print.size = params->buckets;
+        }
 
         print(*stream);
     }

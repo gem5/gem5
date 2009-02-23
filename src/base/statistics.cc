@@ -36,6 +36,7 @@
 
 #include "base/callback.hh"
 #include "base/cprintf.hh"
+#include "base/debug.hh"
 #include "base/hostinfo.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
@@ -81,6 +82,12 @@ InfoAccess::setInfo(Info *info)
 }
 
 void
+InfoAccess::setParams(const StorageParams *params)
+{
+    info()->storageParams = params;
+}
+
+void
 InfoAccess::setInit()
 {
     info()->flags |= init;
@@ -102,11 +109,20 @@ InfoAccess::info() const
     return (*i).second;
 }
 
-Info::Info()
-    : flags(none), precision(-1), prereq(0)
+StorageParams::~StorageParams()
 {
-    static int count = 0;
-    id = count++;
+}
+
+int Info::id_count = 0;
+
+int debug_break_id = -1;
+
+Info::Info()
+    : flags(none), precision(-1), prereq(0), storageParams(NULL)
+{
+    id = id_count++;
+    if (debug_break_id >= 0 and debug_break_id == id)
+        debug_break();
 }
 
 Info::~Info()
@@ -249,7 +265,7 @@ check()
         Info *info = *i;
         assert(info);
         if (!info->check() || !info->baseCheck())
-            panic("stat check failed for %s\n", info->name);
+            panic("stat check failed for '%s' %d\n", info->name, info->id);
     }
 
     off_t j = 0;
