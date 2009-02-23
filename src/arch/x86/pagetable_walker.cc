@@ -319,11 +319,13 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
 }
 
 void
-Walker::start(ThreadContext * _tc, Addr vaddr)
+Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
 {
     assert(state == Ready);
     assert(!tc);
     tc = _tc;
+    execute = _execute;
+    write = _write;
 
     VAddr addr = vaddr;
 

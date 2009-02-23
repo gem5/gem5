@@ -140,9 +140,9 @@ TLB::lookup(Addr va, bool update_lru)
 
 #if FULL_SYSTEM
 void
-TLB::walk(ThreadContext * _tc, Addr vaddr)
+TLB::walk(ThreadContext * _tc, Addr vaddr, bool write, bool execute)
 {
-    walker->start(_tc, vaddr);
+    walker->start(_tc, vaddr, write, execute);
 }
 #endif
 
@@ -616,7 +616,7 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-                return new TlbFault(vaddr);
+                return new TlbFault(vaddr, write, execute);
             } else {
                 // Do paging protection checks.
                 DPRINTF(TLB, "Entry found with paddr %#x, doing protection checks.\n", entry->paddr);

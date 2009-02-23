@@ -95,7 +95,7 @@ namespace X86ISA
         void doNext(PacketPtr &read, PacketPtr &write);
 
         // Kick off the state machine.
-        void start(ThreadContext * _tc, Addr vaddr);
+        void start(ThreadContext * _tc, Addr vaddr, bool write, bool execute);
 
       protected:
 
@@ -165,7 +165,10 @@ namespace X86ISA
         State nextState;
         int size;
         bool enableNX;
+        bool write, execute;
         TlbEntry entry;
+        
+        Fault pageFault(bool present);
 
       public:
 

@@ -119,7 +119,7 @@ namespace X86ISA
 
         Walker * walker;
 
-        void walk(ThreadContext * _tc, Addr vaddr);
+        void walk(ThreadContext * _tc, Addr vaddr, bool write, bool execute);
 #endif
 
       public:

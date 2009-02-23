@@ -166,13 +166,13 @@ namespace X86ISA
     void FakeITLBFault::invoke(ThreadContext * tc)
     {
         // Start the page table walker.
-        tc->getITBPtr()->walk(tc, vaddr);
+        tc->getITBPtr()->walk(tc, vaddr, write, execute);
     }
 
     void FakeDTLBFault::invoke(ThreadContext * tc)
     {
         // Start the page table walker.
-        tc->getDTBPtr()->walk(tc, vaddr);
+        tc->getDTBPtr()->walk(tc, vaddr, write, execute);
     }
 
 #else // !FULL_SYSTEM

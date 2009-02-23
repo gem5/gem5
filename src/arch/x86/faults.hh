@@ -429,10 +429,12 @@ namespace X86ISA
     {
       protected:
         Addr vaddr;
+        bool write;
+        bool execute;
       public:
-        FakeITLBFault(Addr _vaddr) :
+        FakeITLBFault(Addr _vaddr, bool _write, bool _execute) :
             X86Fault("fake instruction tlb fault", "itlb", 0),
-            vaddr(_vaddr)
+            vaddr(_vaddr), write(_write), execute(_execute)
         {}
 
         void invoke(ThreadContext * tc);
@@ -442,10 +444,12 @@ namespace X86ISA
     {
       protected:
         Addr vaddr;
+        bool write;
+        bool execute;
       public:
-        FakeDTLBFault(Addr _vaddr) :
+        FakeDTLBFault(Addr _vaddr, bool _write, bool _execute) :
             X86Fault("fake data tlb fault", "dtlb", 0),
-            vaddr(_vaddr)
+            vaddr(_vaddr), write(_write), execute(_execute)
         {}
 
         void invoke(ThreadContext * tc);
