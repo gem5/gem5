@@ -34,12 +34,12 @@
 #include <string>
 #include <utility>
 
+#include "base/debug.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/pc_event.hh"
-#include "sim/debug.hh"
 #include "sim/core.hh"
 #include "sim/system.hh"
 

@@ -38,6 +38,7 @@
 #include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
 #include "base/annotate.hh"
+#include "base/debug.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"
@@ -49,7 +50,6 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
-#include "sim/debug.hh"
 #if FULL_SYSTEM
 #include "sim/vptr.hh"
 #endif

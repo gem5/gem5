@@ -28,15 +28,18 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __SIM_DEBUG_HH__
-#define __SIM_DEBUG_HH__
+#include <sys/types.h>
+#include <signal.h>
+#include <unistd.h>
 
-#include "sim/host.hh"
+#include "base/cprintf.hh"
 
-void schedBreakCycle(Tick when);
-
-int getRemoteGDBPort();
-// Remote gdb base port.  0 disables remote gdb.
-void setRemoteGDBPort(int port);
-
-#endif // __SIM_DEBUG_HH__
+void
+debug_break()
+{
+#ifndef NDEBUG
+    kill(getpid(), SIGTRAP);
+#else
+    cprintf("debug_break suppressed, compiled with NDEBUG\n");
+#endif
+}

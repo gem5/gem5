@@ -36,6 +36,7 @@
 #include <deque>
 #include <string>
 
+#include "base/debug.hh"
 #include "base/inet.hh"
 #include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
@@ -44,7 +45,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
-#include "sim/debug.hh"
 #include "sim/host.hh"
 #include "sim/system.hh"
 

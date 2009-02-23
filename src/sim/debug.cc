@@ -30,28 +30,16 @@
  */
 
 #include <Python.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
 
 #include <string>
 #include <vector>
 
+#include "base/debug.hh"
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;
-
-void
-debug_break()
-{
-#ifndef NDEBUG
-    kill(getpid(), SIGTRAP);
-#else
-    cprintf("debug_break suppressed, compiled with NDEBUG\n");
-#endif
-}
 
 //
 // Debug event: place a breakpoint on the process function and

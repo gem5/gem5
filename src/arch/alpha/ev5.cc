@@ -35,13 +35,13 @@
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
 #include "arch/alpha/kgdb.h"
+#include "base/debug.hh"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "sim/debug.hh"
 #include "sim/sim_exit.hh"
 
 namespace AlphaISA {

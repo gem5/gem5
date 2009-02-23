@@ -33,6 +33,7 @@
 #include <string>
 
 #include "arch/vtophys.hh"
+#include "base/debug.hh"
 #include "base/inet.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/intr_control.hh"
@@ -40,7 +41,6 @@
 #include "dev/sinic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
 #include "sim/stats.hh"
