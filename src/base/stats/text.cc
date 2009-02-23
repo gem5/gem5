@@ -450,7 +450,7 @@ DistPrint::operator()(ostream &stream) const
     if (!compat) {
         for (off_type i = 0; i < size; ++i) {
             stringstream namestr;
-            namestr << name;
+            namestr << base;
 
             Counter low = i * bucket_size + min;
             Counter high = ::min(low + bucket_size, max);
