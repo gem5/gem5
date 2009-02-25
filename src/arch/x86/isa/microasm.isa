@@ -173,7 +173,7 @@ let {{
         env.dataSize = 8;
     '''
 
-    assembler.symbols["oszForPseudoDesc"] = '''
+    assembler.symbols["maxOsz"] = '''
     if (machInst.mode.submode == SixtyFourBitMode)
         env.dataSize = 8;
     else

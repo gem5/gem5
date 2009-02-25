@@ -56,7 +56,7 @@
 microcode = '''
 def macroop LGDT_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -68,7 +68,7 @@ def macroop LGDT_M
 
 def macroop LGDT_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
@@ -86,7 +86,7 @@ def macroop LGDT_P
 
 def macroop LGDT_16_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -99,7 +99,7 @@ def macroop LGDT_16_M
 
 def macroop LGDT_16_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
@@ -113,7 +113,7 @@ def macroop LGDT_16_P
 
 def macroop LIDT_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -125,7 +125,7 @@ def macroop LIDT_M
 
 def macroop LIDT_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
@@ -143,7 +143,7 @@ def macroop LIDT_P
 
 def macroop LIDT_16_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -156,7 +156,7 @@ def macroop LIDT_16_M
 
 def macroop LIDT_16_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
