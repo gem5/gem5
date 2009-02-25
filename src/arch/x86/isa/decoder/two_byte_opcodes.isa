@@ -264,7 +264,7 @@
 #else
                 0x05: SyscallInst::syscall('xc->syscall(Rax)', IsSyscall);
 #endif
-                0x06: clts();
+                0x06: Inst::CLTS();
                 0x07: decode MODE_SUBMODE {
                     0x0: decode OPSIZE {
                         // Return to 64 bit mode.
