@@ -1171,7 +1171,7 @@ let {{
                 } else if (!(desc.type == 0x9 ||
                         (desc.type == 1 &&
                          m5reg.mode != LongMode))) {
-
+                    fault = new GeneralProtection(selector);
                 }
                 break;
               default:
