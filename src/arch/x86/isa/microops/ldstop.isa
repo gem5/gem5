@@ -466,9 +466,9 @@ let {{
 
         microopClasses[name] = StoreOp
 
-    defineMicroStoreOp('St', 'Mem = Data;')
+    defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
     defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
-    defineMicroStoreOp('Stupd', 'Mem = Data;',
+    defineMicroStoreOp('Stupd', 'Mem = pick(Data, 2, dataSize);',
             'Base = merge(Base, EA - SegBase, addressSize);',
             'Base = merge(Base, pkt->req->getVaddr() - SegBase, addressSize);');
     defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
