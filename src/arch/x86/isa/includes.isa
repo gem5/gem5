@@ -117,6 +117,7 @@ output decoder {{
 #include "arch/x86/microcode_rom.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/segmentregs.hh"
+#include "arch/x86/tlb.hh"
 #include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"

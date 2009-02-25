@@ -60,9 +60,16 @@
 
 #include "arch/x86/insts/microop.hh"
 #include "mem/packet.hh"
+#include "mem/request.hh"
 
 namespace X86ISA
 {
+    static const Request::FlagsType SegmentFlagMask = mask(4);
+    static const int FlagShift = 4;
+    enum FlagBit {
+        CPL0FlagBit = 1
+    };
+
     /**
      * Base class for load and store ops
      */
@@ -77,6 +84,7 @@ namespace X86ISA
         const RegIndex data;
         const uint8_t dataSize;
         const uint8_t addressSize;
+        const Request::FlagsType memFlags;
         RegIndex foldOBit, foldABit;
 
         //Constructor
@@ -87,13 +95,15 @@ namespace X86ISA
                 uint64_t _disp, uint8_t _segment,
                 RegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags,
                 OpClass __opClass) :
         X86MicroopBase(machInst, mnem, _instMnem,
                 isMicro, isDelayed, isFirst, isLast, __opClass),
                 scale(_scale), index(_index), base(_base),
                 disp(_disp), segment(_segment),
                 data(_data),
-                dataSize(_dataSize), addressSize(_addressSize)
+                dataSize(_dataSize), addressSize(_addressSize),
+                memFlags(_memFlags | _segment)
         {
             foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
             foldABit =

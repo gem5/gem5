@@ -59,6 +59,7 @@
 
 #include "config/full_system.hh"
 
+#include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/x86_traits.hh"
@@ -195,7 +196,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
     uint32_t flags = req->getFlags();
     bool storeCheck = flags & StoreCheck;
 
-    int seg = flags & mask(4);
+    int seg = flags & SegmentFlagMask;
 
     //XXX Junk code to surpress the warning
     if (storeCheck);

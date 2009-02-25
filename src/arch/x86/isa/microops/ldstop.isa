@@ -124,14 +124,16 @@ def template MicroLeaDeclare {{
                 uint8_t _scale, RegIndex _index, RegIndex _base,
                 uint64_t _disp, uint8_t _segment,
                 RegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize);
+                uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 uint8_t _scale, RegIndex _index, RegIndex _base,
                 uint64_t _disp, uint8_t _segment,
                 RegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize);
+                uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags);
 
         %(BasicExecDeclare)s
     };
@@ -151,7 +153,7 @@ def template MicroLoadExecute {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, (%(mem_flags)s) | segment);
+        fault = read(xc, EA, Mem, memFlags);
 
         if(fault == NoFault)
         {
@@ -178,7 +180,7 @@ def template MicroLoadInitiateAcc {{
         %(ea_code)s;
         DPRINTF(X86, "%s : %s: The address is %#x\n", instMnem, mnemonic, EA);
 
-        fault = read(xc, EA, Mem, (%(mem_flags)s) | segment);
+        fault = read(xc, EA, Mem, memFlags);
 
         return fault;
     }
@@ -225,7 +227,7 @@ def template MicroStoreExecute {{
 
         if(fault == NoFault)
         {
-            fault = write(xc, Mem, EA, (%(mem_flags)s) | segment);
+            fault = write(xc, Mem, EA, memFlags);
             if(fault == NoFault)
             {
                 %(post_code)s;
@@ -253,7 +255,7 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            write(xc, Mem, EA, (%(mem_flags)s) | segment);
+            write(xc, Mem, EA, memFlags);
         }
         return fault;
     }
@@ -296,14 +298,16 @@ def template MicroLdStOpDeclare {{
                 uint8_t _scale, RegIndex _index, RegIndex _base,
                 uint64_t _disp, uint8_t _segment,
                 RegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize);
+                uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 uint8_t _scale, RegIndex _index, RegIndex _base,
                 uint64_t _disp, uint8_t _segment,
                 RegIndex _data,
-                uint8_t _dataSize, uint8_t _addressSize);
+                uint8_t _dataSize, uint8_t _addressSize,
+                Request::FlagsType _memFlags);
 
         %(BasicExecDeclare)s
 
@@ -325,12 +329,13 @@ def template MicroLdStOpConstructor {{
             uint8_t _scale, RegIndex _index, RegIndex _base,
             uint64_t _disp, uint8_t _segment,
             RegIndex _data,
-            uint8_t _dataSize, uint8_t _addressSize) :
+            uint8_t _dataSize, uint8_t _addressSize,
+            Request::FlagsType _memFlags) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
                 _scale, _index, _base,
                 _disp, _segment, _data,
-                _dataSize, _addressSize, %(op_class)s)
+                _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
         buildMe();
     }
@@ -341,12 +346,13 @@ def template MicroLdStOpConstructor {{
             uint8_t _scale, RegIndex _index, RegIndex _base,
             uint64_t _disp, uint8_t _segment,
             RegIndex _data,
-            uint8_t _dataSize, uint8_t _addressSize) :
+            uint8_t _dataSize, uint8_t _addressSize,
+            Request::FlagsType _memFlags) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
                 _scale, _index, _base,
                 _disp, _segment, _data,
-                _dataSize, _addressSize, %(op_class)s)
+                _dataSize, _addressSize, _memFlags, %(op_class)s)
     {
         buildMe();
     }
@@ -354,26 +360,31 @@ def template MicroLdStOpConstructor {{
 
 let {{
     class LdStOp(X86Microop):
-        def __init__(self, data, segment, addr, disp, dataSize, addressSize):
+        def __init__(self, data, segment, addr, disp,
+                dataSize, addressSize, baseFlags, atCPL0):
             self.data = data
             [self.scale, self.index, self.base] = addr
             self.disp = disp
             self.segment = segment
             self.dataSize = dataSize
             self.addressSize = addressSize
+            self.memFlags = baseFlags
+            if atCPL0:
+                self.memFlags += " | (CPL0FlagBit << FlagShift)"
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(scale)s, %(index)s, %(base)s,
                     %(disp)s, %(segment)s, %(data)s,
-                    %(dataSize)s, %(addressSize)s)''' % {
+                    %(dataSize)s, %(addressSize)s, %(memFlags)s)''' % {
                 "class_name" : self.className,
                 "flags" : self.microFlagsText(microFlags),
                 "scale" : self.scale, "index" : self.index,
                 "base" : self.base,
                 "disp" : self.disp,
                 "segment" : self.segment, "data" : self.data,
-                "dataSize" : self.dataSize, "addressSize" : self.addressSize}
+                "dataSize" : self.dataSize, "addressSize" : self.addressSize,
+                "memFlags" : self.memFlags}
             return allocator
 }};
 
@@ -387,7 +398,7 @@ let {{
 
     calculateEA = "EA = SegBase + scale * Index + Base + disp;"
 
-    def defineMicroLoadOp(mnemonic, code, mem_flags=0):
+    def defineMicroLoadOp(mnemonic, code, mem_flags="0"):
         global header_output
         global decoder_output
         global exec_output
@@ -398,8 +409,7 @@ let {{
         # Build up the all register version of this micro op
         iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
                 {"code": code,
-                 "ea_code": calculateEA,
-                 "mem_flags": mem_flags})
+                 "ea_code": calculateEA})
         header_output += MicroLdStOpDeclare.subst(iop)
         decoder_output += MicroLdStOpConstructor.subst(iop)
         exec_output += MicroLoadExecute.subst(iop)
@@ -408,16 +418,19 @@ let {{
 
         class LoadOp(LdStOp):
             def __init__(self, data, segment, addr, disp = 0,
-                    dataSize="env.dataSize", addressSize="env.addressSize"):
-                super(LoadOp, self).__init__(data, segment,
-                        addr, disp, dataSize, addressSize)
+                    dataSize="env.dataSize",
+                    addressSize="env.addressSize",
+                    atCPL0=False):
+                super(LoadOp, self).__init__(data, segment, addr,
+                        disp, dataSize, addressSize, mem_flags, atCPL0)
                 self.className = Name
                 self.mnemonic = name
 
         microopClasses[name] = LoadOp
 
     defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);')
-    defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);', 'StoreCheck')
+    defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);',
+            'X86ISA::StoreCheck')
     defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
 
     def defineMicroStoreOp(mnemonic, code, \
@@ -434,8 +447,7 @@ let {{
                 {"code": code,
                  "post_code": postCode,
                  "complete_code": completeCode,
-                 "ea_code": calculateEA,
-                 "mem_flags": mem_flags})
+                 "ea_code": calculateEA})
         header_output += MicroLdStOpDeclare.subst(iop)
         decoder_output += MicroLdStOpConstructor.subst(iop)
         exec_output += MicroStoreExecute.subst(iop)
@@ -444,9 +456,11 @@ let {{
 
         class StoreOp(LdStOp):
             def __init__(self, data, segment, addr, disp = 0,
-                    dataSize="env.dataSize", addressSize="env.addressSize"):
-                super(StoreOp, self).__init__(data, segment,
-                        addr, disp, dataSize, addressSize)
+                    dataSize="env.dataSize",
+                    addressSize="env.addressSize",
+                    atCPL0=False):
+                super(StoreOp, self).__init__(data, segment, addr,
+                        disp, dataSize, addressSize, mem_flags, atCPL0)
                 self.className = Name
                 self.mnemonic = name
 
@@ -461,8 +475,7 @@ let {{
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);",
-             "ea_code": calculateEA,
-             "mem_flags": 0})
+             "ea_code": calculateEA})
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
@@ -471,7 +484,7 @@ let {{
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
             super(LeaOp, self).__init__(data, segment,
-                    addr, disp, dataSize, addressSize)
+                    addr, disp, dataSize, addressSize, "0", False)
             self.className = "Lea"
             self.mnemonic = "lea"
 
@@ -480,17 +493,17 @@ let {{
 
     iop = InstObjParams("tia", "Tia", 'X86ISA::LdStOp',
             {"code": "xc->demapPage(EA, 0);",
-             "ea_code": calculateEA,
-             "mem_flags": 0})
+             "ea_code": calculateEA})
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
 
     class TiaOp(LdStOp):
         def __init__(self, segment, addr, disp = 0,
-                dataSize="env.dataSize", addressSize="env.addressSize"):
+                dataSize="env.dataSize",
+                addressSize="env.addressSize"):
             super(TiaOp, self).__init__("NUM_INTREGS", segment,
-                    addr, disp, dataSize, addressSize)
+                    addr, disp, dataSize, addressSize, "0", False)
             self.className = "Tia"
             self.mnemonic = "tia"
 
@@ -498,9 +511,10 @@ let {{
 
     class CdaOp(LdStOp):
         def __init__(self, segment, addr, disp = 0,
-                dataSize="env.dataSize", addressSize="env.addressSize"):
+                dataSize="env.dataSize",
+                addressSize="env.addressSize", atCPL0=False):
             super(CdaOp, self).__init__("NUM_INTREGS", segment,
-                    addr, disp, dataSize, addressSize)
+                    addr, disp, dataSize, addressSize, "0", atCPL0)
             self.className = "Cda"
             self.mnemonic = "cda"
 
