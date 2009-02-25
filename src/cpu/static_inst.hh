@@ -159,6 +159,7 @@ class StaticInstBase : public RefCounted
         IsSerializeAfter,
         IsMemBarrier,   ///< Is a memory barrier
         IsWriteBarrier, ///< Is a write barrier
+        IsReadBarrier,  ///< Is a read barrier
         IsERET, /// <- Causes the IFU to stall (MIPS ISA)
 
         IsNonSpeculative, ///< Should not be executed speculatively
