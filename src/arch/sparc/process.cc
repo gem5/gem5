@@ -338,18 +338,18 @@ SparcLiveProcess::argsInit(int pageSize)
     IntType window_save_base = argc_base - window_save_size;
 #endif
 
-    DPRINTF(Sparc, "The addresses of items on the initial stack:\n");
-    DPRINTF(Sparc, "%#x - sentry NULL\n", sentry_base);
-    DPRINTF(Sparc, "filename = %s\n", filename);
-    DPRINTF(Sparc, "%#x - file name\n", file_name_base);
-    DPRINTF(Sparc, "%#x - env data\n", env_data_base);
-    DPRINTF(Sparc, "%#x - arg data\n", arg_data_base);
-    DPRINTF(Sparc, "%#x - auxv array\n", auxv_array_base);
-    DPRINTF(Sparc, "%#x - envp array\n", envp_array_base);
-    DPRINTF(Sparc, "%#x - argv array\n", argv_array_base);
-    DPRINTF(Sparc, "%#x - argc \n", argc_base);
-    DPRINTF(Sparc, "%#x - window save\n", window_save_base);
-    DPRINTF(Sparc, "%#x - stack min\n", stack_min);
+    DPRINTF(Stack, "The addresses of items on the initial stack:\n");
+    DPRINTF(Stack, "%#x - sentry NULL\n", sentry_base);
+    DPRINTF(Stack, "filename = %s\n", filename);
+    DPRINTF(Stack, "%#x - file name\n", file_name_base);
+    DPRINTF(Stack, "%#x - env data\n", env_data_base);
+    DPRINTF(Stack, "%#x - arg data\n", arg_data_base);
+    DPRINTF(Stack, "%#x - auxv array\n", auxv_array_base);
+    DPRINTF(Stack, "%#x - envp array\n", envp_array_base);
+    DPRINTF(Stack, "%#x - argv array\n", argv_array_base);
+    DPRINTF(Stack, "%#x - argc \n", argc_base);
+    DPRINTF(Stack, "%#x - window save\n", window_save_base);
+    DPRINTF(Stack, "%#x - stack min\n", stack_min);
 
     assert(window_save_base == stack_min);
 

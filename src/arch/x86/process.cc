@@ -406,16 +406,16 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     Addr argv_array_base = envp_array_base - argv_array_size;
     Addr argc_base = argv_array_base - argc_size;
 
-    DPRINTF(X86, "The addresses of items on the initial stack:\n");
-    DPRINTF(X86, "0x%x - file name\n", file_name_base);
-    DPRINTF(X86, "0x%x - env data\n", env_data_base);
-    DPRINTF(X86, "0x%x - arg data\n", arg_data_base);
-    DPRINTF(X86, "0x%x - aux data\n", aux_data_base);
-    DPRINTF(X86, "0x%x - auxv array\n", auxv_array_base);
-    DPRINTF(X86, "0x%x - envp array\n", envp_array_base);
-    DPRINTF(X86, "0x%x - argv array\n", argv_array_base);
-    DPRINTF(X86, "0x%x - argc \n", argc_base);
-    DPRINTF(X86, "0x%x - stack min\n", stack_min);
+    DPRINTF(Stack, "The addresses of items on the initial stack:\n");
+    DPRINTF(Stack, "0x%x - file name\n", file_name_base);
+    DPRINTF(Stack, "0x%x - env data\n", env_data_base);
+    DPRINTF(Stack, "0x%x - arg data\n", arg_data_base);
+    DPRINTF(Stack, "0x%x - aux data\n", aux_data_base);
+    DPRINTF(Stack, "0x%x - auxv array\n", auxv_array_base);
+    DPRINTF(Stack, "0x%x - envp array\n", envp_array_base);
+    DPRINTF(Stack, "0x%x - argv array\n", argv_array_base);
+    DPRINTF(Stack, "0x%x - argc \n", argc_base);
+    DPRINTF(Stack, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
 
