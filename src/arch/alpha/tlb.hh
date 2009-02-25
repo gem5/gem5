@@ -131,7 +131,9 @@ class ITB : public TLB
     ITB(const Params *p);
     virtual void regStats();
 
-    Fault translateAtomic(RequestPtr &req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation);
 };
 
 class DTB : public TLB
@@ -155,7 +157,9 @@ class DTB : public TLB
     DTB(const Params *p);
     virtual void regStats();
 
-    Fault translateAtomic(RequestPtr &req, ThreadContext *tc, bool write);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, bool write);
 };
 
 } // namespace AlphaISA

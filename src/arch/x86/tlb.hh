@@ -138,8 +138,10 @@ namespace X86ISA
         EntryList entryList;
 
         template<class TlbFault>
-        Fault translateAtomic(RequestPtr &req, ThreadContext *tc,
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc,
                 bool write, bool execute);
+        void translateTiming(RequestPtr req, ThreadContext *tc,
+                Translation *translation, bool write, bool execute);
 
       public:
 
@@ -159,7 +161,9 @@ namespace X86ISA
             _allowNX = false;
         }
 
-        Fault translateAtomic(RequestPtr &req, ThreadContext *tc);
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+        void translateTiming(RequestPtr req, ThreadContext *tc,
+                Translation *translation);
 
         friend class DTB;
     };
@@ -172,7 +176,9 @@ namespace X86ISA
         {
             _allowNX = true;
         }
-        Fault translateAtomic(RequestPtr &req, ThreadContext *tc, bool write);
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
+        void translateTiming(RequestPtr req, ThreadContext *tc,
+                Translation *translation, bool write);
 #if FULL_SYSTEM
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
         Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);

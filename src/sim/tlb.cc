@@ -50,6 +50,14 @@ GenericTLB::translateAtomic(RequestPtr req, ThreadContext * tc, bool)
 }
 
 void
+GenericTLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+}
+
+void
 GenericTLB::demapPage(Addr vaddr, uint64_t asn)
 {
     warn("Demapping pages in the generic TLB is unnecessary.\n");

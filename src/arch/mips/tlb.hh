@@ -145,7 +145,9 @@ class ITB : public TLB {
     typedef MipsTLBParams Params;
     ITB(const Params *p);
 
-    Fault translateAtomic(RequestPtr &req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation);
 };
 
 class DTB : public TLB {
@@ -153,8 +155,10 @@ class DTB : public TLB {
     typedef MipsTLBParams Params;
     DTB(const Params *p);
 
-    Fault translateAtomic(RequestPtr &req, ThreadContext *tc,
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
             bool write = false);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, bool write = false);
 };
 
 class UTB : public ITB, public DTB {

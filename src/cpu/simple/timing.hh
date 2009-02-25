@@ -96,9 +96,114 @@ class TimingSimpleCPU : public BaseSimpleCPU
         }
     };
 
-    Fault buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2, RequestPtr &req,
-            Addr split_addr, uint8_t *data, bool read);
-    Fault buildPacket(PacketPtr &pkt, RequestPtr &req, bool read);
+    class FetchTranslation : public BaseTLB::Translation
+    {
+      protected:
+        TimingSimpleCPU *cpu;
+
+      public:
+        FetchTranslation(TimingSimpleCPU *_cpu) : cpu(_cpu)
+        {}
+
+        void finish(Fault fault, RequestPtr req,
+                ThreadContext *tc, bool write)
+        {
+            cpu->sendFetch(fault, req, tc);
+        }
+    };
+    FetchTranslation fetchTranslation;
+
+    class DataTranslation : public BaseTLB::Translation
+    {
+      protected:
+        TimingSimpleCPU *cpu;
+        uint8_t *data;
+        uint64_t *res;
+        bool read;
+
+      public:
+        DataTranslation(TimingSimpleCPU *_cpu,
+                uint8_t *_data, uint64_t *_res, bool _read) :
+            cpu(_cpu), data(_data), res(_res), read(_read)
+        {}
+
+        void
+        finish(Fault fault, RequestPtr req,
+                ThreadContext *tc, bool write)
+        {
+            cpu->sendData(fault, req, data, res, read);
+            delete this;
+        }
+    };
+
+    class SplitDataTranslation : public BaseTLB::Translation
+    {
+      public:
+        struct WholeTranslationState
+        {
+          public:
+            int outstanding;
+            RequestPtr requests[2];
+            RequestPtr mainReq;
+            Fault faults[2];
+            uint8_t *data;
+            bool read;
+
+            WholeTranslationState(RequestPtr req1, RequestPtr req2,
+                    RequestPtr main, uint8_t *_data, bool _read)
+            {
+                outstanding = 2;
+                requests[0] = req1;
+                requests[1] = req2;
+                mainReq = main;
+                faults[0] = faults[1] = NoFault;
+                data = _data;
+                read = _read;
+            }
+        };
+
+        TimingSimpleCPU *cpu;
+        int index;
+        WholeTranslationState *state;
+
+        SplitDataTranslation(TimingSimpleCPU *_cpu, int _index,
+                WholeTranslationState *_state) :
+            cpu(_cpu), index(_index), state(_state)
+        {}
+
+        void
+        finish(Fault fault, RequestPtr req,
+                ThreadContext *tc, bool write)
+        {
+            assert(state);
+            assert(state->outstanding);
+            state->faults[index] = fault;
+            if (--state->outstanding == 0) {
+                cpu->sendSplitData(state->faults[0],
+                                   state->faults[1],
+                                   state->requests[0],
+                                   state->requests[1],
+                                   state->mainReq,
+                                   state->data,
+                                   state->read);
+                delete state;
+            }
+            delete this;
+        }
+    };
+
+    void sendData(Fault fault, RequestPtr req,
+            uint8_t *data, uint64_t *res, bool read);
+    void sendSplitData(Fault fault1, Fault fault2,
+            RequestPtr req1, RequestPtr req2, RequestPtr req,
+            uint8_t *data, bool read);
+
+    void translationFault(Fault fault);
+
+    void buildPacket(PacketPtr &pkt, RequestPtr req, bool read);
+    void buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
+            RequestPtr req1, RequestPtr req2, RequestPtr req,
+            uint8_t *data, bool read);
 
     bool handleReadPacket(PacketPtr pkt);
     // This function always implicitly uses dcache_pkt.
@@ -228,8 +333,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
     void fetch();
+    void sendFetch(Fault fault, RequestPtr req, ThreadContext *tc);
     void completeIfetch(PacketPtr );
-    void completeDataAccess(PacketPtr );
+    void completeDataAccess(PacketPtr pkt);
     void advanceInst(Fault fault);
 
     /**

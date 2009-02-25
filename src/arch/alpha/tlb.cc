@@ -317,7 +317,7 @@ ITB::regStats()
 }
 
 Fault
-ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if (FULL_SYSTEM && PcPAL(req->getPC()))
@@ -401,6 +401,14 @@ ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
 
 }
 
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
+}
+
 ///////////////////////////////////////////////////////////////////////
 //
 //  Alpha DTB
@@ -479,7 +487,7 @@ DTB::regStats()
 }
 
 Fault
-DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 
@@ -614,6 +622,14 @@ DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
         return genMachineCheckFault();
 
     return checkCacheability(req);
+}
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
 }
 
 TlbEntry &

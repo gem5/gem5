@@ -607,8 +607,10 @@ AtomicSimpleCPU::tick()
         Fault fault = NoFault;
 
         bool fromRom = isRomMicroPC(thread->readMicroPC());
-        if (!fromRom)
-            fault = setupFetchRequest(&ifetch_req);
+        if (!fromRom) {
+            setupFetchRequest(&ifetch_req);
+            fault = thread->itb->translateAtomic(&ifetch_req, tc);
+        }
 
         if (fault == NoFault) {
             Tick icache_latency = 0;

@@ -125,9 +125,11 @@ class BaseSimpleCPU : public BaseCPU
     enum Status {
         Idle,
         Running,
+        ITBWaitResponse,
         IcacheRetry,
         IcacheWaitResponse,
         IcacheWaitSwitch,
+        DTBWaitResponse,
         DcacheRetry,
         DcacheWaitResponse,
         DcacheWaitSwitch,
@@ -160,7 +162,7 @@ class BaseSimpleCPU : public BaseCPU
     bool stayAtPC;
 
     void checkForInterrupts();
-    Fault setupFetchRequest(Request *req);
+    void setupFetchRequest(Request *req);
     void preExecute();
     void postExecute();
     void advancePC(Fault fault);

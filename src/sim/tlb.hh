@@ -47,6 +47,21 @@ class BaseTLB : public SimObject
 
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
+
+    class Translation
+    {
+      public:
+        virtual ~Translation()
+        {}
+
+        /*
+         * The memory for this object may be dynamically allocated, and it may
+         * be responsible for cleaning itself up which will happen in this
+         * function. Once it's called, the object is no longer valid.
+         */
+        virtual void finish(Fault fault, RequestPtr req,
+                ThreadContext *tc, bool write=false) = 0;
+    };
 };
 
 class GenericTLB : public BaseTLB
@@ -59,6 +74,8 @@ class GenericTLB : public BaseTLB
     void demapPage(Addr vaddr, uint64_t asn);
 
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool=false);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, bool=false);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

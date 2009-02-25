@@ -190,7 +190,7 @@ TLB::demapPage(Addr va, uint64_t asn)
 
 template<class TlbFault>
 Fault
-TLB::translateAtomic(RequestPtr &req, ThreadContext *tc,
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
         bool write, bool execute)
 {
     Addr vaddr = req->getVaddr();
@@ -663,15 +663,31 @@ TLB::translateAtomic(RequestPtr &req, ThreadContext *tc,
 };
 
 Fault
-DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
     return TLB::translateAtomic<FakeDTLBFault>(req, tc, write, false);
 }
 
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+}
+
 Fault
-ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
     return TLB::translateAtomic<FakeITLBFault>(req, tc, false, true);
+}
+
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
 }
 
 #if FULL_SYSTEM

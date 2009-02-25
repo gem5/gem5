@@ -436,7 +436,7 @@ DTB::writeSfsr(Addr a, bool write, ContextType ct,
 }
 
 Fault
-ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
@@ -548,8 +548,16 @@ ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
     return NoFault;
 }
 
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
+}
+
 Fault
-DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
     /*
      * @todo this could really use some profiling and fixing to make
@@ -846,6 +854,14 @@ handleMmuRegAccess:
     req->setPaddr(req->getVaddr());
     return NoFault;
 };
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+}
 
 #if FULL_SYSTEM
 

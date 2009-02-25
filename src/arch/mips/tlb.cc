@@ -310,7 +310,7 @@ TLB::regStats()
 }
 
 Fault
-ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -426,8 +426,16 @@ ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
 #endif
 }
 
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
+}
+
 Fault
-DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -562,6 +570,14 @@ DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
     }
     return checkCacheability(req);
 #endif
+}
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
 }
 
 ///////////////////////////////////////////////////////////////////////
