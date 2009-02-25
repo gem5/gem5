@@ -71,6 +71,9 @@ Trace::ExeTracerRecord::traceInst(StaticInstPtr inst, bool ran)
     Addr sym_addr;
     if (debugSymbolTable
         && IsOn(ExecSymbol)
+#if FULL_SYSTEM
+        && !inUserMode(thread)
+#endif
         && debugSymbolTable->findNearestSymbol(PC, sym_str, sym_addr)) {
         if (PC != sym_addr)
             sym_str += csprintf("+%d", PC - sym_addr);
