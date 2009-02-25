@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 23 2009 23:45:19
-M5 revision 046e9580158a+ 5888+ default qtip tip delayedmissstats.patch
-M5 started Feb 23 2009 23:48:10
+M5 compiled Feb 24 2009 22:05:32
+M5 revision dda4746d9215 5940 default qtip tip rtcbcd.patch
+M5 started Feb 24 2009 22:07:57
 M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-atomic -re tests/run.py long/00.gzip/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
@@ -26,7 +26,6 @@ Uncompressed data compared correctly
 Compressing Input Data, level 3
 Compressed data 97831 bytes in length
 Uncompressing Data
-info: Increasing stack size by one page.
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Compressing Input Data, level 5
