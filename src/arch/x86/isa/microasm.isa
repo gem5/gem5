@@ -138,7 +138,8 @@ let {{
     # like the internal segment above
     assembler.symbols["flatseg"] = "SEGMENT_REG_LS"
 
-    for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
+    for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
+                '8',  '9',  '10', '11', '12', '13', '14', '15'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
 
     for reg in range(16):
