@@ -148,21 +148,6 @@ class SimpleThread : public ThreadState
      */
     ThreadContext *getTC() { return tc; }
 
-    Fault translateInstReq(RequestPtr &req)
-    {
-        return itb->translate(req, tc);
-    }
-
-    Fault translateDataReadReq(RequestPtr &req)
-    {
-        return dtb->translate(req, tc, false);
-    }
-
-    Fault translateDataWriteReq(RequestPtr &req)
-    {
-        return dtb->translate(req, tc, true);
-    }
-
     void demapPage(Addr vaddr, uint64_t asn)
     {
         itb->demapPage(vaddr, asn);

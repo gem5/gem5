@@ -454,7 +454,7 @@ let {{
             Mem = Data;
             Base = merge(Base, EA - SegBase, addressSize);
             ''');
-
+    defineMicroStoreOp('Cda', 'Mem = 0;', "Request::NO_ACCESS")
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);",
@@ -492,17 +492,6 @@ let {{
             self.mnemonic = "tia"
 
     microopClasses["tia"] = TiaOp
-
-    iop = InstObjParams("cda", "Cda", 'X86ISA::LdStOp',
-            {"code": '''
-            Addr paddr;
-            fault = xc->translateDataWriteAddr(EA, paddr,
-                dataSize, (1 << segment));
-            ''',
-            "ea_code": calculateEA})
-    header_output += MicroLeaDeclare.subst(iop)
-    decoder_output += MicroLdStOpConstructor.subst(iop)
-    exec_output += MicroLeaExecute.subst(iop)
 
     class CdaOp(LdStOp):
         def __init__(self, segment, addr, disp = 0,

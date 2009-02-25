@@ -331,10 +331,6 @@ class CheckerCPU : public BaseCPU
         this->dtb->demapPage(vaddr, asn);
     }
 
-    bool translateInstReq(Request *req);
-    void translateDataWriteReq(Request *req);
-    void translateDataReadReq(Request *req);
-
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }
     void ev5_trap(Fault fault) { fault->invoke(tc); }

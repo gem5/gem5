@@ -275,6 +275,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     if ((fault = buildPacket(pkt1, req1, read)) != NoFault ||
             (fault = buildPacket(pkt2, req2, read)) != NoFault) {
         delete req;
+        delete req1;
         delete pkt1;
         req = NULL;
         pkt1 = NULL;
@@ -286,6 +287,15 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
     req->setPhys(req1->getPaddr(), req->getSize(), req1->getFlags());
     PacketPtr pkt = new Packet(req, pkt1->cmd.responseCommand(),
                                Packet::Broadcast);
+    if (req->getFlags().isSet(Request::NO_ACCESS)) {
+        delete req1;
+        delete pkt1;
+        delete req2;
+        delete pkt2;
+        pkt1 = pkt;
+        pkt2 = NULL;
+        return NoFault;
+    }
 
     pkt->dataDynamic<uint8_t>(data);
     pkt1->dataStatic<uint8_t>(data);
@@ -304,8 +314,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 Fault
 TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr &req, bool read)
 {
-    Fault fault = read ? thread->translateDataReadReq(req) :
-                         thread->translateDataWriteReq(req);
+    Fault fault = thread->dtb->translate(req, tc, !read);
     MemCmd cmd;
     if (fault != NoFault) {
         delete req;
@@ -348,9 +357,13 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
     if (split_addr > addr) {
         PacketPtr pkt1, pkt2;
-        this->buildSplitPacket(pkt1, pkt2, req,
+        Fault fault = this->buildSplitPacket(pkt1, pkt2, req,
                 split_addr, (uint8_t *)(new T), true);
-        if (handleReadPacket(pkt1)) {
+        if (fault != NoFault)
+            return fault;
+        if (req->getFlags().isSet(Request::NO_ACCESS)) {
+            dcache_pkt = pkt1;
+        } else if (handleReadPacket(pkt1)) {
             SplitFragmentSenderState * send_state =
                 dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
             send_state->clearFromParent();
@@ -365,9 +378,12 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         if (fault != NoFault) {
             return fault;
         }
-        pkt->dataDynamic<T>(new T);
-
-        handleReadPacket(pkt);
+        if (req->getFlags().isSet(Request::NO_ACCESS)) {
+            dcache_pkt = pkt;
+        } else {
+            pkt->dataDynamic<T>(new T);
+            handleReadPacket(pkt);
+        }
     }
 
     if (traceData) {
@@ -380,26 +396,6 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         recordEvent("Uncached Read");
 
     return NoFault;
-}
-
-Fault
-TimingSimpleCPU::translateDataReadAddr(Addr vaddr, Addr &paddr,
-        int size, unsigned flags)
-{
-    Request *req =
-        new Request(0, vaddr, size, flags, thread->readPC(), _cpuId, 0);
-
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    Fault fault = thread->translateDataWriteReq(req);
-
-    if (fault == NoFault)
-        paddr = req->getPaddr();
-
-    delete req;
-    return fault;
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -497,15 +493,19 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         if (fault != NoFault)
             return fault;
         dcache_pkt = pkt1;
-        if (handleWritePacket()) {
-            SplitFragmentSenderState * send_state =
-                dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
-            send_state->clearFromParent();
-            dcache_pkt = pkt2;
-            if (handleReadPacket(pkt2)) {
-                send_state =
-                    dynamic_cast<SplitFragmentSenderState *>(pkt1->senderState);
+        if (!req->getFlags().isSet(Request::NO_ACCESS)) {
+            if (handleWritePacket()) {
+                SplitFragmentSenderState * send_state =
+                    dynamic_cast<SplitFragmentSenderState *>(
+                            pkt1->senderState);
                 send_state->clearFromParent();
+                dcache_pkt = pkt2;
+                if (handleReadPacket(pkt2)) {
+                    send_state =
+                        dynamic_cast<SplitFragmentSenderState *>(
+                                pkt1->senderState);
+                    send_state->clearFromParent();
+                }
             }
         }
     } else {
@@ -515,21 +515,23 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         if (fault != NoFault)
             return fault;
 
-        if (req->isLocked()) {
-            do_access = TheISA::handleLockedWrite(thread, req);
-        } else if (req->isCondSwap()) {
-            assert(res);
-            req->setExtraData(*res);
+        if (!req->getFlags().isSet(Request::NO_ACCESS)) {
+            if (req->isLocked()) {
+                do_access = TheISA::handleLockedWrite(thread, req);
+            } else if (req->isCondSwap()) {
+                assert(res);
+                req->setExtraData(*res);
+            }
+
+            dcache_pkt->allocate();
+            if (req->isMmapedIpr())
+                dcache_pkt->set(htog(data));
+            else
+                dcache_pkt->set(data);
+
+            if (do_access)
+                handleWritePacket();
         }
-
-        dcache_pkt->allocate();
-        if (req->isMmapedIpr())
-            dcache_pkt->set(htog(data));
-        else
-            dcache_pkt->set(data);
-
-        if (do_access)
-            handleWritePacket();
     }
 
     if (traceData) {
@@ -544,26 +546,6 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
     return NoFault;
-}
-
-Fault
-TimingSimpleCPU::translateDataWriteAddr(Addr vaddr, Addr &paddr,
-        int size, unsigned flags)
-{
-    Request *req =
-        new Request(0, vaddr, size, flags, thread->readPC(), _cpuId, 0);
-
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    Fault fault = thread->translateDataWriteReq(req);
-
-    if (fault == NoFault)
-        paddr = req->getPaddr();
-
-    delete req;
-    return fault;
 }
 
 

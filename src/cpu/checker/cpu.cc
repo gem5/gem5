@@ -159,7 +159,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
     memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    translateDataReadReq(memReq);
+    dtb->translate(memReq, tc, false);
 
     PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
 
@@ -229,7 +229,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    thread->translateDataWriteReq(memReq);
+    dtb->translate(memReq, tc, true);
 
     // Can compare the write data and result only if it's cacheable,
     // not a store conditional, or is a store conditional that
@@ -323,57 +323,6 @@ CheckerCPU::dbg_vtophys(Addr addr)
     return vtophys(tc, addr);
 }
 #endif // FULL_SYSTEM
-
-bool
-CheckerCPU::translateInstReq(Request *req)
-{
-#if FULL_SYSTEM
-    return (thread->translateInstReq(req) == NoFault);
-#else
-    thread->translateInstReq(req);
-    return true;
-#endif
-}
-
-void
-CheckerCPU::translateDataReadReq(Request *req)
-{
-    thread->translateDataReadReq(req);
-
-    if (req->getVaddr() != unverifiedReq->getVaddr()) {
-        warn("%lli: Request virtual addresses do not match! Inst: %#x, "
-             "checker: %#x",
-             curTick, unverifiedReq->getVaddr(), req->getVaddr());
-        handleError();
-    }
-    req->setPaddr(unverifiedReq->getPaddr());
-
-    if (checkFlags(req)) {
-        warn("%lli: Request flags do not match! Inst: %#x, checker: %#x",
-             curTick, unverifiedReq->getFlags(), req->getFlags());
-        handleError();
-    }
-}
-
-void
-CheckerCPU::translateDataWriteReq(Request *req)
-{
-    thread->translateDataWriteReq(req);
-
-    if (req->getVaddr() != unverifiedReq->getVaddr()) {
-        warn("%lli: Request virtual addresses do not match! Inst: %#x, "
-             "checker: %#x",
-             curTick, unverifiedReq->getVaddr(), req->getVaddr());
-        handleError();
-    }
-    req->setPaddr(unverifiedReq->getPaddr());
-
-    if (checkFlags(req)) {
-        warn("%lli: Request flags do not match! Inst: %#x, checker: %#x",
-             curTick, unverifiedReq->getFlags(), req->getFlags());
-        handleError();
-    }
-}
 
 bool
 CheckerCPU::checkFlags(Request *req)

@@ -279,24 +279,6 @@ class FullO3CPU : public BaseO3CPU
         this->dtb->demapPage(vaddr, asn);
     }
 
-    /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return this->itb->translate(req, thread->getTC());
-    }
-
-    /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), false);
-    }
-
-    /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), true);
-    }
-
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
 

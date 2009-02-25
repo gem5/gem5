@@ -498,24 +498,6 @@ class InOrderCPU : public BaseCPU
     /** Debug function to print all instructions on the list. */
     void dumpInsts();
 
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
     /** Forwards an instruction read to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")
      */

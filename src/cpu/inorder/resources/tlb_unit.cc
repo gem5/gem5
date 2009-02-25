@@ -98,7 +98,8 @@ TLBUnit::execute(int slot_idx)
       case FetchLookup:
         {
             tlb_req->fault =
-                this->cpu->translateInstReq(tlb_req->memReq, cpu->thread[tid]);
+                this->cpu->itb->translate(tlb_req->memReq,
+                        cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(Resource, "[tid:%i]: %s encountered while translating "
@@ -128,7 +129,8 @@ TLBUnit::execute(int slot_idx)
                     tid, seq_num, tlb_req->memReq->getVaddr());
 
             tlb_req->fault =
-                this->cpu->translateInstReq(tlb_req->memReq, cpu->thread[tid]);
+                this->cpu->itb->translate(tlb_req->memReq,
+                        cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(Resource, "[tid:%i]: %s encountered while translating "

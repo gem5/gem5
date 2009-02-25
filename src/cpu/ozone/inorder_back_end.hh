@@ -204,7 +204,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = cpu->translateDataReadReq(memReq);
+    Fault fault = cpu->dtb->translate(memReq, thread->getTC(), false);
 
     // if we have a cache, do cache access too
     if (fault == NoFault && dcacheInterface) {
@@ -245,7 +245,7 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = cpu->translateDataWriteReq(memReq);
+    Fault fault = cpu->dtb->translate(memReq, thread->getTC(), true);
 
     if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Write;

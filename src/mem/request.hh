@@ -73,6 +73,8 @@ class Request : public FastAlloc
     static const FlagsType UNCACHEABLE                 = 0x00001000;
     /** The request should not cause a page fault. */
     static const FlagsType NO_FAULT                    = 0x00002000;
+    /** The request should not cause a memory access. */
+    static const FlagsType NO_ACCESS                   = 0x00004000;
     /** The request should be prefetched into the exclusive state. */
     static const FlagsType PF_EXCLUSIVE                = 0x00010000;
     /** The request should be marked as LRU. */

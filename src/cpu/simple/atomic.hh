@@ -136,11 +136,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
-    Fault translateDataReadAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
-    Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
-
     /**
      * Print state of address in memory system via PrintReq (for
      * debugging).

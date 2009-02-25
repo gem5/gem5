@@ -415,58 +415,19 @@ class OzoneCPU : public BaseCPU
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
-        itb->demap(vaddr, asn);
-        dtb->demap(vaddr, asn);
+        cpu->itb->demap(vaddr, asn);
+        cpu->dtb->demap(vaddr, asn);
     }
 
     void demapInstPage(Addr vaddr, uint64_t asn)
     {
-        itb->demap(vaddr, asn);
+        cpu->itb->demap(vaddr, asn);
     }
 
     void demapDataPage(Addr vaddr, uint64_t asn)
     {
-        dtb->demap(vaddr, asn);
+        cpu->dtb->demap(vaddr, asn);
     }
-
-#if FULL_SYSTEM
-    /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return itb->translate(req, thread->getTC());
-    }
-
-    /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return dtb->translate(req, thread->getTC(), false);
-    }
-
-    /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return dtb->translate(req, thread->getTC(), true);
-    }
-
-#else
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-#endif
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>
