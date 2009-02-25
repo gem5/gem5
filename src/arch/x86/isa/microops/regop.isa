@@ -928,7 +928,7 @@ let {{
             super(Rdcr, self).__init__(dest, \
                     src1, "NUM_INTREGS", flags, dataSize)
         code = '''
-            if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
+            if (src1 == 1 || (src1 > 4 && src1 < 8) || (src1 > 8)) {
                 fault = new InvalidOpcode();
             } else {
                 DestReg = ControlSrc1;
