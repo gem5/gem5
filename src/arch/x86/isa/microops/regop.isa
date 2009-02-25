@@ -923,6 +923,42 @@ let {{
     class Zext(RegOp):
         code = 'DestReg = bits(psrc1, op2, 0);'
 
+    class Rddr(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Rddr, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            CR4 cr4 = CR4Op;
+            DR7 dr7 = DR7Op;
+            if ((cr4.de == 1 && (src1 == 4 || src1 == 5)) || src1 >= 8) {
+                fault = new InvalidOpcode();
+            } else if (dr7.gd) {
+                fault = new DebugException();
+            } else {
+                DestReg = merge(DestReg, DebugSrc1, dataSize);
+            }
+        '''
+
+    class Wrdr(RegOp):
+        def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
+            super(Wrdr, self).__init__(dest, \
+                    src1, "NUM_INTREGS", flags, dataSize)
+        code = '''
+            CR4 cr4 = CR4Op;
+            DR7 dr7 = DR7Op;
+            if ((cr4.de == 1 && (dest == 4 || dest == 5)) || dest >= 8) {
+                fault = new InvalidOpcode();
+            } else if ((dest == 6 || dest == 7) &&
+                    bits(psrc1, 63, 32) &&
+                    machInst.mode.mode == LongMode) {
+                fault = new GeneralProtection(0);
+            } else if (dr7.gd) {
+                fault = new DebugException();
+            } else {
+                DebugDest = psrc1;
+            }
+        '''
+
     class Rdcr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rdcr, self).__init__(dest, \
