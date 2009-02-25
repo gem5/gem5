@@ -1009,6 +1009,11 @@ let {{
             SegSelDest = psrc1;
         '''
 
+    class WrAttr(SegOp):
+        code = '''
+            SegAttrDest = psrc1;
+        '''
+
     class Rdbase(SegOp):
         code = '''
             DestReg = SegBaseSrc1;
