@@ -99,7 +99,7 @@ def rom
     br rom_local_label("%(startLabel)s_stackSwitched")
 
 %(startLabel)s_istStackSwitch:
-    panic "IST based stack switching isn't implemented"
+    ld t6, tr, [8, t12, t0], 0x1c, dataSize=8, addressSize=8, atCPL0=True
     br rom_local_label("%(startLabel)s_stackSwitched")
 
 %(startLabel)s_cplStackSwitch:
