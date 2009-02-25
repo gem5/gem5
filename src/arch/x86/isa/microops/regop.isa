@@ -234,7 +234,8 @@ output header {{
 
     enum SegmentSelectorCheck {
       SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
-      SegSoftIntGateCheck, SegSSCheck, SegIretCheck, SegIntCSCheck
+      SegSoftIntGateCheck, SegSSCheck, SegIretCheck, SegIntCSCheck,
+      SegTRCheck
     };
 
     enum LongModeDescriptorType {
@@ -1116,6 +1117,11 @@ let {{
                 } else {
                     panic("Interrupt CS checks not implemented "
                             "in legacy mode.\\n");
+                }
+                break;
+              case SegTRCheck:
+                if (!selector.si || selector.ti) {
+                    fault = new GeneralProtection(selector);
                 }
                 break;
               default:
