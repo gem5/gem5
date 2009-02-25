@@ -85,15 +85,15 @@ namespace X86ISA
             PSEPD, PD, PTE
         };
 
-        // Act on the current state and determine what to do next. read
-        // should be the packet that just came back from a read and write
+        // Act on the current state and determine what to do next. The global
+        // read should be the packet that just came back from a read and write
         // should be NULL. When the function returns, read is either NULL
         // if the machine is finished, or points to a packet to initiate
         // the next read. If any write is required to update an "accessed"
         // bit, write will point to a packet to do the write. Otherwise it
         // will be NULL. The return value is whatever fault was incurred
         // during this stage of the lookup.
-        Fault doNext(PacketPtr &read, PacketPtr &write);
+        Fault doNext(PacketPtr &write);
 
         // Kick off the state machine.
         Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,

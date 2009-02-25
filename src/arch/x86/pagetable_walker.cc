@@ -85,7 +85,7 @@ BitUnion64(PageTableEntry)
 EndBitUnion(PageTableEntry)
 
 Fault
-Walker::doNext(PacketPtr &read, PacketPtr &write)
+Walker::doNext(PacketPtr &write)
 {
     assert(state != Ready && state != Waiting);
     write = NULL;
@@ -312,7 +312,6 @@ Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
         RequestPtr _req, bool _write, bool _execute)
 {
     assert(state == Ready);
-    assert(!tc);
     tc = _tc;
     req = _req;
     Addr vaddr = req->getVaddr();
@@ -366,21 +365,22 @@ Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
     read->allocate();
     Enums::MemoryMode memMode = sys->getMemoryMode();
     if (memMode == Enums::timing) {
+        nextState = state;
+        state = Waiting;
         timingFault = NoFault;
-        port.sendTiming(read);
+        sendPackets();
     } else if (memMode == Enums::atomic) {
         Fault fault;
         do {
             port.sendAtomic(read);
             PacketPtr write = NULL;
-            fault = doNext(read, write);
+            fault = doNext(write);
             assert(fault == NoFault || read == NULL);
             state = nextState;
             nextState = Ready;
             if (write)
                 port.sendAtomic(write);
         } while(read);
-        tc = NULL;
         state = Ready;
         nextState = Waiting;
         return fault;
@@ -399,18 +399,18 @@ Walker::WalkerPort::recvTiming(PacketPtr pkt)
 bool
 Walker::recvTiming(PacketPtr pkt)
 {
-    inflight--;
     if (pkt->isResponse() && !pkt->wasNacked()) {
+        assert(inflight);
+        assert(state == Waiting);
+        assert(!read);
+        inflight--;
         if (pkt->isRead()) {
-            assert(inflight);
-            assert(state == Waiting);
-            assert(!read);
             state = nextState;
             nextState = Ready;
             PacketPtr write = NULL;
-            timingFault = doNext(pkt, write);
-            state = Waiting;
             read = pkt;
+            timingFault = doNext(write);
+            state = Waiting;
             assert(timingFault == NoFault || read == NULL);
             if (write) {
                 writes.push_back(write);
@@ -420,7 +420,6 @@ Walker::recvTiming(PacketPtr pkt)
             sendPackets();
         }
         if (inflight == 0 && read == NULL && writes.size() == 0) {
-            tc = NULL;
             state = Ready;
             nextState = Waiting;
             if (timingFault == NoFault) {
@@ -445,6 +444,7 @@ Walker::recvTiming(PacketPtr pkt)
     } else if (pkt->wasNacked()) {
         pkt->reinitNacked();
         if (!port.sendTiming(pkt)) {
+            inflight--;
             retrying = true;
             if (pkt->isWrite()) {
                 writes.push_back(pkt);
@@ -452,8 +452,6 @@ Walker::recvTiming(PacketPtr pkt)
                 assert(!read);
                 read = pkt;
             }
-        } else {
-            inflight++;
         }
     }
     return true;
@@ -507,27 +505,26 @@ Walker::sendPackets()
 
     //Reads always have priority
     if (read) {
-        if (!port.sendTiming(read)) {
+        PacketPtr pkt = read;
+        read = NULL;
+        inflight++;
+        if (!port.sendTiming(pkt)) {
             retrying = true;
+            read = pkt;
+            inflight--;
             return;
-        } else {
-            inflight++;
-            delete read->req;
-            delete read;
-            read = NULL;
         }
     }
     //Send off as many of the writes as we can.
     while (writes.size()) {
         PacketPtr write = writes.back();
+        writes.pop_back();
+        inflight++;
         if (!port.sendTiming(write)) {
             retrying = true;
+            writes.push_back(write);
+            inflight--;
             return;
-        } else {
-            inflight++;
-            delete write->req;
-            delete write;
-            writes.pop_back();
         }
     }
 }
