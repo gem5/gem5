@@ -120,13 +120,15 @@ void IntRegFile::clear()
 
 IntReg IntRegFile::readReg(int intReg)
 {
-    DPRINTF(X86, "Read int reg %d and got value %#x\n", intReg, regs[intReg]);
+    DPRINTF(IntRegs, "Read int reg %d and got value %#x\n",
+            intReg, regs[intReg]);
     return regs[intReg];
 }
 
 void IntRegFile::setReg(int intReg, const IntReg &val)
 {
-    DPRINTF(X86, "Setting int reg %d to value %#x\n", intReg, val);
+    DPRINTF(IntRegs, "Setting int reg %d to value %#x\n",
+            intReg, val);
     regs[intReg] = val;
 }
 

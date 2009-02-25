@@ -70,7 +70,7 @@ IntRegFile::IntRegFile()
 
 IntReg IntRegFile::readReg(int intReg)
 {
-    DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, regs[intReg]);
+    DPRINTF(IntRegs, "Read register %d = 0x%x\n", intReg, regs[intReg]);
     return regs[intReg];
     /* XXX Currently not used. When used again regView/offset need to be
      * serialized!
@@ -83,7 +83,7 @@ IntReg IntRegFile::readReg(int intReg)
         panic("Tried to read non-existant integer register %d, %d\n",
                 NumIntArchRegs + NumMicroIntRegs + intReg, intReg);
 
-    DPRINTF(Sparc, "Read register %d = 0x%x\n", intReg, val);
+    DPRINTF(IntRegs, "Read register %d = 0x%x\n", intReg, val);
     return val;
     */
 }
@@ -92,7 +92,7 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
 {
     if(intReg)
     {
-        DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
+        DPRINTF(IntRegs, "Wrote register %d = 0x%x\n", intReg, val);
         regs[intReg] = val;
     }
     return;
@@ -100,7 +100,7 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
      * serialized!
     if(intReg)
     {
-        DPRINTF(Sparc, "Wrote register %d = 0x%x\n", intReg, val);
+        DPRINTF(IntRegs, "Wrote register %d = 0x%x\n", intReg, val);
         if(intReg < NumIntArchRegs)
             regView[intReg >> FrameOffsetBits][intReg & FrameOffsetMask] = val;
         else if((intReg -= NumIntArchRegs) < NumMicroIntRegs)

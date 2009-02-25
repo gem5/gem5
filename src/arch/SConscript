@@ -126,3 +126,8 @@ else:
                                emitter = isa_desc_emitter)
 
 env.Append(BUILDERS = { 'ISADesc' : isa_desc_builder })
+
+TraceFlag('IntRegs')
+TraceFlag('FloatRegs')
+TraceFlag('MiscRegs')
+CompoundFlag('Registers', [ 'IntRegs', 'FloatRegs', 'MiscRegs' ])

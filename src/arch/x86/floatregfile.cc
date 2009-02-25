@@ -113,27 +113,27 @@ void FloatRegFile::clear()
 FloatReg FloatRegFile::readReg(int floatReg, int width)
 {
     FloatReg reg = d[floatReg];
-    DPRINTF(X86, "Reading %f from register %d.\n", reg, floatReg);
+    DPRINTF(FloatRegs, "Reading %f from register %d.\n", reg, floatReg);
     return reg;
 }
 
 FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
 {
     FloatRegBits reg = q[floatReg];
-    DPRINTF(X86, "Reading %#x from register %d.\n", reg, floatReg);
+    DPRINTF(FloatRegs, "Reading %#x from register %d.\n", reg, floatReg);
     return reg;
 }
 
 Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
 {
-    DPRINTF(X86, "Writing %f to register %d.\n", val, floatReg);
+    DPRINTF(FloatRegs, "Writing %f to register %d.\n", val, floatReg);
     d[floatReg] = val;
     return NoFault;
 }
 
 Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
 {
-    DPRINTF(X86, "Writing bits %#x to register %d.\n", val, floatReg);
+    DPRINTF(FloatRegs, "Writing bits %#x to register %d.\n", val, floatReg);
     q[floatReg] = val;
     return NoFault;
 }

@@ -227,7 +227,7 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 
         /** Floating Point Status Register */
       case MISCREG_FSR:
-        DPRINTF(Sparc, "FSR read as: %#x\n", fsr);
+        DPRINTF(MiscRegs, "FSR read as: %#x\n", fsr);
         return fsr;
 
       case MISCREG_MMU_P_CONTEXT:
@@ -446,7 +446,7 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
         /** Floating Point Status Register */
       case MISCREG_FSR:
         fsr = val;
-        DPRINTF(Sparc, "FSR written with: %#x\n", fsr);
+        DPRINTF(MiscRegs, "FSR written with: %#x\n", fsr);
         break;
 
       case MISCREG_MMU_P_CONTEXT:
