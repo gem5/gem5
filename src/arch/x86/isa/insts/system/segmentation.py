@@ -216,6 +216,57 @@ def macroop LTR_P
     st t1, tsg, [8, t4, t0], dataSize=8
 };
 
+def macroop LLDT_R
+{
+    chks reg, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, reg, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks reg, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, reg
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_M
+{
+    ld t5, seg, sib, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_P
+{
+    rdip t7
+    ld t5, seg, riprel, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
 def macroop SWAPGS
 {
     rdval t1, kernel_gs_base, dataSize=8
