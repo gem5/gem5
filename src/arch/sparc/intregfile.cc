@@ -118,19 +118,6 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
     } */
 }
 
-void IntRegFile::setGlobals(int gl)
-{
-    DPRINTF(RegisterWindows, "Now using %d globals\n", gl);
-
-    regView[Globals] = regGlobals[gl];
-    offset[Globals] = RegGlobalOffset + gl * RegsPerFrame;
-
-    if (regView[Globals] == regView[Inputs] ||
-        regView[Globals] == regView[Locals] ||
-        regView[Globals] == regView[Outputs] )
-        panic("Two register arrays set to the same thing!\n");
-}
-
 void IntRegFile::serialize(std::ostream &os)
 {
     SERIALIZE_ARRAY(regs, NumIntRegs);

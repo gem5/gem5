@@ -100,9 +100,6 @@ namespace SparcISA
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
-
-      protected:
-        void setGlobals(int gl);
     };
 }
 
