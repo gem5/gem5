@@ -42,9 +42,6 @@ class Checkpoint;
 
 namespace SparcISA
 {
-    //This function translates integer register file indices into names
-    std::string getIntRegName(RegIndex);
-
     const int NumIntArchRegs = 32;
     const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 

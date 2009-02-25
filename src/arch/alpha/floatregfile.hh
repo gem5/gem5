@@ -42,12 +42,6 @@ class Checkpoint;
 
 namespace AlphaISA {
 
-static inline std::string
-getFloatRegName(RegIndex)
-{
-    return "";
-}
-
 class FloatRegFile
 {
   public:

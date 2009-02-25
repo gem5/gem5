@@ -41,16 +41,6 @@ using namespace std;
 
 class Checkpoint;
 
-string SparcISA::getIntRegName(RegIndex index)
-{
-    static std::string intRegName[NumIntArchRegs] =
-        {"g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",
-         "o0", "o1", "o2", "o3", "o4", "o5", "o6", "o7",
-         "l0", "l1", "l2", "l3", "l4", "l5", "l6", "l7",
-         "i0", "i1", "i2", "i3", "i4", "i5", "i6", "i7"};
-    return intRegName[index];
-}
-
 void IntRegFile::clear()
 {
     memset(regs, 0, sizeof(IntReg) * NumIntRegs);

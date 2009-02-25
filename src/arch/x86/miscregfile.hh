@@ -99,9 +99,6 @@ class Checkpoint;
 
 namespace X86ISA
 {
-
-    std::string getMiscRegName(RegIndex);
-
     //These will have to be updated in the future.
     const int NumMiscArchRegs = NUM_MISCREGS;
     const int NumMiscRegs = NUM_MISCREGS;

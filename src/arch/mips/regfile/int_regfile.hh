@@ -42,11 +42,6 @@ class Checkpoint;
 
 namespace MipsISA
 {
-    static inline std::string getIntRegName(RegIndex)
-    {
-        return "";
-    }
-
     enum MiscIntRegNums {
        LO = NumIntArchRegs,
        HI,

@@ -162,8 +162,6 @@ namespace MipsISA
 
         static std::string miscRegNames[NumMiscRegs];
     };
-
-    inline std::string getMiscRegName(unsigned reg_idx);
 } // namespace MipsISA
 
 #endif

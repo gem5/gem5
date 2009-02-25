@@ -42,8 +42,6 @@ class Checkpoint;
 
 namespace SparcISA
 {
-    std::string getFloatRegName(RegIndex);
-
     const int NumFloatArchRegs = 64;
     const int NumFloatRegs = 64;
 

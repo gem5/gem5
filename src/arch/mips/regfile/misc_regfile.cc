@@ -437,12 +437,6 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 
 }
 
-inline std::string
-MipsISA::getMiscRegName(unsigned reg_idx)
-{
-    return MiscRegFile::miscRegNames[reg_idx];
-}
-
 inline unsigned
 MiscRegFile::getVPENum(unsigned tid)
 {
@@ -457,7 +451,7 @@ MiscRegFile::readRegNoEffect(int reg_idx, unsigned tid)
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA, "Reading CP0 Register:%u Select:%u (%s) (%lx).\n",
-            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),
+            misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg],
             miscRegFile[misc_reg][reg_sel]);
     return miscRegFile[misc_reg][reg_sel];
 }
@@ -474,7 +468,7 @@ MiscRegFile::readReg(int reg_idx,
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "Reading CP0 Register:%u Select:%u (%s) with effect (%lx).\n",
-            misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg),
+            misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg],
             miscRegFile[misc_reg][reg_sel]);
 
 
@@ -494,7 +488,7 @@ MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, unsigned tid)
     DPRINTF(MipsPRA,
             "[tid:%i]: Setting (direct set) CP0 Register:%u "
             "Select:%u (%s) to %#x.\n",
-            tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
+            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
 
     miscRegFile[misc_reg][reg_sel] = val;
 }
@@ -507,7 +501,7 @@ MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, unsigned tid)
         ? tid : getVPENum(tid);
     DPRINTF(MipsPRA,
             "[tid:%i]: Setting CP0 Register: %u Select: %u (%s) to %#x\n",
-            tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
+            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
     miscRegFile_WriteMask[misc_reg][reg_sel] = val;
 }
 
@@ -527,7 +521,7 @@ MiscRegFile::setReg(int reg_idx, const MiscReg &val,
     DPRINTF(MipsPRA,
             "[tid:%i]: Setting CP0 Register:%u "
             "Select:%u (%s) to %#x, with effect.\n",
-            tid, misc_reg / 8, misc_reg % 8, getMiscRegName(misc_reg), val);
+            tid, misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg], val);
 
     MiscReg cp0_val = filterCP0Write(misc_reg, reg_sel, val);
 

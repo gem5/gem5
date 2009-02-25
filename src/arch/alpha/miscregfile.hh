@@ -53,12 +53,6 @@ enum MiscRegIndex
     MISCREG_INTR
 };
 
-static inline std::string
-getMiscRegName(RegIndex)
-{
-    return "";
-}
-
 class MiscRegFile
 {
   public:

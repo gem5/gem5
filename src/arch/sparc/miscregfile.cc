@@ -42,27 +42,6 @@ using namespace std;
 
 class Checkpoint;
 
-//These functions map register indices to names
-string SparcISA::getMiscRegName(RegIndex index)
-{
-    static::string miscRegName[NumMiscRegs] =
-        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
-         "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
-         "stick", "stick_cmpr",
-         "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
-         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
-         "wstate",*/ "gl",
-         "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
-         "hstick_cmpr",
-         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg",
-         "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
-         "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
-         "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
-         "nresErrorHead", "nresErrorTail", "TlbData" };
-
-    return miscRegName[index];
-}
-
 enum RegMask
 {
         PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
@@ -328,8 +307,7 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
         //isn't, instead of panicing.
         return 0;
 
-      panic("Accessing Fullsystem register %s in SE mode\n",
-            getMiscRegName(miscReg));
+      panic("Accessing Fullsystem register %d in SE mode\n", miscReg);
 #endif
 
     }
@@ -583,8 +561,8 @@ void MiscRegFile::setReg(int miscReg,
         //HPSTATE is special because normal trap processing saves HPSTATE when
         //it goes into a trap, and restores it when it returns.
         return;
-      panic("Accessing Fullsystem register %s to %#x in SE mode\n",
-            getMiscRegName(miscReg), val);
+      panic("Accessing Fullsystem register %d to %#x in SE mode\n",
+              miscReg, val);
 #endif
     }
     setRegNoEffect(miscReg, new_val);

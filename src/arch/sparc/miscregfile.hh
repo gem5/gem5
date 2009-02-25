@@ -43,9 +43,6 @@ class Checkpoint;
 
 namespace SparcISA
 {
-    //These functions map register indices to names
-    std::string getMiscRegName(RegIndex);
-
     enum MiscRegIndex
     {
         /** Ancillary State Registers */

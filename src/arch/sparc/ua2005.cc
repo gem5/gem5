@@ -35,6 +35,7 @@
 #include "sim/system.hh"
 
 using namespace SparcISA;
+using namespace std;
 
 
 void
@@ -61,6 +62,26 @@ MiscRegFile::checkSoftInt(ThreadContext *tc)
     }
 }
 
+//These functions map register indices to names
+static inline string
+getMiscRegName(RegIndex index)
+{
+    static string miscRegName[NumMiscRegs] =
+        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
+         "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
+         "stick", "stick_cmpr",
+         "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
+         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
+         "wstate",*/ "gl",
+         "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
+         "hstick_cmpr",
+         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg",
+         "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
+         "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
+         "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
+         "nresErrorHead", "nresErrorTail", "TlbData" };
+    return miscRegName[index];
+}
 
 void
 MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)

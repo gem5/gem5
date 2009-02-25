@@ -96,12 +96,6 @@ using namespace std;
 
 class Checkpoint;
 
-//These functions map register indices to names
-string X86ISA::getMiscRegName(RegIndex index)
-{
-    panic("No misc registers in x86 yet!\n");
-}
-
 void MiscRegFile::clear()
 {
     // Blank everything. 0 might not be an appropriate value for some things,
