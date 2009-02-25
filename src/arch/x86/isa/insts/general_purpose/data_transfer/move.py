@@ -199,6 +199,16 @@ def macroop MOV_R_C {
     rdcr reg, regm
 };
 
+def macroop MOV_D_R {
+    .adjust_env maxOsz
+    wrdr reg, regm
+};
+
+def macroop MOV_R_D {
+    .adjust_env maxOsz
+    rddr reg, regm
+};
+
 def macroop MOV_R_S {
     rdsel reg, regm
 };
