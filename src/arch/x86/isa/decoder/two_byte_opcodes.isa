@@ -831,9 +831,12 @@
                 //0x6: group16();
                 0x6: decode MODRM_MOD {
                     0x3: decode MODRM_REG {
-                        0x5: lfence();
-                        0x6: mfence();
-                        0x7: sfence();
+                        0x5: BasicOperate::LFENCE(
+                                     {{/*Nothing*/}}, IsReadBarrier);
+                        0x6: BasicOperate::MFENCE(
+                                     {{/*Nothing*/}}, IsMemBarrier);
+                        0x7: BasicOperate::SFENCE(
+                                     {{/*Nothing*/}}, IsWriteBarrier);
                         default: Inst::UD2();
                     }
                     default: decode MODRM_REG {
