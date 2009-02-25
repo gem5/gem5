@@ -101,6 +101,8 @@ Walker::doNext(PacketPtr &write)
     bool badNX = pte.nx && (!tlb->allowNX() || !enableNX);
     switch(state) {
       case LongPML4:
+        DPRINTF(PageTableWalker,
+                "Got long mode PML4 entry %#016x.\n", (uint64_t)pte);
         nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl3 * size;
         doWrite = !pte.a;
         pte.a = 1;
@@ -114,6 +116,8 @@ Walker::doNext(PacketPtr &write)
         nextState = LongPDP;
         break;
       case LongPDP:
+        DPRINTF(PageTableWalker,
+                "Got long mode PDP entry %#016x.\n", (uint64_t)pte);
         nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.longl2 * size;
         doWrite = !pte.a;
         pte.a = 1;
@@ -126,6 +130,8 @@ Walker::doNext(PacketPtr &write)
         nextState = LongPD;
         break;
       case LongPD:
+        DPRINTF(PageTableWalker,
+                "Got long mode PD entry %#016x.\n", (uint64_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -154,6 +160,8 @@ Walker::doNext(PacketPtr &write)
             return NoFault;
         }
       case LongPTE:
+        DPRINTF(PageTableWalker,
+                "Got long mode PTE entry %#016x.\n", (uint64_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -171,6 +179,8 @@ Walker::doNext(PacketPtr &write)
         stop();
         return NoFault;
       case PAEPDP:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PAE PDP entry %#08x.\n", (uint32_t)pte);
         nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael2 * size;
         if (!pte.p) {
             stop();
@@ -179,6 +189,8 @@ Walker::doNext(PacketPtr &write)
         nextState = PAEPD;
         break;
       case PAEPD:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PAE PD entry %#08x.\n", (uint32_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -206,6 +218,8 @@ Walker::doNext(PacketPtr &write)
             return NoFault;
         }
       case PAEPTE:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PAE PTE entry %#08x.\n", (uint32_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
@@ -223,6 +237,8 @@ Walker::doNext(PacketPtr &write)
         stop();
         return NoFault;
       case PSEPD:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PSE PD entry %#08x.\n", (uint32_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -251,6 +267,8 @@ Walker::doNext(PacketPtr &write)
             return NoFault;
         }
       case PD:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PD entry %#08x.\n", (uint32_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -265,6 +283,8 @@ Walker::doNext(PacketPtr &write)
         nextState = PTE;
         break;
       case PTE:
+        DPRINTF(PageTableWalker,
+                "Got legacy mode PTE entry %#08x.\n", (uint32_t)pte);
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
@@ -541,6 +561,7 @@ Walker::getPort(const std::string &if_name, int idx)
 Fault
 Walker::pageFault(bool present)
 {
+    DPRINTF(PageTableWalker, "Raising page fault.\n");
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
     return new PageFault(entry.vaddr, present, write,
             m5reg.cpl == 3, false, execute && enableNX);
