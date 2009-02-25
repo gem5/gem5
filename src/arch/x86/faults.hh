@@ -422,38 +422,6 @@ namespace X86ISA
             return true;
         }
     };
-
-    // These faults aren't part of the ISA definition. They trigger filling
-    // the tlb on a miss and are to take the place of a hardware table walker.
-    class FakeITLBFault : public X86Fault
-    {
-      protected:
-        Addr vaddr;
-        bool write;
-        bool execute;
-      public:
-        FakeITLBFault(Addr _vaddr, bool _write, bool _execute) :
-            X86Fault("fake instruction tlb fault", "itlb", 0),
-            vaddr(_vaddr), write(_write), execute(_execute)
-        {}
-
-        void invoke(ThreadContext * tc);
-    };
-
-    class FakeDTLBFault : public X86Fault
-    {
-      protected:
-        Addr vaddr;
-        bool write;
-        bool execute;
-      public:
-        FakeDTLBFault(Addr _vaddr, bool _write, bool _execute) :
-            X86Fault("fake data tlb fault", "dtlb", 0),
-            vaddr(_vaddr), write(_write), execute(_execute)
-        {}
-
-        void invoke(ThreadContext * tc);
-    };
 };
 
 #endif // __ARCH_X86_FAULTS_HH__

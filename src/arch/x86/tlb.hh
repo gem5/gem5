@@ -87,8 +87,7 @@ namespace X86ISA
     class TLB : public BaseTLB
     {
       protected:
-        friend class FakeITLBFault;
-        friend class FakeDTLBFault;
+        friend class Walker;
 
         typedef std::list<TlbEntry *> EntryList;
 
@@ -118,8 +117,6 @@ namespace X86ISA
       protected:
 
         Walker * walker;
-
-        void walk(ThreadContext * _tc, Addr vaddr, bool write, bool execute);
 #endif
 
       public:
@@ -137,15 +134,13 @@ namespace X86ISA
         EntryList freeList;
         EntryList entryList;
 
-        template<class TlbFault>
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc,
-                bool write, bool execute);
-        void translateTiming(RequestPtr req, ThreadContext *tc,
-                Translation *translation, bool write, bool execute);
+        Fault translate(RequestPtr req, ThreadContext *tc,
+                Translation *translation, bool write, bool execute,
+                bool &delayedResponse, bool timing);
 
       public:
 
-        void insert(Addr vpn, TlbEntry &entry);
+        TlbEntry * insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
         virtual void serialize(std::ostream &os);

@@ -84,7 +84,7 @@ BitUnion64(PageTableEntry)
     Bitfield<0> p;
 EndBitUnion(PageTableEntry)
 
-void
+Fault
 Walker::doNext(PacketPtr &read, PacketPtr &write)
 {
     assert(state != Ready && state != Waiting);
@@ -106,11 +106,11 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
-        if (badNX)
-            panic("NX violation!\n");
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         entry.noExec = pte.nx;
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
         nextState = LongPDP;
         break;
       case LongPDP:
@@ -119,10 +119,10 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
-        if (badNX)
-            panic("NX violation!\n");
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         nextState = LongPD;
         break;
       case LongPD:
@@ -130,10 +130,10 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
-        if (badNX)
-            panic("NX violation!\n");
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -150,36 +150,32 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
             entry.patBit = bits(pte, 12);
             entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
             tlb->insert(entry.vaddr, entry);
-            nextState = Ready;
-            delete read->req;
-            delete read;
-            read = NULL;
-            return;
+            stop();
+            return NoFault;
         }
       case LongPTE:
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
-        if (badNX)
-            panic("NX violation!\n");
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         entry.paddr = (uint64_t)pte & (mask(40) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 12);
         entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
         tlb->insert(entry.vaddr, entry);
-        nextState = Ready;
-        delete read->req;
-        delete read;
-        read = NULL;
-        return;
+        stop();
+        return NoFault;
       case PAEPDP:
         nextRead = ((uint64_t)pte & (mask(40) << 12)) + vaddr.pael2 * size;
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (!pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         nextState = PAEPD;
         break;
       case PAEPD:
@@ -187,10 +183,10 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
-        if (badNX)
-            panic("NX violation!\n");
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -206,39 +202,35 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
             entry.patBit = bits(pte, 12);
             entry.vaddr = entry.vaddr & ~((2 * (1 << 20)) - 1);
             tlb->insert(entry.vaddr, entry);
-            nextState = Ready;
-            delete read->req;
-            delete read;
-            read = NULL;
-            return;
+            stop();
+            return NoFault;
         }
       case PAEPTE:
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
-        if (badNX)
-            panic("NX violation!\n");
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (badNX || !pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         entry.paddr = (uint64_t)pte & (mask(40) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
         entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
         tlb->insert(entry.vaddr, entry);
-        nextState = Ready;
-        delete read->req;
-        delete read;
-        read = NULL;
-        return;
+        stop();
+        return NoFault;
       case PSEPD:
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (!pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         if (!pte.ps) {
             // 4 KB page
             entry.size = 4 * (1 << 10);
@@ -255,24 +247,21 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
             entry.patBit = bits(pte, 12);
             entry.vaddr = entry.vaddr & ~((4 * (1 << 20)) - 1);
             tlb->insert(entry.vaddr, entry);
-            nextState = Ready;
-            delete read->req;
-            delete read;
-            read = NULL;
-            return;
+            stop();
+            return NoFault;
         }
       case PD:
         doWrite = !pte.a;
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (!pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         // 4 KB page
         entry.size = 4 * (1 << 10);
         nextRead = ((uint64_t)pte & (mask(20) << 12)) + vaddr.norml2 * size;
-        nextState = PTE;
-        break;
         nextState = PTE;
         break;
       case PTE:
@@ -280,19 +269,18 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
-        if (!pte.p)
-            panic("Page at %#x not present!\n", entry.vaddr);
+        if (!pte.p) {
+            stop();
+            return pageFault(pte.p);
+        }
         entry.paddr = (uint64_t)pte & (mask(20) << 12);
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
         entry.vaddr = entry.vaddr & ~((4 * (1 << 10)) - 1);
         tlb->insert(entry.vaddr, entry);
-        nextState = Ready;
-        delete read->req;
-        delete read;
-        read = NULL;
-        return;
+        stop();
+        return NoFault;
       default:
         panic("Unknown page table walker state %d!\n");
     }
@@ -316,16 +304,21 @@ Walker::doNext(PacketPtr &read, PacketPtr &write)
         delete oldRead->req;
         delete oldRead;
     }
+    return NoFault;
 }
 
-void
-Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
+Fault
+Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
+        RequestPtr _req, bool _write, bool _execute)
 {
     assert(state == Ready);
     assert(!tc);
     tc = _tc;
+    req = _req;
+    Addr vaddr = req->getVaddr();
     execute = _execute;
     write = _write;
+    translation = _translation;
 
     VAddr addr = vaddr;
 
@@ -339,6 +332,7 @@ Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
         // Do long mode.
         state = LongPML4;
         top = (cr3.longPdtb << 12) + addr.longl4 * size;
+        enableNX = efer.nxe;
     } else {
         // We're in some flavor of legacy mode.
         CR4 cr4 = tc->readMiscRegNoEffect(MISCREG_CR4);
@@ -346,6 +340,7 @@ Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
             // Do legacy PAE.
             state = PAEPDP;
             top = (cr3.paePdtb << 5) + addr.pael3 * size;
+            enableNX = efer.nxe;
         } else {
             size = 4;
             top = (cr3.pdtb << 12) + addr.norml2 * size;
@@ -356,13 +351,12 @@ Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
                 // Do legacy non PSE.
                 state = PD;
             }
+            enableNX = false;
         }
     }
 
     nextState = Ready;
     entry.vaddr = vaddr;
-
-    enableNX = efer.nxe;
 
     Request::Flags flags = Request::PHYSICAL;
     if (cr3.pcd)
@@ -372,13 +366,15 @@ Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
     read->allocate();
     Enums::MemoryMode memMode = sys->getMemoryMode();
     if (memMode == Enums::timing) {
-        tc->suspend();
+        timingFault = NoFault;
         port.sendTiming(read);
     } else if (memMode == Enums::atomic) {
+        Fault fault;
         do {
             port.sendAtomic(read);
             PacketPtr write = NULL;
-            doNext(read, write);
+            fault = doNext(read, write);
+            assert(fault == NoFault || read == NULL);
             state = nextState;
             nextState = Ready;
             if (write)
@@ -387,9 +383,11 @@ Walker::start(ThreadContext * _tc, Addr vaddr, bool _write, bool _execute)
         tc = NULL;
         state = Ready;
         nextState = Waiting;
+        return fault;
     } else {
         panic("Unrecognized memory system mode.\n");
     }
+    return NoFault;
 }
 
 bool
@@ -410,9 +408,10 @@ Walker::recvTiming(PacketPtr pkt)
             state = nextState;
             nextState = Ready;
             PacketPtr write = NULL;
-            doNext(pkt, write);
+            timingFault = doNext(pkt, write);
             state = Waiting;
             read = pkt;
+            assert(timingFault == NoFault || read == NULL);
             if (write) {
                 writes.push_back(write);
             }
@@ -421,10 +420,27 @@ Walker::recvTiming(PacketPtr pkt)
             sendPackets();
         }
         if (inflight == 0 && read == NULL && writes.size() == 0) {
-            tc->activate(0);
             tc = NULL;
             state = Ready;
             nextState = Waiting;
+            if (timingFault == NoFault) {
+                /*
+                 * Finish the translation. Now that we now the right entry is
+                 * in the TLB, this should work with no memory accesses.
+                 * There could be new faults unrelated to the table walk like
+                 * permissions violations, so we'll need the return value as
+                 * well.
+                 */
+                bool delayedResponse;
+                Fault fault = tlb->translate(req, tc, NULL, write, execute,
+                        delayedResponse, true);
+                assert(!delayedResponse);
+                // Let the CPU continue.
+                translation->finish(fault, req, tc, write);
+            } else {
+                // There was a fault during the walk. Let the CPU know.
+                translation->finish(timingFault, req, tc, write);
+            }
         }
     } else if (pkt->wasNacked()) {
         pkt->reinitNacked();
@@ -523,6 +539,14 @@ Walker::getPort(const std::string &if_name, int idx)
         return &port;
     else
         panic("No page table walker port named %s!\n", if_name);
+}
+
+Fault
+Walker::pageFault(bool present)
+{
+    HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+    return new PageFault(entry.vaddr, present, write,
+            m5reg.cpl == 3, false, execute && enableNX);
 }
 
 }

@@ -72,6 +72,9 @@
 
 #if FULL_SYSTEM
 #include "arch/x86/pagetable_walker.hh"
+#else
+#include "mem/page_table.hh"
+#include "sim/process.hh"
 #endif
 
 namespace X86ISA {
@@ -90,7 +93,7 @@ TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size)
 #endif
 }
 
-void
+TlbEntry *
 TLB::insert(Addr vpn, TlbEntry &entry)
 {
     //TODO Deal with conflicting entries
@@ -106,6 +109,7 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     *newEntry = entry;
     newEntry->vaddr = vpn;
     entryList.push_front(newEntry);
+    return newEntry;
 }
 
 TLB::EntryList::iterator
@@ -137,14 +141,6 @@ TLB::lookup(Addr va, bool update_lru)
     else
         return *entry;
 }
-
-#if FULL_SYSTEM
-void
-TLB::walk(ThreadContext * _tc, Addr vaddr, bool write, bool execute)
-{
-    walker->start(_tc, vaddr, write, execute);
-}
-#endif
 
 void
 TLB::invalidateAll()
@@ -188,11 +184,12 @@ TLB::demapPage(Addr va, uint64_t asn)
     }
 }
 
-template<class TlbFault>
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
-        bool write, bool execute)
+TLB::translate(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write, bool execute,
+        bool &delayedResponse, bool timing)
 {
+    delayedResponse = false;
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
     uint32_t flags = req->getFlags();
@@ -617,14 +614,45 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-                return new TlbFault(vaddr, write, execute);
-            } else {
-                // Do paging protection checks.
-                DPRINTF(TLB, "Entry found with paddr %#x, doing protection checks.\n", entry->paddr);
-                Addr paddr = entry->paddr | (vaddr & (entry->size-1));
-                DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
-                req->setPaddr(paddr);
+#if FULL_SYSTEM
+                Fault fault = walker->start(tc, translation, req,
+                                            write, execute);
+                if (timing || fault != NoFault) {
+                    // This gets ignored in atomic mode.
+                    delayedResponse = true;
+                    return fault;
+                }
+                entry = lookup(vaddr);
+                assert(entry);
+#else
+                DPRINTF(TLB, "Handling a TLB miss for "
+                        "address %#x at pc %#x.\n",
+                        vaddr, tc->readPC());
+
+                Process *p = tc->getProcessPtr();
+                TlbEntry newEntry;
+                bool success = p->pTable->lookup(vaddr, newEntry);
+                if(!success && !execute) {
+                    p->checkAndAllocNextPage(vaddr);
+                    success = p->pTable->lookup(vaddr, newEntry);
+                }
+                if(!success) {
+                    panic("Tried to execute unmapped address %#x.\n", vaddr);
+                } else {
+                    Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+                    DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+                            newEntry.pageStart());
+                    entry = insert(alignedVaddr, newEntry);
+                }
+                DPRINTF(TLB, "Miss was serviced.\n");
+#endif
             }
+            // Do paging protection checks.
+            DPRINTF(TLB, "Entry found with paddr %#x, "
+                    "doing protection checks.\n", entry->paddr);
+            Addr paddr = entry->paddr | (vaddr & (entry->size-1));
+            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
+            req->setPaddr(paddr);
         } else {
             //Use the address which already has segmentation applied.
             DPRINTF(TLB, "Paging disabled.\n");
@@ -665,29 +693,41 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
 Fault
 DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
-    return TLB::translateAtomic<FakeDTLBFault>(req, tc, write, false);
+    bool delayedResponse;
+    return TLB::translate(req, tc, NULL, write,
+            false, delayedResponse, false);
 }
 
 void
 DTB::translateTiming(RequestPtr req, ThreadContext *tc,
         Translation *translation, bool write)
 {
+    bool delayedResponse;
     assert(translation);
-    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+    Fault fault = TLB::translate(req, tc, translation,
+            write, false, delayedResponse, true);
+    if (!delayedResponse)
+        translation->finish(fault, req, tc, write);
 }
 
 Fault
 ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
-    return TLB::translateAtomic<FakeITLBFault>(req, tc, false, true);
+    bool delayedResponse;
+    return TLB::translate(req, tc, NULL, false,
+            true, delayedResponse, false);
 }
 
 void
 ITB::translateTiming(RequestPtr req, ThreadContext *tc,
         Translation *translation)
 {
+    bool delayedResponse;
     assert(translation);
-    translation->finish(translateAtomic(req, tc), req, tc, false);
+    Fault fault = TLB::translate(req, tc, translation,
+            false, true, delayedResponse, true);
+    if (!delayedResponse)
+        translation->finish(fault, req, tc, false);
 }
 
 #if FULL_SYSTEM

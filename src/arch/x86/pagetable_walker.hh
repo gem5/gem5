@@ -91,11 +91,22 @@ namespace X86ISA
         // if the machine is finished, or points to a packet to initiate
         // the next read. If any write is required to update an "accessed"
         // bit, write will point to a packet to do the write. Otherwise it
-        // will be NULL.
-        void doNext(PacketPtr &read, PacketPtr &write);
+        // will be NULL. The return value is whatever fault was incurred
+        // during this stage of the lookup.
+        Fault doNext(PacketPtr &read, PacketPtr &write);
 
         // Kick off the state machine.
-        void start(ThreadContext * _tc, Addr vaddr, bool write, bool execute);
+        Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
+                RequestPtr req, bool write, bool execute);
+        // Clean up after the state machine.
+        void
+        stop()
+        {
+            nextState = Ready;
+            delete read->req;
+            delete read;
+            read = NULL;
+        }
 
       protected:
 
@@ -109,6 +120,11 @@ namespace X86ISA
         unsigned inflight;
 
         bool retrying;
+
+        /*
+         * The fault, if any, that's waiting to be delivered in timing mode.
+         */
+        Fault timingFault;
 
         /*
          * Functions for dealing with packets.
@@ -156,16 +172,18 @@ namespace X86ISA
         // The TLB we're supposed to load.
         TLB * tlb;
         System * sys;
+        BaseTLB::Translation * translation;
 
         /*
          * State machine state.
          */
         ThreadContext * tc;
+        RequestPtr req;
         State state;
         State nextState;
         int size;
         bool enableNX;
-        bool write, execute;
+        bool write, execute, user;
         TlbEntry entry;
         
         Fault pageFault(bool present);

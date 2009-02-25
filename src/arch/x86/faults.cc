@@ -163,56 +163,6 @@ namespace X86ISA
         }
     }
 
-    void FakeITLBFault::invoke(ThreadContext * tc)
-    {
-        // Start the page table walker.
-        tc->getITBPtr()->walk(tc, vaddr, write, execute);
-    }
-
-    void FakeDTLBFault::invoke(ThreadContext * tc)
-    {
-        // Start the page table walker.
-        tc->getDTBPtr()->walk(tc, vaddr, write, execute);
-    }
-
-#else // !FULL_SYSTEM
-    void FakeITLBFault::invoke(ThreadContext * tc)
-    {
-        DPRINTF(TLB, "Invoking an ITLB fault for address %#x at pc %#x.\n",
-                vaddr, tc->readPC());
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(vaddr, entry);
-        if(!success) {
-            panic("Tried to execute unmapped address %#x.\n", vaddr);
-        } else {
-            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
-                    entry.pageStart());
-            tc->getITBPtr()->insert(alignedVaddr, entry);
-        }
-    }
-
-    void FakeDTLBFault::invoke(ThreadContext * tc)
-    {
-        DPRINTF(TLB, "Invoking an DTLB fault for address %#x at pc %#x.\n",
-                vaddr, tc->readPC());
-        Process *p = tc->getProcessPtr();
-        TlbEntry entry;
-        bool success = p->pTable->lookup(vaddr, entry);
-        if(!success) {
-            p->checkAndAllocNextPage(vaddr);
-            success = p->pTable->lookup(vaddr, entry);
-        }
-        if(!success) {
-            panic("Tried to access unmapped address %#x.\n", vaddr);
-        } else {
-            Addr alignedVaddr = p->pTable->pageAlign(vaddr);
-            DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
-                    entry.pageStart());
-            tc->getDTBPtr()->insert(alignedVaddr, entry);
-        }
-    }
 #endif
 } // namespace X86ISA
 
