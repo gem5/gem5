@@ -118,19 +118,12 @@ protToVirtFallThrough:
     andi t6, t2, 0xF8, dataSize=8
     andi t0, t2, 0x4, flags=(EZF,), dataSize=2
     br label("globalCSDescriptor"), flags=(CEZF,)
-    ld t6, tsl, [1, t0, t6], dataSize=8
+    ld t8, tsl, [1, t0, t6], dataSize=8
     br label("processCSDescriptor")
 globalCSDescriptor:
-    ld t6, tsg, [1, t0, t6], dataSize=8
+    ld t8, tsg, [1, t0, t6], dataSize=8
 processCSDescriptor:
     chks t2, t6, dataSize=8
-
-    # This actually updates state which is wrong. It should wait until we know
-    # we're not going to fault. Unfortunately, that's hard to do.
-    wrdl cs, t6, t2
-    wrsel cs, t2
-
-    #CPL = temp_CPL
 
 
 ###
@@ -175,24 +168,24 @@ doPopStackStuff:
     #    POP.v temp_RSP
     ld t6, ss, [1, t0, rsp], "3 * env.dataSize", dataSize=ssz
     #    POP.v temp_SS
-    ld t2, ss, [1, t0, rsp], "4 * env.dataSize", dataSize=ssz
+    ld t9, ss, [1, t0, rsp], "4 * env.dataSize", dataSize=ssz
     #    SS = READ_DESCRIPTOR (temp_SS, ss_chk)
-    andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
+    andi t0, t9, 0xFC, flags=(EZF,), dataSize=2
     br label("processSSDescriptor"), flags=(CEZF,)
-    andi t7, t2, 0xF8, dataSize=8
-    andi t0, t2, 0x4, flags=(EZF,), dataSize=2
+    andi t7, t9, 0xF8, dataSize=8
+    andi t0, t9, 0x4, flags=(EZF,), dataSize=2
     br label("globalSSDescriptor"), flags=(CEZF,)
     ld t7, tsl, [1, t0, t7], dataSize=8
     br label("processSSDescriptor")
 globalSSDescriptor:
     ld t7, tsg, [1, t0, t7], dataSize=8
 processSSDescriptor:
-    chks t2, t7, dataSize=8
+    chks t9, t7, dataSize=8
 
     # This actually updates state which is wrong. It should wait until we know
     # we're not going to fault. Unfortunately, that's hard to do.
-    wrdl ss, t7, t2
-    wrsel ss, t2
+    wrdl ss, t7, t9
+    wrsel ss, t9
 
 ###
 ### From this point downwards, we can't fault. We can update user visible state.
@@ -203,6 +196,12 @@ processSSDescriptor:
     #}
 
 fallThroughPopStackStuff:
+
+    # Update CS
+    wrdl cs, t8, t2
+    wrsel cs, t2
+
+    #CPL = temp_CPL
 
     #IF (changing CPL)
     #{
