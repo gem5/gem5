@@ -49,7 +49,9 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
 {
     memset(clock_data, 0, sizeof(clock_data));
     stat_regA = RTCA_32768HZ | RTCA_1024HZ;
-    stat_regB = RTCB_PRDC_IE |RTCB_BIN | RTCB_24HR;
+    stat_regB = RTCB_PRDC_IE | RTCB_24HR;
+    if (!bcd)
+        stat_regB |= RTCB_BIN;
 
     year = time.tm_year;
 
