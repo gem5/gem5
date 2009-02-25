@@ -572,6 +572,38 @@ namespace X86ISA
         Bitfield<3, 0> tpr; // Task Priority Register
     EndBitUnion(CR8)
 
+    BitUnion64(DR6)
+        Bitfield<0> b0;
+        Bitfield<1> b1;
+        Bitfield<2> b2;
+        Bitfield<3> b3;
+        Bitfield<13> bd;
+        Bitfield<14> bs;
+        Bitfield<15> bt;
+    EndBitUnion(DR6)
+
+    BitUnion64(DR7)
+        Bitfield<0> l0;
+        Bitfield<1> g0;
+        Bitfield<2> l1;
+        Bitfield<3> g1;
+        Bitfield<4> l2;
+        Bitfield<5> g2;
+        Bitfield<6> l3;
+        Bitfield<7> g3;
+        Bitfield<8> le;
+        Bitfield<9> ge;
+        Bitfield<13> gd;
+        Bitfield<17, 16> rw0;
+        Bitfield<19, 18> len0;
+        Bitfield<21, 20> rw1;
+        Bitfield<23, 22> len1;
+        Bitfield<25, 24> rw2;
+        Bitfield<27, 26> len2;
+        Bitfield<29, 28> rw3;
+        Bitfield<31, 30> len3;
+    EndBitUnion(DR7)
+
     // MTRR capabilities
     BitUnion64(MTRRcap)
         Bitfield<7, 0> vcnt; // Variable-Range Register Count
