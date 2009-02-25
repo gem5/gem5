@@ -599,7 +599,7 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     memReq[tid] = mem_req;
 
     // Translate the instruction request.
-    fault = cpu->itb->translate(mem_req, cpu->thread[tid]->getTC());
+    fault = cpu->itb->translateAtomic(mem_req, cpu->thread[tid]->getTC());
 
     // In the case of faults, the fetch stage may need to stall and wait
     // for the ITB miss to be handled.

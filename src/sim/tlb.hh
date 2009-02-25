@@ -58,7 +58,7 @@ class GenericTLB : public BaseTLB
   public:
     void demapPage(Addr vaddr, uint64_t asn);
 
-    Fault translate(RequestPtr req, ThreadContext *tc, bool=false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool=false);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

@@ -314,7 +314,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->dtb->translate(req, tc, false);
+        Fault fault = thread->dtb->translateAtomic(req, tc, false);
 
         // Now do the access.
         if (fault == NoFault) {
@@ -452,7 +452,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->dtb->translate(req, tc, true);
+        Fault fault = thread->dtb->translateAtomic(req, tc, true);
 
         // Now do the access.
         if (fault == NoFault) {

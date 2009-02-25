@@ -347,7 +347,7 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
     Addr fetchPC = (threadPC & PCMask) + fetchOffset;
     req->setVirt(0, fetchPC, sizeof(MachInst), 0, threadPC);
 
-    Fault fault = thread->itb->translate(req, tc);
+    Fault fault = thread->itb->translateAtomic(req, tc);
 
     return fault;
 }

@@ -98,7 +98,7 @@ TLBUnit::execute(int slot_idx)
       case FetchLookup:
         {
             tlb_req->fault =
-                this->cpu->itb->translate(tlb_req->memReq,
+                this->cpu->itb->translateAtomic(tlb_req->memReq,
                         cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {
@@ -129,7 +129,7 @@ TLBUnit::execute(int slot_idx)
                     tid, seq_num, tlb_req->memReq->getVaddr());
 
             tlb_req->fault =
-                this->cpu->itb->translate(tlb_req->memReq,
+                this->cpu->itb->translateAtomic(tlb_req->memReq,
                         cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {

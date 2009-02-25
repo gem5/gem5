@@ -155,7 +155,7 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
                              fetch_PC, thread->contextId(),
                              inst->threadNumber);
 
-        bool succeeded = itb->translate(memReq, thread);
+        bool succeeded = itb->translateAtomic(memReq, thread);
 
         if (!succeeded) {
             if (inst->getFault() == NoFault) {

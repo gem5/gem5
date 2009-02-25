@@ -860,7 +860,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translate(req, thread->getTC(), false);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), false);
 
     if (req->isUncacheable())
         isUncacheable = true;
@@ -916,7 +916,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translate(req, thread->getTC(), true);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), true);
 
     if (req->isUncacheable())
         isUncacheable = true;

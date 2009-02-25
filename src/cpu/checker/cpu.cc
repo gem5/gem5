@@ -159,7 +159,7 @@ CheckerCPU::read(Addr addr, T &data, unsigned flags)
     memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    dtb->translate(memReq, tc, false);
+    dtb->translateAtomic(memReq, tc, false);
 
     PacketPtr pkt = new Packet(memReq, Packet::ReadReq, Packet::Broadcast);
 
@@ -229,7 +229,7 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     memReq->setVirt(0, addr, sizeof(T), flags, thread->readPC());
 
     // translate to physical address
-    dtb->translate(memReq, tc, true);
+    dtb->translateAtomic(memReq, tc, true);
 
     // Can compare the write data and result only if it's cacheable,
     // not a store conditional, or is a store conditional that

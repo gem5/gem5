@@ -317,7 +317,7 @@ ITB::regStats()
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if (FULL_SYSTEM && PcPAL(req->getPC()))
@@ -479,7 +479,7 @@ DTB::regStats()
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 

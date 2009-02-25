@@ -480,7 +480,7 @@ FrontEnd<Impl>::fetchCacheLine()
                          PC, cpu->thread->contextId());
 
     // Translate the instruction request.
-    fault = cpu->itb->translate(memReq, thread);
+    fault = cpu->itb->translateAtomic(memReq, thread);
 
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.

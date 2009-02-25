@@ -314,7 +314,7 @@ TimingSimpleCPU::buildSplitPacket(PacketPtr &pkt1, PacketPtr &pkt2,
 Fault
 TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr &req, bool read)
 {
-    Fault fault = thread->dtb->translate(req, tc, !read);
+    Fault fault = thread->dtb->translateAtomic(req, tc, !read);
     MemCmd cmd;
     if (fault != NoFault) {
         delete req;

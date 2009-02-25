@@ -436,7 +436,7 @@ DTB::writeSfsr(Addr a, bool write, ContextType ct,
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
@@ -549,7 +549,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
 {
     /*
      * @todo this could really use some profiling and fixing to make

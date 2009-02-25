@@ -177,7 +177,7 @@ class ITB : public TLB
         cacheEntry = NULL;
     }
 
-    Fault translate(RequestPtr &req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr &req, ThreadContext *tc);
   private:
     void writeSfsr(bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
@@ -199,7 +199,7 @@ class DTB : public TLB
         cacheEntry[1] = NULL;
     }
 
-    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+    Fault translateAtomic(RequestPtr &req, ThreadContext *tc, bool write);
 #if FULL_SYSTEM
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);

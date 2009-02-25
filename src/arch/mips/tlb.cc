@@ -310,7 +310,7 @@ TLB::regStats()
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr &req, ThreadContext *tc)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -427,7 +427,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr &req, ThreadContext *tc, bool write)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();

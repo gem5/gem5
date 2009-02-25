@@ -139,7 +139,7 @@ class SimpleThread : public ThreadState
 
     /***************************************************************
      *  SimpleThread functions to provide CPU with access to various
-     *  state, and to provide address translation methods.
+     *  state.
      **************************************************************/
 
     /** Returns the pointer to this SimpleThread's ThreadContext. Used
