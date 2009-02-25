@@ -155,7 +155,7 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
 {
     int gl = tc->readMiscRegNoEffect(MISCREG_GL);
     int cwp = tc->readMiscRegNoEffect(MISCREG_CWP);
-    //DPRINTF(Sparc, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
+    //DPRINTF(RegisterWindows, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
     int newReg;
     //The total number of global registers
     int numGlobals = (MaxGL + 1) * 8;
@@ -214,7 +214,7 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
     }
     else
         panic("Tried to flatten invalid register index %d!\n", reg);
-    DPRINTF(Sparc, "Flattened register %d to %d.\n", reg, newReg);
+    DPRINTF(RegisterWindows, "Flattened register %d to %d.\n", reg, newReg);
     return newReg;
     //return intRegFile.flattenIndex(reg);
 }

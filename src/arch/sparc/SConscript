@@ -45,6 +45,7 @@ if env['TARGET_ISA'] == 'sparc':
 
     SimObject('SparcTLB.py')
     TraceFlag('Sparc', "Generic SPARC ISA stuff")
+    TraceFlag('RegisterWindows', "Register window manipulation")
 
     if env['FULL_SYSTEM']:
         SimObject('SparcSystem.py')

@@ -55,7 +55,7 @@ int IntRegFile::flattenIndex(int reg)
 {
     int flatIndex = offset[reg >> FrameOffsetBits]
         | (reg & FrameOffsetMask);
-    DPRINTF(Sparc, "Flattened index %d into %d.\n", reg, flatIndex);
+    DPRINTF(RegisterWindows, "Flattened index %d into %d.\n", reg, flatIndex);
     return flatIndex;
 }
 
@@ -135,12 +135,12 @@ void IntRegFile::setCWP(int cwp)
     regView[Locals] = regSegments[index+1];
     regView[Inputs] = regSegments[(index+2) % (NWindows * 2)];
 
-    DPRINTF(Sparc, "Changed the CWP value to %d\n", cwp);
+    DPRINTF(RegisterWindows, "Changed the CWP value to %d\n", cwp);
 }
 
 void IntRegFile::setGlobals(int gl)
 {
-    DPRINTF(Sparc, "Now using %d globals\n", gl);
+    DPRINTF(RegisterWindows, "Now using %d globals\n", gl);
 
     regView[Globals] = regGlobals[gl];
     offset[Globals] = RegGlobalOffset + gl * RegsPerFrame;
