@@ -192,10 +192,12 @@ def macroop MOVZX_W_R_P {
 };
 
 def macroop MOV_C_R {
+    .adjust_env maxOsz
     wrcr reg, regm
 };
 
 def macroop MOV_R_C {
+    .adjust_env maxOsz
     rdcr reg, regm
 };
 

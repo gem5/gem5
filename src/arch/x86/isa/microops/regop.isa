@@ -967,7 +967,7 @@ let {{
             if (src1 == 1 || (src1 > 4 && src1 < 8) || (src1 > 8)) {
                 fault = new InvalidOpcode();
             } else {
-                DestReg = ControlSrc1;
+                DestReg = merge(DestReg, ControlSrc1, dataSize);
             }
         '''
 
