@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 16 2009 00:19:15
-M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
-M5 started Feb 16 2009 01:16:41
-M5 executing on zizzer
+M5 compiled Feb 23 2009 23:45:19
+M5 revision 046e9580158a+ 5888+ default qtip tip delayedmissstats.patch
+M5 started Feb 23 2009 23:48:10
+M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/60.bzip2/x86/linux/simple-timing -re tests/run.py long/60.bzip2/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -29,4 +29,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 7645209486000 because target called exit()
+Exiting @ tick 7633159262000 because target called exit()
