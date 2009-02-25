@@ -1052,22 +1052,22 @@ let {{
 
     class Rdbase(SegOp):
         code = '''
-            DestReg = SegBaseSrc1;
+            DestReg = merge(DestReg, SegBaseSrc1, dataSize);
         '''
 
     class Rdlimit(SegOp):
         code = '''
-            DestReg = SegLimitSrc1;
+            DestReg = merge(DestReg, SegLimitSrc1, dataSize);
         '''
 
     class RdAttr(SegOp):
         code = '''
-            DestReg = SegAttrSrc1;
+            DestReg = merge(DestReg, SegAttrSrc1, dataSize);
         '''
 
     class Rdsel(SegOp):
         code = '''
-            DestReg = SegSelSrc1;
+            DestReg = merge(DestReg, SegSelSrc1, dataSize);
         '''
 
     class Rdval(RegOp):
