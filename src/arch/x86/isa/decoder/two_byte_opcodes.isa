@@ -265,9 +265,15 @@
                 0x05: SyscallInst::syscall('xc->syscall(Rax)', IsSyscall);
 #endif
                 0x06: clts();
-                //sandpile.org says (AMD) after sysret, so I might want to check
-                //if that means amd64 or AMD machines
-                0x07: loadall_or_sysret();
+                0x07: decode MODE_SUBMODE {
+                    0x0: decode OPSIZE {
+                        // Return to 64 bit mode.
+                        0x8: Inst::SYSRET_TO_64();
+                        // Return to compatibility mode.
+                        default: Inst::SYSRET_TO_COMPAT();
+                    }
+                    default: Inst::SYSRET_NON_64();
+                }
             }
             0x01: decode OPCODE_OP_BOTTOM3 {
                 0x0: invd();

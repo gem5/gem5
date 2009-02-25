@@ -156,12 +156,80 @@ def macroop SYSCALL_LEGACY
 {
     panic "The syscall instruction isn't implemented in legacy mode."
 };
+
+def macroop SYSRET_TO_64
+{
+    # All 1s.
+    limm t1, "(uint64_t)(-1)"
+
+    rdval t3, star
+    srli t3, t3, 48, dataSize=8
+    ori t3, t3, 3, dataSize=1
+
+    # Set rflags to r11 with RF and VM cleared.
+    limm t4, "~(RFBit | VMBit)"
+    and t4, t4, r11, dataSize=8
+    wrflags t4, t0
+
+    # Set up CS.
+    addi t4, t3, 16, dataSize=8
+    wrsel cs, t4
+    wrbase cs, t0, dataSize=8
+    wrlimit cs, t1, dataSize=4
+    # Not writable, read/execute-able, not expandDown,
+    # dpl=3, defaultSize=0, long mode
+    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
+              (3 << 3) | (0 << 5) | (1 << 6))
+    wrattr cs, t4
+
+    # Only the selector is changed for SS.
+    addi t4, t3, 8, dataSize=8
+    wrsel ss, t4
+
+    # Set the RIP back.
+    wrip rcx, t0, dataSize=8
+};
+
+def macroop SYSRET_TO_COMPAT
+{
+    # All 1s.
+    limm t1, "(uint64_t)(-1)"
+
+    rdval t3, star
+    srli t3, t3, 48, dataSize=8
+    ori t3, t3, 3, dataSize=1
+
+    # Set rflags to r11 with RF and VM cleared.
+    limm t4, "~(RFBit | VMBit)"
+    and t4, t4, r11, dataSize=8
+    wrflags t4, t0
+
+    # Set up CS.
+    wrsel cs, t3
+    wrbase cs, t0, dataSize=8
+    wrlimit cs, t1, dataSize=4
+    # Not writable, read/execute-able, not expandDown,
+    # dpl=3, defaultSize=1, not long mode
+    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
+              (3 << 3) | (1 << 5) | (0 << 6))
+    wrattr cs, t4
+
+    # Only the selector is changed for SS.
+    addi t4, t3, 8, dataSize=8
+    wrsel ss, t4
+
+    # Set the RIP back.
+    wrip rcx, t0, dataSize=8
+};
+
+def macroop SYSRET_NON_64
+{
+    panic "The sysret instruction isn't implemented in legacy mode."
+};
 '''
 #let {{
 #    class SYSENTER(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class SYSEXIT(Inst):
-#       "GenFault ${new UnimpInstFault}"
-#    class SYSRET(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #}};
