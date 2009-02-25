@@ -104,8 +104,11 @@ string X86ISA::getMiscRegName(RegIndex index)
 
 void MiscRegFile::clear()
 {
-    // Blank everything. 0 might not be an appropriate value for some things.
+    // Blank everything. 0 might not be an appropriate value for some things,
+    // but it is for most.
     memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
+    regVal[MISCREG_DR6] = (mask(8) << 4) | (mask(16) << 16);
+    regVal[MISCREG_DR7] = 1 << 10;
 }
 
 MiscReg MiscRegFile::readRegNoEffect(MiscRegIndex miscReg)
@@ -267,6 +270,75 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
       case MISCREG_TSC:
         regVal[MISCREG_TSC] = val - tc->getCpuPtr()->curCycle();
         return;
+      case MISCREG_DR0:
+      case MISCREG_DR1:
+      case MISCREG_DR2:
+      case MISCREG_DR3:
+        /* These should eventually set up breakpoints. */
+        break;
+      case MISCREG_DR4:
+        miscReg = MISCREG_DR6;
+        /* Fall through to have the same effects as DR6. */
+      case MISCREG_DR6:
+        {
+            DR6 dr6 = regVal[MISCREG_DR6];
+            DR6 newDR6 = val;
+            dr6.b0 = newDR6.b0;
+            dr6.b1 = newDR6.b1;
+            dr6.b2 = newDR6.b2;
+            dr6.b3 = newDR6.b3;
+            dr6.bd = newDR6.bd;
+            dr6.bs = newDR6.bs;
+            dr6.bt = newDR6.bt;
+            newVal = dr6;
+        }
+        break;
+      case MISCREG_DR5:
+        miscReg = MISCREG_DR7;
+        /* Fall through to have the same effects as DR7. */
+      case MISCREG_DR7:
+        {
+            DR7 dr7 = regVal[MISCREG_DR7];
+            DR7 newDR7 = val;
+            dr7.l0 = newDR7.l0;
+            dr7.g0 = newDR7.g0;
+            if (dr7.l0 || dr7.g0) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 0. */
+            }
+            dr7.l1 = newDR7.l1;
+            dr7.g1 = newDR7.g1;
+            if (dr7.l1 || dr7.g1) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 1. */
+            }
+            dr7.l2 = newDR7.l2;
+            dr7.g2 = newDR7.g2;
+            if (dr7.l2 || dr7.g2) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 2. */
+            }
+            dr7.l3 = newDR7.l3;
+            dr7.g3 = newDR7.g3;
+            if (dr7.l3 || dr7.g3) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 3. */
+            }
+            dr7.gd = newDR7.gd;
+            dr7.rw0 = newDR7.rw0;
+            dr7.len0 = newDR7.len0;
+            dr7.rw1 = newDR7.rw1;
+            dr7.len1 = newDR7.len1;
+            dr7.rw2 = newDR7.rw2;
+            dr7.len2 = newDR7.len2;
+            dr7.rw3 = newDR7.rw3;
+            dr7.len3 = newDR7.len3;
+        }
+        break;
       default:
         break;
     }
