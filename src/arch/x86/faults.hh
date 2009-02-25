@@ -62,6 +62,8 @@
 #include "base/misc.hh"
 #include "sim/faults.hh"
 
+#include <string>
+
 namespace X86ISA
 {
     // Base class for all x86 "faults" where faults is in the m5 sense
@@ -102,6 +104,8 @@ namespace X86ISA
 
 #if FULL_SYSTEM
         void invoke(ThreadContext * tc);
+
+        virtual std::string describe() const;
 #endif
     };
 
@@ -342,6 +346,8 @@ namespace X86ISA
 
 #if FULL_SYSTEM
         void invoke(ThreadContext * tc);
+
+        virtual std::string describe() const;
 #endif
     };
 
@@ -414,7 +420,7 @@ namespace X86ISA
     {
       public:
         SoftwareInterrupt(uint8_t _vector) :
-            X86Interrupt("Software Interrupt", "INTn", _vector)
+            X86Interrupt("Software Interrupt", "#INTR", _vector)
         {}
 
         bool isSoft()

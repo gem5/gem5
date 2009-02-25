@@ -103,6 +103,8 @@ namespace X86ISA
 #if FULL_SYSTEM
     void X86FaultBase::invoke(ThreadContext * tc)
     {
+        Addr pc = tc->readPC();
+        DPRINTF(Faults, "RIP %#x: vector %d: %s\n", pc, vector, describe());
         using namespace X86ISAInst::RomLabels;
         HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
         MicroPC entry;
@@ -116,7 +118,7 @@ namespace X86ISA
             entry = extern_label_legacyModeInterrupt;
         }
         tc->setIntReg(INTREG_MICRO(1), vector);
-        tc->setIntReg(INTREG_MICRO(7), tc->readPC());
+        tc->setIntReg(INTREG_MICRO(7), pc);
         if (errorCode != (uint64_t)(-1)) {
             if (m5reg.mode == LongMode) {
                 entry = extern_label_longModeInterruptWithError;
@@ -131,6 +133,18 @@ namespace X86ISA
         }
         tc->setMicroPC(romMicroPC(entry));
         tc->setNextMicroPC(romMicroPC(entry) + 1);
+    }
+
+    std::string
+    X86FaultBase::describe() const
+    {
+        std::stringstream ss;
+        ccprintf(ss, "%s", mnemonic());
+        if (errorCode != (uint64_t)(-1)) {
+            ccprintf(ss, "(%#x)", errorCode);
+        }
+
+        return ss.str();
     }
     
     void X86Trap::invoke(ThreadContext * tc)
@@ -161,6 +175,14 @@ namespace X86ISA
         } else {
             tc->setMiscReg(MISCREG_CR2, (uint32_t)addr);
         }
+    }
+
+    std::string
+    PageFault::describe() const
+    {
+        std::stringstream ss;
+        ccprintf(ss, "%s at %#x", X86FaultBase::describe(), addr);
+        return ss.str();
     }
 
 #endif
