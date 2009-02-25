@@ -80,29 +80,22 @@ def rom
     andi t10, t10, 3, dataSize=8
     rdattr t5, cs, dataSize=8
     srli t5, t5, 3, dataSize=8
-    sub t5, t5, t10, dataSize=8
-    andi t0, t5, 0x3, flags=(EZF,), dataSize=8
+    andi t5, t5, 0x3, dataSize=8
+    sub t0, t5, t10, flags=(EZF,), dataSize=8
     # We're going to change priviledge, so zero out the stack selector. We
     # need to let the IST have priority so we don't branch yet.
     wrsel t11, t0, flags=(nCEZF,)
 
     # Check the IST field of the gate descriptor
-    srli t10, t4, 32, dataSize=8
-    andi t10, t10, 0x7, dataSize=8
-    subi t0, t10, 1, flags=(ECF,), dataSize=8
+    srli t12, t4, 32, dataSize=8
+    andi t12, t12, 0x7, dataSize=8
+    subi t0, t12, 1, flags=(ECF,), dataSize=8
     br rom_local_label("%(startLabel)s_istStackSwitch"), flags=(nCECF,)
     br rom_local_label("%(startLabel)s_cplStackSwitch"), flags=(nCEZF,)
 
     # If we're here, it's because the stack isn't being switched.
     # Set t6 to the new aligned rsp.
     mov t6, t6, rsp, dataSize=8
-    andi t6, t6, 0xF0, dataSize=1
-    subi t6, t6, 40 + %(errorCodeSize)d, dataSize=8
-
-    # Check that we can access everything we need to on the stack
-    ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
-    ldst t0, hs, [1, t0, t6], \
-         32 + %(errorCodeSize)d, dataSize=8, addressSize=8
     br rom_local_label("%(startLabel)s_stackSwitched")
 
 %(startLabel)s_istStackSwitch:
@@ -110,10 +103,18 @@ def rom
     br rom_local_label("%(startLabel)s_stackSwitched")
 
 %(startLabel)s_cplStackSwitch:
-    panic "CPL change initiated stack switching isn't implemented"
+    # Get the new rsp from the TSS
+    ld t6, tr, [8, t10, t0], 4, dataSize=8, addressSize=8
 
 %(startLabel)s_stackSwitched:
 
+    andi t6, t6, 0xF0, dataSize=1
+    subi t6, t6, 40 + %(errorCodeSize)d, dataSize=8
+
+    # Check that we can access everything we need to on the stack
+    ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
+    ldst t0, hs, [1, t0, t6], \
+         32 + %(errorCodeSize)d, dataSize=8, addressSize=8
 
     ##
     ## Point of no return.
