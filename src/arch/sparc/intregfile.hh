@@ -87,8 +87,6 @@ namespace SparcISA
 
       public:
 
-        int flattenIndex(int reg);
-
         void clear();
 
         IntRegFile();

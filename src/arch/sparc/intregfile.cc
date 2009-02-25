@@ -51,14 +51,6 @@ string SparcISA::getIntRegName(RegIndex index)
     return intRegName[index];
 }
 
-int IntRegFile::flattenIndex(int reg)
-{
-    int flatIndex = offset[reg >> FrameOffsetBits]
-        | (reg & FrameOffsetMask);
-    DPRINTF(RegisterWindows, "Flattened index %d into %d.\n", reg, flatIndex);
-    return flatIndex;
-}
-
 void IntRegFile::clear()
 {
     int x;
