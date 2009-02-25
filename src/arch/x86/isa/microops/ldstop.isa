@@ -228,6 +228,7 @@ def template MicroStoreExecute {{
             fault = write(xc, Mem, EA, (%(mem_flags)s) | segment);
             if(fault == NoFault)
             {
+                %(post_code)s;
                 %(op_wb)s;
             }
         }
@@ -252,20 +253,20 @@ def template MicroStoreInitiateAcc {{
 
         if(fault == NoFault)
         {
-            fault = write(xc, Mem, EA, (%(mem_flags)s) | segment);
-            if(fault == NoFault)
-            {
-                %(op_wb)s;
-            }
+            write(xc, Mem, EA, (%(mem_flags)s) | segment);
         }
         return fault;
     }
 }};
 
 def template MicroStoreCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
-            Trace::InstRecord * traceData) const
+    Fault %(class_name)s::completeAcc(PacketPtr pkt,
+            %(CPU_exec_context)s * xc, Trace::InstRecord * traceData) const
     {
+        %(op_decl)s;
+        %(op_rd)s;
+        %(complete_code)s;
+        %(op_wb)s;
         return NoFault;
     }
 }};
@@ -419,7 +420,8 @@ let {{
     defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);', 'StoreCheck')
     defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
 
-    def defineMicroStoreOp(mnemonic, code, mem_flags=0):
+    def defineMicroStoreOp(mnemonic, code, \
+            postCode="", completeCode="", mem_flags=0):
         global header_output
         global decoder_output
         global exec_output
@@ -430,6 +432,8 @@ let {{
         # Build up the all register version of this micro op
         iop = InstObjParams(name, Name, 'X86ISA::LdStOp',
                 {"code": code,
+                 "post_code": postCode,
+                 "complete_code": completeCode,
                  "ea_code": calculateEA,
                  "mem_flags": mem_flags})
         header_output += MicroLdStOpDeclare.subst(iop)
@@ -450,11 +454,10 @@ let {{
 
     defineMicroStoreOp('St', 'Mem = Data;')
     defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
-    defineMicroStoreOp('Stupd', '''
-            Mem = Data;
-            Base = merge(Base, EA - SegBase, addressSize);
-            ''');
-    defineMicroStoreOp('Cda', 'Mem = 0;', "Request::NO_ACCESS")
+    defineMicroStoreOp('Stupd', 'Mem = Data;',
+            'Base = merge(Base, EA - SegBase, addressSize);',
+            'Base = merge(Base, pkt->req->getVaddr() - SegBase, addressSize);');
+    defineMicroStoreOp('Cda', 'Mem = 0;', mem_flags="Request::NO_ACCESS")
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);",
