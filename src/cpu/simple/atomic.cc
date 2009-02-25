@@ -607,7 +607,7 @@ AtomicSimpleCPU::tick()
         Fault fault = NoFault;
 
         bool fromRom = isRomMicroPC(thread->readMicroPC());
-        if (!fromRom) {
+        if (!fromRom && !curMacroStaticInst) {
             setupFetchRequest(&ifetch_req);
             fault = thread->itb->translateAtomic(&ifetch_req, tc);
         }
@@ -617,7 +617,7 @@ AtomicSimpleCPU::tick()
             bool icache_access = false;
             dcache_access = false; // assume no dcache access
 
-            if (!fromRom) {
+            if (!fromRom && !curMacroStaticInst) {
                 // This is commented out because the predecoder would act like
                 // a tiny cache otherwise. It wouldn't be flushed when needed
                 // like the I cache. It should be flushed, and when that works

@@ -667,7 +667,7 @@ TimingSimpleCPU::fetch()
 
     bool fromRom = isRomMicroPC(thread->readMicroPC());
 
-    if (!fromRom) {
+    if (!fromRom && !curMacroStaticInst) {
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
