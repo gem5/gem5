@@ -40,8 +40,8 @@ def rom
 
     # Load the gate descriptor from the IDT
     slli t4, t1, 4, dataSize=8
-    ld t2, idtr, [1, t0, t4], 8, dataSize=8, addressSize=8
-    ld t4, idtr, [1, t0, t4], dataSize=8, addressSize=8
+    ld t2, idtr, [1, t0, t4], 8, dataSize=8, addressSize=8, atCPL0=True
+    ld t4, idtr, [1, t0, t4], dataSize=8, addressSize=8, atCPL0=True
 
     # Make sure the descriptor is a legal gate.
     chks t1, t4, %(gateCheckType)s
@@ -54,10 +54,10 @@ def rom
     andi t5, t10, 0xF8, dataSize=8
     andi t0, t10, 0x4, flags=(EZF,), dataSize=2
     br rom_local_label("%(startLabel)s_globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t5], dataSize=8, addressSize=8
+    ld t3, tsl, [1, t0, t5], dataSize=8, addressSize=8, atCPL0=True
     br rom_local_label("%(startLabel)s_processDescriptor")
 %(startLabel)s_globalDescriptor:
-    ld t3, tsg, [1, t0, t5], dataSize=8, addressSize=8
+    ld t3, tsg, [1, t0, t5], dataSize=8, addressSize=8, atCPL0=True
 %(startLabel)s_processDescriptor:
     chks t10, t3, IntCSCheck, dataSize=8
     wrdl hs, t3, t10, dataSize=8
@@ -104,17 +104,12 @@ def rom
 
 %(startLabel)s_cplStackSwitch:
     # Get the new rsp from the TSS
-    ld t6, tr, [8, t10, t0], 4, dataSize=8, addressSize=8
+    ld t6, tr, [8, t10, t0], 4, dataSize=8, addressSize=8, atCPL0=True
 
 %(startLabel)s_stackSwitched:
 
     andi t6, t6, 0xF0, dataSize=1
     subi t6, t6, 40 + %(errorCodeSize)d, dataSize=8
-
-    # Check that we can access everything we need to on the stack
-    ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
-    ldst t0, hs, [1, t0, t6], \
-         32 + %(errorCodeSize)d, dataSize=8, addressSize=8
 
     ##
     ## Point of no return.
@@ -135,6 +130,11 @@ def rom
     limm t10, 0, dataSize=8
     rdsel t10, cs, dataSize=2
     wrsel cs, t5, dataSize=2
+
+    # Check that we can access everything we need to on the stack
+    ldst t0, hs, [1, t0, t6], dataSize=8, addressSize=8
+    ldst t0, hs, [1, t0, t6], \
+         32 + %(errorCodeSize)d, dataSize=8, addressSize=8
 
 
     #
