@@ -235,7 +235,7 @@ output header {{
     enum SegmentSelectorCheck {
       SegNoCheck, SegCSCheck, SegCallGateCheck, SegIntGateCheck,
       SegSoftIntGateCheck, SegSSCheck, SegIretCheck, SegIntCSCheck,
-      SegTRCheck
+      SegTRCheck, SegTSSCheck
     };
 
     enum LongModeDescriptorType {
@@ -1122,6 +1122,15 @@ let {{
               case SegTRCheck:
                 if (!selector.si || selector.ti) {
                     fault = new GeneralProtection(selector);
+                }
+                break;
+              case SegTSSCheck:
+                if (!desc.p) {
+                    fault = new SegmentNotPresent(selector);
+                } else if (!(desc.type == 0x9 ||
+                        (desc.type == 1 &&
+                         m5reg.mode != LongMode))) {
+
                 }
                 break;
               default:
