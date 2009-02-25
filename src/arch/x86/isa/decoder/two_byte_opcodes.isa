@@ -281,7 +281,7 @@
                 0x2: Inst::UD2();
                 0x3: Inst::UD2();
                 0x4: Inst::UD2();
-                0x5: prefetch();
+                0x5: Inst::PREFETCH(Mb);
                 0x6: FailUnimpl::femms();
                 0x7: FailUnimpl::threednow();
             }
@@ -335,7 +335,7 @@
                 //group17();
                 0x0: decode MODRM_REG {
                     0x0: prefetch_nta();
-                    0x1: prefetch_t0();
+                    0x1: Inst::PREFETCH_T0(Mb);
                     0x2: prefetch_t1();
                     0x3: prefetch_t2();
                     default: Inst::HINT_NOP();

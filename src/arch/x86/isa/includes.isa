@@ -157,6 +157,7 @@ output exec {{
 #include "sim/sim_exit.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "mem/request.hh"
 #include "sim/pseudo_inst.hh"
 
 using namespace X86ISA;

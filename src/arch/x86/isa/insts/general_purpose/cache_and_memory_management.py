@@ -53,7 +53,31 @@
 #
 # Authors: Gabe Black
 
-microcode = ""
+microcode = '''
+def macroop PREFETCH_M
+{
+    ld t0, seg, sib, disp, dataSize=1, prefetch=True
+};
+
+def macroop PREFETCH_P
+{
+    rdip t7
+    ld t0, seg, riprel, disp, dataSize=1, prefetch=True
+};
+
+def macroop PREFETCH_T0_M
+{
+    ld t0, seg, sib, disp, dataSize=1, prefetch=True
+};
+
+def macroop PREFETCH_T0_P
+{
+    rdip t7
+    ld t0, seg, riprel, disp, dataSize=1, prefetch=True
+};
+
+'''
+
 #let {{
 #    class LFENCE(Inst):
 #       "GenFault ${new UnimpInstFault}"
@@ -62,8 +86,6 @@ microcode = ""
 #    class MFENCE(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class PREFETCHlevel(Inst):
-#       "GenFault ${new UnimpInstFault}"
-#    class PREFETCH(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #    class PREFETCHW(Inst):
 #       "GenFault ${new UnimpInstFault}"
