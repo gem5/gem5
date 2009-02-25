@@ -303,6 +303,7 @@ X86ISA::I8042::read(PacketPtr pkt)
     } else {
         panic("Read from unrecognized port %#x.\n", addr);
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -434,6 +435,7 @@ X86ISA::I8042::write(PacketPtr pkt)
     } else {
         panic("Write to unrecognized port %#x.\n", addr);
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 

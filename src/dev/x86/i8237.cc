@@ -63,6 +63,7 @@ X86ISA::I8237::read(PacketPtr pkt)
       default:
         panic("Read from undefined i8237 register %d.\n", offset);
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -120,6 +121,7 @@ X86ISA::I8237::write(PacketPtr pkt)
       default:
         panic("Write to undefined i8254 register.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 

@@ -56,6 +56,7 @@ X86ISA::Cmos::read(PacketPtr pkt)
       default:
         panic("Read from undefined CMOS port.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -74,6 +75,7 @@ X86ISA::Cmos::write(PacketPtr pkt)
       default:
         panic("Write to undefined CMOS port.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 

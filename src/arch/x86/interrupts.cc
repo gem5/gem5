@@ -221,6 +221,7 @@ X86ISA::Interrupts::read(PacketPtr pkt)
             "Reading Local APIC register %d at offset %#x as %#x.\n",
             reg, offset, val);
     pkt->setData(((uint8_t *)&val) + (offset & mask(3)));
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -238,6 +239,7 @@ X86ISA::Interrupts::write(PacketPtr pkt)
             "Writing Local APIC register %d at offset %#x as %#x.\n",
             reg, offset, gtoh(val));
     setReg(reg, gtoh(val));
+    pkt->makeAtomicResponse();
     return latency;
 }
 void

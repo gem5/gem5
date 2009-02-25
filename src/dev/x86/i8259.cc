@@ -65,6 +65,7 @@ X86ISA::I8259::read(PacketPtr pkt)
         pkt->set(IMR);
         break;
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -210,6 +211,7 @@ X86ISA::I8259::write(PacketPtr pkt)
         }
         break;
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 

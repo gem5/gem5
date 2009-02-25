@@ -47,6 +47,7 @@ X86ISA::Speaker::read(PacketPtr pkt)
             controlVal.speaker ? "on" : "off",
             controlVal.timer ? "on" : "off");
     pkt->set((uint8_t)controlVal);
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -67,6 +68,7 @@ X86ISA::Speaker::write(PacketPtr pkt)
     controlVal.speaker = val.speaker;
     DPRINTF(PcSpeaker, "Writing to speaker device: gate %s, speaker %s.\n",
             controlVal.gate ? "on" : "off", controlVal.speaker ? "on" : "off");
+    pkt->makeAtomicResponse();
     return latency;
 }
 

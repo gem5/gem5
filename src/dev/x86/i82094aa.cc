@@ -67,6 +67,7 @@ X86ISA::I82094AA::read(PacketPtr pkt)
       default:
         panic("Illegal read from I/O APIC.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -85,6 +86,7 @@ X86ISA::I82094AA::write(PacketPtr pkt)
       default:
         panic("Illegal write to I/O APIC.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 

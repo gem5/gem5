@@ -56,6 +56,7 @@ X86ISA::I8254::read(PacketPtr pkt)
     } else {
         panic("Read from undefined i8254 register.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
@@ -71,6 +72,7 @@ X86ISA::I8254::write(PacketPtr pkt)
     } else {
         panic("Write to undefined i8254 register.\n");
     }
+    pkt->makeAtomicResponse();
     return latency;
 }
 
