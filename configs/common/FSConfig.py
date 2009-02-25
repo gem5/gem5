@@ -261,6 +261,24 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             dest_io_apic_id = 1,
             dest_io_apic_intin = 1)
     self.intel_mp_table.add_entry(assign_1_to_apic)
+    assign_8259_4_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 4,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_4_to_apic)
+    assign_4_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 4,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 4)
+    self.intel_mp_table.add_entry(assign_4_to_apic)
     assign_8259_12_to_apic = X86IntelMPIOIntAssignment(
             interrupt_type = 'ExtInt',
             polarity = 'ConformPolarity',
