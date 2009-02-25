@@ -71,8 +71,6 @@ namespace SparcISA
 
         void clear();
 
-        int FlattenIntIndex(int reg);
-
         MiscReg readMiscRegNoEffect(int miscReg);
 
         MiscReg readMiscReg(int miscReg, ThreadContext *tc);

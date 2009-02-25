@@ -97,8 +97,6 @@ namespace X86ISA
 
         void clear();
 
-        int FlattenIntIndex(int reg);
-
         MiscReg readMiscRegNoEffect(int miscReg);
 
         MiscReg readMiscReg(int miscReg, ThreadContext *tc);
