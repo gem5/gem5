@@ -92,7 +92,7 @@ def macroop LGDT_16_M
     ld t1, seg, sib, disp, dataSize=2
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase tsg, t2
     wrlimit tsg, t1
 };
@@ -106,7 +106,7 @@ def macroop LGDT_16_P
     ld t1, seg, riprel, disp, dataSize=2
     # Get the base
     ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase tsg, t2
     wrlimit tsg, t1
 };
@@ -149,7 +149,7 @@ def macroop LIDT_16_M
     ld t1, seg, sib, disp, dataSize=2
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase idtr, t2
     wrlimit idtr, t1
 };
@@ -163,7 +163,7 @@ def macroop LIDT_16_P
     ld t1, seg, riprel, disp, dataSize=2
     # Get the base
     ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase idtr, t2
     wrlimit idtr, t1
 };

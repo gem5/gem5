@@ -921,7 +921,7 @@ let {{
             '''
 
     class Zext(RegOp):
-        code = 'DestReg = bits(psrc1, op2, 0);'
+        code = 'DestReg = merge(DestReg, bits(psrc1, op2, 0), dataSize);'
 
     class Rddr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):

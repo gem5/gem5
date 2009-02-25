@@ -215,7 +215,7 @@ def macroop MOV_P_S {
 };
 
 def macroop MOV_REAL_S_R {
-    zext t2, regm, 15
+    zext t2, regm, 15, dataSize=8
     slli t3, t2, 2, dataSize=8
     wrsel reg, regm
     wrbase reg, t3
@@ -223,7 +223,7 @@ def macroop MOV_REAL_S_R {
 
 def macroop MOV_REAL_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    zext t2, t1, 15
+    zext t2, t1, 15, dataSize=8
     slli t3, t2, 2, dataSize=8
     wrsel reg, t1
     wrbase reg, t3
@@ -232,7 +232,7 @@ def macroop MOV_REAL_S_M {
 def macroop MOV_REAL_S_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    zext t2, t1, 15
+    zext t2, t1, 15, dataSize=8
     slli t3, t2, 2, dataSize=8
     wrsel reg, t1
     wrbase reg, t3

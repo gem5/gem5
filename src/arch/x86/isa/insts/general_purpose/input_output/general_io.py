@@ -89,7 +89,7 @@ microcode = '''
     };
 
     def macroop IN_R_R {
-        zexti t2, regm, 15, dataSize=2
+        zexti t2, regm, 15, dataSize=8
         ld reg, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 
@@ -100,7 +100,7 @@ microcode = '''
     };
 
     def macroop OUT_R_R {
-        zexti t2, reg, 15, dataSize=2
+        zexti t2, reg, 15, dataSize=8
         st regm, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=4
     };
 '''

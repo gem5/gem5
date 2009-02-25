@@ -61,7 +61,7 @@ def macroop INS_M_R {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    zexti t2, reg, 15, dataSize=2
+    zexti t2, reg, 15, dataSize=8
 
     ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
     st t6, es, [1, t0, rdi]
@@ -78,7 +78,7 @@ def macroop INS_E_M_R {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    zexti t2, reg, 15, dataSize=2
+    zexti t2, reg, 15, dataSize=8
 
 topOfLoop:
     ld t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
@@ -98,7 +98,7 @@ def macroop OUTS_R_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    zexti t2, reg, 15, dataSize=2
+    zexti t2, reg, 15, dataSize=8
 
     ld t6, ds, [1, t0, rsi]
     st t6, intseg, [1, t2, t0], "IntAddrPrefixIO << 3", addressSize=8
@@ -115,7 +115,7 @@ def macroop OUTS_E_R_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    zexti t2, reg, 15, dataSize=2
+    zexti t2, reg, 15, dataSize=8
 
 topOfLoop:
     ld t6, ds, [1, t0, rsi]
