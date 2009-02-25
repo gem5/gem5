@@ -649,6 +649,18 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
 #endif
             }
             // Do paging protection checks.
+            bool inUser = (csAttr.dpl == 3 &&
+                    !(flags & (CPL0FlagBit << FlagShift)));
+            if (inUser && !entry->user ||
+                    write && !entry->writable) {
+                // The page must have been present to get into the TLB in
+                // the first place. We'll assume the reserved bits are
+                // fine even though we're not checking them.
+                return new PageFault(vaddr, true, write,
+                                     inUser, false, execute);
+            }
+
+
             DPRINTF(TLB, "Entry found with paddr %#x, "
                     "doing protection checks.\n", entry->paddr);
             Addr paddr = entry->paddr | (vaddr & (entry->size-1));
