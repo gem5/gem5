@@ -73,7 +73,6 @@ IntRegFile::IntRegFile()
 {
     offset[Globals] = 0;
     regView[Globals] = regGlobals[0];
-    setCWP(0);
     clear();
 }
 
@@ -117,25 +116,6 @@ void IntRegFile::setReg(int intReg, const IntReg &val)
         else
             panic("Tried to set non-existant integer register\n");
     } */
-}
-
-//This doesn't effect the actual CWP register.
-//It's purpose is to adjust the view of the register file
-//to what it would be if CWP = cwp.
-void IntRegFile::setCWP(int cwp)
-{
-    int index = ((NWindows - cwp) % NWindows) * 2;
-    if (index < 0)
-        panic("Index less than 0. cwp=%d nwin=%d\n", cwp, NWindows);
-    offset[Outputs] = FrameOffset + (index * RegsPerFrame);
-    offset[Locals] = FrameOffset + ((index+1) * RegsPerFrame);
-    offset[Inputs] = FrameOffset +
-        (((index+2) % (NWindows * 2)) * RegsPerFrame);
-    regView[Outputs] = regSegments[index];
-    regView[Locals] = regSegments[index+1];
-    regView[Inputs] = regSegments[(index+2) % (NWindows * 2)];
-
-    DPRINTF(RegisterWindows, "Changed the CWP value to %d\n", cwp);
 }
 
 void IntRegFile::setGlobals(int gl)

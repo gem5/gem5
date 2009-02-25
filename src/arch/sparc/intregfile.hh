@@ -102,11 +102,6 @@ namespace SparcISA
         void unserialize(Checkpoint *cp, const std::string &section);
 
       protected:
-        //This doesn't effect the actual CWP register.
-        //It's purpose is to adjust the view of the register file
-        //to what it would be if CWP = cwp.
-        void setCWP(int cwp);
-
         void setGlobals(int gl);
     };
 }
