@@ -26,6 +26,7 @@ Uncompressed data compared correctly
 Compressing Input Data, level 3
 Compressed data 97831 bytes in length
 Uncompressing Data
+info: Increasing stack size by one page.
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Compressing Input Data, level 5

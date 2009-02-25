@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 23 2009 23:45:19
-M5 revision 046e9580158a+ 5888+ default qtip tip delayedmissstats.patch
-M5 started Feb 23 2009 23:48:10
+M5 compiled Feb 24 2009 01:30:29
+M5 revision 652016638b82 5907 default qtip tip nofetchonmicrostats.patch
+M5 started Feb 24 2009 01:36:40
 M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/10.mcf/x86/linux/simple-timing -re tests/run.py long/10.mcf/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
@@ -28,4 +28,4 @@ simplex iterations         : 2663
 flow value                 : 3080014995
 checksum                   : 68389
 optimal
-Exiting @ tick 493318720000 because target called exit()
+Exiting @ tick 381620498000 because target called exit()

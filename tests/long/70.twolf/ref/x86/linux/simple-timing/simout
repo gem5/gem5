@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 23 2009 23:45:19
-M5 revision 046e9580158a+ 5888+ default qtip tip delayedmissstats.patch
-M5 started Feb 23 2009 23:57:42
+M5 compiled Feb 24 2009 01:30:29
+M5 revision 652016638b82 5907 default qtip tip nofetchonmicrostats.patch
+M5 started Feb 24 2009 01:58:47
 M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing -re tests/run.py long/70.twolf/x86/linux/simple-timing
 Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing/smred.sav
@@ -29,4 +29,4 @@ info: Increasing stack size by one page.
  76  77  78  79  80  81  82  83  84  85  86  87  88  89  90 
  91  92  93  94  95  96  97  98  99 100 101 102 103 104 105 
 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 
-122 123 124 Exiting @ tick 337469588000 because target called exit()
+122 123 124 Exiting @ tick 250945484000 because target called exit()

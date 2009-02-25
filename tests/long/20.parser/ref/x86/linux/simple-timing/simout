@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 23 2009 23:45:19
-M5 revision 046e9580158a+ 5888+ default qtip tip delayedmissstats.patch
-M5 started Feb 23 2009 23:48:10
+M5 compiled Feb 24 2009 01:30:29
+M5 revision 652016638b82 5907 default qtip tip nofetchonmicrostats.patch
+M5 started Feb 24 2009 01:46:46
 M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-timing -re tests/run.py long/20.parser/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
@@ -74,4 +74,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 2390957741000 because target called exit()
+Exiting @ tick 1722352498000 because target called exit()
