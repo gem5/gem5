@@ -1192,10 +1192,12 @@ let {{
                 attr.dpl = desc.dpl;
                 attr.defaultSize = desc.d;
                 if (!desc.s) {
-                    SegBaseDest = SegBaseDest;
-                    SegLimitDest = SegLimitDest;
-                    SegAttrDest = SegAttrDest;
-                    panic("System segment encountered.\\n");
+                    // The expand down bit happens to be set for gates.
+                    if (desc.type.e) {
+                        panic("Gate descriptor encountered.\\n");
+                    }
+                    attr.readable = 1;
+                    attr.writable = 1;
                 } else {
                     if (!desc.p)
                         panic("Segment not present.\\n");
@@ -1207,14 +1209,14 @@ let {{
                         attr.readable = 1;
                         attr.writable = desc.type.w;
                     }
-                    Addr base = desc.baseLow | (desc.baseHigh << 24);
-                    Addr limit = desc.limitLow | (desc.limitHigh << 16);
-                    if (desc.g)
-                        limit = (limit << 12) | mask(12);
-                    SegBaseDest = base;
-                    SegLimitDest = limit;
-                    SegAttrDest = attr;
                 }
+                Addr base = desc.baseLow | (desc.baseHigh << 24);
+                Addr limit = desc.limitLow | (desc.limitHigh << 16);
+                if (desc.g)
+                    limit = (limit << 12) | mask(12);
+                SegBaseDest = base;
+                SegLimitDest = limit;
+                SegAttrDest = attr;
             } else {
                 SegBaseDest = SegBaseDest;
                 SegLimitDest = SegLimitDest;
