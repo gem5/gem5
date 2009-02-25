@@ -124,6 +124,18 @@ def rom
     ##
     wrip t0, t9, dataSize=8
 
+    #
+    # Set up the target code segment. Do this now so we have the right
+    # permissions when setting up the stack frame.
+    #
+    srli t5, t4, 16, dataSize=8
+    andi t5, t5, 0xFF, dataSize=8
+    wrdl cs, t3, t5, dataSize=8
+    # Tuck away the old CS for use below
+    limm t10, 0, dataSize=8
+    rdsel t10, cs, dataSize=2
+    wrsel cs, t5, dataSize=2
+
 
     #
     # Build up the interrupt stack frame
@@ -133,9 +145,7 @@ def rom
     # Write out the contents of memory
     %(errorCodeCode)s
     st t7, hs, [1, t0, t6], %(errorCodeSize)d, dataSize=8, addressSize=8
-    limm t5, 0, dataSize=8
-    rdsel t5, cs, dataSize=2
-    st t5, hs, [1, t0, t6], 8 + %(errorCodeSize)d, dataSize=8, addressSize=8
+    st t10, hs, [1, t0, t6], 8 + %(errorCodeSize)d, dataSize=8, addressSize=8
     rflags t10, dataSize=8
     st t10, hs, [1, t0, t6], 16 + %(errorCodeSize)d, dataSize=8, addressSize=8
     st rsp, hs, [1, t0, t6], 24 + %(errorCodeSize)d, dataSize=8, addressSize=8
@@ -145,14 +155,6 @@ def rom
     # Set the stack segment
     mov rsp, rsp, t6, dataSize=8
     wrsel ss, t11, dataSize=2
-
-    #
-    # Set up the target code segment
-    #
-    srli t5, t4, 16, dataSize=8
-    andi t5, t5, 0xFF, dataSize=8
-    wrdl cs, t3, t5, dataSize=8
-    wrsel cs, t5, dataSize=2
 
     #
     # Adjust rflags which is still in t10 from above
