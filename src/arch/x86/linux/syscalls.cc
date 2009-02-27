@@ -508,7 +508,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /*   1 */ SyscallDesc("exit", unimplementedFunc),
     /*   2 */ SyscallDesc("fork", unimplementedFunc),
     /*   3 */ SyscallDesc("read", unimplementedFunc),
-    /*   4 */ SyscallDesc("write", unimplementedFunc),
+    /*   4 */ SyscallDesc("write", writeFunc),
     /*   5 */ SyscallDesc("open", openFunc<X86Linux64>),
     /*   6 */ SyscallDesc("close", unimplementedFunc),
     /*   7 */ SyscallDesc("waitpid", unimplementedFunc),
