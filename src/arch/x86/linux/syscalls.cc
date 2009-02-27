@@ -696,7 +696,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 189 */ SyscallDesc("putpmsg", unimplementedFunc),
     /* 190 */ SyscallDesc("vfork", unimplementedFunc),
     /* 191 */ SyscallDesc("ugetrlimit", unimplementedFunc),
-    /* 192 */ SyscallDesc("mmap2", unimplementedFunc),
+    /* 192 */ SyscallDesc("mmap2", mmapFunc<X86Linux32>),
     /* 193 */ SyscallDesc("truncate64", unimplementedFunc),
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 195 */ SyscallDesc("stat64", unimplementedFunc),

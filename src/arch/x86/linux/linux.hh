@@ -136,6 +136,8 @@ class X86Linux32 : public Linux
 //    static const int TGT_O_RSYNC      = 0x00040000;   //!< O_RSYNC
 
     static const int NUM_OPEN_FLAGS;
+
+    static const unsigned TGT_MAP_ANONYMOUS = 0x20;
 };
 
 #endif
