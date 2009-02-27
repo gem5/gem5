@@ -122,6 +122,111 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     }
 }
 
+BitUnion32(UserDescFlags)
+    Bitfield<0> seg_32bit;
+    Bitfield<2, 1> contents;
+    Bitfield<3> read_exec_only;
+    Bitfield<4> limit_in_pages;
+    Bitfield<5> seg_not_present;
+    Bitfield<6> useable;
+EndBitUnion(UserDescFlags)
+
+struct UserDesc32 {
+    uint32_t entry_number;
+    uint32_t base_addr;
+    uint32_t limit;
+    uint32_t flags;
+};
+
+struct UserDesc64 {
+    uint32_t entry_number;
+    uint32_t __padding1;
+    uint64_t base_addr;
+    uint32_t limit;
+    uint32_t flags;
+};
+
+static SyscallReturn
+setThreadArea32Func(SyscallDesc *desc, int callnum,
+        LiveProcess *process, ThreadContext *tc)
+{
+    const int minTLSEntry = 6;
+    const int numTLSEntries = 3;
+    const int maxTLSEntry = minTLSEntry + numTLSEntries - 1;
+
+    X86LiveProcess *x86lp = dynamic_cast<X86LiveProcess *>(process);
+    assert(x86lp);
+
+    assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86lp->gdtSize());
+
+    TypedBufferArg<UserDesc32> userDesc(process->getSyscallArg(tc, 0));
+    TypedBufferArg<uint64_t>
+        gdt(x86lp->gdtStart() + minTLSEntry * sizeof(uint64_t),
+                numTLSEntries * sizeof(uint64_t));
+
+    if (!userDesc.copyIn(tc->getMemPort()))
+        return -EFAULT;
+
+    if (!gdt.copyIn(tc->getMemPort()))
+        panic("Failed to copy in GDT for %s.\n", desc->name);
+
+    if (userDesc->entry_number == (uint32_t)(-1)) {
+        // Find a free TLS entry.
+        for (int i = 0; i < numTLSEntries; i++) {
+            if (gdt[i] == 0) {
+                userDesc->entry_number = i + minTLSEntry;
+                break;
+            }
+        }
+        // We failed to find one.
+        if (userDesc->entry_number == (uint32_t)(-1))
+            return -ESRCH;
+    }
+
+    int index = userDesc->entry_number;
+
+    if (index < minTLSEntry || index > maxTLSEntry)
+        return -EINVAL;
+
+    index -= minTLSEntry;
+
+    // Build the entry we're going to add.
+    SegDescriptor segDesc = 0;
+    UserDescFlags flags = userDesc->flags;
+
+    segDesc.limitLow = bits(userDesc->limit, 15, 0);
+    segDesc.baseLow = bits(userDesc->base_addr, 23, 0);
+    segDesc.type.a = 1;
+    if (!flags.read_exec_only)
+        segDesc.type.w = 1;
+    if (bits((uint8_t)flags.contents, 0))
+        segDesc.type.e = 1;
+    if (bits((uint8_t)flags.contents, 1))
+        segDesc.type.codeOrData = 1;
+    segDesc.s = 1;
+    segDesc.dpl = 3;
+    if (!flags.seg_not_present)
+        segDesc.p = 1;
+    segDesc.limitHigh = bits(userDesc->limit, 19, 16);
+    if (flags.useable)
+        segDesc.avl = 1;
+    segDesc.l = 0;
+    if (flags.seg_32bit)
+        segDesc.d = 1;
+    if (flags.limit_in_pages)
+        segDesc.g = 1;
+    segDesc.baseHigh = bits(userDesc->base_addr, 31, 24);
+
+    gdt[index] = (uint64_t)segDesc;
+
+    if (!userDesc.copyOut(tc->getMemPort()))
+        return -EFAULT;
+    if (!gdt.copyOut(tc->getMemPort()))
+        panic("Failed to copy out GDT for %s.\n", desc->name);
+
+    return 0;
+}
+
 SyscallDesc X86_64LinuxProcess::syscallDescs[] = {
     /*   0 */ SyscallDesc("read", readFunc),
     /*   1 */ SyscallDesc("write", writeFunc),
@@ -642,7 +747,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 240 */ SyscallDesc("futex", unimplementedFunc),
     /* 241 */ SyscallDesc("sched_setaffinity", unimplementedFunc),
     /* 242 */ SyscallDesc("sched_getaffinity", unimplementedFunc),
-    /* 243 */ SyscallDesc("set_thread_area", unimplementedFunc),
+    /* 243 */ SyscallDesc("set_thread_area", setThreadArea32Func),
     /* 244 */ SyscallDesc("get_thread_area", unimplementedFunc),
     /* 245 */ SyscallDesc("io_setup", unimplementedFunc),
     /* 246 */ SyscallDesc("io_destroy", unimplementedFunc),
