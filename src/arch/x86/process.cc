@@ -98,48 +98,72 @@
 #include "mem/page_table.hh"
 #include "mem/translating_port.hh"
 #include "sim/process_impl.hh"
+#include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
 using namespace std;
 using namespace X86ISA;
 
 
-X86LiveProcess::X86LiveProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
-    : LiveProcess(params, objFile)
+X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
+        SyscallDesc *_syscallDescs, int _numSyscallDescs) :
+    LiveProcess(params, objFile), syscallDescs(_syscallDescs),
+    numSyscallDescs(_numSyscallDescs)
 {
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
     brk_point = roundUp(brk_point, VMPageSize);
+}
 
-    // Set pointer for next thread stack.  Reserve 8M for main stack.
-    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
-
+X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
+        ObjectFile *objFile, SyscallDesc *_syscallDescs,
+        int _numSyscallDescs) :
+    X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
+{
     // Set up stack. On X86_64 Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space plus one page
     // for undertermined purposes.
     stack_base = (Addr)0x7FFFFFFFF000ULL;
+
+    // Set pointer for next thread stack.  Reserve 8M for main stack.
+    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
     mmap_start = mmap_end = (Addr)0x2aaaaaaab000ULL;
 }
 
-void X86LiveProcess::handleTrap(int trapNum, ThreadContext *tc)
+I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
+        ObjectFile *objFile, SyscallDesc *_syscallDescs,
+        int _numSyscallDescs) :
+    X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
-    switch(trapNum)
-    {
-      default:
-        panic("Unimplemented trap to operating system: trap number %#x.\n", trapNum);
-    }
+    stack_base = (Addr)0xffffe000ULL;
+
+    // Set pointer for next thread stack.  Reserve 8M for main stack.
+    next_thread_stack_base = stack_base - (8 * 1024 * 1024);
+
+    // Set up region for mmaps. This was determined empirically and may not
+    // always be correct.
+    mmap_start = mmap_end = (Addr)0xf7ffd000ULL;
+}
+
+SyscallDesc*
+X86LiveProcess::getDesc(int callnum)
+{
+    if (callnum < 0 || callnum >= numSyscallDescs)
+        return NULL;
+    return &syscallDescs[callnum];
 }
 
 void
-X86LiveProcess::startup()
+X86_64LiveProcess::startup()
 {
+    LiveProcess::startup();
+
     if (checkpointRestored)
         return;
 
-    argsInit(sizeof(IntReg), VMPageSize);
+    argsInit(sizeof(uint64_t), VMPageSize);
 
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
@@ -198,12 +222,80 @@ X86LiveProcess::startup()
 }
 
 void
-X86LiveProcess::argsInit(int intSize, int pageSize)
+I386LiveProcess::startup()
 {
-    typedef AuxVector<uint64_t> auxv_t;
-    std::vector<auxv_t>  auxv;
+    LiveProcess::startup();
 
-    Process::startup();
+    if (checkpointRestored)
+        return;
+
+    argsInit(sizeof(uint32_t), VMPageSize);
+
+    for (int i = 0; i < contextIds.size(); i++) {
+        ThreadContext * tc = system->getThreadContext(contextIds[i]);
+
+        SegAttr dataAttr = 0;
+        dataAttr.writable = 1;
+        dataAttr.readable = 1;
+        dataAttr.expandDown = 0;
+        dataAttr.dpl = 3;
+        dataAttr.defaultSize = 1;
+        dataAttr.longMode = 0;
+
+        //Initialize the segment registers.
+        for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
+            tc->setMiscRegNoEffect(MISCREG_SEG_BASE(seg), 0);
+            tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
+            tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
+            tc->setMiscRegNoEffect(MISCREG_SEG_SEL(seg), 0xB);
+        }
+
+        SegAttr csAttr = 0;
+        csAttr.writable = 0;
+        csAttr.readable = 1;
+        csAttr.expandDown = 0;
+        csAttr.dpl = 3;
+        csAttr.defaultSize = 1;
+        csAttr.longMode = 0;
+
+        tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
+
+        //Set up the registers that describe the operating mode.
+        CR0 cr0 = 0;
+        cr0.pg = 1; // Turn on paging.
+        cr0.cd = 0; // Don't disable caching.
+        cr0.nw = 0; // This is bit is defined to be ignored.
+        cr0.am = 0; // No alignment checking
+        cr0.wp = 0; // Supervisor mode can write read only pages
+        cr0.ne = 1;
+        cr0.et = 1; // This should always be 1
+        cr0.ts = 0; // We don't do task switching, so causing fp exceptions
+                    // would be pointless.
+        cr0.em = 0; // Allow x87 instructions to execute natively.
+        cr0.mp = 1; // This doesn't really matter, but the manual suggests
+                    // setting it to one.
+        cr0.pe = 1; // We're definitely in protected mode.
+        tc->setMiscReg(MISCREG_CR0, cr0);
+
+        Efer efer = 0;
+        efer.sce = 1; // Enable system call extensions.
+        efer.lme = 1; // Enable long mode.
+        efer.lma = 0; // Deactivate long mode.
+        efer.nxe = 1; // Enable nx support.
+        efer.svme = 0; // Disable svm support for now. It isn't implemented.
+        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
+        tc->setMiscReg(MISCREG_EFER, efer);
+    }
+}
+
+template<class IntType>
+void
+X86LiveProcess::argsInit(int pageSize)
+{
+    int intSize = sizeof(IntType);
+
+    typedef AuxVector<IntType> auxv_t;
+    std::vector<auxv_t>  auxv;
 
     string filename;
     if(argv.size() < 1)
@@ -396,15 +488,15 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
                      roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr sentry_base = stack_base - sentry_size;
-    Addr file_name_base = sentry_base - file_name_size;
-    Addr env_data_base = file_name_base - env_data_size;
-    Addr arg_data_base = env_data_base - arg_data_size;
-    Addr aux_data_base = arg_data_base - info_block_padding - aux_data_size;
-    Addr auxv_array_base = aux_data_base - aux_array_size - aux_padding;
-    Addr envp_array_base = auxv_array_base - envp_array_size;
-    Addr argv_array_base = envp_array_base - argv_array_size;
-    Addr argc_base = argv_array_base - argc_size;
+    IntType sentry_base = stack_base - sentry_size;
+    IntType file_name_base = sentry_base - file_name_size;
+    IntType env_data_base = file_name_base - env_data_size;
+    IntType arg_data_base = env_data_base - arg_data_size;
+    IntType aux_data_base = arg_data_base - info_block_padding - aux_data_size;
+    IntType auxv_array_base = aux_data_base - aux_array_size - aux_padding;
+    IntType envp_array_base = auxv_array_base - envp_array_size;
+    IntType argv_array_base = envp_array_base - argv_array_size;
+    IntType argc_base = argv_array_base - argc_size;
 
     DPRINTF(Stack, "The addresses of items on the initial stack:\n");
     DPRINTF(Stack, "0x%x - file name\n", file_name_base);
@@ -420,11 +512,11 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     // write contents to stack
 
     // figure out argc
-    uint64_t argc = argv.size();
-    uint64_t guestArgc = X86ISA::htog(argc);
+    IntType argc = argv.size();
+    IntType guestArgc = X86ISA::htog(argc);
 
     //Write out the sentry void *
-    uint64_t sentry_NULL = 0;
+    IntType sentry_NULL = 0;
     initVirtMem->writeBlob(sentry_base,
             (uint8_t*)&sentry_NULL, sentry_size);
 
@@ -469,4 +561,16 @@ X86LiveProcess::argsInit(int intSize, int pageSize)
     stack_min = roundDown(stack_min, pageSize);
 
 //    num_processes++;
+}
+
+void
+X86_64LiveProcess::argsInit(int intSize, int pageSize)
+{
+    X86LiveProcess::argsInit<uint64_t>(pageSize);
+}
+
+void
+I386LiveProcess::argsInit(int intSize, int pageSize)
+{
+    X86LiveProcess::argsInit<uint32_t>(pageSize);
 }

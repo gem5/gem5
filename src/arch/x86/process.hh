@@ -62,22 +62,47 @@
 #include <vector>
 #include "sim/process.hh"
 
+class SyscallDesc;
+
 namespace X86ISA
 {
 
     class X86LiveProcess : public LiveProcess
     {
       protected:
-        X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+        SyscallDesc *syscallDescs;
+        const int numSyscallDescs;
 
-        void startup();
+        X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+
+        template<class IntType>
+        void argsInit(int pageSize);
 
       public:
+        SyscallDesc* getDesc(int callnum);
+    };
 
-        //Handles traps which request services from the operating system
-        virtual void handleTrap(int trapNum, ThreadContext *tc);
+    class X86_64LiveProcess : public X86LiveProcess
+    {
+      protected:
+        X86_64LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
+      public:
         void argsInit(int intSize, int pageSize);
+        void startup();
+    };
+
+    class I386LiveProcess : public X86LiveProcess
+    {
+      protected:
+        I386LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+
+      public:
+        void argsInit(int intSize, int pageSize);
+        void startup();
     };
 }
 

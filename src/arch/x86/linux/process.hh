@@ -65,43 +65,26 @@
 
 namespace X86ISA {
 
-/// A process with emulated x86/Linux syscalls.
-class X86LinuxProcess : public X86LiveProcess
+class X86_64LinuxProcess : public X86_64LiveProcess
 {
   protected:
-    SyscallDesc *syscallDescs;
+     /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
 
-    const int Num_Syscall_Descs;
-
-    /// Constructor.
-    X86LinuxProcess(LiveProcessParams * params, ObjectFile *objFile,
-            SyscallDesc *_syscallDescs, int numSyscallDescs) :
-        X86LiveProcess(params, objFile), syscallDescs(_syscallDescs),
-        Num_Syscall_Descs(numSyscallDescs)
-    {}
-
-  public:
-    SyscallDesc* getDesc(int callnum);
-};
-
-class X86_64LinuxProcess : public X86LinuxProcess
-{
   public:
     /// Constructor.
     X86_64LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
-
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
 };
 
-class I386LinuxProcess : public X86LinuxProcess
+class I386LinuxProcess : public I386LiveProcess
 {
+  protected:
+     /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
+
   public:
     /// Constructor.
     I386LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
-
-     /// Array of syscall descriptors, indexed by call number.
-    static SyscallDesc syscallDescs[];
 };
 
 } // namespace X86ISA

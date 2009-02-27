@@ -64,25 +64,16 @@
 #include "kern/linux/linux.hh"
 
 #include "sim/process.hh"
-#include "sim/syscall_emul.hh"
 
 using namespace std;
 using namespace X86ISA;
 
-SyscallDesc*
-X86LinuxProcess::getDesc(int callnum)
-{
-    if (callnum < 0 || callnum >= Num_Syscall_Descs)
-        return NULL;
-    return &syscallDescs[callnum];
-}
-
 X86_64LinuxProcess::X86_64LinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
-    : X86LinuxProcess(params, objFile, syscallDescs, 273)
+    : X86_64LiveProcess(params, objFile, syscallDescs, 273)
 {}
 
 I386LinuxProcess::I386LinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
-    : X86LinuxProcess(params, objFile, syscallDescs, 324)
+    : I386LiveProcess(params, objFile, syscallDescs, 324)
 {}
