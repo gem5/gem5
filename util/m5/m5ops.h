@@ -52,8 +52,27 @@
 #define addsymbol_func          0x53
 #define panic_func              0x54
 
-#define reserved1_func          0x55 // Reserved for user
 #define reserved2_func          0x56 // Reserved for user
 #define reserved3_func          0x57 // Reserved for user
 #define reserved4_func          0x58 // Reserved for user
 #define reserved5_func          0x59 // Reserved for user
+
+// These operations are for critical path annotation
+#define annotate_func     0x55
+#define an_bsm            0x1
+#define an_esm            0x2
+#define an_begin          0x3
+#define an_end            0x4
+#define an_q              0x6
+#define an_dq             0x7
+#define an_wf             0x8
+#define an_we             0x9
+#define an_rq             0xA
+#define an_ws             0xB
+#define an_sq             0xC
+#define an_aq             0xD
+#define an_pq             0xE
+#define an_l              0xF
+#define an_identify       0x10
+#define an_getid          0x11
+
