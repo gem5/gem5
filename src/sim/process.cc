@@ -717,9 +717,9 @@ LiveProcess::create(LiveProcessParams * params)
         // fall through
       case ObjectFile::Linux:
         if (objFile->getArch() == ObjectFile::X86_64) {
-            process = new X86LinuxProcess(params, objFile);
+            process = new X86_64LinuxProcess(params, objFile);
         } else {
-            panic("32 bit x86 Linux process aren't implemented.\n");
+            process = new I386LinuxProcess(params, objFile);
         }
         break;
 

@@ -72,26 +72,17 @@ using namespace X86ISA;
 SyscallDesc*
 X86LinuxProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
 }
 
-X86LinuxProcess::X86LinuxProcess(LiveProcessParams * params,
+X86_64LinuxProcess::X86_64LinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
-    : X86LiveProcess(params, objFile),
-    Num_Syscall_Descs(273)
+    : X86LinuxProcess(params, objFile, syscallDescs, 273)
 {}
 
-void X86LinuxProcess::handleTrap(int trapNum, ThreadContext *tc)
-{
-    switch(trapNum)
-    {
-      //This implementation is from SPARC
-      case 0x10: //Linux 32 bit syscall trap
-        tc->syscall(tc->readIntReg(1));
-        break;
-      default:
-        X86LiveProcess::handleTrap(trapNum, tc);
-    }
-}
+I386LinuxProcess::I386LinuxProcess(LiveProcessParams * params,
+        ObjectFile *objFile)
+    : X86LinuxProcess(params, objFile, syscallDescs, 324)
+{}
