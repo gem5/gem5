@@ -136,7 +136,10 @@ namespace X86ISA
     {
         uint8_t prefix = Prefixes[nextByte];
         State nextState = PrefixState;
-        if(prefix)
+        // REX prefixes are only recognized in 64 bit mode.
+        if (prefix == RexPrefix && emi.mode.submode != SixtyFourBitMode)
+            prefix = 0;
+        if (prefix)
             consumeByte();
         switch(prefix)
         {
