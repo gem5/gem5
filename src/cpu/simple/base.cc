@@ -31,6 +31,7 @@
 #include "arch/utility.hh"
 #include "arch/faults.hh"
 #include "base/cprintf.hh"
+#include "base/cp_annotate.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -448,6 +449,10 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isLoad()) {
         ++numLoad;
         comLoadEventQueue[0]->serviceEvents(numLoad);
+    }
+
+    if (CPA::available()) {
+        CPA::cpa()->swAutoBegin(tc, thread->readNextPC());
     }
 
     traceFunctions(thread->readPC());

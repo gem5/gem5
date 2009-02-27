@@ -28,6 +28,7 @@
  * Authors: Kevin Lim
  */
 
+#include "base/cp_annotate.hh"
 #include "cpu/o3/dyn_inst.hh"
 
 template <class Impl>
@@ -136,6 +137,10 @@ BaseO3DynInst<Impl>::hwrei()
     // Set the next PC based on the value of the EXC_ADDR IPR.
     this->setNextPC(this->cpu->readMiscRegNoEffect(AlphaISA::IPR_EXC_ADDR,
                                            this->threadNumber));
+    if (CPA::available()) {
+        ThreadContext *tc = this->cpu->tcBase(this->threadNumber);
+        CPA::cpa()->swAutoBegin(tc, this->readNextPC());
+    }
 
     // Tell CPU to clear any state it needs to if a hwrei is taken.
     this->cpu->hwrei(this->threadNumber);

@@ -35,6 +35,7 @@
 #include "arch/alpha/osfpal.hh"
 #include "arch/alpha/tlb.hh"
 #include "arch/alpha/kgdb.h"
+#include "base/cp_annotate.hh"
 #include "base/debug.hh"
 #include "base/remote_gdb.hh"
 #include "base/stats/events.hh"
@@ -559,6 +560,8 @@ SimpleThread::hwrei()
         return new UnimplementedOpcodeFault;
 
     setNextPC(readMiscRegNoEffect(IPR_EXC_ADDR));
+
+    CPA::cpa()->swAutoBegin(tc, readNextPC());
 
     if (!misspeculating()) {
         if (kernelStats)

@@ -36,6 +36,7 @@
 #include <string>
 
 #include "arch/utility.hh"
+#include "base/cp_annotate.hh"
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"
@@ -1096,6 +1097,12 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         if (node)
             thread[tid]->profileNode = node;
+    }
+    if (CPA::available()) {
+        if (head_inst->isControl()) {
+            ThreadContext *tc = thread[tid]->getTC();
+            CPA::cpa()->swAutoBegin(tc, head_inst->readNextPC());
+        }
     }
 #endif
 
