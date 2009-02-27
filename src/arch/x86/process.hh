@@ -70,6 +70,9 @@ namespace X86ISA
     class X86LiveProcess : public LiveProcess
     {
       protected:
+        Addr _gdtStart;
+        Addr _gdtSize;
+
         SyscallDesc *syscallDescs;
         const int numSyscallDescs;
 
@@ -80,6 +83,12 @@ namespace X86ISA
         void argsInit(int pageSize);
 
       public:
+        Addr gdtStart()
+        { return _gdtStart; }
+        
+        Addr gdtSize()
+        { return _gdtSize; }
+
         SyscallDesc* getDesc(int callnum);
 
         void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);

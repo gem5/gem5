@@ -251,6 +251,20 @@ I386LiveProcess::startup()
 
     argsInit(sizeof(uint32_t), VMPageSize);
 
+    /* 
+     * Set up a GDT for this process. The whole GDT wouldn't really be for
+     * this process, but the only parts we care about are.
+     */
+    _gdtStart = stack_base;
+    _gdtSize = VMPageSize;
+    pTable->allocate(_gdtStart, _gdtSize);
+    uint64_t zero = 0;
+    assert(_gdtSize % sizeof(zero) == 0);
+    for (Addr gdtCurrent = _gdtStart;
+            gdtCurrent < _gdtStart + _gdtSize; gdtCurrent += sizeof(zero)) {
+        initVirtMem->write(gdtCurrent, zero);
+    }
+
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
 
@@ -280,6 +294,10 @@ I386LiveProcess::startup()
         csAttr.longMode = 0;
 
         tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
+
+        tc->setMiscRegNoEffect(MISCREG_TSG_BASE, _gdtStart);
+        tc->setMiscRegNoEffect(MISCREG_TSG_EFF_BASE, _gdtStart);
+        tc->setMiscRegNoEffect(MISCREG_TSG_LIMIT, _gdtStart + _gdtSize - 1);
 
         //Set up the registers that describe the operating mode.
         CR0 cr0 = 0;
