@@ -870,9 +870,62 @@ decode OPCODE default Unknown::unknown() {
             0x54: m5panic({{
                 panic("M5 panic instruction called at pc=%#x.", xc->readPC());
             }}, IsNonSpeculative);
-            0x55: m5reserved1({{
-                warn("M5 reserved opcode ignored");
-            }}, IsNonSpeculative);
+#define  CPANN(lbl) CPA::cpa()->lbl(xc->tcBase())
+            0x55: decode RA {
+                0x00: m5a_old({{
+                    panic("Deprecated M5 annotate instruction executed at pc=%#x\n",
+                        xc->readPC());
+                }}, IsNonSpeculative);
+                0x01: m5a_bsm({{
+                    CPANN(swSmBegin);
+                }}, IsNonSpeculative);
+                0x02: m5a_esm({{
+                    CPANN(swSmEnd);
+                }}, IsNonSpeculative);
+                0x03: m5a_begin({{
+                    CPANN(swExplictBegin);
+                }}, IsNonSpeculative);
+                0x04: m5a_end({{
+                    CPANN(swEnd);
+                }}, IsNonSpeculative);
+                0x06: m5a_q({{
+                    CPANN(swQ);
+                }}, IsNonSpeculative);
+                0x07: m5a_dq({{
+                    CPANN(swDq);
+                }}, IsNonSpeculative);
+                0x08: m5a_wf({{
+                    CPANN(swWf);
+                }}, IsNonSpeculative);
+                0x09: m5a_we({{
+                    CPANN(swWe);
+                }}, IsNonSpeculative);
+                0x0C: m5a_sq({{
+                    CPANN(swSq);
+                }}, IsNonSpeculative);
+                0x0D: m5a_aq({{
+                    CPANN(swAq);
+                }}, IsNonSpeculative);
+                0x0E: m5a_pq({{
+                    CPANN(swPq);
+                }}, IsNonSpeculative);
+                0x0F: m5a_l({{
+                    CPANN(swLink);
+                }}, IsNonSpeculative);
+                0x10: m5a_identify({{
+                    CPANN(swIdentify);
+                }}, IsNonSpeculative);
+                0x11: m5a_getid({{
+                    R0 = CPANN(swGetId);
+                }}, IsNonSpeculative);
+                0x13: m5a_scl({{
+                    CPANN(swSyscallLink);
+                }}, IsNonSpeculative);
+                0x14: m5a_rq({{
+                    CPANN(swRq);
+                }}, IsNonSpeculative);
+            } // M5 Annotate Operations
+#undef CPANN
             0x56: m5reserved2({{
                 warn("M5 reserved opcode ignored");
             }}, IsNonSpeculative);

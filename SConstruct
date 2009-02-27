@@ -689,6 +689,7 @@ sticky_vars.AddVariables(
     BoolVariable('USE_MYSQL', 'Use MySQL for stats output', have_mysql),
     BoolVariable('USE_FENV', 'Use <fenv.h> IEEE mode control', have_fenv),
     BoolVariable('USE_CHECKER', 'Use checker for detailed CPU models', False),
+    BoolVariable('CP_ANNOTATE', 'Enable critical path annotation capability', False),
     )
 
 nonsticky_vars.AddVariables(
@@ -699,7 +700,7 @@ nonsticky_vars.AddVariables(
 env.ExportVariables = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
                        'USE_MYSQL', 'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', \
                        'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', \
-                       'USE_CHECKER', 'TARGET_ISA']
+                       'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE']
 
 ###################################################
 #

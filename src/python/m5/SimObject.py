@@ -65,6 +65,7 @@ from params import *
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
 from params import ParamDesc, VectorParamDesc, isNullPointer, SimObjVector
+from proxy import *
 
 noDot = False
 try:
@@ -667,7 +668,7 @@ class SimObject(object):
                 match_obj = self._values[pname]
                 if found_obj != None and found_obj != match_obj:
                     raise AttributeError, \
-                          'parent.any matched more than one: %s' % obj.path
+                          'parent.any matched more than one: %s and %s' % (found_obj.path, match_obj.path)
                 found_obj = match_obj
         return found_obj, found_obj != None
 

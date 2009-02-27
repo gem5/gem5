@@ -34,6 +34,7 @@
 
 #include <iosfwd>
 #include <map>
+#include <string>
 
 #include "sim/host.hh"  // for Addr
 

@@ -37,7 +37,6 @@
 
 #include "arch/kernel_stats.hh"
 #include "arch/vtophys.hh"
-#include "base/annotate.hh"
 #include "base/debug.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
@@ -214,6 +213,7 @@ addsymbol(ThreadContext *tc, Addr addr, Addr symbolAddr)
     DPRINTF(Loader, "Loaded symbol: %s @ %#llx\n", symbol, addr);
 
     tc->getSystemPtr()->kernelSymtab->insert(addr,symbol);
+    debugSymbolTable->insert(addr,symbol);
 }
 
 #endif

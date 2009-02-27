@@ -81,6 +81,16 @@ namespace __hash_namespace {
             return(__stl_hash_string(s.c_str()));
         }
     };
+
+    template <>
+    struct hash<std::pair<std::string, uint64_t> > {
+        size_t operator() (std::pair<std::string, uint64_t> r) const {
+            return (__stl_hash_string(r.first.c_str())) ^ r.second;
+        }
+    };
+
+
+
 }
 
 

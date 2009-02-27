@@ -30,7 +30,9 @@
 
 Import('*')
 
-Source('annotate.cc')
+if env['CP_ANNOTATE']:
+    SimObject('CPA.py')
+    Source('cp_annotate.cc')
 Source('atomicio.cc')
 Source('bigint.cc')
 Source('circlebuf.cc')
@@ -82,6 +84,8 @@ if env['USE_MYSQL']:
     Source('stats/mysql.cc')
 
 TraceFlag('Annotate', "State machine annotation debugging")
+TraceFlag('AnnotateQ', "State machine annotation queue debugging")
+TraceFlag('AnnotateVerbose', "Dump all state machine annotation details")
 TraceFlag('GDBAcc', "Remote debugger accesses")
 TraceFlag('GDBExtra', "Dump extra information on reads and writes")
 TraceFlag('GDBMisc', "Breakpoints, traps, watchpoints, etc.")
@@ -96,3 +100,6 @@ CompoundFlag('GDBAll',
     [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend', 'GDBRecv',
       'GDBExtra' ],
     desc="All Remote debugging flags")
+CompoundFlag('AnnotateAll', ['Annotate', 'AnnotateQ', 'AnnotateVerbose'],
+    desc="All Annotation flags")
+
