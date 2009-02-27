@@ -152,12 +152,32 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
     mmap_start = mmap_end = (Addr)0x2aaaaaaab000ULL;
 }
 
+void
+I386LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
+{
+    Addr eip = tc->readPC();
+    if (eip >= vsyscallPage.base &&
+            eip < vsyscallPage.base + vsyscallPage.size) {
+        tc->setNextPC(vsyscallPage.base + vsyscallPage.vsysexitOffset);
+    }
+    X86LiveProcess::syscall(callnum, tc);
+}
+
+
 I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
         ObjectFile *objFile, SyscallDesc *_syscallDescs,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
-    stack_base = (Addr)0xffffe000ULL;
+    _gdtStart = 0x100000000;
+    _gdtSize = VMPageSize;
+
+    vsyscallPage.base = 0xffffe000ULL;
+    vsyscallPage.size = VMPageSize;
+    vsyscallPage.vsyscallOffset = 0x400;
+    vsyscallPage.vsysexitOffset = 0x410;
+
+    stack_base = vsyscallPage.base;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -255,8 +275,6 @@ I386LiveProcess::startup()
      * Set up a GDT for this process. The whole GDT wouldn't really be for
      * this process, but the only parts we care about are.
      */
-    _gdtStart = stack_base;
-    _gdtSize = VMPageSize;
     pTable->allocate(_gdtStart, _gdtSize);
     uint64_t zero = 0;
     assert(_gdtSize % sizeof(zero) == 0);
@@ -264,6 +282,27 @@ I386LiveProcess::startup()
             gdtCurrent < _gdtStart + _gdtSize; gdtCurrent += sizeof(zero)) {
         initVirtMem->write(gdtCurrent, zero);
     }
+
+    // Set up the vsyscall page for this process.
+    pTable->allocate(vsyscallPage.base, vsyscallPage.size);
+    uint8_t vsyscallBlob[] = {
+        0x51,       // push %ecx
+        0x52,       // push %edp
+        0x55,       // push %ebp
+        0x89, 0xe5, // mov %esp, %ebp
+        0x0f, 0x34  // sysenter
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsyscallOffset,
+            vsyscallBlob, sizeof(vsyscallBlob));
+
+    uint8_t vsysexitBlob[] = {
+        0x5d,       // pop %ebp
+        0x5a,       // pop %edx
+        0x59,       // pop %ecx
+        0xc3        // ret
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vsysexitOffset,
+            vsysexitBlob, sizeof(vsysexitBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
@@ -332,12 +371,13 @@ I386LiveProcess::startup()
 
 template<class IntType>
 void
-X86LiveProcess::argsInit(int pageSize)
+X86LiveProcess::argsInit(int pageSize,
+        std::vector<AuxVector<IntType> > extraAuxvs)
 {
     int intSize = sizeof(IntType);
 
     typedef AuxVector<IntType> auxv_t;
-    std::vector<auxv_t>  auxv;
+    std::vector<auxv_t> auxv = extraAuxvs;
 
     string filename;
     if(argv.size() < 1)
@@ -608,13 +648,19 @@ X86LiveProcess::argsInit(int pageSize)
 void
 X86_64LiveProcess::argsInit(int intSize, int pageSize)
 {
-    X86LiveProcess::argsInit<uint64_t>(pageSize);
+    std::vector<AuxVector<uint64_t> > extraAuxvs;
+    X86LiveProcess::argsInit<uint64_t>(pageSize, extraAuxvs);
 }
 
 void
 I386LiveProcess::argsInit(int intSize, int pageSize)
 {
-    X86LiveProcess::argsInit<uint32_t>(pageSize);
+    std::vector<AuxVector<uint32_t> > extraAuxvs;
+    //Tell the binary where the vsyscall part of the vsyscall page is.
+    extraAuxvs.push_back(AuxVector<uint32_t>(0x20,
+                vsyscallPage.base + vsyscallPage.vsyscallOffset));
+    extraAuxvs.push_back(AuxVector<uint32_t>(0x21, vsyscallPage.base));
+    X86LiveProcess::argsInit<uint32_t>(pageSize, extraAuxvs);
 }
 
 void

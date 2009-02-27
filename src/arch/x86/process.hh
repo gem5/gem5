@@ -80,7 +80,8 @@ namespace X86ISA
                 SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
         template<class IntType>
-        void argsInit(int pageSize);
+        void argsInit(int pageSize,
+                std::vector<AuxVector<IntType> > extraAuxvs);
 
       public:
         Addr gdtStart()
@@ -114,10 +115,21 @@ namespace X86ISA
         I386LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
                 SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
+        class VSyscallPage
+        {
+          public:
+            Addr base;
+            Addr size;
+            Addr vsyscallOffset;
+            Addr vsysexitOffset;
+        };
+        VSyscallPage vsyscallPage;
+
       public:
         void argsInit(int intSize, int pageSize);
         void startup();
 
+        void syscall(int64_t callnum, ThreadContext *tc);
         X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
