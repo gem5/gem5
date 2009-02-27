@@ -56,13 +56,13 @@
 microcode = '''
 def macroop SAL_R_I
 {
-    slli reg, reg, imm, flags=(SF,ZF,PF)
+    slli reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAL_M_I
 {
     ldst t1, seg, sib, disp
-    slli t1, t1, imm, flags=(SF,ZF,PF)
+    slli t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -70,19 +70,19 @@ def macroop SAL_P_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    slli t1, t1, imm, flags=(SF,ZF,PF)
+    slli t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SAL_1_R
 {
-    slli reg, reg, 1, flags=(SF,ZF,PF)
+    slli reg, reg, 1, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAL_1_M
 {
     ldst t1, seg, sib, disp
-    slli t1, t1, 1, flags=(SF,ZF,PF)
+    slli t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -90,19 +90,19 @@ def macroop SAL_1_P
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    slli t1, t1, 1, flags=(SF,ZF,PF)
+    slli t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SAL_R_R
 {
-    sll reg, reg, regm, flags=(SF,ZF,PF)
+    sll reg, reg, regm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAL_M_R
 {
     ldst t1, seg, sib, disp
-    sll t1, t1, reg, flags=(SF,ZF,PF)
+    sll t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -110,19 +110,19 @@ def macroop SAL_P_R
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    sll t1, t1, reg, flags=(SF,ZF,PF)
+    sll t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SHR_R_I
 {
-    srli reg, reg, imm, flags=(SF,ZF,PF)
+    srli reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SHR_M_I
 {
     ldst t1, seg, sib, disp
-    srli t1, t1, imm, flags=(SF,ZF,PF)
+    srli t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -130,19 +130,19 @@ def macroop SHR_P_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srli t1, t1, imm, flags=(SF,ZF,PF)
+    srli t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SHR_1_R
 {
-    srli reg, reg, 1, flags=(SF,ZF,PF)
+    srli reg, reg, 1, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SHR_1_M
 {
     ldst t1, seg, sib, disp
-    srli t1, t1, 1, flags=(SF,ZF,PF)
+    srli t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -150,19 +150,19 @@ def macroop SHR_1_P
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srli t1, t1, 1, flags=(SF,ZF,PF)
+    srli t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SHR_R_R
 {
-    srl reg, reg, regm, flags=(SF,ZF,PF)
+    srl reg, reg, regm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SHR_M_R
 {
     ldst t1, seg, sib, disp
-    srl t1, t1, reg, flags=(SF,ZF,PF)
+    srl t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -170,19 +170,19 @@ def macroop SHR_P_R
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srl t1, t1, reg, flags=(SF,ZF,PF)
+    srl t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SAR_R_I
 {
-    srai reg, reg, imm, flags=(SF,ZF,PF)
+    srai reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAR_M_I
 {
     ldst t1, seg, sib, disp
-    srai t1, t1, imm, flags=(SF,ZF,PF)
+    srai t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -190,19 +190,19 @@ def macroop SAR_P_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srai t1, t1, imm, flags=(SF,ZF,PF)
+    srai t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SAR_1_R
 {
-    srai reg, reg, 1, flags=(SF,ZF,PF)
+    srai reg, reg, 1, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAR_1_M
 {
     ldst t1, seg, sib, disp
-    srai t1, t1, 1, flags=(SF,ZF,PF)
+    srai t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -210,19 +210,19 @@ def macroop SAR_1_P
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srai t1, t1, 1, flags=(SF,ZF,PF)
+    srai t1, t1, 1, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
 def macroop SAR_R_R
 {
-    sra reg, reg, regm, flags=(SF,ZF,PF)
+    sra reg, reg, regm, flags=(CF,OF,SF,ZF,PF)
 };
 
 def macroop SAR_M_R
 {
     ldst t1, seg, sib, disp
-    sra t1, t1, reg, flags=(SF,ZF,PF)
+    sra t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
@@ -230,7 +230,7 @@ def macroop SAR_P_R
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    sra t1, t1, reg, flags=(SF,ZF,PF)
+    sra t1, t1, reg, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 '''
