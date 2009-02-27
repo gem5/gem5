@@ -312,7 +312,7 @@ def main():
 
     if options.trace_start:
         check_tracing()
-        e = event.create(trace.enable, Event.Trace_Enable_Pri)
+        e = event.create(trace.enable, event.Event.Trace_Enable_Pri)
         event.mainq.schedule(e, options.trace_start)
     else:
         trace.enable()
