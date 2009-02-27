@@ -251,10 +251,10 @@ def macroop MOV_S_R {
     andi t2, regm, 0xF8, dataSize=8
     andi t0, regm, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks regm, t3, dataSize=8
     wrdl reg, t3, regm
@@ -268,10 +268,10 @@ def macroop MOV_S_M {
     andi t2, t1, 0xF8, dataSize=8
     andi t0, t1, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, dataSize=8
     wrdl reg, t3, t1
@@ -286,10 +286,10 @@ def macroop MOV_S_P {
     andi t2, t1, 0xF8, dataSize=8
     andi t0, t1, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, dataSize=8
     wrdl reg, t3, t1
@@ -302,10 +302,10 @@ def macroop MOVSS_S_R {
     andi t2, regm, 0xF8, dataSize=8
     andi t0, regm, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks regm, t3, SSCheck, dataSize=8
     wrdl reg, t3, regm
@@ -319,10 +319,10 @@ def macroop MOVSS_S_M {
     andi t2, t1, 0xF8, dataSize=8
     andi t0, t1, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, SSCheck, dataSize=8
     wrdl reg, t3, t1
@@ -337,10 +337,10 @@ def macroop MOVSS_S_P {
     andi t2, t1, 0xF8, dataSize=8
     andi t0, t1, 0x4, flags=(EZF,), dataSize=2
     br label("globalDescriptor"), flags=(CEZF,)
-    ld t3, tsl, [1, t0, t2], dataSize=8
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
     br label("processDescriptor")
 globalDescriptor:
-    ld t3, tsg, [1, t0, t2], dataSize=8
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
 processDescriptor:
     chks t1, t3, SSCheck, dataSize=8
     wrdl reg, t3, t1
