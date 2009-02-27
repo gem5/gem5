@@ -116,6 +116,14 @@ static const int ArgumentReg[] = {
     INTREG_R9W
 };
 static const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+static const int ArgumentReg32[] = {
+    INTREG_EBX,
+    INTREG_ECX,
+    INTREG_EDX,
+    INTREG_ESI,
+    INTREG_EDI,
+};
+static const int NumArgumentRegs32 = sizeof(ArgumentReg) / sizeof(const int);
 
 X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
         SyscallDesc *_syscallDescs, int _numSyscallDescs) :
@@ -260,6 +268,7 @@ I386LiveProcess::startup()
             tc->setMiscRegNoEffect(MISCREG_SEG_EFF_BASE(seg), 0);
             tc->setMiscRegNoEffect(MISCREG_SEG_ATTR(seg), dataAttr);
             tc->setMiscRegNoEffect(MISCREG_SEG_SEL(seg), 0xB);
+            tc->setMiscRegNoEffect(MISCREG_SEG_LIMIT(seg), (uint32_t)(-1));
         }
 
         SegAttr csAttr = 0;
@@ -610,11 +619,13 @@ X86_64LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 X86ISA::IntReg
 I386LiveProcess::getSyscallArg(ThreadContext *tc, int i)
 {
-    panic("32 bit getSyscallArg not implemented.\n");
+    assert(i < NumArgumentRegs32);
+    return tc->readIntReg(ArgumentReg32[i]);
 }
 
 void
 I386LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 {
-    panic("32 bit setSyscallArg not implemented.\n");
+    assert(i < NumArgumentRegs);
+    return tc->setIntReg(ArgumentReg[i], val);
 }
