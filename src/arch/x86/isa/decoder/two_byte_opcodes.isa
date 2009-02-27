@@ -829,20 +829,25 @@
                 0x4: shrd_Ev_Gv_Ib();
                 0x5: shrd_Ev_Gv_rCl();
                 //0x6: group16();
-                0x6: decode MODRM_MOD {
-                    0x3: decode MODRM_REG {
-                        0x5: BasicOperate::LFENCE(
+                0x6: decode MODRM_REG {
+                    0x0: fxsave();
+                    0x1: fxrstor();
+                    0x2: ldmxcsr();
+                    0x3: stmxcsr();
+                    0x4: Inst::UD2();
+                    0x5: decode MODRM_MOD {
+                        0x3: BasicOperate::LFENCE(
                                      {{/*Nothing*/}}, IsReadBarrier);
-                        0x6: BasicOperate::MFENCE(
-                                     {{/*Nothing*/}}, IsMemBarrier);
-                        0x7: BasicOperate::SFENCE(
-                                     {{/*Nothing*/}}, IsWriteBarrier);
                         default: Inst::UD2();
                     }
-                    default: decode MODRM_REG {
-                        0x0: fxsave();
-                        0x1: fxrstor();
-                        0x7: clflush();
+                    0x6: decode MODRM_MOD {
+                        0x3: BasicOperate::MFENCE(
+                                     {{/*Nothing*/}}, IsMemBarrier);
+                        default: Inst::UD2();
+                    }
+                    0x7: decode MODRM_MOD {
+                        0x3: BasicOperate::SFENCE(
+                                     {{/*Nothing*/}}, IsWriteBarrier);
                         default: Inst::UD2();
                     }
                 }
