@@ -420,7 +420,11 @@
                 0x1: Inst::RDTSC();
                 0x2: Inst::RDMSR();
                 0x3: rdpmc();
+#if FULL_SYSTEM
                 0x4: sysenter();
+#else
+                0x4: SyscallInst::sysenter('xc->syscall(Rax)', IsSyscall);
+#endif
                 0x5: sysexit();
                 0x6: Inst::UD2();
                 0x7: getsec();
