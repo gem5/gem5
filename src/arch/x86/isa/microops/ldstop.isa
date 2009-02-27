@@ -375,6 +375,8 @@ let {{
                 self.memFlags += " | (CPL0FlagBit << FlagShift)"
             if prefetch:
                 self.memFlags += " | Request::PF_EXCLUSIVE"
+            self.memFlags += " | (machInst.legacy.addr ? " + \
+                             "(AddrSizeFlagBit << FlagShift) : 0)"
 
         def getAllocator(self, *microFlags):
             allocator = '''new %(class_name)s(machInst, macrocodeBlock
@@ -439,7 +441,7 @@ let {{
     defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
 
     def defineMicroStoreOp(mnemonic, code, \
-            postCode="", completeCode="", mem_flags=0):
+            postCode="", completeCode="", mem_flags="0"):
         global header_output
         global decoder_output
         global exec_output

@@ -67,7 +67,8 @@ namespace X86ISA
     static const Request::FlagsType SegmentFlagMask = mask(4);
     static const int FlagShift = 4;
     enum FlagBit {
-        CPL0FlagBit = 1
+        CPL0FlagBit = 1,
+        AddrSizeFlagBit = 2
     };
 
     /**

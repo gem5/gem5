@@ -575,38 +575,34 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             if (!tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
                 return new GeneralProtection(0);
             bool expandDown = false;
+            SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
                 if (!attr.writable && write)
                     return new GeneralProtection(0);
                 if (!attr.readable && !write && !execute)
                     return new GeneralProtection(0);
                 expandDown = attr.expandDown;
+
             }
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
+            // This assumes we're not in 64 bit mode. If we were, the default
+            // address size is 64 bits, overridable to 32.
+            int size = 32;
+            bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
+            if (csAttr.defaultSize && sizeOverride ||
+                    !csAttr.defaultSize && !sizeOverride)
+                size = 16;
+            Addr offset = bits(vaddr - base, size-1, 0);
+            Addr endOffset = offset + req->getSize() - 1;
             if (expandDown) {
                 DPRINTF(TLB, "Checking an expand down segment.\n");
-                // We don't have to worry about the access going around the
-                // end of memory because accesses will be broken up into
-                // pieces at boundaries aligned on sizes smaller than an
-                // entire address space. We do have to worry about the limit
-                // being less than the base.
-                if (limit < base) {
-                    if (limit < vaddr + req->getSize() && vaddr < base)
-                        return new GeneralProtection(0);
-                } else {
-                    if (limit < vaddr + req->getSize())
-                        return new GeneralProtection(0);
-                }
+                warn_once("Expand down segments are untested.\n");
+                if (offset <= limit || endOffset <= limit)
+                    return new GeneralProtection(0);
             } else {
-                if (limit < base) {
-                    if (vaddr <= limit || vaddr + req->getSize() >= base)
-                        return new GeneralProtection(0);
-                } else {
-                    if (vaddr <= limit && vaddr + req->getSize() >= base)
-                        return new GeneralProtection(0);
-                }
+                if (offset > limit || endOffset > limit)
+                    return new GeneralProtection(0);
             }
         }
         // If paging is enabled, do the translation.
