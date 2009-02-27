@@ -299,6 +299,9 @@ I386LiveProcess::startup()
         tc->setMiscRegNoEffect(MISCREG_TSG_EFF_BASE, _gdtStart);
         tc->setMiscRegNoEffect(MISCREG_TSG_LIMIT, _gdtStart + _gdtSize - 1);
 
+        // Set the LDT selector to 0 to deactivate it.
+        tc->setMiscRegNoEffect(MISCREG_TSL, 0);
+
         //Set up the registers that describe the operating mode.
         CR0 cr0 = 0;
         cr0.pg = 1; // Turn on paging.
