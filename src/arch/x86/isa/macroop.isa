@@ -135,7 +135,7 @@ def template MacroConstructor {{
             %(adjust_env)s;
             %(adjust_imm)s;
             %(adjust_disp)s;
-            %(do_modrm)s;
+            %(init_env)s;
             %(constructor)s;
             const char *macrocodeBlock = "%(class_name)s";
             //alloc_microops is the code that sets up the microops
@@ -166,7 +166,7 @@ let {{
             }
             self.declared = False
             self.adjust_env = ""
-            self.doModRM = ""
+            self.init_env = ""
             self.adjust_imm = '''
                 uint64_t adjustedImm = IMMEDIATE;
                 //This is to pacify gcc in case the immediate isn't used.
@@ -228,7 +228,7 @@ let {{
                                  "adjust_disp" : self.adjust_disp,
                                  "disassembly" : env.disassembly,
                                  "regSize" : regSize,
-                                 "do_modrm" : self.doModRM})
+                                 "init_env" : self.initEnv})
             return MacroConstructor.subst(iop) + \
                    MacroDisassembly.subst(iop);
 }};
@@ -304,6 +304,7 @@ let {{
 
 let {{
     doModRMString = "env.doModRM(machInst);\n"
+    noModRMString = "env.setSeg(machInst);\n"
     def genMacroop(Name, env):
         blocks = OutputBlocks()
         if not macroopDict.has_key(Name):
@@ -311,7 +312,9 @@ let {{
         macroop = macroopDict[Name]
         if not macroop.declared:
             if env.doModRM:
-                macroop.doModRM = doModRMString
+                macroop.initEnv = doModRMString
+            else:
+                macroop.initEnv = noModRMString
             blocks.header_output = macroop.getDeclaration()
             blocks.decoder_output = macroop.getDefinition(env)
             macroop.declared = True

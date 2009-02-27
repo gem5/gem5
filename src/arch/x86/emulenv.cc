@@ -105,3 +105,11 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
     }
 }
 
+void EmulEnv::setSeg(const ExtMachInst & machInst)
+{
+    seg = SEGMENT_REG_DS;
+    //Handle any segment override that might have been in the instruction
+    int segFromInst = machInst.legacy.seg;
+    if (segFromInst)
+        seg = (SegmentRegIndex)(segFromInst - 1);
+}
