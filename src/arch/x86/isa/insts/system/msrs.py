@@ -85,7 +85,7 @@ microcode = '''
 def macroop RDMSR
 {
     ld t2, intseg, [8, rcx, t0], "IntAddrPrefixMSR << 3", \
-        dataSize=8, addressSize=4
+        dataSize=8, addressSize=8
     mov rax, rax, t2, dataSize=4
     srli t2, t2, 32, dataSize=8
     mov rdx, rdx, t2, dataSize=4
@@ -97,7 +97,7 @@ def macroop WRMSR
     slli t3, rdx, 32, dataSize=8
     or t2, t2, t3, dataSize=8
     st t2, intseg, [8, rcx, t0], "IntAddrPrefixMSR << 3", \
-        dataSize=8, addressSize=4
+        dataSize=8, addressSize=8
 };
 
 def macroop RDTSC
