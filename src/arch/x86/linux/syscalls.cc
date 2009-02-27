@@ -756,7 +756,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 249 */ SyscallDesc("io_cancel", unimplementedFunc),
     /* 250 */ SyscallDesc("fadvise64", unimplementedFunc),
     /* 251 */ SyscallDesc("unused", unimplementedFunc),
-    /* 252 */ SyscallDesc("exit_group", unimplementedFunc),
+    /* 252 */ SyscallDesc("exit_group", exitFunc),
     /* 253 */ SyscallDesc("lookup_dcookie", unimplementedFunc),
     /* 254 */ SyscallDesc("epoll_create", unimplementedFunc),
     /* 255 */ SyscallDesc("epoll_ctl", unimplementedFunc),
