@@ -701,7 +701,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 195 */ SyscallDesc("stat64", unimplementedFunc),
     /* 196 */ SyscallDesc("lstat64", unimplementedFunc),
-    /* 197 */ SyscallDesc("fstat64", unimplementedFunc),
+    /* 197 */ SyscallDesc("fstat64", fstat64Func<X86Linux32>),
     /* 198 */ SyscallDesc("lchown32", unimplementedFunc),
     /* 199 */ SyscallDesc("getuid32", unimplementedFunc),
     /* 200 */ SyscallDesc("getgid32", unimplementedFunc),
