@@ -113,8 +113,18 @@ IGbE::IGbE(const Params *p)
     // Magic happy checksum value
     flash[EEPROM_SIZE-1] = htobe((uint16_t)(EEPROM_CSUM - csum));
 
+    // Store the MAC address as queue ID
+    macAddr = p->hardware_address;
+
     rxFifo.clear();
     txFifo.clear();
+}
+
+void
+IGbE::init()
+{
+    cpa = CPA::cpa();
+    PciDev::init();
 }
 
 EtherInt*
@@ -793,6 +803,13 @@ IGbE::RxDescCache::RxDescCache(IGbE *i, const std::string n, int s)
       pktEvent(this), pktHdrEvent(this), pktDataEvent(this)
 
 {
+    annSmFetch = "RX Desc Fetch";
+    annSmWb = "RX Desc Writeback";
+    annUnusedDescQ = "RX Unused Descriptors";
+    annUnusedCacheQ = "RX Unused Descriptor Cache";
+    annUsedCacheQ = "RX Used Descriptor Cache";
+    annUsedDescQ = "RX Used Descriptors";
+    annDescQ = "RX Descriptors";
 }
 
 void
@@ -909,6 +926,8 @@ IGbE::RxDescCache::pktComplete()
     assert(unusedCache.size());
     RxDesc *desc;
     desc = unusedCache.front();
+
+    igbe->anBegin("RXS", "Update Desc");
 
     uint16_t crcfixup = igbe->regs.rctl.secrc() ? 0 : 4 ;
     DPRINTF(EthernetDesc, "pktPtr->length: %d bytesCopied: %d stripcrc offset: %d value written: %d %d\n",
@@ -1052,8 +1071,11 @@ IGbE::RxDescCache::pktComplete()
     enableSm();
     pktDone = true;
 
+    igbe->anBegin("RXS", "Done Updating Desc");
     DPRINTF(EthernetDesc, "Processing of this descriptor complete\n");
+    igbe->anDq("RXS", annUnusedCacheQ);
     unusedCache.pop_front();
+    igbe->anQ("RXS", annUsedCacheQ);
     usedCache.push_back(desc);
 }
 
@@ -1112,6 +1134,13 @@ IGbE::TxDescCache::TxDescCache(IGbE *i, const std::string n, int s)
        useTso(false), pktEvent(this), headerEvent(this), nullEvent(this)
 
 {
+    annSmFetch = "TX Desc Fetch";
+    annSmWb = "TX Desc Writeback";
+    annUnusedDescQ = "TX Unused Descriptors";
+    annUnusedCacheQ = "TX Unused Descriptor Cache";
+    annUsedCacheQ = "TX Used Descriptor Cache";
+    annUsedDescQ = "TX Used Descriptors";
+    annDescQ = "TX Descriptors";
 }
 
 void
@@ -1154,7 +1183,9 @@ IGbE::TxDescCache::processContextDesc()
 
         TxdOp::setDd(desc);
         unusedCache.pop_front();
+        igbe->anDq("TXS", annUnusedCacheQ);
         usedCache.push_back(desc);
+        igbe->anQ("TXS", annUsedCacheQ);
     }
 
     if (!unusedCache.size())
@@ -1298,6 +1329,8 @@ IGbE::TxDescCache::pktComplete()
     assert(unusedCache.size());
     assert(pktPtr);
 
+    igbe->anBegin("TXS", "Update Desc");
+
     DPRINTF(EthernetDesc, "DMA of packet complete\n");
 
 
@@ -1323,7 +1356,9 @@ IGbE::TxDescCache::pktComplete()
             (pktPtr->length < ( tsoMss + tsoHeaderLen) &&
              tsoTotalLen != tsoUsedLen && useTso)) {
         assert(!useTso || (tsoDescBytesUsed == TxdOp::getLen(desc)));
+        igbe->anDq("TXS", annUnusedCacheQ);
         unusedCache.pop_front();
+        igbe->anQ("TXS", annUsedCacheQ);
         usedCache.push_back(desc);
 
         tsoDescBytesUsed = 0;
@@ -1441,7 +1476,9 @@ IGbE::TxDescCache::pktComplete()
 
     if (!useTso ||  TxdOp::getLen(desc) == tsoDescBytesUsed) {
         DPRINTF(EthernetDesc, "Descriptor Done\n");
+        igbe->anDq("TXS", annUnusedCacheQ);
         unusedCache.pop_front();
+        igbe->anQ("TXS", annUsedCacheQ);
         usedCache.push_back(desc);
         tsoDescBytesUsed = 0;
     }
@@ -1458,14 +1495,17 @@ IGbE::TxDescCache::pktComplete()
     tsoPktHasHeader = false;
 
     if (igbe->regs.txdctl.wthresh() == 0) {
+        igbe->anBegin("TXS", "Desc Writeback");
         DPRINTF(EthernetDesc, "WTHRESH == 0, writing back descriptor\n");
         writeback(0);
     } else if (igbe->regs.txdctl.gran() && igbe->regs.txdctl.wthresh() >=
             descInBlock(usedCache.size())) {
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
+        igbe->anBegin("TXS", "Desc Writeback");
         writeback((igbe->cacheBlockSize()-1)>>4);
     } else if (igbe->regs.txdctl.wthresh() >= usedCache.size()) {
         DPRINTF(EthernetDesc, "used > WTHRESH, writing back descriptor\n");
+        igbe->anBegin("TXS", "Desc Writeback");
         writeback((igbe->cacheBlockSize()-1)>>4);
     }
 
@@ -1604,6 +1644,7 @@ IGbE::drain(Event *de)
     else
         changeState(Drained);
 
+    DPRINTF(EthernetSM, "got drain() returning %d", count);
     return count;
 }
 
@@ -1617,6 +1658,7 @@ IGbE::resume()
     rxTick = true;
 
     restartClock();
+    DPRINTF(EthernetSM, "resuming from drain");
 }
 
 void
@@ -1625,6 +1667,7 @@ IGbE::checkDrain()
     if (!drainEvent)
         return;
 
+    DPRINTF(EthernetSM, "checkDrain() in drain\n");
     txFifoTick = false;
     txTick = false;
     rxTick = false;
@@ -1651,11 +1694,13 @@ IGbE::txStateMachine()
                  && !txDescCache.packetMultiDesc() && txPacket->length) {
         bool success;
 
+        anQ("TXS", "TX FIFO Q");
         DPRINTF(EthernetSM, "TXS: packet placed in TX FIFO\n");
         success = txFifo.push(txPacket);
         txFifoTick = true && !drainEvent;
         assert(success);
         txPacket = NULL;
+        anBegin("TXS", "Desc Writeback");
         txDescCache.writeback((cacheBlockSize()-1)>>4);
         return;
     }
@@ -1673,7 +1718,10 @@ IGbE::txStateMachine()
     if (!txDescCache.packetWaiting()) {
         if (txDescCache.descLeft() == 0) {
             postInterrupt(IT_TXQE);
+            anBegin("TXS", "Desc Writeback");
             txDescCache.writeback(0);
+            anBegin("TXS", "Desc Fetch");
+            anWe("TXS", txDescCache.annUnusedCacheQ);
             txDescCache.fetchDescriptors();
             DPRINTF(EthernetSM, "TXS: No descriptors left in ring, forcing "
                     "writeback stopping ticking and posting TXQE\n");
@@ -1683,11 +1731,14 @@ IGbE::txStateMachine()
 
 
         if (!(txDescCache.descUnused())) {
+            anBegin("TXS", "Desc Fetch");
             txDescCache.fetchDescriptors();
+            anWe("TXS", txDescCache.annUnusedCacheQ);
             DPRINTF(EthernetSM, "TXS: No descriptors available in cache, fetching and stopping ticking\n");
             txTick = false;
             return;
         }
+        anPq("TXS", txDescCache.annUnusedCacheQ);
 
 
         txDescCache.processContextDesc();
@@ -1700,6 +1751,8 @@ IGbE::txStateMachine()
         int size;
         size = txDescCache.getPacketSize(txPacket);
         if (size > 0 && txFifo.avail() > size) {
+            anRq("TXS", "TX FIFO Q");
+            anBegin("TXS", "DMA Packet");
             DPRINTF(EthernetSM, "TXS: Reserving %d bytes in FIFO and begining "
                     "DMA of next packet\n", size);
             txFifo.reserve(size);
@@ -1707,8 +1760,10 @@ IGbE::txStateMachine()
         } else if (size <= 0) {
             DPRINTF(EthernetSM, "TXS: getPacketSize returned: %d\n", size);
             DPRINTF(EthernetSM, "TXS: No packets to get, writing back used descriptors\n");
+            anBegin("TXS", "Desc Writeback");
             txDescCache.writeback(0);
         } else {
+            anWf("TXS", "TX FIFO Q");
             DPRINTF(EthernetSM, "TXS: FIFO full, stopping ticking until space "
                     "available in FIFO\n");
             txTick = false;
@@ -1728,9 +1783,12 @@ IGbE::ethRxPkt(EthPacketPtr pkt)
     rxPackets++;
 
     DPRINTF(Ethernet, "RxFIFO: Receiving pcakte from wire\n");
+    anBegin("RXQ", "Wire Recv");
+
 
     if (!regs.rctl.en()) {
         DPRINTF(Ethernet, "RxFIFO: RX not enabled, dropping\n");
+        anBegin("RXQ", "FIFO Drop", CPA::FL_BAD);
         return true;
     }
 
@@ -1744,7 +1802,21 @@ IGbE::ethRxPkt(EthPacketPtr pkt)
     if (!rxFifo.push(pkt)) {
         DPRINTF(Ethernet, "RxFIFO: Packet won't fit in fifo... dropped\n");
         postInterrupt(IT_RXO, true);
+        anBegin("RXQ", "FIFO Drop", CPA::FL_BAD);
         return false;
+    }
+
+    if (CPA::available() && cpa->enabled()) {
+        assert(sys->numSystemsRunning <= 2);
+        System *other_sys;
+        if (sys->systemList[0] == sys)
+            other_sys = sys->systemList[1];
+        else
+            other_sys = sys->systemList[0];
+
+        cpa->hwDq(CPA::FL_NONE, sys, macAddr, "RXQ", "WireQ", 0, other_sys);
+        anQ("RXQ", "RX FIFO Q");
+        cpa->hwWe(CPA::FL_NONE, sys, macAddr, "RXQ", "WireQ", 0, other_sys);
     }
 
     return true;
@@ -1780,6 +1852,7 @@ IGbE::rxStateMachine()
             rxDescCache.writeback(0);
 
         if (descLeft == 0) {
+            anBegin("RXS", "Writeback Descriptors");
             rxDescCache.writeback(0);
             DPRINTF(EthernetSM, "RXS: No descriptors left in ring, forcing"
                     " writeback and stopping ticking\n");
@@ -1791,6 +1864,7 @@ IGbE::rxStateMachine()
 
         if (regs.rxdctl.wthresh() >= rxDescCache.descUsed()) {
             DPRINTF(EthernetSM, "RXS: Writing back because WTHRESH >= descUsed\n");
+            anBegin("RXS", "Writeback Descriptors");
             if (regs.rxdctl.wthresh() < (cacheBlockSize()>>4))
                 rxDescCache.writeback(regs.rxdctl.wthresh()-1);
             else
@@ -1800,11 +1874,14 @@ IGbE::rxStateMachine()
         if ((rxDescCache.descUnused() < regs.rxdctl.pthresh()) &&
              ((rxDescCache.descLeft() - rxDescCache.descUnused()) > regs.rxdctl.hthresh())) {
             DPRINTF(EthernetSM, "RXS: Fetching descriptors because descUnused < PTHRESH\n");
+            anBegin("RXS", "Fetch Descriptors");
             rxDescCache.fetchDescriptors();
         }
 
         if (rxDescCache.descUnused() == 0) {
+            anBegin("RXS", "Fetch Descriptors");
             rxDescCache.fetchDescriptors();
+            anWe("RXS", rxDescCache.annUnusedCacheQ);
             DPRINTF(EthernetSM, "RXS: No descriptors available in cache, "
                     "fetching descriptors and stopping ticking\n");
             rxTick = false;
@@ -1819,18 +1896,24 @@ IGbE::rxStateMachine()
     }
 
     if (!rxDescCache.descUnused()) {
+        anBegin("RXS", "Fetch Descriptors");
         rxDescCache.fetchDescriptors();
+        anWe("RXS", rxDescCache.annUnusedCacheQ);
         DPRINTF(EthernetSM, "RXS: No descriptors available in cache, stopping ticking\n");
         rxTick = false;
         DPRINTF(EthernetSM, "RXS: No descriptors available, fetching\n");
         return;
     }
+    anPq("RXS", rxDescCache.annUnusedCacheQ);
 
     if (rxFifo.empty()) {
+        anWe("RXS", "RX FIFO Q");
         DPRINTF(EthernetSM, "RXS: RxFIFO empty, stopping ticking\n");
         rxTick = false;
         return;
     }
+    anPq("RXS", "RX FIFO Q");
+    anBegin("RXS", "Get Desc");
 
     EthPacketPtr pkt;
     pkt = rxFifo.front();
@@ -1839,26 +1922,32 @@ IGbE::rxStateMachine()
     pktOffset = rxDescCache.writePacket(pkt, pktOffset);
     DPRINTF(EthernetSM, "RXS: Writing packet into memory\n");
     if (pktOffset == pkt->length) {
+        anBegin( "RXS", "FIFO Dequeue");
         DPRINTF(EthernetSM, "RXS: Removing packet from FIFO\n");
         pktOffset = 0;
+        anDq("RXS", "RX FIFO Q");
         rxFifo.pop();
     }
 
     DPRINTF(EthernetSM, "RXS: stopping ticking until packet DMA completes\n");
     rxTick = false;
     rxDmaPacket = true;
+    anBegin("RXS", "DMA Packet");
 }
 
 void
 IGbE::txWire()
 {
     if (txFifo.empty()) {
+        anWe("TXQ", "TX FIFO Q");
         txFifoTick = false;
         return;
     }
 
 
+    anPq("TXQ", "TX FIFO Q");
     if (etherInt->sendPacket(txFifo.front())) {
+        cpa->hwQ(CPA::FL_NONE, sys, macAddr, "TXQ", "WireQ", 0);
         if (DTRACE(EthernetSM)) {
             IpPtr ip(txFifo.front());
             if (ip)
@@ -1867,6 +1956,8 @@ IGbE::txWire()
             else
                 DPRINTF(EthernetSM, "Transmitting Non-Ip packet\n");
         }
+        anDq("TXQ", "TX FIFO Q");
+        anBegin("TXQ", "Wire Send");
         DPRINTF(EthernetSM, "TxFIFO: Successful transmit, bytes available in fifo: %d\n",
                 txFifo.avail());
 
@@ -1903,6 +1994,7 @@ IGbE::tick()
 void
 IGbE::ethTxDone()
 {
+    anBegin("TXQ", "Send Done");
     // restart the tx state machines if they are stopped
     // fifo to send another packet
     // tx sm to put more data into the fifo

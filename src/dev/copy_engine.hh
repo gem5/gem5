@@ -130,6 +130,36 @@ class CopyEngine : public PciDev
         void recvCommand();
         bool inDrain();
         void restartStateMachine();
+        inline void anBegin(const char *s)
+        {
+            CPA::cpa()->hwBegin(CPA::FL_NONE, ce->sys,
+                         channelId, "CopyEngine", s);
+        }
+
+        inline void anWait()
+        {
+            CPA::cpa()->hwWe(CPA::FL_NONE, ce->sys,
+                     channelId, "CopyEngine", "DMAUnusedDescQ", channelId);
+        }
+
+        inline void anDq()
+        {
+            CPA::cpa()->hwDq(CPA::FL_NONE, ce->sys,
+                      channelId, "CopyEngine", "DMAUnusedDescQ", channelId);
+        }
+
+        inline void anPq()
+        {
+            CPA::cpa()->hwDq(CPA::FL_NONE, ce->sys,
+                      channelId, "CopyEngine", "DMAUnusedDescQ", channelId);
+        }
+
+        inline void anQ(const char * s, uint64_t id, int size = 1)
+        {
+            CPA::cpa()->hwQ(CPA::FL_NONE, ce->sys, channelId,
+                    "CopyEngine", s, id, NULL, size);
+        }
+
     };
 
   private:

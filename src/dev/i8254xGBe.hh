@@ -38,6 +38,7 @@
 #include <deque>
 #include <string>
 
+#include "base/cp_annotate.hh"
 #include "base/inet.hh"
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
@@ -54,6 +55,7 @@ class IGbE : public EtherDevice
 {
   private:
     IGbEInt *etherInt;
+    CPA *cpa;
 
     // device registers
     iGbReg::Regs regs;
@@ -176,6 +178,35 @@ class IGbE : public EtherDevice
      */
     void checkDrain();
 
+    void anBegin(std::string sm, std::string st, int flags = CPA::FL_NONE) {
+        cpa->hwBegin((CPA::flags)flags, sys, macAddr, sm, st);
+    }
+
+    void anQ(std::string sm, std::string q) { 
+        cpa->hwQ(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anDq(std::string sm, std::string q) {
+        cpa->hwDq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anPq(std::string sm, std::string q, int num = 1) {
+        cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+    }
+
+    void anRq(std::string sm, std::string q, int num = 1) {
+        cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+    }
+
+    void anWe(std::string sm, std::string q) {
+        cpa->hwWe(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anWf(std::string sm, std::string q) {
+        cpa->hwWf(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+
     template<class T>
     class DescCache
     {
@@ -225,6 +256,10 @@ class IGbE : public EtherDevice
         EthPacketPtr pktPtr;
 
       public:
+        /** Annotate sm*/
+        std::string annSmFetch, annSmWb, annUnusedDescQ, annUsedCacheQ,
+            annUsedDescQ, annUnusedCacheQ, annDescQ;
+
         DescCache(IGbE *i, const std::string n, int s)
             : igbe(i), _name(n), cachePnt(0), size(s), curFetching(0), wbOut(0),
               pktPtr(NULL), wbDelayEvent(this), fetchDelayEvent(this), 
@@ -290,6 +325,10 @@ class IGbE : public EtherDevice
             DPRINTF(EthernetDesc, "Writing back %d descriptors\n", max_to_wb);
 
             if (max_to_wb <= 0) {
+                if (usedCache.size())
+                    igbe->anBegin(annSmWb, "Wait Alignment", CPA::FL_WAIT);
+                else
+                    igbe->anWe(annSmWb, annUsedCacheQ);
                 return;
             }
 
@@ -297,24 +336,29 @@ class IGbE : public EtherDevice
 
             assert(!wbDelayEvent.scheduled()); 
             igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
+            igbe->anBegin(annSmWb, "Prepare Writeback Desc");
         }
             
         void writeback1()
         {
             // If we're draining delay issuing this DMA
-            if (igbe->drainEvent) {
+            if (igbe->getState() != SimObject::Running) {
                 igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
                 return;
             }
 
-            DPRINTF(EthernetDesc, "Beining DMA of %d descriptors\n", wbOut);
+            DPRINTF(EthernetDesc, "Begining DMA of %d descriptors\n", wbOut);
             
             for (int x = 0; x < wbOut; x++) {
                 assert(usedCache.size());
                 memcpy(&wbBuf[x], usedCache[x], sizeof(T));
-                 //delete usedCache[0];
-                //usedCache.pop_front();
+                igbe->anPq(annSmWb, annUsedCacheQ);
+                igbe->anPq(annSmWb, annDescQ);
+                igbe->anQ(annSmWb, annUsedDescQ);
             }
+
+    
+            igbe->anBegin(annSmWb, "Writeback Desc DMA");
 
             assert(wbOut);
             igbe->dmaWrite(igbe->platform->pciToDma(descBase() + descHead() * sizeof(T)),
@@ -343,6 +387,18 @@ class IGbE : public EtherDevice
 
             size_t free_cache = size - usedCache.size() - unusedCache.size();
 
+            if (!max_to_fetch)
+                igbe->anWe(annSmFetch, annUnusedDescQ);
+            else
+                igbe->anPq(annSmFetch, annUnusedDescQ, max_to_fetch);
+
+            if (max_to_fetch) {
+                if (!free_cache)
+                    igbe->anWf(annSmFetch, annDescQ);
+                else
+                    igbe->anRq(annSmFetch, annDescQ, free_cache);
+            }
+
             max_to_fetch = std::min(max_to_fetch, free_cache);
             
 
@@ -360,15 +416,18 @@ class IGbE : public EtherDevice
 
             assert(!fetchDelayEvent.scheduled());
             igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
+            igbe->anBegin(annSmFetch, "Prepare Fetch Desc");
         }
 
         void fetchDescriptors1()
         {
             // If we're draining delay issuing this DMA
-            if (igbe->drainEvent) {
+            if (igbe->getState() != SimObject::Running) {
                 igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
                 return;
             }
+
+            igbe->anBegin(annSmFetch, "Fetch Desc");
 
             DPRINTF(EthernetDesc, "Fetching descriptors at %#x (%#x), size: %#x\n",
                     descBase() + cachePnt * sizeof(T),
@@ -387,10 +446,14 @@ class IGbE : public EtherDevice
         void fetchComplete()
         {
             T *newDesc;
+            igbe->anBegin(annSmFetch, "Fetch Complete");
             for (int x = 0; x < curFetching; x++) {
                 newDesc = new T;
                 memcpy(newDesc, &fetchBuf[x], sizeof(T));
                 unusedCache.push_back(newDesc);
+                igbe->anDq(annSmFetch, annUnusedDescQ);
+                igbe->anQ(annSmFetch, annUnusedCacheQ);
+                igbe->anQ(annSmFetch, annDescQ);
             }
 
 
@@ -408,6 +471,16 @@ class IGbE : public EtherDevice
             DPRINTF(EthernetDesc, "Fetching complete cachePnt %d -> %d\n",
                     oldCp, cachePnt);
 
+            if ((descTail() >= cachePnt ? (descTail() - cachePnt) : (descLen() -
+                    cachePnt)) == 0)
+            {
+                igbe->anWe(annSmFetch, annUnusedDescQ);
+            } else if (!(size - usedCache.size() - unusedCache.size())) {
+                igbe->anWf(annSmFetch, annDescQ);
+            } else {
+                igbe->anBegin(annSmFetch, "Wait", CPA::FL_WAIT);
+            }
+
             enableSm();
             igbe->checkDrain();
         }
@@ -419,6 +492,8 @@ class IGbE : public EtherDevice
         void wbComplete()
         {
 
+            igbe->anBegin(annSmWb, "Finish Writeback");
+
             long  curHead = descHead();
 #ifndef NDEBUG
             long oldHead = curHead;
@@ -428,6 +503,9 @@ class IGbE : public EtherDevice
                 assert(usedCache.size());
                 delete usedCache[0];
                 usedCache.pop_front();
+
+                igbe->anDq(annSmWb, annUsedCacheQ);
+                igbe->anDq(annSmWb, annDescQ);
             }
 
             curHead += wbOut;
@@ -452,6 +530,10 @@ class IGbE : public EtherDevice
 
             if (!wbOut) {
                 igbe->checkDrain();
+                if (usedCache.size())
+                    igbe->anBegin(annSmWb, "Wait", CPA::FL_WAIT);
+                else
+                    igbe->anWe(annSmWb, annUsedCacheQ);
             }
             fetchAfterWb();
         }
@@ -747,6 +829,7 @@ class IGbE : public EtherDevice
     }
     IGbE(const Params *params);
     ~IGbE() {}
+    virtual void init();
 
     virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
