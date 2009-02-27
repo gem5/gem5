@@ -174,6 +174,41 @@ def macroop SHR_P_R
     st t1, seg, riprel, disp
 };
 
+# SHRD will not set OF correctly when the shift count is 1.
+def macroop SHRD_R_R_I
+{
+    srli t1, reg, imm, flags=(CF,)
+    rori t2, regm, imm
+    srli t3, regm, imm
+    xor t2, t2, t3
+    or reg, t1, t2
+};
+
+# SHRD will not set OF correctly when the shift count is 1.
+def macroop SHRD_M_R_I
+{
+    ldst t1, seg, sib, disp
+    srli t1, t1, imm, flags=(CF,)
+    rori t2, reg, imm
+    srli t3, reg, imm
+    xor t2, t2, t3
+    or t1, t1, t2
+    st t1, seg, sib, disp
+};
+
+# SHRD will not set OF correctly when the shift count is 1.
+def macroop SHRD_P_R_I
+{
+    rdip t7
+    ldst t1, seg, riprel, disp
+    srli t1, t1, imm, flags=(CF,)
+    rori t2, reg, imm
+    srli t3, reg, imm
+    xor t2, t2, t3
+    or t1, t1, t2
+    st t1, seg, riprel, disp
+};
+
 def macroop SAR_R_I
 {
     srai reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
