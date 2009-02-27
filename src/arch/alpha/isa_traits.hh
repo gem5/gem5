@@ -152,12 +152,9 @@ const int ReturnAddressReg = 26;
 const int ReturnValueReg = 0;
 const int FramePointerReg = 15;
 
-const int ArgumentReg[] = {16, 17, 18, 19, 20, 21};
-const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
-
-const int SyscallNumReg = ReturnValueReg;
-const int SyscallPseudoReturnReg = ArgumentReg[4];
-const int SyscallSuccessReg = 19;
+const int SyscallNumReg = 0;
+const int FirstArgumentReg = 16;
+const int SyscallPseudoReturnReg = 20;
 
 const int LogVMPageSize = 13;       // 8K bytes
 const int VMPageSize = (1 << LogVMPageSize);

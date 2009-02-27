@@ -38,7 +38,6 @@
 #include "sim/faults.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
-#include "sim/syscallreturn.hh"
 #include "sim/byteswap.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
@@ -258,13 +257,6 @@ class ThreadContext
     virtual bool misspeculating() = 0;
 
 #if !FULL_SYSTEM
-    virtual IntReg getSyscallArg(int i) = 0;
-
-    // used to shift args for indirect syscall
-    virtual void setSyscallArg(int i, IntReg val) = 0;
-
-    virtual void setSyscallReturn(SyscallReturn return_value) = 0;
-
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
 
@@ -457,15 +449,6 @@ class ProxyThreadContext : public ThreadContext
     bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, IntReg val)
-    { actualTC->setSyscallArg(i, val); }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    { actualTC->setSyscallReturn(return_value); }
-
     void syscall(int64_t callnum)
     { actualTC->syscall(callnum); }
 

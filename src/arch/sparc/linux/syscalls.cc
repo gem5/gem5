@@ -29,7 +29,6 @@
  */
 
 #include "arch/sparc/linux/process.hh"
-#include "arch/sparc/syscallreturn.hh"
 #include "sim/syscall_emul.hh"
 
 class LiveProcess;
@@ -42,7 +41,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -60,9 +59,9 @@ SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
         LiveProcess *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
-    Addr ruid = tc->getSyscallArg(0);
-    Addr euid = tc->getSyscallArg(1);
-    Addr suid = tc->getSyscallArg(2);
+    Addr ruid = p->getSyscallArg(tc, 0);
+    Addr euid = p->getSyscallArg(tc, 1);
+    Addr suid = p->getSyscallArg(tc, 2);
     //Handle the EFAULT case
     //Set the ruid
     if(ruid)

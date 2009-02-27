@@ -511,15 +511,6 @@ class InOrderCPU : public BaseCPU
     /** Executes a syscall.*/
     void syscall(int64_t callnum, int tid);
 
-    /** Gets a syscall argument. */
-    IntReg getSyscallArg(int i, int tid);
-
-    /** Used to shift args for indirect syscall. */
-    void setSyscallArg(int i, IntReg val, int tid);
-
-    /** Sets the return value of a syscall. */
-    void setSyscallReturn(SyscallReturn return_value, int tid);
-
   public:
     /** Per-Thread List of all the instructions in flight. */
     std::list<DynInstPtr> instList[ThePipeline::MaxThreads];

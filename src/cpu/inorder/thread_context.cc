@@ -262,21 +262,3 @@ InOrderThreadContext::setMiscReg(int misc_reg, const MiscReg &val)
 {
     cpu->setMiscReg(misc_reg, val, thread->readTid());
 }
-
-TheISA::IntReg
-InOrderThreadContext::getSyscallArg(int i)
-{
-    return cpu->getSyscallArg(i, thread->readTid());
-}
-
-void
-InOrderThreadContext::setSyscallArg(int i, IntReg val)
-{
-    cpu->setSyscallArg(i, val, thread->readTid());
-}
-
-void
-InOrderThreadContext::setSyscallReturn(SyscallReturn return_value)
-{
-    cpu->setSyscallReturn(return_value, thread->readTid());
-}

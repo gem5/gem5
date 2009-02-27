@@ -437,10 +437,10 @@ class Tru64 : public OperatingSystem
 #ifdef __CYGWIN__
         panic("getdirent not implemented on cygwin!");
 #else
-        int fd = process->sim_fd(tc->getSyscallArg(0));
-        Addr tgt_buf = tc->getSyscallArg(1);
-        int tgt_nbytes = tc->getSyscallArg(2);
-        Addr tgt_basep = tc->getSyscallArg(3);
+        int fd = process->sim_fd(process->getSyscallArg(tc, 0));
+        Addr tgt_buf = process->getSyscallArg(tc, 1);
+        int tgt_nbytes = process->getSyscallArg(tc, 2);
+        Addr tgt_basep = process->getSyscallArg(tc, 3);
 
         char * const host_buf = new char[tgt_nbytes];
 
@@ -496,7 +496,7 @@ class Tru64 : public OperatingSystem
         using namespace TheISA;
 
         using TheISA::RegFile;
-        TypedBufferArg<Tru64::sigcontext> sc(tc->getSyscallArg(0));
+        TypedBufferArg<Tru64::sigcontext> sc(process->getSyscallArg(tc, 0));
 
         sc.copyIn(tc->getMemPort());
 
@@ -528,7 +528,7 @@ class Tru64 : public OperatingSystem
     {
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::vm_stack> argp(tc->getSyscallArg(0));
+        TypedBufferArg<Tru64::vm_stack> argp(process->getSyscallArg(tc, 0));
 
         argp.copyIn(tc->getMemPort());
 
@@ -576,8 +576,9 @@ class Tru64 : public OperatingSystem
         using namespace std;
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::nxm_task_attr> attrp(tc->getSyscallArg(0));
-        TypedBufferArg<Addr> configptr_ptr(tc->getSyscallArg(1));
+        TypedBufferArg<Tru64::nxm_task_attr>
+            attrp(process->getSyscallArg(tc, 0));
+        TypedBufferArg<Addr> configptr_ptr(process->getSyscallArg(tc, 1));
 
         attrp.copyIn(tc->getMemPort());
 
@@ -683,14 +684,14 @@ class Tru64 : public OperatingSystem
 
     /// Initialize thread context.
     static void
-    init_thread_context(ThreadContext *tc,
+    init_thread_context(LiveProcess *process, ThreadContext *tc,
                       Tru64::nxm_thread_attr *attrp, uint64_t uniq_val)
     {
         using namespace TheISA;
 
         tc->clearArchRegs();
 
-        tc->setIntReg(TheISA::ArgumentReg[0], gtoh(attrp->registers.a0));
+        process->setSyscallArg(tc, 0, gtoh(attrp->registers.a0));
         tc->setIntReg(27/*t12*/, gtoh(attrp->registers.pc));
         tc->setIntReg(TheISA::StackPointerReg, gtoh(attrp->registers.sp));
         tc->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ, uniq_val);
@@ -709,9 +710,10 @@ class Tru64 : public OperatingSystem
         using namespace std;
         using namespace TheISA;
 
-        TypedBufferArg<Tru64::nxm_thread_attr> attrp(tc->getSyscallArg(0));
-        TypedBufferArg<uint64_t> kidp(tc->getSyscallArg(1));
-        int thread_index = tc->getSyscallArg(2);
+        TypedBufferArg<Tru64::nxm_thread_attr>
+            attrp(process->getSyscallArg(tc, 0));
+        TypedBufferArg<uint64_t> kidp(process->getSyscallArg(tc, 1));
+        int thread_index = process->getSyscallArg(tc, 2);
 
         // get attribute args
         attrp.copyIn(tc->getMemPort());
@@ -792,7 +794,7 @@ class Tru64 : public OperatingSystem
             ThreadContext *tc = process->findFreeContext();
             if (tc) {
                 // inactive context... grab it
-                init_thread_context(tc, attrp, uniq_val);
+                init_thread_context(process, tc, attrp, uniq_val);
 
                 // This is supposed to be a port number, but we'll try
                 // and get away with just sticking the thread index
@@ -830,11 +832,11 @@ class Tru64 : public OperatingSystem
     {
         using namespace std;
 
-        uint64_t tid = tc->getSyscallArg(0);
-        uint64_t secs = tc->getSyscallArg(1);
-        uint64_t flags = tc->getSyscallArg(2);
-        uint64_t action = tc->getSyscallArg(3);
-        uint64_t usecs = tc->getSyscallArg(4);
+        uint64_t tid = process->getSyscallArg(tc, 0);
+        uint64_t secs = process->getSyscallArg(tc, 1);
+        uint64_t flags = process->getSyscallArg(tc, 2);
+        uint64_t action = process->getSyscallArg(tc, 3);
+        uint64_t usecs = process->getSyscallArg(tc, 4);
 
         cout << tc->getCpuPtr()->name() << ": nxm_thread_block " << tid << " "
              << secs << " " << flags << " " << action << " " << usecs << endl;
@@ -849,11 +851,11 @@ class Tru64 : public OperatingSystem
     {
         using namespace std;
 
-        Addr uaddr = tc->getSyscallArg(0);
-        uint64_t val = tc->getSyscallArg(1);
-        uint64_t secs = tc->getSyscallArg(2);
-        uint64_t usecs = tc->getSyscallArg(3);
-        uint64_t flags = tc->getSyscallArg(4);
+        Addr uaddr = process->getSyscallArg(tc, 0);
+        uint64_t val = process->getSyscallArg(tc, 1);
+        uint64_t secs = process->getSyscallArg(tc, 2);
+        uint64_t usecs = process->getSyscallArg(tc, 3);
+        uint64_t flags = process->getSyscallArg(tc, 4);
 
         BaseCPU *cpu = tc->getCpuPtr();
 
@@ -872,7 +874,7 @@ class Tru64 : public OperatingSystem
     {
         using namespace std;
 
-        Addr uaddr = tc->getSyscallArg(0);
+        Addr uaddr = process->getSyscallArg(tc, 0);
 
         cout << tc->getCpuPtr()->name() << ": nxm_unblock "
              << hex << uaddr << dec << endl;
@@ -973,7 +975,7 @@ class Tru64 : public OperatingSystem
     m5_mutex_lockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                       ThreadContext *tc)
     {
-        Addr uaddr = tc->getSyscallArg(0);
+        Addr uaddr = process->getSyscallArg(tc, 0);
 
         m5_lock_mutex(uaddr, process, tc);
 
@@ -990,7 +992,7 @@ class Tru64 : public OperatingSystem
     {
         using namespace TheISA;
 
-        Addr uaddr = tc->getSyscallArg(0);
+        Addr uaddr = process->getSyscallArg(tc, 0);
         TypedBufferArg<uint64_t> lockp(uaddr);
 
         lockp.copyIn(tc->getMemPort());
@@ -1010,7 +1012,7 @@ class Tru64 : public OperatingSystem
     m5_mutex_unlockFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
     {
-        Addr uaddr = tc->getSyscallArg(0);
+        Addr uaddr = process->getSyscallArg(tc, 0);
 
         m5_unlock_mutex(uaddr, process, tc);
 
@@ -1022,7 +1024,7 @@ class Tru64 : public OperatingSystem
     m5_cond_signalFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                        ThreadContext *tc)
     {
-        Addr cond_addr = tc->getSyscallArg(0);
+        Addr cond_addr = process->getSyscallArg(tc, 0);
 
         // Wake up one process waiting on the condition variable.
         activate_waiting_context(cond_addr, process);
@@ -1035,7 +1037,7 @@ class Tru64 : public OperatingSystem
     m5_cond_broadcastFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                           ThreadContext *tc)
     {
-        Addr cond_addr = tc->getSyscallArg(0);
+        Addr cond_addr = process->getSyscallArg(tc, 0);
 
         activate_waiting_context(cond_addr, process, true);
 
@@ -1049,8 +1051,8 @@ class Tru64 : public OperatingSystem
     {
         using namespace TheISA;
 
-        Addr cond_addr = tc->getSyscallArg(0);
-        Addr lock_addr = tc->getSyscallArg(1);
+        Addr cond_addr = process->getSyscallArg(tc, 0);
+        Addr lock_addr = process->getSyscallArg(tc, 1);
         TypedBufferArg<uint64_t> condp(cond_addr);
         TypedBufferArg<uint64_t> lockp(lock_addr);
 
@@ -1082,10 +1084,10 @@ class Tru64 : public OperatingSystem
     indirectSyscallFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                         ThreadContext *tc)
     {
-        int new_callnum = tc->getSyscallArg(0);
+        int new_callnum = process->getSyscallArg(tc, 0);
 
         for (int i = 0; i < 5; ++i)
-            tc->setSyscallArg(i, tc->getSyscallArg(i+1));
+            process->setSyscallArg(tc, i, process->getSyscallArg(tc, i+1));
 
 
         SyscallDesc *new_desc = process->getDesc(new_callnum);

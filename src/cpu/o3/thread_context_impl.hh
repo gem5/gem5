@@ -482,28 +482,3 @@ O3ThreadContext<Impl>::setMiscReg(int misc_reg,
     }
 }
 
-#if !FULL_SYSTEM
-
-template <class Impl>
-TheISA::IntReg
-O3ThreadContext<Impl>::getSyscallArg(int i)
-{
-    return cpu->getSyscallArg(i, thread->threadId());
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setSyscallArg(int i, IntReg val)
-{
-    cpu->setSyscallArg(i, val, thread->threadId());
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setSyscallReturn(SyscallReturn return_value)
-{
-    cpu->setSyscallReturn(return_value, thread->threadId());
-}
-
-#endif // FULL_SYSTEM
-

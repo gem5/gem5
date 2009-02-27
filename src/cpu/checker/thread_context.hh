@@ -277,21 +277,6 @@ class CheckerThreadContext : public ThreadContext
     bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, IntReg val)
-    {
-        checkerTC->setSyscallArg(i, val);
-        actualTC->setSyscallArg(i, val);
-    }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    {
-        checkerTC->setSyscallReturn(return_value);
-        actualTC->setSyscallReturn(return_value);
-    }
-
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
 };

@@ -56,7 +56,6 @@ isa_switch_hdrs = Split('''
         regfile.hh
         remote_gdb.hh
         stacktrace.hh
-        syscallreturn.hh
         tlb.hh
         types.hh
         utility.hh

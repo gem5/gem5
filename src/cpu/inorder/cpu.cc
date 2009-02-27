@@ -1281,32 +1281,6 @@ InOrderCPU::syscall(int64_t callnum, int tid)
     nonSpecInstActive[tid] = false;
 }
 
-IntReg
-InOrderCPU::getSyscallArg(int idx, int tid)
-{
-    return readIntReg(ArgumentReg0 + idx, tid);
-}
-
-void
-InOrderCPU::setSyscallArg(int idx, IntReg val, int tid)
-{
-    setIntReg(ArgumentReg0 + idx, val, tid);
-}
-
-void
-InOrderCPU::setSyscallReturn(SyscallReturn return_value, int tid)
-{
-    if (return_value.successful()) {
-        // no error
-        setIntReg(SyscallSuccessReg, 0, tid);
-        setIntReg(ReturnValueReg, return_value.value(), tid);
-    } else {
-        // got an error, return details
-        setIntReg(SyscallSuccessReg, (IntReg) -1, tid);
-        setIntReg(ReturnValueReg, -return_value.value(), tid);
-    }
-}
-
 Fault
 InOrderCPU::read(DynInstPtr inst)
 {

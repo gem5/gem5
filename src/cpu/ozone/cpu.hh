@@ -246,22 +246,6 @@ class OzoneCPU : public BaseCPU
         bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
-        TheISA::IntReg getSyscallArg(int i)
-        {
-            assert(i < TheISA::NumArgumentRegs);
-            return thread->renameTable[TheISA::ArgumentReg[i]]->readIntResult();
-        }
-
-        // used to shift args for indirect syscall
-        void setSyscallArg(int i, TheISA::IntReg val)
-        {
-            assert(i < TheISA::NumArgumentRegs);
-            thread->renameTable[TheISA::ArgumentReg[i]]->setIntResult(i);
-        }
-
-        void setSyscallReturn(SyscallReturn return_value)
-        { cpu->setSyscallReturn(return_value, thread->threadId()); }
-
         Counter readFuncExeInst() { return thread->funcExeInst; }
 
         void setFuncExeInst(Counter new_val)
@@ -468,7 +452,6 @@ class OzoneCPU : public BaseCPU
     void processInterrupts();
 #else
     void syscall(uint64_t &callnum);
-    void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 
     ThreadContext *tcBase() { return tc; }

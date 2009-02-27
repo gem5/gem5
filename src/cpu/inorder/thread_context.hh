@@ -236,15 +236,6 @@ class InOrderThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     virtual bool misspeculating() { return false; }
 
-    /** Gets a syscall argument by index. */
-    virtual IntReg getSyscallArg(int i);
-
-    /** Sets a syscall argument. */
-    virtual void setSyscallArg(int i, IntReg val);
-
-    /** Sets the syscall return value. */
-    virtual void setSyscallReturn(SyscallReturn return_value);
-
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->readTid()); }

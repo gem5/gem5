@@ -68,7 +68,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -94,8 +94,8 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     };
 
     //First argument is the code, second is the address
-    int code = tc->getSyscallArg(0);
-    uint64_t addr = tc->getSyscallArg(1);
+    int code = process->getSyscallArg(tc, 0);
+    uint64_t addr = process->getSyscallArg(tc, 1);
     uint64_t fsBase, gsBase;
     TranslatingPort *p = tc->getMemPort();
     switch(code)

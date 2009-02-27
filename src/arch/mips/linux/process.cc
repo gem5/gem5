@@ -51,7 +51,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"m5.eecs.umich.edu");
@@ -70,13 +70,13 @@ static SyscallReturn
 sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
           fpcr.copyOut(tc->getMemPort());
@@ -97,13 +97,13 @@ static SyscallReturn
 sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "

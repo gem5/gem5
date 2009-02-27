@@ -34,7 +34,6 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/regfile.hh"
-#include "arch/syscallreturn.hh"
 #include "arch/tlb.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -367,33 +366,6 @@ class SimpleThread : public ThreadState
     { storeCondFailures = sc_failures; }
 
 #if !FULL_SYSTEM
-    TheISA::IntReg getSyscallArg(int i)
-    {
-        assert(i < TheISA::NumArgumentRegs);
-        TheISA::IntReg val = regs.readIntReg(
-                TheISA::flattenIntIndex(getTC(), TheISA::ArgumentReg[i]));
-#if THE_ISA == SPARC_ISA
-        if (bits(this->readMiscRegNoEffect(
-                        SparcISA::MISCREG_PSTATE), 3, 3)) {
-            val = bits(val, 31, 0);
-        }
-#endif
-        return val;
-    }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, TheISA::IntReg val)
-    {
-        assert(i < TheISA::NumArgumentRegs);
-        regs.setIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg[i]), val);
-    }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    {
-        TheISA::setSyscallReturn(return_value, getTC());
-    }
-
     void syscall(int64_t callnum)
     {
         process->syscall(callnum, tc);

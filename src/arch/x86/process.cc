@@ -104,6 +104,18 @@
 using namespace std;
 using namespace X86ISA;
 
+static const int ReturnValueReg = INTREG_RAX;
+static const int ArgumentReg[] = {
+    INTREG_RDI,
+    INTREG_RSI,
+    INTREG_RDX,
+    //This argument register is r10 for syscalls and rcx for C.
+    INTREG_R10W,
+    //INTREG_RCX,
+    INTREG_R8W,
+    INTREG_R9W
+};
+static const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
 
 X86LiveProcess::X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
         SyscallDesc *_syscallDescs, int _numSyscallDescs) :
@@ -573,4 +585,36 @@ void
 I386LiveProcess::argsInit(int intSize, int pageSize)
 {
     X86LiveProcess::argsInit<uint32_t>(pageSize);
+}
+
+void
+X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn return_value)
+{
+    tc->setIntReg(INTREG_RAX, return_value.value());
+}
+
+X86ISA::IntReg
+X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < NumArgumentRegs);
+    return tc->readIntReg(ArgumentReg[i]);
+}
+
+void
+X86_64LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+{
+    assert(i < NumArgumentRegs);
+    return tc->setIntReg(ArgumentReg[i], val);
+}
+
+X86ISA::IntReg
+I386LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    panic("32 bit getSyscallArg not implemented.\n");
+}
+
+void
+I386LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
+{
+    panic("32 bit setSyscallArg not implemented.\n");
 }

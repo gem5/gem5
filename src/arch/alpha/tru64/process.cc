@@ -45,7 +45,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<AlphaTru64::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<AlphaTru64::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "OSF1");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -62,34 +62,35 @@ static SyscallReturn
 getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case AlphaTru64::GSI_MAX_CPU: {
-          TypedBufferArg<uint32_t> max_cpu(tc->getSyscallArg(1));
+          TypedBufferArg<uint32_t> max_cpu(process->getSyscallArg(tc, 1));
           *max_cpu = htog((uint32_t)process->numCpus());
           max_cpu.copyOut(tc->getMemPort());
           return 1;
       }
 
       case AlphaTru64::GSI_CPUS_IN_BOX: {
-          TypedBufferArg<uint32_t> cpus_in_box(tc->getSyscallArg(1));
+          TypedBufferArg<uint32_t> cpus_in_box(process->getSyscallArg(tc, 1));
           *cpus_in_box = htog((uint32_t)process->numCpus());
           cpus_in_box.copyOut(tc->getMemPort());
           return 1;
       }
 
       case AlphaTru64::GSI_PHYSMEM: {
-          TypedBufferArg<uint64_t> physmem(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> physmem(process->getSyscallArg(tc, 1));
           *physmem = htog((uint64_t)1024 * 1024);  // physical memory in KB
           physmem.copyOut(tc->getMemPort());
           return 1;
       }
 
       case AlphaTru64::GSI_CPU_INFO: {
-          TypedBufferArg<AlphaTru64::cpu_info> infop(tc->getSyscallArg(1));
+          TypedBufferArg<AlphaTru64::cpu_info>
+              infop(process->getSyscallArg(tc, 1));
 
           infop->current_cpu = htog(0);
           infop->cpus_in_box = htog(process->numCpus());
@@ -106,14 +107,14 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       }
 
       case AlphaTru64::GSI_PROC_TYPE: {
-          TypedBufferArg<uint64_t> proc_type(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> proc_type(process->getSyscallArg(tc, 1));
           *proc_type = htog((uint64_t)11);
           proc_type.copyOut(tc->getMemPort());
           return 1;
       }
 
       case AlphaTru64::GSI_PLATFORM_NAME: {
-          BufferArg bufArg(tc->getSyscallArg(1), nbytes);
+          BufferArg bufArg(process->getSyscallArg(tc, 1), nbytes);
           strncpy((char *)bufArg.bufferPtr(),
                   "COMPAQ Professional Workstation XP1000",
                   nbytes);
@@ -122,7 +123,7 @@ getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       }
 
       case AlphaTru64::GSI_CLK_TCK: {
-          TypedBufferArg<uint64_t> clk_hz(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> clk_hz(process->getSyscallArg(tc, 1));
           *clk_hz = htog((uint64_t)1024);
           clk_hz.copyOut(tc->getMemPort());
           return 1;
@@ -141,12 +142,12 @@ static SyscallReturn
 setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
+    unsigned op = process->getSyscallArg(tc, 0);
 
     switch (op) {
       case AlphaTru64::SSI_IEEE_FP_CONTROL:
         warn("setsysinfo: ignoring ieee_set_fp_control() arg 0x%x\n",
-             tc->getSyscallArg(1));
+             process->getSyscallArg(tc, 1));
         break;
 
       default:
@@ -164,17 +165,17 @@ tableFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     using namespace std;
 
-    int id = tc->getSyscallArg(0);      // table ID
-    int index = tc->getSyscallArg(1);   // index into table
+    int id = process->getSyscallArg(tc, 0);      // table ID
+    int index = process->getSyscallArg(tc, 1);   // index into table
     // arg 2 is buffer pointer; type depends on table ID
-    int nel = tc->getSyscallArg(3);     // number of elements
-    int lel = tc->getSyscallArg(4);     // expected element size
+    int nel = process->getSyscallArg(tc, 3);     // number of elements
+    int lel = process->getSyscallArg(tc, 4);     // expected element size
 
     switch (id) {
       case AlphaTru64::TBL_SYSINFO: {
           if (index != 0 || nel != 1 || lel != sizeof(Tru64::tbl_sysinfo))
               return -EINVAL;
-          TypedBufferArg<Tru64::tbl_sysinfo> elp(tc->getSyscallArg(2));
+          TypedBufferArg<Tru64::tbl_sysinfo> elp(process->getSyscallArg(tc, 2));
 
           const int clk_hz = one_million;
           elp->si_user = htog(curTick / (Clock::Frequency / clk_hz));

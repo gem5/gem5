@@ -42,6 +42,8 @@
 using namespace AlphaISA;
 using namespace std;
 
+static const int SyscallSuccessReg = 19;
+
 AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams *params,
                                    ObjectFile *objFile)
     : LiveProcess(params, objFile)
@@ -156,12 +158,10 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
                 (uint8_t*)&(auxv[x].a_val), intSize);
     }
 
-    assert(NumArgumentRegs >= 2);
-
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
-    tc->setIntReg(ArgumentReg[0], argc);
-    tc->setIntReg(ArgumentReg[1], argv_array_base);
+    setSyscallArg(tc, 0, argc);
+    setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
@@ -195,3 +195,35 @@ AlphaLiveProcess::startup()
     tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
 }
 
+AlphaISA::IntReg
+AlphaLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < 6);
+    return tc->readIntReg(FirstArgumentReg + i);
+}
+
+void
+AlphaLiveProcess::setSyscallArg(ThreadContext *tc,
+        int i, AlphaISA::IntReg val)
+{
+    assert(i < 6);
+    tc->setIntReg(FirstArgumentReg + i, val);
+}
+
+void
+AlphaLiveProcess::setSyscallReturn(ThreadContext *tc,
+        SyscallReturn return_value)
+{
+    // check for error condition.  Alpha syscall convention is to
+    // indicate success/failure in reg a3 (r19) and put the
+    // return value itself in the standard return value reg (v0).
+    if (return_value.successful()) {
+        // no error
+        tc->setIntReg(SyscallSuccessReg, 0);
+        tc->setIntReg(ReturnValueReg, return_value.value());
+    } else {
+        // got an error, return details
+        tc->setIntReg(SyscallSuccessReg, (IntReg)-1);
+        tc->setIntReg(ReturnValueReg, -return_value.value());
+    }
+}

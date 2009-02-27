@@ -648,26 +648,6 @@ OzoneCPU<Impl>::syscall(uint64_t &callnum)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 }
-
-template <class Impl>
-void
-OzoneCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
-{
-    // check for error condition.  Alpha syscall convention is to
-    // indicate success/failure in reg a3 (r19) and put the
-    // return value itself in the standard return value reg (v0).
-    if (return_value.successful()) {
-        // no error
-        thread.renameTable[SyscallSuccessReg]->setIntResult(0);
-        thread.renameTable[ReturnValueReg]->setIntResult(
-            return_value.value());
-    } else {
-        // got an error, return details
-        thread.renameTable[SyscallSuccessReg]->setIntResult((IntReg) -1);
-        thread.renameTable[ReturnValueReg]->setIntResult(
-            -return_value.value());
-    }
-}
 #else
 template <class Impl>
 Fault

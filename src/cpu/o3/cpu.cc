@@ -420,34 +420,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
     lockFlag = false;
 }
 
-#if !FULL_SYSTEM
-
-template <class Impl>
-TheISA::IntReg
-FullO3CPU<Impl>::getSyscallArg(int i, int tid)
-{
-    assert(i < TheISA::NumArgumentRegs);
-    TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
-            TheISA::ArgumentReg[i]);
-    TheISA::IntReg val = this->readArchIntReg(idx, tid);
-#if THE_ISA == SPARC_ISA
-    if (bits(this->readMiscRegNoEffect(SparcISA::MISCREG_PSTATE, tid), 3, 3))
-        val = bits(val, 31, 0);
-#endif
-    return val;
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setSyscallArg(int i, TheISA::IntReg val, int tid)
-{
-    assert(i < TheISA::NumArgumentRegs);
-    TheISA::IntReg idx = TheISA::flattenIntIndex(this->tcBase(tid),
-            TheISA::ArgumentReg[i]);
-    this->setArchIntReg(idx, val, tid);
-}
-#endif
-
 template <class Impl>
 FullO3CPU<Impl>::~FullO3CPU()
 {
@@ -998,13 +970,6 @@ FullO3CPU<Impl>::syscall(int64_t callnum, int tid)
     // Decrease funcExeInst by one as the normal commit will handle
     // incrementing it.
     --(this->thread[tid]->funcExeInst);
-}
-
-template <class Impl>
-void
-FullO3CPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
-{
-    TheISA::setSyscallReturn(return_value, this->tcBase(tid));
 }
 
 #endif

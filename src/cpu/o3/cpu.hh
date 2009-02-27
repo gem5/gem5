@@ -193,13 +193,6 @@ class FullO3CPU : public BaseO3CPU
             activateThreadEvent[tid].squash();
     }
 
-#if !FULL_SYSTEM
-    TheISA::IntReg getSyscallArg(int i, int tid);
-
-    /** Used to shift args for indirect syscall. */
-    void setSyscallArg(int i, TheISA::IntReg val, int tid);
-#endif
-
     /** The tick event used for scheduling CPU ticks. */
     ActivateThreadEvent activateThreadEvent[Impl::MaxThreads];
 
@@ -354,10 +347,6 @@ class FullO3CPU : public BaseO3CPU
      * @todo: Determine if this needs to be virtual.
      */
     void syscall(int64_t callnum, int tid);
-
-    /** Sets the return value of a syscall. */
-    void setSyscallReturn(SyscallReturn return_value, int tid);
-
 #endif
 
     /** Starts draining the CPU's pipeline of all instructions in

@@ -46,6 +46,9 @@
 using namespace std;
 using namespace SparcISA;
 
+static const int FirstArgumentReg = 8;
+static const int ReturnValueReg = 8;
+
 
 SparcLiveProcess::SparcLiveProcess(LiveProcessParams * params,
         ObjectFile *objFile, Addr _StackBias)
@@ -508,4 +511,64 @@ void Sparc64LiveProcess::flushWindows(ThreadContext *tc)
     tc->setIntReg(NumIntArchRegs + 3, Cansave);
     tc->setIntReg(NumIntArchRegs + 4, Canrestore);
     tc->setMiscReg(MISCREG_CWP, origCWP);
+}
+
+IntReg
+Sparc32LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < 6);
+    return bits(tc->readIntReg(FirstArgumentReg + i), 31, 0);
+}
+
+void
+Sparc32LiveProcess::setSyscallArg(ThreadContext *tc, int i, IntReg val)
+{
+    assert(i < 6);
+    tc->setIntReg(FirstArgumentReg + i, bits(val, 31, 0));
+}
+
+IntReg
+Sparc64LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < 6);
+    return tc->readIntReg(FirstArgumentReg + i);
+}
+
+void
+Sparc64LiveProcess::setSyscallArg(ThreadContext *tc, int i, IntReg val)
+{
+    assert(i < 6);
+    tc->setIntReg(FirstArgumentReg + i, val);
+}
+
+void
+SparcLiveProcess::setSyscallReturn(ThreadContext *tc,
+        SyscallReturn return_value)
+{
+    // check for error condition.  SPARC syscall convention is to
+    // indicate success/failure in reg the carry bit of the ccr
+    // and put the return value itself in the standard return value reg ().
+    if (return_value.successful()) {
+        // no error, clear XCC.C
+        tc->setIntReg(NumIntArchRegs + 2,
+                tc->readIntReg(NumIntArchRegs + 2) & 0xEE);
+        //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) & 0xEE);
+        IntReg val = return_value.value();
+        if (bits(tc->readMiscRegNoEffect(
+                        SparcISA::MISCREG_PSTATE), 3, 3)) {
+            val = bits(val, 31, 0);
+        }
+        tc->setIntReg(ReturnValueReg, val);
+    } else {
+        // got an error, set XCC.C
+        tc->setIntReg(NumIntArchRegs + 2,
+                tc->readIntReg(NumIntArchRegs + 2) | 0x11);
+        //tc->setMiscRegNoEffect(MISCREG_CCR, tc->readMiscRegNoEffect(MISCREG_CCR) | 0x11);
+        IntReg val = -return_value.value();
+        if (bits(tc->readMiscRegNoEffect(
+                        SparcISA::MISCREG_PSTATE), 3, 3)) {
+            val = bits(val, 31, 0);
+        }
+        tc->setIntReg(ReturnValueReg, val);
+    }
 }

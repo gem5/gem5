@@ -42,6 +42,11 @@ class AlphaLiveProcess : public LiveProcess
     void startup();
 
     void argsInit(int intSize, int pageSize);
+
+  public:
+    AlphaISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, AlphaISA::IntReg val);
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
 #endif // __ARCH_ALPHA_PROCESS_HH__

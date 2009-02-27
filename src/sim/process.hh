@@ -44,9 +44,11 @@
 #include <string>
 #include <vector>
 
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
+#include "sim/syscallreturn.hh"
 
 class GDBListener;
 class PageTable;
@@ -321,6 +323,11 @@ class LiveProcess : public Process
     std::string getcwd() const { return cwd; }
 
     virtual void syscall(int64_t callnum, ThreadContext *tc);
+    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int i) = 0;
+    virtual void setSyscallArg(ThreadContext *tc,
+            int i, TheISA::IntReg val) = 0;
+    virtual void setSyscallReturn(ThreadContext *tc,
+            SyscallReturn return_value) = 0;
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
 

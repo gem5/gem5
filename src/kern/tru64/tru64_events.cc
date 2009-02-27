@@ -51,7 +51,7 @@ BadAddrEvent::process(ThreadContext *tc)
     // annotation for vmunix::badaddr in:
     // simos/simulation/apps/tcl/osf/tlaser.tcl
 
-    uint64_t a0 = tc->readIntReg(ArgumentReg[0]);
+    uint64_t a0 = tc->readIntReg(16);
 
     AddrRangeList resp;
     bool snoop;

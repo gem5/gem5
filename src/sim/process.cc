@@ -616,12 +616,10 @@ LiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
-    assert(NumArgumentRegs >= 2);
-
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
-    tc->setIntReg(ArgumentReg[0], argc);
-    tc->setIntReg(ArgumentReg[1], argv_array_base);
+    setSyscallArg(tc, 0, argc);
+    setSyscallArg(tc, 1, argv_array_base);
     tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();

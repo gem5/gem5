@@ -81,6 +81,8 @@ namespace X86ISA
 
       public:
         SyscallDesc* getDesc(int callnum);
+
+        void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
     };
 
     class X86_64LiveProcess : public X86LiveProcess
@@ -92,6 +94,9 @@ namespace X86ISA
       public:
         void argsInit(int intSize, int pageSize);
         void startup();
+
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 
     class I386LiveProcess : public X86LiveProcess
@@ -103,6 +108,9 @@ namespace X86ISA
       public:
         void argsInit(int intSize, int pageSize);
         void startup();
+
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 }
 

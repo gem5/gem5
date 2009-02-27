@@ -60,7 +60,6 @@
 
 #include "sim/process.hh"
 #include "arch/x86/linux/linux.hh"
-#include "arch/x86/syscallreturn.hh"
 #include "arch/x86/process.hh"
 
 namespace X86ISA {

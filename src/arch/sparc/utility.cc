@@ -46,8 +46,9 @@ namespace SparcISA {
 //first 6 arguments which the caller may use but doesn't have to.
 uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
 #if FULL_SYSTEM
+    const int NumArgumentRegs = 6;
     if (number < NumArgumentRegs) {
-        return tc->readIntReg(ArgumentReg[number]);
+        return tc->readIntReg(8 + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
         VirtualPort *vp = tc->getVirtPort();

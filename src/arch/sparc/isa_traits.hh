@@ -68,16 +68,12 @@ namespace SparcISA
     // semantically meaningful register indices
     const int ZeroReg = 0;      // architecturally meaningful
     // the rest of these depend on the ABI
-    const int StackPointerReg = 14;
     const int ReturnAddressReg = 31; // post call, precall is 15
-    const int ReturnValueReg = 8; // Post return, 24 is pre-return.
+    const int StackPointerReg = 14;
     const int FramePointerReg = 30;
 
-    const int ArgumentReg[] = {8, 9, 10, 11, 12, 13};
-    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
-
     // Some OS syscall use a second register (o1) to return a second value
-    const int SyscallPseudoReturnReg = ArgumentReg[1];
+    const int SyscallPseudoReturnReg = 9;
 
     //8K. This value is implmentation specific; and should probably
     //be somewhere else.

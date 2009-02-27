@@ -40,6 +40,10 @@
 using namespace std;
 using namespace MipsISA;
 
+static const int SyscallSuccessReg = 7;
+static const int FirstArgumentReg = 4;
+static const int ReturnValueReg = 2;
+
 MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
         ObjectFile *objFile)
     : LiveProcess(params, objFile)
@@ -63,4 +67,34 @@ void
 MipsLiveProcess::startup()
 {
     argsInit(MachineBytes, VMPageSize);
+}
+
+MipsISA::IntReg
+MipsLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < 6);
+    return tc->readIntReg(FirstArgumentReg + i);
+}
+
+void
+MipsLiveProcess::setSyscallArg(ThreadContext *tc,
+        int i, MipsISA::IntReg val)
+{
+    assert(i < 6);
+    tc->setIntReg(FirstArgumentReg + i, val);
+}
+
+void
+MipsLiveProcess::setSyscallReturn(ThreadContext *tc,
+        SyscallReturn return_value)
+{
+    if (return_value.successful()) {
+        // no error
+        tc->setIntReg(SyscallSuccessReg, 0);
+        tc->setIntReg(ReturnValueReg, return_value.value());
+    } else {
+        // got an error, return details
+        tc->setIntReg(SyscallSuccessReg, (IntReg) -1);
+        tc->setIntReg(ReturnValueReg, -return_value.value());
+    }
 }

@@ -69,6 +69,7 @@ class SparcLiveProcess : public LiveProcess
     { return spillStart; }
 
     virtual void flushWindows(ThreadContext *tc) = 0;
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
 class Sparc32LiveProcess : public SparcLiveProcess
@@ -93,6 +94,9 @@ class Sparc32LiveProcess : public SparcLiveProcess
     void argsInit(int intSize, int pageSize);
 
     void flushWindows(ThreadContext *tc);
+
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
 class Sparc64LiveProcess : public SparcLiveProcess
@@ -118,6 +122,9 @@ class Sparc64LiveProcess : public SparcLiveProcess
     void argsInit(int intSize, int pageSize);
 
     void flushWindows(ThreadContext *tc);
+
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
 #endif // __SPARC_PROCESS_HH__
