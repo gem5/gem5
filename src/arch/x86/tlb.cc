@@ -590,8 +590,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             // address size is 64 bits, overridable to 32.
             int size = 32;
             bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
-            if (csAttr.defaultSize && sizeOverride ||
-                    !csAttr.defaultSize && !sizeOverride)
+            if ((csAttr.defaultSize && sizeOverride) ||
+                    (!csAttr.defaultSize && !sizeOverride))
                 size = 16;
             Addr offset = bits(vaddr - base, size-1, 0);
             Addr endOffset = offset + req->getSize() - 1;
@@ -647,8 +647,8 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             // Do paging protection checks.
             bool inUser = (csAttr.dpl == 3 &&
                     !(flags & (CPL0FlagBit << FlagShift)));
-            if (inUser && !entry->user ||
-                    write && !entry->writable) {
+            if ((inUser && !entry->user) ||
+                    (write && !entry->writable)) {
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
