@@ -425,7 +425,7 @@ MipsLinuxProcess::getDesc(int callnum)
     //MIPS32 syscalls are in the range of 4000 - 4999
     int m5_sys_idx = callnum - 4000;
 
-    if (m5_sys_idx < 0 || m5_sys_idx > Num_Syscall_Descs)
+    if (m5_sys_idx < 0 || m5_sys_idx >= Num_Syscall_Descs)
         return NULL;
 
     return &syscallDescs[m5_sys_idx];

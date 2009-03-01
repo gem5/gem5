@@ -579,7 +579,7 @@ AlphaLinuxProcess::AlphaLinuxProcess(LiveProcessParams * params,
 SyscallDesc*
 AlphaLinuxProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
 }
