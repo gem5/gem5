@@ -230,11 +230,9 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     // Initialize TimeBuffer Stage Queues
-    // For now just have these time buffers be pretty big.
-    // @note: This could be statically allocated but changes
-    // would have to be made to the standard time buffer class.
     for (int stNum=0; stNum < NumStages - 1; stNum++) {
         stageQueue[stNum] = new StageQueue(NumStages, NumStages);
+        stageQueue[stNum]->id(stNum);
     }
 
 

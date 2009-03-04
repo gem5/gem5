@@ -556,8 +556,8 @@ PipelineStage::sortInsts()
     if (prevStageValid) {
         int insts_from_prev_stage = prevStage->size;
 
-        DPRINTF(InOrderStage, "%i insts available from previous stage.\n",
-                insts_from_prev_stage);
+        DPRINTF(InOrderStage, "%i insts available from stage buffer %i.\n",
+                insts_from_prev_stage, prevStageQueue->id());
 
         for (int i = 0; i < insts_from_prev_stage; ++i) {
 
@@ -985,8 +985,9 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
                     tid, cpu->pipelineStage[next_stage]->stageBufferAvail());
 
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: being placed into  "
-                    "index %i stage %i queue.\n",
-                    tid, inst->seqNum, toNextStageIndex, inst->nextStage);
+                    "index %i of stage buffer %i queue.\n",
+                    tid, inst->seqNum, toNextStageIndex,
+                    cpu->pipelineStage[prev_stage]->nextStageQueue->id());
 
             int next_stage_idx = cpu->pipelineStage[prev_stage]->nextStage->size;
 
