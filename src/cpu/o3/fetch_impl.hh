@@ -132,7 +132,9 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
       switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
-        fatal("numThreads is not a valid value\n");
+        fatal("numThreads (%d) is larger than compiled limit (%d),\n"
+              "\tincrease MaxThreads in src/cpu/o3/impl.hh\n",
+              numThreads, static_cast<int>(Impl::MaxThreads));
 
     // Set fetch stage's status to inactive.
     _status = Inactive;
