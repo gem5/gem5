@@ -34,9 +34,8 @@ from BaseCPU import BaseCPU
 class InOrderCPU(BaseCPU):
     type = 'InOrderCPU'
     activity = Param.Unsigned(0, "Initial count")
-    numThreads = Param.Unsigned(1, "number of HW thread contexts")
 
-    cachePorts = Param.Unsigned("Cache Ports")
+    cachePorts = Param.Unsigned(2, "Cache Ports")
     stageWidth = Param.Unsigned(1, "Stage width")
 
     fetchMemPort = Param.String("icache_port" , "Name of Memory Port to get instructions from")
@@ -66,7 +65,7 @@ class InOrderCPU(BaseCPU):
     functionTraceStart = Param.Tick(0, "Cycle to start function trace")
     stageTracing = Param.Bool(False, "Enable tracing of each stage in CPU")
 
-    memBlockSize = Param.Unsigned("Memory Block Size")
+    memBlockSize = Param.Unsigned(64, "Memory Block Size")
 
     multLatency = Param.Unsigned(1, "Latency for Multiply Operations")
     multRepeatRate = Param.Unsigned(1, "Repeat Rate for Multiply Operations")

@@ -57,6 +57,8 @@ MultDivUnit::MultDivUnit(string res_name, int res_id, int res_width,
 
     div32RepeatRate = params->div32RepeatRate;
     div32Latency = params->div32Latency;    
+
+    lastMDUCycle = 0;
 }
 
 void
@@ -150,6 +152,9 @@ MultDivUnit::getSlot(DynInstPtr inst)
                 rval);
 
         if (rval != -1) {            
+            lastMDUCycle = curTick;
+            lastOpType = inst->opClass();
+            lastInstName = inst->staticInst->getName();
         }
       
         return rval;

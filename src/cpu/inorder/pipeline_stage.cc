@@ -38,34 +38,9 @@ using namespace std;
 using namespace ThePipeline;
 
 PipelineStage::PipelineStage(Params *params, unsigned stage_num)
-    : numThreads(ThePipeline::MaxThreads)
 {
-    stageNum = stage_num;
-    stageWidth = ThePipeline::StageWidth;
-
-    _status = Inactive;
-
-    prevStageValid = false;
-    nextStageValid = false;
-
-    // Init. structures
-    for(int tid=0; tid < numThreads; tid++) {
-        stageStatus[tid] = Idle;
-
-        for (int stNum = 0; stNum < NumStages; stNum++) {
-            stalls[tid].stage[stNum] = false;
-        }
-        stalls[tid].resources.clear();
-
-        if (stageNum < BackEndStartStage)
-            lastStallingStage[tid] = BackEndStartStage - 1;
-        else
-            lastStallingStage[tid] = NumStages - 1;
-    }
-
-    stageBufferMax = ThePipeline::interStageBuffSize[stage_num];
+    init(params, stage_num);
 }
-
 
 void
 PipelineStage::init(Params *params, unsigned stage_num)
@@ -189,7 +164,7 @@ PipelineStage::setNextStageQueue(TimeBuffer<InterStageStruct> *next_stage_ptr)
 
     // Setup wire to write information to proper place in stage queue.
     nextStage = nextStageQueue->getWire(0);
-
+    nextStage->size = 0;
     nextStageValid = true;
 }
 
@@ -681,6 +656,9 @@ PipelineStage::tick()
     wroteToTimeBuffer = false;
 
     bool status_change = false;
+
+    if (nextStageValid)
+        nextStage->size = 0;
 
     toNextStageIndex = 0;
 

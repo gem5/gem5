@@ -53,6 +53,14 @@ struct InterStageStruct {
     uint64_t nextPC;
     InstSeqNum squashedSeqNum;
     bool includeSquashInst;
+
+    InterStageStruct()
+        :size(0),  squash(false),
+         branchMispredict(false), branchTaken(false),
+         mispredPC(0), nextPC(0),
+         squashedSeqNum(0), includeSquashInst(false)
+    { }
+
 };
 
 /** Turn This into a Class */

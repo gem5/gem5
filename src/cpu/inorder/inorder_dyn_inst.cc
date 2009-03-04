@@ -84,7 +84,10 @@ InOrderDynInst::InOrderDynInst(StaticInstPtr &_staticInst)
 
 InOrderDynInst::InOrderDynInst()
     : traceData(NULL), cpu(cpu)
-{     initVars(); }
+{
+    seqNum = 0;
+    initVars();
+}
 
 int InOrderDynInst::instcount = 0;
 
