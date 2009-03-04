@@ -127,7 +127,7 @@ FirstStage::processInsts(unsigned tid)
 {
     bool all_reqs_completed = true;
 
-    for (int insts_fetched = 0; insts_fetched < stageWidth && canSendInstToNextStage(); insts_fetched++) {
+    for (int insts_fetched = 0; insts_fetched < stageWidth && canSendInstToStage(1); insts_fetched++) {
         DynInstPtr inst;
         bool new_inst = false;
 

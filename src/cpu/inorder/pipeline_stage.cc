@@ -229,7 +229,7 @@ PipelineStage::checkStall(unsigned tid) const
     bool ret_val = false;
 
     // Only check pipeline stall from stage directly following this stage
-    if (stalls[tid].stage[stageNum + 1]) {
+    if (nextStageValid && stalls[tid].stage[stageNum + 1]) {
         DPRINTF(InOrderStage,"[tid:%i]: Stall fom Stage %i detected.\n",
                 tid, stageNum + 1);
         ret_val = true;
@@ -422,26 +422,28 @@ PipelineStage::stageBufferAvail()
     }
 
     int incoming_insts = (prevStageValid) ?
-        cpu->pipelineStage[stageNum-1]->nextStage->size :
+        cpu->pipelineStage[stageNum]->prevStage->size :
         0;
 
-    int avail = stageBufferMax - total - incoming_insts;
+    int avail = stageBufferMax - total -0;// incoming_insts;
 
-    assert(avail >= 0);
+    if (avail < 0)
+        fatal("stageNum %i:stageBufferAvail() < 0...stBMax=%i,total=%i,incoming=%i=>%i",
+              stageNum, stageBufferMax, total, incoming_insts, avail);
 
     return avail;
 }
 
 bool
-PipelineStage::canSendInstToNextStage()
+PipelineStage::canSendInstToStage(unsigned stage_num)
 {
     bool buffer_avail = false;
 
-    if (nextStageValid) {
-        buffer_avail = (cpu->pipelineStage[stageNum+1]->stageBufferAvail() >= 1);
+    if (cpu->pipelineStage[stage_num]->prevStageValid) {
+        buffer_avail = cpu->pipelineStage[stage_num]->stageBufferAvail() >= 1;
     }
 
-    if (!buffer_avail && nextStageValid) {
+    if (!buffer_avail && nextStageQueueValid(stage_num)) {
         DPRINTF(InOrderStall, "STALL: No room in stage %i buffer.\n", stageNum + 1);
     }
 
@@ -468,6 +470,17 @@ PipelineStage::skidInsert(unsigned tid)
 }
 
 
+int
+PipelineStage::skidSize()
+{
+    int total = 0;
+
+    for (int i=0; i < ThePipeline::MaxThreads; i++) {
+        total += skidBuffer[i].size();
+    }
+
+    return total;
+}
 
 bool
 PipelineStage::skidsEmpty()
@@ -743,8 +756,11 @@ PipelineStage::processStage(bool &status_change)
                 nextStage->size, stageNum + 1);
     }
 
-    DPRINTF(InOrderStage, "%i insts left in stage buffer.\n", stageBufferMax - stageBufferAvail());
+    DPRINTF(InOrderStage, "%i left in stage %i incoming buffer.\n", skidSize(),
+            stageNum);
 
+    DPRINTF(InOrderStage, "%i available in stage %i incoming buffer.\n", stageBufferAvail(),
+            stageNum);
 }
 
 void
@@ -814,14 +830,10 @@ PipelineStage::processInsts(unsigned tid)
 
     int insts_processed = 0;
 
-    DPRINTF(InOrderStage, "[tid:%u]: Sending instructions to stage %u.\n", tid,
-            stageNum+1);
-
-    //Keep processing instructions while ... these ?s are true:
-    while (insts_available > 0 &&                            //1. are there instructions to process
-           insts_processed < stageWidth &&                   //2. can the stage still process this
-           (canSendInstToNextStage() || !nextStageValid) &&  //3. is there room in next stage
-           last_req_completed) {                             //4. was the last instruction completed
+    while (insts_available > 0 &&
+           insts_processed < stageWidth &&
+           (!nextStageValid || canSendInstToStage(stageNum+1)) &&
+           last_req_completed) {
         assert(!insts_to_stage.empty());
 
         inst = insts_to_stage.front();
@@ -847,23 +859,21 @@ PipelineStage::processInsts(unsigned tid)
 
         last_req_completed = processInstSchedule(inst);
 
-
-        insts_processed++;
-
         // Don't let instruction pass to next stage if it hasnt completed
         // all of it's requests for this stage.
         if (!last_req_completed && !outOfOrderValid())
             continue;
 
-        insts_to_stage.pop();
-
-        DPRINTF(InOrderStage, "Marking [tid:%i] [sn:%i] for insertion into next stage buffer.\n",
-                tid, inst->seqNum);
-
         // Send to Next Stage or Break Loop
-        if (!sendInstToNextStage(inst))
-            break;;
+        if (nextStageValid && !sendInstToNextStage(inst)) {
+            DPRINTF(InOrderStage, "[tid:%i] [sn:%i] unable to proceed to stage %i.\n",
+                    tid, inst->seqNum,inst->nextStage);
+            break;
+        }
 
+        insts_processed++;
+
+        insts_to_stage.pop();
 
         //++stageProcessedInsts;
         --insts_available;
@@ -871,8 +881,6 @@ PipelineStage::processInsts(unsigned tid)
 
     // If we didn't process all instructions, then we will need to block
     // and put all those instructions into the skid buffer.
-    // @TODO:-IN-PROGRESS-:Evaluating when stages should block/unblock
-    // for stage stalls...
     if (!insts_to_stage.empty()) {
         blockDueToBuffer(tid);
     }
@@ -945,6 +953,8 @@ bool
 PipelineStage::sendInstToNextStage(DynInstPtr inst)
 {
     // Update Next Stage Variable in Instruction
+    // NOTE: Some Resources will update this nextStage var. to
+    // for bypassing, so can't always assume nextStage=stageNum+1
     if (inst->nextStage == stageNum)
         inst->nextStage++;
 
@@ -953,14 +963,29 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
     int next_stage = inst->nextStage;
     int prev_stage = next_stage - 1;
 
+    assert(next_stage >= 1);
+    assert(prev_stage >= 0);
+
+    DPRINTF(InOrderStage, "[tid:%u]: Attempting to send instructions to stage %u.\n", tid,
+            stageNum+1);
+
+    if (!canSendInstToStage(inst->nextStage)) {
+        DPRINTF(InOrderStage, "[tid:%u]: Could not send instruction to stage %u.\n", tid,
+            stageNum+1);
+        return false;
+    }
+
+
     if (nextStageQueueValid(inst->nextStage - 1)) {
         if (inst->seqNum > cpu->squashSeqNum[tid] &&
             curTick == cpu->lastSquashCycle[tid]) {
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping insertion "
                     "into stage %i queue.\n", tid, inst->seqNum, inst->nextStage);
         } else {
-            DPRINTF(InOrderStage, "[tid:%u] %i slots available in next stage buffer.\n",
+            if (nextStageValid) {
+                DPRINTF(InOrderStage, "[tid:%u] %i slots available in next stage buffer.\n",
                     tid, cpu->pipelineStage[next_stage]->stageBufferAvail());
+            }
 
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: being placed into  "
                     "index %i of stage buffer %i queue.\n",

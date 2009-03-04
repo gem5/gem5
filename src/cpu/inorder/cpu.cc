@@ -250,8 +250,8 @@ InOrderCPU::InOrderCPU(Params *params)
         // Take Care of 1st/Nth stages
         if (stNum > 0)
             pipelineStage[stNum]->setPrevStageQueue(stageQueue[stNum - 1]);
-        if (stNum < NumStages - 2)
-            pipelineStage[stNum]->setNextStageQueue(stageQueue[stNum + 1]);
+        if (stNum < NumStages - 1)
+            pipelineStage[stNum]->setNextStageQueue(stageQueue[stNum]);
     }
 
     // Initialize thread specific variables

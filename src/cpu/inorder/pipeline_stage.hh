@@ -184,7 +184,7 @@ class PipelineStage
     virtual bool processInstSchedule(DynInstPtr inst);
 
     /** Is there room in the next stage buffer for this instruction? */
-    virtual bool canSendInstToNextStage();
+    virtual bool canSendInstToStage(unsigned stage_num);
 
     /** Send an instruction to the next stage buffer */
     virtual bool sendInstToNextStage(DynInstPtr inst);
@@ -193,6 +193,9 @@ class PipelineStage
      * once stage unblocks.
      */
     virtual void skidInsert(unsigned tid);
+
+    /** Total size of all skid buffers */
+    int skidSize();
 
     /** Returns if all of the skid buffers are empty. */
     bool skidsEmpty();
