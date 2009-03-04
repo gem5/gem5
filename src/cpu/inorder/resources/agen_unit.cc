@@ -54,7 +54,7 @@ AGENUnit::execute(int slot_num)
         {
             // Load/Store Instruction
             if (inst->isMemRef()) {
-                DPRINTF(Resource, "[tid:%i] Generating Address for [sn:%i] (%s).\n",
+                DPRINTF(InOrderAGEN, "[tid:%i] Generating Address for [sn:%i] (%s).\n",
                     tid, inst->seqNum, inst->staticInst->getName());
 
 
@@ -67,13 +67,13 @@ AGENUnit::execute(int slot_num)
                         inst->setMemAddr(inst->getEA());
                         //inst->setExecuted();
 
-                        DPRINTF(Resource, "[tid:%i] [sn:%i] Effective address calculated to be: "
+                        DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
                                 "%#x.\n", tid, inst->seqNum, inst->getEA());
                     } else if (inst->isStore()) {
                         fault = inst->calcEA();
                         inst->setMemAddr(inst->getEA());
 
-                        DPRINTF(Resource, "[tid:%i] [sn:%i] Effective address calculated to be: "
+                        DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
                                 "%#x.\n", tid, inst->seqNum, inst->getEA());
                     } else {
                         panic("Unexpected memory type!\n");
@@ -86,7 +86,7 @@ AGENUnit::execute(int slot_num)
                     }
                 }
             } else {
-                DPRINTF(Resource, "[tid:] Ignoring non-memory instruction [sn:%i].\n", tid, seq_num);
+                DPRINTF(InOrderAGEN, "[tid:] Ignoring non-memory instruction [sn:%i].\n", tid, seq_num);
                 agen_req->done();
             }
         }

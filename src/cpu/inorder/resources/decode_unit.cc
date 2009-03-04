@@ -63,7 +63,7 @@ DecodeUnit::execute(int slot_num)
             bool done_sked = ThePipeline::createBackEndSchedule(inst);
 
             if (done_sked) {
-                DPRINTF(Resource, "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
+                DPRINTF(InOrderDecode, "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
                     tid, seq_num);
                 regDepMap[tid]->insert(inst);
                 decode_req->done();
@@ -85,7 +85,7 @@ DecodeUnit::execute(int slot_num)
 void
 DecodeUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid)
 {
-    DPRINTF(Resource, "[tid:%i]: Updating due to squash from stage %i after [sn:%i].\n",
+    DPRINTF(InOrderDecode, "[tid:%i]: Updating due to squash from stage %i after [sn:%i].\n",
             tid, stage_num, squash_seq_num);
 
     //cpu->removeInstsUntil(squash_seq_num, tid);

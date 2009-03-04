@@ -90,7 +90,7 @@ FetchSeqUnit::execute(int slot_num)
 
                     delaySlotInfo[tid].targetReady = false;
 
-                    DPRINTF(Resource, "[tid:%i]: Setting PC to delay slot target\n",tid);
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to delay slot target\n",tid);
                 }
 
                 inst->setPC(PC[tid]);
@@ -102,7 +102,7 @@ FetchSeqUnit::execute(int slot_num)
                 inst->setMemAddr(PC[tid]);
                 inst->setSeqNum(cpu->getAndIncrementInstSeq(tid));
 
-                DPRINTF(Resource, "[tid:%i]: Assigning [sn:%i] to PC %08p\n", tid,
+                DPRINTF(InOrderFetchSeq, "[tid:%i]: Assigning [sn:%i] to PC %08p\n", tid,
                         inst->seqNum, inst->readPC());
 
                 if (delaySlotInfo[tid].numInsts > 0) {
@@ -113,7 +113,7 @@ FetchSeqUnit::execute(int slot_num)
                         delaySlotInfo[tid].targetReady = true;
                     }
 
-                    DPRINTF(Resource, "[tid:%i]: %i delay slot inst(s) left to"
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: %i delay slot inst(s) left to"
                             " process.\n", tid, delaySlotInfo[tid].numInsts);
                 }
 
@@ -139,11 +139,11 @@ FetchSeqUnit::execute(int slot_num)
                     pcBlockStage[tid] = stage_num;
                 } else if (inst->isCondDelaySlot() && !inst->predTaken()) {
                 // Not-Taken AND Conditional Control
-                    DPRINTF(Resource, "[tid:%i]: [sn:%i]: [PC:%08p] Predicted Not-Taken Cond. "
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: [PC:%08p] Predicted Not-Taken Cond. "
                             "Delay inst. Skipping delay slot and  Updating PC to %08p\n",
                             tid, inst->seqNum, inst->readPC(), inst->readPredTarg());
 
-                    DPRINTF(Resource, "[tid:%i] Setting up squash to start from stage %i, after [sn:%i].\n",
+                    DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to start from stage %i, after [sn:%i].\n",
                             tid, stage_num, seq_num);
 
                     inst->bdelaySeqNum = seq_num;
@@ -152,7 +152,7 @@ FetchSeqUnit::execute(int slot_num)
                     squashAfterInst(inst, stage_num, tid);
                 } else if (!inst->isCondDelaySlot() && !inst->predTaken()) {
                 // Not-Taken Control
-                    DPRINTF(Resource, "[tid:%i]: [sn:%i]: Predicted Not-Taken Control "
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Predicted Not-Taken Control "
                             "inst. updating PC to %08p\n", tid, inst->seqNum,
                             inst->readNextPC());
 
@@ -166,11 +166,11 @@ FetchSeqUnit::execute(int slot_num)
                     delaySlotInfo[tid].targetReady = false;
                     delaySlotInfo[tid].targetAddr = inst->readPredTarg();
 
-                    DPRINTF(Resource, "[tid:%i]: [sn:%i] Updating delay slot target "
+                    DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i] Updating delay slot target "
                             "to PC %08p\n", tid, inst->seqNum, inst->readPredTarg());
 
                     // Set-Up Squash Through-Out Pipeline
-                    DPRINTF(Resource, "[tid:%i] Setting up squash to start from stage %i, after [sn:%i].\n",
+                    DPRINTF(InOrderFetchSeq, "[tid:%i] Setting up squash to start from stage %i, after [sn:%i].\n",
                             tid, stage_num, seq_num + 1);
                     inst->bdelaySeqNum = seq_num + 1;
                     inst->squashingStage = stage_num;
@@ -179,7 +179,7 @@ FetchSeqUnit::execute(int slot_num)
                     squashAfterInst(inst, stage_num, tid);
                 }
             } else {
-                DPRINTF(Resource, "[tid:%i]: [sn:%i]: Ignoring branch target update "
+                DPRINTF(InOrderFetchSeq, "[tid:%i]: [sn:%i]: Ignoring branch target update "
                         "since then is not a control instruction.\n", tid, inst->seqNum);
             }
 
@@ -209,7 +209,7 @@ void
 FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
                      InstSeqNum squash_seq_num, unsigned tid)
 {
-    DPRINTF(Resource, "[tid:%i]: Updating due to squash from stage %i.\n",
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from stage %i.\n",
             tid, squash_stage);
 
     InstSeqNum done_seq_num = inst->bdelaySeqNum;
@@ -217,7 +217,7 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
 
     if (squashSeqNum[tid] <= done_seq_num &&
         lastSquashCycle[tid] == curTick) {
-        DPRINTF(Resource, "[tid:%i]: Ignoring squash from stage %i, since"
+        DPRINTF(InOrderFetchSeq, "[tid:%i]: Ignoring squash from stage %i, since"
                 "there is an outstanding squash that is older.\n",
                 tid, squash_stage);
     } else {
@@ -237,7 +237,7 @@ FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
             nextPC[tid] = new_PC + instSize;
             nextNPC[tid] = new_PC + (2 * instSize);
 
-            DPRINTF(Resource, "[tid:%i]: Setting PC to %08p.\n",
+            DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC to %08p.\n",
                     tid, PC[tid]);
         } else {
             delaySlotInfo[tid].numInsts = 1;
@@ -278,7 +278,7 @@ FetchSeqUnit::FetchSeqEvent::process()
         fs_res->PC[i] = fs_res->cpu->readPC(i);
         fs_res->nextPC[i] = fs_res->cpu->readNextPC(i);
         fs_res->nextNPC[i] = fs_res->cpu->readNextNPC(i);
-        DPRINTF(Resource, "[tid:%i]: Setting PC:%08p NPC:%08p NNPC:%08p.\n",
+        DPRINTF(InOrderFetchSeq, "[tid:%i]: Setting PC:%08p NPC:%08p NNPC:%08p.\n",
                 fs_res->PC[i], fs_res->nextPC[i], fs_res->nextNPC[i]);
 
         fs_res->pcValid[i] = true;
@@ -299,7 +299,7 @@ FetchSeqUnit::activateThread(unsigned tid)
 
     cpu->fetchPriorityList.push_back(tid);
 
-    DPRINTF(Resource, "[tid:%i]: Reading PC:%08p NPC:%08p NNPC:%08p.\n",
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Reading PC:%08p NPC:%08p NNPC:%08p.\n",
             tid, PC[tid], nextPC[tid], nextNPC[tid]);
 }
 

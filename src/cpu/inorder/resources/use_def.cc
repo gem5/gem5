@@ -104,7 +104,7 @@ UseDefUnit::execute(int slot_idx)
     // in the pipeline then stall instructions here
     if (*nonSpecInstActive[tid] == true &&
         seq_num > *nonSpecSeqNum[tid]) {
-        DPRINTF(Resource, "[tid:%i]: [sn:%i] cannot execute because there is "
+        DPRINTF(InOrderUseDef, "[tid:%i]: [sn:%i] cannot execute because there is "
                 "non-speculative instruction [sn:%i] has not graduated.\n",
                 tid, seq_num, *nonSpecSeqNum[tid]);
         return;
@@ -119,7 +119,7 @@ UseDefUnit::execute(int slot_idx)
         {
             int reg_idx = inst->_srcRegIdx[ud_idx];
 
-            DPRINTF(Resource, "[tid:%i]: Attempting to read source register idx %i.\n",
+            DPRINTF(InOrderUseDef, "[tid:%i]: Attempting to read source register idx %i.\n",
                     tid, ud_idx);
 
             // Ask register dependency map if it is OK to read from Arch. Reg. File
@@ -127,19 +127,19 @@ UseDefUnit::execute(int slot_idx)
                 // Read From Register File
                 if (inst->seqNum <= outReadSeqNum[tid]) {
                     if (reg_idx <= FP_Base_DepTag) {
-                        DPRINTF(Resource, "[tid:%i]: Reading Int Reg %i from Register File.\n",
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Int Reg %i from Register File.\n",
                                 tid, reg_idx);
                         inst->setIntSrc(ud_idx,
                                         cpu->readIntReg(reg_idx,inst->readTid()));
                     } else if (reg_idx <= Ctrl_Base_DepTag) {
                         reg_idx -= FP_Base_DepTag;
-                        DPRINTF(Resource, "[tid:%i]: Reading Float Reg %i from Register File.\n",
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File.\n",
                                 tid, reg_idx);
                         inst->setIntSrc(ud_idx, // Always Read FloatRegBits For Now
                                         cpu->readFloatRegBits(reg_idx, inst->readTid()));
                     } else {
                         reg_idx -= Ctrl_Base_DepTag;
-                        DPRINTF(Resource, "[tid:%i]: Reading Misc Reg %i from Register File.\n",
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Misc Reg %i from Register File.\n",
                                 tid, reg_idx);
                         inst->setIntSrc(ud_idx,
                                         cpu->readMiscReg(reg_idx, inst->readTid()));
@@ -149,7 +149,7 @@ UseDefUnit::execute(int slot_idx)
 
                     ud_req->done();
                 } else {
-                    DPRINTF(Resource, "[tid:%i]: Unable to read because of [sn:%i] hasnt read it's"
+                    DPRINTF(InOrderUseDef, "[tid:%i]: Unable to read because of [sn:%i] hasnt read it's"
                             " registers yet.\n", tid, outReadSeqNum[tid]);
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for [sn:%i] to write\n",
                             tid, outReadSeqNum[tid]);
@@ -164,19 +164,19 @@ UseDefUnit::execute(int slot_idx)
                         int dest_reg_idx = forward_inst->getDestIdxNum(reg_idx);
 
                         if (reg_idx <= FP_Base_DepTag) {
-                            DPRINTF(Resource, "[tid:%i]: Forwarding dest. reg value 0x%x from "
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
                                     tid, forward_inst->readIntResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setIntSrc(ud_idx, forward_inst->readIntResult(dest_reg_idx));
                         } else if (reg_idx <= Ctrl_Base_DepTag) {
-                            DPRINTF(Resource, "[tid:%i]: Forwarding dest. reg value 0x%x from "
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
                                     tid, forward_inst->readFloatResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setFloatSrc(ud_idx, forward_inst->readFloatResult(dest_reg_idx));
                         } else {
-                            DPRINTF(Resource, "[tid:%i]: Forwarding dest. reg value 0x%x from "
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
                                     tid, forward_inst->readIntResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
@@ -187,13 +187,13 @@ UseDefUnit::execute(int slot_idx)
 
                         ud_req->done();
                     } else {
-                        DPRINTF(Resource, "[tid:%i]: Unable to read because of [sn:%i] hasnt read it's"
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Unable to read because of [sn:%i] hasnt read it's"
                                 " registers yet.\n", tid, outReadSeqNum[tid]);
                         DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for [sn:%i] to forward\n",
                                 tid, outReadSeqNum[tid]);
                     }
                 } else {
-                    DPRINTF(Resource, "[tid:%i]: Source register idx: %i is not ready to read.\n",
+                    DPRINTF(InOrderUseDef, "[tid:%i]: Source register idx: %i is not ready to read.\n",
                             tid, reg_idx);
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting to read register (idx=%i)\n",
                             tid, reg_idx);
@@ -208,12 +208,12 @@ UseDefUnit::execute(int slot_idx)
             int reg_idx = inst->_destRegIdx[ud_idx];
 
             if (regDepMap[tid]->canWrite(reg_idx, inst)) {
-                DPRINTF(Resource, "[tid:%i]: Attempting to write to Register File.\n",
+                DPRINTF(InOrderUseDef, "[tid:%i]: Attempting to write to Register File.\n",
                         tid);
 
                 if (inst->seqNum <= outReadSeqNum[tid]) {
                     if (reg_idx <= FP_Base_DepTag) {
-                        DPRINTF(Resource, "[tid:%i]: Writing 0x%x to register idx %i.\n",
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing 0x%x to register idx %i.\n",
                                 tid, inst->readIntResult(ud_idx), reg_idx);
 
                         // Remove Dependencies
@@ -246,13 +246,13 @@ UseDefUnit::execute(int slot_idx)
 
                     ud_req->done();
                 } else {
-                    DPRINTF(Resource, "[tid:%i]: Unable to write because of [sn:%i] hasnt read it's"
+                    DPRINTF(InOrderUseDef, "[tid:%i]: Unable to write because of [sn:%i] hasnt read it's"
                             " registers yet.\n", tid, outReadSeqNum);
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for [sn:%i] to read\n",
                             tid, outReadSeqNum);
                 }
             } else {
-                DPRINTF(Resource, "[tid:%i]: Dest. register idx: %i is not ready to write.\n",
+                DPRINTF(InOrderUseDef, "[tid:%i]: Dest. register idx: %i is not ready to write.\n",
                         tid, reg_idx);
                 DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting to write register (idx=%i)\n",
                         tid, reg_idx);
@@ -270,7 +270,7 @@ UseDefUnit::execute(int slot_idx)
 void
 UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid)
 {
-    DPRINTF(Resource, "[tid:%i]: Updating Due To Squash After [sn:%i].\n",
+    DPRINTF(InOrderUseDef, "[tid:%i]: Updating Due To Squash After [sn:%i].\n",
             tid, squash_seq_num);
 
     std::vector<int> slot_remove_list;
@@ -285,7 +285,7 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, un
             req_ptr->getInst()->readTid() == tid &&
             req_ptr->getInst()->seqNum > squash_seq_num) {
 
-            DPRINTF(Resource, "[tid:%i]: Squashing [sn:%i].\n",
+            DPRINTF(InOrderUseDef, "[tid:%i]: Squashing [sn:%i].\n",
                     req_ptr->getInst()->readTid(),
                     req_ptr->getInst()->seqNum);
 
@@ -309,18 +309,18 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, un
     }
 
     if (outReadSeqNum[tid] >= squash_seq_num) {
-        DPRINTF(Resource, "[tid:%i]: Outstanding Read Seq Num Reset.\n", tid);
+        DPRINTF(InOrderUseDef, "[tid:%i]: Outstanding Read Seq Num Reset.\n", tid);
         outReadSeqNum[tid] = maxSeqNum;
     } else if (outReadSeqNum[tid] != maxSeqNum) {
-        DPRINTF(Resource, "[tid:%i]: No need to reset Outstanding Read Seq Num %i\n",
+        DPRINTF(InOrderUseDef, "[tid:%i]: No need to reset Outstanding Read Seq Num %i\n",
                 tid, outReadSeqNum[tid]);
     }
 
     if (outWriteSeqNum[tid] >= squash_seq_num) {
-        DPRINTF(Resource, "[tid:%i]: Outstanding Write Seq Num Reset.\n", tid);
+        DPRINTF(InOrderUseDef, "[tid:%i]: Outstanding Write Seq Num Reset.\n", tid);
         outWriteSeqNum[tid] = maxSeqNum;
     } else if (outWriteSeqNum[tid] != maxSeqNum) {
-        DPRINTF(Resource, "[tid:%i]: No need to reset Outstanding Write Seq Num %i\n",
+        DPRINTF(InOrderUseDef, "[tid:%i]: No need to reset Outstanding Write Seq Num %i\n",
                 tid, outWriteSeqNum[tid]);
     }
 }

@@ -71,14 +71,14 @@ GraduationUnit::execute(int slot_num)
                 lastCycleGrad = curTick;
                 numCycleGrad = 0;
             } else if (numCycleGrad > width) {
-                DPRINTF(Resource, "Graduation bandwidth reached for this cycle.\n");
+                DPRINTF(InOrderGraduation, "Graduation bandwidth reached for this cycle.\n");
                 return;
             }
 
             // Make sure this is the last thing on the resource schedule
             assert(inst->resSched.size() == 1);
 
-            DPRINTF(Resource, "[tid:%i] Graduating instruction [sn:%i].\n",
+            DPRINTF(InOrderGraduation, "[tid:%i] Graduating instruction [sn:%i].\n",
                     tid, seq_num);
 
             DPRINTF(RefCount, "Refcount = %i.\n", 0/*inst->curCount()*/);
@@ -88,7 +88,7 @@ GraduationUnit::execute(int slot_num)
             // @TODO: Fix this functionality. Probably too conservative.
             if (inst->isNonSpeculative()) {
                 *nonSpecInstActive[tid] = false;
-                DPRINTF(Resource, "[tid:%i] Non-speculative instruction [sn:%i] has graduated.\n",
+                DPRINTF(InOrderGraduation, "[tid:%i] Non-speculative instruction [sn:%i] has graduated.\n",
                         tid, seq_num);
             }
 

@@ -41,7 +41,6 @@
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resources/bpred_unit.hh"
 #include "cpu/inorder/cpu.hh"
-//#include "cpu/inorder/params.hh"
 
 class BranchPredictor : public Resource {
   public:

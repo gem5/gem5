@@ -76,21 +76,21 @@ InstBuffer::execute(int slot_idx)
             bool do_bypass = true;
 
             if (!instList.empty()) {
-                DPRINTF(Resource, "[sn:%i] cannot bypass stage %i because buffer isn't empty.\n",
+                DPRINTF(InOrderInstBuffer, "[sn:%i] cannot bypass stage %i because buffer isn't empty.\n",
                         inst->seqNum, next_stage);
                 do_bypass = false;
             } else if(cpu->pipelineStage[bypass_stage]->isBlocked(tid)) {
-                DPRINTF(Resource, "[sn:%i] cannot bypass stage %i because stage %i is blocking.\n",
+                DPRINTF(InOrderInstBuffer, "[sn:%i] cannot bypass stage %i because stage %i is blocking.\n",
                         inst->seqNum, next_stage);
                 do_bypass = false;
             } else if(cpu->pipelineStage[bypass_stage]->stageBufferAvail() <= 0) {
-                DPRINTF(Resource, "[sn:%i] cannot bypass stage %i because there is no room in "
+                DPRINTF(InOrderInstBuffer, "[sn:%i] cannot bypass stage %i because there is no room in "
                         "stage %i incoming stage buffer.\n", inst->seqNum, next_stage);
                 do_bypass = false;
             }
 
             if (!do_bypass) { // SCHEDULE USAGE OF BUFFER
-                DPRINTF(Resource, "Scheduling [sn:%i] for buffer insertion in stage %i\n",
+                DPRINTF(InOrderInstBuffer, "Scheduling [sn:%i] for buffer insertion in stage %i\n",
                         inst->seqNum, next_stage);
 
                 // Add to schedule: Insert into buffer in next stage
@@ -105,7 +105,7 @@ InstBuffer::execute(int slot_idx)
                 inst->resSched.push(new ScheduleEntry(bypass_stage, stage_pri, id,
                                                    InstBuffer::RemoveInst));
             } else {         // BYPASS BUFFER & NEXT STAGE
-                DPRINTF(Resource, "Setting [sn:%i] to bypass stage %i and enter stage %i.\n",
+                DPRINTF(InOrderInstBuffer, "Setting [sn:%i] to bypass stage %i and enter stage %i.\n",
                         inst->seqNum, next_stage, bypass_stage);
                 inst->setNextStage(bypass_stage);
                 instsBypassed++;
@@ -120,12 +120,12 @@ InstBuffer::execute(int slot_idx)
             bool inserted = false;
 
             if (instList.size() < width) {
-                DPRINTF(Resource, "[tid:%i]: Inserting [sn:%i] into buffer.\n",
+                DPRINTF(InOrderInstBuffer, "[tid:%i]: Inserting [sn:%i] into buffer.\n",
                         tid, seq_num);
                 insert(inst);
                 inserted = true;
             } else {
-                DPRINTF(Resource, "[tid:%i]: Denying [sn:%i] request because "
+                DPRINTF(InOrderInstBuffer, "[tid:%i]: Denying [sn:%i] request because "
                         "buffer is full.\n", tid, seq_num);
 
 
@@ -144,7 +144,7 @@ InstBuffer::execute(int slot_idx)
 
       case RemoveInst:
         {
-            DPRINTF(Resource, "[tid:%i]: Removing [sn:%i] from buffer.\n",
+            DPRINTF(InOrderInstBuffer, "[tid:%i]: Removing [sn:%i] from buffer.\n",
                     tid, seq_num);
             remove(inst);
             ib_req->done();
@@ -155,7 +155,7 @@ InstBuffer::execute(int slot_idx)
         fatal("Unrecognized command to %s", resName);
     }
 
-    DPRINTF(Resource, "Buffer now contains %i insts.\n", instList.size());
+    DPRINTF(InOrderInstBuffer, "Buffer now contains %i insts.\n", instList.size());
 }
 
 void
@@ -212,7 +212,7 @@ InstBuffer::squash(DynInstPtr inst, int stage_num,
 
     // Removed Instructions from InstList & Clear Remove List
     while (!remove_list.empty()) {
-        DPRINTF(Resource, "[tid:%i]: Removing squashed [sn:%i] from buffer.\n",
+        DPRINTF(InOrderInstBuffer, "[tid:%i]: Removing squashed [sn:%i] from buffer.\n",
                 tid, (*remove_list.front())->seqNum);
         instList.erase(remove_list.front());
         remove_list.pop();

@@ -36,18 +36,29 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 
 	TraceFlag('ResReqCount')
 	TraceFlag('FreeList')
-	TraceFlag('InOrderCachePort')
 	TraceFlag('InOrderStage')
 	TraceFlag('InOrderStall')
 	TraceFlag('InOrderCPU')
-	TraceFlag('InOrderMDU')
 	TraceFlag('RegDepMap')
 	TraceFlag('InOrderDynInst')
 	TraceFlag('Resource')
+	TraceFlag('InOrderAGEN')
+	TraceFlag('InOrderFetchSeq')
+	TraceFlag('InOrderTLB')
+	TraceFlag('InOrderCachePort')
+	TraceFlag('InOrderBPred')
+	TraceFlag('InOrderDecode')
+	TraceFlag('InOrderExecute')
+	TraceFlag('InOrderInstBuffer')
+	TraceFlag('InOrderUseDef')
+	TraceFlag('InOrderMDU')
+	TraceFlag('InOrderGraduation')
 	TraceFlag('RefCount')
 
 	CompoundFlag('InOrderCPUAll', [ 'InOrderStage', 'InOrderStall', 'InOrderCPU',
-	       'InOrderMDU', 'InOrderCachePort', 'RegDepMap', 'Resource'])
+	       'InOrderMDU', 'InOrderAGEN', 'InOrderFetchSeq', 'InOrderTLB', 'InOrderBPred',
+	       'InOrderDecode', 'InOrderExecute', 'InOrderInstBuffer', 'InOrderUseDef',
+	       'InOrderGraduation', 'InOrderCachePort', 'RegDepMap', 'Resource'])
 
 	Source('pipeline_traits.cc')        
 	Source('inorder_dyn_inst.cc')

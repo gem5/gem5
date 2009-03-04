@@ -90,7 +90,7 @@ BranchPredictor::execute(int slot_num)
 
                     predictedTaken++;
                 } else {
-                    DPRINTF(Resource, "[tid:%i]: [sn:%i]: Branch predicted false.\n",
+                    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch predicted false.\n",
                             tid, seq_num);
 
                     if (inst->isCondDelaySlot())
@@ -105,11 +105,11 @@ BranchPredictor::execute(int slot_num)
 
                 inst->setBranchPred(predict_taken);
 
-                DPRINTF(Resource, "[tid:%i]: [sn:%i]: Predicted PC is %08p.\n",
+                DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Predicted PC is %08p.\n",
                             tid, seq_num, pred_PC);
 
             } else {
-                DPRINTF(Resource, "[tid:%i]: Ignoring [sn:%i] because this isn't "
+                DPRINTF(InOrderBPred, "[tid:%i]: Ignoring [sn:%i] because this isn't "
                         "a control instruction.\n", tid, seq_num);
             }
 
@@ -119,7 +119,7 @@ BranchPredictor::execute(int slot_num)
 
       case UpdatePredictor:
         {
-            DPRINTF(Resource, "[tid:%i]: [sn:%i]: Updating Branch Predictor.\n",
+            DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Updating Branch Predictor.\n",
                     tid, seq_num);
 
 
@@ -138,7 +138,7 @@ void
 BranchPredictor::squash(DynInstPtr inst, int squash_stage,
                         InstSeqNum squash_seq_num, unsigned tid)
 {
-    DPRINTF(Resource, "Squashing...\n");
+    DPRINTF(InOrderBPred, "Squashing...\n");
     branchPred.squash(squash_seq_num, tid);
 }
 

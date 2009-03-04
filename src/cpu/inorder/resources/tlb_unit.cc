@@ -102,7 +102,7 @@ TLBUnit::execute(int slot_idx)
                         cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {
-                DPRINTF(Resource, "[tid:%i]: %s encountered while translating "
+                DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
                         "addr:%08p for [sn:%i].\n", tid, tlb_req->fault->name(),
                         tlb_req->memReq->getVaddr(), seq_num);
                 //insert(inst);
@@ -114,7 +114,7 @@ TLBUnit::execute(int slot_idx)
                 // Let CPU handle the fault
                 cpu->trap(tlb_req->fault, tid);
             } else {
-                DPRINTF(Resource, "[tid:%i]: [sn:%i] virt. addr %08p translated "
+                DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                         "to phys. addr:%08p.\n", tid, seq_num,
                         tlb_req->memReq->getVaddr(),
                         tlb_req->memReq->getPaddr());
@@ -125,7 +125,7 @@ TLBUnit::execute(int slot_idx)
 
       case DataLookup:
         {
-            DPRINTF(Resource, "[tid:%i]: [sn:%i]: Attempting to translate %08p.\n",
+            DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i]: Attempting to translate %08p.\n",
                     tid, seq_num, tlb_req->memReq->getVaddr());
 
             tlb_req->fault =
@@ -133,7 +133,7 @@ TLBUnit::execute(int slot_idx)
                         cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {
-                DPRINTF(Resource, "[tid:%i]: %s encountered while translating "
+                DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
                         "addr:%08p for [sn:%i].\n", tid, tlb_req->fault->name(),
                         tlb_req->memReq->getVaddr(), seq_num);
                 //insert(inst);
@@ -144,7 +144,7 @@ TLBUnit::execute(int slot_idx)
                 // Let CPU handle the fault
                 cpu->trap(tlb_req->fault, tid);
             } else {
-                DPRINTF(Resource, "[tid:%i]: [sn:%i] virt. addr %08p translated "
+                DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                         "to phys. addr:%08p.\n", tid, seq_num,
                         tlb_req->memReq->getVaddr(),
                         tlb_req->memReq->getPaddr());
@@ -169,7 +169,7 @@ TLBUnitEvent::process()
     int stage_num = resource->reqMap[slotIdx]->getStageNum();
     int tid = inst->threadNumber;
 
-    DPRINTF(Resource, "Waking up from TLB Miss caused by [sn:%i].\n",
+    DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
             inst->seqNum);
 
     TLBUnit* tlb_res = dynamic_cast<TLBUnit*>(resource);

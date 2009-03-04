@@ -68,7 +68,7 @@ ExecutionUnit::execute(int slot_num)
 
     exec_req->fault = NoFault;
 
-    DPRINTF(Resource, "[tid:%i] Executing [sn:%i] [PC:%#x] .\n",
+    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%#x] .\n",
             tid, seq_num, inst->readPC());
 
     switch (exec_req->cmd)
@@ -99,7 +99,7 @@ ExecutionUnit::execute(int slot_num)
                                 inst->bdelaySeqNum = seq_num;
                                 inst->setPredTarg(inst->nextPC);
 
-                                DPRINTF(Resource, "[tid:%i]: Conditional branch inst"
+                                DPRINTF(InOrderExecute, "[tid:%i]: Conditional branch inst"
                                         "[sn:%i] PC %#x mispredicted as taken.\n", tid,
                                         seq_num, inst->PC);
                             } else if (!inst->predTaken() && inst->isCondDelaySlot()) {
@@ -107,13 +107,13 @@ ExecutionUnit::execute(int slot_num)
                                 inst->setPredTarg(inst->nextPC);
                                 inst->procDelaySlotOnMispred = true;
 
-                                DPRINTF(Resource, "[tid:%i]: Conditional branch inst."
+                                DPRINTF(InOrderExecute, "[tid:%i]: Conditional branch inst."
                                         "[sn:%i] PC %#x mispredicted as not taken.\n", tid,
                                         seq_num, inst->PC);
                             } else {
                                 inst->bdelaySeqNum = seq_num + 1;
 
-                                DPRINTF(Resource, "[tid:%i]: Misprediction detected at "
+                                DPRINTF(InOrderExecute, "[tid:%i]: Misprediction detected at "
                                         "[sn:%i] PC %#x,\n\t squashing after delay slot "
                                         "instruction [sn:%i].\n",
                                         tid, seq_num, inst->PC, inst->bdelaySeqNum);
@@ -122,20 +122,20 @@ ExecutionUnit::execute(int slot_num)
                                 inst->setPredTarg(inst->nextNPC);
                             }
 
-                            DPRINTF(Resource, "[tid:%i] Redirecting fetch to %#x.\n", tid,
+                            DPRINTF(InOrderExecute, "[tid:%i] Redirecting fetch to %#x.\n", tid,
                                     inst->readPredTarg());
 
                         } else if(inst->isIndirectCtrl()){
                             inst->setPredTarg(inst->nextNPC);
                             inst->bdelaySeqNum = seq_num + 1;
-                            DPRINTF(Resource, "[tid:%i] Redirecting fetch to %#x.\n", tid,
+                            DPRINTF(InOrderExecute, "[tid:%i] Redirecting fetch to %#x.\n", tid,
                                     inst->readPredTarg());
                         } else {
                             panic("Non-control instruction (%s) mispredicting?!!",
                                   inst->staticInst->getName());
                         }
 
-                        DPRINTF(Resource, "[tid:%i] Squashing will start from stage %i.\n",
+                        DPRINTF(InOrderExecute, "[tid:%i] Squashing will start from stage %i.\n",
                                 tid, stage_num);
 
                         cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
@@ -164,7 +164,7 @@ ExecutionUnit::execute(int slot_num)
                     inst->setExecuted();
                     exec_req->done();
 
-                    DPRINTF(Resource, "[tid:%i]: The result of execution is 0x%x.\n",
+                    DPRINTF(InOrderExecute, "[tid:%i]: The result of execution is 0x%x.\n",
                             inst->readTid(), inst->readIntResult(0));
                 } else {
                     warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
