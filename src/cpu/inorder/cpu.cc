@@ -355,7 +355,7 @@ InOrderCPU::regStats()
         .name(name() + ".cpi_total")
         .desc("CPI: Total CPI of All Threads")
         .precision(6);
-    totalCpi = simTicks / totalCommittedInsts;
+    totalCpi = numCycles / totalCommittedInsts;
 
     ipc
         .name(name() + ".ipc")
@@ -373,7 +373,7 @@ InOrderCPU::regStats()
         .name(name() + ".ipc_total")
         .desc("IPC: Total IPC of All Threads")
         .precision(6);
-        totalIpc =  totalCommittedInsts / simTicks;
+        totalIpc =  totalCommittedInsts / numCycles;
 
     BaseCPU::regStats();
 }
