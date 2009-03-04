@@ -47,7 +47,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	TraceFlag('RefCount')
 
 	CompoundFlag('InOrderCPUAll', [ 'InOrderStage', 'InOrderStall', 'InOrderCPU',
-	       'InOrderMDU', 'RegDepMap', 'Resource'])
+	       'InOrderMDU', 'InOrderCachePort', 'RegDepMap', 'Resource'])
 
 	Source('pipeline_traits.cc')        
 	Source('inorder_dyn_inst.cc')

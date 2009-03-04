@@ -121,4 +121,4 @@ class InOrderParams : public BaseCPU::Params
 
 };
 
-#endif // __CPU_O3_CPU_INORDER_PARAMS_HH__
+#endif // _CPU_INORDER_PARAMS_HH__

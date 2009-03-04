@@ -957,10 +957,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
-#ifdef DEBUG
-    void dumpSNList();
-#endif
-
     /** Dumps out contents of this BaseDynInst. */
     void dump();
 

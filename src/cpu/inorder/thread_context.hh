@@ -111,9 +111,6 @@ class InOrderThreadContext : public ThreadContext
     virtual void setStatus(Status new_status)
     { thread->setStatus(new_status); }
 
-    /** Returns a pointer to the last graduated/committed instruction in the thread */
-    //DynInstPtr getLastGradInst() { return thread->getLastGradInst(); }
-
     /** Set the status to Active.  Optional delay indicates number of
      * cycles to wait before beginning execution. */
     virtual void activate(int delay = 1);

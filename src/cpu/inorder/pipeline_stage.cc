@@ -193,7 +193,7 @@ void
 PipelineStage::switchOut()
 {
     // Stage can immediately switch out.
-    cpu->signalSwitched();
+    panic("Switching Out of Stages Unimplemented");
 }
 
 
@@ -691,13 +691,6 @@ PipelineStage::tick()
     DPRINTF(InOrderStage, "\n\n");
 }
 
-bool
-PipelineStage::outOfOrderValid()
-{
-    //@TODO: Define this function when OOO is valid
-    return false;
-}
-
 void
 PipelineStage::setResStall(ResReqPtr res_req, unsigned tid)
 {
@@ -861,7 +854,7 @@ PipelineStage::processInsts(unsigned tid)
 
         // Don't let instruction pass to next stage if it hasnt completed
         // all of it's requests for this stage.
-        if (!last_req_completed && !outOfOrderValid())
+        if (!last_req_completed)
             continue;
 
         // Send to Next Stage or Break Loop
@@ -1018,7 +1011,7 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
 void
 PipelineStage::dumpInsts()
 {
-    std::cerr << "Insts in Stage " << stageNum << " skidbuffers:" << endl;
+    cprintf("Insts in Stage %i skidbuffers\n",stageNum);
 
     for (int tid=0; tid < ThePipeline::MaxThreads; tid++) {
 

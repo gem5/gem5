@@ -46,7 +46,6 @@
 #include "cpu/inorder/resource_pool.hh"
 #include "mem/translating_port.hh"
 #include "sim/process.hh"
-//#include "sim/root.hh"
 #include "sim/stat_control.hh"
 #include <algorithm>
 
@@ -162,7 +161,6 @@ InOrderCPU::InOrderCPU(Params *params)
     cpu_params = params;
 
     resPool = new ResourcePool(this, params);
-//    resPool->init();
 
     coreType = "default"; // eventually get this from params
 
@@ -191,13 +189,9 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
 
-    /* Use this port to for syscall emulation writes to memory. */
-    //Port *mem_port = NULL;
-    //TranslatingPort *trans_port = NULL;
-
     for (int i = 0; i < numThreads; ++i) {
         if (i < params->workload.size()) {
-            DPRINTF(InOrderCPU, "Workload[%i] process is %#x",
+            DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
                     i, this->thread[i]);
             this->thread[i] = new Thread(this, i, params->workload[i],
                                          i);
@@ -208,11 +202,8 @@ InOrderCPU::InOrderCPU(Params *params)
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
-            Process* dummy_proc = params->workload[0]; //LiveProcess::createDummy();
+            Process* dummy_proc = params->workload[0];
             this->thread[i] = new Thread(this, i, dummy_proc, i);
-
-            // Set Up Syscall Emulation Port
-            //this->thread[i]->setMemPort(trans_port);
         }
 
         // Setup the TC that will serve as the interface to the threads/CPU.
@@ -790,8 +781,6 @@ InOrderCPU::deallocateThread(unsigned tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Deallocating ...", tid);
 
-    //removeThread(tid);
-
     removeFromCurrentThreads(tid);
 
     deactivateThread(tid);
@@ -839,19 +828,6 @@ InOrderCPU::activateWhenReady(int tid)
     panic("Unimplemented Function\n.");
 }
 
-
-void
-InOrderCPU::signalSwitched()
-{
-    panic("Unimplemented Function\n.");
-}
-
-
-void
-InOrderCPU::takeOverFrom(BaseCPU *oldCPU)
-{
-    panic("Take Over From Another CPU\n.");
-}
 
 uint64_t
 InOrderCPU::readPC(unsigned tid)
@@ -1205,14 +1181,6 @@ InOrderCPU::cleanUpRemovedEvents()
     }
 }
 
-/*
-
-void
-InOrderCPU::removeAllInsts()
-{
-    instList.clear();
-}
-*/
 
 void
 InOrderCPU::dumpInsts()
@@ -1233,14 +1201,6 @@ InOrderCPU::dumpInsts()
         ++num;
     }
 }
-/*
-
-void
-InOrderCPU::wakeDependents(DynInstPtr &inst)
-{
-    iew.wakeDependents(inst);
-}
-*/
 
 void
 InOrderCPU::wakeCPU()
@@ -1252,6 +1212,7 @@ InOrderCPU::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
+    //@todo: figure out how to count idleCycles correctly
     //idleCycles += (curTick - 1) - lastRunningCycle;
 
     mainEventQueue.schedule(&tickEvent, curTick);

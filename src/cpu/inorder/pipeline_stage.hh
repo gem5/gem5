@@ -147,9 +147,6 @@ class PipelineStage
      */
     virtual void tick();
 
-    /** Is out of order processing valid? */
-    bool outOfOrderValid();
-
     /** Set a resource stall in the pipeline-stage */
     void setResStall(ResReqPtr res_req, unsigned tid);
 

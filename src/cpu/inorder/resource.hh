@@ -79,9 +79,6 @@ class Resource {
     virtual void init();    
     virtual void initSlots();
 
-    /** Tasks to perform when simulation starts */
-    //virtual void startup() { }
-
     /** Register Stats for this resource */
     virtual void regStats();
 

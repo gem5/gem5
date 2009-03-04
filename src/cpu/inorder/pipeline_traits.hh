@@ -38,7 +38,6 @@
 
 #include "arch/isa_traits.hh"
 #include "cpu/base.hh"
-//#include "cpu/inorder/params.hh"
 
 #include "params/InOrderCPU.hh"
 
@@ -122,12 +121,6 @@ namespace ThePipeline {
             if (lhs->stageNum > rhs->stageNum) {
                 return true;
             } else if (lhs->stageNum == rhs->stageNum) {
-                /*if (lhs->resNum > rhs->resNum) {
-                  return true;
-                } else {
-                  return false;
-                  }*/
-
                 if (lhs->priority > rhs->priority) {
                   return true;
                 } else {

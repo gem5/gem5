@@ -167,10 +167,6 @@ InOrderDynInst::initVars()
 
     DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created. (active insts: %i)\n",
             threadNumber, seqNum, instcount);
-
-#ifdef DEBUG
-    cpu->snList.insert(seqNum);
-#endif
 }
 
 
@@ -192,9 +188,6 @@ InOrderDynInst::~InOrderDynInst()
 
     DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction destroyed. (active insts: %i)\n",
             threadNumber, seqNum, instcount);
-#ifdef DEBUG
-    cpu->snList.erase(seqNum);
-#endif
 }
 
 void
@@ -305,44 +298,13 @@ InOrderDynInst::syscall(int64_t callnum)
 void
 InOrderDynInst::prefetch(Addr addr, unsigned flags)
 {
-    // This is the "functional" implementation of prefetch.  Not much
-    // happens here since prefetches don't affect the architectural
-    // state.
-/*
-    // Generate a MemReq so we can translate the effective address.
-    MemReqPtr req = new MemReq(addr, thread->getXCProxy(), 1, flags);
-    req->asid = asid;
-
-    // Prefetches never cause faults.
-    fault = NoFault;
-
-    // note this is a local, not InOrderDynInst::fault
-    Fault trans_fault = cpu->translateDataReadReq(req);
-
-    if (trans_fault == NoFault && !(req->flags & UNCACHEABLE)) {
-        // It's a valid address to cacheable space.  Record key MemReq
-        // parameters so we can generate another one just like it for
-        // the timing access without calling translate() again (which
-        // might mess up the TLB).
-        effAddr = req->vaddr;
-        physEffAddr = req->paddr;
-        memReqFlags = req->flags;
-    } else {
-        // Bogus address (invalid or uncacheable space).  Mark it by
-        // setting the eff_addr to InvalidAddr.
-        effAddr = physEffAddr = MemReq::inval_addr;
-    }
-
-    if (traceData) {
-        traceData->setAddr(addr);
-    }
-*/
+    panic("Prefetch Unimplemented\n");
 }
 
 void
 InOrderDynInst::writeHint(Addr addr, int size, unsigned flags)
 {
-    // Not currently supported.
+    panic("Write-Hint Unimplemented\n");
 }
 
 /**
@@ -762,20 +724,3 @@ my_hash_t;
 
 my_hash_t thishash;
 #endif
-
-#ifdef DEBUG
-
-void
-InOrderDynInst::dumpSNList()
-{
-    std::set<InstSeqNum>::iterator sn_it = cpu->snList.begin();
-
-    int count = 0;
-    while (sn_it != cpu->snList.end()) {
-        cprintf("%i: [sn:%lli] not destroyed\n", count, (*sn_it));
-        count++;
-        sn_it++;
-    }
-}
-#endif
-

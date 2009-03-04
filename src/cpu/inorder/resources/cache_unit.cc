@@ -454,12 +454,10 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         findRequest(cache_pkt->cacheReq->getInst()));
     assert(cache_req);
 
-#if TRACING_ON
-    // Get resource request info
-    unsigned tid = 0;
-#endif
 
-    //tid = pkt->req->getThreadNum();
+    // Get resource request info
+    // @todo: SMT needs to figure out where to get thread # from.
+    unsigned tid = 0;
     unsigned stage_num = cache_req->getStageNum();
     DynInstPtr inst = cache_req->inst;
 

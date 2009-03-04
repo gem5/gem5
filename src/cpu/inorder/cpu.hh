@@ -249,9 +249,6 @@ class InOrderCPU : public BaseCPU
     TheISA::IntReg nextNPC[ThePipeline::MaxThreads];
 
     /** The Register File for the CPU */
-    /** @TODO: This regFile wont be a sufficient solution for out-of-order, add register
-     *  files as a resource in order to handle ths problem
-     */
     TheISA::IntRegFile intRegFile[ThePipeline::MaxThreads];;
     TheISA::FloatRegFile floatRegFile[ThePipeline::MaxThreads];;
     TheISA::MiscRegFile miscRegFile;
@@ -362,15 +359,6 @@ class InOrderCPU : public BaseCPU
     void switchToActive(int stage_idx)
     { /*pipelineStage[stage_idx]->switchToActive();*/ }
 
-    /** Switches out this CPU. (Unused currently) */
-    //void switchOut(Sampler *sampler);
-
-    /** Signals to this CPU that a stage has completed switching out. (Unused currently)*/
-    void signalSwitched();
-
-    /** Takes over from another CPU. (Unused currently)*/
-    void takeOverFrom(BaseCPU *oldCPU);
-
     /** Get the current instruction sequence number, and increment it. */
     InstSeqNum getAndIncrementInstSeq(unsigned tid)
     { return globalSeqNum[tid]++; }
@@ -389,6 +377,7 @@ class InOrderCPU : public BaseCPU
         globalSeqNum[tid] = seq_num;
     }
 
+    /** Get & Update Next Event Number */
     InstSeqNum getNextEventNum()
     {
         return cpuEventNum++;
@@ -463,9 +452,6 @@ class InOrderCPU : public BaseCPU
     /** Sets the next NPC of a specific thread. */
     void setNextNPC(uint64_t val, unsigned tid);
 
-    /** Add Destination Register To Dependency Maps */
-    //void addToRegDepMap(DynInstPtr &inst);
-
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
@@ -529,13 +515,6 @@ class InOrderCPU : public BaseCPU
      *  the current cycle.
      */
     std::queue<Event*> cpuEventRemoveList;
-
-#ifdef DEBUG
-    /** Debug structure to keep track of the sequence numbers still in
-     * flight.
-     */
-    std::set<InstSeqNum> snList;
-#endif
 
     /** Records if instructions need to be removed this cycle due to
      *  being retired or squashed.
@@ -610,7 +589,6 @@ class InOrderCPU : public BaseCPU
     unsigned readStCondFailures() { return stCondFails; }
     unsigned setStCondFailures(unsigned st_fails) { return stCondFails = st_fails; }
 
-  public:
     /** Returns a pointer to a thread context. */
     ThreadContext *tcBase(unsigned tid = 0)
     {
@@ -631,6 +609,7 @@ class InOrderCPU : public BaseCPU
 
     /** Pointer to the icache interface. */
     MemInterface *icacheInterface;
+
     /** Pointer to the dcache interface. */
     MemInterface *dcacheInterface;
 
