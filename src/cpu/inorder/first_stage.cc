@@ -40,15 +40,12 @@ using namespace std;
 using namespace ThePipeline;
 
 FirstStage::FirstStage(Params *params, unsigned stage_num)
-    : PipelineStage(params, stage_num)
+    : PipelineStage(params, stage_num), numFetchingThreads(1),
+      fetchPolicy(FirstStage::RoundRobin)
 {
     for(int tid=0; tid < this->numThreads; tid++) {
         stageStatus[tid] = Running;
     }
-
-    numFetchingThreads = 1;
-
-    fetchPolicy = RoundRobin;
 }
 
 void

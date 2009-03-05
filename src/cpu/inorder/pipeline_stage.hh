@@ -97,7 +97,7 @@ class PipelineStage
     virtual ~PipelineStage() { }
 
     /** PipelineStage initialization. */
-    void init(Params *params, unsigned stage_num);
+    void init(Params *params);
 
     /** Returns the name of stage. */
     std::string name() const;

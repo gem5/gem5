@@ -38,24 +38,17 @@ using namespace std;
 using namespace ThePipeline;
 
 PipelineStage::PipelineStage(Params *params, unsigned stage_num)
+    : stageNum(stage_num), stageWidth(ThePipeline::StageWidth),
+      numThreads(ThePipeline::MaxThreads), _status(Inactive),
+      stageBufferMax(ThePipeline::interStageBuffSize[stage_num]),
+      prevStageValid(false), nextStageValid(false)
 {
-    init(params, stage_num);
+    init(params);
 }
 
 void
-PipelineStage::init(Params *params, unsigned stage_num)
+PipelineStage::init(Params *params)
 {
-    stageNum = stage_num;
-    stageWidth = ThePipeline::StageWidth;
-
-    _status = Inactive;
-
-    numThreads = ThePipeline::MaxThreads;
-
-    prevStageValid = false;
-    nextStageValid = false;
-
-    // Init. structures
     for(int tid=0; tid < numThreads; tid++) {
         stageStatus[tid] = Idle;
 
@@ -69,8 +62,6 @@ PipelineStage::init(Params *params, unsigned stage_num)
         else
             lastStallingStage[tid] = NumStages - 1;
     }
-
-    stageBufferMax = ThePipeline::interStageBuffSize[stage_num];
 }
 
 

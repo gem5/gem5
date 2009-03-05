@@ -41,25 +41,14 @@ using namespace ThePipeline;
 
 MultDivUnit::MultDivUnit(string res_name, int res_id, int res_width,
                          int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
-    : Resource(res_name, res_id, res_width, res_latency, _cpu)
-{
-    multRepeatRate = params->multRepeatRate;
-    multLatency = params->multLatency;
-
-    div8RepeatRate = params->div8RepeatRate;
-    div8Latency = params->div8Latency;
-
-    div16RepeatRate = params->div16RepeatRate;
-    div16Latency = params->div16Latency;
-
-    div24RepeatRate = params->div24RepeatRate;
-    div24Latency = params->div24Latency;
-
-    div32RepeatRate = params->div32RepeatRate;
-    div32Latency = params->div32Latency;    
-
-    lastMDUCycle = 0;
-}
+    : Resource(res_name, res_id, res_width, res_latency, _cpu),
+      multRepeatRate(params->multRepeatRate), multLatency(params->multLatency), 
+      div8RepeatRate(params->div8RepeatRate), div8Latency(params->div8Latency), 
+      div16RepeatRate(params->div16RepeatRate), div16Latency(params->div16Latency), 
+      div24RepeatRate(params->div24RepeatRate), div24Latency(params->div24Latency), 
+      div32RepeatRate(params->div32RepeatRate), div32Latency(params->div32Latency), 
+      lastMDUCycle(0)
+{ }
 
 void
 MultDivUnit::regStats()

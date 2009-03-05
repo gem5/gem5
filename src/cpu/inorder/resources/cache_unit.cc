@@ -81,14 +81,9 @@ CacheUnit::CachePort::recvRetry()
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      retryPkt(NULL), retrySlot(-1)
+      retryPkt(NULL), retrySlot(-1), cacheBlocked(false)
 {
-    //cacheData.resize(res_width);
-    //slotStatus = new CachePortStatus[width];
-    //fetchPC = new Addr[width];
     cachePort = new CachePort(this);
-
-    cacheBlocked = false;
 }
 
 Port *

@@ -84,24 +84,24 @@ class MultDivUnit : public Resource {
 
   protected:
     /** Latency & Repeat Rate for Multiply Insts */
-    unsigned multLatency;
     unsigned multRepeatRate;
+    unsigned multLatency;
 
     /** Latency & Repeat Rate for 8-bit Divide Insts */
-    unsigned div8Latency;
     unsigned div8RepeatRate;
+    unsigned div8Latency;
 
     /** Latency & Repeat Rate for 16-bit Divide Insts */
-    unsigned div16Latency;
     unsigned div16RepeatRate;
+    unsigned div16Latency;
 
     /** Latency & Repeat Rate for 24-bit Divide Insts */
-    unsigned div24Latency;
     unsigned div24RepeatRate;
+    unsigned div24Latency;
 
     /** Latency & Repeat Rate for 32-bit Divide Insts */
-    unsigned div32Latency;
     unsigned div32RepeatRate;
+    unsigned div32Latency;
 
     /** Last cycle that MDU was used */
     Tick lastMDUCycle;

@@ -76,16 +76,14 @@ InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
 }
 
 InOrderDynInst::InOrderDynInst(StaticInstPtr &_staticInst)
-    : staticInst(_staticInst), traceData(NULL)
+    : seqNum(0), staticInst(_staticInst), traceData(NULL)
 {
-    seqNum = 0;
     initVars();
 }
 
 InOrderDynInst::InOrderDynInst()
-    : traceData(NULL), cpu(cpu)
+    : seqNum(0), traceData(NULL), cpu(cpu)
 {
-    seqNum = 0;
     initVars();
 }
 

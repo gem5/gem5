@@ -35,11 +35,10 @@ using namespace ThePipeline;
 
 GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
                        int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
-    : Resource(res_name, res_id, res_width, res_latency, _cpu)
+    : Resource(res_name, res_id, res_width, res_latency, _cpu),
+      lastCycleGrad(0), numCycleGrad(0)
+      
 {
-    lastCycleGrad = 0;
-    numCycleGrad = 0;
-
     for (int tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];

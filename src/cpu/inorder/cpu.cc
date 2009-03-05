@@ -147,6 +147,8 @@ InOrderCPU::CPUEvent::unscheduleEvent()
 InOrderCPU::InOrderCPU(Params *params)
     : BaseCPU(params),
       cpu_id(params->cpu_id),
+      coreType("default"),
+      _status(Idle),
       tickEvent(this),
       miscRegFile(this),
       timeBuffer(2 , 2),
@@ -161,10 +163,6 @@ InOrderCPU::InOrderCPU(Params *params)
     cpu_params = params;
 
     resPool = new ResourcePool(this, params);
-
-    coreType = "default"; // eventually get this from params
-
-    _status = Idle;
 
     // Resize for Multithreading CPUs
     thread.resize(numThreads);

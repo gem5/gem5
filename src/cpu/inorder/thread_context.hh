@@ -132,6 +132,7 @@ class InOrderThreadContext : public ThreadContext
 
     /** Serializes state. */
     virtual void serialize(std::ostream &os);
+
     /** Unserializes state. */
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
