@@ -115,6 +115,14 @@ class Info
     virtual ~Info();
 
     /**
+     * Check that this stat has been set up properly and is ready for
+     * use
+     * @return true for success
+     */
+    virtual bool check() const = 0;
+    bool baseCheck() const;
+
+    /**
      * Reset the stat to the default state.
      */
     virtual void reset() = 0;
@@ -124,14 +132,6 @@ class Info
      * requirement as a prereq
      */
     virtual bool zero() const = 0;
-
-    /**
-     * Check that this stat has been set up properly and is ready for
-     * use
-     * @return true for success
-     */
-    virtual bool check() const = 0;
-    bool baseCheck() const;
 
     /**
      * Visitor entry for outputing statistics data
@@ -187,8 +187,8 @@ class VectorInfoBase : public Info
 {
   public:
     /** Names and descriptions of subfields. */
-    mutable std::vector<std::string> subnames;
-    mutable std::vector<std::string> subdescs;
+    std::vector<std::string> subnames;
+    std::vector<std::string> subdescs;
 
   public:
     virtual size_type size() const = 0;
@@ -242,7 +242,7 @@ class VectorInfo : public InfoWrap<Stat, VectorInfoBase>
     visit(Visit &visitor)
     {
         this->update();
-        this->s.update(this);
+        this->s.update();
         visitor.visit(*this);
     }
 };
@@ -275,7 +275,7 @@ class DistInfo : public InfoWrap<Stat, DistInfoBase>
     void
     visit(Visit &visitor)
     {
-        this->s.update(this);
+        this->s.update();
         visitor.visit(*this);
     }
 };
@@ -285,9 +285,9 @@ class VectorDistInfoBase : public Info
   public:
     std::vector<DistData> data;
 
-   /** Names and descriptions of subfields. */
-    mutable std::vector<std::string> subnames;
-    mutable std::vector<std::string> subdescs;
+    /** Names and descriptions of subfields. */
+    std::vector<std::string> subnames;
+    std::vector<std::string> subdescs;
 
   protected:
     /** Local storage for the entry values, used for printing. */
@@ -320,7 +320,7 @@ class VectorDistInfo : public InfoWrap<Stat, VectorDistInfoBase>
     visit(Visit &visitor)
     {
         this->update();
-        this->s.update(this);
+        this->s.update();
         visitor.visit(*this);
     }
 };
@@ -333,10 +333,11 @@ class Vector2dInfoBase : public Info
     std::vector<std::string> subdescs;
     std::vector<std::string> y_subnames;
 
+    size_type x;
+    size_type y;
+
     /** Local storage for the entry values, used for printing. */
     mutable VCounter cvec;
-    mutable size_type x;
-    mutable size_type y;
 
   public:
     void
@@ -357,7 +358,7 @@ class Vector2dInfo : public InfoWrap<Stat, Vector2dInfoBase>
     visit(Visit &visitor)
     {
         this->update();
-        this->s.update(this);
+        this->s.update();
         visitor.visit(*this);
     }
 };
@@ -397,29 +398,27 @@ class InfoAccess
     bool check() const { return true; }
 };
 
-template <class Derived, class Base, template <class> class Info>
-class DataWrap : public Base
+template <class Derived, template <class> class InfoType>
+class DataWrap : public InfoAccess
 {
   public:
-    typedef Derived DerivedType;
-    typedef Base BaseType;
-    typedef Info<Base> InfoType;
+    typedef InfoType<Derived> Info;
 
   protected:
-    Derived &self() { return *reinterpret_cast<Derived *>(this); }
+    Derived &self() { return *static_cast<Derived *>(this); }
 
   protected:
-    InfoType *
+    Info *
     info()
     {
-        return safe_cast<InfoType *>(InfoAccess::info());
+        return safe_cast<Info *>(InfoAccess::info());
     }
 
   public:
-    const InfoType *
+    const Info *
     info() const
     {
-        return safe_cast<const InfoType *>(InfoAccess::info());
+        return safe_cast<const Info *>(InfoAccess::info());
     }
 
   protected:
@@ -436,7 +435,7 @@ class DataWrap : public Base
   public:
     DataWrap()
     {
-        this->setInfo(new InfoType(*this));
+        this->setInfo(new Info(self()));
     }
 
     /**
@@ -447,11 +446,12 @@ class DataWrap : public Base
     Derived &
     name(const std::string &_name)
     {
-        InfoType *info = this->info();
+        Info *info = this->info();
         info->name = _name;
         info->flags |= print;
         return this->self();
     }
+    const std::string &name() const { return this->info()->name; }
 
     /**
      * Set the description and marks this stat to print at the end of
@@ -505,15 +505,12 @@ class DataWrap : public Base
     }
 };
 
-template <class Derived, class Base, template <class Base> class Info>
-class DataWrapVec : public DataWrap<Derived, Base, Info>
+template <class Derived, template <class> class InfoType>
+class DataWrapVec : public DataWrap<Derived, InfoType>
 {
   public:
-    typedef Derived DerivedType;
-    typedef Base BaseType;
-    typedef Info<Base> InfoType;
+    typedef InfoType<Derived> Info;
 
-  public:
     // The following functions are specific to vectors.  If you use them
     // in a non vector context, you will get a nice compiler error!
 
@@ -527,12 +524,19 @@ class DataWrapVec : public DataWrap<Derived, Base, Info>
     Derived &
     subname(off_type index, const std::string &name)
     {
-        std::vector<std::string> &subn = this->info()->subnames;
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        std::vector<std::string> &subn = info->subnames;
         if (subn.size() <= index)
             subn.resize(index + 1);
         subn[index] = name;
-        return this->self();
+        return self;
     }
+
+    // The following functions are specific to 2d vectors.  If you use
+    // them in a non vector context, you will get a nice compiler
+    // error because info doesn't have the right variables.
 
     /**
      * Set the subfield description for the given index and marks this stat to
@@ -544,7 +548,9 @@ class DataWrapVec : public DataWrap<Derived, Base, Info>
     Derived &
     subdesc(off_type index, const std::string &desc)
     {
-        std::vector<std::string> &subd = this->info()->subdescs;
+        Info *info = this->info();
+
+        std::vector<std::string> &subd = info->subdescs;
         if (subd.size() <= index)
             subd.resize(index + 1);
         subd[index] = desc;
@@ -552,17 +558,24 @@ class DataWrapVec : public DataWrap<Derived, Base, Info>
         return this->self();
     }
 
+    void
+    reset()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->reset(info);
+    }
 };
 
-template <class Derived, class Base, template <class Base> class Info>
-class DataWrapVec2d : public DataWrapVec<Derived, Base, Info>
+template <class Derived, template <class> class InfoType>
+class DataWrapVec2d : public DataWrapVec<Derived, InfoType>
 {
   public:
-    typedef Derived DerivedType;
-    typedef Base BaseType;
-    typedef Info<Base> InfoType;
+    typedef InfoType<Derived> Info;
 
-  public:
     /**
      * @warning This makes the assumption that if you're gonna subnames a 2d
      * vector, you're subnaming across all y
@@ -570,21 +583,25 @@ class DataWrapVec2d : public DataWrapVec<Derived, Base, Info>
     Derived &
     ysubnames(const char **names)
     {
-        InfoType *info = this->info();
-        info->y_subnames.resize(this->y);
-        for (off_type i = 0; i < this->y; ++i)
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        info->y_subnames.resize(self.y);
+        for (off_type i = 0; i < self.y; ++i)
             info->y_subnames[i] = names[i];
-        return this->self();
+        return self;
     }
 
     Derived &
     ysubname(off_type index, const std::string subname)
     {
-        InfoType *info = this->info();
-        assert(index < this->y);
-        info->y_subnames.resize(this->y);
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        assert(index < self.y);
+        info->y_subnames.resize(self.y);
         info->y_subnames[index] = subname.c_str();
-        return this->self();
+        return self;
     }
 };
 
@@ -723,6 +740,11 @@ class AvgStor
     }
 
     /**
+     * @return true if zero value
+     */
+    bool zero() const { return total == 0.0; }
+
+    /**
      * Reset stat value to default
      */
     void
@@ -732,18 +754,14 @@ class AvgStor
         last = curTick;
     }
 
-    /**
-     * @return true if zero value
-     */
-    bool zero() const { return total == 0.0; }
 };
 
 /**
  * Implementation of a scalar stat. The type of stat is determined by the
  * Storage template.
  */
-template <class Stor>
-class ScalarBase : public InfoAccess
+template <class Derived, class Stor>
+class ScalarBase : public DataWrap<Derived, ScalarInfo>
 {
   public:
     typedef Stor Storage;
@@ -780,8 +798,8 @@ class ScalarBase : public InfoAccess
     void
     doInit()
     {
-        new (storage) Storage(info());
-        setInit();
+        new (storage) Storage(this->info());
+        this->setInit();
     }
 
   public:
@@ -792,7 +810,10 @@ class ScalarBase : public InfoAccess
     Counter value() const { return data()->value(); }
 
   public:
-    ScalarBase() { }
+    ScalarBase()
+    {
+        this->doInit();
+    }
 
   public:
     // Common operators for stats
@@ -845,7 +866,7 @@ class ScalarBase : public InfoAccess
     /**
      * Reset stat value to default
      */
-    void reset() { data()->reset(info()); }
+    void reset() { data()->reset(this->info()); }
 
     Counter value() { return data()->value(); }
 
@@ -893,7 +914,8 @@ class FunctorProxy : public ProxyInfo
     Result total() const { return (*functor)(); }
 };
 
-class ValueBase : public InfoAccess
+template <class Derived>
+class ValueBase : public DataWrap<Derived, ScalarInfo>
 {
   private:
     ProxyInfo *proxy;
@@ -903,19 +925,21 @@ class ValueBase : public InfoAccess
     ~ValueBase() { if (proxy) delete proxy; }
 
     template <class T>
-    void
+    Derived &
     scalar(T &value)
     {
         proxy = new ValueProxy<T>(value);
-        setInit();
+        this->setInit();
+        return this->self();
     }
 
     template <class T>
-    void
+    Derived &
     functor(T &func)
     {
         proxy = new FunctorProxy<T>(func);
-        setInit();
+        this->setInit();
+        return this->self();
     }
 
     Counter value() { return proxy->value(); }
@@ -944,7 +968,7 @@ class ScalarProxy
 {
   private:
     /** Pointer to the parent Vector. */
-    Stat *stat;
+    Stat &stat;
 
     /** The index to access in the parent VectorBase. */
     off_type index;
@@ -967,10 +991,9 @@ class ScalarProxy
      * Create and initialize this proxy, do not register it with the database.
      * @param i The index to access.
      */
-    ScalarProxy(Stat *s, off_type i)
+    ScalarProxy(Stat &s, off_type i)
         : stat(s), index(i)
     {
-        assert(stat);
     }
 
     /**
@@ -1000,12 +1023,12 @@ class ScalarProxy
      * Increment the stat by 1. This calls the associated storage object inc
      * function.
      */
-    void operator++() { stat->data(index)->inc(1); }
+    void operator++() { stat.data(index)->inc(1); }
     /**
      * Decrement the stat by 1. This calls the associated storage object dec
      * function.
      */
-    void operator--() { stat->data(index)->dec(1); }
+    void operator--() { stat.data(index)->dec(1); }
 
     /** Increment the stat by 1. */
     void operator++(int) { ++*this; }
@@ -1021,7 +1044,7 @@ class ScalarProxy
     void
     operator=(const U &v)
     {
-        stat->data(index)->set(v);
+        stat.data(index)->set(v);
     }
 
     /**
@@ -1033,7 +1056,7 @@ class ScalarProxy
     void
     operator+=(const U &v)
     {
-        stat->data(index)->inc(v);
+        stat.data(index)->inc(v);
     }
 
     /**
@@ -1045,7 +1068,7 @@ class ScalarProxy
     void
     operator-=(const U &v)
     {
-        stat->data(index)->dec(v);
+        stat.data(index)->dec(v);
     }
 
     /**
@@ -1058,7 +1081,7 @@ class ScalarProxy
     std::string
     str() const
     {
-        return csprintf("%s[%d]", stat->info()->name, index);
+        return csprintf("%s[%d]", stat.info()->name, index);
     }
 };
 
@@ -1066,17 +1089,17 @@ class ScalarProxy
  * Implementation of a vector of stats. The type of stat is determined by the
  * Storage class. @sa ScalarBase
  */
-template <class Stor>
-class VectorBase : public InfoAccess
+template <class Derived, class Stor>
+class VectorBase : public DataWrapVec<Derived, VectorInfo>
 {
   public:
     typedef Stor Storage;
     typedef typename Stor::Params Params;
 
     /** Proxy type */
-    typedef ScalarProxy<VectorBase<Storage> > Proxy;
-
-    friend class ScalarProxy<VectorBase<Storage> >;
+    typedef ScalarProxy<Derived> Proxy;
+    friend class ScalarProxy<Derived>;
+    friend class DataWrapVec<Derived, VectorInfo>;
 
   protected:
     /** The storage of this stat. */
@@ -1109,9 +1132,9 @@ class VectorBase : public InfoAccess
         storage = reinterpret_cast<Storage *>(ptr);
 
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info());
+            new (&storage[i]) Storage(this->info());
 
-        setInit();
+        this->setInit();
     }
 
   public:
@@ -1168,13 +1191,6 @@ class VectorBase : public InfoAccess
         return storage != NULL;
     }
 
-    void
-    reset()
-    {
-        for (off_type i = 0; i < size(); ++i)
-            data(i)->reset(info());
-    }
-
   public:
     VectorBase()
         : storage(NULL)
@@ -1191,6 +1207,19 @@ class VectorBase : public InfoAccess
     }
 
     /**
+     * Set this vector to have the given size.
+     * @param size The new size.
+     * @return A reference to this stat.
+     */
+    Derived &
+    init(size_type size)
+    {
+        Derived &self = this->self();
+        self.doInit(size);
+        return self;
+    }
+
+    /**
      * Return a reference (ScalarProxy) to the stat at the given index.
      * @param index The vector index to access.
      * @return A reference of the stat.
@@ -1199,17 +1228,17 @@ class VectorBase : public InfoAccess
     operator[](off_type index)
     {
         assert (index >= 0 && index < size());
-        return Proxy(this, index);
+        return Proxy(this->self(), index);
     }
 
-    void update(Info *data) {}
+    void update() {}
 };
 
 template <class Stat>
 class VectorProxy
 {
   private:
-    Stat *stat;
+    Stat &stat;
     off_type offset;
     size_type len;
 
@@ -1220,14 +1249,14 @@ class VectorProxy
     data(off_type index)
     {
         assert(index < len);
-        return stat->data(offset + index);
+        return stat.data(offset + index);
     }
 
     const typename Stat::Storage *
     data(off_type index) const
     {
         assert(index < len);
-        return const_cast<Stat *>(stat)->data(offset + index);
+        return stat.data(offset + index);
     }
 
   public:
@@ -1252,7 +1281,7 @@ class VectorProxy
     }
 
   public:
-    VectorProxy(Stat *s, off_type o, size_type l)
+    VectorProxy(Stat &s, off_type o, size_type l)
         : stat(s), offset(o), len(l)
     {
     }
@@ -1281,15 +1310,18 @@ class VectorProxy
     size_type size() const { return len; }
 };
 
-template <class Stor>
-class Vector2dBase : public InfoAccess
+template <class Derived, class Stor>
+class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfo>
 {
   public:
+    typedef Vector2dInfo<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
-    typedef VectorProxy<Vector2dBase<Storage> > Proxy;
-    friend class ScalarProxy<Vector2dBase<Storage> >;
-    friend class VectorProxy<Vector2dBase<Storage> >;
+    typedef VectorProxy<Derived> Proxy;
+    friend class ScalarProxy<Derived>;
+    friend class VectorProxy<Derived>;
+    friend class DataWrapVec<Derived, Vector2dInfo>;
+    friend class DataWrapVec2d<Derived, Vector2dInfo>;
 
   protected:
     size_type x;
@@ -1300,29 +1332,6 @@ class Vector2dBase : public InfoAccess
   protected:
     Storage *data(off_type index) { return &storage[index]; }
     const Storage *data(off_type index) const { return &storage[index]; }
-
-    void
-    doInit(size_type _x, size_type _y)
-    {
-        assert(_x > 0 && _y > 0 && "sizes must be positive!");
-        assert(!storage && "already initialized");
-
-        Vector2dInfoBase *info = safe_cast<Vector2dInfoBase *>(this->info());
-
-        x = _x;
-        y = _y;
-        info->x = _x;
-        info->y = _y;
-        _size = x * y;
-
-        char *ptr = new char[_size * sizeof(Storage)];
-        storage = reinterpret_cast<Storage *>(ptr);
-
-        for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info);
-
-        setInit();
-    }
 
   public:
     Vector2dBase()
@@ -1340,12 +1349,39 @@ class Vector2dBase : public InfoAccess
     }
 
     void
-    update(Vector2dInfoBase *newinfo)
+    update()
     {
+        Info *info = this->info();
         size_type size = this->size();
-        newinfo->cvec.resize(size);
+        info->cvec.resize(size);
         for (off_type i = 0; i < size; ++i)
-            newinfo->cvec[i] = data(i)->value();
+            info->cvec[i] = data(i)->value();
+    }
+
+    Derived &
+    init(size_type _x, size_type _y)
+    {
+        assert(_x > 0 && _y > 0 && "sizes must be positive!");
+        assert(!storage && "already initialized");
+
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        x = _x;
+        y = _y;
+        info->x = _x;
+        info->y = _y;
+        _size = x * y;
+
+        char *ptr = new char[_size * sizeof(Storage)];
+        storage = reinterpret_cast<Storage *>(ptr);
+
+        for (off_type i = 0; i < _size; ++i)
+            new (&storage[i]) Storage(info);
+
+        this->setInit();
+
+        return self;
     }
 
     std::string ysubname(off_type i) const { return (*this->y_subnames)[i]; }
@@ -1355,7 +1391,7 @@ class Vector2dBase : public InfoAccess
     {
         off_type offset = index * y;
         assert (index >= 0 && offset + index < size());
-        return Proxy(this, offset, y);
+        return Proxy(this->self(), offset, y);
     }
 
 
@@ -1383,8 +1419,10 @@ class Vector2dBase : public InfoAccess
     void
     reset()
     {
-        for (off_type i = 0; i < size(); ++i)
-            data(i)->reset(info());
+        Info *info = this->info();
+        size_type size = this->size();
+        for (off_type i = 0; i < size; ++i)
+            data(i)->reset(info);
     }
 
     bool
@@ -1699,10 +1737,11 @@ class AvgFancy
  * Implementation of a distribution stat. The type of distribution is
  * determined by the Storage template. @sa ScalarBase
  */
-template <class Stor>
-class DistBase : public InfoAccess
+template <class Derived, class Stor>
+class DistBase : public DataWrap<Derived, DistInfo>
 {
   public:
+    typedef DistInfo<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
 
@@ -1734,8 +1773,8 @@ class DistBase : public InfoAccess
     void
     doInit()
     {
-        new (storage) Storage(info());
-        setInit();
+        new (storage) Storage(this->info());
+        this->setInit();
     }
 
   public:
@@ -1762,9 +1801,10 @@ class DistBase : public InfoAccess
     bool zero() const { return data()->zero(); }
 
     void
-    update(DistInfoBase *base)
+    update()
     {
-        data()->update(info(), base->data);
+        Info *info = this->info();
+        data()->update(info, info->data);
     }
 
     /**
@@ -1773,21 +1813,23 @@ class DistBase : public InfoAccess
     void
     reset()
     {
-        data()->reset(info());
+        data()->reset(this->info());
     }
 };
 
 template <class Stat>
 class DistProxy;
 
-template <class Stor>
-class VectorDistBase : public InfoAccess
+template <class Derived, class Stor>
+class VectorDistBase : public DataWrapVec<Derived, VectorDistInfo>
 {
   public:
+    typedef VectorDistInfo<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
-    typedef DistProxy<VectorDistBase<Storage> > Proxy;
-    friend class DistProxy<VectorDistBase<Storage> >;
+    typedef DistProxy<Derived> Proxy;
+    friend class DistProxy<Derived>;
+    friend class DataWrapVec<Derived, VectorDistInfo>;
 
   protected:
     Storage *storage;
@@ -1816,10 +1858,11 @@ class VectorDistBase : public InfoAccess
         char *ptr = new char[_size * sizeof(Storage)];
         storage = reinterpret_cast<Storage *>(ptr);
 
+        Info *info = this->info();
         for (off_type i = 0; i < _size; ++i)
-            new (&storage[i]) Storage(info());
+            new (&storage[i]) Storage(info);
 
-        setInit();
+        this->setInit();
     }
 
   public:
@@ -1857,16 +1900,6 @@ class VectorDistBase : public InfoAccess
 #endif
     }
 
-    /**
-     * Reset stat value to default
-     */
-    void
-    reset()
-    {
-        for (off_type i = 0; i < size(); ++i)
-            data(i)->reset(info());
-    }
-
     bool
     check() const
     {
@@ -1874,12 +1907,15 @@ class VectorDistBase : public InfoAccess
     }
 
     void
-    update(VectorDistInfoBase *base)
+    update()
     {
-        size_type size = this->size();
-        base->data.resize(size);
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_type size = self.size();
+        info.data.resize(size);
         for (off_type i = 0; i < size; ++i) {
-            data(i)->update(info(), base->data[i]);
+            data(i)->update(info, info.data[i]);
         }
     }
 };
@@ -1938,12 +1974,13 @@ class DistProxy
     void reset() { }
 };
 
-template <class Storage>
-inline typename VectorDistBase<Storage>::Proxy
-VectorDistBase<Storage>::operator[](off_type index)
+template <class Derived, class Stor>
+inline typename VectorDistBase<Derived, Stor>::Proxy
+VectorDistBase<Derived, Stor>::operator[](off_type index)
 {
     assert (index >= 0 && index < size());
-    return typename VectorDistBase<Storage>::Proxy(this, index);
+    typedef typename VectorDistBase<Derived, Stor>::Proxy Proxy;
+    return Proxy(this, index);
 }
 
 #if 0
@@ -2350,148 +2387,56 @@ class SumNode : public Node
  * This is a simple scalar statistic, like a counter.
  * @sa Stat, ScalarBase, StatStor
  */
-class Scalar : public DataWrap<Scalar, ScalarBase<StatStor>, ScalarInfo>
+class Scalar : public ScalarBase<Scalar, StatStor>
 {
   public:
-    /** The base implementation. */
-    typedef ScalarBase<StatStor> Base;
-
-    Scalar()
-    {
-        this->doInit();
-    }
-
-    /**
-     * Sets the stat equal to the given value. Calls the base implementation
-     * of operator=
-     * @param v The new value.
-     */
-    template <typename U>
-    void operator=(const U &v) { Base::operator=(v); }
-};
-
-class Value : public DataWrap<Value, ValueBase, ScalarInfo>
-{
-  public:
-    /** The base implementation. */
-    typedef ValueBase Base;
-
-    template <class T>
-    Value &
-    scalar(T &value)
-    {
-        Base::scalar(value);
-        return *this;
-    }
-
-    template <class T>
-    Value &
-    functor(T &func)
-    {
-        Base::functor(func);
-        return *this;
-    }
+    using ScalarBase<Scalar, StatStor>::operator=;
 };
 
 /**
  * A stat that calculates the per tick average of a value.
  * @sa Stat, ScalarBase, AvgStor
  */
-class Average : public DataWrap<Average, ScalarBase<AvgStor>, ScalarInfo>
+class Average : public ScalarBase<Average, AvgStor>
 {
   public:
-    /** The base implementation. */
-    typedef ScalarBase<AvgStor> Base;
+    using ScalarBase<Average, AvgStor>::operator=;
+};
 
-    Average()
-    {
-        this->doInit();
-    }
-
-    /**
-     * Sets the stat equal to the given value. Calls the base implementation
-     * of operator=
-     * @param v The new value.
-     */
-    template <typename U>
-    void
-    operator=(const U &v)
-    {
-        Base::operator=(v);
-    }
+class Value : public ValueBase<Value>
+{
 };
 
 /**
  * A vector of scalar stats.
  * @sa Stat, VectorBase, StatStor
  */
-class Vector : public DataWrapVec<Vector, VectorBase<StatStor>, VectorInfo>
+class Vector : public VectorBase<Vector, StatStor>
 {
-  public:
-    /** The base implementation. */
-    typedef ScalarBase<StatStor> Base;
-
-    /**
-     * Set this vector to have the given size.
-     * @param size The new size.
-     * @return A reference to this stat.
-     */
-    Vector &
-    init(size_type size)
-    {
-        this->doInit(size);
-        return *this;
-    }
 };
 
 /**
  * A vector of Average stats.
  * @sa Stat, VectorBase, AvgStor
  */
-class AverageVector
-    : public DataWrapVec<AverageVector, VectorBase<AvgStor>, VectorInfo>
+class AverageVector : public VectorBase<AverageVector, AvgStor>
 {
-  public:
-    /**
-     * Set this vector to have the given size.
-     * @param size The new size.
-     * @return A reference to this stat.
-     */
-    AverageVector &
-    init(size_type size)
-    {
-        this->doInit(size);
-        return *this;
-    }
 };
 
 /**
  * A 2-Dimensional vecto of scalar stats.
  * @sa Stat, Vector2dBase, StatStor
  */
-class Vector2d
-    : public DataWrapVec2d<Vector2d, Vector2dBase<StatStor>, Vector2dInfo>
+class Vector2d : public Vector2dBase<Vector2d, StatStor>
 {
-  public:
-    Vector2d &
-    init(size_type x, size_type y)
-    {
-        this->doInit(x, y);
-        return *this;
-    }
 };
 
 /**
  * A simple distribution stat.
  * @sa Stat, DistBase, DistStor
  */
-class Distribution
-    : public DataWrap<Distribution, DistBase<DistStor>, DistInfo>
+class Distribution : public DistBase<Distribution, DistStor>
 {
-  public:
-    /** Base implementation. */
-    typedef DistBase<DistStor> Base;
-
   public:
     /**
      * Set the parameters of this distribution. @sa DistStor::Params
@@ -2510,7 +2455,7 @@ class Distribution
         params->buckets = (size_type)rint((max - min) / bkt + 1.0);
         this->setParams(params);
         this->doInit();
-        return *this;
+        return this->self();
     }
 };
 
@@ -2518,13 +2463,8 @@ class Distribution
  * Calculates the mean and variance of all the samples.
  * @sa Stat, DistBase, FancyStor
  */
-class StandardDeviation
-    : public DataWrap<StandardDeviation, DistBase<FancyStor>, DistInfo>
+class StandardDeviation : public DistBase<StandardDeviation, FancyStor>
 {
-  public:
-    /** The base implementation */
-    typedef DistBase<DistStor> Base;
-
   public:
     /**
      * Construct and initialize this distribution.
@@ -2539,13 +2479,8 @@ class StandardDeviation
  * Calculates the per tick mean and variance of the samples.
  * @sa Stat, DistBase, AvgFancy
  */
-class AverageDeviation
-    : public DataWrap<AverageDeviation, DistBase<AvgFancy>, DistInfo>
+class AverageDeviation : public DistBase<AverageDeviation, AvgFancy>
 {
-  public:
-    /** The base implementation */
-    typedef DistBase<DistStor> Base;
-
   public:
     /**
      * Construct and initialize this distribution.
@@ -2560,15 +2495,8 @@ class AverageDeviation
  * A vector of distributions.
  * @sa Stat, VectorDistBase, DistStor
  */
-class VectorDistribution
-    : public DataWrapVec<VectorDistribution,
-                         VectorDistBase<DistStor>,
-                         VectorDistInfo>
+class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
 {
-  public:
-    /** The base implementation */
-    typedef VectorDistBase<DistStor> Base;
-
   public:
     /**
      * Initialize storage and parameters for this distribution.
@@ -2588,7 +2516,7 @@ class VectorDistribution
         params->buckets = rint((max - min) / bkt + 1.0);
         this->setParams(params);
         this->doInit(size);
-        return *this;
+        return this->self();
     }
 };
 
@@ -2597,14 +2525,8 @@ class VectorDistribution
  * @sa Stat, VectorDistBase, FancyStor
  */
 class VectorStandardDeviation
-    : public DataWrapVec<VectorStandardDeviation,
-                         VectorDistBase<FancyStor>,
-                         VectorDistInfo>
+    : public VectorDistBase<VectorStandardDeviation, FancyStor>
 {
-  public:
-    /** The base implementation */
-    typedef VectorDistBase<FancyStor> Base;
-
   public:
     /**
      * Initialize storage for this distribution.
@@ -2615,7 +2537,7 @@ class VectorStandardDeviation
     init(size_type size)
     {
         this->doInit(size);
-        return *this;
+        return this->self();
     }
 };
 
@@ -2624,14 +2546,8 @@ class VectorStandardDeviation
  * @sa Stat, VectorDistBase, AvgFancy
  */
 class VectorAverageDeviation
-    : public DataWrapVec<VectorAverageDeviation,
-                         VectorDistBase<AvgFancy>,
-                         VectorDistInfo>
+    : public VectorDistBase<VectorAverageDeviation, AvgFancy>
 {
-  public:
-    /** The base implementation */
-    typedef VectorDistBase<AvgFancy> Base;
-
   public:
     /**
      * Initialize storage for this distribution.
@@ -2642,65 +2558,8 @@ class VectorAverageDeviation
     init(size_type size)
     {
         this->doInit(size);
-        return *this;
+        return this->self();
     }
-};
-
-/**
- * A formula for statistics that is calculated when printed. A formula is
- * stored as a tree of Nodes that represent the equation to calculate.
- * @sa Stat, ScalarStat, VectorStat, Node, Temp
- */
-class FormulaBase : public InfoAccess
-{
-  protected:
-    /** The root of the tree which represents the Formula */
-    NodePtr root;
-    friend class Temp;
-
-  public:
-    /**
-     * Return the result of the Fomula in a vector.  If there were no Vector
-     * components to the Formula, then the vector is size 1.  If there were,
-     * like x/y with x being a vector of size 3, then the result returned will
-     * be x[0]/y, x[1]/y, x[2]/y, respectively.
-     * @return The result vector.
-     */
-    void result(VResult &vec) const;
-
-    /**
-     * Return the total Formula result.  If there is a Vector
-     * component to this Formula, then this is the result of the
-     * Formula if the formula is applied after summing all the
-     * components of the Vector.  For example, if Formula is x/y where
-     * x is size 3, then total() will return (x[1]+x[2]+x[3])/y.  If
-     * there is no Vector component, total() returns the same value as
-     * the first entry in the VResult val() returns.
-     * @return The total of the result vector.
-     */
-    Result total() const;
-
-    /**
-     * Return the number of elements in the tree.
-     */
-    size_type size() const;
-
-    /**
-     * Formulas don't need to be reset
-     */
-    void reset();
-
-    /**
-     *
-     */
-    bool zero() const;
-
-    /**
-     *
-     */
-    void update(Info *);
-
-    std::string str() const;
 };
 
 class FormulaInfoBase : public VectorInfoBase
@@ -2734,7 +2593,7 @@ class FormulaInfo : public InfoWrap<Stat, FormulaInfoBase>
     visit(Visit &visitor)
     {
         this->update();
-        this->s.update(this);
+        this->s.update();
         visitor.visit(*this);
     }
 
@@ -2742,8 +2601,18 @@ class FormulaInfo : public InfoWrap<Stat, FormulaInfoBase>
 };
 
 class Temp;
-class Formula : public DataWrapVec<Formula, FormulaBase, FormulaInfo>
+/**
+ * A formula for statistics that is calculated when printed. A formula is
+ * stored as a tree of Nodes that represent the equation to calculate.
+ * @sa Stat, ScalarStat, VectorStat, Node, Temp
+ */
+class Formula : public DataWrapVec<Formula, FormulaInfo>
 {
+  protected:
+    /** The root of the tree which represents the Formula */
+    NodePtr root;
+    friend class Temp;
+
   public:
     /**
      * Create and initialize thie formula, and register it with the database.
@@ -2770,6 +2639,50 @@ class Formula : public DataWrapVec<Formula, FormulaBase, FormulaInfo>
      * @return a reference to this formula.
      */
     const Formula &operator+=(Temp r);
+    /**
+     * Return the result of the Fomula in a vector.  If there were no Vector
+     * components to the Formula, then the vector is size 1.  If there were,
+     * like x/y with x being a vector of size 3, then the result returned will
+     * be x[0]/y, x[1]/y, x[2]/y, respectively.
+     * @return The result vector.
+     */
+    void result(VResult &vec) const;
+
+    /**
+     * Return the total Formula result.  If there is a Vector
+     * component to this Formula, then this is the result of the
+     * Formula if the formula is applied after summing all the
+     * components of the Vector.  For example, if Formula is x/y where
+     * x is size 3, then total() will return (x[1]+x[2]+x[3])/y.  If
+     * there is no Vector component, total() returns the same value as
+     * the first entry in the VResult val() returns.
+     * @return The total of the result vector.
+     */
+    Result total() const;
+
+    /**
+     * Return the number of elements in the tree.
+     */
+    size_type size() const;
+
+    void prepare() { }
+
+    /**
+     * Formulas don't need to be reset
+     */
+    void reset();
+
+    /**
+     *
+     */
+    bool zero() const;
+
+    /**
+     *
+     */
+    void update();
+
+    std::string str() const;
 };
 
 class FormulaNode : public Node

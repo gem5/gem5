@@ -158,7 +158,7 @@ Info::less(Info *stat1, Info *stat2)
 bool
 Info::baseCheck() const
 {
-    if (!(flags & init)) {
+    if (!(flags & Stats::init)) {
 #ifdef DEBUG
         cprintf("this is stat number %d\n", id);
 #endif
@@ -174,55 +174,6 @@ Info::baseCheck() const
     return true;
 }
 
-
-void
-FormulaBase::result(VResult &vec) const
-{
-    if (root)
-        vec = root->result();
-}
-
-Result
-FormulaBase::total() const
-{
-    return root ? root->total() : 0.0;
-}
-
-size_type
-FormulaBase::size() const
-{
-    if (!root)
-        return 0;
-    else
-        return root->size();
-}
-
-void
-FormulaBase::reset()
-{
-}
-
-bool
-FormulaBase::zero() const
-{
-    VResult vec;
-    result(vec);
-    for (off_t i = 0; i < vec.size(); ++i)
-        if (vec[i] != 0.0)
-            return false;
-    return true;
-}
-
-void
-FormulaBase::update(Info *)
-{
-}
-
-string
-FormulaBase::str() const
-{
-    return root ? root->str() : "";
-}
 
 Formula::Formula()
 {
@@ -253,6 +204,55 @@ Formula::operator+=(Temp r)
         root = r;
     assert(size());
     return *this;
+}
+
+void
+Formula::result(VResult &vec) const
+{
+    if (root)
+        vec = root->result();
+}
+
+Result
+Formula::total() const
+{
+    return root ? root->total() : 0.0;
+}
+
+size_type
+Formula::size() const
+{
+    if (!root)
+        return 0;
+    else
+        return root->size();
+}
+
+void
+Formula::reset()
+{
+}
+
+bool
+Formula::zero() const
+{
+    VResult vec;
+    result(vec);
+    for (off_t i = 0; i < vec.size(); ++i)
+        if (vec[i] != 0.0)
+            return false;
+    return true;
+}
+
+void
+Formula::update()
+{
+}
+
+string
+Formula::str() const
+{
+    return root ? root->str() : "";
 }
 
 void
