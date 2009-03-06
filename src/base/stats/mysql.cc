@@ -583,8 +583,8 @@ MySql::configure(const DistInfoBase &info)
     if (!configure(info, "DIST"))
         return;
 
-    if (!info.data.fancy) {
-        const Params *params = safe_cast<const Params *>(info.storageParams);
+    const Params *params = safe_cast<const Params *>(info.storageParams);
+    if (!params->fancy) {
         stat.size = params->buckets;
         stat.min = params->min;
         stat.max = params->max;
@@ -599,8 +599,8 @@ MySql::configure(const VectorDistInfoBase &info)
     if (!configure(info, "VECTORDIST"))
         return;
 
-    if (!info.data[0].fancy) {
-        const Params *params = safe_cast<const Params *>(info.storageParams);
+    const Params *params = safe_cast<const Params *>(info.storageParams);
+    if (!params->fancy) {
         stat.size = params->buckets;
         stat.min = params->min;
         stat.max = params->max;

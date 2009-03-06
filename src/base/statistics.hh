@@ -257,8 +257,6 @@ struct DistData
     Counter sum;
     Counter squares;
     Counter samples;
-
-    bool fancy;
 };
 
 class DistInfoBase : public Info
@@ -1419,8 +1417,9 @@ class DistStor
         Counter bucket_size;
         /** The number of buckets. Equal to (max-min)/bucket_size. */
         size_type buckets;
+
+        enum { fancy = false };
     };
-    enum { fancy = false };
 
   private:
     /** The minimum value to track. */
@@ -1556,10 +1555,10 @@ class DistStor
 class FancyStor
 {
   public:
-    struct Params : public StorageParams {};
-
-  public:
-    enum { fancy = true };
+    struct Params : public StorageParams
+    {
+        enum { fancy = true };
+    };
 
   private:
     /** The current sum. */
@@ -1632,10 +1631,10 @@ class FancyStor
 class AvgFancy
 {
   public:
-    struct Params : public StorageParams {};
-
-  public:
-    enum { fancy = true };
+    struct Params : public StorageParams
+    {
+        enum { fancy = true };
+    };
 
   private:
     /** Current total. */
@@ -1765,7 +1764,6 @@ class DistBase : public InfoAccess
     void
     update(DistInfoBase *base)
     {
-        base->data.fancy = Storage::fancy;
         data()->update(info(), base->data);
     }
 
@@ -1881,7 +1879,6 @@ class VectorDistBase : public InfoAccess
         size_type size = this->size();
         base->data.resize(size);
         for (off_type i = 0; i < size; ++i) {
-            base->data[i].fancy = Storage::fancy;
             data(i)->update(info(), base->data[i]);
         }
     }
