@@ -43,6 +43,7 @@
 //#include "params/DerivO3CPU.hh"
 
 using namespace std;
+using namespace MipsISA;
 
 std::string MiscRegFile::miscRegNames[NumMiscRegs] =
 {

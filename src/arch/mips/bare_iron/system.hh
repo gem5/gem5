@@ -39,8 +39,6 @@ class IdleStartEvent;
 #include "arch/mips/system.hh"
 #include "params/BareIronMipsSystem.hh"
 
-using namespace MipsISA;
-
 /**
  * This class contains linux specific system code (Loading, Events).
  * It points to objects that are the system binaries to load and patches them

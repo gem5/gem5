@@ -45,7 +45,6 @@
 #include "base/misc.hh"
 
 #include <iostream>
-using namespace std;
 
 namespace MipsISA
 {
@@ -164,7 +163,7 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
                 success = 1;
             }
         } else {
-            std::cerr << "Bad VPEs" << endl;
+            std::cerr << "Bad VPEs" << std::endl;
         }
     }
 

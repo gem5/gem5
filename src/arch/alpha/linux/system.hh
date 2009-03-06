@@ -43,9 +43,6 @@ class IdleStartEvent;
 #include "kern/linux/events.hh"
 #include "params/LinuxAlphaSystem.hh"
 
-using namespace AlphaISA;
-using namespace Linux;
-
 /**
  * This class contains linux specific system code (Loading, Events).
  * It points to objects that are the system binaries to load and patches them
@@ -109,7 +106,7 @@ class LinuxAlphaSystem : public AlphaSystem
      * PC based event to skip the dprink() call and emulate its
      * functionality
      */
-    DebugPrintkEvent *debugPrintkEvent;
+    Linux::DebugPrintkEvent *debugPrintkEvent;
 
     /**
      * Skip calculate_delay_loop() rather than waiting for this to be

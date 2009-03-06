@@ -32,9 +32,6 @@
 #define __ARCH_MIPS_LINUX_LINUX_HH__
 
 #include "kern/linux/linux.hh"
-#include <string>
-
-using std::string;
 
 class MipsLinux : public Linux
 {

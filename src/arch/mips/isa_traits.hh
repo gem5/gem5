@@ -381,6 +381,4 @@ namespace MipsISA
 
 };
 
-using namespace MipsISA;
-
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

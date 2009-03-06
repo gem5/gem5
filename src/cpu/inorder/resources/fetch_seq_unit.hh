@@ -41,8 +41,6 @@
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
 
-using namespace ThePipeline;
-
 class FetchSeqUnit : public Resource {
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
