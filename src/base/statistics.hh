@@ -2350,8 +2350,7 @@ class SumNode : public Node
  * This is a simple scalar statistic, like a counter.
  * @sa Stat, ScalarBase, StatStor
  */
-template<int N = 0>
-class Scalar : public DataWrap<Scalar<N>, ScalarBase<StatStor>, ScalarInfo>
+class Scalar : public DataWrap<Scalar, ScalarBase<StatStor>, ScalarInfo>
 {
   public:
     /** The base implementation. */
@@ -2398,8 +2397,7 @@ class Value : public DataWrap<Value, ValueBase, ScalarInfo>
  * A stat that calculates the per tick average of a value.
  * @sa Stat, ScalarBase, AvgStor
  */
-template<int N = 0>
-class Average : public DataWrap<Average<N>, ScalarBase<AvgStor>, ScalarInfo>
+class Average : public DataWrap<Average, ScalarBase<AvgStor>, ScalarInfo>
 {
   public:
     /** The base implementation. */
@@ -2427,8 +2425,7 @@ class Average : public DataWrap<Average<N>, ScalarBase<AvgStor>, ScalarInfo>
  * A vector of scalar stats.
  * @sa Stat, VectorBase, StatStor
  */
-template<int N = 0>
-class Vector : public DataWrapVec<Vector<N>, VectorBase<StatStor>, VectorInfo>
+class Vector : public DataWrapVec<Vector, VectorBase<StatStor>, VectorInfo>
 {
   public:
     /** The base implementation. */
@@ -2451,9 +2448,8 @@ class Vector : public DataWrapVec<Vector<N>, VectorBase<StatStor>, VectorInfo>
  * A vector of Average stats.
  * @sa Stat, VectorBase, AvgStor
  */
-template<int N = 0>
 class AverageVector
-    : public DataWrapVec<AverageVector<N>, VectorBase<AvgStor>, VectorInfo>
+    : public DataWrapVec<AverageVector, VectorBase<AvgStor>, VectorInfo>
 {
   public:
     /**
@@ -2473,9 +2469,8 @@ class AverageVector
  * A 2-Dimensional vecto of scalar stats.
  * @sa Stat, Vector2dBase, StatStor
  */
-template<int N = 0>
 class Vector2d
-    : public DataWrapVec2d<Vector2d<N>, Vector2dBase<StatStor>, Vector2dInfo>
+    : public DataWrapVec2d<Vector2d, Vector2dBase<StatStor>, Vector2dInfo>
 {
   public:
     Vector2d &
@@ -2490,9 +2485,8 @@ class Vector2d
  * A simple distribution stat.
  * @sa Stat, DistBase, DistStor
  */
-template<int N = 0>
 class Distribution
-    : public DataWrap<Distribution<N>, DistBase<DistStor>, DistInfo>
+    : public DataWrap<Distribution, DistBase<DistStor>, DistInfo>
 {
   public:
     /** Base implementation. */
@@ -2524,9 +2518,8 @@ class Distribution
  * Calculates the mean and variance of all the samples.
  * @sa Stat, DistBase, FancyStor
  */
-template<int N = 0>
 class StandardDeviation
-    : public DataWrap<StandardDeviation<N>, DistBase<FancyStor>, DistInfo>
+    : public DataWrap<StandardDeviation, DistBase<FancyStor>, DistInfo>
 {
   public:
     /** The base implementation */
@@ -2546,9 +2539,8 @@ class StandardDeviation
  * Calculates the per tick mean and variance of the samples.
  * @sa Stat, DistBase, AvgFancy
  */
-template<int N = 0>
 class AverageDeviation
-    : public DataWrap<AverageDeviation<N>, DistBase<AvgFancy>, DistInfo>
+    : public DataWrap<AverageDeviation, DistBase<AvgFancy>, DistInfo>
 {
   public:
     /** The base implementation */
@@ -2568,9 +2560,8 @@ class AverageDeviation
  * A vector of distributions.
  * @sa Stat, VectorDistBase, DistStor
  */
-template<int N = 0>
 class VectorDistribution
-    : public DataWrapVec<VectorDistribution<N>,
+    : public DataWrapVec<VectorDistribution,
                          VectorDistBase<DistStor>,
                          VectorDistInfo>
 {
@@ -2605,9 +2596,8 @@ class VectorDistribution
  * This is a vector of StandardDeviation stats.
  * @sa Stat, VectorDistBase, FancyStor
  */
-template<int N = 0>
 class VectorStandardDeviation
-    : public DataWrapVec<VectorStandardDeviation<N>,
+    : public DataWrapVec<VectorStandardDeviation,
                          VectorDistBase<FancyStor>,
                          VectorDistInfo>
 {
@@ -2633,9 +2623,8 @@ class VectorStandardDeviation
  * This is a vector of AverageDeviation stats.
  * @sa Stat, VectorDistBase, AvgFancy
  */
-template<int N = 0>
 class VectorAverageDeviation
-    : public DataWrapVec<VectorAverageDeviation<N>,
+    : public DataWrapVec<VectorAverageDeviation,
                          VectorDistBase<AvgFancy>,
                          VectorDistInfo>
 {
@@ -2828,8 +2817,7 @@ class Temp
      * Create a new ScalarStatNode.
      * @param s The ScalarStat to place in a node.
      */
-    template <int N>
-    Temp(const Scalar<N> &s)
+    Temp(const Scalar &s)
         : node(new ScalarStatNode(s.info()))
     { }
 
@@ -2845,8 +2833,7 @@ class Temp
      * Create a new ScalarStatNode.
      * @param s The ScalarStat to place in a node.
      */
-    template <int N>
-    Temp(const Average<N> &s)
+    Temp(const Average &s)
         : node(new ScalarStatNode(s.info()))
     { }
 
@@ -2854,8 +2841,7 @@ class Temp
      * Create a new VectorStatNode.
      * @param s The VectorStat to place in a node.
      */
-    template <int N>
-    Temp(const Vector<N> &s)
+    Temp(const Vector &s)
         : node(new VectorStatNode(s.info()))
     { }
 
