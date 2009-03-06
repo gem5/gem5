@@ -397,16 +397,16 @@ class InfoAccess
     const Info *info() const;
 };
 
-template <class Parent, class Child, template <class> class Info>
-class Wrap : public Child
+template <class Derived, class Base, template <class> class Info>
+class Wrap : public Base
 {
   public:
-    typedef Parent ParentType;
-    typedef Child ChildType;
-    typedef Info<Child> InfoType;
+    typedef Derived DerivedType;
+    typedef Base BaseType;
+    typedef Info<Base> InfoType;
 
   protected:
-    Parent &self() { return *reinterpret_cast<Parent *>(this); }
+    Derived &self() { return *reinterpret_cast<Derived *>(this); }
 
   protected:
     InfoType *
@@ -444,7 +444,7 @@ class Wrap : public Child
      * @param name The new name.
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     name(const std::string &_name)
     {
         InfoType *info = this->info();
@@ -459,7 +459,7 @@ class Wrap : public Child
      * @param desc The new description.
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     desc(const std::string &_desc)
     {
         this->info()->desc = _desc;
@@ -471,7 +471,7 @@ class Wrap : public Child
      * @param _precision The new precision
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     precision(int _precision)
     {
         this->info()->precision = _precision;
@@ -483,7 +483,7 @@ class Wrap : public Child
      * @param f The new flags.
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     flags(StatFlags _flags)
     {
         this->info()->flags |= _flags;
@@ -497,7 +497,7 @@ class Wrap : public Child
      * @return A reference to this stat.
      */
     template <class Stat>
-    Parent &
+    Derived &
     prereq(const Stat &prereq)
     {
         this->info()->prereq = prereq.info();
@@ -505,13 +505,13 @@ class Wrap : public Child
     }
 };
 
-template <class Parent, class Child, template <class Child> class Info>
-class WrapVec : public Wrap<Parent, Child, Info>
+template <class Derived, class Base, template <class Base> class Info>
+class WrapVec : public Wrap<Derived, Base, Info>
 {
   public:
-    typedef Parent ParentType;
-    typedef Child ChildType;
-    typedef Info<Child> InfoType;
+    typedef Derived DerivedType;
+    typedef Base BaseType;
+    typedef Info<Base> InfoType;
 
   public:
     // The following functions are specific to vectors.  If you use them
@@ -524,7 +524,7 @@ class WrapVec : public Wrap<Parent, Child, Info>
      * @param name The new name of the subfield.
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     subname(off_type index, const std::string &name)
     {
         std::vector<std::string> &subn = this->info()->subnames;
@@ -541,7 +541,7 @@ class WrapVec : public Wrap<Parent, Child, Info>
      * @param desc The new description of the subfield
      * @return A reference to this stat.
      */
-    Parent &
+    Derived &
     subdesc(off_type index, const std::string &desc)
     {
         std::vector<std::string> &subd = this->info()->subdescs;
@@ -554,20 +554,20 @@ class WrapVec : public Wrap<Parent, Child, Info>
 
 };
 
-template <class Parent, class Child, template <class Child> class Info>
-class WrapVec2d : public WrapVec<Parent, Child, Info>
+template <class Derived, class Base, template <class Base> class Info>
+class WrapVec2d : public WrapVec<Derived, Base, Info>
 {
   public:
-    typedef Parent ParentType;
-    typedef Child ChildType;
-    typedef Info<Child> InfoType;
+    typedef Derived DerivedType;
+    typedef Base BaseType;
+    typedef Info<Base> InfoType;
 
   public:
     /**
      * @warning This makes the assumption that if you're gonna subnames a 2d
      * vector, you're subnaming across all y
      */
-    Parent &
+    Derived &
     ysubnames(const char **names)
     {
         InfoType *info = this->info();
@@ -577,7 +577,7 @@ class WrapVec2d : public WrapVec<Parent, Child, Info>
         return this->self();
     }
 
-    Parent &
+    Derived &
     ysubname(off_type index, const std::string subname)
     {
         InfoType *info = this->info();
