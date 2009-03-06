@@ -155,7 +155,7 @@ class ScalarInfoBase : public Info
     virtual Counter value() const = 0;
     virtual Result result() const = 0;
     virtual Result total() const = 0;
-    virtual void visit(Visit &visitor) { visitor.visit(*this); }
+    void visit(Visit &visitor) { visitor.visit(*this); }
 };
 
 template <class Stat>
@@ -167,12 +167,12 @@ class ScalarInfo : public ScalarInfoBase
   public:
     ScalarInfo(Stat &stat) : s(stat) {}
 
-    virtual bool check() const { return s.check(); }
-    virtual Counter value() const { return s.value(); }
-    virtual Result result() const { return s.result(); }
-    virtual Result total() const { return s.total(); }
-    virtual void reset() { s.reset(); }
-    virtual bool zero() const { return s.zero(); }
+    bool check() const { return s.check(); }
+    Counter value() const { return s.value(); }
+    Result result() const { return s.result(); }
+    Result total() const { return s.total(); }
+    void reset() { s.reset(); }
+    bool zero() const { return s.zero(); }
 };
 
 class VectorInfoBase : public Info
@@ -183,10 +183,10 @@ class VectorInfoBase : public Info
     mutable std::vector<std::string> subdescs;
 
   public:
-    virtual size_type size() const  = 0;
+    virtual size_type size() const = 0;
     virtual const VCounter &value() const = 0;
     virtual const VResult &result() const = 0;
-    virtual Result total() const  = 0;
+    virtual Result total() const = 0;
 
     void
     update()
@@ -213,29 +213,29 @@ class VectorInfo : public VectorInfoBase
   public:
     VectorInfo(Stat &stat) : s(stat) {}
 
-    virtual bool check() const { return s.check(); }
-    virtual bool zero() const { return s.zero(); }
-    virtual void reset() { s.reset(); }
+    bool check() const { return s.check(); }
+    bool zero() const { return s.zero(); }
+    void reset() { s.reset(); }
 
-    virtual size_type size() const { return s.size(); }
+    size_type size() const { return s.size(); }
 
-    virtual VCounter &
+    VCounter &
     value() const
     {
         s.value(cvec);
         return cvec;
     }
 
-    virtual const VResult &
+    const VResult &
     result() const
     {
         s.result(rvec);
         return rvec;
     }
 
-    virtual Result total() const { return s.total(); }
+    Result total() const { return s.total(); }
 
-    virtual void
+    void
     visit(Visit &visitor)
     {
         update();
@@ -274,11 +274,11 @@ class DistInfo : public DistInfoBase
   public:
     DistInfo(Stat &stat) : s(stat) {}
 
-    virtual bool check() const { return s.check(); }
-    virtual void reset() { s.reset(); }
-    virtual bool zero() const { return s.zero(); }
+    bool check() const { return s.check(); }
+    void reset() { s.reset(); }
+    bool zero() const { return s.zero(); }
 
-    virtual void
+    void
     visit(Visit &visitor)
     {
         s.update(this);
@@ -323,12 +323,12 @@ class VectorDistInfo : public VectorDistInfoBase
   public:
     VectorDistInfo(Stat &stat) : s(stat) {}
 
-    virtual bool check() const { return s.check(); }
-    virtual void reset() { s.reset(); }
-    virtual size_type size() const { return s.size(); }
-    virtual bool zero() const { return s.zero(); }
+    bool check() const { return s.check(); }
+    void reset() { s.reset(); }
+    size_type size() const { return s.size(); }
+    bool zero() const { return s.zero(); }
 
-    virtual void
+    void
     visit(Visit &visitor)
     {
         update();
@@ -368,11 +368,11 @@ class Vector2dInfo : public Vector2dInfoBase
   public:
     Vector2dInfo(Stat &stat) : s(stat) {}
 
-    virtual bool check() const { return s.check(); }
-    virtual void reset() { s.reset(); }
-    virtual bool zero() const { return s.zero(); }
+    bool check() const { return s.check(); }
+    void reset() { s.reset(); }
+    bool zero() const { return s.zero(); }
 
-    virtual void
+    void
     visit(Visit &visitor)
     {
         update();
@@ -862,12 +862,12 @@ class ScalarBase : public InfoAccess
 class ProxyInfo : public ScalarInfoBase
 {
   public:
-    virtual void visit(Visit &visitor) { visitor.visit(*this); }
-    virtual std::string str() const { return to_string(value()); }
-    virtual size_type size() const { return 1; }
-    virtual bool zero() const { return value() == 0; }
-    virtual bool check() const { return true; }
-    virtual void reset() { }
+    void visit(Visit &visitor) { visitor.visit(*this); }
+    std::string str() const { return to_string(value()); }
+    size_type size() const { return 1; }
+    bool zero() const { return value() == 0; }
+    bool check() const { return true; }
+    void reset() { }
 };
 
 template <class T>
@@ -878,9 +878,9 @@ class ValueProxy : public ProxyInfo
 
   public:
     ValueProxy(T &val) : scalar(&val) {}
-    virtual Counter value() const { return *scalar; }
-    virtual Result result() const { return *scalar; }
-    virtual Result total() const { return *scalar; }
+    Counter value() const { return *scalar; }
+    Result result() const { return *scalar; }
+    Result total() const { return *scalar; }
 };
 
 template <class T>
@@ -891,9 +891,9 @@ class FunctorProxy : public ProxyInfo
 
   public:
     FunctorProxy(T &func) : functor(&func) {}
-    virtual Counter value() const { return (*functor)(); }
-    virtual Result result() const { return (*functor)(); }
-    virtual Result total() const { return (*functor)(); }
+    Counter value() const { return (*functor)(); }
+    Result result() const { return (*functor)(); }
+    Result total() const { return (*functor)(); }
 };
 
 class ValueBase : public InfoAccess
@@ -2024,21 +2024,21 @@ class ScalarStatNode : public Node
   public:
     ScalarStatNode(const ScalarInfoBase *d) : data(d), vresult(1) {}
 
-    virtual const VResult &
+    const VResult &
     result() const
     {
         vresult[0] = data->result();
         return vresult;
     }
 
-    virtual Result total() const { return data->result(); };
+    Result total() const { return data->result(); };
 
-    virtual size_type size() const { return 1; }
+    size_type size() const { return 1; }
 
     /**
      *
      */
-    virtual std::string str() const { return data->name; }
+    std::string str() const { return data->name; }
 };
 
 template <class Stat>
@@ -2053,20 +2053,20 @@ class ScalarProxyNode : public Node
         : proxy(p), vresult(1)
     { }
 
-    virtual const VResult &
+    const VResult &
     result() const
     {
         vresult[0] = proxy.result();
         return vresult;
     }
 
-    virtual Result
+    Result
     total() const
     {
         return proxy.result();
     }
 
-    virtual size_type
+    size_type
     size() const
     {
         return 1;
@@ -2075,7 +2075,7 @@ class ScalarProxyNode : public Node
     /**
      *
      */
-    virtual std::string
+    std::string
     str() const
     {
         return proxy.str();
@@ -2089,12 +2089,12 @@ class VectorStatNode : public Node
 
   public:
     VectorStatNode(const VectorInfoBase *d) : data(d) { }
-    virtual const VResult &result() const { return data->result(); }
-    virtual Result total() const { return data->total(); };
+    const VResult &result() const { return data->result(); }
+    Result total() const { return data->total(); };
 
-    virtual size_type size() const { return data->size(); }
+    size_type size() const { return data->size(); }
 
-    virtual std::string str() const { return data->name; }
+    std::string str() const { return data->name; }
 };
 
 template <class T>
@@ -2106,9 +2106,9 @@ class ConstNode : public Node
   public:
     ConstNode(T s) : vresult(1, (Result)s) {}
     const VResult &result() const { return vresult; }
-    virtual Result total() const { return vresult[0]; };
-    virtual size_type size() const { return 1; }
-    virtual std::string str() const { return to_string(vresult[0]); }
+    Result total() const { return vresult[0]; };
+    size_type size() const { return 1; }
+    std::string str() const { return to_string(vresult[0]); }
 };
 
 template <class T>
@@ -2121,7 +2121,7 @@ class ConstVectorNode : public Node
     ConstVectorNode(const T &s) : vresult(s.begin(), s.end()) {}
     const VResult &result() const { return vresult; }
 
-    virtual Result
+    Result
     total() const
     {
         size_type size = this->size();
@@ -2131,8 +2131,8 @@ class ConstVectorNode : public Node
         return tmp;
     }
 
-    virtual size_type size() const { return vresult.size(); }
-    virtual std::string
+    size_type size() const { return vresult.size(); }
+    std::string
     str() const
     {
         size_type size = this->size();
@@ -2219,9 +2219,9 @@ class UnaryNode : public Node
         return total;
     }
 
-    virtual size_type size() const { return l->size(); }
+    size_type size() const { return l->size(); }
 
-    virtual std::string
+    std::string
     str() const
     {
         return OpString<Op>::str() + l->str();
@@ -2281,7 +2281,7 @@ class BinaryNode : public Node
         return total;
     }
 
-    virtual size_type
+    size_type
     size() const
     {
         size_type ls = l->size();
@@ -2296,7 +2296,7 @@ class BinaryNode : public Node
         }
     }
 
-    virtual std::string
+    std::string
     str() const
     {
         return csprintf("(%s %s %s)", l->str(), OpString<Op>::str(), r->str());
@@ -2345,9 +2345,9 @@ class SumNode : public Node
         return vresult;
     }
 
-    virtual size_type size() const { return 1; }
+    size_type size() const { return 1; }
 
-    virtual std::string
+    std::string
     str() const
     {
         return csprintf("total(%s)", l->str());
@@ -2740,7 +2740,7 @@ class FormulaInfoBase : public VectorInfoBase
 {
   public:
     virtual std::string str() const = 0;
-    virtual bool check() const { return true; }
+    bool check() const { return true; }
 };
 
 template <class Stat>
@@ -2754,21 +2754,21 @@ class FormulaInfo : public FormulaInfoBase
   public:
     FormulaInfo(Stat &stat) : s(stat) {}
 
-    virtual bool zero() const { return s.zero(); }
-    virtual void reset() { s.reset(); }
+    bool zero() const { return s.zero(); }
+    void reset() { s.reset(); }
 
-    virtual size_type size() const { return s.size(); }
+    size_type size() const { return s.size(); }
 
-    virtual const VResult &
+    const VResult &
     result() const
     {
         s.result(vec);
         return vec;
     }
-    virtual Result total() const { return s.total(); }
-    virtual VCounter &value() const { return cvec; }
+    Result total() const { return s.total(); }
+    VCounter &value() const { return cvec; }
 
-    virtual void
+    void
     visit(Visit &visitor)
     {
         update();
@@ -2776,7 +2776,7 @@ class FormulaInfo : public FormulaInfoBase
         visitor.visit(*this);
     }
 
-    virtual std::string str() const { return s.str(); }
+    std::string str() const { return s.str(); }
 };
 
 class Temp;
@@ -2822,11 +2822,11 @@ class FormulaNode : public Node
   public:
     FormulaNode(const Formula &f) : formula(f) {}
 
-    virtual size_type size() const { return formula.size(); }
-    virtual const VResult &result() const { formula.result(vec); return vec; }
-    virtual Result total() const { return formula.total(); }
+    size_type size() const { return formula.size(); }
+    const VResult &result() const { formula.result(vec); return vec; }
+    Result total() const { return formula.total(); }
 
-    virtual std::string str() const { return formula.str(); }
+    std::string str() const { return formula.str(); }
 };
 
 /**
