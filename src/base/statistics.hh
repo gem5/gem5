@@ -115,7 +115,7 @@ class Info
     virtual ~Info();
 
     /**
-     * Reset the corresponding stat to the default state.
+     * Reset the stat to the default state.
      */
     virtual void reset() = 0;
 
@@ -149,6 +149,20 @@ class Info
     static bool less(Info *stat1, Info *stat2);
 };
 
+template <class Stat, class Base>
+class InfoWrap : public Base
+{
+  protected:
+    Stat &s;
+
+  public:
+    InfoWrap(Stat &stat) : s(stat) {}
+
+    bool check() const { return s.check(); }
+    void reset() { s.reset(); }
+    bool zero() const { return s.zero(); }
+};
+
 class ScalarInfoBase : public Info
 {
   public:
@@ -159,20 +173,14 @@ class ScalarInfoBase : public Info
 };
 
 template <class Stat>
-class ScalarInfo : public ScalarInfoBase
+class ScalarInfo : public InfoWrap<Stat, ScalarInfoBase>
 {
-  protected:
-    Stat &s;
-
   public:
-    ScalarInfo(Stat &stat) : s(stat) {}
+    ScalarInfo(Stat &stat) : InfoWrap<Stat, ScalarInfoBase>(stat) {}
 
-    bool check() const { return s.check(); }
-    Counter value() const { return s.value(); }
-    Result result() const { return s.result(); }
-    Result total() const { return s.total(); }
-    void reset() { s.reset(); }
-    bool zero() const { return s.zero(); }
+    Counter value() const { return this->s.value(); }
+    Result result() const { return this->s.result(); }
+    Result total() const { return this->s.total(); }
 };
 
 class VectorInfoBase : public Info
@@ -203,43 +211,38 @@ class VectorInfoBase : public Info
 };
 
 template <class Stat>
-class VectorInfo : public VectorInfoBase
+class VectorInfo : public InfoWrap<Stat, VectorInfoBase>
 {
   protected:
-    Stat &s;
     mutable VCounter cvec;
     mutable VResult rvec;
 
   public:
-    VectorInfo(Stat &stat) : s(stat) {}
+    VectorInfo(Stat &stat) : InfoWrap<Stat, VectorInfoBase>(stat) {}
 
-    bool check() const { return s.check(); }
-    bool zero() const { return s.zero(); }
-    void reset() { s.reset(); }
-
-    size_type size() const { return s.size(); }
+    size_type size() const { return this->s.size(); }
 
     VCounter &
     value() const
     {
-        s.value(cvec);
+        this->s.value(cvec);
         return cvec;
     }
 
     const VResult &
     result() const
     {
-        s.result(rvec);
+        this->s.result(rvec);
         return rvec;
     }
 
-    Result total() const { return s.total(); }
+    Result total() const { return this->s.total(); }
 
     void
     visit(Visit &visitor)
     {
-        update();
-        s.update(this);
+        this->update();
+        this->s.update(this);
         visitor.visit(*this);
     }
 };
@@ -266,22 +269,15 @@ class DistInfoBase : public Info
 };
 
 template <class Stat>
-class DistInfo : public DistInfoBase
+class DistInfo : public InfoWrap<Stat, DistInfoBase>
 {
-  protected:
-    Stat &s;
-
   public:
-    DistInfo(Stat &stat) : s(stat) {}
-
-    bool check() const { return s.check(); }
-    void reset() { s.reset(); }
-    bool zero() const { return s.zero(); }
+    DistInfo(Stat &stat) : InfoWrap<Stat, DistInfoBase>(stat) {}
 
     void
     visit(Visit &visitor)
     {
-        s.update(this);
+        this->s.update(this);
         visitor.visit(*this);
     }
 };
@@ -315,24 +311,18 @@ class VectorDistInfoBase : public Info
 };
 
 template <class Stat>
-class VectorDistInfo : public VectorDistInfoBase
+class VectorDistInfo : public InfoWrap<Stat, VectorDistInfoBase>
 {
-  protected:
-    Stat &s;
-
   public:
-    VectorDistInfo(Stat &stat) : s(stat) {}
+    VectorDistInfo(Stat &stat) : InfoWrap<Stat, VectorDistInfoBase>(stat) {}
 
-    bool check() const { return s.check(); }
-    void reset() { s.reset(); }
-    size_type size() const { return s.size(); }
-    bool zero() const { return s.zero(); }
+    size_type size() const { return this->s.size(); }
 
     void
     visit(Visit &visitor)
     {
-        update();
-        s.update(this);
+        this->update();
+        this->s.update(this);
         visitor.visit(*this);
     }
 };
@@ -360,23 +350,16 @@ class Vector2dInfoBase : public Info
 };
 
 template <class Stat>
-class Vector2dInfo : public Vector2dInfoBase
+class Vector2dInfo : public InfoWrap<Stat, Vector2dInfoBase>
 {
-  protected:
-    Stat &s;
-
   public:
-    Vector2dInfo(Stat &stat) : s(stat) {}
-
-    bool check() const { return s.check(); }
-    void reset() { s.reset(); }
-    bool zero() const { return s.zero(); }
+    Vector2dInfo(Stat &stat) : InfoWrap<Stat, Vector2dInfoBase>(stat) {}
 
     void
     visit(Visit &visitor)
     {
-        update();
-        s.update(this);
+        this->update();
+        this->s.update(this);
         visitor.visit(*this);
     }
 };
@@ -395,10 +378,29 @@ class InfoAccess
     Info *info();
     /** Grab the information class for this statistic */
     const Info *info() const;
+
+  public:
+    /**
+     * Reset the stat to the default state.
+     */
+    void reset() {}
+
+    /**
+     * @return true if this stat has a value and satisfies its
+     * requirement as a prereq
+     */
+    bool zero() const { return true; }
+
+    /**
+     * Check that this stat has been set up properly and is ready for
+     * use
+     * @return true for success
+     */
+    bool check() const { return true; }
 };
 
 template <class Derived, class Base, template <class> class Info>
-class Wrap : public Base
+class DataWrap : public Base
 {
   public:
     typedef Derived DerivedType;
@@ -426,15 +428,15 @@ class Wrap : public Base
     /**
      * Copy constructor, copies are not allowed.
      */
-    Wrap(const Wrap &stat);
+    DataWrap(const DataWrap &stat);
 
     /**
      * Can't copy stats.
      */
-    void operator=(const Wrap &);
+    void operator=(const DataWrap &);
 
   public:
-    Wrap()
+    DataWrap()
     {
         this->setInfo(new InfoType(*this));
     }
@@ -506,7 +508,7 @@ class Wrap : public Base
 };
 
 template <class Derived, class Base, template <class Base> class Info>
-class WrapVec : public Wrap<Derived, Base, Info>
+class DataWrapVec : public DataWrap<Derived, Base, Info>
 {
   public:
     typedef Derived DerivedType;
@@ -555,7 +557,7 @@ class WrapVec : public Wrap<Derived, Base, Info>
 };
 
 template <class Derived, class Base, template <class Base> class Info>
-class WrapVec2d : public WrapVec<Derived, Base, Info>
+class DataWrapVec2d : public DataWrapVec<Derived, Base, Info>
 {
   public:
     typedef Derived DerivedType;
@@ -842,8 +844,6 @@ class ScalarBase : public InfoAccess
      */
     size_type size() const { return 1; }
 
-    bool check() const { return true; }
-
     /**
      * Reset stat value to default
      */
@@ -856,7 +856,6 @@ class ScalarBase : public InfoAccess
     Result total() { return result(); }
 
     bool zero() { return result() == 0.0; }
-
 };
 
 class ProxyInfo : public ScalarInfoBase
@@ -865,9 +864,9 @@ class ProxyInfo : public ScalarInfoBase
     void visit(Visit &visitor) { visitor.visit(*this); }
     std::string str() const { return to_string(value()); }
     size_type size() const { return 1; }
-    bool zero() const { return value() == 0; }
     bool check() const { return true; }
-    void reset() { }
+    void reset() {}
+    bool zero() const { return value() == 0; }
 };
 
 template <class T>
@@ -1056,11 +1055,6 @@ class ScalarProxy
      * @return 1.
      */
     size_type size() const { return 1; }
-
-    /**
-     * This stat has no state.  Nothing to reset
-     */
-    void reset() {  }
 
   public:
     std::string
@@ -1287,11 +1281,6 @@ class VectorProxy
     }
 
     size_type size() const { return len; }
-
-    /**
-     * This stat has no state.  Nothing to reset.
-     */
-    void reset() { }
 };
 
 template <class Stor>
@@ -1401,7 +1390,7 @@ class Vector2dBase : public InfoAccess
     }
 
     bool
-    check()
+    check() const
     {
         return storage != NULL;
     }
@@ -1788,12 +1777,6 @@ class DistBase : public InfoAccess
     {
         data()->reset(info());
     }
-
-    bool
-    check()
-    {
-        return true;
-    }
 };
 
 template <class Stat>
@@ -1887,7 +1870,7 @@ class VectorDistBase : public InfoAccess
     }
 
     bool
-    check()
+    check() const
     {
         return storage != NULL;
     }
@@ -2371,7 +2354,7 @@ class SumNode : public Node
  * @sa Stat, ScalarBase, StatStor
  */
 template<int N = 0>
-class Scalar : public Wrap<Scalar<N>, ScalarBase<StatStor>, ScalarInfo>
+class Scalar : public DataWrap<Scalar<N>, ScalarBase<StatStor>, ScalarInfo>
 {
   public:
     /** The base implementation. */
@@ -2391,7 +2374,7 @@ class Scalar : public Wrap<Scalar<N>, ScalarBase<StatStor>, ScalarInfo>
     void operator=(const U &v) { Base::operator=(v); }
 };
 
-class Value : public Wrap<Value, ValueBase, ScalarInfo>
+class Value : public DataWrap<Value, ValueBase, ScalarInfo>
 {
   public:
     /** The base implementation. */
@@ -2419,7 +2402,7 @@ class Value : public Wrap<Value, ValueBase, ScalarInfo>
  * @sa Stat, ScalarBase, AvgStor
  */
 template<int N = 0>
-class Average : public Wrap<Average<N>, ScalarBase<AvgStor>, ScalarInfo>
+class Average : public DataWrap<Average<N>, ScalarBase<AvgStor>, ScalarInfo>
 {
   public:
     /** The base implementation. */
@@ -2448,7 +2431,7 @@ class Average : public Wrap<Average<N>, ScalarBase<AvgStor>, ScalarInfo>
  * @sa Stat, VectorBase, StatStor
  */
 template<int N = 0>
-class Vector : public WrapVec<Vector<N>, VectorBase<StatStor>, VectorInfo>
+class Vector : public DataWrapVec<Vector<N>, VectorBase<StatStor>, VectorInfo>
 {
   public:
     /** The base implementation. */
@@ -2473,7 +2456,7 @@ class Vector : public WrapVec<Vector<N>, VectorBase<StatStor>, VectorInfo>
  */
 template<int N = 0>
 class AverageVector
-    : public WrapVec<AverageVector<N>, VectorBase<AvgStor>, VectorInfo>
+    : public DataWrapVec<AverageVector<N>, VectorBase<AvgStor>, VectorInfo>
 {
   public:
     /**
@@ -2495,7 +2478,7 @@ class AverageVector
  */
 template<int N = 0>
 class Vector2d
-    : public WrapVec2d<Vector2d<N>, Vector2dBase<StatStor>, Vector2dInfo>
+    : public DataWrapVec2d<Vector2d<N>, Vector2dBase<StatStor>, Vector2dInfo>
 {
   public:
     Vector2d &
@@ -2512,7 +2495,7 @@ class Vector2d
  */
 template<int N = 0>
 class Distribution
-    : public Wrap<Distribution<N>, DistBase<DistStor>, DistInfo>
+    : public DataWrap<Distribution<N>, DistBase<DistStor>, DistInfo>
 {
   public:
     /** Base implementation. */
@@ -2546,7 +2529,7 @@ class Distribution
  */
 template<int N = 0>
 class StandardDeviation
-    : public Wrap<StandardDeviation<N>, DistBase<FancyStor>, DistInfo>
+    : public DataWrap<StandardDeviation<N>, DistBase<FancyStor>, DistInfo>
 {
   public:
     /** The base implementation */
@@ -2568,7 +2551,7 @@ class StandardDeviation
  */
 template<int N = 0>
 class AverageDeviation
-    : public Wrap<AverageDeviation<N>, DistBase<AvgFancy>, DistInfo>
+    : public DataWrap<AverageDeviation<N>, DistBase<AvgFancy>, DistInfo>
 {
   public:
     /** The base implementation */
@@ -2590,9 +2573,9 @@ class AverageDeviation
  */
 template<int N = 0>
 class VectorDistribution
-    : public WrapVec<VectorDistribution<N>,
-                     VectorDistBase<DistStor>,
-                     VectorDistInfo>
+    : public DataWrapVec<VectorDistribution<N>,
+                         VectorDistBase<DistStor>,
+                         VectorDistInfo>
 {
   public:
     /** The base implementation */
@@ -2627,9 +2610,9 @@ class VectorDistribution
  */
 template<int N = 0>
 class VectorStandardDeviation
-    : public WrapVec<VectorStandardDeviation<N>,
-                     VectorDistBase<FancyStor>,
-                     VectorDistInfo>
+    : public DataWrapVec<VectorStandardDeviation<N>,
+                         VectorDistBase<FancyStor>,
+                         VectorDistInfo>
 {
   public:
     /** The base implementation */
@@ -2655,9 +2638,9 @@ class VectorStandardDeviation
  */
 template<int N = 0>
 class VectorAverageDeviation
-    : public WrapVec<VectorAverageDeviation<N>,
-                     VectorDistBase<AvgFancy>,
-                     VectorDistInfo>
+    : public DataWrapVec<VectorAverageDeviation<N>,
+                         VectorDistBase<AvgFancy>,
+                         VectorDistInfo>
 {
   public:
     /** The base implementation */
@@ -2716,8 +2699,6 @@ class FormulaBase : public InfoAccess
      */
     size_type size() const;
 
-    bool check() const { return true; }
-
     /**
      * Formulas don't need to be reset
      */
@@ -2740,50 +2721,42 @@ class FormulaInfoBase : public VectorInfoBase
 {
   public:
     virtual std::string str() const = 0;
-    bool check() const { return true; }
 };
 
 template <class Stat>
-class FormulaInfo : public FormulaInfoBase
+class FormulaInfo : public InfoWrap<Stat, FormulaInfoBase>
 {
   protected:
-    Stat &s;
     mutable VResult vec;
     mutable VCounter cvec;
 
   public:
-    FormulaInfo(Stat &stat) : s(stat) {}
+    FormulaInfo(Stat &stat) : InfoWrap<Stat, FormulaInfoBase>(stat) {}
 
-    bool zero() const { return s.zero(); }
-    void reset() { s.reset(); }
-
-    size_type size() const { return s.size(); }
+    size_type size() const { return this->s.size(); }
 
     const VResult &
     result() const
     {
-        s.result(vec);
+        this->s.result(vec);
         return vec;
     }
-    Result total() const { return s.total(); }
+    Result total() const { return this->s.total(); }
     VCounter &value() const { return cvec; }
 
     void
     visit(Visit &visitor)
     {
-        update();
-        s.update(this);
+        this->update();
+        this->s.update(this);
         visitor.visit(*this);
     }
 
-    std::string str() const { return s.str(); }
+    std::string str() const { return this->s.str(); }
 };
 
 class Temp;
-class Formula
-    : public WrapVec<Formula,
-                     FormulaBase,
-                     FormulaInfo>
+class Formula : public DataWrapVec<Formula, FormulaBase, FormulaInfo>
 {
   public:
     /**
