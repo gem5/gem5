@@ -468,7 +468,7 @@ class Wrap : public Child
 
     /**
      * Set the precision and marks this stat to print at the end of simulation.
-     * @param p The new precision
+     * @param _precision The new precision
      * @return A reference to this stat.
      */
     Parent &
@@ -728,7 +728,7 @@ class AvgStor
     void
     reset(Info *info)
     {
-        total = 0;
+        total = 0.0;
         last = curTick;
     }
 
@@ -1253,7 +1253,7 @@ class VectorProxy
     Result
     total() const
     {
-        Result total = 0;
+        Result total = 0.0;
         for (off_type i = 0; i < size(); ++i)
             total += data(i)->result();
         return total;
@@ -1471,7 +1471,6 @@ class DistStor
      * Add a value to the distribution for the given number of times.
      * @param val The value to add.
      * @param number The number of times to add the value.
-     * @param params The paramters of the distribution.
      */
     void
     sample(Counter val, int number)
@@ -1595,7 +1594,6 @@ class FancyStor
      * values seen by the given number.
      * @param val The value to add.
      * @param number The number of times to add the value.
-     * @param p The parameters of this stat.
      */
     void
     sample(Counter val, int number)
@@ -1973,7 +1971,7 @@ template <class Storage>
 Result
 VectorDistBase<Storage>::total(off_type index) const
 {
-    Result total = 0;
+    Result total = 0.0;
     for (off_type i = 0; i < x_size(); ++i)
         total += data(i)->result();
 }
@@ -2215,7 +2213,7 @@ class UnaryNode : public Node
     total() const
     {
         const VResult &vec = this->result();
-        Result total = 0;
+        Result total = 0.0;
         for (off_type i = 0; i < size(); i++)
             total += vec[i];
         return total;
@@ -2277,7 +2275,7 @@ class BinaryNode : public Node
     total() const
     {
         const VResult &vec = this->result();
-        Result total = 0;
+        Result total = 0.0;
         for (off_type i = 0; i < size(); i++)
             total += vec[i];
         return total;
@@ -2853,7 +2851,7 @@ class Temp
      * Return the node pointer.
      * @return the node pointer.
      */
-    operator NodePtr&() { return node;}
+    operator NodePtr&() { return node; }
 
   public:
     /**
