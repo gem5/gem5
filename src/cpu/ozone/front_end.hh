@@ -275,48 +275,48 @@ class FrontEnd
   private:
     // number of idle cycles
 /*
-    Stats::Average<> notIdleFraction;
+    Stats::Average notIdleFraction;
     Stats::Formula idleFraction;
 */
     // @todo: Consider making these vectors and tracking on a per thread basis.
     /** Stat for total number of cycles stalled due to an icache miss. */
-    Stats::Scalar<> icacheStallCycles;
+    Stats::Scalar icacheStallCycles;
     /** Stat for total number of fetched instructions. */
-    Stats::Scalar<> fetchedInsts;
-    Stats::Scalar<> fetchedBranches;
+    Stats::Scalar fetchedInsts;
+    Stats::Scalar fetchedBranches;
     /** Stat for total number of predicted branches. */
-    Stats::Scalar<> predictedBranches;
+    Stats::Scalar predictedBranches;
     /** Stat for total number of cycles spent fetching. */
-    Stats::Scalar<> fetchCycles;
+    Stats::Scalar fetchCycles;
 
-    Stats::Scalar<> fetchIdleCycles;
+    Stats::Scalar fetchIdleCycles;
     /** Stat for total number of cycles spent squashing. */
-    Stats::Scalar<> fetchSquashCycles;
+    Stats::Scalar fetchSquashCycles;
     /** Stat for total number of cycles spent blocked due to other stages in
      * the pipeline.
      */
-    Stats::Scalar<> fetchBlockedCycles;
+    Stats::Scalar fetchBlockedCycles;
     /** Stat for total number of fetched cache lines. */
-    Stats::Scalar<> fetchedCacheLines;
+    Stats::Scalar fetchedCacheLines;
 
-    Stats::Scalar<> fetchIcacheSquashes;
+    Stats::Scalar fetchIcacheSquashes;
     /** Distribution of number of instructions fetched each cycle. */
-    Stats::Distribution<> fetchNisnDist;
-//    Stats::Vector<> qfull_iq_occupancy;
-//    Stats::VectorDistribution<> qfull_iq_occ_dist_;
+    Stats::Distribution fetchNisnDist;
+//    Stats::Vector qfull_iq_occupancy;
+//    Stats::VectorDistribution qfull_iq_occ_dist_;
     Stats::Formula idleRate;
     Stats::Formula branchRate;
     Stats::Formula fetchRate;
-    Stats::Scalar<> IFQCount;   // cumulative IFQ occupancy
+    Stats::Scalar IFQCount;   // cumulative IFQ occupancy
     Stats::Formula IFQOccupancy;
     Stats::Formula IFQLatency;
-    Stats::Scalar<> IFQFcount; // cumulative IFQ full count
+    Stats::Scalar IFQFcount; // cumulative IFQ full count
     Stats::Formula IFQFullRate;
 
-    Stats::Scalar<> dispatchCountStat;
-    Stats::Scalar<> dispatchedSerializing;
-    Stats::Scalar<> dispatchedTempSerializing;
-    Stats::Scalar<> dispatchSerializeStallCycles;
+    Stats::Scalar dispatchCountStat;
+    Stats::Scalar dispatchedSerializing;
+    Stats::Scalar dispatchedTempSerializing;
+    Stats::Scalar dispatchSerializeStallCycles;
     Stats::Formula dispatchRate;
     Stats::Formula regIntFull;
     Stats::Formula regFpFull;

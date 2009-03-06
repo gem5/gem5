@@ -409,35 +409,35 @@ class LSQUnit {
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
     /** Total number of loads forwaded from LSQ stores. */
-    Stats::Scalar<> lsqForwLoads;
+    Stats::Scalar lsqForwLoads;
 
     /** Total number of loads ignored due to invalid addresses. */
-    Stats::Scalar<> invAddrLoads;
+    Stats::Scalar invAddrLoads;
 
     /** Total number of squashed loads. */
-    Stats::Scalar<> lsqSquashedLoads;
+    Stats::Scalar lsqSquashedLoads;
 
     /** Total number of responses from the memory system that are
      * ignored due to the instruction already being squashed. */
-    Stats::Scalar<> lsqIgnoredResponses;
+    Stats::Scalar lsqIgnoredResponses;
 
     /** Tota number of memory ordering violations. */
-    Stats::Scalar<> lsqMemOrderViolation;
+    Stats::Scalar lsqMemOrderViolation;
 
     /** Total number of squashed stores. */
-    Stats::Scalar<> lsqSquashedStores;
+    Stats::Scalar lsqSquashedStores;
 
     /** Total number of software prefetches ignored due to invalid addresses. */
-    Stats::Scalar<> invAddrSwpfs;
+    Stats::Scalar invAddrSwpfs;
 
     /** Ready loads blocked due to partial store-forwarding. */
-    Stats::Scalar<> lsqBlockedLoads;
+    Stats::Scalar lsqBlockedLoads;
 
     /** Number of loads that were rescheduled. */
-    Stats::Scalar<> lsqRescheduledLoads;
+    Stats::Scalar lsqRescheduledLoads;
 
     /** Number of times the LSQ is blocked due to the cache. */
-    Stats::Scalar<> lsqCacheBlocked;
+    Stats::Scalar lsqCacheBlocked;
 
   public:
     /** Executes the load at the given index. */

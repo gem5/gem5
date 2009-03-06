@@ -177,7 +177,7 @@ class BaseSimpleCPU : public BaseCPU
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
-    Stats::Scalar<> numInsts;
+    Stats::Scalar numInsts;
 
     void countInst()
     {
@@ -196,30 +196,30 @@ class BaseSimpleCPU : public BaseCPU
     static const Addr PCMask = ~((Addr)sizeof(TheISA::MachInst) - 1);
 
     // number of simulated memory references
-    Stats::Scalar<> numMemRefs;
+    Stats::Scalar numMemRefs;
 
     // number of simulated loads
     Counter numLoad;
     Counter startNumLoad;
 
     // number of idle cycles
-    Stats::Average<> notIdleFraction;
+    Stats::Average notIdleFraction;
     Stats::Formula idleFraction;
 
     // number of cycles stalled for I-cache responses
-    Stats::Scalar<> icacheStallCycles;
+    Stats::Scalar icacheStallCycles;
     Counter lastIcacheStall;
 
     // number of cycles stalled for I-cache retries
-    Stats::Scalar<> icacheRetryCycles;
+    Stats::Scalar icacheRetryCycles;
     Counter lastIcacheRetry;
 
     // number of cycles stalled for D-cache responses
-    Stats::Scalar<> dcacheStallCycles;
+    Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 
     // number of cycles stalled for D-cache retries
-    Stats::Scalar<> dcacheRetryCycles;
+    Stats::Scalar dcacheRetryCycles;
     Counter lastDcacheRetry;
 
     virtual void serialize(std::ostream &os);

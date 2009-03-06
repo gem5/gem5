@@ -69,8 +69,8 @@ class ExecutionUnit : public Resource {
     // RESOURCE STATISTICS
     //
     /////////////////////////////////////////////////////////////////
-    Stats::Scalar<> predictedTakenIncorrect;
-    Stats::Scalar<> predictedNotTakenIncorrect;
+    Stats::Scalar predictedTakenIncorrect;
+    Stats::Scalar predictedNotTakenIncorrect;
 };
 
 

@@ -390,7 +390,7 @@ class OzoneCPU : public BaseCPU
     Counter startNumLoad;
 
     // number of idle cycles
-    Stats::Average<> notIdleFraction;
+    Stats::Average notIdleFraction;
     Stats::Formula idleFraction;
 
   public:
@@ -473,7 +473,7 @@ class OzoneCPU : public BaseCPU
 
     bool lockFlag;
 
-    Stats::Scalar<> quiesceCycles;
+    Stats::Scalar quiesceCycles;
 
     Checker<DynInstPtr> *checker;
 };

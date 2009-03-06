@@ -79,15 +79,15 @@ class BasePrefetcher
 
   public:
 
-    Stats::Scalar<> pfIdentified;
-    Stats::Scalar<> pfMSHRHit;
-    Stats::Scalar<> pfCacheHit;
-    Stats::Scalar<> pfBufferHit;
-    Stats::Scalar<> pfRemovedFull;
-    Stats::Scalar<> pfRemovedMSHR;
-    Stats::Scalar<> pfIssued;
-    Stats::Scalar<> pfSpanPage;
-    Stats::Scalar<> pfSquashed;
+    Stats::Scalar pfIdentified;
+    Stats::Scalar pfMSHRHit;
+    Stats::Scalar pfCacheHit;
+    Stats::Scalar pfBufferHit;
+    Stats::Scalar pfRemovedFull;
+    Stats::Scalar pfRemovedMSHR;
+    Stats::Scalar pfIssued;
+    Stats::Scalar pfSpanPage;
+    Stats::Scalar pfSquashed;
 
     void regStats(const std::string &name);
 

@@ -238,12 +238,12 @@ class IdeDisk : public SimObject
     /** Interrupt pending */
     bool intrPending;
 
-    Stats::Scalar<> dmaReadFullPages;
-    Stats::Scalar<> dmaReadBytes;
-    Stats::Scalar<> dmaReadTxs;
-    Stats::Scalar<> dmaWriteFullPages;
-    Stats::Scalar<> dmaWriteBytes;
-    Stats::Scalar<> dmaWriteTxs;
+    Stats::Scalar dmaReadFullPages;
+    Stats::Scalar dmaReadBytes;
+    Stats::Scalar dmaReadTxs;
+    Stats::Scalar dmaWriteFullPages;
+    Stats::Scalar dmaWriteBytes;
+    Stats::Scalar dmaWriteTxs;
     Stats::Formula rdBandwidth;
     Stats::Formula wrBandwidth;
     Stats::Formula totBandwidth;

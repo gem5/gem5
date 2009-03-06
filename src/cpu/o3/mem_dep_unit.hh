@@ -253,13 +253,13 @@ class MemDepUnit {
     int id;
 
     /** Stat for number of inserted loads. */
-    Stats::Scalar<> insertedLoads;
+    Stats::Scalar insertedLoads;
     /** Stat for number of inserted stores. */
-    Stats::Scalar<> insertedStores;
+    Stats::Scalar insertedStores;
     /** Stat for number of conflicting loads that had to wait for a store. */
-    Stats::Scalar<> conflictingLoads;
+    Stats::Scalar conflictingLoads;
     /** Stat for number of conflicting stores that had to wait for a store. */
-    Stats::Scalar<> conflictingStores;
+    Stats::Scalar conflictingStores;
 };
 
 #endif // __CPU_O3_MEM_DEP_UNIT_HH__

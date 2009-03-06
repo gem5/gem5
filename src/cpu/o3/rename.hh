@@ -441,44 +441,44 @@ class DefaultRename
     inline void incrFullStat(const FullSource &source);
 
     /** Stat for total number of cycles spent squashing. */
-    Stats::Scalar<> renameSquashCycles;
+    Stats::Scalar renameSquashCycles;
     /** Stat for total number of cycles spent idle. */
-    Stats::Scalar<> renameIdleCycles;
+    Stats::Scalar renameIdleCycles;
     /** Stat for total number of cycles spent blocking. */
-    Stats::Scalar<> renameBlockCycles;
+    Stats::Scalar renameBlockCycles;
     /** Stat for total number of cycles spent stalling for a serializing inst. */
-    Stats::Scalar<> renameSerializeStallCycles;
+    Stats::Scalar renameSerializeStallCycles;
     /** Stat for total number of cycles spent running normally. */
-    Stats::Scalar<> renameRunCycles;
+    Stats::Scalar renameRunCycles;
     /** Stat for total number of cycles spent unblocking. */
-    Stats::Scalar<> renameUnblockCycles;
+    Stats::Scalar renameUnblockCycles;
     /** Stat for total number of renamed instructions. */
-    Stats::Scalar<> renameRenamedInsts;
+    Stats::Scalar renameRenamedInsts;
     /** Stat for total number of squashed instructions that rename discards. */
-    Stats::Scalar<> renameSquashedInsts;
+    Stats::Scalar renameSquashedInsts;
     /** Stat for total number of times that the ROB starts a stall in rename. */
-    Stats::Scalar<> renameROBFullEvents;
+    Stats::Scalar renameROBFullEvents;
     /** Stat for total number of times that the IQ starts a stall in rename. */
-    Stats::Scalar<> renameIQFullEvents;
+    Stats::Scalar renameIQFullEvents;
     /** Stat for total number of times that the LSQ starts a stall in rename. */
-    Stats::Scalar<> renameLSQFullEvents;
+    Stats::Scalar renameLSQFullEvents;
     /** Stat for total number of times that rename runs out of free registers
      * to use to rename. */
-    Stats::Scalar<> renameFullRegistersEvents;
+    Stats::Scalar renameFullRegistersEvents;
     /** Stat for total number of renamed destination registers. */
-    Stats::Scalar<> renameRenamedOperands;
+    Stats::Scalar renameRenamedOperands;
     /** Stat for total number of source register rename lookups. */
-    Stats::Scalar<> renameRenameLookups;
+    Stats::Scalar renameRenameLookups;
     /** Stat for total number of committed renaming mappings. */
-    Stats::Scalar<> renameCommittedMaps;
+    Stats::Scalar renameCommittedMaps;
     /** Stat for total number of mappings that were undone due to a squash. */
-    Stats::Scalar<> renameUndoneMaps;
+    Stats::Scalar renameUndoneMaps;
     /** Number of serialize instructions handled. */
-    Stats::Scalar<> renamedSerializing;
+    Stats::Scalar renamedSerializing;
     /** Number of instructions marked as temporarily serializing. */
-    Stats::Scalar<> renamedTempSerializing;
+    Stats::Scalar renamedTempSerializing;
     /** Number of instructions inserted into skid buffers. */
-    Stats::Scalar<> renameSkidInsts;
+    Stats::Scalar renameSkidInsts;
 };
 
 #endif // __CPU_O3_RENAME_HH__

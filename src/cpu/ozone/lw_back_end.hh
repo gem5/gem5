@@ -326,47 +326,47 @@ class LWBackEnd
     bool exactFullStall;
 
     // number of cycles stalled for D-cache misses
-/*    Stats::Scalar<> dcacheStallCycles;
+/*    Stats::Scalar dcacheStallCycles;
       Counter lastDcacheStall;
 */
-    Stats::Vector<> robCapEvents;
-    Stats::Vector<> robCapInstCount;
-    Stats::Vector<> iqCapEvents;
-    Stats::Vector<> iqCapInstCount;
+    Stats::Vector robCapEvents;
+    Stats::Vector robCapInstCount;
+    Stats::Vector iqCapEvents;
+    Stats::Vector iqCapInstCount;
     // total number of instructions executed
-    Stats::Vector<> exeInst;
-    Stats::Vector<> exeSwp;
-    Stats::Vector<> exeNop;
-    Stats::Vector<> exeRefs;
-    Stats::Vector<> exeLoads;
-    Stats::Vector<> exeBranches;
+    Stats::Vector exeInst;
+    Stats::Vector exeSwp;
+    Stats::Vector exeNop;
+    Stats::Vector exeRefs;
+    Stats::Vector exeLoads;
+    Stats::Vector exeBranches;
 
-    Stats::Vector<> issuedOps;
+    Stats::Vector issuedOps;
 
     // total number of loads forwaded from LSQ stores
-    Stats::Vector<> lsqForwLoads;
+    Stats::Vector lsqForwLoads;
 
     // total number of loads ignored due to invalid addresses
-    Stats::Vector<> invAddrLoads;
+    Stats::Vector invAddrLoads;
 
     // total number of software prefetches ignored due to invalid addresses
-    Stats::Vector<> invAddrSwpfs;
+    Stats::Vector invAddrSwpfs;
     // ready loads blocked due to memory disambiguation
-    Stats::Vector<> lsqBlockedLoads;
+    Stats::Vector lsqBlockedLoads;
 
-    Stats::Scalar<> lsqInversion;
+    Stats::Scalar lsqInversion;
 
-    Stats::Vector<> nIssuedDist;
+    Stats::Vector nIssuedDist;
 /*
-    Stats::VectorDistribution<> issueDelayDist;
+    Stats::VectorDistribution issueDelayDist;
 
-    Stats::VectorDistribution<> queueResDist;
+    Stats::VectorDistribution queueResDist;
 */
 /*
-    Stats::Vector<> stat_fu_busy;
-    Stats::Vector2d<> stat_fuBusy;
-    Stats::Vector<> dist_unissued;
-    Stats::Vector2d<> stat_issued_inst_type;
+    Stats::Vector stat_fu_busy;
+    Stats::Vector2d stat_fuBusy;
+    Stats::Vector dist_unissued;
+    Stats::Vector2d stat_issued_inst_type;
 
     Stats::Formula misspec_cnt;
     Stats::Formula misspec_ipc;
@@ -379,37 +379,37 @@ class LWBackEnd
     Stats::Formula commit_ipb;
     Stats::Formula lsq_inv_rate;
 */
-    Stats::Vector<> writebackCount;
-    Stats::Vector<> producerInst;
-    Stats::Vector<> consumerInst;
-    Stats::Vector<> wbPenalized;
+    Stats::Vector writebackCount;
+    Stats::Vector producerInst;
+    Stats::Vector consumerInst;
+    Stats::Vector wbPenalized;
 
     Stats::Formula wbRate;
     Stats::Formula wbFanout;
     Stats::Formula wbPenalizedRate;
 
     // total number of instructions committed
-    Stats::Vector<> statComInst;
-    Stats::Vector<> statComSwp;
-    Stats::Vector<> statComRefs;
-    Stats::Vector<> statComLoads;
-    Stats::Vector<> statComMembars;
-    Stats::Vector<> statComBranches;
+    Stats::Vector statComInst;
+    Stats::Vector statComSwp;
+    Stats::Vector statComRefs;
+    Stats::Vector statComLoads;
+    Stats::Vector statComMembars;
+    Stats::Vector statComBranches;
 
-    Stats::Distribution<> nCommittedDist;
+    Stats::Distribution nCommittedDist;
 
-    Stats::Scalar<> commitEligibleSamples;
-    Stats::Vector<> commitEligible;
+    Stats::Scalar commitEligibleSamples;
+    Stats::Vector commitEligible;
 
-    Stats::Vector<> squashedInsts;
-    Stats::Vector<> ROBSquashedInsts;
+    Stats::Vector squashedInsts;
+    Stats::Vector ROBSquashedInsts;
 
-    Stats::Scalar<> ROBFcount;
+    Stats::Scalar ROBFcount;
     Stats::Formula ROBFullRate;
 
-    Stats::Vector<>  ROBCount;   // cumulative ROB occupancy
+    Stats::Vector  ROBCount;   // cumulative ROB occupancy
     Stats::Formula ROBOccRate;
-//    Stats::VectorDistribution<> ROBOccDist;
+//    Stats::VectorDistribution ROBOccDist;
   public:
     void dumpInsts();
 

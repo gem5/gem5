@@ -137,7 +137,7 @@ class Process : public SimObject
 
     std::string prog_fname;     // file name
 
-    Stats::Scalar<> num_syscalls;       // number of syscalls executed
+    Stats::Scalar num_syscalls;       // number of syscalls executed
 
 
   protected:

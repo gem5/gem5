@@ -86,7 +86,7 @@ class InstBuffer : public Resource {
     //
     /////////////////////////////////////////////////////////////////
     /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar<> instsBypassed;
+    Stats::Scalar instsBypassed;
 
 };
 

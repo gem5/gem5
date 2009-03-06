@@ -78,8 +78,8 @@ class BranchPredictor : public Resource {
     // RESOURCE STATISTICS
     //
     /////////////////////////////////////////////////////////////////
-    Stats::Scalar<> predictedTaken;
-    Stats::Scalar<> predictedNotTaken;
+    Stats::Scalar predictedTaken;
+    Stats::Scalar predictedNotTaken;
 
 };
 

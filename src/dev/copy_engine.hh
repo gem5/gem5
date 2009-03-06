@@ -164,8 +164,8 @@ class CopyEngine : public PciDev
 
   private:
 
-    Stats::Vector<> bytesCopied;
-    Stats::Vector<> copiesProcessed;
+    Stats::Vector bytesCopied;
+    Stats::Vector copiesProcessed;
 
     // device registers
     CopyEngineReg::Regs regs;

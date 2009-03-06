@@ -283,35 +283,35 @@ class Device : public Base
  * Statistics
  */
   private:
-    Stats::Scalar<> rxBytes;
+    Stats::Scalar rxBytes;
     Stats::Formula  rxBandwidth;
-    Stats::Scalar<> rxPackets;
+    Stats::Scalar rxPackets;
     Stats::Formula  rxPacketRate;
-    Stats::Scalar<> rxIpPackets;
-    Stats::Scalar<> rxTcpPackets;
-    Stats::Scalar<> rxUdpPackets;
-    Stats::Scalar<> rxIpChecksums;
-    Stats::Scalar<> rxTcpChecksums;
-    Stats::Scalar<> rxUdpChecksums;
+    Stats::Scalar rxIpPackets;
+    Stats::Scalar rxTcpPackets;
+    Stats::Scalar rxUdpPackets;
+    Stats::Scalar rxIpChecksums;
+    Stats::Scalar rxTcpChecksums;
+    Stats::Scalar rxUdpChecksums;
 
-    Stats::Scalar<> txBytes;
+    Stats::Scalar txBytes;
     Stats::Formula  txBandwidth;
     Stats::Formula totBandwidth;
     Stats::Formula totPackets;
     Stats::Formula totBytes;
     Stats::Formula totPacketRate;
-    Stats::Scalar<> txPackets;
+    Stats::Scalar txPackets;
     Stats::Formula  txPacketRate;
-    Stats::Scalar<> txIpPackets;
-    Stats::Scalar<> txTcpPackets;
-    Stats::Scalar<> txUdpPackets;
-    Stats::Scalar<> txIpChecksums;
-    Stats::Scalar<> txTcpChecksums;
-    Stats::Scalar<> txUdpChecksums;
+    Stats::Scalar txIpPackets;
+    Stats::Scalar txTcpPackets;
+    Stats::Scalar txUdpPackets;
+    Stats::Scalar txIpChecksums;
+    Stats::Scalar txTcpChecksums;
+    Stats::Scalar txUdpChecksums;
 
-    Stats::Scalar<> totalVnicDistance;
-    Stats::Scalar<> numVnicDistance;
-    Stats::Scalar<> maxVnicDistance;
+    Stats::Scalar totalVnicDistance;
+    Stats::Scalar numVnicDistance;
+    Stats::Scalar maxVnicDistance;
     Stats::Formula avgVnicDistance;
 
     int _maxVnicDistance;

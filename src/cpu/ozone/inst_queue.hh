@@ -473,35 +473,35 @@ class InstQueue
     void dumpInsts();
 
     /** Stat for number of instructions added. */
-    Stats::Scalar<> iqInstsAdded;
+    Stats::Scalar iqInstsAdded;
     /** Stat for number of non-speculative instructions added. */
-    Stats::Scalar<> iqNonSpecInstsAdded;
-//    Stats::Scalar<> iqIntInstsAdded;
+    Stats::Scalar iqNonSpecInstsAdded;
+//    Stats::Scalar iqIntInstsAdded;
     /** Stat for number of integer instructions issued. */
-    Stats::Scalar<> iqIntInstsIssued;
-//    Stats::Scalar<> iqFloatInstsAdded;
+    Stats::Scalar iqIntInstsIssued;
+//    Stats::Scalar iqFloatInstsAdded;
     /** Stat for number of floating point instructions issued. */
-    Stats::Scalar<> iqFloatInstsIssued;
-//    Stats::Scalar<> iqBranchInstsAdded;
+    Stats::Scalar iqFloatInstsIssued;
+//    Stats::Scalar iqBranchInstsAdded;
     /** Stat for number of branch instructions issued. */
-    Stats::Scalar<> iqBranchInstsIssued;
-//    Stats::Scalar<> iqMemInstsAdded;
+    Stats::Scalar iqBranchInstsIssued;
+//    Stats::Scalar iqMemInstsAdded;
     /** Stat for number of memory instructions issued. */
-    Stats::Scalar<> iqMemInstsIssued;
-//    Stats::Scalar<> iqMiscInstsAdded;
+    Stats::Scalar iqMemInstsIssued;
+//    Stats::Scalar iqMiscInstsAdded;
     /** Stat for number of miscellaneous instructions issued. */
-    Stats::Scalar<> iqMiscInstsIssued;
+    Stats::Scalar iqMiscInstsIssued;
     /** Stat for number of squashed instructions that were ready to issue. */
-    Stats::Scalar<> iqSquashedInstsIssued;
+    Stats::Scalar iqSquashedInstsIssued;
     /** Stat for number of squashed instructions examined when squashing. */
-    Stats::Scalar<> iqSquashedInstsExamined;
+    Stats::Scalar iqSquashedInstsExamined;
     /** Stat for number of squashed instruction operands examined when
      * squashing.
      */
-    Stats::Scalar<> iqSquashedOperandsExamined;
+    Stats::Scalar iqSquashedOperandsExamined;
     /** Stat for number of non-speculative instructions removed due to a squash.
      */
-    Stats::Scalar<> iqSquashedNonSpecRemoved;
+    Stats::Scalar iqSquashedNonSpecRemoved;
 
 };
 

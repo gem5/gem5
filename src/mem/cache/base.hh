@@ -223,14 +223,14 @@ class BaseCache : public MemObject
      */
 
     /** Number of hits per thread for each type of command. @sa Packet::Command */
-    Stats::Vector<> hits[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector hits[MemCmd::NUM_MEM_CMDS];
     /** Number of hits for demand accesses. */
     Stats::Formula demandHits;
     /** Number of hit for all accesses. */
     Stats::Formula overallHits;
 
     /** Number of misses per thread for each type of command. @sa Packet::Command */
-    Stats::Vector<> misses[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector misses[MemCmd::NUM_MEM_CMDS];
     /** Number of misses for demand accesses. */
     Stats::Formula demandMisses;
     /** Number of misses for all accesses. */
@@ -240,7 +240,7 @@ class BaseCache : public MemObject
      * Total number of cycles per thread/command spent waiting for a miss.
      * Used to calculate the average miss latency.
      */
-    Stats::Vector<> missLatency[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector missLatency[MemCmd::NUM_MEM_CMDS];
     /** Total number of cycles spent waiting for demand misses. */
     Stats::Formula demandMissLatency;
     /** Total number of cycles spent waiting for all misses. */
@@ -268,50 +268,50 @@ class BaseCache : public MemObject
     Stats::Formula overallAvgMissLatency;
 
     /** The total number of cycles blocked for each blocked cause. */
-    Stats::Vector<> blocked_cycles;
+    Stats::Vector blocked_cycles;
     /** The number of times this cache blocked for each blocked cause. */
-    Stats::Vector<> blocked_causes;
+    Stats::Vector blocked_causes;
 
     /** The average number of cycles blocked for each blocked cause. */
     Stats::Formula avg_blocked;
 
     /** The number of fast writes (WH64) performed. */
-    Stats::Scalar<> fastWrites;
+    Stats::Scalar fastWrites;
 
     /** The number of cache copies performed. */
-    Stats::Scalar<> cacheCopies;
+    Stats::Scalar cacheCopies;
 
     /** Number of blocks written back per thread. */
-    Stats::Vector<> writebacks;
+    Stats::Vector writebacks;
 
     /** Number of misses that hit in the MSHRs per command and thread. */
-    Stats::Vector<> mshr_hits[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector mshr_hits[MemCmd::NUM_MEM_CMDS];
     /** Demand misses that hit in the MSHRs. */
     Stats::Formula demandMshrHits;
     /** Total number of misses that hit in the MSHRs. */
     Stats::Formula overallMshrHits;
 
     /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector<> mshr_misses[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector mshr_misses[MemCmd::NUM_MEM_CMDS];
     /** Demand misses that miss in the MSHRs. */
     Stats::Formula demandMshrMisses;
     /** Total number of misses that miss in the MSHRs. */
     Stats::Formula overallMshrMisses;
 
     /** Number of misses that miss in the MSHRs, per command and thread. */
-    Stats::Vector<> mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector mshr_uncacheable[MemCmd::NUM_MEM_CMDS];
     /** Total number of misses that miss in the MSHRs. */
     Stats::Formula overallMshrUncacheable;
 
     /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector<> mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector mshr_miss_latency[MemCmd::NUM_MEM_CMDS];
     /** Total cycle latency of demand MSHR misses. */
     Stats::Formula demandMshrMissLatency;
     /** Total cycle latency of overall MSHR misses. */
     Stats::Formula overallMshrMissLatency;
 
     /** Total cycle latency of each MSHR miss, per command and thread. */
-    Stats::Vector<> mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
+    Stats::Vector mshr_uncacheable_lat[MemCmd::NUM_MEM_CMDS];
     /** Total cycle latency of overall MSHR misses. */
     Stats::Formula overallMshrUncacheableLatency;
 
@@ -342,11 +342,11 @@ class BaseCache : public MemObject
     Stats::Formula overallAvgMshrUncacheableLatency;
 
     /** The number of times a thread hit its MSHR cap. */
-    Stats::Vector<> mshr_cap_events;
+    Stats::Vector mshr_cap_events;
     /** The number of times software prefetches caused the MSHR to block. */
-    Stats::Vector<> soft_prefetch_mshr_full;
+    Stats::Vector soft_prefetch_mshr_full;
 
-    Stats::Scalar<> mshr_no_allocate_misses;
+    Stats::Scalar mshr_no_allocate_misses;
 
     /**
      * @}

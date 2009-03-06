@@ -288,27 +288,27 @@ class DefaultDecode
 
 
     /** Stat for total number of idle cycles. */
-    Stats::Scalar<> decodeIdleCycles;
+    Stats::Scalar decodeIdleCycles;
     /** Stat for total number of blocked cycles. */
-    Stats::Scalar<> decodeBlockedCycles;
+    Stats::Scalar decodeBlockedCycles;
     /** Stat for total number of normal running cycles. */
-    Stats::Scalar<> decodeRunCycles;
+    Stats::Scalar decodeRunCycles;
     /** Stat for total number of unblocking cycles. */
-    Stats::Scalar<> decodeUnblockCycles;
+    Stats::Scalar decodeUnblockCycles;
     /** Stat for total number of squashing cycles. */
-    Stats::Scalar<> decodeSquashCycles;
+    Stats::Scalar decodeSquashCycles;
     /** Stat for number of times a branch is resolved at decode. */
-    Stats::Scalar<> decodeBranchResolved;
+    Stats::Scalar decodeBranchResolved;
     /** Stat for number of times a branch mispredict is detected. */
-    Stats::Scalar<> decodeBranchMispred;
+    Stats::Scalar decodeBranchMispred;
     /** Stat for number of times decode detected a non-control instruction
      * incorrectly predicted as a branch.
      */
-    Stats::Scalar<> decodeControlMispred;
+    Stats::Scalar decodeControlMispred;
     /** Stat for total number of decoded instructions. */
-    Stats::Scalar<> decodeDecodedInsts;
+    Stats::Scalar decodeDecodedInsts;
     /** Stat for total number of squashed instructions. */
-    Stats::Scalar<> decodeSquashedInsts;
+    Stats::Scalar decodeSquashedInsts;
 };
 
 #endif // __CPU_O3_DECODE_HH__

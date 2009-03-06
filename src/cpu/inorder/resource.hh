@@ -232,7 +232,7 @@ class Resource {
     //
     /////////////////////////////////////////////////////////////////
     /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar<> instReqsProcessed;
+    Stats::Scalar instReqsProcessed;
 };
 
 class ResourceEvent : public Event

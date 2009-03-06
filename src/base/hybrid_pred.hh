@@ -62,12 +62,12 @@ class HybridPredictor : public GenericPredictor
     //
     //  Stats
     //
-    Stats::Scalar<> pred_one; //num_one_preds
-    Stats::Scalar<> pred_zero; //num_zero_preds
-    Stats::Scalar<> correct_pred_one; //num_one_correct
-    Stats::Scalar<> correct_pred_zero; //num_zero_correct
-    Stats::Scalar<> record_one; //num_one_updates
-    Stats::Scalar<> record_zero; //num_zero_updates
+    Stats::Scalar pred_one; //num_one_preds
+    Stats::Scalar pred_zero; //num_zero_preds
+    Stats::Scalar correct_pred_one; //num_one_correct
+    Stats::Scalar correct_pred_zero; //num_zero_correct
+    Stats::Scalar record_one; //num_one_updates
+    Stats::Scalar record_zero; //num_zero_updates
 
     Stats::Formula total_preds;
     Stats::Formula frac_preds_zero;

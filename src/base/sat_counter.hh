@@ -64,13 +64,13 @@ class SaturatingCounterPred : public GenericPredictor
     unsigned *table;
 
     //  Statistics
-    Stats::Scalar<> predicted_one;      // Total predictions of one, preds_one
-    Stats::Scalar<> predicted_zero;     // Total predictions of zero, preds_zero
-    Stats::Scalar<> correct_pred_one;   // Total correct predictions of one, correct_one
-    Stats::Scalar<> correct_pred_zero;  // Total correct predictions of zero, correct_zero
+    Stats::Scalar predicted_one;      // Total predictions of one, preds_one
+    Stats::Scalar predicted_zero;     // Total predictions of zero, preds_zero
+    Stats::Scalar correct_pred_one;   // Total correct predictions of one, correct_one
+    Stats::Scalar correct_pred_zero;  // Total correct predictions of zero, correct_zero
 
-    Stats::Scalar<> record_zero;        //updates_zero
-    Stats::Scalar<> record_one;         //updates_one
+    Stats::Scalar record_zero;        //updates_zero
+    Stats::Scalar record_one;         //updates_one
 
     Stats::Formula preds_total;
     Stats::Formula pred_frac_zero;

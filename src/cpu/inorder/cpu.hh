@@ -638,25 +638,25 @@ class InOrderCPU : public BaseCPU
     inline void tickThreadStats();
 
     /** Per-Thread Tick */
-    Stats::Vector<> threadCycles;
+    Stats::Vector threadCycles;
 
     /** Tick for SMT */
-    Stats::Scalar<> smtCycles;
+    Stats::Scalar smtCycles;
 
     /** Stat for total number of times the CPU is descheduled. */
-    Stats::Scalar<> timesIdled;
+    Stats::Scalar timesIdled;
 
     /** Stat for total number of cycles the CPU spends descheduled. */
-    Stats::Scalar<> idleCycles;
+    Stats::Scalar idleCycles;
 
     /** Stat for the number of committed instructions per thread. */
-    Stats::Vector<> committedInsts;
+    Stats::Vector committedInsts;
 
     /** Stat for the number of committed instructions per thread. */
-    Stats::Vector<> smtCommittedInsts;
+    Stats::Vector smtCommittedInsts;
 
     /** Stat for the total number of committed instructions. */
-    Stats::Scalar<> totalCommittedInsts;
+    Stats::Scalar totalCommittedInsts;
 
     /** Stat for the CPI per thread. */
     Stats::Formula cpi;

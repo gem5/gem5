@@ -755,13 +755,13 @@ class FullO3CPU : public BaseO3CPU
     bool lockFlag;
 
     /** Stat for total number of times the CPU is descheduled. */
-    Stats::Scalar<> timesIdled;
+    Stats::Scalar timesIdled;
     /** Stat for total number of cycles the CPU spends descheduled. */
-    Stats::Scalar<> idleCycles;
+    Stats::Scalar idleCycles;
     /** Stat for the number of committed instructions per thread. */
-    Stats::Vector<> committedInsts;
+    Stats::Vector committedInsts;
     /** Stat for the total number of committed instructions. */
-    Stats::Scalar<> totalCommittedInsts;
+    Stats::Scalar totalCommittedInsts;
     /** Stat for the CPI per thread. */
     Stats::Formula cpi;
     /** Stat for the total CPI. */

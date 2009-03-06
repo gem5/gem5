@@ -51,17 +51,17 @@ class Statistics : public Serializable
     std::string myname;
 
   protected:
-    Stats::Scalar<> _arm;
-    Stats::Scalar<> _quiesce;
-    Stats::Scalar<> _hwrei;
+    Stats::Scalar _arm;
+    Stats::Scalar _quiesce;
+    Stats::Scalar _hwrei;
 
-    Stats::Vector<> _iplCount;
-    Stats::Vector<> _iplGood;
-    Stats::Vector<> _iplTicks;
+    Stats::Vector _iplCount;
+    Stats::Vector _iplGood;
+    Stats::Vector _iplTicks;
     Stats::Formula _iplUsed;
 
-    Stats::Vector<> _syscall;
-//    Stats::Vector<> _faults;
+    Stats::Vector _syscall;
+//    Stats::Vector _faults;
 
   private:
     int iplLast;

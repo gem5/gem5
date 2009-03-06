@@ -340,19 +340,19 @@ class PipelineStage
 
     //@TODO: Use Stats for the pipeline stages
     /** Stat for total number of idle cycles. */
-    //Stats::Scalar<> stageIdleCycles;
+    //Stats::Scalar stageIdleCycles;
     /** Stat for total number of blocked cycles. */
-    //Stats::Scalar<> stageBlockedCycles;
+    //Stats::Scalar stageBlockedCycles;
     /** Stat for total number of normal running cycles. */
-    //Stats::Scalar<> stageRunCycles;
+    //Stats::Scalar stageRunCycles;
     /** Stat for total number of unblocking cycles. */
-    //Stats::Scalar<> stageUnblockCycles;
+    //Stats::Scalar stageUnblockCycles;
     /** Stat for total number of squashing cycles. */
-    //Stats::Scalar<> stageSquashCycles;
+    //Stats::Scalar stageSquashCycles;
     /** Stat for total number of staged instructions. */
-    //Stats::Scalar<> stageProcessedInsts;
+    //Stats::Scalar stageProcessedInsts;
     /** Stat for total number of squashed instructions. */
-    //Stats::Scalar<> stageSquashedInsts;
+    //Stats::Scalar stageSquashedInsts;
 };
 
 #endif

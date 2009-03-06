@@ -41,7 +41,7 @@ class FaultBase;
 typedef RefCountingPtr<FaultBase> Fault;
 
 typedef const char * FaultName;
-typedef Stats::Scalar<> FaultStat;
+typedef Stats::Scalar FaultStat;
 
 // Each class has it's name statically define in _name,
 // and has a virtual function to access it's name.

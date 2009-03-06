@@ -116,22 +116,22 @@ main(int argc, char *argv[])
     if (!text && (compat || descriptions))
         usage();
 
-    Scalar<> s1;
-    Scalar<> s2;
-    Average<> s3;
-    Scalar<> s4;
-    Vector<> s5;
-    Distribution<> s6;
-    Vector<> s7;
-    AverageVector<> s8;
-    StandardDeviation<> s9;
-    AverageDeviation<> s10;
-    Scalar<> s11;
-    Distribution<> s12;
-    VectorDistribution<> s13;
-    VectorStandardDeviation<> s14;
-    VectorAverageDeviation<> s15;
-    Vector2d<> s16;
+    Scalar s1;
+    Scalar s2;
+    Average s3;
+    Scalar s4;
+    Vector s5;
+    Distribution s6;
+    Vector s7;
+    AverageVector s8;
+    StandardDeviation s9;
+    AverageDeviation s10;
+    Scalar s11;
+    Distribution s12;
+    VectorDistribution s13;
+    VectorStandardDeviation s14;
+    VectorAverageDeviation s15;
+    Vector2d s16;
     Value s17;
     Value s18;
 
@@ -141,9 +141,9 @@ main(int argc, char *argv[])
     Formula f4;
     Formula f5;
 
-    cprintf("sizeof(Scalar<>) = %d\n", sizeof(Scalar<>));
-    cprintf("sizeof(Vector<>) = %d\n", sizeof(Vector<>));
-    cprintf("sizeof(Distribution<>) = %d\n", sizeof(Distribution<>));
+    cprintf("sizeof(Scalar) = %d\n", sizeof(Scalar));
+    cprintf("sizeof(Vector) = %d\n", sizeof(Vector));
+    cprintf("sizeof(Distribution) = %d\n", sizeof(Distribution));
 
     s1
         .name("Stat01")

@@ -171,9 +171,9 @@ class MemTest : public MemObject
 
     bool atomic;
 
-    Stats::Scalar<> numReadsStat;
-    Stats::Scalar<> numWritesStat;
-    Stats::Scalar<> numCopiesStat;
+    Stats::Scalar numReadsStat;
+    Stats::Scalar numWritesStat;
+    Stats::Scalar numCopiesStat;
 
     // called by MemCompleteEvent::process()
     void completeRequest(PacketPtr pkt);

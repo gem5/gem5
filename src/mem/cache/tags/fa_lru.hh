@@ -139,11 +139,11 @@ class FALRU : public BaseTags
      */
 
     /** Hits in each cache size >= 128K. */
-    Stats::Vector<> hits;
+    Stats::Vector hits;
     /** Misses in each cache size >= 128K. */
-    Stats::Vector<> misses;
+    Stats::Vector misses;
     /** Total number of accesses. */
-    Stats::Scalar<> accesses;
+    Stats::Scalar accesses;
 
     /**
      * @}

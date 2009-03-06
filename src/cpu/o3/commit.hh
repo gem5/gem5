@@ -452,40 +452,40 @@ class DefaultCommit
     void updateComInstStats(DynInstPtr &inst);
 
     /** Stat for the total number of committed instructions. */
-    Stats::Scalar<> commitCommittedInsts;
+    Stats::Scalar commitCommittedInsts;
     /** Stat for the total number of squashed instructions discarded by commit.
      */
-    Stats::Scalar<> commitSquashedInsts;
+    Stats::Scalar commitSquashedInsts;
     /** Stat for the total number of times commit is told to squash.
      * @todo: Actually increment this stat.
      */
-    Stats::Scalar<> commitSquashEvents;
+    Stats::Scalar commitSquashEvents;
     /** Stat for the total number of times commit has had to stall due to a non-
      * speculative instruction reaching the head of the ROB.
      */
-    Stats::Scalar<> commitNonSpecStalls;
+    Stats::Scalar commitNonSpecStalls;
     /** Stat for the total number of branch mispredicts that caused a squash. */
-    Stats::Scalar<> branchMispredicts;
+    Stats::Scalar branchMispredicts;
     /** Distribution of the number of committed instructions each cycle. */
-    Stats::Distribution<> numCommittedDist;
+    Stats::Distribution numCommittedDist;
 
     /** Total number of instructions committed. */
-    Stats::Vector<> statComInst;
+    Stats::Vector statComInst;
     /** Total number of software prefetches committed. */
-    Stats::Vector<> statComSwp;
+    Stats::Vector statComSwp;
     /** Stat for the total number of committed memory references. */
-    Stats::Vector<> statComRefs;
+    Stats::Vector statComRefs;
     /** Stat for the total number of committed loads. */
-    Stats::Vector<> statComLoads;
+    Stats::Vector statComLoads;
     /** Total number of committed memory barriers. */
-    Stats::Vector<> statComMembars;
+    Stats::Vector statComMembars;
     /** Total number of committed branches. */
-    Stats::Vector<> statComBranches;
+    Stats::Vector statComBranches;
 
     /** Number of cycles where the commit bandwidth limit is reached. */
-    Stats::Scalar<> commitEligibleSamples;
+    Stats::Scalar commitEligibleSamples;
     /** Number of instructions not committed due to bandwidth limits. */
-    Stats::Vector<> commitEligible;
+    Stats::Vector commitEligible;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

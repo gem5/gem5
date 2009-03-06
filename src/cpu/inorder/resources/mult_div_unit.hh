@@ -116,10 +116,10 @@ class MultDivUnit : public Resource {
     std::string lastInstName;
 
     /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar<> multInstReqsProcessed;
+    Stats::Scalar multInstReqsProcessed;
 
     /** Number of Instruction Requests the Resource Processes */
-    Stats::Scalar<> divInstReqsProcessed;
+    Stats::Scalar divInstReqsProcessed;
 
     MDUEvent *mduEvent;    
 };

@@ -192,7 +192,7 @@ class InorderBackEnd
 
     TimeBuffer<CommStruct> *comm;
     // number of cycles stalled for D-cache misses
-    Stats::Scalar<> dcacheStallCycles;
+    Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 };
 

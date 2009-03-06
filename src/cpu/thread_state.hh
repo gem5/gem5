@@ -155,9 +155,9 @@ struct ThreadState {
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */
-    Stats::Scalar<> numInsts;
+    Stats::Scalar numInsts;
     /** Stat for number of memory references. */
-    Stats::Scalar<> numMemRefs;
+    Stats::Scalar numMemRefs;
 
     /** Number of simulated loads, used for tracking events based on
      * the number of loads committed.

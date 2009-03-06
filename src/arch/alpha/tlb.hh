@@ -121,9 +121,9 @@ class TLB : public BaseTLB
 class ITB : public TLB
 {
   protected:
-    mutable Stats::Scalar<> hits;
-    mutable Stats::Scalar<> misses;
-    mutable Stats::Scalar<> acv;
+    mutable Stats::Scalar hits;
+    mutable Stats::Scalar misses;
+    mutable Stats::Scalar acv;
     mutable Stats::Formula accesses;
 
   public:
@@ -139,14 +139,14 @@ class ITB : public TLB
 class DTB : public TLB
 {
   protected:
-    mutable Stats::Scalar<> read_hits;
-    mutable Stats::Scalar<> read_misses;
-    mutable Stats::Scalar<> read_acv;
-    mutable Stats::Scalar<> read_accesses;
-    mutable Stats::Scalar<> write_hits;
-    mutable Stats::Scalar<> write_misses;
-    mutable Stats::Scalar<> write_acv;
-    mutable Stats::Scalar<> write_accesses;
+    mutable Stats::Scalar read_hits;
+    mutable Stats::Scalar read_misses;
+    mutable Stats::Scalar read_acv;
+    mutable Stats::Scalar read_accesses;
+    mutable Stats::Scalar write_hits;
+    mutable Stats::Scalar write_misses;
+    mutable Stats::Scalar write_acv;
+    mutable Stats::Scalar write_accesses;
     Stats::Formula hits;
     Stats::Formula misses;
     Stats::Formula acv;

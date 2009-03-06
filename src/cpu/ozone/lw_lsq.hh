@@ -411,9 +411,9 @@ class OzoneLWLSQ {
     //list<InstSeqNum> mshrSeqNums;
 
     /** Tota number of memory ordering violations. */
-    Stats::Scalar<> lsqMemOrderViolation;
+    Stats::Scalar lsqMemOrderViolation;
 
-     //Stats::Scalar<> dcacheStallCycles;
+     //Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 
     // Make these per thread?

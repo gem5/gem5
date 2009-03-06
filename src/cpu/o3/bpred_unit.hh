@@ -237,21 +237,21 @@ class BPredUnit
     ReturnAddrStack RAS[Impl::MaxThreads];
 
     /** Stat for number of BP lookups. */
-    Stats::Scalar<> lookups;
+    Stats::Scalar lookups;
     /** Stat for number of conditional branches predicted. */
-    Stats::Scalar<> condPredicted;
+    Stats::Scalar condPredicted;
     /** Stat for number of conditional branches predicted incorrectly. */
-    Stats::Scalar<> condIncorrect;
+    Stats::Scalar condIncorrect;
     /** Stat for number of BTB lookups. */
-    Stats::Scalar<> BTBLookups;
+    Stats::Scalar BTBLookups;
     /** Stat for number of BTB hits. */
-    Stats::Scalar<> BTBHits;
+    Stats::Scalar BTBHits;
     /** Stat for number of times the BTB is correct. */
-    Stats::Scalar<> BTBCorrect;
+    Stats::Scalar BTBCorrect;
     /** Stat for number of times the RAS is used to get a target. */
-    Stats::Scalar<> usedRAS;
+    Stats::Scalar usedRAS;
     /** Stat for number of times the RAS is incorrect. */
-    Stats::Scalar<> RASIncorrect;
+    Stats::Scalar RASIncorrect;
 };
 
 #endif // __CPU_O3_BPRED_UNIT_HH__

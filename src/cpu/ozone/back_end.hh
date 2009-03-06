@@ -157,13 +157,13 @@ class BackEnd
         int numInsts;
         int width;
 
-        Stats::VectorDistribution<> occ_dist;
+        Stats::VectorDistribution occ_dist;
 
-        Stats::Vector<> inst_count;
-        Stats::Vector<> peak_inst_count;
-        Stats::Scalar<> empty_count;
-        Stats::Scalar<> current_count;
-        Stats::Scalar<> fullCount;
+        Stats::Vector inst_count;
+        Stats::Vector peak_inst_count;
+        Stats::Scalar empty_count;
+        Stats::Scalar current_count;
+        Stats::Scalar fullCount;
 
         Stats::Formula occ_rate;
         Stats::Formula avg_residency;
@@ -371,45 +371,45 @@ class BackEnd
     bool fetchRedirect[Impl::MaxThreads];
 
     // number of cycles stalled for D-cache misses
-/*    Stats::Scalar<> dcacheStallCycles;
+/*    Stats::Scalar dcacheStallCycles;
       Counter lastDcacheStall;
 */
-    Stats::Vector<> rob_cap_events;
-    Stats::Vector<> rob_cap_inst_count;
-    Stats::Vector<> iq_cap_events;
-    Stats::Vector<> iq_cap_inst_count;
+    Stats::Vector rob_cap_events;
+    Stats::Vector rob_cap_inst_count;
+    Stats::Vector iq_cap_events;
+    Stats::Vector iq_cap_inst_count;
     // total number of instructions executed
-    Stats::Vector<> exe_inst;
-    Stats::Vector<> exe_swp;
-    Stats::Vector<> exe_nop;
-    Stats::Vector<> exe_refs;
-    Stats::Vector<> exe_loads;
-    Stats::Vector<> exe_branches;
+    Stats::Vector exe_inst;
+    Stats::Vector exe_swp;
+    Stats::Vector exe_nop;
+    Stats::Vector exe_refs;
+    Stats::Vector exe_loads;
+    Stats::Vector exe_branches;
 
-    Stats::Vector<> issued_ops;
+    Stats::Vector issued_ops;
 
     // total number of loads forwaded from LSQ stores
-    Stats::Vector<> lsq_forw_loads;
+    Stats::Vector lsq_forw_loads;
 
     // total number of loads ignored due to invalid addresses
-    Stats::Vector<> inv_addr_loads;
+    Stats::Vector inv_addr_loads;
 
     // total number of software prefetches ignored due to invalid addresses
-    Stats::Vector<> inv_addr_swpfs;
+    Stats::Vector inv_addr_swpfs;
     // ready loads blocked due to memory disambiguation
-    Stats::Vector<> lsq_blocked_loads;
+    Stats::Vector lsq_blocked_loads;
 
-    Stats::Scalar<> lsqInversion;
+    Stats::Scalar lsqInversion;
 
-    Stats::Vector<> n_issued_dist;
-    Stats::VectorDistribution<> issue_delay_dist;
+    Stats::Vector n_issued_dist;
+    Stats::VectorDistribution issue_delay_dist;
 
-    Stats::VectorDistribution<> queue_res_dist;
+    Stats::VectorDistribution queue_res_dist;
 /*
-    Stats::Vector<> stat_fu_busy;
-    Stats::Vector2d<> stat_fuBusy;
-    Stats::Vector<> dist_unissued;
-    Stats::Vector2d<> stat_issued_inst_type;
+    Stats::Vector stat_fu_busy;
+    Stats::Vector2d stat_fuBusy;
+    Stats::Vector dist_unissued;
+    Stats::Vector2d stat_issued_inst_type;
 
     Stats::Formula misspec_cnt;
     Stats::Formula misspec_ipc;
@@ -422,34 +422,34 @@ class BackEnd
     Stats::Formula commit_ipb;
     Stats::Formula lsq_inv_rate;
 */
-    Stats::Vector<> writeback_count;
-    Stats::Vector<> producer_inst;
-    Stats::Vector<> consumer_inst;
-    Stats::Vector<> wb_penalized;
+    Stats::Vector writeback_count;
+    Stats::Vector producer_inst;
+    Stats::Vector consumer_inst;
+    Stats::Vector wb_penalized;
 
     Stats::Formula wb_rate;
     Stats::Formula wb_fanout;
     Stats::Formula wb_penalized_rate;
 
     // total number of instructions committed
-    Stats::Vector<> stat_com_inst;
-    Stats::Vector<> stat_com_swp;
-    Stats::Vector<> stat_com_refs;
-    Stats::Vector<> stat_com_loads;
-    Stats::Vector<> stat_com_membars;
-    Stats::Vector<> stat_com_branches;
+    Stats::Vector stat_com_inst;
+    Stats::Vector stat_com_swp;
+    Stats::Vector stat_com_refs;
+    Stats::Vector stat_com_loads;
+    Stats::Vector stat_com_membars;
+    Stats::Vector stat_com_branches;
 
-    Stats::Distribution<> n_committed_dist;
+    Stats::Distribution n_committed_dist;
 
-    Stats::Scalar<> commit_eligible_samples;
-    Stats::Vector<> commit_eligible;
+    Stats::Scalar commit_eligible_samples;
+    Stats::Vector commit_eligible;
 
-    Stats::Scalar<> ROB_fcount;
+    Stats::Scalar ROB_fcount;
     Stats::Formula ROB_full_rate;
 
-    Stats::Vector<>  ROB_count;  // cumulative ROB occupancy
+    Stats::Vector  ROB_count;  // cumulative ROB occupancy
     Stats::Formula ROB_occ_rate;
-    Stats::VectorDistribution<> ROB_occ_dist;
+    Stats::VectorDistribution ROB_occ_dist;
   public:
     void dumpInsts();
 };

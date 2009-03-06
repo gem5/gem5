@@ -248,20 +248,20 @@ class IIC : public BaseTags
      */
 
     /** Hash hit depth of cache hits. */
-    Stats::Distribution<> hitHashDepth;
+    Stats::Distribution hitHashDepth;
     /** Hash depth for cache misses. */
-    Stats::Distribution<> missHashDepth;
+    Stats::Distribution missHashDepth;
     /** Count of accesses to each hash set. */
-    Stats::Distribution<> setAccess;
+    Stats::Distribution setAccess;
 
     /** The total hash depth for every miss. */
-    Stats::Scalar<> missDepthTotal;
+    Stats::Scalar missDepthTotal;
     /** The total hash depth for all hits. */
-    Stats::Scalar<> hitDepthTotal;
+    Stats::Scalar hitDepthTotal;
     /** The number of hash misses. */
-    Stats::Scalar<> hashMiss;
+    Stats::Scalar hashMiss;
     /** The number of hash hits. */
-    Stats::Scalar<> hashHit;
+    Stats::Scalar hashHit;
     /** @} */
 
   public:
