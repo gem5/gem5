@@ -123,6 +123,16 @@ class Info
     bool baseCheck() const;
 
     /**
+     * Enable the stat for use
+     */
+    virtual void enable();
+
+    /**
+     * Prepare the stat for dumping.
+     */
+    virtual void prepare() = 0;
+
+    /**
      * Reset the stat to the default state.
      */
     virtual void reset() = 0;
@@ -159,7 +169,13 @@ class InfoWrap : public Base
     InfoWrap(Stat &stat) : s(stat) {}
 
     bool check() const { return s.check(); }
+    void prepare() { s.prepare(); }
     void reset() { s.reset(); }
+    void
+    visit(Visit &visitor)
+    {
+        visitor.visit(*static_cast<Base *>(this));
+    }
     bool zero() const { return s.zero(); }
 };
 
@@ -169,7 +185,6 @@ class ScalarInfoBase : public Info
     virtual Counter value() const = 0;
     virtual Result result() const = 0;
     virtual Result total() const = 0;
-    void visit(Visit &visitor) { visitor.visit(*this); }
 };
 
 template <class Stat>
@@ -191,23 +206,13 @@ class VectorInfoBase : public Info
     std::vector<std::string> subdescs;
 
   public:
+    void enable();
+
+  public:
     virtual size_type size() const = 0;
     virtual const VCounter &value() const = 0;
     virtual const VResult &result() const = 0;
     virtual Result total() const = 0;
-
-    void
-    update()
-    {
-        if (!subnames.empty()) {
-            size_type s = size();
-            if (subnames.size() < s)
-                subnames.resize(s);
-
-            if (subdescs.size() < s)
-                subdescs.resize(s);
-        }
-    }
 };
 
 template <class Stat>
@@ -237,14 +242,6 @@ class VectorInfo : public InfoWrap<Stat, VectorInfoBase>
     }
 
     Result total() const { return this->s.total(); }
-
-    void
-    visit(Visit &visitor)
-    {
-        this->update();
-        this->s.update();
-        visitor.visit(*this);
-    }
 };
 
 struct DistData
@@ -271,13 +268,6 @@ class DistInfo : public InfoWrap<Stat, DistInfoBase>
 {
   public:
     DistInfo(Stat &stat) : InfoWrap<Stat, DistInfoBase>(stat) {}
-
-    void
-    visit(Visit &visitor)
-    {
-        this->s.update();
-        visitor.visit(*this);
-    }
 };
 
 class VectorDistInfoBase : public Info
@@ -288,6 +278,7 @@ class VectorDistInfoBase : public Info
     /** Names and descriptions of subfields. */
     std::vector<std::string> subnames;
     std::vector<std::string> subdescs;
+    void enable();
 
   protected:
     /** Local storage for the entry values, used for printing. */
@@ -295,17 +286,6 @@ class VectorDistInfoBase : public Info
 
   public:
     virtual size_type size() const = 0;
-
-    void
-    update()
-    {
-        size_type s = size();
-        if (subnames.size() < s)
-            subnames.resize(s);
-
-        if (subdescs.size() < s)
-            subdescs.resize(s);
-    }
 };
 
 template <class Stat>
@@ -315,14 +295,6 @@ class VectorDistInfo : public InfoWrap<Stat, VectorDistInfoBase>
     VectorDistInfo(Stat &stat) : InfoWrap<Stat, VectorDistInfoBase>(stat) {}
 
     size_type size() const { return this->s.size(); }
-
-    void
-    visit(Visit &visitor)
-    {
-        this->update();
-        this->s.update();
-        visitor.visit(*this);
-    }
 };
 
 class Vector2dInfoBase : public Info
@@ -339,13 +311,7 @@ class Vector2dInfoBase : public Info
     /** Local storage for the entry values, used for printing. */
     mutable VCounter cvec;
 
-  public:
-    void
-    update()
-    {
-        if (subnames.size() < x)
-            subnames.resize(x);
-    }
+    void enable();
 };
 
 template <class Stat>
@@ -353,14 +319,6 @@ class Vector2dInfo : public InfoWrap<Stat, Vector2dInfoBase>
 {
   public:
     Vector2dInfo(Stat &stat) : InfoWrap<Stat, Vector2dInfoBase>(stat) {}
-
-    void
-    visit(Visit &visitor)
-    {
-        this->update();
-        this->s.update();
-        visitor.visit(*this);
-    }
 };
 
 class InfoAccess
@@ -382,7 +340,7 @@ class InfoAccess
     /**
      * Reset the stat to the default state.
      */
-    void reset() {}
+    void reset() { }
 
     /**
      * @return true if this stat has a value and satisfies its
@@ -525,7 +483,7 @@ class DataWrapVec : public DataWrap<Derived, InfoType>
     subname(off_type index, const std::string &name)
     {
         Derived &self = this->self();
-        Info *info = this->info();
+        Info *info = self.info();
 
         std::vector<std::string> &subn = info->subnames;
         if (subn.size() <= index)
@@ -556,6 +514,17 @@ class DataWrapVec : public DataWrap<Derived, InfoType>
         subd[index] = desc;
 
         return this->self();
+    }
+
+    void
+    prepare()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->prepare(info);
     }
 
     void
@@ -658,6 +627,10 @@ class StatStor
      */
     Result result() const { return (Result)data; }
     /**
+     * Prepare stat data for dumping or serialization
+     */
+    void prepare(Info *info) { }
+    /**
      * Reset stat value to default
      */
     void reset(Info *info) { data = Counter(); }
@@ -734,8 +707,7 @@ class AvgStor
     Result
     result() const
     {
-        total += current * (curTick - last);
-        last = curTick;
+        assert(last == curTick);
         return (Result)(total + current) / (Result)(curTick + 1);
     }
 
@@ -743,6 +715,16 @@ class AvgStor
      * @return true if zero value
      */
     bool zero() const { return total == 0.0; }
+
+    /**
+     * Prepare stat data for dumping or serialization
+     */
+    void
+    prepare(Info *info)
+    {
+        total += current * (curTick - last);
+        last = curTick;
+    }
 
     /**
      * Reset stat value to default
@@ -863,11 +845,6 @@ class ScalarBase : public DataWrap<Derived, ScalarInfo>
      */
     size_type size() const { return 1; }
 
-    /**
-     * Reset stat value to default
-     */
-    void reset() { data()->reset(this->info()); }
-
     Counter value() { return data()->value(); }
 
     Result result() { return data()->result(); }
@@ -875,17 +852,22 @@ class ScalarBase : public DataWrap<Derived, ScalarInfo>
     Result total() { return result(); }
 
     bool zero() { return result() == 0.0; }
+
+    void reset() { data()->reset(this->info()); }
+    void prepare() { data()->prepare(this->info()); }
 };
 
 class ProxyInfo : public ScalarInfoBase
 {
   public:
-    void visit(Visit &visitor) { visitor.visit(*this); }
     std::string str() const { return to_string(value()); }
     size_type size() const { return 1; }
     bool check() const { return true; }
-    void reset() {}
+    void prepare() { }
+    void reset() { }
     bool zero() const { return value() == 0; }
+
+    void visit(Visit &visitor) { visitor.visit(*this); }
 };
 
 template <class T>
@@ -950,6 +932,7 @@ class ValueBase : public DataWrap<Derived, ScalarInfo>
     std::string str() const { return proxy->str(); }
     bool zero() const { return proxy->zero(); }
     bool check() const { return proxy != NULL; }
+    void prepare() { }
     void reset() { }
 };
 
@@ -1230,8 +1213,6 @@ class VectorBase : public DataWrapVec<Derived, VectorInfo>
         assert (index >= 0 && index < size());
         return Proxy(this->self(), index);
     }
-
-    void update() {}
 };
 
 template <class Stat>
@@ -1348,16 +1329,6 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfo>
         delete [] reinterpret_cast<char *>(storage);
     }
 
-    void
-    update()
-    {
-        Info *info = this->info();
-        size_type size = this->size();
-        info->cvec.resize(size);
-        for (off_type i = 0; i < size; ++i)
-            info->cvec[i] = data(i)->value();
-    }
-
     Derived &
     init(size_type _x, size_type _y)
     {
@@ -1411,6 +1382,20 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfo>
                 return false;
         return true;
 #endif
+    }
+
+    void
+    prepare()
+    {
+        Info *info = this->info();
+        size_type size = this->size();
+
+        for (off_type i = 0; i < size; ++i)
+            data(i)->prepare(info);
+
+        info->cvec.resize(size);
+        for (off_type i = 0; i < size; ++i)
+            info->cvec[i] = data(i)->value();
     }
 
     /**
@@ -1541,7 +1526,7 @@ class DistStor
     }
 
     void
-    update(Info *info, DistData &data)
+    prepare(Info *info, DistData &data)
     {
         const Params *params = safe_cast<const Params *>(info->storageParams);
 
@@ -1630,14 +1615,6 @@ class FancyStor
         samples += number;
     }
 
-    void
-    update(Info *info, DistData &data)
-    {
-        data.sum = sum;
-        data.squares = squares;
-        data.samples = samples;
-    }
-
     /**
      * Return the number of entries in this stat, 1
      * @return 1.
@@ -1649,6 +1626,14 @@ class FancyStor
      * @return True if no samples have been added.
      */
     bool zero() const { return samples == Counter(); }
+
+    void
+    prepare(Info *info, DistData &data)
+    {
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = samples;
+    }
 
     /**
      * Reset stat value to default
@@ -1702,14 +1687,6 @@ class AvgFancy
         squares += value * value;
     }
 
-    void
-    update(Info *info, DistData &data)
-    {
-        data.sum = sum;
-        data.squares = squares;
-        data.samples = curTick;
-    }
-
     /**
      * Return the number of entries, in this case 1.
      * @return 1.
@@ -1721,6 +1698,14 @@ class AvgFancy
      * @return True if the sum is zero.
      */
     bool zero() const { return sum == Counter(); }
+
+    void
+    prepare(Info *info, DistData &data)
+    {
+        data.sum = sum;
+        data.squares = squares;
+        data.samples = curTick;
+    }
 
     /**
      * Reset stat value to default
@@ -1801,10 +1786,10 @@ class DistBase : public DataWrap<Derived, DistInfo>
     bool zero() const { return data()->zero(); }
 
     void
-    update()
+    prepare()
     {
         Info *info = this->info();
-        data()->update(info, info->data);
+        data()->prepare(info, info->data);
     }
 
     /**
@@ -1900,23 +1885,20 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfo>
 #endif
     }
 
+    void
+    prepare()
+    {
+        Info *info = this->info();
+        size_type size = this->size();
+        info->data.resize(size);
+        for (off_type i = 0; i < size; ++i)
+            data(i)->prepare(info, info->data[i]);
+    }
+
     bool
     check() const
     {
         return storage != NULL;
-    }
-
-    void
-    update()
-    {
-        Derived &self = this->self();
-        Info *info = this->info();
-
-        size_type size = self.size();
-        info.data.resize(size);
-        for (off_type i = 0; i < size; ++i) {
-            data(i)->update(info, info.data[i]);
-        }
     }
 };
 
@@ -2589,14 +2571,6 @@ class FormulaInfo : public InfoWrap<Stat, FormulaInfoBase>
     Result total() const { return this->s.total(); }
     VCounter &value() const { return cvec; }
 
-    void
-    visit(Visit &visitor)
-    {
-        this->update();
-        this->s.update();
-        visitor.visit(*this);
-    }
-
     std::string str() const { return this->s.str(); }
 };
 
@@ -2676,11 +2650,6 @@ class Formula : public DataWrapVec<Formula, FormulaInfo>
      *
      */
     bool zero() const;
-
-    /**
-     *
-     */
-    void update();
 
     std::string str() const;
 };
@@ -2876,11 +2845,6 @@ class Temp
  * @}
  */
 
-void check();
-void dump();
-void reset();
-void registerResetCallback(Callback *cb);
-
 inline Temp
 operator+(Temp l, Temp r)
 {
@@ -2930,6 +2894,34 @@ sum(Temp val)
 {
     return NodePtr(new SumNode<std::plus<Result> >(val));
 }
+
+/**
+ * Enable the statistics package.  Before the statistics package is
+ * enabled, all statistics must be created and initialized and once
+ * the package is enabled, no more statistics can be created.
+ */
+void enable();
+
+/**
+ * Prepare all stats for data access.  This must be done before
+ * dumping and serialization.
+ */
+void prepare();
+
+/**
+ * Dump all statistics data to the registered outputs
+ */
+void dump();
+
+/**
+ * Reset all statistics to the base state
+ */
+void reset();
+/**
+ * Register a callback that should be called whenever statistics are
+ * reset
+ */
+void registerResetCallback(Callback *cb);
 
 std::list<Info *> &statsList();
 

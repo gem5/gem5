@@ -27,7 +27,14 @@
 # Authors: Nathan Binkert
 
 import internal
+from internal.core import initAll, regAllStats
 
 def setOutputDir(dir):
     internal.core.setOutputDir(dir)
+
+def initAll():
+    internal.core.initAll()
+
+def regAllStats():
+    internal.core.regAllStats()
 

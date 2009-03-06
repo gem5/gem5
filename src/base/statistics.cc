@@ -32,6 +32,7 @@
 #include <fstream>
 #include <list>
 #include <map>
+#include <set>
 #include <string>
 
 #include "base/callback.hh"
@@ -174,6 +175,41 @@ Info::baseCheck() const
     return true;
 }
 
+void
+Info::enable()
+{
+}
+
+void
+VectorInfoBase::enable()
+{
+    size_type s = size();
+    if (subnames.size() < s)
+        subnames.resize(s);
+    if (subdescs.size() < s)
+        subdescs.resize(s);
+}
+
+void
+VectorDistInfoBase::enable()
+{
+    size_type s = size();
+    if (subnames.size() < s)
+        subnames.resize(s);
+    if (subdescs.size() < s)
+        subdescs.resize(s);
+}
+
+void
+Vector2dInfoBase::enable()
+{
+    if (subnames.size() < x)
+        subnames.resize(x);
+    if (subdescs.size() < x)
+        subdescs.resize(x);
+    if (y_subnames.size() < y)
+        y_subnames.resize(y);
+}
 
 Formula::Formula()
 {
@@ -244,11 +280,6 @@ Formula::zero() const
     return true;
 }
 
-void
-Formula::update()
-{
-}
-
 string
 Formula::str() const
 {
@@ -256,7 +287,7 @@ Formula::str() const
 }
 
 void
-check()
+enable()
 {
     typedef list<Info *>::iterator iter_t;
 
@@ -277,17 +308,21 @@ check()
 
     statsList().sort(Info::less);
 
-    if (i == end)
-        return;
-
-    iter_t last = i;
-    ++i;
-
     for (i = statsList().begin(); i != end; ++i) {
-        if ((*i)->name == (*last)->name)
-            panic("same name used twice! name=%s\n", (*i)->name);
+        Info *info = *i;
+        info->enable();
+    }
+}
 
-        last = i;
+void
+prepare()
+{
+    list<Info *>::iterator i = statsList().begin();
+    list<Info *>::iterator end = statsList().end();
+    while (i != end) {
+        Info *info = *i;
+        info->prepare();
+        ++i;
     }
 }
 

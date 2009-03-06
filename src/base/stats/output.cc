@@ -30,6 +30,7 @@
 
 #include <list>
 
+#include "base/statistics.hh"
 #include "base/stats/output.hh"
 #include "sim/eventq.hh"
 #include "sim/host.hh"
@@ -48,6 +49,8 @@ dump()
     if (lastDump == curTick)
         return;
     lastDump = curTick;
+
+    prepare();
 
     list<Output *>::iterator i = OutputList.begin();
     list<Output *>::iterator end = OutputList.end();
