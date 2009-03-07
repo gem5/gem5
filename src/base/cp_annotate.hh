@@ -53,7 +53,7 @@ class ThreadContext;
 
 
 #if !CP_ANNOTATE
-class CPA : SimObject
+class CPA
 {
   public:
     enum flags {

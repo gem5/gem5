@@ -2495,7 +2495,7 @@ class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
         params->min = min;
         params->max = max;
         params->bucket_size = bkt;
-        params->buckets = rint((max - min) / bkt + 1.0);
+        params->buckets = (size_type)rint((max - min) / bkt + 1.0);
         this->setParams(params);
         this->doInit(size);
         return this->self();
