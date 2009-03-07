@@ -1423,6 +1423,22 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfo>
 //
 //////////////////////////////////////////////////////////////////////
 
+struct DistParams : public StorageParams
+{
+    const bool fancy;
+
+    /** The minimum value to track. */
+    Counter min;
+    /** The maximum value to track. */
+    Counter max;
+    /** The number of entries in each bucket. */
+    Counter bucket_size;
+    /** The number of buckets. Equal to (max-min)/bucket_size. */
+    size_type buckets;
+
+    explicit DistParams(bool f) : fancy(f) {}
+};
+
 /**
  * Templatized storage and interface for a distrbution stat.
  */
@@ -1430,18 +1446,9 @@ class DistStor
 {
   public:
     /** The parameters for a distribution stat. */
-    struct Params : public StorageParams
+    struct Params : public DistParams
     {
-        /** The minimum value to track. */
-        Counter min;
-        /** The maximum value to track. */
-        Counter max;
-        /** The number of entries in each bucket. */
-        Counter bucket_size;
-        /** The number of buckets. Equal to (max-min)/bucket_size. */
-        size_type buckets;
-
-        enum { fancy = false };
+        Params() : DistParams(false) {}
     };
 
   private:
@@ -1578,9 +1585,9 @@ class DistStor
 class FancyStor
 {
   public:
-    struct Params : public StorageParams
+    struct Params : public DistParams
     {
-        enum { fancy = true };
+        Params() : DistParams(true) {}
     };
 
   private:
@@ -1654,9 +1661,9 @@ class FancyStor
 class AvgFancy
 {
   public:
-    struct Params : public StorageParams
+    struct Params : public DistParams
     {
-        enum { fancy = true };
+        Params() : DistParams(true) {}
     };
 
   private:

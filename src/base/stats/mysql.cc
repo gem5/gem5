@@ -583,7 +583,8 @@ MySql::configure(const DistInfoBase &info)
     if (!configure(info, "DIST"))
         return;
 
-    const Params *params = safe_cast<const Params *>(info.storageParams);
+    const DistParams *params =
+        safe_cast<const DistParams *>(info.storageParams);
     if (!params->fancy) {
         stat.size = params->buckets;
         stat.min = params->min;
@@ -599,7 +600,8 @@ MySql::configure(const VectorDistInfoBase &info)
     if (!configure(info, "VECTORDIST"))
         return;
 
-    const Params *params = safe_cast<const Params *>(info.storageParams);
+    const DistParams *params =
+        safe_cast<const DistParams *>(info.storageParams);
     if (!params->fancy) {
         stat.size = params->buckets;
         stat.min = params->min;
@@ -765,7 +767,7 @@ MySql::output(const VectorInfoBase &info)
 }
 
 void
-MySql::output(const DistData &data)
+MySql::output(const DistData &data, const DistParams *params)
 {
     const int db_sum = -1;
     const int db_squares = -2;
@@ -787,7 +789,7 @@ MySql::output(const DistData &data)
     newdata.data = data.samples;
     newdata.insert();
 
-    if (data.samples && !data.fancy) {
+    if (data.samples && !params->fancy) {
         newdata.x = db_min_val;
         newdata.data = data.min_val;
         newdata.insert();
@@ -821,7 +823,7 @@ MySql::output(const DistInfoBase &info)
 
     newdata.stat = find(info.id);
     newdata.y = 0;
-    output(info.data);
+    output(info.data, safe_cast<const DistParams *>(info.storageParams));
 }
 
 void
@@ -835,7 +837,8 @@ MySql::output(const VectorDistInfoBase &info)
     size_type size = info.data.size();
     for (off_type y = 0; y < size; ++y) {
         newdata.y = y;
-        output(info.data[y]);
+        output(info.data[y],
+               safe_cast<const DistParams *>(info.storageParams));
     }
 }
 

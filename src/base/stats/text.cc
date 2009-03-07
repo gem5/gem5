@@ -351,27 +351,63 @@ struct DistPrint
     bool descriptions;
     int precision;
 
-    Result min_val;
-    Result max_val;
-    Result underflow;
-    Result overflow;
-    VResult vec;
-    Result sum;
-    Result squares;
-    Result samples;
-
     Counter min;
     Counter max;
     Counter bucket_size;
     size_type size;
     bool fancy;
 
+    const DistData &data;
+
+    DistPrint(const DistInfoBase &info);
+    DistPrint(const VectorDistInfoBase &info, int i);
+    void init(const Info &info, const DistParams *params);
     void operator()(ostream &stream) const;
 };
+
+DistPrint::DistPrint(const DistInfoBase &info)
+    : data(info.data)
+{
+    init(info, safe_cast<const DistParams *>(info.storageParams));
+}
+
+DistPrint::DistPrint(const VectorDistInfoBase &info, int i)
+    : data(info.data[i])
+{
+    init(info, safe_cast<const DistParams *>(info.storageParams));
+
+    name = info.name + "_" +
+        (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
+
+    if (!info.subdescs[i].empty())
+        desc = info.subdescs[i];
+}
+
+void
+DistPrint::init(const Info &info, const DistParams *params)
+{
+    name = info.name;
+    desc = info.desc;
+    flags = info.flags;
+    compat = compat;
+    descriptions = descriptions;
+    precision = info.precision;
+
+    fancy = params->fancy;
+    min = params->min;
+    max = params->max;
+    bucket_size = params->bucket_size;
+    size = params->buckets;
+}
 
 void
 DistPrint::operator()(ostream &stream) const
 {
+    Result stdev = NAN;
+    if (data.samples)
+        stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
+                     (data.samples * (data.samples - 1.0)));
+
     if (fancy) {
         ScalarPrint print;
         string base = name + (compat ? "_" : "::");
@@ -385,28 +421,27 @@ DistPrint::operator()(ostream &stream) const
         print.cdf = NAN;
 
         print.name = base + "mean";
-        print.value = samples ? sum / samples : NAN;
+        print.value = data.samples ? data.sum / data.samples : NAN;
         print(stream);
 
         print.name = base + "stdev";
-        print.value = samples ? sqrt((samples * squares - sum * sum) /
-                                     (samples * (samples - 1.0))) : NAN;
+        print.value = stdev;
         print(stream);
 
         print.name = "**Ignore: " + base + "TOT";
-        print.value = samples;
+        print.value = data.samples;
         print(stream);
         return;
     }
 
-    assert(size == vec.size());
+    assert(size == data.cvec.size());
 
     Result total = 0.0;
 
-    total += underflow;
+    total += data.underflow;
     for (off_type i = 0; i < size; ++i)
-        total += vec[i];
-    total += overflow;
+        total += data.cvec[i];
+    total += data.overflow;
 
     string base = name + (compat ? "." : "::");
 
@@ -427,18 +462,18 @@ DistPrint::operator()(ostream &stream) const
     }
 
     print.name = base + "samples";
-    print.value = samples;
+    print.value = data.samples;
     print(stream);
 
     print.name = base + "min_value";
-    print.value = min_val;
+    print.value = data.min_val;
     print(stream);
 
-    if (!compat || underflow > 0.0) {
+    if (!compat || data.underflow > 0.0) {
         print.name = base + "underflows";
-        print.value = underflow;
+        print.value = data.underflow;
         if (!compat && total) {
-            print.pdf = underflow / total;
+            print.pdf = data.underflow / total;
             print.cdf += print.pdf;
         }
         print(stream);
@@ -456,9 +491,9 @@ DistPrint::operator()(ostream &stream) const
                 namestr << "-" << high;
 
             print.name = namestr.str();
-            print.value = vec[i];
+            print.value = data.cvec[i];
             if (total) {
-                print.pdf = vec[i] / total;
+                print.pdf = data.cvec[i] / total;
                 print.cdf += print.pdf;
             }
             print(stream);
@@ -471,17 +506,17 @@ DistPrint::operator()(ostream &stream) const
         print.flags = flags | __substat;
 
         for (off_type i = 0; i < size; ++i) {
-            if ((flags & nozero && vec[i] == 0.0) ||
-                (flags & nonan && isnan(vec[i])))
+            if ((flags & nozero && data.cvec[i] == 0.0) ||
+                (flags & nonan && isnan(data.cvec[i])))
                 continue;
 
             _min = i * bucket_size + min;
-            _pdf = vec[i] / total * 100.0;
+            _pdf = data.cvec[i] / total * 100.0;
             _cdf += _pdf;
 
 
             print.name = ValueToString(_min, 0, compat);
-            print.value = vec[i];
+            print.value = data.cvec[i];
             print.pdf = (flags & pdf) ? _pdf : NAN;
             print.cdf = (flags & cdf) ? _cdf : NAN;
             print(stream);
@@ -490,11 +525,11 @@ DistPrint::operator()(ostream &stream) const
         print.flags = flags;
     }
 
-    if (!compat || overflow > 0.0) {
+    if (!compat || data.overflow > 0.0) {
         print.name = base + "overflows";
-        print.value = overflow;
+        print.value = data.overflow;
         if (!compat && total) {
-            print.pdf = overflow / total;
+            print.pdf = data.overflow / total;
             print.cdf += print.pdf;
         } else {
             print.pdf = NAN;
@@ -513,17 +548,16 @@ DistPrint::operator()(ostream &stream) const
     }
 
     print.name = base + "max_value";
-    print.value = max_val;
+    print.value = data.max_val;
     print(stream);
 
-    if (!compat && samples != 0) {
+    if (!compat && data.samples != 0) {
         print.name = base + "mean";
-        print.value = sum / samples;
+        print.value = data.sum / data.samples;
         print(stream);
 
         print.name = base + "stdev";
-        print.value = sqrt((samples * squares - sum * sum) /
-                           (samples * (samples - 1.0)));
+        print.value = stdev;
         print(stream);
     }
 
@@ -651,39 +685,7 @@ Text::visit(const DistInfoBase &info)
     if (noOutput(info))
         return;
 
-    DistPrint print;
-
-    print.name = info.name;
-    print.desc = info.desc;
-    print.flags = info.flags;
-    print.compat = compat;
-    print.descriptions = descriptions;
-    print.precision = info.precision;
-
-    const DistData &data = info.data;
-
-    print.min_val = data.min_val;
-    print.max_val = data.max_val;
-    print.underflow = data.underflow;
-    print.overflow = data.overflow;
-    print.vec.resize(data.cvec.size());
-    for (off_type i = 0; i < print.vec.size(); ++i)
-        print.vec[i] = (Result)data.cvec[i];
-    print.sum = data.sum;
-    print.squares = data.squares;
-    print.samples = data.samples;
-
-    const DistStor::Params *params =
-        safe_cast<const DistStor::Params *>(info.storageParams);
-
-    print.fancy = params->fancy;
-    if (!params->fancy) {
-        print.min = params->min;
-        print.max = params->max;
-        print.bucket_size = params->bucket_size;
-        print.size = params->buckets;
-    }
-
+    DistPrint print(info);
     print(*stream);
 }
 
@@ -694,38 +696,7 @@ Text::visit(const VectorDistInfoBase &info)
         return;
 
     for (off_type i = 0; i < info.size(); ++i) {
-        DistPrint print;
-
-        print.name = info.name + "_" +
-            (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
-        print.desc = info.subdescs[i].empty() ? info.desc : info.subdescs[i];
-        print.flags = info.flags;
-        print.compat = compat;
-        print.descriptions = descriptions;
-        print.precision = info.precision;
-
-        print.min_val = info.data[i].min_val;
-        print.max_val = info.data[i].max_val;
-        print.underflow = info.data[i].underflow;
-        print.overflow = info.data[i].overflow;
-        print.vec.resize(info.data[i].cvec.size());
-        for (off_type j = 0; j < print.vec.size(); ++j)
-            print.vec[j] = (Result)info.data[i].cvec[j];
-        print.sum = info.data[i].sum;
-        print.squares = info.data[i].squares;
-        print.samples = info.data[i].samples;
-
-        const DistStor::Params *params =
-            safe_cast<const DistStor::Params *>(info.storageParams);
-
-        print.fancy = params->fancy;
-        if (!params->fancy) {
-            print.min = params->min;
-            print.max = params->max;
-            print.bucket_size = params->bucket_size;
-            print.size = params->buckets;
-        }
-
+        DistPrint print(info, i);
         print(*stream);
     }
 }

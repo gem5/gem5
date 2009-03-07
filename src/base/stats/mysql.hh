@@ -56,6 +56,7 @@ struct SetupStat
     bool total;
     bool pdf;
     bool cdf;
+
     double min;
     double max;
     double bktsize;
@@ -177,7 +178,7 @@ class MySql : public Output
     void output(const VectorDistInfoBase &info);
     void output(const Vector2dInfoBase &info);
     void output(const FormulaInfoBase &info);
-    void output(const DistData &data);
+    void output(const DistData &data, const DistParams *params);
 
     void configure();
     bool configure(const Info &info, std::string type);
