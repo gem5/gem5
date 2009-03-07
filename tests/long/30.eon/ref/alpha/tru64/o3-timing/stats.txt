@@ -1,25 +1,21 @@
 
 ---------- Begin Simulation Statistics ----------
-global.BPredUnit.BTBCorrect                         0                       # Number of correct BTB predictions (this stat may not work properly.
-global.BPredUnit.BTBHits                     38296034                       # Number of BTB hits
-global.BPredUnit.BTBLookups                  45834466                       # Number of BTB lookups
-global.BPredUnit.RASInCorrect                    1077                       # Number of incorrect RAS predictions.
-global.BPredUnit.condIncorrect                5781170                       # Number of conditional branches incorrect
-global.BPredUnit.condPredicted               35418150                       # Number of conditional branches predicted
-global.BPredUnit.lookups                     62209737                       # Number of BP lookups
-global.BPredUnit.usedRAS                     12344504                       # Number of times the RAS was used to get a target.
-host_inst_rate                                 183215                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 211568                       # Number of bytes of host memory used
-host_seconds                                  2049.91                       # Real time elapsed on the host
-host_tick_rate                               65854919                       # Simulator tick rate (ticks/s)
-memdepunit.memDep.conflictingLoads           73961217                       # Number of conflicting loads.
-memdepunit.memDep.conflictingStores          54131405                       # Number of conflicting stores.
-memdepunit.memDep.insertedLoads             124841223                       # Number of loads inserted to the mem dependence unit.
-memdepunit.memDep.insertedStores             92324076                       # Number of stores inserted to the mem dependence unit.
+host_inst_rate                                 243217                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 213460                       # Number of bytes of host memory used
+host_seconds                                  1544.20                       # Real time elapsed on the host
+host_tick_rate                               87422028                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   375574819                       # Number of instructions simulated
 sim_seconds                                  0.134997                       # Number of seconds simulated
 sim_ticks                                134996684500                       # Number of ticks simulated
+system.cpu.BPredUnit.BTBCorrect                     0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu.BPredUnit.BTBHits                 38296034                       # Number of BTB hits
+system.cpu.BPredUnit.BTBLookups              45834466                       # Number of BTB lookups
+system.cpu.BPredUnit.RASInCorrect                1077                       # Number of incorrect RAS predictions.
+system.cpu.BPredUnit.condIncorrect            5781170                       # Number of conditional branches incorrect
+system.cpu.BPredUnit.condPredicted           35418150                       # Number of conditional branches predicted
+system.cpu.BPredUnit.lookups                 62209737                       # Number of BP lookups
+system.cpu.BPredUnit.usedRAS                 12344504                       # Number of times the RAS was used to get a target.
 system.cpu.commit.COM:branches               44587532                       # Number of branches committed
 system.cpu.commit.COM:bw_lim_events          13163574                       # number cycles where commit BW limit reached
 system.cpu.commit.COM:bw_limited                    0                       # number of insts not committed due to BW limits
@@ -298,21 +294,23 @@ system.cpu.iq.ISSUE:fu_full.start_dist
                        IprAccess            0      0.00%            # attempts to use FU when none available
                     InstPrefetch            0      0.00%            # attempts to use FU when none available
 system.cpu.iq.ISSUE:fu_full.end_dist
-system.cpu.iq.ISSUE:issued_per_cycle.start_dist                     # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle.samples    269852647                      
-system.cpu.iq.ISSUE:issued_per_cycle.min_value            0                      
-                               0     99465935   3685.94%           
-                               1     57766030   2140.65%           
-                               2     39984554   1481.72%           
-                               3     29664959   1099.30%           
-                               4     23966120    888.12%           
-                               5     10452563    387.34%           
-                               6      5712016    211.67%           
-                               7      2252970     83.49%           
-                               8       587500     21.77%           
-system.cpu.iq.ISSUE:issued_per_cycle.max_value            8                      
-system.cpu.iq.ISSUE:issued_per_cycle.end_dist
-
+system.cpu.iq.ISSUE:issued_per_cycle::samples    269852647                      
+system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                      
+system.cpu.iq.ISSUE:issued_per_cycle::underflows            0      0.00%           
+system.cpu.iq.ISSUE:issued_per_cycle::0-1     99465935     36.86%           
+system.cpu.iq.ISSUE:issued_per_cycle::1-2     57766030     21.41%           
+system.cpu.iq.ISSUE:issued_per_cycle::2-3     39984554     14.82%           
+system.cpu.iq.ISSUE:issued_per_cycle::3-4     29664959     10.99%           
+system.cpu.iq.ISSUE:issued_per_cycle::4-5     23966120      8.88%           
+system.cpu.iq.ISSUE:issued_per_cycle::5-6     10452563      3.87%           
+system.cpu.iq.ISSUE:issued_per_cycle::6-7      5712016      2.12%           
+system.cpu.iq.ISSUE:issued_per_cycle::7-8      2252970      0.83%           
+system.cpu.iq.ISSUE:issued_per_cycle::8        587500      0.22%           
+system.cpu.iq.ISSUE:issued_per_cycle::overflows            0      0.00%           
+system.cpu.iq.ISSUE:issued_per_cycle::total    269852647                      
+system.cpu.iq.ISSUE:issued_per_cycle::max_value            8                      
+system.cpu.iq.ISSUE:issued_per_cycle::mean     1.591981                      
+system.cpu.iq.ISSUE:issued_per_cycle::stdev     1.720906                      
 system.cpu.iq.ISSUE:rate                     1.591151                       # Inst issue rate
 system.cpu.iq.iqInstsAdded                  466283095                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                 429600196                       # Number of instructions issued
@@ -398,6 +396,10 @@ system.cpu.l2cache.tagsinuse              3875.343408                       # Cy
 system.cpu.l2cache.total_refs                     609                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
+system.cpu.memDep0.conflictingLoads          73961217                       # Number of conflicting loads.
+system.cpu.memDep0.conflictingStores         54131405                       # Number of conflicting stores.
+system.cpu.memDep0.insertedLoads            124841223                       # Number of loads inserted to the mem dependence unit.
+system.cpu.memDep0.insertedStores            92324076                       # Number of stores inserted to the mem dependence unit.
 system.cpu.numCycles                        269993372                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles          8452992                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps      259532341                       # Number of HB maps that are committed

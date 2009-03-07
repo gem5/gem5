@@ -1,43 +1,41 @@
 
 ---------- Begin Simulation Statistics ----------
-global.BPredUnit.BTBCorrect                         0                       # Number of correct BTB predictions (this stat may not work properly.
-global.BPredUnit.BTBHits                         4398                       # Number of BTB hits
-global.BPredUnit.BTBLookups                      9844                       # Number of BTB lookups
-global.BPredUnit.RASInCorrect                       0                       # Number of incorrect RAS predictions.
-global.BPredUnit.condIncorrect                   2923                       # Number of conditional branches incorrect
-global.BPredUnit.condPredicted                  11413                       # Number of conditional branches predicted
-global.BPredUnit.lookups                        11413                       # Number of BP lookups
-global.BPredUnit.usedRAS                            0                       # Number of times the RAS was used to get a target.
-host_inst_rate                                  30716                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 201632                       # Number of bytes of host memory used
-host_seconds                                     0.47                       # Real time elapsed on the host
-host_tick_rate                               58973694                       # Simulator tick rate (ticks/s)
-memdepunit.memDep.conflictingLoads                 26                       # Number of conflicting loads.
-memdepunit.memDep.conflictingStores                 0                       # Number of conflicting stores.
-memdepunit.memDep.insertedLoads                  4960                       # Number of loads inserted to the mem dependence unit.
-memdepunit.memDep.insertedStores                 3415                       # Number of stores inserted to the mem dependence unit.
+host_inst_rate                                  66771                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 203496                       # Number of bytes of host memory used
+host_seconds                                     0.22                       # Real time elapsed on the host
+host_tick_rate                              128111456                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                       14449                       # Number of instructions simulated
 sim_seconds                                  0.000028                       # Number of seconds simulated
 sim_ticks                                    27756500                       # Number of ticks simulated
+system.cpu.BPredUnit.BTBCorrect                     0                       # Number of correct BTB predictions (this stat may not work properly.
+system.cpu.BPredUnit.BTBHits                     4398                       # Number of BTB hits
+system.cpu.BPredUnit.BTBLookups                  9844                       # Number of BTB lookups
+system.cpu.BPredUnit.RASInCorrect                   0                       # Number of incorrect RAS predictions.
+system.cpu.BPredUnit.condIncorrect               2923                       # Number of conditional branches incorrect
+system.cpu.BPredUnit.condPredicted              11413                       # Number of conditional branches predicted
+system.cpu.BPredUnit.lookups                    11413                       # Number of BP lookups
+system.cpu.BPredUnit.usedRAS                        0                       # Number of times the RAS was used to get a target.
 system.cpu.commit.COM:branches                   3359                       # Number of branches committed
 system.cpu.commit.COM:bw_lim_events               103                       # number cycles where commit BW limit reached
 system.cpu.commit.COM:bw_limited                    0                       # number of insts not committed due to BW limits
-system.cpu.commit.COM:committed_per_cycle.start_dist                     # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle.samples        42766                      
-system.cpu.commit.COM:committed_per_cycle.min_value            0                      
-                               0        34594   8089.14%           
-                               1         4804   1123.32%           
-                               2         1741    407.10%           
-                               3          720    168.36%           
-                               4          413     96.57%           
-                               5          144     33.67%           
-                               6          196     45.83%           
-                               7           51     11.93%           
-                               8          103     24.08%           
-system.cpu.commit.COM:committed_per_cycle.max_value            8                      
-system.cpu.commit.COM:committed_per_cycle.end_dist
-
+system.cpu.commit.COM:committed_per_cycle::samples        42766                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::underflows            0      0.00%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::0-1        34594     80.89%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::1-2         4804     11.23%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::2-3         1741      4.07%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::3-4          720      1.68%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::4-5          413      0.97%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::5-6          144      0.34%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::6-7          196      0.46%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::7-8           51      0.12%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::8          103      0.24%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::overflows            0      0.00%            # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::total        42766                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::mean     0.354838                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::stdev     0.957636                       # Number of insts commited each cycle
 system.cpu.commit.COM:count                     15175                       # Number of instructions committed
 system.cpu.commit.COM:loads                      2226                       # Number of loads committed
 system.cpu.commit.COM:membars                       0                       # Number of memory barriers committed
@@ -134,21 +132,23 @@ system.cpu.fetch.branchRate                  0.205588                       # Nu
 system.cpu.fetch.icacheStallCycles               7356                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.predictedBranches               4398                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.rate                        1.049231                       # Number of inst fetches per cycle
-system.cpu.fetch.rateDist.start_dist                           # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist.samples               47090                      
-system.cpu.fetch.rateDist.min_value                 0                      
-                               0        30448   6465.92%           
-                               1         7532   1599.49%           
-                               2         1217    258.44%           
-                               3         1059    224.89%           
-                               4         1060    225.10%           
-                               5         1193    253.34%           
-                               6          711    150.99%           
-                               7          327     69.44%           
-                               8         3543    752.39%           
-system.cpu.fetch.rateDist.max_value                 8                      
-system.cpu.fetch.rateDist.end_dist
-
+system.cpu.fetch.rateDist::samples              47090                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::underflows               0      0.00%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::0-1                  30448     64.66%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::1-2                   7532     15.99%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::2-3                   1217      2.58%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::3-4                   1059      2.25%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::4-5                   1060      2.25%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::5-6                   1193      2.53%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::6-7                    711      1.51%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::7-8                    327      0.69%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::8                     3543      7.52%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::overflows                0      0.00%            # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::total                47090                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::max_value                8                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::mean              1.236929                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::stdev             2.372442                       # Number of instructions fetched each cycle (Total)
 system.cpu.icache.ReadReq_accesses               7356                       # number of ReadReq accesses(hits+misses)
 system.cpu.icache.ReadReq_avg_miss_latency 33620.560748                       # average ReadReq miss latency
 system.cpu.icache.ReadReq_avg_mshr_miss_latency 34869.080780                       # average ReadReq mshr miss latency
@@ -283,21 +283,23 @@ system.cpu.iq.ISSUE:fu_full.start_dist
                        IprAccess            0      0.00%            # attempts to use FU when none available
                     InstPrefetch            0      0.00%            # attempts to use FU when none available
 system.cpu.iq.ISSUE:fu_full.end_dist
-system.cpu.iq.ISSUE:issued_per_cycle.start_dist                     # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle.samples        47090                      
-system.cpu.iq.ISSUE:issued_per_cycle.min_value            0                      
-                               0        34112   7244.00%           
-                               1         5516   1171.37%           
-                               2         3070    651.94%           
-                               3         2146    455.72%           
-                               4          997    211.72%           
-                               5          653    138.67%           
-                               6          342     72.63%           
-                               7          211     44.81%           
-                               8           43      9.13%           
-system.cpu.iq.ISSUE:issued_per_cycle.max_value            8                      
-system.cpu.iq.ISSUE:issued_per_cycle.end_dist
-
+system.cpu.iq.ISSUE:issued_per_cycle::samples        47090                      
+system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                      
+system.cpu.iq.ISSUE:issued_per_cycle::underflows            0      0.00%           
+system.cpu.iq.ISSUE:issued_per_cycle::0-1        34112     72.44%           
+system.cpu.iq.ISSUE:issued_per_cycle::1-2         5516     11.71%           
+system.cpu.iq.ISSUE:issued_per_cycle::2-3         3070      6.52%           
+system.cpu.iq.ISSUE:issued_per_cycle::3-4         2146      4.56%           
+system.cpu.iq.ISSUE:issued_per_cycle::4-5          997      2.12%           
+system.cpu.iq.ISSUE:issued_per_cycle::5-6          653      1.39%           
+system.cpu.iq.ISSUE:issued_per_cycle::6-7          342      0.73%           
+system.cpu.iq.ISSUE:issued_per_cycle::7-8          211      0.45%           
+system.cpu.iq.ISSUE:issued_per_cycle::8            43      0.09%           
+system.cpu.iq.ISSUE:issued_per_cycle::overflows            0      0.00%           
+system.cpu.iq.ISSUE:issued_per_cycle::total        47090                      
+system.cpu.iq.ISSUE:issued_per_cycle::max_value            8                      
+system.cpu.iq.ISSUE:issued_per_cycle::mean     0.620514                      
+system.cpu.iq.ISSUE:issued_per_cycle::stdev     1.275912                      
 system.cpu.iq.ISSUE:rate                     0.526354                       # Inst issue rate
 system.cpu.iq.iqInstsAdded                      32302                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                     29220                       # Number of instructions issued
@@ -377,6 +379,10 @@ system.cpu.l2cache.tagsinuse               251.642612                       # Cy
 system.cpu.l2cache.total_refs                       4                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                       0                       # number of writebacks
+system.cpu.memDep0.conflictingLoads                26                       # Number of conflicting loads.
+system.cpu.memDep0.conflictingStores                0                       # Number of conflicting stores.
+system.cpu.memDep0.insertedLoads                 4960                       # Number of loads inserted to the mem dependence unit.
+system.cpu.memDep0.insertedStores                3415                       # Number of stores inserted to the mem dependence unit.
 system.cpu.numCycles                            55514                       # number of cpu cycles simulated
 system.cpu.rename.RENAME:BlockCycles               32                       # Number of cycles rename is blocking
 system.cpu.rename.RENAME:CommittedMaps          13832                       # Number of HB maps that are committed
