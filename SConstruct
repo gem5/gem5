@@ -161,7 +161,8 @@ def compare_versions(v1, v2):
 # Set up the base build environment.
 #
 ########################################################################
-use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'PATH', 'RANLIB' ])
+use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
+                 'RANLIB' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
@@ -550,7 +551,7 @@ py_includes = [ py_general_include ]
 if py_platform_include != py_general_include:
     py_includes.append(py_platform_include)
 
-py_lib_path = []
+py_lib_path = [ py_getvar('LIBDIR') ]
 # add the prefix/lib/pythonX.Y/config dir, but only if there is no
 # shared library in prefix/lib/.
 if not py_getvar('Py_ENABLE_SHARED'):
@@ -564,7 +565,6 @@ py_libs.append('-l' + py_version)
 
 env.Append(CPPPATH=py_includes)
 env.Append(LIBPATH=py_lib_path)
-#env.Append(LIBS=py_libs)
 
 # verify that this stuff works
 if not conf.CheckHeader('Python.h', '<>'):
