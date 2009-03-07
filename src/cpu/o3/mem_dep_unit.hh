@@ -65,7 +65,11 @@ class InstructionQueue;
  * dependence prediction schemes.
  */
 template <class MemDepPred, class Impl>
-class MemDepUnit {
+class MemDepUnit
+{
+  protected:
+    std::string _name;
+
   public:
     typedef typename Impl::DynInstPtr DynInstPtr;
 
@@ -79,7 +83,7 @@ class MemDepUnit {
     ~MemDepUnit();
 
     /** Returns the name of the memory dependence unit. */
-    std::string name() const;
+    std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
     void init(DerivO3CPUParams *params, int tid);

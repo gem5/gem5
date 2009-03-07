@@ -38,9 +38,10 @@
 
 template<class Impl>
 BPredUnit<Impl>::BPredUnit(DerivO3CPUParams *params)
-  : BTB(params->BTBEntries,
-        params->BTBTagSize,
-        params->instShiftAmt)
+    : _name(params->name + ".BPredUnit"),
+      BTB(params->BTBEntries,
+          params->BTBTagSize,
+          params->instShiftAmt)
 {
     // Setup the selected predictor.
     if (params->predType == "local") {
@@ -73,43 +74,43 @@ void
 BPredUnit<Impl>::regStats()
 {
     lookups
-        .name(name() + ".BPredUnit.lookups")
+        .name(name() + ".lookups")
         .desc("Number of BP lookups")
         ;
 
     condPredicted
-        .name(name() + ".BPredUnit.condPredicted")
+        .name(name() + ".condPredicted")
         .desc("Number of conditional branches predicted")
         ;
 
     condIncorrect
-        .name(name() + ".BPredUnit.condIncorrect")
+        .name(name() + ".condIncorrect")
         .desc("Number of conditional branches incorrect")
         ;
 
     BTBLookups
-        .name(name() + ".BPredUnit.BTBLookups")
+        .name(name() + ".BTBLookups")
         .desc("Number of BTB lookups")
         ;
 
     BTBHits
-        .name(name() + ".BPredUnit.BTBHits")
+        .name(name() + ".BTBHits")
         .desc("Number of BTB hits")
         ;
 
     BTBCorrect
-        .name(name() + ".BPredUnit.BTBCorrect")
+        .name(name() + ".BTBCorrect")
         .desc("Number of correct BTB predictions (this stat may not "
               "work properly.")
         ;
 
     usedRAS
-        .name(name() + ".BPredUnit.usedRAS")
+        .name(name() + ".usedRAS")
         .desc("Number of times the RAS was used to get a target.")
         ;
 
     RASIncorrect
-        .name(name() + ".BPredUnit.RASInCorrect")
+        .name(name() + ".RASInCorrect")
         .desc("Number of incorrect RAS predictions.")
         ;
 }

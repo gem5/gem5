@@ -44,7 +44,8 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit()
 
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::MemDepUnit(DerivO3CPUParams *params)
-    : depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
+    : _name(params->name + ".memdepunit"),
+      depPred(params->SSITSize, params->LFSTSize), loadBarrier(false),
       loadBarrierSN(0), storeBarrier(false), storeBarrierSN(0), iqPtr(NULL)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit object.\n");
@@ -76,18 +77,12 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 }
 
 template <class MemDepPred, class Impl>
-std::string
-MemDepUnit<MemDepPred, Impl>::name() const
-{
-    return "memdepunit";
-}
-
-template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, int tid)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
+    _name = csprintf("%s.memDep%d", params->name, tid);
     id = tid;
 
     depPred.init(params->SSITSize, params->LFSTSize);
@@ -98,19 +93,19 @@ void
 MemDepUnit<MemDepPred, Impl>::regStats()
 {
     insertedLoads
-        .name(name() + ".memDep.insertedLoads")
+        .name(name() + ".insertedLoads")
         .desc("Number of loads inserted to the mem dependence unit.");
 
     insertedStores
-        .name(name() + ".memDep.insertedStores")
+        .name(name() + ".insertedStores")
         .desc("Number of stores inserted to the mem dependence unit.");
 
     conflictingLoads
-        .name(name() + ".memDep.conflictingLoads")
+        .name(name() + ".conflictingLoads")
         .desc("Number of conflicting loads.");
 
     conflictingStores
-        .name(name() + ".memDep.conflictingStores")
+        .name(name() + ".conflictingStores")
         .desc("Number of conflicting stores.");
 }
 

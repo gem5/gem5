@@ -62,12 +62,16 @@ class BPredUnit
 
     PredType predictor;
 
+    const std::string _name;
+
   public:
 
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
     BPredUnit(DerivO3CPUParams *params);
+
+    const std::string &name() const { return _name; }
 
     /**
      * Registers statistics.
