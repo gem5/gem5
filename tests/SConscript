@@ -124,16 +124,18 @@ def run_test(target, source, env):
 
     else: # m5 exit status != 0
         # M5 did not terminate properly, so no need to check the output
-        if signaled(status) and signum(status) in retry_signals:
-            # Consider the test incomplete; don't create a 'status' output.
-            # Hand the return status to scons and let scons decide what
-            # to do about it (typically terminate unless run with -k).
+        if signaled(status):
             print 'M5 terminated with signal', signum(status)
-            return status
+            if signum(status) in retry_signals:
+                # Consider the test incomplete; don't create a 'status' output.
+                # Hand the return status to scons and let scons decide what
+                # to do about it (typically terminate unless run with -k).
+                return status
+        else:
+            print 'M5 exited with non-zero status', status
         # complete but failed execution (call to exit() with non-zero
         # status, SIGABORT due to assertion failure, etc.)... fall through
         # and generate FAILED status as if output comparison had failed
-        print 'M5 exited with non-zero status', status
 
     # Generate status file contents based on exit status of m5 or diff-out
     if status == 0:
