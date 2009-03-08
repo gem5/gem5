@@ -29,7 +29,7 @@
 # Authors: Steve Reinhardt
 #          Kevin Lim
 
-import os
+import os, signal
 import sys
 import glob
 from SCons.Script.SConscript import SConsEnvironment
@@ -44,57 +44,113 @@ env.Tests = {}
 def contents(node):
     return file(str(node)).read()
 
-def check_test(target, source, env):
+# functions to parse return value from scons Execute()... not the same
+# as wait() etc., so python built-in os funcs don't work.
+def signaled(status):
+    return (status & 0x80) != 0;
+
+def signum(status):
+    return (status & 0x7f);
+
+# List of signals that indicate that we should retry the test rather
+# than consider it failed.
+retry_signals = (signal.SIGTERM, signal.SIGKILL, signal.SIGINT,
+                 signal.SIGQUIT, signal.SIGHUP)
+
+# regular expressions of lines to ignore when diffing outputs
+output_ignore_regexes = (
+    '^command line:',		# for stdout file
+    '^M5 compiled ',		# for stderr file
+    '^M5 started ',		# for stderr file
+    '^M5 executing on ',	# for stderr file
+    '^Simulation complete at',	# for stderr file
+    '^Listening for',		# for stderr file
+    'listening for remote gdb',	# for stderr file
+    )
+
+output_ignore_args = ' '.join(["-I '"+s+"'" for s in output_ignore_regexes])
+
+output_ignore_args += ' --exclude=stats.txt --exclude=outdiff'
+
+def run_test(target, source, env):
     """Check output from running test.
 
     Targets are as follows:
-    target[0] : outdiff
-    target[1] : statsdiff
-    target[2] : status
+    target[0] : status
+
+    Sources are:
+    source[0] : M5 binary
+    source[1] : tests/run.py script
+    source[2] : reference stats file
 
     """
     # make sure target files are all gone
     for t in target:
         if os.path.exists(t.abspath):
             Execute(Delete(t.abspath))
-    # Run diff on output & ref directories to find differences.
-    # Exclude the stats file since we will use diff-out on that.
-    Execute(env.subst('diff -ubr ${SOURCES[0].dir} ${SOURCES[1].dir} ' +
-                      '-I "^command line:" ' +		# for stdout file
-                      '-I "^M5 compiled " ' +		# for stderr file
-                      '-I "^M5 started " ' +		# for stderr file
-                      '-I "^M5 executing on " ' +	# for stderr file
-                      '-I "^Simulation complete at" ' +	# for stderr file
-                      '-I "^Listening for" ' +		# for stderr file
-                      '-I "listening for remote gdb" ' + # for stderr file
-                      '--exclude=stats.txt --exclude=SCCS ' +
-                      '--exclude=${TARGETS[0].file} ' +
-                      '> ${TARGETS[0]}', target=target, source=source), None)
-    print "===== Output differences ====="
-    print contents(target[0])
-    # Run diff-out on stats.txt file
-    status = Execute(env.subst('$DIFFOUT $SOURCES > ${TARGETS[1]}',
-                               target=target, source=source),
-                     strfunction=None)
-    print "===== Statistics differences ====="
-    print contents(target[1])
-    # Generate status file contents based on exit status of diff-out
+
+    tgt_dir = os.path.dirname(str(target[0]))
+
+    # Base command for running test.  We mess around with indirectly
+    # referring to files via SOURCES and TARGETS so that scons can mess
+    # with paths all it wants to and we still get the right files.
+    cmd = '${SOURCES[0]} -d %s -re ${SOURCES[1]} %s' % (tgt_dir, tgt_dir)
+
+    # Prefix test run with batch job submission command if appropriate.
+    # Batch command also supports timeout arg (in seconds, not minutes).
+    timeout = 15 * 60 # used to be a param, probably should be again
+    if env['BATCH']:
+        cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
+
+    status = Execute(env.subst(cmd, target=target, source=source))
+    if status == 0:
+        # M5 terminated normally.
+        # Run diff on output & ref directories to find differences.
+        # Exclude the stats file since we will use diff-out on that.
+        outdiff = os.path.join(tgt_dir, 'outdiff')
+        diffcmd = 'diff -ubr %s ${SOURCES[2].dir} %s > %s' \
+                  % (output_ignore_args, tgt_dir, outdiff)
+        Execute(env.subst(diffcmd, target=target, source=source))
+        print "===== Output differences ====="
+        print contents(outdiff)
+        # Run diff-out on stats.txt file
+        statsdiff = os.path.join(tgt_dir, 'statsdiff')
+        diffcmd = '$DIFFOUT ${SOURCES[2]} %s > %s' \
+                  % (os.path.join(tgt_dir, 'stats.txt'), statsdiff)
+        diffcmd = env.subst(diffcmd, target=target, source=source)
+        status = Execute(diffcmd, strfunction=None)
+        print "===== Statistics differences ====="
+        print contents(statsdiff)
+
+    else: # m5 exit status != 0
+        # M5 did not terminate properly, so no need to check the output
+        if signaled(status) and signum(status) in retry_signals:
+            # Consider the test incomplete; don't create a 'status' output.
+            # Hand the return status to scons and let scons decide what
+            # to do about it (typically terminate unless run with -k).
+            print 'M5 terminated with signal', signum(status)
+            return status
+        # complete but failed execution (call to exit() with non-zero
+        # status, SIGABORT due to assertion failure, etc.)... fall through
+        # and generate FAILED status as if output comparison had failed
+        print 'M5 exited with non-zero status', status
+
+    # Generate status file contents based on exit status of m5 or diff-out
     if status == 0:
         status_str = "passed."
     else:
         status_str = "FAILED!"
-    f = file(str(target[2]), 'w')
-    print >>f, env.subst('${TARGETS[2].dir}', target=target, source=source), \
-          status_str
+    f = file(str(target[0]), 'w')
+    print >>f, tgt_dir, status_str
     f.close()
     # done
     return 0
 
-def check_test_string(target, source, env):
-    return env.subst("Comparing outputs in ${TARGETS[0].dir}.",
+def run_test_string(target, source, env):
+    return env.subst("Running test in ${TARGETS[0].dir}.",
                      target=target, source=source)
 
-testAction = env.Action(check_test, check_test_string)
+testAction = env.Action(run_test, run_test_string)
 
 def print_test(target, source, env):
     print '***** ' + contents(source[0])
@@ -174,24 +230,8 @@ def test_builder(env, ref_dir):
     new_stats = tgt('stats.txt')
     status_file = tgt('status')
 
-    # Base command for running test.  We mess around with indirectly
-    # referring to files via SOURCES and TARGETS so that scons can
-    # mess with paths all it wants to and we still get the right
-    # files.
-    cmd = '${SOURCES[0]} -d $TARGET.dir -re ${SOURCES[1]} %s' % tgt_dir
-
-    # Prefix test run with batch job submission command if appropriate.
-    # Batch command also supports timeout arg (in seconds, not minutes).
-    timeout = 15 * 60 # used to be a param, probably should be again
-    if env['BATCH']:
-        cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
-
-    env.Command([tgt('simout'), tgt('simerr'), new_stats],
-                [env.M5Binary, 'run.py'], cmd)
-
-    # order of targets is important... see check_test
-    env.Command([tgt('outdiff'), tgt('statsdiff'), status_file],
-                [ref_stats, new_stats],
+    env.Command([status_file],
+                [env.M5Binary, 'run.py', ref_stats],
                 testAction)
 
     # phony target to echo status

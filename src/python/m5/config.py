@@ -29,10 +29,18 @@
 import os
 from os.path import isdir, isfile, join as joinpath
 
-homedir = os.environ['HOME']
-confdir = os.environ.get('M5_CONFIG', joinpath(homedir, '.m5'))
+
+confdir = os.environ.get('M5_CONFIG')
+
+if not confdir:
+    # HOME is not set when running regressions, due to use of scons
+    # Execute() function.
+    homedir = os.environ.get('HOME')
+    if homedir and isdir(joinpath(homedir, '.m5')):
+        confdir = joinpath(homedir, '.m5')
+
 def get(name):
-    if not isdir(confdir):
+    if not confdir:
         return None
     conffile = joinpath(confdir, name)
     if not isfile(conffile):
