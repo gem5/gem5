@@ -76,9 +76,9 @@ namespace X86ISA
         uint64_t errorCode;
 
         X86FaultBase(const char * _faultName, const char * _mnem,
-                const uint8_t _vector, uint64_t _errorCode = -1) :
-            faultName(_faultName), mnem(_mnem),
-            vector(_vector), errorCode(_errorCode)
+                     const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1)
+            : faultName(_faultName), mnem(_mnem),
+              vector(_vector), errorCode(_errorCode)
         {
         }
 
@@ -115,8 +115,8 @@ namespace X86ISA
     {
       protected:
         X86Fault(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = -1) :
-            X86FaultBase(name, mnem, vector, _errorCode)
+                 const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
     };
 
@@ -126,8 +126,8 @@ namespace X86ISA
     {
       protected:
         X86Trap(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = -1) :
-            X86FaultBase(name, mnem, vector, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -140,8 +140,8 @@ namespace X86ISA
     {
       protected:
         X86Abort(const char * name, const char * mnem,
-                const uint8_t vector, uint64_t _errorCode = -1) :
-            X86FaultBase(name, mnem, vector, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -154,8 +154,8 @@ namespace X86ISA
     {
       protected:
         X86Interrupt(const char * name, const char * mnem,
-                const uint8_t _vector, uint64_t _errorCode = -1) :
-            X86FaultBase(name, mnem, _vector, _errorCode)
+                const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, _vector, _errorCode)
         {}
     };
 
