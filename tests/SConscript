@@ -87,7 +87,7 @@ def run_test(target, source, env):
     # make sure target files are all gone
     for t in target:
         if os.path.exists(t.abspath):
-            Execute(Delete(t.abspath))
+            env.Execute(Delete(t.abspath))
 
     tgt_dir = os.path.dirname(str(target[0]))
 
@@ -102,7 +102,7 @@ def run_test(target, source, env):
     if env['BATCH']:
         cmd = '%s -t %d %s' % (env['BATCH_CMD'], timeout, cmd)
 
-    status = Execute(env.subst(cmd, target=target, source=source))
+    status = env.Execute(env.subst(cmd, target=target, source=source))
     if status == 0:
         # M5 terminated normally.
         # Run diff on output & ref directories to find differences.
@@ -110,7 +110,7 @@ def run_test(target, source, env):
         outdiff = os.path.join(tgt_dir, 'outdiff')
         diffcmd = 'diff -ubr %s ${SOURCES[2].dir} %s > %s' \
                   % (output_ignore_args, tgt_dir, outdiff)
-        Execute(env.subst(diffcmd, target=target, source=source))
+        env.Execute(env.subst(diffcmd, target=target, source=source))
         print "===== Output differences ====="
         print contents(outdiff)
         # Run diff-out on stats.txt file
@@ -118,7 +118,7 @@ def run_test(target, source, env):
         diffcmd = '$DIFFOUT ${SOURCES[2]} %s > %s' \
                   % (os.path.join(tgt_dir, 'stats.txt'), statsdiff)
         diffcmd = env.subst(diffcmd, target=target, source=source)
-        status = Execute(diffcmd, strfunction=None)
+        status = env.Execute(diffcmd, strfunction=None)
         print "===== Statistics differences ====="
         print contents(statsdiff)
 
@@ -205,7 +205,7 @@ def update_test(target, source, env):
             print "  Creating new file", f
         copyAction = Copy(os.path.join(dest_dir, f), os.path.join(src_dir, f))
         copyAction.strfunction = None
-        Execute(copyAction)
+        env.Execute(copyAction)
     return 0
 
 def update_test_string(target, source, env):
