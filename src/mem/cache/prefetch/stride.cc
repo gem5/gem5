@@ -46,6 +46,11 @@ StridePrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
         return;
     }
 
+    if (useContextId && !pkt->req->hasContextId()) {
+        DPRINTF(HWPrefetch, "ignoring request with no context ID");
+        return;
+    }
+
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
     int ctx_id = useContextId ? pkt->req->contextId() : 0;
     Addr pc = pkt->req->getPC();

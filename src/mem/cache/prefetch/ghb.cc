@@ -34,13 +34,18 @@
  * GHB Prefetcher implementation.
  */
 
+#include "base/trace.hh"
 #include "mem/cache/prefetch/ghb.hh"
-#include "arch/isa_traits.hh"
 
 void
 GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                  std::list<Tick> &delays)
 {
+    if (useContextId && !pkt->req->hasContextId()) {
+        DPRINTF(HWPrefetch, "ignoring request with no context ID");
+        return;
+    }
+
     Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
     int ctx_id = useContextId ? pkt->req->contextId() : 0;
     assert(ctx_id < Max_Contexts);

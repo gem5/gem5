@@ -409,6 +409,12 @@ class Request : public FastAlloc
         flags.set(VALID_EXTRA_DATA);
     }
 
+    bool
+    hasContextId() const
+    {
+        return flags.isSet(VALID_CONTEXT_ID);
+    }
+
     /** Accessor function for context ID.*/
     int
     contextId() const
@@ -425,13 +431,13 @@ class Request : public FastAlloc
         return _threadId;
     }
 
-    /** Accessor function for pc.*/
     bool
     hasPC() const
     {
         return flags.isSet(VALID_PC);
     }
 
+    /** Accessor function for pc.*/
     Addr
     getPC() const
     {
