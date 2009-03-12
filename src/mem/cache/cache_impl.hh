@@ -149,8 +149,10 @@ Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
             panic("Invalid size for conditional read/write\n");
     }
 
-    if (overwrite_mem)
+    if (overwrite_mem) {
         std::memcpy(blk_data, &overwrite_val, pkt->getSize());
+        blk->status |= BlkDirty;
+    }
 }
 
 
