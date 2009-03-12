@@ -564,7 +564,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     assert(split_addr <= addr || split_addr - addr < block_size);
 
     T *dataP = new T;
-    *dataP = TheISA::gtoh(data);
+    *dataP = TheISA::htog(data);
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;

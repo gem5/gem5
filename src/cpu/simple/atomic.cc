@@ -513,7 +513,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             // calling changeStatus() and changing it to "bad addr write"
             // or something.
             if (traceData) {
-                traceData->setData(data);
+                traceData->setData(gtoh(data));
             }
             return fault;
         }
