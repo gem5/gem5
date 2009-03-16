@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 712663                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 336988                       # Number of bytes of host memory used
-host_seconds                                   342.15                       # Real time elapsed on the host
-host_tick_rate                             1070988197                       # Simulator tick rate (ticks/s)
+host_inst_rate                                1212571                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 337588                       # Number of bytes of host memory used
+host_seconds                                   201.09                       # Real time elapsed on the host
+host_tick_rate                             1822248337                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   243835278                       # Number of instructions simulated
 sim_seconds                                  0.366435                       # Number of seconds simulated
@@ -80,7 +80,7 @@ system.cpu.dcache.soft_prefetch_mshr_full            0                       # n
 system.cpu.dcache.tagsinuse               3569.622607                       # Cycle average of tags in use
 system.cpu.dcache.total_refs                104186700                       # Total number of references to valid blocks.
 system.cpu.dcache.warmup_cycle           134379688000                       # Cycle when the warmup percentage was hit.
-system.cpu.dcache.writebacks                    94875                       # number of writebacks
+system.cpu.dcache.writebacks                    94877                       # number of writebacks
 system.cpu.icache.ReadReq_accesses          244421512                       # number of ReadReq accesses(hits+misses)
 system.cpu.icache.ReadReq_avg_miss_latency 55904.761905                       # average ReadReq miss latency
 system.cpu.icache.ReadReq_avg_mshr_miss_latency 52904.761905                       # average ReadReq mshr miss latency
@@ -163,8 +163,8 @@ system.cpu.l2cache.UpgradeReq_misses            48257                       # nu
 system.cpu.l2cache.UpgradeReq_mshr_miss_latency   1930280000                       # number of UpgradeReq MSHR miss cycles
 system.cpu.l2cache.UpgradeReq_mshr_miss_rate            1                       # mshr miss rate for UpgradeReq accesses
 system.cpu.l2cache.UpgradeReq_mshr_misses        48257                       # number of UpgradeReq MSHR misses
-system.cpu.l2cache.Writeback_accesses           94875                       # number of Writeback accesses(hits+misses)
-system.cpu.l2cache.Writeback_hits               94875                       # number of Writeback hits
+system.cpu.l2cache.Writeback_accesses           94877                       # number of Writeback accesses(hits+misses)
+system.cpu.l2cache.Writeback_hits               94877                       # number of Writeback hits
 system.cpu.l2cache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
 system.cpu.l2cache.avg_refs                 51.559226                       # Average number of references to valid blocks.
@@ -204,7 +204,7 @@ system.cpu.l2cache.overall_mshr_uncacheable_misses            0                 
 system.cpu.l2cache.replacements                   891                       # number of replacements
 system.cpu.l2cache.sampled_refs                 15559                       # Sample count of references to valid blocks.
 system.cpu.l2cache.soft_prefetch_mshr_full            0                       # number of mshr full events for SW prefetching instrutions
-system.cpu.l2cache.tagsinuse              8958.837724                       # Cycle average of tags in use
+system.cpu.l2cache.tagsinuse              8959.416448                       # Cycle average of tags in use
 system.cpu.l2cache.total_refs                  802210                       # Total number of references to valid blocks.
 system.cpu.l2cache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu.l2cache.writebacks                      41                       # number of writebacks

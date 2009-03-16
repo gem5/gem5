@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar  6 2009 18:29:06
-M5 revision c619bb0f8f4f 6005 default qtip stats_duplicates.diff tip
-M5 started Mar  6 2009 18:38:25
-M5 executing on maize
-command line: /n/blue/z/binkert/build/work/build/SPARC_SE/m5.fast -d /n/blue/z/binkert/build/work/build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing -re tests/run.py long/00.gzip/sparc/linux/o3-timing
+M5 compiled Mar 16 2009 00:51:12
+M5 revision 208de84f046d 6013 default tip
+M5 started Mar 16 2009 00:51:29
+M5 executing on zizzer
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing -re tests/run.py build/SPARC_SE/tests/fast/long/00.gzip/sparc/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 spec_init
@@ -43,4 +43,4 @@ Uncompressing Data
 Uncompressed data 1048576 bytes in length
 Uncompressed data compared correctly
 Tested 1MB buffer: OK!
-Exiting @ tick 1102659164000 because target called exit()
+Exiting @ tick 1102659088000 because target called exit()
