@@ -961,13 +961,13 @@ class ScalarProxy
      * Return the current value of this stat as its base type.
      * @return The current value.
      */
-    Counter value() const { return stat->data(index)->value(); }
+    Counter value() const { return stat.data(index)->value(); }
 
     /**
      * Return the current value of this statas a result type.
      * @return The current value.
      */
-    Result result() const { return stat->data(index)->result(); }
+    Result result() const { return stat.data(index)->result(); }
 
   public:
     /**
