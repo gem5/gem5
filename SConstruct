@@ -374,7 +374,7 @@ Export('base_dir')
 Export('extras_dir_list')
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
-env.Append(ENV = { 'M5_PLY' : str(Dir('ext/ply')) })
+env.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
 
 CXX_version = read_command([env['CXX'],'--version'], exception=False)
 CXX_V = read_command([env['CXX'],'-V'], exception=False)
