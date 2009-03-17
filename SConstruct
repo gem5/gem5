@@ -373,6 +373,9 @@ else:
 Export('base_dir')
 Export('extras_dir_list')
 
+# the ext directory should be on the #includes path
+env.Append(CPPPATH=[Dir('ext')])
+
 # M5_PLY is used by isa_parser.py to find the PLY package.
 env.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
 
@@ -418,7 +421,6 @@ if env['BATCH']:
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
     env.Append(CCFLAGS=Split("-Wno-uninitialized"))
-env.Append(CPPPATH=[Dir('ext/dnet')])
 
 # Check for SWIG
 if not env.has_key('SWIG'):

@@ -28,8 +28,6 @@
 #
 # Authors: Nathan Binkert
 
-import os, subprocess
-
 Import('env')
 
 env.Library('gzstream', [File('gzstream.cc')])
