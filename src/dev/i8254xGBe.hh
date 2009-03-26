@@ -195,7 +195,7 @@ class IGbE : public EtherDevice
     }
 
     void anRq(std::string sm, std::string q, int num = 1) {
-        cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+        cpa->hwRq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
     }
 
     void anWe(std::string sm, std::string q) {
