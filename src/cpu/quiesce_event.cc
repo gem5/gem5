@@ -33,7 +33,7 @@
 #include "cpu/quiesce_event.hh"
 
 EndQuiesceEvent::EndQuiesceEvent(ThreadContext *_tc)
-    : Event(&mainEventQueue), tc(_tc)
+    : tc(_tc)
 {
 }
 

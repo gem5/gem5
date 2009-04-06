@@ -35,6 +35,7 @@
 #include <set>
 
 #include "base/statistics.hh"
+#include "base/fast_alloc.hh"
 #include "params/MemTest.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_exit.hh"
@@ -73,10 +74,10 @@ class MemTest : public MemObject
     {
       private:
         MemTest *cpu;
+
       public:
-        TickEvent(MemTest *c)
-            : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c) {}
-        void process() {cpu->tick();}
+        TickEvent(MemTest *c) : Event(CPU_Tick_Pri), cpu(c) {}
+        void process() { cpu->tick(); }
         virtual const char *description() const { return "MemTest tick"; }
     };
 
@@ -116,7 +117,7 @@ class MemTest : public MemObject
 
     bool snoopRangeSent;
 
-    class MemTestSenderState : public Packet::SenderState
+    class MemTestSenderState : public Packet::SenderState, public FastAlloc
     {
       public:
         /** Constructor. */
@@ -132,10 +133,10 @@ class MemTest : public MemObject
 
     bool accessRetry;
 
-    unsigned size;		// size of testing memory region
+    unsigned size;              // size of testing memory region
 
-    unsigned percentReads;	// target percentage of read accesses
-    unsigned percentFunctional;	// target percentage of functional accesses
+    unsigned percentReads;      // target percentage of read accesses
+    unsigned percentFunctional; // target percentage of functional accesses
     unsigned percentUncacheable;
 
     int id;
@@ -153,12 +154,12 @@ class MemTest : public MemObject
 
     Addr traceBlockAddr;
 
-    Addr baseAddr1;		// fix this to option
-    Addr baseAddr2;		// fix this to option
+    Addr baseAddr1;             // fix this to option
+    Addr baseAddr2;             // fix this to option
     Addr uncacheAddr;
 
-    unsigned progressInterval;	// frequency of progress reports
-    Tick nextProgressMessage;	// access # for next progress report
+    unsigned progressInterval;  // frequency of progress reports
+    Tick nextProgressMessage;   // access # for next progress report
 
     unsigned percentSourceUnaligned;
     unsigned percentDestUnaligned;
@@ -170,9 +171,9 @@ class MemTest : public MemObject
 
     bool atomic;
 
-    Stats::Scalar<> numReadsStat;
-    Stats::Scalar<> numWritesStat;
-    Stats::Scalar<> numCopiesStat;
+    Stats::Scalar numReadsStat;
+    Stats::Scalar numWritesStat;
+    Stats::Scalar numCopiesStat;
 
     // called by MemCompleteEvent::process()
     void completeRequest(PacketPtr pkt);

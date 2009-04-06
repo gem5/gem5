@@ -59,10 +59,9 @@ getArgument(ThreadContext *tc, int number, bool fp)
             return tc->readIntReg(ArgumentReg[number]);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort(tc);
+        VirtualPort *vp = tc->getVirtPort();
         uint64_t arg = vp->read<uint64_t>(sp +
                            (number-NumArgumentRegs) * sizeof(uint64_t));
-        tc->delVirtPort(vp);
         return arg;
     }
 #else
@@ -146,7 +145,7 @@ genCCVector(uint32_t fcsr, int cc_num, uint32_t cc_val)
 {
     int cc_idx = (cc_num == 0) ? 23 : cc_num + 24;
 
-    fcsr = bits(fcsr, 31, cc_idx + 1) << cc_idx + 1 |
+    fcsr = bits(fcsr, 31, cc_idx + 1) << (cc_idx + 1) |
            cc_val << cc_idx |
            bits(fcsr, cc_idx - 1, 0);
 
@@ -260,7 +259,7 @@ zeroRegisters(CPU *cpu)
 void
 startupCPU(ThreadContext *tc, int cpuId)
 {
-    tc->activate(0/*tc->getThreadNum()*/);
+    tc->activate(0/*tc->threadId()*/);
 }
 
 } // namespace MipsISA

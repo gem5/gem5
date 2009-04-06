@@ -60,9 +60,6 @@ namespace MipsISA
         MiscReg  ctrlreg;
     } AnyReg;
 
-    typedef int RegContextParam;
-    typedef int RegContextVal;
-
     //used in FP convert & round function
     enum ConvertType{
         SINGLE_TO_DOUBLE,

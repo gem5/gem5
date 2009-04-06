@@ -40,10 +40,13 @@
 #include "arch/faults.hh"
 #include "arch/locked_mem.hh"
 #include "config/full_system.hh"
+#include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
+
+class DerivO3CPUParams;
 
 /**
  * Class that implements the actual LQ and SQ for each specific
@@ -62,7 +65,6 @@ class LSQUnit {
   protected:
     typedef TheISA::IntReg IntReg;
   public:
-    typedef typename Impl::Params Params;
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::CPUPol::IEW IEW;
@@ -74,8 +76,9 @@ class LSQUnit {
     LSQUnit();
 
     /** Initializes the LSQ unit with the specified number of entries. */
-    void init(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params, LSQ *lsq_ptr,
-              unsigned maxLQEntries, unsigned maxSQEntries, unsigned id);
+    void init(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params,
+            LSQ *lsq_ptr, unsigned maxLQEntries, unsigned maxSQEntries,
+            unsigned id);
 
     /** Returns the name of the LSQ unit. */
     std::string name() const;
@@ -245,7 +248,7 @@ class LSQUnit {
     Port *dcachePort;
 
     /** Derived class to hold any sender state the LSQ needs. */
-    class LSQSenderState : public Packet::SenderState
+    class LSQSenderState : public Packet::SenderState, public FastAlloc
     {
       public:
         /** Default constructor. */
@@ -406,35 +409,35 @@ class LSQUnit {
     // of that in stage that is one level up, and only call executeLoad/Store
     // the appropriate number of times.
     /** Total number of loads forwaded from LSQ stores. */
-    Stats::Scalar<> lsqForwLoads;
+    Stats::Scalar lsqForwLoads;
 
     /** Total number of loads ignored due to invalid addresses. */
-    Stats::Scalar<> invAddrLoads;
+    Stats::Scalar invAddrLoads;
 
     /** Total number of squashed loads. */
-    Stats::Scalar<> lsqSquashedLoads;
+    Stats::Scalar lsqSquashedLoads;
 
     /** Total number of responses from the memory system that are
      * ignored due to the instruction already being squashed. */
-    Stats::Scalar<> lsqIgnoredResponses;
+    Stats::Scalar lsqIgnoredResponses;
 
     /** Tota number of memory ordering violations. */
-    Stats::Scalar<> lsqMemOrderViolation;
+    Stats::Scalar lsqMemOrderViolation;
 
     /** Total number of squashed stores. */
-    Stats::Scalar<> lsqSquashedStores;
+    Stats::Scalar lsqSquashedStores;
 
     /** Total number of software prefetches ignored due to invalid addresses. */
-    Stats::Scalar<> invAddrSwpfs;
+    Stats::Scalar invAddrSwpfs;
 
     /** Ready loads blocked due to partial store-forwarding. */
-    Stats::Scalar<> lsqBlockedLoads;
+    Stats::Scalar lsqBlockedLoads;
 
     /** Number of loads that were rescheduled. */
-    Stats::Scalar<> lsqRescheduledLoads;
+    Stats::Scalar lsqRescheduledLoads;
 
     /** Number of times the LSQ is blocked due to the cache. */
-    Stats::Scalar<> lsqCacheBlocked;
+    Stats::Scalar lsqCacheBlocked;
 
   public:
     /** Executes the load at the given index. */
@@ -581,7 +584,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             // We'll say this has a 1 cycle load-store forwarding latency
             // for now.
             // @todo: Need to make this a parameter.
-            wb->schedule(curTick);
+            cpu->schedule(wb, curTick);
 
             ++lsqForwLoads;
             return NoFault;

@@ -56,17 +56,17 @@
 microcode = ""
 #let {{
 #    class LDS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class LES(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class LFS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class LGS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class LSS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class MOV_SEG(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class POP(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

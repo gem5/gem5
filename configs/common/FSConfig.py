@@ -68,7 +68,7 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.sim_console = SimConsole()
+    self.terminal = Terminal()
     self.kernel = binary('vmlinux')
     self.pal = binary('ts_osfpal')
     self.console = binary('console')
@@ -148,7 +148,7 @@ def makeLinuxMipsSystem(mem_mode, mdesc = None):
                                                read_only = True))
     self.intrctrl = IntrControl()
     self.mem_mode = mem_mode
-    self.sim_console = SimConsole()
+    self.terminal = Terminal()
     self.kernel = binary('mips/vmlinux')
     self.console = binary('mips/console')
     self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
@@ -159,11 +159,14 @@ def x86IOAddress(port):
     IO_address_space_base = 0x8000000000000000
     return IO_address_space_base + port;
 
-def makeLinuxX86System(mem_mode, mdesc = None):
-    self = LinuxX86System()
+def makeX86System(mem_mode, mdesc = None, self = None):
+    if self == None:
+        self = X86System()
+
     if not mdesc:
         # generic system
         mdesc = SysConfig()
+    mdesc.diskname = 'x86root.img'
     self.readfile = mdesc.script()
 
     # Physical memory
@@ -177,22 +180,168 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     self.bridge.side_a = self.iobus.port
     self.bridge.side_b = self.membus.port
 
-    # Serial port and console
-    self.console = SimConsole()
-    self.com_1 = Uart8250()
-    self.com_1.pio_addr = x86IOAddress(0x3f8)
-    self.com_1.pio = self.iobus.port
-    self.com_1.sim_console = self.console
-
-    # Command line
-    self.boot_osflags = 'earlyprintk=ttyS0'
-
     # Platform
-    self.opteron = Opteron()
-    self.opteron.attachIO(self.iobus)
+    self.pc = Pc()
+    self.pc.attachIO(self.iobus)
 
     self.intrctrl = IntrControl()
 
+    # Disks
+    disk0 = CowIdeDisk(driveID='master')
+    disk2 = CowIdeDisk(driveID='master')
+    disk0.childImage(mdesc.disk())
+    disk2.childImage(disk('linux-bigswap2.img'))
+    self.pc.south_bridge.ide.disks = [disk0, disk2]
+
+    # Add in a Bios information structure.
+    structures = [X86SMBiosBiosInformation()]
+    self.smbios_table.structures = structures
+
+    # Set up the Intel MP table
+    bp = X86IntelMPProcessor(
+            local_apic_id = 0,
+            local_apic_version = 0x14,
+            enable = True,
+            bootstrap = True)
+    self.intel_mp_table.add_entry(bp)
+    io_apic = X86IntelMPIOAPIC(
+            id = 1,
+            version = 0x11,
+            enable = True,
+            address = 0xfec00000)
+    self.intel_mp_table.add_entry(io_apic)
+    isa_bus = X86IntelMPBus(bus_id = 0, bus_type='ISA')
+    self.intel_mp_table.add_entry(isa_bus)
+    pci_bus = X86IntelMPBus(bus_id = 1, bus_type='PCI')
+    self.intel_mp_table.add_entry(pci_bus)
+    connect_busses = X86IntelMPBusHierarchy(bus_id=0,
+            subtractive_decode=True, parent_bus=1)
+    self.intel_mp_table.add_entry(connect_busses)
+    pci_dev4_inta = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 1,
+            source_bus_irq = 0 + (4 << 2),
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 16)
+    assign_8259_0_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 0,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_0_to_apic)
+    assign_0_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 0,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 2)
+    self.intel_mp_table.add_entry(assign_0_to_apic)
+    assign_8259_1_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 1,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_1_to_apic)
+    assign_1_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 1,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 1)
+    self.intel_mp_table.add_entry(assign_1_to_apic)
+    assign_8259_4_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 4,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_4_to_apic)
+    assign_4_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 4,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 4)
+    self.intel_mp_table.add_entry(assign_4_to_apic)
+    assign_8259_12_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 12,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_12_to_apic)
+    assign_12_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 12,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 12)
+    self.intel_mp_table.add_entry(assign_12_to_apic)
+    assign_8259_14_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'ExtInt',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 14,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 0)
+    self.intel_mp_table.add_entry(assign_8259_14_to_apic)
+    assign_14_to_apic = X86IntelMPIOIntAssignment(
+            interrupt_type = 'INT',
+            polarity = 'ConformPolarity',
+            trigger = 'ConformTrigger',
+            source_bus_id = 0,
+            source_bus_irq = 14,
+            dest_io_apic_id = 1,
+            dest_io_apic_intin = 14)
+    self.intel_mp_table.add_entry(assign_14_to_apic)
+
+
+def makeLinuxX86System(mem_mode, mdesc = None):
+    self = LinuxX86System()
+
+    # Build up a generic x86 system and then specialize it for Linux
+    makeX86System(mem_mode, mdesc, self)
+
+    # We assume below that there's at least 1MB of memory. We'll require 2
+    # just to avoid corner cases.
+    assert(self.physmem.range.second >= 0x200000)
+
+    # Mark the first megabyte of memory as reserved
+    self.e820_table.entries.append(X86E820Entry(
+                addr = 0,
+                size = '1MB',
+                range_type = 2))
+
+    # Mark the rest as available
+    self.e820_table.entries.append(X86E820Entry(
+                addr = 0x100000,
+                size = '%dB' % (self.physmem.range.second - 0x100000 - 1),
+                range_type = 1))
+
+    # Command line
+    self.boot_osflags = 'earlyprintk=ttyS0 console=ttyS0 lpj=7999923 ' + \
+                        'root=/dev/hda1'
     return self
 
 

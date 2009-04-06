@@ -48,7 +48,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Solaris::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Solaris::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "SunOS");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -80,7 +80,7 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<Solaris>),
     /* 16 */ SyscallDesc("chown", chownFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("stat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
@@ -123,7 +123,7 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 57 */ SyscallDesc("utssys", unimplementedFunc),
     /* 58 */ SyscallDesc("fdsync", unimplementedFunc),
     /* 59 */ SyscallDesc("execve", unimplementedFunc),
-    /* 60 */ SyscallDesc("umask", unimplementedFunc),
+    /* 60 */ SyscallDesc("umask", umaskFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
     /* 62 */ SyscallDesc("fcntl", unimplementedFunc),
     /* 63 */ SyscallDesc("ulimit", unimplementedFunc),
@@ -153,7 +153,7 @@ SyscallDesc SparcSolarisProcess::syscallDescs[] = {
     /* 87 */ SyscallDesc("poll", unimplementedFunc),
     /* 88 */ SyscallDesc("lstat", unimplementedFunc),
     /* 89 */ SyscallDesc("symlink", unimplementedFunc),
-    /* 90 */ SyscallDesc("readlink", unimplementedFunc),
+    /* 90 */ SyscallDesc("readlink", readlinkFunc),
     /* 91 */ SyscallDesc("setgroups", unimplementedFunc),
     /* 92 */ SyscallDesc("getgroups", unimplementedFunc),
     /* 93 */ SyscallDesc("fchmod", unimplementedFunc),
@@ -336,7 +336,7 @@ SparcSolarisProcess::SparcSolarisProcess(LiveProcessParams * params,
 SyscallDesc*
 SparcSolarisProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
 }

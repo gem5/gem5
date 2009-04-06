@@ -77,11 +77,11 @@ struct O3ThreadState : public ThreadState {
 
 #if FULL_SYSTEM
     O3ThreadState(O3CPU *_cpu, int _thread_num)
-        : ThreadState(_cpu, -1, _thread_num),
+        : ThreadState(_cpu, _thread_num),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
-        if (cpu->params->profile) {
-            profile = new FunctionProfile(cpu->params->system->kernelSymtab);
+        if (cpu->params()->profile) {
+            profile = new FunctionProfile(cpu->params()->system->kernelSymtab);
             Callback *cb =
                 new MakeCallback<O3ThreadState,
                 &O3ThreadState::dumpFuncProfile>(this);
@@ -96,7 +96,7 @@ struct O3ThreadState : public ThreadState {
     }
 #else
     O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(_cpu, -1, _thread_num, _process, _asid),
+        : ThreadState(_cpu, _thread_num, _process, _asid),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 #endif

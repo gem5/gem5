@@ -33,7 +33,3 @@
 
 // Explicit instantiation
 template class BaseDynInst<OzoneImpl>;
-
-template <>
-int
-BaseDynInst<OzoneImpl>::instcount = 0;

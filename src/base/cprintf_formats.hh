@@ -31,8 +31,9 @@
 #ifndef __BASE_CPRINTF_FORMATS_HH__
 #define __BASE_CPRINTF_FORMATS_HH__
 
-#include <sstream>
+#include <cstring>
 #include <ostream>
+#include <sstream>
 
 namespace cp {
 
@@ -49,6 +50,8 @@ struct Format
     enum { best, fixed, scientific } float_format;
     int precision;
     int width;
+    bool get_precision;
+    bool get_width;
 
     Format() { clear(); }
 
@@ -64,6 +67,8 @@ struct Format
         format = none;
         precision = -1;
         width = 0;
+        get_precision = false;
+        get_width = false;
     }
 };
 

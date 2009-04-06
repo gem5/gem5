@@ -193,7 +193,7 @@ RegFile::setNextNPC(Addr val)
 }
 
 void
-RegFile::serialize(std::ostream &os)
+RegFile::serialize(EventManager *em, std::ostream &os)
 {
     intRegFile.serialize(os);
     //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
@@ -207,7 +207,8 @@ RegFile::serialize(std::ostream &os)
 }
 
 void
-RegFile::unserialize(Checkpoint *cp, const std::string &section)
+RegFile::unserialize(EventManager *em, Checkpoint *cp,
+    const std::string &section)
 {
     intRegFile.unserialize(cp, section);
     //UNSERIALIZE_ARRAY(floatRegFile);

@@ -82,11 +82,11 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop BSF_R_R {
+def macroop BSR_R_R {
     # Determine if the input was zero, and also move it to a temp reg.
     movi t1, t1, t0, dataSize=8
     and t1, regm, regm, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
+    br label("end"), flags=(CZF,)
 
     # Zero out the result register
     movi reg, reg, 0x0
@@ -125,7 +125,161 @@ def macroop BSF_R_R {
     srli t3, t1, 1, dataSize=8, flags=(EZF,)
     ori t4, reg, 0x1
     mov reg, reg, t4, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSR_R_M {
+
+    movi t1, t1, t0, dataSize=8
+    ld t1, seg, sib, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    br label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0x0
+
+    # Bit 6
+    srli t3, t1, 32, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    srli t3, t1, 16, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    srli t3, t1, 8, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    srli t3, t1, 4, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    srli t3, t1, 2, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    srli t3, t1, 1, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSR_R_P {
+
+    rdip t7
+    movi t1, t1, t0, dataSize=8
+    ld t1, seg, riprel, disp
+
+    # Determine if the input was zero, and also move it to a temp reg.
+    and t1, t1, t1, flags=(ZF,)
+    br label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0x0
+
+    # Bit 6
+    srli t3, t1, 32, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x20
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    srli t3, t1, 16, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x10
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    srli t3, t1, 8, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    srli t3, t1, 4, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    srli t3, t1, 2, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    srli t3, t1, 1, dataSize=8, flags=(EZF,)
+    ori t4, reg, 0x1
+    mov reg, reg, t4, flags=(nCEZF,)
+
+end:
+    fault "NoFault"
+};
+
+def macroop BSF_R_R {
+    # Determine if the input was zero, and also move it to a temp reg.
+    mov t1, t1, t0, dataSize=8
+    and t1, regm, regm, flags=(ZF,)
+    br label("end"), flags=(CZF,)
+
+    # Zero out the result register
+    movi reg, reg, 0
+
+    subi t2, t1, 1
+    xor t1, t2, t1
+
+
+    # Bit 6
+    srli t3, t1, 32, dataSize=8, flags=(EZF,)
+    ori t4, reg, 32
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 5
+    srli t3, t1, 16, dataSize=8, flags=(EZF,)
+    ori t4, reg, 16
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 4
+    srli t3, t1, 8, dataSize=8, flags=(EZF,)
+    ori t4, reg, 8
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 3
+    srli t3, t1, 4, dataSize=8, flags=(EZF,)
+    ori t4, reg, 4
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 2
+    srli t3, t1, 2, dataSize=8, flags=(EZF,)
+    ori t4, reg, 2
+    mov reg, reg, t4, flags=(nCEZF,)
+    mov t1, t1, t3, flags=(nCEZF,)
+
+    # Bit 1
+    srli t3, t1, 1, dataSize=8, flags=(EZF,)
+    ori t4, reg, 1
+    mov reg, reg, t4, flags=(nCEZF,)
 
 end:
     fault "NoFault"
@@ -133,49 +287,52 @@ end:
 
 def macroop BSF_R_M {
 
-    movi t1, t1, t0, dataSize=8
+    mov t1, t1, t0, dataSize=8
     ld t1, seg, sib, disp
 
     # Determine if the input was zero, and also move it to a temp reg.
     and t1, t1, t1, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
+    br label("end"), flags=(CZF,)
 
     # Zero out the result register
-    movi reg, reg, 0x0
+    mov reg, reg, t0
+
+    subi t2, t1, 1
+    xor t1, t2, t1
 
     # Bit 6
     srli t3, t1, 32, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x20
+    ori t4, reg, 32
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 5
     srli t3, t1, 16, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x10
+    ori t4, reg, 16
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 4
     srli t3, t1, 8, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x8
+    ori t4, reg, 8
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 3
     srli t3, t1, 4, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x4
+    ori t4, reg, 4
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 2
     srli t3, t1, 2, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x2
+    ori t4, reg, 2
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 1
     srli t3, t1, 1, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x1
+    ori t4, reg, 1
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
@@ -186,196 +343,54 @@ end:
 def macroop BSF_R_P {
 
     rdip t7
-    movi t1, t1, t0, dataSize=8
+    mov t1, t1, t0, dataSize=8
     ld t1, seg, riprel, disp
 
     # Determine if the input was zero, and also move it to a temp reg.
     and t1, t1, t1, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
+    br label("end"), flags=(CZF,)
 
     # Zero out the result register
-    movi reg, reg, 0x0
+    mov reg, reg, t0
+
+    subi t2, t1, 1
+    xor t1, t2, t1
 
     # Bit 6
     srli t3, t1, 32, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x20
+    ori t4, reg, 32
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 5
     srli t3, t1, 16, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x10
+    ori t4, reg, 16
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 4
     srli t3, t1, 8, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x8
+    ori t4, reg, 8
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 3
     srli t3, t1, 4, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x4
+    ori t4, reg, 4
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 2
     srli t3, t1, 2, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x2
+    ori t4, reg, 2
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
 
     # Bit 1
     srli t3, t1, 1, dataSize=8, flags=(EZF,)
-    ori t4, reg, 0x1
+    ori t4, reg, 1
     mov reg, reg, t4, flags=(nCEZF,)
     mov t1, t1, t3, flags=(nCEZF,)
-
-end:
-    fault "NoFault"
-};
-
-def macroop BSR_R_R {
-    # Determine if the input was zero, and also move it to a temp reg.
-    mov t1, t1, t0, dataSize=8
-    and t1, regm, regm, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
-
-    # Zero out the result register
-    movi reg, reg, 0
-
-    subi t2, t1, 1
-    xor t1, t2, t1
-
-    # Bit 6
-    srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
-
-    # Bit 5
-    srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
-
-    # Bit 4
-    srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
-
-    # Bit 3
-    srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
-
-    # Bit 2
-    srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
-
-    # Bit 1
-    srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
-
-end:
-    fault "NoFault"
-};
-
-def macroop BSR_R_M {
-
-    mov t1, t1, t0, dataSize=8
-    ld t1, seg, sib, disp
-
-    # Determine if the input was zero, and also move it to a temp reg.
-    and t1, t1, t1, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
-
-    # Zero out the result register
-    mov reg, reg, t0
-
-    subi t2, t1, 1
-    xor t1, t2, t1
-
-    # Bit 6
-    srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
-
-    # Bit 5
-    srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
-
-    # Bit 4
-    srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
-
-    # Bit 3
-    srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
-
-    # Bit 2
-    srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
-
-    # Bit 1
-    srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
-
-end:
-    fault "NoFault"
-};
-
-def macroop BSR_R_P {
-
-    rdip t7
-    mov t1, t1, t0, dataSize=8
-    ld t1, seg, riprel, disp
-
-    # Determine if the input was zero, and also move it to a temp reg.
-    and t1, t1, t1, flags=(ZF,)
-    bri t0, label("end"), flags=(CZF,)
-
-    # Zero out the result register
-    mov reg, reg, t0
-
-    subi t2, t1, 1
-    xor t1, t2, t1
-
-    # Bit 6
-    srli t3, t1, 32, dataSize=8
-    andi t3, t3, 32
-    or reg, reg, t3
-
-    # Bit 5
-    srli t3, t1, 16, dataSize=8
-    andi t3, t3, 16
-    or reg, reg, t3
-
-    # Bit 4
-    srli t3, t1, 8, dataSize=8
-    andi t3, t3, 8
-    or reg, reg, t3
-
-    # Bit 3
-    srli t3, t1, 4, dataSize=8
-    andi t3, t3, 4
-    or reg, reg, t3
-
-    # Bit 2
-    srli t3, t1, 2, dataSize=8
-    andi t3, t3, 2
-    or reg, reg, t3
-
-    # Bit 1
-    srli t3, t1, 1, dataSize=8
-    andi t3, t3, 1
-    or reg, reg, t3
 
 end:
     fault "NoFault"

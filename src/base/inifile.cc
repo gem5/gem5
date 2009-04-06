@@ -29,22 +29,8 @@
  *          Steve Reinhardt
  */
 
-#define USE_CPP
-
-#ifdef USE_CPP
-#include <sys/signal.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-
-#include <libgen.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#endif
-
 #include <fstream>
 #include <iostream>
-
 #include <vector>
 #include <string>
 
@@ -66,103 +52,6 @@ IniFile::~IniFile()
         ++i;
     }
 }
-
-
-#ifdef USE_CPP
-bool
-IniFile::loadCPP(const string &file, vector<char *> &cppArgs)
-{
-    // Open the file just to verify that we can.  Otherwise if the
-    // file doesn't exist or has bad permissions the user will get
-    // confusing errors from cpp/g++.
-    ifstream tmpf(file.c_str());
-
-    if (!tmpf.is_open())
-        return false;
-
-    tmpf.close();
-
-    char *cfile = strncpy(new char[file.size() + 1], file.c_str(),
-                          file.size());
-    char *dir = dirname(cfile);
-    char *dir_arg = NULL;
-    if (*dir != '.') {
-        string arg = "-I";
-        arg += dir;
-
-        dir_arg = new char[arg.size() + 1];
-        strncpy(dir_arg, arg.c_str(), arg.size());
-    }
-
-    delete [] cfile;
-
-    char tempfile[] = "/tmp/configXXXXXX";
-    int tmp_fd = mkstemp(tempfile);
-
-    int pid = fork();
-
-    if (pid == -1)
-        return false;
-
-    if (pid == 0) {
-        char filename[FILENAME_MAX];
-        string::size_type i = file.copy(filename, sizeof(filename) - 1);
-        filename[i] = '\0';
-
-        int arg_count = cppArgs.size();
-
-        const char **args = new const char *[arg_count + 20];
-
-        int nextArg = 0;
-        args[nextArg++] = "g++";
-        args[nextArg++] = "-E";
-        args[nextArg++] = "-P";
-        args[nextArg++] = "-nostdinc";
-        args[nextArg++] = "-nostdinc++";
-        args[nextArg++] = "-x";
-        args[nextArg++] = "c++";
-        args[nextArg++] = "-undef";
-
-        for (int i = 0; i < arg_count; i++)
-            args[nextArg++] = cppArgs[i];
-
-        if (dir_arg)
-            args[nextArg++] = dir_arg;
-
-        args[nextArg++] = filename;
-        args[nextArg++] = NULL;
-
-        close(STDOUT_FILENO);
-        if (dup2(tmp_fd, STDOUT_FILENO) == -1)
-            exit(1);
-
-        // execvp signature is intentionally broken wrt const-ness for
-        // backwards compatibility... see man page
-        execvp("g++", const_cast<char * const *>(args));
-
-        exit(0);
-    }
-
-    int retval;
-    waitpid(pid, &retval, 0);
-
-    delete [] dir_arg;
-
-    // check for normal completion of CPP
-    if (!WIFEXITED(retval) || WEXITSTATUS(retval) != 0)
-        return false;
-
-    close(tmp_fd);
-
-    bool status = false;
-
-    status = load(tempfile);
-
-    unlink(tempfile);
-
-    return status;
-}
-#endif
 
 bool
 IniFile::load(const string &file)

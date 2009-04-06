@@ -38,7 +38,6 @@
 #include "sim/faults.hh"
 #include "sim/host.hh"
 #include "sim/serialize.hh"
-#include "sim/syscallreturn.hh"
 #include "sim/byteswap.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
@@ -115,26 +114,30 @@ class ThreadContext
 
     virtual BaseCPU *getCpuPtr() = 0;
 
-    virtual void setCpuId(int id) = 0;
+    virtual int cpuId() = 0;
 
-    virtual int readCpuId() = 0;
+    virtual int threadId() = 0;
+
+    virtual void setThreadId(int id) = 0;
+
+    virtual int contextId() = 0;
+
+    virtual void setContextId(int id) = 0;
 
     virtual TheISA::ITB *getITBPtr() = 0;
 
     virtual TheISA::DTB *getDTBPtr() = 0;
 
-#if FULL_SYSTEM
     virtual System *getSystemPtr() = 0;
 
+#if FULL_SYSTEM
     virtual TheISA::Kernel::Statistics *getKernelStats() = 0;
 
     virtual FunctionalPort *getPhysPort() = 0;
 
-    virtual VirtualPort *getVirtPort(ThreadContext *tc = NULL) = 0;
+    virtual VirtualPort *getVirtPort() = 0;
 
-    virtual void delVirtPort(VirtualPort *vp) = 0;
-
-    virtual void connectMemPorts() = 0;
+    virtual void connectMemPorts(ThreadContext *tc) = 0;
 #else
     virtual TranslatingPort *getMemPort() = 0;
 
@@ -180,8 +183,6 @@ class ThreadContext
     virtual void profileClear() = 0;
     virtual void profileSample() = 0;
 #endif
-
-    virtual int getThreadNum() = 0;
 
     // Also somewhat obnoxious.  Really only used for the TLB fault.
     // However, may be quite useful in SPARC.
@@ -256,13 +257,6 @@ class ThreadContext
     virtual bool misspeculating() = 0;
 
 #if !FULL_SYSTEM
-    virtual IntReg getSyscallArg(int i) = 0;
-
-    // used to shift args for indirect syscall
-    virtual void setSyscallArg(int i, IntReg val) = 0;
-
-    virtual void setSyscallReturn(SyscallReturn return_value) = 0;
-
     // Same with st cond failures.
     virtual Counter readFuncExeInst() = 0;
 
@@ -273,9 +267,6 @@ class ThreadContext
     // Used in syscall-emulation mode when a  thread calls the exit syscall.
     virtual int exit() { return 1; };
 #endif
-
-    virtual void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val) = 0;
 
     /** function to compare two thread contexts (for debugging) */
     static void compare(ThreadContext *one, ThreadContext *two);
@@ -305,27 +296,31 @@ class ProxyThreadContext : public ThreadContext
 
     BaseCPU *getCpuPtr() { return actualTC->getCpuPtr(); }
 
-    void setCpuId(int id) { actualTC->setCpuId(id); }
+    int cpuId() { return actualTC->cpuId(); }
 
-    int readCpuId() { return actualTC->readCpuId(); }
+    int threadId() { return actualTC->threadId(); }
+
+    void setThreadId(int id) { return actualTC->setThreadId(id); }
+
+    int contextId() { return actualTC->contextId(); }
+
+    void setContextId(int id) { actualTC->setContextId(id); }
 
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
     TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
-#if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 
+#if FULL_SYSTEM
     TheISA::Kernel::Statistics *getKernelStats()
     { return actualTC->getKernelStats(); }
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return actualTC->getVirtPort(tc); }
+    VirtualPort *getVirtPort() { return actualTC->getVirtPort(); }
 
-    void delVirtPort(VirtualPort *vp) { return actualTC->delVirtPort(vp); }
-
-    void connectMemPorts() { actualTC->connectMemPorts(); }
+    void connectMemPorts(ThreadContext *tc) { actualTC->connectMemPorts(tc); }
 #else
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
@@ -371,9 +366,6 @@ class ProxyThreadContext : public ThreadContext
     void profileClear() { return actualTC->profileClear(); }
     void profileSample() { return actualTC->profileSample(); }
 #endif
-
-    int getThreadNum() { return actualTC->getThreadNum(); }
-
     // @todo: Do I need this?
     MachInst getInst() { return actualTC->getInst(); }
 
@@ -433,7 +425,7 @@ class ProxyThreadContext : public ThreadContext
 
     uint64_t readNextMicroPC() { return actualTC->readMicroPC(); }
 
-    void setNextMicroPC(uint64_t val) { actualTC->setMicroPC(val); }
+    void setNextMicroPC(uint64_t val) { actualTC->setNextMicroPC(val); }
 
     MiscReg readMiscRegNoEffect(int misc_reg)
     { return actualTC->readMiscRegNoEffect(misc_reg); }
@@ -457,26 +449,11 @@ class ProxyThreadContext : public ThreadContext
     bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, IntReg val)
-    { actualTC->setSyscallArg(i, val); }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    { actualTC->setSyscallReturn(return_value); }
-
     void syscall(int64_t callnum)
     { actualTC->syscall(callnum); }
 
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
-
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        actualTC->changeRegFileContext(param, val);
-    }
 };
 
 #endif

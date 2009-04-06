@@ -68,6 +68,7 @@
 #include <string>
 
 class Checkpoint;
+class EventManager;
 
 namespace X86ISA
 {
@@ -95,8 +96,6 @@ namespace X86ISA
       public:
 
         void clear();
-
-        int FlattenIntIndex(int reg);
 
         MiscReg readMiscRegNoEffect(int miscReg);
 
@@ -139,12 +138,11 @@ namespace X86ISA
 
         void setIntReg(int intReg, const IntReg &val);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+            const std::string &section);
 
       public:
-
-        void changeContext(RegContextParam param, RegContextVal val);
     };
 
     int flattenIntIndex(ThreadContext * tc, int reg);

@@ -50,14 +50,6 @@
 #include "mem/cache/tags/iic.hh"
 #endif
 
-#if defined(USE_CACHE_SPLIT)
-#include "mem/cache/tags/split.hh"
-#endif
-
-#if defined(USE_CACHE_SPLIT_LIFO)
-#include "mem/cache/tags/split_lifo.hh"
-#endif
-
 #include "mem/cache/cache_impl.hh"
 
 // Template Instantiations
@@ -74,14 +66,6 @@ template class Cache<IIC>;
 
 #if defined(USE_CACHE_LRU)
 template class Cache<LRU>;
-#endif
-
-#if defined(USE_CACHE_SPLIT)
-template class Cache<Split>;
-#endif
-
-#if defined(USE_CACHE_SPLIT_LIFO)
-template class Cache<SplitLIFO>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

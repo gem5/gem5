@@ -34,7 +34,8 @@
  * by permission.
  */
 
-#include <assert.h>
+#include <cassert>
+
 #include "base/fast_alloc.hh"
 
 #if !NO_FAST_ALLOC
@@ -45,21 +46,22 @@
 
 void *FastAlloc::freeLists[Num_Buckets];
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
 unsigned FastAlloc::newCount[Num_Buckets];
 unsigned FastAlloc::deleteCount[Num_Buckets];
 unsigned FastAlloc::allocCount[Num_Buckets];
 #endif
 
-void *FastAlloc::moreStructs(int bucket)
+void *
+FastAlloc::moreStructs(int bucket)
 {
     assert(bucket > 0 && bucket < Num_Buckets);
 
     int sz = bucket * Alloc_Quantum;
-    const int nstructs = Num_Structs_Per_New;	// how many to allocate?
+    const int nstructs = Num_Structs_Per_New;   // how many to allocate?
     char *p = ::new char[nstructs * sz];
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
     ++allocCount[bucket];
 #endif
 
@@ -71,14 +73,13 @@ void *FastAlloc::moreStructs(int bucket)
     return (p + sz);
 }
 
+#if FAST_ALLOC_DEBUG
 
-#ifdef FAST_ALLOC_DEBUG
-
-#include <typeinfo>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <map>
 #include <string>
+#include <typeinfo>
 
 using namespace std;
 
@@ -96,7 +97,6 @@ FastAlloc::FastAlloc(FastAlloc *prev, FastAlloc *next)
     inUsePrev = prev;
     inUseNext = next;
 }
-
 
 // constructor: marks as in use, add to in-use list
 FastAlloc::FastAlloc()
@@ -131,7 +131,6 @@ FastAlloc::~FastAlloc()
     inUseNext->inUsePrev = inUsePrev;
 }
 
-
 // summarize in-use list
 void
 FastAlloc::dump_summary()
@@ -148,11 +147,8 @@ FastAlloc::dump_summary()
     cout << " count  type\n"
          << " -----  ----\n";
     for (mapiter = typemap.begin(); mapiter != typemap.end(); ++mapiter)
-    {
         cout << setw(6) << mapiter->second << "  " << mapiter->first << endl;
-    }
 }
-
 
 // show oldest n items on in-use list
 void
@@ -160,36 +156,34 @@ FastAlloc::dump_oldest(int n)
 {
     // sanity check: don't want to crash the debugger if you forget to
     // pass in a parameter
-    if (n < 0 || n > numInUse)
-    {
+    if (n < 0 || n > numInUse) {
         cout << "FastAlloc::dump_oldest: bad arg " << n
              << " (" << numInUse << " objects in use" << endl;
         return;
     }
 
-    for (FastAlloc *p = inUseHead.inUsePrev;
+    for (FastAlloc *p = inUseHead.inUseNext;
          p != &inUseHead && n > 0;
-         p = p->inUsePrev, --n)
-    {
+         p = p->inUseNext, --n)
         cout << p << " " << typeid(*p).name() << endl;
-    }
 }
-
 
 //
 // C interfaces to FastAlloc::dump_summary() and FastAlloc::dump_oldest().
 // gdb seems to have trouble with calling C++ functions directly.
 //
+void
 fast_alloc_summary()
 {
     FastAlloc::dump_summary();
 }
 
+void
 fast_alloc_oldest(int n)
 {
     FastAlloc::dump_oldest(n);
 }
 
-#endif
+#endif // FAST_ALLOC_DEBUG
 
 #endif // NO_FAST_ALLOC

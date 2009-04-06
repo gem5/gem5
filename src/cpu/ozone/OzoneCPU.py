@@ -40,8 +40,6 @@ class DerivOzoneCPU(BaseCPU):
 
     if build_env['USE_CHECKER']:
         checker = Param.BaseCPU("Checker CPU")
-    if build_env['FULL_SYSTEM']:
-        profile = Param.Latency('0ns', "trace the kernel stack")
 
     icache_port = Port("Instruction Port")
     dcache_port = Port("Data Port")

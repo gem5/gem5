@@ -245,10 +245,12 @@ class Bus : public MemObject
      */
     void addressRanges(AddrRangeList &resp, bool &snoop, int id);
 
-    /** Prepare a packet to be sent on the bus. The header finishes at tick
-     *  headerTime
+    /** Calculate the timing parameters for the packet.  Updates the
+     * firstWordTime and finishTime fields of the packet object.
+     * Returns the tick at which the packet header is completed (which
+     * will be all that is sent if the target rejects the packet).
      */
-    void preparePacket(PacketPtr pkt, Tick & headerTime);
+    Tick calcPacketTiming(PacketPtr pkt);
 
     /** Occupy the bus until until */
     void occupyBus(Tick until);

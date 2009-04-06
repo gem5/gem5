@@ -30,7 +30,7 @@
 
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -38,8 +38,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratories.
+ *      This product includes software developed by the University of
+ *      California, Lawrence Berkeley Laboratories.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,8 +51,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -69,7 +69,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kgdb_stub.c	8.4 (Berkeley) 1/12/94
+ *      @(#)kgdb_stub.c 8.4 (Berkeley) 1/12/94
  */
 
 /*-
@@ -89,8 +89,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the NetBSD
- *	Foundation, Inc. and its contributors.
+ *      This product includes software developed by the NetBSD
+ *      Foundation, Inc. and its contributors.
  * 4. Neither the name of The NetBSD Foundation nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -195,6 +195,11 @@ GDBListener::name()
 void
 GDBListener::listen()
 {
+    if (ListenSocket::allDisabled()) {
+        warn_once("Sockets disabled, not accepting gdb connections");
+        return;
+    }
+
     while (!listener.listen(port, true)) {
         DPRINTF(GDBMisc, "Can't bind port %d\n", port);
         port++;
@@ -341,14 +346,16 @@ uint8_t
 BaseRemoteGDB::getbyte()
 {
     uint8_t b;
-    ::read(fd, &b, 1);
+    if (::read(fd, &b, 1) != 1)
+        warn("could not read byte from debugger");
     return b;
 }
 
 void
 BaseRemoteGDB::putbyte(uint8_t b)
 {
-    ::write(fd, &b, 1);
+    if (::write(fd, &b, 1) != 1)
+        warn("could not write byte to debugger");
 }
 
 // Send a packet to gdb
@@ -454,14 +461,11 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
 #if FULL_SYSTEM
-    VirtualPort *port = context->getVirtPort(context);
+    VirtualPort *port = context->getVirtPort();
 #else
     TranslatingPort *port = context->getMemPort();
 #endif
     port->readBlob(vaddr, (uint8_t*)data, size);
-#if FULL_SYSTEM
-    context->delVirtPort(port);
-#endif
 
 #if TRACING_ON
     if (DTRACE(GDBRead)) {
@@ -499,14 +503,12 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
             DPRINTFNR("\n");
     }
 #if FULL_SYSTEM
-    VirtualPort *port = context->getVirtPort(context);
+    VirtualPort *port = context->getVirtPort();
 #else
     TranslatingPort *port = context->getMemPort();
 #endif
     port->writeBlob(vaddr, (uint8_t*)data, size);
-#if FULL_SYSTEM
-    context->delVirtPort(port);
-#else
+#if !FULL_SYSTEM
     delete port;
 #endif
 

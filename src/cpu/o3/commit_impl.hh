@@ -36,6 +36,7 @@
 #include <string>
 
 #include "arch/utility.hh"
+#include "base/cp_annotate.hh"
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
 #include "cpu/exetrace.hh"
@@ -46,12 +47,14 @@
 #include "cpu/checker/cpu.hh"
 #endif
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
                                           unsigned _tid)
-    : Event(&mainEventQueue, CPU_Tick_Pri), commit(_commit), tid(_tid)
+    : Event(CPU_Tick_Pri), commit(_commit), tid(_tid)
 {
-    this->setFlags(Event::AutoDelete);
+    this->setFlags(AutoDelete);
 }
 
 template <class Impl>
@@ -71,7 +74,7 @@ DefaultCommit<Impl>::TrapEvent::description() const
 }
 
 template <class Impl>
-DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
+DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       squashCounter(0),
       iewToCommitDelay(params->iewToCommitDelay),
@@ -80,7 +83,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, Params *params)
       fetchToCommitDelay(params->commitToFetchDelay),
       renameWidth(params->renameWidth),
       commitWidth(params->commitWidth),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       drainPending(false),
       switchedOut(false),
       trapLatency(params->trapLatency)
@@ -460,7 +463,7 @@ DefaultCommit<Impl>::generateTrapEvent(unsigned tid)
 
     TrapEvent *trap = new TrapEvent(this, tid);
 
-    trap->schedule(curTick + trapLatency);
+    cpu->schedule(trap, curTick + trapLatency);
     trapInFlight[tid] = true;
 }
 
@@ -663,7 +666,7 @@ DefaultCommit<Impl>::handleInterrupt()
             DPRINTF(Commit, "Interrupt pending, waiting for ROB to empty.\n");
         }
     } else if (commitStatus[0] != TrapPending &&
-               cpu->check_interrupts(cpu->tcBase(0)) &&
+               cpu->checkInterrupts(cpu->tcBase(0)) &&
                !trapSquash[0] &&
                !tcSquash[0]) {
         // Process interrupts if interrupts are enabled, not in PAL
@@ -693,7 +696,7 @@ DefaultCommit<Impl>::commit()
     // Check for any interrupt, and start processing it.  Or if we
     // have an outstanding interrupt and are at a point when it is
     // valid to take an interrupt, process it.
-    if (cpu->check_interrupts(cpu->tcBase(0))) {
+    if (cpu->checkInterrupts(cpu->tcBase(0))) {
         handleInterrupt();
     }
 #endif // FULL_SYSTEM
@@ -812,7 +815,7 @@ DefaultCommit<Impl>::commit()
         // @todo: Make this handle multi-cycle communication between
         // commit and IEW.
         if (checkEmptyROB[tid] && rob->isEmpty(tid) &&
-            !iewStage->hasStoresToWB() && !committedStores[tid]) {
+            !iewStage->hasStoresToWB(tid) && !committedStores[tid]) {
             checkEmptyROB[tid] = false;
             toIEW->commitInfo[tid].usedROB = true;
             toIEW->commitInfo[tid].emptyROB = true;
@@ -966,7 +969,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
                     "instruction [sn:%lli] at the head of the ROB, PC %#x.\n",
                     head_inst->seqNum, head_inst->readPC());
 
-            if (inst_num > 0 || iewStage->hasStoresToWB()) {
+            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
                 return false;
             }
@@ -981,7 +984,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
             return false;
         } else if (head_inst->isLoad()) {
-            if (inst_num > 0 || iewStage->hasStoresToWB()) {
+            if (inst_num > 0 || iewStage->hasStoresToWB(tid)) {
                 DPRINTF(Commit, "Waiting for all stores to writeback.\n");
                 return false;
             }
@@ -1036,7 +1039,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         DPRINTF(Commit, "Inst [sn:%lli] PC %#x has a fault\n",
                 head_inst->seqNum, head_inst->readPC());
 
-        if (iewStage->hasStoresToWB() || inst_num > 0) {
+        if (iewStage->hasStoresToWB(tid) || inst_num > 0) {
             DPRINTF(Commit, "Stores outstanding, fault must wait.\n");
             return false;
         }
@@ -1094,6 +1097,12 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 
         if (node)
             thread[tid]->profileNode = node;
+    }
+    if (CPA::available()) {
+        if (head_inst->isControl()) {
+            ThreadContext *tc = thread[tid]->getTC();
+            CPA::cpa()->swAutoBegin(tc, head_inst->readNextPC());
+        }
     }
 #endif
 

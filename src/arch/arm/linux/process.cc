@@ -49,7 +49,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -79,7 +79,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<ArmLinux>),
     /* 16 */ SyscallDesc("lchown", chownFunc),
-    /* 17 */ SyscallDesc("break", obreakFunc), //???
+    /* 17 */ SyscallDesc("break", brkFunc), //???
     /* 18 */ SyscallDesc("unused#18", unimplementedFunc), //???
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
@@ -107,7 +107,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 42 */ SyscallDesc("pipe", unimplementedFunc),
     /* 43 */ SyscallDesc("times", unimplementedFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
-    /* 45 */ SyscallDesc("brk", obreakFunc),
+    /* 45 */ SyscallDesc("brk", brkFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidFunc),
     /* 48 */ SyscallDesc("signal", ignoreFunc),

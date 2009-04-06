@@ -96,15 +96,6 @@ using namespace std;
 
 class Checkpoint;
 
-string X86ISA::getFloatRegName(RegIndex index)
-{
-    static std::string floatRegName[NumFloatRegs] =
-        {"mmx0", "mmx1", "mmx2", "mmx3", "mmx4", "mmx5", "mmx6", "mmx7",
-         "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
-         "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "xmm14", "xmm15"};
-    return floatRegName[index];
-}
-
 void FloatRegFile::clear()
 {
     memset(q, 0, sizeof(FloatReg) * NumFloatRegs);
@@ -113,27 +104,27 @@ void FloatRegFile::clear()
 FloatReg FloatRegFile::readReg(int floatReg, int width)
 {
     FloatReg reg = d[floatReg];
-    DPRINTF(X86, "Reading %f from register %d.\n", reg, floatReg);
+    DPRINTF(FloatRegs, "Reading %f from register %d.\n", reg, floatReg);
     return reg;
 }
 
 FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
 {
     FloatRegBits reg = q[floatReg];
-    DPRINTF(X86, "Reading %#x from register %d.\n", reg, floatReg);
+    DPRINTF(FloatRegs, "Reading %#x from register %d.\n", reg, floatReg);
     return reg;
 }
 
 Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
 {
-    DPRINTF(X86, "Writing %f to register %d.\n", val, floatReg);
+    DPRINTF(FloatRegs, "Writing %f to register %d.\n", val, floatReg);
     d[floatReg] = val;
     return NoFault;
 }
 
 Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
 {
-    DPRINTF(X86, "Writing bits %#x to register %d.\n", val, floatReg);
+    DPRINTF(FloatRegs, "Writing bits %#x to register %d.\n", val, floatReg);
     q[floatReg] = val;
     return NoFault;
 }

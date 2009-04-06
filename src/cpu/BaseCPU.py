@@ -26,7 +26,7 @@
 #
 # Authors: Nathan Binkert
 
-from m5.SimObject import SimObject
+from MemObject import MemObject
 from m5.params import *
 from m5.proxy import *
 from m5 import build_env
@@ -39,50 +39,84 @@ default_tracer = ExeTracer()
 
 if build_env['TARGET_ISA'] == 'alpha':
     from AlphaTLB import AlphaDTB, AlphaITB
+    if build_env['FULL_SYSTEM']:
+        from AlphaInterrupts import AlphaInterrupts
 elif build_env['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcDTB, SparcITB
+    if build_env['FULL_SYSTEM']:
+        from SparcInterrupts import SparcInterrupts
 elif build_env['TARGET_ISA'] == 'x86':
     from X86TLB import X86DTB, X86ITB
+    if build_env['FULL_SYSTEM']:
+        from X86LocalApic import X86LocalApic
 elif build_env['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB,MipsDTB, MipsITB, MipsUTB
+    if build_env['FULL_SYSTEM']:
+        from MipsInterrupts import MipsInterrupts
 elif build_env['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB, ArmDTB, ArmITB, ArmUTB
+    if build_env['FULL_SYSTEM']:
+        from ArmInterrupts import ArmInterrupts
 
-class BaseCPU(SimObject):
+class BaseCPU(MemObject):
     type = 'BaseCPU'
     abstract = True
 
     system = Param.System(Parent.any, "system object")
-    cpu_id = Param.Int("CPU identifier")
+    cpu_id = Param.Int(-1, "CPU identifier")
+    numThreads = Param.Unsigned(1, "number of HW thread contexts")
+
+    function_trace = Param.Bool(False, "Enable function trace")
+    function_trace_start = Param.Tick(0, "Cycle to start function trace")
+
+    checker = Param.BaseCPU(NULL, "checker CPU")
+
+    do_checkpoint_insts = Param.Bool(True,
+        "enable checkpoint pseudo instructions")
+    do_statistics_insts = Param.Bool(True,
+        "enable statistics pseudo instructions")
 
     if build_env['FULL_SYSTEM']:
+        profile = Param.Latency('0ns', "trace the kernel stack")
         do_quiesce = Param.Bool(True, "enable quiesce instructions")
-        do_checkpoint_insts = Param.Bool(True,
-            "enable checkpoint pseudo instructions")
-        do_statistics_insts = Param.Bool(True,
-            "enable statistics pseudo instructions")
     else:
         workload = VectorParam.Process("processes to run")
 
     if build_env['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcDTB(SparcDTB(), "Data TLB")
         itb = Param.SparcITB(SparcITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.SparcInterrupts(
+                SparcInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaDTB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaITB(AlphaITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.AlphaInterrupts(
+                AlphaInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'x86':
         dtb = Param.X86DTB(X86DTB(), "Data TLB")
         itb = Param.X86ITB(X86ITB(), "Instruction TLB")
+        if build_env['FULL_SYSTEM']:
+            _localApic = X86LocalApic(pio_addr=0x2000000000000000)
+            interrupts = \
+                Param.X86LocalApic(_localApic, "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'mips':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.MipsDTB(MipsDTB(), "Data TLB")
         itb = Param.MipsITB(MipsITB(), "Instruction TLB")
         tlb = Param.MipsUTB(MipsUTB(), "Unified TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.MipsInterrupts(
+                    MipsInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'arm':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.ArmDTB(ArmDTB(), "Data TLB")
         itb = Param.ArmITB(ArmITB(), "Instruction TLB")
         tlb = Param.ArmUTB(ArmUTB(), "Unified TLB")
+        if build_env['FULL_SYSTEM']:
+            interrupts = Param.ArmInterrupts(
+                    ArmInterrupts(), "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             build_env['TARGET_ISA']
@@ -109,7 +143,10 @@ class BaseCPU(SimObject):
 
     _mem_ports = []
     if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
-        _mem_ports = ["itb.walker.port", "dtb.walker.port"]
+        _mem_ports = ["itb.walker.port",
+                      "dtb.walker.port",
+                      "interrupts.pio",
+                      "interrupts.int_port"]
 
     def connectMemPorts(self, bus):
         for p in self._mem_ports:

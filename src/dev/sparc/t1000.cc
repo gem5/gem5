@@ -37,8 +37,8 @@
 #include <vector>
 
 #include "cpu/intr_control.hh"
-#include "dev/simconsole.hh"
 #include "dev/sparc/t1000.hh"
+#include "dev/terminal.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -94,7 +94,21 @@ T1000::pciToDma(Addr pciAddr) const
 
 
 Addr
-T1000::calcConfigAddr(int bus, int dev, int func)
+T1000::calcPciConfigAddr(int bus, int dev, int func)
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
+
+Addr
+T1000::calcPciIOAddr(Addr addr)
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
+
+Addr
+T1000::calcPciMemAddr(Addr addr)
 {
     panic("Need implementation\n");
     M5_DUMMY_RETURN

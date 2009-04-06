@@ -32,81 +32,106 @@
 #include <fstream>
 #include <list>
 #include <map>
+#include <set>
 #include <string>
 
 #include "base/callback.hh"
 #include "base/cprintf.hh"
+#include "base/debug.hh"
 #include "base/hostinfo.hh"
 #include "base/misc.hh"
 #include "base/statistics.hh"
 #include "base/str.hh"
 #include "base/time.hh"
 #include "base/trace.hh"
-#include "base/stats/statdb.hh"
 
 using namespace std;
 
 namespace Stats {
 
-StatData *
-DataAccess::find() const
+typedef map<const void *, Info *> MapType;
+
+// We wrap these in a function to make sure they're built in time.
+list<Info *> &
+statsList()
 {
-    return Database::find(const_cast<void *>((const void *)this));
+    static list<Info *> the_list;
+    return the_list;
 }
 
-const StatData *
-getStatData(const void *stat)
+MapType &
+statsMap()
 {
-    return Database::find(const_cast<void *>(stat));
-}
-
-void
-DataAccess::map(StatData *data)
-{
-    Database::regStat(this, data);
-}
-
-StatData *
-DataAccess::statData()
-{
-    StatData *ptr = find();
-    assert(ptr);
-    return ptr;
-}
-
-const StatData *
-DataAccess::statData() const
-{
-    const StatData *ptr = find();
-    assert(ptr);
-    return ptr;
+    static MapType the_map;
+    return the_map;
 }
 
 void
-DataAccess::setInit()
+InfoAccess::setInfo(Info *info)
 {
-    statData()->flags |= init;
+    if (statsMap().find(this) != statsMap().end())
+        panic("shouldn't register stat twice!");
+
+    statsList().push_back(info);
+
+#ifndef NDEBUG
+    pair<MapType::iterator, bool> result =
+#endif
+        statsMap().insert(make_pair(this, info));
+    assert(result.second && "this should never fail");
+    assert(statsMap().find(this) != statsMap().end());
 }
 
 void
-DataAccess::setPrint()
+InfoAccess::setParams(const StorageParams *params)
 {
-    Database::regPrint(this);
+    info()->storageParams = params;
 }
 
-StatData::StatData()
-    : flags(none), precision(-1), prereq(0)
+void
+InfoAccess::setInit()
 {
-    static int count = 0;
-    id = count++;
+    info()->flags |= init;
 }
 
-StatData::~StatData()
+Info *
+InfoAccess::info()
+{
+    MapType::const_iterator i = statsMap().find(this);
+    assert(i != statsMap().end());
+    return (*i).second;
+}
+
+const Info *
+InfoAccess::info() const
+{
+    MapType::const_iterator i = statsMap().find(this);
+    assert(i != statsMap().end());
+    return (*i).second;
+}
+
+StorageParams::~StorageParams()
+{
+}
+
+int Info::id_count = 0;
+
+int debug_break_id = -1;
+
+Info::Info()
+    : flags(none), precision(-1), prereq(0), storageParams(NULL)
+{
+    id = id_count++;
+    if (debug_break_id >= 0 and debug_break_id == id)
+        debug_break();
+}
+
+Info::~Info()
 {
 }
 
 bool
-StatData::less(StatData *stat1, StatData *stat2)
+Info::less(Info *stat1, Info *stat2)
 {
     const string &name1 = stat1->name;
     const string &name2 = stat2->name;
@@ -117,8 +142,8 @@ StatData::less(StatData *stat1, StatData *stat2)
     tokenize(v1, name1, '.');
     tokenize(v2, name2, '.');
 
-    int last = min(v1.size(), v2.size()) - 1;
-    for (int i = 0; i < last; ++i)
+    size_type last = min(v1.size(), v2.size()) - 1;
+    for (off_type i = 0; i < last; ++i)
         if (v1[i] != v2[i])
             return v1[i] < v2[i];
 
@@ -132,9 +157,9 @@ StatData::less(StatData *stat1, StatData *stat2)
 }
 
 bool
-StatData::baseCheck() const
+Info::baseCheck() const
 {
-    if (!(flags & init)) {
+    if (!(flags & Stats::init)) {
 #ifdef DEBUG
         cprintf("this is stat number %d\n", id);
 #endif
@@ -150,54 +175,40 @@ StatData::baseCheck() const
     return true;
 }
 
-
 void
-FormulaBase::result(VResult &vec) const
+Info::enable()
 {
-    if (root)
-        vec = root->result();
-}
-
-Result
-FormulaBase::total() const
-{
-    return root ? root->total() : 0.0;
-}
-
-size_t
-FormulaBase::size() const
-{
-    if (!root)
-        return 0;
-    else
-        return root->size();
 }
 
 void
-FormulaBase::reset()
+VectorInfoBase::enable()
 {
-}
-
-bool
-FormulaBase::zero() const
-{
-    VResult vec;
-    result(vec);
-    for (int i = 0; i < vec.size(); ++i)
-        if (vec[i] != 0.0)
-            return false;
-    return true;
+    size_type s = size();
+    if (subnames.size() < s)
+        subnames.resize(s);
+    if (subdescs.size() < s)
+        subdescs.resize(s);
 }
 
 void
-FormulaBase::update(StatData *)
+VectorDistInfoBase::enable()
 {
+    size_type s = size();
+    if (subnames.size() < s)
+        subnames.resize(s);
+    if (subdescs.size() < s)
+        subdescs.resize(s);
 }
 
-string
-FormulaBase::str() const
+void
+Vector2dInfoBase::enable()
 {
-    return root ? root->str() : "";
+    if (subnames.size() < x)
+        subnames.resize(x);
+    if (subdescs.size() < x)
+        subdescs.resize(x);
+    if (y_subnames.size() < y)
+        y_subnames.resize(y);
 }
 
 Formula::Formula()
@@ -232,38 +243,86 @@ Formula::operator+=(Temp r)
 }
 
 void
-check()
+Formula::result(VResult &vec) const
 {
-    typedef Database::stat_list_t::iterator iter_t;
+    if (root)
+        vec = root->result();
+}
 
-    iter_t i, end = Database::stats().end();
-    for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *data = *i;
-        assert(data);
-        if (!data->check() || !data->baseCheck())
-            panic("stat check failed for %s\n", data->name);
+Result
+Formula::total() const
+{
+    return root ? root->total() : 0.0;
+}
+
+size_type
+Formula::size() const
+{
+    if (!root)
+        return 0;
+    else
+        return root->size();
+}
+
+void
+Formula::reset()
+{
+}
+
+bool
+Formula::zero() const
+{
+    VResult vec;
+    result(vec);
+    for (off_t i = 0; i < vec.size(); ++i)
+        if (vec[i] != 0.0)
+            return false;
+    return true;
+}
+
+string
+Formula::str() const
+{
+    return root ? root->str() : "";
+}
+
+void
+enable()
+{
+    typedef list<Info *>::iterator iter_t;
+
+    iter_t i, end = statsList().end();
+    for (i = statsList().begin(); i != end; ++i) {
+        Info *info = *i;
+        assert(info);
+        if (!info->check() || !info->baseCheck())
+            panic("stat check failed for '%s' %d\n", info->name, info->id);
     }
 
-    int j = 0;
-    for (i = Database::stats().begin(); i != end; ++i) {
-        StatData *data = *i;
-        if (!(data->flags & print))
-            data->name = "__Stat" + to_string(j++);
+    off_t j = 0;
+    for (i = statsList().begin(); i != end; ++i) {
+        Info *info = *i;
+        if (!(info->flags & print))
+            info->name = "__Stat" + to_string(j++);
     }
 
-    Database::stats().sort(StatData::less);
+    statsList().sort(Info::less);
 
-    if (i == end)
-        return;
+    for (i = statsList().begin(); i != end; ++i) {
+        Info *info = *i;
+        info->enable();
+    }
+}
 
-    iter_t last = i;
-    ++i;
-
-    for (i = Database::stats().begin(); i != end; ++i) {
-        if ((*i)->name == (*last)->name)
-            panic("same name used twice! name=%s\n", (*i)->name);
-
-        last = i;
+void
+prepare()
+{
+    list<Info *>::iterator i = statsList().begin();
+    list<Info *>::iterator end = statsList().end();
+    while (i != end) {
+        Info *info = *i;
+        info->prepare();
+        ++i;
     }
 }
 
@@ -272,11 +331,11 @@ CallbackQueue resetQueue;
 void
 reset()
 {
-    Database::stat_list_t::iterator i = Database::stats().begin();
-    Database::stat_list_t::iterator end = Database::stats().end();
+    list<Info *>::iterator i = statsList().begin();
+    list<Info *>::iterator end = statsList().end();
     while (i != end) {
-        StatData *data = *i;
-        data->reset();
+        Info *info = *i;
+        info->reset();
         ++i;
     }
 

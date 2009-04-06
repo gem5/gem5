@@ -37,9 +37,10 @@
 #include "base/timebuf.hh"
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/iew.hh"
+#include "params/DerivO3CPU.hh"
 
 template<class Impl>
-DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, Params *params)
+DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
     : issueToExecQueue(params->backComSize, params->forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
@@ -52,7 +53,7 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, Params *params)
       issueWidth(params->issueWidth),
       wbOutstanding(0),
       wbWidth(params->wbWidth),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       switchedOut(false)
 {
     _status = Active;

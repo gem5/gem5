@@ -28,9 +28,9 @@
  * Authors: Nathan Binkert
  */
 
-#include <sys/types.h>
-#include <sys/time.h>
-#include <time.h>
+#include <cctype>
+#include <cstring>
+#include <ctime>
 #include <iostream>
 #include <string>
 

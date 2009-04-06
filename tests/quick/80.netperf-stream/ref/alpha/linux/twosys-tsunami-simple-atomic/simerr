@@ -1,0 +1,7 @@
+warn: Sockets disabled, not accepting terminal connections
+For more information see: http://www.m5sim.org/warn/8742226b
+warn: Sockets disabled, not accepting gdb connections
+For more information see: http://www.m5sim.org/warn/d946bea6
+warn: Obsolete M5 ivlb instruction encountered.
+For more information see: http://www.m5sim.org/warn/fcbd217d
+hack: be nice to actually delete the event here

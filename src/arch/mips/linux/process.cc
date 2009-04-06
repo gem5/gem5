@@ -51,7 +51,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename,"m5.eecs.umich.edu");
@@ -70,13 +70,13 @@ static SyscallReturn
 sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
           fpcr.copyOut(tc->getMemPort());
@@ -97,13 +97,13 @@ static SyscallReturn
 sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
@@ -138,7 +138,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<MipsLinux>),
     /* 16 */ SyscallDesc("lchown", chownFunc),
-    /* 17 */ SyscallDesc("break", obreakFunc),
+    /* 17 */ SyscallDesc("break", brkFunc),
     /* 18 */ SyscallDesc("unused#18", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
@@ -160,13 +160,13 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 36 */ SyscallDesc("sync", unimplementedFunc),
     /* 37 */ SyscallDesc("kill", unimplementedFunc),
     /* 38 */ SyscallDesc("rename", unimplementedFunc),
-    /* 39 */ SyscallDesc("mkdir", unimplementedFunc),
+    /* 39 */ SyscallDesc("mkdir", mkdirFunc),
     /* 40 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
     /* 42 */ SyscallDesc("pipe", pipePseudoFunc),
     /* 43 */ SyscallDesc("times", unimplementedFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
-    /* 45 */ SyscallDesc("brk", obreakFunc),
+    /* 45 */ SyscallDesc("brk", brkFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
     /* 47 */ SyscallDesc("getgid", getgidFunc),
     /* 48 */ SyscallDesc("signal", ignoreFunc),
@@ -175,13 +175,13 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 51 */ SyscallDesc("acct", unimplementedFunc),
     /* 52 */ SyscallDesc("umount2", unimplementedFunc),
     /* 53 */ SyscallDesc("lock", unimplementedFunc),
-    /* 54 */ SyscallDesc("ioctl", unimplementedFunc/*ioctlFunc<MipsLinux>*/),
+    /* 54 */ SyscallDesc("ioctl", ioctlFunc<MipsLinux>),
     /* 55 */ SyscallDesc("fcntl", fcntlFunc),
     /* 56 */ SyscallDesc("mpx", unimplementedFunc),
     /* 57 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 58 */ SyscallDesc("ulimit", unimplementedFunc),
     /* 59 */ SyscallDesc("unused#59", unimplementedFunc),
-    /* 60 */ SyscallDesc("umask", unimplementedFunc),
+    /* 60 */ SyscallDesc("umask", umaskFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
     /* 62 */ SyscallDesc("ustat", unimplementedFunc),
     /* 63 */ SyscallDesc("dup2", unimplementedFunc),
@@ -206,7 +206,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 82 */ SyscallDesc("reserved#82", unimplementedFunc),
     /* 83 */ SyscallDesc("symlink", unimplementedFunc),
     /* 84 */ SyscallDesc("unused#84", unimplementedFunc),
-    /* 85 */ SyscallDesc("readlink", unimplementedFunc),
+    /* 85 */ SyscallDesc("readlink", readlinkFunc),
     /* 86 */ SyscallDesc("uselib", unimplementedFunc),
     /* 87 */ SyscallDesc("swapon", gethostnameFunc),
     /* 88 */ SyscallDesc("reboot", unimplementedFunc),
@@ -288,7 +288,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 164 */ SyscallDesc("sched_get_priority_min", unimplementedFunc),
     /* 165 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc),
     /* 166 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 167 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 167 */ SyscallDesc("mremap", mremapFunc<MipsLinux>),
     /* 168 */ SyscallDesc("accept", unimplementedFunc),
     /* 169 */ SyscallDesc("bind", unimplementedFunc),
     /* 170 */ SyscallDesc("connect", unimplementedFunc),
@@ -324,7 +324,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 200 */ SyscallDesc("pread64", unimplementedFunc),
     /* 201 */ SyscallDesc("pwrite64", unimplementedFunc),
     /* 202 */ SyscallDesc("chown", unimplementedFunc),
-    /* 203 */ SyscallDesc("getcwd", unimplementedFunc),
+    /* 203 */ SyscallDesc("getcwd", getcwdFunc),
     /* 204 */ SyscallDesc("capget", unimplementedFunc),
     /* 205 */ SyscallDesc("capset", unimplementedFunc),
     /* 206 */ SyscallDesc("sigalstack", unimplementedFunc),
@@ -425,7 +425,7 @@ MipsLinuxProcess::getDesc(int callnum)
     //MIPS32 syscalls are in the range of 4000 - 4999
     int m5_sys_idx = callnum - 4000;
 
-    if (m5_sys_idx < 0 || m5_sys_idx > Num_Syscall_Descs)
+    if (m5_sys_idx < 0 || m5_sys_idx >= Num_Syscall_Descs)
         return NULL;
 
     return &syscallDescs[m5_sys_idx];

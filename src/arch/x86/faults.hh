@@ -58,8 +58,11 @@
 #ifndef __ARCH_X86_FAULTS_HH__
 #define __ARCH_X86_FAULTS_HH__
 
+#include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
+
+#include <string>
 
 namespace X86ISA
 {
@@ -69,11 +72,13 @@ namespace X86ISA
       protected:
         const char * faultName;
         const char * mnem;
+        uint8_t vector;
         uint64_t errorCode;
 
         X86FaultBase(const char * _faultName, const char * _mnem,
-                uint64_t _errorCode = 0) :
-            faultName(_faultName), mnem(_mnem), errorCode(_errorCode)
+                     const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1)
+            : faultName(_faultName), mnem(_mnem),
+              vector(_vector), errorCode(_errorCode)
         {
         }
 
@@ -91,6 +96,17 @@ namespace X86ISA
         {
             return mnem;
         }
+
+        virtual bool isSoft()
+        {
+            return false;
+        }
+
+#if FULL_SYSTEM
+        void invoke(ThreadContext * tc);
+
+        virtual std::string describe() const;
+#endif
     };
 
     // Base class for x86 faults which behave as if the underlying instruction
@@ -99,8 +115,8 @@ namespace X86ISA
     {
       protected:
         X86Fault(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                 const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
     };
 
@@ -110,8 +126,8 @@ namespace X86ISA
     {
       protected:
         X86Trap(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -124,8 +140,8 @@ namespace X86ISA
     {
       protected:
         X86Abort(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, vector, _errorCode)
         {}
 
 #if FULL_SYSTEM
@@ -138,13 +154,9 @@ namespace X86ISA
     {
       protected:
         X86Interrupt(const char * name, const char * mnem,
-                uint64_t _errorCode = 0) :
-            X86FaultBase(name, mnem, _errorCode)
+                const uint8_t _vector, uint64_t _errorCode = (uint64_t)-1)
+            : X86FaultBase(name, mnem, _vector, _errorCode)
         {}
-
-#if FULL_SYSTEM
-        void invoke(ThreadContext * tc);
-#endif
     };
 
     class UnimpInstFault : public FaultBase
@@ -201,7 +213,7 @@ namespace X86ISA
     {
       public:
         DivideByZero() :
-            X86Fault("Divide-by-Zero-Error", "#DE")
+            X86Fault("Divide-by-Zero-Error", "#DE", 0)
         {}
     };
 
@@ -209,15 +221,15 @@ namespace X86ISA
     {
       public:
         DebugException() :
-            X86FaultBase("Debug", "#DB")
+            X86FaultBase("Debug", "#DB", 1)
         {}
     };
 
     class NonMaskableInterrupt : public X86Interrupt
     {
       public:
-        NonMaskableInterrupt() :
-            X86Interrupt("Non-Maskable-Interrupt", "#NMI")
+        NonMaskableInterrupt(uint8_t _vector) :
+            X86Interrupt("Non Maskable Interrupt", "#NMI", 2, _vector)
         {}
     };
 
@@ -225,7 +237,7 @@ namespace X86ISA
     {
       public:
         Breakpoint() :
-            X86Trap("Breakpoint", "#BP")
+            X86Trap("Breakpoint", "#BP", 3)
         {}
     };
 
@@ -233,7 +245,7 @@ namespace X86ISA
     {
       public:
         OverflowTrap() :
-            X86Trap("Overflow", "#OF")
+            X86Trap("Overflow", "#OF", 4)
         {}
     };
 
@@ -241,7 +253,7 @@ namespace X86ISA
     {
       public:
         BoundRange() :
-            X86Fault("Bound-Range", "#BR")
+            X86Fault("Bound-Range", "#BR", 5)
         {}
     };
 
@@ -249,7 +261,7 @@ namespace X86ISA
     {
       public:
         InvalidOpcode() :
-            X86Fault("Invalid-Opcode", "#UD")
+            X86Fault("Invalid-Opcode", "#UD", 6)
         {}
     };
 
@@ -257,7 +269,7 @@ namespace X86ISA
     {
       public:
         DeviceNotAvailable() :
-            X86Fault("Device-Not-Available", "#NM")
+            X86Fault("Device-Not-Available", "#NM", 7)
         {}
     };
 
@@ -265,132 +277,156 @@ namespace X86ISA
     {
       public:
         DoubleFault() :
-            X86Abort("Double-Fault", "#DF")
+            X86Abort("Double-Fault", "#DF", 8, 0)
         {}
     };
 
     class InvalidTSS : public X86Fault
     {
       public:
-        InvalidTSS() :
-            X86Fault("Invalid-TSS", "#TS")
+        InvalidTSS(uint32_t _errorCode) :
+            X86Fault("Invalid-TSS", "#TS", 10, _errorCode)
         {}
     };
 
     class SegmentNotPresent : public X86Fault
     {
       public:
-        SegmentNotPresent() :
-            X86Fault("Segment-Not-Present", "#NP")
+        SegmentNotPresent(uint32_t _errorCode) :
+            X86Fault("Segment-Not-Present", "#NP", 11, _errorCode)
         {}
     };
 
     class StackFault : public X86Fault
     {
       public:
-        StackFault() :
-            X86Fault("Stack", "#SS")
+        StackFault(uint32_t _errorCode) :
+            X86Fault("Stack", "#SS", 12, _errorCode)
         {}
     };
 
     class GeneralProtection : public X86Fault
     {
       public:
-        GeneralProtection(uint64_t _errorCode) :
-            X86Fault("General-Protection", "#GP", _errorCode)
+        GeneralProtection(uint32_t _errorCode) :
+            X86Fault("General-Protection", "#GP", 13, _errorCode)
         {}
     };
 
     class PageFault : public X86Fault
     {
+      protected:
+        BitUnion32(PageFaultErrorCode)
+            Bitfield<0> present;
+            Bitfield<1> write;
+            Bitfield<2> user;
+            Bitfield<3> reserved;
+            Bitfield<4> fetch;
+        EndBitUnion(PageFaultErrorCode)
+
+        Addr addr;
+
       public:
-        PageFault() :
-            X86Fault("Page-Fault", "#PF")
+        PageFault(Addr _addr, uint32_t _errorCode) :
+            X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
         {}
+
+        PageFault(Addr _addr, bool present, bool write,
+                bool user, bool reserved, bool fetch) :
+            X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
+        {
+            PageFaultErrorCode code = 0;
+            code.present = present;
+            code.write = write;
+            code.user = user;
+            code.reserved = reserved;
+            code.fetch = fetch;
+            errorCode = code;
+        }
+
+#if FULL_SYSTEM
+        void invoke(ThreadContext * tc);
+
+        virtual std::string describe() const;
+#endif
     };
 
     class X87FpExceptionPending : public X86Fault
     {
       public:
         X87FpExceptionPending() :
-            X86Fault("x87 Floating-Point Exception Pending", "#MF")
+            X86Fault("x87 Floating-Point Exception Pending", "#MF", 16)
         {}
     };
 
-    class AlignmentCheck : X86Fault
+    class AlignmentCheck : public X86Fault
     {
       public:
         AlignmentCheck() :
-            X86Fault("Alignment-Check", "#AC")
+            X86Fault("Alignment-Check", "#AC", 17, 0)
         {}
     };
 
-    class MachineCheck : X86Abort
+    class MachineCheck : public X86Abort
     {
       public:
         MachineCheck() :
-            X86Abort("Machine-Check", "#MC")
+            X86Abort("Machine-Check", "#MC", 18)
         {}
     };
 
-    class SIMDFloatingPointFault : X86Fault
+    class SIMDFloatingPointFault : public X86Fault
     {
       public:
         SIMDFloatingPointFault() :
-            X86Fault("SIMD Floating-Point", "#XF")
+            X86Fault("SIMD Floating-Point", "#XF", 19)
         {}
     };
 
-    class SecurityException : X86FaultBase
+    class SecurityException : public X86FaultBase
     {
       public:
         SecurityException() :
-            X86FaultBase("Security Exception", "#SX")
+            X86FaultBase("Security Exception", "#SX", 30)
         {}
     };
 
-    class ExternalInterrupt : X86Interrupt
+    class ExternalInterrupt : public X86Interrupt
     {
       public:
-        ExternalInterrupt() :
-            X86Interrupt("External Interrupt", "#INTR")
+        ExternalInterrupt(uint8_t _vector) :
+            X86Interrupt("External Interrupt", "#INTR", _vector)
         {}
     };
 
-    class SoftwareInterrupt : X86Interrupt
+    class SystemManagementInterrupt : public X86Interrupt
     {
       public:
-        SoftwareInterrupt() :
-            X86Interrupt("Software Interrupt", "INTn")
+        SystemManagementInterrupt() :
+            X86Interrupt("System Management Interrupt", "#SMI", 0)
         {}
     };
 
-    // These faults aren't part of the ISA definition. They trigger filling
-    // the tlb on a miss and are to take the place of a hardware table walker.
-    class FakeITLBFault : public X86Fault
+    class InitInterrupt : public X86Interrupt
     {
-      protected:
-        Addr vaddr;
+        uint8_t vector;
       public:
-        FakeITLBFault(Addr _vaddr) :
-            X86Fault("fake instruction tlb fault", "itlb"),
-            vaddr(_vaddr)
+        InitInterrupt(uint8_t _vector) :
+            X86Interrupt("INIT Interrupt", "#INIT", _vector)
         {}
-
-        void invoke(ThreadContext * tc);
     };
 
-    class FakeDTLBFault : public X86Fault
+    class SoftwareInterrupt : public X86Interrupt
     {
-      protected:
-        Addr vaddr;
       public:
-        FakeDTLBFault(Addr _vaddr) :
-            X86Fault("fake data tlb fault", "dtlb"),
-            vaddr(_vaddr)
+        SoftwareInterrupt(uint8_t _vector) :
+            X86Interrupt("Software Interrupt", "#INTR", _vector)
         {}
 
-        void invoke(ThreadContext * tc);
+        bool isSoft()
+        {
+            return true;
+        }
     };
 };
 

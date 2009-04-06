@@ -53,6 +53,8 @@
 //#include "cpu/o3/thread_context.hh"
 #include "sim/process.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class>
 class Checker;
 class ThreadContext;
@@ -63,24 +65,15 @@ class Checkpoint;
 class MemObject;
 class Process;
 
+class BaseCPUParams;
+
 class BaseO3CPU : public BaseCPU
 {
     //Stuff that's pretty ISA independent will go here.
   public:
-    typedef BaseCPU::Params Params;
-
-    BaseO3CPU(Params *params);
+    BaseO3CPU(BaseCPUParams *params);
 
     void regStats();
-
-    /** Sets this CPU's ID. */
-    void setCpuId(int id) { cpu_id = id; }
-
-    /** Reads this CPU's ID. */
-    int readCpuId() { return cpu_id; }
-
-  protected:
-    int cpu_id;
 };
 
 /**
@@ -96,8 +89,8 @@ class FullO3CPU : public BaseO3CPU
     typedef typename Impl::CPUPol CPUPolicy;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
+    typedef O3ThreadState<Impl> ImplState;
     typedef O3ThreadState<Impl> Thread;
 
     typedef typename std::list<DynInstPtr>::iterator ListIt;
@@ -146,9 +139,9 @@ class FullO3CPU : public BaseO3CPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-            tickEvent.reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(tickEvent, nextCycle(curTick + ticks(delay)));
         else if (!tickEvent.scheduled())
-            tickEvent.schedule(nextCycle(curTick + ticks(delay)));
+            schedule(tickEvent, nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule tick event, regardless of its current state. */
@@ -186,11 +179,11 @@ class FullO3CPU : public BaseO3CPU
     {
         // Schedule thread to activate, regardless of its current state.
         if (activateThreadEvent[tid].squashed())
-            activateThreadEvent[tid].
-                reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(activateThreadEvent[tid],
+                nextCycle(curTick + ticks(delay)));
         else if (!activateThreadEvent[tid].scheduled())
-            activateThreadEvent[tid].
-                schedule(nextCycle(curTick + ticks(delay)));
+            schedule(activateThreadEvent[tid],
+                nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule actiavte thread event, regardless of its current state. */
@@ -237,11 +230,11 @@ class FullO3CPU : public BaseO3CPU
     {
         // Schedule thread to activate, regardless of its current state.
         if (deallocateContextEvent[tid].squashed())
-            deallocateContextEvent[tid].
-                reschedule(nextCycle(curTick + ticks(delay)));
+            reschedule(deallocateContextEvent[tid],
+                nextCycle(curTick + ticks(delay)));
         else if (!deallocateContextEvent[tid].scheduled())
-            deallocateContextEvent[tid].
-                schedule(nextCycle(curTick + ticks(delay)));
+            schedule(deallocateContextEvent[tid],
+                nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule thread deallocation in CPU */
@@ -256,12 +249,12 @@ class FullO3CPU : public BaseO3CPU
 
   public:
     /** Constructs a CPU with the given parameters. */
-    FullO3CPU(O3CPU *o3_cpu, Params *params);
+    FullO3CPU(DerivO3CPUParams *params);
     /** Destructor. */
     ~FullO3CPU();
 
     /** Registers statistics. */
-    void fullCPURegStats();
+    void regStats();
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
@@ -277,24 +270,6 @@ class FullO3CPU : public BaseO3CPU
     void demapDataPage(Addr vaddr, uint64_t asn)
     {
         this->dtb->demapPage(vaddr, asn);
-    }
-
-    /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req, Thread *thread)
-    {
-        return this->itb->translate(req, thread->getTC());
-    }
-
-    /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), false);
-    }
-
-    /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req, Thread *thread)
-    {
-        return this->dtb->translate(req, thread->getTC(), true);
     }
 
     /** Returns a specific port. */
@@ -367,12 +342,12 @@ class FullO3CPU : public BaseO3CPU
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
   public:
-    /** Executes a syscall on this cycle.
-     *  ---------------------------------------
-     *  Note: this is a virtual function. CPU-Specific
-     *  functionality defined in derived classes
+#if !FULL_SYSTEM
+    /** Executes a syscall.
+     * @todo: Determine if this needs to be virtual.
      */
-    virtual void syscall(int tid) { panic("Unimplemented!"); }
+    void syscall(int64_t callnum, int tid);
+#endif
 
     /** Starts draining the CPU's pipeline of all instructions in
      * order to stop all memory accesses. */
@@ -394,7 +369,24 @@ class FullO3CPU : public BaseO3CPU
     InstSeqNum getAndIncrementInstSeq()
     { return globalSeqNum++; }
 
+    /** Traps to handle given fault. */
+    void trap(Fault fault, unsigned tid);
+
 #if FULL_SYSTEM
+    /** HW return from error interrupt. */
+    Fault hwrei(unsigned tid);
+
+    bool simPalCheck(int palFunc, unsigned tid);
+
+    /** Returns the Fault for any valid interrupt. */
+    Fault getInterrupts();
+
+    /** Processes any an interrupt fault. */
+    void processInterrupts(Fault interrupt);
+
+    /** Halts the CPU. */
+    void halt() { panic("Halt not implemented!\n"); }
+
     /** Update the Virt and Phys ports of all ThreadContexts to
      * reflect change in memory connections. */
     void updateMemPorts();
@@ -424,6 +416,24 @@ class FullO3CPU : public BaseO3CPU
 #endif
 
     /** Register accessors.  Index refers to the physical register index. */
+
+    /** Reads a miscellaneous register. */
+    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
+
+    /** Reads a misc. register, including any side effects the read
+     * might have as defined by the architecture.
+     */
+    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
+
+    /** Sets a miscellaneous register. */
+    void setMiscRegNoEffect(int misc_reg, const TheISA::MiscReg &val, unsigned tid);
+
+    /** Sets a misc. register, including any side effects the write
+     * might have as defined by the architecture.
+     */
+    void setMiscReg(int misc_reg, const TheISA::MiscReg &val,
+            unsigned tid);
+
     uint64_t readIntReg(int reg_idx);
 
     TheISA::FloatReg readFloatReg(int reg_idx);
@@ -495,6 +505,12 @@ class FullO3CPU : public BaseO3CPU
     /** Sets the commit next micro PC of a specific thread. */
     void setNextMicroPC(Addr val, unsigned tid);
 
+    /** Initiates a squash of all in-flight instructions for a given
+     * thread.  The source of the squash is an external update of
+     * state through the TC.
+     */
+    void squashFromTC(unsigned tid);
+
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
      */
@@ -528,6 +544,11 @@ class FullO3CPU : public BaseO3CPU
     void dumpInsts();
 
   public:
+#ifndef NDEBUG
+    /** Count of total number of dynamic instructions in flight. */
+    int instcount;
+#endif
+
     /** List of all the instructions in flight. */
     std::list<DynInstPtr> instList;
 
@@ -648,6 +669,10 @@ class FullO3CPU : public BaseO3CPU
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
 
+#if FULL_SYSTEM
+    virtual void wakeup();
+#endif
+
     /** Gets a free thread id. Use if thread ids change across system. */
     int getFreeTid();
 
@@ -710,14 +735,33 @@ class FullO3CPU : public BaseO3CPU
     /** Available thread ids in the cpu*/
     std::vector<unsigned> tids;
 
+    /** CPU read function, forwards read to LSQ. */
+    template <class T>
+    Fault read(RequestPtr &req, T &data, int load_idx)
+    {
+        return this->iew.ldstQueue.read(req, data, load_idx);
+    }
+
+    /** CPU write function, forwards write to LSQ. */
+    template <class T>
+    Fault write(RequestPtr &req, T &data, int store_idx)
+    {
+        return this->iew.ldstQueue.write(req, data, store_idx);
+    }
+
+    Addr lockAddr;
+
+    /** Temporary fix for the lock flag, works in the UP case. */
+    bool lockFlag;
+
     /** Stat for total number of times the CPU is descheduled. */
-    Stats::Scalar<> timesIdled;
+    Stats::Scalar timesIdled;
     /** Stat for total number of cycles the CPU spends descheduled. */
-    Stats::Scalar<> idleCycles;
+    Stats::Scalar idleCycles;
     /** Stat for the number of committed instructions per thread. */
-    Stats::Vector<> committedInsts;
+    Stats::Vector committedInsts;
     /** Stat for the total number of committed instructions. */
-    Stats::Scalar<> totalCommittedInsts;
+    Stats::Scalar totalCommittedInsts;
     /** Stat for the CPI per thread. */
     Stats::Formula cpi;
     /** Stat for the total CPI. */

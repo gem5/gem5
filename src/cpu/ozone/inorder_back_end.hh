@@ -192,7 +192,7 @@ class InorderBackEnd
 
     TimeBuffer<CommStruct> *comm;
     // number of cycles stalled for D-cache misses
-    Stats::Scalar<> dcacheStallCycles;
+    Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 };
 
@@ -204,7 +204,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = cpu->translateDataReadReq(memReq);
+    Fault fault = cpu->dtb->translateAtomic(memReq, thread->getTC(), false);
 
     // if we have a cache, do cache access too
     if (fault == NoFault && dcacheInterface) {
@@ -222,7 +222,7 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
             // are executed twice.
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
+//          unscheduleTickEvent();
             status = DcacheMissLoadStall;
             DPRINTF(IBE, "Dcache miss stall!\n");
         } else {
@@ -245,11 +245,11 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     memReq->reset(addr, sizeof(T), flags);
 
     // translate to physical address
-    Fault fault = cpu->translateDataWriteReq(memReq);
+    Fault fault = cpu->dtb->translateAtomic(memReq, thread->getTC(), true);
 
     if (fault == NoFault && dcacheInterface) {
         memReq->cmd = Write;
-//	memcpy(memReq->data,(uint8_t *)&data,memReq->size);
+//      memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
         memReq->time = curTick;
         memReq->flags &= ~INST_READ;
@@ -261,7 +261,7 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
         if (result != MA_HIT) {
             memReq->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
+//          unscheduleTickEvent();
             status = DcacheMissStoreStall;
             DPRINTF(IBE, "Dcache miss stall!\n");
         } else {
@@ -307,7 +307,7 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
         if (result != MA_HIT) {
             req->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
+//          unscheduleTickEvent();
             status = DcacheMissLoadStall;
             DPRINTF(IBE, "Dcache miss load stall!\n");
         } else {
@@ -372,7 +372,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         if (result != MA_HIT) {
             req->completionEvent = &cacheCompletionEvent;
             lastDcacheStall = curTick;
-//	    unscheduleTickEvent();
+//          unscheduleTickEvent();
             status = DcacheMissStoreStall;
             DPRINTF(IBE, "Dcache miss store stall!\n");
         } else {

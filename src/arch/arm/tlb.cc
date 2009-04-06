@@ -29,6 +29,7 @@
  *
  * Authors: Nathan Binkert
  *          Steve Reinhardt
+ *          Jaidev Patwardhan
  *          Stephen Hines
  */
 
@@ -149,7 +150,7 @@ TLB::checkCacheability(RequestPtr &req)
   // or by the TLB entry
   if((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
     // mark request as uncacheable
-    req->setFlags(req->getFlags() | UNCACHEABLE);
+    req->setFlags(req->getFlags() | Request::UNCACHEABLE);
   }
   return NoFault;
 }
@@ -278,7 +279,7 @@ TLB::regStats()
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -293,8 +294,17 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
 #endif
 }
 
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
+}
+
+
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -307,6 +317,14 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
 #else
   fatal("DTB translate not yet implemented\n");
 #endif
+}
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
 }
 
 ///////////////////////////////////////////////////////////////////////

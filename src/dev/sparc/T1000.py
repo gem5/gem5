@@ -29,9 +29,9 @@
 from m5.params import *
 from m5.proxy import *
 from Device import BasicPioDevice, PioDevice, IsaFake, BadAddr
-from Uart import Uart8250
 from Platform import Platform
-from SimConsole import SimConsole
+from Terminal import Terminal
+from Uart import Uart8250
 
 
 class MmDisk(BasicPioDevice):
@@ -98,11 +98,11 @@ class T1000(Platform):
     fake_ssi = IsaFake(pio_addr=0xff00000000, pio_size=0x10000000)
             #warn_access="Accessing SSI -- Unimplemented!")
 
-    hconsole = SimConsole()
+    hterm = Terminal()
     hvuart = Uart8250(pio_addr=0xfff0c2c000)
     htod = DumbTOD()
 
-    pconsole = SimConsole()
+    pterm = Terminal()
     puart0 = Uart8250(pio_addr=0x1f10000000)
 
     iob = Iob()
@@ -116,8 +116,8 @@ class T1000(Platform):
     # earlier, since the bus object itself is typically defined at the
     # System level.
     def attachIO(self, bus):
-        self.hvuart.sim_console = self.hconsole
-        self.puart0.sim_console = self.pconsole
+        self.hvuart.terminal = self.hterm
+        self.puart0.terminal = self.pterm
         self.fake_clk.pio = bus.port
         self.fake_membnks.pio = bus.port
         self.fake_l2_1.pio = bus.port

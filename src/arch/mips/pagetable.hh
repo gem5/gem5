@@ -59,9 +59,9 @@ namespace MipsISA {
         Addr level3() const
         { return MipsISA::PteAddr(addr >> PageShift); }
         Addr level2() const
-        { return MipsISA::PteAddr(addr >> NPtePageShift + PageShift); }
+        { return MipsISA::PteAddr(addr >> (NPtePageShift + PageShift)); }
         Addr level1() const
-        { return MipsISA::PteAddr(addr >> 2 * NPtePageShift + PageShift); }
+        { return MipsISA::PteAddr(addr >> (2 * NPtePageShift + PageShift)); }
     };
 
     // ITB/DTB page table entry

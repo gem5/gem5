@@ -1,0 +1,30 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Feb 16 2009 00:22:05
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 00:36:09
+M5 executing on zizzer
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/simple-timing -re tests/run.py long/60.bzip2/alpha/tru64/simple-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+spec_init
+Loading Input Data
+Input data 1048576 bytes in length
+Compressing Input Data, level 7
+Compressed data 198546 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 198677 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!

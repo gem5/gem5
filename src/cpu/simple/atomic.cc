@@ -43,7 +43,7 @@ using namespace std;
 using namespace TheISA;
 
 AtomicSimpleCPU::TickEvent::TickEvent(AtomicSimpleCPU *c)
-    : Event(&mainEventQueue, CPU_Tick_Pri), cpu(c)
+    : Event(CPU_Tick_Pri), cpu(c)
 {
 }
 
@@ -79,13 +79,12 @@ void
 AtomicSimpleCPU::init()
 {
     BaseCPU::init();
-    cpuId = tc->readCpuId();
 #if FULL_SYSTEM
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, cpuId);
+        TheISA::initCPU(tc, tc->contextId());
     }
 #endif
     if (hasPhysMemPort) {
@@ -94,9 +93,10 @@ AtomicSimpleCPU::init()
         physmemPort.getPeerAddressRanges(pmAddrList, snoop);
         physMemAddr = *pmAddrList.begin();
     }
-    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
-    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
-    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
+    // Atomic doesn't do MT right now, so contextId == threadId
+    ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
+    data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
 }
 
 bool
@@ -148,13 +148,14 @@ AtomicSimpleCPU::DcachePort::setPeer(Port *port)
 #if FULL_SYSTEM
     // Update the ThreadContext's memory ports (Functional/Virtual
     // Ports)
-    cpu->tcBase()->connectMemPorts();
+    cpu->tcBase()->connectMemPorts(cpu->tcBase());
 #endif
 }
 
-AtomicSimpleCPU::AtomicSimpleCPU(Params *p)
-    : BaseSimpleCPU(p), tickEvent(this),
-      width(p->width), simulate_stalls(p->simulate_stalls),
+AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
+    : BaseSimpleCPU(p), tickEvent(this), width(p->width),
+      simulate_data_stalls(p->simulate_data_stalls),
+      simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
       physmemPort(name() + "-iport", this), hasPhysMemPort(false)
 {
@@ -175,8 +176,6 @@ AtomicSimpleCPU::serialize(ostream &os)
 {
     SimObject::State so_state = SimObject::getState();
     SERIALIZE_ENUM(so_state);
-    Status _status = status();
-    SERIALIZE_ENUM(_status);
     BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -187,7 +186,6 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     SimObject::State so_state;
     UNSERIALIZE_ENUM(so_state);
-    UNSERIALIZE_ENUM(_status);
     BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
@@ -203,16 +201,15 @@ AtomicSimpleCPU::resume()
 
     changeState(SimObject::Running);
     if (thread->status() == ThreadContext::Active) {
-        if (!tickEvent.scheduled()) {
-            tickEvent.schedule(nextCycle());
-        }
+        if (!tickEvent.scheduled())
+            schedule(tickEvent, nextCycle());
     }
 }
 
 void
 AtomicSimpleCPU::switchOut()
 {
-    assert(status() == Running || status() == Idle);
+    assert(_status == Running || _status == Idle);
     _status = SwitchedOut;
 
     tickEvent.squash();
@@ -232,7 +229,7 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;
-            tickEvent.schedule(nextCycle());
+            schedule(tickEvent, nextCycle());
             break;
         }
     }
@@ -240,10 +237,9 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
         _status = Idle;
     }
     assert(threadContexts.size() == 1);
-    cpuId = tc->readCpuId();
-    ifetch_req.setThreadContext(cpuId, 0); // Add thread ID if we add MT
-    data_read_req.setThreadContext(cpuId, 0); // Add thread ID here too
-    data_write_req.setThreadContext(cpuId, 0); // Add thread ID here too
+    ifetch_req.setThreadContext(_cpuId, 0); // Add thread ID if we add MT
+    data_read_req.setThreadContext(_cpuId, 0); // Add thread ID here too
+    data_write_req.setThreadContext(_cpuId, 0); // Add thread ID here too
 }
 
 
@@ -262,7 +258,7 @@ AtomicSimpleCPU::activateContext(int thread_num, int delay)
     numCycles += tickToCycles(thread->lastActivate - thread->lastSuspend);
 
     //Make sure ticks are still on multiples of cycles
-    tickEvent.schedule(nextCycle(curTick + ticks(delay)));
+    schedule(tickEvent, nextCycle(curTick + ticks(delay)));
     _status = Running;
 }
 
@@ -280,7 +276,7 @@ AtomicSimpleCPU::suspendContext(int thread_num)
     // tick event may not be scheduled if this gets called from inside
     // an instruction's execution, e.g. "quiesce"
     if (tickEvent.scheduled())
-        tickEvent.deschedule();
+        deschedule(tickEvent);
 
     notIdleFraction--;
     _status = Idle;
@@ -318,7 +314,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->translateDataReadReq(req);
+        Fault fault = thread->dtb->translateAtomic(req, tc, false);
 
         // Now do the access.
         if (fault == NoFault) {
@@ -355,6 +351,9 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         if (secondAddr <= addr)
         {
             data = gtoh(data);
+            if (traceData) {
+                traceData->setData(data);
+            }
             return fault;
         }
 
@@ -368,61 +367,6 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         dataSize = addr + sizeof(T) - secondAddr;
         //And access the right address.
         addr = secondAddr;
-    }
-}
-
-Fault
-AtomicSimpleCPU::translateDataReadAddr(Addr vaddr, Addr & paddr,
-        int size, unsigned flags)
-{
-    // use the CPU's statically allocated read request and packet objects
-    Request *req = &data_read_req;
-
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    //The block size of our peer.
-    int blockSize = dcachePort.peerBlockSize();
-    //The size of the data we're trying to read.
-    int dataSize = size;
-
-    bool firstTimeThrough = true;
-
-    //The address of the second part of this access if it needs to be split
-    //across a cache line boundary.
-    Addr secondAddr = roundDown(vaddr + dataSize - 1, blockSize);
-
-    if(secondAddr > vaddr)
-        dataSize = secondAddr - vaddr;
-
-    while(1) {
-        req->setVirt(0, vaddr, dataSize, flags, thread->readPC());
-
-        // translate to physical address
-        Fault fault = thread->translateDataReadReq(req);
-
-        //If there's a fault, return it
-        if (fault != NoFault)
-            return fault;
-
-        if (firstTimeThrough) {
-            paddr = req->getPaddr();
-            firstTimeThrough = false;
-        }
-
-        //If we don't need to access a second cache line, stop now.
-        if (secondAddr <= vaddr)
-            return fault;
-
-        /*
-         * Set up for accessing the second cache line.
-         */
-
-        //Adjust the size to get the remaining bytes.
-        dataSize = vaddr + size - secondAddr;
-        //And access the right address.
-        vaddr = secondAddr;
     }
 }
 
@@ -508,7 +452,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->translateDataWriteReq(req);
+        Fault fault = thread->dtb->translateAtomic(req, tc, true);
 
         // Now do the access.
         if (fault == NoFault) {
@@ -568,6 +512,9 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             // If the write needs to have a fault on the access, consider
             // calling changeStatus() and changing it to "bad addr write"
             // or something.
+            if (traceData) {
+                traceData->setData(gtoh(data));
+            }
             return fault;
         }
 
@@ -581,64 +528,6 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         dataSize = addr + sizeof(T) - secondAddr;
         //And access the right address.
         addr = secondAddr;
-    }
-}
-
-Fault
-AtomicSimpleCPU::translateDataWriteAddr(Addr vaddr, Addr &paddr,
-        int size, unsigned flags)
-{
-    // use the CPU's statically allocated write request and packet objects
-    Request *req = &data_write_req;
-
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    //The block size of our peer.
-    int blockSize = dcachePort.peerBlockSize();
-
-    //The address of the second part of this access if it needs to be split
-    //across a cache line boundary.
-    Addr secondAddr = roundDown(vaddr + size - 1, blockSize);
-
-    //The size of the data we're trying to read.
-    int dataSize = size;
-
-    bool firstTimeThrough = true;
-
-    if(secondAddr > vaddr)
-        dataSize = secondAddr - vaddr;
-
-    dcache_latency = 0;
-
-    while(1) {
-        req->setVirt(0, vaddr, dataSize, flags, thread->readPC());
-
-        // translate to physical address
-        Fault fault = thread->translateDataWriteReq(req);
-
-        //If there's a fault or we don't need to access a second cache line,
-        //stop now.
-        if (fault != NoFault)
-            return fault;
-
-        if (firstTimeThrough) {
-            paddr = req->getPaddr();
-            firstTimeThrough = false;
-        }
-
-        if (secondAddr <= vaddr)
-            return fault;
-
-        /*
-         * Set up for accessing the second cache line.
-         */
-
-        //Adjust the size to get the remaining bytes.
-        dataSize = vaddr + size - secondAddr;
-        //And access the right address.
-        vaddr = secondAddr;
     }
 }
 
@@ -705,7 +594,7 @@ AtomicSimpleCPU::tick()
 {
     DPRINTF(SimpleCPU, "Tick\n");
 
-    Tick latency = ticks(1); // instruction takes one cycle by default
+    Tick latency = 0;
 
     for (int i = 0; i < width; ++i) {
         numCycles++;
@@ -715,31 +604,43 @@ AtomicSimpleCPU::tick()
 
         checkPcEventQueue();
 
-        Fault fault = setupFetchRequest(&ifetch_req);
+        Fault fault = NoFault;
+
+        bool fromRom = isRomMicroPC(thread->readMicroPC());
+        if (!fromRom && !curMacroStaticInst) {
+            setupFetchRequest(&ifetch_req);
+            fault = thread->itb->translateAtomic(&ifetch_req, tc);
+        }
 
         if (fault == NoFault) {
             Tick icache_latency = 0;
             bool icache_access = false;
             dcache_access = false; // assume no dcache access
 
-            //Fetch more instruction memory if necessary
-            //if(predecoder.needMoreBytes())
-            //{
-                icache_access = true;
-                Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
-                                           Packet::Broadcast);
-                ifetch_pkt.dataStatic(&inst);
+            if (!fromRom && !curMacroStaticInst) {
+                // This is commented out because the predecoder would act like
+                // a tiny cache otherwise. It wouldn't be flushed when needed
+                // like the I cache. It should be flushed, and when that works
+                // this code should be uncommented.
+                //Fetch more instruction memory if necessary
+                //if(predecoder.needMoreBytes())
+                //{
+                    icache_access = true;
+                    Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
+                                               Packet::Broadcast);
+                    ifetch_pkt.dataStatic(&inst);
 
-                if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
-                    icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
-                else
-                    icache_latency = icachePort.sendAtomic(&ifetch_pkt);
+                    if (hasPhysMemPort && ifetch_pkt.getAddr() == physMemAddr)
+                        icache_latency = physmemPort.sendAtomic(&ifetch_pkt);
+                    else
+                        icache_latency = icachePort.sendAtomic(&ifetch_pkt);
 
-                assert(!ifetch_pkt.isError());
+                    assert(!ifetch_pkt.isError());
 
-                // ifetch_req is initialized to read the instruction directly
-                // into the CPU object's inst field.
-            //}
+                    // ifetch_req is initialized to read the instruction directly
+                    // into the CPU object's inst field.
+                //}
+            }
 
             preExecute();
 
@@ -763,16 +664,21 @@ AtomicSimpleCPU::tick()
                         curStaticInst->isFirstMicroop()))
                 instCnt++;
 
-            if (simulate_stalls) {
-                Tick icache_stall =
-                    icache_access ? icache_latency - ticks(1) : 0;
-                Tick dcache_stall =
-                    dcache_access ? dcache_latency - ticks(1) : 0;
-                Tick stall_cycles = (icache_stall + dcache_stall) / ticks(1);
-                if (ticks(stall_cycles) < (icache_stall + dcache_stall))
-                    latency += ticks(stall_cycles+1);
-                else
-                    latency += ticks(stall_cycles);
+            Tick stall_ticks = 0;
+            if (simulate_inst_stalls && icache_access)
+                stall_ticks += icache_latency;
+
+            if (simulate_data_stalls && dcache_access)
+                stall_ticks += dcache_latency;
+
+            if (stall_ticks) {
+                Tick stall_cycles = stall_ticks / ticks(1);
+                Tick aligned_stall_ticks = ticks(stall_cycles);
+
+                if (aligned_stall_ticks < stall_ticks)
+                    aligned_stall_ticks += 1;
+
+                latency += aligned_stall_ticks;
             }
 
         }
@@ -780,8 +686,12 @@ AtomicSimpleCPU::tick()
             advancePC(fault);
     }
 
+    // instruction takes at least one cycle
+    if (latency < ticks(1))
+        latency = ticks(1);
+
     if (_status != Idle)
-        tickEvent.schedule(curTick + latency);
+        schedule(tickEvent, curTick + latency);
 }
 
 
@@ -799,38 +709,10 @@ AtomicSimpleCPU::printAddr(Addr a)
 AtomicSimpleCPU *
 AtomicSimpleCPUParams::create()
 {
-    AtomicSimpleCPU::Params *params = new AtomicSimpleCPU::Params();
-    params->name = name;
-    params->numberOfThreads = 1;
-    params->max_insts_any_thread = max_insts_any_thread;
-    params->max_insts_all_threads = max_insts_all_threads;
-    params->max_loads_any_thread = max_loads_any_thread;
-    params->max_loads_all_threads = max_loads_all_threads;
-    params->progress_interval = progress_interval;
-    params->deferRegistration = defer_registration;
-    params->phase = phase;
-    params->clock = clock;
-    params->functionTrace = function_trace;
-    params->functionTraceStart = function_trace_start;
-    params->width = width;
-    params->simulate_stalls = simulate_stalls;
-    params->system = system;
-    params->cpu_id = cpu_id;
-    params->tracer = tracer;
-
-    params->itb = itb;
-    params->dtb = dtb;
-#if FULL_SYSTEM
-    params->profile = profile;
-    params->do_quiesce = do_quiesce;
-    params->do_checkpoint_insts = do_checkpoint_insts;
-    params->do_statistics_insts = do_statistics_insts;
-#else
+    numThreads = 1;
+#if !FULL_SYSTEM
     if (workload.size() != 1)
         panic("only one workload allowed");
-    params->process = workload[0];
 #endif
-
-    AtomicSimpleCPU *cpu = new AtomicSimpleCPU(params);
-    return cpu;
+    return new AtomicSimpleCPU(this);
 }

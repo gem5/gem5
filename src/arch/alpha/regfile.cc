@@ -33,67 +33,68 @@
 #include "arch/alpha/regfile.hh"
 #include "cpu/thread_context.hh"
 
-namespace AlphaISA
+using namespace std;
+
+namespace AlphaISA {
+
+void
+RegFile::serialize(EventManager *em, ostream &os)
 {
-    void
-    RegFile::serialize(std::ostream &os)
-    {
-        intRegFile.serialize(os);
-        floatRegFile.serialize(os);
-        miscRegFile.serialize(os);
-        SERIALIZE_SCALAR(pc);
-        SERIALIZE_SCALAR(npc);
+    intRegFile.serialize(os);
+    floatRegFile.serialize(os);
+    miscRegFile.serialize(os);
+    SERIALIZE_SCALAR(pc);
+    SERIALIZE_SCALAR(npc);
 #if FULL_SYSTEM
-        SERIALIZE_SCALAR(intrflag);
+    SERIALIZE_SCALAR(intrflag);
 #endif
-    }
-
-    void
-    RegFile::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        intRegFile.unserialize(cp, section);
-        floatRegFile.unserialize(cp, section);
-        miscRegFile.unserialize(cp, section);
-        UNSERIALIZE_SCALAR(pc);
-        UNSERIALIZE_SCALAR(npc);
-#if FULL_SYSTEM
-        UNSERIALIZE_SCALAR(intrflag);
-#endif
-    }
-
-    void
-    copyRegs(ThreadContext *src, ThreadContext *dest)
-    {
-        // First loop through the integer registers.
-        for (int i = 0; i < NumIntRegs; ++i) {
-            dest->setIntReg(i, src->readIntReg(i));
-        }
-
-        // Then loop through the floating point registers.
-        for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
-            dest->setFloatRegBits(i, src->readFloatRegBits(i));
-        }
-
-        // Copy misc. registers
-        copyMiscRegs(src, dest);
-
-        // Lastly copy PC/NPC
-        dest->setPC(src->readPC());
-        dest->setNextPC(src->readNextPC());
-    }
-
-    void
-    copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-    {
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_FPCR,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_FPCR));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_UNIQ,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_UNIQ));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKFLAG));
-        dest->setMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR,
-                src->readMiscRegNoEffect(AlphaISA::MISCREG_LOCKADDR));
-
-        copyIprs(src, dest);
-    }
 }
+
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
+{
+    intRegFile.unserialize(cp, section);
+    floatRegFile.unserialize(cp, section);
+    miscRegFile.unserialize(cp, section);
+    UNSERIALIZE_SCALAR(pc);
+    UNSERIALIZE_SCALAR(npc);
+#if FULL_SYSTEM
+    UNSERIALIZE_SCALAR(intrflag);
+#endif
+}
+
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; ++i)
+        dest->setIntReg(i, src->readIntReg(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        dest->setFloatRegBits(i, src->readFloatRegBits(i));
+
+    // Copy misc. registers
+    copyMiscRegs(src, dest);
+
+    // Lastly copy PC/NPC
+    dest->setPC(src->readPC());
+    dest->setNextPC(src->readNextPC());
+}
+
+void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    dest->setMiscRegNoEffect(MISCREG_FPCR,
+        src->readMiscRegNoEffect(MISCREG_FPCR));
+    dest->setMiscRegNoEffect(MISCREG_UNIQ,
+        src->readMiscRegNoEffect(MISCREG_UNIQ));
+    dest->setMiscRegNoEffect(MISCREG_LOCKFLAG,
+        src->readMiscRegNoEffect(MISCREG_LOCKFLAG));
+    dest->setMiscRegNoEffect(MISCREG_LOCKADDR,
+        src->readMiscRegNoEffect(MISCREG_LOCKADDR));
+
+    copyIprs(src, dest);
+}
+
+} // namespace AlphaISA

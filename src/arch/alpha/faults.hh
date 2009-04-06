@@ -29,18 +29,16 @@
  *          Kevin Lim
  */
 
-#ifndef __ALPHA_FAULTS_HH__
-#define __ALPHA_FAULTS_HH__
+#ifndef __ARCH_ALPHA_FAULTS_HH__
+#define __ARCH_ALPHA_FAULTS_HH__
 
+#include "arch/alpha/pagetable.hh"
 #include "config/full_system.hh"
 #include "sim/faults.hh"
 
-#include "arch/alpha/pagetable.hh"
-
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 
 typedef const Addr FaultVect;
 
@@ -63,6 +61,7 @@ class MachineCheckFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -76,6 +75,7 @@ class AlignmentFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -94,6 +94,7 @@ class ResetFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -102,12 +103,14 @@ class ResetFault : public AlphaFault
 
 class ArithmeticFault : public AlphaFault
 {
-  protected:
-    bool skipFaultingInstruction() {return true;}
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
+  protected:
+    bool skipFaultingInstruction() {return true;}
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -119,12 +122,14 @@ class ArithmeticFault : public AlphaFault
 
 class InterruptFault : public AlphaFault
 {
-  protected:
-    bool setRestartAddress() {return false;}
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
+  protected:
+    bool setRestartAddress() {return false;}
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -134,11 +139,12 @@ class InterruptFault : public AlphaFault
 class DtbFault : public AlphaFault
 {
   protected:
-    AlphaISA::VAddr vaddr;
-    uint32_t reqFlags;
+    VAddr vaddr;
+    Request::Flags reqFlags;
     uint64_t flags;
+
   public:
-    DtbFault(AlphaISA::VAddr _vaddr, uint32_t _reqFlags, uint64_t _flags)
+    DtbFault(VAddr _vaddr, Request::Flags _reqFlags, uint64_t _flags)
         : vaddr(_vaddr), reqFlags(_reqFlags), flags(_flags)
     { }
     FaultName name() const = 0;
@@ -155,8 +161,9 @@ class NDtbMissFault : public DtbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    NDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    NDtbMissFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -173,8 +180,9 @@ class PDtbMissFault : public DtbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    PDtbMissFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    PDtbMissFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -188,8 +196,9 @@ class DtbPageFault : public DtbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    DtbPageFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbPageFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -203,8 +212,9 @@ class DtbAcvFault : public DtbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    DtbAcvFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAcvFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -218,8 +228,9 @@ class DtbAlignmentFault : public DtbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    DtbAlignmentFault(AlphaISA::VAddr vaddr, uint32_t reqFlags, uint64_t flags)
+    DtbAlignmentFault(VAddr vaddr, Request::Flags reqFlags, uint64_t flags)
         : DtbFault(vaddr, reqFlags, flags)
     { }
     FaultName name() const {return _name;}
@@ -231,10 +242,9 @@ class ItbFault : public AlphaFault
 {
   protected:
     Addr pc;
+
   public:
-    ItbFault(Addr _pc)
-        : pc(_pc)
-    { }
+    ItbFault(Addr _pc) : pc(_pc) { }
     FaultName name() const = 0;
     FaultVect vect() = 0;
     FaultStat & countStat() = 0;
@@ -249,10 +259,9 @@ class ItbPageFault : public ItbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    ItbPageFault(Addr pc)
-        : ItbFault(pc)
-    { }
+    ItbPageFault(Addr pc) : ItbFault(pc) { }
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -267,10 +276,9 @@ class ItbAcvFault : public ItbFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
-    ItbAcvFault(Addr pc)
-        : ItbFault(pc)
-    { }
+    ItbAcvFault(Addr pc) : ItbFault(pc) { }
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
@@ -282,6 +290,7 @@ class UnimplementedOpcodeFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -294,6 +303,7 @@ class FloatEnableFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -302,12 +312,14 @@ class FloatEnableFault : public AlphaFault
 
 class PalFault : public AlphaFault
 {
-  protected:
-    bool skipFaultingInstruction() {return true;}
   private:
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
+  protected:
+    bool skipFaultingInstruction() {return true;}
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
@@ -320,12 +332,13 @@ class IntegerOverflowFault : public AlphaFault
     static FaultName _name;
     static FaultVect _vect;
     static FaultStat _count;
+
   public:
     FaultName name() const {return _name;}
     FaultVect vect() {return _vect;}
     FaultStat & countStat() {return _count;}
 };
 
-} // AlphaISA namespace
+} // namespace AlphaISA
 
-#endif // __FAULTS_HH__
+#endif // __ARCH_ALPHA_FAULTS_HH__

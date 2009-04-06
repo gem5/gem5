@@ -26,12 +26,44 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Steve Reinhardt
-#          Gabe Black
+# Authors: Gabe Black
 
 Import('*')
 
 if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'x86':
-    SimObject('Opteron.py')
+    SimObject('Pc.py')
+    Source('pc.cc')
 
-    Source('opteron.cc')
+    SimObject('SouthBridge.py')
+    Source('south_bridge.cc')
+
+    SimObject('Cmos.py')
+    Source('cmos.cc')
+    TraceFlag('CMOS', 'Accesses to CMOS devices')
+
+    SimObject('I8259.py')
+    Source('i8259.cc')
+    TraceFlag('I8259', 'Accesses to the I8259 PIC devices')
+
+    SimObject('I8254.py')
+    Source('i8254.cc')
+    TraceFlag('I8254', 'Interrupts from the I8254 timer');
+
+    SimObject('I8237.py')
+    Source('i8237.cc')
+    TraceFlag('I8237', 'The I8237 dma controller');
+
+    SimObject('I8042.py')
+    Source('i8042.cc')
+    TraceFlag('I8042', 'The I8042 keyboard controller');
+
+    SimObject('PcSpeaker.py')
+    Source('speaker.cc')
+    TraceFlag('PcSpeaker')
+
+    SimObject('I82094AA.py')
+    Source('i82094aa.cc')
+    TraceFlag('I82094AA')
+
+    SimObject('X86IntPin.py')
+    Source('intdev.cc')

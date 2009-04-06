@@ -55,20 +55,25 @@ class MSHR : public Packet::SenderState, public Printable
 
     class Target {
       public:
+
+        enum Source {
+            FromCPU,
+            FromSnoop,
+            FromPrefetcher
+        };
+
         Tick recvTime;  //!< Time when request was received (for stats)
         Tick readyTime; //!< Time when request is ready to be serviced
         Counter order;  //!< Global order (for memory consistency mgmt)
         PacketPtr pkt;  //!< Pending request packet.
-        bool cpuSide;   //!< Did request come from cpu side or mem side?
+        Source source;  //!< Did request come from cpu, memory, or prefetcher?
         bool markedPending; //!< Did we mark upstream MSHR
                             //!<  as downstreamPending?
 
-        bool isCpuSide() const { return cpuSide; }
-
         Target(PacketPtr _pkt, Tick _readyTime, Counter _order,
-               bool _cpuSide, bool _markedPending)
+               Source _source, bool _markedPending)
             : recvTime(curTick), readyTime(_readyTime), order(_order),
-              pkt(_pkt), cpuSide(_cpuSide), markedPending(_markedPending)
+              pkt(_pkt), source(_source), markedPending(_markedPending)
         {}
     };
 
@@ -85,7 +90,7 @@ class MSHR : public Packet::SenderState, public Printable
         void resetFlags() { needsExclusive = hasUpgrade = false; }
         bool isReset()    { return !needsExclusive && !hasUpgrade; }
         void add(PacketPtr pkt, Tick readyTime, Counter order,
-                 bool cpuSide, bool markPending);
+                 Target::Source source, bool markPending);
         void replaceUpgrades();
         void clearDownstreamPending();
         bool checkFunctional(PacketPtr pkt);
@@ -118,8 +123,8 @@ class MSHR : public Packet::SenderState, public Printable
     /** True if the request has been sent to the bus. */
     bool inService;
 
-    /** True if we will be putting the returned block in the cache */
-    bool isCacheFill;
+    /** True if the request is just a simple forward from an upper level */
+    bool isForward;
 
     /** True if we need to get an exclusive copy of the block. */
     bool needsExclusive() const { return targets->needsExclusive; }
@@ -200,7 +205,7 @@ public:
      * Returns the current number of allocated targets.
      * @return The current number of allocated targets.
      */
-    int getNumTargets() { return ntargets; }
+    int getNumTargets() const { return ntargets; }
 
     /**
      * Returns a pointer to the target list.
@@ -212,13 +217,17 @@ public:
      * Returns true if there are targets left.
      * @return true if there are targets
      */
-    bool hasTargets() { return !targets->empty(); }
+    bool hasTargets() const { return !targets->empty(); }
 
     /**
      * Returns a reference to the first target.
      * @return A pointer to the first target.
      */
-    Target *getTarget() { assert(hasTargets());  return &targets->front(); }
+    Target *getTarget() const
+    {
+        assert(hasTargets());
+        return &targets->front();
+    }
 
     /**
      * Pop first target.
@@ -229,12 +238,12 @@ public:
         targets->pop_front();
     }
 
-    bool isSimpleForward()
+    bool isForwardNoResponse() const
     {
         if (getNumTargets() != 1)
             return false;
         Target *tgt = getTarget();
-        return tgt->isCpuSide() && !tgt->pkt->needsResponse();
+        return tgt->source == Target::FromCPU && !tgt->pkt->needsResponse();
     }
 
     bool promoteDeferredTargets();

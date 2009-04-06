@@ -116,10 +116,6 @@ class OzoneCPU : public BaseCPU
 
         BaseCPU *getCpuPtr();
 
-        void setCpuId(int id);
-
-        int readCpuId() { return thread->readCpuId(); }
-
         TheISA::ITB *getITBPtr() { return cpu->itb; }
 
         TheISA::DTB * getDTBPtr() { return cpu->dtb; }
@@ -134,10 +130,8 @@ class OzoneCPU : public BaseCPU
 
         FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
-        VirtualPort *getVirtPort(ThreadContext *tc = NULL)
-        { return thread->getVirtPort(tc); }
-
-        void delVirtPort(VirtualPort *vp);
+        VirtualPort *getVirtPort()
+        { return thread->getVirtPort(); }
 #else
         TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
@@ -182,7 +176,7 @@ class OzoneCPU : public BaseCPU
         void profileSample();
 #endif
 
-        int getThreadNum();
+        int threadId();
 
         // Also somewhat obnoxious.  Really only used for the TLB fault.
         TheISA::MachInst getInst();
@@ -252,30 +246,11 @@ class OzoneCPU : public BaseCPU
         bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
-        TheISA::IntReg getSyscallArg(int i)
-        {
-            assert(i < TheISA::NumArgumentRegs);
-            return thread->renameTable[TheISA::ArgumentReg[i]]->readIntResult();
-        }
-
-        // used to shift args for indirect syscall
-        void setSyscallArg(int i, TheISA::IntReg val)
-        {
-            assert(i < TheISA::NumArgumentRegs);
-            thread->renameTable[TheISA::ArgumentReg[i]]->setIntResult(i);
-        }
-
-        void setSyscallReturn(SyscallReturn return_value)
-        { cpu->setSyscallReturn(return_value, thread->readTid()); }
-
         Counter readFuncExeInst() { return thread->funcExeInst; }
 
         void setFuncExeInst(Counter new_val)
         { thread->funcExeInst = new_val; }
 #endif
-        void changeRegFileContext(TheISA::RegContextParam param,
-                                          TheISA::RegContextVal val)
-        { panic("Not supported on Alpha!"); }
     };
 
     // Ozone specific thread context
@@ -295,6 +270,11 @@ class OzoneCPU : public BaseCPU
   public:
     // main simulation loop (one cycle)
     void tick();
+
+#ifndef NDEBUG
+    /** Count of total number of dynamic instructions in flight. */
+    int instcount;
+#endif
 
     std::set<InstSeqNum> snList;
     std::set<Addr> lockAddrList;
@@ -337,7 +317,7 @@ class OzoneCPU : public BaseCPU
     Status _status;
 
   public:
-    void post_interrupt(int int_num, int index);
+    void wakeup();
 
     void zero_fill_64(Addr addr) {
         static int warned = 0;
@@ -357,12 +337,6 @@ class OzoneCPU : public BaseCPU
 
   public:
     BaseCPU *getCpuPtr() { return this; }
-
-    void setCpuId(int id) { cpuId = id; }
-
-    int readCpuId() { return cpuId; }
-
-    int cpuId;
 
     void switchOut();
     void signalSwitched();
@@ -416,7 +390,7 @@ class OzoneCPU : public BaseCPU
     Counter startNumLoad;
 
     // number of idle cycles
-    Stats::Average<> notIdleFraction;
+    Stats::Average notIdleFraction;
     Stats::Formula idleFraction;
 
   public:
@@ -425,58 +399,19 @@ class OzoneCPU : public BaseCPU
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
-        itb->demap(vaddr, asn);
-        dtb->demap(vaddr, asn);
+        cpu->itb->demap(vaddr, asn);
+        cpu->dtb->demap(vaddr, asn);
     }
 
     void demapInstPage(Addr vaddr, uint64_t asn)
     {
-        itb->demap(vaddr, asn);
+        cpu->itb->demap(vaddr, asn);
     }
 
     void demapDataPage(Addr vaddr, uint64_t asn)
     {
-        dtb->demap(vaddr, asn);
+        cpu->dtb->demap(vaddr, asn);
     }
-
-#if FULL_SYSTEM
-    /** Translates instruction requestion. */
-    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return itb->translate(req, thread->getTC());
-    }
-
-    /** Translates data read request. */
-    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return dtb->translate(req, thread->getTC(), false);
-    }
-
-    /** Translates data write request. */
-    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return dtb->translate(req, thread->getTC(), true);
-    }
-
-#else
-    /** Translates instruction requestion in syscall emulation mode. */
-    Fault translateInstReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data read request in syscall emulation mode. */
-    Fault translateDataReadReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-
-    /** Translates data write request in syscall emulation mode. */
-    Fault translateDataWriteReq(RequestPtr &req, OzoneThreadState<Impl> *thread)
-    {
-        return thread->getProcessPtr()->pTable->translate(req);
-    }
-#endif
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>
@@ -517,7 +452,6 @@ class OzoneCPU : public BaseCPU
     void processInterrupts();
 #else
     void syscall(uint64_t &callnum);
-    void setSyscallReturn(SyscallReturn return_value, int tid);
 #endif
 
     ThreadContext *tcBase() { return tc; }
@@ -539,7 +473,7 @@ class OzoneCPU : public BaseCPU
 
     bool lockFlag;
 
-    Stats::Scalar<> quiesceCycles;
+    Stats::Scalar quiesceCycles;
 
     Checker<DynInstPtr> *checker;
 };

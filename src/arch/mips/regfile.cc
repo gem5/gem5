@@ -188,12 +188,6 @@ RegFile::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-
-void RegFile::changeContext(RegContextParam param, RegContextVal val)
-{
-    panic("Change Context Not Implemented for MipsISA");
-}
-
 static inline int flattenIntIndex(ThreadContext * tc, int reg)
 {
     return reg;
@@ -201,12 +195,6 @@ static inline int flattenIntIndex(ThreadContext * tc, int reg)
 
 void
 MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Regs Not Implemented Yet\n");
-}
-
-void
-MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest);
 {
     panic("Copy Regs Not Implemented Yet\n");
 }

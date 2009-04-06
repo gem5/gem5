@@ -32,6 +32,7 @@
 #ifndef __DEV_IO_DEVICE_HH__
 #define __DEV_IO_DEVICE_HH__
 
+#include "base/fast_alloc.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/tport.hh"
@@ -73,7 +74,7 @@ class PioPort : public SimpleTimingPort
 class DmaPort : public Port
 {
   protected:
-    struct DmaReqState : public Packet::SenderState
+    struct DmaReqState : public Packet::SenderState, public FastAlloc
     {
         /** Event to call on the device when this transaction (all packets)
          * complete. */
@@ -88,8 +89,12 @@ class DmaPort : public Port
         /** Number of bytes that have been acked for this transaction. */
         Addr numBytes;
 
-        DmaReqState(Event *ce, Port *p, Addr tb)
-            : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0)
+        /** Amount to delay completion of dma by */
+        Tick delay;
+
+        DmaReqState(Event *ce, Port *p, Addr tb, Tick _delay)
+            : completionEvent(ce), outPort(p), totBytes(tb), numBytes(0),
+              delay(_delay)
         {}
     };
 
@@ -143,7 +148,7 @@ class DmaPort : public Port
     DmaPort(DmaDevice *dev, System *s);
 
     void dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data = NULL);
+                   uint8_t *data, Tick delay);
 
     bool dmaPending() { return pendingCount > 0; }
 
@@ -207,7 +212,8 @@ class PioDevice : public MemObject
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
-                panic("pio port already connected to.");
+                fatal("%s: pio port already connected to %s",
+                      name(), pioPort->getPeer()->name());
             pioPort = new PioPort(this, sys);
             return pioPort;
         } else
@@ -264,14 +270,14 @@ class DmaDevice : public PioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data)
+    void dmaWrite(Addr addr, int size, Event *event, uint8_t *data, Tick delay = 0)
     {
-        dmaPort->dmaAction(MemCmd::WriteReq, addr, size, event, data);
+        dmaPort->dmaAction(MemCmd::WriteReq, addr, size, event, data, delay);
     }
 
-    void dmaRead(Addr addr, int size, Event *event, uint8_t *data)
+    void dmaRead(Addr addr, int size, Event *event, uint8_t *data, Tick delay = 0)
     {
-        dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data);
+        dmaPort->dmaAction(MemCmd::ReadReq, addr, size, event, data, delay);
     }
 
     bool dmaPending() { return dmaPort->dmaPending(); }
@@ -284,12 +290,14 @@ class DmaDevice : public PioDevice
     {
         if (if_name == "pio") {
             if (pioPort != NULL)
-                panic("pio port already connected to.");
+                fatal("%s: pio port already connected to %s",
+                      name(), pioPort->getPeer()->name());
             pioPort = new PioPort(this, sys);
             return pioPort;
         } else if (if_name == "dma") {
             if (dmaPort != NULL)
-                panic("dma port already connected to.");
+                fatal("%s: dma port already connected to %s",
+                      name(), dmaPort->getPeer()->name());
             dmaPort = new DmaPort(this, sys);
             return dmaPort;
         } else

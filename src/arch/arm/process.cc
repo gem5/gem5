@@ -43,8 +43,7 @@
 using namespace std;
 using namespace ArmISA;
 
-ArmLiveProcess::ArmLiveProcess(LiveProcessParams * params,
-        ObjectFile *objFile)
+ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile)
     : LiveProcess(params, objFile)
 {
     stack_base = 0xc0000000L;
@@ -147,12 +146,35 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     initVirtMem->writeBlob(0xffff0fe0, insns, 8);
     */
 
-    threadContexts[0]->setIntReg(ArgumentReg1, argc);
-    threadContexts[0]->setIntReg(ArgumentReg2, argv_array_base);
-    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+
+    tc->setIntReg(ArgumentReg1, argc);
+    tc->setIntReg(ArgumentReg2, argv_array_base);
+    tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
-    threadContexts[0]->setPC(prog_entry);
-    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    tc->setPC(prog_entry);
+    tc->setNextPC(prog_entry + sizeof(MachInst));
 }
 
+ArmISA::IntReg
+ArmLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    assert(i < 4);
+    return tc->readIntReg(ArgumentReg0 + i);
+}
+
+void
+ArmLiveProcess::setSyscallArg(ThreadContext *tc,
+        int i, ArmISA::IntReg val)
+{
+    assert(i < 4);
+    tc->setIntReg(ArgumentReg0 + i, val);
+}
+
+void
+ArmLiveProcess::setSyscallReturn(ThreadContext *tc,
+        SyscallReturn return_value)
+{
+    tc->setIntReg(ReturnValueReg, return_value.value());
+}

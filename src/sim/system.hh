@@ -87,14 +87,19 @@ class System : public SimObject
     PCEventQueue pcEventQueue;
 
     std::vector<ThreadContext *> threadContexts;
-    int numcpus;
+    int _numContexts;
 
-    int getNumCPUs()
+    ThreadContext * getThreadContext(int tid)
     {
-        if (numcpus != threadContexts.size())
+        return threadContexts[tid];
+    }
+
+    int numContexts()
+    {
+        if (_numContexts != threadContexts.size())
             panic("cpu array not fully populated!");
 
-        return numcpus;
+        return _numContexts;
     }
 
 #if FULL_SYSTEM
@@ -133,6 +138,12 @@ class System : public SimObject
     {
         return next_PID++;
     }
+
+    /** Amount of physical memory that is still free */
+    Addr freeMemSize();
+
+    /** Amount of physical memory that exists */
+    Addr memSize();
 
 
 #endif // FULL_SYSTEM
@@ -219,8 +230,8 @@ class System : public SimObject
 
 #endif // FULL_SYSTEM
 
-    int registerThreadContext(ThreadContext *tc, int tcIndex);
-    void replaceThreadContext(ThreadContext *tc, int tcIndex);
+    int registerThreadContext(ThreadContext *tc, int assigned=-1);
+    void replaceThreadContext(ThreadContext *tc, int context_id);
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);

@@ -87,16 +87,13 @@ ElfFile('libelf_convert.c')
 ElfFile('libelf_fsize.c')
 ElfFile('libelf_msize.c')
 
-m4env = Environment(ENV=os.environ)
-
-if env.get('CC'):
-    m4env['CC'] = env['CC']
-if env.get('CXX'):
-    m4env['CXX'] = env['CXX']
-
-if env.get('OSX64bit'):
-    m4env.Append(CFLAGS='-arch x86_64')
-    m4env.Append(LINKFLAGS='-arch x86_64')
+m4env = env.Clone()
+if env['GCC']:
+    major,minor,dot = [ int(x) for x in env['CXXVERSION'].split('.')]
+    if major >= 4:
+        m4env.Append(CCFLAGS=['-Wno-pointer-sign'])
+m4env.Append(CCFLAGS=['-Wno-implicit'])
+del m4env['CPPPATH']
 
 # If we have gm4 use it
 if m4env.Detect('gm4'):
@@ -117,7 +114,10 @@ m4env.M4(target=File('libelf_fsize.c'),
          source=[File('elf_types.m4'), File('libelf_fsize.m4')])
 m4env.M4(target=File('libelf_msize.c'),
          source=[File('elf_types.m4'), File('libelf_msize.m4')])
-m4env.Library('elf', elf_files)
+
+# Build libelf as a static library with PIC code so it can be linked
+# into either m5 or the library
+m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 
 env.Append(CPPPATH=Dir('.'))
 env.Append(LIBS=['elf'])

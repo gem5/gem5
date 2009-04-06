@@ -32,9 +32,6 @@
 #define __ARCH_MIPS_LINUX_LINUX_HH__
 
 #include "kern/linux/linux.hh"
-#include <string>
-
-using std::string;
 
 class MipsLinux : public Linux
 {
@@ -49,21 +46,21 @@ class MipsLinux : public Linux
 
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY	= 0x00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 0x00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	        = 0x00000002;	//!< O_RDWR
-    static const int TGT_O_NONBLOCK     = 0x00000080;	//!< O_NONBLOCK
-    static const int TGT_O_APPEND	= 0x00000008;	//!< O_APPEND
-    static const int TGT_O_CREAT	= 0x00000100;	//!< O_CREAT
-    static const int TGT_O_TRUNC	= 0x00000200;	//!< O_TRUNC
-    static const int TGT_O_EXCL	        = 0x00000400;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 0x00000800;	//!< O_NOCTTY
-    static const int TGT_O_SYNC	        = 0x00000010;	//!< O_SYNC
-    static const int TGT_O_DRD	        = 0x00010000;	//!< O_DRD
-    static const int TGT_O_DIRECTIO     = 0x00020000;	//!< O_DIRECTIO
-    static const int TGT_O_CACHE	= 0x00002000;	//!< O_CACHE
-    static const int TGT_O_DSYNC	= 0x00008000;	//!< O_DSYNC
-    static const int TGT_O_RSYNC	= 0x00040000;	//!< O_RSYNC
+    static const int TGT_O_RDONLY       = 0x00000000;   //!< O_RDONLY
+    static const int TGT_O_WRONLY       = 0x00000001;   //!< O_WRONLY
+    static const int TGT_O_RDWR         = 0x00000002;   //!< O_RDWR
+    static const int TGT_O_NONBLOCK     = 0x00000080;   //!< O_NONBLOCK
+    static const int TGT_O_APPEND       = 0x00000008;   //!< O_APPEND
+    static const int TGT_O_CREAT        = 0x00000100;   //!< O_CREAT
+    static const int TGT_O_TRUNC        = 0x00000200;   //!< O_TRUNC
+    static const int TGT_O_EXCL         = 0x00000400;   //!< O_EXCL
+    static const int TGT_O_NOCTTY       = 0x00000800;   //!< O_NOCTTY
+    static const int TGT_O_SYNC         = 0x00000010;   //!< O_SYNC
+    static const int TGT_O_DRD          = 0x00010000;   //!< O_DRD
+    static const int TGT_O_DIRECTIO     = 0x00020000;   //!< O_DIRECTIO
+    static const int TGT_O_CACHE        = 0x00002000;   //!< O_CACHE
+    static const int TGT_O_DSYNC        = 0x00008000;   //!< O_DSYNC
+    static const int TGT_O_RSYNC        = 0x00040000;   //!< O_RSYNC
     //@}
 
     /// For mmap().
@@ -72,12 +69,12 @@ class MipsLinux : public Linux
     //@{
     /// For getsysinfo().
     static const unsigned GSI_PLATFORM_NAME = 103;  //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;	//!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;	//!< get proc_type
+    static const unsigned GSI_CPU_INFO = 59;    //!< CPU information
+    static const unsigned GSI_PROC_TYPE = 60;   //!< get proc_type
     static const unsigned GSI_MAX_CPU = 30;         //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55;	//!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;	        //!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;	        //!< clock freq in Hz
+    static const unsigned GSI_CPUS_IN_BOX = 55; //!< number of CPUs in system
+    static const unsigned GSI_PHYSMEM = 19;             //!< Physical memory in KB
+    static const unsigned GSI_CLK_TCK = 42;             //!< clock freq in Hz
     //@}
 
     //@{
@@ -94,15 +91,15 @@ class MipsLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP   = 0x7408;
-    static const unsigned TIOCSETP   = 0x7409;
-    static const unsigned TIOCSETN   = 0x740a;
-    static const unsigned TIOCSETC   = 0x7411;
-    static const unsigned TIOCGETC   = 0x7412;
-    static const unsigned FIONREAD   = 0x467f;
-    static const unsigned TIOCISATTY = 0x5480;
-    static const unsigned TIOCGETS   = 0x540d;
-    static const unsigned TIOCGETA   = 0x7417;
+    static const unsigned TIOCGETP_   = 0x7408;
+    static const unsigned TIOCSETP_   = 0x7409;
+    static const unsigned TIOCSETN_   = 0x740a;
+    static const unsigned TIOCSETC_   = 0x7411;
+    static const unsigned TIOCGETC_   = 0x7412;
+    static const unsigned FIONREAD_   = 0x467f;
+    static const unsigned TIOCISATTY_ = 0x5480;
+    static const unsigned TIOCGETS_   = 0x540d;
+    static const unsigned TIOCGETA_   = 0x7417;
     //@}
 
     /// For table().

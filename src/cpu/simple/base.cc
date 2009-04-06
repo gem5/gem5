@@ -31,6 +31,7 @@
 #include "arch/utility.hh"
 #include "arch/faults.hh"
 #include "base/cprintf.hh"
+#include "base/cp_annotate.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -65,16 +66,18 @@
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
 
+#include "params/BaseSimpleCPU.hh"
+
 using namespace std;
 using namespace TheISA;
 
-BaseSimpleCPU::BaseSimpleCPU(Params *p)
+BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     : BaseCPU(p), traceData(NULL), thread(NULL), predecoder(NULL)
 {
 #if FULL_SYSTEM
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
-    thread = new SimpleThread(this, /* thread_num */ 0, p->process,
+    thread = new SimpleThread(this, /* thread_num */ 0, p->workload[0],
             p->itb, p->dtb, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
@@ -174,12 +177,13 @@ void
 BaseSimpleCPU::resetStats()
 {
 //    startNumInst = numInst;
-    // notIdleFraction = (_status != Idle);
+     notIdleFraction = (_status != Idle);
 }
 
 void
 BaseSimpleCPU::serialize(ostream &os)
 {
+    SERIALIZE_ENUM(_status);
     BaseCPU::serialize(os);
 //    SERIALIZE_SCALAR(inst);
     nameOut(os, csprintf("%s.xc.0", name()));
@@ -189,6 +193,7 @@ BaseSimpleCPU::serialize(ostream &os)
 void
 BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
+    UNSERIALIZE_ENUM(_status);
     BaseCPU::unserialize(cp, section);
 //    UNSERIALIZE_SCALAR(inst);
     thread->unserialize(cp, csprintf("%s.xc.0", section));
@@ -299,14 +304,13 @@ BaseSimpleCPU::dbg_vtophys(Addr addr)
 
 #if FULL_SYSTEM
 void
-BaseSimpleCPU::post_interrupt(int int_num, int index)
+BaseSimpleCPU::wakeup()
 {
-    BaseCPU::post_interrupt(int_num, index);
+    if (thread->status() != ThreadContext::Suspended)
+        return;
 
-    if (thread->status() == ThreadContext::Suspended) {
-                DPRINTF(Quiesce,"Suspended Processor awoke\n");
-        thread->activate();
-    }
+    DPRINTF(Quiesce,"Suspended Processor awoke\n");
+    thread->activate();
 }
 #endif // FULL_SYSTEM
 
@@ -314,11 +318,12 @@ void
 BaseSimpleCPU::checkForInterrupts()
 {
 #if FULL_SYSTEM
-    if (check_interrupts(tc)) {
-        Fault interrupt = interrupts.getInterrupt(tc);
+    if (checkInterrupts(tc)) {
+        Fault interrupt = interrupts->getInterrupt(tc);
 
         if (interrupt != NoFault) {
-            interrupts.updateIntrInfo(tc);
+            predecoder.reset();
+            interrupts->updateIntrInfo(tc);
             interrupt->invoke(tc);
         }
     }
@@ -326,7 +331,7 @@ BaseSimpleCPU::checkForInterrupts()
 }
 
 
-Fault
+void
 BaseSimpleCPU::setupFetchRequest(Request *req)
 {
     Addr threadPC = thread->readPC();
@@ -342,10 +347,6 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
 
     Addr fetchPC = (threadPC & PCMask) + fetchOffset;
     req->setVirt(0, fetchPC, sizeof(MachInst), 0, threadPC);
-
-    Fault fault = thread->translateInstReq(req);
-
-    return fault;
 }
 
 
@@ -364,9 +365,13 @@ BaseSimpleCPU::preExecute()
     // decode the instruction
     inst = gtoh(inst);
 
-    //If we're not in the middle of a macro instruction
-    if (!curMacroStaticInst) {
+    MicroPC upc = thread->readMicroPC();
 
+    if (isRomMicroPC(upc)) {
+        stayAtPC = false;
+        curStaticInst = microcodeRom.fetchMicroop(upc, curMacroStaticInst);
+    } else if (!curMacroStaticInst) {
+        //We're not in the middle of a macro instruction
         StaticInstPtr instPtr = NULL;
 
         //Predecode, ie bundle up an ExtMachInst
@@ -397,23 +402,22 @@ BaseSimpleCPU::preExecute()
         //out micro ops
         if (instPtr && instPtr->isMacroop()) {
             curMacroStaticInst = instPtr;
-            curStaticInst = curMacroStaticInst->
-                fetchMicroop(thread->readMicroPC());
+            curStaticInst = curMacroStaticInst->fetchMicroop(upc);
         } else {
             curStaticInst = instPtr;
         }
     } else {
         //Read the next micro op from the macro op
-        curStaticInst = curMacroStaticInst->
-            fetchMicroop(thread->readMicroPC());
+        curStaticInst = curMacroStaticInst->fetchMicroop(upc);
     }
 
     //If we decoded an instruction this "tick", record information about it.
     if(curStaticInst)
     {
 #if TRACING_ON
-        traceData = tracer->getInstRecord(curTick, tc, curStaticInst,
-                                         thread->readPC());
+        traceData = tracer->getInstRecord(curTick, tc,
+                curStaticInst, thread->readPC(),
+                curMacroStaticInst, thread->readMicroPC());
 
         DPRINTF(Decode,"Decode: Decoded %s instruction: 0x%x\n",
                 curStaticInst->getName(), curStaticInst->machInst);
@@ -447,6 +451,10 @@ BaseSimpleCPU::postExecute()
         comLoadEventQueue[0]->serviceEvents(numLoad);
     }
 
+    if (CPA::available()) {
+        CPA::cpa()->swAutoBegin(tc, thread->readNextPC());
+    }
+
     traceFunctions(thread->readPC());
 
     if (traceData) {
@@ -465,22 +473,21 @@ BaseSimpleCPU::advancePC(Fault fault)
     if (fault != NoFault) {
         curMacroStaticInst = StaticInst::nullStaticInstPtr;
         predecoder.reset();
-        thread->setMicroPC(0);
-        thread->setNextMicroPC(1);
         fault->invoke(tc);
     } else {
         //If we're at the last micro op for this instruction
         if (curStaticInst && curStaticInst->isLastMicroop()) {
-            //We should be working with a macro op
-            assert(curMacroStaticInst);
+            //We should be working with a macro op or be in the ROM
+            assert(curMacroStaticInst ||
+                    isRomMicroPC(thread->readMicroPC()));
             //Close out this macro op, and clean up the
             //microcode state
             curMacroStaticInst = StaticInst::nullStaticInstPtr;
-            thread->setMicroPC(0);
-            thread->setNextMicroPC(1);
+            thread->setMicroPC(normalMicroPC(0));
+            thread->setNextMicroPC(normalMicroPC(1));
         }
         //If we're still in a macro op
-        if (curMacroStaticInst) {
+        if (curMacroStaticInst || isRomMicroPC(thread->readMicroPC())) {
             //Advance the micro pc
             thread->setMicroPC(thread->readNextMicroPC());
             //Advance the "next" micro pc. Note that there are no delay

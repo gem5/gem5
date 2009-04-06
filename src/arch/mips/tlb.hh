@@ -68,6 +68,9 @@ struct TlbEntry
         return _pageStart;
     }
 
+    void
+    updateVaddr(Addr new_vaddr) {}
+    
     void serialize(std::ostream &os)
     {
         SERIALIZE_SCALAR(_pageStart);
@@ -84,23 +87,23 @@ class TLB : public BaseTLB
 {
   protected:
     typedef std::multimap<Addr, int> PageTable;
-    PageTable lookupTable;	// Quick lookup into page table
+    PageTable lookupTable;      // Quick lookup into page table
 
-    MipsISA::PTE *table;	// the Page Table
-    int size;			// TLB Size
-    int nlu;			// not last used entry (for replacement)
+    MipsISA::PTE *table;        // the Page Table
+    int size;                   // TLB Size
+    int nlu;                    // not last used entry (for replacement)
 
     void nextnlu() { if (++nlu >= size) nlu = 0; }
     MipsISA::PTE *lookup(Addr vpn, uint8_t asn) const;
 
-    mutable Stats::Scalar<> read_hits;
-    mutable Stats::Scalar<> read_misses;
-    mutable Stats::Scalar<> read_acv;
-    mutable Stats::Scalar<> read_accesses;
-    mutable Stats::Scalar<> write_hits;
-    mutable Stats::Scalar<> write_misses;
-    mutable Stats::Scalar<> write_acv;
-    mutable Stats::Scalar<> write_accesses;
+    mutable Stats::Scalar read_hits;
+    mutable Stats::Scalar read_misses;
+    mutable Stats::Scalar read_acv;
+    mutable Stats::Scalar read_accesses;
+    mutable Stats::Scalar write_hits;
+    mutable Stats::Scalar write_misses;
+    mutable Stats::Scalar write_acv;
+    mutable Stats::Scalar write_accesses;
     Stats::Formula hits;
     Stats::Formula misses;
     Stats::Formula invalids;
@@ -142,7 +145,9 @@ class ITB : public TLB {
     typedef MipsTLBParams Params;
     ITB(const Params *p);
 
-    Fault translate(RequestPtr &req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation);
 };
 
 class DTB : public TLB {
@@ -150,7 +155,10 @@ class DTB : public TLB {
     typedef MipsTLBParams Params;
     DTB(const Params *p);
 
-    Fault translate(RequestPtr &req, ThreadContext *tc, bool write = false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
+            bool write = false);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, bool write = false);
 };
 
 class UTB : public ITB, public DTB {

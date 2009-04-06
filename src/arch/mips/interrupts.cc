@@ -76,7 +76,7 @@ static inline void setCauseIP_(ThreadContext *tc, uint8_t val) {
   intstatus &= ~(1 << int_num);
   }
 
-  void Interrupts::clear_all()
+  void Interrupts::clearAll()
   {
   DPRINTF(Interrupt, "Interrupts all cleared\n");
   intstatus = 0;
@@ -156,12 +156,6 @@ static inline void setCauseIP_(ThreadContext *tc, uint8_t val) {
   return false;
   }
 
-
-  uint64_t Interrupts::get_vec(int int_num)
-  {
-  panic("MipsISA::Interrupts::get_vec() is not implemented. \n");
-  M5_DUMMY_RETURN
-  }
 */
 void Interrupts::post(int int_num, ThreadContext* tc)
 {
@@ -195,14 +189,14 @@ void Interrupts::clear(int int_num, int index)
     fatal("Must use Thread COntext when clearing MIPS Interrupts in M5");
 }
 
-void Interrupts::clear_all(ThreadContext *tc)
+void Interrupts::clearAll(ThreadContext *tc)
 {
     DPRINTF(Interrupt, "Interrupts all cleared\n");
     uint8_t intstatus = 0;
     setCauseIP_(tc, intstatus);
 }
 
-void Interrupts::clear_all()
+void Interrupts::clearAll()
 {
     fatal("Must use Thread COntext when clearing MIPS Interrupts in M5");
 }
@@ -251,12 +245,6 @@ void Interrupts::updateIntrInfo(ThreadContext *tc) const
     //Nothing needs to be done.
     ;
 }
-
-uint64_t Interrupts::get_vec(int int_num)
-{
-    panic("MipsISA::Interrupts::get_vec() is not implemented. \n");
-    M5_DUMMY_RETURN
-        }
 
 bool Interrupts::interruptsPending(ThreadContext *tc) const
 {

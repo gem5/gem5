@@ -36,12 +36,14 @@
 #ifndef __SIM_OBJECT_HH__
 #define __SIM_OBJECT_HH__
 
-#include <map>
-#include <list>
-#include <vector>
 #include <iostream>
+#include <list>
+#include <map>
+#include <string>
+#include <vector>
 
 #include "params/SimObject.hh"
+#include "sim/eventq.hh"
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 
@@ -53,7 +55,8 @@ class Event;
  * correspond to physical components and can be specified via the
  * config file (CPUs, caches, etc.).
  */
-class SimObject : public Serializable, protected StartupCallback
+class SimObject
+    : public EventManager, public Serializable, protected StartupCallback
 {
   public:
     enum State {
@@ -85,10 +88,6 @@ class SimObject : public Serializable, protected StartupCallback
     const Params *params() const { return _params; }
     SimObject(const Params *_params);
     virtual ~SimObject() {}
-
-  protected:
-    // static: support for old-style constructors (call manually)
-    static Params *makeParams(const std::string &name);
 
   public:
 

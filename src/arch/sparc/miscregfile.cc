@@ -42,27 +42,6 @@ using namespace std;
 
 class Checkpoint;
 
-//These functions map register indices to names
-string SparcISA::getMiscRegName(RegIndex index)
-{
-    static::string miscRegName[NumMiscRegs] =
-        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
-         "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
-         "stick", "stick_cmpr",
-         "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
-         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
-         "wstate",*/ "gl",
-         "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
-         "hstick_cmpr",
-         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg",
-         "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
-         "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
-         "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
-         "nresErrorHead", "nresErrorTail", "TlbData" };
-
-    return miscRegName[index];
-}
-
 enum RegMask
 {
         PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
@@ -227,7 +206,7 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
 
         /** Floating Point Status Register */
       case MISCREG_FSR:
-        DPRINTF(Sparc, "FSR read as: %#x\n", fsr);
+        DPRINTF(MiscRegs, "FSR read as: %#x\n", fsr);
         return fsr;
 
       case MISCREG_MMU_P_CONTEXT:
@@ -322,12 +301,13 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
         return readFSReg(miscReg, tc);
 #else
       case MISCREG_HPSTATE:
-        //HPSTATE is special because because sometimes in privilege checks for instructions
-        //it will read HPSTATE to make sure the priv. level is ok
-        //So, we'll just have to tell it it isn't, instead of panicing.
+        //HPSTATE is special because because sometimes in privilege
+        //checks for instructions it will read HPSTATE to make sure
+        //the priv. level is ok So, we'll just have to tell it it
+        //isn't, instead of panicing.
         return 0;
 
-      panic("Accessing Fullsystem register %s in SE mode\n",getMiscRegName(miscReg));
+      panic("Accessing Fullsystem register %d in SE mode\n", miscReg);
 #endif
 
     }
@@ -444,7 +424,7 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
         /** Floating Point Status Register */
       case MISCREG_FSR:
         fsr = val;
-        DPRINTF(Sparc, "FSR written with: %#x\n", fsr);
+        DPRINTF(MiscRegs, "FSR written with: %#x\n", fsr);
         break;
 
       case MISCREG_MMU_P_CONTEXT:
@@ -540,20 +520,17 @@ void MiscRegFile::setReg(int miscReg,
         tl = val;
 #if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            tc->getCpuPtr()->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            tc->getCpuPtr()->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
 #endif
         return;
       case MISCREG_CWP:
         new_val = val >= NWindows ? NWindows - 1 : val;
         if (val >= NWindows)
             new_val = NWindows - 1;
-
-        tc->changeRegFileContext(CONTEXT_CWP, new_val);
         break;
       case MISCREG_GL:
-        tc->changeRegFileContext(CONTEXT_GLOBALS, val);
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:
@@ -584,13 +561,15 @@ void MiscRegFile::setReg(int miscReg,
         //HPSTATE is special because normal trap processing saves HPSTATE when
         //it goes into a trap, and restores it when it returns.
         return;
-      panic("Accessing Fullsystem register %s to %#x in SE mode\n", getMiscRegName(miscReg), val);
+      panic("Accessing Fullsystem register %d to %#x in SE mode\n",
+              miscReg, val);
 #endif
     }
     setRegNoEffect(miscReg, new_val);
 }
 
-void MiscRegFile::serialize(std::ostream & os)
+void
+MiscRegFile::serialize(EventManager *em, std::ostream &os)
 {
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
@@ -667,7 +646,9 @@ void MiscRegFile::serialize(std::ostream & os)
 #endif
 }
 
-void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
+void
+MiscRegFile::unserialize(EventManager *em, Checkpoint *cp,
+    const string &section)
 {
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tick);
@@ -726,15 +707,15 @@ void MiscRegFile::unserialize(Checkpoint * cp, const std::string & section)
 
             if (tick_cmp) {
                 tickCompare = new TickCompareEvent(this, tc);
-                tickCompare->schedule(tick_cmp);
+                em->schedule(tickCompare, tick_cmp);
             }
             if (stick_cmp)  {
                 sTickCompare = new STickCompareEvent(this, tc);
-                sTickCompare->schedule(stick_cmp);
+                em->schedule(sTickCompare, stick_cmp);
             }
             if (hstick_cmp)  {
                 hSTickCompare = new HSTickCompareEvent(this, tc);
-                hSTickCompare->schedule(hstick_cmp);
+                em->schedule(hSTickCompare, hstick_cmp);
             }
         }
     }

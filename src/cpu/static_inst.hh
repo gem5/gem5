@@ -42,7 +42,6 @@
 #include "base/misc.hh"
 #include "base/refcnt.hh"
 #include "cpu/op_class.hh"
-#include "cpu/o3/dyn_inst.hh"
 #include "sim/faults.hh"
 #include "sim/host.hh"
 
@@ -54,8 +53,11 @@ class ThreadContext;
 class DynInst;
 class Packet;
 
-template <class Impl>
-class OzoneDynInst;
+class O3CPUImpl;
+template <class Impl> class BaseO3DynInst;
+typedef BaseO3DynInst<O3CPUImpl> O3DynInst;
+template <class Impl> class OzoneDynInst;
+class InOrderDynInst;
 
 class CheckerCPU;
 class FastCPU;
@@ -69,7 +71,27 @@ namespace Trace {
     class InstRecord;
 }
 
-typedef uint32_t MicroPC;
+typedef uint16_t MicroPC;
+
+static const MicroPC MicroPCRomBit = 1 << (sizeof(MicroPC) * 8 - 1);
+
+static inline MicroPC
+romMicroPC(MicroPC upc)
+{
+    return upc | MicroPCRomBit;
+}
+
+static inline MicroPC
+normalMicroPC(MicroPC upc)
+{
+    return upc & ~MicroPCRomBit;
+}
+
+static inline bool
+isRomMicroPC(MicroPC upc)
+{
+    return MicroPCRomBit & upc;
+}
 
 /**
  * Base, ISA-independent static instruction class.
@@ -105,38 +127,39 @@ class StaticInstBase : public RefCounted
     /// implement this behavior via the execute() methods.
     ///
     enum Flags {
-        IsNop,		///< Is a no-op (no effect at all).
+        IsNop,          ///< Is a no-op (no effect at all).
 
-        IsInteger,	///< References integer regs.
-        IsFloating,	///< References FP regs.
+        IsInteger,      ///< References integer regs.
+        IsFloating,     ///< References FP regs.
 
-        IsMemRef,	///< References memory (load, store, or prefetch).
-        IsLoad,		///< Reads from memory (load or prefetch).
-        IsStore,	///< Writes to memory.
+        IsMemRef,       ///< References memory (load, store, or prefetch).
+        IsLoad,         ///< Reads from memory (load or prefetch).
+        IsStore,        ///< Writes to memory.
         IsStoreConditional,    ///< Store conditional instruction.
         IsIndexed,      ///< Accesses memory with an indexed address computation
-        IsInstPrefetch,	///< Instruction-cache prefetch.
-        IsDataPrefetch,	///< Data-cache prefetch.
+        IsInstPrefetch, ///< Instruction-cache prefetch.
+        IsDataPrefetch, ///< Data-cache prefetch.
         IsCopy,         ///< Fast Cache block copy
 
-        IsControl,		///< Control transfer instruction.
-        IsDirectControl,	///< PC relative control transfer.
-        IsIndirectControl,	///< Register indirect control transfer.
-        IsCondControl,		///< Conditional control transfer.
-        IsUncondControl,	///< Unconditional control transfer.
-        IsCall,			///< Subroutine call.
-        IsReturn,		///< Subroutine return.
+        IsControl,              ///< Control transfer instruction.
+        IsDirectControl,        ///< PC relative control transfer.
+        IsIndirectControl,      ///< Register indirect control transfer.
+        IsCondControl,          ///< Conditional control transfer.
+        IsUncondControl,        ///< Unconditional control transfer.
+        IsCall,                 ///< Subroutine call.
+        IsReturn,               ///< Subroutine return.
 
         IsCondDelaySlot,///< Conditional Delay-Slot Instruction
 
-        IsThreadSync,	///< Thread synchronization operation.
+        IsThreadSync,   ///< Thread synchronization operation.
 
-        IsSerializing,	///< Serializes pipeline: won't execute until all
+        IsSerializing,  ///< Serializes pipeline: won't execute until all
                         /// older instructions have committed.
         IsSerializeBefore,
         IsSerializeAfter,
-        IsMemBarrier,	///< Is a memory barrier
-        IsWriteBarrier,	///< Is a write barrier
+        IsMemBarrier,   ///< Is a memory barrier
+        IsWriteBarrier, ///< Is a write barrier
+        IsReadBarrier,  ///< Is a read barrier
         IsERET, /// <- Causes the IFU to stall (MIPS ISA)
 
         IsNonSpeculative, ///< Should not be executed speculatively
@@ -150,12 +173,12 @@ class StaticInstBase : public RefCounted
 
         //Flags for microcode
         IsMacroop,      ///< Is a macroop containing microops
-        IsMicroop,	///< Is a microop
-        IsDelayedCommit,	///< This microop doesn't commit right away
-        IsLastMicroop,	///< This microop ends a microop sequence
-        IsFirstMicroop,	///< This microop begins a microop sequence
+        IsMicroop,      ///< Is a microop
+        IsDelayedCommit,        ///< This microop doesn't commit right away
+        IsLastMicroop,  ///< This microop ends a microop sequence
+        IsFirstMicroop, ///< This microop begins a microop sequence
         //This flag doesn't do anything yet
-        IsMicroBranch,	///< This microop branches within the microcode for a macroop
+        IsMicroBranch,  ///< This microop branches within the microcode for a macroop
         IsDspOp,
 
         NumFlags
@@ -215,26 +238,26 @@ class StaticInstBase : public RefCounted
     /// of the individual flags.
     //@{
 
-    bool isNop() 	  const { return flags[IsNop]; }
+    bool isNop()          const { return flags[IsNop]; }
 
-    bool isMemRef()    	  const { return flags[IsMemRef]; }
-    bool isLoad()	  const { return flags[IsLoad]; }
-    bool isStore()	  const { return flags[IsStore]; }
-    bool isStoreConditional()	  const { return flags[IsStoreConditional]; }
+    bool isMemRef()       const { return flags[IsMemRef]; }
+    bool isLoad()         const { return flags[IsLoad]; }
+    bool isStore()        const { return flags[IsStore]; }
+    bool isStoreConditional()     const { return flags[IsStoreConditional]; }
     bool isInstPrefetch() const { return flags[IsInstPrefetch]; }
     bool isDataPrefetch() const { return flags[IsDataPrefetch]; }
     bool isCopy()         const { return flags[IsCopy];}
 
-    bool isInteger()	  const { return flags[IsInteger]; }
-    bool isFloating()	  const { return flags[IsFloating]; }
+    bool isInteger()      const { return flags[IsInteger]; }
+    bool isFloating()     const { return flags[IsFloating]; }
 
-    bool isControl()	  const { return flags[IsControl]; }
-    bool isCall()	  const { return flags[IsCall]; }
-    bool isReturn()	  const { return flags[IsReturn]; }
-    bool isDirectCtrl()	  const { return flags[IsDirectControl]; }
+    bool isControl()      const { return flags[IsControl]; }
+    bool isCall()         const { return flags[IsCall]; }
+    bool isReturn()       const { return flags[IsReturn]; }
+    bool isDirectCtrl()   const { return flags[IsDirectControl]; }
     bool isIndirectCtrl() const { return flags[IsIndirectControl]; }
-    bool isCondCtrl()	  const { return flags[IsCondControl]; }
-    bool isUncondCtrl()	  const { return flags[IsUncondControl]; }
+    bool isCondCtrl()     const { return flags[IsCondControl]; }
+    bool isUncondCtrl()   const { return flags[IsUncondControl]; }
     bool isCondDelaySlot() const { return flags[IsCondDelaySlot]; }
 
     bool isThreadSync()   const { return flags[IsThreadSync]; }
@@ -287,8 +310,8 @@ class StaticInst : public StaticInstBase
     typedef TheISA::RegIndex RegIndex;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	//< Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,	//< Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        //< Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      //< Max dest regs
     };
 
 
@@ -360,12 +383,7 @@ class StaticInst : public StaticInstBase
     { }
 
   public:
-
-    virtual ~StaticInst()
-    {
-        if (cachedDisassembly)
-            delete cachedDisassembly;
-    }
+    virtual ~StaticInst();
 
 /**
  * The execute() signatures are auto-generated by scons based on the
@@ -384,12 +402,7 @@ class StaticInst : public StaticInstBase
      * Invalid if not a PC-relative branch (i.e. isDirectCtrl()
      * should be true).
      */
-    virtual Addr branchTarget(Addr branchPC) const
-    {
-        panic("StaticInst::branchTarget() called on instruction "
-              "that is not a PC-relative branch.");
-        M5_DUMMY_RETURN
-    }
+    virtual Addr branchTarget(Addr branchPC) const;
 
     /**
      * Return the target address for an indirect branch (jump).  The
@@ -398,18 +411,15 @@ class StaticInst : public StaticInstBase
      * execute the branch in question.  Invalid if not an indirect
      * branch (i.e. isIndirectCtrl() should be true).
      */
-    virtual Addr branchTarget(ThreadContext *tc) const
-    {
-        panic("StaticInst::branchTarget() called on instruction "
-              "that is not an indirect branch.");
-        M5_DUMMY_RETURN
-    }
+    virtual Addr branchTarget(ThreadContext *tc) const;
 
     /**
      * Return true if the instruction is a control transfer, and if so,
      * return the target address as well.
      */
     bool hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const;
+
+    virtual Request::Flags memAccFlags();
 
     /**
      * Return string representation of disassembled instruction.
@@ -419,14 +429,7 @@ class StaticInst : public StaticInstBase
      * should not be cached, this function should be overridden directly.
      */
     virtual const std::string &disassemble(Addr pc,
-                                           const SymbolTable *symtab = 0) const
-    {
-        if (!cachedDisassembly)
-            cachedDisassembly =
-                new std::string(generateDisassembly(pc, symtab));
-
-        return *cachedDisassembly;
-    }
+        const SymbolTable *symtab = 0) const;
 
     /// Decoded instruction cache type.
     /// For now we're using a generic hash_map; this seems to work
@@ -458,13 +461,13 @@ class StaticInst : public StaticInstBase
     /// A cache of decoded instruction objects from addresses.
     static AddrDecodeCache addrDecodeCache;
 
-    struct cacheElement {
+    struct cacheElement
+    {
         Addr page_addr;
         AddrDecodePage *decodePage;
 
-        cacheElement()
-          :decodePage(NULL) { }
-    } ;
+        cacheElement() : decodePage(NULL) { }
+    };
 
     /// An array of recently decoded instructions.
     // might not use an array if there is only two elements
@@ -493,7 +496,7 @@ class StaticInst : public StaticInstBase
     /// @retval A pointer to the corresponding StaticInst object.
     //This is defined as inlined below.
     static StaticInstPtr searchCache(ExtMachInst mach_inst, Addr addr,
-                                     AddrDecodePage * decodePage);
+                                     AddrDecodePage *decodePage);
 };
 
 typedef RefCountingPtr<StaticInstBase> StaticInstBasePtr;
@@ -547,7 +550,8 @@ class AddrDecodePage
 
   public:
     /// Constructor
-    AddrDecodePage() {
+    AddrDecodePage()
+    {
         lowerMask = TheISA::PageBytes - 1;
         memset(valid, 0, TheISA::PageBytes);
     }
@@ -557,7 +561,8 @@ class AddrDecodePage
     /// related to the address
     /// @param mach_inst The binary instruction to check
     /// @param addr The address containing the instruction
-    inline bool decoded(ExtMachInst mach_inst, Addr addr)
+    bool
+    decoded(ExtMachInst mach_inst, Addr addr)
     {
         return (valid[addr & lowerMask] &&
                 (instructions[addr & lowerMask]->machInst == mach_inst));
@@ -567,19 +572,22 @@ class AddrDecodePage
     /// to check if the instruction is valid.
     /// @param addr The address of the instruction.
     /// @retval A pointer to the corresponding StaticInst object.
-    inline StaticInstPtr getInst(Addr addr)
-    {   return instructions[addr & lowerMask]; }
+    StaticInstPtr
+    getInst(Addr addr)
+    {
+        return instructions[addr & lowerMask];
+    }
 
     /// Inserts a pointer to a StaticInst object into the list of decoded
     /// instructions on the page.
     /// @param addr The address of the instruction.
     /// @param si A pointer to the corresponding StaticInst object.
-    inline void insert(Addr addr, StaticInstPtr &si)
+    void
+    insert(Addr addr, StaticInstPtr &si)
     {
         instructions[addr & lowerMask] = si;
         valid[addr & lowerMask] = true;
     }
-
 };
 
 
@@ -628,7 +636,7 @@ StaticInst::decode(StaticInst::ExtMachInst mach_inst, Addr addr)
     }
 
     // creates a new object for a page of decoded instructions
-    AddrDecodePage * decodePage = new AddrDecodePage;
+    AddrDecodePage *decodePage = new AddrDecodePage;
     addrDecodeCache[page_addr] = decodePage;
     updateCache(page_addr, decodePage);
     return searchCache(mach_inst, addr, decodePage);
@@ -636,7 +644,7 @@ StaticInst::decode(StaticInst::ExtMachInst mach_inst, Addr addr)
 
 inline StaticInstPtr
 StaticInst::searchCache(ExtMachInst mach_inst, Addr addr,
-                        AddrDecodePage * decodePage)
+                        AddrDecodePage *decodePage)
 {
     DecodeCache::iterator iter = decodeCache.find(mach_inst);
     if (iter != decodeCache.end()) {

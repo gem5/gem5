@@ -81,7 +81,8 @@
 #
 # Authors: Gabe Black
 
-categories = ["halt",
+categories = ["control_registers",
+              "halt",
               "invlpg",
               "undefined_operation",
               "msrs",

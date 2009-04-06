@@ -97,17 +97,6 @@ using namespace std;
 
 class Checkpoint;
 
-string X86ISA::getIntRegName(RegIndex index)
-{
-    //These might appear to be out of order, but they match
-    //the encoding for the registers. Who knows why the indexes
-    //are out of order
-    static std::string intRegName[NumIntArchRegs] =
-        {"rax", "rcx", "rdx", "rbx", "rsp", "rbp", "rsi", "rdi",
-         "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"};
-    return intRegName[index];
-}
-
 int IntRegFile::flattenIndex(int reg)
 {
     return reg;
@@ -120,13 +109,15 @@ void IntRegFile::clear()
 
 IntReg IntRegFile::readReg(int intReg)
 {
-    DPRINTF(X86, "Read int reg %d and got value %#x\n", intReg, regs[intReg]);
+    DPRINTF(IntRegs, "Read int reg %d and got value %#x\n",
+            intReg, regs[intReg]);
     return regs[intReg];
 }
 
 void IntRegFile::setReg(int intReg, const IntReg &val)
 {
-    DPRINTF(X86, "Setting int reg %d to value %#x\n", intReg, val);
+    DPRINTF(IntRegs, "Setting int reg %d to value %#x\n",
+            intReg, val);
     regs[intReg] = val;
 }
 

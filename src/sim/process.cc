@@ -46,6 +46,7 @@
 #include "mem/translating_port.hh"
 #include "params/Process.hh"
 #include "params/LiveProcess.hh"
+#include "sim/debug.hh"
 #include "sim/process.hh"
 #include "sim/process_impl.hh"
 #include "sim/stats.hh"
@@ -85,12 +86,23 @@ using namespace TheISA;
 // current number of allocated processes
 int num_processes = 0;
 
+template<class IntType>
+AuxVector<IntType>::AuxVector(IntType type, IntType val)
+{
+    a_type = TheISA::htog(type);
+    a_val = TheISA::htog(val);
+}
+
+template class AuxVector<uint32_t>;
+template class AuxVector<uint64_t>;
+
 Process::Process(ProcessParams * params)
     : SimObject(params), system(params->system), checkpointRestored(false),
     max_stack_size(params->max_stack_size)
 {
     string in = params->input;
     string out = params->output;
+    string err = params->errout;
 
     // initialize file descriptors to default: same as simulator
     int stdin_fd, stdout_fd, stderr_fd;
@@ -111,7 +123,16 @@ Process::Process(ProcessParams * params)
     else
         stdout_fd = Process::openOutputFile(out);
 
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+    if (err == "stdout" || err == "cout")
+        stderr_fd = STDOUT_FILENO;
+    else if (err == "stderr" || err == "cerr")
+        stderr_fd = STDERR_FILENO;
+    else if (err == "None")
+        stderr_fd = -1;
+    else if (err == out)
+        stderr_fd = stdout_fd;
+    else
+        stderr_fd = Process::openOutputFile(err);
 
     M5_pid = system->allocatePID();
     // initialize first 3 fds (stdin, stdout, stderr)
@@ -131,7 +152,7 @@ Process::Process(ProcessParams * params)
 
     fdo = &fd_map[STDERR_FILENO];
     fdo->fd = stderr_fd;
-    fdo->filename = "STDERR";
+    fdo->filename = err;
     fdo->flags = O_WRONLY;
     fdo->mode = -1;
     fdo->fileOffset = 0;
@@ -182,7 +203,7 @@ Process::openInputFile(const string &filename)
 int
 Process::openOutputFile(const string &filename)
 {
-    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0774);
+    int fd = open(filename.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
     if (fd == -1) {
         perror(NULL);
@@ -193,33 +214,29 @@ Process::openOutputFile(const string &filename)
     return fd;
 }
 
-
-int
-Process::registerThreadContext(ThreadContext *tc)
+ThreadContext *
+Process::findFreeContext()
 {
-    // add to list
-    int myIndex = threadContexts.size();
-    threadContexts.push_back(tc);
-
-    RemoteGDB *rgdb = new RemoteGDB(system, tc);
-    GDBListener *gdbl = new GDBListener(rgdb, 7000 + myIndex);
-    gdbl->listen();
-    //gdbl->accept();
-
-    remoteGDB.push_back(rgdb);
-
-    // return CPU number to caller
-    return myIndex;
+    int size = contextIds.size();
+    ThreadContext *tc;
+    for (int i = 0; i < size; ++i) {
+        tc = system->getThreadContext(contextIds[i]);
+        if (tc->status() == ThreadContext::Unallocated) {
+            // inactive context, free to use
+            return tc;
+        }
+    }
+    return NULL;
 }
 
 void
 Process::startup()
 {
-    if (threadContexts.empty())
-        fatal("Process %s is not associated with any CPUs!\n", name());
+    if (contextIds.empty())
+        fatal("Process %s is not associated with any HW contexts!\n", name());
 
     // first thread context for this process... initialize & enable
-    ThreadContext *tc = threadContexts[0];
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
     // mark this context as active so it will start ticking.
     tc->activate(0);
@@ -230,17 +247,6 @@ Process::startup()
             TranslatingPort::Always);
     mem_port->setPeer(initVirtMem);
     initVirtMem->setPeer(mem_port);
-}
-
-void
-Process::replaceThreadContext(ThreadContext *tc, int tcIndex)
-{
-    if (tcIndex >= threadContexts.size()) {
-        panic("replaceThreadContext: bad tcIndex, %d >= %d\n",
-              tcIndex, threadContexts.size());
-    }
-
-    threadContexts[tcIndex] = tc;
 }
 
 // map simulator fd sim_fd to target fd tgt_fd
@@ -337,7 +343,7 @@ Process::checkAndAllocNextPage(Addr vaddr)
             if(stack_base - stack_min > 8*1024*1024)
                 fatal("Over max stack size for one thread\n");
             pTable->allocate(stack_min, TheISA::PageBytes);
-            warn("Increasing stack size by one page.");
+            inform("Increasing stack size by one page.");
         };
         return true;
     }
@@ -352,6 +358,7 @@ Process::fix_file_offsets() {
     Process::FdMap *fdo_stderr = &fd_map[STDERR_FILENO];
     string in = fdo_stdin->filename;
     string out = fdo_stdout->filename;
+    string err = fdo_stderr->filename;
 
     // initialize file descriptors to default: same as simulator
     int stdin_fd, stdout_fd, stderr_fd;
@@ -375,11 +382,23 @@ Process::fix_file_offsets() {
         stdout_fd = -1;
     else{
         stdout_fd = Process::openOutputFile(out);
-        if (lseek(stdin_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
-            panic("Unable to seek to correct in file: %s", out);
+        if (lseek(stdout_fd, fdo_stdout->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct location in file: %s", out);
     }
 
-    stderr_fd = (stdout_fd != STDOUT_FILENO) ? stdout_fd : STDERR_FILENO;
+    if (err == "stdout" || err == "cout")
+        stderr_fd = STDOUT_FILENO;
+    else if (err == "stderr" || err == "cerr")
+        stderr_fd = STDERR_FILENO;
+    else if (err == "None")
+        stderr_fd = -1;
+    else if (err == out)
+        stderr_fd = stdout_fd;
+    else {
+        stderr_fd = Process::openOutputFile(err);
+        if (lseek(stderr_fd, fdo_stderr->fileOffset, SEEK_SET) < 0)
+            panic("Unable to seek to correct location in file: %s", err);
+    }
 
     fdo_stdin->fd = stdin_fd;
     fdo_stdout->fd = stdout_fd;
@@ -597,17 +616,18 @@ LiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
-    assert(NumArgumentRegs >= 2);
-    threadContexts[0]->setIntReg(ArgumentReg[0], argc);
-    threadContexts[0]->setIntReg(ArgumentReg[1], argv_array_base);
-    threadContexts[0]->setIntReg(StackPointerReg, stack_min);
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+
+    setSyscallArg(tc, 0, argc);
+    setSyscallArg(tc, 1, argv_array_base);
+    tc->setIntReg(StackPointerReg, stack_min);
 
     Addr prog_entry = objFile->entryPoint();
-    threadContexts[0]->setPC(prog_entry);
-    threadContexts[0]->setNextPC(prog_entry + sizeof(MachInst));
+    tc->setPC(prog_entry);
+    tc->setNextPC(prog_entry + sizeof(MachInst));
 
 #if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
-    threadContexts[0]->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
+    tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 #endif
 
     num_processes++;
@@ -643,18 +663,17 @@ LiveProcess::create(LiveProcessParams * params)
              "executable as a static binary and try again.\n");
 
 #if THE_ISA == ALPHA_ISA
-    if (objFile->hasTLS())
-        fatal("Object file has a TLS section and single threaded TLS is not\n"
-              "       currently supported for Alpha! Please recompile your "
-              "executable with \n       a non-TLS toolchain.\n");
-
     if (objFile->getArch() != ObjectFile::Alpha)
         fatal("Object file architecture does not match compiled ISA (Alpha).");
+
     switch (objFile->getOpSys()) {
       case ObjectFile::Tru64:
         process = new AlphaTru64Process(params, objFile);
         break;
 
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new AlphaLinuxProcess(params, objFile);
         break;
@@ -663,9 +682,13 @@ LiveProcess::create(LiveProcessParams * params)
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == SPARC_ISA
-    if (objFile->getArch() != ObjectFile::SPARC64 && objFile->getArch() != ObjectFile::SPARC32)
+    if (objFile->getArch() != ObjectFile::SPARC64 &&
+        objFile->getArch() != ObjectFile::SPARC32)
         fatal("Object file architecture does not match compiled ISA (SPARC).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         if (objFile->getArch() == ObjectFile::SPARC64) {
             process = new Sparc64LinuxProcess(params, objFile);
@@ -678,16 +701,26 @@ LiveProcess::create(LiveProcessParams * params)
       case ObjectFile::Solaris:
         process = new SparcSolarisProcess(params, objFile);
         break;
+
       default:
         fatal("Unknown/unsupported operating system.");
     }
 #elif THE_ISA == X86_ISA
-    if (objFile->getArch() != ObjectFile::X86)
+    if (objFile->getArch() != ObjectFile::X86_64 &&
+        objFile->getArch() != ObjectFile::I386)
         fatal("Object file architecture does not match compiled ISA (x86).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
-        process = new X86LinuxProcess(params, objFile);
+        if (objFile->getArch() == ObjectFile::X86_64) {
+            process = new X86_64LinuxProcess(params, objFile);
+        } else {
+            process = new I386LinuxProcess(params, objFile);
+        }
         break;
+
       default:
         fatal("Unknown/unsupported operating system.");
     }
@@ -695,6 +728,9 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::Mips)
         fatal("Object file architecture does not match compiled ISA (MIPS).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new MipsLinuxProcess(params, objFile);
         break;
@@ -706,6 +742,9 @@ LiveProcess::create(LiveProcessParams * params)
     if (objFile->getArch() != ObjectFile::Arm)
         fatal("Object file architecture does not match compiled ISA (ARM).");
     switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
       case ObjectFile::Linux:
         process = new ArmLinuxProcess(params, objFile);
         break;

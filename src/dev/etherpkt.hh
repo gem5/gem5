@@ -60,24 +60,17 @@ class EthPacketData : public RefCounted
      */
     int length;
 
-    /*
-     * Extra space taken up by the packet in whatever data structure
-     * it is in.
-     *
-     * NOTE: This can only be use by *one* data structure at a time!
-     */
-    int slack;
-
   public:
-    EthPacketData() : data(NULL), length(0), slack(0)
+    EthPacketData()
+        : data(NULL), length(0)
     { }
 
     explicit EthPacketData(size_t size)
-        : data(new uint8_t[size]), length(0), slack(0)
+        : data(new uint8_t[size]), length(0)
     { }
 
-    EthPacketData(std::auto_ptr<uint8_t> d, int l, int s = 0)
-        : data(d.release()), length(l), slack(s)
+    EthPacketData(std::auto_ptr<uint8_t> d, int l)
+        : data(d.release()), length(l)
     { }
 
     ~EthPacketData() { if (data) delete [] data; }

@@ -87,6 +87,44 @@ PageTable::allocate(Addr vaddr, int64_t size)
     }
 }
 
+void
+PageTable::remap(Addr vaddr, int64_t size, Addr new_vaddr)
+{
+    assert(pageOffset(vaddr) == 0);
+    assert(pageOffset(new_vaddr) == 0);
+
+    DPRINTF(MMU, "moving pages from vaddr %08p to %08p, size = %d\n", vaddr,
+            new_vaddr, size);
+
+    for (; size > 0; size -= pageSize, vaddr += pageSize, new_vaddr += pageSize) {
+        PTableItr iter = pTable.find(vaddr);
+
+        assert(iter != pTable.end());
+
+        pTable[new_vaddr] = pTable[vaddr];
+        pTable.erase(vaddr);
+        pTable[new_vaddr].updateVaddr(new_vaddr);
+        updateCache(new_vaddr, pTable[new_vaddr]);
+    }
+}
+
+void
+PageTable::deallocate(Addr vaddr, int64_t size)
+{
+    assert(pageOffset(vaddr) == 0);
+
+    DPRINTF(MMU, "Deallocating page: %#x-%#x\n", vaddr, vaddr+ size);
+
+    for (; size > 0; size -= pageSize, vaddr += pageSize) {
+        PTableItr iter = pTable.find(vaddr);
+
+        assert(iter != pTable.end());
+
+        pTable.erase(vaddr);
+    }
+
+}
+
 bool
 PageTable::lookup(Addr vaddr, TheISA::TlbEntry &entry)
 {

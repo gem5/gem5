@@ -36,6 +36,7 @@
 #include <deque>
 #include <string>
 
+#include "base/debug.hh"
 #include "base/inet.hh"
 #include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
@@ -44,9 +45,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
-#include "sim/debug.hh"
 #include "sim/host.hh"
-#include "sim/stats.hh"
 #include "sim/system.hh"
 
 const char *NsRxStateStrings[] =
@@ -130,341 +129,6 @@ NSGigE::NSGigE(Params *p)
 
 NSGigE::~NSGigE()
 {}
-
-void
-NSGigE::regStats()
-{
-    txBytes
-        .name(name() + ".txBytes")
-        .desc("Bytes Transmitted")
-        .prereq(txBytes)
-        ;
-
-    rxBytes
-        .name(name() + ".rxBytes")
-        .desc("Bytes Received")
-        .prereq(rxBytes)
-        ;
-
-    txPackets
-        .name(name() + ".txPackets")
-        .desc("Number of Packets Transmitted")
-        .prereq(txBytes)
-        ;
-
-    rxPackets
-        .name(name() + ".rxPackets")
-        .desc("Number of Packets Received")
-        .prereq(rxBytes)
-        ;
-
-    txIpChecksums
-        .name(name() + ".txIpChecksums")
-        .desc("Number of tx IP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    rxIpChecksums
-        .name(name() + ".rxIpChecksums")
-        .desc("Number of rx IP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    txTcpChecksums
-        .name(name() + ".txTcpChecksums")
-        .desc("Number of tx TCP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    rxTcpChecksums
-        .name(name() + ".rxTcpChecksums")
-        .desc("Number of rx TCP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    txUdpChecksums
-        .name(name() + ".txUdpChecksums")
-        .desc("Number of tx UDP Checksums done by device")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    rxUdpChecksums
-        .name(name() + ".rxUdpChecksums")
-        .desc("Number of rx UDP Checksums done by device")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    descDmaReads
-        .name(name() + ".descDMAReads")
-        .desc("Number of descriptors the device read w/ DMA")
-        .precision(0)
-        ;
-
-    descDmaWrites
-        .name(name() + ".descDMAWrites")
-        .desc("Number of descriptors the device wrote w/ DMA")
-        .precision(0)
-        ;
-
-    descDmaRdBytes
-        .name(name() + ".descDmaReadBytes")
-        .desc("number of descriptor bytes read w/ DMA")
-        .precision(0)
-        ;
-
-   descDmaWrBytes
-        .name(name() + ".descDmaWriteBytes")
-        .desc("number of descriptor bytes write w/ DMA")
-        .precision(0)
-        ;
-
-    txBandwidth
-        .name(name() + ".txBandwidth")
-        .desc("Transmit Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    rxBandwidth
-        .name(name() + ".rxBandwidth")
-        .desc("Receive Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    totBandwidth
-        .name(name() + ".totBandwidth")
-        .desc("Total Bandwidth (bits/s)")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totPackets
-        .name(name() + ".totPackets")
-        .desc("Total Packets")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totBytes
-        .name(name() + ".totBytes")
-        .desc("Total Bytes")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    totPacketRate
-        .name(name() + ".totPPS")
-        .desc("Total Tranmission Rate (packets/s)")
-        .precision(0)
-        .prereq(totBytes)
-        ;
-
-    txPacketRate
-        .name(name() + ".txPPS")
-        .desc("Packet Tranmission Rate (packets/s)")
-        .precision(0)
-        .prereq(txBytes)
-        ;
-
-    rxPacketRate
-        .name(name() + ".rxPPS")
-        .desc("Packet Reception Rate (packets/s)")
-        .precision(0)
-        .prereq(rxBytes)
-        ;
-
-    postedSwi
-        .name(name() + ".postedSwi")
-        .desc("number of software interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalSwi
-        .name(name() + ".totalSwi")
-        .desc("total number of Swi written to ISR")
-        .precision(0)
-        ;
-
-    coalescedSwi
-        .name(name() + ".coalescedSwi")
-        .desc("average number of Swi's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedRxIdle
-        .name(name() + ".postedRxIdle")
-        .desc("number of rxIdle interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalRxIdle
-        .name(name() + ".totalRxIdle")
-        .desc("total number of RxIdle written to ISR")
-        .precision(0)
-        ;
-
-    coalescedRxIdle
-        .name(name() + ".coalescedRxIdle")
-        .desc("average number of RxIdle's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedRxOk
-        .name(name() + ".postedRxOk")
-        .desc("number of RxOk interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalRxOk
-        .name(name() + ".totalRxOk")
-        .desc("total number of RxOk written to ISR")
-        .precision(0)
-        ;
-
-    coalescedRxOk
-        .name(name() + ".coalescedRxOk")
-        .desc("average number of RxOk's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedRxDesc
-        .name(name() + ".postedRxDesc")
-        .desc("number of RxDesc interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalRxDesc
-        .name(name() + ".totalRxDesc")
-        .desc("total number of RxDesc written to ISR")
-        .precision(0)
-        ;
-
-    coalescedRxDesc
-        .name(name() + ".coalescedRxDesc")
-        .desc("average number of RxDesc's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedTxOk
-        .name(name() + ".postedTxOk")
-        .desc("number of TxOk interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalTxOk
-        .name(name() + ".totalTxOk")
-        .desc("total number of TxOk written to ISR")
-        .precision(0)
-        ;
-
-    coalescedTxOk
-        .name(name() + ".coalescedTxOk")
-        .desc("average number of TxOk's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedTxIdle
-        .name(name() + ".postedTxIdle")
-        .desc("number of TxIdle interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalTxIdle
-        .name(name() + ".totalTxIdle")
-        .desc("total number of TxIdle written to ISR")
-        .precision(0)
-        ;
-
-    coalescedTxIdle
-        .name(name() + ".coalescedTxIdle")
-        .desc("average number of TxIdle's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedTxDesc
-        .name(name() + ".postedTxDesc")
-        .desc("number of TxDesc interrupts posted to CPU")
-        .precision(0)
-        ;
-
-    totalTxDesc
-        .name(name() + ".totalTxDesc")
-        .desc("total number of TxDesc written to ISR")
-        .precision(0)
-        ;
-
-    coalescedTxDesc
-        .name(name() + ".coalescedTxDesc")
-        .desc("average number of TxDesc's coalesced into each post")
-        .precision(0)
-        ;
-
-    postedRxOrn
-        .name(name() + ".postedRxOrn")
-        .desc("number of RxOrn posted to CPU")
-        .precision(0)
-        ;
-
-    totalRxOrn
-        .name(name() + ".totalRxOrn")
-        .desc("total number of RxOrn written to ISR")
-        .precision(0)
-        ;
-
-    coalescedRxOrn
-        .name(name() + ".coalescedRxOrn")
-        .desc("average number of RxOrn's coalesced into each post")
-        .precision(0)
-        ;
-
-    coalescedTotal
-        .name(name() + ".coalescedTotal")
-        .desc("average number of interrupts coalesced into each post")
-        .precision(0)
-        ;
-
-    postedInterrupts
-        .name(name() + ".postedInterrupts")
-        .desc("number of posts to CPU")
-        .precision(0)
-        ;
-
-    droppedPackets
-        .name(name() + ".droppedPackets")
-        .desc("number of packets dropped")
-        .precision(0)
-        ;
-
-    coalescedSwi = totalSwi / postedInterrupts;
-    coalescedRxIdle = totalRxIdle / postedInterrupts;
-    coalescedRxOk = totalRxOk / postedInterrupts;
-    coalescedRxDesc = totalRxDesc / postedInterrupts;
-    coalescedTxOk = totalTxOk / postedInterrupts;
-    coalescedTxIdle = totalTxIdle / postedInterrupts;
-    coalescedTxDesc = totalTxDesc / postedInterrupts;
-    coalescedRxOrn = totalRxOrn / postedInterrupts;
-
-    coalescedTotal = (totalSwi + totalRxIdle + totalRxOk + totalRxDesc +
-                      totalTxOk + totalTxIdle + totalTxDesc +
-                      totalRxOrn) / postedInterrupts;
-
-    txBandwidth = txBytes * Stats::constant(8) / simSeconds;
-    rxBandwidth = rxBytes * Stats::constant(8) / simSeconds;
-    totBandwidth = txBandwidth + rxBandwidth;
-    totBytes = txBytes + rxBytes;
-    totPackets = txPackets + rxPackets;
-
-    txPacketRate = txPackets / simSeconds;
-    rxPacketRate = rxPackets / simSeconds;
-}
-
 
 /**
  * This is to write to the PCI general configuration registers
@@ -1186,6 +850,7 @@ NSGigE::devIntrPost(uint32_t interrupts)
         Tick when = curTick;
         if ((regs.isr & regs.imr & ISR_NODELAY) == 0)
             when += intrDelay;
+        postedInterrupts++;
         cpuIntrPost(when);
     }
 }
@@ -1225,9 +890,6 @@ NSGigE::devIntrClear(uint32_t interrupts)
     if (regs.isr & regs.imr & ISR_RXORN) {
         postedRxOrn++;
     }
-
-    if (regs.isr & regs.imr & ISR_IMPL)
-        postedInterrupts++;
 
     interrupts &= ~ISR_NOIMPL;
     regs.isr &= ~interrupts;
@@ -1283,7 +945,8 @@ NSGigE::cpuIntrPost(Tick when)
 
     if (intrEvent)
         intrEvent->squash();
-    intrEvent = new IntrEvent(this, intrTick, true);
+    intrEvent = new IntrEvent(this, true);
+    schedule(intrEvent, intrTick);
 }
 
 void
@@ -1780,7 +1443,7 @@ NSGigE::rxKick()
             NsRxStateStrings[rxState]);
 
     if (clock && !rxKickEvent.scheduled())
-        rxKickEvent.schedule(rxKickTick);
+        schedule(rxKickEvent, rxKickTick);
 }
 
 void
@@ -1830,7 +1493,7 @@ NSGigE::transmit()
 
    if (!txFifo.empty() && !txEvent.scheduled()) {
        DPRINTF(Ethernet, "reschedule transmit\n");
-       txEvent.schedule(curTick + retryTime);
+       schedule(txEvent, curTick + retryTime);
    }
 }
 
@@ -2036,19 +1699,34 @@ NSGigE::txKick()
                     IpPtr ip(txPacket);
                     if (extsts & EXTSTS_UDPPKT) {
                         UdpPtr udp(ip);
-                        udp->sum(0);
-                        udp->sum(cksum(udp));
-                        txUdpChecksums++;
+                        if (udp) {
+                            udp->sum(0);
+                            udp->sum(cksum(udp));
+                            txUdpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("UDPPKT set, but not UDP!\n");
+                        }
                     } else if (extsts & EXTSTS_TCPPKT) {
                         TcpPtr tcp(ip);
-                        tcp->sum(0);
-                        tcp->sum(cksum(tcp));
-                        txTcpChecksums++;
+                        if (tcp) {
+                            tcp->sum(0);
+                            tcp->sum(cksum(tcp));
+                            txTcpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("TCPPKT set, but not UDP!\n");
+                        }
                     }
                     if (extsts & EXTSTS_IPPKT) {
-                        ip->sum(0);
-                        ip->sum(cksum(ip));
-                        txIpChecksums++;
+                        if (ip) {
+                            ip->sum(0);
+                            ip->sum(cksum(ip));
+                            txIpChecksums++;
+                        } else {
+                            debug_break();
+                            warn_once("IPPKT set, but not UDP!\n");
+                        }
                     }
                 }
 
@@ -2208,7 +1886,7 @@ NSGigE::txKick()
             NsTxStateStrings[txState]);
 
     if (clock && !txKickEvent.scheduled())
-        txKickEvent.schedule(txKickTick);
+        schedule(txKickEvent, txKickTick);
 }
 
 /**
@@ -2322,7 +2000,7 @@ NSGigE::transferDone()
 
     DPRINTF(Ethernet, "transfer complete: data in txFifo...schedule xmit\n");
 
-    txEvent.reschedule(curTick + ticks(1), true);
+    reschedule(txEvent, curTick + ticks(1), true);
 }
 
 bool
@@ -2723,7 +2401,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->txDmaState = (DmaState) txDmaState;
     UNSERIALIZE_SCALAR(txKickTick);
     if (txKickTick)
-        txKickEvent.schedule(txKickTick);
+        schedule(txKickEvent, txKickTick);
 
     /*
      * unserialize rx state machine
@@ -2741,7 +2419,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     this->rxDmaState = (DmaState) rxDmaState;
     UNSERIALIZE_SCALAR(rxKickTick);
     if (rxKickTick)
-        rxKickEvent.schedule(rxKickTick);
+        schedule(rxKickEvent, rxKickTick);
 
     /*
      * Unserialize EEPROM state machine
@@ -2761,7 +2439,7 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick transmitTick;
     UNSERIALIZE_SCALAR(transmitTick);
     if (transmitTick)
-        txEvent.schedule(curTick + transmitTick);
+        schedule(txEvent, curTick + transmitTick);
 
     /*
      * unserialize receive address filter settings
@@ -2782,7 +2460,8 @@ NSGigE::unserialize(Checkpoint *cp, const std::string &section)
     Tick intrEventTick;
     UNSERIALIZE_SCALAR(intrEventTick);
     if (intrEventTick) {
-        intrEvent = new IntrEvent(this, intrEventTick, true);
+        intrEvent = new IntrEvent(this, true);
+        schedule(intrEvent, intrEventTick);
     }
 }
 

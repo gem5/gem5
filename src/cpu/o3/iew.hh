@@ -41,6 +41,7 @@
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/lsq.hh"
 
+class DerivO3CPUParams;
 class FUPool;
 
 /**
@@ -70,7 +71,6 @@ class DefaultIEW
     typedef typename Impl::CPUPol CPUPol;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     typedef typename CPUPol::IQ IQ;
     typedef typename CPUPol::RenameMap RenameMap;
@@ -115,7 +115,7 @@ class DefaultIEW
 
   public:
     /** Constructs a DefaultIEW with the given parameters. */
-    DefaultIEW(O3CPU *_cpu, Params *params);
+    DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of the DefaultIEW stage. */
     std::string name() const;
@@ -207,6 +207,9 @@ class DefaultIEW
 
     /** Returns if the LSQ has any stores to writeback. */
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
+
+    /** Returns if the LSQ has any stores to writeback. */
+    bool hasStoresToWB(unsigned tid) { return ldstQueue.hasStoresToWB(tid); }
 
     void incrWb(InstSeqNum &sn)
     {
@@ -462,69 +465,69 @@ class DefaultIEW
     bool switchedOut;
 
     /** Stat for total number of idle cycles. */
-    Stats::Scalar<> iewIdleCycles;
+    Stats::Scalar iewIdleCycles;
     /** Stat for total number of squashing cycles. */
-    Stats::Scalar<> iewSquashCycles;
+    Stats::Scalar iewSquashCycles;
     /** Stat for total number of blocking cycles. */
-    Stats::Scalar<> iewBlockCycles;
+    Stats::Scalar iewBlockCycles;
     /** Stat for total number of unblocking cycles. */
-    Stats::Scalar<> iewUnblockCycles;
+    Stats::Scalar iewUnblockCycles;
     /** Stat for total number of instructions dispatched. */
-    Stats::Scalar<> iewDispatchedInsts;
+    Stats::Scalar iewDispatchedInsts;
     /** Stat for total number of squashed instructions dispatch skips. */
-    Stats::Scalar<> iewDispSquashedInsts;
+    Stats::Scalar iewDispSquashedInsts;
     /** Stat for total number of dispatched load instructions. */
-    Stats::Scalar<> iewDispLoadInsts;
+    Stats::Scalar iewDispLoadInsts;
     /** Stat for total number of dispatched store instructions. */
-    Stats::Scalar<> iewDispStoreInsts;
+    Stats::Scalar iewDispStoreInsts;
     /** Stat for total number of dispatched non speculative instructions. */
-    Stats::Scalar<> iewDispNonSpecInsts;
+    Stats::Scalar iewDispNonSpecInsts;
     /** Stat for number of times the IQ becomes full. */
-    Stats::Scalar<> iewIQFullEvents;
+    Stats::Scalar iewIQFullEvents;
     /** Stat for number of times the LSQ becomes full. */
-    Stats::Scalar<> iewLSQFullEvents;
+    Stats::Scalar iewLSQFullEvents;
     /** Stat for total number of memory ordering violation events. */
-    Stats::Scalar<> memOrderViolationEvents;
+    Stats::Scalar memOrderViolationEvents;
     /** Stat for total number of incorrect predicted taken branches. */
-    Stats::Scalar<> predictedTakenIncorrect;
+    Stats::Scalar predictedTakenIncorrect;
     /** Stat for total number of incorrect predicted not taken branches. */
-    Stats::Scalar<> predictedNotTakenIncorrect;
+    Stats::Scalar predictedNotTakenIncorrect;
     /** Stat for total number of mispredicted branches detected at execute. */
     Stats::Formula branchMispredicts;
 
     /** Stat for total number of executed instructions. */
-    Stats::Scalar<> iewExecutedInsts;
+    Stats::Scalar iewExecutedInsts;
     /** Stat for total number of executed load instructions. */
-    Stats::Vector<> iewExecLoadInsts;
+    Stats::Vector iewExecLoadInsts;
     /** Stat for total number of executed store instructions. */
-//    Stats::Scalar<> iewExecStoreInsts;
+//    Stats::Scalar iewExecStoreInsts;
     /** Stat for total number of squashed instructions skipped at execute. */
-    Stats::Scalar<> iewExecSquashedInsts;
+    Stats::Scalar iewExecSquashedInsts;
     /** Number of executed software prefetches. */
-    Stats::Vector<> iewExecutedSwp;
+    Stats::Vector iewExecutedSwp;
     /** Number of executed nops. */
-    Stats::Vector<> iewExecutedNop;
+    Stats::Vector iewExecutedNop;
     /** Number of executed meomory references. */
-    Stats::Vector<> iewExecutedRefs;
+    Stats::Vector iewExecutedRefs;
     /** Number of executed branches. */
-    Stats::Vector<> iewExecutedBranches;
+    Stats::Vector iewExecutedBranches;
     /** Number of executed store instructions. */
     Stats::Formula iewExecStoreInsts;
     /** Number of instructions executed per cycle. */
     Stats::Formula iewExecRate;
 
     /** Number of instructions sent to commit. */
-    Stats::Vector<> iewInstsToCommit;
+    Stats::Vector iewInstsToCommit;
     /** Number of instructions that writeback. */
-    Stats::Vector<> writebackCount;
+    Stats::Vector writebackCount;
     /** Number of instructions that wake consumers. */
-    Stats::Vector<> producerInst;
+    Stats::Vector producerInst;
     /** Number of instructions that wake up from producers. */
-    Stats::Vector<> consumerInst;
+    Stats::Vector consumerInst;
     /** Number of instructions that were delayed in writing back due
      * to resource contention.
      */
-    Stats::Vector<> wbPenalized;
+    Stats::Vector wbPenalized;
     /** Number of instructions per cycle written back. */
     Stats::Formula wbRate;
     /** Average number of woken instructions per writeback. */

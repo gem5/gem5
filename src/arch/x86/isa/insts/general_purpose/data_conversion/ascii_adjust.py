@@ -56,11 +56,11 @@
 microcode = ""
 #let {{
 #    class AAA(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class AAD(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class AAM(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class AAS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

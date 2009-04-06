@@ -134,9 +134,9 @@ MipsSystem::~MipsSystem()
  * in the procedure value register (pv aka t12 == r27).  This sequence
  * looks like the following:
  *
- *			opcode Ra Rb offset
- *	ldah gp,X(pv)     09   29 27   X
- *	lda  gp,Y(gp)     08   29 29   Y
+ *                      opcode Ra Rb offset
+ *      ldah gp,X(pv)     09   29 27   X
+ *      lda  gp,Y(gp)     08   29 29   Y
  *
  * for some constant offsets X and Y.  The catch is that the linker
  * (or maybe even the compiler, I'm not sure) may recognize that the
@@ -185,7 +185,7 @@ MipsSystem::setMipsAccess(Addr access)
 {
     Addr addr = 0;
     if (consoleSymtab->findAddress("m5MipsAccess", addr)) {
-      //        virtPort.write(addr, htog(EV5::Phys2K0Seg(access)));
+      //        virtPort.write(addr, htog(AlphaISA::Phys2K0Seg(access)));
     } else
     panic("could not find m5MipsAccess\n");
     }

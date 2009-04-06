@@ -28,8 +28,10 @@
  * Authors: Nathan Binkert
  */
 
+#include <cstdlib>
 #include <iostream>
 #include <string>
+#include <zlib.h>
 
 #include "base/cprintf.hh"
 #include "base/hostinfo.hh"
@@ -42,11 +44,23 @@
 
 using namespace std;
 
+bool want_warn = true;
+bool want_info = true;
+bool want_hack = true;
+
+bool warn_verbose = false;
+bool info_verbose = false;
+bool hack_verbose = false;
+
 void
-__panic(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
+__exit_message(const char *prefix, int code,
+    const char *func, const char *file, int line,
+    const char *fmt, CPRINTF_DEFINITION)
 {
-    string format = "panic: ";
+    CPrintfArgsList args(VARARGS_ALLARGS);
+
+    string format = prefix;
+    format += ": ";
     format += fmt;
     switch (format[format.size() - 1]) {
       case '\n':
@@ -55,58 +69,39 @@ __panic(const char *func, const char *file, int line, const char *fmt,
       default:
         format += "\n";
     }
-
-    format += " @ cycle %d\n[%s:%s, line %d]\n";
-
-    CPrintfArgsList args(VARARGS_ALLARGS);
-
-    args.push_back(curTick);
-    args.push_back(func);
-    args.push_back(file);
-    args.push_back(line);
-
-    ccprintf(cerr, format.c_str(), args);
-
-    abort();
-}
-
-void
-__fatal(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
-{
-    CPrintfArgsList args(VARARGS_ALLARGS);
-    string format = "fatal: ";
-    format += fmt;
-
-    switch (format[format.size() - 1]) {
-      case '\n':
-      case '\r':
-        break;
-      default:
-        format += "\n";
-    }
+    
+    uint32_t crc = crc32(0, (const Bytef*)fmt, strlen(fmt));
 
     format += " @ cycle %d\n[%s:%s, line %d]\n";
     format += "Memory Usage: %ld KBytes\n";
+    format += "For more information see: http://www.m5sim.org/%s/%x\n";
 
     args.push_back(curTick);
     args.push_back(func);
     args.push_back(file);
     args.push_back(line);
     args.push_back(memUsage());
+    args.push_back(prefix);
+    args.push_back(crc);
 
     ccprintf(cerr, format.c_str(), args);
 
-    exit(1);
+    if (code < 0)
+        abort();
+    else
+        exit(code);
 }
 
 void
-__warn(const char *func, const char *file, int line, const char *fmt,
-    CPRINTF_DEFINITION)
+__base_message(std::ostream &stream, const char *prefix, bool verbose,
+    const char *func, const char *file, int line,
+    const char *fmt, CPRINTF_DEFINITION)
 {
-    string format = "warn: ";
-    format += fmt;
+    CPrintfArgsList args(VARARGS_ALLARGS);
 
+    string format = prefix;
+    format += ": ";
+    format += fmt;
     switch (format[format.size() - 1]) {
       case '\n':
       case '\r':
@@ -114,21 +109,22 @@ __warn(const char *func, const char *file, int line, const char *fmt,
       default:
         format += "\n";
     }
+    
+    uint32_t crc = crc32(0, (const Bytef*)fmt, strlen(fmt));
 
-#ifdef VERBOSE_WARN
-    format += " @ cycle %d\n[%s:%s, line %d]\n";
-#endif
+    if (verbose) {
+        format += " @ cycle %d\n[%s:%s, line %d]\n";
+        args.push_back(curTick);
+        args.push_back(func);
+        args.push_back(file);
+        args.push_back(line);
+    }
 
-    CPrintfArgsList args(VARARGS_ALLARGS);
+    if (strcmp(prefix, "warn") == 0) {
+        format += "For more information see: http://www.m5sim.org/%s/%x\n";
+        args.push_back(prefix);
+        args.push_back(crc);
+    }
 
-#ifdef VERBOSE_WARN
-    args.push_back(curTick);
-    args.push_back(func);
-    args.push_back(file);
-    args.push_back(line);
-#endif
-
-    ccprintf(cerr, format.c_str(), args);
-    if (simout.isFile(*outputStream))
-        ccprintf(*outputStream, format.c_str(), args);
+    ccprintf(stream, format.c_str(), args);
 }

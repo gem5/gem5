@@ -47,20 +47,15 @@ TaggedPrefetcher::
 calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                   std::list<Tick> &delays)
 {
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
+    Addr blkAddr = pkt->getAddr() & ~(Addr)(blkSize-1);
 
-    for (int d=1; d <= degree; d++) {
-        Addr newAddr = blkAddr + d*(this->blkSize);
-        if (this->pageStop &&
-            (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-            (newAddr & ~(TheISA::VMPageSize - 1)))
-        {
-            //Spanned the page, so now stop
-            this->pfSpanPage += degree - d + 1;
+    for (int d = 1; d <= degree; d++) {
+        Addr newAddr = blkAddr + d*(blkSize);
+        if (pageStop &&  !samePage(blkAddr, newAddr)) {
+            // Spanned the page, so now stop
+            pfSpanPage += degree - d + 1;
             return;
-        }
-        else
-        {
+        } else {
             addresses.push_back(newAddr);
             delays.push_back(latency);
         }

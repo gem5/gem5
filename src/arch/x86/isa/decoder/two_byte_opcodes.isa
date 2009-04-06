@@ -93,8 +93,8 @@
                 0x00: decode MODRM_REG {
                     0x0: sldt_Mw_or_Rv();
                     0x1: str_Mw_or_Rv();
-                    0x2: lldt_Mw_or_Rv();
-                    0x3: ltr_Mw_or_Rv();
+                    0x2: Inst::LLDT(Ew);
+                    0x3: Inst::LTR(Ew);
                     0x4: verr_Mw_or_Rv();
                     0x5: verw_Mw_or_Rv();
                     //0x6: jmpe_Ev(); // IA-64
@@ -128,7 +128,7 @@
                         0x4: smsw_Rv();
                         0x6: lmsw_Rv();
                         0x7: decode MODRM_RM {
-                            0x0: swapgs();
+                            0x0: Inst::SWAPGS();
                             0x1: rdtscp();
                             default: Inst::UD2();
                         }
@@ -163,17 +163,117 @@
                 }
                 0x02: lar_Gv_Ew();
                 0x03: lsl_Gv_Ew();
-                //sandpile.org doesn't seem to know what this is... ?
-                0x04: loadall_or_reset_or_hang();
+                // sandpile.org doesn't seem to know what this is...? We'll
+                // use it for pseudo instructions. We've got 16 bits of space
+                // to play with so there can be quite a few pseudo
+                // instructions.
+                //0x04: loadall_or_reset_or_hang();
+                0x4: decode IMMEDIATE {
+                    format BasicOperate {
 #if FULL_SYSTEM
-                0x05: syscall();
-#else
-                0x05: SyscallInst::syscall('xc->syscall(rax)', IsSyscall);
+                        0x00: m5arm({{
+                            PseudoInst::arm(xc->tcBase());
+                        }}, IsNonSpeculative);
+                        0x01: m5quiesce({{
+                            PseudoInst::quiesce(xc->tcBase());
+                        }}, IsNonSpeculative);
+                        0x02: m5quiesceNs({{
+                            PseudoInst::quiesceNs(xc->tcBase(), Rdi);
+                        }}, IsNonSpeculative);
+                        0x03: m5quiesceCycle({{
+                            PseudoInst::quiesceCycles(xc->tcBase(), Rdi);
+                        }}, IsNonSpeculative);
+                        0x04: m5quiesceTime({{
+                            Rax = PseudoInst::quiesceTime(xc->tcBase());
+                        }}, IsNonSpeculative);
 #endif
-                0x06: clts();
-                //sandpile.org says (AMD) after sysret, so I might want to check
-                //if that means amd64 or AMD machines
-                0x07: loadall_or_sysret();
+                        0x07: m5rpns({{
+                            Rax = PseudoInst::rpns(xc->tcBase());
+                        }}, IsNonSpeculative);
+                        0x21: m5exit({{
+                            PseudoInst::m5exit(xc->tcBase(), Rdi);
+                        }}, IsNonSpeculative);
+#if FULL_SYSTEM
+                        0x30: m5initparam({{
+                            Rax = xc->tcBase()->getCpuPtr()->
+                                      system->init_param;
+                        }}, IsNonSpeculative);
+                        0x31: m5loadsymbol({{
+                            PseudoInst::loadsymbol(xc->tcBase());
+                        }}, IsNonSpeculative);
+#endif
+                        0x40: m5resetstats({{
+                            PseudoInst::resetstats(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+                        0x41: m5dumpstats({{
+                            PseudoInst::dumpstats(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+                        0x42: m5dumpresetstats({{
+                            PseudoInst::dumpresetstats(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+                        0x43: m5checkpoint({{
+                            PseudoInst::m5checkpoint(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+#if FULL_SYSTEM
+                        0x50: m5readfile({{
+                            Rax = PseudoInst::readfile(
+                                xc->tcBase(), Rdi, Rsi, Rdx);
+                        }}, IsNonSpeculative);
+#endif
+                        0x51: m5debugbreak({{
+                            PseudoInst::debugbreak(xc->tcBase());
+                        }}, IsNonSpeculative);
+                        0x52: m5switchcpu({{
+                            PseudoInst::switchcpu(xc->tcBase());
+                        }}, IsNonSpeculative);
+#if FULL_SYSTEM
+                        0x53: m5addsymbol({{
+                            PseudoInst::addsymbol(xc->tcBase(), Rdi, Rsi);
+                        }}, IsNonSpeculative);
+#endif
+                        0x54: m5panic({{
+                            panic("M5 panic instruction called at pc=%#x.\n",
+                                xc->readPC());
+                        }}, IsNonSpeculative);
+                        0x55: m5reserved1({{
+                            warn("M5 reserved opcode 1 ignored.\n");
+                        }}, IsNonSpeculative);
+                        0x56: m5reserved2({{
+                            warn("M5 reserved opcode 2 ignored.\n");
+                        }}, IsNonSpeculative);
+                        0x57: m5reserved3({{
+                            warn("M5 reserved opcode 3 ignored.\n");
+                        }}, IsNonSpeculative);
+                        0x58: m5reserved4({{
+                            warn("M5 reserved opcode 4 ignored.\n");
+                        }}, IsNonSpeculative);
+                        0x59: m5reserved5({{
+                            warn("M5 reserved opcode 5 ignored.\n");
+                        }}, IsNonSpeculative);
+                        default: Inst::UD2();
+                    }
+                }
+#if FULL_SYSTEM
+                0x05: decode MODE_MODE {
+                    0x0: decode MODE_SUBMODE {
+                        0x0: Inst::SYSCALL_64();
+                        0x1: Inst::SYSCALL_COMPAT();
+                    }
+                    0x1: Inst::SYSCALL_LEGACY();
+                }
+#else
+                0x05: SyscallInst::syscall('xc->syscall(Rax)', IsSyscall);
+#endif
+                0x06: Inst::CLTS();
+                0x07: decode MODE_SUBMODE {
+                    0x0: decode OPSIZE {
+                        // Return to 64 bit mode.
+                        0x8: Inst::SYSRET_TO_64();
+                        // Return to compatibility mode.
+                        default: Inst::SYSRET_TO_COMPAT();
+                    }
+                    default: Inst::SYSRET_NON_64();
+                }
             }
             0x01: decode OPCODE_OP_BOTTOM3 {
                 0x0: invd();
@@ -181,9 +281,9 @@
                 0x2: Inst::UD2();
                 0x3: Inst::UD2();
                 0x4: Inst::UD2();
-                0x5: threednow();
-                0x6: threednow();
-                0x7: threednow();
+                0x5: Inst::PREFETCH(Mb);
+                0x6: FailUnimpl::femms();
+                0x7: FailUnimpl::threednow();
             }
             0x02: decode LEGACY_DECODEVAL {
                 // no prefix
@@ -235,7 +335,7 @@
                 //group17();
                 0x0: decode MODRM_REG {
                     0x0: prefetch_nta();
-                    0x1: prefetch_t0();
+                    0x1: Inst::PREFETCH_T0(Mb);
                     0x2: prefetch_t1();
                     0x3: prefetch_t2();
                     default: Inst::HINT_NOP();
@@ -252,9 +352,9 @@
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::MOV(Rd,Cd);
-                    0x1: mov_Rd_Dd();
+                    0x1: Inst::MOV(Rd,Dd);
                     0x2: Inst::MOV(Cd,Rd);
-                    0x3: mov_Dd_Rd();
+                    0x3: Inst::MOV(Dd,Rd);
                     0x4: mov_Rd_Td();
                     0x6: mov_Td_Rd();
                     default: Inst::UD2();
@@ -317,10 +417,14 @@
             }
             0x06: decode OPCODE_OP_BOTTOM3 {
                 0x0: Inst::WRMSR();
-                0x1: rdtsc();
+                0x1: Inst::RDTSC();
                 0x2: Inst::RDMSR();
                 0x3: rdpmc();
+#if FULL_SYSTEM
                 0x4: sysenter();
+#else
+                0x4: SyscallInst::sysenter('xc->syscall(Rax)', IsSyscall);
+#endif
                 0x5: sysexit();
                 0x6: Inst::UD2();
                 0x7: getsec();
@@ -707,7 +811,14 @@
             0x14: decode OPCODE_OP_BOTTOM3 {
                 0x0: push_fs();
                 0x1: pop_fs();
-                0x2: Inst::CPUID(rAd);
+                0x2: CPUIDInst::CPUID({{
+                    CpuidResult result;
+                    success = doCpuid(xc->tcBase(), Rax, result);
+                    Rax = result.rax;
+                    Rbx = result.rbx;
+                    Rcx = result.rcx;
+                    Rdx = result.rdx;
+                    }});
                 0x3: Inst::BT(Ev,Gv);
                 0x4: shld_Ev_Gv_Ib();
                 0x5: shld_Ev_Gv_rCl();
@@ -719,20 +830,28 @@
                 0x1: pop_gs();
                 0x2: rsm_smm();
                 0x3: Inst::BTS(Ev,Gv);
-                0x4: shrd_Ev_Gv_Ib();
+                0x4: Inst::SHRD(Ev,Gv,Ib);
                 0x5: shrd_Ev_Gv_rCl();
                 //0x6: group16();
-                0x6: decode MODRM_MOD {
-                    0x3: decode MODRM_REG {
-                        0x5: lfence();
-                        0x6: mfence();
-                        0x7: sfence();
+                0x6: decode MODRM_REG {
+                    0x0: fxsave();
+                    0x1: fxrstor();
+                    0x2: ldmxcsr();
+                    0x3: stmxcsr();
+                    0x4: Inst::UD2();
+                    0x5: decode MODRM_MOD {
+                        0x3: BasicOperate::LFENCE(
+                                     {{/*Nothing*/}}, IsReadBarrier);
                         default: Inst::UD2();
                     }
-                    default: decode MODRM_REG {
-                        0x0: fxsave();
-                        0x1: fxrstor();
-                        0x7: clflush();
+                    0x6: decode MODRM_MOD {
+                        0x3: BasicOperate::MFENCE(
+                                     {{/*Nothing*/}}, IsMemBarrier);
+                        default: Inst::UD2();
+                    }
+                    0x7: decode MODRM_MOD {
+                        0x3: BasicOperate::SFENCE(
+                                     {{/*Nothing*/}}, IsWriteBarrier);
                         default: Inst::UD2();
                     }
                 }
@@ -775,8 +894,8 @@
                 0x7: Inst::MOVSX_W(Gv,Ev);
             }
             0x18: decode OPCODE_OP_BOTTOM3 {
-                0x0: xadd_Eb_Gb();
-                0x1: xadd_Ev_Gv();
+                0x0: Inst::XADD(Eb,Gb);
+                0x1: Inst::XADD(Ev,Gv);
                 //0x7: group9();
                 0x7: decode MODRM_REG {
                     0x1: cmpxchg_Mq();
@@ -820,7 +939,11 @@
                     default: Inst::UD2();
                 }
             }
-            0x19: bswap_B();
+            0x19: decode OPSIZE {
+                4: Inst::BSWAP_D(Bd);
+                8: Inst::BSWAP_Q(Bq);
+                default: Inst::UD2();
+            }
             0x1A: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {

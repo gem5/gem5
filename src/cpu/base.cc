@@ -37,16 +37,16 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/output.hh"
+#include "base/trace.hh"
 #include "cpu/base.hh"
 #include "cpu/cpuevent.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/profile.hh"
+#include "params/BaseCPU.hh"
 #include "sim/sim_exit.hh"
 #include "sim/process.hh"
 #include "sim/sim_events.hh"
 #include "sim/system.hh"
-
-#include "base/trace.hh"
 
 // Hack
 #include "sim/stat_control.hh"
@@ -60,13 +60,12 @@ vector<BaseCPU *> BaseCPU::cpuList;
 // been initialized
 int maxThreadsPerCPU = 1;
 
-CPUProgressEvent::CPUProgressEvent(EventQueue *q, Tick ival,
-                                   BaseCPU *_cpu)
-    : Event(q, Event::Progress_Event_Pri), interval(ival),
-      lastNumInst(0), cpu(_cpu)
+CPUProgressEvent::CPUProgressEvent(BaseCPU *_cpu, Tick ival)
+    : Event(Event::Progress_Event_Pri), interval(ival), lastNumInst(0),
+      cpu(_cpu)
 {
     if (interval)
-        schedule(curTick + interval);
+        cpu->schedule(this, curTick + interval);
 }
 
 void
@@ -84,7 +83,7 @@ CPUProgressEvent::process()
             curTick, cpu->name(), temp - lastNumInst);
 #endif
     lastNumInst = temp;
-    schedule(curTick + interval);
+    cpu->schedule(this, curTick + interval);
 }
 
 const char *
@@ -95,20 +94,28 @@ CPUProgressEvent::description() const
 
 #if FULL_SYSTEM
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(makeParams(p->name)), clock(p->clock), instCnt(0),
-      params(p), number_of_threads(p->numberOfThreads), system(p->system),
+    : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
+      interrupts(p->interrupts),
+      number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
-    : MemObject(makeParams(p->name)), clock(p->clock), params(p),
-      number_of_threads(p->numberOfThreads), system(p->system),
+    : MemObject(p), clock(p->clock), _cpuId(p->cpu_id),
+      number_of_threads(p->numThreads), system(p->system),
       phase(p->phase)
 #endif
 {
 //    currentTick = curTick;
 
+    // if Python did not provide a valid ID, do it here
+    if (_cpuId == -1 ) {
+        _cpuId = cpuList.size();
+    }
+
     // add self to global list of CPUs
     cpuList.push_back(this);
+
+    DPRINTF(SyscallVerbose, "Constructing CPU with id %d\n", _cpuId);
 
     if (number_of_threads > maxThreadsPerCPU)
         maxThreadsPerCPU = number_of_threads;
@@ -121,22 +128,26 @@ BaseCPU::BaseCPU(Params *p)
     //
     // set up instruction-count-based termination events, if any
     //
-    if (p->max_insts_any_thread != 0)
-        for (int i = 0; i < number_of_threads; ++i)
-            schedExitSimLoop("a thread reached the max instruction count",
-                             p->max_insts_any_thread, 0,
-                             comInstEventQueue[i]);
+    if (p->max_insts_any_thread != 0) {
+        const char *cause = "a thread reached the max instruction count";
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new SimLoopExitEvent(cause, 0);
+            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+        }
+    }
 
     if (p->max_insts_all_threads != 0) {
+        const char *cause = "all threads reached the max instruction count";
+
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
         *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i)
-            new CountedExitEvent(comInstEventQueue[i],
-                "all threads reached the max instruction count",
-                p->max_insts_all_threads, *counter);
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+        }
     }
 
     // allocate per-thread load-based event queues
@@ -147,53 +158,49 @@ BaseCPU::BaseCPU(Params *p)
     //
     // set up instruction-count-based termination events, if any
     //
-    if (p->max_loads_any_thread != 0)
-        for (int i = 0; i < number_of_threads; ++i)
-            schedExitSimLoop("a thread reached the max load count",
-                             p->max_loads_any_thread, 0,
-                             comLoadEventQueue[i]);
+    if (p->max_loads_any_thread != 0) {
+        const char *cause = "a thread reached the max load count";
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new SimLoopExitEvent(cause, 0);
+            comLoadEventQueue[i]->schedule(event, p->max_loads_any_thread);
+        }
+    }
 
     if (p->max_loads_all_threads != 0) {
+        const char *cause = "all threads reached the max load count";
         // allocate & initialize shared downcounter: each event will
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
         *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i)
-            new CountedExitEvent(comLoadEventQueue[i],
-                "all threads reached the max load count",
-                p->max_loads_all_threads, *counter);
+        for (int i = 0; i < number_of_threads; ++i) {
+            Event *event = new CountedExitEvent(cause, *counter);
+            comLoadEventQueue[i]->schedule(event, p->max_loads_all_threads);
+        }
     }
 
     functionTracingEnabled = false;
-    if (p->functionTrace) {
+    if (p->function_trace) {
         functionTraceStream = simout.find(csprintf("ftrace.%s", name()));
         currentFunctionStart = currentFunctionEnd = 0;
-        functionEntryTick = p->functionTraceStart;
+        functionEntryTick = p->function_trace_start;
 
-        if (p->functionTraceStart == 0) {
+        if (p->function_trace_start == 0) {
             functionTracingEnabled = true;
         } else {
-            new EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace>(this,
-                                                                     p->functionTraceStart,
-                                                                     true);
+            typedef EventWrapper<BaseCPU, &BaseCPU::enableFunctionTrace> wrap;
+            Event *event = new wrap(this, true);
+            schedule(event, p->function_trace_start);
         }
     }
 #if FULL_SYSTEM
-    profileEvent = NULL;
-    if (params->profile)
-        profileEvent = new ProfileEvent(this, params->profile);
-#endif
-    tracer = params->tracer;
-}
+    interrupts->setCPU(this);
 
-BaseCPU::Params::Params()
-{
-#if FULL_SYSTEM
-    profile = false;
+    profileEvent = NULL;
+    if (params()->profile)
+        profileEvent = new ProfileEvent(this, params()->profile);
 #endif
-    checker = NULL;
-    tracer = NULL;
+    tracer = params()->tracer;
 }
 
 void
@@ -209,7 +216,7 @@ BaseCPU::~BaseCPU()
 void
 BaseCPU::init()
 {
-    if (!params->deferRegistration)
+    if (!params()->defer_registration)
         registerThreadContexts();
 }
 
@@ -217,14 +224,14 @@ void
 BaseCPU::startup()
 {
 #if FULL_SYSTEM
-    if (!params->deferRegistration && profileEvent)
-        profileEvent->schedule(curTick);
+    if (!params()->defer_registration && profileEvent)
+        schedule(profileEvent, curTick);
 #endif
 
-    if (params->progress_interval) {
-        new CPUProgressEvent(&mainEventQueue,
-                             ticks(params->progress_interval),
-                             this);
+    if (params()->progress_interval) {
+        Tick num_ticks = ticks(params()->progress_interval);
+        Event *event = new CPUProgressEvent(this, num_ticks);
+        schedule(event, curTick + num_ticks);
     }
 }
 
@@ -280,14 +287,19 @@ BaseCPU::registerThreadContexts()
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *tc = threadContexts[i];
 
-#if FULL_SYSTEM
-        int id = params->cpu_id;
-        if (id != -1)
-            id += i;
-
-        tc->setCpuId(system->registerThreadContext(tc, id));
-#else
-        tc->setCpuId(tc->getProcessPtr()->registerThreadContext(tc));
+        /** This is so that contextId and cpuId match where there is a
+         * 1cpu:1context relationship.  Otherwise, the order of registration
+         * could affect the assignment and cpu 1 could have context id 3, for
+         * example.  We may even want to do something like this for SMT so that
+         * cpu 0 has the lowest thread contexts and cpu N has the highest, but
+         * I'll just do this for now
+         */
+        if (number_of_threads == 1)
+            tc->setContextId(system->registerThreadContext(tc, _cpuId));
+        else
+            tc->setContextId(system->registerThreadContext(tc));
+#if !FULL_SYSTEM
+        tc->getProcessPtr()->assignThreadContext(tc->contextId());
 #endif
     }
 }
@@ -309,7 +321,7 @@ BaseCPU::switchOut()
 //    panic("This CPU doesn't support sampling!");
 #if FULL_SYSTEM
     if (profileEvent && profileEvent->scheduled())
-        profileEvent->deschedule();
+        deschedule(profileEvent);
 #endif
 }
 
@@ -317,6 +329,8 @@ void
 BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 {
     assert(threadContexts.size() == oldCPU->threadContexts.size());
+
+    _cpuId = oldCPU->cpuId();
 
     for (int i = 0; i < threadContexts.size(); ++i) {
         ThreadContext *newTC = threadContexts[i];
@@ -326,53 +340,49 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
         CpuEvent::replaceThreadContext(oldTC, newTC);
 
-        assert(newTC->readCpuId() == oldTC->readCpuId());
-#if FULL_SYSTEM
-        system->replaceThreadContext(newTC, newTC->readCpuId());
-#else
-        assert(newTC->getProcessPtr() == oldTC->getProcessPtr());
-        newTC->getProcessPtr()->replaceThreadContext(newTC, newTC->readCpuId());
-#endif
+        assert(newTC->contextId() == oldTC->contextId());
+        assert(newTC->threadId() == oldTC->threadId());
+        system->replaceThreadContext(newTC, newTC->contextId());
 
-        if (DTRACE(Context))
+        /* This code no longer works since the zero register (e.g.,
+         * r31 on Alpha) doesn't necessarily contain zero at this
+         * point.
+           if (DTRACE(Context))
             ThreadContext::compare(oldTC, newTC);
+        */
     }
 
 #if FULL_SYSTEM
     interrupts = oldCPU->interrupts;
+    interrupts->setCPU(this);
 
     for (int i = 0; i < threadContexts.size(); ++i)
         threadContexts[i]->profileClear();
 
     if (profileEvent)
-        profileEvent->schedule(curTick);
+        schedule(profileEvent, curTick);
 #endif
 
     // Connect new CPU to old CPU's memory only if new CPU isn't
     // connected to anything.  Also connect old CPU's memory to new
     // CPU.
-    Port *peer;
-    if (ic->getPeer() == NULL || ic->getPeer()->isDefaultPort()) {
-        peer = oldCPU->getPort("icache_port")->getPeer();
+    if (!ic->isConnected()) {
+        Port *peer = oldCPU->getPort("icache_port")->getPeer();
         ic->setPeer(peer);
-    } else {
-        peer = ic->getPeer();
+        peer->setPeer(ic);
     }
-    peer->setPeer(ic);
 
-    if (dc->getPeer() == NULL || dc->getPeer()->isDefaultPort()) {
-        peer = oldCPU->getPort("dcache_port")->getPeer();
+    if (!dc->isConnected()) {
+        Port *peer = oldCPU->getPort("dcache_port")->getPeer();
         dc->setPeer(peer);
-    } else {
-        peer = dc->getPeer();
+        peer->setPeer(dc);
     }
-    peer->setPeer(dc);
 }
 
 
 #if FULL_SYSTEM
-BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, int _interval)
-    : Event(&mainEventQueue), cpu(_cpu), interval(_interval)
+BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
+    : cpu(_cpu), interval(_interval)
 { }
 
 void
@@ -383,45 +393,21 @@ BaseCPU::ProfileEvent::process()
         tc->profileSample();
     }
 
-    schedule(curTick + interval);
-}
-
-void
-BaseCPU::post_interrupt(int int_num, int index)
-{
-    interrupts.post(int_num, index);
-}
-
-void
-BaseCPU::clear_interrupt(int int_num, int index)
-{
-    interrupts.clear(int_num, index);
-}
-
-void
-BaseCPU::clear_interrupts()
-{
-    interrupts.clear_all();
-}
-
-uint64_t
-BaseCPU::get_interrupts(int int_num)
-{
-    return interrupts.get_vec(int_num);
+    cpu->schedule(this, curTick + interval);
 }
 
 void
 BaseCPU::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(instCnt);
-    interrupts.serialize(os);
+    interrupts->serialize(os);
 }
 
 void
 BaseCPU::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(instCnt);
-    interrupts.unserialize(cp, section);
+    interrupts->unserialize(cp, section);
 }
 
 #endif // FULL_SYSTEM

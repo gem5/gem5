@@ -30,9 +30,7 @@
 
 #include <iomanip>
 #include <iostream>
-#include <fstream>
 #include <string>
-#include <unistd.h>
 
 #include "base/cprintf.hh"
 #include "base/misc.hh"
@@ -43,36 +41,6 @@
 
 using namespace std;
 using namespace Stats;
-
-Tick curTick = 0;
-Tick ticksPerSecond = ULL(2000000000);
-
-Scalar<> s1;
-Scalar<> s2;
-Average<> s3;
-Scalar<> s4;
-Vector<> s5;
-Distribution<> s6;
-Vector<> s7;
-AverageVector<> s8;
-StandardDeviation<> s9;
-AverageDeviation<> s10;
-Scalar<> s11;
-Distribution<> s12;
-VectorDistribution<> s13;
-VectorStandardDeviation<> s14;
-VectorAverageDeviation<> s15;
-Vector2d<> s16;
-
-Formula f1;
-Formula f2;
-Formula f3;
-Value f4;
-Value f5;
-Formula f6;
-Formula f7;
-
-ostream *outputStream = &cout;
 
 double
 testfunc()
@@ -85,7 +53,7 @@ class TestClass {
     double operator()() { return 9.7; }
 };
 
-char *progname = "";
+const char *progname = "";
 
 void
 usage()
@@ -101,20 +69,31 @@ main(int argc, char *argv[])
     bool descriptions = false;
     bool compat = false;
     bool text = false;
+
+#if USE_MYSQL
     string mysql_name;
+    string mysql_db;
     string mysql_host;
     string mysql_user = "binkertn";
     string mysql_passwd;
+#endif
 
     char c;
     progname = argv[0];
-    while ((c = getopt(argc, argv, "cdh:P:p:s:tu:")) != -1) {
+    while ((c = getopt(argc, argv, "cD:dh:P:p:s:tu:")) != -1) {
         switch (c) {
           case 'c':
             compat = true;
             break;
           case 'd':
             descriptions = true;
+            break;
+          case 't':
+            text = true;
+            break;
+#if USE_MYSQL
+          case 'D':
+            mysql_db = optarg;
             break;
           case 'h':
             mysql_host = optarg;
@@ -125,12 +104,10 @@ main(int argc, char *argv[])
           case 's':
             mysql_name = optarg;
             break;
-          case 't':
-            text = true;
-            break;
           case 'u':
             mysql_user = optarg;
             break;
+#endif
           default:
             usage();
         }
@@ -139,15 +116,34 @@ main(int argc, char *argv[])
     if (!text && (compat || descriptions))
         usage();
 
-    s5.init(5);
-    s6.init(1, 100, 13);
-    s7.init(7);
-    s8.init(10);
-    s12.init(1, 100, 13);
-    s13.init(4, 0, 99, 10);
-    s14.init(9);
-    s15.init(10);
-    s16.init(2, 9);
+    Scalar s1;
+    Scalar s2;
+    Average s3;
+    Scalar s4;
+    Vector s5;
+    Distribution s6;
+    Vector s7;
+    AverageVector s8;
+    StandardDeviation s9;
+    AverageDeviation s10;
+    Scalar s11;
+    Distribution s12;
+    VectorDistribution s13;
+    VectorStandardDeviation s14;
+    VectorAverageDeviation s15;
+    Vector2d s16;
+    Value s17;
+    Value s18;
+
+    Formula f1;
+    Formula f2;
+    Formula f3;
+    Formula f4;
+    Formula f5;
+
+    cprintf("sizeof(Scalar) = %d\n", sizeof(Scalar));
+    cprintf("sizeof(Vector) = %d\n", sizeof(Vector));
+    cprintf("sizeof(Distribution) = %d\n", sizeof(Distribution));
 
     s1
         .name("Stat01")
@@ -163,7 +159,7 @@ main(int argc, char *argv[])
     s3
         .name("Stat03")
         .desc("this is statistic 3")
-        .prereq(f7)
+        .prereq(f5)
         ;
 
     s4
@@ -173,6 +169,7 @@ main(int argc, char *argv[])
         ;
 
     s5
+        .init(5)
         .name("Stat05")
         .desc("this is statistic 5")
         .prereq(s11)
@@ -184,12 +181,14 @@ main(int argc, char *argv[])
         ;
 
     s6
+        .init(1, 100, 13)
         .name("Stat06")
         .desc("this is statistic 6")
         .prereq(s11)
         ;
 
     s7
+        .init(7)
         .name("Stat07")
         .desc("this is statistic 7")
         .precision(1)
@@ -198,6 +197,7 @@ main(int argc, char *argv[])
         ;
 
     s8
+        .init(10)
         .name("Stat08")
         .desc("this is statistic 8")
         .precision(2)
@@ -219,26 +219,31 @@ main(int argc, char *argv[])
         ;
 
     s12
+        .init(1, 100, 13)
         .name("Stat12")
         .desc("this is statistic 12")
         ;
 
     s13
+        .init(4, 0, 99, 10)
         .name("Stat13")
         .desc("this is statistic 13")
         ;
 
     s14
+        .init(9)
         .name("Stat14")
         .desc("this is statistic 14")
         ;
 
     s15
+        .init(10)
         .name("Stat15")
         .desc("this is statistic 15")
         ;
 
     s16
+        .init(2, 9)
         .name("Stat16")
         .desc("this is statistic 16")
         .flags(total)
@@ -247,6 +252,20 @@ main(int argc, char *argv[])
         .ysubname(0, "y0")
         .ysubname(1, "y1")
         ;
+
+    s17
+        .functor(testfunc)
+        .name("Stat17")
+        .desc("this is stat 17")
+        ;
+
+    TestClass testclass;
+    s18
+        .functor(testclass)
+        .name("Stat18")
+        .desc("this is stat 18")
+        ;
+
 
     f1
         .name("Formula1")
@@ -273,29 +292,17 @@ main(int argc, char *argv[])
         ;
 
     f4
-        .functor(testfunc)
         .name("Formula4")
         .desc("this is formula 4")
         ;
 
-    TestClass testclass;
-    f5
-        .functor(testclass)
-        .name("Formula5")
-        .desc("this is formula 5")
-        ;
-
-    f6
-        .name("Formula6")
-        .desc("this is formula 6")
-        ;
 
     f1 = s1 + s2;
     f2 = (-s1) / (-s2) * (-s3 + ULL(100) + s4);
     f3 = sum(s5) * s7;
-    f6 += constant(10.0);
-    f6 += s5[3];
-    f7 = constant(1);
+    f4 += constant(10.0);
+    f4 += s5[3];
+    f5 = constant(1);
 
     check();
     reset();
@@ -545,12 +552,14 @@ main(int argc, char *argv[])
         out();
     }
 
+#if USE_MYSQL
     if (!mysql_name.empty()) {
         MySql out;
-        out.connect(mysql_host, mysql_user, mysql_passwd, "m5stats",
+        out.connect(mysql_host, mysql_db, mysql_user, mysql_passwd, "test",
                     mysql_name, "test");
         out();
     }
+#endif
 
     return 0;
 }

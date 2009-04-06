@@ -43,19 +43,20 @@
 #include "cpu/thread_context.hh"
 
 using namespace std;
-using namespace EV5;
 
 namespace AlphaISA {
+
 ///////////////////////////////////////////////////////////////////////
 //
 //  Alpha TLB
 //
+
 #ifdef DEBUG
 bool uncacheBit39 = false;
 bool uncacheBit40 = false;
 #endif
 
-#define MODE2MASK(X)			(1 << (X))
+#define MODE2MASK(X) (1 << (X))
 
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
@@ -114,20 +115,20 @@ TLB::lookup(Addr vpn, uint8_t asn)
     return retval;
 }
 
-
 Fault
-TLB::checkCacheability(RequestPtr &req)
+TLB::checkCacheability(RequestPtr &req, bool itb)
 {
-// in Alpha, cacheability is controlled by upper-level bits of the
-// physical address
+    // in Alpha, cacheability is controlled by upper-level bits of the
+    // physical address
 
-/*
- * We support having the uncacheable bit in either bit 39 or bit 40.
- * The Turbolaser platform (and EV5) support having the bit in 39, but
- * Tsunami (which Linux assumes uses an EV6) generates accesses with
- * the bit in 40.  So we must check for both, but we have debug flags
- * to catch a weird case where both are used, which shouldn't happen.
- */
+    /*
+     * We support having the uncacheable bit in either bit 39 or bit
+     * 40.  The Turbolaser platform (and EV5) support having the bit
+     * in 39, but Tsunami (which Linux assumes uses an EV6) generates
+     * accesses with the bit in 40.  So we must check for both, but we
+     * have debug flags to catch a weird case where both are used,
+     * which shouldn't happen.
+     */
 
 
 #if ALPHA_TLASER
@@ -141,13 +142,20 @@ TLB::checkCacheability(RequestPtr &req)
             return new UnimpFault("IPR memory space not implemented!");
         } else {
             // mark request as uncacheable
-            req->setFlags(req->getFlags() | UNCACHEABLE);
+            req->setFlags(Request::UNCACHEABLE);
 
 #if !ALPHA_TLASER
-            // Clear bits 42:35 of the physical address (10-2 in Tsunami manual)
+            // Clear bits 42:35 of the physical address (10-2 in
+            // Tsunami manual)
             req->setPaddr(req->getPaddr() & PAddrUncachedMask);
 #endif
         }
+        // We shouldn't be able to read from an uncachable address in Alpha as
+        // we don't have a ROM and we don't want to try to fetch from a device 
+        // register as we destroy any data that is clear-on-read. 
+        if (req->isUncacheable() && itb) 
+            return new UnimpFault("CPU trying to fetch from uncached I/O");
+
     }
     return NoFault;
 }
@@ -216,7 +224,8 @@ TLB::flushProcesses()
         ++i;
 
         if (!entry->asma) {
-            DPRINTF(TLB, "flush @%d: %#x -> %#x\n", index, entry->tag, entry->ppn);
+            DPRINTF(TLB, "flush @%d: %#x -> %#x\n", index,
+                    entry->tag, entry->ppn);
             entry->valid = false;
             lookupTable.erase(cur);
         }
@@ -279,7 +288,6 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     }
 }
 
-
 ///////////////////////////////////////////////////////////////////////
 //
 //  Alpha ITB
@@ -308,13 +316,12 @@ ITB::regStats()
     accesses = hits + misses;
 }
 
-
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
-    if(FULL_SYSTEM && PcPAL(req->getPC()))
-        req->setFlags(req->getFlags() | PHYSICAL);
+    if (FULL_SYSTEM && PcPAL(req->getPC()))
+        req->setFlags(Request::PHYSICAL);
 
     if (PcPAL(req->getPC())) {
         // strip off PAL PC marker (lsb is 1)
@@ -323,7 +330,7 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         return NoFault;
     }
 
-    if (req->getFlags() & PHYSICAL) {
+    if (req->getFlags() & Request::PHYSICAL) {
         req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
@@ -390,15 +397,23 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     if (req->getPaddr() & ~PAddrImplMask)
         return genMachineCheckFault();
 
-    return checkCacheability(req);
+    return checkCacheability(req, true);
 
+}
+
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
 }
 
 ///////////////////////////////////////////////////////////////////////
 //
 //  Alpha DTB
 //
- DTB::DTB(const Params *p)
+DTB::DTB(const Params *p)
      : TLB(p)
 {}
 
@@ -472,13 +487,12 @@ DTB::regStats()
 }
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 
     mode_type mode =
         (mode_type)DTB_CM_CM(tc->readMiscRegNoEffect(IPR_DTB_CM));
-
 
     /**
      * Check for alignment faults
@@ -491,13 +505,13 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     }
 
     if (PcPAL(pc)) {
-        mode = (req->getFlags() & ALTMODE) ?
+        mode = (req->getFlags() & Request::ALTMODE) ?
             (mode_type)ALT_MODE_AM(
                 tc->readMiscRegNoEffect(IPR_ALT_MODE))
             : mode_kernel;
     }
 
-    if (req->getFlags() & PHYSICAL) {
+    if (req->getFlags() & Request::PHYSICAL) {
         req->setPaddr(req->getVaddr());
     } else {
         // verify that this is a good virtual address
@@ -517,14 +531,15 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         if (VAddrSpaceEV6(req->getVaddr()) == 0x7e)
 #endif
         {
-
             // only valid in kernel mode
             if (DTB_CM_CM(tc->readMiscRegNoEffect(IPR_DTB_CM)) !=
                 mode_kernel) {
                 if (write) { write_acv++; } else { read_acv++; }
                 uint64_t flags = ((write ? MM_STAT_WR_MASK : 0) |
                                   MM_STAT_ACV_MASK);
-                return new DtbAcvFault(req->getVaddr(), req->getFlags(), flags);
+
+                return new DtbAcvFault(req->getVaddr(), req->getFlags(),
+                                       flags);
             }
 
             req->setPaddr(req->getVaddr() & PAddrImplMask);
@@ -553,7 +568,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                 if (write) { write_misses++; } else { read_misses++; }
                 uint64_t flags = (write ? MM_STAT_WR_MASK : 0) |
                     MM_STAT_DTB_MISS_MASK;
-                return (req->getFlags() & VPTE) ?
+                return (req->getFlags() & Request::VPTE) ?
                     (Fault)(new PDtbMissFault(req->getVaddr(), req->getFlags(),
                                               flags)) :
                     (Fault)(new NDtbMissFault(req->getVaddr(), req->getFlags(),
@@ -570,25 +585,28 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                     uint64_t flags = MM_STAT_WR_MASK |
                         MM_STAT_ACV_MASK |
                         (entry->fonw ? MM_STAT_FONW_MASK : 0);
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
+                                            flags);
                 }
                 if (entry->fonw) {
                     write_acv++;
-                    uint64_t flags = MM_STAT_WR_MASK |
-                        MM_STAT_FONW_MASK;
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
+                    uint64_t flags = MM_STAT_WR_MASK | MM_STAT_FONW_MASK;
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
+                                            flags);
                 }
             } else {
                 if (!(entry->xre & MODE2MASK(mode))) {
                     read_acv++;
                     uint64_t flags = MM_STAT_ACV_MASK |
                         (entry->fonr ? MM_STAT_FONR_MASK : 0);
-                    return new DtbAcvFault(req->getVaddr(), req->getFlags(), flags);
+                    return new DtbAcvFault(req->getVaddr(), req->getFlags(),
+                                           flags);
                 }
                 if (entry->fonr) {
                     read_acv++;
                     uint64_t flags = MM_STAT_FONR_MASK;
-                    return new DtbPageFault(req->getVaddr(), req->getFlags(), flags);
+                    return new DtbPageFault(req->getVaddr(), req->getFlags(),
+                                            flags);
                 }
             }
         }
@@ -604,6 +622,14 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         return genMachineCheckFault();
 
     return checkCacheability(req);
+}
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
 }
 
 TlbEntry &

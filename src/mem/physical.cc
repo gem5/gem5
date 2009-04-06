@@ -41,6 +41,7 @@
 
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
+#include "base/random.hh"
 #include "config/full_system.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
@@ -51,10 +52,15 @@ using namespace std;
 using namespace TheISA;
 
 PhysicalMemory::PhysicalMemory(const Params *p)
-    : MemObject(p), pmemAddr(NULL), lat(p->latency)
+    : MemObject(p), pmemAddr(NULL), pagePtr(0),
+      lat(p->latency), lat_var(p->latency_var),
+      cachedSize(params()->range.size()), cachedStart(params()->range.start)
 {
     if (params()->range.size() % TheISA::PageBytes != 0)
         panic("Memory Size not divisible by page size\n");
+
+    if (params()->null)
+        return;
 
     int map_flags = MAP_ANON | MAP_PRIVATE;
     pmemAddr = (uint8_t *)mmap(NULL, params()->range.size(),
@@ -68,12 +74,6 @@ PhysicalMemory::PhysicalMemory(const Params *p)
     //If requested, initialize all the memory to 0
     if (p->zero)
         memset(pmemAddr, 0, p->range.size());
-
-    pagePtr = 0;
-
-    cachedSize = params()->range.size();
-    cachedStart = params()->range.start;
-
 }
 
 void
@@ -116,7 +116,10 @@ PhysicalMemory::deviceBlockSize()
 Tick
 PhysicalMemory::calculateLatency(PacketPtr pkt)
 {
-    return lat;
+    Tick latency = lat;
+    if (lat_var != 0)
+        latency += random_mt.random<Tick>(0, lat_var);
+    return latency;
 }
 
 
@@ -136,16 +139,16 @@ PhysicalMemory::trackLoadLocked(PacketPtr pkt)
 
     for (i = lockedAddrList.begin(); i != lockedAddrList.end(); ++i) {
         if (i->matchesContext(req)) {
-            DPRINTF(LLSC, "Modifying lock record: cpu %d thread %d addr %#x\n",
-                    req->getCpuNum(), req->getThreadNum(), paddr);
+            DPRINTF(LLSC, "Modifying lock record: context %d addr %#x\n",
+                    req->contextId(), paddr);
             i->addr = paddr;
             return;
         }
     }
 
     // no record for this xc: need to allocate a new one
-    DPRINTF(LLSC, "Adding lock record: cpu %d thread %d addr %#x\n",
-            req->getCpuNum(), req->getThreadNum(), paddr);
+    DPRINTF(LLSC, "Adding lock record: context %d addr %#x\n",
+            req->contextId(), paddr);
     lockedAddrList.push_front(LockedAddr(req));
 }
 
@@ -180,14 +183,14 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
                 // it's a store conditional, and as far as the memory
                 // system can tell, the requesting context's lock is
                 // still valid.
-                DPRINTF(LLSC, "StCond success: cpu %d thread %d addr %#x\n",
-                        req->getCpuNum(), req->getThreadNum(), paddr);
+                DPRINTF(LLSC, "StCond success: context %d addr %#x\n",
+                        req->contextId(), paddr);
                 success = true;
             }
 
             // Get rid of our record of this lock and advance to next
-            DPRINTF(LLSC, "Erasing lock record: cpu %d thread %d addr %#x\n",
-                    i->cpuNum, i->threadNum, paddr);
+            DPRINTF(LLSC, "Erasing lock record: context %d addr %#x\n",
+                    i->contextId, paddr);
             i = lockedAddrList.erase(i);
         }
         else {
@@ -252,6 +255,8 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         uint64_t condition_val64;
         uint32_t condition_val32;
 
+        if (!pmemAddr)
+            panic("Swap only works if there is real memory (i.e. null=False)");
         assert(sizeof(IntReg) >= pkt->getSize());
 
         overwrite_mem = true;
@@ -282,11 +287,13 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         if (pkt->isLocked()) {
             trackLoadLocked(pkt);
         }
-        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr)
+            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET("Read");
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
-            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+            if (pmemAddr)
+                memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
             TRACE_PACKET("Write");
         }
     } else if (pkt->isInvalidate()) {
@@ -315,11 +322,13 @@ PhysicalMemory::doFunctionalAccess(PacketPtr pkt)
     uint8_t *hostAddr = pmemAddr + pkt->getAddr() - start();
 
     if (pkt->isRead()) {
-        memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
+        if (pmemAddr)
+            memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
         TRACE_PACKET("Read");
         pkt->makeAtomicResponse();
     } else if (pkt->isWrite()) {
-        memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+        if (pmemAddr)
+            memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
         pkt->makeAtomicResponse();
     } else if (pkt->isPrint()) {
@@ -374,7 +383,7 @@ PhysicalMemory::recvStatusChange(Port::Status status)
 
 PhysicalMemory::MemoryPort::MemoryPort(const std::string &_name,
                                        PhysicalMemory *_memory)
-    : SimpleTimingPort(_name), memory(_memory)
+    : SimpleTimingPort(_name, _memory), memory(_memory)
 { }
 
 void
@@ -443,6 +452,9 @@ PhysicalMemory::drain(Event *de)
 void
 PhysicalMemory::serialize(ostream &os)
 {
+    if (!pmemAddr)
+        return;
+
     gzFile compressedMem;
     string filename = name() + ".physmem";
 
@@ -475,13 +487,15 @@ PhysicalMemory::serialize(ostream &os)
 void
 PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
 {
+    if (!pmemAddr)
+        return;
+
     gzFile compressedMem;
     long *tempPage;
     long *pmem_current;
     uint64_t curSize;
     uint32_t bytesRead;
     const int chunkSize = 16384;
-
 
     string filename;
 

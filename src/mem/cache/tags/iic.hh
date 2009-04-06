@@ -248,20 +248,20 @@ class IIC : public BaseTags
      */
 
     /** Hash hit depth of cache hits. */
-    Stats::Distribution<> hitHashDepth;
+    Stats::Distribution hitHashDepth;
     /** Hash depth for cache misses. */
-    Stats::Distribution<> missHashDepth;
+    Stats::Distribution missHashDepth;
     /** Count of accesses to each hash set. */
-    Stats::Distribution<> setAccess;
+    Stats::Distribution setAccess;
 
     /** The total hash depth for every miss. */
-    Stats::Scalar<> missDepthTotal;
+    Stats::Scalar missDepthTotal;
     /** The total hash depth for all hits. */
-    Stats::Scalar<> hitDepthTotal;
+    Stats::Scalar hitDepthTotal;
     /** The number of hash misses. */
-    Stats::Scalar<> hashMiss;
+    Stats::Scalar hashMiss;
     /** The number of hash hits. */
-    Stats::Scalar<> hashHit;
+    Stats::Scalar hashHit;
     /** @} */
 
   public:
@@ -385,14 +385,6 @@ class IIC : public BaseTags
     }
 
     /**
-     * Check for the address in the tagstore.
-     * @param asid The address space ID.
-     * @param addr The address to find.
-     * @return true if it is found.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Swap the position of two tags.
      * @param index1 The first tag location.
      * @param index2 The second tag location.
@@ -418,14 +410,16 @@ class IIC : public BaseTags
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Find the block and update the replacement data. This call also returns
-     * the access latency as a side effect.
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such.
+     * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* findBlock(Addr addr, int &lat);
+    IICTag* accessBlock(Addr addr, int &lat);
 
     /**
      * Find the block, do not update the replacement data.
@@ -441,31 +435,15 @@ class IIC : public BaseTags
      * @param writebacks List for any writebacks to be performed.
      * @return The block to place the replacement in.
      */
-    IICTag* findReplacement(Addr addr, PacketList &writebacks);
+    IICTag* findVictim(Addr addr, PacketList &writebacks);
 
-    /**
-     * Read the data from the internal storage of the given cache block.
-     * @param blk The block to read the data from.
-     * @param data The buffer to read the data into.
-     * @return The cache block's data.
-     */
-    void readData(IICTag *blk, uint8_t *data);
-
-    /**
-     * Write the data into the internal storage of the given cache block.
-     * @param blk The block to write to.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(IICTag *blk, uint8_t *data, int size,
-                   PacketList & writebacks);
+    void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();
+
 private:
     /**
      * Return the hash of the address.

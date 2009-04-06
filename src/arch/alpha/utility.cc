@@ -36,28 +36,28 @@
 #include "mem/vport.hh"
 #endif
 
-namespace AlphaISA
-{
+namespace AlphaISA {
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp)
+uint64_t
+getArgument(ThreadContext *tc, int number, bool fp)
 {
 #if FULL_SYSTEM
+    const int NumArgumentRegs = 6;
     if (number < NumArgumentRegs) {
         if (fp)
-            return tc->readFloatRegBits(ArgumentReg[number]);
+            return tc->readFloatRegBits(16 + number);
         else
-            return tc->readIntReg(ArgumentReg[number]);
+            return tc->readIntReg(16 + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
-        VirtualPort *vp = tc->getVirtPort(tc);
+        VirtualPort *vp = tc->getVirtPort();
         uint64_t arg = vp->read<uint64_t>(sp +
                            (number-NumArgumentRegs) * sizeof(uint64_t));
-        tc->delVirtPort(vp);
         return arg;
     }
 #else
     panic("getArgument() is Full system only\n");
-    M5_DUMMY_RETURN
+    M5_DUMMY_RETURN;
 #endif
 }
 

@@ -39,20 +39,59 @@
 #include "sim/serialize.hh"
 
 class Checkpoint;
+
+struct PacketFifoEntry
+{
+    EthPacketPtr packet;
+    uint64_t number;
+    int slack;
+    int priv;
+
+    PacketFifoEntry()
+    {
+        clear();
+    }
+
+    PacketFifoEntry(const PacketFifoEntry &s)
+        : packet(s.packet), number(s.number), slack(s.slack), priv(s.priv)
+    {
+    }
+
+    PacketFifoEntry(EthPacketPtr p, uint64_t n)
+        : packet(p), number(n), slack(0), priv(-1)
+    {
+    }
+
+    void clear()
+    {
+        packet = NULL;
+        number = 0;
+        slack = 0;
+        priv = -1;
+    }
+
+    void serialize(const std::string &base, std::ostream &os);
+    void unserialize(const std::string &base, Checkpoint *cp,
+                     const std::string &section);
+};
+
 class PacketFifo
 {
   public:
-    typedef std::list<EthPacketPtr> fifo_list;
+
+    typedef std::list<PacketFifoEntry> fifo_list;
     typedef fifo_list::iterator iterator;
 
   protected:
-    std::list<EthPacketPtr> fifo;
+    std::list<PacketFifoEntry> fifo;
+    uint64_t _counter;
     int _maxsize;
     int _size;
     int _reserved;
 
   public:
-    explicit PacketFifo(int max) : _maxsize(max), _size(0), _reserved(0) {}
+    explicit PacketFifo(int max)
+        : _counter(0), _maxsize(max), _size(0), _reserved(0) {}
     virtual ~PacketFifo() {}
 
     int packets() const { return fifo.size(); }
@@ -73,18 +112,21 @@ class PacketFifo
     iterator begin() { return fifo.begin(); }
     iterator end() { return fifo.end(); }
 
-    EthPacketPtr front() { return fifo.front(); }
+    EthPacketPtr front() { return fifo.begin()->packet; }
 
     bool push(EthPacketPtr ptr)
     {
         assert(ptr->length);
         assert(_reserved <= ptr->length);
-        assert(ptr->slack == 0);
         if (avail() < ptr->length - _reserved)
             return false;
 
         _size += ptr->length;
-        fifo.push_back(ptr);
+
+        PacketFifoEntry entry;
+        entry.packet = ptr;
+        entry.number = _counter++;
+        fifo.push_back(entry);
         _reserved = 0;
         return true;
     }
@@ -94,18 +136,17 @@ class PacketFifo
         if (empty())
             return;
 
-        EthPacketPtr &packet = fifo.front();
-        _size -= packet->length;
-        _size -= packet->slack;
-        packet->slack = 0;
-        packet = NULL;
+        iterator entry = fifo.begin();
+        _size -= entry->packet->length;
+        _size -= entry->slack;
+        entry->packet = NULL;
         fifo.pop_front();
     }
 
     void clear()
     {
         for (iterator i = begin(); i != end(); ++i)
-            (*i)->slack = 0;
+            i->clear();
         fifo.clear();
         _size = 0;
         _reserved = 0;
@@ -113,50 +154,47 @@ class PacketFifo
 
     void remove(iterator i)
     {
-        EthPacketPtr &packet = *i;
         if (i != fifo.begin()) {
             iterator prev = i;
             --prev;
             assert(prev != fifo.end());
-            (*prev)->slack += packet->length;
+            prev->slack += i->packet->length;
+            prev->slack += i->slack;
         } else {
-            _size -= packet->length;
-            _size -= packet->slack;
+            _size -= i->packet->length;
+            _size -= i->slack;
         }
 
-        packet->slack = 0;
-        packet = NULL;
+        i->clear();
         fifo.erase(i);
     }
 
     bool copyout(void *dest, int offset, int len);
 
-    int countPacketsBefore(iterator end)
+    int countPacketsBefore(iterator i)
     {
-        iterator i = fifo.begin();
-        int count = 0;
-
-        while (i != end) {
-            ++count;
-            ++i;
-        }
-
-        return count;
+        if (i == fifo.end())
+            return 0;
+        return i->number - fifo.begin()->number;
     }
 
     int countPacketsAfter(iterator i)
     {
         iterator end = fifo.end();
-        int count = 0;
-
-        while (i != end) {
-            ++count;
-            ++i;
-        }
-
-        return count;
+        if (i == end)
+            return 0;
+        return (--end)->number - i->number;
     }
 
+    void check()
+    {
+        int total = 0;
+        for (iterator i = begin(); i != end(); ++i)
+            total += i->packet->length + i->slack;
+
+        if (total != _size)
+            panic("total (%d) is not == to size (%d)\n", total, _size);
+    }
 
 /**
  * Serialization stuff

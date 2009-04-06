@@ -63,13 +63,13 @@ namespace X86ISA
     void X86StaticInst::printMnemonic(std::ostream &os,
             const char * mnemonic) const
     {
-        ccprintf(os, "\t%s   ", mnemonic);
+        ccprintf(os, "  %s   ", mnemonic);
     }
 
     void X86StaticInst::printMnemonic(std::ostream &os,
             const char * instMnemonic, const char * mnemonic) const
     {
-        ccprintf(os, "\t%s : %s   ", instMnemonic, mnemonic);
+        ccprintf(os, "  %s : %s   ", instMnemonic, mnemonic);
     }
 
     void X86StaticInst::printSegment(std::ostream &os, int segment) const
@@ -238,6 +238,44 @@ namespace X86ISA
                 ccprintf(os, "%%ctrl%d", reg - Ctrl_Base_DepTag);
             }
         }
+    }
+
+    void X86StaticInst::printMem(std::ostream &os, uint8_t segment,
+            uint8_t scale, RegIndex index, RegIndex base,
+            uint64_t disp, uint8_t addressSize, bool rip) const
+    {
+        bool someAddr = false;
+        printSegment(os, segment);
+        os << ":[";
+        if (rip) {
+            os << "rip";
+            someAddr = true;
+        } else {
+            if (scale != 0 && index != ZeroReg)
+            {
+                if(scale != 1)
+                    ccprintf(os, "%d*", scale);
+                printReg(os, index, addressSize);
+                someAddr = true;
+            }
+            if (base != ZeroReg)
+            {
+                if(someAddr)
+                    os << " + ";
+                printReg(os, base, addressSize);
+                someAddr = true;
+            }
+        }
+        if (disp != 0)
+        {
+            if(someAddr)
+                os << " + ";
+            ccprintf(os, "%#x", disp);
+            someAddr = true;
+        }
+        if (!someAddr)
+            os << "0";
+        os << "]";
     }
 
     std::string X86StaticInst::generateDisassembly(Addr pc,

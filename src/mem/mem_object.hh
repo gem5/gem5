@@ -48,17 +48,10 @@ class MemObject : public SimObject
 {
   public:
     typedef MemObjectParams Params;
+    const Params *params() const
+    { return dynamic_cast<const Params *>(_params); }
+
     MemObject(const Params *params);
-
-    const Params *
-    params() const
-    {
-        return dynamic_cast<const Params *>(_params);
-    }
-
-  protected:
-    // static: support for old-style constructors (call manually)
-    static Params *makeParams(const std::string &name);
 
   public:
     /** Additional function to return the Port of a memory object. */

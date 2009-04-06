@@ -127,7 +127,7 @@ public:
      * @param _assoc The associativity of the cache.
      * @param _hit_latency The latency in cycles for a hit.
      */
-    LRU(int _numSets, int _blkSize,	int _assoc, int _hit_latency);
+    LRU(int _numSets, int _blkSize,     int _assoc, int _hit_latency);
 
     /**
      * Destructor
@@ -154,31 +154,25 @@ public:
     }
 
     /**
-     * Search for the address in the cache.
-     * @param asid The address space ID.
-     * @param addr The address to find.
-     * @return True if the address is in the cache.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Finds the given address in the cache and update replacement data.
-     * Returns the access latency as a side effect.
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such. Returns the access latency as a side effect.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Addr addr, int &lat);
+    LRUBlk* accessBlock(Addr addr, int &lat);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
+     * i.e. This is a no-side-effect find of a block.
      * @param addr The address to find.
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
@@ -186,12 +180,20 @@ public:
     LRUBlk* findBlock(Addr addr) const;
 
     /**
-     * Find a replacement block for the address provided.
-     * @param pkt The request to a find a replacement candidate for.
+     * Find a block to evict for the address provided.
+     * @param addr The addr to a find a replacement candidate for.
      * @param writebacks List for any writebacks to be performed.
-     * @return The block to place the replacement in.
+     * @return The candidate block.
      */
-    LRUBlk* findReplacement(Addr addr, PacketList &writebacks);
+    LRUBlk* findVictim(Addr addr, PacketList &writebacks);
+
+    /**
+     * Insert the new block into the cache.  For LRU this means inserting into
+     * the MRU position of the set.
+     * @param addr The address to update.
+     * @param blk The block to update.
+     */
+     void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Generate the tag from the given address.
@@ -251,33 +253,6 @@ public:
     int getHitLatency() const
     {
         return hitLatency;
-    }
-
-    /**
-     * Read the data out of the internal storage of the given cache block.
-     * @param blk The cache block to read.
-     * @param data The buffer to read the data into.
-     * @return The cache block's data.
-     */
-    void readData(LRUBlk *blk, uint8_t *data)
-    {
-        std::memcpy(data, blk->data, blk->size);
-    }
-
-    /**
-     * Write data into the internal storage of the given cache block. Since in
-     * LRU does not store data differently this just needs to update the size.
-     * @param blk The cache block to write.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(LRUBlk *blk, uint8_t *data, int size,
-                   PacketList & writebacks)
-    {
-        assert(size <= blkSize);
-        blk->size = size;
     }
 
     /**

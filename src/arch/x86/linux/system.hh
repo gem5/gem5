@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -62,12 +62,14 @@
 #include <vector>
 
 #include "params/LinuxX86System.hh"
+#include "arch/x86/bios/e820.hh"
 #include "arch/x86/system.hh"
 
 class LinuxX86System : public X86System
 {
   protected:
     std::string commandLine;
+    X86ISA::E820Table * e820Table;
 
   public:
     typedef LinuxX86SystemParams Params;

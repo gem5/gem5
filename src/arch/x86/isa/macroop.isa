@@ -72,41 +72,13 @@ def template MacroExecPanic {{
 output header {{
 
         // Base class for combinationally generated macroops
-        class Macroop : public StaticInst
+        class Macroop : public X86ISA::MacroopBase
         {
-          protected:
-            const uint32_t numMicroops;
-
-            //Constructor.
+          public:
             Macroop(const char *mnem, ExtMachInst _machInst,
-                    uint32_t _numMicroops)
-                        : StaticInst(mnem, _machInst, No_OpClass),
-                        numMicroops(_numMicroops)
-            {
-                assert(numMicroops);
-                microops = new StaticInstPtr[numMicroops];
-                flags[IsMacroop] = true;
-            }
-
-            ~Macroop()
-            {
-                delete [] microops;
-            }
-
-            StaticInstPtr * microops;
-
-            StaticInstPtr fetchMicroop(MicroPC microPC)
-            {
-                assert(microPC < numMicroops);
-                return microops[microPC];
-            }
-
-            std::string generateDisassembly(Addr pc,
-                    const SymbolTable *symtab) const
-            {
-                return mnemonic;
-            }
-
+                    uint32_t _numMicroops, X86ISA::EmulEnv _env)
+                        : MacroopBase(mnem, _machInst, _numMicroops, _env)
+            {}
             %(MacroExecPanic)s
         };
 }};
@@ -130,22 +102,42 @@ def template MacroDeclare {{
                 %(declareLabels)s
               public:
                 // Constructor.
-                %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv env);
+                %(class_name)s(ExtMachInst machInst, X86ISA::EmulEnv _env);
+
+                std::string
+                generateDisassembly(Addr pc, const SymbolTable *symtab) const;
             };
         };
+}};
+
+def template MacroDisassembly {{
+    std::string
+    X86Macroop::%(class_name)s::generateDisassembly(Addr pc,
+            const SymbolTable *symtab) const
+    {
+        std::stringstream out;
+        out << mnemonic << "\t";
+
+        int regSize = %(regSize)s;
+        %(disassembly)s
+        // Shut up gcc.
+        regSize = regSize;
+        return out.str();
+    }
 }};
 
 // Basic instruction class constructor template.
 def template MacroConstructor {{
         inline X86Macroop::%(class_name)s::%(class_name)s(
-                ExtMachInst machInst, EmulEnv env)
-            : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s)
+                ExtMachInst machInst, EmulEnv _env)
+            : %(base_class)s("%(mnemonic)s", machInst, %(num_microops)s, _env)
         {
             %(adjust_env)s;
             %(adjust_imm)s;
             %(adjust_disp)s;
-            %(do_modrm)s;
+            %(init_env)s;
             %(constructor)s;
+            const char *macrocodeBlock = "%(class_name)s";
             //alloc_microops is the code that sets up the microops
             //array in the parent class.
             %(alloc_microops)s;
@@ -174,7 +166,7 @@ let {{
             }
             self.declared = False
             self.adjust_env = ""
-            self.doModRM = ""
+            self.init_env = ""
             self.adjust_imm = '''
                 uint64_t adjustedImm = IMMEDIATE;
                 //This is to pacify gcc in case the immediate isn't used.
@@ -186,7 +178,12 @@ let {{
                 adjustedDisp = adjustedDisp;
             '''
         def getAllocator(self, env):
-            return "new X86Macroop::%s(machInst, %s)" % (self.name, env.getAllocator())
+            return "new X86Macroop::%s(machInst, %s)" % \
+                    (self.name, env.getAllocator())
+        def getMnemonic(self):
+            mnemonic = self.name.lower()
+            mnemonic = re.match(r'[^_]*', mnemonic).group(0)
+            return mnemonic
         def getDeclaration(self):
             #FIXME This first parameter should be the mnemonic. I need to
             #write some code which pulls that out
@@ -194,32 +191,46 @@ let {{
             for (label, microop) in self.labels.items():
                 declareLabels += "const static uint64_t label_%s = %d;\n" \
                                   % (label, microop.micropc)
-            iop = InstObjParams(self.name, self.name, "Macroop",
+            iop = InstObjParams(self.getMnemonic(), self.name, "Macroop",
                     {"code" : "",
                      "declareLabels" : declareLabels
                     })
             return MacroDeclare.subst(iop);
-        def getDefinition(self):
+        def getDefinition(self, env):
             #FIXME This first parameter should be the mnemonic. I need to
             #write some code which pulls that out
             numMicroops = len(self.microops)
             allocMicroops = ''
             micropc = 0
             for op in self.microops:
+                isLast = (micropc == numMicroops - 1)
                 allocMicroops += \
                     "microops[%d] = %s;\n" % \
-                    (micropc, op.getAllocator(True, False,
-                                              micropc == 0,
-                                              micropc == numMicroops - 1))
+                    (micropc, op.getAllocator(True, not isLast,
+                                              micropc == 0, isLast))
                 micropc += 1
-            iop = InstObjParams(self.name, self.name, "Macroop",
+            if env.useStackSize:
+                useStackSize = "true"
+            else:
+                useStackSize = "false"
+            if env.memoryInst:
+                memoryInst = "true"
+            else:
+                memoryInst = "false"
+            regSize = '''(%s || (env.base == INTREG_RSP && %s) ?
+                         env.stackSize :
+                         env.dataSize)''' % (useStackSize, memoryInst)
+            iop = InstObjParams(self.getMnemonic(), self.name, "Macroop",
                                 {"code" : "", "num_microops" : numMicroops,
                                  "alloc_microops" : allocMicroops,
                                  "adjust_env" : self.adjust_env,
                                  "adjust_imm" : self.adjust_imm,
                                  "adjust_disp" : self.adjust_disp,
-                                 "do_modrm" : self.doModRM})
-            return MacroConstructor.subst(iop);
+                                 "disassembly" : env.disassembly,
+                                 "regSize" : regSize,
+                                 "init_env" : self.initEnv})
+            return MacroConstructor.subst(iop) + \
+                   MacroDisassembly.subst(iop);
 }};
 
 let {{
@@ -235,6 +246,16 @@ let {{
             self.dataSize = "OPSIZE"
             self.stackSize = "STACKSIZE"
             self.doModRM = False
+            self.disassembly = ""
+            self.firstArgument = True
+            self.useStackSize = False
+            self.memoryInst = False
+
+        def addToDisassembly(self, code):
+            if not self.firstArgument:
+                self.disassembly += "out << \", \";\n"
+            self.firstArgument = False
+            self.disassembly += code
 
         def getAllocator(self):
             if self.size == 'b':
@@ -283,6 +304,7 @@ let {{
 
 let {{
     doModRMString = "env.doModRM(machInst);\n"
+    noModRMString = "env.setSeg(machInst);\n"
     def genMacroop(Name, env):
         blocks = OutputBlocks()
         if not macroopDict.has_key(Name):
@@ -290,9 +312,11 @@ let {{
         macroop = macroopDict[Name]
         if not macroop.declared:
             if env.doModRM:
-                macroop.doModRM = doModRMString
+                macroop.initEnv = doModRMString
+            else:
+                macroop.initEnv = noModRMString
             blocks.header_output = macroop.getDeclaration()
-            blocks.decoder_output = macroop.getDefinition()
+            blocks.decoder_output = macroop.getDefinition(env)
             macroop.declared = True
         blocks.decode_block = "return %s;\n" % macroop.getAllocator(env)
         return blocks

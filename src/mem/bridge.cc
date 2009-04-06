@@ -47,7 +47,7 @@ Bridge::BridgePort::BridgePort(const std::string &_name,
                                int _delay, int _nack_delay, int _req_limit,
                                int _resp_limit,
                                std::vector<Range<Addr> > filter_ranges)
-    : Port(_name), bridge(_bridge), otherPort(_otherPort),
+    : Port(_name, _bridge), bridge(_bridge), otherPort(_otherPort),
       delay(_delay), nackDelay(_nack_delay), filterRanges(filter_ranges),
       outstandingResponses(0), queuedRequests(0), inRetry(false),
       reqQueueLimit(_req_limit), respQueueLimit(_resp_limit), sendEvent(this)
@@ -89,7 +89,7 @@ void
 Bridge::init()
 {
     // Make sure that both sides are connected to.
-    if (portA.getPeer() == NULL || portB.getPeer() == NULL)
+    if (!portA.isConnected() || !portB.isConnected())
         fatal("Both ports of bus bridge are not connected to a bus.\n");
 
     if (portA.peerBlockSize() != portB.peerBlockSize())
@@ -130,7 +130,7 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
         return true;
     }
 
-    if (pkt->needsResponse())
+    if (pkt->needsResponse()) {
         if (respQueueFull()) {
             DPRINTF(BusBridge, "Local queue full, no space for response, nacking\n");
             DPRINTF(BusBridge, "queue size: %d outreq: %d outstanding resp: %d\n",
@@ -141,6 +141,7 @@ Bridge::BridgePort::recvTiming(PacketPtr pkt)
             DPRINTF(BusBridge, "Request Needs response, reserving space\n");
             ++outstandingResponses;
         }
+    }
 
     otherPort->queueForSendTiming(pkt);
 
@@ -161,7 +162,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
     // nothing on the list, add it and we're done
     if (sendQueue.empty()) {
         assert(!sendEvent.scheduled());
-        sendEvent.schedule(readyTime);
+        schedule(sendEvent, readyTime);
         sendQueue.push_back(buf);
         return;
     }
@@ -183,7 +184,7 @@ Bridge::BridgePort::nackRequest(PacketPtr pkt)
     while (i != end && !done) {
         if (readyTime < (*i)->ready) {
             if (i == begin)
-                sendEvent.reschedule(readyTime);
+                reschedule(sendEvent, readyTime);
             sendQueue.insert(i,buf);
             done = true;
         }
@@ -226,7 +227,7 @@ Bridge::BridgePort::queueForSendTiming(PacketPtr pkt)
     // should already be an event scheduled for sending the head
     // packet.
     if (sendQueue.empty()) {
-        sendEvent.schedule(readyTime);
+        schedule(sendEvent, readyTime);
     }
     sendQueue.push_back(buf);
 }
@@ -280,7 +281,7 @@ Bridge::BridgePort::trySend()
         if (!sendQueue.empty()) {
             buf = sendQueue.front();
             DPRINTF(BusBridge, "Scheduling next send\n");
-            sendEvent.schedule(std::max(buf->ready, curTick + 1));
+            schedule(sendEvent, std::max(buf->ready, curTick + 1));
         }
     } else {
         DPRINTF(BusBridge, "  unsuccessful\n");
@@ -301,7 +302,7 @@ Bridge::BridgePort::recvRetry()
     if (nextReady <= curTick)
         trySend();
     else
-        sendEvent.schedule(nextReady);
+        schedule(sendEvent, nextReady);
 }
 
 /** Function called by the port when the bus is receiving a Atomic

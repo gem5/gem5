@@ -61,7 +61,7 @@ namespace SparcISA
     class StackTrace
     {
       protected:
-        typedef TheISA::MachInst MachInst;
+        typedef SparcISA::MachInst MachInst;
       private:
         ThreadContext *tc;
         std::vector<Addr> stack;

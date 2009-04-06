@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -61,12 +61,14 @@ def macroop LODS_M {
     subi t4, t0, dsz, dataSize=asz
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
-    ld rax, seg, [1, t0, rdi]
+    ld rax, seg, [1, t0, rsi]
 
-    add rdi, rdi, t3, dataSize=asz
+    add rsi, rsi, t3, dataSize=asz
 };
 
 def macroop LODS_E_M {
+    and t0, rcx, rcx, flags=(EZF,), dataSize=asz
+    br label("end"), flags=(CEZF,)
     # Find the constant we need to either add or subtract from rdi
     ruflag t0, 10
     movi t3, t3, dsz, flags=(CEZF,), dataSize=asz
@@ -74,11 +76,12 @@ def macroop LODS_E_M {
     mov t3, t3, t4, flags=(nCEZF,), dataSize=asz
 
 topOfLoop:
-    ld rax, seg, [1, t0, rdi]
+    ld rax, seg, [1, t0, rsi]
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
-    add rdi, rdi, t3, dataSize=asz
-    bri t0, label("topOfLoop"), flags=(nCEZF,)
+    add rsi, rsi, t3, dataSize=asz
+    br label("topOfLoop"), flags=(nCEZF,)
+end:
     fault "NoFault"
 };
 '''

@@ -60,26 +60,30 @@
 
 #include "sim/process.hh"
 #include "arch/x86/linux/linux.hh"
-#include "arch/x86/syscallreturn.hh"
 #include "arch/x86/process.hh"
 
 namespace X86ISA {
 
-/// A process with emulated x86/Linux syscalls.
-class X86LinuxProcess : public X86LiveProcess
+class X86_64LinuxProcess : public X86_64LiveProcess
 {
-  public:
-    /// Constructor.
-    X86LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
-
+  protected:
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 
-    SyscallDesc* getDesc(int callnum);
+  public:
+    /// Constructor.
+    X86_64LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
+};
 
-    const int Num_Syscall_Descs;
+class I386LinuxProcess : public I386LiveProcess
+{
+  protected:
+     /// Array of syscall descriptors, indexed by call number.
+    static SyscallDesc syscallDescs[];
 
-    void handleTrap(int trapNum, ThreadContext *tc);
+  public:
+    /// Constructor.
+    I386LinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 };
 
 } // namespace X86ISA

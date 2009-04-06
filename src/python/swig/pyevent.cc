@@ -33,21 +33,15 @@
 #include "python/swig/pyevent.hh"
 #include "sim/async.hh"
 
-PythonEvent::PythonEvent(PyObject *obj, Tick when, Priority priority)
-    : Event(&mainEventQueue, priority), object(obj)
+PythonEvent::PythonEvent(PyObject *obj, Priority priority)
+    : Event(priority), object(obj)
 {
     if (object == NULL)
         panic("Passed in invalid object");
-
-    Py_INCREF(object);
-
-    setFlags(AutoDelete);
-    schedule(when);
 }
 
 PythonEvent::~PythonEvent()
 {
-    Py_DECREF(object);
 }
 
 void
@@ -66,4 +60,27 @@ PythonEvent::process()
         async_event = true;
         async_exception = true;
     }
+
+    // Since the object has been removed from the event queue, its
+    // reference count must be decremented.
+    Py_DECREF(object);
+}
+
+CountedDrainEvent *
+createCountedDrain()
+{
+    return new CountedDrainEvent();
+}
+
+void
+cleanupCountedDrain(Event *counted_drain)
+{
+    CountedDrainEvent *event =
+        dynamic_cast<CountedDrainEvent *>(counted_drain);
+    if (event == NULL) {
+        fatal("Called cleanupCountedDrain() on an event that was not "
+              "a CountedDrainEvent.");
+    }
+    assert(event->getCount() == 0);
+    delete event;
 }

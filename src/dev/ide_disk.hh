@@ -238,12 +238,12 @@ class IdeDisk : public SimObject
     /** Interrupt pending */
     bool intrPending;
 
-    Stats::Scalar<> dmaReadFullPages;
-    Stats::Scalar<> dmaReadBytes;
-    Stats::Scalar<> dmaReadTxs;
-    Stats::Scalar<> dmaWriteFullPages;
-    Stats::Scalar<> dmaWriteBytes;
-    Stats::Scalar<> dmaWriteTxs;
+    Stats::Scalar dmaReadFullPages;
+    Stats::Scalar dmaReadBytes;
+    Stats::Scalar dmaReadTxs;
+    Stats::Scalar dmaWriteFullPages;
+    Stats::Scalar dmaWriteBytes;
+    Stats::Scalar dmaWriteTxs;
     Stats::Formula rdBandwidth;
     Stats::Formula wrBandwidth;
     Stats::Formula totBandwidth;
@@ -278,8 +278,10 @@ class IdeDisk : public SimObject
     }
 
     // Device register read/write
-    void read(const Addr &offset, IdeRegType regtype, uint8_t *data);
-    void write(const Addr &offset, IdeRegType regtype, const uint8_t *data);
+    void readCommand(const Addr offset, int size, uint8_t *data);
+    void readControl(const Addr offset, int size, uint8_t *data);
+    void writeCommand(const Addr offset, int size, const uint8_t *data);
+    void writeControl(const Addr offset, int size, const uint8_t *data);
 
     // Start/abort functions
     void startDma(const uint32_t &prdTableBase);

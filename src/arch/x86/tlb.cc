@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -59,6 +59,7 @@
 
 #include "config/full_system.hh"
 
+#include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/pagetable.hh"
 #include "arch/x86/tlb.hh"
 #include "arch/x86/x86_traits.hh"
@@ -72,6 +73,9 @@
 
 #if FULL_SYSTEM
 #include "arch/x86/pagetable_walker.hh"
+#else
+#include "mem/page_table.hh"
+#include "sim/process.hh"
 #endif
 
 namespace X86ISA {
@@ -90,7 +94,7 @@ TLB::TLB(const Params *p) : BaseTLB(p), configAddress(0), size(p->size)
 #endif
 }
 
-void
+TlbEntry *
 TLB::insert(Addr vpn, TlbEntry &entry)
 {
     //TODO Deal with conflicting entries
@@ -106,6 +110,7 @@ TLB::insert(Addr vpn, TlbEntry &entry)
     *newEntry = entry;
     newEntry->vaddr = vpn;
     entryList.push_front(newEntry);
+    return newEntry;
 }
 
 TLB::EntryList::iterator
@@ -137,14 +142,6 @@ TLB::lookup(Addr va, bool update_lru)
     else
         return *entry;
 }
-
-#if FULL_SYSTEM
-void
-TLB::walk(ThreadContext * _tc, Addr vaddr)
-{
-    walker->start(_tc, vaddr);
-}
-#endif
 
 void
 TLB::invalidateAll()
@@ -188,16 +185,18 @@ TLB::demapPage(Addr va, uint64_t asn)
     }
 }
 
-template<class TlbFault>
 Fault
-TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
+TLB::translate(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write, bool execute,
+        bool &delayedResponse, bool timing)
 {
+    delayedResponse = false;
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
     uint32_t flags = req->getFlags();
     bool storeCheck = flags & StoreCheck;
 
-    int seg = flags & mask(4);
+    int seg = flags & SegmentFlagMask;
 
     //XXX Junk code to surpress the warning
     if (storeCheck);
@@ -206,10 +205,11 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
     // value.
     if (seg == SEGMENT_REG_MS) {
         DPRINTF(TLB, "Addresses references internal memory.\n");
-        Addr prefix = vaddr & IntAddrPrefixMask;
+        Addr prefix = (vaddr >> 3) & IntAddrPrefixMask;
         if (prefix == IntAddrPrefixCPUID) {
             panic("CPUID memory space not yet implemented!\n");
         } else if (prefix == IntAddrPrefixMSR) {
+            vaddr = vaddr >> 3;
             req->setMmapedIpr(true);
             Addr regNum = 0;
             switch (vaddr & ~IntAddrPrefixMask) {
@@ -357,6 +357,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
               case 0x410:
                 regNum = MISCREG_MC4_CTL;
                 break;
+              case 0x414:
+                regNum = MISCREG_MC5_CTL;
+                break;
+              case 0x418:
+                regNum = MISCREG_MC6_CTL;
+                break;
+              case 0x41C:
+                regNum = MISCREG_MC7_CTL;
+                break;
               case 0x401:
                 regNum = MISCREG_MC0_STATUS;
                 break;
@@ -371,6 +380,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                 break;
               case 0x411:
                 regNum = MISCREG_MC4_STATUS;
+                break;
+              case 0x415:
+                regNum = MISCREG_MC5_STATUS;
+                break;
+              case 0x419:
+                regNum = MISCREG_MC6_STATUS;
+                break;
+              case 0x41D:
+                regNum = MISCREG_MC7_STATUS;
                 break;
               case 0x402:
                 regNum = MISCREG_MC0_ADDR;
@@ -387,6 +405,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
               case 0x412:
                 regNum = MISCREG_MC4_ADDR;
                 break;
+              case 0x416:
+                regNum = MISCREG_MC5_ADDR;
+                break;
+              case 0x41A:
+                regNum = MISCREG_MC6_ADDR;
+                break;
+              case 0x41E:
+                regNum = MISCREG_MC7_ADDR;
+                break;
               case 0x403:
                 regNum = MISCREG_MC0_MISC;
                 break;
@@ -401,6 +428,15 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                 break;
               case 0x413:
                 regNum = MISCREG_MC4_MISC;
+                break;
+              case 0x417:
+                regNum = MISCREG_MC5_MISC;
+                break;
+              case 0x41B:
+                regNum = MISCREG_MC6_MISC;
+                break;
+              case 0x41F:
+                regNum = MISCREG_MC7_MISC;
                 break;
               case 0xC0000080:
                 regNum = MISCREG_EFER;
@@ -510,7 +546,8 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
                     tc->readMiscRegNoEffect(MISCREG_PCI_CONFIG_ADDRESS);
                 if (bits(configAddress, 31, 31)) {
                     req->setPaddr(PhysAddrPrefixPciConfig |
-                            bits(configAddress, 30, 0));
+                            mbits(configAddress, 30, 2) |
+                            (IOPort & mask(2)));
                 }
             } else {
                 req->setPaddr(PhysAddrPrefixIO | IOPort);
@@ -534,35 +571,38 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         // If we're not in 64-bit mode, do protection/limit checks
         if (!efer.lma || !csAttr.longMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
+            // Check for a NULL segment selector.
+            if (!tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
+                return new GeneralProtection(0);
+            bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
-            if (!attr.writable && write)
-                return new GeneralProtection(0);
-            if (!attr.readable && !write && !execute)
-                return new GeneralProtection(0);
+            if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
+                if (!attr.writable && write)
+                    return new GeneralProtection(0);
+                if (!attr.readable && !write && !execute)
+                    return new GeneralProtection(0);
+                expandDown = attr.expandDown;
+
+            }
             Addr base = tc->readMiscRegNoEffect(MISCREG_SEG_BASE(seg));
             Addr limit = tc->readMiscRegNoEffect(MISCREG_SEG_LIMIT(seg));
-            if (!attr.expandDown) {
+            // This assumes we're not in 64 bit mode. If we were, the default
+            // address size is 64 bits, overridable to 32.
+            int size = 32;
+            bool sizeOverride = (flags & (AddrSizeFlagBit << FlagShift));
+            if ((csAttr.defaultSize && sizeOverride) ||
+                    (!csAttr.defaultSize && !sizeOverride))
+                size = 16;
+            Addr offset = bits(vaddr - base, size-1, 0);
+            Addr endOffset = offset + req->getSize() - 1;
+            if (expandDown) {
                 DPRINTF(TLB, "Checking an expand down segment.\n");
-                // We don't have to worry about the access going around the
-                // end of memory because accesses will be broken up into
-                // pieces at boundaries aligned on sizes smaller than an
-                // entire address space. We do have to worry about the limit
-                // being less than the base.
-                if (limit < base) {
-                    if (limit < vaddr + req->getSize() && vaddr < base)
-                        return new GeneralProtection(0);
-                } else {
-                    if (limit < vaddr + req->getSize())
-                        return new GeneralProtection(0);
-                }
+                warn_once("Expand down segments are untested.\n");
+                if (offset <= limit || endOffset <= limit)
+                    return new GeneralProtection(0);
             } else {
-                if (limit < base) {
-                    if (vaddr <= limit || vaddr + req->getSize() >= base)
-                        return new GeneralProtection(0);
-                } else {
-                    if (vaddr <= limit && vaddr + req->getSize() >= base)
-                        return new GeneralProtection(0);
-                }
+                if (offset > limit || endOffset > limit)
+                    return new GeneralProtection(0);
             }
         }
         // If paging is enabled, do the translation.
@@ -571,14 +611,57 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
             // The vaddr already has the segment base applied.
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
-                return new TlbFault(vaddr);
-            } else {
-                // Do paging protection checks.
-                DPRINTF(TLB, "Entry found with paddr %#x, doing protection checks.\n", entry->paddr);
-                Addr paddr = entry->paddr | (vaddr & (entry->size-1));
-                DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
-                req->setPaddr(paddr);
+#if FULL_SYSTEM
+                Fault fault = walker->start(tc, translation, req,
+                                            write, execute);
+                if (timing || fault != NoFault) {
+                    // This gets ignored in atomic mode.
+                    delayedResponse = true;
+                    return fault;
+                }
+                entry = lookup(vaddr);
+                assert(entry);
+#else
+                DPRINTF(TLB, "Handling a TLB miss for "
+                        "address %#x at pc %#x.\n",
+                        vaddr, tc->readPC());
+
+                Process *p = tc->getProcessPtr();
+                TlbEntry newEntry;
+                bool success = p->pTable->lookup(vaddr, newEntry);
+                if(!success && !execute) {
+                    p->checkAndAllocNextPage(vaddr);
+                    success = p->pTable->lookup(vaddr, newEntry);
+                }
+                if(!success) {
+                    panic("Tried to execute unmapped address %#x.\n", vaddr);
+                } else {
+                    Addr alignedVaddr = p->pTable->pageAlign(vaddr);
+                    DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
+                            newEntry.pageStart());
+                    entry = insert(alignedVaddr, newEntry);
+                }
+                DPRINTF(TLB, "Miss was serviced.\n");
+#endif
             }
+            // Do paging protection checks.
+            bool inUser = (csAttr.dpl == 3 &&
+                    !(flags & (CPL0FlagBit << FlagShift)));
+            if ((inUser && !entry->user) ||
+                    (write && !entry->writable)) {
+                // The page must have been present to get into the TLB in
+                // the first place. We'll assume the reserved bits are
+                // fine even though we're not checking them.
+                return new PageFault(vaddr, true, write,
+                                     inUser, false, execute);
+            }
+
+
+            DPRINTF(TLB, "Entry found with paddr %#x, "
+                    "doing protection checks.\n", entry->paddr);
+            Addr paddr = entry->paddr | (vaddr & (entry->size-1));
+            DPRINTF(TLB, "Translated %#x -> %#x.\n", vaddr, paddr);
+            req->setPaddr(paddr);
         } else {
             //Use the address which already has segmentation applied.
             DPRINTF(TLB, "Paging disabled.\n");
@@ -592,160 +675,68 @@ TLB::translate(RequestPtr &req, ThreadContext *tc, bool write, bool execute)
         req->setPaddr(vaddr);
     }
     // Check for an access to the local APIC
+#if FULL_SYSTEM
     LocalApicBase localApicBase = tc->readMiscRegNoEffect(MISCREG_APIC_BASE);
-    Addr baseAddr = localApicBase.base << 12;
+    Addr baseAddr = localApicBase.base * PageBytes;
     Addr paddr = req->getPaddr();
-    if (baseAddr <= paddr && baseAddr + (1 << 12) > paddr) {
-        req->setMmapedIpr(true);
+    if (baseAddr <= paddr && baseAddr + PageBytes > paddr) {
+        // The Intel developer's manuals say the below restrictions apply,
+        // but the linux kernel, because of a compiler optimization, breaks
+        // them.
+        /*
         // Check alignment
         if (paddr & ((32/8) - 1))
             return new GeneralProtection(0);
         // Check access size
         if (req->getSize() != (32/8))
             return new GeneralProtection(0);
-        MiscReg regNum;
-        switch (paddr - baseAddr)
-        {
-          case 0x20:
-            regNum = MISCREG_APIC_ID;
-            break;
-          case 0x30:
-            regNum = MISCREG_APIC_VERSION;
-            break;
-          case 0x80:
-            regNum = MISCREG_APIC_TASK_PRIORITY;
-            break;
-          case 0x90:
-            regNum = MISCREG_APIC_ARBITRATION_PRIORITY;
-            break;
-          case 0xA0:
-            regNum = MISCREG_APIC_PROCESSOR_PRIORITY;
-            break;
-          case 0xB0:
-            regNum = MISCREG_APIC_EOI;
-            break;
-          case 0xD0:
-            regNum = MISCREG_APIC_LOGICAL_DESTINATION;
-            break;
-          case 0xE0:
-            regNum = MISCREG_APIC_DESTINATION_FORMAT;
-            break;
-          case 0xF0:
-            regNum = MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR;
-            break;
-          case 0x100:
-          case 0x108:
-          case 0x110:
-          case 0x118:
-          case 0x120:
-          case 0x128:
-          case 0x130:
-          case 0x138:
-          case 0x140:
-          case 0x148:
-          case 0x150:
-          case 0x158:
-          case 0x160:
-          case 0x168:
-          case 0x170:
-          case 0x178:
-            regNum = MISCREG_APIC_IN_SERVICE(
-                    (paddr - baseAddr - 0x100) / 0x8);
-            break;
-          case 0x180:
-          case 0x188:
-          case 0x190:
-          case 0x198:
-          case 0x1A0:
-          case 0x1A8:
-          case 0x1B0:
-          case 0x1B8:
-          case 0x1C0:
-          case 0x1C8:
-          case 0x1D0:
-          case 0x1D8:
-          case 0x1E0:
-          case 0x1E8:
-          case 0x1F0:
-          case 0x1F8:
-            regNum = MISCREG_APIC_TRIGGER_MODE(
-                    (paddr - baseAddr - 0x180) / 0x8);
-            break;
-          case 0x200:
-          case 0x208:
-          case 0x210:
-          case 0x218:
-          case 0x220:
-          case 0x228:
-          case 0x230:
-          case 0x238:
-          case 0x240:
-          case 0x248:
-          case 0x250:
-          case 0x258:
-          case 0x260:
-          case 0x268:
-          case 0x270:
-          case 0x278:
-            regNum = MISCREG_APIC_INTERRUPT_REQUEST(
-                    (paddr - baseAddr - 0x200) / 0x8);
-            break;
-          case 0x280:
-            regNum = MISCREG_APIC_ERROR_STATUS;
-            break;
-          case 0x300:
-            regNum = MISCREG_APIC_INTERRUPT_COMMAND_LOW;
-            break;
-          case 0x310:
-            regNum = MISCREG_APIC_INTERRUPT_COMMAND_HIGH;
-            break;
-          case 0x320:
-            regNum = MISCREG_APIC_LVT_TIMER;
-            break;
-          case 0x330:
-            regNum = MISCREG_APIC_LVT_THERMAL_SENSOR;
-            break;
-          case 0x340:
-            regNum = MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS;
-            break;
-          case 0x350:
-            regNum = MISCREG_APIC_LVT_LINT0;
-            break;
-          case 0x360:
-            regNum = MISCREG_APIC_LVT_LINT1;
-            break;
-          case 0x370:
-            regNum = MISCREG_APIC_LVT_ERROR;
-            break;
-          case 0x380:
-            regNum = MISCREG_APIC_INITIAL_COUNT;
-            break;
-          case 0x390:
-            regNum = MISCREG_APIC_CURRENT_COUNT;
-            break;
-          case 0x3E0:
-            regNum = MISCREG_APIC_DIVIDE_COUNT;
-            break;
-          default:
-            // A reserved register field.
-            return new GeneralProtection(0);
-            break;
-        }
-        req->setPaddr(regNum * sizeof(MiscReg));
+        */
+        // Force the access to be uncacheable.
+        req->setFlags(Request::UNCACHEABLE);
+        req->setPaddr(x86LocalAPICAddress(tc->contextId(), paddr - baseAddr));
     }
+#endif
     return NoFault;
 };
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
-    return TLB::translate<FakeDTLBFault>(req, tc, write, false);
+    bool delayedResponse;
+    return TLB::translate(req, tc, NULL, write,
+            false, delayedResponse, false);
+}
+
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    bool delayedResponse;
+    assert(translation);
+    Fault fault = TLB::translate(req, tc, translation,
+            write, false, delayedResponse, true);
+    if (!delayedResponse)
+        translation->finish(fault, req, tc, write);
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
-    return TLB::translate<FakeITLBFault>(req, tc, false, true);
+    bool delayedResponse;
+    return TLB::translate(req, tc, NULL, false,
+            true, delayedResponse, false);
+}
+
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    bool delayedResponse;
+    assert(translation);
+    Fault fault = TLB::translate(req, tc, translation,
+            false, true, delayedResponse, true);
+    if (!delayedResponse)
+        translation->finish(fault, req, tc, false);
 }
 
 #if FULL_SYSTEM

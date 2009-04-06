@@ -106,19 +106,7 @@ namespace X86ISA
     const int StackPointerReg = INTREG_RSP;
     //X86 doesn't seem to have a link register
     const int ReturnAddressReg = 0;
-    const int ReturnValueReg = INTREG_RAX;
     const int FramePointerReg = INTREG_RBP;
-    const int ArgumentReg[] = {
-        INTREG_RDI,
-        INTREG_RSI,
-        INTREG_RDX,
-        //This argument register is r10 for syscalls and rcx for C.
-        INTREG_R10W,
-        //INTREG_RCX,
-        INTREG_R8W,
-        INTREG_R9W
-    };
-    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
 
     // Some OS syscalls use a second register (rdx) to return a second
     // value

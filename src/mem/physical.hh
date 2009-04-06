@@ -89,21 +89,18 @@ class PhysicalMemory : public MemObject
 
         static Addr mask(Addr paddr) { return (paddr & ~Addr_Mask); }
 
-        Addr addr; 	// locked address
-        int cpuNum;	// locking CPU
-        int threadNum;	// locking thread ID within CPU
+        Addr addr;      // locked address
+        int contextId;     // locking hw context
 
         // check for matching execution context
         bool matchesContext(Request *req)
         {
-            return (cpuNum == req->getCpuNum() &&
-                    threadNum == req->getThreadNum());
+            return (contextId == req->contextId());
         }
 
         LockedAddr(Request *req)
             : addr(mask(req->getPaddr())),
-              cpuNum(req->getCpuNum()),
-              threadNum(req->getThreadNum())
+              contextId(req->contextId())
         {
         }
     };
@@ -146,6 +143,7 @@ class PhysicalMemory : public MemObject
     uint8_t *pmemAddr;
     int pagePtr;
     Tick lat;
+    Tick lat_var;
     std::vector<MemoryPort*> ports;
     typedef std::vector<MemoryPort*>::iterator PortIterator;
 

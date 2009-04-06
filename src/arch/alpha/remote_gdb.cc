@@ -30,7 +30,7 @@
 
 /*
  * Copyright (c) 1990, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * This software was developed by the Computer Systems Engineering group
  * at Lawrence Berkeley Laboratory under DARPA contract BG 91-66 and
@@ -38,8 +38,8 @@
  *
  * All advertising materials mentioning features or use of this software
  * must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Lawrence Berkeley Laboratories.
+ *      This product includes software developed by the University of
+ *      California, Lawrence Berkeley Laboratories.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -51,8 +51,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
  * 4. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
@@ -69,7 +69,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)kgdb_stub.c	8.4 (Berkeley) 1/12/94
+ *      @(#)kgdb_stub.c 8.4 (Berkeley) 1/12/94
  */
 
 /*-
@@ -89,8 +89,8 @@
  *    documentation and/or other materials provided with the distribution.
  * 3. All advertising materials mentioning features or use of this software
  *    must display the following acknowledgement:
- *	This product includes software developed by the NetBSD
- *	Foundation, Inc. and its contributors.
+ *      This product includes software developed by the NetBSD
+ *      Foundation, Inc. and its contributors.
  * 4. Neither the name of The NetBSD Foundation nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -117,9 +117,9 @@
  */
 
 #include <sys/signal.h>
+#include <unistd.h>
 
 #include <string>
-#include <unistd.h>
 
 #include "config/full_system.hh"
 #if FULL_SYSTEM
@@ -140,19 +140,17 @@
 #include "sim/system.hh"
 
 using namespace std;
-using namespace TheISA;
+using namespace AlphaISA;
 
-RemoteGDB::RemoteGDB(System *_system, ThreadContext *c)
-    : BaseRemoteGDB(_system, c, KGDB_NUMREGS)
+RemoteGDB::RemoteGDB(System *_system, ThreadContext *tc)
+    : BaseRemoteGDB(_system, tc, KGDB_NUMREGS)
 {
     memset(gdbregs.regs, 0, gdbregs.bytes());
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::acc
-//
-//	Determine if the mapping at va..(va+len) is valid.
-//
+/*
+ * Determine if the mapping at va..(va+len) is valid.
+ */
 bool
 RemoteGDB::acc(Addr va, size_t len)
 {
@@ -161,12 +159,12 @@ RemoteGDB::acc(Addr va, size_t len)
 #else
     Addr last_va;
 
-    va = TheISA::TruncPage(va);
-    last_va = TheISA::RoundPage(va + len);
+    va = TruncPage(va);
+    last_va = RoundPage(va + len);
 
     do  {
-        if (TheISA::IsK0Seg(va)) {
-            if (va < (TheISA::K0SegBase + pmem->size())) {
+        if (IsK0Seg(va)) {
+            if (va < (K0SegBase + pmem->size())) {
                 DPRINTF(GDBAcc, "acc:   Mapping is valid  K0SEG <= "
                         "%#x < K0SEG + size\n", va);
                 return true;
@@ -177,23 +175,25 @@ RemoteGDB::acc(Addr va, size_t len)
             }
         }
 
-    /**
-     * This code says that all accesses to palcode (instruction and data)
-     * are valid since there isn't a va->pa mapping because palcode is
-     * accessed physically. At some point this should probably be cleaned up
-     * but there is no easy way to do it.
-     */
+        /**
+         * This code says that all accesses to palcode (instruction
+         * and data) are valid since there isn't a va->pa mapping
+         * because palcode is accessed physically. At some point this
+         * should probably be cleaned up but there is no easy way to
+         * do it.
+         */
 
-        if (AlphaISA::PcPAL(va) || va < 0x10000)
+        if (PcPAL(va) || va < 0x10000)
             return true;
 
-        Addr ptbr = context->readMiscRegNoEffect(AlphaISA::IPR_PALtemp20);
-        TheISA::PageTableEntry pte = TheISA::kernel_pte_lookup(context->getPhysPort(), ptbr, va);
+        Addr ptbr = context->readMiscRegNoEffect(IPR_PALtemp20);
+        PageTableEntry pte =
+            kernel_pte_lookup(context->getPhysPort(), ptbr, va);
         if (!pte.valid()) {
             DPRINTF(GDBAcc, "acc:   %#x pte is invalid\n", va);
             return false;
         }
-        va += TheISA::PageBytes;
+        va += PageBytes;
     } while (va < last_va);
 
     DPRINTF(GDBAcc, "acc:   %#x mapping is valid\n", va);
@@ -201,11 +201,10 @@ RemoteGDB::acc(Addr va, size_t len)
 #endif
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::getregs
-//
-//	Translate the kernel debugger register format into
-//	the GDB register format.
+/*
+ * Translate the kernel debugger register format into the GDB register
+ * format.
+ */
 void
 RemoteGDB::getregs()
 {
@@ -214,45 +213,43 @@ RemoteGDB::getregs()
     gdbregs.regs[KGDB_REG_PC] = context->readPC();
 
     // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            gdbregs.regs[i] = context->readIntReg(AlphaISA::reg_redir[i]);
+    if (PcPAL(gdbregs.regs[KGDB_REG_PC])) {
+        for (int i = 0; i < NumIntArchRegs; ++i) {
+            gdbregs.regs[i] = context->readIntReg(reg_redir[i]);
         }
     } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < NumIntArchRegs; ++i) {
             gdbregs.regs[i] = context->readIntReg(i);
         }
     }
 
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
+    for (int i = 0; i < NumFloatArchRegs; ++i) {
         gdbregs.regs[i + KGDB_REG_F0] = context->readFloatRegBits(i);
     }
 #endif
 }
 
-///////////////////////////////////////////////////////////
-// RemoteGDB::setregs
-//
-//	Translate the GDB register format into the kernel
-//	debugger register format.
-//
+/*
+ * Translate the GDB register format into the kernel debugger register
+ * format.
+ */
 void
 RemoteGDB::setregs()
 {
     // @todo: Currently this is very Alpha specific.
-    if (AlphaISA::PcPAL(gdbregs.regs[KGDB_REG_PC])) {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
-            context->setIntReg(AlphaISA::reg_redir[i], gdbregs.regs[i]);
+    if (PcPAL(gdbregs.regs[KGDB_REG_PC])) {
+        for (int i = 0; i < NumIntArchRegs; ++i) {
+            context->setIntReg(reg_redir[i], gdbregs.regs[i]);
         }
     } else {
-        for (int i = 0; i < TheISA::NumIntArchRegs; ++i) {
+        for (int i = 0; i < NumIntArchRegs; ++i) {
             context->setIntReg(i, gdbregs.regs[i]);
         }
     }
 
 #ifdef KGDB_FP_REGS
-    for (int i = 0; i < TheISA::NumFloatArchRegs; ++i) {
+    for (int i = 0; i < NumFloatArchRegs; ++i) {
         context->setFloatRegBits(i, gdbregs.regs[i + KGDB_REG_F0]);
     }
 #endif

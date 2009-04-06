@@ -35,142 +35,163 @@
 #include "arch/alpha/faults.hh"
 #include "arch/alpha/isa_traits.hh"
 #include "base/compiler.hh"
+#include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "params/AlphaInterrupts.hh"
+#include "sim/sim_object.hh"
 
-namespace AlphaISA
+namespace AlphaISA {
+
+class Interrupts : public SimObject
 {
-    class Interrupts
+  private:
+    bool newInfoSet;
+    int newIpl;
+    int newSummary;
+    BaseCPU * cpu;
+
+  protected:
+    uint64_t interrupts[NumInterruptLevels];
+    uint64_t intstatus;
+
+  public:
+    typedef AlphaInterruptsParams Params;
+
+    const Params *
+    params() const
     {
-      protected:
-        uint64_t interrupts[NumInterruptLevels];
-        uint64_t intstatus;
+        return dynamic_cast<const Params *>(_params);
+    }
 
-      public:
-        Interrupts()
-        {
-            memset(interrupts, 0, sizeof(interrupts));
-            intstatus = 0;
-            newInfoSet = false;
-        }
+    Interrupts(Params * p) : SimObject(p), cpu(NULL)
+    {
+        memset(interrupts, 0, sizeof(interrupts));
+        intstatus = 0;
+        newInfoSet = false;
+    }
 
-        void post(int int_num, int index)
-        {
-            DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
+    void
+    setCPU(BaseCPU * _cpu)
+    {
+        cpu = _cpu;
+    }
 
-            if (int_num < 0 || int_num >= NumInterruptLevels)
-                panic("int_num out of bounds\n");
+    void
+    post(int int_num, int index)
+    {
+        DPRINTF(Interrupt, "Interrupt %d:%d posted\n", int_num, index);
 
-            if (index < 0 || index >= sizeof(uint64_t) * 8)
-                panic("int_num out of bounds\n");
+        if (int_num < 0 || int_num >= NumInterruptLevels)
+            panic("int_num out of bounds\n");
 
-            interrupts[int_num] |= 1 << index;
-            intstatus |= (ULL(1) << int_num);
-        }
+        if (index < 0 || index >= (int)sizeof(uint64_t) * 8)
+            panic("int_num out of bounds\n");
 
-        void clear(int int_num, int index)
-        {
-            DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
+        interrupts[int_num] |= 1 << index;
+        intstatus |= (ULL(1) << int_num);
+    }
 
-            if (int_num < 0 || int_num >= TheISA::NumInterruptLevels)
-                panic("int_num out of bounds\n");
+    void
+    clear(int int_num, int index)
+    {
+        DPRINTF(Interrupt, "Interrupt %d:%d cleared\n", int_num, index);
 
-            if (index < 0 || index >= sizeof(uint64_t) * 8)
-                panic("int_num out of bounds\n");
+        if (int_num < 0 || int_num >= NumInterruptLevels)
+            panic("int_num out of bounds\n");
 
-            interrupts[int_num] &= ~(1 << index);
-            if (interrupts[int_num] == 0)
-                intstatus &= ~(ULL(1) << int_num);
-        }
+        if (index < 0 || index >= (int)sizeof(uint64_t) * 8)
+            panic("int_num out of bounds\n");
 
-        void clear_all()
-        {
-            DPRINTF(Interrupt, "Interrupts all cleared\n");
+        interrupts[int_num] &= ~(1 << index);
+        if (interrupts[int_num] == 0)
+            intstatus &= ~(ULL(1) << int_num);
+    }
 
-            memset(interrupts, 0, sizeof(interrupts));
-            intstatus = 0;
-        }
+    void
+    clearAll()
+    {
+        DPRINTF(Interrupt, "Interrupts all cleared\n");
 
-        void serialize(std::ostream &os)
-        {
-            SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
-            SERIALIZE_SCALAR(intstatus);
-        }
+        memset(interrupts, 0, sizeof(interrupts));
+        intstatus = 0;
+    }
 
-        void unserialize(Checkpoint *cp, const std::string &section)
-        {
-            UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
-            UNSERIALIZE_SCALAR(intstatus);
-        }
+    void
+    serialize(std::ostream &os)
+    {
+        SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+        SERIALIZE_SCALAR(intstatus);
+    }
 
-        bool check_interrupts(ThreadContext * tc) const
-        {
-            return (intstatus != 0) && !(tc->readPC() & 0x3);
-        }
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
+    {
+        UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
+        UNSERIALIZE_SCALAR(intstatus);
+    }
 
-        Fault getInterrupt(ThreadContext * tc)
-        {
-            int ipl = 0;
-            int summary = 0;
+    bool
+    checkInterrupts(ThreadContext *tc) const
+    {
+        return (intstatus != 0) && !(tc->readPC() & 0x3);
+    }
 
-            if (tc->readMiscRegNoEffect(IPR_ASTRR))
-                panic("asynchronous traps not implemented\n");
+    Fault
+    getInterrupt(ThreadContext *tc)
+    {
+        int ipl = 0;
+        int summary = 0;
 
-            if (tc->readMiscRegNoEffect(IPR_SIRR)) {
-                for (int i = INTLEVEL_SOFTWARE_MIN;
-                     i < INTLEVEL_SOFTWARE_MAX; i++) {
-                    if (tc->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
-                        // See table 4-19 of 21164 hardware reference
-                        ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                        summary |= (ULL(1) << i);
-                    }
+        if (tc->readMiscRegNoEffect(IPR_ASTRR))
+            panic("asynchronous traps not implemented\n");
+
+        if (tc->readMiscRegNoEffect(IPR_SIRR)) {
+            for (int i = INTLEVEL_SOFTWARE_MIN;
+                 i < INTLEVEL_SOFTWARE_MAX; i++) {
+                if (tc->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
+                    // See table 4-19 of 21164 hardware reference
+                    ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
+                    summary |= (ULL(1) << i);
                 }
             }
+        }
 
-            uint64_t interrupts = intstatus;
-            if (interrupts) {
-                for (int i = INTLEVEL_EXTERNAL_MIN;
-                    i < INTLEVEL_EXTERNAL_MAX; i++) {
-                    if (interrupts & (ULL(1) << i)) {
-                        // See table 4-19 of 21164 hardware reference
-                        ipl = i;
-                        summary |= (ULL(1) << i);
-                    }
+        uint64_t interrupts = intstatus;
+        if (interrupts) {
+            for (int i = INTLEVEL_EXTERNAL_MIN;
+                 i < INTLEVEL_EXTERNAL_MAX; i++) {
+                if (interrupts & (ULL(1) << i)) {
+                    // See table 4-19 of 21164 hardware reference
+                    ipl = i;
+                    summary |= (ULL(1) << i);
                 }
             }
-
-            if (ipl && ipl > tc->readMiscRegNoEffect(IPR_IPLR)) {
-                newIpl = ipl;
-                newSummary = summary;
-                newInfoSet = true;
-                DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                        tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
-
-                return new InterruptFault;
-            } else {
-                return NoFault;
-            }
         }
 
-        void updateIntrInfo(ThreadContext *tc)
-        {
-            assert(newInfoSet);
-            tc->setMiscRegNoEffect(IPR_ISR, newSummary);
-            tc->setMiscRegNoEffect(IPR_INTID, newIpl);
-            newInfoSet = false;
+        if (ipl && ipl > tc->readMiscRegNoEffect(IPR_IPLR)) {
+            newIpl = ipl;
+            newSummary = summary;
+            newInfoSet = true;
+            DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
+                    tc->readMiscRegNoEffect(IPR_IPLR), ipl, summary);
+
+            return new InterruptFault;
+        } else {
+            return NoFault;
         }
+    }
 
-        uint64_t get_vec(int int_num)
-        {
-            panic("Shouldn't be called for Alpha\n");
-            M5_DUMMY_RETURN
-        }
+    void
+    updateIntrInfo(ThreadContext *tc)
+    {
+        assert(newInfoSet);
+        tc->setMiscRegNoEffect(IPR_ISR, newSummary);
+        tc->setMiscRegNoEffect(IPR_INTID, newIpl);
+        newInfoSet = false;
+    }
+};
 
-      private:
-        bool newInfoSet;
-        int newIpl;
-        int newSummary;
-    };
-}
+} // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_INTERRUPT_HH__
 

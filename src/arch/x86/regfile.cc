@@ -135,23 +135,23 @@ void RegFile::clear()
 
 MiscReg RegFile::readMiscRegNoEffect(int miscReg)
 {
-    return miscRegFile.readRegNoEffect(miscReg);
+    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
 }
 
 MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc)
 {
-    return miscRegFile.readReg(miscReg, tc);
+    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
 }
 
 void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val)
 {
-    miscRegFile.setRegNoEffect(miscReg, val);
+    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
 }
 
 void RegFile::setMiscReg(int miscReg, const MiscReg &val,
         ThreadContext * tc)
 {
-    miscRegFile.setReg(miscReg, val, tc);
+    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
@@ -214,7 +214,7 @@ int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
     //If we need to fold over the index to match byte semantics, do that.
     //Otherwise, just strip off any extra bits and pass it through.
     if (reg & (1 << 6))
-        return (reg & ~(1 << 6) - 0x4);
+        return (reg & (~(1 << 6) - 0x4));
     else
         return (reg & ~(1 << 6));
 }
@@ -228,7 +228,8 @@ int X86ISA::flattenFloatIndex(ThreadContext * tc, int reg)
     return reg;
 }
 
-void RegFile::serialize(std::ostream &os)
+void
+RegFile::serialize(EventManager *em, std::ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
@@ -237,18 +238,14 @@ void RegFile::serialize(std::ostream &os)
     SERIALIZE_SCALAR(nextRip);
 }
 
-void RegFile::unserialize(Checkpoint *cp, const std::string &section)
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);
     miscRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(rip);
     UNSERIALIZE_SCALAR(nextRip);
-}
-
-void RegFile::changeContext(RegContextParam param, RegContextVal val)
-{
-    panic("changeContext not implemented for x86!\n");
 }
 
 void X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)

@@ -38,8 +38,8 @@
 #include <list>
 
 #include "base/printable.hh"
-#include "sim/core.hh"		// for Tick
-#include "arch/isa_traits.hh"	// for Addr
+#include "sim/core.hh"          // for Tick
+#include "arch/isa_traits.hh"   // for Addr
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
@@ -48,17 +48,17 @@
  */
 enum CacheBlkStatusBits {
     /** valid, readable */
-    BlkValid =		0x01,
+    BlkValid =          0x01,
     /** write permission */
-    BlkWritable =	0x02,
+    BlkWritable =       0x02,
     /** read permission (yes, block can be valid but not readable) */
-    BlkReadable =	0x04,
+    BlkReadable =       0x04,
     /** dirty (modified) */
-    BlkDirty =		0x08,
+    BlkDirty =          0x08,
     /** block was referenced */
-    BlkReferenced =	0x10,
+    BlkReferenced =     0x10,
     /** block was a hardware prefetch yet unaccessed*/
-    BlkHWPrefetched =	0x20
+    BlkHWPrefetched =   0x20
 };
 
 /**
@@ -108,18 +108,16 @@ class CacheBlk
      */
     class Lock {
       public:
-        int cpuNum;	// locking CPU
-        int threadNum;	// locking thread ID within CPU
+        int contextId;     // locking context
 
         // check for matching execution context
         bool matchesContext(Request *req)
         {
-            return (cpuNum == req->getCpuNum() &&
-                    threadNum == req->getThreadNum());
+            return (contextId == req->contextId());
         }
 
         Lock(Request *req)
-            : cpuNum(req->getCpuNum()), threadNum(req->getThreadNum())
+            : contextId(req->contextId())
         {
         }
     };
@@ -207,7 +205,7 @@ class CacheBlk
      * be touched.
      * @return True if the block was a hardware prefetch, unaccesed.
      */
-    bool isPrefetch() const
+    bool wasPrefetched() const
     {
         return (status & BlkHWPrefetched) != 0;
     }

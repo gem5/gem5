@@ -155,7 +155,7 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
 {
     int gl = tc->readMiscRegNoEffect(MISCREG_GL);
     int cwp = tc->readMiscRegNoEffect(MISCREG_CWP);
-    //DPRINTF(Sparc, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
+    //DPRINTF(RegisterWindows, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
     int newReg;
     //The total number of global registers
     int numGlobals = (MaxGL + 1) * 8;
@@ -214,44 +214,31 @@ int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
     }
     else
         panic("Tried to flatten invalid register index %d!\n", reg);
-    DPRINTF(Sparc, "Flattened register %d to %d.\n", reg, newReg);
+    DPRINTF(RegisterWindows, "Flattened register %d to %d.\n", reg, newReg);
     return newReg;
     //return intRegFile.flattenIndex(reg);
 }
 
-void RegFile::serialize(std::ostream &os)
+void
+RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
-    miscRegFile.serialize(os);
+    miscRegFile.serialize(em, os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
 }
 
-void RegFile::unserialize(Checkpoint *cp, const std::string &section)
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);
-    miscRegFile.unserialize(cp, section);
+    miscRegFile.unserialize(em, cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);
-}
-
-void RegFile::changeContext(RegContextParam param, RegContextVal val)
-{
-    switch(param)
-    {
-      case CONTEXT_CWP:
-        intRegFile.setCWP(val);
-        break;
-      case CONTEXT_GLOBALS:
-        intRegFile.setGlobals(val);
-        break;
-      default:
-        panic("Tried to set illegal context parameter in the SPARC regfile.\n");
-    }
 }
 
 void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
@@ -366,12 +353,12 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     // First loop through the integer registers.
-    for (int i = 0; i < TheISA::NumIntRegs; ++i) {
+    for (int i = 0; i < SparcISA::NumIntRegs; ++i) {
         dest->setIntReg(i, src->readIntReg(i));
     }
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < TheISA::NumFloatRegs; ++i) {
+    for (int i = 0; i < SparcISA::NumFloatRegs; ++i) {
         dest->setFloatRegBits(i, src->readFloatRegBits(i));
     }
 

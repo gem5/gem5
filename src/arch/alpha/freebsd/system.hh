@@ -57,7 +57,6 @@ class FreebsdAlphaSystem : public AlphaSystem
     ~FreebsdAlphaSystem();
 
     void doCalibrateClocks(ThreadContext *tc);
-
 };
 
 #endif // __ARCH_ALPHA_FREEBSD_SYSTEM_HH__

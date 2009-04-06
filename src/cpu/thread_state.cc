@@ -43,15 +43,15 @@
 #endif
 
 #if FULL_SYSTEM
-ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid)
-    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+ThreadState::ThreadState(BaseCPU *cpu, int _tid)
+    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
-      physPort(NULL), virtPort(NULL),
+      kernelStats(NULL), physPort(NULL), virtPort(NULL),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+ThreadState::ThreadState(BaseCPU *cpu, int _tid, Process *_process,
                          short _asid)
-    : baseCpu(cpu), cpuId(_cpuId), tid(_tid), lastActivate(0), lastSuspend(0),
+    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       port(NULL), process(_process), asid(_asid),
       microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif
@@ -105,7 +105,7 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
     Tick quiesceEndTick;
     UNSERIALIZE_SCALAR(quiesceEndTick);
     if (quiesceEndTick)
-        quiesceEvent->schedule(quiesceEndTick);
+        baseCpu->schedule(quiesceEvent, quiesceEndTick);
     if (kernelStats)
         kernelStats->unserialize(cp, section);
 #endif
@@ -113,10 +113,10 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
 
 #if FULL_SYSTEM
 void
-ThreadState::connectMemPorts()
+ThreadState::connectMemPorts(ThreadContext *tc)
 {
     connectPhysPort();
-    connectVirtPort();
+    connectVirtPort(tc);
 }
 
 void
@@ -129,12 +129,12 @@ ThreadState::connectPhysPort()
         physPort->removeConn();
     else
         physPort = new FunctionalPort(csprintf("%s-%d-funcport",
-                                           baseCpu->name(), tid));
+                                           baseCpu->name(), _threadId));
     connectToMemFunc(physPort);
 }
 
 void
-ThreadState::connectVirtPort()
+ThreadState::connectVirtPort(ThreadContext *tc)
 {
     // @todo: For now this disregards any older port that may have
     // already existed.  Fix this memory leak once the bus port IDs
@@ -143,7 +143,7 @@ ThreadState::connectVirtPort()
         virtPort->removeConn();
     else
         virtPort = new VirtualPort(csprintf("%s-%d-vport",
-                                        baseCpu->name(), tid));
+                                        baseCpu->name(), _threadId), tc);
     connectToMemFunc(virtPort);
 }
 
@@ -169,7 +169,7 @@ ThreadState::getMemPort()
         return port;
 
     /* Use this port to for syscall emulation writes to memory. */
-    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), tid),
+    port = new TranslatingPort(csprintf("%s-%d-funcport", baseCpu->name(), _threadId),
                                process, TranslatingPort::NextPage);
 
     connectToMemFunc(port);

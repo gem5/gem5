@@ -29,7 +29,6 @@
  */
 
 #include "arch/sparc/linux/process.hh"
-#include "arch/sparc/syscallreturn.hh"
 #include "sim/syscall_emul.hh"
 
 class LiveProcess;
@@ -42,7 +41,7 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -60,9 +59,9 @@ SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
         LiveProcess *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
-    Addr ruid = tc->getSyscallArg(0);
-    Addr euid = tc->getSyscallArg(1);
-    Addr suid = tc->getSyscallArg(2);
+    Addr ruid = p->getSyscallArg(tc, 0);
+    Addr euid = p->getSyscallArg(tc, 1);
+    Addr suid = p->getSyscallArg(tc, 2);
     //Handle the EFAULT case
     //Set the ruid
     if(ruid)
@@ -106,7 +105,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  14 */ SyscallDesc("mknod", unimplementedFunc),
     /*  15 */ SyscallDesc("chmod", unimplementedFunc),
     /*  16 */ SyscallDesc("lchown", unimplementedFunc), //32 bit
-    /*  17 */ SyscallDesc("brk", obreakFunc),
+    /*  17 */ SyscallDesc("brk", brkFunc),
     /*  18 */ SyscallDesc("perfctr", unimplementedFunc), //32 bit
     /*  19 */ SyscallDesc("lseek", lseekFunc), //32 bit
     /*  20 */ SyscallDesc("getpid", getpidFunc),
@@ -147,7 +146,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  55 */ SyscallDesc("reboot", unimplementedFunc), //32 bit
     /*  56 */ SyscallDesc("mmap2", unimplementedFunc), //32 bit
     /*  57 */ SyscallDesc("symlink", unimplementedFunc),
-    /*  58 */ SyscallDesc("readlink", unimplementedFunc), //32 bit
+    /*  58 */ SyscallDesc("readlink", readlinkFunc), //32 bit
     /*  59 */ SyscallDesc("execve", unimplementedFunc), //32 bit
     /*  60 */ SyscallDesc("umask", unimplementedFunc), //32 bit
     /*  61 */ SyscallDesc("chroot", unimplementedFunc),
@@ -208,7 +207,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 116 */ SyscallDesc("gettimeofday", unimplementedFunc), //32 bit
     /* 117 */ SyscallDesc("getrusage", unimplementedFunc), //32 bit
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
-    /* 119 */ SyscallDesc("getcwd", unimplementedFunc),
+    /* 119 */ SyscallDesc("getcwd", getcwdFunc),
     /* 120 */ SyscallDesc("readv", unimplementedFunc),
     /* 121 */ SyscallDesc("writev", unimplementedFunc),
     /* 122 */ SyscallDesc("settimeofday", unimplementedFunc), //32 bit
@@ -225,7 +224,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
     /* 134 */ SyscallDesc("shutdown", unimplementedFunc),
     /* 135 */ SyscallDesc("socketpair", unimplementedFunc),
-    /* 136 */ SyscallDesc("mkdir", unimplementedFunc), //32 bit
+    /* 136 */ SyscallDesc("mkdir", mkdirFunc), //32 bit
     /* 137 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 138 */ SyscallDesc("utimes", unimplementedFunc), //32 bit
     /* 139 */ SyscallDesc("stat64", unimplementedFunc),
@@ -339,7 +338,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 247 */ SyscallDesc("sched_get_priority_min", unimplementedFunc), //32 bit
     /* 248 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc), //32 bit
     /* 249 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 250 */ SyscallDesc("mremap", unimplementedFunc), //32 bit
+    /* 250 */ SyscallDesc("mremap", mremapFunc<Sparc32Linux>), //32 bit
     /* 251 */ SyscallDesc("_sysctl", unimplementedFunc), //32 bit
     /* 252 */ SyscallDesc("getsid", unimplementedFunc), //32 bit
     /* 253 */ SyscallDesc("fdatasync", unimplementedFunc),
@@ -409,7 +408,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<Linux>),
     /* 16 */ SyscallDesc("lchown", unimplementedFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("perfctr", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getpid", getpidFunc),
@@ -450,7 +449,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 55 */ SyscallDesc("reboot", unimplementedFunc),
     /* 56 */ SyscallDesc("mmap2", unimplementedFunc),
     /* 57 */ SyscallDesc("symlink", unimplementedFunc),
-    /* 58 */ SyscallDesc("readlink", unimplementedFunc),
+    /* 58 */ SyscallDesc("readlink", readlinkFunc),
     /* 59 */ SyscallDesc("execve", unimplementedFunc),
     /* 60 */ SyscallDesc("umask", unimplementedFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
@@ -528,7 +527,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
     /* 134 */ SyscallDesc("shutdown", unimplementedFunc),
     /* 135 */ SyscallDesc("socketpair", unimplementedFunc),
-    /* 136 */ SyscallDesc("mkdir", unimplementedFunc),
+    /* 136 */ SyscallDesc("mkdir", mkdirFunc),
     /* 137 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 138 */ SyscallDesc("utimes", unimplementedFunc),
     /* 139 */ SyscallDesc("stat64", unimplementedFunc),
@@ -642,7 +641,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 247 */ SyscallDesc("sched_get_priority_min", unimplementedFunc),
     /* 248 */ SyscallDesc("sched_rr_get_interval", unimplementedFunc),
     /* 249 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 250 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 250 */ SyscallDesc("mremap", mremapFunc<SparcLinux>),
     /* 251 */ SyscallDesc("_sysctl", unimplementedFunc),
     /* 252 */ SyscallDesc("getsid", unimplementedFunc),
     /* 253 */ SyscallDesc("fdatasync", unimplementedFunc),

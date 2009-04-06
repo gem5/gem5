@@ -41,6 +41,8 @@
 #include "mem/port.hh"
 #include "sim/eventq.hh"
 
+class DerivO3CPUParams;
+
 /**
  * DefaultFetch class handles both single threaded and SMT fetch. Its
  * width is specified by the parameters; each cycle it tries to fetch
@@ -58,7 +60,6 @@ class DefaultFetch
     typedef typename Impl::DynInst DynInst;
     typedef typename Impl::DynInstPtr DynInstPtr;
     typedef typename Impl::O3CPU O3CPU;
-    typedef typename Impl::Params Params;
 
     /** Typedefs from the CPU policy. */
     typedef typename CPUPol::BPredUnit BPredUnit;
@@ -81,7 +82,7 @@ class DefaultFetch
       public:
         /** Default constructor. */
         IcachePort(DefaultFetch<Impl> *_fetch)
-            : Port(_fetch->name() + "-iport"), fetch(_fetch)
+            : Port(_fetch->name() + "-iport", _fetch->cpu), fetch(_fetch)
         { }
 
         bool snoopRangeSent;
@@ -160,7 +161,7 @@ class DefaultFetch
 
   public:
     /** DefaultFetch constructor. */
-    DefaultFetch(O3CPU *_cpu, Params *params);
+    DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of fetch. */
     std::string name() const;
@@ -447,33 +448,33 @@ class DefaultFetch
 
     // @todo: Consider making these vectors and tracking on a per thread basis.
     /** Stat for total number of cycles stalled due to an icache miss. */
-    Stats::Scalar<> icacheStallCycles;
+    Stats::Scalar icacheStallCycles;
     /** Stat for total number of fetched instructions. */
-    Stats::Scalar<> fetchedInsts;
+    Stats::Scalar fetchedInsts;
     /** Total number of fetched branches. */
-    Stats::Scalar<> fetchedBranches;
+    Stats::Scalar fetchedBranches;
     /** Stat for total number of predicted branches. */
-    Stats::Scalar<> predictedBranches;
+    Stats::Scalar predictedBranches;
     /** Stat for total number of cycles spent fetching. */
-    Stats::Scalar<> fetchCycles;
+    Stats::Scalar fetchCycles;
     /** Stat for total number of cycles spent squashing. */
-    Stats::Scalar<> fetchSquashCycles;
+    Stats::Scalar fetchSquashCycles;
     /** Stat for total number of cycles spent blocked due to other stages in
      * the pipeline.
      */
-    Stats::Scalar<> fetchIdleCycles;
+    Stats::Scalar fetchIdleCycles;
     /** Total number of cycles spent blocked. */
-    Stats::Scalar<> fetchBlockedCycles;
+    Stats::Scalar fetchBlockedCycles;
     /** Total number of cycles spent in any other state. */
-    Stats::Scalar<> fetchMiscStallCycles;
+    Stats::Scalar fetchMiscStallCycles;
     /** Stat for total number of fetched cache lines. */
-    Stats::Scalar<> fetchedCacheLines;
+    Stats::Scalar fetchedCacheLines;
     /** Total number of outstanding icache accesses that were dropped
      * due to a squash.
      */
-    Stats::Scalar<> fetchIcacheSquashes;
+    Stats::Scalar fetchIcacheSquashes;
     /** Distribution of number of instructions fetched each cycle. */
-    Stats::Distribution<> fetchNisnDist;
+    Stats::Distribution fetchNisnDist;
     /** Rate of how often fetch was idle. */
     Stats::Formula idleRate;
     /** Number of branch fetches per cycle. */

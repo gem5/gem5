@@ -100,9 +100,6 @@ namespace X86ISA
 {
     class Regfile;
 
-    //This function translates integer register file indices into names
-    std::string getIntRegName(RegIndex);
-
     const int NumIntArchRegs = NUM_INTREGS;
     const int NumIntRegs =
         NumIntArchRegs + NumMicroIntRegs +

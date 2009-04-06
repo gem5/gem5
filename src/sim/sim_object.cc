@@ -59,7 +59,7 @@ SimObject::SimObjectList SimObject::simObjectList;
 // SimObject constructor: used to maintain static simObjectList
 //
 SimObject::SimObject(const Params *p)
-    : _params(p)
+    : EventManager(p->eventq), _params(p)
 {
 #ifdef DEBUG
     doDebugBreak = false;
@@ -67,14 +67,6 @@ SimObject::SimObject(const Params *p)
 
     simObjectList.push_back(this);
     state = Running;
-}
-
-SimObjectParams *
-SimObject::makeParams(const std::string &name)
-{
-    SimObjectParams *params = new SimObjectParams;
-    params->name = name;
-    return params;
 }
 
 void

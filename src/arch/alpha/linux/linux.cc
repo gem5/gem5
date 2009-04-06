@@ -28,47 +28,44 @@
  * Authors: Korey Sewell
  */
 
-#include "arch/alpha/linux/linux.hh"
-
 #include <fcntl.h>
+
+#include "arch/alpha/linux/linux.hh"
 
 // open(2) flags translation table
 OpenFlagTransTable AlphaLinux::openFlagTable[] = {
 #ifdef _MSC_VER
-  { AlphaLinux::TGT_O_RDONLY,	_O_RDONLY },
-  { AlphaLinux::TGT_O_WRONLY,	_O_WRONLY },
-  { AlphaLinux::TGT_O_RDWR,	_O_RDWR },
-  { AlphaLinux::TGT_O_APPEND,	_O_APPEND },
-  { AlphaLinux::TGT_O_CREAT,	_O_CREAT },
-  { AlphaLinux::TGT_O_TRUNC,	_O_TRUNC },
-  { AlphaLinux::TGT_O_EXCL,	_O_EXCL },
+  { AlphaLinux::TGT_O_RDONLY,   _O_RDONLY },
+  { AlphaLinux::TGT_O_WRONLY,   _O_WRONLY },
+  { AlphaLinux::TGT_O_RDWR,     _O_RDWR },
+  { AlphaLinux::TGT_O_APPEND,   _O_APPEND },
+  { AlphaLinux::TGT_O_CREAT,    _O_CREAT },
+  { AlphaLinux::TGT_O_TRUNC,    _O_TRUNC },
+  { AlphaLinux::TGT_O_EXCL,     _O_EXCL },
 #ifdef _O_NONBLOCK
-  { AlphaLinux::TGT_O_NONBLOCK,	_O_NONBLOCK },
+  { AlphaLinux::TGT_O_NONBLOCK, _O_NONBLOCK },
 #endif
 #ifdef _O_NOCTTY
-  { AlphaLinux::TGT_O_NOCTTY,	_O_NOCTTY },
+  { AlphaLinux::TGT_O_NOCTTY,   _O_NOCTTY },
 #endif
 #ifdef _O_SYNC
-  { AlphaLinux::TGT_O_SYNC,	_O_SYNC },
+  { AlphaLinux::TGT_O_SYNC,     _O_SYNC },
 #endif
 #else /* !_MSC_VER */
-  { AlphaLinux::TGT_O_RDONLY,	O_RDONLY },
-  { AlphaLinux::TGT_O_WRONLY,	O_WRONLY },
-  { AlphaLinux::TGT_O_RDWR,	O_RDWR },
-  { AlphaLinux::TGT_O_APPEND,	O_APPEND },
-  { AlphaLinux::TGT_O_CREAT,	O_CREAT },
-  { AlphaLinux::TGT_O_TRUNC,	O_TRUNC },
-  { AlphaLinux::TGT_O_EXCL,	O_EXCL },
-  { AlphaLinux::TGT_O_NONBLOCK,	O_NONBLOCK },
-  { AlphaLinux::TGT_O_NOCTTY,	O_NOCTTY },
+  { AlphaLinux::TGT_O_RDONLY,   O_RDONLY },
+  { AlphaLinux::TGT_O_WRONLY,   O_WRONLY },
+  { AlphaLinux::TGT_O_RDWR,     O_RDWR },
+  { AlphaLinux::TGT_O_APPEND,   O_APPEND },
+  { AlphaLinux::TGT_O_CREAT,    O_CREAT },
+  { AlphaLinux::TGT_O_TRUNC,    O_TRUNC },
+  { AlphaLinux::TGT_O_EXCL,     O_EXCL },
+  { AlphaLinux::TGT_O_NONBLOCK, O_NONBLOCK },
+  { AlphaLinux::TGT_O_NOCTTY,   O_NOCTTY },
 #ifdef O_SYNC
-  { AlphaLinux::TGT_O_SYNC,	O_SYNC },
+  { AlphaLinux::TGT_O_SYNC,     O_SYNC },
 #endif
 #endif /* _MSC_VER */
 };
 
 const int AlphaLinux::NUM_OPEN_FLAGS =
-        (sizeof(AlphaLinux::openFlagTable)/sizeof(AlphaLinux::openFlagTable[0]));
-
-
-
+    (sizeof(AlphaLinux::openFlagTable)/sizeof(AlphaLinux::openFlagTable[0]));

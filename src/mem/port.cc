@@ -39,17 +39,18 @@
 #include "mem/mem_object.hh"
 #include "mem/port.hh"
 
-class defaultPeerPortClass: public Port
+class DefaultPeerPort : public Port
 {
   protected:
     void blowUp()
     {
-        fatal("Unconnected port!");
+        fatal("%s: Unconnected port!", peer->name());
     }
 
   public:
-    defaultPeerPortClass() : Port("default_port")
-    {}
+    DefaultPeerPort()
+        : Port("default_port", NULL)
+    { }
 
     bool recvTiming(PacketPtr)
     {
@@ -84,16 +85,18 @@ class defaultPeerPortClass: public Port
         blowUp();
     }
 
-    bool isDefaultPort() { return true; }
+    bool isDefaultPort() const { return true; }
+};
 
-} defaultPeerPort;
+DefaultPeerPort defaultPeerPort;
 
-Port::Port() : peer(&defaultPeerPort), owner(NULL)
+Port::Port(const std::string &_name, MemObject *_owner)
+    : EventManager(_owner), portName(_name), peer(&defaultPeerPort),
+      owner(_owner)
 {
 }
 
-Port::Port(const std::string &_name, MemObject *_owner) :
-    portName(_name), peer(&defaultPeerPort), owner(_owner)
+Port::~Port()
 {
 }
 
@@ -101,7 +104,15 @@ void
 Port::setPeer(Port *port)
 {
     DPRINTF(Config, "setting peer to %s\n", port->name());
+
     peer = port;
+}
+
+void
+Port::setOwner(MemObject *_owner)
+{
+    eventq = _owner->queue();
+    owner = _owner;
 }
 
 void

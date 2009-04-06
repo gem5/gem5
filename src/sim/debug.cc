@@ -29,51 +29,36 @@
  *          Steve Reinhardt
  */
 
-#include <sys/types.h>
-#include <signal.h>
-#include <unistd.h>
+#include <Python.h>
 
 #include <string>
 #include <vector>
 
+#include "base/debug.hh"
 #include "sim/debug.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 
 using namespace std;
 
-void
-debug_break()
-{
-#ifndef NDEBUG
-    kill(getpid(), SIGTRAP);
-#else
-    cprintf("debug_break suppressed, compiled with NDEBUG\n");
-#endif
-}
-
 //
 // Debug event: place a breakpoint on the process function and
 // schedule the event to break at a particular cycle
 //
-class DebugBreakEvent : public Event
+struct DebugBreakEvent : public Event
 {
-  public:
-
-    DebugBreakEvent(EventQueue *q, Tick _when);
-
-    void process();	// process event
+    DebugBreakEvent();
+    void process();     // process event
     virtual const char *description() const;
 };
 
 //
 // constructor: schedule at specified time
 //
-DebugBreakEvent::DebugBreakEvent(EventQueue *q, Tick _when)
-    : Event(q, Debug_Break_Pri)
+DebugBreakEvent::DebugBreakEvent()
+    : Event(Debug_Break_Pri)
 {
     setFlags(AutoDelete);
-    schedule(_when);
 }
 
 //
@@ -99,12 +84,46 @@ DebugBreakEvent::description() const
 void
 schedBreakCycle(Tick when)
 {
-    new DebugBreakEvent(&mainEventQueue, when);
+    mainEventQueue.schedule(new DebugBreakEvent, when);
+    warn("need to stop all queues");
 }
 
 void
 eventqDump()
 {
     mainEventQueue.dump();
+    warn("need to dump all queues");
+}
+
+void
+py_interact()
+{
+    PyObject *globals;
+    PyObject *locals;
+
+    globals = PyEval_GetGlobals();
+    Py_INCREF(globals);
+    locals = PyDict_New();
+    PyRun_String("import code", Py_file_input, globals, locals);
+    PyRun_String("code.interact(local=globals())", Py_file_input,
+                 globals, locals);
+    Py_DECREF(globals);
+    Py_DECREF(locals);
+}
+
+int remote_gdb_base_port = 7000;
+
+int
+getRemoteGDBPort()
+{
+    return remote_gdb_base_port;
+}
+
+// Set remote GDB base port.  0 means disable remote GDB.
+// Callable from python.
+void
+setRemoteGDBPort(int port)
+{
+    remote_gdb_base_port = port;
 }
 

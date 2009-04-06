@@ -70,19 +70,19 @@ class BaseTags
      */
 
     /** Number of replacements of valid blocks per thread. */
-    Stats::Vector<> replacements;
+    Stats::Vector replacements;
     /** Per cycle average of the number of tags that hold valid data. */
-    Stats::Average<> tagsInUse;
+    Stats::Average tagsInUse;
 
     /** The total number of references to a block before it is replaced. */
-    Stats::Scalar<> totalRefs;
+    Stats::Scalar totalRefs;
 
     /**
      * The number of reference counts sampled. This is different from
      * replacements because we sample all the valid blocks when the simulator
      * exits.
      */
-    Stats::Scalar<> sampledRefs;
+    Stats::Scalar sampledRefs;
 
     /**
      * Average number of references to a block before is was replaced.
@@ -91,7 +91,7 @@ class BaseTags
     Stats::Formula avgRefs;
 
     /** The cycle that the warmup percentage was hit. */
-    Stats::Scalar<> warmupCycle;
+    Stats::Scalar warmupCycle;
     /**
      * @}
      */

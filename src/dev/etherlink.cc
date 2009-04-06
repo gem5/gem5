@@ -135,7 +135,7 @@ class LinkDelayEvent : public Event
   public:
     // non-scheduling version for createForUnserialize()
     LinkDelayEvent();
-    LinkDelayEvent(EtherLink::Link *link, EthPacketPtr pkt, Tick when);
+    LinkDelayEvent(EtherLink::Link *link, EthPacketPtr pkt);
 
     void process();
 
@@ -153,7 +153,8 @@ EtherLink::Link::txDone()
 
     if (linkDelay > 0) {
         DPRINTF(Ethernet, "packet delayed: delay=%d\n", linkDelay);
-        new LinkDelayEvent(this, packet, curTick + linkDelay);
+        Event *event = new LinkDelayEvent(this, packet);
+        parent->schedule(event, curTick + linkDelay);
     } else {
         txComplete(packet);
     }
@@ -182,7 +183,7 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
 
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);
-    doneEvent.schedule(curTick + delay);
+    parent->schedule(doneEvent, curTick + delay);
 
     return true;
 }
@@ -220,23 +221,22 @@ EtherLink::Link::unserialize(const string &base, Checkpoint *cp,
     if (event_scheduled) {
         Tick event_time;
         paramIn(cp, section, base + ".event_time", event_time);
-        doneEvent.schedule(event_time);
+        parent->schedule(doneEvent, event_time);
     }
 }
 
 LinkDelayEvent::LinkDelayEvent()
-    : Event(&mainEventQueue), link(NULL)
+    : link(NULL)
 {
     setFlags(AutoSerialize);
     setFlags(AutoDelete);
 }
 
-LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, EthPacketPtr p, Tick when)
-    : Event(&mainEventQueue), link(l), packet(p)
+LinkDelayEvent::LinkDelayEvent(EtherLink::Link *l, EthPacketPtr p)
+    : link(l), packet(p)
 {
     setFlags(AutoSerialize);
     setFlags(AutoDelete);
-    schedule(when);
 }
 
 void

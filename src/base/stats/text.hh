@@ -46,7 +46,7 @@ class Text : public Output
     std::ostream *stream;
 
   protected:
-    bool noOutput(const StatData &data);
+    bool noOutput(const Info &info);
 
   public:
     bool compat;
@@ -62,12 +62,12 @@ class Text : public Output
     void open(const std::string &file);
 
     // Implement Visit
-    virtual void visit(const ScalarData &data);
-    virtual void visit(const VectorData &data);
-    virtual void visit(const DistData &data);
-    virtual void visit(const VectorDistData &data);
-    virtual void visit(const Vector2dData &data);
-    virtual void visit(const FormulaData &data);
+    virtual void visit(const ScalarInfoBase &info);
+    virtual void visit(const VectorInfoBase &info);
+    virtual void visit(const DistInfoBase &info);
+    virtual void visit(const VectorDistInfoBase &info);
+    virtual void visit(const Vector2dInfoBase &info);
+    virtual void visit(const FormulaInfoBase &info);
 
     // Implement Output
     virtual bool valid() const;

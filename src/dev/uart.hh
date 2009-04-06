@@ -39,7 +39,7 @@
 #include "dev/io_device.hh"
 #include "params/Uart.hh"
 
-class SimConsole;
+class Terminal;
 class Platform;
 
 const int RX_INT = 0x1;
@@ -51,7 +51,7 @@ class Uart : public BasicPioDevice
   protected:
     int status;
     Platform *platform;
-    SimConsole *cons;
+    Terminal *term;
 
   public:
     typedef UartParams Params;

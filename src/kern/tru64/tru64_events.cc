@@ -51,7 +51,7 @@ BadAddrEvent::process(ThreadContext *tc)
     // annotation for vmunix::badaddr in:
     // simos/simulation/apps/tcl/osf/tlaser.tcl
 
-    uint64_t a0 = tc->readIntReg(ArgumentReg[0]);
+    uint64_t a0 = tc->readIntReg(16);
 
     AddrRangeList resp;
     bool snoop;
@@ -59,20 +59,19 @@ BadAddrEvent::process(ThreadContext *tc)
     bool found = false;
 
     tc->getPhysPort()->getPeerAddressRanges(resp, snoop);
-    for(iter = resp.begin(); iter != resp.end(); iter++)
-    {
-        if (*iter == (TheISA::K0Seg2Phys(a0) & EV5::PAddrImplMask))
+    for (iter = resp.begin(); iter != resp.end(); iter++) {
+        if (*iter == (K0Seg2Phys(a0) & PAddrImplMask))
             found = true;
     }
 
-    if (!TheISA::IsK0Seg(a0) || found ) {
+    if (!IsK0Seg(a0) || found ) {
 
         DPRINTF(BADADDR, "badaddr arg=%#x bad\n", a0);
         tc->setIntReg(ReturnValueReg, 0x1);
         SkipFuncEvent::process(tc);
-    }
-    else
+    } else {
         DPRINTF(BADADDR, "badaddr arg=%#x good\n", a0);
+    }
 }
 
 void

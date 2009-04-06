@@ -44,9 +44,11 @@
 #include <string>
 #include <vector>
 
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "sim/host.hh"
 #include "sim/sim_object.hh"
+#include "sim/syscallreturn.hh"
 
 class GDBListener;
 class PageTable;
@@ -60,6 +62,18 @@ namespace TheISA
 {
     class RemoteGDB;
 }
+
+template<class IntType>
+struct AuxVector
+{
+    IntType a_type;
+    IntType a_val;
+
+    AuxVector()
+    {}
+
+    AuxVector(IntType type, IntType val);
+};
 
 class Process : public SimObject
 {
@@ -77,7 +91,7 @@ class Process : public SimObject
     bool checkpointRestored;
 
     // thread contexts associated with this process
-    std::vector<ThreadContext *> threadContexts;
+    std::vector<int> contextIds;
 
     // remote gdb objects
     std::vector<TheISA::RemoteGDB *> remoteGDB;
@@ -85,7 +99,7 @@ class Process : public SimObject
     bool breakpoint();
 
     // number of CPUs (esxec contexts, really) assigned to this process.
-    unsigned int numCpus() { return threadContexts.size(); }
+    unsigned int numCpus() { return contextIds.size(); }
 
     // record of blocked context
     struct WaitRec
@@ -95,17 +109,17 @@ class Process : public SimObject
 
         WaitRec(Addr chan, ThreadContext *ctx)
             : waitChan(chan), waitingContext(ctx)
-        {	}
+        {       }
     };
 
     // list of all blocked contexts
     std::list<WaitRec> waitList;
 
-    Addr brk_point;		// top of the data segment
+    Addr brk_point;             // top of the data segment
 
-    Addr stack_base;		// stack segment base (highest address)
-    unsigned stack_size;	// initial stack size
-    Addr stack_min;		// lowest address accessed on the stack
+    Addr stack_base;            // stack segment base (highest address)
+    unsigned stack_size;        // initial stack size
+    Addr stack_min;             // lowest address accessed on the stack
 
     // The maximum size allowed for the stack.
     Addr max_stack_size;
@@ -121,9 +135,9 @@ class Process : public SimObject
     Addr nxm_start;
     Addr nxm_end;
 
-    std::string prog_fname;	// file name
+    std::string prog_fname;     // file name
 
-    Stats::Scalar<> num_syscalls;	// number of syscalls executed
+    Stats::Scalar num_syscalls;       // number of syscalls executed
 
 
   protected:
@@ -187,12 +201,15 @@ class Process : public SimObject
     // override of virtual SimObject method: register statistics
     virtual void regStats();
 
-    // register a thread context for this process.
-    // returns tc's cpu number (index into threadContexts[])
-    int registerThreadContext(ThreadContext *tc);
+    // After getting registered with system object, tell process which
+    // system-wide context id it is assigned.
+    void assignThreadContext(int context_id)
+    {
+        contextIds.push_back(context_id);
+    }
 
-
-    void replaceThreadContext(ThreadContext *tc, int tcIndex);
+    // Find a free context to use
+    ThreadContext * findFreeContext();
 
     // map simulator fd sim_fd to target fd tgt_fd
     void dup_fd(int sim_fd, int tgt_fd);
@@ -303,7 +320,14 @@ class LiveProcess : public Process
         return full + filename;
     }
 
+    std::string getcwd() const { return cwd; }
+
     virtual void syscall(int64_t callnum, ThreadContext *tc);
+    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int i) = 0;
+    virtual void setSyscallArg(ThreadContext *tc,
+            int i, TheISA::IntReg val) = 0;
+    virtual void setSyscallReturn(ThreadContext *tc,
+            SyscallReturn return_value) = 0;
 
     virtual SyscallDesc* getDesc(int callnum) = 0;
 

@@ -69,26 +69,7 @@ class SparcLiveProcess : public LiveProcess
     { return spillStart; }
 
     virtual void flushWindows(ThreadContext *tc) = 0;
-};
-
-template<class IntType>
-struct M5_auxv_t
-{
-    IntType a_type;
-    union {
-        IntType a_val;
-        IntType a_ptr;
-        IntType a_fcn;
-    };
-
-    M5_auxv_t()
-    {}
-
-    M5_auxv_t(IntType type, IntType val)
-    {
-        a_type = SparcISA::htog(type);
-        a_val = SparcISA::htog(val);
-    }
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
 class Sparc32LiveProcess : public SparcLiveProcess
@@ -113,6 +94,9 @@ class Sparc32LiveProcess : public SparcLiveProcess
     void argsInit(int intSize, int pageSize);
 
     void flushWindows(ThreadContext *tc);
+
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
 class Sparc64LiveProcess : public SparcLiveProcess
@@ -138,6 +122,9 @@ class Sparc64LiveProcess : public SparcLiveProcess
     void argsInit(int intSize, int pageSize);
 
     void flushWindows(ThreadContext *tc);
+
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
 #endif // __SPARC_PROCESS_HH__

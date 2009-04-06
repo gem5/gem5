@@ -33,13 +33,14 @@
 #include "arch/alpha/kernel_stats.hh"
 #include "cpu/thread_context.hh"
 
-using namespace TheISA;
+using namespace AlphaISA;
 
 void
 IdleStartEvent::process(ThreadContext *tc)
 {
-    if (tc->getKernelStats())
-        tc->getKernelStats()->setIdleProcess(
-            tc->readMiscRegNoEffect(AlphaISA::IPR_PALtemp23), tc);
+    if (tc->getKernelStats()) {
+        MiscReg val = tc->readMiscRegNoEffect(IPR_PALtemp23);
+        tc->getKernelStats()->setIdleProcess(val, tc);
+    }
     remove();
 }

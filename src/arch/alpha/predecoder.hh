@@ -38,62 +38,72 @@
 
 class ThreadContext;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+class Predecoder
 {
-    class Predecoder
+  protected:
+    ThreadContext *tc;
+
+    // The extended machine instruction being generated
+    ExtMachInst ext_inst;
+
+  public:
+    Predecoder(ThreadContext * _tc)
+        : tc(_tc)
+    {}
+
+    ThreadContext *
+    getTC()
     {
-      protected:
-        ThreadContext * tc;
-        //The extended machine instruction being generated
-        ExtMachInst ext_inst;
+        return tc;
+    }
 
-      public:
-        Predecoder(ThreadContext * _tc) : tc(_tc)
-        {}
+    void
+    setTC(ThreadContext * _tc)
+    {
+        tc = _tc;
+    }
 
-        ThreadContext * getTC()
-        {
-            return tc;
-        }
+    void
+    process()
+    { }
 
-        void setTC(ThreadContext * _tc)
-        {
-            tc = _tc;
-        }
+    void
+    reset()
+    { }
 
-        void process()
-        {
-        }
-
-        void reset()
-        {}
-
-        //Use this to give data to the predecoder. This should be used
-        //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
-        {
-            ext_inst = inst;
+    // Use this to give data to the predecoder. This should be used
+    // when there is control flow.
+    void
+    moreBytes(Addr pc, Addr fetchPC, MachInst inst)
+    {
+        ext_inst = inst;
 #if FULL_SYSTEM
-            ext_inst|=(static_cast<ExtMachInst>(pc & 0x1) << 32);
+        ext_inst |= (static_cast<ExtMachInst>(pc & 0x1) << 32);
 #endif
-        }
+    }
 
-        bool needMoreBytes()
-        {
-            return true;
-        }
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
 
-        bool extMachInstReady()
-        {
-            return true;
-        }
+    bool
+    extMachInstReady()
+    {
+        return true;
+    }
 
-        //This returns a constant reference to the ExtMachInst to avoid a copy
-        const ExtMachInst & getExtMachInst()
-        {
-            return ext_inst;
-        }
-    };
+    // This returns a constant reference to the ExtMachInst to avoid a copy
+    const ExtMachInst &
+    getExtMachInst()
+    {
+        return ext_inst;
+    }
 };
+
+} // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_PREDECODER_HH__

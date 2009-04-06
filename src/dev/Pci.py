@@ -73,6 +73,12 @@ class PciDevice(DmaDevice):
     BAR3Size = Param.MemorySize32('0B', "Base Address Register 3 Size")
     BAR4Size = Param.MemorySize32('0B', "Base Address Register 4 Size")
     BAR5Size = Param.MemorySize32('0B', "Base Address Register 5 Size")
+    BAR0LegacyIO = Param.Bool(False, "Whether BAR0 is hardwired legacy IO")
+    BAR1LegacyIO = Param.Bool(False, "Whether BAR1 is hardwired legacy IO")
+    BAR2LegacyIO = Param.Bool(False, "Whether BAR2 is hardwired legacy IO")
+    BAR3LegacyIO = Param.Bool(False, "Whether BAR3 is hardwired legacy IO")
+    BAR4LegacyIO = Param.Bool(False, "Whether BAR4 is hardwired legacy IO")
+    BAR5LegacyIO = Param.Bool(False, "Whether BAR5 is hardwired legacy IO")
 
     CardbusCIS = Param.UInt32(0x00, "Cardbus Card Information Structure")
     SubsystemID = Param.UInt16(0x00, "Subsystem ID")

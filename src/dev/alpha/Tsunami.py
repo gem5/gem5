@@ -28,12 +28,12 @@
 
 from m5.params import *
 from m5.proxy import *
-from Device import BasicPioDevice, IsaFake, BadAddr
-from Platform import Platform
-from AlphaConsole import AlphaConsole
-from Uart import Uart8250
-from Pci import PciConfigAll
 from BadDevice import BadDevice
+from AlphaBackdoor import AlphaBackdoor
+from Device import BasicPioDevice, IsaFake, BadAddr
+from Pci import PciConfigAll
+from Platform import Platform
+from Uart import Uart8250
 
 class TsunamiCChip(BasicPioDevice):
     type = 'TsunamiCChip'
@@ -87,7 +87,7 @@ class Tsunami(Platform):
     fb = BadDevice(pio_addr=0x801fc0003d0, devicename='FrameBuffer')
     io = TsunamiIO(pio_addr=0x801fc000000)
     uart = Uart8250(pio_addr=0x801fc0003f8)
-    console = AlphaConsole(pio_addr=0x80200000000, disk=Parent.simple_disk)
+    backdoor = AlphaBackdoor(pio_addr=0x80200000000, disk=Parent.simple_disk)
 
     # Attach I/O devices to specified bus object.  Can't do this
     # earlier, since the bus object itself is typically defined at the
@@ -120,4 +120,4 @@ class Tsunami(Platform):
         self.fb.pio = bus.port
         self.io.pio = bus.port
         self.uart.pio = bus.port
-        self.console.pio = bus.port
+        self.backdoor.pio = bus.port

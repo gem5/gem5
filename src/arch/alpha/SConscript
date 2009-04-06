@@ -47,9 +47,11 @@ if env['TARGET_ISA'] == 'alpha':
     SimObject('AlphaTLB.py')
 
     if env['FULL_SYSTEM']:
+        SimObject('AlphaInterrupts.py')
         SimObject('AlphaSystem.py')
 
         Source('idle_event.cc')
+        Source('interrupts.cc')
         Source('kernel_stats.cc')
         Source('osfpal.cc')
         Source('stacktrace.cc')

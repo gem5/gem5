@@ -43,9 +43,6 @@ class IdleStartEvent;
 #include "kern/linux/events.hh"
 #include "params/LinuxAlphaSystem.hh"
 
-using namespace AlphaISA;
-using namespace Linux;
-
 /**
  * This class contains linux specific system code (Loading, Events).
  * It points to objects that are the system binaries to load and patches them
@@ -54,22 +51,19 @@ using namespace Linux;
 class LinuxAlphaSystem : public AlphaSystem
 {
   private:
-    class SkipDelayLoopEvent : public SkipFuncEvent
+    struct SkipDelayLoopEvent : public SkipFuncEvent
     {
-      public:
         SkipDelayLoopEvent(PCEventQueue *q, const std::string &desc, Addr addr)
             : SkipFuncEvent(q, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
 
-    class PrintThreadInfo : public PCEvent
+    struct PrintThreadInfo : public PCEvent
     {
-      public:
         PrintThreadInfo(PCEventQueue *q, const std::string &desc, Addr addr)
             : PCEvent(q, desc, addr) {}
         virtual void process(ThreadContext *tc);
     };
-
 
     /**
      * Addresses defining where the kernel bootloader places various
@@ -112,7 +106,7 @@ class LinuxAlphaSystem : public AlphaSystem
      * PC based event to skip the dprink() call and emulate its
      * functionality
      */
-    DebugPrintkEvent *debugPrintkEvent;
+    Linux::DebugPrintkEvent *debugPrintkEvent;
 
     /**
      * Skip calculate_delay_loop() rather than waiting for this to be

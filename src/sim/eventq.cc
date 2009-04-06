@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2000-2005 The Regents of The University of Michigan
+ * Copyright (c) 2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,18 +31,17 @@
  *          Steve Raasch
  */
 
-#include <assert.h>
-
+#include <cassert>
 #include <iostream>
 #include <string>
 #include <vector>
 
-#include "cpu/smt.hh"
+#include "base/hashmap.hh"
 #include "base/misc.hh"
-
-#include "sim/eventq.hh"
 #include "base/trace.hh"
+#include "cpu/smt.hh"
 #include "sim/core.hh"
+#include "sim/eventq.hh"
 
 using namespace std;
 
@@ -51,100 +51,183 @@ using namespace std;
 // Events on this queue are processed at the *beginning* of each
 // cycle, before the pipeline simulation is performed.
 //
-EventQueue mainEventQueue("MainEventQueue");
+EventQueue mainEventQueue("Main Event Queue");
 
 #ifndef NDEBUG
 Counter Event::instanceCounter = 0;
 #endif
 
+Event::~Event()
+{
+    assert(!scheduled());
+}
+
+const std::string
+Event::name() const
+{
+#ifndef NDEBUG
+    return csprintf("Event_%d", instance);
+#else
+    return csprintf("Event_%x", (uintptr_t)this);
+#endif
+}
+
+
+Event *
+Event::insertBefore(Event *event, Event *curr)
+{
+    // Either way, event will be the top element in the 'in bin' list
+    // which is the pointer we need in order to look into the list, so
+    // we need to insert that into the bin list.
+    if (!curr || *event < *curr) {
+        // Insert the event before the current list since it is in the future.
+        event->nextBin = curr;
+        event->nextInBin = NULL;
+    } else {
+        // Since we're on the correct list, we need to point to the next list
+        event->nextBin = curr->nextBin;  // curr->nextBin can now become stale
+
+        // Insert event at the top of the stack
+        event->nextInBin = curr;
+    }
+
+    return event;
+}
+
 void
 EventQueue::insert(Event *event)
 {
-    if (head == NULL || event->when() < head->when() ||
-        (event->when() == head->when() &&
-         event->priority() <= head->priority())) {
-        event->next = head;
-        head = event;
-    } else {
-        Event *prev = head;
-        Event *curr = head->next;
-
-        while (curr) {
-            if (event->when() <= curr->when() &&
-                (event->when() < curr->when() ||
-                 event->priority() <= curr->priority()))
-                break;
-
-            prev = curr;
-            curr = curr->next;
-        }
-
-        event->next = curr;
-        prev->next = event;
+    // Deal with the head case
+    if (!head || *event <= *head) {
+        head = Event::insertBefore(event, head);
+        return;
     }
+
+    // Figure out either which 'in bin' list we are on, or where a new list
+    // needs to be inserted
+    Event *prev = head;
+    Event *curr = head->nextBin;
+    while (curr && *curr < *event) {
+        prev = curr;
+        curr = curr->nextBin;
+    }
+
+    // Note: this operation may render all nextBin pointers on the
+    // prev 'in bin' list stale (except for the top one)
+    prev->nextBin = Event::insertBefore(event, curr);
+}
+
+Event *
+Event::removeItem(Event *event, Event *top)
+{
+    Event *curr = top;
+    Event *next = top->nextInBin;
+
+    // if we removed the top item, we need to handle things specially
+    // and just remove the top item, fixing up the next bin pointer of
+    // the new top item
+    if (event == top) {
+        if (!next)
+            return top->nextBin;
+        next->nextBin = top->nextBin;
+        return next;
+    }
+
+    // Since we already checked the current element, we're going to
+    // keep checking event against the next element.
+    while (event != next) {
+        if (!next)
+            panic("event not found!");
+
+        curr = next;
+        next = next->nextInBin;
+    }
+
+    // remove next from the 'in bin' list since it's what we're looking for
+    curr->nextInBin = next->nextInBin;
+    return top;
 }
 
 void
 EventQueue::remove(Event *event)
 {
     if (head == NULL)
-        return;
+        panic("event not found!");
 
-    if (head == event){
-        head = event->next;
+    // deal with an event on the head's 'in bin' list (event has the same
+    // time as the head)
+    if (*head == *event) {
+        head = Event::removeItem(event, head);
         return;
     }
 
+    // Find the 'in bin' list that this event belongs on
     Event *prev = head;
-    Event *curr = head->next;
-    while (curr && curr != event) {
+    Event *curr = head->nextBin;
+    while (curr && *curr < *event) {
         prev = curr;
-        curr = curr->next;
+        curr = curr->nextBin;
     }
 
-    if (curr == event)
-        prev->next = curr->next;
+    if (!curr || *curr != *event)
+        panic("event not found!");
+
+    // curr points to the top item of the the correct 'in bin' list, when
+    // we remove an item, it returns the new top item (which may be
+    // unchanged)
+    prev->nextBin = Event::removeItem(event, curr);
 }
 
 Event *
 EventQueue::serviceOne()
 {
     Event *event = head;
-    event->clearFlags(Event::Scheduled);
-    head = event->next;
+    Event *next = head->nextInBin;
+    event->flags.clear(Event::Scheduled);
+
+    if (next) {
+        // update the next bin pointer since it could be stale
+        next->nextBin = head->nextBin;
+
+        // pop the stack
+        head = next;
+    } else {
+        // this was the only element on the 'in bin' list, so get rid of
+        // the 'in bin' list and point to the next bin list
+        head = head->nextBin;
+    }
 
     // handle action
     if (!event->squashed()) {
         event->process();
         if (event->isExitEvent()) {
-            assert(!event->getFlags(Event::AutoDelete)); // would be silly
+            assert(!event->flags.isSet(Event::AutoDelete)); // would be silly
             return event;
         }
     } else {
-        event->clearFlags(Event::Squashed);
+        event->flags.clear(Event::Squashed);
     }
 
-    if (event->getFlags(Event::AutoDelete) && !event->scheduled())
+    if (event->flags.isSet(Event::AutoDelete) && !event->scheduled())
         delete event;
 
     return NULL;
 }
-
 
 void
 Event::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(_when);
     SERIALIZE_SCALAR(_priority);
-    SERIALIZE_ENUM(_flags);
+    short _flags = flags;
+    SERIALIZE_SCALAR(_flags);
 }
-
 
 void
 Event::unserialize(Checkpoint *cp, const string &section)
 {
     if (scheduled())
-        deschedule();
+        mainEventQueue.deschedule(this);
 
     UNSERIALIZE_SCALAR(_when);
     UNSERIALIZE_SCALAR(_priority);
@@ -152,13 +235,16 @@ Event::unserialize(Checkpoint *cp, const string &section)
     // need to see if original event was in a scheduled, unsquashed
     // state, but don't want to restore those flags in the current
     // object itself (since they aren't immediately true)
-    UNSERIALIZE_ENUM(_flags);
-    bool wasScheduled = (_flags & Scheduled) && !(_flags & Squashed);
-    _flags &= ~(Squashed | Scheduled);
+    short _flags;
+    UNSERIALIZE_SCALAR(_flags);
+    flags = _flags;
+
+    bool wasScheduled = flags.isSet(Scheduled) && !flags.isSet(Squashed);
+    flags.clear(Squashed | Scheduled);
 
     if (wasScheduled) {
         DPRINTF(Config, "rescheduling at %d\n", _when);
-        schedule(_when);
+        mainEventQueue.schedule(this, _when);
     }
 }
 
@@ -168,18 +254,25 @@ EventQueue::serialize(ostream &os)
     std::list<Event *> eventPtrs;
 
     int numEvents = 0;
-    Event *event = head;
-    while (event) {
-        if (event->getFlags(Event::AutoSerialize)) {
-            eventPtrs.push_back(event);
-            paramOut(os, csprintf("event%d", numEvents++), event->name());
+    Event *nextBin = head;
+    while (nextBin) {
+        Event *nextInBin = nextBin;
+
+        while (nextInBin) {
+            if (nextInBin->flags.isSet(Event::AutoSerialize)) {
+                eventPtrs.push_back(nextInBin);
+                paramOut(os, csprintf("event%d", numEvents++),
+                         nextInBin->name());
+            }
+            nextInBin = nextInBin->nextInBin;
         }
-        event = event->next;
+
+        nextBin = nextBin->nextBin;
     }
 
     SERIALIZE_SCALAR(numEvents);
 
-    for (std::list<Event *>::iterator it=eventPtrs.begin();
+    for (std::list<Event *>::iterator it = eventPtrs.begin();
          it != eventPtrs.end(); ++it) {
         (*it)->nameOut(os);
         (*it)->serialize(os);
@@ -203,7 +296,7 @@ EventQueue::unserialize(Checkpoint *cp, const std::string &section)
 }
 
 void
-EventQueue::dump()
+EventQueue::dump() const
 {
     cprintf("============================================================\n");
     cprintf("EventQueue Dump  (cycle %d)\n", curTick);
@@ -212,14 +305,61 @@ EventQueue::dump()
     if (empty())
         cprintf("<No Events>\n");
     else {
-        Event *event = head;
-        while (event) {
-            event->dump();
-            event = event->next;
+        Event *nextBin = head;
+        while (nextBin) {
+            Event *nextInBin = nextBin;
+            while (nextInBin) {
+                nextInBin->dump();
+                nextInBin = nextInBin->nextInBin;
+            }
+
+            nextBin = nextBin->nextBin;
         }
     }
 
     cprintf("============================================================\n");
+}
+
+bool
+EventQueue::debugVerify() const
+{
+    m5::hash_map<long, bool> map;
+
+    Tick time = 0;
+    short priority = 0;
+
+    Event *nextBin = head;
+    while (nextBin) {
+        Event *nextInBin = nextBin;
+        while (nextInBin) {
+            if (nextInBin->when() < time) {
+                cprintf("time goes backwards!");
+                nextInBin->dump();
+                return false;
+            } else if (nextInBin->when() == time &&
+                       nextInBin->priority() < priority) {
+                cprintf("priority inverted!");
+                nextInBin->dump();
+                return false;
+            }
+
+            if (map[reinterpret_cast<long>(nextInBin)]) {
+                cprintf("Node already seen");
+                nextInBin->dump();
+                return false;
+            }
+            map[reinterpret_cast<long>(nextInBin)] = true;
+
+            time = nextInBin->when();
+            priority = nextInBin->priority();
+
+            nextInBin = nextInBin->nextInBin;
+        }
+
+        nextBin = nextBin->nextBin;
+    }
+
+    return true;
 }
 
 void
@@ -235,7 +375,6 @@ Event::description() const
     return "generic";
 }
 
-#if TRACING_ON
 void
 Event::trace(const char *action)
 {
@@ -250,23 +389,21 @@ Event::trace(const char *action)
     // needs to be printed.
     DPRINTFN("%s event %s @ %d\n", description(), action, when());
 }
-#endif
 
 void
-Event::dump()
+Event::dump() const
 {
-    cprintf("Event  (%s)\n", description());
-    cprintf("Flags: %#x\n", _flags);
-#if TRACING_ON
-    cprintf("Created: %d\n", when_created);
+    cprintf("Event %s (%s)\n", name(), description());
+    cprintf("Flags: %#x\n", flags);
+#ifdef EVENTQ_DEBUG
+    cprintf("Created: %d\n", whenCreated);
 #endif
     if (scheduled()) {
-#if TRACING_ON
-        cprintf("Scheduled at  %d\n", when_scheduled);
+#ifdef EVENTQ_DEBUG
+        cprintf("Scheduled at  %d\n", whenScheduled);
 #endif
         cprintf("Scheduled for %d, priority %d\n", when(), _priority);
-    }
-    else {
+    } else {
         cprintf("Not Scheduled\n");
     }
 }

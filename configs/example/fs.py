@@ -29,6 +29,10 @@
 import optparse, os, sys
 
 import m5
+
+if not m5.build_env['FULL_SYSTEM']:
+    m5.fatal("This script requires full-system mode (*_FS).")
+
 from m5.objects import *
 m5.AddToPath('../common')
 from FSConfig import *
@@ -36,9 +40,6 @@ from SysPaths import *
 from Benchmarks import *
 import Simulation
 from Caches import *
-
-if not m5.build_env['FULL_SYSTEM']:
-    m5.panic("This script requires full-system mode (ALPHA_FS).")
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
 config_path = os.path.dirname(os.path.abspath(__file__))
@@ -104,7 +105,7 @@ elif m5.build_env['TARGET_ISA'] == "sparc":
 elif m5.build_env['TARGET_ISA'] == "x86":
     test_sys = makeLinuxX86System(test_mem_mode, bm[0])
 else:
-    m5.panic("incapable of building non-alpha or non-sparc full system!")
+    m5.fatal("incapable of building non-alpha or non-sparc full system!")
 
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)

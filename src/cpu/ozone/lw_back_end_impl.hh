@@ -525,10 +525,7 @@ template <class Impl>
 void
 LWBackEnd<Impl>::checkInterrupts()
 {
-    if (cpu->checkInterrupts &&
-        cpu->check_interrupts(tc) &&
-        !trapSquash &&
-        !tcSquash) {
+    if (cpu->checkInterrupts(tc) && !trapSquash && !tcSquash) {
         frontEnd->interruptPending = true;
         if (robEmpty() && !LSQ.hasStoresToWB()) {
             // Will need to squash all instructions currently in flight and have

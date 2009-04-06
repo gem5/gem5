@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -54,10 +54,27 @@
 # Authors: Gabe Black
 
 from m5.params import *
+from E820 import X86E820Table, X86E820Entry
+from SMBios import X86SMBiosSMBiosTable
+from IntelMP import X86IntelMPFloatingPointer, X86IntelMPConfigTable
+from ACPI import X86ACPIRSDP
 from System import System
 
 class X86System(System):
     type = 'X86System'
+    smbios_table = Param.X86SMBiosSMBiosTable(
+            X86SMBiosSMBiosTable(), 'table of smbios/dmi information')
+    intel_mp_pointer = Param.X86IntelMPFloatingPointer(
+            X86IntelMPFloatingPointer(),
+            'intel mp spec floating pointer structure')
+    intel_mp_table = Param.X86IntelMPConfigTable(
+            X86IntelMPConfigTable(),
+            'intel mp spec configuration table')
+    acpi_description_table_pointer = Param.X86ACPIRSDP(
+            X86ACPIRSDP(), 'ACPI root description pointer structure')
 
 class LinuxX86System(X86System):
     type = 'LinuxX86System'
+
+    e820_table = Param.X86E820Table(
+            X86E820Table(), 'E820 map of physical memory')

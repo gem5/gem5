@@ -97,3 +97,42 @@ const int X86Linux64::NUM_OPEN_FLAGS =
         sizeof(X86Linux64::openFlagTable) /
         sizeof(X86Linux64::openFlagTable[0]);
 
+// open(2) flags translation table
+OpenFlagTransTable X86Linux32::openFlagTable[] = {
+#ifdef _MSC_VER
+  { TGT_O_RDONLY, _O_RDONLY },
+  { TGT_O_WRONLY, _O_WRONLY },
+  { TGT_O_RDWR, _O_RDWR },
+  { TGT_O_APPEND, _O_APPEND },
+  { TGT_O_CREAT, _O_CREAT },
+  { TGT_O_TRUNC, _O_TRUNC },
+  { TGT_O_EXCL, _O_EXCL },
+#ifdef _O_NONBLOCK
+  { TGT_O_NONBLOCK, _O_NONBLOCK },
+#endif
+#ifdef _O_NOCTTY
+  { TGT_O_NOCTTY, _O_NOCTTY },
+#endif
+#ifdef _O_SYNC
+  { TGT_O_SYNC, _O_SYNC },
+#endif
+#else /* !_MSC_VER */
+  { TGT_O_RDONLY, O_RDONLY },
+  { TGT_O_WRONLY, O_WRONLY },
+  { TGT_O_RDWR, O_RDWR },
+  { TGT_O_APPEND, O_APPEND },
+  { TGT_O_CREAT, O_CREAT },
+  { TGT_O_TRUNC, O_TRUNC },
+  { TGT_O_EXCL, O_EXCL },
+  { TGT_O_NONBLOCK, O_NONBLOCK },
+  { TGT_O_NOCTTY, O_NOCTTY },
+#ifdef O_SYNC
+  { TGT_O_SYNC, O_SYNC },
+#endif
+#endif /* _MSC_VER */
+};
+
+const int X86Linux32::NUM_OPEN_FLAGS =
+        sizeof(X86Linux32::openFlagTable) /
+        sizeof(X86Linux32::openFlagTable[0]);
+

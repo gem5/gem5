@@ -61,8 +61,8 @@ class IniFile
     ///
     class Entry
     {
-        std::string	value;		///< The entry value.
-        mutable bool	referenced;	///< Has this entry been used?
+        std::string     value;          ///< The entry value.
+        mutable bool    referenced;     ///< Has this entry been used?
 
       public:
         /// Constructor.
@@ -96,8 +96,8 @@ class IniFile
         /// EntryTable type.  Map of strings to Entry object pointers.
         typedef m5::hash_map<std::string, Entry *> EntryTable;
 
-        EntryTable	table;		///< Table of entries.
-        mutable bool	referenced;	///< Has this section been used?
+        EntryTable      table;          ///< Table of entries.
+        mutable bool    referenced;     ///< Has this section been used?
 
       public:
         /// Constructor.
@@ -166,14 +166,6 @@ class IniFile
     /// and then pass it here.
     /// @retval True if successful, false if errors were encountered.
     bool load(std::istream &f);
-
-    /// Load the specified file, passing it through the C preprocessor.
-    /// Parameter settings found in the file will be merged with any
-    /// already defined in this object.
-    /// @param file The path of the file to load.
-    /// @param cppFlags Vector of extra flags to pass to cpp.
-    /// @retval True if successful, false if errors were encountered.
-    bool loadCPP(const std::string &file, std::vector<char *> &cppFlags);
 
     /// Load the specified file.
     /// Parameter settings found in the file will be merged with any

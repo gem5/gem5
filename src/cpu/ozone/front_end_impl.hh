@@ -477,10 +477,10 @@ FrontEnd<Impl>::fetchCacheLine()
     // Setup the memReq to do a read of the first isntruction's address.
     // Set the appropriate read size and flags as well.
     memReq = new Request(0, fetch_PC, cacheBlkSize, 0,
-                         PC, cpu->readCpuId(), 0);
+                         PC, cpu->thread->contextId());
 
     // Translate the instruction request.
-    fault = cpu->translateInstReq(memReq, thread);
+    fault = cpu->itb->translateAtomic(memReq, thread);
 
     // Now do the timing access to see whether or not the instruction
     // exists within the cache.

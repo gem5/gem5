@@ -133,6 +133,7 @@ let {{
 
 def format Swap(code, postacc_code, mem_flags, *opt_flags) {{
     mem_flags = makeList(mem_flags)
+    mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
     flags = string.join(mem_flags, '|')
 
     (header_output,
@@ -144,6 +145,7 @@ def format Swap(code, postacc_code, mem_flags, *opt_flags) {{
 
 def format SwapAlt(code, postacc_code, mem_flags, *opt_flags) {{
     mem_flags = makeList(mem_flags)
+    mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
     mem_flags.append("EXT_ASI")
     flags = string.join(mem_flags, '|')
     (header_output,
@@ -175,6 +177,7 @@ let {{
 
 def format CasAlt(code, postacc_code, mem_flags, *opt_flags) {{
     mem_flags = makeList(mem_flags)
+    mem_flags = [ 'Request::%s' % flag for flag in mem_flags ]
     mem_flags.append("EXT_ASI")
     flags = string.join(mem_flags, '|')
     (header_output,

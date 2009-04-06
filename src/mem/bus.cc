@@ -97,34 +97,39 @@ Bus::init()
         intIter->second->sendStatusChange(Port::RangeChange);
 }
 
-Bus::BusFreeEvent::BusFreeEvent(Bus *_bus) : Event(&mainEventQueue), bus(_bus)
+Bus::BusFreeEvent::BusFreeEvent(Bus *_bus)
+    : bus(_bus)
 {}
 
-void Bus::BusFreeEvent::process()
+void
+Bus::BusFreeEvent::process()
 {
     bus->recvRetry(-1);
 }
 
-const char * Bus::BusFreeEvent::description() const
+const char *
+Bus::BusFreeEvent::description() const
 {
     return "bus became available";
 }
 
-void Bus::preparePacket(PacketPtr pkt, Tick & headerTime)
+Tick
+Bus::calcPacketTiming(PacketPtr pkt)
 {
-    //Bring tickNextIdle up to the present tick
-    //There is some potential ambiguity where a cycle starts, which might make
-    //a difference when devices are acting right around a cycle boundary. Using
-    //a < allows things which happen exactly on a cycle boundary to take up
-    //only the following cycle. Anything that happens later will have to "wait"
-    //for the end of that cycle, and then start using the bus after that.
+    // Bring tickNextIdle up to the present tick.
+    // There is some potential ambiguity where a cycle starts, which
+    // might make a difference when devices are acting right around a
+    // cycle boundary. Using a < allows things which happen exactly on
+    // a cycle boundary to take up only the following cycle. Anything
+    // that happens later will have to "wait" for the end of that
+    // cycle, and then start using the bus after that.
     if (tickNextIdle < curTick) {
         tickNextIdle = curTick;
         if (tickNextIdle % clock != 0)
             tickNextIdle = curTick - (curTick % clock) + clock;
     }
 
-    headerTime = tickNextIdle + headerCycles * clock;
+    Tick headerTime = tickNextIdle + headerCycles * clock;
 
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
@@ -142,17 +147,20 @@ void Bus::preparePacket(PacketPtr pkt, Tick & headerTime)
     pkt->firstWordTime = headerTime + clock;
 
     pkt->finishTime = headerTime + numCycles * clock;
+
+    return headerTime;
 }
 
 void Bus::occupyBus(Tick until)
 {
-    tickNextIdle = until;
-
-    if (!busIdle.scheduled()) {
-        busIdle.schedule(tickNextIdle);
-    } else {
-        busIdle.reschedule(tickNextIdle);
+    if (until == 0) {
+        // shortcut for express snoop packets
+        return;
     }
+
+    tickNextIdle = until;
+    reschedule(busIdle, tickNextIdle, true);
+
     DPRINTF(Bus, "The bus is now occupied from tick %d to %d\n",
             curTick, tickNextIdle);
 }
@@ -190,11 +198,8 @@ Bus::recvTiming(PacketPtr pkt)
     DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x\n",
             src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
 
-    Tick headerTime = 0;
-
-    if (!pkt->isExpressSnoop()) {
-        preparePacket(pkt, headerTime);
-    }
+    Tick headerFinishTime = pkt->isExpressSnoop() ? 0 : calcPacketTiming(pkt);
+    Tick packetFinishTime = pkt->isExpressSnoop() ? 0 : pkt->finishTime;
 
     short dest = pkt->getDest();
     int dest_port_id;
@@ -243,17 +248,16 @@ Bus::recvTiming(PacketPtr pkt)
             DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
                     src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
             addToRetryList(src_port);
-            if (!pkt->isExpressSnoop()) {
-                occupyBus(headerTime);
-            }
+            occupyBus(headerFinishTime);
             return false;
         }
-        // send OK, fall through
+        // send OK, fall through... pkt may have been deleted by
+        // target at this point, so it should *not* be referenced
+        // again.  We'll set it to NULL here just to be safe.
+        pkt = NULL;
     }
 
-    if (!pkt->isExpressSnoop()) {
-        occupyBus(pkt->finishTime);
-    }
+    occupyBus(packetFinishTime);
 
     // Packet was successfully sent.
     // Also take care of retries
@@ -289,7 +293,7 @@ Bus::recvRetry(int id)
             //Burn a cycle for the missed grant.
             tickNextIdle += clock;
 
-            busIdle.reschedule(tickNextIdle, true);
+            reschedule(busIdle, tickNextIdle, true);
         }
     }
     //If we weren't able to drain before, we might be able to now.
@@ -327,10 +331,10 @@ Bus::findPort(Addr addr)
 
         if (responderSet) {
             panic("Unable to find destination for addr (user set default "
-                  "responder): %#llx", addr);
+                  "responder): %#llx\n", addr);
         } else {
             DPRINTF(Bus, "Unable to find destination for addr: %#llx, will use "
-                    "default port", addr);
+                    "default port\n", addr);
 
             return defaultId;
         }
@@ -519,9 +523,12 @@ Bus::recvStatusChange(Port::Status status, int id)
         for (iter = ranges.begin(); iter != ranges.end(); iter++) {
             DPRINTF(BusAddrRanges, "Adding range %#llx - %#llx for id %d\n",
                     iter->start, iter->end, id);
-            if (portMap.insert(*iter, id) == portMap.end())
-                panic("Two devices with same range\n");
-
+            if (portMap.insert(*iter, id) == portMap.end()) {
+                int conflict_id = portMap.find(*iter)->second;
+                fatal("%s has two ports with same range:\n\t%s\n\t%s\n",
+                      name(), interfaces[id]->getPeer()->name(),
+                      interfaces[conflict_id]->getPeer()->name());
+            }
         }
     }
     DPRINTF(MMU, "port list has %d entries\n", portMap.size());

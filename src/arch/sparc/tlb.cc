@@ -51,7 +51,7 @@ TLB::TLB(const Params *p)
 {
     // To make this work you'll have to change the hypervisor and OS
     if (size > 64)
-        fatal("SPARC T1 TLB registers don't support more than 64 TLB entries.");
+        fatal("SPARC T1 TLB registers don't support more than 64 TLB entries");
 
     tlb = new TlbEntry[size];
     std::memset(tlb, 0, sizeof(TlbEntry) * size);
@@ -87,8 +87,6 @@ void
 TLB::insert(Addr va, int partition_id, int context_id, bool real,
         const PageTableEntry& PTE, int entry)
 {
-
-
     MapIter i;
     TlbEntry *new_entry = NULL;
 //    TlbRange tr;
@@ -103,8 +101,9 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
     tr.real = real;
 */
 
-    DPRINTF(TLB, "TLB: Inserting TLB Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
-            va, PTE.paddr(), partition_id, context_id, (int)real, entry);
+    DPRINTF(TLB,
+        "TLB: Inserting Entry; va=%#x pa=%#x pid=%d cid=%d r=%d entryid=%d\n",
+        va, PTE.paddr(), partition_id, context_id, (int)real, entry);
 
     // Demap any entry that conflicts
     for (x = 0; x < size; x++) {
@@ -127,7 +126,6 @@ TLB::insert(Addr va, int partition_id, int context_id, bool real,
             }
         }
     }
-
 
 /*
     i = lookupTable.find(tr);
@@ -195,25 +193,22 @@ insertAllLocked:
     new_entry->valid = true;
     usedEntries++;
 
-
-
     i = lookupTable.insert(new_entry->range, new_entry);
     assert(i != lookupTable.end());
 
-    // If all entries have there used bit set, clear it on them all, but the
-    // one we just inserted
+    // If all entries have their used bit set, clear it on them all,
+    // but the one we just inserted
     if (usedEntries == size) {
         clearUsedBits();
         new_entry->used = true;
         usedEntries++;
     }
-
 }
 
 
 TlbEntry*
-TLB::lookup(Addr va, int partition_id, bool real, int context_id, bool
-        update_used)
+TLB::lookup(Addr va, int partition_id, bool real, int context_id,
+            bool update_used)
 {
     MapIter i;
     TlbRange tr;
@@ -240,8 +235,8 @@ TLB::lookup(Addr va, int partition_id, bool real, int context_id, bool
     DPRINTF(TLB, "TLB: Valid entry found pa: %#x size: %#x\n", t->pte.paddr(),
             t->pte.size());
 
-    // Update the used bits only if this is a real access (not a fake one from
-    // virttophys()
+    // Update the used bits only if this is a real access (not a fake
+    // one from virttophys()
     if (!t->used && update_used) {
         t->used = true;
         usedEntries++;
@@ -304,11 +299,10 @@ TLB::demapPage(Addr va, int partition_id, bool real, int context_id)
 void
 TLB::demapContext(int partition_id, int context_id)
 {
-    int x;
     DPRINTF(IPR, "TLB: Demapping Context pid=%#d cid=%d\n",
             partition_id, context_id);
     cacheValid = false;
-    for (x = 0; x < size; x++) {
+    for (int x = 0; x < size; x++) {
         if (tlb[x].range.contextId == context_id &&
             tlb[x].range.partitionId == partition_id) {
             if (tlb[x].valid == true) {
@@ -327,10 +321,9 @@ TLB::demapContext(int partition_id, int context_id)
 void
 TLB::demapAll(int partition_id)
 {
-    int x;
     DPRINTF(TLB, "TLB: Demapping All pid=%#d\n", partition_id);
     cacheValid = false;
-    for (x = 0; x < size; x++) {
+    for (int x = 0; x < size; x++) {
         if (tlb[x].valid && !tlb[x].pte.locked() &&
                 tlb[x].range.partitionId == partition_id) {
             freeList.push_front(&tlb[x]);
@@ -347,11 +340,10 @@ TLB::demapAll(int partition_id)
 void
 TLB::invalidateAll()
 {
-    int x;
     cacheValid = false;
-
     lookupTable.clear();
-    for (x = 0; x < size; x++) {
+
+    for (int x = 0; x < size; x++) {
         if (tlb[x].valid == true)
             freeList.push_back(&tlb[x]);
         tlb[x].valid = false;
@@ -361,7 +353,8 @@ TLB::invalidateAll()
 }
 
 uint64_t
-TLB::TteRead(int entry) {
+TLB::TteRead(int entry)
+{
     if (entry >= size)
         panic("entry: %d\n", entry);
 
@@ -373,7 +366,8 @@ TLB::TteRead(int entry) {
 }
 
 uint64_t
-TLB::TagRead(int entry) {
+TLB::TagRead(int entry)
+{
     assert(entry < size);
     uint64_t tag;
     if (!tlb[entry].valid)
@@ -442,7 +436,7 @@ DTB::writeSfsr(Addr a, bool write, ContextType ct,
 }
 
 Fault
-ITB::translate(RequestPtr &req, ThreadContext *tc)
+ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
@@ -459,9 +453,8 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
         if (cacheEntry) {
             if (cacheEntry->range.va < vaddr + sizeof(MachInst) &&
                 cacheEntry->range.va + cacheEntry->range.size >= vaddr) {
-                    req->setPaddr(cacheEntry->pte.paddr() & ~(cacheEntry->pte.size()-1) |
-                                  vaddr & cacheEntry->pte.size()-1 );
-                    return NoFault;
+                req->setPaddr(cacheEntry->pte.translate(vaddr));
+                return NoFault;
             }
         } else {
             req->setPaddr(vaddr & PAddrImplMask);
@@ -550,18 +543,26 @@ ITB::translate(RequestPtr &req, ThreadContext *tc)
     cacheState = tlbdata;
     cacheEntry = e;
 
-    req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
-                  vaddr & e->pte.size()-1 );
+    req->setPaddr(e->pte.translate(vaddr));
     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
 }
 
-
+void
+ITB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc), req, tc, false);
+}
 
 Fault
-DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
+DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 {
-    /* @todo this could really use some profiling and fixing to make it faster! */
+    /*
+     * @todo this could really use some profiling and fixing to make
+     * it faster!
+     */
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
     Addr vaddr = req->getVaddr();
     Addr size = req->getSize();
@@ -569,7 +570,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     asi = (ASI)req->getAsi();
     bool implicit = false;
     bool hpriv = bits(tlbdata,0,0);
-    bool unaligned = (vaddr & size-1);
+    bool unaligned = vaddr & (size - 1);
 
     DPRINTF(TLB, "TLB: DTB Request to translate va=%#x size=%d asi=%#x\n",
             vaddr, size, asi);
@@ -599,11 +600,11 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                 if (cacheAsi[0] == asi &&
                     ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
-                        req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
-                        if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                            req->setFlags(req->getFlags() | UNCACHEABLE);
-                        DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
-                        return NoFault;
+                    req->setPaddr(ce->pte.translate(vaddr));
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                        req->setFlags(Request::UNCACHEABLE);
+                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                    return NoFault;
                 } // if matched
             } // if cache entry valid
             if (cacheEntry[1]) {
@@ -612,11 +613,11 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
                 if (cacheAsi[1] == asi &&
                     ce_va < vaddr + size && ce_va + ce->range.size > vaddr &&
                     (!write || ce->pte.writable())) {
-                        req->setPaddr(ce->pte.paddrMask() | vaddr & ce->pte.sizeMask());
-                        if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
-                            req->setFlags(req->getFlags() | UNCACHEABLE);
-                        DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
-                        return NoFault;
+                    req->setPaddr(ce->pte.translate(vaddr));
+                    if (ce->pte.sideffect() || (ce->pte.paddr() >> 39) & 1)
+                        req->setFlags(Request::UNCACHEABLE);
+                    DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
+                    return NoFault;
                 } // if matched
             } // if cache entry valid
         }
@@ -639,7 +640,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
     TlbEntry *e;
 
     DPRINTF(TLB, "TLB: priv:%d hpriv:%d red:%d lsudm:%d part_id: %#X\n",
-           priv, hpriv, red, lsu_dm, part_id);
+            priv, hpriv, red, lsu_dm, part_id);
 
     if (implicit) {
         if (tl > 0) {
@@ -725,11 +726,10 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         return new DataAccessException;
     }
 
-
     if ((!lsu_dm && !hpriv && !red) || AsiIsReal(asi)) {
         real = true;
         context = 0;
-    };
+    }
 
     if (hpriv && (implicit || (!AsiIsAsIfUser(asi) && !AsiIsReal(asi)))) {
         req->setPaddr(vaddr & PAddrImplMask);
@@ -776,9 +776,8 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
         return new DataAccessException;
     }
 
-
     if (e->pte.sideffect() || (e->pte.paddr() >> 39) & 1)
-        req->setFlags(req->getFlags() | UNCACHEABLE);
+        req->setFlags(Request::UNCACHEABLE);
 
     // cache translation date for next translation
     cacheState = tlbdata;
@@ -796,8 +795,7 @@ DTB::translate(RequestPtr &req, ThreadContext *tc, bool write)
             cacheAsi[0] = (ASI)0;
     }
     cacheValid = true;
-    req->setPaddr(e->pte.paddr() & ~(e->pte.size()-1) |
-                  vaddr & e->pte.size()-1);
+    req->setPaddr(e->pte.translate(vaddr));
     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
 
@@ -811,8 +809,8 @@ handleIntRegAccess:
             return new PrivilegedAction;
     }
 
-    if (asi == ASI_SWVR_UDB_INTR_W && !write ||
-                    asi == ASI_SWVR_UDB_INTR_R && write) {
+    if ((asi == ASI_SWVR_UDB_INTR_W && !write) ||
+        (asi == ASI_SWVR_UDB_INTR_R && write)) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }
@@ -832,7 +830,7 @@ handleQueueRegAccess:
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new PrivilegedAction;
     }
-    if (!hpriv && vaddr & 0xF || vaddr > 0x3f8 || vaddr < 0x3c0) {
+    if ((!hpriv && vaddr & 0xF) || vaddr > 0x3f8 || vaddr < 0x3c0) {
         writeSfsr(vaddr, write, Primary, true, IllegalAsi, asi);
         return new DataAccessException;
     }
@@ -857,6 +855,14 @@ handleMmuRegAccess:
     return NoFault;
 };
 
+void
+DTB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+}
+
 #if FULL_SYSTEM
 
 Tick
@@ -869,7 +875,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
          (uint32_t)pkt->req->getAsi(), pkt->getAddr());
 
-    ITB * itb = tc->getITBPtr();
+    ITB *itb = tc->getITBPtr();
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1018,12 +1024,22 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
                 itb->cx_config));
         break;
       case ASI_SWVR_INTR_RECEIVE:
-        pkt->set(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
+        {
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            pkt->set(interrupts->get_vec(IT_INT_VEC));
+        }
         break;
       case ASI_SWVR_UDB_INTR_R:
-        temp = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC));
-        tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, temp);
-        pkt->set(temp);
+        {
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            temp = findMsbSet(interrupts->get_vec(IT_INT_VEC));
+            tc->getCpuPtr()->clearInterrupt(IT_INT_VEC, temp);
+            pkt->set(temp);
+        }
         break;
       default:
 doMmuReadError:
@@ -1055,7 +1071,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
          (uint32_t)asi, va, data);
 
-    ITB * itb = tc->getITBPtr();
+    ITB *itb = tc->getITBPtr();
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1129,7 +1145,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         break;
       case ASI_SPARC_ERROR_EN_REG:
       case ASI_SPARC_ERROR_STATUS_REG:
-        warn("Ignoring write to SPARC ERROR regsiter\n");
+        inform("Ignoring write to SPARC ERROR regsiter\n");
         break;
       case ASI_HYP_SCRATCHPAD:
       case ASI_SCRATCHPAD:
@@ -1173,7 +1189,8 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         real_insert = bits(va, 9,9);
         pte.populate(data, bits(va,10,10) ? PageTableEntry::sun4v :
                 PageTableEntry::sun4u);
-        insert(va_insert, part_insert, ct_insert, real_insert, pte, entry_insert);
+        insert(va_insert, part_insert, ct_insert, real_insert, pte,
+               entry_insert);
         break;
       case ASI_IMMU_DEMAP:
         ignore = false;
@@ -1261,18 +1278,23 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
         }
         break;
        case ASI_SWVR_INTR_RECEIVE:
-        int msb;
-        // clear all the interrupts that aren't set in the write
-        while(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data) {
-            msb = findMsbSet(tc->getCpuPtr()->get_interrupts(IT_INT_VEC) & data);
-            tc->getCpuPtr()->clear_interrupt(IT_INT_VEC, msb);
+        {
+            int msb;
+            // clear all the interrupts that aren't set in the write
+            SparcISA::Interrupts * interrupts =
+                dynamic_cast<SparcISA::Interrupts *>(
+                        tc->getCpuPtr()->getInterruptController());
+            while (interrupts->get_vec(IT_INT_VEC) & data) {
+                msb = findMsbSet(interrupts->get_vec(IT_INT_VEC) & data);
+                tc->getCpuPtr()->clearInterrupt(IT_INT_VEC, msb);
+            }
         }
         break;
       case ASI_SWVR_UDB_INTR_W:
             tc->getSystemPtr()->threadContexts[bits(data,12,8)]->getCpuPtr()->
-            post_interrupt(bits(data,5,0),0);
+            postInterrupt(bits(data, 5, 0), 0);
         break;
- default:
+      default:
 doMmuWriteError:
         panic("need to impl DTB::doMmuRegWrite() got asi=%#x, va=%#x d=%#x\n",
             (uint32_t)pkt->req->getAsi(), pkt->getAddr(), data);
@@ -1310,10 +1332,6 @@ DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
                 itb->cx_config);
 }
 
-
-
-
-
 uint64_t
 DTB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
         uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config)
@@ -1340,7 +1358,6 @@ DTB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
 
     return ptr;
 }
-
 
 void
 TLB::serialize(std::ostream &os)

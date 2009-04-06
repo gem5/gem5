@@ -68,11 +68,6 @@ extern Tick ps;
 
 void setClockFrequency(Tick ticksPerSecond);
 
-/// Output stream for simulator messages (e.g., cprintf()).  Also used
-/// as default stream for tracing and DPRINTF() messages (unless
-/// overridden with trace:file option).
-extern std::ostream *outputStream;
-void setOutputFile(const std::string &file);
 void setOutputDir(const std::string &dir);
 
 struct Callback;

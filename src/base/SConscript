@@ -30,11 +30,15 @@
 
 Import('*')
 
-Source('annotate.cc')
+if env['CP_ANNOTATE']:
+    SimObject('CPA.py')
+    Source('cp_annotate.cc')
+Source('atomicio.cc')
 Source('bigint.cc')
 Source('circlebuf.cc')
 Source('cprintf.cc')
 Source('crc.cc')
+Source('debug.cc')
 Source('fast_alloc.cc')
 if env['USE_FENV']:
     Source('fenv.c')
@@ -72,7 +76,6 @@ Source('loader/symtab.cc')
 
 Source('stats/events.cc')
 Source('stats/output.cc')
-Source('stats/statdb.cc')
 Source('stats/text.cc')
 Source('stats/visit.cc')
 
@@ -80,16 +83,23 @@ if env['USE_MYSQL']:
     Source('mysql.cc')
     Source('stats/mysql.cc')
 
-TraceFlag('Annotate')
-TraceFlag('GDBAcc')
-TraceFlag('GDBExtra')
-TraceFlag('GDBMisc')
-TraceFlag('GDBRead')
-TraceFlag('GDBRecv')
-TraceFlag('GDBSend')
-TraceFlag('GDBWrite')
-TraceFlag('SQL')
-TraceFlag('StatEvents')
+TraceFlag('Annotate', "State machine annotation debugging")
+TraceFlag('AnnotateQ', "State machine annotation queue debugging")
+TraceFlag('AnnotateVerbose', "Dump all state machine annotation details")
+TraceFlag('GDBAcc', "Remote debugger accesses")
+TraceFlag('GDBExtra', "Dump extra information on reads and writes")
+TraceFlag('GDBMisc', "Breakpoints, traps, watchpoints, etc.")
+TraceFlag('GDBRead', "Reads to the remote address space")
+TraceFlag('GDBRecv', "Messages received from the remote application")
+TraceFlag('GDBSend', "Messages sent to the remote application")
+TraceFlag('GDBWrite', "Writes to the remote address space")
+TraceFlag('SQL', "SQL queries sent to the server")
+TraceFlag('StatEvents', "Statistics event tracking")
 
-CompoundFlag('GDBAll', [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend',
-    'GDBRecv', 'GDBExtra' ])
+CompoundFlag('GDBAll',
+    [ 'GDBMisc', 'GDBAcc', 'GDBRead', 'GDBWrite', 'GDBSend', 'GDBRecv',
+      'GDBExtra' ],
+    desc="All Remote debugging flags")
+CompoundFlag('AnnotateAll', ['Annotate', 'AnnotateQ', 'AnnotateVerbose'],
+    desc="All Annotation flags")
+

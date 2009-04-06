@@ -29,7 +29,7 @@
  */
 
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -91,6 +91,7 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
+#include "sim/host.hh"
 
 #include <string>
 
@@ -98,8 +99,6 @@ class Checkpoint;
 
 namespace X86ISA
 {
-    std::string getMiscRegName(RegIndex);
-
     //These will have to be updated in the future.
     const int NumMiscArchRegs = NUM_MISCREGS;
     const int NumMiscRegs = NUM_MISCREGS;
@@ -117,13 +116,13 @@ namespace X86ISA
             clear();
         }
 
-        MiscReg readRegNoEffect(int miscReg);
+        MiscReg readRegNoEffect(MiscRegIndex miscReg);
 
-        MiscReg readReg(int miscReg, ThreadContext *tc);
+        MiscReg readReg(MiscRegIndex miscReg, ThreadContext *tc);
 
-        void setRegNoEffect(int miscReg, const MiscReg &val);
+        void setRegNoEffect(MiscRegIndex miscReg, const MiscReg &val);
 
-        void setReg(int miscReg,
+        void setReg(MiscRegIndex miscReg,
                 const MiscReg &val, ThreadContext *tc);
 
         void serialize(std::ostream & os);

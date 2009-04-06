@@ -47,7 +47,7 @@ using namespace SparcISA;
 SyscallDesc*
 SparcLinuxProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
 }
@@ -55,7 +55,7 @@ SparcLinuxProcess::getDesc(int callnum)
 SyscallDesc*
 SparcLinuxProcess::getDesc32(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall32_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall32_Descs)
         return NULL;
     return &syscall32Descs[callnum];
 }

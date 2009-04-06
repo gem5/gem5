@@ -41,8 +41,10 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/op_class.hh"
+#include "sim/eventq.hh"
 #include "sim/host.hh"
 
+class DerivO3CPUParams;
 class FUPool;
 class MemInterface;
 
@@ -70,7 +72,6 @@ class InstructionQueue
     //Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
 
     typedef typename Impl::CPUPol::IEW IEW;
     typedef typename Impl::CPUPol::MemDepUnit MemDepUnit;
@@ -110,7 +111,7 @@ class InstructionQueue
     };
 
     /** Constructs an IQ. */
-    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params);
+    InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params);
 
     /** Destructs the IQ. */
     ~InstructionQueue();
@@ -442,58 +443,58 @@ class InstructionQueue
     void dumpInsts();
 
     /** Stat for number of instructions added. */
-    Stats::Scalar<> iqInstsAdded;
+    Stats::Scalar iqInstsAdded;
     /** Stat for number of non-speculative instructions added. */
-    Stats::Scalar<> iqNonSpecInstsAdded;
+    Stats::Scalar iqNonSpecInstsAdded;
 
-    Stats::Scalar<> iqInstsIssued;
+    Stats::Scalar iqInstsIssued;
     /** Stat for number of integer instructions issued. */
-    Stats::Scalar<> iqIntInstsIssued;
+    Stats::Scalar iqIntInstsIssued;
     /** Stat for number of floating point instructions issued. */
-    Stats::Scalar<> iqFloatInstsIssued;
+    Stats::Scalar iqFloatInstsIssued;
     /** Stat for number of branch instructions issued. */
-    Stats::Scalar<> iqBranchInstsIssued;
+    Stats::Scalar iqBranchInstsIssued;
     /** Stat for number of memory instructions issued. */
-    Stats::Scalar<> iqMemInstsIssued;
+    Stats::Scalar iqMemInstsIssued;
     /** Stat for number of miscellaneous instructions issued. */
-    Stats::Scalar<> iqMiscInstsIssued;
+    Stats::Scalar iqMiscInstsIssued;
     /** Stat for number of squashed instructions that were ready to issue. */
-    Stats::Scalar<> iqSquashedInstsIssued;
+    Stats::Scalar iqSquashedInstsIssued;
     /** Stat for number of squashed instructions examined when squashing. */
-    Stats::Scalar<> iqSquashedInstsExamined;
+    Stats::Scalar iqSquashedInstsExamined;
     /** Stat for number of squashed instruction operands examined when
      * squashing.
      */
-    Stats::Scalar<> iqSquashedOperandsExamined;
+    Stats::Scalar iqSquashedOperandsExamined;
     /** Stat for number of non-speculative instructions removed due to a squash.
      */
-    Stats::Scalar<> iqSquashedNonSpecRemoved;
+    Stats::Scalar iqSquashedNonSpecRemoved;
     // Also include number of instructions rescheduled and replayed.
 
     /** Distribution of number of instructions in the queue.
      * @todo: Need to create struct to track the entry time for each
      * instruction. */
-//    Stats::VectorDistribution<> queueResDist;
+//    Stats::VectorDistribution queueResDist;
     /** Distribution of the number of instructions issued. */
-    Stats::Distribution<> numIssuedDist;
+    Stats::Distribution numIssuedDist;
     /** Distribution of the cycles it takes to issue an instruction.
      * @todo: Need to create struct to track the ready time for each
      * instruction. */
-//    Stats::VectorDistribution<> issueDelayDist;
+//    Stats::VectorDistribution issueDelayDist;
 
     /** Number of times an instruction could not be issued because a
      * FU was busy.
      */
-    Stats::Vector<> statFuBusy;
-//    Stats::Vector<> dist_unissued;
+    Stats::Vector statFuBusy;
+//    Stats::Vector dist_unissued;
     /** Stat for total number issued for each instruction type. */
-    Stats::Vector2d<> statIssuedInstType;
+    Stats::Vector2d statIssuedInstType;
 
     /** Number of instructions issued per cycle. */
     Stats::Formula issueRate;
 
     /** Number of times the FU was busy. */
-    Stats::Vector<> fuBusy;
+    Stats::Vector fuBusy;
     /** Number of times the FU was busy per instruction issued. */
     Stats::Formula fuBusyRate;
 };

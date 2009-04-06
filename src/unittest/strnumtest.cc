@@ -28,8 +28,7 @@
  * Authors: Nathan Binkert
  */
 
-#include <iostream.h>
-
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -40,39 +39,39 @@ using namespace std;
 int
 main(int argc, char *argv[])
 {
-  if (argc != 2) {
-    cout << "Usage: " << argv[0] << " <number>\n";
-    exit(1);
-  }
+    if (argc != 2) {
+        cout << "Usage: " << argv[0] << " <number>\n";
+        exit(1);
+    }
 
-  string s = argv[1];
+    string s = argv[1];
 
 #define OUTVAL(valtype, type) do { \
-  valtype value; \
-  cout << "TYPE = " #valtype "\n"; \
-  if (to_number(s, value)) { \
-    cout << "Number(" << s << ") = " << dec \
-      << (unsigned long long)(unsigned type)value << "\n" \
-      << "Number(" << s << ") = " << dec \
-      << (signed long long)(signed type)value << "\n" \
-      << "Number(" << s << ") = 0x" << hex \
-      << (unsigned long long)(unsigned type)value << "\n" \
-      << "Number(" << s << ") = 0" << oct \
-      << (unsigned long long)(unsigned type)value << "\n\n"; \
-  } else \
-    cout << "Number(" << s << ") is invalid\n\n"; \
-  } while (0)
+        valtype value;             \
+        cout << "TYPE = " #valtype "\n";        \
+        if (to_number(s, value)) {              \
+            cout << "Number(" << s << ") = " << dec       \
+                 << (unsigned long long)(unsigned type)value << "\n"    \
+                 << "Number(" << s << ") = " << dec                     \
+                 << (signed long long)(signed type)value << "\n"        \
+                 << "Number(" << s << ") = 0x" << hex                   \
+                 << (unsigned long long)(unsigned type)value << "\n"    \
+                 << "Number(" << s << ") = 0" << oct                    \
+                 << (unsigned long long)(unsigned type)value << "\n\n"; \
+        } else                                                          \
+            cout << "Number(" << s << ") is invalid\n\n";               \
+    } while (0)
 
-  OUTVAL(signed long long, long long);
-  OUTVAL(unsigned long long, long long);
-  OUTVAL(signed long, long);
-  OUTVAL(unsigned long, long);
-  OUTVAL(signed int, int);
-  OUTVAL(unsigned int, int);
-  OUTVAL(signed short, short);
-  OUTVAL(unsigned short, short);
-  OUTVAL(signed char, char);
-  OUTVAL(unsigned char, char);
+    OUTVAL(signed long long, long long);
+    OUTVAL(unsigned long long, long long);
+    OUTVAL(signed long, long);
+    OUTVAL(unsigned long, long);
+    OUTVAL(signed int, int);
+    OUTVAL(unsigned int, int);
+    OUTVAL(signed short, short);
+    OUTVAL(unsigned short, short);
+    OUTVAL(signed char, char);
+    OUTVAL(unsigned char, char);
 
-  return 0;
+    return 0;
 }

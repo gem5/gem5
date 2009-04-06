@@ -40,28 +40,49 @@ PacketFifo::copyout(void *dest, int offset, int len)
     if (offset + len >= size())
         return false;
 
-    list<EthPacketPtr>::iterator p = fifo.begin();
-    list<EthPacketPtr>::iterator end = fifo.end();
+    iterator i = fifo.begin();
+    iterator end = fifo.end();
     while (len > 0) {
-        while (offset >= (*p)->length) {
-            offset -= (*p)->length;
-            ++p;
+        EthPacketPtr &pkt = i->packet;
+        while (offset >= pkt->length) {
+            offset -= pkt->length;
+            ++i;
         }
 
-        if (p == end)
+        if (i == end)
             panic("invalid fifo");
 
-        int size = min((*p)->length - offset, len);
-        memcpy(data, (*p)->data, size);
+        int size = min(pkt->length - offset, len);
+        memcpy(data, pkt->data, size);
         offset = 0;
         len -= size;
         data += size;
-        ++p;
+        ++i;
     }
 
     return true;
 }
 
+
+void
+PacketFifoEntry::serialize(const string &base, ostream &os)
+{
+    packet->serialize(base + ".packet", os);
+    paramOut(os, base + ".slack", slack);
+    paramOut(os, base + ".number", number);
+    paramOut(os, base + ".priv", priv);
+}
+
+void
+PacketFifoEntry::unserialize(const string &base, Checkpoint *cp,
+                             const string &section)
+{
+    packet = new EthPacketData(16384);
+    packet->unserialize(base + ".packet", cp, section);
+    paramIn(cp, section, base + ".slack", slack);
+    paramIn(cp, section, base + ".number", number);
+    paramIn(cp, section, base + ".priv", priv);
+}
 
 void
 PacketFifo::serialize(const string &base, ostream &os)
@@ -72,11 +93,11 @@ PacketFifo::serialize(const string &base, ostream &os)
     paramOut(os, base + ".packets", fifo.size());
 
     int i = 0;
-    list<EthPacketPtr>::iterator p = fifo.begin();
-    list<EthPacketPtr>::iterator end = fifo.end();
-    while (p != end) {
-        (*p)->serialize(csprintf("%s.packet%d", base, i), os);
-        ++p;
+    iterator entry = fifo.begin();
+    iterator end = fifo.end();
+    while (entry != end) {
+        entry->serialize(csprintf("%s.entry%d", base, i), os);
+        ++entry;
         ++i;
     }
 }
@@ -94,8 +115,8 @@ PacketFifo::unserialize(const string &base, Checkpoint *cp,
     fifo.clear();
 
     for (int i = 0; i < fifosize; ++i) {
-        EthPacketPtr p = new EthPacketData(16384);
-        p->unserialize(csprintf("%s.packet%d", base, i), cp, section);
-        fifo.push_back(p);
+        PacketFifoEntry entry;
+        entry.unserialize(csprintf("%s.entry%d", base, i), cp, section);
+        fifo.push_back(entry);
     }
 }

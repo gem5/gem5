@@ -35,7 +35,7 @@
 #include <limits>
 #include <string>
 
-#include "sim/host.hh"	// for Addr
+#include "sim/host.hh"  // for Addr
 
 class Port;
 class SymbolTable;
@@ -50,7 +50,8 @@ class ObjectFile
         SPARC64,
         SPARC32,
         Mips,
-        X86,
+        X86_64,
+        I386,
         Arm
     };
 

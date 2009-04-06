@@ -51,6 +51,8 @@
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
 void
 DefaultFetch<Impl>::IcachePort::setPeer(Port *port)
@@ -111,7 +113,7 @@ DefaultFetch<Impl>::IcachePort::recvRetry()
 }
 
 template<class Impl>
-DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
+DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       branchPred(params),
       predecoder(NULL),
@@ -123,14 +125,16 @@ DefaultFetch<Impl>::DefaultFetch(O3CPU *_cpu, Params *params)
       cacheBlocked(false),
       retryPkt(NULL),
       retryTid(-1),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       numFetchingThreads(params->smtNumFetchingThreads),
       interruptPending(false),
       drainPending(false),
       switchedOut(false)
 {
     if (numThreads > Impl::MaxThreads)
-        fatal("numThreads is not a valid value\n");
+        fatal("numThreads (%d) is larger than compiled limit (%d),\n"
+              "\tincrease MaxThreads in src/cpu/o3/impl.hh\n",
+              numThreads, static_cast<int>(Impl::MaxThreads));
 
     // Set fetch stage's status to inactive.
     _status = Inactive;
@@ -360,7 +364,7 @@ template<class Impl>
 void
 DefaultFetch<Impl>::processCacheCompletion(PacketPtr pkt)
 {
-    unsigned tid = pkt->req->getThreadNum();
+    unsigned tid = pkt->req->threadId();
 
     DPRINTF(Fetch, "[tid:%u] Waking up from cache miss.\n",tid);
 
@@ -591,12 +595,13 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid
     // Set the appropriate read size and flags as well.
     // Build request here.
     RequestPtr mem_req = new Request(tid, block_PC, cacheBlkSize, 0,
-                                     fetch_PC, cpu->readCpuId(), tid);
+                                     fetch_PC, cpu->thread[tid]->contextId(),
+                                     tid);
 
     memReq[tid] = mem_req;
 
     // Translate the instruction request.
-    fault = cpu->translateInstReq(mem_req, cpu->thread[tid]);
+    fault = cpu->itb->translateAtomic(mem_req, cpu->thread[tid]->getTC());
 
     // In the case of faults, the fetch stage may need to stall and wait
     // for the ITB miss to be handled.

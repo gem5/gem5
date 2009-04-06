@@ -40,7 +40,7 @@ using namespace std;
 namespace cp {
 
 Print::Print(std::ostream &stream, const std::string &format)
-    : stream(stream), format(format.c_str()), ptr(format.c_str())
+    : stream(stream), format(format.c_str()), ptr(format.c_str()), cont(false)
 {
     saved_flags = stream.flags();
     saved_fill = stream.fill();
@@ -48,7 +48,7 @@ Print::Print(std::ostream &stream, const std::string &format)
 }
 
 Print::Print(std::ostream &stream, const char *format)
-    : stream(stream), format(format), ptr(format)
+    : stream(stream), format(format), ptr(format), cont(false)
 {
     saved_flags = stream.flags();
     saved_fill = stream.fill();
@@ -60,8 +60,10 @@ Print::~Print()
 }
 
 void
-Print::process(Format &fmt)
+Print::process()
 {
+    fmt.clear();
+
     size_t len;
 
     while (*ptr) {
@@ -221,8 +223,15 @@ Print::process(Format &fmt)
             number = number * 10 + (*ptr - '0');
             break;
 
+          case '*':
+            if (have_precision)
+                fmt.get_precision = true;
+            else
+                fmt.get_width = true;
+            break;
+
           case '%':
-            assert("we shouldn't get here");
+            assert(false && "we shouldn't get here");
             break;
 
           default:

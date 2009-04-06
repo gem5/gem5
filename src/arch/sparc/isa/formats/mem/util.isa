@@ -264,11 +264,6 @@ def template StoreInitiateAcc {{
                 fault = xc->write((%(mem_acc_type)s%(mem_acc_size)s_t)Mem,
                         EA, %(asi_val)s, 0);
             }
-            if(fault == NoFault)
-            {
-                    //Write the resulting state to the execution context
-                %(op_wb)s;
-            }
             return fault;
         }
 }};
@@ -277,6 +272,15 @@ def template StoreCompleteAcc {{
         Fault %(class_name)s::completeAcc(PacketPtr, %(CPU_exec_context)s * xc,
                 Trace::InstRecord * traceData) const
         {
+            Fault fault = NoFault;
+            %(op_decl)s;
+
+            %(op_rd)s;
+            %(postacc_code)s;
+            if (fault == NoFault)
+            {
+                %(op_wb)s;
+            }
             return NoFault;
         }
 }};
@@ -314,10 +318,11 @@ let {{
     # are split into ones that are available in priv and hpriv, and
     # those that are only available in hpriv
     AlternateASIPrivFaultCheck = '''
-        if(!bits(Pstate,2,2) && !bits(Hpstate,2,2) && !AsiIsUnPriv((ASI)EXT_ASI) ||
-                             !bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI))
-                fault = new PrivilegedAction;
-        else if(AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
+        if ((!bits(Pstate,2,2) && !bits(Hpstate,2,2) &&
+             !AsiIsUnPriv((ASI)EXT_ASI)) ||
+            (!bits(Hpstate,2,2) && AsiIsHPriv((ASI)EXT_ASI)))
+            fault = new PrivilegedAction;
+        else if (AsiIsAsIfUser((ASI)EXT_ASI) && !bits(Pstate,2,2))
             fault = new PrivilegedAction;
     '''
 

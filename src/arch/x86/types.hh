@@ -246,17 +246,6 @@ namespace X86ISA
         MiscReg ctrlReg;
     } AnyReg;
 
-    //XXX This is very hypothetical. X87 instructions would need to
-    //change their "context" constantly. It's also not clear how
-    //this would be handled as far as out of order execution.
-    //Maybe x87 instructions are in order?
-    enum RegContextParam
-    {
-        CONTEXT_X87_TOP
-    };
-
-    typedef int RegContextVal;
-
     typedef uint16_t RegIndex;
 
     struct CoreSpecific {

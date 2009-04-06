@@ -42,52 +42,16 @@ class Checkpoint;
 
 namespace SparcISA
 {
-    class RegFile;
-
-    //This function translates integer register file indices into names
-    std::string getIntRegName(RegIndex);
-
     const int NumIntArchRegs = 32;
     const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
     class IntRegFile
     {
-      private:
-        friend class RegFile;
       protected:
-        //The number of bits needed to index into each 8 register frame
-        static const int FrameOffsetBits = 3;
-        //The number of bits to choose between the 4 sets of 8 registers
-        static const int FrameNumBits = 2;
-
-        //The number of registers per "frame" (8)
-        static const int RegsPerFrame = 1 << FrameOffsetBits;
-        //A mask to get the frame number
-        static const uint64_t FrameNumMask =
-                (FrameNumBits == sizeof(int)) ?
-                (unsigned int)(-1) :
-                (1 << FrameNumBits) - 1;
-        static const uint64_t FrameOffsetMask =
-                (FrameOffsetBits == sizeof(int)) ?
-                (unsigned int)(-1) :
-                (1 << FrameOffsetBits) - 1;
-
-        IntReg regGlobals[MaxGL+1][RegsPerFrame];
-        IntReg regSegments[2 * NWindows][RegsPerFrame];
         IntReg microRegs[NumMicroIntRegs];
         IntReg regs[NumIntRegs];
 
-        enum regFrame {Globals, Outputs, Locals, Inputs, NumFrames};
-
-        IntReg * regView[NumFrames];
-
-        static const int RegGlobalOffset = 0;
-        static const int FrameOffset = (MaxGL + 1) * RegsPerFrame;
-        int offset[NumFrames];
-
       public:
-
-        int flattenIndex(int reg);
 
         void clear();
 
@@ -100,14 +64,6 @@ namespace SparcISA
         void serialize(std::ostream &os);
 
         void unserialize(Checkpoint *cp, const std::string &section);
-
-      protected:
-        //This doesn't effect the actual CWP register.
-        //It's purpose is to adjust the view of the register file
-        //to what it would be if CWP = cwp.
-        void setCWP(int cwp);
-
-        void setGlobals(int gl);
     };
 }
 

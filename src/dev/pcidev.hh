@@ -99,6 +99,9 @@ class PciDev : public DmaDevice
     /** The current address mapping of the BARs */
     Addr BARAddrs[6];
 
+    /** Whether the BARs are really hardwired legacy IO locations. */
+    bool legacyIO[6];
+
     /**
      * Does the given address lie within the space mapped by the given
      * base address register?

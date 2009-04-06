@@ -147,11 +147,11 @@ namespace MipsISA
     // MIPS modes
     enum mode_type
     {
-        mode_kernel = 0,		// kernel
-        mode_supervisor = 1,	// supervisor
-        mode_user = 2,		// user mode
+        mode_kernel = 0,        // kernel
+        mode_supervisor = 1,    // supervisor
+        mode_user = 2,          // user mode
         mode_debug = 3,         // debug mode
-        mode_number			// number of modes
+        mode_number             // number of modes
     };
 
   inline mode_type getOperatingMode(MiscReg Stat)
@@ -181,6 +181,8 @@ namespace MipsISA
     const int NumIntRegs = NumIntArchRegs*NumShadowRegSets + NumIntSpecialRegs;        //HI & LO Regs
     const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;//
 
+    const int TotalArchRegs = NumIntArchRegs * NumShadowRegSets;
+
     // Static instruction parameters
     const int MaxInstSrcRegs = 10;
     const int MaxInstDestRegs = 8;
@@ -188,13 +190,6 @@ namespace MipsISA
     // semantically meaningful register indices
     const int ZeroReg = 0;
     const int AssemblerReg = 1;
-    const int ReturnValueReg = 2;
-    const int ReturnValueReg1 = 2;
-    const int ReturnValueReg2 = 3;
-    const int ArgumentReg0 = 4;
-    const int ArgumentReg1 = 5;
-    const int ArgumentReg2 = 6;
-    const int ArgumentReg3 = 7;
     const int KernelReg0 = 26;
     const int KernelReg1 = 27;
     const int GlobalPointerReg = 28;
@@ -202,14 +197,9 @@ namespace MipsISA
     const int FramePointerReg = 30;
     const int ReturnAddressReg = 31;
 
-    const int ArgumentReg[] = {4, 5, 6, 7};
-    const int NumArgumentRegs = sizeof(ArgumentReg) / sizeof(const int);
+    const int SyscallPseudoReturnReg = 3;
 
-    const int SyscallNumReg = ReturnValueReg1;
-    const int SyscallPseudoReturnReg = ReturnValueReg2;
-    const int SyscallSuccessReg = ArgumentReg3;
-
-    const int LogVMPageSize = 13;	// 8K bytes
+    const int LogVMPageSize = 13;       // 8K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
     const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
@@ -390,7 +380,5 @@ namespace MipsISA
 
 
 };
-
-using namespace MipsISA;
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__

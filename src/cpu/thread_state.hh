@@ -34,6 +34,7 @@
 #include "arch/types.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
+#include "cpu/base.hh"
 
 #if !FULL_SYSTEM
 #include "mem/mem_object.hh"
@@ -51,7 +52,6 @@ namespace TheISA {
 };
 #endif
 
-class BaseCPU;
 class Checkpoint;
 class Port;
 class TranslatingPort;
@@ -66,9 +66,9 @@ struct ThreadState {
     typedef ThreadContext::Status Status;
 
 #if FULL_SYSTEM
-    ThreadState(BaseCPU *cpu, int _cpuId, int _tid);
+    ThreadState(BaseCPU *cpu, int _tid);
 #else
-    ThreadState(BaseCPU *cpu, int _cpuId, int _tid, Process *_process,
+    ThreadState(BaseCPU *cpu, int _tid, Process *_process,
                 short _asid);
 #endif
 
@@ -78,24 +78,26 @@ struct ThreadState {
 
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    void setCpuId(int id) { cpuId = id; }
+    int cpuId() { return baseCpu->cpuId(); }
 
-    int readCpuId() { return cpuId; }
+    int contextId() { return _contextId; }
 
-    void setTid(int id) { tid = id; }
+    void setContextId(int id) { _contextId = id; }
 
-    int readTid() { return tid; }
+    void setThreadId(int id) { _threadId = id; }
+
+    int threadId() { return _threadId; }
 
     Tick readLastActivate() { return lastActivate; }
 
     Tick readLastSuspend() { return lastSuspend; }
 
 #if FULL_SYSTEM
-    void connectMemPorts();
+    void connectMemPorts(ThreadContext *tc);
 
     void connectPhysPort();
 
-    void connectVirtPort();
+    void connectVirtPort(ThreadContext *tc);
 
     void dumpFuncProfile();
 
@@ -111,9 +113,7 @@ struct ThreadState {
 
     void setPhysPort(FunctionalPort *port) { physPort = port; }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL) { return virtPort; }
-
-    void setVirtPort(VirtualPort *port) { virtPort = port; }
+    VirtualPort *getVirtPort() { return virtPort; }
 #else
     Process *getProcessPtr() { return process; }
 
@@ -155,9 +155,9 @@ struct ThreadState {
     /** Number of instructions committed. */
     Counter numInst;
     /** Stat for number instructions committed. */
-    Stats::Scalar<> numInsts;
+    Stats::Scalar numInsts;
     /** Stat for number of memory references. */
-    Stats::Scalar<> numMemRefs;
+    Stats::Scalar numMemRefs;
 
     /** Number of simulated loads, used for tracking events based on
      * the number of loads committed.
@@ -173,12 +173,11 @@ struct ThreadState {
     // Pointer to the base CPU.
     BaseCPU *baseCpu;
 
-    // ID of this context w.r.t. the System or Process object to which
-    // it belongs.  For full-system mode, this is the system CPU ID.
-    int cpuId;
+    // system wide HW context id
+    int _contextId;
 
     // Index of hardware thread context on the CPU that this represents.
-    int tid;
+    int _threadId;
 
   public:
     /** Last time activate was called on this thread. */
@@ -201,7 +200,7 @@ struct ThreadState {
     FunctionalPort *physPort;
 
     /** A functional port, outgoing only, for functional accesse to virtual
-     * addresses. That doen't require execution context information */
+     * addresses. */
     VirtualPort *virtPort;
 #else
     TranslatingPort *port;

@@ -39,247 +39,436 @@
 #ifndef __MEM_REQUEST_HH__
 #define __MEM_REQUEST_HH__
 
+#include <cassert>
+
 #include "base/fast_alloc.hh"
+#include "base/flags.hh"
+#include "base/misc.hh"
 #include "sim/host.hh"
 #include "sim/core.hh"
-
-#include <cassert>
 
 class Request;
 
 typedef Request* RequestPtr;
 
-
-/** ASI information for this request if it exsits. */
-const uint32_t ASI_BITS         = 0x000FF;
-/** The request is a Load locked/store conditional. */
-const uint32_t LOCKED		= 0x00100;
-/** The virtual address is also the physical address. */
-const uint32_t PHYSICAL		= 0x00200;
-/** The request is an ALPHA VPTE pal access (hw_ld). */
-const uint32_t VPTE		= 0x00400;
-/** Use the alternate mode bits in ALPHA. */
-const uint32_t ALTMODE		= 0x00800;
-/** The request is to an uncacheable address. */
-const uint32_t UNCACHEABLE	= 0x01000;
-/** The request should not cause a page fault. */
-const uint32_t NO_FAULT         = 0x02000;
-/** The request should be prefetched into the exclusive state. */
-const uint32_t PF_EXCLUSIVE	= 0x10000;
-/** The request should be marked as LRU. */
-const uint32_t EVICT_NEXT	= 0x20000;
-/** The request should ignore unaligned access faults */
-const uint32_t NO_ALIGN_FAULT   = 0x40000;
-/** The request was an instruction read. */
-const uint32_t INST_READ        = 0x80000;
-/** This request is for a memory swap. */
-const uint32_t MEM_SWAP         = 0x100000;
-const uint32_t MEM_SWAP_COND    = 0x200000;
-/** The request should ignore unaligned access faults */
-const uint32_t NO_HALF_WORD_ALIGN_FAULT = 0x400000;
-
-
 class Request : public FastAlloc
 {
+    friend class Packet;
+
+  public:
+    typedef uint32_t FlagsType;
+    typedef ::Flags<FlagsType> Flags;
+
+    /** ASI information for this request if it exists. */
+    static const FlagsType ASI_BITS                    = 0x000000FF;
+    /** The request is a Load locked/store conditional. */
+    static const FlagsType LOCKED                      = 0x00000100;
+    /** The virtual address is also the physical address. */
+    static const FlagsType PHYSICAL                    = 0x00000200;
+    /** The request is an ALPHA VPTE pal access (hw_ld). */
+    static const FlagsType VPTE                        = 0x00000400;
+    /** Use the alternate mode bits in ALPHA. */
+    static const FlagsType ALTMODE                     = 0x00000800;
+    /** The request is to an uncacheable address. */
+    static const FlagsType UNCACHEABLE                 = 0x00001000;
+    /** The request should not cause a page fault. */
+    static const FlagsType NO_FAULT                    = 0x00002000;
+    /** The request should not cause a memory access. */
+    static const FlagsType NO_ACCESS                   = 0x00004000;
+    /** The request should be prefetched into the exclusive state. */
+    static const FlagsType PF_EXCLUSIVE                = 0x00010000;
+    /** The request should be marked as LRU. */
+    static const FlagsType EVICT_NEXT                  = 0x00020000;
+    /** The request should ignore unaligned access faults */
+    static const FlagsType NO_ALIGN_FAULT              = 0x00040000;
+    /** The request was an instruction read. */
+    static const FlagsType INST_READ                   = 0x00080000;
+    /** This request is for a memory swap. */
+    static const FlagsType MEM_SWAP                    = 0x00100000;
+    static const FlagsType MEM_SWAP_COND               = 0x00200000;
+    /** The request should ignore unaligned access faults */
+    static const FlagsType NO_HALF_WORD_ALIGN_FAULT    = 0x00400000;
+    /** This request is to a memory mapped register. */
+    static const FlagsType MMAPED_IPR                  = 0x00800000;
+
+  private:
+    static const FlagsType PUBLIC_FLAGS                = 0x00FF3FFF;
+    static const FlagsType PRIVATE_FLAGS               = 0xFF000000;
+
+    /** Whether or not the size is valid. */
+    static const FlagsType VALID_SIZE                  = 0x01000000;
+    /** Whether or not paddr is valid (has been written yet). */
+    static const FlagsType VALID_PADDR                 = 0x02000000;
+    /** Whether or not the vaddr & asid are valid. */
+    static const FlagsType VALID_VADDR                 = 0x04000000;
+    /** Whether or not the pc is valid. */
+    static const FlagsType VALID_PC                    = 0x10000000;
+    /** Whether or not the context ID is valid. */
+    static const FlagsType VALID_CONTEXT_ID            = 0x20000000;
+    static const FlagsType VALID_THREAD_ID             = 0x40000000;
+    /** Whether or not the sc result is valid. */
+    static const FlagsType VALID_EXTRA_DATA            = 0x80000000;
+
   private:
     /**
      * The physical address of the request. Valid only if validPaddr
-     * is set. */
+     * is set.
+     */
     Addr paddr;
 
     /**
      * The size of the request. This field must be set when vaddr or
      * paddr is written via setVirt() or setPhys(), so it is always
-     * valid as long as one of the address fields is valid.  */
+     * valid as long as one of the address fields is valid.
+     */
     int size;
 
     /** Flag structure for the request. */
-    uint32_t flags;
+    Flags flags;
 
     /**
      * The time this request was started. Used to calculate
      * latencies. This field is set to curTick any time paddr or vaddr
-     * is written.  */
+     * is written.
+     */
     Tick time;
 
     /** The address space ID. */
     int asid;
 
-    /** This request is to a memory mapped register. */
-    bool mmapedIpr;
-
     /** The virtual address of the request. */
     Addr vaddr;
 
-    /** Extra data for the request, such as the return value of
+    /**
+     * Extra data for the request, such as the return value of
      * store conditional or the compare value for a CAS. */
     uint64_t extraData;
 
-    /** The cpu number (for statistics, typically). */
-    int cpuNum;
-    /** The requesting thread id (for statistics, typically). */
-    int  threadNum;
+    /** The context ID (for statistics, typically). */
+    int _contextId;
+    /** The thread ID (id within this CPU) */
+    int _threadId;
 
     /** program counter of initiating access; for tracing/debugging */
     Addr pc;
 
-    /** Whether or not paddr is valid (has been written yet). */
-    bool validPaddr;
-    /** Whether or not the asid & vaddr are valid. */
-    bool validAsidVaddr;
-    /** Whether or not the sc result is valid. */
-    bool validExData;
-    /** Whether or not the cpu number & thread ID are valid. */
-    bool validCpuAndThreadNums;
-    /** Whether or not the pc is valid. */
-    bool validPC;
-
   public:
     /** Minimal constructor.  No fields are initialized. */
     Request()
-        : validPaddr(false), validAsidVaddr(false),
-          validExData(false), validCpuAndThreadNums(false), validPC(false)
     {}
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
      * just physical address, size, flags, and timestamp (to curTick).
-     * These fields are adequate to perform a request.  */
-    Request(Addr _paddr, int _size, int _flags)
-        : validCpuAndThreadNums(false)
-    { setPhys(_paddr, _size, _flags); }
-
-    Request(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc,
-            int _cpuNum, int _threadNum)
+     * These fields are adequate to perform a request. 
+     */
+    Request(Addr paddr, int size, Flags flags)
     {
-        setThreadContext(_cpuNum, _threadNum);
-        setVirt(_asid, _vaddr, _size, _flags, _pc);
+        setPhys(paddr, size, flags);
+    }
+
+    Request(int asid, Addr vaddr, int size, Flags flags, Addr pc,
+            int cid, int tid)
+    {
+        setThreadContext(cid, tid);
+        setVirt(asid, vaddr, size, flags, pc);
     }
 
     ~Request() {}  // for FastAlloc
 
     /**
-     * Set up CPU and thread numbers. */
-    void setThreadContext(int _cpuNum, int _threadNum)
+     * Set up CPU and thread numbers.
+     */
+    void
+    setThreadContext(int context_id, int thread_id)
     {
-        cpuNum = _cpuNum;
-        threadNum = _threadNum;
-        validCpuAndThreadNums = true;
+        _contextId = context_id;
+        _threadId = thread_id;
+        flags.set(VALID_CONTEXT_ID|VALID_THREAD_ID);
     }
 
     /**
      * Set up a physical (e.g. device) request in a previously
-     * allocated Request object. */
-    void setPhys(Addr _paddr, int _size, int _flags)
+     * allocated Request object.
+     */
+    void
+    setPhys(Addr _paddr, int _size, Flags _flags)
     {
+        assert(_size >= 0);
         paddr = _paddr;
         size = _size;
-        flags = _flags;
         time = curTick;
-        validPaddr = true;
-        validAsidVaddr = false;
-        validPC = false;
-        validExData = false;
-        mmapedIpr = false;
+
+        flags.set(VALID_PADDR|VALID_SIZE);
+        flags.clear(VALID_VADDR|VALID_PC|VALID_EXTRA_DATA|MMAPED_IPR);
+        flags.update(_flags, PUBLIC_FLAGS);
     }
 
     /**
      * Set up a virtual (e.g., CPU) request in a previously
-     * allocated Request object. */
-    void setVirt(int _asid, Addr _vaddr, int _size, int _flags, Addr _pc)
+     * allocated Request object.
+     */
+    void
+    setVirt(int _asid, Addr _vaddr, int _size, Flags _flags, Addr _pc)
     {
+        assert(_size >= 0);
         asid = _asid;
         vaddr = _vaddr;
         size = _size;
-        flags = _flags;
         pc = _pc;
         time = curTick;
-        validPaddr = false;
-        validAsidVaddr = true;
-        validPC = true;
-        validExData = false;
-        mmapedIpr = false;
+
+        flags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
+        flags.clear(VALID_PADDR|VALID_EXTRA_DATA|MMAPED_IPR);
+        flags.update(_flags, PUBLIC_FLAGS);
     }
 
-    /** Set just the physical address.  This should only be used to
+    /**
+     * Set just the physical address.  This should only be used to
      * record the result of a translation, and thus the vaddr must be
      * valid before this method is called.  Otherwise, use setPhys()
      * to guarantee that the size and flags are also set.
      */
-    void setPaddr(Addr _paddr)
+    void
+    setPaddr(Addr _paddr)
     {
-        assert(validAsidVaddr);
+        assert(flags.isSet(VALID_VADDR));
         paddr = _paddr;
-        validPaddr = true;
+        flags.set(VALID_PADDR);
     }
 
-    /** Accessor for paddr. */
-    Addr getPaddr() { assert(validPaddr); return paddr; }
+    /**
+     * Generate two requests as if this request had been split into two
+     * pieces. The original request can't have been translated already.
+     */
+    void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
+    {
+        assert(flags.isSet(VALID_VADDR));
+        assert(flags.noneSet(VALID_PADDR));
+        assert(split_addr > vaddr && split_addr < vaddr + size);
+        req1 = new Request;
+        *req1 = *this;
+        req2 = new Request;
+        *req2 = *this;
+        req1->size = split_addr - vaddr;
+        req2->vaddr = split_addr;
+        req2->size = size - req1->size;
+    }
 
-    /** Accessor for size. */
-    int getSize() { assert(validPaddr || validAsidVaddr); return size; }
+    /**
+     * Accessor for paddr.
+     */
+    Addr
+    getPaddr()
+    {
+        assert(flags.isSet(VALID_PADDR));
+        return paddr;
+    }
+
+    /**
+     *  Accessor for size.
+     */
+    int
+    getSize()
+    {
+        assert(flags.isSet(VALID_SIZE));
+        return size;
+    }
+
     /** Accessor for time. */
-    Tick getTime() { assert(validPaddr || validAsidVaddr); return time; }
+    Tick
+    getTime()
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        return time;
+    }
+
+    void
+    setTime(Tick when)
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        time = when;
+    }
 
     /** Accessor for flags. */
-    uint32_t getFlags() { assert(validPaddr || validAsidVaddr); return flags; }
-    /** Accessor for paddr. */
-    void setFlags(uint32_t _flags)
-    { assert(validPaddr || validAsidVaddr); flags = _flags; }
+    Flags
+    getFlags()
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        return flags & PUBLIC_FLAGS;
+    }
+
+    Flags
+    anyFlags(Flags _flags)
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        return flags.isSet(_flags);
+    }
+
+    Flags
+    allFlags(Flags _flags)
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        return flags.allSet(_flags);
+    }
+
+    /** Accessor for flags. */
+    void
+    setFlags(Flags _flags)
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        flags.set(_flags);
+    }
+
+    void
+    clearFlags(Flags _flags)
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        flags.clear(_flags);
+    }
+
+    void
+    clearFlags()
+    {
+        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        flags.clear(PUBLIC_FLAGS);
+    }
 
     /** Accessor function for vaddr.*/
-    Addr getVaddr() { assert(validAsidVaddr); return vaddr; }
+    Addr
+    getVaddr()
+    {
+        assert(flags.isSet(VALID_VADDR));
+        return vaddr;
+    }
 
     /** Accessor function for asid.*/
-    int getAsid() { assert(validAsidVaddr); return asid; }
+    int
+    getAsid()
+    {
+        assert(flags.isSet(VALID_VADDR));
+        return asid;
+    }
 
     /** Accessor function for asi.*/
-    uint8_t getAsi() { assert(validAsidVaddr); return flags & ASI_BITS; }
+    uint8_t
+    getAsi()
+    {
+        assert(flags.isSet(VALID_VADDR));
+        return flags & ASI_BITS;
+    }
 
     /** Accessor function for asi.*/
-    void setAsi(uint8_t a)
-    { assert(validAsidVaddr); flags = (flags & ~ASI_BITS) | a; }
+    void
+    setAsi(uint8_t a)
+    {
+        assert(flags.isSet(VALID_VADDR));
+        flags.update(a, ASI_BITS);
+    }
 
     /** Accessor function for asi.*/
-    bool isMmapedIpr() { assert(validPaddr); return mmapedIpr; }
+    bool
+    isMmapedIpr()
+    {
+        assert(flags.isSet(VALID_PADDR));
+        return flags.isSet(MMAPED_IPR);
+    }
 
     /** Accessor function for asi.*/
-    void setMmapedIpr(bool r) { assert(validAsidVaddr); mmapedIpr = r; }
+    void
+    setMmapedIpr(bool r)
+    {
+        assert(VALID_VADDR);
+        flags.set(MMAPED_IPR);
+    }
 
     /** Accessor function to check if sc result is valid. */
-    bool extraDataValid() { return validExData; }
-    /** Accessor function for store conditional return value.*/
-    uint64_t getExtraData() { assert(validExData); return extraData; }
-    /** Accessor function for store conditional return value.*/
-    void setExtraData(uint64_t _extraData)
-    { extraData = _extraData; validExData = true; }
+    bool
+    extraDataValid()
+    {
+        return flags.isSet(VALID_EXTRA_DATA);
+    }
 
-    /** Accessor function for cpu number.*/
-    int getCpuNum() { assert(validCpuAndThreadNums); return cpuNum; }
-    /** Accessor function for thread number.*/
-    int getThreadNum()  { assert(validCpuAndThreadNums); return threadNum; }
+    /** Accessor function for store conditional return value.*/
+    uint64_t
+    getExtraData() const
+    {
+        assert(flags.isSet(VALID_EXTRA_DATA));
+        return extraData;
+    }
+
+    /** Accessor function for store conditional return value.*/
+    void
+    setExtraData(uint64_t _extraData)
+    {
+        extraData = _extraData;
+        flags.set(VALID_EXTRA_DATA);
+    }
+
+    bool
+    hasContextId() const
+    {
+        return flags.isSet(VALID_CONTEXT_ID);
+    }
+
+    /** Accessor function for context ID.*/
+    int
+    contextId() const
+    {
+        assert(flags.isSet(VALID_CONTEXT_ID));
+        return _contextId;
+    }
+
+    /** Accessor function for thread ID. */
+    int
+    threadId() const
+    {
+        assert(flags.isSet(VALID_THREAD_ID));
+        return _threadId;
+    }
+
+    bool
+    hasPC() const
+    {
+        return flags.isSet(VALID_PC);
+    }
 
     /** Accessor function for pc.*/
-    Addr getPC() { assert(validPC); return pc; }
+    Addr
+    getPC() const
+    {
+        assert(flags.isSet(VALID_PC));
+        return pc;
+    }
 
     /** Accessor Function to Check Cacheability. */
-    bool isUncacheable() { return (getFlags() & UNCACHEABLE) != 0; }
+    bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
+    bool isInstRead() const { return flags.isSet(INST_READ); }
+    bool isLocked() const { return flags.isSet(LOCKED); }
+    bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
+    bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }
 
-    bool isInstRead() { return (getFlags() & INST_READ) != 0; }
+    bool
+    isMisaligned() const
+    {
+        if (flags.isSet(NO_ALIGN_FAULT))
+            return false;
 
-    bool isLocked() { return (getFlags() & LOCKED) != 0; }
+        if ((vaddr & 0x1))
+            return true;
 
-    bool isSwap() { return (getFlags() & MEM_SWAP ||
-                            getFlags() & MEM_SWAP_COND); }
+        if (flags.isSet(NO_HALF_WORD_ALIGN_FAULT))
+            return false;
 
-    bool isCondSwap() { return (getFlags() & MEM_SWAP_COND) != 0; }
+        if ((vaddr & 0x2))
+            return true;
 
-    bool inline isMisaligned() {return (!(getFlags() & NO_ALIGN_FAULT) &&
-                                        ((vaddr & 1)  ||
-                                         (!(getFlags() & NO_HALF_WORD_ALIGN_FAULT)
-                                          && (vaddr & 0x2))));}
-
-    friend class Packet;
+        return false;
+    }
 };
 
 #endif // __MEM_REQUEST_HH__

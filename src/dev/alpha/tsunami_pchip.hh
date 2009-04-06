@@ -84,6 +84,8 @@ class TsunamiPChip : public BasicPioDevice
     Addr translatePciToDma(Addr busAddr);
 
     Addr calcConfigAddr(int bus, int dev, int func);
+    Addr calcIOAddr(Addr addr);
+    Addr calcMemAddr(Addr addr);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);

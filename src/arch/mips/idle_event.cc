@@ -34,7 +34,7 @@
 #include "arch/mips/kernel_stats.hh"
 #include "cpu/thread_context.hh"
 
-using namespace TheISA;
+using namespace MipsISA;
 
 void
 IdleStartEvent::process(ThreadContext *tc)

@@ -144,14 +144,6 @@ FALRU::hashLookup(Addr addr) const
     return NULL;
 }
 
-bool
-FALRU::probe(Addr addr) const
-{
-    Addr blkAddr = blkAlign(addr);
-    FALRUBlk* blk = hashLookup(blkAddr);
-    return blk && blk->tag == blkAddr && blk->isValid();
-}
-
 void
 FALRU::invalidateBlk(FALRU::BlkType *blk)
 {
@@ -163,7 +155,7 @@ FALRU::invalidateBlk(FALRU::BlkType *blk)
 }
 
 FALRUBlk*
-FALRU::findBlock(Addr addr, int &lat, int *inCache)
+FALRU::accessBlock(Addr addr, int &lat, int *inCache)
 {
     accesses++;
     int tmp_in_cache = 0;
@@ -215,7 +207,7 @@ FALRU::findBlock(Addr addr) const
 }
 
 FALRUBlk*
-FALRU::findReplacement(Addr addr, PacketList &writebacks)
+FALRU::findVictim(Addr addr, PacketList &writebacks)
 {
     FALRUBlk * blk = tail;
     assert(blk->inCache == 0);
@@ -234,6 +226,11 @@ FALRU::findReplacement(Addr addr, PacketList &writebacks)
     }
     //assert(check());
     return blk;
+}
+
+void
+FALRU::insertBlock(Addr addr, FALRU::BlkType *blk)
+{
 }
 
 void

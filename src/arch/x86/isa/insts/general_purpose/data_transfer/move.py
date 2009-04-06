@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Hewlett-Packard Development Company
+# Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use of this software in source and binary forms,
@@ -126,18 +126,19 @@ def macroop MOVSXD_R_P {
 };
 
 def macroop MOVSX_B_R_R {
-    sexti reg, regm, 7
+    mov t1, t1, regm, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_B_R_M {
-    ld reg, seg, sib, disp, dataSize=1
-    sexti reg, reg, 7
+    ld t1, seg, sib, disp, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_B_R_P {
     rdip t7
-    ld reg, seg, riprel, disp, dataSize=1
-    sexti reg, reg, 7
+    ld t1, seg, riprel, disp, dataSize=1
+    sexti reg, t1, 7
 };
 
 def macroop MOVSX_W_R_R {
@@ -160,7 +161,8 @@ def macroop MOVSX_W_R_P {
 #
 
 def macroop MOVZX_B_R_R {
-    zexti reg, regm, 7
+    mov t1, t1, regm, dataSize=1
+    zexti reg, t1, 7
 };
 
 def macroop MOVZX_B_R_M {
@@ -190,11 +192,23 @@ def macroop MOVZX_W_R_P {
 };
 
 def macroop MOV_C_R {
+    .adjust_env maxOsz
     wrcr reg, regm
 };
 
 def macroop MOV_R_C {
+    .adjust_env maxOsz
     rdcr reg, regm
+};
+
+def macroop MOV_D_R {
+    .adjust_env maxOsz
+    wrdr reg, regm
+};
+
+def macroop MOV_R_D {
+    .adjust_env maxOsz
+    rddr reg, regm
 };
 
 def macroop MOV_R_S {
@@ -213,7 +227,7 @@ def macroop MOV_P_S {
 };
 
 def macroop MOV_REAL_S_R {
-    zext t2, regm, 15
+    zexti t2, regm, 15, dataSize=8
     slli t3, t2, 2, dataSize=8
     wrsel reg, regm
     wrbase reg, t3
@@ -221,87 +235,121 @@ def macroop MOV_REAL_S_R {
 
 def macroop MOV_REAL_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    zext t2, t1, 15
+    zexti t2, t1, 15, dataSize=8
     slli t3, t2, 2, dataSize=8
     wrsel reg, t1
     wrbase reg, t3
 };
 
 def macroop MOV_REAL_S_P {
-    rdip t7
-    ld t1, seg, riprel, disp, dataSize=2
-    zext t2, t1, 15
-    slli t3, t2, 2, dataSize=8
-    wrsel reg, t1
-    wrbase reg, t3
+    panic "RIP relative addressing shouldn't happen in real mode"
 };
 
 def macroop MOV_S_R {
-    chks t1, regm, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, regm
-end:
+    andi t0, regm, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, regm, 0xF8, dataSize=8
+    andi t0, regm, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks regm, t3, dataSize=8
+    wrdl reg, t3, regm
     wrsel reg, regm
 };
 
 def macroop MOV_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
-end:
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks t1, t3, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOV_S_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    bri t0, label("end"), flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
-end:
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks t1, t3, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOVSS_S_R {
-    chks t1, regm, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, regm
+    andi t0, regm, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, regm, 0xF8, dataSize=8
+    andi t0, regm, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks regm, t3, SSCheck, dataSize=8
+    wrdl reg, t3, regm
     wrsel reg, regm
 };
 
 def macroop MOVSS_S_M {
     ld t1, seg, sib, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks t1, t3, SSCheck, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 
 def macroop MOVSS_S_P {
     rdip t7
     ld t1, seg, riprel, disp, dataSize=2
-    chks t2, t1, flags=(EZF,), dataSize=8
-    # This actually needs to use the selector as the error code, but it would
-    # be hard to get that information into the instruction at the moment.
-    fault "new GeneralProtection(0)", flags=(CEZF,)
-    ld t2, flatseg, [1, t0, t1], addressSize=8, dataSize=8
-    wrdl reg, t2, t1
+    andi t0, t1, 0xFC, flags=(EZF,), dataSize=2
+    br label("processDescriptor"), flags=(CEZF,)
+    andi t2, t1, 0xF8, dataSize=8
+    andi t0, t1, 0x4, flags=(EZF,), dataSize=2
+    br label("globalDescriptor"), flags=(CEZF,)
+    ld t3, tsl, [1, t0, t2], dataSize=8, addressSize=8
+    br label("processDescriptor")
+globalDescriptor:
+    ld t3, tsg, [1, t0, t2], dataSize=8, addressSize=8
+processDescriptor:
+    chks t1, t3, SSCheck, dataSize=8
+    wrdl reg, t3, t1
     wrsel reg, t1
 };
 '''
 #let {{
 #    class MOVD(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class MOVNTI(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

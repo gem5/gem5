@@ -108,6 +108,16 @@ def format Store(code, *opt_flags) {{
              StoreFuncs, '', name, Name, 0, opt_flags)
 }};
 
+def format StoreFsr(code, *opt_flags) {{
+        code = filterDoubles(code)
+        (header_output,
+         decoder_output,
+         exec_output,
+         decode_block) = doMemFormat(code,
+             StoreFuncs, '', name, Name, 0, opt_flags,
+             'Fsr = insertBits(Fsr,16,14,0);')
+}};
+
 def format TwinLoad(code, *opt_flags) {{
         (header_output,
          decoder_output,

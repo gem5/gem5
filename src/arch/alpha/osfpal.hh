@@ -28,8 +28,8 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __OSFPAL_HH__
-#define __OSFPAL_HH__
+#ifndef __ARCH_ALPHA_OSFPAL_HH__
+#define __ARCH_ALPHA_OSFPAL_HH__
 
 struct PAL
 {
@@ -79,4 +79,4 @@ struct PAL
     static const char *name(int index);
 };
 
-#endif // __OSFPAL_HH__
+#endif // __ARCH_ALPHA_OSFPAL_HH__

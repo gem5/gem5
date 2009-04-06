@@ -28,21 +28,20 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-class SparcTLB(SimObject):
+
+from BaseTLB import BaseTLB
+
+class SparcTLB(BaseTLB):
     type = 'SparcTLB'
     abstract = True
     size = Param.Int("TLB size")
 
 class SparcDTB(SparcTLB):
     type = 'SparcDTB'
-    cxx_namespace = 'SparcISA'
-    cxx_class = 'DTB'
-
+    cxx_class = 'SparcISA::DTB'
     size = 64
 
 class SparcITB(SparcTLB):
     type = 'SparcITB'
-    cxx_namespace = 'SparcISA'
-    cxx_class = 'ITB'
-
+    cxx_class = 'SparcISA::ITB'
     size = 64

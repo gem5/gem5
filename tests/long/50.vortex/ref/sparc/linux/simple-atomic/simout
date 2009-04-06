@@ -1,0 +1,16 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Feb 16 2009 00:17:12
+M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
+M5 started Feb 16 2009 00:53:28
+M5 executing on zizzer
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/50.vortex/sparc/linux/simple-atomic -re tests/run.py long/50.vortex/sparc/linux/simple-atomic
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Exiting @ tick 68148678500 because target called exit()

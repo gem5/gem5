@@ -64,8 +64,6 @@ class Cache : public BaseCache
     /** A typedef for a list of BlkType pointers. */
     typedef typename TagStore::BlkList BlkList;
 
-    bool prefetchAccess;
-
   protected:
 
     class CpuSidePort : public CachePort
@@ -137,21 +135,14 @@ class Cache : public BaseCache
     BlkType *tempBlock;
 
     /**
-     * Can this cache should allocate a block on a line-sized write miss.
+     * This cache should allocate a block on a line-sized write miss.
      */
     const bool doFastWrites;
 
-    const bool prefetchMiss;
-
     /**
-     * Handle a replacement for the given request.
-     * @param blk A pointer to the block, usually NULL
-     * @param pkt The memory request to satisfy.
-     * @param new_state The new state of the block.
-     * @param writebacks A list to store any generated writebacks.
+     * Notify the prefetcher on every access, not just misses.
      */
-    BlkType* doReplacement(BlkType *blk, PacketPtr pkt,
-                           CacheBlk::State new_state, PacketList &writebacks);
+    const bool prefetchOnAccess;
 
     /**
      * Does all the processing necessary to perform the provided request.
@@ -159,10 +150,10 @@ class Cache : public BaseCache
      * @param lat The latency of the access.
      * @param writebacks List for any writebacks that need to be performed.
      * @param update True if the replacement data should be updated.
-     * @return Pointer to the cache block touched by the request. NULL if it
-     * was a miss.
+     * @return Boolean indicating whether the request was satisfied.
      */
-    bool access(PacketPtr pkt, BlkType *&blk, int &lat);
+    bool access(PacketPtr pkt, BlkType *&blk,
+                int &lat, PacketList &writebacks);
 
     /**
      *Handle doing the Compare and Swap function for SPARC.
@@ -181,7 +172,6 @@ class Cache : public BaseCache
      * Populates a cache block and handles all outstanding requests for the
      * satisfied fill request. This version takes two memory requests. One
      * contains the fill data, the other is an optional target to satisfy.
-     * Used for Cache::probe.
      * @param pkt The memory request with the fill data.
      * @param blk The cache block if it already exists.
      * @param writebacks List for any writebacks that need to be performed.
@@ -331,6 +321,11 @@ class Cache : public BaseCache
     bool inMissQueue(Addr addr) {
         return (mshrQueue.findMatch(addr) != 0);
     }
+
+    /**
+     * Find next request ready time from among possible sources.
+     */
+    Tick nextMSHRReadyTime();
 };
 
 #endif // __CACHE_HH__

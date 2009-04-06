@@ -1,5 +1,6 @@
 #! /usr/bin/env python
-# Copyright (c) 2007 The Regents of The University of Michigan
+# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2007 The Hewlett-Packard Development Company
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -260,35 +261,42 @@ def modified_lines(old_data, new_data, max_lines):
                 break
     return modified
 
-def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
-    from mercurial import mdiff
+def do_check_whitespace(ui, repo, *files, **args):
+    """check files for proper m5 style guidelines"""
+    from mercurial import mdiff, util
 
-    if hooktype != 'pretxncommit':
-        raise AttributeError, \
-              "This hook is only meant for pretxncommit, not %s" % hooktype
+    if files:
+        files = frozenset(files)
 
-    tabsize = 8
-    verbose = ui.configbool('style', 'verbose', False)
+    def skip(name):
+        return files and name in files
+
     def prompt(name, fixonly=None):
-        result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", "^[aif]$", "a")
+        if args.get('auto', False):
+            result = 'f'
+        else:
+            result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", "^[aif]$", "a")
         if result == 'a':
             return True
         elif result == 'i':
             pass
         elif result == 'f':
-            fixwhite(repo.wjoin(name), tabsize, fixonly)
+            fixwhite(repo.wjoin(name), args['tabsize'], fixonly)
         else:
-            raise RepoError, "Invalid response: '%s'" % result
+            raise util.Abort(_("Invalid response: '%s'") % result)
 
         return False
 
     modified, added, removed, deleted, unknown, ignore, clean = repo.status()
 
     for fname in added:
+        if skip(fname):
+            continue
+
         ok = True
         for line,num in checkwhite(repo.wjoin(fname)):
             ui.write("invalid whitespace in %s:%d\n" % (fname, num))
-            if verbose:
+            if ui.verbose:
                 ui.write(">>%s<<\n" % line[-1])
             ok = False
 
@@ -296,21 +304,31 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
             if prompt(fname):
                 return True
 
-    wctx = repo.workingctx()
+    try:
+        wctx = repo.workingctx()
+    except:
+        from mercurial import context
+        wctx = context.workingctx(repo)
+
     for fname in modified:
+        if skip(fname):
+            continue
+
         if not whitespace_file(fname):
             continue
 
         fctx = wctx.filectx(fname)
         pctx = fctx.parents()
-        assert len(pctx) in (1, 2)
 
         file_data = fctx.data()
         lines = mdiff.splitnewlines(file_data)
-        mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
-        if len(pctx) == 2:
-            m2 = modified_lines(pctx[1].data(), file_data, len(lines))
-            mod_lines = mod_lines & m2 # only the lines that are new in both
+        if len(pctx) in (1, 2):
+            mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
+            if len(pctx) == 2:
+                m2 = modified_lines(pctx[1].data(), file_data, len(lines))
+                mod_lines = mod_lines & m2 # only the lines that are new in both
+        else:
+            mod_lines = xrange(0, len(lines))
 
         fixonly = set()
         for i,line in enumerate(lines):
@@ -321,13 +339,21 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
                 continue
 
             ui.write("invalid whitespace: %s:%d\n" % (fname, i+1))
-            if verbose:
+            if ui.verbose:
                 ui.write(">>%s<<\n" % line[:-1])
             fixonly.add(i)
 
         if fixonly:
             if prompt(fname, fixonly):
                 return True
+
+def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
+    if hooktype != 'pretxncommit':
+        raise AttributeError, \
+              "This hook is only meant for pretxncommit, not %s" % hooktype
+
+    args = { 'tabsize' : 8 }
+    do_check_whitespace(ui, repo, **args)
 
 def check_format(ui, repo, hooktype, node, parent1, parent2):
     if hooktype != 'pretxncommit':
@@ -350,10 +376,23 @@ def check_format(ui, repo, hooktype, node, parent1, parent2):
         elif result.startswith('a'):
             return True
         else:
-            raise RepoError, "Invalid response: '%s'" % result
+            raise util.Abort(_("Invalid response: '%s'") % result)
 
     return False
 
+try:
+    from mercurial.i18n import _
+except ImportError:
+    def _(arg):
+        return arg
+
+cmdtable = {
+    '^m5style' :
+    ( do_check_whitespace,
+      [ ('a', 'auto', False, _("automatically fix whitespace")),
+        ('t', 'tabsize', 8, _("Number of spaces TAB indents")) ],
+      _('hg m5check [-t <tabsize>] [FILE]...')),
+}
 if __name__ == '__main__':
     import getopt
 

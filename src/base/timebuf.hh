@@ -43,6 +43,7 @@ class TimeBuffer
     int past;
     int future;
     int size;
+    int _id;
 
     char *data;
     std::vector<char *> index;
@@ -148,6 +149,8 @@ class TimeBuffer
             new (ptr) T;
             ptr += sizeof(T);
         }
+
+        _id = -1;
     }
 
     TimeBuffer()
@@ -160,6 +163,16 @@ class TimeBuffer
         for (int i = 0; i < size; ++i)
             (reinterpret_cast<T *>(index[i]))->~T();
         delete [] data;
+    }
+
+    void id(int id)
+    {
+        _id = id;
+    }
+
+    int id()
+    {
+        return _id;
     }
 
     void

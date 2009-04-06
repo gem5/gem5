@@ -1,4 +1,4 @@
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -418,12 +418,27 @@
                     default: Inst::RET_FAR();
                 }
                 0x4: int3();
+#if FULL_SYSTEM
                 0x5: int_Ib();
+#else
+                // Really only the LSB matters, but the predecoder will sign
+                // extend it, and there's no easy way to specify only checking
+                // the first byte.
+                0x5: decode IMMEDIATE {
+                    0xffffffffffffff80:
+                         SyscallInst::int80('xc->syscall(Rax)', IsSyscall);
+                    default: int_Ib();
+                }
+#endif
                 0x6: decode MODE_SUBMODE {
                     0x0: Inst::UD2();
                     default: into();
                 }
-                0x7: iret();
+                0x7: decode MODE_SUBMODE {
+                    0x4: Inst::IRET_REAL();
+                    0x3: Inst::IRET_VIRT();
+                    default: Inst::IRET_PROT();
+                }
             }
         }
         0x1A: decode OPCODE_OP_BOTTOM3 {
@@ -549,8 +564,8 @@
         0x1F: decode OPCODE_OP_BOTTOM3 {
             0x0: CLC();
             0x1: STC();
-            0x2: WarnUnimpl::cli();
-            0x3: WarnUnimpl::sti();
+            0x2: CLI();
+            0x3: STI();
             0x4: CLD();
             0x5: STD();
             //0x6: group4();

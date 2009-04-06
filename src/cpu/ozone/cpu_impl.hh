@@ -95,6 +95,9 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
     : BaseCPU(p), thread(this, 0, p->workload[0], 0),
       tickEvent(this, p->width),
 #endif
+#ifndef NDEBUG
+      instcount(0),
+#endif
       comm(5, 5)
 {
     frontEnd = new FrontEnd(p);
@@ -417,7 +420,7 @@ OzoneCPU<Impl>::init()
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
-        TheISA::initCPU(tc, tc->readCpuId());
+        TheISA::initCPU(tc, tc->contextId());
     }
 #endif
     frontEnd->renameTable.copyFrom(thread.renameTable);
@@ -579,16 +582,14 @@ OzoneCPU<Impl>::dbg_vtophys(Addr addr)
 #if FULL_SYSTEM
 template <class Impl>
 void
-OzoneCPU<Impl>::post_interrupt(int int_num, int index)
+OzoneCPU<Impl>::wakeup()
 {
-    BaseCPU::post_interrupt(int_num, index);
-
     if (_status == Idle) {
         DPRINTF(IPI,"Suspended Processor awoke\n");
-//	thread.activate();
+//      thread.activate();
         // Hack for now.  Otherwise might have to go through the tc, or
         // I need to figure out what's the right thing to call.
-        activateContext(thread.readTid(), 1);
+        activateContext(thread.threadId(), 1);
     }
 }
 #endif // FULL_SYSTEM
@@ -647,26 +648,6 @@ OzoneCPU<Impl>::syscall(uint64_t &callnum)
     frontEnd->renameTable.copyFrom(thread.renameTable);
     backEnd->renameTable.copyFrom(thread.renameTable);
 }
-
-template <class Impl>
-void
-OzoneCPU<Impl>::setSyscallReturn(SyscallReturn return_value, int tid)
-{
-    // check for error condition.  Alpha syscall convention is to
-    // indicate success/failure in reg a3 (r19) and put the
-    // return value itself in the standard return value reg (v0).
-    if (return_value.successful()) {
-        // no error
-        thread.renameTable[SyscallSuccessReg]->setIntResult(0);
-        thread.renameTable[ReturnValueReg]->setIntResult(
-            return_value.value());
-    } else {
-        // got an error, return details
-        thread.renameTable[SyscallSuccessReg]->setIntResult((IntReg) -1);
-        thread.renameTable[ReturnValueReg]->setIntResult(
-            -return_value.value());
-    }
-}
 #else
 template <class Impl>
 Fault
@@ -693,10 +674,10 @@ OzoneCPU<Impl>::processInterrupts()
 
     // Check if there are any outstanding interrupts
     //Handle the interrupts
-    Fault interrupt = this->interrupts.getInterrupt(thread.getTC());
+    Fault interrupt = this->interrupts->getInterrupt(thread.getTC());
 
     if (interrupt != NoFault) {
-        this->interrupts.updateIntrInfo(thread.getTC());
+        this->interrupts->updateIntrInfo(thread.getTC());
         interrupt->invoke(thread.getTC());
     }
 }
@@ -711,7 +692,7 @@ OzoneCPU<Impl>::simPalCheck(int palFunc)
 
     switch (palFunc) {
       case PAL::halt:
-        haltContext(thread.readTid());
+        haltContext(thread.threadId());
         if (--System::numSystemsRunning == 0)
             exitSimLoop("all cpus halted");
         break;
@@ -736,24 +717,6 @@ OzoneCPU<Impl>::OzoneTC::getCpuPtr()
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneTC::setCpuId(int id)
-{
-    cpu->cpuId = id;
-    thread->setCpuId(id);
-}
-
-#if FULL_SYSTEM
-template <class Impl>
-void
-OzoneCPU<Impl>::OzoneTC::delVirtPort(VirtualPort *vp)
-{
-    vp->removeConn();
-    delete vp;
-}
-#endif
-
-template <class Impl>
-void
 OzoneCPU<Impl>::OzoneTC::setStatus(Status new_status)
 {
     thread->setStatus(new_status);
@@ -763,7 +726,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::activate(int delay)
 {
-    cpu->activateContext(thread->readTid(), delay);
+    cpu->activateContext(thread->threadId(), delay);
 }
 
 /// Set the status to Suspended.
@@ -771,7 +734,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::suspend()
 {
-    cpu->suspendContext(thread->readTid());
+    cpu->suspendContext(thread->threadId());
 }
 
 /// Set the status to Unallocated.
@@ -779,7 +742,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::deallocate(int delay)
 {
-    cpu->deallocateContext(thread->readTid(), delay);
+    cpu->deallocateContext(thread->threadId(), delay);
 }
 
 /// Set the status to Halted.
@@ -787,7 +750,7 @@ template <class Impl>
 void
 OzoneCPU<Impl>::OzoneTC::halt()
 {
-    cpu->haltContext(thread->readTid());
+    cpu->haltContext(thread->threadId());
 }
 
 #if FULL_SYSTEM
@@ -813,7 +776,8 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     // copy over functional state
     setStatus(old_context->status());
     copyArchRegs(old_context);
-    setCpuId(old_context->readCpuId());
+    setCpuId(old_context->cpuId());
+    setContextId(old_context->contextId());
 
     thread->setInst(old_context->getInst());
 #if !FULL_SYSTEM
@@ -901,9 +865,9 @@ OzoneCPU<Impl>::OzoneTC::profileSample()
 
 template <class Impl>
 int
-OzoneCPU<Impl>::OzoneTC::getThreadNum()
+OzoneCPU<Impl>::OzoneTC::threadId()
 {
-    return thread->readTid();
+    return thread->threadId();
 }
 
 template <class Impl>

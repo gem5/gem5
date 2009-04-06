@@ -1231,16 +1231,14 @@ decode OP default Unknown::unknown()
             0x23: Load::lddf({{Frd.udw = Mem.udw;}});
             0x24: Store::stf({{Mem.uw = Frds.uw;}});
             0x25: decode RD {
-                0x0: Store::stfsr({{fault = checkFpEnableFault(xc);
-                                     if (fault)
-                                         return fault;
-                                    Mem.uw = Fsr<31:0>;
-                                    Fsr = insertBits(Fsr,16,14,0);}});
-                0x1: Store::stxfsr({{fault = checkFpEnableFault(xc);
-                                     if (fault)
-                                         return fault;
-                                     Mem.udw = Fsr;
-                                     Fsr = insertBits(Fsr,16,14,0);}});
+                0x0: StoreFsr::stfsr({{fault = checkFpEnableFault(xc);
+                                       if (fault)
+                                           return fault;
+                                       Mem.uw = Fsr<31:0>;}});
+                0x1: StoreFsr::stxfsr({{fault = checkFpEnableFault(xc);
+                                        if (fault)
+                                            return fault;
+                                        Mem.udw = Fsr;}});
                 default: FailUnimpl::stfsrOther();
             }
             0x26: stqf({{fault = new FpDisabled;}});

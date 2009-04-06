@@ -38,7 +38,6 @@
 #define __DEV_NS_GIGE_HH__
 
 #include "base/inet.hh"
-#include "base/statistics.hh"
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
@@ -63,10 +62,10 @@ const uint8_t  EEPROM_PMATCH0_ADDR = 0xC; // EEPROM Address of PMATCH word 0
  * Ethernet device registers
  */
 struct dp_regs {
-    uint32_t	command;
-    uint32_t	config;
-    uint32_t	mear;
-    uint32_t	ptscr;
+    uint32_t    command;
+    uint32_t    config;
+    uint32_t    mear;
+    uint32_t    ptscr;
     uint32_t    isr;
     uint32_t    imr;
     uint32_t    ier;
@@ -372,60 +371,6 @@ class NSGigE : public EtherDevice
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
     virtual void resume();
-
-  public:
-    void regStats();
-
-  private:
-    Stats::Scalar<> txBytes;
-    Stats::Scalar<> rxBytes;
-    Stats::Scalar<> txPackets;
-    Stats::Scalar<> rxPackets;
-    Stats::Scalar<> txIpChecksums;
-    Stats::Scalar<> rxIpChecksums;
-    Stats::Scalar<> txTcpChecksums;
-    Stats::Scalar<> rxTcpChecksums;
-    Stats::Scalar<> txUdpChecksums;
-    Stats::Scalar<> rxUdpChecksums;
-    Stats::Scalar<> descDmaReads;
-    Stats::Scalar<> descDmaWrites;
-    Stats::Scalar<> descDmaRdBytes;
-    Stats::Scalar<> descDmaWrBytes;
-    Stats::Formula totBandwidth;
-    Stats::Formula totPackets;
-    Stats::Formula totBytes;
-    Stats::Formula totPacketRate;
-    Stats::Formula txBandwidth;
-    Stats::Formula rxBandwidth;
-    Stats::Formula txPacketRate;
-    Stats::Formula rxPacketRate;
-    Stats::Scalar<> postedSwi;
-    Stats::Formula coalescedSwi;
-    Stats::Scalar<> totalSwi;
-    Stats::Scalar<> postedRxIdle;
-    Stats::Formula coalescedRxIdle;
-    Stats::Scalar<> totalRxIdle;
-    Stats::Scalar<> postedRxOk;
-    Stats::Formula coalescedRxOk;
-    Stats::Scalar<> totalRxOk;
-    Stats::Scalar<> postedRxDesc;
-    Stats::Formula coalescedRxDesc;
-    Stats::Scalar<> totalRxDesc;
-    Stats::Scalar<> postedTxOk;
-    Stats::Formula coalescedTxOk;
-    Stats::Scalar<> totalTxOk;
-    Stats::Scalar<> postedTxIdle;
-    Stats::Formula coalescedTxIdle;
-    Stats::Scalar<> totalTxIdle;
-    Stats::Scalar<> postedTxDesc;
-    Stats::Formula coalescedTxDesc;
-    Stats::Scalar<> totalTxDesc;
-    Stats::Scalar<> postedRxOrn;
-    Stats::Formula coalescedRxOrn;
-    Stats::Scalar<> totalRxOrn;
-    Stats::Formula coalescedTotal;
-    Stats::Scalar<> postedInterrupts;
-    Stats::Scalar<> droppedPackets;
 };
 
 /*

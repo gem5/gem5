@@ -54,8 +54,11 @@ class NativeTraceRecord : public InstRecord
   public:
     NativeTraceRecord(NativeTrace * _parent,
                Tick _when, ThreadContext *_thread,
-               const StaticInstPtr &_staticInst, Addr _pc, bool spec)
-        : InstRecord(_when, _thread, _staticInst, _pc, spec), parent(_parent)
+               const StaticInstPtr _staticInst, Addr _pc, bool spec,
+               const StaticInstPtr _macroStaticInst = NULL, MicroPC _upc = 0)
+        : InstRecord(_when, _thread, _staticInst, _pc, spec,
+                _macroStaticInst, _upc),
+        parent(_parent)
     {
     }
 
@@ -192,13 +195,14 @@ class NativeTrace : public InstTracer
 
     NativeTraceRecord *
     getInstRecord(Tick when, ThreadContext *tc,
-            const StaticInstPtr staticInst, Addr pc)
+            const StaticInstPtr staticInst, Addr pc,
+            const StaticInstPtr macroStaticInst = NULL, MicroPC upc = 0)
     {
         if (tc->misspeculating())
             return NULL;
 
         return new NativeTraceRecord(this, when, tc,
-                staticInst, pc, tc->misspeculating());
+                staticInst, pc, tc->misspeculating(), macroStaticInst, upc);
     }
 
     void

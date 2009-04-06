@@ -32,28 +32,25 @@
 from m5.SimObject import SimObject
 from m5.params import *
 
-class MipsTLB(SimObject):
-    abstract = True
+from BaseTLB import BaseTLB
+
+class MipsTLB(BaseTLB):
     type = 'MipsTLB'
-    cxx_namespace = 'MipsISA'
-    cxx_class = 'TLB'
+    abstract = True
     size = Param.Int("TLB size")
 
 class MipsDTB(MipsTLB):
     type = 'MipsDTB'
-    cxx_namespace = 'MipsISA'
-    cxx_class = 'DTB'
+    cxx_class = 'MipsISA::DTB'
     size = 64
 
 class MipsITB(MipsTLB):
     type = 'MipsITB'
-    cxx_namespace = 'MipsISA'
-    cxx_class = 'ITB'
+    cxx_class = 'MipsISA::ITB'
     size = 64
 
 class MipsUTB(MipsTLB):
     type = 'MipsUTB'
-    cxx_namespace = 'MipsISA'
-    cxx_class = 'UTB'
+    cxx_class = 'MipsISA::UTB'
     size = 64
 

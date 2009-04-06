@@ -38,8 +38,8 @@
 #include <deque>
 #include <string>
 
+#include "base/cp_annotate.hh"
 #include "base/inet.hh"
-#include "base/statistics.hh"
 #include "dev/etherdevice.hh"
 #include "dev/etherint.hh"
 #include "dev/etherpkt.hh"
@@ -55,6 +55,7 @@ class IGbE : public EtherDevice
 {
   private:
     IGbEInt *etherInt;
+    CPA *cpa;
 
     // device registers
     iGbReg::Regs regs;
@@ -84,11 +85,19 @@ class IGbE : public EtherDevice
 
     bool rxDmaPacket;
 
+    // Number of bytes copied from current RX packet
+    int pktOffset;
+
+    // Delays in managaging descriptors
+    Tick fetchDelay, wbDelay;
+    Tick fetchCompDelay, wbCompDelay;
+    Tick rxWriteDelay, txReadDelay;
+
     // Event and function to deal with RDTR timer expiring
     void rdtrProcess() {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting RXT interrupt because RDTR timer expired\n");
-        postInterrupt(iGbReg::IT_RXT, true);
+        postInterrupt(iGbReg::IT_RXT);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::rdtrProcess>;
@@ -98,7 +107,7 @@ class IGbE : public EtherDevice
     void radvProcess() {
         rxDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting RXT interrupt because RADV timer expired\n");
-        postInterrupt(iGbReg::IT_RXT, true);
+        postInterrupt(iGbReg::IT_RXT);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::radvProcess>;
@@ -108,7 +117,7 @@ class IGbE : public EtherDevice
     void tadvProcess() {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting TXDW interrupt because TADV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW, true);
+        postInterrupt(iGbReg::IT_TXDW);
     }
 
     //friend class EventWrapper<IGbE, &IGbE::tadvProcess>;
@@ -118,7 +127,7 @@ class IGbE : public EtherDevice
     void tidvProcess() {
         txDescCache.writeback(0);
         DPRINTF(EthernetIntr, "Posting TXDW interrupt because TIDV timer expired\n");
-        postInterrupt(iGbReg::IT_TXDW, true);
+        postInterrupt(iGbReg::IT_TXDW);
     }
     //friend class EventWrapper<IGbE, &IGbE::tidvProcess>;
     EventWrapper<IGbE, &IGbE::tidvProcess> tidvEvent;
@@ -128,6 +137,8 @@ class IGbE : public EtherDevice
     //friend class EventWrapper<IGbE, &IGbE::tick>;
     EventWrapper<IGbE, &IGbE::tick> tickEvent;
 
+
+    uint64_t macAddr;
 
     void rxStateMachine();
     void txStateMachine();
@@ -167,6 +178,35 @@ class IGbE : public EtherDevice
      */
     void checkDrain();
 
+    void anBegin(std::string sm, std::string st, int flags = CPA::FL_NONE) {
+        cpa->hwBegin((CPA::flags)flags, sys, macAddr, sm, st);
+    }
+
+    void anQ(std::string sm, std::string q) { 
+        cpa->hwQ(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anDq(std::string sm, std::string q) {
+        cpa->hwDq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anPq(std::string sm, std::string q, int num = 1) {
+        cpa->hwPq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+    }
+
+    void anRq(std::string sm, std::string q, int num = 1) {
+        cpa->hwRq(CPA::FL_NONE, sys, macAddr, sm, q, macAddr, NULL, num);
+    }
+
+    void anWe(std::string sm, std::string q) {
+        cpa->hwWe(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+    void anWf(std::string sm, std::string q) {
+        cpa->hwWf(CPA::FL_NONE, sys, macAddr, sm, q, macAddr);
+    }
+
+
     template<class T>
     class DescCache
     {
@@ -177,7 +217,7 @@ class IGbE : public EtherDevice
         virtual long descLen() const = 0;
         virtual void updateHead(long h) = 0;
         virtual void enableSm() = 0;
-        virtual void intAfterWb() const {}
+        virtual void actionAfterWb() {}
         virtual void fetchAfterWb() = 0;
 
         std::deque<T*> usedCache;
@@ -216,9 +256,14 @@ class IGbE : public EtherDevice
         EthPacketPtr pktPtr;
 
       public:
+        /** Annotate sm*/
+        std::string annSmFetch, annSmWb, annUnusedDescQ, annUsedCacheQ,
+            annUsedDescQ, annUnusedCacheQ, annDescQ;
+
         DescCache(IGbE *i, const std::string n, int s)
             : igbe(i), _name(n), cachePnt(0), size(s), curFetching(0), wbOut(0),
-              pktPtr(NULL), fetchEvent(this), wbEvent(this)
+              pktPtr(NULL), wbDelayEvent(this), fetchDelayEvent(this), 
+              fetchEvent(this), wbEvent(this)
         {
             fetchBuf = new T[size];
             wbBuf = new T[size];
@@ -248,62 +293,92 @@ class IGbE : public EtherDevice
             int curHead = descHead();
             int max_to_wb = usedCache.size();
 
+            // Check if this writeback is less restrictive that the previous
+            // and if so setup another one immediately following it
+            if (wbOut) {
+                if (aMask < wbAlignment) {
+                    moreToWb = true;
+                    wbAlignment = aMask;
+                }
+                DPRINTF(EthernetDesc, "Writing back already in process, returning\n");
+                return;
+            }
+
+            moreToWb = false;
+            wbAlignment = aMask;
+   
+
             DPRINTF(EthernetDesc, "Writing back descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_wb: %d descleft: %d\n",
                     curHead, descTail(), descLen(), cachePnt, max_to_wb,
                     descLeft());
 
-            // Check if this writeback is less restrictive that the previous
-            // and if so setup another one immediately following it
-            if (wbOut && (aMask < wbAlignment)) {
-                moreToWb = true;
-                wbAlignment = aMask;
-                DPRINTF(EthernetDesc, "Writing back already in process, returning\n");
-                return;
-            }
-
-
-            moreToWb = false;
-            wbAlignment = aMask;
-
             if (max_to_wb + curHead >= descLen()) {
                 max_to_wb = descLen() - curHead;
                 moreToWb = true;
                 // this is by definition aligned correctly
-            } else if (aMask != 0) {
+            } else if (wbAlignment != 0) {
                 // align the wb point to the mask
-                max_to_wb = max_to_wb & ~aMask;
+                max_to_wb = max_to_wb & ~wbAlignment;
             }
 
             DPRINTF(EthernetDesc, "Writing back %d descriptors\n", max_to_wb);
 
-            if (max_to_wb <= 0 || wbOut)
+            if (max_to_wb <= 0) {
+                if (usedCache.size())
+                    igbe->anBegin(annSmWb, "Wait Alignment", CPA::FL_WAIT);
+                else
+                    igbe->anWe(annSmWb, annUsedCacheQ);
                 return;
+            }
 
             wbOut = max_to_wb;
 
-            for (int x = 0; x < wbOut; x++) {
-                assert(usedCache.size());
-                memcpy(&wbBuf[x], usedCache[0], sizeof(T));
-                delete usedCache[0];
-                usedCache.pop_front();
+            assert(!wbDelayEvent.scheduled()); 
+            igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
+            igbe->anBegin(annSmWb, "Prepare Writeback Desc");
+        }
+            
+        void writeback1()
+        {
+            // If we're draining delay issuing this DMA
+            if (igbe->getState() != SimObject::Running) {
+                igbe->schedule(wbDelayEvent, curTick + igbe->wbDelay);
+                return;
             }
 
+            DPRINTF(EthernetDesc, "Begining DMA of %d descriptors\n", wbOut);
+            
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                memcpy(&wbBuf[x], usedCache[x], sizeof(T));
+                igbe->anPq(annSmWb, annUsedCacheQ);
+                igbe->anPq(annSmWb, annDescQ);
+                igbe->anQ(annSmWb, annUsedDescQ);
+            }
+
+    
+            igbe->anBegin(annSmWb, "Writeback Desc DMA");
 
             assert(wbOut);
-            igbe->dmaWrite(igbe->platform->pciToDma(descBase() + curHead * sizeof(T)),
-                    wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf);
+            igbe->dmaWrite(igbe->platform->pciToDma(descBase() + descHead() * sizeof(T)),
+                    wbOut * sizeof(T), &wbEvent, (uint8_t*)wbBuf,
+                    igbe->wbCompDelay);
         }
+        EventWrapper<DescCache, &DescCache::writeback1> wbDelayEvent;
 
         /** Fetch a chunk of descriptors into the descriptor cache.
          * Calls fetchComplete when the memory system returns the data
          */
+
         void fetchDescriptors()
         {
             size_t max_to_fetch;
 
-            if (curFetching)
+            if (curFetching) {
+                DPRINTF(EthernetDesc, "Currently fetching %d descriptors, returning\n", curFetching);
                 return;
+            }
 
             if (descTail() >= cachePnt)
                 max_to_fetch = descTail() - cachePnt;
@@ -312,7 +387,20 @@ class IGbE : public EtherDevice
 
             size_t free_cache = size - usedCache.size() - unusedCache.size();
 
+            if (!max_to_fetch)
+                igbe->anWe(annSmFetch, annUnusedDescQ);
+            else
+                igbe->anPq(annSmFetch, annUnusedDescQ, max_to_fetch);
+
+            if (max_to_fetch) {
+                if (!free_cache)
+                    igbe->anWf(annSmFetch, annDescQ);
+                else
+                    igbe->anRq(annSmFetch, annDescQ, free_cache);
+            }
+
             max_to_fetch = std::min(max_to_fetch, free_cache);
+            
 
             DPRINTF(EthernetDesc, "Fetching descriptors head: %d tail: "
                     "%d len: %d cachePnt: %d max_to_fetch: %d descleft: %d\n",
@@ -322,9 +410,24 @@ class IGbE : public EtherDevice
             // Nothing to do
             if (max_to_fetch == 0)
                 return;
-
+            
             // So we don't have two descriptor fetches going on at once
             curFetching = max_to_fetch;
+
+            assert(!fetchDelayEvent.scheduled());
+            igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
+            igbe->anBegin(annSmFetch, "Prepare Fetch Desc");
+        }
+
+        void fetchDescriptors1()
+        {
+            // If we're draining delay issuing this DMA
+            if (igbe->getState() != SimObject::Running) {
+                igbe->schedule(fetchDelayEvent, curTick + igbe->fetchDelay);
+                return;
+            }
+
+            igbe->anBegin(annSmFetch, "Fetch Desc");
 
             DPRINTF(EthernetDesc, "Fetching descriptors at %#x (%#x), size: %#x\n",
                     descBase() + cachePnt * sizeof(T),
@@ -332,20 +435,27 @@ class IGbE : public EtherDevice
                     curFetching * sizeof(T));
             assert(curFetching);
             igbe->dmaRead(igbe->platform->pciToDma(descBase() + cachePnt * sizeof(T)),
-                    curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf);
+                    curFetching * sizeof(T), &fetchEvent, (uint8_t*)fetchBuf,
+                    igbe->fetchCompDelay);
         }
 
+        EventWrapper<DescCache, &DescCache::fetchDescriptors1> fetchDelayEvent;
 
         /** Called by event when dma to read descriptors is completed
          */
         void fetchComplete()
         {
             T *newDesc;
+            igbe->anBegin(annSmFetch, "Fetch Complete");
             for (int x = 0; x < curFetching; x++) {
                 newDesc = new T;
                 memcpy(newDesc, &fetchBuf[x], sizeof(T));
                 unusedCache.push_back(newDesc);
+                igbe->anDq(annSmFetch, annUnusedDescQ);
+                igbe->anQ(annSmFetch, annUnusedCacheQ);
+                igbe->anQ(annSmFetch, annDescQ);
             }
+
 
 #ifndef NDEBUG
             int oldCp = cachePnt;
@@ -361,6 +471,16 @@ class IGbE : public EtherDevice
             DPRINTF(EthernetDesc, "Fetching complete cachePnt %d -> %d\n",
                     oldCp, cachePnt);
 
+            if ((descTail() >= cachePnt ? (descTail() - cachePnt) : (descLen() -
+                    cachePnt)) == 0)
+            {
+                igbe->anWe(annSmFetch, annUnusedDescQ);
+            } else if (!(size - usedCache.size() - unusedCache.size())) {
+                igbe->anWf(annSmFetch, annDescQ);
+            } else {
+                igbe->anBegin(annSmFetch, "Wait", CPA::FL_WAIT);
+            }
+
             enableSm();
             igbe->checkDrain();
         }
@@ -372,10 +492,21 @@ class IGbE : public EtherDevice
         void wbComplete()
         {
 
+            igbe->anBegin(annSmWb, "Finish Writeback");
+
             long  curHead = descHead();
 #ifndef NDEBUG
             long oldHead = curHead;
 #endif
+            
+            for (int x = 0; x < wbOut; x++) {
+                assert(usedCache.size());
+                delete usedCache[0];
+                usedCache.pop_front();
+
+                igbe->anDq(annSmWb, annUsedCacheQ);
+                igbe->anDq(annSmWb, annDescQ);
+            }
 
             curHead += wbOut;
             wbOut = 0;
@@ -390,14 +521,19 @@ class IGbE : public EtherDevice
                     oldHead, curHead);
 
             // If we still have more to wb, call wb now
-            intAfterWb();
+            actionAfterWb();
             if (moreToWb) {
+                moreToWb = false;
                 DPRINTF(EthernetDesc, "Writeback has more todo\n");
                 writeback(wbAlignment);
             }
 
             if (!wbOut) {
                 igbe->checkDrain();
+                if (usedCache.size())
+                    igbe->anBegin(annSmWb, "Wait", CPA::FL_WAIT);
+                else
+                    igbe->anWe(annSmWb, annUsedCacheQ);
             }
             fetchAfterWb();
         }
@@ -411,8 +547,8 @@ class IGbE : public EtherDevice
         int descLeft() const
         {
             int left = unusedCache.size();
-            if (cachePnt - descTail() >= 0)
-                left += (cachePnt - descTail());
+            if (cachePnt >= descTail())
+                left += (descLen() - cachePnt + descTail());
             else
                 left += (descTail() - cachePnt);
 
@@ -464,6 +600,16 @@ class IGbE : public EtherDevice
                 arrayParamOut(os, csprintf("unusedCache_%d", x),
                         (uint8_t*)unusedCache[x],sizeof(T));
             }
+
+            Tick fetch_delay = 0, wb_delay = 0;
+            if (fetchDelayEvent.scheduled())
+                fetch_delay = fetchDelayEvent.when();
+            SERIALIZE_SCALAR(fetch_delay);
+            if (wbDelayEvent.scheduled())
+                wb_delay = wbDelayEvent.when();
+            SERIALIZE_SCALAR(wb_delay);
+
+
         }
 
         virtual void unserialize(Checkpoint *cp, const std::string &section)
@@ -492,6 +638,15 @@ class IGbE : public EtherDevice
                         (uint8_t*)temp,sizeof(T));
                 unusedCache.push_back(temp);
             }
+            Tick fetch_delay = 0, wb_delay = 0;
+            UNSERIALIZE_SCALAR(fetch_delay);
+            UNSERIALIZE_SCALAR(wb_delay);
+            if (fetch_delay)
+                igbe->schedule(fetchDelayEvent, fetch_delay);
+            if (wb_delay)
+                igbe->schedule(wbDelayEvent, wb_delay);
+
+
         }
         virtual bool hasOutstandingEvents() {
             return wbEvent.scheduled() || fetchEvent.scheduled();
@@ -516,6 +671,12 @@ class IGbE : public EtherDevice
 
         bool pktDone;
 
+        /** Variable to head with header/data completion events */
+        int splitCount;
+
+        /** Bytes of packet that have been copied, so we know when to set EOP */
+        int bytesCopied;
+
       public:
         RxDescCache(IGbE *i, std::string n, int s);
 
@@ -523,19 +684,27 @@ class IGbE : public EtherDevice
          * descriptor and update the book keeping. Should only be called when
          * there are no dma's pending.
          * @param packet ethernet packet to write
-         * @return if the packet could be written (there was a free descriptor)
+         * @param pkt_offset bytes already copied from the packet to memory
+         * @return pkt_offset + number of bytes copied during this call
          */
-        void writePacket(EthPacketPtr packet);
+        int writePacket(EthPacketPtr packet, int pkt_offset);
+
         /** Called by event when dma to write packet is completed
          */
         void pktComplete();
 
-        /** Check if the dma on the packet has completed.
+        /** Check if the dma on the packet has completed and RX state machine
+         * can continue
          */
-
         bool packetDone();
 
         EventWrapper<RxDescCache, &RxDescCache::pktComplete> pktEvent;
+
+        // Event to handle issuing header and data write at the same time
+        // and only callking pktComplete() when both are completed
+        void pktSplitDone();
+        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktHdrEvent;
+        EventWrapper<RxDescCache, &RxDescCache::pktSplitDone> pktDataEvent;
 
         virtual bool hasOutstandingEvents();
 
@@ -555,15 +724,37 @@ class IGbE : public EtherDevice
         virtual long descLen() const { return igbe->regs.tdlen() >> 4; }
         virtual void updateHead(long h) { igbe->regs.tdh(h); }
         virtual void enableSm();
-        virtual void intAfterWb() const { igbe->postInterrupt(iGbReg::IT_TXDW); }
+        virtual void actionAfterWb();
         virtual void fetchAfterWb() {
             if (!igbe->txTick && igbe->getState() == SimObject::Running)
                 fetchDescriptors();
         }
+        
+
 
         bool pktDone;
         bool isTcp;
         bool pktWaiting;
+        bool pktMultiDesc;
+        Addr completionAddress;
+        bool completionEnabled;
+        uint32_t descEnd;
+        
+
+        // tso variables
+        bool useTso;
+        Addr tsoHeaderLen;
+        Addr tsoMss;
+        Addr tsoTotalLen;
+        Addr tsoUsedLen;
+        Addr tsoPrevSeq;;
+        Addr tsoPktPayloadBytes;
+        bool tsoLoadedHeader;
+        bool tsoPktHasHeader;
+        uint8_t tsoHeader[256];
+        Addr tsoDescBytesUsed;
+        Addr tsoCopyBytes;
+        int tsoPkts;
 
       public:
         TxDescCache(IGbE *i, std::string n, int s);
@@ -572,9 +763,15 @@ class IGbE : public EtherDevice
          * return the size the of the packet to reserve space in tx fifo.
          * @return size of the packet
          */
-        int getPacketSize();
+        int getPacketSize(EthPacketPtr p);
         void getPacketData(EthPacketPtr p);
+        void processContextDesc();
 
+        /** Return the number of dsecriptors in a cache block for threshold
+         * operations.
+         */
+        int descInBlock(int num_desc) { return num_desc / 
+            igbe->cacheBlockSize() / sizeof(iGbReg::TxDesc); }
         /** Ask if the packet has been transfered so the state machine can give
          * it to the fifo.
          * @return packet available in descriptor cache
@@ -586,12 +783,34 @@ class IGbE : public EtherDevice
          */
         bool packetWaiting() { return pktWaiting; }
 
+        /** Ask if this packet is composed of multiple descriptors
+         * so even if we've got data, we need to wait for more before
+         * we can send it out.
+         * @return packet can't be sent out because it's a multi-descriptor
+         * packet
+         */
+        bool packetMultiDesc() { return pktMultiDesc;}
+
         /** Called by event when dma to write packet is completed
          */
         void pktComplete();
         EventWrapper<TxDescCache, &TxDescCache::pktComplete> pktEvent;
 
+        void headerComplete();
+        EventWrapper<TxDescCache, &TxDescCache::headerComplete> headerEvent;
+
+
+        void completionWriteback(Addr a, bool enabled) {
+            DPRINTF(EthernetDesc, "Completion writeback Addr: %#x enabled: %d\n", 
+                    a, enabled);
+            completionAddress = a;
+            completionEnabled = enabled;
+        }
+
         virtual bool hasOutstandingEvents();
+
+        void nullCallback() { DPRINTF(EthernetDesc, "Completion writeback complete\n"); }
+        EventWrapper<TxDescCache, &TxDescCache::nullCallback> nullEvent;
 
         virtual void serialize(std::ostream &os);
         virtual void unserialize(Checkpoint *cp, const std::string &section);
@@ -610,10 +829,12 @@ class IGbE : public EtherDevice
     }
     IGbE(const Params *params);
     ~IGbE() {}
+    virtual void init();
 
     virtual EtherInt *getEthPort(const std::string &if_name, int idx);
 
     Tick clock;
+    Tick lastInterrupt;
     inline Tick ticks(int numCycles) const { return numCycles * clock; }
 
     virtual Tick read(PacketPtr pkt);

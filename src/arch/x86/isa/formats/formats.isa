@@ -85,6 +85,9 @@
 //Templates from this format are used later
 ##include "basic.isa"
 
+//Include a format to generate a CPUID instruction.
+##include "cpuid.isa"
+
 //Include the "unknown" format
 ##include "unknown.isa"
 

@@ -37,11 +37,11 @@
 #include <vector>
 
 #include "cpu/intr_control.hh"
-#include "dev/simconsole.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunami_io.hh"
 #include "dev/alpha/tsunami.hh"
+#include "dev/terminal.hh"
 #include "sim/system.hh"
 
 using namespace std;
@@ -96,9 +96,21 @@ Tsunami::pciToDma(Addr pciAddr) const
 
 
 Addr
-Tsunami::calcConfigAddr(int bus, int dev, int func)
+Tsunami::calcPciConfigAddr(int bus, int dev, int func)
 {
    return pchip->calcConfigAddr(bus, dev, func);
+}
+
+Addr
+Tsunami::calcPciIOAddr(Addr addr)
+{
+   return pchip->calcIOAddr(addr);
+}
+
+Addr
+Tsunami::calcPciMemAddr(Addr addr)
+{
+   return pchip->calcMemAddr(addr);
 }
 
 void

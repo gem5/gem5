@@ -62,38 +62,76 @@
 #include <vector>
 #include "sim/process.hh"
 
+class SyscallDesc;
+
 namespace X86ISA
 {
-    struct M5_64_auxv_t
-    {
-        int64_t a_type;
-        union {
-            int64_t a_val;
-            int64_t a_ptr;
-            int64_t a_fcn;
-        };
-
-        M5_64_auxv_t()
-        {}
-
-        M5_64_auxv_t(int64_t type, int64_t val);
-    };
 
     class X86LiveProcess : public LiveProcess
     {
       protected:
-        std::vector<M5_64_auxv_t> auxv;
+        Addr _gdtStart;
+        Addr _gdtSize;
 
-        X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile);
+        SyscallDesc *syscallDescs;
+        const int numSyscallDescs;
 
-        void startup();
+        X86LiveProcess(LiveProcessParams * params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+
+        template<class IntType>
+        void argsInit(int pageSize,
+                std::vector<AuxVector<IntType> > extraAuxvs);
 
       public:
+        Addr gdtStart()
+        { return _gdtStart; }
+        
+        Addr gdtSize()
+        { return _gdtSize; }
 
-        //Handles traps which request services from the operating system
-        virtual void handleTrap(int trapNum, ThreadContext *tc);
+        SyscallDesc* getDesc(int callnum);
 
+        void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
+    };
+
+    class X86_64LiveProcess : public X86LiveProcess
+    {
+      protected:
+        X86_64LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+
+      public:
         void argsInit(int intSize, int pageSize);
+        void startup();
+
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
+    };
+
+    class I386LiveProcess : public X86LiveProcess
+    {
+      protected:
+        I386LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
+                SyscallDesc *_syscallDescs, int _numSyscallDescs);
+
+        class VSyscallPage
+        {
+          public:
+            Addr base;
+            Addr size;
+            Addr vsyscallOffset;
+            Addr vsysexitOffset;
+        };
+        VSyscallPage vsyscallPage;
+
+      public:
+        void argsInit(int intSize, int pageSize);
+        void startup();
+
+        void syscall(int64_t callnum, ThreadContext *tc);
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 }
 

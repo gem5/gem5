@@ -56,7 +56,7 @@
 microcode = ""
 #let {{
 #    class MOVMSKPS(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #    class MOVMSKPD(Inst):
-#	"GenFault ${new UnimpInstFault}"
+#       "GenFault ${new UnimpInstFault}"
 #}};

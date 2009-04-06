@@ -53,6 +53,9 @@ class ArmLiveProcess : public LiveProcess
   public:
     void argsInit(int intSize, int pageSize);
 
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
 #endif // __ARM_PROCESS_HH__

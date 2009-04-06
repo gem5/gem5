@@ -149,8 +149,7 @@ InorderBackEnd<Impl>::tick()
     // if (interrupt) then set thread PC, stall front end, record that
     // I'm waiting for it to drain.  (for now just squash)
 #if FULL_SYSTEM
-    if (interruptBlocked ||
-        cpu->check_interrupts(tc)) {
+    if (interruptBlocked || cpu->checkInterrupts(tc)) {
         if (!robEmpty()) {
             interruptBlocked = true;
         //AlphaDep

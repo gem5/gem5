@@ -57,23 +57,23 @@ class Interrupts
       //  for posting an interrupt. It sets a bit
       //  in intstatus corresponding to Cause IP*. The
       //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by check_interrupts
+      //  which is called by checkInterrupts
       //
       void post(int int_num, int index);
       // clear(int int_num, int index) is responsible
       //  for clearing an interrupt. It clear a bit
       //  in intstatus corresponding to Cause IP*. The
       //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by check_interrupts
+      //  which is called by checkInterrupts
       //
       void clear(int int_num, int index);
-      //  clear_all() is responsible
+      //  clearAll() is responsible
       //  for clearing all interrupts. It clears all bits
       //  in intstatus corresponding to Cause IP*. The
       //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by check_interrupts
+      //  which is called by checkInterrupts
       //
-      void clear_all();
+      void clearAll();
 
       // getInterrupt(ThreadContext * tc) checks if an interrupt
       //  should be returned. It ands the interrupt mask and
@@ -91,9 +91,7 @@ class Interrupts
       void updateIntrInfoCpuTimerIntr(ThreadContext *tc) const;
       bool onCpuTimerInterrupt(ThreadContext *tc) const;
 
-      uint64_t get_vec(int int_num);
-
-      bool check_interrupts(ThreadContext * tc) const{
+      bool checkInterrupts(ThreadContext *tc) const {
       //return (intstatus != 0) && !(tc->readPC() & 0x3);
       if (oncputimerintr == false){
       updateIntrInfo(tc);
@@ -121,7 +119,7 @@ class Interrupts
     //  for posting an interrupt. It sets a bit
     //  in intstatus corresponding to Cause IP*. The
     //  MIPS register Cause is updated by updateIntrInfo
-    //  which is called by check_interrupts
+    //  which is called by checkInterrupts
     //
     void post(int int_num, ThreadContext* tc);
     void post(int int_num, int index);
@@ -130,19 +128,19 @@ class Interrupts
     //  for clearing an interrupt. It clear a bit
     //  in intstatus corresponding to Cause IP*. The
     //  MIPS register Cause is updated by updateIntrInfo
-    //  which is called by check_interrupts
+    //  which is called by checkInterrupts
     //
     void clear(int int_num, ThreadContext* tc);
     void clear(int int_num, int index);
 
-    //  clear_all() is responsible
+    //  clearAll() is responsible
     //  for clearing all interrupts. It clears all bits
     //  in intstatus corresponding to Cause IP*. The
     //  MIPS register Cause is updated by updateIntrInfo
-    //  which is called by check_interrupts
+    //  which is called by checkInterrupts
     //
-    void clear_all(ThreadContext* tc);
-    void clear_all();
+    void clearAll(ThreadContext* tc);
+    void clearAll();
 
     // getInterrupt(ThreadContext * tc) checks if an interrupt
     //  should be returned. It ands the interrupt mask and
@@ -160,9 +158,9 @@ class Interrupts
     bool interruptsPending(ThreadContext *tc) const;
     bool onCpuTimerInterrupt(ThreadContext *tc) const;
 
-    uint64_t get_vec(int int_num);
-
-    bool check_interrupts(ThreadContext * tc) const{
+    bool
+    checkInterrupts(ThreadContext *tc) const
+    {
         return interruptsPending(tc);
     }
 

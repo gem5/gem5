@@ -116,7 +116,7 @@ t_SEMI             = r';'
 t_DOT              = r'\.'
 t_COLON            = r':'
 t_DBLCOLON         = r'::'
-t_ASTERISK	   = r'\*'
+t_ASTERISK         = r'\*'
 
 # Identifiers and reserved words
 reserved_map = { }
@@ -480,7 +480,7 @@ def p_excess_args_param(t):
 
 #
 # A decode block looks like:
-#	decode <field1> [, <field2>]* [default <inst>] { ... }
+#       decode <field1> [, <field2>]* [default <inst>] { ... }
 #
 def p_decode_block(t):
     'decode_block : DECODE ID opt_default LBRACE decode_stmt_list RBRACE'
@@ -1149,7 +1149,7 @@ def buildOperandTypeMap(userDict, lineno):
             ctype = 'uint%d_t' % size
             is_signed = 0
         elif desc == 'float':
-            is_signed = 1	# shouldn't really matter
+            is_signed = 1       # shouldn't really matter
             if size == 32:
                 ctype = 'float'
             elif size == 64:
@@ -1595,9 +1595,9 @@ def buildOperandNameMap(userDict, lineno):
     operands = userDict.keys()
 
     operandsREString = (r'''
-    (?<![\w\.])	     # neg. lookbehind assertion: prevent partial matches
+    (?<![\w\.])      # neg. lookbehind assertion: prevent partial matches
     ((%s)(?:\.(\w+))?)   # match: operand with optional '.' then suffix
-    (?![\w\.])	     # neg. lookahead assertion: prevent partial matches
+    (?![\w\.])       # neg. lookahead assertion: prevent partial matches
     '''
                         % string.join(operands, '|'))
 

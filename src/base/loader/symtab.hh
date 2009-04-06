@@ -34,8 +34,9 @@
 
 #include <iosfwd>
 #include <map>
+#include <string>
 
-#include "sim/host.hh"	// for Addr
+#include "sim/host.hh"  // for Addr
 
 class Checkpoint;
 class SymbolTable

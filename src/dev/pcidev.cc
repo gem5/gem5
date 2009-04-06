@@ -41,7 +41,7 @@
 #include "base/inifile.hh"
 #include "base/intmath.hh" // for isPowerOf2(
 #include "base/misc.hh"
-#include "base/str.hh"	// for to_number
+#include "base/str.hh"  // for to_number
 #include "base/trace.hh"
 #include "dev/pciconfigall.hh"
 #include "dev/pcidev.hh"
@@ -56,10 +56,10 @@ using namespace std;
 
 PciDev::PciConfigPort::PciConfigPort(PciDev *dev, int busid, int devid,
         int funcid, Platform *p)
-    : SimpleTimingPort(dev->name() + "-pciconf"), device(dev), platform(p),
-      busId(busid), deviceId(devid), functionId(funcid)
+    : SimpleTimingPort(dev->name() + "-pciconf", dev), device(dev),
+      platform(p), busId(busid), deviceId(devid), functionId(funcid)
 {
-    configAddr = platform->calcConfigAddr(busId, deviceId, functionId);
+    configAddr = platform->calcPciConfigAddr(busId, deviceId, functionId);
 }
 
 
@@ -121,14 +121,25 @@ PciDev::PciDev(const Params *p)
     BARSize[4] = p->BAR4Size;
     BARSize[5] = p->BAR5Size;
 
+    legacyIO[0] = p->BAR0LegacyIO;
+    legacyIO[1] = p->BAR1LegacyIO;
+    legacyIO[2] = p->BAR2LegacyIO;
+    legacyIO[3] = p->BAR3LegacyIO;
+    legacyIO[4] = p->BAR4LegacyIO;
+    legacyIO[5] = p->BAR5LegacyIO;
+
     for (int i = 0; i < 6; ++i) {
-        uint32_t barsize = BARSize[i];
-        if (barsize != 0 && !isPowerOf2(barsize)) {
-            fatal("BAR %d size %d is not a power of 2\n", i, BARSize[i]);
+        if (legacyIO[i]) {
+            BARAddrs[i] = platform->calcPciIOAddr(letoh(config.baseAddr[i]));
+            config.baseAddr[i] = 0;
+        } else {
+            BARAddrs[i] = 0;
+            uint32_t barsize = BARSize[i];
+            if (barsize != 0 && !isPowerOf2(barsize)) {
+                fatal("BAR %d size %d is not a power of 2\n", i, BARSize[i]);
+            }
         }
     }
-
-    memset(BARAddrs, 0, sizeof(BARAddrs));
 
     plat->registerPciDevice(0, p->pci_dev, p->pci_func,
             letoh(config.interruptLine));
@@ -216,8 +227,10 @@ PciDev::writeConfig(PacketPtr pkt)
         switch (offset) {
           case PCI0_INTERRUPT_LINE:
             config.interruptLine = pkt->get<uint8_t>();
+            break;
           case PCI_CACHE_LINE_SIZE:
             config.cacheLineSize = pkt->get<uint8_t>();
+            break;
           case PCI_LATENCY_TIMER:
             config.latencyTimer = pkt->get<uint8_t>();
             break;
@@ -240,8 +253,10 @@ PciDev::writeConfig(PacketPtr pkt)
         switch (offset) {
           case PCI_COMMAND:
             config.command = pkt->get<uint8_t>();
+            break;
           case PCI_STATUS:
             config.status = pkt->get<uint8_t>();
+            break;
           case PCI_CACHE_LINE_SIZE:
             config.cacheLineSize = pkt->get<uint8_t>();
             break;
@@ -264,30 +279,32 @@ PciDev::writeConfig(PacketPtr pkt)
             {
                 int barnum = BAR_NUMBER(offset);
 
-                // convert BAR values to host endianness
-                uint32_t he_old_bar = letoh(config.baseAddr[barnum]);
-                uint32_t he_new_bar = letoh(pkt->get<uint32_t>());
+                if (!legacyIO[barnum]) {
+                    // convert BAR values to host endianness
+                    uint32_t he_old_bar = letoh(config.baseAddr[barnum]);
+                    uint32_t he_new_bar = letoh(pkt->get<uint32_t>());
 
-                uint32_t bar_mask =
-                    BAR_IO_SPACE(he_old_bar) ? BAR_IO_MASK : BAR_MEM_MASK;
+                    uint32_t bar_mask =
+                        BAR_IO_SPACE(he_old_bar) ? BAR_IO_MASK : BAR_MEM_MASK;
 
-                // Writing 0xffffffff to a BAR tells the card to set the
-                // value of the bar to a bitmask indicating the size of
-                // memory it needs
-                if (he_new_bar == 0xffffffff) {
-                    he_new_bar = ~(BARSize[barnum] - 1);
-                } else {
-                    // does it mean something special to write 0 to a BAR?
-                    he_new_bar &= ~bar_mask;
-                    if (he_new_bar) {
-                        Addr space_base = BAR_IO_SPACE(he_old_bar) ?
-                            TSUNAMI_PCI0_IO : TSUNAMI_PCI0_MEMORY;
-                        BARAddrs[barnum] = he_new_bar + space_base;
-                        pioPort->sendStatusChange(Port::RangeChange);
+                    // Writing 0xffffffff to a BAR tells the card to set the
+                    // value of the bar to a bitmask indicating the size of
+                    // memory it needs
+                    if (he_new_bar == 0xffffffff) {
+                        he_new_bar = ~(BARSize[barnum] - 1);
+                    } else {
+                        // does it mean something special to write 0 to a BAR?
+                        he_new_bar &= ~bar_mask;
+                        if (he_new_bar) {
+                            BARAddrs[barnum] = BAR_IO_SPACE(he_old_bar) ?
+                                platform->calcPciIOAddr(he_new_bar) :
+                                platform->calcPciMemAddr(he_new_bar);
+                            pioPort->sendStatusChange(Port::RangeChange);
+                        }
                     }
+                    config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
+                                                    (he_old_bar & bar_mask));
                 }
-                config.baseAddr[barnum] = htole((he_new_bar & ~bar_mask) |
-                                                (he_old_bar & bar_mask));
             }
             break;
 

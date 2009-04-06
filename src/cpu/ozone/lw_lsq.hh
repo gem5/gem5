@@ -39,6 +39,7 @@
 #include "arch/faults.hh"
 #include "arch/types.hh"
 #include "config/full_system.hh"
+#include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"
 #include "mem/packet.hh"
@@ -301,7 +302,7 @@ class OzoneLWLSQ {
     };
 
     /** Derived class to hold any sender state the LSQ needs. */
-    class LSQSenderState : public Packet::SenderState
+    class LSQSenderState : public Packet::SenderState, public FastAlloc
     {
       public:
         /** Default constructor. */
@@ -410,9 +411,9 @@ class OzoneLWLSQ {
     //list<InstSeqNum> mshrSeqNums;
 
     /** Tota number of memory ordering violations. */
-    Stats::Scalar<> lsqMemOrderViolation;
+    Stats::Scalar lsqMemOrderViolation;
 
-     //Stats::Scalar<> dcacheStallCycles;
+     //Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 
     // Make these per thread?

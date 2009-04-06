@@ -131,9 +131,6 @@ namespace ArmISA
     const int ZeroReg = NumIntArchRegs;
     const int AddrReg = ZeroReg + 1; // Used to generate address for uops
 
-    const int ArgumentReg[] = {0, 1, 2, 3};
-    const int NumArgumentRegs = sizeof(ArgumentReg)/ sizeof(const int);
-
     const int SyscallNumReg = ReturnValueReg;
     const int SyscallPseudoReturnReg = ReturnValueReg;
     const int SyscallSuccessReg = ReturnValueReg;

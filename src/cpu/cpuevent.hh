@@ -58,8 +58,8 @@ class CpuEvent : public Event
     ThreadContext *tc;
 
   public:
-    CpuEvent(EventQueue *q, ThreadContext *_tc, Priority p = Default_Pri)
-        : Event(q, p), tc(_tc)
+    CpuEvent(ThreadContext *_tc, Priority p = Default_Pri)
+        : Event(p), tc(_tc)
     { cpuEventList.push_back(this); }
 
     /** delete the cpu event from the global list. */
@@ -81,9 +81,8 @@ class CpuEventWrapper : public CpuEvent
     T *object;
 
   public:
-    CpuEventWrapper(T *obj, ThreadContext *_tc,
-        EventQueue *q = &mainEventQueue, Priority p = Default_Pri)
-        : CpuEvent(q, _tc, p), object(obj)
+    CpuEventWrapper(T *obj, ThreadContext *_tc, Priority p = Default_Pri)
+        : CpuEvent(_tc, p), object(obj)
     { }
     void process() { (object->*F)(tc); }
 };

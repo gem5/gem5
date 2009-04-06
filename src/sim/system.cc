@@ -42,6 +42,7 @@
 #include "mem/physical.hh"
 #include "sim/byteswap.hh"
 #include "sim/system.hh"
+#include "sim/debug.hh"
 #if FULL_SYSTEM
 #include "arch/vtophys.hh"
 #include "kern/kernel_stats.hh"
@@ -57,7 +58,7 @@ vector<System *> System::systemList;
 int System::numSystemsRunning = 0;
 
 System::System(Params *p)
-    : SimObject(p), physmem(p->physmem), numcpus(0),
+    : SimObject(p), physmem(p->physmem), _numContexts(0),
 #if FULL_SYSTEM
       init_param(p->init_param),
       functionalPort(p->name + "-fport"),
@@ -94,12 +95,12 @@ System::System(Params *p)
      * Load the kernel code into memory
      */
     if (params()->kernel == "") {
-        warn("No kernel set for full system simulation. Assuming you know what"
+        inform("No kernel set for full system simulation. Assuming you know what"
                 " you're doing...\n");
     } else {
         // Load kernel code
         kernel = createObjectFile(params()->kernel);
-        warn("kernel located at: %s", params()->kernel);
+        inform("kernel located at: %s", params()->kernel);
 
         if (kernel == NULL)
             fatal("Could not load kernel file %s", params()->kernel);
@@ -114,16 +115,16 @@ System::System(Params *p)
 
         // load symbols
         if (!kernel->loadGlobalSymbols(kernelSymtab))
-            panic("could not load kernel symbols\n");
+            fatal("could not load kernel symbols\n");
 
         if (!kernel->loadLocalSymbols(kernelSymtab))
-            panic("could not load kernel local symbols\n");
+            fatal("could not load kernel local symbols\n");
 
         if (!kernel->loadGlobalSymbols(debugSymbolTable))
-            panic("could not load kernel symbols\n");
+            fatal("could not load kernel symbols\n");
 
         if (!kernel->loadLocalSymbols(debugSymbolTable))
-            panic("could not load kernel local symbols\n");
+            fatal("could not load kernel local symbols\n");
 
         DPRINTF(Loader, "Kernel start = %#x\n", kernelStart);
         DPRINTF(Loader, "Kernel end   = %#x\n", kernelEnd);
@@ -165,27 +166,33 @@ bool System::breakpoint()
 }
 
 int
-System::registerThreadContext(ThreadContext *tc, int id)
+System::registerThreadContext(ThreadContext *tc, int assigned)
 {
-    if (id == -1) {
+    int id;
+    if (assigned == -1) {
         for (id = 0; id < threadContexts.size(); id++) {
             if (!threadContexts[id])
                 break;
         }
+
+        if (threadContexts.size() <= id)
+            threadContexts.resize(id + 1);
+    } else {
+        if (threadContexts.size() <= assigned)
+            threadContexts.resize(assigned + 1);
+        id = assigned;
     }
 
-    if (threadContexts.size() <= id)
-        threadContexts.resize(id + 1);
-
     if (threadContexts[id])
-        panic("Cannot have two CPUs with the same id (%d)\n", id);
+        fatal("Cannot have two CPUs with the same id (%d)\n", id);
 
     threadContexts[id] = tc;
-    numcpus++;
+    _numContexts++;
 
-    if (rgdb_enable) {
+    int port = getRemoteGDBPort();
+    if (rgdb_enable && port) {
         RemoteGDB *rgdb = new RemoteGDB(this, tc);
-        GDBListener *gdbl = new GDBListener(rgdb, 7000 + id);
+        GDBListener *gdbl = new GDBListener(rgdb, port + id);
         gdbl->listen();
         /**
          * Uncommenting this line waits for a remote debugger to
@@ -207,22 +214,24 @@ System::registerThreadContext(ThreadContext *tc, int id)
 void
 System::startup()
 {
+#if FULL_SYSTEM
     int i;
     for (i = 0; i < threadContexts.size(); i++)
         TheISA::startupCPU(threadContexts[i], i);
+#endif
 }
 
 void
-System::replaceThreadContext(ThreadContext *tc, int id)
+System::replaceThreadContext(ThreadContext *tc, int context_id)
 {
-    if (id >= threadContexts.size()) {
+    if (context_id >= threadContexts.size()) {
         panic("replaceThreadContext: bad id, %d >= %d\n",
-              id, threadContexts.size());
+              context_id, threadContexts.size());
     }
 
-    threadContexts[id] = tc;
-    if (id < remoteGDB.size())
-        remoteGDB[id]->replaceThreadContext(tc);
+    threadContexts[context_id] = tc;
+    if (context_id < remoteGDB.size())
+        remoteGDB[context_id]->replaceThreadContext(tc);
 }
 
 #if !FULL_SYSTEM
@@ -235,6 +244,19 @@ System::new_page()
         fatal("Out of memory, please increase size of physical memory.");
     return return_addr;
 }
+
+Addr
+System::memSize()
+{
+    return physmem->size();
+}
+
+Addr
+System::freeMemSize()
+{
+   return physmem->size() - (page_ptr << LogVMPageSize);
+}
+
 #endif
 
 void
@@ -283,11 +305,7 @@ const char *System::MemoryModeStrings[3] = {"invalid", "atomic",
 System *
 SystemParams::create()
 {
-    System::Params *p = new System::Params;
-    p->name = name;
-    p->physmem = physmem;
-    p->mem_mode = mem_mode;
-    return new System(p);
+    return new System(this);
 }
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007 The Hewlett-Packard Development Company
+ * Copyright (c) 2007-2008 The Hewlett-Packard Development Company
  * All rights reserved.
  *
  * Redistribution and use of this software in source and binary forms,
@@ -82,6 +82,18 @@ namespace X86ISA
         OFBit = 1 << 11
     };
 
+    enum RFLAGBit {
+        TFBit = 1 << 8,
+        IFBit = 1 << 9,
+        NTBit = 1 << 14,
+        RFBit = 1 << 16,
+        VMBit = 1 << 17,
+        ACBit = 1 << 18,
+        VIFBit = 1 << 19,
+        VIPBit = 1 << 20,
+        IDBit = 1 << 21
+    };
+
     enum MiscRegIndex
     {
         // Control registers
@@ -117,6 +129,9 @@ namespace X86ISA
 
         // Flags register
         MISCREG_RFLAGS = MISCREG_DR_BASE + NumDRegs,
+
+        //Register to keep handy values like the CPU mode in.
+        MISCREG_M5_REG,
 
         /*
          * Model Specific Registers
@@ -183,6 +198,9 @@ namespace X86ISA
         MISCREG_MC2_CTL,
         MISCREG_MC3_CTL,
         MISCREG_MC4_CTL,
+        MISCREG_MC5_CTL,
+        MISCREG_MC6_CTL,
+        MISCREG_MC7_CTL,
 
         MISCREG_MC_STATUS_BASE,
         MISCREG_MC0_STATUS = MISCREG_MC_STATUS_BASE,
@@ -190,6 +208,9 @@ namespace X86ISA
         MISCREG_MC2_STATUS,
         MISCREG_MC3_STATUS,
         MISCREG_MC4_STATUS,
+        MISCREG_MC5_STATUS,
+        MISCREG_MC6_STATUS,
+        MISCREG_MC7_STATUS,
 
         MISCREG_MC_ADDR_BASE,
         MISCREG_MC0_ADDR = MISCREG_MC_ADDR_BASE,
@@ -197,6 +218,9 @@ namespace X86ISA
         MISCREG_MC2_ADDR,
         MISCREG_MC3_ADDR,
         MISCREG_MC4_ADDR,
+        MISCREG_MC5_ADDR,
+        MISCREG_MC6_ADDR,
+        MISCREG_MC7_ADDR,
 
         MISCREG_MC_MISC_BASE,
         MISCREG_MC0_MISC = MISCREG_MC_MISC_BASE,
@@ -204,6 +228,9 @@ namespace X86ISA
         MISCREG_MC2_MISC,
         MISCREG_MC3_MISC,
         MISCREG_MC4_MISC,
+        MISCREG_MC5_MISC,
+        MISCREG_MC6_MISC,
+        MISCREG_MC7_MISC,
 
         // Extended feature enable register
         MISCREG_EFER,
@@ -341,38 +368,6 @@ namespace X86ISA
 
         MISCREG_APIC_BASE,
 
-        MISCREG_APIC_START,
-        MISCREG_APIC_ID = MISCREG_APIC_START,
-        MISCREG_APIC_VERSION,
-        MISCREG_APIC_TASK_PRIORITY,
-        MISCREG_APIC_ARBITRATION_PRIORITY,
-        MISCREG_APIC_PROCESSOR_PRIORITY,
-        MISCREG_APIC_EOI,
-        MISCREG_APIC_LOGICAL_DESTINATION,
-        MISCREG_APIC_DESTINATION_FORMAT,
-        MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR,
-
-        MISCREG_APIC_IN_SERVICE_BASE,
-
-        MISCREG_APIC_TRIGGER_MODE_BASE = MISCREG_APIC_IN_SERVICE_BASE + 16,
-
-        MISCREG_APIC_INTERRUPT_REQUEST_BASE =
-            MISCREG_APIC_TRIGGER_MODE_BASE + 16,
-
-        MISCREG_APIC_ERROR_STATUS = MISCREG_APIC_INTERRUPT_REQUEST_BASE + 16,
-        MISCREG_APIC_INTERRUPT_COMMAND_LOW,
-        MISCREG_APIC_INTERRUPT_COMMAND_HIGH,
-        MISCREG_APIC_LVT_TIMER,
-        MISCREG_APIC_LVT_THERMAL_SENSOR,
-        MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS,
-        MISCREG_APIC_LVT_LINT0,
-        MISCREG_APIC_LVT_LINT1,
-        MISCREG_APIC_LVT_ERROR,
-        MISCREG_APIC_INITIAL_COUNT,
-        MISCREG_APIC_CURRENT_COUNT,
-        MISCREG_APIC_DIVIDE_COUNT,
-        MISCREG_APIC_END = MISCREG_APIC_DIVIDE_COUNT,
-
         // "Fake" MSRs for internally implemented devices
         MISCREG_PCI_CONFIG_ADDRESS,
 
@@ -481,24 +476,6 @@ namespace X86ISA
         return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
     }
 
-    static inline MiscRegIndex
-    MISCREG_APIC_IN_SERVICE(int index)
-    {
-        return (MiscRegIndex)(MISCREG_APIC_IN_SERVICE_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_APIC_TRIGGER_MODE(int index)
-    {
-        return (MiscRegIndex)(MISCREG_APIC_TRIGGER_MODE_BASE + index);
-    }
-
-    static inline MiscRegIndex
-    MISCREG_APIC_INTERRUPT_REQUEST(int index)
-    {
-        return (MiscRegIndex)(MISCREG_APIC_INTERRUPT_REQUEST_BASE + index);
-    }
-
     /**
      * A type to describe the condition code bits of the RFLAGS register,
      * plus two flags, EZF and ECF, which are only visible to microcode.
@@ -536,6 +513,12 @@ namespace X86ISA
         Bitfield<2> pf; // Parity Flag
         Bitfield<0> cf; // Carry Flag
     EndBitUnion(RFLAGS)
+
+    BitUnion64(HandyM5Reg)
+        Bitfield<0> mode;
+        Bitfield<3, 1> submode;
+        Bitfield<5, 4> cpl;
+    EndBitUnion(HandyM5Reg)
 
     /**
      * Control registers
@@ -588,6 +571,38 @@ namespace X86ISA
     BitUnion64(CR8)
         Bitfield<3, 0> tpr; // Task Priority Register
     EndBitUnion(CR8)
+
+    BitUnion64(DR6)
+        Bitfield<0> b0;
+        Bitfield<1> b1;
+        Bitfield<2> b2;
+        Bitfield<3> b3;
+        Bitfield<13> bd;
+        Bitfield<14> bs;
+        Bitfield<15> bt;
+    EndBitUnion(DR6)
+
+    BitUnion64(DR7)
+        Bitfield<0> l0;
+        Bitfield<1> g0;
+        Bitfield<2> l1;
+        Bitfield<3> g1;
+        Bitfield<4> l2;
+        Bitfield<5> g2;
+        Bitfield<6> l3;
+        Bitfield<7> g3;
+        Bitfield<8> le;
+        Bitfield<9> ge;
+        Bitfield<13> gd;
+        Bitfield<17, 16> rw0;
+        Bitfield<19, 18> len0;
+        Bitfield<21, 20> rw1;
+        Bitfield<23, 22> len1;
+        Bitfield<25, 24> rw2;
+        Bitfield<27, 26> len2;
+        Bitfield<29, 28> rw3;
+        Bitfield<31, 30> len3;
+    EndBitUnion(DR7)
 
     // MTRR capabilities
     BitUnion64(MTRRcap)

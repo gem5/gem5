@@ -162,11 +162,11 @@ class GenRepl : public Repl
      * @{
      */
     /** The number of replacements from each pool. */
-    Stats::Distribution<> repl_pool;
+    Stats::Distribution repl_pool;
     /** The number of advances out of each pool. */
-    Stats::Distribution<> advance_pool;
+    Stats::Distribution advance_pool;
     /** The number of demotions from each pool. */
-    Stats::Distribution<> demote_pool;
+    Stats::Distribution demote_pool;
     /**
      * @}
      */

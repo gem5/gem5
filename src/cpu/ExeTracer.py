@@ -32,5 +32,4 @@ from InstTracer import InstTracer
 
 class ExeTracer(InstTracer):
     type = 'ExeTracer'
-    cxx_namespace = 'Trace'
-    cxx_class = 'ExeTracer'
+    cxx_class = 'Trace::ExeTracer'

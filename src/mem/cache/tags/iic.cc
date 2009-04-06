@@ -219,15 +219,9 @@ IIC::regStats(const string &name)
         ;
 }
 
-// probe cache for presence of given block.
-bool
-IIC::probe(Addr addr) const
-{
-    return (findBlock(addr) != NULL);
-}
 
 IICTag*
-IIC::findBlock(Addr addr, int &lat)
+IIC::accessBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
@@ -303,7 +297,7 @@ IIC::findBlock(Addr addr) const
 
 
 IICTag*
-IIC::findReplacement(Addr addr, PacketList &writebacks)
+IIC::findVictim(Addr addr, PacketList &writebacks)
 {
     DPRINTF(IIC, "Finding Replacement for %x\n", addr);
     unsigned set = hash(addr);
@@ -346,6 +340,11 @@ IIC::findReplacement(Addr addr, PacketList &writebacks)
 }
 
 void
+IIC::insertBlock(Addr addr, BlkType* blk)
+{
+}
+
+void
 IIC::freeReplacementBlock(PacketList & writebacks)
 {
     IICTag *tag_ptr;
@@ -365,7 +364,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
         tag_ptr->refCount = 0;
 
         if (tag_ptr->isDirty()) {
-/*	    PacketPtr writeback =
+/*          PacketPtr writeback =
                 buildWritebackReq(regenerateBlkAddr(tag_ptr->tag, 0),
                                   tag_ptr->req->asid, tag_ptr->xc, blkSize,
                                   tag_ptr->data,
@@ -633,66 +632,6 @@ IIC::invalidateBlk(IIC::BlkType *tag_ptr)
         freeTag(tag_ptr);
     }
 }
-
-void
-IIC::readData(IICTag *blk, uint8_t *data)
-{
-    assert(blk->size <= trivialSize || blk->numData > 0);
-    int data_size = blk->size;
-    if (data_size > trivialSize) {
-        for (int i = 0; i < blk->numData; ++i){
-            memcpy(data+i*subSize,
-                   &(dataBlks[blk->data_ptr[i]][0]),
-                   (data_size>subSize)?subSize:data_size);
-            data_size -= subSize;
-        }
-    } else {
-        memcpy(data,blk->trivialData,data_size);
-    }
-}
-
-void
-IIC::writeData(IICTag *blk, uint8_t *write_data, int size,
-               PacketList & writebacks)
-{
-    DPRINTF(IIC, "Writing %d bytes to %x\n", size,
-            blk->tag<<tagShift);
-    // Find the number of subblocks needed, (round up)
-    int num_subs = (size + (subSize -1))/subSize;
-    if (size <= trivialSize) {
-        num_subs = 0;
-    }
-    assert(num_subs <= numSub);
-    if (num_subs > blk->numData) {
-        // need to allocate more data blocks
-        for (int i = blk->numData; i < num_subs; ++i){
-            blk->data_ptr[i] = getFreeDataBlock(writebacks);
-            dataReferenceCount[blk->data_ptr[i]] += 1;
-        }
-    } else if (num_subs < blk->numData){
-        // can free data blocks
-        for (int i=num_subs; i < blk->numData; ++i){
-            // decrement reference count and compare to zero
-            if (--dataReferenceCount[blk->data_ptr[i]] == 0) {
-                freeDataBlock(blk->data_ptr[i]);
-            }
-        }
-    }
-
-    blk->numData = num_subs;
-    blk->size = size;
-    assert(size <= trivialSize || blk->numData > 0);
-    if (size > trivialSize){
-        for (int i = 0; i < blk->numData; ++i){
-            memcpy(&dataBlks[blk->data_ptr[i]][0], write_data + i*subSize,
-                   (size>subSize)?subSize:size);
-            size -= subSize;
-        }
-    } else {
-        memcpy(blk->trivialData,write_data,size);
-    }
-}
-
 
 void
 IIC::cleanupRefs()

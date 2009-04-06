@@ -86,6 +86,7 @@
 Import('*')
 
 if env['TARGET_ISA'] == 'x86':
+    Source('cpuid.cc')
     Source('emulenv.cc')
     Source('floatregfile.cc')
     Source('faults.cc')
@@ -105,16 +106,22 @@ if env['TARGET_ISA'] == 'x86':
     Source('utility.cc')
 
     SimObject('X86TLB.py')
-    TraceFlag('Predecoder')
-    TraceFlag('X86')
+    TraceFlag('Predecoder', "Predecoder debug output")
+    TraceFlag('X86', "Generic X86 ISA debugging")
 
     if env['FULL_SYSTEM']:
+        TraceFlag('LocalApic', "Local APIC debugging")
+        TraceFlag('PageTableWalker', \
+                  "Page table walker state machine debugging")
+        TraceFlag('Faults', "Trace all faults/exceptions/traps")
+
+        SimObject('X86LocalApic.py')
         SimObject('X86System.py')
 
         # Full-system sources
+        Source('interrupts.cc')
         Source('linux/system.cc')
         Source('pagetable_walker.cc')
-	Source('smbios.cc')
         Source('system.cc')
         Source('stacktrace.cc')
         Source('vtophys.cc')
@@ -170,7 +177,6 @@ if env['TARGET_ISA'] == 'x86':
         'general_purpose/load_segment_registers.py',
         'general_purpose/logical.py',
         'general_purpose/no_operation.py',
-        'general_purpose/processor_information.py',
         'general_purpose/rotate_and_shift/__init__.py',
         'general_purpose/rotate_and_shift/rotate.py',
         'general_purpose/rotate_and_shift/shift.py',
@@ -182,7 +188,9 @@ if env['TARGET_ISA'] == 'x86':
         'general_purpose/string/scan_string.py',
         'general_purpose/string/store_string.py',
         'general_purpose/system_calls.py',
+        'romutil.py',
         'system/__init__.py',
+        'system/control_registers.py',
         'system/halt.py',
         'system/invlpg.py',
         'system/undefined_operation.py',

@@ -64,7 +64,6 @@ namespace X86ISA
             const SymbolTable *symtab) const
     {
         std::stringstream response;
-        bool someAddr = false;
 
         printMnemonic(response, instMnem, mnemonic);
         if(flags[IsLoad])
@@ -72,32 +71,8 @@ namespace X86ISA
         else
             printSrcReg(response, 2, dataSize);
         response << ", ";
-        printSegment(response, segment);
-        response << ":[";
-        if(scale != 0 && _srcRegIdx[0] != ZeroReg)
-        {
-            if(scale != 1)
-                ccprintf(response, "%d*", scale);
-            printSrcReg(response, 0, addressSize);
-            someAddr = true;
-        }
-        if(_srcRegIdx[1] != ZeroReg)
-        {
-            if(someAddr)
-                response << " + ";
-            printSrcReg(response, 1, addressSize);
-            someAddr = true;
-        }
-        if(disp != 0)
-        {
-            if(someAddr)
-                response << " + ";
-            ccprintf(response, "%#x", disp);
-            someAddr = true;
-        }
-        if(!someAddr)
-            response << "0";
-        response << "]";
+        printMem(response, segment, scale, index, base, disp,
+                addressSize, false);
         return response.str();
     }
 }

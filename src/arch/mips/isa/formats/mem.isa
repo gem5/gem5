@@ -43,7 +43,7 @@ output header {{
       protected:
 
         /// Memory request flags.  See mem_req_base.hh.
-        unsigned memAccessFlags;
+        Request::Flags memAccessFlags;
         /// Pointer to EAComp object.
         const StaticInstPtr eaCompPtr;
         /// Pointer to MemAcc object.
@@ -57,7 +57,7 @@ output header {{
                StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : MipsStaticInst(mnem, _machInst, __opClass),
-              memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
+              eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
               disp(sext<16>(OFFSET))
         {
         }
@@ -70,7 +70,7 @@ output header {{
         const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
         const StaticInstPtr &memAccInst() const { return memAccPtr; }
 
-        unsigned memAccFlags() { return memAccessFlags; }
+        Request::Flags memAccFlags() { return memAccessFlags; }
     };
 
      /**

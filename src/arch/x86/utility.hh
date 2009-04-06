@@ -93,7 +93,12 @@ namespace X86ISA
     static inline bool
     inUserMode(ThreadContext *tc)
     {
-        return false;
+#if FULL_SYSTEM
+        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        return m5reg.cpl == 3;
+#else
+        return true;
+#endif
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {

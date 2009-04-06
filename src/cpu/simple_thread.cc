@@ -37,9 +37,11 @@
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
+#include "params/BaseCPU.hh"
 
 #if FULL_SYSTEM
 #include "arch/kernel_stats.hh"
+#include "arch/stacktrace.hh"
 #include "base/callback.hh"
 #include "base/cprintf.hh"
 #include "base/output.hh"
@@ -48,11 +50,10 @@
 #include "cpu/quiesce_event.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_exit.hh"
-#include "arch/stacktrace.hh"
 #else
+#include "mem/translating_port.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
-#include "mem/translating_port.hh"
 #endif
 
 using namespace std;
@@ -62,7 +63,7 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::ITB *_itb, TheISA::DTB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(_cpu, -1, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
+    : ThreadState(_cpu, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)
 
 {
@@ -72,7 +73,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 
     regs.clear();
 
-    if (cpu->params->profile) {
+    if (cpu->params()->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
         Callback *cb =
             new MakeCallback<SimpleThread,
@@ -86,16 +87,13 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
     profileNode = &dummyNode;
     profilePC = 3;
 
-    if (use_kernel_stats) {
+    if (use_kernel_stats)
         kernelStats = new TheISA::Kernel::Statistics(system);
-    } else {
-        kernelStats = NULL;
-    }
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
                            TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid)
-    : ThreadState(_cpu, -1, _thread_num, _process, _asid),
+    : ThreadState(_cpu, _thread_num, _process, _asid),
       cpu(_cpu), itb(_itb), dtb(_dtb)
 {
     regs.clear();
@@ -106,9 +104,9 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
 
 SimpleThread::SimpleThread()
 #if FULL_SYSTEM
-    : ThreadState(NULL, -1, -1)
+    : ThreadState(NULL, -1)
 #else
-    : ThreadState(NULL, -1, -1, NULL, -1)
+    : ThreadState(NULL, -1, NULL, -1)
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -180,18 +178,20 @@ SimpleThread::copyState(ThreadContext *oldContext)
     // copy over functional state
     _status = oldContext->status();
     copyArchRegs(oldContext);
-    cpuId = oldContext->readCpuId();
 #if !FULL_SYSTEM
     funcExeInst = oldContext->readFuncExeInst();
 #endif
     inst = oldContext->getInst();
+
+    _threadId = oldContext->threadId();
+    _contextId = oldContext->contextId();
 }
 
 void
 SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
-    regs.serialize(os);
+    regs.serialize(cpu, os);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -200,7 +200,7 @@ void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
-    regs.unserialize(cp, section);
+    regs.unserialize(cpu, cp, section);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -222,14 +222,14 @@ SimpleThread::activate(int delay)
     lastActivate = curTick;
 
 //    if (status() == ThreadContext::Unallocated) {
-//	cpu->activateWhenReady(tid);
-//	return;
+//      cpu->activateWhenReady(_threadId);
+//      return;
 //   }
 
     _status = ThreadContext::Active;
 
     // status() == Suspended
-    cpu->activateContext(tid, delay);
+    cpu->activateContext(_threadId, delay);
 }
 
 void
@@ -243,14 +243,14 @@ SimpleThread::suspend()
 /*
 #if FULL_SYSTEM
     // Don't change the status from active if there are pending interrupts
-    if (cpu->check_interrupts()) {
+    if (cpu->checkInterrupts()) {
         assert(status() == ThreadContext::Active);
         return;
     }
 #endif
 */
     _status = ThreadContext::Suspended;
-    cpu->suspendContext(tid);
+    cpu->suspendContext(_threadId);
 }
 
 void
@@ -260,7 +260,7 @@ SimpleThread::deallocate()
         return;
 
     _status = ThreadContext::Unallocated;
-    cpu->deallocateContext(tid);
+    cpu->deallocateContext(_threadId);
 }
 
 void
@@ -270,7 +270,7 @@ SimpleThread::halt()
         return;
 
     _status = ThreadContext::Halted;
-    cpu->haltContext(tid);
+    cpu->haltContext(_threadId);
 }
 
 
@@ -288,27 +288,4 @@ SimpleThread::copyArchRegs(ThreadContext *src_tc)
 {
     TheISA::copyRegs(src_tc, tc);
 }
-
-#if FULL_SYSTEM
-VirtualPort*
-SimpleThread::getVirtPort(ThreadContext *src_tc)
-{
-    if (!src_tc)
-        return virtPort;
-
-    VirtualPort *vp = new VirtualPort("tc-vport", src_tc);
-    connectToMemFunc(vp);
-    return vp;
-}
-
-void
-SimpleThread::delVirtPort(VirtualPort *vp)
-{
-    if (vp != virtPort) {
-        vp->removeConn();
-        delete vp;
-    }
-}
-
-#endif
 

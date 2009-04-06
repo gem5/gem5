@@ -36,6 +36,8 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 
+class DerivO3CPUParams;
+
 /**
  * DefaultDecode class handles both single threaded and SMT
  * decode. Its width is specified by the parameters; each cycles it
@@ -50,7 +52,6 @@ class DefaultDecode
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
 
     // Typedefs from the CPU policy.
@@ -86,7 +87,7 @@ class DefaultDecode
 
   public:
     /** DefaultDecode constructor. */
-    DefaultDecode(O3CPU *_cpu, Params *params);
+    DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of decode. */
     std::string name() const;
@@ -287,27 +288,27 @@ class DefaultDecode
 
 
     /** Stat for total number of idle cycles. */
-    Stats::Scalar<> decodeIdleCycles;
+    Stats::Scalar decodeIdleCycles;
     /** Stat for total number of blocked cycles. */
-    Stats::Scalar<> decodeBlockedCycles;
+    Stats::Scalar decodeBlockedCycles;
     /** Stat for total number of normal running cycles. */
-    Stats::Scalar<> decodeRunCycles;
+    Stats::Scalar decodeRunCycles;
     /** Stat for total number of unblocking cycles. */
-    Stats::Scalar<> decodeUnblockCycles;
+    Stats::Scalar decodeUnblockCycles;
     /** Stat for total number of squashing cycles. */
-    Stats::Scalar<> decodeSquashCycles;
+    Stats::Scalar decodeSquashCycles;
     /** Stat for number of times a branch is resolved at decode. */
-    Stats::Scalar<> decodeBranchResolved;
+    Stats::Scalar decodeBranchResolved;
     /** Stat for number of times a branch mispredict is detected. */
-    Stats::Scalar<> decodeBranchMispred;
+    Stats::Scalar decodeBranchMispred;
     /** Stat for number of times decode detected a non-control instruction
      * incorrectly predicted as a branch.
      */
-    Stats::Scalar<> decodeControlMispred;
+    Stats::Scalar decodeControlMispred;
     /** Stat for total number of decoded instructions. */
-    Stats::Scalar<> decodeDecodedInsts;
+    Stats::Scalar decodeDecodedInsts;
     /** Stat for total number of squashed instructions. */
-    Stats::Scalar<> decodeSquashedInsts;
+    Stats::Scalar decodeSquashedInsts;
 };
 
 #endif // __CPU_O3_DECODE_HH__

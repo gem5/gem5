@@ -32,33 +32,16 @@
 #define __CPU_SIMPLE_ATOMIC_HH__
 
 #include "cpu/simple/base.hh"
+#include "params/AtomicSimpleCPU.hh"
 
 class AtomicSimpleCPU : public BaseSimpleCPU
 {
   public:
 
-    struct Params : public BaseSimpleCPU::Params {
-        int width;
-        bool simulate_stalls;
-    };
-
-    AtomicSimpleCPU(Params *params);
+    AtomicSimpleCPU(AtomicSimpleCPUParams *params);
     virtual ~AtomicSimpleCPU();
 
     virtual void init();
-
-  public:
-    //
-    enum Status {
-        Running,
-        Idle,
-        SwitchedOut
-    };
-
-  protected:
-    Status _status;
-
-    Status status() const { return _status; }
 
   private:
 
@@ -74,7 +57,8 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     TickEvent tickEvent;
 
     const int width;
-    const bool simulate_stalls;
+    const bool simulate_data_stalls;
+    const bool simulate_inst_stalls;
 
     // main simulation loop (one cycle)
     void tick();
@@ -151,11 +135,6 @@ class AtomicSimpleCPU : public BaseSimpleCPU
 
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
-
-    Fault translateDataReadAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
-    Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
 
     /**
      * Print state of address in memory system via PrintReq (for

@@ -34,10 +34,10 @@
  * by permission.
  */
 
-#ifndef __FAST_ALLOC_H__
-#define __FAST_ALLOC_H__
+#ifndef __BASE_FAST_ALLOC_HH__
+#define __BASE_FAST_ALLOC_HH__
 
-#include <stddef.h>
+#include <cstddef>
 
 // Fast structure allocator.  Designed for small objects that are
 // frequently allocated and deallocated.  This code is derived from the
@@ -62,35 +62,30 @@
 // collapse the destructor call chain back up the inheritance
 // hierarchy.
 
-// Uncomment this #define to track in-use objects
-// (for debugging memory leaks).
-//#define FAST_ALLOC_DEBUG
-
-// Uncomment this #define to count news, deletes, and chunk allocations
-// (by bucket).
-// #define FAST_ALLOC_STATS
-
 #include "config/no_fast_alloc.hh"
+#include "config/fast_alloc_debug.hh"
+#include "config/fast_alloc_stats.hh"
 
 #if NO_FAST_ALLOC
 
-class FastAlloc {
+class FastAlloc
+{
 };
 
 #else
 
-class FastAlloc {
+class FastAlloc
+{
   public:
-
     static void *allocate(size_t);
     static void deallocate(void *, size_t);
 
     void *operator new(size_t);
     void operator delete(void *, size_t);
 
-#ifdef FAST_ALLOC_DEBUG
+#if FAST_ALLOC_DEBUG
     FastAlloc();
-    FastAlloc(FastAlloc*,FastAlloc*);	// for inUseHead, see below
+    FastAlloc(FastAlloc *, FastAlloc *);   // for inUseHead, see below
     virtual ~FastAlloc();
 #else
     virtual ~FastAlloc() {}
@@ -121,21 +116,21 @@ class FastAlloc {
 
     static void *freeLists[Num_Buckets];
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
     static unsigned newCount[Num_Buckets];
     static unsigned deleteCount[Num_Buckets];
     static unsigned allocCount[Num_Buckets];
 #endif
 
-#ifdef FAST_ALLOC_DEBUG
+#if FAST_ALLOC_DEBUG
     // per-object debugging fields
-    bool inUse;			// in-use flag
-    FastAlloc *inUsePrev;	// ptrs to build list of in-use objects
+    bool inUse;                 // in-use flag
+    FastAlloc *inUsePrev;       // ptrs to build list of in-use objects
     FastAlloc *inUseNext;
 
     // static (global) debugging vars
-    static int numInUse;	// count in-use objects
-    static FastAlloc inUseHead;	// dummy head for list of in-use objects
+    static int numInUse;        // count in-use objects
+    static FastAlloc inUseHead; // dummy head for list of in-use objects
 
   public:
     // functions to dump debugging info (see fast_alloc.cc for C
@@ -145,16 +140,14 @@ class FastAlloc {
 #endif
 };
 
-
-inline
-int FastAlloc::bucketFor(size_t sz)
+inline int
+FastAlloc::bucketFor(size_t sz)
 {
     return (sz + Alloc_Quantum - 1) >> Log2_Alloc_Quantum;
 }
 
-
-inline
-void *FastAlloc::allocate(size_t sz)
+inline void *
+FastAlloc::allocate(size_t sz)
 {
     int b;
     void *p;
@@ -170,21 +163,19 @@ void *FastAlloc::allocate(size_t sz)
     else
         p = moreStructs(b);
 
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
     ++newCount[b];
 #endif
 
     return p;
 }
 
-
-inline
-void FastAlloc::deallocate(void *p, size_t sz)
+inline void
+FastAlloc::deallocate(void *p, size_t sz)
 {
     int b;
 
-    if (sz > Max_Alloc_Size)
-    {
+    if (sz > Max_Alloc_Size) {
         ::delete [] (char *)p;
         return;
     }
@@ -192,25 +183,23 @@ void FastAlloc::deallocate(void *p, size_t sz)
     b = bucketFor(sz);
     *(void **)p = freeLists[b];
     freeLists[b] = p;
-#ifdef FAST_ALLOC_STATS
+#if FAST_ALLOC_STATS
     ++deleteCount[b];
 #endif
 }
 
-
-inline
-void *FastAlloc::operator new(size_t sz)
+inline void *
+FastAlloc::operator new(size_t sz)
 {
     return allocate(sz);
 }
 
-
-inline
-void FastAlloc::operator delete(void *p, size_t sz)
+inline void
+FastAlloc::operator delete(void *p, size_t sz)
 {
     deallocate(p, sz);
 }
 
 #endif // NO_FAST_ALLOC
 
-#endif // __FAST_ALLOC_H__
+#endif // __BASE_FAST_ALLOC_HH__

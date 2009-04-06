@@ -120,7 +120,7 @@ void
 Iob::readJBus(PacketPtr pkt)
 {
         Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        int cpuid = pkt->req->getCpuNum();
+        int cpuid = pkt->req->contextId();
         int index;
         uint64_t data;
 
@@ -235,7 +235,7 @@ void
 Iob::writeJBus(PacketPtr pkt)
 {
         Addr accessAddr = pkt->getAddr() - iobJBusAddr;
-        int cpuid = pkt->req->getCpuNum();
+        int cpuid = pkt->req->contextId();
         int index;
         uint64_t data;
 
@@ -276,7 +276,7 @@ void
 Iob::generateIpi(Type type, int cpu_id, int vector)
 {
     SparcISA::SparcFault<SparcISA::PowerOnReset> *por = new SparcISA::PowerOnReset();
-    if (cpu_id >= sys->getNumCPUs())
+    if (cpu_id >= sys->numContexts())
         return;
 
     switch (type) {

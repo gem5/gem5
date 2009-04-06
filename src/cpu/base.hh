@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
 #include "sim/eventq.hh"
@@ -45,6 +46,7 @@
 #include "arch/interrupts.hh"
 #endif
 
+class BaseCPUParams;
 class BranchPred;
 class CheckerCPU;
 class ThreadContext;
@@ -64,7 +66,7 @@ class CPUProgressEvent : public Event
     BaseCPU *cpu;
 
   public:
-    CPUProgressEvent(EventQueue *q, Tick ival, BaseCPU *_cpu);
+    CPUProgressEvent(BaseCPU *_cpu, Tick ival);
 
     void process();
 
@@ -78,8 +80,16 @@ class BaseCPU : public MemObject
     Tick clock;
     // @todo remove me after debugging with legion done
     Tick instCnt;
+    // every cpu has an id, put it in the base cpu
+    // Set at initialization, only time a cpuId might change is during a
+    // takeover (which should be done from within the BaseCPU anyway,
+    // therefore no setCpuId() method is provided
+    int _cpuId;
 
   public:
+    /** Reads this CPU's ID. */
+    int cpuId() { return _cpuId; }
+
 //    Tick currentTick;
     inline Tick frequency() const { return Clock::Frequency / clock; }
     inline Tick ticks(int numCycles) const { return clock * numCycles; }
@@ -102,29 +112,54 @@ class BaseCPU : public MemObject
      */
     Tick nextCycle(Tick begin_tick);
 
+    TheISA::MicrocodeRom microcodeRom;
+
 #if FULL_SYSTEM
   protected:
-//    uint64_t interrupts[TheISA::NumInterruptLevels];
-//    uint64_t intstatus;
-    TheISA::Interrupts interrupts;
+    TheISA::Interrupts *interrupts;
 
   public:
-    virtual void post_interrupt(int int_num, int index);
-    virtual void clear_interrupt(int int_num, int index);
-    virtual void clear_interrupts();
-    virtual uint64_t get_interrupts(int int_num);
+    TheISA::Interrupts *
+    getInterruptController()
+    {
+        return interrupts;
+    }
 
-    bool check_interrupts(ThreadContext * tc) const
-    { return interrupts.check_interrupts(tc); }
+    virtual void wakeup() = 0;
+
+    void
+    postInterrupt(int int_num, int index)
+    {
+        interrupts->post(int_num, index);
+        wakeup();
+    }
+
+    void
+    clearInterrupt(int int_num, int index)
+    {
+        interrupts->clear(int_num, index);
+    }
+
+    void
+    clearInterrupts()
+    {
+        interrupts->clearAll();
+    }
+
+    bool
+    checkInterrupts(ThreadContext *tc) const
+    {
+        return interrupts->checkInterrupts(tc);
+    }
 
     class ProfileEvent : public Event
     {
       private:
         BaseCPU *cpu;
-        int interval;
+        Tick interval;
 
       public:
-        ProfileEvent(BaseCPU *cpu, int interval);
+        ProfileEvent(BaseCPU *cpu, Tick interval);
         void process();
     };
     ProfileEvent *profileEvent;
@@ -162,40 +197,9 @@ class BaseCPU : public MemObject
    ThreadContext *getContext(int tn) { return threadContexts[tn]; }
 
   public:
-    struct Params
-    {
-        std::string name;
-        int numberOfThreads;
-        bool deferRegistration;
-        Counter max_insts_any_thread;
-        Counter max_insts_all_threads;
-        Counter max_loads_any_thread;
-        Counter max_loads_all_threads;
-        Tick clock;
-        bool functionTrace;
-        Tick functionTraceStart;
-        System *system;
-        int cpu_id;
-        Trace::InstTracer * tracer;
-
-        Tick phase;
-#if FULL_SYSTEM
-        Tick profile;
-
-        bool do_statistics_insts;
-        bool do_checkpoint_insts;
-        bool do_quiesce;
-#endif
-        Tick progress_interval;
-        BaseCPU *checker;
-
-        TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
-
-        Params();
-    };
-
-    const Params *params;
-
+    typedef BaseCPUParams Params;
+    const Params *params() const
+    { return reinterpret_cast<const Params *>(_params); }
     BaseCPU(Params *params);
     virtual ~BaseCPU();
 
@@ -220,6 +224,8 @@ class BaseCPU : public MemObject
      * This is a constant for the duration of the simulation.
      */
     int number_of_threads;
+
+    TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
 
     /**
      * Vector of per-thread instruction-based event queues.  Used for
@@ -298,7 +304,7 @@ class BaseCPU : public MemObject
 
   public:
     // Number of CPU cycles simulated
-    Stats::Scalar<> numCycles;
+    Stats::Scalar numCycles;
 };
 
 #endif // __CPU_BASE_HH__

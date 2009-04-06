@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include <cassert>
 #include <string>
 
 #include "gelf.h"
@@ -36,7 +37,7 @@
 #include "base/loader/elf_object.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
-#include "base/trace.hh"	// for DPRINTF
+#include "base/trace.hh"        // for DPRINTF
 #include "sim/byteswap.hh"
 
 using namespace std;
@@ -79,13 +80,19 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             arch = ObjectFile::SPARC32;
         } else if (ehdr.e_machine == EM_MIPS
                 && ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
-            arch = ObjectFile::Mips;
+            if (ehdr.e_ident[EI_DATA] == ELFDATA2LSB) {
+                arch = ObjectFile::Mips;
+            } else {
+                fatal("The binary you're trying to load is compiled for big "
+                        "endian MIPS. M5\nonly supports little endian MIPS. "
+                        "Please recompile your binary.\n");
+            }
         } else if (ehdr.e_machine == EM_X86_64 &&
                 ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
-            //In the future, we might want to differentiate between 32 bit
-            //and 64 bit x86 processes in case there are differences in their
-            //initial stack frame.
-            arch = ObjectFile::X86;
+            arch = ObjectFile::X86_64;
+        } else if (ehdr.e_machine == EM_386 &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+            arch = ObjectFile::I386;
         } else if (ehdr.e_ident[EI_CLASS] == ELFCLASS64) {
             arch = ObjectFile::Alpha;
         } else if (ehdr.e_machine == EM_ARM) {
@@ -284,6 +291,8 @@ ElfObject::ElfObject(const string &_filename, int _fd,
             data.size = phdr.p_filesz;
             data.fileImage = fileData + phdr.p_offset;
         } else {
+            // If it's none of the above but is loadable, 
+            // load the filesize worth of data
             Segment extra;
             extra.baseAddr = phdr.p_paddr;
             extra.size = phdr.p_filesz;

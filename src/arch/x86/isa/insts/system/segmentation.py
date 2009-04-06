@@ -56,7 +56,7 @@
 microcode = '''
 def macroop LGDT_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -68,7 +68,7 @@ def macroop LGDT_M
 
 def macroop LGDT_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
@@ -86,34 +86,34 @@ def macroop LGDT_P
 
 def macroop LGDT_16_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase tsg, t2
     wrlimit tsg, t1
 };
 
 def macroop LGDT_16_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
     ld t1, seg, riprel, disp, dataSize=2
     # Get the base
     ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase tsg, t2
     wrlimit tsg, t1
 };
 
 def macroop LIDT_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
@@ -125,7 +125,7 @@ def macroop LIDT_M
 
 def macroop LIDT_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
@@ -143,28 +143,135 @@ def macroop LIDT_P
 
 def macroop LIDT_16_M
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     # Get the limit
     ld t1, seg, sib, disp, dataSize=2
     # Get the base
     ld t2, seg, sib, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase idtr, t2
     wrlimit idtr, t1
 };
 
 def macroop LIDT_16_P
 {
-    .adjust_env oszForPseudoDesc
+    .adjust_env maxOsz
 
     rdip t7
     # Get the limit
     ld t1, seg, riprel, disp, dataSize=2
     # Get the base
     ld t2, seg, riprel, 'adjustedDisp + 2', dataSize=4
-    zexti t2, t2, 23
+    zexti t2, t2, 23, dataSize=8
     wrbase idtr, t2
     wrlimit idtr, t1
+};
+
+def macroop LTR_R
+{
+    chks reg, t0, TRCheck
+    limm t4, 0
+    srli t4, reg, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks reg, t1, TSSCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, reg
+    wrbase tr, t3, dataSize=8
+    ori t1, t1, (1 << 9)
+    st t1, tsg, [8, t4, t0], dataSize=8
+};
+
+def macroop LTR_M
+{
+    ld t5, seg, sib, disp, dataSize=2
+    chks t5, t0, TRCheck
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, TSSCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+    ori t1, t1, (1 << 9)
+    st t1, tsg, [8, t4, t0], dataSize=8
+};
+
+def macroop LTR_P
+{
+    rdip t7
+    ld t5, seg, riprel, disp, dataSize=2
+    chks t5, t0, TRCheck
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, TSSCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+    ori t1, t1, (1 << 9)
+    st t1, tsg, [8, t4, t0], dataSize=8
+};
+
+def macroop LLDT_R
+{
+    chks reg, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, reg, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks reg, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, reg
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_M
+{
+    ld t5, seg, sib, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop LLDT_P
+{
+    rdip t7
+    ld t5, seg, riprel, disp, dataSize=2
+    chks t5, t0, InGDTCheck, flags=(EZF,)
+    br label("end"), flags=(CEZF,)
+    limm t4, 0
+    srli t4, t5, 3, dataSize=2
+    ldst t1, tsg, [8, t4, t0], dataSize=8
+    ld t2, tsg, [8, t4, t0], 8, dataSize=8
+    chks t5, t1, LDTCheck
+    wrdh t3, t1, t2
+    wrdl tr, t1, t5
+    wrbase tr, t3, dataSize=8
+end:
+    fault "NoFault"
+};
+
+def macroop SWAPGS
+{
+    rdval t1, kernel_gs_base, dataSize=8
+    rdbase t2, gs, dataSize=8
+    wrbase gs, t1, dataSize=8
+    wrval kernel_gs_base, t2, dataSize=8
 };
 '''

@@ -546,7 +546,7 @@ void SparcFaultBase::invoke(ThreadContext * tc)
         doNormalFault(tc, trapType(), true);
         getHyperVector(tc, PC, NPC, 2);
     } else if (level == Hyperprivileged ||
-            level == Privileged && trapType() >= 384) {
+               (level == Privileged && trapType() >= 384)) {
         doNormalFault(tc, trapType(), true);
         getHyperVector(tc, PC, NPC, trapType());
     } else {

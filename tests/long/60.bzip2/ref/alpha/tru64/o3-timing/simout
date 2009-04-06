@@ -1,0 +1,30 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Mar  6 2009 18:15:46
+M5 revision c619bb0f8f4f 6005 default qtip stats_duplicates.diff tip
+M5 started Mar  6 2009 18:18:05
+M5 executing on maize
+command line: /n/blue/z/binkert/build/work/build/ALPHA_SE/m5.fast -d /n/blue/z/binkert/build/work/build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/o3-timing -re tests/run.py long/60.bzip2/alpha/tru64/o3-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+info: Increasing stack size by one page.
+spec_init
+Loading Input Data
+Input data 1048576 bytes in length
+Compressing Input Data, level 7
+Compressed data 198546 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Compressing Input Data, level 9
+Compressed data 198677 bytes in length
+Uncompressing Data
+Uncompressed data 1048576 bytes in length
+Uncompressed data compared correctly
+Tested 1MB buffer: OK!

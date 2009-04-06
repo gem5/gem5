@@ -33,6 +33,8 @@ import sys
 
 # import the SWIG-wrapped main C++ functions
 import internal
+import core
+import stats
 from main import options
 import SimObject
 import ticks
@@ -46,28 +48,29 @@ def instantiate(root):
 
     root.unproxy_all()
 
-    ini_file = file(os.path.join(options.outdir, 'config.ini'), 'w')
-    root.print_ini(ini_file)
-    ini_file.close() # close config.ini
+    if options.dump_config:
+        ini_file = file(os.path.join(options.outdir, options.dump_config), 'w')
+        root.print_ini(ini_file)
+        ini_file.close()
 
     # Initialize the global statistics
-    internal.stats.initSimStats()
+    stats.initSimStats()
 
     # Create the C++ sim objects and connect ports
     root.createCCObject()
     root.connectPorts()
 
     # Do a second pass to finish initializing the sim objects
-    internal.core.initAll()
+    core.initAll()
 
     # Do a third pass to initialize statistics
-    internal.core.regAllStats()
+    core.regAllStats()
 
-    # Check to make sure that the stats package is properly initialized
-    internal.stats.check()
+    # We're done registering statistics.  Enable the stats package now.
+    stats.enable()
 
     # Reset to put the stats in a consistent state.
-    internal.stats.reset()
+    stats.reset()
 
 def doDot(root):
     dot = pydot.Dot()
@@ -182,3 +185,5 @@ def switchCpus(cpuList):
 
     for old_cpu, new_cpu in cpuList:
         new_cpu.takeOverFrom(old_cpu)
+
+from internal.core import disableAllListeners

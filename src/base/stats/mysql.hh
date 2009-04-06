@@ -40,7 +40,7 @@
 namespace MySQL { class Connection; }
 namespace Stats {
 
-class DistDataData;
+class DistInfoBase;
 class MySqlRun;
 
 struct SetupStat
@@ -56,6 +56,7 @@ struct SetupStat
     bool total;
     bool pdf;
     bool cdf;
+
     double min;
     double max;
     double bktsize;
@@ -69,9 +70,9 @@ class InsertData
 {
   private:
     char *query;
-    int size;
+    size_type size;
     bool first;
-    static const int maxsize = 1024*1024;
+    static const size_type maxsize = 1024*1024;
 
   public:
     MySqlRun *run;
@@ -95,9 +96,9 @@ class InsertEvent
 {
   private:
     char *query;
-    int size;
+    size_type size;
     bool first;
-    static const int maxsize = 1024*1024;
+    static const size_type maxsize = 1024*1024;
 
     typedef std::map<std::string, uint32_t> event_map_t;
     event_map_t events;
@@ -121,19 +122,21 @@ class MySql : public Output
     SetupStat stat;
     InsertData newdata;
     InsertEvent newevent;
-    std::list<FormulaData *> formulas;
+    std::list<FormulaInfoBase *> formulas;
     bool configured;
 
   protected:
     std::map<int, int> idmap;
 
-    void insert(int sim_id, int db_id)
+    void
+    insert(int sim_id, int db_id)
     {
         using namespace std;
         idmap.insert(make_pair(sim_id, db_id));
     }
 
-    int find(int sim_id)
+    int
+    find(int sim_id)
     {
         using namespace std;
         map<int,int>::const_iterator i = idmap.find(sim_id);
@@ -146,19 +149,19 @@ class MySql : public Output
     ~MySql();
 
     void connect(const std::string &host, const std::string &user,
-                 const std::string &passwd, const std::string &db,
-                 const std::string &name, const std::string &sample,
-                 const std::string &project);
+        const std::string &passwd, const std::string &db,
+        const std::string &name, const std::string &sample,
+        const std::string &project);
     bool connected() const;
 
   public:
     // Implement Visit
-    virtual void visit(const ScalarData &data);
-    virtual void visit(const VectorData &data);
-    virtual void visit(const DistData &data);
-    virtual void visit(const VectorDistData &data);
-    virtual void visit(const Vector2dData &data);
-    virtual void visit(const FormulaData &data);
+    virtual void visit(const ScalarInfoBase &info);
+    virtual void visit(const VectorInfoBase &info);
+    virtual void visit(const DistInfoBase &info);
+    virtual void visit(const VectorDistInfoBase &info);
+    virtual void visit(const Vector2dInfoBase &info);
+    virtual void visit(const FormulaInfoBase &info);
 
     // Implement Output
     virtual bool valid() const;
@@ -169,33 +172,33 @@ class MySql : public Output
 
   protected:
     // Output helper
-    void output(const DistDataData &data);
-    void output(const ScalarData &data);
-    void output(const VectorData &data);
-    void output(const DistData &data);
-    void output(const VectorDistData &data);
-    void output(const Vector2dData &data);
-    void output(const FormulaData &data);
+    void output(const ScalarInfoBase &info);
+    void output(const VectorInfoBase &info);
+    void output(const DistInfoBase &info);
+    void output(const VectorDistInfoBase &info);
+    void output(const Vector2dInfoBase &info);
+    void output(const FormulaInfoBase &info);
+    void output(const DistData &data, const DistParams *params);
 
     void configure();
-    bool configure(const StatData &data, std::string type);
-    void configure(const ScalarData &data);
-    void configure(const VectorData &data);
-    void configure(const DistData &data);
-    void configure(const VectorDistData &data);
-    void configure(const Vector2dData &data);
-    void configure(const FormulaData &data);
+    bool configure(const Info &info, std::string type);
+    void configure(const ScalarInfoBase &info);
+    void configure(const VectorInfoBase &info);
+    void configure(const DistInfoBase &info);
+    void configure(const VectorDistInfoBase &info);
+    void configure(const Vector2dInfoBase &info);
+    void configure(const FormulaInfoBase &info);
 };
 
 bool initMySQL(std::string host, std::string database, std::string user,
-               std::string passwd, std::string project, std::string name,
-               std::string sample);
+    std::string passwd, std::string project, std::string name,
+    std::string sample);
 
 #if !USE_MYSQL
 inline bool
 initMySQL(std::string host, std::string user, std::string password,
-          std::string database, std::string project, std::string name,
-          std::string sample)
+    std::string database, std::string project, std::string name,
+    std::string sample)
 {
     return false;
 }

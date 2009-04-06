@@ -65,7 +65,7 @@ struct SimpleCPUPolicy
     /** Typedef for the branch prediction unit (which includes the BP,
      * RAS, and BTB).
      */
-    typedef BPredUnit<Impl> BPredUnit;
+    typedef ::BPredUnit<Impl> BPredUnit;
     /** Typedef for the register file.  Most classes assume a unified
      * physical register file.
      */
@@ -75,15 +75,15 @@ struct SimpleCPUPolicy
     /** Typedef for the rename map. */
     typedef SimpleRenameMap RenameMap;
     /** Typedef for the ROB. */
-    typedef ROB<Impl> ROB;
+    typedef ::ROB<Impl> ROB;
     /** Typedef for the instruction queue/scheduler. */
     typedef InstructionQueue<Impl> IQ;
     /** Typedef for the memory dependence unit. */
-    typedef MemDepUnit<StoreSet, Impl> MemDepUnit;
+    typedef ::MemDepUnit<StoreSet, Impl> MemDepUnit;
     /** Typedef for the LSQ. */
-    typedef LSQ<Impl> LSQ;
+    typedef ::LSQ<Impl> LSQ;
     /** Typedef for the thread-specific LSQ units. */
-    typedef LSQUnit<Impl> LSQUnit;
+    typedef ::LSQUnit<Impl> LSQUnit;
 
     /** Typedef for fetch. */
     typedef DefaultFetch<Impl> Fetch;
@@ -109,7 +109,7 @@ struct SimpleCPUPolicy
     typedef DefaultIEWDefaultCommit<Impl> IEWStruct;
 
     /** The struct for communication within the IEW stage. */
-    typedef IssueStruct<Impl> IssueStruct;
+    typedef ::IssueStruct<Impl> IssueStruct;
 
     /** The struct for all backwards communication. */
     typedef TimeBufStruct<Impl> TimeStruct;

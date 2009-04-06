@@ -166,6 +166,10 @@ class ParamDesc(object):
 
 class VectorParamValue(list):
     __metaclass__ = MetaParamValue
+    def __setattr__(self, attr, value):
+        raise AttributeError, \
+              "Not allowed to set %s on '%s'" % (attr, type(self).__name__)
+
     def ini_str(self):
         return ' '.join([v.ini_str() for v in self])
 
@@ -323,8 +327,8 @@ class CheckedIntType(MetaParamValue):
         if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
             if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
                 panic("CheckedInt subclass %s must define either\n" \
-                      "    'min' and 'max' or 'size' and 'unsigned'\n" \
-                      % name);
+                      "    'min' and 'max' or 'size' and 'unsigned'\n",
+                      name);
             if cls.unsigned:
                 cls.min = 0
                 cls.max = 2 ** cls.size - 1
@@ -379,6 +383,13 @@ class Percent(CheckedInt):  cxx_type = 'int'; min = 0; max = 100
 class Float(ParamValue, float):
     cxx_type = 'double'
 
+    def __init__(self, value):
+        if isinstance(value, (int, long, float, NumericParamValue, Float)):
+            self.value = float(value)
+        else:
+            raise TypeError, "Can't convert object of type %s to Float" \
+                  % type(value).__name__
+
     def getValue(self):
         return float(self.value)
 
@@ -406,7 +417,6 @@ class MemorySize32(CheckedInt):
 
 class Addr(CheckedInt):
     cxx_type = 'Addr'
-    cxx_predecls = ['#include "arch/isa_traits.hh"']
     size = 64
     unsigned = True
     def __init__(self, value):
@@ -886,7 +896,7 @@ class NetworkBandwidth(float,ParamValue):
 
 class MemoryBandwidth(float,ParamValue):
     cxx_type = 'float'
-    def __new__(self, value):
+    def __new__(cls, value):
         # we want the number of ticks per byte of data
         val = convert.toMemoryBandwidth(value)
         return super(cls, MemoryBandwidth).__new__(cls, val)
@@ -896,7 +906,9 @@ class MemoryBandwidth(float,ParamValue):
 
     def getValue(self):
         # convert to seconds per byte
-        value = 1.0 / float(self)
+        value = float(self)
+        if value:
+            value = 1.0 / float(self)
         # convert to ticks per byte
         value = ticks.fromSeconds(value)
         return float(value)
@@ -992,6 +1004,7 @@ class PortRef(object):
         if self.peer and not proxy.isproxy(self.peer):
             print "warning: overwriting port", self, \
                   "value", self.peer, "with", other
+            self.peer.peer = None
         self.peer = other
         if proxy.isproxy(other):
             other.set_param_desc(PortParamDesc())
@@ -1034,6 +1047,8 @@ class PortRef(object):
         if self.ccConnected: # already done this
             return
         peer = self.peer
+        if not self.peer: # nothing to connect to
+            return
         connectPorts(self.simobj.getCCObject(), self.name, self.index,
                      peer.simobj.getCCObject(), peer.name, peer.index)
         self.ccConnected = True

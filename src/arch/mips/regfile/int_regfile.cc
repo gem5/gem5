@@ -37,7 +37,6 @@
 using namespace MipsISA;
 using namespace std;
 
-
 void
 IntRegFile::clear()
 {
@@ -45,29 +44,33 @@ IntRegFile::clear()
     currShadowSet=0;
 }
 
+int
+IntRegFile::readShadowSet()
+{
+  return currShadowSet;
+}
+
 void
 IntRegFile::setShadowSet(int css)
 {
-    DPRINTF(MipsPRA,"Setting Shadow Set to :%d (%s)\n",css,currShadowSet);
+    DPRINTF(MipsPRA, "Setting Shadow Set to :%d (%s)\n", css, currShadowSet);
     currShadowSet = css;
 }
 
 IntReg
 IntRegFile::readReg(int intReg)
 {
-    if(intReg < NumIntRegs)
-    { // Regular GPR Read
-        DPRINTF(MipsPRA,"Reading Reg: %d, CurrShadowSet: %d\n",intReg,currShadowSet);
-        if(intReg >= NumIntArchRegs*NumShadowRegSets){
-            return regs[intReg+NumIntRegs*currShadowSet];
-        }
-        else {
-            return regs[(intReg + NumIntArchRegs*currShadowSet) % NumIntArchRegs];
-        }
-    }
-    else
-    { // Read from shadow GPR .. probably called by RDPGPR
-        return regs[intReg];
+    if (intReg < NumIntArchRegs) {
+        // Regular GPR Read
+        DPRINTF(MipsPRA, "Reading Reg: %d, CurrShadowSet: %d\n", intReg,
+              currShadowSet);
+
+        return regs[intReg + NumIntArchRegs * currShadowSet];
+    } else {
+        unsigned special_reg_num = intReg - NumIntArchRegs;
+
+        // Read A Special Reg
+        return regs[TotalArchRegs + special_reg_num];
     }
 }
 
@@ -75,20 +78,15 @@ Fault
 IntRegFile::setReg(int intReg, const IntReg &val)
 {
     if (intReg != ZeroReg) {
+        if (intReg < NumIntArchRegs) {
+          regs[intReg + NumIntArchRegs * currShadowSet] = val;
+        } else {
+          unsigned special_reg_num = intReg - NumIntArchRegs;
 
-        if(intReg < NumIntRegs)
-        {
-            if(intReg >= NumIntArchRegs*NumShadowRegSets){
-                regs[intReg] = val;
-            }
-            else{
-                regs[intReg+NumIntRegs*currShadowSet] = val;
-            }
-        }
-        else{
-            regs[intReg] = val;
+          regs[TotalArchRegs + special_reg_num] = val;
         }
     }
+
     return NoFault;
 }
 
@@ -103,4 +101,3 @@ IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_ARRAY(regs, NumIntRegs);
 }
-

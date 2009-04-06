@@ -51,4 +51,5 @@ class AlphaLinuxProcess : public AlphaLiveProcess
 };
 
 } // namespace AlphaISA
+
 #endif // __ALPHA_LINUX_PROCESS_HH__

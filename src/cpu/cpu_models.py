@@ -82,3 +82,6 @@ CpuModel('CheckerCPU', 'checker_cpu_exec.cc',
 CpuModel('O3CPU', 'o3_cpu_exec.cc',
          '#include "cpu/o3/isa_specific.hh"',
          { 'CPU_exec_context': 'O3DynInst' })
+CpuModel('InOrderCPU', 'inorder_cpu_exec.cc',
+         '#include "cpu/inorder/inorder_dyn_inst.hh"',
+         { 'CPU_exec_context': 'InOrderDynInst' })

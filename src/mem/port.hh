@@ -47,6 +47,7 @@
 #include "base/range.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "sim/eventq.hh"
 
 /** This typedef is used to clean up the parameter list of
  * getDeviceAddressRanges() and getPeerAddressRanges().  It's declared
@@ -58,6 +59,7 @@
 typedef std::list<Range<Addr> > AddrRangeList;
 typedef std::list<Range<Addr> >::iterator AddrRangeIter;
 
+class EventQueue;
 class MemObject;
 
 /**
@@ -71,10 +73,9 @@ class MemObject;
  * Send accessor functions are being called from the device the port is
  * associated with, and it will call the peer recv. accessor function.
  */
-class Port
+class Port : public EventManager
 {
-  private:
-
+  protected:
     /** Descriptive name (for DPRINTF output) */
     mutable std::string portName;
 
@@ -87,9 +88,6 @@ class Port
     MemObject *owner;
 
   public:
-
-    Port();
-
     /**
      * Constructor.
      *
@@ -98,12 +96,12 @@ class Port
      * @param _owner Pointer to the MemObject that owns this port.
      * Will not necessarily be set.
      */
-    Port(const std::string &_name, MemObject *_owner = NULL);
+    Port(const std::string &_name, MemObject *_owner);
 
     /** Return port name (for DPRINTF). */
     const std::string &name() const { return portName; }
 
-    virtual ~Port() {};
+    virtual ~Port();
 
     // mey be better to use subclasses & RTTI?
     /** Holds the ports status.  Currently just that a range recomputation needs
@@ -122,7 +120,7 @@ class Port
     Port *getPeer() { return peer; }
 
     /** Function to set the owner of this port. */
-    void setOwner(MemObject *_owner) { owner = _owner; }
+    void setOwner(MemObject *_owner);
 
     /** Function to return the owner of this port. */
     MemObject *getOwner() { return owner; }
@@ -131,7 +129,9 @@ class Port
      * demise. */
     void removeConn();
 
-    virtual bool isDefaultPort() { return false; }
+    virtual bool isDefaultPort() const { return false; }
+
+    bool isConnected() { return peer && !peer->isDefaultPort(); }
 
   protected:
 

@@ -38,11 +38,13 @@
 #include "sim/faults.hh"
 
 class Checkpoint;
+class EventManager;
 class ThreadContext;
 
 namespace ArmISA
 {
-    class RegFile {
+    class RegFile
+    {
       protected:
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
@@ -176,8 +178,9 @@ namespace ArmISA
             //nnpc = val;
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+                         const std::string &section);
 
         void changeContext(RegContextParam param, RegContextVal val)
         {

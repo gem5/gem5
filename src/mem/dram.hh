@@ -117,27 +117,27 @@ class DRAMMemory : public PhysicalMemory
     Tick time_last_access;
 
 
-    Stats::Vector<> accesses;
-    Stats::Vector<> bytesRequested;
-    Stats::Vector<> bytesSent;
-    Stats::Vector<> compressedAccesses;
+    Stats::Vector accesses;
+    Stats::Vector bytesRequested;
+    Stats::Vector bytesSent;
+    Stats::Vector compressedAccesses;
 
-    Stats::Vector<> cycles_nCKE;
-    Stats::Vector<> cycles_all_precharge_CKE;
-    Stats::Vector<> cycles_all_precharge_nCKE;
-    Stats::Vector<> cycles_bank_active_nCKE;
-    Stats::Vector<> cycles_avg_ACT;
-    Stats::Vector<> cycles_read_out;
-    Stats::Vector<> cycles_write_in;
-    Stats::Vector<> cycles_between_misses;
-    Stats::Vector<> other_bank_read_access_miss;
-    Stats::Vector<> other_bank_write_access_miss;
-    Stats::Scalar<> total_latency;
-    Stats::Scalar<> total_icache_req;
-    Stats::Scalar<> total_arb_latency;
+    Stats::Vector cycles_nCKE;
+    Stats::Vector cycles_all_precharge_CKE;
+    Stats::Vector cycles_all_precharge_nCKE;
+    Stats::Vector cycles_bank_active_nCKE;
+    Stats::Vector cycles_avg_ACT;
+    Stats::Vector cycles_read_out;
+    Stats::Vector cycles_write_in;
+    Stats::Vector cycles_between_misses;
+    Stats::Vector other_bank_read_access_miss;
+    Stats::Vector other_bank_write_access_miss;
+    Stats::Scalar total_latency;
+    Stats::Scalar total_icache_req;
+    Stats::Scalar total_arb_latency;
     Stats::Formula avg_latency;
     Stats::Formula avg_arb_latency;
-    Stats::Vector2d<> bank_access_profile;
+    Stats::Vector2d bank_access_profile;
 
 
   protected:

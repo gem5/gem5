@@ -321,23 +321,23 @@ objParamIn(Checkpoint *cp, const std::string &section,
 }
 
 
-#define INSTANTIATE_PARAM_TEMPLATES(type)				\
-template void								\
-paramOut(ostream &os, const std::string &name, type const &param);	\
-template void								\
-paramIn(Checkpoint *cp, const std::string &section,			\
-        const std::string &name, type & param);				\
-template void								\
-arrayParamOut(ostream &os, const std::string &name,			\
-              type const *param, int size);				\
-template void								\
-arrayParamIn(Checkpoint *cp, const std::string &section,		\
+#define INSTANTIATE_PARAM_TEMPLATES(type)                               \
+template void                                                           \
+paramOut(ostream &os, const std::string &name, type const &param);      \
+template void                                                           \
+paramIn(Checkpoint *cp, const std::string &section,                     \
+        const std::string &name, type & param);                         \
+template void                                                           \
+arrayParamOut(ostream &os, const std::string &name,                     \
+              type const *param, int size);                             \
+template void                                                           \
+arrayParamIn(Checkpoint *cp, const std::string &section,                \
              const std::string &name, type *param, int size);           \
-template void								\
-arrayParamOut(ostream &os, const std::string &name,			\
-              const std::vector<type> &param);				\
-template void								\
-arrayParamIn(Checkpoint *cp, const std::string &section,		\
+template void                                                           \
+arrayParamOut(ostream &os, const std::string &name,                     \
+              const std::vector<type> &param);                          \
+template void                                                           \
+arrayParamIn(Checkpoint *cp, const std::string &section,                \
              const std::string &name, std::vector<type> &param);
 
 INSTANTIATE_PARAM_TEMPLATES(signed char)
@@ -351,6 +351,8 @@ INSTANTIATE_PARAM_TEMPLATES(unsigned long)
 INSTANTIATE_PARAM_TEMPLATES(signed long long)
 INSTANTIATE_PARAM_TEMPLATES(unsigned long long)
 INSTANTIATE_PARAM_TEMPLATES(bool)
+INSTANTIATE_PARAM_TEMPLATES(float)
+INSTANTIATE_PARAM_TEMPLATES(double)
 INSTANTIATE_PARAM_TEMPLATES(string)
 
 
@@ -394,6 +396,24 @@ Globals::unserialize(Checkpoint *cp)
     mainEventQueue.unserialize(cp, "MainEventQueue");
 }
 
+Serializable::Serializable()
+{
+}
+
+Serializable::~Serializable()
+{
+}
+
+void
+Serializable::serialize(std::ostream &os)
+{
+}
+
+void
+Serializable::unserialize(Checkpoint *cp, const std::string &section)
+{
+}
+
 void
 Serializable::serializeAll(const std::string &cpt_dir)
 {
@@ -405,6 +425,8 @@ Serializable::serializeAll(const std::string &cpt_dir)
     string cpt_file = dir + Checkpoint::baseFilename;
     ofstream outstream(cpt_file.c_str());
     time_t t = time(NULL);
+    if (!outstream.is_open())
+        fatal("Unable to open file %s for writing\n", cpt_file.c_str());
     outstream << "// checkpoint generated: " << ctime(&t);
 
     globals.serialize(outstream);

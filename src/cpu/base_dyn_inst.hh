@@ -77,8 +77,8 @@ class BaseDynInst : public FastAlloc, public RefCounted
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
     enum {
-        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,	/// Max source regs
-        MaxInstDestRegs = TheISA::MaxInstDestRegs,	/// Max dest regs
+        MaxInstSrcRegs = TheISA::MaxInstSrcRegs,        /// Max source regs
+        MaxInstDestRegs = TheISA::MaxInstDestRegs,      /// Max dest regs
     };
 
     /** The StaticInst used by this BaseDynInst. */
@@ -115,9 +115,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault read(Addr addr, T &data, unsigned flags);
 
-    Fault translateDataReadAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
-
     /**
      * Does a write to a given address.
      * @param data The data to be written.
@@ -129,9 +126,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault write(T data, Addr addr, unsigned flags,
                         uint64_t *res);
-
-    Fault translateDataWriteAddr(Addr vaddr, Addr &paddr,
-            int size, unsigned flags);
 
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
@@ -257,9 +251,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
     bool predTaken;
 
   public:
-
-    /** Count of total number of dynamic instructions. */
-    static int instcount;
 
 #ifdef DEBUG
     void dumpSNList();
@@ -412,7 +403,10 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void dump(std::string &outstring);
 
     /** Read this CPU's ID. */
-    int readCpuId() { return cpu->readCpuId(); }
+    int cpuId() { return cpu->cpuId(); }
+
+    /** Read this context's system-wide ID **/
+    int contextId() { return thread->contextId(); }
 
     /** Returns the fault type. */
     Fault getFault() { return fault; }
@@ -486,24 +480,24 @@ class BaseDynInst : public FastAlloc, public RefCounted
     //
     //  Instruction types.  Forward checks to StaticInst object.
     //
-    bool isNop()	  const { return staticInst->isNop(); }
-    bool isMemRef()    	  const { return staticInst->isMemRef(); }
-    bool isLoad()	  const { return staticInst->isLoad(); }
-    bool isStore()	  const { return staticInst->isStore(); }
+    bool isNop()          const { return staticInst->isNop(); }
+    bool isMemRef()       const { return staticInst->isMemRef(); }
+    bool isLoad()         const { return staticInst->isLoad(); }
+    bool isStore()        const { return staticInst->isStore(); }
     bool isStoreConditional() const
     { return staticInst->isStoreConditional(); }
     bool isInstPrefetch() const { return staticInst->isInstPrefetch(); }
     bool isDataPrefetch() const { return staticInst->isDataPrefetch(); }
     bool isCopy()         const { return staticInst->isCopy(); }
-    bool isInteger()	  const { return staticInst->isInteger(); }
-    bool isFloating()	  const { return staticInst->isFloating(); }
-    bool isControl()	  const { return staticInst->isControl(); }
-    bool isCall()	  const { return staticInst->isCall(); }
-    bool isReturn()	  const { return staticInst->isReturn(); }
-    bool isDirectCtrl()	  const { return staticInst->isDirectCtrl(); }
+    bool isInteger()      const { return staticInst->isInteger(); }
+    bool isFloating()     const { return staticInst->isFloating(); }
+    bool isControl()      const { return staticInst->isControl(); }
+    bool isCall()         const { return staticInst->isCall(); }
+    bool isReturn()       const { return staticInst->isReturn(); }
+    bool isDirectCtrl()   const { return staticInst->isDirectCtrl(); }
     bool isIndirectCtrl() const { return staticInst->isIndirectCtrl(); }
-    bool isCondCtrl()	  const { return staticInst->isCondCtrl(); }
-    bool isUncondCtrl()	  const { return staticInst->isUncondCtrl(); }
+    bool isCondCtrl()     const { return staticInst->isCondCtrl(); }
+    bool isUncondCtrl()   const { return staticInst->isUncondCtrl(); }
     bool isCondDelaySlot() const { return staticInst->isCondDelaySlot(); }
     bool isThreadSync()   const { return staticInst->isThreadSync(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
@@ -560,7 +554,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     Addr branchTarget() const { return staticInst->branchTarget(PC); }
 
     /** Returns the number of source registers. */
-    int8_t numSrcRegs()	const { return staticInst->numSrcRegs(); }
+    int8_t numSrcRegs() const { return staticInst->numSrcRegs(); }
 
     /** Returns the number of destination registers. */
     int8_t numDestRegs() const { return staticInst->numDestRegs(); }
@@ -857,29 +851,6 @@ class BaseDynInst : public FastAlloc, public RefCounted
 };
 
 template<class Impl>
-Fault
-BaseDynInst<Impl>::translateDataReadAddr(Addr vaddr, Addr &paddr,
-        int size, unsigned flags)
-{
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    reqMade = true;
-    Request *req = new Request();
-    req->setVirt(asid, vaddr, size, flags, PC);
-    req->setThreadContext(thread->readCpuId(), threadNumber);
-
-    fault = cpu->translateDataReadReq(req, thread);
-
-    if (fault == NoFault)
-        paddr = req->getPaddr();
-
-    delete req;
-    return fault;
-}
-
-template<class Impl>
 template<class T>
 inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
@@ -887,9 +858,9 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->readCpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->translateDataReadReq(req, thread);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), false);
 
     if (req->isUncacheable())
         isUncacheable = true;
@@ -931,29 +902,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 }
 
 template<class Impl>
-Fault
-BaseDynInst<Impl>::translateDataWriteAddr(Addr vaddr, Addr &paddr,
-        int size, unsigned flags)
-{
-    if (traceData) {
-        traceData->setAddr(vaddr);
-    }
-
-    reqMade = true;
-    Request *req = new Request();
-    req->setVirt(asid, vaddr, size, flags, PC);
-    req->setThreadContext(thread->readCpuId(), threadNumber);
-
-    fault = cpu->translateDataWriteReq(req, thread);
-
-    if (fault == NoFault)
-        paddr = req->getPaddr();
-
-    delete req;
-    return fault;
-}
-
-template<class Impl>
 template<class T>
 inline Fault
 BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
@@ -966,9 +914,9 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     reqMade = true;
     Request *req = new Request();
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->readCpuId(), threadNumber);
+    req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->translateDataWriteReq(req, thread);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), true);
 
     if (req->isUncacheable())
         isUncacheable = true;

@@ -32,5 +32,4 @@ from InstTracer import InstTracer
 
 class IntelTrace(InstTracer):
     type = 'IntelTrace'
-    cxx_namespace = 'Trace'
-    cxx_class = 'IntelTrace'
+    cxx_class = 'Trace::IntelTrace'

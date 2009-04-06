@@ -366,7 +366,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
   int lat=0, temp=0, current_bank=0;
   int current_row=0, current_device=0;
 
-  int was_miss = 0;	// determines if there was an active row miss this access
+  int was_miss = 0;     // determines if there was an active row miss this access
 
   //md_addr_t physic_address; /* linear memory address to be accessed */
   Addr physic_address; /* linear memory address to be accessed */
@@ -415,7 +415,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         int SD_BEST_T_WRITE_WRITE_OBANK = 0; /* WAW, row miss/hit, another bank */
 
     Tick time_since_last_access = curTick-time_last_access;
-    Tick time_last_miss = 0;	// used for keeping track of times between activations (page misses)
+    Tick time_last_miss = 0;    // used for keeping track of times between activations (page misses)
     //int was_idle = (curTick > busy_until);
         bool srow_flag = false;
         int timing_correction = 0;
@@ -433,7 +433,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         // SDRAM does not use the active_row array in closed_page mode
         // TODO: handle closed page operation
 
-    } else {		// DRDRAM uses the active_row array
+    } else {            // DRDRAM uses the active_row array
         for( int i = 0; i < bank_max; i++ ) {
                 if( (active_row[current_bank] != row_max)) all_precharged = 0;
         }
@@ -923,7 +923,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           }
         // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
 
         return lat;
       }
@@ -2034,7 +2034,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return lat;
       }
 
@@ -2226,7 +2226,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         /*fprintf(stderr,"%10.0f %10.0f %4d %4d \n",(double)busy_until, (double)curTick, overlap, lat);debug*/
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return lat;
       }
 
@@ -2468,7 +2468,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return lat;
       }
 
@@ -2525,7 +2525,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
 
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return lat;
       }
 
@@ -2593,7 +2593,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
           }
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return lat;
       }
 
@@ -2608,7 +2608,7 @@ DRAMMemory::calculateLatency(PacketPtr pkt)
         assert(chunks >0);
         // if((_cpu_num < num_cpus) && (_cpu_num >= 0))
                 // cout <<"cpu id = " << _cpu_num << "current_bank = " << current_bank << endl;
-    //	bank_access_profile[_cpu_num][current_bank]++;
+    //  bank_access_profile[_cpu_num][current_bank]++;
         return(/* first chunk latency */act_lat +
                (/* remainder chunk latency */cas_lat * (chunks - 1)));
       }

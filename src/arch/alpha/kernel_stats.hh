@@ -62,15 +62,15 @@ class Statistics : public ::Kernel::Statistics
     void changeMode(cpu_mode newmode, ThreadContext *tc);
 
   private:
-    Stats::Vector<> _callpal;
-//    Stats::Vector<> _faults;
+    Stats::Vector _callpal;
+//    Stats::Vector _faults;
 
-    Stats::Vector<> _mode;
-    Stats::Vector<> _modeGood;
+    Stats::Vector _mode;
+    Stats::Vector _modeGood;
     Stats::Formula _modeFraction;
-    Stats::Vector<> _modeTicks;
+    Stats::Vector _modeTicks;
 
-    Stats::Scalar<> _swap_context;
+    Stats::Scalar _swap_context;
 
   public:
     Statistics(System *system);
@@ -90,7 +90,7 @@ class Statistics : public ::Kernel::Statistics
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-} /* end namespace AlphaISA::Kernel */
-} /* end namespace AlphaISA */
+} // namespace Kernel
+} // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_KERNEL_STATS_HH__

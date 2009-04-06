@@ -65,6 +65,7 @@ class Process;
 #endif // FULL_SYSTEM
 template <class>
 class BaseDynInst;
+class CheckerCPUParams;
 class ThreadContext;
 class MemInterface;
 class Checkpoint;
@@ -96,20 +97,10 @@ class CheckerCPU : public BaseCPU
   public:
     virtual void init();
 
-    struct Params : public BaseCPU::Params
-    {
-#if FULL_SYSTEM
-        TheISA::ITB *itb;
-        TheISA::DTB *dtb;
-#else
-        Process *process;
-#endif
-        bool exitOnError;
-        bool updateOnError;
-        bool warnOnlyOnLoadError;
-    };
-
   public:
+    typedef CheckerCPUParams Params;
+    const Params *params() const
+    { return reinterpret_cast<const Params *>(_params); }    
     CheckerCPU(Params *p);
     virtual ~CheckerCPU();
 
@@ -189,7 +180,7 @@ class CheckerCPU : public BaseCPU
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
     void setEA(Addr EA) { panic("SimpleCPU::setEA() not implemented\n"); }
-    Addr getEA() 	{ panic("SimpleCPU::getEA() not implemented\n"); }
+    Addr getEA()        { panic("SimpleCPU::getEA() not implemented\n"); }
 
     void prefetch(Addr addr, unsigned flags)
     {
@@ -339,10 +330,6 @@ class CheckerCPU : public BaseCPU
     {
         this->dtb->demapPage(vaddr, asn);
     }
-
-    bool translateInstReq(Request *req);
-    void translateDataWriteReq(Request *req);
-    void translateDataReadReq(Request *req);
 
 #if FULL_SYSTEM
     Fault hwrei() { return thread->hwrei(); }

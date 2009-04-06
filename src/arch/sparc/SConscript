@@ -44,11 +44,14 @@ if env['TARGET_ISA'] == 'sparc':
     Source('utility.cc')
 
     SimObject('SparcTLB.py')
-    TraceFlag('Sparc')
+    TraceFlag('Sparc', "Generic SPARC ISA stuff")
+    TraceFlag('RegisterWindows', "Register window manipulation")
 
     if env['FULL_SYSTEM']:
         SimObject('SparcSystem.py')
+        SimObject('SparcInterrupts.py')
 
+        Source('interrupts.cc')
         Source('stacktrace.cc')
         Source('system.cc')
         Source('ua2005.cc')

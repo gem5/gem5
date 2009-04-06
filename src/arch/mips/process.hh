@@ -47,6 +47,10 @@ class MipsLiveProcess : public LiveProcess
 
     virtual void startup();
 
+  public:
+    MipsISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, MipsISA::IntReg val);
+    void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };
 
 

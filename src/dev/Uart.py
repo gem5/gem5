@@ -34,7 +34,7 @@ from Device import BasicPioDevice
 class Uart(BasicPioDevice):
     type = 'Uart'
     abstract = True
-    sim_console = Param.SimConsole(Parent.any, "The console")
+    terminal = Param.Terminal(Parent.any, "The terminal")
 
 class Uart8250(Uart):
     type = 'Uart8250'

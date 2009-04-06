@@ -41,22 +41,23 @@
 //#include "cpu/base.hh"
 #include "sim/faults.hh"
 
-class Checkpoint;
 class BaseCPU;
+class Checkpoint;
+class EventManager;
 
 namespace MipsISA
 {
     class RegFile {
       protected:
-        Addr pc;			// program counter
-        Addr npc;			// next-cycle program counter
-        Addr nnpc;			// next-next-cycle program counter
+        Addr pc;                        // program counter
+        Addr npc;                       // next-cycle program counter
+        Addr nnpc;                      // next-next-cycle program counter
                                         // used to implement branch delay slot
                                         // not real register
 
-        IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
+        IntRegFile intRegFile;          // (signed) integer register file
+        FloatRegFile floatRegFile;      // floating point register file
+        MiscRegFile miscRegFile;        // control register file
 
       public:
         void clear();
@@ -99,12 +100,9 @@ namespace MipsISA
         Addr readNextNPC();
         void setNextNPC(Addr val);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-        void changeContext(RegContextParam param, RegContextVal val)
-        {
-        }
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+            const std::string &section);
 
     };
 

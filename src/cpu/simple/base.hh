@@ -76,6 +76,8 @@ namespace Trace {
     class InstRecord;
 }
 
+class BaseSimpleCPUParams;
+
 
 class BaseSimpleCPU : public BaseCPU
 {
@@ -96,7 +98,7 @@ class BaseSimpleCPU : public BaseCPU
     }
 
   public:
-    void post_interrupt(int int_num, int index);
+    void wakeup();
 
     void zero_fill_64(Addr addr) {
       static int warned = 0;
@@ -107,15 +109,7 @@ class BaseSimpleCPU : public BaseCPU
     };
 
   public:
-    struct Params : public BaseCPU::Params
-    {
-        TheISA::ITB *itb;
-        TheISA::DTB *dtb;
-#if !FULL_SYSTEM
-        Process *process;
-#endif
-    };
-    BaseSimpleCPU(Params *params);
+    BaseSimpleCPU(BaseSimpleCPUParams *params);
     virtual ~BaseSimpleCPU();
 
   public:
@@ -127,7 +121,22 @@ class BaseSimpleCPU : public BaseCPU
      */
     ThreadContext *tc;
   protected:
-    int cpuId;
+
+    enum Status {
+        Idle,
+        Running,
+        ITBWaitResponse,
+        IcacheRetry,
+        IcacheWaitResponse,
+        IcacheWaitSwitch,
+        DTBWaitResponse,
+        DcacheRetry,
+        DcacheWaitResponse,
+        DcacheWaitSwitch,
+        SwitchedOut
+    };
+
+    Status _status;
 
   public:
 
@@ -153,7 +162,7 @@ class BaseSimpleCPU : public BaseCPU
     bool stayAtPC;
 
     void checkForInterrupts();
-    Fault setupFetchRequest(Request *req);
+    void setupFetchRequest(Request *req);
     void preExecute();
     void postExecute();
     void advancePC(Fault fault);
@@ -168,7 +177,7 @@ class BaseSimpleCPU : public BaseCPU
     // number of simulated instructions
     Counter numInst;
     Counter startNumInst;
-    Stats::Scalar<> numInsts;
+    Stats::Scalar numInsts;
 
     void countInst()
     {
@@ -187,30 +196,30 @@ class BaseSimpleCPU : public BaseCPU
     static const Addr PCMask = ~((Addr)sizeof(TheISA::MachInst) - 1);
 
     // number of simulated memory references
-    Stats::Scalar<> numMemRefs;
+    Stats::Scalar numMemRefs;
 
     // number of simulated loads
     Counter numLoad;
     Counter startNumLoad;
 
     // number of idle cycles
-    Stats::Average<> notIdleFraction;
+    Stats::Average notIdleFraction;
     Stats::Formula idleFraction;
 
     // number of cycles stalled for I-cache responses
-    Stats::Scalar<> icacheStallCycles;
+    Stats::Scalar icacheStallCycles;
     Counter lastIcacheStall;
 
     // number of cycles stalled for I-cache retries
-    Stats::Scalar<> icacheRetryCycles;
+    Stats::Scalar icacheRetryCycles;
     Counter lastIcacheRetry;
 
     // number of cycles stalled for D-cache responses
-    Stats::Scalar<> dcacheStallCycles;
+    Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 
     // number of cycles stalled for D-cache retries
-    Stats::Scalar<> dcacheRetryCycles;
+    Stats::Scalar dcacheRetryCycles;
     Counter lastDcacheRetry;
 
     virtual void serialize(std::ostream &os);
@@ -219,7 +228,7 @@ class BaseSimpleCPU : public BaseCPU
     // These functions are only used in CPU models that split
     // effective address computation from the actual memory access.
     void setEA(Addr EA) { panic("BaseSimpleCPU::setEA() not implemented\n"); }
-    Addr getEA() 	{ panic("BaseSimpleCPU::getEA() not implemented\n");
+    Addr getEA()        { panic("BaseSimpleCPU::getEA() not implemented\n");
         M5_DUMMY_RETURN}
 
     void prefetch(Addr addr, unsigned flags)

@@ -82,7 +82,7 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setCpuId(id);
     }
 
-    int readCpuId() { return actualTC->readCpuId(); }
+    int cpuId() { return actualTC->cpuId(); }
 
     TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
 
@@ -98,10 +98,8 @@ class CheckerThreadContext : public ThreadContext
 
     FunctionalPort *getPhysPort() { return actualTC->getPhysPort(); }
 
-    VirtualPort *getVirtPort(ThreadContext *tc = NULL)
+    VirtualPort *getVirtPort()
     { return actualTC->getVirtPort(); }
-
-    void delVirtPort(VirtualPort *vp) { actualTC->delVirtPort(vp); }
 #else
     TranslatingPort *getMemPort() { return actualTC->getMemPort(); }
 
@@ -155,7 +153,7 @@ class CheckerThreadContext : public ThreadContext
     void profileSample() { return actualTC->profileSample(); }
 #endif
 
-    int getThreadNum() { return actualTC->getThreadNum(); }
+    int threadId() { return actualTC->threadId(); }
 
     // @todo: Do I need this?
     MachInst getInst() { return actualTC->getInst(); }
@@ -279,29 +277,8 @@ class CheckerThreadContext : public ThreadContext
     bool misspeculating() { return actualTC->misspeculating(); }
 
 #if !FULL_SYSTEM
-    IntReg getSyscallArg(int i) { return actualTC->getSyscallArg(i); }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, IntReg val)
-    {
-        checkerTC->setSyscallArg(i, val);
-        actualTC->setSyscallArg(i, val);
-    }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    {
-        checkerTC->setSyscallReturn(return_value);
-        actualTC->setSyscallReturn(return_value);
-    }
-
     Counter readFuncExeInst() { return actualTC->readFuncExeInst(); }
 #endif
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        actualTC->changeRegFileContext(param, val);
-        checkerTC->changeRegFileContext(param, val);
-    }
 };
 
 #endif // __CPU_CHECKER_EXEC_CONTEXT_HH__

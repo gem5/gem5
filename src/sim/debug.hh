@@ -28,9 +28,15 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __DEBUG_HH__
-#define __DEBUG_HH__
+#ifndef __SIM_DEBUG_HH__
+#define __SIM_DEBUG_HH__
 
-void debug_break();
+#include "sim/host.hh"
 
-#endif // __DEBUG_HH__
+void schedBreakCycle(Tick when);
+
+int getRemoteGDBPort();
+// Remote gdb base port.  0 disables remote gdb.
+void setRemoteGDBPort(int port);
+
+#endif // __SIM_DEBUG_HH__

@@ -28,9 +28,6 @@
 
 import internal
 
-from internal.stats import dump
-from internal.stats import initSimStats
-from internal.stats import reset
 from internal.stats import StatEvent as event
 
 def initText(filename, desc=True, compat=True):
@@ -44,3 +41,19 @@ def initMySQL(host, database, user='', passwd='', project='test', name='test',
 
     internal.stats.initMySQL(host, database, user, passwd, project, name,
                              sample)
+
+def initSimStats():
+    internal.stats.initSimStats()
+
+def enable():
+    internal.stats.enable()
+
+def dump():
+    # Currently prepare happens in the dump, but we should maybe move
+    # that out.
+
+    #internal.stats.prepare()
+    internal.stats.dump()
+
+def reset():
+    internal.stats.reset()

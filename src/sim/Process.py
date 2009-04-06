@@ -34,7 +34,8 @@ class Process(SimObject):
     type = 'Process'
     abstract = True
     input = Param.String('cin', "filename for stdin")
-    output = Param.String('cout', 'filename for stdout/stderr')
+    output = Param.String('cout', 'filename for stdout')
+    errout = Param.String('cerr', 'filename for stderr')
     system = Param.System(Parent.any, "system process will run on")
     max_stack_size = Param.MemorySize('64MB', 'maximum size of the stack')
 

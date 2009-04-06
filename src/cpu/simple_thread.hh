@@ -34,7 +34,6 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/regfile.hh"
-#include "arch/syscallreturn.hh"
 #include "arch/tlb.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -99,7 +98,7 @@ class SimpleThread : public ThreadState
     typedef ThreadContext::Status Status;
 
   protected:
-    RegFile regs;	// correct-path register context
+    RegFile regs;       // correct-path register context
 
   public:
     // pointer to CPU associated with this SimpleThread
@@ -139,7 +138,7 @@ class SimpleThread : public ThreadState
 
     /***************************************************************
      *  SimpleThread functions to provide CPU with access to various
-     *  state, and to provide address translation methods.
+     *  state.
      **************************************************************/
 
     /** Returns the pointer to this SimpleThread's ThreadContext. Used
@@ -147,21 +146,6 @@ class SimpleThread : public ThreadState
      *  CPU.
      */
     ThreadContext *getTC() { return tc; }
-
-    Fault translateInstReq(RequestPtr &req)
-    {
-        return itb->translate(req, tc);
-    }
-
-    Fault translateDataReadReq(RequestPtr &req)
-    {
-        return dtb->translate(req, tc, false);
-    }
-
-    Fault translateDataWriteReq(RequestPtr &req)
-    {
-        return dtb->translate(req, tc, true);
-    }
 
     void demapPage(Addr vaddr, uint64_t asn)
     {
@@ -197,23 +181,20 @@ class SimpleThread : public ThreadState
 
     BaseCPU *getCpuPtr() { return cpu; }
 
-    int getThreadNum() { return tid; }
-
     TheISA::ITB *getITBPtr() { return itb; }
 
     TheISA::DTB *getDTBPtr() { return dtb; }
 
-#if FULL_SYSTEM
     System *getSystemPtr() { return system; }
 
+#if FULL_SYSTEM
     FunctionalPort *getPhysPort() { return physPort; }
 
-    /** Return a virtual port. If no thread context is specified then a static
-     * port is returned. Otherwise a port is created and returned. It must be
-     * deleted by deleteVirtPort(). */
-    VirtualPort *getVirtPort(ThreadContext *tc);
-
-    void delVirtPort(VirtualPort *vp);
+    /** Return a virtual port. This port cannot be cached locally in an object.
+     * After a CPU switch it may point to the wrong memory object which could
+     * mean stale data.
+     */
+    VirtualPort *getVirtPort() { return virtPort; }
 #endif
 
     Status status() const { return _status; }
@@ -385,37 +366,11 @@ class SimpleThread : public ThreadState
     { storeCondFailures = sc_failures; }
 
 #if !FULL_SYSTEM
-    TheISA::IntReg getSyscallArg(int i)
-    {
-        assert(i < TheISA::NumArgumentRegs);
-        return regs.readIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg[i]));
-    }
-
-    // used to shift args for indirect syscall
-    void setSyscallArg(int i, TheISA::IntReg val)
-    {
-        assert(i < TheISA::NumArgumentRegs);
-        regs.setIntReg(TheISA::flattenIntIndex(getTC(),
-                    TheISA::ArgumentReg[i]), val);
-    }
-
-    void setSyscallReturn(SyscallReturn return_value)
-    {
-        TheISA::setSyscallReturn(return_value, getTC());
-    }
-
     void syscall(int64_t callnum)
     {
         process->syscall(callnum, tc);
     }
 #endif
-
-    void changeRegFileContext(TheISA::RegContextParam param,
-            TheISA::RegContextVal val)
-    {
-        regs.changeContext(param, val);
-    }
 };
 
 

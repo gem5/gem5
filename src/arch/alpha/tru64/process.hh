@@ -28,12 +28,13 @@
  * Authors: Steve Reinhardt
  */
 
-#ifndef __ALPHA_TRU64_PROCESS_HH__
-#define __ALPHA_TRU64_PROCESS_HH__
+#ifndef __ARCH_ALPHA_TRU64_PROCESS_HH__
+#define __ARCH_ALPHA_TRU64_PROCESS_HH__
 
 #include "arch/alpha/process.hh"
 
 namespace AlphaISA {
+
 /// A process with emulated Alpha Tru64 syscalls.
 class AlphaTru64Process : public AlphaLiveProcess
 {
@@ -51,9 +52,9 @@ class AlphaTru64Process : public AlphaLiveProcess
     const int Num_Syscall_Descs;
     const int Num_Mach_Syscall_Descs;
 
-    virtual SyscallDesc* getDesc(int callnum);
+    virtual SyscallDesc *getDesc(int callnum);
 };
 
 } // namespace AlphaISA
 
-#endif // __ALPHA_TRU64_PROCESS_HH__
+#endif // __ARCH_ALPHA_TRU64_PROCESS_HH__

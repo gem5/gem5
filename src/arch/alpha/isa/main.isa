@@ -68,9 +68,8 @@ using namespace AlphaISA;
 output exec {{
 #include <math.h>
 
-#if FULL_SYSTEM
+#include "base/cp_annotate.hh"
 #include "sim/pseudo_inst.hh"
-#endif
 #include "arch/alpha/ipr.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
@@ -173,11 +172,11 @@ def operands {{
     # Int regs default to unsigned, but code should not count on this.
     # For clarity, descriptions that depend on unsigned behavior should
     # explicitly specify '.uq'.
-    'Ra': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RA] : RA',
+    'Ra': ('IntReg', 'uq', 'PALMODE ? reg_redir[RA] : RA',
            'IsInteger', 1),
-    'Rb': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RB] : RB',
+    'Rb': ('IntReg', 'uq', 'PALMODE ? reg_redir[RB] : RB',
            'IsInteger', 2),
-    'Rc': ('IntReg', 'uq', 'PALMODE ? AlphaISA::reg_redir[RC] : RC',
+    'Rc': ('IntReg', 'uq', 'PALMODE ? reg_redir[RC] : RC',
            'IsInteger', 3),
     'Fa': ('FloatReg', 'df', 'FA', 'IsFloating', 1),
     'Fb': ('FloatReg', 'df', 'FB', 'IsFloating', 2),

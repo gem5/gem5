@@ -47,7 +47,7 @@ using namespace std;
 PciConfigAll::PciConfigAll(const Params *p)
     : PioDevice(p)
 {
-    pioAddr = p->platform->calcConfigAddr(params()->bus,0,0);
+    pioAddr = p->platform->calcPciConfigAddr(params()->bus,0,0);
 }
 
 

@@ -43,18 +43,16 @@
 using namespace std;
 using namespace AlphaISA;
 
-
-
 /// Target uname() handler.
 static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(tc->getSyscallArg(0));
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
-    strcpy(name->release, "2.4.20");
+    strcpy(name->release, "2.6.26");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "alpha");
 
@@ -69,13 +67,13 @@ static SyscallReturn
 osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
           fpcr.copyOut(tc->getMemPort());
@@ -96,13 +94,13 @@ static SyscallReturn
 osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = tc->getSyscallArg(0);
-    // unsigned nbytes = tc->getSyscallArg(2);
+    unsigned op = process->getSyscallArg(tc, 0);
+    // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(tc->getSyscallArg(1));
+          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
           // I don't think this exactly matches the HW FPCR
           fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "
@@ -138,7 +136,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 14 */ SyscallDesc("mknod", unimplementedFunc),
     /* 15 */ SyscallDesc("chmod", chmodFunc<AlphaLinux>),
     /* 16 */ SyscallDesc("chown", chownFunc),
-    /* 17 */ SyscallDesc("brk", obreakFunc),
+    /* 17 */ SyscallDesc("brk", brkFunc),
     /* 18 */ SyscallDesc("osf_getfsstat", unimplementedFunc),
     /* 19 */ SyscallDesc("lseek", lseekFunc),
     /* 20 */ SyscallDesc("getxpid", getpidPseudoFunc),
@@ -179,9 +177,9 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 55 */ SyscallDesc("osf_reboot", unimplementedFunc),
     /* 56 */ SyscallDesc("osf_revoke", unimplementedFunc),
     /* 57 */ SyscallDesc("symlink", unimplementedFunc),
-    /* 58 */ SyscallDesc("readlink", unimplementedFunc),
+    /* 58 */ SyscallDesc("readlink", readlinkFunc),
     /* 59 */ SyscallDesc("execve", unimplementedFunc),
-    /* 60 */ SyscallDesc("umask", unimplementedFunc),
+    /* 60 */ SyscallDesc("umask", umaskFunc),
     /* 61 */ SyscallDesc("chroot", unimplementedFunc),
     /* 62 */ SyscallDesc("osf_old_fstat", unimplementedFunc),
     /* 63 */ SyscallDesc("getpgrp", unimplementedFunc),
@@ -250,14 +248,14 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 126 */ SyscallDesc("setreuid", unimplementedFunc),
     /* 127 */ SyscallDesc("setregid", unimplementedFunc),
     /* 128 */ SyscallDesc("rename", renameFunc),
-    /* 129 */ SyscallDesc("truncate", unimplementedFunc),
-    /* 130 */ SyscallDesc("ftruncate", unimplementedFunc),
+    /* 129 */ SyscallDesc("truncate", truncateFunc),
+    /* 130 */ SyscallDesc("ftruncate", ftruncateFunc),
     /* 131 */ SyscallDesc("flock", unimplementedFunc),
     /* 132 */ SyscallDesc("setgid", unimplementedFunc),
     /* 133 */ SyscallDesc("sendto", unimplementedFunc),
     /* 134 */ SyscallDesc("shutdown", unimplementedFunc),
     /* 135 */ SyscallDesc("socketpair", unimplementedFunc),
-    /* 136 */ SyscallDesc("mkdir", unimplementedFunc),
+    /* 136 */ SyscallDesc("mkdir", mkdirFunc),
     /* 137 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 138 */ SyscallDesc("osf_utimes", unimplementedFunc),
     /* 139 */ SyscallDesc("osf_old_sigreturn", unimplementedFunc),
@@ -465,7 +463,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 338 */ SyscallDesc("afs_syscall", unimplementedFunc),
     /* 339 */ SyscallDesc("uname", unameFunc),
     /* 340 */ SyscallDesc("nanosleep", unimplementedFunc),
-    /* 341 */ SyscallDesc("mremap", unimplementedFunc),
+    /* 341 */ SyscallDesc("mremap", mremapFunc<AlphaLinux>),
     /* 342 */ SyscallDesc("nfsservctl", unimplementedFunc),
     /* 343 */ SyscallDesc("setresuid", unimplementedFunc),
     /* 344 */ SyscallDesc("getresuid", unimplementedFunc),
@@ -491,7 +489,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 364 */ SyscallDesc("getrusage", getrusageFunc<AlphaLinux>),
     /* 365 */ SyscallDesc("wait4", unimplementedFunc),
     /* 366 */ SyscallDesc("adjtimex", unimplementedFunc),
-    /* 367 */ SyscallDesc("getcwd", unimplementedFunc),
+    /* 367 */ SyscallDesc("getcwd", getcwdFunc),
     /* 368 */ SyscallDesc("capget", unimplementedFunc),
     /* 369 */ SyscallDesc("capset", unimplementedFunc),
     /* 370 */ SyscallDesc("sendfile", unimplementedFunc),
@@ -581,7 +579,7 @@ AlphaLinuxProcess::AlphaLinuxProcess(LiveProcessParams * params,
 SyscallDesc*
 AlphaLinuxProcess::getDesc(int callnum)
 {
-    if (callnum < 0 || callnum > Num_Syscall_Descs)
+    if (callnum < 0 || callnum >= Num_Syscall_Descs)
         return NULL;
     return &syscallDescs[callnum];
 }

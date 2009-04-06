@@ -109,9 +109,9 @@ class TLB : public BaseTLB
      * @param paritition_id partition this entry is for
      * @param real is this a real->phys or virt->phys translation
      * @param context_id if this is virt->phys what context
-     * @param update_used should ew update the used bits in the entries on not
-     * useful if we are trying to do a va->pa without mucking with any state for
-     * a debug read for example.
+     * @param update_used should ew update the used bits in the
+     * entries on not useful if we are trying to do a va->pa without
+     * mucking with any state for a debug read for example.
      * @return A pointer to a tlb entry
      */
     TlbEntry *lookup(Addr va, int partition_id, bool real, int context_id = 0,
@@ -177,7 +177,9 @@ class ITB : public TLB
         cacheEntry = NULL;
     }
 
-    Fault translate(RequestPtr &req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation);
   private:
     void writeSfsr(bool write, ContextType ct,
             bool se, FaultTypes ft, int asi);
@@ -199,7 +201,10 @@ class DTB : public TLB
         cacheEntry[1] = NULL;
     }
 
-    Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+    Fault translateAtomic(RequestPtr req,
+            ThreadContext *tc, bool write=false);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, bool write=false);
 #if FULL_SYSTEM
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);

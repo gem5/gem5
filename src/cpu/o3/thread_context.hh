@@ -75,16 +75,21 @@ class O3ThreadContext : public ThreadContext
     /** Returns a pointer to this CPU. */
     virtual BaseCPU *getCpuPtr() { return cpu; }
 
-    /** Sets this CPU's ID. */
-    virtual void setCpuId(int id) { cpu->setCpuId(id); }
-
     /** Reads this CPU's ID. */
-    virtual int readCpuId() { return cpu->readCpuId(); }
+    virtual int cpuId() { return cpu->cpuId(); }
 
-#if FULL_SYSTEM
+    virtual int contextId() { return thread->contextId(); }
+
+    virtual void setContextId(int id) { thread->setContextId(id); }
+
+    /** Returns this thread's ID number. */
+    virtual int threadId() { return thread->threadId(); }
+    virtual void setThreadId(int id) { return thread->setThreadId(id); }
+
     /** Returns a pointer to the system. */
     virtual System *getSystemPtr() { return cpu->system; }
 
+#if FULL_SYSTEM
     /** Returns a pointer to physical memory. */
     virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
 
@@ -94,11 +99,9 @@ class O3ThreadContext : public ThreadContext
 
     virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
 
-    virtual VirtualPort *getVirtPort(ThreadContext *src_tc = NULL);
+    virtual VirtualPort *getVirtPort();
 
-    void delVirtPort(VirtualPort *vp);
-
-    virtual void connectMemPorts() { thread->connectMemPorts(); }
+    virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
 #else
     virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
@@ -153,9 +156,6 @@ class O3ThreadContext : public ThreadContext
     /** Samples the function profiling information. */
     virtual void profileSample();
 #endif
-    /** Returns this thread's ID number. */
-    virtual int getThreadNum() { return thread->readTid(); }
-
     /** Returns the instruction this thread is currently committing.
      *  Only used when an instruction faults.
      */
@@ -191,36 +191,36 @@ class O3ThreadContext : public ThreadContext
 
     /** Reads this thread's PC. */
     virtual uint64_t readPC()
-    { return cpu->readPC(thread->readTid()); }
+    { return cpu->readPC(thread->threadId()); }
 
     /** Sets this thread's PC. */
     virtual void setPC(uint64_t val);
 
     /** Reads this thread's next PC. */
     virtual uint64_t readNextPC()
-    { return cpu->readNextPC(thread->readTid()); }
+    { return cpu->readNextPC(thread->threadId()); }
 
     /** Sets this thread's next PC. */
     virtual void setNextPC(uint64_t val);
 
     virtual uint64_t readMicroPC()
-    { return cpu->readMicroPC(thread->readTid()); }
+    { return cpu->readMicroPC(thread->threadId()); }
 
     virtual void setMicroPC(uint64_t val);
 
     virtual uint64_t readNextMicroPC()
-    { return cpu->readNextMicroPC(thread->readTid()); }
+    { return cpu->readNextMicroPC(thread->threadId()); }
 
     virtual void setNextMicroPC(uint64_t val);
 
     /** Reads a miscellaneous register. */
     virtual MiscReg readMiscRegNoEffect(int misc_reg)
-    { return cpu->readMiscRegNoEffect(misc_reg, thread->readTid()); }
+    { return cpu->readMiscRegNoEffect(misc_reg, thread->threadId()); }
 
     /** Reads a misc. register, including any side-effects the
      * read might have as defined by the architecture. */
     virtual MiscReg readMiscReg(int misc_reg)
-    { return cpu->readMiscReg(misc_reg, thread->readTid()); }
+    { return cpu->readMiscReg(misc_reg, thread->threadId()); }
 
     /** Sets a misc. register. */
     virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
@@ -247,22 +247,48 @@ class O3ThreadContext : public ThreadContext
     virtual bool misspeculating() { return false; }
 
 #if !FULL_SYSTEM
-    /** Gets a syscall argument by index. */
-    virtual IntReg getSyscallArg(int i);
-
-    /** Sets a syscall argument. */
-    virtual void setSyscallArg(int i, IntReg val);
-
-    /** Sets the syscall return value. */
-    virtual void setSyscallReturn(SyscallReturn return_value);
-
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
-    { return cpu->syscall(callnum, thread->readTid()); }
+    { return cpu->syscall(callnum, thread->threadId()); }
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }
+#else
+    /** Returns pointer to the quiesce event. */
+    virtual EndQuiesceEvent *getQuiesceEvent()
+    {
+        return this->thread->quiesceEvent;
+    }
 #endif
+
+    virtual uint64_t readNextNPC()
+    {
+        return this->cpu->readNextNPC(this->thread->threadId());
+    }
+
+    virtual void setNextNPC(uint64_t val)
+    {
+#if THE_ISA == ALPHA_ISA
+        panic("Not supported on Alpha!");
+#endif
+        this->cpu->setNextNPC(val, this->thread->threadId());
+    }
+
+    /** This function exits the thread context in the CPU and returns
+     * 1 if the CPU has no more active threads (meaning it's OK to exit);
+     * Used in syscall-emulation mode when a thread executes the 'exit'
+     * syscall.
+     */
+    virtual int exit()
+    {
+        this->deallocate();
+
+        // If there are still threads executing in the system
+        if (this->cpu->numActiveThreads())
+            return 0; // don't exit simulation
+        else
+            return 1; // exit simulation
+    }
 };
 
 #endif

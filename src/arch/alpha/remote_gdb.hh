@@ -44,31 +44,29 @@ class System;
 class ThreadContext;
 class PhysicalMemory;
 
-namespace AlphaISA
+namespace AlphaISA {
+
+class RemoteGDB : public BaseRemoteGDB
 {
-    class RemoteGDB : public BaseRemoteGDB
-    {
-      protected:
-        // Machine memory
-        bool write(Addr addr, size_t size, const char *data);
+  protected:
+    Addr notTakenBkpt;
+    Addr takenBkpt;
 
-      public:
-        RemoteGDB(System *system, ThreadContext *context);
+  protected:
+    void getregs();
+    void setregs();
 
-        bool acc(Addr addr, size_t len);
+    void clearSingleStep();
+    void setSingleStep();
 
-      protected:
-        void getregs();
-        void setregs();
+    // Machine memory
+    bool acc(Addr addr, size_t len);
+    bool write(Addr addr, size_t size, const char *data);
 
-        void clearSingleStep();
-        void setSingleStep();
+  public:
+    RemoteGDB(System *system, ThreadContext *context);
+};
 
-      protected:
+} // namespace AlphaISA
 
-        Addr notTakenBkpt;
-        Addr takenBkpt;
-    };
-}
-
-#endif /* __ARCH_ALPHA_REMOTE_GDB_H__ */
+#endif // __ARCH_ALPHA_REMOTE_GDB_HH__

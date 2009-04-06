@@ -30,6 +30,21 @@
 
 #include "mem/tport.hh"
 
+using namespace std;
+
+SimpleTimingPort::SimpleTimingPort(string pname, MemObject *_owner)
+    : Port(pname, _owner), sendEvent(0), drainEvent(NULL),
+      waitingOnRetry(false)
+{
+    sendEvent =  new EventWrapper<SimpleTimingPort,
+        &SimpleTimingPort::processSendEvent>(this);
+}
+
+SimpleTimingPort::~SimpleTimingPort()
+{
+    delete sendEvent;
+}
+
 bool
 SimpleTimingPort::checkFunctional(PacketPtr pkt)
 {
@@ -65,7 +80,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
     // code to hanldle nacks here, but I'm pretty sure it didn't work
     // correctly with the drain code, so that would need to be fixed
     // if we ever added it back.
-    assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
         // snooper will supply based on copy of packet
@@ -83,7 +97,6 @@ SimpleTimingPort::recvTiming(PacketPtr pkt)
         assert(pkt->isResponse());
         schedSendTiming(pkt, curTick + latency);
     } else {
-        delete pkt->req;
         delete pkt;
     }
 
@@ -103,11 +116,6 @@ SimpleTimingPort::schedSendTiming(PacketPtr pkt, Tick when)
         schedSendEvent(when);
         return;
     }
-
-    // list is non-empty and this is not the head, so event should
-    // already be scheduled
-    assert(waitingOnRetry ||
-           (sendEvent->scheduled() && sendEvent->when() <= when));
 
     // list is non-empty & this belongs at the end
     if (when >= transmitList.back().tick) {
@@ -144,7 +152,7 @@ SimpleTimingPort::sendDeferredPacket()
     if (success) {
         if (!transmitList.empty() && !sendEvent->scheduled()) {
             Tick time = transmitList.front().tick;
-            sendEvent->schedule(time <= curTick ? curTick+1 : time);
+            schedule(sendEvent, time <= curTick ? curTick+1 : time);
         }
 
         if (transmitList.empty() && drainEvent) {

@@ -38,7 +38,7 @@ using namespace std;
 
 namespace Stats {
 
-Tick EventStart = ULL(0x7fffffffffffffff);
+Tick EventStart = MaxTick;
 
 extern list<Output *> OutputList;
 

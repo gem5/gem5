@@ -87,6 +87,7 @@
 
 #include "arch/x86/miscregfile.hh"
 #include "arch/x86/tlb.hh"
+#include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "sim/serialize.hh"
 
@@ -95,19 +96,16 @@ using namespace std;
 
 class Checkpoint;
 
-//These functions map register indices to names
-string X86ISA::getMiscRegName(RegIndex index)
-{
-    panic("No misc registers in x86 yet!\n");
-}
-
 void MiscRegFile::clear()
 {
-    // Blank everything. 0 might not be an appropriate value for some things.
+    // Blank everything. 0 might not be an appropriate value for some things,
+    // but it is for most.
     memset(regVal, 0, NumMiscRegs * sizeof(MiscReg));
+    regVal[MISCREG_DR6] = (mask(8) << 4) | (mask(16) << 16);
+    regVal[MISCREG_DR7] = 1 << 10;
 }
 
-MiscReg MiscRegFile::readRegNoEffect(int miscReg)
+MiscReg MiscRegFile::readRegNoEffect(MiscRegIndex miscReg)
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
@@ -121,90 +119,15 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
     return regVal[miscReg];
 }
 
-MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
+MiscReg MiscRegFile::readReg(MiscRegIndex miscReg, ThreadContext * tc)
 {
-    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
-        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
-                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
-            panic("Local APIC In-Service registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
-                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
-            panic("Local APIC Trigger Mode registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
-                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
-            panic("Local APIC Interrupt Request registers "
-                    "are unimplemented.\n");
-        }
-        switch (miscReg) {
-          case MISCREG_APIC_TASK_PRIORITY:
-            panic("Local APIC Task Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_ARBITRATION_PRIORITY:
-            panic("Local APIC Arbitration Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_PROCESSOR_PRIORITY:
-            panic("Local APIC Processor Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_EOI:
-            panic("Local APIC EOI register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LOGICAL_DESTINATION:
-            panic("Local APIC Logical Destination register unimplemented.\n");
-            break;
-          case MISCREG_APIC_DESTINATION_FORMAT:
-            panic("Local APIC Destination Format register unimplemented.\n");
-            break;
-          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
-            panic("Local APIC Spurious Interrupt Vector"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_ERROR_STATUS:
-            panic("Local APIC Error Status register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
-            panic("Local APIC Interrupt Command low"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
-            panic("Local APIC Interrupt Command high"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_TIMER:
-            panic("Local APIC LVT Timer register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_THERMAL_SENSOR:
-            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
-            panic("Local APIC LVT Performance Monitoring Counters"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT0:
-            panic("Local APIC LVT LINT0 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT1:
-            panic("Local APIC LVT LINT1 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_ERROR:
-            panic("Local APIC LVT Error register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INITIAL_COUNT:
-            panic("Local APIC Initial Count register unimplemented.\n");
-            break;
-          case MISCREG_APIC_CURRENT_COUNT:
-            panic("Local APIC Current Count register unimplemented.\n");
-            break;
-          case MISCREG_APIC_DIVIDE_COUNT:
-            panic("Local APIC Divide Count register unimplemented.\n");
-            break;
-        }
+    if (miscReg == MISCREG_TSC) {
+        return regVal[MISCREG_TSC] + tc->getCpuPtr()->curCycle();
     }
     return readRegNoEffect(miscReg);
 }
 
-void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
+void MiscRegFile::setRegNoEffect(MiscRegIndex miscReg, const MiscReg &val)
 {
     // Make sure we're not dealing with an illegal control register.
     // Instructions should filter out these indexes, and nothing else should
@@ -217,96 +140,10 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
     regVal[miscReg] = val;
 }
 
-void MiscRegFile::setReg(int miscReg,
+void MiscRegFile::setReg(MiscRegIndex miscReg,
         const MiscReg &val, ThreadContext * tc)
 {
     MiscReg newVal = val;
-    if (miscReg >= MISCREG_APIC_START && miscReg <= MISCREG_APIC_END) {
-        if (miscReg >= MISCREG_APIC_IN_SERVICE(0) &&
-                miscReg <= MISCREG_APIC_IN_SERVICE(15)) {
-            panic("Local APIC In-Service registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_TRIGGER_MODE(0) &&
-                miscReg <= MISCREG_APIC_TRIGGER_MODE(15)) {
-            panic("Local APIC Trigger Mode registers are unimplemented.\n");
-        }
-        if (miscReg >= MISCREG_APIC_INTERRUPT_REQUEST(0) &&
-                miscReg <= MISCREG_APIC_INTERRUPT_REQUEST(15)) {
-            panic("Local APIC Interrupt Request registers "
-                    "are unimplemented.\n");
-        }
-        switch (miscReg) {
-          case MISCREG_APIC_ID:
-            panic("Local APIC ID register unimplemented.\n");
-            break;
-          case MISCREG_APIC_VERSION:
-            panic("Local APIC Version register is read only.\n");
-            break;
-          case MISCREG_APIC_TASK_PRIORITY:
-            panic("Local APIC Task Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_ARBITRATION_PRIORITY:
-            panic("Local APIC Arbitration Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_PROCESSOR_PRIORITY:
-            panic("Local APIC Processor Priority register unimplemented.\n");
-            break;
-          case MISCREG_APIC_EOI:
-            panic("Local APIC EOI register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LOGICAL_DESTINATION:
-            panic("Local APIC Logical Destination register unimplemented.\n");
-            break;
-          case MISCREG_APIC_DESTINATION_FORMAT:
-            panic("Local APIC Destination Format register unimplemented.\n");
-            break;
-          case MISCREG_APIC_SPURIOUS_INTERRUPT_VECTOR:
-            panic("Local APIC Spurious Interrupt Vector"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_ERROR_STATUS:
-            panic("Local APIC Error Status register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_LOW:
-            panic("Local APIC Interrupt Command low"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INTERRUPT_COMMAND_HIGH:
-            panic("Local APIC Interrupt Command high"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_TIMER:
-            panic("Local APIC LVT Timer register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_THERMAL_SENSOR:
-            panic("Local APIC LVT Thermal Sensor register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_PERFORMANCE_MONITORING_COUNTERS:
-            panic("Local APIC LVT Performance Monitoring Counters"
-                    " register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT0:
-            panic("Local APIC LVT LINT0 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_LINT1:
-            panic("Local APIC LVT LINT1 register unimplemented.\n");
-            break;
-          case MISCREG_APIC_LVT_ERROR:
-            panic("Local APIC LVT Error register unimplemented.\n");
-            break;
-          case MISCREG_APIC_INITIAL_COUNT:
-            panic("Local APIC Initial Count register unimplemented.\n");
-            break;
-          case MISCREG_APIC_CURRENT_COUNT:
-            panic("Local APIC Current Count register unimplemented.\n");
-            break;
-          case MISCREG_APIC_DIVIDE_COUNT:
-            panic("Local APIC Divide Count register unimplemented.\n");
-            break;
-        }
-        setRegNoEffect(miscReg, newVal);
-        return;
-    }
     switch(miscReg)
     {
       case MISCREG_CR0:
@@ -314,17 +151,39 @@ void MiscRegFile::setReg(int miscReg,
             CR0 toggled = regVal[miscReg] ^ val;
             CR0 newCR0 = val;
             Efer efer = regVal[MISCREG_EFER];
+            HandyM5Reg m5reg = regVal[MISCREG_M5_REG];
             if (toggled.pg && efer.lme) {
                 if (newCR0.pg) {
                     //Turning on long mode
                     efer.lma = 1;
+                    m5reg.mode = LongMode;
                     regVal[MISCREG_EFER] = efer;
                 } else {
                     //Turning off long mode
                     efer.lma = 0;
+                    m5reg.mode = LegacyMode;
                     regVal[MISCREG_EFER] = efer;
                 }
             }
+            // Figure out what submode we're in.
+            if (m5reg.mode == LongMode) {
+                SegAttr csAttr = regVal[MISCREG_CS_ATTR];
+                if (csAttr.longMode)
+                    m5reg.submode = SixtyFourBitMode;
+                else
+                    m5reg.submode = CompatabilityMode;
+            } else {
+                if (newCR0.pe) {
+                    RFLAGS rflags = regVal[MISCREG_RFLAGS];
+                    if (rflags.vm)
+                        m5reg.submode = Virtual8086Mode;
+                    else
+                        m5reg.submode = ProtectedMode;
+                } else {
+                    m5reg.submode = RealMode;
+                }
+            }
+            regVal[MISCREG_M5_REG] = m5reg;
             if (toggled.pg) {
                 tc->getITBPtr()->invalidateAll();
                 tc->getDTBPtr()->invalidateAll();
@@ -355,20 +214,26 @@ void MiscRegFile::setReg(int miscReg,
         {
             SegAttr toggled = regVal[miscReg] ^ val;
             SegAttr newCSAttr = val;
+            HandyM5Reg m5reg = regVal[MISCREG_M5_REG];
             if (toggled.longMode) {
-                SegAttr newCSAttr = val;
                 if (newCSAttr.longMode) {
+                    if (m5reg.mode == LongMode)
+                        m5reg.submode = SixtyFourBitMode;
                     regVal[MISCREG_ES_EFF_BASE] = 0;
                     regVal[MISCREG_CS_EFF_BASE] = 0;
                     regVal[MISCREG_SS_EFF_BASE] = 0;
                     regVal[MISCREG_DS_EFF_BASE] = 0;
                 } else {
+                    if (m5reg.mode == LongMode)
+                        m5reg.submode = CompatabilityMode;
                     regVal[MISCREG_ES_EFF_BASE] = regVal[MISCREG_ES_BASE];
                     regVal[MISCREG_CS_EFF_BASE] = regVal[MISCREG_CS_BASE];
                     regVal[MISCREG_SS_EFF_BASE] = regVal[MISCREG_SS_BASE];
                     regVal[MISCREG_DS_EFF_BASE] = regVal[MISCREG_DS_BASE];
                 }
             }
+            m5reg.cpl = newCSAttr.dpl;
+            regVal[MISCREG_M5_REG] = m5reg;
         }
         break;
       // These segments always actually use their bases, or in other words
@@ -395,6 +260,80 @@ void MiscRegFile::setReg(int miscReg,
                 regVal[MISCREG_SEG_EFF_BASE(miscReg -
                         MISCREG_SEG_BASE_BASE)] = val;
         }
+        break;
+      case MISCREG_TSC:
+        regVal[MISCREG_TSC] = val - tc->getCpuPtr()->curCycle();
+        return;
+      case MISCREG_DR0:
+      case MISCREG_DR1:
+      case MISCREG_DR2:
+      case MISCREG_DR3:
+        /* These should eventually set up breakpoints. */
+        break;
+      case MISCREG_DR4:
+        miscReg = MISCREG_DR6;
+        /* Fall through to have the same effects as DR6. */
+      case MISCREG_DR6:
+        {
+            DR6 dr6 = regVal[MISCREG_DR6];
+            DR6 newDR6 = val;
+            dr6.b0 = newDR6.b0;
+            dr6.b1 = newDR6.b1;
+            dr6.b2 = newDR6.b2;
+            dr6.b3 = newDR6.b3;
+            dr6.bd = newDR6.bd;
+            dr6.bs = newDR6.bs;
+            dr6.bt = newDR6.bt;
+            newVal = dr6;
+        }
+        break;
+      case MISCREG_DR5:
+        miscReg = MISCREG_DR7;
+        /* Fall through to have the same effects as DR7. */
+      case MISCREG_DR7:
+        {
+            DR7 dr7 = regVal[MISCREG_DR7];
+            DR7 newDR7 = val;
+            dr7.l0 = newDR7.l0;
+            dr7.g0 = newDR7.g0;
+            if (dr7.l0 || dr7.g0) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 0. */
+            }
+            dr7.l1 = newDR7.l1;
+            dr7.g1 = newDR7.g1;
+            if (dr7.l1 || dr7.g1) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 1. */
+            }
+            dr7.l2 = newDR7.l2;
+            dr7.g2 = newDR7.g2;
+            if (dr7.l2 || dr7.g2) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 2. */
+            }
+            dr7.l3 = newDR7.l3;
+            dr7.g3 = newDR7.g3;
+            if (dr7.l3 || dr7.g3) {
+                panic("Debug register breakpoints not implemented.\n");
+            } else {
+                /* Disable breakpoint 3. */
+            }
+            dr7.gd = newDR7.gd;
+            dr7.rw0 = newDR7.rw0;
+            dr7.len0 = newDR7.len0;
+            dr7.rw1 = newDR7.rw1;
+            dr7.len1 = newDR7.len1;
+            dr7.rw2 = newDR7.rw2;
+            dr7.len2 = newDR7.len2;
+            dr7.rw3 = newDR7.rw3;
+            dr7.len3 = newDR7.len3;
+        }
+        break;
+      default:
         break;
     }
     setRegNoEffect(miscReg, newVal);

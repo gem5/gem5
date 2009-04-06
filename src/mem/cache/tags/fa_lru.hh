@@ -139,11 +139,11 @@ class FALRU : public BaseTags
      */
 
     /** Hits in each cache size >= 128K. */
-    Stats::Vector<> hits;
+    Stats::Vector hits;
     /** Misses in each cache size >= 128K. */
-    Stats::Vector<> misses;
+    Stats::Vector misses;
     /** Total number of accesses. */
-    Stats::Scalar<> accesses;
+    Stats::Scalar accesses;
 
     /**
      * @}
@@ -165,29 +165,23 @@ public:
     void regStats(const std::string &name);
 
     /**
-     * Return true if the address is found in the cache.
-     * @param asid The address space ID.
-     * @param addr The address to look for.
-     * @return True if the address is in the cache.
-     */
-    bool probe(Addr addr) const;
-
-    /**
      * Invalidate a cache block.
      * @param blk The block to invalidate.
      */
     void invalidateBlk(BlkType *blk);
 
     /**
-     * Find the block in the cache and update the replacement data. Returns
-     * the access latency and the in cache flags as a side effect
+     * Access block and update replacement data.  May not succeed, in which case
+     * NULL pointer is returned.  This has all the implications of a cache
+     * access and should only be used as such.
+     * Returns the access latency and inCache flags as a side effect.
      * @param addr The address to look for.
      * @param asid The address space ID.
      * @param lat The latency of the access.
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* findBlock(Addr addr, int &lat, int *inCache = 0);
+    FALRUBlk* accessBlock(Addr addr, int &lat, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -203,7 +197,9 @@ public:
      * @param writebacks List for any writebacks to be performed.
      * @return The block to place the replacement in.
      */
-    FALRUBlk* findReplacement(Addr addr, PacketList & writebacks);
+    FALRUBlk* findVictim(Addr addr, PacketList & writebacks);
+
+    void insertBlock(Addr addr, BlkType *blk);
 
     /**
      * Return the hit latency of this cache.
@@ -282,31 +278,6 @@ public:
     Addr regenerateBlkAddr(Addr tag, int set) const
     {
         return (tag);
-    }
-
-    /**
-     * Read the data out of the internal storage of a cache block. FALRU
-     * currently doesn't support data storage.
-     * @param blk The cache block to read.
-     * @param data The buffer to read the data into.
-     * @return The data from the cache block.
-     */
-    void readData(FALRUBlk *blk, uint8_t *data)
-    {
-    }
-
-    /**
-     * Write data into the internal storage of a cache block. FALRU
-     * currently doesn't support data storage.
-     * @param blk The cache block to be written.
-     * @param data The data to write.
-     * @param size The number of bytes to write.
-     * @param writebacks A list for any writebacks to be performed. May be
-     * needed when writing to a compressed block.
-     */
-    void writeData(FALRUBlk *blk, uint8_t *data, int size,
-                   PacketList &writebacks)
-    {
     }
 };
 

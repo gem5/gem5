@@ -51,7 +51,9 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('bpred_unit.cc')
     Source('commit.cc')
     Source('cpu.cc')
+    Source('cpu_builder.cc')
     Source('decode.cc')
+    Source('dyn_inst.cc')
     Source('fetch.cc')
     Source('free_list.cc')
     Source('fu_pool.cc')
@@ -65,6 +67,7 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('rob.cc')
     Source('scoreboard.cc')
     Source('store_set.cc')
+    Source('thread_context.cc')
 
     TraceFlag('FreeList')
     TraceFlag('LSQ')
@@ -80,24 +83,6 @@ if 'O3CPU' in env['CPU_MODELS']:
     CompoundFlag('O3CPUAll', [ 'Fetch', 'Decode', 'Rename', 'IEW', 'Commit',
         'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
         'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
-
-    if env['TARGET_ISA'] == 'alpha':
-        Source('alpha/cpu.cc')
-        Source('alpha/cpu_builder.cc')
-        Source('alpha/dyn_inst.cc')
-        Source('alpha/thread_context.cc')
-    elif env['TARGET_ISA'] == 'mips':
-        Source('mips/cpu.cc')
-        Source('mips/cpu_builder.cc')
-        Source('mips/dyn_inst.cc')
-        Source('mips/thread_context.cc')
-    elif env['TARGET_ISA'] == 'sparc':
-        Source('sparc/cpu.cc')
-        Source('sparc/cpu_builder.cc')
-        Source('sparc/dyn_inst.cc')
-        Source('sparc/thread_context.cc')
-    else:
-        sys.exit('O3 CPU does not support the \'%s\' ISA' % env['TARGET_ISA'])
 
     if env['USE_CHECKER']:
         SimObject('O3Checker.py')

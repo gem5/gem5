@@ -80,6 +80,8 @@ class PageTable
     Addr pageOffset(Addr a) { return (a &  offsetMask); }
 
     void allocate(Addr vaddr, int64_t size);
+    void remap(Addr vaddr, int64_t size, Addr new_vaddr);
+    void deallocate(Addr vaddr, int64_t size);
 
     /**
      * Lookup function
@@ -91,9 +93,17 @@ class PageTable
     /**
      * Translate function
      * @param vaddr The virtual address.
-     * @return Physical address from translation.
+     * @param paddr Physical address from translation.
+     * @return True if translation exists
      */
     bool translate(Addr vaddr, Addr &paddr);
+
+    /**
+     * Simplified translate function (just check for translation)
+     * @param vaddr The virtual address.
+     * @return True if translation exists
+     */
+    bool translate(Addr vaddr) { Addr dummy; return translate(vaddr, dummy); }
 
     /**
      * Perform a translation on the memory request, fills in paddr

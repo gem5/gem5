@@ -1,4 +1,4 @@
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -68,5 +68,11 @@
 //Load/store microop definitions
 ##include "ldstop.isa"
 
+//Control flow microop definitions
+##include "seqop.isa"
+
 //Miscellaneous microop definitions
 ##include "specop.isa"
+
+//Microops for printing out debug messages through M5
+##include "debug.isa"

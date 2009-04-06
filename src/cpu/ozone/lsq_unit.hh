@@ -331,7 +331,7 @@ class OzoneLSQ {
 
     //list<InstSeqNum> mshrSeqNums;
 
-     //Stats::Scalar<> dcacheStallCycles;
+     //Stats::Scalar dcacheStallCycles;
     Counter lastDcacheStall;
 
     /** Wire to read information from the issue stage time queue. */

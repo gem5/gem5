@@ -35,7 +35,8 @@
 
 using namespace std;
 
-int main()
+int
+main()
 {
     range_map<Addr,int> r;
 

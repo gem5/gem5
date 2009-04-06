@@ -38,13 +38,11 @@
 #define __HOST_HH__
 
 #include <inttypes.h>
-#include <limits>
-
 
 /** uint64_t constant */
-#define ULL(N)		((uint64_t)N##ULL)
+#define ULL(N)          ((uint64_t)N##ULL)
 /** int64_t constant */
-#define LL(N)		((int64_t)N##LL)
+#define LL(N)           ((int64_t)N##LL)
 
 /** Statistics counter type.  Not much excuse for not using a 64-bit
  * integer here, but if you're desperate and only run short
@@ -58,7 +56,7 @@ typedef int64_t Counter;
  */
 typedef int64_t Tick;
 
-const Tick MaxTick = std::numeric_limits<Tick>::max();
+const Tick MaxTick = LL(0x7fffffffffffffff);
 
 /**
  * Address type

@@ -230,7 +230,7 @@ MSHRQueue::squash(int threadNum)
         if (mshr->threadNum == threadNum) {
             while (mshr->hasTargets()) {
                 mshr->popTarget();
-                assert(0/*target->req->getThreadNum()*/ == threadNum);
+                assert(0/*target->req->threadId()*/ == threadNum);
             }
             assert(!mshr->hasTargets());
             assert(mshr->ntargets==0);

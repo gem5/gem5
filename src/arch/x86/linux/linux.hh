@@ -82,26 +82,26 @@ class X86Linux64 : public Linux
         uint64_t st_mtime_nsec;
         uint64_t st_ctimeX;
         uint64_t st_ctime_nsec;
-        int64_t __unused[3];
+        int64_t unused0[3];
     } tgt_stat64;
 
     static OpenFlagTransTable openFlagTable[];
 
-    static const int TGT_O_RDONLY	= 00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	        = 00000002;	//!< O_RDWR
-    static const int TGT_O_NONBLOCK     = 00004000;	//!< O_NONBLOCK
-    static const int TGT_O_APPEND	= 00002000;	//!< O_APPEND
-    static const int TGT_O_CREAT	= 00000100;	//!< O_CREAT
-    static const int TGT_O_TRUNC	= 00001000;	//!< O_TRUNC
-    static const int TGT_O_EXCL	        = 00000200;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 00000400;	//!< O_NOCTTY
-    static const int TGT_O_SYNC	        = 00010000;	//!< O_SYNC
-//    static const int TGT_O_DRD	        = 0x00010000;	//!< O_DRD
-//    static const int TGT_O_DIRECTIO     = 0x00020000;	//!< O_DIRECTIO
-//    static const int TGT_O_CACHE	= 0x00002000;	//!< O_CACHE
-//    static const int TGT_O_DSYNC	= 0x00008000;	//!< O_DSYNC
-//    static const int TGT_O_RSYNC	= 0x00040000;	//!< O_RSYNC
+    static const int TGT_O_RDONLY       = 00000000;     //!< O_RDONLY
+    static const int TGT_O_WRONLY       = 00000001;     //!< O_WRONLY
+    static const int TGT_O_RDWR         = 00000002;     //!< O_RDWR
+    static const int TGT_O_NONBLOCK     = 00004000;     //!< O_NONBLOCK
+    static const int TGT_O_APPEND       = 00002000;     //!< O_APPEND
+    static const int TGT_O_CREAT        = 00000100;     //!< O_CREAT
+    static const int TGT_O_TRUNC        = 00001000;     //!< O_TRUNC
+    static const int TGT_O_EXCL         = 00000200;     //!< O_EXCL
+    static const int TGT_O_NOCTTY       = 00000400;     //!< O_NOCTTY
+    static const int TGT_O_SYNC         = 00010000;     //!< O_SYNC
+//    static const int TGT_O_DRD        = 0x00010000;   //!< O_DRD
+//    static const int TGT_O_DIRECTIO   = 0x00020000; //!< O_DIRECTIO
+//    static const int TGT_O_CACHE      = 0x00002000;   //!< O_CACHE
+//    static const int TGT_O_DSYNC      = 0x00008000;   //!< O_DSYNC
+//    static const int TGT_O_RSYNC      = 0x00040000;   //!< O_RSYNC
 
     static const int NUM_OPEN_FLAGS;
 
@@ -111,6 +111,55 @@ class X86Linux64 : public Linux
         uint64_t iov_base; // void *
         uint64_t iov_len;  // size_t
     } tgt_iovec;
+};
+
+class X86Linux32 : public Linux
+{
+  public:
+
+    typedef struct {
+        uint64_t st_dev;
+        uint8_t __pad0[4];
+        uint32_t __st_ino;
+        uint32_t st_mode;
+        uint32_t st_nlink;
+        uint32_t st_uid;
+        uint32_t st_gid;
+        uint64_t st_rdev;
+        int64_t st_size;
+        uint8_t __pad3[4];
+        uint32_t st_blksize;
+        uint64_t st_blocks;
+        uint32_t st_atimeX;
+        uint32_t st_atime_nsec;
+        uint32_t st_mtimeX;
+        uint32_t st_mtime_nsec;
+        uint32_t st_ctimeX;
+        uint32_t st_ctime_nsec;
+        uint64_t st_ino;
+    } tgt_stat64;
+
+    static OpenFlagTransTable openFlagTable[];
+
+    static const int TGT_O_RDONLY       = 00000000;     //!< O_RDONLY
+    static const int TGT_O_WRONLY       = 00000001;     //!< O_WRONLY
+    static const int TGT_O_RDWR         = 00000002;     //!< O_RDWR
+    static const int TGT_O_NONBLOCK     = 00004000;     //!< O_NONBLOCK
+    static const int TGT_O_APPEND       = 00002000;     //!< O_APPEND
+    static const int TGT_O_CREAT        = 00000100;     //!< O_CREAT
+    static const int TGT_O_TRUNC        = 00001000;     //!< O_TRUNC
+    static const int TGT_O_EXCL         = 00000200;     //!< O_EXCL
+    static const int TGT_O_NOCTTY       = 00000400;     //!< O_NOCTTY
+    static const int TGT_O_SYNC         = 00010000;     //!< O_SYNC
+//    static const int TGT_O_DRD        = 0x00010000;   //!< O_DRD
+//    static const int TGT_O_DIRECTIO   = 0x00020000; //!< O_DIRECTIO
+//    static const int TGT_O_CACHE      = 0x00002000;   //!< O_CACHE
+//    static const int TGT_O_DSYNC      = 0x00008000;   //!< O_DSYNC
+//    static const int TGT_O_RSYNC      = 0x00040000;   //!< O_RSYNC
+
+    static const int NUM_OPEN_FLAGS;
+
+    static const unsigned TGT_MAP_ANONYMOUS = 0x20;
 };
 
 #endif

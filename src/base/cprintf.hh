@@ -51,24 +51,53 @@ struct Print
     std::ostream &stream;
     const char *format;
     const char *ptr;
+    bool cont;
 
     std::ios::fmtflags saved_flags;
     char saved_fill;
     int saved_precision;
 
-    void process(Format &fmt);
+    Format fmt;
+    void process();
 
   public:
     Print(std::ostream &stream, const std::string &format);
     Print(std::ostream &stream, const char *format);
     ~Print();
 
+    int
+    get_number(int data)
+    {
+        return data;
+    }
+    
+    template <typename T>
+    int
+    get_number(const T& data)
+    {
+        return 0;
+    }
+
     template <typename T>
     void
     add_arg(const T &data)
     {
-        Format fmt;
-        process(fmt);
+        if (!cont)
+            process();
+
+        if (fmt.get_width) {
+            fmt.get_width = false;
+            cont = true;
+            fmt.width = get_number(data);
+            return;
+        }
+            
+        if (fmt.get_precision) {
+            fmt.get_precision = false;
+            cont = true;
+            fmt.precision = get_number(data);
+            return;
+        }
 
         switch (fmt.format) {
           case Format::character:

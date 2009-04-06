@@ -34,11 +34,27 @@
 %{
 #include "python/swig/pyobject.hh"
 
+#include "base/misc.hh"
+#include "base/socket.hh"
 #include "sim/core.hh"
 #include "sim/host.hh"
 #include "sim/startup.hh"
 
 extern const char *compileDate;
+
+#ifdef DEBUG
+const bool flag_DEBUG = true;
+#else
+const bool flag_DEBUG = false;
+#endif
+#ifdef NDEBUG
+const bool flag_NDEBUG = true;
+#else
+const bool flag_NDEBUG = false;
+#endif
+const bool flag_TRACING_ON = TRACING_ON;
+
+inline void disableAllListeners() { ListenSocket::disableAll(); }
 %}
 
 %include "stdint.i"
@@ -46,11 +62,15 @@ extern const char *compileDate;
 %include "sim/host.hh"
 
 void setOutputDir(const std::string &dir);
-void setOutputFile(const std::string &file);
 void SimStartup();
 void doExitCleanup();
+void disableAllListeners();
 
+%immutable compileDate;
 char *compileDate;
+const bool flag_DEBUG;
+const bool flag_NDEBUG;
+const bool flag_TRACING_ON;
 
 void setClockFrequency(Tick ticksPerSecond);
 
@@ -62,6 +82,10 @@ void unserializeAll(const std::string &cpt_dir);
 
 void initAll();
 void regAllStats();
+
+bool want_warn, warn_verbose;
+bool want_info, info_verbose;
+bool want_hack, hack_verbose;
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package

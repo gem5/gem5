@@ -46,12 +46,10 @@
 class EtherDump : public SimObject
 {
   private:
-    std::ofstream stream;
+    std::ostream *stream;
     const int maxlen;
     void dumpPacket(EthPacketPtr &packet);
     void init();
-
-    Tick curtime;
 
   public:
     typedef EtherDumpParams Params;

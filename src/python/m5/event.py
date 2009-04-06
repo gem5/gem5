@@ -26,17 +26,36 @@
 #
 # Authors: Nathan Binkert
 
-from internal.event import create
-from internal.event import SimLoopExitEvent as SimExit
+import m5
+import internal.event
 
-class ProgressEvent(object):
-    def __init__(self, period):
+from internal.event import PythonEvent, SimLoopExitEvent as SimExit
+
+mainq = internal.event.cvar.mainEventQueue
+
+def create(obj, priority=None):
+    if priority is None:
+        priority = Event.Default_Pri
+    return PythonEvent(obj, priority)
+
+
+# As a reminder, priorities found in sim/eventq.hh are stuck into the
+# Event class by swig
+class Event(PythonEvent):
+    def __init__(self, priority=None):
+        if priority is None:
+            priority = Event.Default_Pri
+        super(Event, self).__init__(self, priority)
+
+class ProgressEvent(Event):
+    def __init__(self, eventq, period):
+        super(ProgressEvent, self).__init__()
         self.period = int(period)
-        self.schedule()
-
-    def schedule(self):
-        create(self, m5.curTick() + self.period)
+        self.eventq = eventq
+        self.eventq.schedule(self, m5.curTick() + self.period)
 
     def __call__(self):
         print "Progress! Time now %fs" % (m5.curTick()/1e12)
-        self.schedule()
+        self.eventq.schedule(self, m5.curTick() + self.period)
+
+__all__ = [ 'create', 'Event', 'ProgressEvent', 'SimExit', 'mainq' ]

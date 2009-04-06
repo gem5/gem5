@@ -34,39 +34,37 @@
  * GHB Prefetcher implementation.
  */
 
+#include "base/trace.hh"
 #include "mem/cache/prefetch/ghb.hh"
-#include "arch/isa_traits.hh"
 
 void
 GHBPrefetcher::calculatePrefetch(PacketPtr &pkt, std::list<Addr> &addresses,
                                  std::list<Tick> &delays)
 {
-    Addr blkAddr = pkt->getAddr() & ~(Addr)(this->blkSize-1);
-    int cpuID = pkt->req->getCpuNum();
-    if (!useCPUId) cpuID = 0;
+    if (useContextId && !pkt->req->hasContextId()) {
+        DPRINTF(HWPrefetch, "ignoring request with no context ID");
+        return;
+    }
 
+    Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
+    int ctx_id = useContextId ? pkt->req->contextId() : 0;
+    assert(ctx_id < Max_Contexts);
 
-    int new_stride = blkAddr - last_miss_addr[cpuID];
-    int old_stride = last_miss_addr[cpuID] -
-        second_last_miss_addr[cpuID];
+    int new_stride = blk_addr - lastMissAddr[ctx_id];
+    int old_stride = lastMissAddr[ctx_id] - secondLastMissAddr[ctx_id];
 
-    second_last_miss_addr[cpuID] = last_miss_addr[cpuID];
-    last_miss_addr[cpuID] = blkAddr;
+    secondLastMissAddr[ctx_id] = lastMissAddr[ctx_id];
+    lastMissAddr[ctx_id] = blk_addr;
 
     if (new_stride == old_stride) {
-        for (int d=1; d <= degree; d++) {
-            Addr newAddr = blkAddr + d * new_stride;
-            if (this->pageStop &&
-                (blkAddr & ~(TheISA::VMPageSize - 1)) !=
-                (newAddr & ~(TheISA::VMPageSize - 1)))
-            {
-                //Spanned the page, so now stop
-                this->pfSpanPage += degree - d + 1;
+        for (int d = 1; d <= degree; d++) {
+            Addr new_addr = blk_addr + d * new_stride;
+            if (pageStop && !samePage(blk_addr, new_addr)) {
+                // Spanned the page, so now stop
+                pfSpanPage += degree - d + 1;
                 return;
-            }
-            else
-            {
-                addresses.push_back(newAddr);
+            } else {
+                addresses.push_back(new_addr);
                 delays.push_back(latency);
             }
         }

@@ -130,6 +130,9 @@ EtherTap::EtherTap(const Params *p)
     : EtherObject(p), event(NULL), socket(-1), buflen(p->bufsz), dump(p->dump),
       interface(NULL), txEvent(this)
 {
+    if (ListenSocket::allDisabled())
+        fatal("All listeners are disabled! EtherTap can't work!");
+
     buffer = new char[buflen];
     listener = new TapListener(this, p->port);
     listener->listen();
@@ -179,8 +182,12 @@ EtherTap::recvPacket(EthPacketPtr packet)
     DPRINTF(Ethernet, "EtherTap output len=%d\n", packet->length);
     DDUMP(EthernetData, packet->data, packet->length);
     uint32_t len = htonl(packet->length);
-    write(socket, &len, sizeof(len));
-    write(socket, packet->data, packet->length);
+    ssize_t ret = write(socket, &len, sizeof(len));
+    if (ret != sizeof(len))
+        return false;
+    ret = write(socket, packet->data, packet->length);
+    if (ret != packet->length)
+        return false;
 
     interface->recvDone();
 
@@ -239,7 +246,7 @@ EtherTap::process(int revent)
             DPRINTF(Ethernet, "bus busy...buffer for retransmission\n");
             packetBuffer.push(packet);
             if (!txEvent.scheduled())
-                txEvent.schedule(curTick + retryTime);
+                schedule(txEvent, curTick + retryTime);
         } else if (dump) {
             dump->dump(packet);
         }
@@ -262,7 +269,7 @@ EtherTap::retransmit()
     }
 
     if (!packetBuffer.empty() && !txEvent.scheduled())
-        txEvent.schedule(curTick + retryTime);
+        schedule(txEvent, curTick + retryTime);
 }
 
 EtherInt*

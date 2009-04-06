@@ -86,6 +86,7 @@ namespace X86ISA
         {;}
 
         void doModRM(const ExtMachInst & machInst);
+        void setSeg(const ExtMachInst & machInst);
     };
 };
 

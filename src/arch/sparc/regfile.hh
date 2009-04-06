@@ -48,8 +48,8 @@ namespace SparcISA
     class RegFile
     {
       protected:
-        Addr pc;		// Program Counter
-        Addr npc;		// Next Program Counter
+        Addr pc;                // Program Counter
+        Addr npc;               // Next Program Counter
         Addr nnpc;
 
       public:
@@ -63,15 +63,13 @@ namespace SparcISA
         void setNextNPC(Addr val);
 
       protected:
-        IntRegFile intRegFile;		// integer register file
-        FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
+        IntRegFile intRegFile;          // integer register file
+        FloatRegFile floatRegFile;      // floating point register file
+        MiscRegFile miscRegFile;        // control register file
 
       public:
 
         void clear();
-
-        int FlattenIntIndex(int reg);
 
         MiscReg readMiscRegNoEffect(int miscReg);
 
@@ -112,12 +110,11 @@ namespace SparcISA
 
         void setIntReg(int intReg, const IntReg &val);
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+            const std::string &section);
 
       public:
-
-        void changeContext(RegContextParam param, RegContextVal val);
     };
 
     int flattenIntIndex(ThreadContext * tc, int reg);

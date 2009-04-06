@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2007 The Hewlett-Packard Development Company
+// Copyright (c) 2007-2008 The Hewlett-Packard Development Company
 // All rights reserved.
 //
 // Redistribution and use of this software in source and binary forms,
@@ -64,22 +64,31 @@
 //Include code to build macroops in both C++ and python.
 ##include "macroop.isa"
 
+//Include code to fill out the microcode ROM in both C++ and python.
+##include "rom.isa"
+
 let {{
     import sys
     sys.path[0:0] = ["src/arch/x86/isa/"]
     from insts import microcode
     # print microcode
-    from micro_asm import MicroAssembler, Rom_Macroop, Rom
-    mainRom = Rom('main ROM')
+    from micro_asm import MicroAssembler, Rom_Macroop
+    mainRom = X86MicrocodeRom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
     # Add in symbols for the microcode registers
-    for num in range(15):
+    for num in range(16):
         assembler.symbols["t%d" % num] = "NUM_INTREGS+%d" % num
-    for num in range(7):
+    for num in range(8):
         assembler.symbols["ufp%d" % num] = "FLOATREG_MICROFP(%d)" % num
     # Add in symbols for the segment descriptor registers
-    for letter in ("C", "D", "E", "F", "G", "S"):
+    for letter in ("C", "D", "E", "F", "G", "H", "S"):
         assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
+
+    # Add in symbols for the various checks of segment selectors.
+    for check in ("NoCheck", "CSCheck", "CallGateCheck", "IntGateCheck",
+                  "SoftIntGateCheck", "SSCheck", "IretCheck", "IntCSCheck",
+                  "TRCheck", "TSSCheck", "InGDTCheck", "LDTCheck"):
+        assembler.symbols[check] = "Seg%s" % check
 
     for reg in ("TR", "IDTR"):
         assembler.symbols[reg.lower()] = "SYS_SEGMENT_REG_%s" % reg
@@ -129,13 +138,15 @@ let {{
     # like the internal segment above
     assembler.symbols["flatseg"] = "SEGMENT_REG_LS"
 
-    for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di'):
+    for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
+                '8',  '9',  '10', '11', '12', '13', '14', '15'):
         assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
 
-    for reg in range(15):
+    for reg in range(16):
         assembler.symbols["cr%d" % reg] = "MISCREG_CR%d" % reg
 
-    for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF'):
+    for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF', \
+                 'TF', 'IF', 'NT', 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID'):
         assembler.symbols[flag] = flag + "Bit"
 
     for cond in ('True', 'False', 'ECF', 'EZF', 'SZnZF',
@@ -150,6 +161,11 @@ let {{
     assembler.symbols["CTrue"] = "ConditionTests::True"
     assembler.symbols["CFalse"] = "ConditionTests::False"
 
+    for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
+                'star', 'lstar', 'cstar', 'sf_mask',
+                'kernel_gs_base'):
+        assembler.symbols[reg] = "MISCREG_%s" % reg.upper()
+
     # Code literal which forces a default 64 bit operand size in 64 bit mode.
     assembler.symbols["oszIn64Override"] = '''
     if (machInst.mode.submode == SixtyFourBitMode &&
@@ -157,7 +173,7 @@ let {{
         env.dataSize = 8;
     '''
 
-    assembler.symbols["oszForPseudoDesc"] = '''
+    assembler.symbols["maxOsz"] = '''
     if (machInst.mode.submode == SixtyFourBitMode)
         env.dataSize = 8;
     else
@@ -174,10 +190,23 @@ let {{
 
     assembler.symbols["label"] = labeler
 
+    def rom_labeler(labelStr):
+        return "romMicroPC(RomLabels::extern_label_%s)" % labelStr
+
+    assembler.symbols["rom_label"] = rom_labeler
+
+    def rom_local_labeler(labelStr):
+        return "romMicroPC(RomLabels::label_%s)" % labelStr
+
+    assembler.symbols["rom_local_label"] = rom_local_labeler
+
     def stack_index(index):
         return "(NUM_FLOATREGS + (((%s) + 8) %% 8))" % index
 
     assembler.symbols["st"] = stack_index
 
     macroopDict = assembler.assemble(microcode)
+
+    decoder_output += mainRom.getDefinition()
+    header_output += mainRom.getDeclaration()
 }};

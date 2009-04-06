@@ -37,6 +37,8 @@
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"
 
+class DerivO3CPUParams;
+
 template <class>
 class O3ThreadState;
 
@@ -69,7 +71,6 @@ class DefaultCommit
     // Typedefs from the Impl.
     typedef typename Impl::O3CPU O3CPU;
     typedef typename Impl::DynInstPtr DynInstPtr;
-    typedef typename Impl::Params Params;
     typedef typename Impl::CPUPol CPUPol;
 
     typedef typename CPUPol::RenameMap RenameMap;
@@ -136,7 +137,7 @@ class DefaultCommit
 
   public:
     /** Construct a DefaultCommit with the given parameters. */
-    DefaultCommit(O3CPU *_cpu, Params *params);
+    DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params);
 
     /** Returns the name of the DefaultCommit. */
     std::string name() const;
@@ -451,40 +452,40 @@ class DefaultCommit
     void updateComInstStats(DynInstPtr &inst);
 
     /** Stat for the total number of committed instructions. */
-    Stats::Scalar<> commitCommittedInsts;
+    Stats::Scalar commitCommittedInsts;
     /** Stat for the total number of squashed instructions discarded by commit.
      */
-    Stats::Scalar<> commitSquashedInsts;
+    Stats::Scalar commitSquashedInsts;
     /** Stat for the total number of times commit is told to squash.
      * @todo: Actually increment this stat.
      */
-    Stats::Scalar<> commitSquashEvents;
+    Stats::Scalar commitSquashEvents;
     /** Stat for the total number of times commit has had to stall due to a non-
      * speculative instruction reaching the head of the ROB.
      */
-    Stats::Scalar<> commitNonSpecStalls;
+    Stats::Scalar commitNonSpecStalls;
     /** Stat for the total number of branch mispredicts that caused a squash. */
-    Stats::Scalar<> branchMispredicts;
+    Stats::Scalar branchMispredicts;
     /** Distribution of the number of committed instructions each cycle. */
-    Stats::Distribution<> numCommittedDist;
+    Stats::Distribution numCommittedDist;
 
     /** Total number of instructions committed. */
-    Stats::Vector<> statComInst;
+    Stats::Vector statComInst;
     /** Total number of software prefetches committed. */
-    Stats::Vector<> statComSwp;
+    Stats::Vector statComSwp;
     /** Stat for the total number of committed memory references. */
-    Stats::Vector<> statComRefs;
+    Stats::Vector statComRefs;
     /** Stat for the total number of committed loads. */
-    Stats::Vector<> statComLoads;
+    Stats::Vector statComLoads;
     /** Total number of committed memory barriers. */
-    Stats::Vector<> statComMembars;
+    Stats::Vector statComMembars;
     /** Total number of committed branches. */
-    Stats::Vector<> statComBranches;
+    Stats::Vector statComBranches;
 
     /** Number of cycles where the commit bandwidth limit is reached. */
-    Stats::Scalar<> commitEligibleSamples;
+    Stats::Scalar commitEligibleSamples;
     /** Number of instructions not committed due to bandwidth limits. */
-    Stats::Vector<> commitEligible;
+    Stats::Vector commitEligible;
 };
 
 #endif // __CPU_O3_COMMIT_HH__

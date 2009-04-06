@@ -1,4 +1,4 @@
-# Copyright (c) 2005-2007 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,10 @@ class PhysicalMemory(MemObject):
     port = VectorPort("the access port")
     range = Param.AddrRange(AddrRange('128MB'), "Device Address")
     file = Param.String('', "memory mapped file")
-    latency = Param.Latency('1t', "latency of an access")
+    latency = Param.Latency('30ns', "latency of an access")
+    latency_var = Param.Latency('0ns', "access variablity")
     zero = Param.Bool(False, "zero initialize memory")
+    null = Param.Bool(False, "do not store data, always return zero")
 
 class DRAMMemory(PhysicalMemory):
     type = 'DRAMMemory'

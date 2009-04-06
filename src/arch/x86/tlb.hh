@@ -87,8 +87,7 @@ namespace X86ISA
     class TLB : public BaseTLB
     {
       protected:
-        friend class FakeITLBFault;
-        friend class FakeDTLBFault;
+        friend class Walker;
 
         typedef std::list<TlbEntry *> EntryList;
 
@@ -118,8 +117,6 @@ namespace X86ISA
       protected:
 
         Walker * walker;
-
-        void walk(ThreadContext * _tc, Addr vaddr);
 #endif
 
       public:
@@ -137,13 +134,13 @@ namespace X86ISA
         EntryList freeList;
         EntryList entryList;
 
-        template<class TlbFault>
-        Fault translate(RequestPtr &req, ThreadContext *tc,
-                bool write, bool execute);
+        Fault translate(RequestPtr req, ThreadContext *tc,
+                Translation *translation, bool write, bool execute,
+                bool &delayedResponse, bool timing);
 
       public:
 
-        void insert(Addr vpn, TlbEntry &entry);
+        TlbEntry * insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
         virtual void serialize(std::ostream &os);
@@ -159,7 +156,9 @@ namespace X86ISA
             _allowNX = false;
         }
 
-        Fault translate(RequestPtr &req, ThreadContext *tc);
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+        void translateTiming(RequestPtr req, ThreadContext *tc,
+                Translation *translation);
 
         friend class DTB;
     };
@@ -172,7 +171,9 @@ namespace X86ISA
         {
             _allowNX = true;
         }
-        Fault translate(RequestPtr &req, ThreadContext *tc, bool write);
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
+        void translateTiming(RequestPtr req, ThreadContext *tc,
+                Translation *translation, bool write);
 #if FULL_SYSTEM
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
         Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);

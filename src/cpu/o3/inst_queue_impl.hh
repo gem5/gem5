@@ -37,12 +37,13 @@
 #include "enums/OpClass.hh"
 #include "sim/core.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
-                                                   int fu_idx,
-                                                   InstructionQueue<Impl> *iq_ptr)
-    : Event(&mainEventQueue, Stat_Event_Pri),
-      inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr), freeFU(false)
+    int fu_idx, InstructionQueue<Impl> *iq_ptr)
+    : Event(Stat_Event_Pri), inst(_inst), fuIdx(fu_idx), iqPtr(iq_ptr),
+      freeFU(false)
 {
     this->setFlags(Event::AutoDelete);
 }
@@ -65,7 +66,7 @@ InstructionQueue<Impl>::FUCompletion::description() const
 
 template <class Impl>
 InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
-                                         Params *params)
+                                         DerivO3CPUParams *params)
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       fuPool(params->fuPool),
@@ -79,7 +80,7 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
 
     switchedOut = false;
 
-    numThreads = params->numberOfThreads;
+    numThreads = params->numThreads;
 
     // Set the number of physical registers as the number of int + float
     numPhysRegs = numPhysIntRegs + numPhysFloatRegs;
@@ -752,7 +753,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
                 FUCompletion *execution = new FUCompletion(issuing_inst,
                                                            idx, this);
 
-                execution->schedule(curTick + cpu->ticks(op_latency - 1));
+                cpu->schedule(execution, curTick + cpu->ticks(op_latency - 1));
 
                 // @todo: Enforce that issue_latency == 1 or op_latency
                 if (issue_latency > 1) {

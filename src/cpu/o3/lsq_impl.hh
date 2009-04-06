@@ -34,6 +34,8 @@
 
 #include "cpu/o3/lsq.hh"
 
+#include "params/DerivO3CPU.hh"
+
 template<class Impl>
 void
 LSQ<Impl>::DcachePort::setPeer(Port *port)
@@ -83,7 +85,7 @@ LSQ<Impl>::DcachePort::recvTiming(PacketPtr pkt)
     if (pkt->isError())
         DPRINTF(LSQ, "Got error packet back for address: %#X\n", pkt->getAddr());
     if (pkt->isResponse()) {
-        lsq->thread[pkt->req->getThreadNum()].completeDataAccess(pkt);
+        lsq->thread[pkt->req->threadId()].completeDataAccess(pkt);
     }
     else {
         // must be a snoop
@@ -111,11 +113,11 @@ LSQ<Impl>::DcachePort::recvRetry()
 }
 
 template <class Impl>
-LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, Params *params)
+LSQ<Impl>::LSQ(O3CPU *cpu_ptr, IEW *iew_ptr, DerivO3CPUParams *params)
     : cpu(cpu_ptr), iewStage(iew_ptr), dcachePort(this),
       LQEntries(params->LQEntries),
       SQEntries(params->SQEntries),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       retryTid(-1)
 {
     dcachePort.snoopRangeSent = false;
@@ -582,17 +584,14 @@ LSQ<Impl>::hasStoresToWB()
     std::list<unsigned>::iterator threads = activeThreads->begin();
     std::list<unsigned>::iterator end = activeThreads->end();
 
-    if (threads == end)
-        return false;
-
     while (threads != end) {
         unsigned tid = *threads++;
 
-        if (!hasStoresToWB(tid))
-            return false;
+        if (hasStoresToWB(tid))
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 template<class Impl>
@@ -605,11 +604,11 @@ LSQ<Impl>::willWB()
     while (threads != end) {
         unsigned tid = *threads++;
 
-        if (!willWB(tid))
-            return false;
+        if (willWB(tid))
+            return true;
     }
 
-    return true;
+    return false;
 }
 
 template<class Impl>

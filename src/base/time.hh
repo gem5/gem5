@@ -68,7 +68,7 @@ std::ostream &operator<<(std::ostream &out, const Time &time);
 
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *      The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -94,7 +94,7 @@ std::ostream &operator<<(std::ostream &out, const Time &time);
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)time.h	8.2 (Berkeley) 7/10/94
+ *      @(#)time.h      8.2 (Berkeley) 7/10/94
  */
 
 #if defined(__sun)

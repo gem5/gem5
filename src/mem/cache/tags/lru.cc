@@ -113,7 +113,7 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
     // allocate data storage in one big chunk
     dataBlks = new uint8_t[numSets*assoc*blkSize];
 
-    blkIndex = 0;	// index into blks array
+    blkIndex = 0;       // index into blks array
     for (i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
@@ -150,21 +150,8 @@ LRU::~LRU()
     delete [] sets;
 }
 
-// probe cache for presence of given block.
-bool
-LRU::probe(Addr addr) const
-{
-    //  return(findBlock(Read, addr, asid) != 0);
-    Addr tag = extractTag(addr);
-    unsigned myset = extractSet(addr);
-
-    LRUBlk *blk = sets[myset].findBlk(tag);
-
-    return (blk != NULL);	// true if in cache
-}
-
 LRUBlk*
-LRU::findBlock(Addr addr, int &lat)
+LRU::accessBlock(Addr addr, int &lat)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -196,12 +183,11 @@ LRU::findBlock(Addr addr) const
 }
 
 LRUBlk*
-LRU::findReplacement(Addr addr, PacketList &writebacks)
+LRU::findVictim(Addr addr, PacketList &writebacks)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate
     LRUBlk *blk = sets[set].blks[assoc-1];
-    sets[set].moveToHead(blk);
     if (blk->isValid()) {
         replacements[0]++;
         totalRefs += blk->refCount;
@@ -210,7 +196,14 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
 
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
                 set, regenerateBlkAddr(blk->tag, set));
-    } else if (!blk->isTouched) {
+    }
+    return blk;
+}
+
+void
+LRU::insertBlock(Addr addr, LRU::BlkType *blk)
+{
+    if (!blk->isTouched) {
         tagsInUse++;
         blk->isTouched = true;
         if (!warmedUp && tagsInUse.value() >= warmupBound) {
@@ -219,7 +212,11 @@ LRU::findReplacement(Addr addr, PacketList &writebacks)
         }
     }
 
-    return blk;
+    // Set tag for new block.  Caller is responsible for setting status.
+    blk->tag = extractTag(addr);
+
+    unsigned set = extractSet(addr);
+    sets[set].moveToHead(blk);
 }
 
 void

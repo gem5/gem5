@@ -65,7 +65,7 @@ const uint8_t UART_LSR_DR   = 0x01;
 const uint8_t UART_MCR_LOOP = 0x10;
 
 
-class SimConsole;
+class Terminal;
 class Platform;
 
 class Uart8250 : public Uart

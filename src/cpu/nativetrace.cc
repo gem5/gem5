@@ -50,8 +50,12 @@ using namespace TheISA;
 
 namespace Trace {
 
-NativeTrace::NativeTrace(const Params *p) : InstTracer(p)
+NativeTrace::NativeTrace(const Params *p)
+    : InstTracer(p)
 {
+    if (ListenSocket::allDisabled())
+        fatal("All listeners are disabled!");
+
     int port = 8000;
     while(!native_listener.listen(port, true))
     {

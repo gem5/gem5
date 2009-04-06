@@ -44,15 +44,15 @@
 #include <errno.h>
 #include <string>
 #ifdef __CYGWIN32__
-#include <sys/fcntl.h>	// for O_BINARY
+#include <sys/fcntl.h>  // for O_BINARY
 #endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/uio.h>
 
-#include "sim/host.hh"	// for Addr
+#include "sim/host.hh"  // for Addr
 #include "base/chunk_generator.hh"
-#include "base/intmath.hh"	// for RoundUp
+#include "base/intmath.hh"      // for RoundUp
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/base.hh"
@@ -72,9 +72,9 @@ class SyscallDesc {
     typedef SyscallReturn (*FuncPtr)(SyscallDesc *, int num,
                            LiveProcess *, ThreadContext *);
 
-    const char *name;	//!< Syscall name (e.g., "open").
-    FuncPtr funcPtr;	//!< Pointer to emulation function.
-    int flags;		//!< Flags (see Flags enum).
+    const char *name;   //!< Syscall name (e.g., "open").
+    FuncPtr funcPtr;    //!< Pointer to emulation function.
+    int flags;          //!< Flags (see Flags enum).
 
     /// Flag values for controlling syscall behavior.
     enum Flags {
@@ -117,7 +117,7 @@ class BaseBufferArg {
     virtual bool copyIn(TranslatingPort *memport)
     {
         memport->readBlob(addr, bufPtr, size);
-        return true;	// no EFAULT detection for now
+        return true;    // no EFAULT detection for now
     }
 
     //
@@ -126,7 +126,7 @@ class BaseBufferArg {
     virtual bool copyOut(TranslatingPort *memport)
     {
         memport->writeBlob(addr, bufPtr, size);
-        return true;	// no EFAULT detection for now
+        return true;    // no EFAULT detection for now
     }
 
   protected:
@@ -140,7 +140,7 @@ class BufferArg : public BaseBufferArg
 {
   public:
     BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
-    void *bufferPtr()	{ return bufPtr; }
+    void *bufferPtr()   { return bufPtr; }
 };
 
 template <class T>
@@ -158,8 +158,8 @@ class TypedBufferArg : public BaseBufferArg
     operator T*() { return (T *)bufPtr; }
 
     // dereference operators
-    T &operator*()	 { return *((T *)bufPtr); }
-    T* operator->()	 { return (T *)bufPtr; }
+    T &operator*()       { return *((T *)bufPtr); }
+    T* operator->()      { return (T *)bufPtr; }
     T &operator[](int i) { return ((T *)bufPtr)[i]; }
 };
 
@@ -191,9 +191,9 @@ SyscallReturn exitFunc(SyscallDesc *desc, int num,
 SyscallReturn getpagesizeFunc(SyscallDesc *desc, int num,
                               LiveProcess *p, ThreadContext *tc);
 
-/// Target obreak() handler: set brk address.
-SyscallReturn obreakFunc(SyscallDesc *desc, int num,
-                         LiveProcess *p, ThreadContext *tc);
+/// Target brk() handler: set brk address.
+SyscallReturn brkFunc(SyscallDesc *desc, int num,
+                      LiveProcess *p, ThreadContext *tc);
 
 /// Target close() handler.
 SyscallReturn closeFunc(SyscallDesc *desc, int num,
@@ -223,9 +223,21 @@ SyscallReturn munmapFunc(SyscallDesc *desc, int num,
 SyscallReturn gethostnameFunc(SyscallDesc *desc, int num,
                               LiveProcess *p, ThreadContext *tc);
 
+/// Target getcwd() handler.
+SyscallReturn getcwdFunc(SyscallDesc *desc, int num,
+                         LiveProcess *p, ThreadContext *tc);
+
+/// Target unlink() handler.
+SyscallReturn readlinkFunc(SyscallDesc *desc, int num,
+                           LiveProcess *p, ThreadContext *tc);
+
 /// Target unlink() handler.
 SyscallReturn unlinkFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
+
+/// Target mkdir() handler.
+SyscallReturn mkdirFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
 
 /// Target rename() handler.
 SyscallReturn renameFunc(SyscallDesc *desc, int num,
@@ -240,6 +252,11 @@ SyscallReturn truncateFunc(SyscallDesc *desc, int num,
 /// Target ftruncate() handler.
 SyscallReturn ftruncateFunc(SyscallDesc *desc, int num,
                             LiveProcess *p, ThreadContext *tc);
+
+
+/// Target umask() handler.
+SyscallReturn umaskFunc(SyscallDesc *desc, int num,
+                        LiveProcess *p, ThreadContext *tc);
 
 
 /// Target chown() handler.
@@ -363,6 +380,11 @@ convertStatBuf(target_stat &tgt, host_stat *host, bool fakeTTY = false)
     tgt->st_ino = host->st_ino;
     tgt->st_ino = htog(tgt->st_ino);
     tgt->st_mode = host->st_mode;
+    if (fakeTTY) {
+        // Claim to be a character device
+        tgt->st_mode &= ~S_IFMT;    // Clear S_IFMT
+        tgt->st_mode |= S_IFCHR;    // Set S_IFCHR
+    }
     tgt->st_mode = htog(tgt->st_mode);
     tgt->st_nlink = host->st_nlink;
     tgt->st_nlink = htog(tgt->st_nlink);
@@ -445,8 +467,8 @@ SyscallReturn
 ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    int fd = tc->getSyscallArg(0);
-    unsigned req = tc->getSyscallArg(1);
+    int fd = process->getSyscallArg(tc, 0);
+    unsigned req = process->getSyscallArg(tc, 1);
 
     DPRINTF(SyscallVerbose, "ioctl(%d, 0x%x, ...)\n", fd, req);
 
@@ -480,7 +502,7 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -490,8 +512,8 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -ENOENT;
     }
 
-    int tgtFlags = tc->getSyscallArg(1);
-    int mode = tc->getSyscallArg(2);
+    int tgtFlags = process->getSyscallArg(tc, 1);
+    int mode = process->getSyscallArg(tc, 2);
     int hostFlags = 0;
 
     // translate open flags
@@ -515,10 +537,18 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     DPRINTF(SyscallVerbose, "opening file %s\n", path.c_str());
 
-    // open the file
-    int fd = open(path.c_str(), hostFlags, mode);
+    int fd;
+    if (!path.compare(0, 6, "/proc/") || !path.compare(0, 8, "/system/") ||
+        !path.compare(0, 10, "/platform/") || !path.compare(0, 5, "/sys/")) {
+        // It's a proc/sys entery and requires special handling
+        fd = OS::openSpecialFile(path, process, tc);
+        return (fd == -1) ? -1 : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+     } else {
+        // open the file
+        fd = open(path.c_str(), hostFlags, mode);
+        return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
+     }
 
-    return (fd == -1) ? -errno : process->alloc_fd(fd,path.c_str(),hostFlags,mode, false);
 }
 
 
@@ -530,10 +560,10 @@ chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
         return -EFAULT;
 
-    uint32_t mode = tc->getSyscallArg(1);
+    uint32_t mode = process->getSyscallArg(tc, 1);
     mode_t hostMode = 0;
 
     // XXX translate mode flags via OS::something???
@@ -557,13 +587,13 @@ SyscallReturn
 fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
-    int fd = tc->getSyscallArg(0);
+    int fd = process->getSyscallArg(tc, 0);
     if (fd < 0 || process->sim_fd(fd) < 0) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
     }
 
-    uint32_t mode = tc->getSyscallArg(1);
+    uint32_t mode = process->getSyscallArg(tc, 1);
     mode_t hostMode = 0;
 
     // XXX translate mode flags via OS::someting???
@@ -577,6 +607,51 @@ fchmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 0;
 }
 
+/// Target mremap() handler.
+template <class OS>
+SyscallReturn
+mremapFunc(SyscallDesc *desc, int callnum, LiveProcess *process, ThreadContext *tc)
+{
+    Addr start = process->getSyscallArg(tc, 0);
+    uint64_t old_length = process->getSyscallArg(tc, 1);
+    uint64_t new_length = process->getSyscallArg(tc, 2);
+    uint64_t flags = process->getSyscallArg(tc, 3);
+
+    if ((start % TheISA::VMPageSize != 0) ||
+            (new_length % TheISA::VMPageSize != 0)) {
+        warn("mremap failing: arguments not page aligned");
+        return -EINVAL;
+    }
+
+    if (new_length > old_length) {
+        if ((start + old_length) == process->mmap_end) {
+            uint64_t diff = new_length - old_length;
+            process->pTable->allocate(process->mmap_end, diff);
+            process->mmap_end += diff;
+            return start;
+        } else {
+            // sys/mman.h defined MREMAP_MAYMOVE
+            if (!(flags & 1)) {
+                warn("can't remap here and MREMAP_MAYMOVE flag not set\n");
+                return -ENOMEM;
+            } else {
+                process->pTable->remap(start, old_length, process->mmap_end);
+                warn("mremapping to totally new vaddr %08p-%08p, adding %d\n", 
+                        process->mmap_end, process->mmap_end + new_length, new_length);
+                start = process->mmap_end;
+                // add on the remaining unallocated pages
+                process->pTable->allocate(start + old_length, new_length - old_length);
+                process->mmap_end += new_length;
+                warn("returning %08p as start\n", start);
+                return start;
+            }
+        }
+    } else {
+        process->pTable->deallocate(start + new_length, old_length -
+                new_length);
+        return start;
+    }
+}
 
 /// Target stat() handler.
 template <class OS>
@@ -586,7 +661,7 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
     return -EFAULT;
 
     // Adjust path for current working directory
@@ -598,7 +673,8 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
+            &hostBuf);
 
     return 0;
 }
@@ -612,7 +688,7 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
         return -EFAULT;
 
     // Adjust path for current working directory
@@ -629,7 +705,8 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
+            &hostBuf);
 
     return 0;
 }
@@ -641,7 +718,7 @@ SyscallReturn
 fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
-    int fd = tc->getSyscallArg(0);
+    int fd = process->getSyscallArg(tc, 0);
     if (fd < 0 || process->sim_fd(fd) < 0) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
@@ -658,7 +735,7 @@ fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1),
+    copyOutStat64Buf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
         &hostBuf, (fd == 1));
 
     return 0;
@@ -673,7 +750,7 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
       return -EFAULT;
 
     // Adjust path for current working directory
@@ -685,7 +762,8 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
+            &hostBuf);
 
     return 0;
 }
@@ -698,7 +776,7 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
       return -EFAULT;
 
     // Adjust path for current working directory
@@ -715,7 +793,8 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemPort(), tc->getSyscallArg(1), &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
+            &hostBuf);
 
     return 0;
 }
@@ -726,7 +805,7 @@ SyscallReturn
 fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    int fd = process->sim_fd(tc->getSyscallArg(0));
+    int fd = process->sim_fd(process->getSyscallArg(tc, 0));
 
     DPRINTF(SyscallVerbose, "fstat(%d, ...)\n", fd);
 
@@ -739,7 +818,7 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemPort(), tc->getSyscallArg(1),
+    copyOutStatBuf<OS>(tc->getMemPort(), process->getSyscallArg(tc, 1),
         &hostBuf, (fd == 1));
 
     return 0;
@@ -754,7 +833,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
       return -EFAULT;
 
     // Adjust path for current working directory
@@ -767,7 +846,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         return -errno;
 
     OS::copyOutStatfsBuf(tc->getMemPort(),
-            (Addr)(tc->getSyscallArg(1)), &hostBuf);
+            (Addr)(process->getSyscallArg(tc, 1)), &hostBuf);
 
     return 0;
 }
@@ -779,7 +858,7 @@ SyscallReturn
 fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
-    int fd = process->sim_fd(tc->getSyscallArg(0));
+    int fd = process->sim_fd(process->getSyscallArg(tc, 0));
 
     if (fd < 0)
         return -EBADF;
@@ -790,7 +869,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemPort(), tc->getSyscallArg(1),
+    OS::copyOutStatfsBuf(tc->getMemPort(), process->getSyscallArg(tc, 1),
         &hostBuf);
 
     return 0;
@@ -803,15 +882,15 @@ SyscallReturn
 writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
-    int fd = tc->getSyscallArg(0);
+    int fd = process->getSyscallArg(tc, 0);
     if (fd < 0 || process->sim_fd(fd) < 0) {
         // doesn't map to any simulator fd: not a valid target fd
         return -EBADF;
     }
 
     TranslatingPort *p = tc->getMemPort();
-    uint64_t tiov_base = tc->getSyscallArg(1);
-    size_t count = tc->getSyscallArg(2);
+    uint64_t tiov_base = process->getSyscallArg(tc, 1);
+    size_t count = process->getSyscallArg(tc, 2);
     struct iovec hiov[count];
     for (int i = 0; i < count; ++i)
     {
@@ -855,12 +934,13 @@ template <class OS>
 SyscallReturn
 mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
-    Addr start = tc->getSyscallArg(0);
-    uint64_t length = tc->getSyscallArg(1);
-    // int prot = tc->getSyscallArg(2);
-    int flags = tc->getSyscallArg(3);
-    // int fd = p->sim_fd(tc->getSyscallArg(4));
-    // int offset = tc->getSyscallArg(5);
+    Addr start = p->getSyscallArg(tc, 0);
+    uint64_t length = p->getSyscallArg(tc, 1);
+    // int prot = p->getSyscallArg(tc, 2);
+    int flags = p->getSyscallArg(tc, 3);
+    // int fd = p->sim_fd(p->getSyscallArg(tc, 4));
+    // int offset = p->getSyscallArg(tc, 5);
+
 
     if ((start  % TheISA::VMPageSize) != 0 ||
         (length % TheISA::VMPageSize) != 0) {
@@ -882,7 +962,7 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         warn("allowing mmap of file @ fd %d. "
-             "This will break if not /dev/zero.", tc->getSyscallArg(4));
+             "This will break if not /dev/zero.", p->getSyscallArg(tc, 4));
     }
 
     return start;
@@ -894,13 +974,20 @@ SyscallReturn
 getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
-    unsigned resource = tc->getSyscallArg(0);
-    TypedBufferArg<typename OS::rlimit> rlp(tc->getSyscallArg(1));
+    unsigned resource = process->getSyscallArg(tc, 0);
+    TypedBufferArg<typename OS::rlimit> rlp(process->getSyscallArg(tc, 1));
 
     switch (resource) {
         case OS::TGT_RLIMIT_STACK:
-            // max stack size in bytes: make up a number (2MB for now)
+            // max stack size in bytes: make up a number (8MB for now)
             rlp->rlim_cur = rlp->rlim_max = 8 * 1024 * 1024;
+            rlp->rlim_cur = htog(rlp->rlim_cur);
+            rlp->rlim_max = htog(rlp->rlim_max);
+            break;
+
+        case OS::TGT_RLIMIT_DATA:
+            // max data segment size in bytes: make up a number
+            rlp->rlim_cur = rlp->rlim_max = 256 * 1024 * 1024;
             rlp->rlim_cur = htog(rlp->rlim_cur);
             rlp->rlim_max = htog(rlp->rlim_max);
             break;
@@ -922,7 +1009,7 @@ SyscallReturn
 gettimeofdayFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
-    TypedBufferArg<typename OS::timeval> tp(tc->getSyscallArg(0));
+    TypedBufferArg<typename OS::timeval> tp(process->getSyscallArg(tc, 0));
 
     getElapsedTime(tp->tv_sec, tp->tv_usec);
     tp->tv_sec += seconds_since_epoch;
@@ -943,10 +1030,10 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     std::string path;
 
-    if (!tc->getMemPort()->tryReadString(path, tc->getSyscallArg(0)))
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, 0)))
       return -EFAULT;
 
-    TypedBufferArg<typename OS::timeval [2]> tp(tc->getSyscallArg(1));
+    TypedBufferArg<typename OS::timeval [2]> tp(process->getSyscallArg(tc, 1));
     tp.copyIn(tc->getMemPort());
 
     struct timeval hostTimeval[2];
@@ -972,8 +1059,8 @@ SyscallReturn
 getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
-    int who = tc->getSyscallArg(0);	// THREAD, SELF, or CHILDREN
-    TypedBufferArg<typename OS::rusage> rup(tc->getSyscallArg(1));
+    int who = process->getSyscallArg(tc, 0);     // THREAD, SELF, or CHILDREN
+    TypedBufferArg<typename OS::rusage> rup(process->getSyscallArg(tc, 1));
 
     rup->ru_utime.tv_sec = 0;
     rup->ru_utime.tv_usec = 0;

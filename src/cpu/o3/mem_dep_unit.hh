@@ -48,6 +48,8 @@ struct SNHash {
     }
 };
 
+class DerivO3CPUParams;
+
 template <class Impl>
 class InstructionQueue;
 
@@ -63,25 +65,28 @@ class InstructionQueue;
  * dependence prediction schemes.
  */
 template <class MemDepPred, class Impl>
-class MemDepUnit {
+class MemDepUnit
+{
+  protected:
+    std::string _name;
+
   public:
-    typedef typename Impl::Params Params;
     typedef typename Impl::DynInstPtr DynInstPtr;
 
     /** Empty constructor. Must call init() prior to using in this case. */
     MemDepUnit();
 
     /** Constructs a MemDepUnit with given parameters. */
-    MemDepUnit(Params *params);
+    MemDepUnit(DerivO3CPUParams *params);
 
     /** Frees up any memory allocated. */
     ~MemDepUnit();
 
     /** Returns the name of the memory dependence unit. */
-    std::string name() const;
+    std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(Params *params, int tid);
+    void init(DerivO3CPUParams *params, int tid);
 
     /** Registers statistics. */
     void regStats();
@@ -252,13 +257,13 @@ class MemDepUnit {
     int id;
 
     /** Stat for number of inserted loads. */
-    Stats::Scalar<> insertedLoads;
+    Stats::Scalar insertedLoads;
     /** Stat for number of inserted stores. */
-    Stats::Scalar<> insertedStores;
+    Stats::Scalar insertedStores;
     /** Stat for number of conflicting loads that had to wait for a store. */
-    Stats::Scalar<> conflictingLoads;
+    Stats::Scalar conflictingLoads;
     /** Stat for number of conflicting stores that had to wait for a store. */
-    Stats::Scalar<> conflictingStores;
+    Stats::Scalar conflictingStores;
 };
 
 #endif // __CPU_O3_MEM_DEP_UNIT_HH__

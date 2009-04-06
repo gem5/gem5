@@ -49,9 +49,8 @@
 #include "base/misc.hh"
 #include "mem/request.hh"
 
+namespace AlphaISA {
 
-namespace AlphaISA
-{
 template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
@@ -86,9 +85,9 @@ handleLockedWrite(XC *xc, Request *req)
             stCondFailures++;
             xc->setStCondFailures(stCondFailures);
             if (stCondFailures % 100000 == 0) {
-                warn("cpu %d: %d consecutive "
+                warn("context %d: %d consecutive "
                      "store conditional failures\n",
-                     xc->readCpuId(), stCondFailures);
+                     xc->contextId(), stCondFailures);
             }
 
             // store conditional failed already, so don't issue it to mem
@@ -99,7 +98,6 @@ handleLockedWrite(XC *xc, Request *req)
     return true;
 }
 
-
 } // namespace AlphaISA
 
-#endif
+#endif // __ARCH_ALPHA_LOCKED_MEM_HH__

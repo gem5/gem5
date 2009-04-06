@@ -34,7 +34,7 @@
 
 #include "base/loader/symtab.hh"
 
-#include "base/trace.hh"	// for DPRINTF
+#include "base/trace.hh"        // for DPRINTF
 
 #include "base/loader/exec_aout.h"
 

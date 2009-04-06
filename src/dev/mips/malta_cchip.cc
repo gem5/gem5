@@ -103,7 +103,7 @@ MaltaCChip::read(PacketPtr pkt)
                    break;
               case TSDEV_CC_MISC:
                   pkt->set((ipint << 8) & 0xF | (itint << 4) & 0xF |
-                                     (pkt->req->getCpuNum() & 0x3));
+                                     (pkt->req->contextId() & 0x3));
                   break;
               case TSDEV_CC_AAR0:
               case TSDEV_CC_AAR1:

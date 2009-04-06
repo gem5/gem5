@@ -141,9 +141,9 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         // Try to fetch the instruction
 
 #if FULL_SYSTEM
-#define IFETCH_FLAGS(pc)	((pc) & 1) ? PHYSICAL : 0
+#define IFETCH_FLAGS(pc)        ((pc) & 1) ? PHYSICAL : 0
 #else
-#define IFETCH_FLAGS(pc)	0
+#define IFETCH_FLAGS(pc)        0
 #endif
 
         uint64_t fetch_PC = thread->readPC() & ~3;
@@ -152,9 +152,10 @@ Checker<DynInstPtr>::verify(DynInstPtr &completed_inst)
         memReq = new Request(inst->threadNumber, fetch_PC,
                              sizeof(uint32_t),
                              IFETCH_FLAGS(thread->readPC()),
-                             fetch_PC, thread->readCpuId(), inst->threadNumber);
+                             fetch_PC, thread->contextId(),
+                             inst->threadNumber);
 
-        bool succeeded = translateInstReq(memReq);
+        bool succeeded = itb->translateAtomic(memReq, thread);
 
         if (!succeeded) {
             if (inst->getFault() == NoFault) {

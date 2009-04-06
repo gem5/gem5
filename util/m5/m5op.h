@@ -39,6 +39,8 @@ void quiesce(void);
 void quiesceNs(uint64_t ns);
 void quiesceCycle(uint64_t cycles);
 uint64_t quiesceTime(void);
+uint64_t rpns();
+void wakeCPU(uint64_t cpuid);
 
 void m5_exit(uint64_t ns_delay);
 uint64_t m5_initparam(void);
@@ -51,7 +53,27 @@ void m5_debugbreak(void);
 void m5_switchcpu(void);
 void m5_addsymbol(uint64_t addr, char *symbol);
 void m5_panic(void);
-void m5_anbegin(uint64_t s);
-void m5_anwait(uint64_t s, uint64_t w);
+
+// These operations are for critical path annotation
+void m5a_bsm(char *sm, const void *id, int flags);
+void m5a_esm(char *sm);
+void m5a_begin(int flags, char *st);
+void m5a_end(void);
+void m5a_q(const void *id, char *q, int count);
+void m5a_dq(const void *id, char *q, int count);
+void m5a_wf(const void *id, char *q, char *sm, int count);
+void m5a_we(const void *id, char *q, char *sm, int count);
+void m5a_ws(const void *id, char *q, char *sm);
+void m5a_sq(const void *id, char *q, int count, int flags);
+void m5a_aq(const void *id, char *q, int count);
+void m5a_pq(const void *id, char *q, int count);
+void m5a_l(char *lsm, const void *id, char *sm);
+void m5a_identify(uint64_t id);
+uint64_t m5a_getid(void);
+
+#define M5_AN_FL_NONE   0x0
+#define M5_AN_FL_BAD    0x2
+#define M5_AN_FL_LINK   0x10
+#define M5_AN_FL_RESET  0x20
 
 #endif // __M5OP_H__

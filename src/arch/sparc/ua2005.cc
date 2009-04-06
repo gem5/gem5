@@ -35,34 +35,59 @@
 #include "sim/system.hh"
 
 using namespace SparcISA;
+using namespace std;
 
 
 void
 MiscRegFile::checkSoftInt(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // If PIL < 14, copy over the tm and sm bits
     if (pil < 14 && softint & 0x10000)
-        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,16);
+        cpu->postInterrupt(IT_SOFT_INT, 16);
     else
-        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,16);
+        cpu->clearInterrupt(IT_SOFT_INT, 16);
     if (pil < 14 && softint & 0x1)
-        tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,0);
+        cpu->postInterrupt(IT_SOFT_INT, 0);
     else
-        tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,0);
+        cpu->clearInterrupt(IT_SOFT_INT, 0);
 
     // Copy over any of the other bits that are set
     for (int bit = 15; bit > 0; --bit) {
         if (1 << bit & softint && bit > pil)
-            tc->getCpuPtr()->post_interrupt(IT_SOFT_INT,bit);
+            cpu->postInterrupt(IT_SOFT_INT, bit);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_SOFT_INT,bit);
+            cpu->clearInterrupt(IT_SOFT_INT, bit);
     }
 }
 
+//These functions map register indices to names
+static inline string
+getMiscRegName(RegIndex index)
+{
+    static string miscRegName[NumMiscRegs] =
+        {/*"y", "ccr",*/ "asi", "tick", "fprs", "pcr", "pic",
+         "gsr", "softint_set", "softint_clr", "softint", "tick_cmpr",
+         "stick", "stick_cmpr",
+         "tpc", "tnpc", "tstate", "tt", "privtick", "tba", "pstate", "tl",
+         "pil", "cwp", /*"cansave", "canrestore", "cleanwin", "otherwin",
+         "wstate",*/ "gl",
+         "hpstate", "htstate", "hintp", "htba", "hver", "strand_sts_reg",
+         "hstick_cmpr",
+         "fsr", "prictx", "secctx", "partId", "lsuCtrlReg",
+         "scratch0", "scratch1", "scratch2", "scratch3", "scratch4",
+         "scratch5", "scratch6", "scratch7", "cpuMondoHead", "cpuMondoTail",
+         "devMondoHead", "devMondoTail", "resErrorHead", "resErrorTail",
+         "nresErrorHead", "nresErrorTail", "TlbData" };
+    return miscRegName[index];
+}
 
 void
 MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     int64_t time;
     switch (miscReg) {
         /* Full system only ASRs */
@@ -80,12 +105,12 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             tickCompare = new TickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((tick_cmpr & ~mask(63)) && tickCompare->scheduled())
-            tickCompare->deschedule();
+            cpu->deschedule(tickCompare);
         time = (tick_cmpr & mask(63)) - (tick & mask(63));
         if (!(tick_cmpr & ~mask(63)) && time > 0) {
             if (tickCompare->scheduled())
-                tickCompare->deschedule();
-            tickCompare->schedule(time * tc->getCpuPtr()->ticks(1));
+                cpu->deschedule(tickCompare);
+            cpu->schedule(tickCompare, curTick + time * cpu->ticks(1));
         }
         panic("writing to TICK compare register %#X\n", val);
         break;
@@ -95,13 +120,13 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             sTickCompare = new STickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((stick_cmpr & ~mask(63)) && sTickCompare->scheduled())
-            sTickCompare->deschedule();
+            cpu->deschedule(sTickCompare);
         time = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
-            tc->getCpuPtr()->instCount();
+            cpu->instCount();
         if (!(stick_cmpr & ~mask(63)) && time > 0) {
             if (sTickCompare->scheduled())
-                sTickCompare->deschedule();
-            sTickCompare->schedule(time * tc->getCpuPtr()->ticks(1) + curTick);
+                cpu->deschedule(sTickCompare);
+            cpu->schedule(sTickCompare, curTick + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to sTICK compare register value %#X\n", val);
         break;
@@ -120,9 +145,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_HINTP:
         setRegNoEffect(miscReg, val);
         if (hintp)
-            tc->getCpuPtr()->post_interrupt(IT_HINTP,0);
+            cpu->postInterrupt(IT_HINTP, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_HINTP,0);
+            cpu->clearInterrupt(IT_HINTP, 0);
         break;
 
       case MISCREG_HTBA:
@@ -134,25 +159,25 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
       case MISCREG_QUEUE_CPU_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (cpu_mondo_head != cpu_mondo_tail)
-            tc->getCpuPtr()->post_interrupt(IT_CPU_MONDO,0);
+            cpu->postInterrupt(IT_CPU_MONDO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_CPU_MONDO,0);
+            cpu->clearInterrupt(IT_CPU_MONDO, 0);
         break;
       case MISCREG_QUEUE_DEV_MONDO_HEAD:
       case MISCREG_QUEUE_DEV_MONDO_TAIL:
         setRegNoEffect(miscReg, val);
         if (dev_mondo_head != dev_mondo_tail)
-            tc->getCpuPtr()->post_interrupt(IT_DEV_MONDO,0);
+            cpu->postInterrupt(IT_DEV_MONDO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_DEV_MONDO,0);
+            cpu->clearInterrupt(IT_DEV_MONDO, 0);
         break;
       case MISCREG_QUEUE_RES_ERROR_HEAD:
       case MISCREG_QUEUE_RES_ERROR_TAIL:
         setRegNoEffect(miscReg, val);
         if (res_error_head != res_error_tail)
-            tc->getCpuPtr()->post_interrupt(IT_RES_ERROR,0);
+            cpu->postInterrupt(IT_RES_ERROR, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_RES_ERROR,0);
+            cpu->clearInterrupt(IT_RES_ERROR, 0);
         break;
       case MISCREG_QUEUE_NRES_ERROR_HEAD:
       case MISCREG_QUEUE_NRES_ERROR_TAIL:
@@ -165,13 +190,13 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             hSTickCompare = new HSTickCompareEvent(this, tc);
         setRegNoEffect(miscReg, val);
         if ((hstick_cmpr & ~mask(63)) && hSTickCompare->scheduled())
-            hSTickCompare->deschedule();
+            cpu->deschedule(hSTickCompare);
         time = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
-            tc->getCpuPtr()->instCount();
+            cpu->instCount();
         if (!(hstick_cmpr & ~mask(63)) && time > 0) {
             if (hSTickCompare->scheduled())
-                hSTickCompare->deschedule();
-            hSTickCompare->schedule(curTick + time * tc->getCpuPtr()->ticks(1));
+                cpu->deschedule(hSTickCompare);
+            cpu->schedule(hSTickCompare, curTick + time * cpu->ticks(1));
         }
         DPRINTF(Timer, "writing to hsTICK compare register value %#X\n", val);
         break;
@@ -181,9 +206,9 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
         setRegNoEffect(miscReg, val | HPSTATE::id);
 #if FULL_SYSTEM
         if (hpstate & HPSTATE::tlz && tl == 0 && !(hpstate & HPSTATE::hpriv))
-            tc->getCpuPtr()->post_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            cpu->postInterrupt(IT_TRAP_LEVEL_ZERO, 0);
         else
-            tc->getCpuPtr()->clear_interrupt(IT_TRAP_LEVEL_ZERO,0);
+            cpu->clearInterrupt(IT_TRAP_LEVEL_ZERO, 0);
 #endif
         break;
       case MISCREG_HTSTATE:
@@ -200,11 +225,12 @@ MiscRegFile::setFSReg(int miscReg, const MiscReg &val, ThreadContext *tc)
             tc->suspend();
             if (tc->getKernelStats())
                 tc->getKernelStats()->quiesce();
-            }
+        }
         break;
 
       default:
-        panic("Invalid write to FS misc register %s\n", getMiscRegName(miscReg));
+        panic("Invalid write to FS misc register %s\n",
+              getMiscRegName(miscReg));
     }
 }
 
@@ -250,12 +276,13 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
         sys = tc->getSystemPtr();
 
         temp = readRegNoEffect(miscReg) & (STS::active | STS::speculative);
-        // Check that the CPU array is fully populated (by calling getNumCPus())
-        assert(sys->getNumCPUs() > tc->readCpuId());
+        // Check that the CPU array is fully populated
+        // (by calling getNumCPus())
+        assert(sys->numContexts() > tc->contextId());
 
-        temp |= tc->readCpuId()  << STS::shft_id;
+        temp |= tc->contextId()  << STS::shft_id;
 
-        for (x = tc->readCpuId() & ~3; x < sys->threadContexts.size(); x++) {
+        for (x = tc->contextId() & ~3; x < sys->threadContexts.size(); x++) {
             switch (sys->threadContexts[x]->status()) {
               case ThreadContext::Active:
                 temp |= STS::st_run << (STS::shft_fsm0 -
@@ -280,16 +307,6 @@ MiscRegFile::readFSReg(int miscReg, ThreadContext * tc)
         panic("Invalid read to FS misc register\n");
     }
 }
-/*
-  In Niagra STICK==TICK so this isn't needed
-  case MISCREG_STICK:
-  SparcSystem *sys;
-  sys = dynamic_cast<SparcSystem*>(tc->getSystemPtr());
-  assert(sys != NULL);
-  return curTick/Clock::Int::ns - sys->sysTick | (stick & ~(mask(63)));
-*/
-
-
 
 void
 MiscRegFile::processTickCompare(ThreadContext *tc)
@@ -300,12 +317,14 @@ MiscRegFile::processTickCompare(ThreadContext *tc)
 void
 MiscRegFile::processSTickCompare(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
     ticks = ((int64_t)(stick_cmpr & mask(63)) - (int64_t)stick) -
-        tc->getCpuPtr()->instCount();
+        cpu->instCount();
     assert(ticks >= 0 && "stick compare missed interrupt cycle");
 
     if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
@@ -315,12 +334,14 @@ MiscRegFile::processSTickCompare(ThreadContext *tc)
             setReg(MISCREG_SOFTINT, softint | (ULL(1) << 16), tc);
         }
     } else
-        sTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
+        cpu->schedule(sTickCompare, curTick + ticks * cpu->ticks(1));
 }
 
 void
 MiscRegFile::processHSTickCompare(ThreadContext *tc)
 {
+    BaseCPU *cpu = tc->getCpuPtr();
+
     // since our microcode instructions take two cycles we need to check if
     // we're actually at the correct cycle or we need to wait a little while
     // more
@@ -330,7 +351,7 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
        return;
 
     ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -
-        tc->getCpuPtr()->instCount();
+        cpu->instCount();
     assert(ticks >= 0 && "hstick compare missed interrupt cycle");
 
     if (ticks == 0 || tc->status() == ThreadContext::Suspended) {
@@ -341,6 +362,6 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
         }
         // Need to do something to cause interrupt to happen here !!! @todo
     } else
-        hSTickCompare->schedule(ticks * tc->getCpuPtr()->ticks(1) + curTick);
+        cpu->schedule(hSTickCompare, curTick + ticks * cpu->ticks(1));
 }
 

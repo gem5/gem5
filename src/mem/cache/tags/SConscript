@@ -34,13 +34,9 @@ Source('base.cc')
 Source('fa_lru.cc')
 Source('iic.cc')
 Source('lru.cc')
-Source('split.cc')
-Source('split_lifo.cc')
-Source('split_lru.cc')
 
 SimObject('iic_repl/Repl.py')
 Source('iic_repl/gen.cc')
 
 TraceFlag('IIC')
 TraceFlag('IICMore')
-TraceFlag('Split')

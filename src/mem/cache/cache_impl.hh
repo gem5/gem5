@@ -38,6 +38,7 @@
  */
 
 #include "sim/host.hh"
+#include "base/fast_alloc.hh"
 #include "base/misc.hh"
 #include "base/range_ops.hh"
 
@@ -52,11 +53,10 @@
 template<class TagStore>
 Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     : BaseCache(p),
-      prefetchAccess(p->prefetch_access),
       tags(tags),
       prefetcher(pf),
       doFastWrites(true),
-      prefetchMiss(p->prefetch_miss)
+      prefetchOnAccess(p->prefetch_on_access)
 {
     tempBlock = new BlkType();
     tempBlock->data = new uint8_t[blkSize];
@@ -71,7 +71,8 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags, BasePrefetcher *pf)
     memSidePort->setOtherPort(cpuSidePort);
 
     tags->setCache(this);
-    prefetcher->setCache(this);
+    if (prefetcher)
+        prefetcher->setCache(this);
 }
 
 template<class TagStore>
@@ -80,7 +81,8 @@ Cache<TagStore>::regStats()
 {
     BaseCache::regStats();
     tags->regStats(name());
-    prefetcher->regStats(name());
+    if (prefetcher)
+        prefetcher->regStats(name());
 }
 
 template<class TagStore>
@@ -147,8 +149,10 @@ Cache<TagStore>::cmpAndSwap(BlkType *blk, PacketPtr pkt)
             panic("Invalid size for conditional read/write\n");
     }
 
-    if (overwrite_mem)
+    if (overwrite_mem) {
         std::memcpy(blk_data, &overwrite_val, pkt->getSize());
+        blk->status |= BlkDirty;
+    }
 }
 
 
@@ -259,7 +263,8 @@ Cache<TagStore>::squash(int threadNum)
 
 template<class TagStore>
 bool
-Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
+Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
+                        int &lat, PacketList &writebacks)
 {
     if (pkt->req->isUncacheable())  {
         blk = NULL;
@@ -267,34 +272,16 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
         return false;
     }
 
-    blk = tags->findBlock(pkt->getAddr(), lat);
-
-    if (prefetchAccess) {
-        //We are determining prefetches on access stream, call prefetcher
-        prefetcher->handleMiss(pkt, curTick);
-    }
+    blk = tags->accessBlock(pkt->getAddr(), lat);
 
     DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
             (blk) ? "hit" : "miss");
 
     if (blk != NULL) {
 
-        if (blk->isPrefetch()) {
-            //Signal that this was a hit under prefetch (no need for
-            //use prefetch (only can get here if true)
-            DPRINTF(HWPrefetch, "Hit a block that was prefetched\n");
-            blk->status &= ~BlkHWPrefetched;
-            if (prefetchMiss) {
-                //If we are using the miss stream, signal the
-                //prefetcher otherwise the access stream would have
-                //already signaled this hit
-                prefetcher->handleMiss(pkt, curTick);
-            }
-        }
-
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
-            hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             satisfyCpuSideRequest(pkt, blk);
             return true;
         }
@@ -307,7 +294,6 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
     // into the cache without having a writeable copy (or any copy at
     // all).
     if (pkt->cmd == MemCmd::Writeback) {
-        PacketList writebacks;
         assert(blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
@@ -318,19 +304,14 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
                 incMissCount(pkt);
                 return false;
             }
+            tags->insertBlock(pkt->getAddr(), blk);
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
         blk->status |= BlkDirty;
-        // copy writebacks from replacement to write buffer
-        while (!writebacks.empty()) {
-            PacketPtr wbPkt = writebacks.front();
-            allocateWriteBuffer(wbPkt, curTick + hitLatency, true);
-            writebacks.pop_front();
-        }
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+        hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
         return true;
     }
 
@@ -346,7 +327,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk, int &lat)
 }
 
 
-class ForwardResponseRecord : public Packet::SenderState
+class ForwardResponseRecord : public Packet::SenderState, public FastAlloc
 {
     Packet::SenderState *prevSenderState;
     int prevSrc;
@@ -407,6 +388,9 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             memSidePort->sendTiming(snoopPkt);
             // main memory will delete snoopPkt
         }
+        // since we're the official target but we aren't responding,
+        // delete the packet now.
+        delete pkt;
         return true;
     }
 
@@ -423,12 +407,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
     int lat = hitLatency;
     BlkType *blk = NULL;
-    bool satisfied = access(pkt, blk, lat);
+    PacketList writebacks;
+
+    bool satisfied = access(pkt, blk, lat, writebacks);
 
 #if 0
     /** @todo make the fast write alloc (wh64) work with coherence. */
-
-    PacketList writebacks;
 
     // If this is a block size write/hint (WH64) allocate the block here
     // if the coherence protocol allows it.
@@ -447,14 +431,10 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             ++fastWrites;
         }
     }
-
-    // copy writebacks to write buffer
-    while (!writebacks.empty()) {
-        PacketPtr wbPkt = writebacks.front();
-        allocateWriteBuffer(wbPkt, time, true);
-        writebacks.pop_front();
-    }
 #endif
+
+    // track time of availability of next prefetch, if any
+    Tick next_pf_time = 0;
 
     bool needsResponse = pkt->needsResponse();
 
@@ -465,10 +445,14 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         } else {
             delete pkt;
         }
+
+        if (prefetcher && (prefetchOnAccess || (blk && blk->wasPrefetched()))) {
+            if (blk)
+                blk->status &= ~BlkHWPrefetched;
+            next_pf_time = prefetcher->notify(pkt, time);
+        }
     } else {
         // miss
-        if (prefetchMiss)
-            prefetcher->handleMiss(pkt, time);
 
         Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
@@ -476,8 +460,8 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         if (mshr) {
             // MSHR hit
             //@todo remove hw_pf here
-            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
-            if (mshr->threadNum != 0/*pkt->req->getThreadNum()*/) {
+            mshr_hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+            if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                 mshr->threadNum = -1;
             }
             mshr->allocateTarget(pkt, time, order++);
@@ -491,7 +475,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             }
         } else {
             // no MSHR
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             // always mark as cache fill for now... if we implement
             // no-write-allocate or bypass accesses this will have to
             // be changed.
@@ -520,7 +504,21 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
                 allocateMissBuffer(pkt, time, true);
             }
+
+            if (prefetcher) {
+                next_pf_time = prefetcher->notify(pkt, time);
+            }
         }
+    }
+
+    if (next_pf_time != 0)
+        requestMemSideBus(Request_PF, std::max(time, next_pf_time));
+
+    // copy writebacks to write buffer
+    while (!writebacks.empty()) {
+        PacketPtr wbPkt = writebacks.front();
+        allocateWriteBuffer(wbPkt, time, true);
+        writebacks.pop_front();
     }
 
     return true;
@@ -610,51 +608,77 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
     // access in timing mode
 
     BlkType *blk = NULL;
+    PacketList writebacks;
 
-    if (!access(pkt, blk, lat)) {
+    if (!access(pkt, blk, lat, writebacks)) {
         // MISS
-        PacketPtr busPkt = getBusPacket(pkt, blk, pkt->needsExclusive());
+        PacketPtr bus_pkt = getBusPacket(pkt, blk, pkt->needsExclusive());
 
-        bool isCacheFill = (busPkt != NULL);
+        bool is_forward = (bus_pkt == NULL);
 
-        if (busPkt == NULL) {
+        if (is_forward) {
             // just forwarding the same request to the next level
             // no local cache operation involved
-            busPkt = pkt;
+            bus_pkt = pkt;
         }
 
         DPRINTF(Cache, "Sending an atomic %s for %x\n",
-                busPkt->cmdString(), busPkt->getAddr());
+                bus_pkt->cmdString(), bus_pkt->getAddr());
 
 #if TRACING_ON
         CacheBlk::State old_state = blk ? blk->status : 0;
 #endif
 
-        lat += memSidePort->sendAtomic(busPkt);
+        lat += memSidePort->sendAtomic(bus_pkt);
 
         DPRINTF(Cache, "Receive response: %s for addr %x in state %i\n",
-                busPkt->cmdString(), busPkt->getAddr(), old_state);
+                bus_pkt->cmdString(), bus_pkt->getAddr(), old_state);
 
-        bool is_error = busPkt->isError();
-        assert(!busPkt->wasNacked());
+        assert(!bus_pkt->wasNacked());
 
-        if (is_error && pkt->needsResponse()) {
-            pkt->makeAtomicResponse();
-            pkt->copyError(busPkt);
-        } else if (isCacheFill && !is_error) {
-            PacketList writebacks;
-            blk = handleFill(busPkt, blk, writebacks);
-            satisfyCpuSideRequest(pkt, blk);
-            delete busPkt;
-
-            // Handle writebacks if needed
-            while (!writebacks.empty()){
-                PacketPtr wbPkt = writebacks.front();
-                memSidePort->sendAtomic(wbPkt);
-                writebacks.pop_front();
-                delete wbPkt;
+        // If packet was a forward, the response (if any) is already
+        // in place in the bus_pkt == pkt structure, so we don't need
+        // to do anything.  Otherwise, use the separate bus_pkt to
+        // generate response to pkt and then delete it.
+        if (!is_forward) {
+            if (pkt->needsResponse()) {
+                assert(bus_pkt->isResponse());
+                if (bus_pkt->isError()) {
+                    pkt->makeAtomicResponse();
+                    pkt->copyError(bus_pkt);
+                } else if (bus_pkt->isRead() ||
+                           bus_pkt->cmd == MemCmd::UpgradeResp) {
+                    // we're updating cache state to allow us to
+                    // satisfy the upstream request from the cache
+                    blk = handleFill(bus_pkt, blk, writebacks);
+                    satisfyCpuSideRequest(pkt, blk);
+                } else {
+                    // we're satisfying the upstream request without
+                    // modifying cache state, e.g., a write-through
+                    pkt->makeAtomicResponse();
+                }
             }
+            delete bus_pkt;
         }
+    }
+
+    // Note that we don't invoke the prefetcher at all in atomic mode.
+    // It's not clear how to do it properly, particularly for
+    // prefetchers that aggressively generate prefetch candidates and
+    // rely on bandwidth contention to throttle them; these will tend
+    // to pollute the cache in atomic mode since there is no bandwidth
+    // contention.  If we ever do want to enable prefetching in atomic
+    // mode, though, this is the place to do it... see timingAccess()
+    // for an example (though we'd want to issue the prefetch(es)
+    // immediately rather than calling requestMemSideBus() as we do
+    // there).
+
+    // Handle writebacks if needed
+    while (!writebacks.empty()){
+        PacketPtr wbPkt = writebacks.front();
+        memSidePort->sendAtomic(wbPkt);
+        writebacks.pop_front();
+        delete wbPkt;
     }
 
     // We now have the block one way or another (hit or completed miss)
@@ -742,14 +766,17 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     PacketList writebacks;
 
     if (pkt->req->isUncacheable()) {
-        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+        mshr_uncacheable_lat[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
             miss_latency;
     } else {
-        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->getThreadNum()*/] +=
+        mshr_miss_latency[stats_cmd_idx][0/*pkt->req->threadId()*/] +=
             miss_latency;
     }
 
-    if (mshr->isCacheFill && !is_error) {
+    bool is_fill = !mshr->isForward &&
+        (pkt->isRead() || pkt->cmd == MemCmd::UpgradeResp);
+
+    if (is_fill && !is_error) {
         DPRINTF(Cache, "Block for addr %x being updated in Cache\n",
                 pkt->getAddr());
 
@@ -770,9 +797,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     while (mshr->hasTargets()) {
         MSHR::Target *target = mshr->getTarget();
 
-        if (target->isCpuSide()) {
+        switch (target->source) {
+          case MSHR::Target::FromCPU:
             Tick completion_time;
-            if (blk != NULL) {
+            if (is_fill) {
                 satisfyCpuSideRequest(target->pkt, blk);
                 // How many bytes past the first request is this one
                 int transfer_offset =
@@ -786,7 +814,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                     (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
 
                 assert(!target->pkt->req->isUncacheable());
-                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/] +=
+                missLatency[target->pkt->cmdToIndex()][0/*pkt->req->threadId()*/] +=
                     completion_time - target->recvTime;
             } else {
                 // not a cache fill, just forwarding response
@@ -808,13 +836,27 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
             cpuSidePort->respond(target->pkt, completion_time);
-        } else {
+            break;
+
+          case MSHR::Target::FromPrefetcher:
+            assert(target->pkt->cmd == MemCmd::HardPFReq);
+            if (blk)
+                blk->status |= BlkHWPrefetched;
+            delete target->pkt->req;
+            delete target->pkt;
+            break;
+
+          case MSHR::Target::FromSnoop:
             // I don't believe that a snoop can be in an error state
             assert(!is_error);
             // response to snoop request
             DPRINTF(Cache, "processing deferred snoop...\n");
             handleSnoop(target->pkt, blk, true, true,
                         mshr->pendingInvalidate || pkt->isInvalidate());
+            break;
+
+          default:
+            panic("Illegal target->source enum %d\n", target->source);
         }
 
         mshr->popTarget();
@@ -825,6 +867,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     }
 
     if (mshr->promoteDeferredTargets()) {
+        // avoid later read getting stale data while write miss is
+        // outstanding.. see comment in timingAccess()
+        blk->status &= ~BlkReadable;
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
         requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
@@ -861,7 +906,7 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
-    writebacks[0/*pkt->req->getThreadNum()*/]++;
+    writebacks[0/*pkt->req->threadId()*/]++;
 
     Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0);
@@ -878,7 +923,7 @@ template<class TagStore>
 typename Cache<TagStore>::BlkType*
 Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
 {
-    BlkType *blk = tags->findReplacement(addr, writebacks);
+    BlkType *blk = tags->findVictim(addr, writebacks);
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
@@ -889,6 +934,7 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
             assert(!blk->isWritable());
             assert(repl_mshr->needsExclusive());
             // too hard to replace block with transient state
+            // allocation failed, block not inserted
             return NULL;
         } else {
             DPRINTF(Cache, "replacement: replacing %x with %x: %s\n",
@@ -902,8 +948,6 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
         }
     }
 
-    // Set tag for new block.  Caller is responsible for setting status.
-    blk->tag = tags->extractTag(addr);
     return blk;
 }
 
@@ -934,7 +978,10 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             assert(!tempBlock->isValid());
             blk = tempBlock;
             tempBlock->set = tags->extractSet(addr);
+            tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
+        } else {
+            tags->insertBlock(addr, blk);
         }
     } else {
         // existing block... probably an upgrade
@@ -1088,6 +1135,11 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
             pkt->makeAtomicResponse();
             pkt->setDataFromBlock(blk->data, blkSize);
         }
+    } else if (is_timing && is_deferred) {
+        // if it's a deferred timing snoop then we've made a copy of
+        // the packet, and so if we're not using that copy to respond
+        // then we need to delete it here.
+        delete pkt;
     }
 
     // Do this last in case it deallocates block data or something
@@ -1156,6 +1208,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
             if (pkt->isInvalidate()) {
                 // Invalidation trumps our writeback... discard here
                 markInService(mshr);
+                delete wb_pkt;
             }
 
             // If this was a shared writeback, there may still be
@@ -1253,7 +1306,7 @@ Cache<TagStore>::getNextMSHR()
         if (pkt) {
             // Update statistic on number of prefetches issued
             // (hwpf_mshr_misses)
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->getThreadNum()*/]++;
+            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
             // Don't request bus, since we already have it
             return allocateMissBuffer(pkt, curTick, false);
         }
@@ -1277,7 +1330,7 @@ Cache<TagStore>::getTimingPacket()
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
 
-    if (mshr->isSimpleForward()) {
+    if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
         assert(tags->findBlock(mshr->addr) == NULL);
         pkt = tgt_pkt;
@@ -1285,11 +1338,10 @@ Cache<TagStore>::getTimingPacket()
         BlkType *blk = tags->findBlock(mshr->addr);
         pkt = getBusPacket(tgt_pkt, blk, mshr->needsExclusive());
 
-        mshr->isCacheFill = (pkt != NULL);
+        mshr->isForward = (pkt == NULL);
 
-        if (pkt == NULL) {
+        if (mshr->isForward) {
             // not a cache block request, but a response is expected
-            assert(!mshr->isSimpleForward());
             // make copy of current packet to forward, keep current
             // copy for response handling
             pkt = new Packet(tgt_pkt);
@@ -1303,6 +1355,22 @@ Cache<TagStore>::getTimingPacket()
     assert(pkt != NULL);
     pkt->senderState = mshr;
     return pkt;
+}
+
+
+template<class TagStore>
+Tick
+Cache<TagStore>::nextMSHRReadyTime()
+{
+    Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
+                              writeBuffer.nextMSHRReadyTime());
+
+    if (prefetcher) {
+        nextReady = std::min(nextReady,
+                             prefetcher->nextPrefetchReadyTime());
+    }
+
+    return nextReady;
 }
 
 
@@ -1463,7 +1531,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
             waitingOnRetry = !success;
             if (waitingOnRetry) {
                 DPRINTF(CachePort, "now waiting on a retry\n");
-                if (!mshr->isSimpleForward()) {
+                if (!mshr->isForwardNoResponse()) {
                     delete pkt;
                 }
             } else {
@@ -1481,7 +1549,7 @@ Cache<TagStore>::MemSidePort::sendPacket()
         // @TODO: need to facotr in prefetch requests here somehow
         if (nextReady != MaxTick) {
             DPRINTF(CachePort, "more packets to send @ %d\n", nextReady);
-            sendEvent->schedule(std::max(nextReady, curTick + 1));
+            schedule(sendEvent, std::max(nextReady, curTick + 1));
         } else {
             // no more to send right now: if we're draining, we may be done
             if (drainEvent) {

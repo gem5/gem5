@@ -35,9 +35,10 @@
 #include "arch/regfile.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
+#include "params/DerivO3CPU.hh"
 
 template <class Impl>
-DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, Params *params)
+DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
       iewToRenameDelay(params->iewToRenameDelay),
       decodeToRenameDelay(params->decodeToRenameDelay),
@@ -46,7 +47,7 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, Params *params)
       commitWidth(params->commitWidth),
       resumeSerialize(false),
       resumeUnblocking(false),
-      numThreads(params->numberOfThreads),
+      numThreads(params->numThreads),
       maxPhysicalRegs(params->numPhysIntRegs + params->numPhysFloatRegs)
 {
     _status = Inactive;

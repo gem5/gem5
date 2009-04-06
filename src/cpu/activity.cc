@@ -28,15 +28,18 @@
  * Authors: Kevin Lim
  */
 
-#include <cstring>
+#include <string>
 
 #include "base/timebuf.hh"
 #include "cpu/activity.hh"
 
-ActivityRecorder::ActivityRecorder(int num_stages, int longest_latency,
-                                   int activity)
-    : activityBuffer(longest_latency, 0), longestLatency(longest_latency),
-      activityCount(activity), numStages(num_stages)
+using namespace std;
+
+ActivityRecorder::ActivityRecorder(const string &name, int num_stages,
+    int longest_latency, int activity)
+    : _name(name), activityBuffer(longest_latency, 0),
+      longestLatency(longest_latency), activityCount(activity),
+      numStages(num_stages)
 {
     stageActive = new bool[numStages];
     std::memset(stageActive, 0, numStages);
