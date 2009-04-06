@@ -1,0 +1,282 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2007-2008 The Florida State University
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Stephen Hines
+
+////////////////////////////////////////////////////////////////////
+//
+// Utility functions for execute methods
+//
+//
+output header {{
+
+    // Shift types for ARM instructions
+    enum ArmShiftType {
+        LSL = 0,
+        LSR,
+        ASR,
+        ROR
+    };
+
+    enum ArmShiftMode {
+    };
+
+    inline uint32_t number_of_ones(int32_t val)
+    {
+        uint32_t ones = 0;
+        for (int i = 0; i < 32; i++ )
+        {
+            if ( val & (1<<i) )
+                ones++;
+        }
+        return ones;
+    }
+
+}};
+
+output exec {{
+
+    static int32_t arm_NEG(int32_t val) { return (val >> 31); }
+    static int32_t arm_POS(int32_t val) { return ((~val) >> 31); }
+
+    // Shift Rm by an immediate value
+    inline int32_t
+    shift_rm_imm(uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval)
+    {
+        enum ArmShiftType shiftType;
+        shiftType = (enum ArmShiftType) type;
+
+        switch (shiftType)
+        {
+            case LSL:
+                return (base << shamt);
+            case LSR:
+                if (shamt == 0)
+                    return (0);
+                else
+                    return (base >> shamt);
+            case ASR:
+                if (shamt == 0)
+                    return ((uint32_t) ((int32_t) base >> 31L));
+                else
+                    return ((uint32_t) (((int32_t) base) >> shamt));
+            case ROR:
+                //shamt = shamt & 0x1f;
+                if (shamt == 0)
+                    return (cfval << 31) | (base >> 1); // RRX
+                else
+                    return (base << (32 - shamt)) | (base >> shamt);
+            default:
+                fprintf(stderr, "Unhandled shift type\n");
+                exit(1);
+                break;
+        }
+        return 0;
+    }
+
+    // Shift Rm by Rs
+    inline int32_t
+    shift_rm_rs(uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval)
+    {
+        enum ArmShiftType shiftType;
+        shiftType = (enum ArmShiftType) type;
+
+        switch (shiftType)
+        {
+            case LSL:
+                if (shamt == 0)
+                    return (base);
+                else if (shamt >= 32)
+                    return (0);
+                else
+                    return (base << shamt);
+            case LSR:
+                if (shamt == 0)
+                    return (base);
+                else if (shamt >= 32)
+                    return (0);
+                else
+                    return (base >> shamt);
+            case ASR:
+                if (shamt == 0)
+                    return base;
+                else if (shamt >= 32)
+                    return ((uint32_t) ((int32_t) base >> 31L));
+                else
+                    return ((uint32_t) (((int32_t) base) >> (int) shamt));
+            case ROR:
+                shamt = shamt & 0x1f;
+                if (shamt == 0)
+                    return (base);
+                else
+                    return ((base << (32 - shamt)) | (base >> shamt));
+            default:
+                fprintf(stderr, "Unhandled shift type\n");
+                exit(1);
+                break;
+        }
+        return 0;
+    }
+
+
+    // Generate C for a shift by immediate
+    inline int32_t
+    shift_carry_imm(uint32_t base, uint32_t shamt, uint32_t type,
+        uint32_t cfval)
+    {
+        enum ArmShiftType shiftType;
+        shiftType = (enum ArmShiftType) type;
+
+        switch (shiftType)
+        {
+            case LSL:
+                return (base >> (32 - shamt)) & 1;
+            case LSR:
+                if (shamt == 0)
+                    return (base >> 31) & 1;
+                else
+                    return (base >> (shamt - 1)) & 1;
+            case ASR:
+                if (shamt == 0)
+                    return (base >> 31L);
+                else
+                    return ((uint32_t) (((int32_t) base) >> (shamt - 1))) & 1;
+            case ROR:
+                shamt = shamt & 0x1f;
+                if (shamt == 0)
+                    return (base & 1); // RRX
+                else
+                    return (base >> (shamt - 1)) & 1;
+            default:
+                fprintf(stderr, "Unhandled shift type\n");
+                exit(1);
+                break;
+
+        }
+        return 0;
+    }
+
+
+    // Generate C for a shift by Rs
+    inline int32_t
+    shift_carry_rs(uint32_t base, uint32_t shamt, uint32_t type, uint32_t cfval)
+    {
+        enum ArmShiftType shiftType;
+        shiftType = (enum ArmShiftType) type;
+
+        switch (shiftType)
+        {
+            case LSL:
+                if (shamt == 0)
+                    return (!!cfval);
+                else if (shamt == 32)
+                    return (base & 1);
+                else if (shamt > 32)
+                    return (0);
+                else
+                    return ((base >> (32 - shamt)) & 1);
+            case LSR:
+                if (shamt == 0)
+                    return (!!cfval);
+                else if (shamt == 32)
+                    return (base >> 31);
+                else if (shamt > 32)
+                    return (0);
+                else
+                    return ((base >> (shamt - 1)) & 1);
+            case ASR:
+                if (shamt == 0)
+                    return (!!cfval);
+                else if (shamt >= 32)
+                    return (base >> 31L);
+                else
+                    return (((uint32_t) (((int32_t) base) >> (shamt - 1))) & 1);
+            case ROR:
+                if (shamt == 0)
+                    return (!!cfval);
+                shamt = shamt & 0x1f;
+                if (shamt == 0)
+                    return (base >> 31); // RRX
+                else
+                    return ((base >> (shamt - 1)) & 1);
+            default:
+                fprintf(stderr, "Unhandled shift type\n");
+                exit(1);
+                break;
+
+        }
+        return 0;
+    }
+
+
+    // Generate the appropriate carry bit for an addition operation
+    inline int32_t
+    arm_add_carry(int32_t result, int32_t lhs, int32_t rhs)
+    {
+        if ((lhs | rhs) >> 30)
+            return ((arm_NEG(lhs) && arm_NEG(rhs)) ||
+                    (arm_NEG(lhs) && arm_POS(result)) ||
+                    (arm_NEG(rhs) && arm_POS(result)));
+        else
+            return 0;
+    }
+
+    // Generate the appropriate carry bit for a subtraction operation
+    inline int32_t
+    arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs)
+    {
+        if ((lhs >= rhs) || ((rhs | lhs) >> 31))
+            return ((arm_NEG(lhs) && arm_POS(rhs)) ||
+                    (arm_NEG(lhs) && arm_POS(result)) ||
+                    (arm_POS(rhs) && arm_POS(result)));
+        else
+            return 0;
+    }
+
+    inline int32_t
+    arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs)
+    {
+        if ((lhs | rhs) >> 30)
+            return ((arm_NEG(lhs) && arm_NEG(rhs) && arm_POS(result)) ||
+                    (arm_POS(lhs) && arm_POS(rhs) && arm_NEG(result)));
+        else
+            return 0;
+    }
+
+    inline int32_t
+    arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs)
+    {
+        if ((lhs >= rhs) || ((rhs | lhs) >> 31))
+            return ((arm_NEG(lhs) && arm_POS(rhs) && arm_POS(result)) ||
+                    (arm_POS(lhs) && arm_NEG(rhs) && arm_NEG(result)));
+        else
+            return 0;
+    }
+
+}};
+

@@ -1,0 +1,72 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2007-2008 The Florida State University
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Stephen Hines
+
+def operand_types {{
+    'sb' : ('signed int', 8),
+    'ub' : ('unsigned int', 8),
+    'sh' : ('signed int', 16),
+    'uh' : ('unsigned int', 16),
+    'sw' : ('signed int', 32),
+    'uw' : ('unsigned int', 32),
+    'ud' : ('unsigned int', 64),
+    'sf' : ('float', 32),
+    'df' : ('float', 64)
+}};
+
+def operands {{
+    #General Purpose Integer Reg Operands
+    'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1),
+    'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2),
+    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
+    'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4),
+    'Re': ('IntReg', 'uw', 'RE', 'IsInteger', 5),
+
+    'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 5),
+    'R0': ('IntReg', 'uw', '0', 'IsInteger', 5),
+    'R7': ('IntReg', 'uw', '7', 'IsInteger', 5),
+    'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 5),
+    'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 6),
+    'LR': ('IntReg', 'uw', '14', 'IsInteger', 6),
+    'Ignore': ('IntReg', 'uw', '16', 'IsInteger', 99),
+
+    #General Purpose Floating Point Reg Operands
+    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
+    'Fn': ('FloatReg', 'df', 'FN', 'IsFloating', 2),
+    'Fm': ('FloatReg', 'df', 'FM', 'IsFloating', 3),
+
+    #Memory Operand
+    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
+
+    'Cpsr': ('ControlReg', 'uw', 'CPSR', 'IsInteger', 7),
+    'Fpsr': ('ControlReg', 'uw', 'FPSR', 'IsInteger', 7),
+    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 9),
+    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 9),
+
+}};

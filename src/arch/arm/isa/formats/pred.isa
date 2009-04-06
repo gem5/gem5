@@ -1,0 +1,402 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2007-2008 The Florida State University
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Stephen Hines
+
+////////////////////////////////////////////////////////////////////
+//
+// Predicated Instruction Execution
+//
+
+output header {{
+#include <iostream>
+
+    enum ArmPredicateBits {
+        COND_EQ  =   0,
+        COND_NE, //  1
+        COND_CS, //  2
+        COND_CC, //  3
+        COND_MI, //  4
+        COND_PL, //  5
+        COND_VS, //  6
+        COND_VC, //  7
+        COND_HI, //  8
+        COND_LS, //  9
+        COND_GE, // 10
+        COND_LT, // 11
+        COND_GT, // 12
+        COND_LE, // 13
+        COND_AL, // 14
+        COND_NV  // 15
+    };
+
+    inline uint32_t
+    rotate_imm(uint32_t immValue, uint32_t rotateValue)
+    {
+        return ((immValue >> (int)(rotateValue & 31)) |
+                (immValue << (32 - (int)(rotateValue & 31))));
+    }
+
+    inline uint32_t nSet(uint32_t cpsr) { return cpsr & (1<<31); }
+    inline uint32_t zSet(uint32_t cpsr) { return cpsr & (1<<30); }
+    inline uint32_t cSet(uint32_t cpsr) { return cpsr & (1<<29); }
+    inline uint32_t vSet(uint32_t cpsr) { return cpsr & (1<<28); }
+
+    inline bool arm_predicate(uint32_t cpsr, uint32_t predBits)
+    {
+
+        enum ArmPredicateBits armPredBits = (enum ArmPredicateBits) predBits;
+        uint32_t result = 0;
+        switch (armPredBits)
+        {
+            case COND_EQ:
+                result = zSet(cpsr); break;
+            case COND_NE:
+                result = !zSet(cpsr); break;
+            case COND_CS:
+                result = cSet(cpsr); break;
+            case COND_CC:
+                result = !cSet(cpsr); break;
+            case COND_MI:
+                result = nSet(cpsr); break;
+            case COND_PL:
+                result = !nSet(cpsr); break;
+            case COND_VS:
+                result = vSet(cpsr); break;
+            case COND_VC:
+                result = !vSet(cpsr); break;
+            case COND_HI:
+                result = cSet(cpsr) && !zSet(cpsr); break;
+            case COND_LS:
+                result = !cSet(cpsr) || zSet(cpsr); break;
+            case COND_GE:
+                result = (!nSet(cpsr) && !vSet(cpsr)) || (nSet(cpsr) && vSet(cpsr)); break;
+            case COND_LT:
+                result = (nSet(cpsr) && !vSet(cpsr)) || (!nSet(cpsr) && vSet(cpsr)); break;
+            case COND_GT:
+                result = (!nSet(cpsr) && !vSet(cpsr) && !zSet(cpsr)) || (nSet(cpsr) && vSet(cpsr) && !zSet(cpsr)); break;
+            case COND_LE:
+                result = (nSet(cpsr) && !vSet(cpsr)) || (!nSet(cpsr) && vSet(cpsr)) || zSet(cpsr); break;
+            case COND_AL: result = 1; break;
+            case COND_NV: result = 0; break;
+            default:
+                fprintf(stderr, "Unhandled predicate condition: %d\n", armPredBits);
+                exit(1);
+        }
+        if (result)
+            return true;
+        else
+            return false;
+    }
+
+
+    /**
+     * Base class for predicated integer operations.
+     */
+    class PredOp : public ArmStaticInst
+    {
+            protected:
+
+            uint32_t condCode;
+
+            /// Constructor
+            PredOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                            ArmStaticInst(mnem, _machInst, __opClass),
+                            condCode(COND_CODE)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    /**
+     * Base class for predicated immediate operations.
+     */
+    class PredImmOp : public PredOp
+    {
+            protected:
+
+            uint32_t imm;
+            uint32_t rotate;
+            uint32_t rotated_imm;
+            uint32_t rotated_carry;
+
+            /// Constructor
+            PredImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                            PredOp(mnem, _machInst, __opClass),
+                            imm(IMM), rotate(ROTATE << 1), rotated_imm(0),
+                            rotated_carry(0)
+            {
+                rotated_imm = rotate_imm(imm, rotate);
+                if (rotate != 0)
+                    rotated_carry = (rotated_imm >> 31) & 1;
+            }
+
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    /**
+     * Base class for predicated integer operations.
+     */
+    class PredIntOp : public PredOp
+    {
+            protected:
+
+            uint32_t shift_size;
+            uint32_t shift;
+
+            /// Constructor
+            PredIntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                            PredOp(mnem, _machInst, __opClass),
+                            shift_size(SHIFT_SIZE), shift(SHIFT)
+            {
+            }
+
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    /**
+     * Base class for predicated macro-operations.
+     */
+    class PredMacroOp : public PredOp
+    {
+            protected:
+
+            uint32_t numMicroops;
+            StaticInstPtr * microOps;
+
+            /// Constructor
+            PredMacroOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                            PredOp(mnem, _machInst, __opClass),
+                            numMicroops(0)
+            {
+                // We rely on the subclasses of this object to handle the
+                // initialization of the micro-operations, since they are
+                // all of variable length
+                flags[IsMacroop] = true;
+            }
+
+            ~PredMacroOp()
+            {
+                if (numMicroops)
+                    delete [] microOps;
+            }
+
+            StaticInstPtr fetchMicroop(MicroPC microPC)
+            {
+                assert(microPC < numMicroops);
+                return microOps[microPC];
+            }
+
+            %(BasicExecPanic)s
+
+            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    };
+
+    /**
+     * Base class for predicated micro-operations.
+     */
+    class PredMicroop : public PredOp
+    {
+            /// Constructor
+            PredMicroop(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                            PredOp(mnem, _machInst, __opClass)
+            {
+                flags[IsMicroop] = true;
+            }
+    };
+
+}};
+
+def template PredOpExecute {{
+    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+    {
+        Fault fault = NoFault;
+
+        %(fp_enable_check)s;
+        %(op_decl)s;
+        %(op_rd)s;
+        %(code)s;
+
+        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        {
+            if (fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+        }
+        else
+            return NoFault;
+            // Predicated false instructions should not return faults
+
+        return fault;
+    }
+}};
+
+//Outputs to decoder.cc
+output decoder {{
+    std::string PredOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
+        }
+
+        ss << ", ";
+
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ", ";
+        }
+
+        return ss.str();
+    }
+
+    std::string PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
+        }
+
+        ss << ", ";
+
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ", ";
+        }
+
+        return ss.str();
+    }
+
+    std::string PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        if (_numDestRegs > 0) {
+            printReg(ss, _destRegIdx[0]);
+        }
+
+        ss << ", ";
+
+        if (_numSrcRegs > 0) {
+            printReg(ss, _srcRegIdx[0]);
+            ss << ", ";
+        }
+
+        return ss.str();
+    }
+
+    std::string PredMacroOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+    {
+        std::stringstream ss;
+
+        ccprintf(ss, "%-10s ", mnemonic);
+
+        return ss.str();
+    }
+
+}};
+
+let {{
+
+    calcCcCode = '''
+        uint16_t _ic, _iv, _iz, _in;
+
+        _in = (resTemp >> 31) & 1;
+        _iz = (resTemp == 0);
+        _iv = %(ivValue)s & 1;
+        _ic = %(icValue)s & 1;
+
+        Cpsr =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
+            (Cpsr & 0x0FFFFFFF);
+
+        DPRINTF(Arm, "in = %%d\\n", _in);
+        DPRINTF(Arm, "iz = %%d\\n", _iz);
+        DPRINTF(Arm, "ic = %%d\\n", _ic);
+        DPRINTF(Arm, "iv = %%d\\n", _iv);
+        '''
+
+}};
+
+def format PredOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'PredOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = PredOpExecute.subst(iop)
+}};
+
+def format PredImmOp(code, *opt_flags) {{
+    iop = InstObjParams(name, Name, 'PredImmOp', code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = PredOpExecute.subst(iop)
+}};
+
+def format PredImmOpCc(code, icValue, ivValue, *opt_flags) {{
+    ccCode = calcCcCode % vars()
+    code += ccCode;
+    iop = InstObjParams(name, Name, 'PredImmOp',
+        {"code": code, "cc_code": ccCode}, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = PredOpExecute.subst(iop)
+}};
+
+def format PredIntOp(code, *opt_flags) {{
+    new_code = ArmGenericCodeSubs(code)
+    iop = InstObjParams(name, Name, 'PredIntOp', new_code, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = PredOpExecute.subst(iop)
+}};
+
+def format PredIntOpCc(code, icValue, ivValue, *opt_flags) {{
+    ccCode = calcCcCode % vars()
+    code += ccCode;
+    new_code = ArmGenericCodeSubs(code)
+    iop = InstObjParams(name, Name, 'PredIntOp',
+        {"code": new_code, "cc_code": ccCode }, opt_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = PredOpExecute.subst(iop)
+}};
+
