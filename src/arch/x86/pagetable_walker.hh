@@ -97,7 +97,7 @@ namespace X86ISA
 
         // Kick off the state machine.
         Fault start(ThreadContext * _tc, BaseTLB::Translation *translation,
-                RequestPtr req, bool write, bool execute);
+                RequestPtr req, BaseTLB::Mode mode);
         // Clean up after the state machine.
         void
         stop()
@@ -183,7 +183,8 @@ namespace X86ISA
         State nextState;
         int size;
         bool enableNX;
-        bool write, execute, user;
+        BaseTLB::Mode mode;
+        bool user;
         TlbEntry entry;
         
         Fault pageFault(bool present);

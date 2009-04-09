@@ -314,7 +314,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->dtb->translateAtomic(req, tc, false);
+        Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Read);
 
         // Now do the access.
         if (fault == NoFault) {
@@ -452,7 +452,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         req->setVirt(0, addr, dataSize, flags, thread->readPC());
 
         // translate to physical address
-        Fault fault = thread->dtb->translateAtomic(req, tc, true);
+        Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Write);
 
         // Now do the access.
         if (fault == NoFault) {
@@ -609,7 +609,8 @@ AtomicSimpleCPU::tick()
         bool fromRom = isRomMicroPC(thread->readMicroPC());
         if (!fromRom && !curMacroStaticInst) {
             setupFetchRequest(&ifetch_req);
-            fault = thread->itb->translateAtomic(&ifetch_req, tc, false, true);
+            fault = thread->itb->translateAtomic(&ifetch_req, tc,
+                                                 BaseTLB::Execute);
         }
 
         if (fault == NoFault) {

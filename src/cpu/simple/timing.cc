@@ -454,15 +454,15 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
         typedef SplitDataTranslation::WholeTranslationState WholeState;
         WholeState *state = new WholeState(req1, req2, req,
-                (uint8_t *)(new T), true);
+                                           (uint8_t *)(new T), BaseTLB::Read);
         thread->dtb->translateTiming(req1, tc,
-                new SplitDataTranslation(this, 0, state), false);
+                new SplitDataTranslation(this, 0, state), BaseTLB::Read);
         thread->dtb->translateTiming(req2, tc,
-                new SplitDataTranslation(this, 1, state), false);
+                new SplitDataTranslation(this, 1, state), BaseTLB::Read);
     } else {
-        thread->dtb->translateTiming(req, tc,
-                new DataTranslation(this, (uint8_t *)(new T), NULL, true),
-                false);
+        DataTranslation *translation =
+            new DataTranslation(this, (uint8_t *)(new T), NULL, BaseTLB::Read);
+        thread->dtb->translateTiming(req, tc, translation, BaseTLB::Read);
     }
 
     if (traceData) {
@@ -573,15 +573,15 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
         typedef SplitDataTranslation::WholeTranslationState WholeState;
         WholeState *state = new WholeState(req1, req2, req,
-                (uint8_t *)dataP, false);
+                (uint8_t *)dataP, BaseTLB::Write);
         thread->dtb->translateTiming(req1, tc,
-                new SplitDataTranslation(this, 0, state), true);
+                new SplitDataTranslation(this, 0, state), BaseTLB::Write);
         thread->dtb->translateTiming(req2, tc,
-                new SplitDataTranslation(this, 1, state), true);
+                new SplitDataTranslation(this, 1, state), BaseTLB::Write);
     } else {
-        thread->dtb->translateTiming(req, tc,
-                new DataTranslation(this, (uint8_t *)dataP, res, false),
-                true);
+        DataTranslation *translation =
+            new DataTranslation(this, (uint8_t *)dataP, res, BaseTLB::Write);
+        thread->dtb->translateTiming(req, tc, translation, BaseTLB::Write);
     }
 
     if (traceData) {
@@ -671,8 +671,8 @@ TimingSimpleCPU::fetch()
         Request *ifetch_req = new Request();
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
-        thread->itb->translateTiming(ifetch_req, tc,
-                &fetchTranslation, false, true);
+        thread->itb->translateTiming(ifetch_req, tc, &fetchTranslation,
+                BaseTLB::Execute);
     } else {
         _status = IcacheWaitResponse;
         completeIfetch(NULL);

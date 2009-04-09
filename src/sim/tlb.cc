@@ -34,7 +34,7 @@
 #include "sim/tlb.hh"
 
 Fault
-GenericTLB::translateAtomic(RequestPtr req, ThreadContext * tc, bool, bool)
+GenericTLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode)
 {
 #if FULL_SYSTEM
         panic("Generic translation shouldn't be used in full system mode.\n");
@@ -51,11 +51,10 @@ GenericTLB::translateAtomic(RequestPtr req, ThreadContext * tc, bool, bool)
 
 void
 GenericTLB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write, bool execute)
+        Translation *translation, Mode mode)
 {
     assert(translation);
-    translation->finish(translateAtomic(req, tc, write, execute),
-            req, tc, write, execute);
+    translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
 void

@@ -46,6 +46,7 @@
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
+#include "sim/tlb.hh"
 
 /**
  * @file
@@ -860,7 +861,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translateAtomic(req, thread->getTC(), false);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Read);
 
     if (req->isUncacheable())
         isUncacheable = true;
@@ -916,7 +917,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     req->setVirt(asid, addr, sizeof(T), flags, this->PC);
     req->setThreadContext(thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translateAtomic(req, thread->getTC(), true);
+    fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Write);
 
     if (req->isUncacheable())
         isUncacheable = true;

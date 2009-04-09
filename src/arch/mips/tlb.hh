@@ -138,10 +138,9 @@ class TLB : public BaseTLB
 
     void regStats();
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
-            bool write=false, bool execute=false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write=false, bool execute=false);
+            Translation *translation, Mode mode);
 
   private:
     Fault translateInst(RequestPtr req, ThreadContext *tc);

@@ -61,6 +61,7 @@
 #include "base/bitunion.hh"
 #include "base/misc.hh"
 #include "sim/faults.hh"
+#include "sim/tlb.hh"
 
 #include <string>
 
@@ -331,16 +332,16 @@ namespace X86ISA
             X86Fault("Page-Fault", "#PF", 14, _errorCode), addr(_addr)
         {}
 
-        PageFault(Addr _addr, bool present, bool write,
-                bool user, bool reserved, bool fetch) :
+        PageFault(Addr _addr, bool present, BaseTLB::Mode mode,
+                bool user, bool reserved) :
             X86Fault("Page-Fault", "#PF", 14, 0), addr(_addr)
         {
             PageFaultErrorCode code = 0;
             code.present = present;
-            code.write = write;
+            code.write = (mode == BaseTLB::Write);
             code.user = user;
             code.reserved = reserved;
-            code.fetch = fetch;
+            code.fetch = (mode == BaseTLB::Execute);
             errorCode = code;
         }
 

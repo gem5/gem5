@@ -42,8 +42,12 @@ class Packet;
 class BaseTLB : public SimObject
 {
   protected:
-    BaseTLB(const Params *p) : SimObject(p)
+    BaseTLB(const Params *p)
+        : SimObject(p)
     {}
+
+  public:
+    enum Mode { Read, Write, Execute };
 
   public:
     virtual void demapPage(Addr vaddr, uint64_t asn) = 0;
@@ -59,24 +63,24 @@ class BaseTLB : public SimObject
          * be responsible for cleaning itself up which will happen in this
          * function. Once it's called, the object is no longer valid.
          */
-        virtual void finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write=false, bool execute=false) = 0;
+        virtual void finish(Fault fault, RequestPtr req, ThreadContext *tc,
+                            Mode mode) = 0;
     };
 };
 
 class GenericTLB : public BaseTLB
 {
   protected:
-    GenericTLB(const Params *p) : BaseTLB(p)
+    GenericTLB(const Params *p)
+        : BaseTLB(p)
     {}
 
   public:
     void demapPage(Addr vaddr, uint64_t asn);
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
-            bool=false, bool=false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool=false, bool=false);
+                         Translation *translation, Mode mode);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

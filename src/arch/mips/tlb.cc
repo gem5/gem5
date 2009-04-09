@@ -562,22 +562,20 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
-        bool write, bool execute)
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
-    if (execute)
+    if (mode == Execute)
         return translateInst(req, tc);
     else
-        return translateData(req, tc, write);
+        return translateData(req, tc, mode == Write);
 }
 
 void
 TLB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write, bool execute)
+        Translation *translation, Mode mode)
 {
     assert(translation);
-    translation->finish(translateAtomic(req, tc, write, execute),
-            req, tc, write, execute);
+    translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
 
 

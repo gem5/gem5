@@ -98,7 +98,7 @@ Walker::doNext(PacketPtr &write)
     bool uncacheable = pte.pcd;
     Addr nextRead = 0;
     bool doWrite = false;
-    bool badNX = pte.nx && execute && enableNX;
+    bool badNX = pte.nx && mode == BaseTLB::Write && enableNX;
     switch(state) {
       case LongPML4:
         DPRINTF(PageTableWalker,
@@ -329,14 +329,13 @@ Walker::doNext(PacketPtr &write)
 
 Fault
 Walker::start(ThreadContext * _tc, BaseTLB::Translation *_translation,
-        RequestPtr _req, bool _write, bool _execute)
+              RequestPtr _req, BaseTLB::Mode _mode)
 {
     assert(state == Ready);
     tc = _tc;
     req = _req;
     Addr vaddr = req->getVaddr();
-    execute = _execute;
-    write = _write;
+    mode = _mode;
     translation = _translation;
 
     VAddr addr = vaddr;
@@ -451,14 +450,14 @@ Walker::recvTiming(PacketPtr pkt)
                  * well.
                  */
                 bool delayedResponse;
-                Fault fault = tlb->translate(req, tc, NULL, write, execute,
+                Fault fault = tlb->translate(req, tc, NULL, mode,
                         delayedResponse, true);
                 assert(!delayedResponse);
                 // Let the CPU continue.
-                translation->finish(fault, req, tc, write);
+                translation->finish(fault, req, tc, mode);
             } else {
                 // There was a fault during the walk. Let the CPU know.
-                translation->finish(timingFault, req, tc, write);
+                translation->finish(timingFault, req, tc, mode);
             }
         }
     } else if (pkt->wasNacked()) {
@@ -563,8 +562,9 @@ Walker::pageFault(bool present)
 {
     DPRINTF(PageTableWalker, "Raising page fault.\n");
     HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-    return new PageFault(entry.vaddr, present, write,
-            m5reg.cpl == 3, false, execute && enableNX);
+    if (mode == BaseTLB::Execute && !enableNX)
+        mode = BaseTLB::Read;
+    return new PageFault(entry.vaddr, present, mode, m5reg.cpl == 3, false);
 }
 
 }

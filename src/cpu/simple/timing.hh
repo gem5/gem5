@@ -102,11 +102,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
         TimingSimpleCPU *cpu;
 
       public:
-        FetchTranslation(TimingSimpleCPU *_cpu) : cpu(_cpu)
+        FetchTranslation(TimingSimpleCPU *_cpu)
+            : cpu(_cpu)
         {}
 
-        void finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write, bool execute)
+        void
+        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+               BaseTLB::Mode mode)
         {
             cpu->sendFetch(fault, req, tc);
         }
@@ -119,19 +121,22 @@ class TimingSimpleCPU : public BaseSimpleCPU
         TimingSimpleCPU *cpu;
         uint8_t *data;
         uint64_t *res;
-        bool read;
+        BaseTLB::Mode mode;
 
       public:
         DataTranslation(TimingSimpleCPU *_cpu,
-                uint8_t *_data, uint64_t *_res, bool _read) :
-            cpu(_cpu), data(_data), res(_res), read(_read)
-        {}
+                uint8_t *_data, uint64_t *_res, BaseTLB::Mode _mode)
+            : cpu(_cpu), data(_data), res(_res), mode(_mode)
+        {
+            assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
+        }
 
         void
-        finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write, bool execute)
+        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+               BaseTLB::Mode mode)
         {
-            cpu->sendData(fault, req, data, res, read);
+            assert(mode == this->mode);
+            cpu->sendData(fault, req, data, res, mode == BaseTLB::Read);
             delete this;
         }
     };
@@ -147,18 +152,20 @@ class TimingSimpleCPU : public BaseSimpleCPU
             RequestPtr mainReq;
             Fault faults[2];
             uint8_t *data;
-            bool read;
+            BaseTLB::Mode mode;
 
             WholeTranslationState(RequestPtr req1, RequestPtr req2,
-                    RequestPtr main, uint8_t *_data, bool _read)
+                    RequestPtr main, uint8_t *data, BaseTLB::Mode mode)
             {
+                assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
+
                 outstanding = 2;
                 requests[0] = req1;
                 requests[1] = req2;
                 mainReq = main;
                 faults[0] = faults[1] = NoFault;
-                data = _data;
-                read = _read;
+                this->data = data;
+                this->mode = mode;
             }
         };
 
@@ -167,13 +174,13 @@ class TimingSimpleCPU : public BaseSimpleCPU
         WholeTranslationState *state;
 
         SplitDataTranslation(TimingSimpleCPU *_cpu, int _index,
-                WholeTranslationState *_state) :
-            cpu(_cpu), index(_index), state(_state)
+                WholeTranslationState *_state)
+            : cpu(_cpu), index(_index), state(_state)
         {}
 
         void
-        finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write, bool execute)
+        finish(Fault fault, RequestPtr req, ThreadContext *tc,
+               BaseTLB::Mode mode)
         {
             assert(state);
             assert(state->outstanding);
@@ -185,7 +192,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
                                    state->requests[1],
                                    state->mainReq,
                                    state->data,
-                                   state->read);
+                                   state->mode == BaseTLB::Read);
                 delete state;
             }
             delete this;

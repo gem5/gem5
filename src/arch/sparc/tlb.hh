@@ -163,10 +163,9 @@ class TLB : public BaseTLB
 
     void dumpAll();
 
-    Fault translateAtomic(RequestPtr req,
-            ThreadContext *tc, bool write=false, bool execute=false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write=false, bool execute=false);
+            Translation *translation, Mode mode);
 #if FULL_SYSTEM
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);

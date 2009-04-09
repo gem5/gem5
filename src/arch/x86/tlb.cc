@@ -186,9 +186,8 @@ TLB::demapPage(Addr va, uint64_t asn)
 }
 
 Fault
-TLB::translate(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write, bool execute,
-        bool &delayedResponse, bool timing)
+TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
+        Mode mode, bool &delayedResponse, bool timing)
 {
     delayedResponse = false;
     Addr vaddr = req->getVaddr();
@@ -577,9 +576,9 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                if (!attr.writable && write)
+                if (!attr.writable && mode == Write)
                     return new GeneralProtection(0);
-                if (!attr.readable && !write && !execute)
+                if (!attr.readable && mode == Read)
                     return new GeneralProtection(0);
                 expandDown = attr.expandDown;
 
@@ -612,8 +611,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             TlbEntry *entry = lookup(vaddr);
             if (!entry) {
 #if FULL_SYSTEM
-                Fault fault = walker->start(tc, translation, req,
-                                            write, execute);
+                Fault fault = walker->start(tc, translation, req, mode);
                 if (timing || fault != NoFault) {
                     // This gets ignored in atomic mode.
                     delayedResponse = true;
@@ -629,7 +627,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
                 Process *p = tc->getProcessPtr();
                 TlbEntry newEntry;
                 bool success = p->pTable->lookup(vaddr, newEntry);
-                if(!success && !execute) {
+                if(!success && mode != Execute) {
                     p->checkAndAllocNextPage(vaddr);
                     success = p->pTable->lookup(vaddr, newEntry);
                 }
@@ -648,12 +646,11 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
             bool inUser = (csAttr.dpl == 3 &&
                     !(flags & (CPL0FlagBit << FlagShift)));
             if ((inUser && !entry->user) ||
-                    (write && !entry->writable)) {
+                (mode == Write && !entry->writable)) {
                 // The page must have been present to get into the TLB in
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
-                return new PageFault(vaddr, true, write,
-                                     inUser, false, execute);
+                return new PageFault(vaddr, true, mode, inUser, false);
             }
 
 
@@ -700,24 +697,22 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
 };
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
-        bool write, bool execute)
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
     bool delayedResponse;
-    return TLB::translate(req, tc, NULL, write,
-            execute, delayedResponse, false);
+    return TLB::translate(req, tc, NULL, mode, delayedResponse, false);
 }
 
 void
 TLB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write, bool execute)
+        Translation *translation, Mode mode)
 {
     bool delayedResponse;
     assert(translation);
-    Fault fault = TLB::translate(req, tc, translation,
-            write, execute, delayedResponse, true);
+    Fault fault =
+        TLB::translate(req, tc, translation, mode, delayedResponse, true);
     if (!delayedResponse)
-        translation->finish(fault, req, tc, write, execute);
+        translation->finish(fault, req, tc, mode);
 }
 
 #if FULL_SYSTEM
