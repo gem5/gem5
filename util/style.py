@@ -347,7 +347,7 @@ def do_check_whitespace(ui, repo, *files, **args):
             if prompt(fname, fixonly):
                 return True
 
-def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
+def check_whitespace(ui, repo, hooktype, node, parent1, parent2, **kwargs):
     if hooktype != 'pretxncommit':
         raise AttributeError, \
               "This hook is only meant for pretxncommit, not %s" % hooktype
@@ -355,7 +355,7 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2):
     args = { 'tabsize' : 8 }
     do_check_whitespace(ui, repo, **args)
 
-def check_format(ui, repo, hooktype, node, parent1, parent2):
+def check_format(ui, repo, hooktype, node, parent1, parent2, **kwargs):
     if hooktype != 'pretxncommit':
         raise AttributeError, \
               "This hook is only meant for pretxncommit, not %s" % hooktype
