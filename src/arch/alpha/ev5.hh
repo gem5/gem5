@@ -33,17 +33,11 @@
 #ifndef __ARCH_ALPHA_EV5_HH__
 #define __ARCH_ALPHA_EV5_HH__
 
-#include "config/alpha_tlaser.hh"
 #include "arch/alpha/isa_traits.hh"
 
 namespace AlphaISA {
 
-#if ALPHA_TLASER
-const uint64_t AsnMask = ULL(0x7f);
-#else
 const uint64_t AsnMask = ULL(0xff);
-#endif
-
 const int VAddrImplBits = 43;
 const Addr VAddrImplMask = (ULL(1) << VAddrImplBits) - 1;
 const Addr VAddrUnImplMask = ~VAddrImplMask;
@@ -53,13 +47,8 @@ inline Addr VAddrOffset(Addr a) { return a & PageOffset; }
 inline Addr VAddrSpaceEV5(Addr a) { return a >> 41 & 0x3; }
 inline Addr VAddrSpaceEV6(Addr a) { return a >> 41 & 0x7f; }
 
-#if ALPHA_TLASER
-inline bool PAddrIprSpace(Addr a) { return a >= ULL(0xFFFFF00000); }
-const int PAddrImplBits = 40;
-#else
 inline bool PAddrIprSpace(Addr a) { return a >= ULL(0xFFFFFF00000); }
 const int PAddrImplBits = 44; // for Tsunami
-#endif
 const Addr PAddrImplMask = (ULL(1) << PAddrImplBits) - 1;
 const Addr PAddrUncachedBit39 = ULL(0x8000000000);
 const Addr PAddrUncachedBit40 = ULL(0x10000000000);
@@ -69,12 +58,10 @@ const Addr PAddrUncachedMask = ULL(0x807ffffffff); // Clear PA<42:35>
 inline Addr
 Phys2K0Seg(Addr addr)
 {
-#if !ALPHA_TLASER
     if (addr & PAddrUncachedBit43) {
         addr &= PAddrUncachedMask;
         addr |= PAddrUncachedBit40;
     }
-#endif
     return addr | K0SegBase;
 }
 

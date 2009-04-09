@@ -39,7 +39,6 @@
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "config/alpha_tlaser.hh"
 #include "cpu/thread_context.hh"
 
 using namespace std;
@@ -215,12 +214,7 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
      */
 
 
-#if ALPHA_TLASER
-    if (req->getPaddr() & PAddrUncachedBit39)
-#else
-    if (req->getPaddr() & PAddrUncachedBit43)
-#endif
-    {
+    if (req->getPaddr() & PAddrUncachedBit43) {
         // IPR memory space not implemented
         if (PAddrIprSpace(req->getPaddr())) {
             return new UnimpFault("IPR memory space not implemented!");
@@ -228,11 +222,9 @@ TLB::checkCacheability(RequestPtr &req, bool itb)
             // mark request as uncacheable
             req->setFlags(Request::UNCACHEABLE);
 
-#if !ALPHA_TLASER
             // Clear bits 42:35 of the physical address (10-2 in
             // Tsunami manual)
             req->setPaddr(req->getPaddr() & PAddrUncachedMask);
-#endif
         }
         // We shouldn't be able to read from an uncachable address in Alpha as
         // we don't have a ROM and we don't want to try to fetch from a device 
@@ -398,13 +390,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
         // VA<42:41> == 2, VA<39:13> maps directly to PA<39:13> for EV5
         // VA<47:41> == 0x7e, VA<40:13> maps directly to PA<40:13> for EV6
-#if ALPHA_TLASER
-        if ((MCSR_SP(tc->readMiscRegNoEffect(IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->getVaddr()) == 2)
-#else
-        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e)
-#endif
-        {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
             // only valid in kernel mode
             if (ICM_CM(tc->readMiscRegNoEffect(IPR_ICM)) !=
                 mode_kernel) {
@@ -414,14 +400,11 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
 
             req->setPaddr(req->getVaddr() & PAddrImplMask);
 
-#if !ALPHA_TLASER
             // sign extend the physical address properly
             if (req->getPaddr() & PAddrUncachedBit40)
                 req->setPaddr(req->getPaddr() | ULL(0xf0000000000));
             else
                 req->setPaddr(req->getPaddr() & ULL(0xffffffffff));
-#endif
-
         } else {
             // not a physical address: need to look up pte
             int asn = DTB_ASN_ASN(tc->readMiscRegNoEffect(IPR_DTB_ASN));
@@ -495,13 +478,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
         }
 
         // Check for "superpage" mapping
-#if ALPHA_TLASER
-        if ((MCSR_SP(tc->readMiscRegNoEffect(IPR_MCSR)) & 2) &&
-            VAddrSpaceEV5(req->getVaddr()) == 2)
-#else
-        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e)
-#endif
-        {
+        if (VAddrSpaceEV6(req->getVaddr()) == 0x7e) {
             // only valid in kernel mode
             if (DTB_CM_CM(tc->readMiscRegNoEffect(IPR_DTB_CM)) !=
                 mode_kernel) {
@@ -515,14 +492,11 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 
             req->setPaddr(req->getVaddr() & PAddrImplMask);
 
-#if !ALPHA_TLASER
             // sign extend the physical address properly
             if (req->getPaddr() & PAddrUncachedBit40)
                 req->setPaddr(req->getPaddr() | ULL(0xf0000000000));
             else
                 req->setPaddr(req->getPaddr() & ULL(0xffffffffff));
-#endif
-
         } else {
             if (write)
                 write_accesses++;

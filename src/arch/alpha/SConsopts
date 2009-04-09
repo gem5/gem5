@@ -31,7 +31,3 @@
 Import('*')
 
 all_isa_list.append('alpha')
-
-# Alpha can be compiled with Turbolaser support instead of Tsunami
-sticky_vars.Add(BoolVariable('ALPHA_TLASER',
-    'Model Alpha TurboLaser platform (vs. Tsunami)', False))

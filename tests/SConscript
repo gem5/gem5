@@ -251,13 +251,12 @@ def test_builder(env, ref_dir):
 configs = []
 if env['FULL_SYSTEM']:
     if env['TARGET_ISA'] == 'alpha':
-        if not env['ALPHA_TLASER']:
-            configs += ['tsunami-simple-atomic',
-                        'tsunami-simple-timing',
-                        'tsunami-simple-atomic-dual',
-                        'tsunami-simple-timing-dual',
-                        'twosys-tsunami-simple-atomic',
-                        'tsunami-o3', 'tsunami-o3-dual']
+        configs += ['tsunami-simple-atomic',
+                    'tsunami-simple-timing',
+                    'tsunami-simple-atomic-dual',
+                    'tsunami-simple-timing-dual',
+                    'twosys-tsunami-simple-atomic',
+                    'tsunami-o3', 'tsunami-o3-dual']
     if env['TARGET_ISA'] == 'sparc':
         configs += ['t1000-simple-atomic',
                     't1000-simple-timing']

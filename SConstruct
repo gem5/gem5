@@ -698,7 +698,7 @@ nonsticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-env.ExportVariables = ['FULL_SYSTEM', 'ALPHA_TLASER', 'USE_FENV', \
+env.ExportVariables = ['FULL_SYSTEM', 'USE_FENV', \
                        'USE_MYSQL', 'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', \
                        'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', \
                        'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE']

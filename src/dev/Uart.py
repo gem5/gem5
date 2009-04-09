@@ -38,8 +38,3 @@ class Uart(BasicPioDevice):
 
 class Uart8250(Uart):
     type = 'Uart8250'
-
-if build_env['ALPHA_TLASER']:
-    class Uart8530(Uart):
-        type = 'Uart8530'
-
