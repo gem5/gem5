@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 738696                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 331676                       # Number of bytes of host memory used
-host_seconds                                   365.09                       # Real time elapsed on the host
-host_tick_rate                              451120089                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2496453                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 334252                       # Number of bytes of host memory used
+host_seconds                                   108.03                       # Real time elapsed on the host
+host_tick_rate                             1524575559                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   269686773                       # Number of instructions simulated
 sim_seconds                                  0.164697                       # Number of seconds simulated

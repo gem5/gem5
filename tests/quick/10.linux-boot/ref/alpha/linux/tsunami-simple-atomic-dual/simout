@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 16 2009 00:15:24
-M5 revision d8c62c2eaaa6 5874 default qtip pf1 tip qbase
-M5 started Feb 16 2009 00:15:50
-M5 executing on zizzer
-command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual -re tests/run.py quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
+M5 compiled Apr  8 2009 12:30:02
+M5 revision 233a4a1a6110 6024 default qtip tip test_unifytlb.diff
+M5 started Apr  8 2009 12:30:04
+M5 executing on maize
+command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual -re tests/run.py build/ALPHA_FS/tests/fast/quick/10.linux-boot/alpha/linux/tsunami-simple-atomic-dual
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux
 info: Entering event queue @ 0.  Starting simulation...

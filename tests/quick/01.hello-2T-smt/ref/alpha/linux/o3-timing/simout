@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Mar  6 2009 18:15:46
-M5 revision c619bb0f8f4f 6005 default qtip stats_duplicates.diff tip
-M5 started Mar  6 2009 18:23:16
+M5 compiled Apr  8 2009 12:30:02
+M5 revision 233a4a1a6110 6024 default qtip tip test_unifytlb.diff
+M5 started Apr  8 2009 12:44:23
 M5 executing on maize
-command line: /n/blue/z/binkert/build/work/build/ALPHA_SE/m5.fast -d /n/blue/z/binkert/build/work/build/ALPHA_SE/tests/fast/quick/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py quick/01.hello-2T-smt/alpha/linux/o3-timing
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/01.hello-2T-smt/alpha/linux/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/01.hello-2T-smt/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

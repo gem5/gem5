@@ -1,9 +1,13 @@
 
 ---------- Begin Simulation Statistics ----------
-drivesys.cpu.dtb.accesses                      401302                       # DTB accesses
-drivesys.cpu.dtb.acv                               40                       # DTB access violations
-drivesys.cpu.dtb.hits                          624235                       # DTB hits
-drivesys.cpu.dtb.misses                           569                       # DTB misses
+drivesys.cpu.dtb.data_accesses                 401302                       # DTB accesses
+drivesys.cpu.dtb.data_acv                          40                       # DTB access violations
+drivesys.cpu.dtb.data_hits                     624235                       # DTB hits
+drivesys.cpu.dtb.data_misses                      569                       # DTB misses
+drivesys.cpu.dtb.fetch_accesses                     0                       # ITB accesses
+drivesys.cpu.dtb.fetch_acv                          0                       # ITB acv
+drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
+drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
 drivesys.cpu.dtb.read_accesses                 268057                       # DTB read accesses
 drivesys.cpu.dtb.read_acv                          30                       # DTB read access violations
 drivesys.cpu.dtb.read_hits                     393500                       # DTB read hits
@@ -13,10 +17,22 @@ drivesys.cpu.dtb.write_acv                         10                       # DT
 drivesys.cpu.dtb.write_hits                    230735                       # DTB write hits
 drivesys.cpu.dtb.write_misses                      82                       # DTB write misses
 drivesys.cpu.idle_fraction                   1.000000                       # Percentage of idle cycles
-drivesys.cpu.itb.accesses                     1337980                       # ITB accesses
-drivesys.cpu.itb.acv                               22                       # ITB acv
-drivesys.cpu.itb.hits                         1337786                       # ITB hits
-drivesys.cpu.itb.misses                           194                       # ITB misses
+drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
+drivesys.cpu.itb.data_acv                           0                       # DTB access violations
+drivesys.cpu.itb.data_hits                          0                       # DTB hits
+drivesys.cpu.itb.data_misses                        0                       # DTB misses
+drivesys.cpu.itb.fetch_accesses               1337980                       # ITB accesses
+drivesys.cpu.itb.fetch_acv                         22                       # ITB acv
+drivesys.cpu.itb.fetch_hits                   1337786                       # ITB hits
+drivesys.cpu.itb.fetch_misses                     194                       # ITB misses
+drivesys.cpu.itb.read_accesses                      0                       # DTB read accesses
+drivesys.cpu.itb.read_acv                           0                       # DTB read access violations
+drivesys.cpu.itb.read_hits                          0                       # DTB read hits
+drivesys.cpu.itb.read_misses                        0                       # DTB read misses
+drivesys.cpu.itb.write_accesses                     0                       # DTB write accesses
+drivesys.cpu.itb.write_acv                          0                       # DTB write access violations
+drivesys.cpu.itb.write_hits                         0                       # DTB write hits
+drivesys.cpu.itb.write_misses                       0                       # DTB write misses
 drivesys.cpu.kern.callpal                        4443                       # number of callpals executed
 drivesys.cpu.kern.callpal_swpctx                   70      1.58%      1.58% # number of callpals executed
 drivesys.cpu.kern.callpal_tbi                       5      0.11%      1.69% # number of callpals executed
@@ -139,18 +155,22 @@ drivesys.tsunami.ethernet.txPPS                    25                       # Pa
 drivesys.tsunami.ethernet.txPackets                 5                       # Number of Packets Transmitted
 drivesys.tsunami.ethernet.txTcpChecksums            2                       # Number of tx TCP Checksums done by device
 drivesys.tsunami.ethernet.txUdpChecksums            0                       # Number of tx UDP Checksums done by device
-host_inst_rate                              151383583                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 478624                       # Number of bytes of host memory used
-host_seconds                                     1.81                       # Real time elapsed on the host
-host_tick_rate                           110738300112                       # Simulator tick rate (ticks/s)
+host_inst_rate                              239279638                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 480276                       # Number of bytes of host memory used
+host_seconds                                     1.14                       # Real time elapsed on the host
+host_tick_rate                           175028279617                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.200001                       # Number of seconds simulated
 sim_ticks                                200000789468                       # Number of ticks simulated
-testsys.cpu.dtb.accesses                       335402                       # DTB accesses
-testsys.cpu.dtb.acv                               161                       # DTB access violations
-testsys.cpu.dtb.hits                          1163288                       # DTB hits
-testsys.cpu.dtb.misses                           3815                       # DTB misses
+testsys.cpu.dtb.data_accesses                  335402                       # DTB accesses
+testsys.cpu.dtb.data_acv                          161                       # DTB access violations
+testsys.cpu.dtb.data_hits                     1163288                       # DTB hits
+testsys.cpu.dtb.data_misses                      3815                       # DTB misses
+testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
+testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
+testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
+testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.read_accesses                  225414                       # DTB read accesses
 testsys.cpu.dtb.read_acv                           80                       # DTB read access violations
 testsys.cpu.dtb.read_hits                      658435                       # DTB read hits
@@ -160,10 +180,22 @@ testsys.cpu.dtb.write_acv                          81                       # DT
 testsys.cpu.dtb.write_hits                     504853                       # DTB write hits
 testsys.cpu.dtb.write_misses                      528                       # DTB write misses
 testsys.cpu.idle_fraction                    0.999999                       # Percentage of idle cycles
-testsys.cpu.itb.accesses                      1249822                       # ITB accesses
-testsys.cpu.itb.acv                                69                       # ITB acv
-testsys.cpu.itb.hits                          1248325                       # ITB hits
-testsys.cpu.itb.misses                           1497                       # ITB misses
+testsys.cpu.itb.data_accesses                       0                       # DTB accesses
+testsys.cpu.itb.data_acv                            0                       # DTB access violations
+testsys.cpu.itb.data_hits                           0                       # DTB hits
+testsys.cpu.itb.data_misses                         0                       # DTB misses
+testsys.cpu.itb.fetch_accesses                1249822                       # ITB accesses
+testsys.cpu.itb.fetch_acv                          69                       # ITB acv
+testsys.cpu.itb.fetch_hits                    1248325                       # ITB hits
+testsys.cpu.itb.fetch_misses                     1497                       # ITB misses
+testsys.cpu.itb.read_accesses                       0                       # DTB read accesses
+testsys.cpu.itb.read_acv                            0                       # DTB read access violations
+testsys.cpu.itb.read_hits                           0                       # DTB read hits
+testsys.cpu.itb.read_misses                         0                       # DTB read misses
+testsys.cpu.itb.write_accesses                      0                       # DTB write accesses
+testsys.cpu.itb.write_acv                           0                       # DTB write access violations
+testsys.cpu.itb.write_hits                          0                       # DTB write hits
+testsys.cpu.itb.write_misses                        0                       # DTB write misses
 testsys.cpu.kern.callpal                        13122                       # number of callpals executed
 testsys.cpu.kern.callpal_swpctx                   438      3.34%      3.34% # number of callpals executed
 testsys.cpu.kern.callpal_tbi                       20      0.15%      3.49% # number of callpals executed
@@ -300,10 +332,14 @@ testsys.tsunami.ethernet.txUdpChecksums             0                       # Nu
 ---------- End Simulation Statistics   ----------
 
 ---------- Begin Simulation Statistics ----------
-drivesys.cpu.dtb.accesses                           0                       # DTB accesses
-drivesys.cpu.dtb.acv                                0                       # DTB access violations
-drivesys.cpu.dtb.hits                               0                       # DTB hits
-drivesys.cpu.dtb.misses                             0                       # DTB misses
+drivesys.cpu.dtb.data_accesses                      0                       # DTB accesses
+drivesys.cpu.dtb.data_acv                           0                       # DTB access violations
+drivesys.cpu.dtb.data_hits                          0                       # DTB hits
+drivesys.cpu.dtb.data_misses                        0                       # DTB misses
+drivesys.cpu.dtb.fetch_accesses                     0                       # ITB accesses
+drivesys.cpu.dtb.fetch_acv                          0                       # ITB acv
+drivesys.cpu.dtb.fetch_hits                         0                       # ITB hits
+drivesys.cpu.dtb.fetch_misses                       0                       # ITB misses
 drivesys.cpu.dtb.read_accesses                      0                       # DTB read accesses
 drivesys.cpu.dtb.read_acv                           0                       # DTB read access violations
 drivesys.cpu.dtb.read_hits                          0                       # DTB read hits
@@ -313,10 +349,22 @@ drivesys.cpu.dtb.write_acv                          0                       # DT
 drivesys.cpu.dtb.write_hits                         0                       # DTB write hits
 drivesys.cpu.dtb.write_misses                       0                       # DTB write misses
 drivesys.cpu.idle_fraction                          1                       # Percentage of idle cycles
-drivesys.cpu.itb.accesses                           0                       # ITB accesses
-drivesys.cpu.itb.acv                                0                       # ITB acv
-drivesys.cpu.itb.hits                               0                       # ITB hits
-drivesys.cpu.itb.misses                             0                       # ITB misses
+drivesys.cpu.itb.data_accesses                      0                       # DTB accesses
+drivesys.cpu.itb.data_acv                           0                       # DTB access violations
+drivesys.cpu.itb.data_hits                          0                       # DTB hits
+drivesys.cpu.itb.data_misses                        0                       # DTB misses
+drivesys.cpu.itb.fetch_accesses                     0                       # ITB accesses
+drivesys.cpu.itb.fetch_acv                          0                       # ITB acv
+drivesys.cpu.itb.fetch_hits                         0                       # ITB hits
+drivesys.cpu.itb.fetch_misses                       0                       # ITB misses
+drivesys.cpu.itb.read_accesses                      0                       # DTB read accesses
+drivesys.cpu.itb.read_acv                           0                       # DTB read access violations
+drivesys.cpu.itb.read_hits                          0                       # DTB read hits
+drivesys.cpu.itb.read_misses                        0                       # DTB read misses
+drivesys.cpu.itb.write_accesses                     0                       # DTB write accesses
+drivesys.cpu.itb.write_acv                          0                       # DTB write access violations
+drivesys.cpu.itb.write_hits                         0                       # DTB write hits
+drivesys.cpu.itb.write_misses                       0                       # DTB write misses
 drivesys.cpu.kern.inst.arm                          0                       # number of arm instructions executed
 drivesys.cpu.kern.inst.hwrei                        0                       # number of hwrei instructions executed
 drivesys.cpu.kern.inst.quiesce                      0                       # number of quiesce instructions executed
@@ -381,18 +429,22 @@ drivesys.tsunami.ethernet.totalSwi                  0                       # to
 drivesys.tsunami.ethernet.totalTxDesc               0                       # total number of TxDesc written to ISR
 drivesys.tsunami.ethernet.totalTxIdle               0                       # total number of TxIdle written to ISR
 drivesys.tsunami.ethernet.totalTxOk                 0                       # total number of TxOk written to ISR
-host_inst_rate                           133483805176                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 478624                       # Number of bytes of host memory used
+host_inst_rate                           135334075743                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 480276                       # Number of bytes of host memory used
 host_seconds                                     0.00                       # Real time elapsed on the host
-host_tick_rate                              360871442                       # Simulator tick rate (ticks/s)
+host_tick_rate                              369524213                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   273374833                       # Number of instructions simulated
 sim_seconds                                  0.000001                       # Number of seconds simulated
 sim_ticks                                      785978                       # Number of ticks simulated
-testsys.cpu.dtb.accesses                            0                       # DTB accesses
-testsys.cpu.dtb.acv                                 0                       # DTB access violations
-testsys.cpu.dtb.hits                                0                       # DTB hits
-testsys.cpu.dtb.misses                              0                       # DTB misses
+testsys.cpu.dtb.data_accesses                       0                       # DTB accesses
+testsys.cpu.dtb.data_acv                            0                       # DTB access violations
+testsys.cpu.dtb.data_hits                           0                       # DTB hits
+testsys.cpu.dtb.data_misses                         0                       # DTB misses
+testsys.cpu.dtb.fetch_accesses                      0                       # ITB accesses
+testsys.cpu.dtb.fetch_acv                           0                       # ITB acv
+testsys.cpu.dtb.fetch_hits                          0                       # ITB hits
+testsys.cpu.dtb.fetch_misses                        0                       # ITB misses
 testsys.cpu.dtb.read_accesses                       0                       # DTB read accesses
 testsys.cpu.dtb.read_acv                            0                       # DTB read access violations
 testsys.cpu.dtb.read_hits                           0                       # DTB read hits
@@ -402,10 +454,22 @@ testsys.cpu.dtb.write_acv                           0                       # DT
 testsys.cpu.dtb.write_hits                          0                       # DTB write hits
 testsys.cpu.dtb.write_misses                        0                       # DTB write misses
 testsys.cpu.idle_fraction                           1                       # Percentage of idle cycles
-testsys.cpu.itb.accesses                            0                       # ITB accesses
-testsys.cpu.itb.acv                                 0                       # ITB acv
-testsys.cpu.itb.hits                                0                       # ITB hits
-testsys.cpu.itb.misses                              0                       # ITB misses
+testsys.cpu.itb.data_accesses                       0                       # DTB accesses
+testsys.cpu.itb.data_acv                            0                       # DTB access violations
+testsys.cpu.itb.data_hits                           0                       # DTB hits
+testsys.cpu.itb.data_misses                         0                       # DTB misses
+testsys.cpu.itb.fetch_accesses                      0                       # ITB accesses
+testsys.cpu.itb.fetch_acv                           0                       # ITB acv
+testsys.cpu.itb.fetch_hits                          0                       # ITB hits
+testsys.cpu.itb.fetch_misses                        0                       # ITB misses
+testsys.cpu.itb.read_accesses                       0                       # DTB read accesses
+testsys.cpu.itb.read_acv                            0                       # DTB read access violations
+testsys.cpu.itb.read_hits                           0                       # DTB read hits
+testsys.cpu.itb.read_misses                         0                       # DTB read misses
+testsys.cpu.itb.write_accesses                      0                       # DTB write accesses
+testsys.cpu.itb.write_acv                           0                       # DTB write access violations
+testsys.cpu.itb.write_hits                          0                       # DTB write hits
+testsys.cpu.itb.write_misses                        0                       # DTB write misses
 testsys.cpu.kern.inst.arm                           0                       # number of arm instructions executed
 testsys.cpu.kern.inst.hwrei                         0                       # number of hwrei instructions executed
 testsys.cpu.kern.inst.quiesce                       0                       # number of quiesce instructions executed

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                4658528                       # Simulator instruction rate (inst/s)
-host_mem_usage                                1123612                       # Number of bytes of host memory used
-host_seconds                                     0.43                       # Real time elapsed on the host
-host_tick_rate                              582033733                       # Simulator tick rate (ticks/s)
+host_inst_rate                                4748415                       # Simulator instruction rate (inst/s)
+host_mem_usage                                1125700                       # Number of bytes of host memory used
+host_seconds                                     0.42                       # Real time elapsed on the host
+host_tick_rate                              593193174                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                     2000004                       # Number of instructions simulated
 sim_seconds                                  0.000250                       # Number of seconds simulated
@@ -59,10 +59,14 @@ system.cpu0.dcache.tagsinuse               276.872320                       # Cy
 system.cpu0.dcache.total_refs                  180312                       # Total number of references to valid blocks.
 system.cpu0.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu0.dcache.writebacks                      29                       # number of writebacks
-system.cpu0.dtb.accesses                       180793                       # DTB accesses
-system.cpu0.dtb.acv                                 0                       # DTB access violations
-system.cpu0.dtb.hits                           180775                       # DTB hits
-system.cpu0.dtb.misses                             18                       # DTB misses
+system.cpu0.dtb.data_accesses                  180793                       # DTB accesses
+system.cpu0.dtb.data_acv                            0                       # DTB access violations
+system.cpu0.dtb.data_hits                      180775                       # DTB hits
+system.cpu0.dtb.data_misses                        18                       # DTB misses
+system.cpu0.dtb.fetch_accesses                      0                       # ITB accesses
+system.cpu0.dtb.fetch_acv                           0                       # ITB acv
+system.cpu0.dtb.fetch_hits                          0                       # ITB hits
+system.cpu0.dtb.fetch_misses                        0                       # ITB misses
 system.cpu0.dtb.read_accesses                  124443                       # DTB read accesses
 system.cpu0.dtb.read_acv                            0                       # DTB read access violations
 system.cpu0.dtb.read_hits                      124435                       # DTB read hits
@@ -119,10 +123,22 @@ system.cpu0.icache.total_refs                  499556                       # To
 system.cpu0.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu0.icache.writebacks                       0                       # number of writebacks
 system.cpu0.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu0.itb.accesses                       500032                       # ITB accesses
-system.cpu0.itb.acv                                 0                       # ITB acv
-system.cpu0.itb.hits                           500019                       # ITB hits
-system.cpu0.itb.misses                             13                       # ITB misses
+system.cpu0.itb.data_accesses                       0                       # DTB accesses
+system.cpu0.itb.data_acv                            0                       # DTB access violations
+system.cpu0.itb.data_hits                           0                       # DTB hits
+system.cpu0.itb.data_misses                         0                       # DTB misses
+system.cpu0.itb.fetch_accesses                 500032                       # ITB accesses
+system.cpu0.itb.fetch_acv                           0                       # ITB acv
+system.cpu0.itb.fetch_hits                     500019                       # ITB hits
+system.cpu0.itb.fetch_misses                       13                       # ITB misses
+system.cpu0.itb.read_accesses                       0                       # DTB read accesses
+system.cpu0.itb.read_acv                            0                       # DTB read access violations
+system.cpu0.itb.read_hits                           0                       # DTB read hits
+system.cpu0.itb.read_misses                         0                       # DTB read misses
+system.cpu0.itb.write_accesses                      0                       # DTB write accesses
+system.cpu0.itb.write_acv                           0                       # DTB write access violations
+system.cpu0.itb.write_hits                          0                       # DTB write hits
+system.cpu0.itb.write_misses                        0                       # DTB write misses
 system.cpu0.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu0.numCycles                          500032                       # number of cpu cycles simulated
 system.cpu0.num_insts                          500001                       # Number of instructions executed
@@ -179,10 +195,14 @@ system.cpu1.dcache.tagsinuse               276.872320                       # Cy
 system.cpu1.dcache.total_refs                  180312                       # Total number of references to valid blocks.
 system.cpu1.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu1.dcache.writebacks                      29                       # number of writebacks
-system.cpu1.dtb.accesses                       180793                       # DTB accesses
-system.cpu1.dtb.acv                                 0                       # DTB access violations
-system.cpu1.dtb.hits                           180775                       # DTB hits
-system.cpu1.dtb.misses                             18                       # DTB misses
+system.cpu1.dtb.data_accesses                  180793                       # DTB accesses
+system.cpu1.dtb.data_acv                            0                       # DTB access violations
+system.cpu1.dtb.data_hits                      180775                       # DTB hits
+system.cpu1.dtb.data_misses                        18                       # DTB misses
+system.cpu1.dtb.fetch_accesses                      0                       # ITB accesses
+system.cpu1.dtb.fetch_acv                           0                       # ITB acv
+system.cpu1.dtb.fetch_hits                          0                       # ITB hits
+system.cpu1.dtb.fetch_misses                        0                       # ITB misses
 system.cpu1.dtb.read_accesses                  124443                       # DTB read accesses
 system.cpu1.dtb.read_acv                            0                       # DTB read access violations
 system.cpu1.dtb.read_hits                      124435                       # DTB read hits
@@ -239,10 +259,22 @@ system.cpu1.icache.total_refs                  499556                       # To
 system.cpu1.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu1.icache.writebacks                       0                       # number of writebacks
 system.cpu1.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu1.itb.accesses                       500032                       # ITB accesses
-system.cpu1.itb.acv                                 0                       # ITB acv
-system.cpu1.itb.hits                           500019                       # ITB hits
-system.cpu1.itb.misses                             13                       # ITB misses
+system.cpu1.itb.data_accesses                       0                       # DTB accesses
+system.cpu1.itb.data_acv                            0                       # DTB access violations
+system.cpu1.itb.data_hits                           0                       # DTB hits
+system.cpu1.itb.data_misses                         0                       # DTB misses
+system.cpu1.itb.fetch_accesses                 500032                       # ITB accesses
+system.cpu1.itb.fetch_acv                           0                       # ITB acv
+system.cpu1.itb.fetch_hits                     500019                       # ITB hits
+system.cpu1.itb.fetch_misses                       13                       # ITB misses
+system.cpu1.itb.read_accesses                       0                       # DTB read accesses
+system.cpu1.itb.read_acv                            0                       # DTB read access violations
+system.cpu1.itb.read_hits                           0                       # DTB read hits
+system.cpu1.itb.read_misses                         0                       # DTB read misses
+system.cpu1.itb.write_accesses                      0                       # DTB write accesses
+system.cpu1.itb.write_acv                           0                       # DTB write access violations
+system.cpu1.itb.write_hits                          0                       # DTB write hits
+system.cpu1.itb.write_misses                        0                       # DTB write misses
 system.cpu1.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu1.numCycles                          500032                       # number of cpu cycles simulated
 system.cpu1.num_insts                          500001                       # Number of instructions executed
@@ -299,10 +331,14 @@ system.cpu2.dcache.tagsinuse               276.872320                       # Cy
 system.cpu2.dcache.total_refs                  180312                       # Total number of references to valid blocks.
 system.cpu2.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu2.dcache.writebacks                      29                       # number of writebacks
-system.cpu2.dtb.accesses                       180793                       # DTB accesses
-system.cpu2.dtb.acv                                 0                       # DTB access violations
-system.cpu2.dtb.hits                           180775                       # DTB hits
-system.cpu2.dtb.misses                             18                       # DTB misses
+system.cpu2.dtb.data_accesses                  180793                       # DTB accesses
+system.cpu2.dtb.data_acv                            0                       # DTB access violations
+system.cpu2.dtb.data_hits                      180775                       # DTB hits
+system.cpu2.dtb.data_misses                        18                       # DTB misses
+system.cpu2.dtb.fetch_accesses                      0                       # ITB accesses
+system.cpu2.dtb.fetch_acv                           0                       # ITB acv
+system.cpu2.dtb.fetch_hits                          0                       # ITB hits
+system.cpu2.dtb.fetch_misses                        0                       # ITB misses
 system.cpu2.dtb.read_accesses                  124443                       # DTB read accesses
 system.cpu2.dtb.read_acv                            0                       # DTB read access violations
 system.cpu2.dtb.read_hits                      124435                       # DTB read hits
@@ -359,10 +395,22 @@ system.cpu2.icache.total_refs                  499556                       # To
 system.cpu2.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu2.icache.writebacks                       0                       # number of writebacks
 system.cpu2.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu2.itb.accesses                       500032                       # ITB accesses
-system.cpu2.itb.acv                                 0                       # ITB acv
-system.cpu2.itb.hits                           500019                       # ITB hits
-system.cpu2.itb.misses                             13                       # ITB misses
+system.cpu2.itb.data_accesses                       0                       # DTB accesses
+system.cpu2.itb.data_acv                            0                       # DTB access violations
+system.cpu2.itb.data_hits                           0                       # DTB hits
+system.cpu2.itb.data_misses                         0                       # DTB misses
+system.cpu2.itb.fetch_accesses                 500032                       # ITB accesses
+system.cpu2.itb.fetch_acv                           0                       # ITB acv
+system.cpu2.itb.fetch_hits                     500019                       # ITB hits
+system.cpu2.itb.fetch_misses                       13                       # ITB misses
+system.cpu2.itb.read_accesses                       0                       # DTB read accesses
+system.cpu2.itb.read_acv                            0                       # DTB read access violations
+system.cpu2.itb.read_hits                           0                       # DTB read hits
+system.cpu2.itb.read_misses                         0                       # DTB read misses
+system.cpu2.itb.write_accesses                      0                       # DTB write accesses
+system.cpu2.itb.write_acv                           0                       # DTB write access violations
+system.cpu2.itb.write_hits                          0                       # DTB write hits
+system.cpu2.itb.write_misses                        0                       # DTB write misses
 system.cpu2.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu2.numCycles                          500032                       # number of cpu cycles simulated
 system.cpu2.num_insts                          500001                       # Number of instructions executed
@@ -419,10 +467,14 @@ system.cpu3.dcache.tagsinuse               276.872320                       # Cy
 system.cpu3.dcache.total_refs                  180312                       # Total number of references to valid blocks.
 system.cpu3.dcache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu3.dcache.writebacks                      29                       # number of writebacks
-system.cpu3.dtb.accesses                       180793                       # DTB accesses
-system.cpu3.dtb.acv                                 0                       # DTB access violations
-system.cpu3.dtb.hits                           180775                       # DTB hits
-system.cpu3.dtb.misses                             18                       # DTB misses
+system.cpu3.dtb.data_accesses                  180793                       # DTB accesses
+system.cpu3.dtb.data_acv                            0                       # DTB access violations
+system.cpu3.dtb.data_hits                      180775                       # DTB hits
+system.cpu3.dtb.data_misses                        18                       # DTB misses
+system.cpu3.dtb.fetch_accesses                      0                       # ITB accesses
+system.cpu3.dtb.fetch_acv                           0                       # ITB acv
+system.cpu3.dtb.fetch_hits                          0                       # ITB hits
+system.cpu3.dtb.fetch_misses                        0                       # ITB misses
 system.cpu3.dtb.read_accesses                  124443                       # DTB read accesses
 system.cpu3.dtb.read_acv                            0                       # DTB read access violations
 system.cpu3.dtb.read_hits                      124435                       # DTB read hits
@@ -479,10 +531,22 @@ system.cpu3.icache.total_refs                  499556                       # To
 system.cpu3.icache.warmup_cycle                     0                       # Cycle when the warmup percentage was hit.
 system.cpu3.icache.writebacks                       0                       # number of writebacks
 system.cpu3.idle_fraction                           0                       # Percentage of idle cycles
-system.cpu3.itb.accesses                       500032                       # ITB accesses
-system.cpu3.itb.acv                                 0                       # ITB acv
-system.cpu3.itb.hits                           500019                       # ITB hits
-system.cpu3.itb.misses                             13                       # ITB misses
+system.cpu3.itb.data_accesses                       0                       # DTB accesses
+system.cpu3.itb.data_acv                            0                       # DTB access violations
+system.cpu3.itb.data_hits                           0                       # DTB hits
+system.cpu3.itb.data_misses                         0                       # DTB misses
+system.cpu3.itb.fetch_accesses                 500032                       # ITB accesses
+system.cpu3.itb.fetch_acv                           0                       # ITB acv
+system.cpu3.itb.fetch_hits                     500019                       # ITB hits
+system.cpu3.itb.fetch_misses                       13                       # ITB misses
+system.cpu3.itb.read_accesses                       0                       # DTB read accesses
+system.cpu3.itb.read_acv                            0                       # DTB read access violations
+system.cpu3.itb.read_hits                           0                       # DTB read hits
+system.cpu3.itb.read_misses                         0                       # DTB read misses
+system.cpu3.itb.write_accesses                      0                       # DTB write accesses
+system.cpu3.itb.write_acv                           0                       # DTB write access violations
+system.cpu3.itb.write_hits                          0                       # DTB write hits
+system.cpu3.itb.write_misses                        0                       # DTB write misses
 system.cpu3.not_idle_fraction                       1                       # Percentage of non-idle cycles
 system.cpu3.numCycles                          500032                       # number of cpu cycles simulated
 system.cpu3.num_insts                          500001                       # Number of instructions executed

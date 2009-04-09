@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 243217                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 213460                       # Number of bytes of host memory used
-host_seconds                                  1544.20                       # Real time elapsed on the host
-host_tick_rate                               87422028                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 244825                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 213432                       # Number of bytes of host memory used
+host_seconds                                  1534.05                       # Real time elapsed on the host
+host_tick_rate                               88000012                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   375574819                       # Number of instructions simulated
 sim_seconds                                  0.134997                       # Number of seconds simulated
@@ -123,10 +123,14 @@ system.cpu.decode.DECODE:RunCycles          101952317                       # Nu
 system.cpu.decode.DECODE:SquashCycles        15306974                       # Number of cycles decode is squashing
 system.cpu.decode.DECODE:SquashedInsts          12561                       # Number of squashed instructions handled by decode
 system.cpu.decode.DECODE:UnblockCycles        1275127                       # Number of cycles decode is unblocking
-system.cpu.dtb.accesses                     185115437                       # DTB accesses
-system.cpu.dtb.acv                                  1                       # DTB access violations
-system.cpu.dtb.hits                         185076670                       # DTB hits
-system.cpu.dtb.misses                           38767                       # DTB misses
+system.cpu.dtb.data_accesses                185115437                       # DTB accesses
+system.cpu.dtb.data_acv                             1                       # DTB access violations
+system.cpu.dtb.data_hits                    185076670                       # DTB hits
+system.cpu.dtb.data_misses                      38767                       # DTB misses
+system.cpu.dtb.fetch_accesses                       0                       # ITB accesses
+system.cpu.dtb.fetch_acv                            0                       # ITB acv
+system.cpu.dtb.fetch_hits                           0                       # ITB hits
+system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.read_accesses                104449499                       # DTB read accesses
 system.cpu.dtb.read_acv                             0                       # DTB read access violations
 system.cpu.dtb.read_hits                    104412186                       # DTB read hits
@@ -319,10 +323,22 @@ system.cpu.iq.iqSquashedInstsExamined        89615992                       # Nu
 system.cpu.iq.iqSquashedInstsIssued            918381                       # Number of squashed instructions issued
 system.cpu.iq.iqSquashedNonSpecRemoved             24                       # Number of squashed non-spec instructions that were removed
 system.cpu.iq.iqSquashedOperandsExamined     68228113                       # Number of squashed operands that are examined and possibly removed from graph
-system.cpu.itb.accesses                      63866476                       # ITB accesses
-system.cpu.itb.acv                                  0                       # ITB acv
-system.cpu.itb.hits                          63866189                       # ITB hits
-system.cpu.itb.misses                             287                       # ITB misses
+system.cpu.itb.data_accesses                        0                       # DTB accesses
+system.cpu.itb.data_acv                             0                       # DTB access violations
+system.cpu.itb.data_hits                            0                       # DTB hits
+system.cpu.itb.data_misses                          0                       # DTB misses
+system.cpu.itb.fetch_accesses                63866476                       # ITB accesses
+system.cpu.itb.fetch_acv                            0                       # ITB acv
+system.cpu.itb.fetch_hits                    63866189                       # ITB hits
+system.cpu.itb.fetch_misses                       287                       # ITB misses
+system.cpu.itb.read_accesses                        0                       # DTB read accesses
+system.cpu.itb.read_acv                             0                       # DTB read access violations
+system.cpu.itb.read_hits                            0                       # DTB read hits
+system.cpu.itb.read_misses                          0                       # DTB read misses
+system.cpu.itb.write_accesses                       0                       # DTB write accesses
+system.cpu.itb.write_acv                            0                       # DTB write access violations
+system.cpu.itb.write_hits                           0                       # DTB write hits
+system.cpu.itb.write_misses                         0                       # DTB write misses
 system.cpu.l2cache.ReadExReq_accesses            3197                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_avg_miss_latency 34596.340006                       # average ReadExReq miss latency
 system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency 31467.625899                       # average ReadExReq mshr miss latency

@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                2514121                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 213276                       # Number of bytes of host memory used
-host_seconds                                    35.14                       # Real time elapsed on the host
-host_tick_rate                             3846798027                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2447162                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 215136                       # Number of bytes of host memory used
+host_seconds                                    36.10                       # Real time elapsed on the host
+host_tick_rate                             3744340356                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    88340673                       # Number of instructions simulated
 sim_seconds                                  0.135169                       # Number of seconds simulated
@@ -71,10 +71,14 @@ system.cpu.dcache.tagsinuse               4078.872537                       # Cy
 system.cpu.dcache.total_refs                 34685671                       # Total number of references to valid blocks.
 system.cpu.dcache.warmup_cycle              947635000                       # Cycle when the warmup percentage was hit.
 system.cpu.dcache.writebacks                   147714                       # number of writebacks
-system.cpu.dtb.accesses                      34987415                       # DTB accesses
-system.cpu.dtb.acv                                  0                       # DTB access violations
-system.cpu.dtb.hits                          34890015                       # DTB hits
-system.cpu.dtb.misses                           97400                       # DTB misses
+system.cpu.dtb.data_accesses                 34987415                       # DTB accesses
+system.cpu.dtb.data_acv                             0                       # DTB access violations
+system.cpu.dtb.data_hits                     34890015                       # DTB hits
+system.cpu.dtb.data_misses                      97400                       # DTB misses
+system.cpu.dtb.fetch_accesses                       0                       # ITB accesses
+system.cpu.dtb.fetch_acv                            0                       # ITB acv
+system.cpu.dtb.fetch_hits                           0                       # ITB hits
+system.cpu.dtb.fetch_misses                         0                       # ITB misses
 system.cpu.dtb.read_accesses                 20366786                       # DTB read accesses
 system.cpu.dtb.read_acv                             0                       # DTB read access violations
 system.cpu.dtb.read_hits                     20276638                       # DTB read hits
@@ -137,10 +141,22 @@ system.cpu.icache.total_refs                 88361638                       # To
 system.cpu.icache.warmup_cycle                      0                       # Cycle when the warmup percentage was hit.
 system.cpu.icache.writebacks                        0                       # number of writebacks
 system.cpu.idle_fraction                            0                       # Percentage of idle cycles
-system.cpu.itb.accesses                      88442008                       # ITB accesses
-system.cpu.itb.acv                                  0                       # ITB acv
-system.cpu.itb.hits                          88438074                       # ITB hits
-system.cpu.itb.misses                            3934                       # ITB misses
+system.cpu.itb.data_accesses                        0                       # DTB accesses
+system.cpu.itb.data_acv                             0                       # DTB access violations
+system.cpu.itb.data_hits                            0                       # DTB hits
+system.cpu.itb.data_misses                          0                       # DTB misses
+system.cpu.itb.fetch_accesses                88442008                       # ITB accesses
+system.cpu.itb.fetch_acv                            0                       # ITB acv
+system.cpu.itb.fetch_hits                    88438074                       # ITB hits
+system.cpu.itb.fetch_misses                      3934                       # ITB misses
+system.cpu.itb.read_accesses                        0                       # DTB read accesses
+system.cpu.itb.read_acv                             0                       # DTB read access violations
+system.cpu.itb.read_hits                            0                       # DTB read hits
+system.cpu.itb.read_misses                          0                       # DTB read misses
+system.cpu.itb.write_accesses                       0                       # DTB write accesses
+system.cpu.itb.write_acv                            0                       # DTB write access violations
+system.cpu.itb.write_hits                           0                       # DTB write hits
+system.cpu.itb.write_misses                         0                       # DTB write misses
 system.cpu.l2cache.ReadExReq_accesses          143578                       # number of ReadExReq accesses(hits+misses)
 system.cpu.l2cache.ReadExReq_avg_miss_latency        52000                       # average ReadExReq miss latency
 system.cpu.l2cache.ReadExReq_avg_mshr_miss_latency        40000                       # average ReadExReq mshr miss latency
