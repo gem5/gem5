@@ -114,6 +114,9 @@ class Info
     Info();
     virtual ~Info();
 
+    /** Set the name of this statistic */
+    void setName(const std::string &name);
+
     /**
      * Check that this stat has been set up properly and is ready for
      * use
@@ -402,10 +405,10 @@ class DataWrap : public InfoAccess
      * @return A reference to this stat.
      */
     Derived &
-    name(const std::string &_name)
+    name(const std::string &name)
     {
         Info *info = this->info();
-        info->name = _name;
+        info->setName(name);
         info->flags |= print;
         return this->self();
     }

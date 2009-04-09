@@ -32,7 +32,6 @@
 #include <fstream>
 #include <list>
 #include <map>
-#include <set>
 #include <string>
 
 #include "base/callback.hh"
@@ -114,6 +113,14 @@ StorageParams::~StorageParams()
 {
 }
 
+typedef map<std::string, Info *> NameMapType;
+NameMapType &
+nameMap()
+{
+    static NameMapType the_map;
+    return the_map;
+}
+
 int Info::id_count = 0;
 
 int debug_break_id = -1;
@@ -128,6 +135,24 @@ Info::Info()
 
 Info::~Info()
 {
+}
+
+void
+Info::setName(const string &name)
+{
+    pair<NameMapType::iterator, bool> p =
+        nameMap().insert(make_pair(name, this));
+
+    Info *other = p.first->second;
+    bool result = p.second;
+    
+    if (!result) {
+        // using other->name instead of just name to avoid a compiler
+        // warning.  They should be the same.
+        panic("same statistic name used twice! name=%s\n", other->name);
+    }
+
+    this->name = name;
 }
 
 bool
