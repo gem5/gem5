@@ -84,9 +84,9 @@ class CheckerThreadContext : public ThreadContext
 
     int cpuId() { return actualTC->cpuId(); }
 
-    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
+    TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
 #if FULL_SYSTEM
     System *getSystemPtr() { return actualTC->getSystemPtr(); }

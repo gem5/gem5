@@ -68,18 +68,8 @@ if build_env['FULL_SYSTEM']:
 
 class X86TLB(BaseTLB):
     type = 'X86TLB'
-    abstract = True
-    size = Param.Int("TLB size")
+    cxx_class = 'X86ISA::TLB'
+    size = Param.Int(64, "TLB size")
     if build_env['FULL_SYSTEM']:
         walker = Param.X86PagetableWalker(\
                 X86PagetableWalker(), "page table walker")
-
-class X86DTB(X86TLB):
-    type = 'X86DTB'
-    cxx_class = 'X86ISA::DTB'
-    size = 64
-
-class X86ITB(X86TLB):
-    type = 'X86ITB'
-    cxx_class = 'X86ISA::ITB'
-    size = 64

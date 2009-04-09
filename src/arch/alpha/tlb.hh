@@ -41,8 +41,7 @@
 #include "arch/alpha/vtophys.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
-#include "params/AlphaDTB.hh"
-#include "params/AlphaITB.hh"
+#include "params/AlphaTLB.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
 
@@ -55,6 +54,24 @@ class TlbEntry;
 class TLB : public BaseTLB
 {
   protected:
+    mutable Stats::Scalar fetch_hits;
+    mutable Stats::Scalar fetch_misses;
+    mutable Stats::Scalar fetch_acv;
+    mutable Stats::Formula fetch_accesses;
+    mutable Stats::Scalar read_hits;
+    mutable Stats::Scalar read_misses;
+    mutable Stats::Scalar read_acv;
+    mutable Stats::Scalar read_accesses;
+    mutable Stats::Scalar write_hits;
+    mutable Stats::Scalar write_misses;
+    mutable Stats::Scalar write_acv;
+    mutable Stats::Scalar write_accesses;
+    Stats::Formula data_hits;
+    Stats::Formula data_misses;
+    Stats::Formula data_acv;
+    Stats::Formula data_accesses;
+
+
     typedef std::multimap<Addr, int> PageTable;
     PageTable lookupTable;  // Quick lookup into page table
 
@@ -69,6 +86,8 @@ class TLB : public BaseTLB
     typedef AlphaTLBParams Params;
     TLB(const Params *p);
     virtual ~TLB();
+
+    virtual void regStats();
 
     int getsize() const { return size; }
 
@@ -116,50 +135,17 @@ class TLB : public BaseTLB
         EntryCache[0] = entry;
         return entry;
     }
-};
 
-class ITB : public TLB
-{
   protected:
-    mutable Stats::Scalar hits;
-    mutable Stats::Scalar misses;
-    mutable Stats::Scalar acv;
-    mutable Stats::Formula accesses;
+    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
+    Fault translateInst(RequestPtr req, ThreadContext *tc);
 
   public:
-    typedef AlphaITBParams Params;
-    ITB(const Params *p);
-    virtual void regStats();
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
+            bool write = false, bool execute = false);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation);
-};
-
-class DTB : public TLB
-{
-  protected:
-    mutable Stats::Scalar read_hits;
-    mutable Stats::Scalar read_misses;
-    mutable Stats::Scalar read_acv;
-    mutable Stats::Scalar read_accesses;
-    mutable Stats::Scalar write_hits;
-    mutable Stats::Scalar write_misses;
-    mutable Stats::Scalar write_acv;
-    mutable Stats::Scalar write_accesses;
-    Stats::Formula hits;
-    Stats::Formula misses;
-    Stats::Formula acv;
-    Stats::Formula accesses;
-
-  public:
-    typedef AlphaDTBParams Params;
-    DTB(const Params *p);
-    virtual void regStats();
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write);
+            Translation *translation,
+            bool write = false, bool execute = false);
 };
 
 } // namespace AlphaISA

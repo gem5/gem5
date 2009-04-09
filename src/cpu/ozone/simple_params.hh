@@ -36,8 +36,7 @@
 //Forward declarations
 namespace TheISA
 {
-    class DTB;
-    class ITB;
+    class TLB;
 }
 class FUPool;
 class MemObject;
@@ -55,7 +54,7 @@ class SimpleParams : public BaseCPU::Params
 {
   public:
 
-    TheISA::ITB *itb; TheISA::DTB *dtb;
+    TheISA::TLB *itb; TheISA::TLB *dtb;
 #if !FULL_SYSTEM
     std::vector<Process *> workload;
 #endif // FULL_SYSTEM

@@ -33,15 +33,5 @@ from BaseTLB import BaseTLB
 
 class SparcTLB(BaseTLB):
     type = 'SparcTLB'
-    abstract = True
-    size = Param.Int("TLB size")
-
-class SparcDTB(SparcTLB):
-    type = 'SparcDTB'
-    cxx_class = 'SparcISA::DTB'
-    size = 64
-
-class SparcITB(SparcTLB):
-    type = 'SparcITB'
-    cxx_class = 'SparcISA::ITB'
-    size = 64
+    cxx_class = 'SparcISA::TLB'
+    size = Param.Int(64, "TLB size")

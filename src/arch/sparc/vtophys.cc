@@ -81,8 +81,8 @@ vtophys(ThreadContext *tc, Addr addr)
     //int sec_context = bits(tlbdata,63,48);
 
     FunctionalPort *mem = tc->getPhysPort();
-    ITB* itb = tc->getITBPtr();
-    DTB* dtb = tc->getDTBPtr();
+    TLB* itb = tc->getITBPtr();
+    TLB* dtb = tc->getDTBPtr();
     TlbEntry* tbe;
     PageTableEntry pte;
     Addr tsbs[4];

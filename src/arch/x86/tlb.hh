@@ -67,8 +67,7 @@
 #include "config/full_system.hh"
 #include "mem/mem_object.hh"
 #include "mem/request.hh"
-#include "params/X86DTB.hh"
-#include "params/X86ITB.hh"
+#include "params/X86TLB.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
 #include "sim/sim_object.hh"
@@ -82,8 +81,6 @@ namespace X86ISA
 
     static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
 
-    class TLB;
-
     class TLB : public BaseTLB
     {
       protected:
@@ -91,14 +88,9 @@ namespace X86ISA
 
         typedef std::list<TlbEntry *> EntryList;
 
-        bool _allowNX;
         uint32_t configAddress;
 
       public:
-        bool allowNX() const
-        {
-            return _allowNX;
-        }
 
         typedef X86TLBParams Params;
         TLB(const Params *p);
@@ -140,44 +132,18 @@ namespace X86ISA
 
       public:
 
-        TlbEntry * insert(Addr vpn, TlbEntry &entry);
-
-        // Checkpointing
-        virtual void serialize(std::ostream &os);
-        virtual void unserialize(Checkpoint *cp, const std::string &section);
-    };
-
-    class ITB : public TLB
-    {
-      public:
-        typedef X86ITBParams Params;
-        ITB(const Params *p) : TLB(p)
-        {
-            _allowNX = false;
-        }
-
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc);
+        Fault translateAtomic(RequestPtr req, ThreadContext *tc,
+                bool write = false, bool execute = false);
         void translateTiming(RequestPtr req, ThreadContext *tc,
-                Translation *translation);
+                Translation *translation,
+                bool write = false, bool execute = false);
 
-        friend class DTB;
-    };
-
-    class DTB : public TLB
-    {
-      public:
-        typedef X86DTBParams Params;
-        DTB(const Params *p) : TLB(p)
-        {
-            _allowNX = true;
-        }
-        Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
-        void translateTiming(RequestPtr req, ThreadContext *tc,
-                Translation *translation, bool write);
 #if FULL_SYSTEM
         Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
         Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
 #endif
+
+        TlbEntry * insert(Addr vpn, TlbEntry &entry);
 
         // Checkpointing
         virtual void serialize(std::ostream &os);

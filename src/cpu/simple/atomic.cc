@@ -609,7 +609,7 @@ AtomicSimpleCPU::tick()
         bool fromRom = isRomMicroPC(thread->readMicroPC());
         if (!fromRom && !curMacroStaticInst) {
             setupFetchRequest(&ifetch_req);
-            fault = thread->itb->translateAtomic(&ifetch_req, tc);
+            fault = thread->itb->translateAtomic(&ifetch_req, tc, false, true);
         }
 
         if (fault == NoFault) {

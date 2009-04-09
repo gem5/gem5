@@ -103,8 +103,8 @@ class InOrderCPU : public BaseCPU
 
     Params *cpu_params;
 
-    TheISA::ITB * itb;
-    TheISA::DTB * dtb;
+    TheISA::TLB * itb;
+    TheISA::TLB * dtb;
 
   public:
     enum Status {

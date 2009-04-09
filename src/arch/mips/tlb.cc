@@ -45,10 +45,7 @@
 #include "cpu/thread_context.hh"
 #include "sim/process.hh"
 #include "mem/page_table.hh"
-#include "params/MipsDTB.hh"
-#include "params/MipsITB.hh"
 #include "params/MipsTLB.hh"
-#include "params/MipsUTB.hh"
 
 
 using namespace std;
@@ -310,7 +307,7 @@ TLB::regStats()
 }
 
 Fault
-ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -426,16 +423,8 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 #endif
 }
 
-void
-ITB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation)
-{
-    assert(translation);
-    translation->finish(translateAtomic(req, tc), req, tc, false);
-}
-
 Fault
-DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -572,60 +561,24 @@ DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
 #endif
 }
 
-void
-DTB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write)
+Fault
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
+        bool write, bool execute)
 {
-    assert(translation);
-    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+    if (execute)
+        return translateInst(req, tc);
+    else
+        return translateData(req, tc, write);
 }
 
-///////////////////////////////////////////////////////////////////////
-//
-//  Mips ITB
-//
-ITB::ITB(const Params *p)
-    : TLB(p)
-{}
-
-
-// void
-// ITB::regStats()
-// {
-//   /*    hits - causes failure for some reason
-//      .name(name() + ".hits")
-//      .desc("ITB hits");
-//     misses
-//      .name(name() + ".misses")
-//      .desc("ITB misses");
-//     acv
-//      .name(name() + ".acv")
-//      .desc("ITB acv");
-//     accesses
-//      .name(name() + ".accesses")
-//      .desc("ITB accesses");
-
-//      accesses = hits + misses + invalids; */
-// }
-
-
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Mips DTB
-//
-DTB::DTB(const Params *p)
-    : TLB(p)
-{}
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Mips UTB
-//
-UTB::UTB(const Params *p)
-    : ITB(p), DTB(p)
-{}
-
+void
+TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write, bool execute)
+{
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write, execute),
+            req, tc, write, execute);
+}
 
 
 MipsISA::PTE &
@@ -639,20 +592,8 @@ TLB::index(bool advance)
     return *pte;
 }
 
-MipsISA::ITB *
-MipsITBParams::create()
+MipsISA::TLB *
+MipsTLBParams::create()
 {
-    return new MipsISA::ITB(this);
-}
-
-MipsISA::DTB *
-MipsDTBParams::create()
-{
-    return new MipsISA::DTB(this);
-}
-
-MipsISA::UTB *
-MipsUTBParams::create()
-{
-    return new MipsISA::UTB(this);
+    return new MipsISA::TLB(this);
 }

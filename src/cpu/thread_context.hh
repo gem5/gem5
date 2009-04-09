@@ -44,8 +44,7 @@
 // DTB pointers.
 namespace TheISA
 {
-    class DTB;
-    class ITB;
+    class TLB;
 }
 class BaseCPU;
 class EndQuiesceEvent;
@@ -124,9 +123,9 @@ class ThreadContext
 
     virtual void setContextId(int id) = 0;
 
-    virtual TheISA::ITB *getITBPtr() = 0;
+    virtual TheISA::TLB *getITBPtr() = 0;
 
-    virtual TheISA::DTB *getDTBPtr() = 0;
+    virtual TheISA::TLB *getDTBPtr() = 0;
 
     virtual System *getSystemPtr() = 0;
 
@@ -306,9 +305,9 @@ class ProxyThreadContext : public ThreadContext
 
     void setContextId(int id) { actualTC->setContextId(id); }
 
-    TheISA::ITB *getITBPtr() { return actualTC->getITBPtr(); }
+    TheISA::TLB *getITBPtr() { return actualTC->getITBPtr(); }
 
-    TheISA::DTB *getDTBPtr() { return actualTC->getDTBPtr(); }
+    TheISA::TLB *getDTBPtr() { return actualTC->getDTBPtr(); }
 
     System *getSystemPtr() { return actualTC->getSystemPtr(); }
 

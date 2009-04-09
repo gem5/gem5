@@ -67,6 +67,9 @@ TLB::TLB(const Params *p)
     cx_config = 0;
     sfsr = 0;
     tag_access = 0;
+    sfar = 0;
+    cacheEntry[0] = NULL;
+    cacheEntry[1] = NULL;
 }
 
 void
@@ -418,25 +421,17 @@ TLB::writeTagAccess(Addr va, int context)
 }
 
 void
-ITB::writeSfsr(bool write, ContextType ct, bool se, FaultTypes ft, int asi)
-{
-    DPRINTF(TLB, "TLB: ITB Fault:  w=%d ct=%d ft=%d asi=%d\n",
-             (int)write, ct, ft, asi);
-    TLB::writeSfsr(write, ct, se, ft, asi);
-}
-
-void
-DTB::writeSfsr(Addr a, bool write, ContextType ct,
+TLB::writeSfsr(Addr a, bool write, ContextType ct,
         bool se, FaultTypes ft, int asi)
 {
-    DPRINTF(TLB, "TLB: DTB Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
+    DPRINTF(TLB, "TLB: Fault: A=%#x w=%d ct=%d ft=%d asi=%d\n",
             a, (int)write, ct, ft, asi);
     TLB::writeSfsr(write, ct, se, ft, asi);
     sfar = a;
 }
 
 Fault
-ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
     uint64_t tlbdata = tc->readMiscRegNoEffect(MISCREG_TLB_DATA);
 
@@ -450,10 +445,10 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 
     // Be fast if we can!
     if (cacheValid && cacheState == tlbdata) {
-        if (cacheEntry) {
-            if (cacheEntry->range.va < vaddr + sizeof(MachInst) &&
-                cacheEntry->range.va + cacheEntry->range.size >= vaddr) {
-                req->setPaddr(cacheEntry->pte.translate(vaddr));
+        if (cacheEntry[0]) {
+            if (cacheEntry[0]->range.va < vaddr + sizeof(MachInst) &&
+                cacheEntry[0]->range.va + cacheEntry[0]->range.size >= vaddr) {
+                req->setPaddr(cacheEntry[0]->pte.translate(vaddr));
                 return NoFault;
             }
         } else {
@@ -492,7 +487,7 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
     if ( hpriv || red ) {
         cacheValid = true;
         cacheState = tlbdata;
-        cacheEntry = NULL;
+        cacheEntry[0] = NULL;
         req->setPaddr(vaddr & PAddrImplMask);
         return NoFault;
     }
@@ -541,23 +536,15 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
     // cache translation date for next translation
     cacheValid = true;
     cacheState = tlbdata;
-    cacheEntry = e;
+    cacheEntry[0] = e;
 
     req->setPaddr(e->pte.translate(vaddr));
     DPRINTF(TLB, "TLB: %#X -> %#X\n", vaddr, req->getPaddr());
     return NoFault;
 }
 
-void
-ITB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation)
-{
-    assert(translation);
-    translation->finish(translateAtomic(req, tc), req, tc, false);
-}
-
 Fault
-DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
     /*
      * @todo this could really use some profiling and fixing to make
@@ -855,18 +842,29 @@ handleMmuRegAccess:
     return NoFault;
 };
 
+Fault
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
+        bool write, bool execute)
+{
+    if (execute)
+        return translateInst(req, tc);
+    else
+        return translateData(req, tc, write);
+}
+
 void
-DTB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write)
+TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write, bool execute)
 {
     assert(translation);
-    translation->finish(translateAtomic(req, tc, write), req, tc, write);
+    translation->finish(translateAtomic(req, tc, write, execute),
+            req, tc, write, execute);
 }
 
 #if FULL_SYSTEM
 
 Tick
-DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
+TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     Addr va = pkt->getAddr();
     ASI asi = (ASI)pkt->req->getAsi();
@@ -875,7 +873,7 @@ DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Read: asi=%#X a=%#x\n",
          (uint32_t)pkt->req->getAsi(), pkt->getAddr());
 
-    ITB *itb = tc->getITBPtr();
+    TLB *itb = tc->getITBPtr();
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1051,7 +1049,7 @@ doMmuReadError:
 }
 
 Tick
-DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
+TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
     uint64_t data = gtoh(pkt->get<uint64_t>());
     Addr va = pkt->getAddr();
@@ -1071,7 +1069,7 @@ DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
     DPRINTF(IPR, "Memory Mapped IPR Write: asi=%#X a=%#x d=%#X\n",
          (uint32_t)asi, va, data);
 
-    ITB *itb = tc->getITBPtr();
+    TLB *itb = tc->getITBPtr();
 
     switch (asi) {
       case ASI_LSU_CONTROL_REG:
@@ -1306,10 +1304,10 @@ doMmuWriteError:
 #endif
 
 void
-DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
+TLB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
 {
     uint64_t tag_access = mbits(addr,63,13) | mbits(ctx,12,0);
-    ITB * itb = tc->getITBPtr();
+    TLB * itb = tc->getITBPtr();
     ptrs[0] = MakeTsbPtr(Ps0, tag_access,
                 c0_tsb_ps0,
                 c0_config,
@@ -1333,7 +1331,7 @@ DTB::GetTsbPtr(ThreadContext *tc, Addr addr, int ctx, Addr *ptrs)
 }
 
 uint64_t
-DTB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
+TLB::MakeTsbPtr(TsbPageSize ps, uint64_t tag_access, uint64_t c0_tsb,
         uint64_t c0_config, uint64_t cX_tsb, uint64_t cX_config)
 {
     uint64_t tsb;
@@ -1391,6 +1389,7 @@ TLB::serialize(std::ostream &os)
         nameOut(os, csprintf("%s.PTE%d", name(), x));
         tlb[x].serialize(os);
     }
+    SERIALIZE_SCALAR(sfar);
 }
 
 void
@@ -1429,32 +1428,13 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
             lookupTable.insert(tlb[x].range, &tlb[x]);
 
     }
-}
-
-void
-DTB::serialize(std::ostream &os)
-{
-    TLB::serialize(os);
-    SERIALIZE_SCALAR(sfar);
-}
-
-void
-DTB::unserialize(Checkpoint *cp, const std::string &section)
-{
-    TLB::unserialize(cp, section);
     UNSERIALIZE_SCALAR(sfar);
 }
 
 /* end namespace SparcISA */ }
 
-SparcISA::ITB *
-SparcITBParams::create()
+SparcISA::TLB *
+SparcTLBParams::create()
 {
-    return new SparcISA::ITB(this);
-}
-
-SparcISA::DTB *
-SparcDTBParams::create()
-{
-    return new SparcISA::DTB(this);
+    return new SparcISA::TLB(this);
 }

@@ -36,8 +36,7 @@
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
-#include "params/SparcDTB.hh"
-#include "params/SparcITB.hh"
+#include "params/SparcTLB.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
 
@@ -57,6 +56,8 @@ class TLB : public BaseTLB
 
     //TLB state
   protected:
+    // Only used when this is the data TLB.
+    uint64_t sfar;
     uint64_t c0_tsb_ps0;
     uint64_t c0_tsb_ps1;
     uint64_t c0_config;
@@ -148,6 +149,9 @@ class TLB : public BaseTLB
 
     void writeTagAccess(Addr va, int context);
 
+    Fault translateInst(RequestPtr req, ThreadContext *tc);
+    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
+
   public:
     typedef SparcTLBParams Params;
     TLB(const Params *p);
@@ -159,52 +163,10 @@ class TLB : public BaseTLB
 
     void dumpAll();
 
-    // Checkpointing
-    virtual void serialize(std::ostream &os);
-    virtual void unserialize(Checkpoint *cp, const std::string &section);
-
-    /** Give an entry id, read that tlb entries' tte */
-    uint64_t TteRead(int entry);
-
-};
-
-class ITB : public TLB
-{
-  public:
-    typedef SparcITBParams Params;
-    ITB(const Params *p) : TLB(p)
-    {
-        cacheEntry = NULL;
-    }
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation);
-  private:
-    void writeSfsr(bool write, ContextType ct,
-            bool se, FaultTypes ft, int asi);
-    TlbEntry *cacheEntry;
-    friend class DTB;
-};
-
-class DTB : public TLB
-{
-    //DTLB specific state
-  protected:
-    uint64_t sfar;
-  public:
-    typedef SparcDTBParams Params;
-    DTB(const Params *p) : TLB(p)
-    {
-        sfar = 0;
-        cacheEntry[0] = NULL;
-        cacheEntry[1] = NULL;
-    }
-
     Fault translateAtomic(RequestPtr req,
-            ThreadContext *tc, bool write=false);
+            ThreadContext *tc, bool write=false, bool execute=false);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write=false);
+            Translation *translation, bool write=false, bool execute=false);
 #if FULL_SYSTEM
     Tick doMmuRegRead(ThreadContext *tc, Packet *pkt);
     Tick doMmuRegWrite(ThreadContext *tc, Packet *pkt);
@@ -214,6 +176,9 @@ class DTB : public TLB
     // Checkpointing
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
+
+    /** Give an entry id, read that tlb entries' tte */
+    uint64_t TteRead(int entry);
 
   private:
     void writeSfsr(Addr a, bool write, ContextType ct,

@@ -33,15 +33,5 @@ from BaseTLB import BaseTLB
 
 class AlphaTLB(BaseTLB):
     type = 'AlphaTLB'
-    abstract = True
-    size = Param.Int("TLB size")
-
-class AlphaDTB(AlphaTLB):
-    type = 'AlphaDTB'
-    cxx_class = 'AlphaISA::DTB'
-    size = 64
-
-class AlphaITB(AlphaTLB):
-    type = 'AlphaITB'
-    cxx_class = 'AlphaISA::ITB'
-    size = 48
+    cxx_class = 'AlphaISA::TLB'
+    size = Param.Int(64, "TLB size")

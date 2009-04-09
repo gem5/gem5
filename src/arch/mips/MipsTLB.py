@@ -36,21 +36,5 @@ from BaseTLB import BaseTLB
 
 class MipsTLB(BaseTLB):
     type = 'MipsTLB'
-    abstract = True
-    size = Param.Int("TLB size")
-
-class MipsDTB(MipsTLB):
-    type = 'MipsDTB'
-    cxx_class = 'MipsISA::DTB'
-    size = 64
-
-class MipsITB(MipsTLB):
-    type = 'MipsITB'
-    cxx_class = 'MipsISA::ITB'
-    size = 64
-
-class MipsUTB(MipsTLB):
-    type = 'MipsUTB'
-    cxx_class = 'MipsISA::UTB'
-    size = 64
-
+    cxx_class = 'MipsISA::TLB'
+    size = Param.Int(64, "TLB size")

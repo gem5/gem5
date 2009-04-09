@@ -49,8 +49,7 @@
 #if FULL_SYSTEM
 namespace TheISA
 {
-    class ITB;
-    class DTB;
+    class TLB;
 }
 class Processor;
 class PhysicalMemory;
@@ -130,8 +129,8 @@ class CheckerCPU : public BaseCPU
 
     ThreadContext *tc;
 
-    TheISA::ITB *itb;
-    TheISA::DTB *dtb;
+    TheISA::TLB *itb;
+    TheISA::TLB *dtb;
 
 #if FULL_SYSTEM
     Addr dbg_vtophys(Addr addr);

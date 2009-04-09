@@ -700,55 +700,36 @@ TLB::translate(RequestPtr req, ThreadContext *tc,
 };
 
 Fault
-DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
+        bool write, bool execute)
 {
     bool delayedResponse;
     return TLB::translate(req, tc, NULL, write,
-            false, delayedResponse, false);
+            execute, delayedResponse, false);
 }
 
 void
-DTB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write)
+TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, bool write, bool execute)
 {
     bool delayedResponse;
     assert(translation);
     Fault fault = TLB::translate(req, tc, translation,
-            write, false, delayedResponse, true);
+            write, execute, delayedResponse, true);
     if (!delayedResponse)
-        translation->finish(fault, req, tc, write);
-}
-
-Fault
-ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
-{
-    bool delayedResponse;
-    return TLB::translate(req, tc, NULL, false,
-            true, delayedResponse, false);
-}
-
-void
-ITB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation)
-{
-    bool delayedResponse;
-    assert(translation);
-    Fault fault = TLB::translate(req, tc, translation,
-            false, true, delayedResponse, true);
-    if (!delayedResponse)
-        translation->finish(fault, req, tc, false);
+        translation->finish(fault, req, tc, write, execute);
 }
 
 #if FULL_SYSTEM
 
 Tick
-DTB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
+TLB::doMmuRegRead(ThreadContext *tc, Packet *pkt)
 {
     return tc->getCpuPtr()->ticks(1);
 }
 
 Tick
-DTB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
+TLB::doMmuRegWrite(ThreadContext *tc, Packet *pkt)
 {
     return tc->getCpuPtr()->ticks(1);
 }
@@ -765,28 +746,10 @@ TLB::unserialize(Checkpoint *cp, const std::string &section)
 {
 }
 
-void
-DTB::serialize(std::ostream &os)
-{
-    TLB::serialize(os);
-}
-
-void
-DTB::unserialize(Checkpoint *cp, const std::string &section)
-{
-    TLB::unserialize(cp, section);
-}
-
 /* end namespace X86ISA */ }
 
-X86ISA::ITB *
-X86ITBParams::create()
+X86ISA::TLB *
+X86TLBParams::create()
 {
-    return new X86ISA::ITB(this);
-}
-
-X86ISA::DTB *
-X86DTBParams::create()
-{
-    return new X86ISA::DTB(this);
+    return new X86ISA::TLB(this);
 }

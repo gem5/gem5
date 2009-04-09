@@ -53,8 +53,7 @@
 
 namespace TheISA
 {
-    class ITB;
-    class DTB;
+    class TLB;
 }
 class PhysicalMemory;
 class MemoryController;
@@ -116,9 +115,9 @@ class OzoneCPU : public BaseCPU
 
         BaseCPU *getCpuPtr();
 
-        TheISA::ITB *getITBPtr() { return cpu->itb; }
+        TheISA::TLB *getITBPtr() { return cpu->itb; }
 
-        TheISA::DTB * getDTBPtr() { return cpu->dtb; }
+        TheISA::TLB * getDTBPtr() { return cpu->dtb; }
 
 #if FULL_SYSTEM
         System *getSystemPtr() { return cpu->system; }
@@ -349,8 +348,8 @@ class OzoneCPU : public BaseCPU
 
     bool interval_stats;
 
-    TheISA::ITB *itb;
-    TheISA::DTB *dtb;
+    TheISA::TLB *itb;
+    TheISA::TLB *dtb;
     System *system;
     PhysicalMemory *physmem;
 #endif

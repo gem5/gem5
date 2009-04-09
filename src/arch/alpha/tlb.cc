@@ -72,6 +72,90 @@ TLB::~TLB()
         delete [] table;
 }
 
+void
+TLB::regStats()
+{
+    fetch_hits
+        .name(name() + ".fetch_hits")
+        .desc("ITB hits");
+    fetch_misses
+        .name(name() + ".fetch_misses")
+        .desc("ITB misses");
+    fetch_acv
+        .name(name() + ".fetch_acv")
+        .desc("ITB acv");
+    fetch_accesses
+        .name(name() + ".fetch_accesses")
+        .desc("ITB accesses");
+
+    fetch_accesses = fetch_hits + fetch_misses;
+
+    read_hits
+        .name(name() + ".read_hits")
+        .desc("DTB read hits")
+        ;
+
+    read_misses
+        .name(name() + ".read_misses")
+        .desc("DTB read misses")
+        ;
+
+    read_acv
+        .name(name() + ".read_acv")
+        .desc("DTB read access violations")
+        ;
+
+    read_accesses
+        .name(name() + ".read_accesses")
+        .desc("DTB read accesses")
+        ;
+
+    write_hits
+        .name(name() + ".write_hits")
+        .desc("DTB write hits")
+        ;
+
+    write_misses
+        .name(name() + ".write_misses")
+        .desc("DTB write misses")
+        ;
+
+    write_acv
+        .name(name() + ".write_acv")
+        .desc("DTB write access violations")
+        ;
+
+    write_accesses
+        .name(name() + ".write_accesses")
+        .desc("DTB write accesses")
+        ;
+
+    data_hits
+        .name(name() + ".data_hits")
+        .desc("DTB hits")
+        ;
+
+    data_misses
+        .name(name() + ".data_misses")
+        .desc("DTB misses")
+        ;
+
+    data_acv
+        .name(name() + ".data_acv")
+        .desc("DTB access violations")
+        ;
+
+    data_accesses
+        .name(name() + ".data_accesses")
+        .desc("DTB accesses")
+        ;
+
+    data_hits = read_hits + write_hits;
+    data_misses = read_misses + write_misses;
+    data_acv = read_acv + write_acv;
+    data_accesses = read_accesses + write_accesses;
+}
+
 // look up an entry in the TLB
 TlbEntry *
 TLB::lookup(Addr vpn, uint8_t asn)
@@ -288,36 +372,8 @@ TLB::unserialize(Checkpoint *cp, const string &section)
     }
 }
 
-///////////////////////////////////////////////////////////////////////
-//
-//  Alpha ITB
-//
-ITB::ITB(const Params *p)
-    : TLB(p)
-{}
-
-
-void
-ITB::regStats()
-{
-    hits
-        .name(name() + ".hits")
-        .desc("ITB hits");
-    misses
-        .name(name() + ".misses")
-        .desc("ITB misses");
-    acv
-        .name(name() + ".acv")
-        .desc("ITB acv");
-    accesses
-        .name(name() + ".accesses")
-        .desc("ITB accesses");
-
-    accesses = hits + misses;
-}
-
 Fault
-ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
+TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
     //If this is a pal pc, then set PHYSICAL
     if (FULL_SYSTEM && PcPAL(req->getPC()))
@@ -326,7 +382,7 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
     if (PcPAL(req->getPC())) {
         // strip off PAL PC marker (lsb is 1)
         req->setPaddr((req->getVaddr() & ~3) & PAddrImplMask);
-        hits++;
+        fetch_hits++;
         return NoFault;
     }
 
@@ -335,7 +391,7 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
     } else {
         // verify that this is a good virtual address
         if (!validVirtualAddress(req->getVaddr())) {
-            acv++;
+            fetch_acv++;
             return new ItbAcvFault(req->getVaddr());
         }
 
@@ -352,7 +408,7 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
             // only valid in kernel mode
             if (ICM_CM(tc->readMiscRegNoEffect(IPR_ICM)) !=
                 mode_kernel) {
-                acv++;
+                fetch_acv++;
                 return new ItbAcvFault(req->getVaddr());
             }
 
@@ -373,7 +429,7 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
                               asn);
 
             if (!entry) {
-                misses++;
+                fetch_misses++;
                 return new ItbPageFault(req->getVaddr());
             }
 
@@ -385,11 +441,11 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
             if (!(entry->xre &
                   (1 << ICM_CM(tc->readMiscRegNoEffect(IPR_ICM))))) {
                 // instruction access fault
-                acv++;
+                fetch_acv++;
                 return new ItbAcvFault(req->getVaddr());
             }
 
-            hits++;
+            fetch_hits++;
         }
     }
 
@@ -401,93 +457,8 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 
 }
 
-void
-ITB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation)
-{
-    assert(translation);
-    translation->finish(translateAtomic(req, tc), req, tc, false);
-}
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Alpha DTB
-//
-DTB::DTB(const Params *p)
-     : TLB(p)
-{}
-
-void
-DTB::regStats()
-{
-    read_hits
-        .name(name() + ".read_hits")
-        .desc("DTB read hits")
-        ;
-
-    read_misses
-        .name(name() + ".read_misses")
-        .desc("DTB read misses")
-        ;
-
-    read_acv
-        .name(name() + ".read_acv")
-        .desc("DTB read access violations")
-        ;
-
-    read_accesses
-        .name(name() + ".read_accesses")
-        .desc("DTB read accesses")
-        ;
-
-    write_hits
-        .name(name() + ".write_hits")
-        .desc("DTB write hits")
-        ;
-
-    write_misses
-        .name(name() + ".write_misses")
-        .desc("DTB write misses")
-        ;
-
-    write_acv
-        .name(name() + ".write_acv")
-        .desc("DTB write access violations")
-        ;
-
-    write_accesses
-        .name(name() + ".write_accesses")
-        .desc("DTB write accesses")
-        ;
-
-    hits
-        .name(name() + ".hits")
-        .desc("DTB hits")
-        ;
-
-    misses
-        .name(name() + ".misses")
-        .desc("DTB misses")
-        ;
-
-    acv
-        .name(name() + ".acv")
-        .desc("DTB access violations")
-        ;
-
-    accesses
-        .name(name() + ".accesses")
-        .desc("DTB accesses")
-        ;
-
-    hits = read_hits + write_hits;
-    misses = read_misses + write_misses;
-    acv = read_acv + write_acv;
-    accesses = read_accesses + write_accesses;
-}
-
 Fault
-DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
+TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
     Addr pc = tc->readPC();
 
@@ -624,14 +595,6 @@ DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
     return checkCacheability(req);
 }
 
-void
-DTB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write)
-{
-    assert(translation);
-    translation->finish(translateAtomic(req, tc, write), req, tc, write);
-}
-
 TlbEntry &
 TLB::index(bool advance)
 {
@@ -643,16 +606,30 @@ TLB::index(bool advance)
     return *entry;
 }
 
-/* end namespace AlphaISA */ }
-
-AlphaISA::ITB *
-AlphaITBParams::create()
+Fault
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc,
+        bool write, bool execute)
 {
-    return new AlphaISA::ITB(this);
+    if (execute)
+        return translateInst(req, tc);
+    else
+        return translateData(req, tc, write);
 }
 
-AlphaISA::DTB *
-AlphaDTBParams::create()
+void
+TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation,
+        bool write, bool execute)
 {
-    return new AlphaISA::DTB(this);
+    assert(translation);
+    translation->finish(translateAtomic(req, tc, write, execute),
+            req, tc, write, execute);
+}
+
+/* end namespace AlphaISA */ }
+
+AlphaISA::TLB *
+AlphaTLBParams::create()
+{
+    return new AlphaISA::TLB(this);
 }

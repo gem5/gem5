@@ -61,7 +61,7 @@ using namespace std;
 // constructor
 #if FULL_SYSTEM
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
-                           TheISA::ITB *_itb, TheISA::DTB *_dtb,
+                           TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
     : ThreadState(_cpu, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
       dtb(_dtb)
@@ -92,7 +92,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                           TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid)
+                           TheISA::TLB *_itb, TheISA::TLB *_dtb, int _asid)
     : ThreadState(_cpu, _thread_num, _process, _asid),
       cpu(_cpu), itb(_itb), dtb(_dtb)
 {

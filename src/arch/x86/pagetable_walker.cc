@@ -98,7 +98,7 @@ Walker::doNext(PacketPtr &write)
     bool uncacheable = pte.pcd;
     Addr nextRead = 0;
     bool doWrite = false;
-    bool badNX = pte.nx && (!tlb->allowNX() || !enableNX);
+    bool badNX = pte.nx && execute && enableNX;
     switch(state) {
       case LongPML4:
         DPRINTF(PageTableWalker,

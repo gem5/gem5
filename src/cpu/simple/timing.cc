@@ -672,7 +672,7 @@ TimingSimpleCPU::fetch()
         ifetch_req->setThreadContext(_cpuId, /* thread ID */ 0);
         setupFetchRequest(ifetch_req);
         thread->itb->translateTiming(ifetch_req, tc,
-                &fetchTranslation);
+                &fetchTranslation, false, true);
     } else {
         _status = IcacheWaitResponse;
         completeIfetch(NULL);

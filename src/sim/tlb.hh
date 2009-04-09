@@ -60,7 +60,7 @@ class BaseTLB : public SimObject
          * function. Once it's called, the object is no longer valid.
          */
         virtual void finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write=false) = 0;
+                ThreadContext *tc, bool write=false, bool execute=false) = 0;
     };
 };
 
@@ -73,9 +73,10 @@ class GenericTLB : public BaseTLB
   public:
     void demapPage(Addr vaddr, uint64_t asn);
 
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool=false);
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc,
+            bool=false, bool=false);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool=false);
+            Translation *translation, bool=false, bool=false);
 };
 
 #endif // __ARCH_SPARC_TLB_HH__

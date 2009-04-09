@@ -108,17 +108,17 @@ class SimpleThread : public ThreadState
 
     System *system;
 
-    TheISA::ITB *itb;
-    TheISA::DTB *dtb;
+    TheISA::TLB *itb;
+    TheISA::TLB *dtb;
 
     // constructor: initialize SimpleThread from given process structure
 #if FULL_SYSTEM
     SimpleThread(BaseCPU *_cpu, int _thread_num, System *_system,
-                 TheISA::ITB *_itb, TheISA::DTB *_dtb,
+                 TheISA::TLB *_itb, TheISA::TLB *_dtb,
                  bool use_kernel_stats = true);
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                 TheISA::ITB *_itb, TheISA::DTB *_dtb, int _asid);
+                 TheISA::TLB *_itb, TheISA::TLB *_dtb, int _asid);
 #endif
 
     SimpleThread();
@@ -181,9 +181,9 @@ class SimpleThread : public ThreadState
 
     BaseCPU *getCpuPtr() { return cpu; }
 
-    TheISA::ITB *getITBPtr() { return itb; }
+    TheISA::TLB *getITBPtr() { return itb; }
 
-    TheISA::DTB *getDTBPtr() { return dtb; }
+    TheISA::TLB *getDTBPtr() { return dtb; }
 
     System *getSystemPtr() { return system; }
 

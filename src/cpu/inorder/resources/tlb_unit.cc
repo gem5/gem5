@@ -99,7 +99,7 @@ TLBUnit::execute(int slot_idx)
         {
             tlb_req->fault =
                 this->cpu->itb->translateAtomic(tlb_req->memReq,
-                        cpu->thread[tid]->getTC());
+                        cpu->thread[tid]->getTC(), false, true);
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "

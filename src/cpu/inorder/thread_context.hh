@@ -65,10 +65,10 @@ class InOrderThreadContext : public ThreadContext
 
 
     /** Returns a pointer to the ITB. */
-    TheISA::ITB *getITBPtr() { return cpu->itb; }
+    TheISA::TLB *getITBPtr() { return cpu->itb; }
 
     /** Returns a pointer to the DTB. */
-    TheISA::DTB *getDTBPtr() { return cpu->dtb; }
+    TheISA::TLB *getDTBPtr() { return cpu->dtb; }
 
     System *getSystemPtr() { return cpu->system; }
 

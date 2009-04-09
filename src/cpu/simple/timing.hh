@@ -106,7 +106,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
         {}
 
         void finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write)
+                ThreadContext *tc, bool write, bool execute)
         {
             cpu->sendFetch(fault, req, tc);
         }
@@ -129,7 +129,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         void
         finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write)
+                ThreadContext *tc, bool write, bool execute)
         {
             cpu->sendData(fault, req, data, res, read);
             delete this;
@@ -173,7 +173,7 @@ class TimingSimpleCPU : public BaseSimpleCPU
 
         void
         finish(Fault fault, RequestPtr req,
-                ThreadContext *tc, bool write)
+                ThreadContext *tc, bool write, bool execute)
         {
             assert(state);
             assert(state->outstanding);

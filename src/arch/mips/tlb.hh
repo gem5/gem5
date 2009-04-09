@@ -43,8 +43,7 @@
 #include "arch/mips/pagetable.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
-#include "params/MipsDTB.hh"
-#include "params/MipsITB.hh"
+#include "params/MipsTLB.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
 #include "sim/sim_object.hh"
@@ -138,34 +137,15 @@ class TLB : public BaseTLB
     void unserialize(Checkpoint *cp, const std::string &section);
 
     void regStats();
-};
-
-class ITB : public TLB {
-  public:
-    typedef MipsTLBParams Params;
-    ITB(const Params *p);
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation);
-};
-
-class DTB : public TLB {
-  public:
-    typedef MipsTLBParams Params;
-    DTB(const Params *p);
 
     Fault translateAtomic(RequestPtr req, ThreadContext *tc,
-            bool write = false);
+            bool write=false, bool execute=false);
     void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write = false);
-};
+            Translation *translation, bool write=false, bool execute=false);
 
-class UTB : public ITB, public DTB {
-  public:
-    typedef MipsTLBParams Params;
-    UTB(const Params *p);
-
+  private:
+    Fault translateInst(RequestPtr req, ThreadContext *tc);
+    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
 };
 
 }
