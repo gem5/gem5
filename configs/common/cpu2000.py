@@ -31,7 +31,7 @@ import sys
 from os.path import basename, exists, join as joinpath, normpath
 from os.path import isdir, isfile, islink
 
-spec_dist = '/dist/m5/cpu2000'
+spec_dist = os.environ.get('M5_CPU2000', '/dist/m5/cpu2000')
 
 def copyfiles(srcdir, dstdir):
     from filecmp import cmp as filecmp
