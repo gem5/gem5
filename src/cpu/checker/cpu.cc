@@ -75,7 +75,6 @@ CheckerCPU::CheckerCPU(Params *p)
     thread = new SimpleThread(this, /* thread_num */ 0, process,
                               /* asid */ 0);
 
-    thread->setStatus(ThreadContext::Suspended);
     tc = thread->getTC();
     threadContexts.push_back(tc);
 #endif
@@ -95,7 +94,6 @@ CheckerCPU::setSystem(System *system)
 
     thread = new SimpleThread(this, 0, systemPtr, itb, dtb, false);
 
-    thread->setStatus(ThreadContext::Suspended);
     tc = thread->getTC();
     threadContexts.push_back(tc);
     delete thread->kernelStats;

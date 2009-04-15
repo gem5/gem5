@@ -193,10 +193,6 @@ InOrderCPU::InOrderCPU(Params *params)
                     i, this->thread[i]);
             this->thread[i] = new Thread(this, i, params->workload[i],
                                          i);
-
-            // Start thread's off in "Suspended" status
-            this->thread[i]->setStatus(ThreadContext::Suspended);
-
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU

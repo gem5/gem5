@@ -131,7 +131,6 @@ OzoneCPU<Impl>::OzoneCPU(Params *p)
 
     thread.inSyscall = false;
 
-    thread.setStatus(ThreadContext::Suspended);
     itb = p->itb;
     dtb = p->dtb;
 #if FULL_SYSTEM

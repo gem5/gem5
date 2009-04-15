@@ -44,20 +44,20 @@
 
 #if FULL_SYSTEM
 ThreadState::ThreadState(BaseCPU *cpu, int _tid)
-    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
+#else
+ThreadState::ThreadState(BaseCPU *cpu, int _tid,
+                         Process *_process, short _asid)
+#endif
+    : numInst(0), numLoad(0), _status(ThreadContext::Halted),
+      baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
+#if FULL_SYSTEM
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), physPort(NULL), virtPort(NULL),
-      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, int _tid, Process *_process,
-                         short _asid)
-    : baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
       port(NULL), process(_process), asid(_asid),
-      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 #endif
+      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
 {
-    numInst = 0;
-    numLoad = 0;
 }
 
 ThreadState::~ThreadState()

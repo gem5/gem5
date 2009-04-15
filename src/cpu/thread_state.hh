@@ -68,8 +68,7 @@ struct ThreadState {
 #if FULL_SYSTEM
     ThreadState(BaseCPU *cpu, int _tid);
 #else
-    ThreadState(BaseCPU *cpu, int _tid, Process *_process,
-                short _asid);
+    ThreadState(BaseCPU *cpu, int _tid, Process *_process, short _asid);
 #endif
 
     ~ThreadState();
