@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 150366                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 208016                       # Number of bytes of host memory used
-host_seconds                                  9347.96                       # Real time elapsed on the host
-host_tick_rate                              117957212                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 120324                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 213384                       # Number of bytes of host memory used
+host_seconds                                 11681.98                       # Real time elapsed on the host
+host_tick_rate                               94389741                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                  1405618365                       # Number of instructions simulated
 sim_seconds                                  1.102659                       # Number of seconds simulated
@@ -133,7 +133,7 @@ system.cpu.fetch.CacheLines                 354588619                       # Nu
 system.cpu.fetch.Cycles                    1199300749                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.IcacheSquashes              10659931                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.Insts                     3732201000                       # Number of instructions fetch has processed
-system.cpu.fetch.SquashCycles                88873600                       # Number of cycles fetch has spent squashing
+system.cpu.fetch.SquashCycles                88873599                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.branchRate                  0.115384                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles          354588619                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.predictedBranches          182414509                       # Number of branches that fetch has predicted taken

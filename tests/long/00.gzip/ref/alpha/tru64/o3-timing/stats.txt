@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 312901                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 206004                       # Number of bytes of host memory used
-host_seconds                                  1807.45                       # Real time elapsed on the host
-host_tick_rate                               92438667                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 252050                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 207828                       # Number of bytes of host memory used
+host_seconds                                  2243.81                       # Real time elapsed on the host
+host_tick_rate                               74461791                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                   565552443                       # Number of instructions simulated
 sim_seconds                                  0.167078                       # Number of seconds simulated
@@ -20,9 +20,9 @@ system.cpu.commit.COM:branches               62547159                       # Nu
 system.cpu.commit.COM:bw_lim_events          17700250                       # number cycles where commit BW limit reached
 system.cpu.commit.COM:bw_limited                    0                       # number of insts not committed due to BW limits
 system.cpu.commit.COM:committed_per_cycle.start_dist                     # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle.samples    322711249                      
+system.cpu.commit.COM:committed_per_cycle.samples    322711250                      
 system.cpu.commit.COM:committed_per_cycle.min_value            0                      
-                               0    108088757   3349.40%           
+                               0    108088758   3349.40%           
                                1    100475751   3113.49%           
                                2     37367184   1157.91%           
                                3      9733028    301.60%           
@@ -144,7 +144,7 @@ system.cpu.fetch.CacheLines                  66014406                       # Nu
 system.cpu.fetch.Cycles                     197129335                       # Number of cycles fetch has run and was not squashing or blocked
 system.cpu.fetch.IcacheSquashes               1352914                       # Number of outstanding Icache misses that were squashed
 system.cpu.fetch.Insts                      698864013                       # Number of instructions fetch has processed
-system.cpu.fetch.SquashCycles                 4233116                       # Number of cycles fetch has spent squashing
+system.cpu.fetch.SquashCycles                 4233115                       # Number of cycles fetch has spent squashing
 system.cpu.fetch.branchRate                  0.227555                       # Number of branch fetches per cycle
 system.cpu.fetch.icacheStallCycles           66014406                       # Number of cycles fetch is stalled on an Icache miss
 system.cpu.fetch.predictedBranches           67411078                       # Number of branches that fetch has predicted taken
