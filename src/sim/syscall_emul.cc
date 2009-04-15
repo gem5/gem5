@@ -42,6 +42,7 @@
 #include "cpu/base.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
+#include "sim/system.hh"
 
 #include "sim/sim_exit.hh"
 
@@ -91,9 +92,13 @@ SyscallReturn
 exitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
          ThreadContext *tc)
 {
-    if (tc->exit()) {
+    if (process->system->numRunningContexts() == 1) {
+        // Last running context... exit simulator
         exitSimLoop("target called exit()",
-                process->getSyscallArg(tc, 0) & 0xff);
+                    process->getSyscallArg(tc, 0) & 0xff);
+    } else {
+        // other running threads... just halt this one
+        tc->halt();
     }
 
     return 1;

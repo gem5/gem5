@@ -118,9 +118,6 @@ class InOrderThreadContext : public ThreadContext
     /** Set the status to Suspended. */
     virtual void suspend(int delay = 0);
 
-    /** Set the status to Unallocated. */
-    virtual void deallocate(int delay = 1);
-
     /** Set the status to Halted. */
     virtual void halt(int delay = 0);
 
@@ -244,32 +241,6 @@ class InOrderThreadContext : public ThreadContext
     virtual void changeRegFileContext(unsigned param,
                                       unsigned val)
     { panic("Not supported!"); }
-
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
-    {
-        this->deallocate();
-
-        // If there are still threads executing in the system (for now
-        // this single cpu)
-        if (this->cpu->numActiveThreads() - 1 > 0)
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
-    }
-
-    virtual void setThreadRescheduleCondition(uint64_t cond)
-    {
-        this->deallocate();
-
-        this->setStatus(ThreadContext::Suspended);
-
-        activateContext(cond);
-    }
 };
 
 #endif

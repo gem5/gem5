@@ -122,9 +122,6 @@ class O3ThreadContext : public ThreadContext
     /** Set the status to Suspended. */
     virtual void suspend(int delay = 0);
 
-    /** Set the status to Unallocated. */
-    virtual void deallocate(int delay = 0);
-
     /** Set the status to Halted. */
     virtual void halt(int delay = 0);
 
@@ -272,22 +269,6 @@ class O3ThreadContext : public ThreadContext
         panic("Not supported on Alpha!");
 #endif
         this->cpu->setNextNPC(val, this->thread->threadId());
-    }
-
-    /** This function exits the thread context in the CPU and returns
-     * 1 if the CPU has no more active threads (meaning it's OK to exit);
-     * Used in syscall-emulation mode when a thread executes the 'exit'
-     * syscall.
-     */
-    virtual int exit()
-    {
-        this->deallocate();
-
-        // If there are still threads executing in the system
-        if (this->cpu->numActiveThreads())
-            return 0; // don't exit simulation
-        else
-            return 1; // exit simulation
     }
 };
 

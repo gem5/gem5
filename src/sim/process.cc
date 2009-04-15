@@ -221,7 +221,7 @@ Process::findFreeContext()
     ThreadContext *tc;
     for (int i = 0; i < size; ++i) {
         tc = system->getThreadContext(contextIds[i]);
-        if (tc->status() == ThreadContext::Unallocated) {
+        if (tc->status() == ThreadContext::Halted) {
             // inactive context, free to use
             return tc;
         }

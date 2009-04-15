@@ -346,8 +346,7 @@ MiscRegFile::processHSTickCompare(ThreadContext *tc)
     // we're actually at the correct cycle or we need to wait a little while
     // more
     int ticks;
-    if ( tc->status() == ThreadContext::Halted ||
-         tc->status() == ThreadContext::Unallocated)
+    if ( tc->status() == ThreadContext::Halted)
        return;
 
     ticks = ((int64_t)(hstick_cmpr & mask(63)) - (int64_t)stick) -

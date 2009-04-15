@@ -211,6 +211,17 @@ System::registerThreadContext(ThreadContext *tc, int assigned)
     return id;
 }
 
+int
+System::numRunningContexts()
+{
+    int running = 0;
+    for (int i = 0; i < _numContexts; ++i) {
+        if (threadContexts[i]->status() != ThreadContext::Halted)
+            ++running;
+    }
+    return running;
+}
+
 void
 System::startup()
 {

@@ -84,7 +84,7 @@ O3ThreadContext<Impl>::takeOverFrom(ThreadContext *old_context)
     cpu->lockFlag = false;
 #endif
 
-    old_context->setStatus(ThreadContext::Unallocated);
+    old_context->setStatus(ThreadContext::Halted);
 
     thread->inSyscall = false;
     thread->trapPending = false;
@@ -103,11 +103,6 @@ O3ThreadContext<Impl>::activate(int delay)
 #if FULL_SYSTEM
     thread->lastActivate = curTick;
 #endif
-
-    if (thread->status() == ThreadContext::Unallocated) {
-        cpu->activateWhenReady(thread->threadId());
-        return;
-    }
 
     thread->setStatus(ThreadContext::Active);
 
@@ -140,20 +135,6 @@ O3ThreadContext<Impl>::suspend(int delay)
 */
     thread->setStatus(ThreadContext::Suspended);
     cpu->suspendContext(thread->threadId());
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::deallocate(int delay)
-{
-    DPRINTF(O3CPU, "Calling deallocate on Thread Context %d delay %d\n",
-            threadId(), delay);
-
-    if (thread->status() == ThreadContext::Unallocated)
-        return;
-
-    thread->setStatus(ThreadContext::Unallocated);
-    cpu->deallocateContext(thread->threadId(), true, delay);
 }
 
 template <class Impl>

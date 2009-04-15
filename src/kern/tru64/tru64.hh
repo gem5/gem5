@@ -1074,7 +1074,7 @@ class Tru64 : public OperatingSystem
                        ThreadContext *tc)
     {
         assert(tc->status() == ThreadContext::Active);
-        tc->deallocate();
+        tc->halt();
 
         return 0;
     }

@@ -148,9 +148,6 @@ class OzoneCPU : public BaseCPU
         /// Set the status to Suspended.
         void suspend();
 
-        /// Set the status to Unallocated.
-        void deallocate(int delay = 0);
-
         /// Set the status to Halted.
         void halt();
 

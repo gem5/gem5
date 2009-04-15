@@ -81,7 +81,7 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
             p->itb, p->dtb, /* asid */ 0);
 #endif // !FULL_SYSTEM
 
-    thread->setStatus(ThreadContext::Unallocated);
+    thread->setStatus(ThreadContext::Halted);
 
     tc = thread->getTC();
 

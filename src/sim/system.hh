@@ -89,18 +89,20 @@ class System : public SimObject
     std::vector<ThreadContext *> threadContexts;
     int _numContexts;
 
-    ThreadContext * getThreadContext(int tid)
+    ThreadContext *getThreadContext(int tid)
     {
         return threadContexts[tid];
     }
 
     int numContexts()
     {
-        if (_numContexts != threadContexts.size())
-            panic("cpu array not fully populated!");
-
+        assert(_numContexts == threadContexts.size());
         return _numContexts;
     }
+
+    /** Return number of running (non-halted) thread contexts in
+     * system.  These threads could be Active or Suspended. */
+    int numRunningContexts();
 
 #if FULL_SYSTEM
     Platform *platform;

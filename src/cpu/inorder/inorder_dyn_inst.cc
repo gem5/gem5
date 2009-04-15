@@ -573,12 +573,6 @@ InOrderDynInst::disableMultiThreading(unsigned vpe)
     this->cpu->disableMultiThreading(threadNumber, vpe);
 }
 
-void
-InOrderDynInst::setThreadRescheduleCondition(uint32_t cond)
-{
-    this->cpu->setThreadRescheduleCondition(cond);
-}
-
 template<class T>
 inline Fault
 InOrderDynInst::read(Addr addr, T &data, unsigned flags)

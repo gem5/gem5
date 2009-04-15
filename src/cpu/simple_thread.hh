@@ -208,9 +208,6 @@ class SimpleThread : public ThreadState
     /// Set the status to Suspended.
     void suspend();
 
-    /// Set the status to Unallocated.
-    void deallocate();
-
     /// Set the status to Halted.
     void halt();
 

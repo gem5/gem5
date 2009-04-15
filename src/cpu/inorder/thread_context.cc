@@ -46,7 +46,7 @@ InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
     copyArchRegs(old_context);
 
     thread->funcExeInst = old_context->readFuncExeInst();
-    old_context->setStatus(ThreadContext::Unallocated);
+    old_context->setStatus(ThreadContext::Halted);
     thread->inSyscall = false;
     thread->trapPending = false;
 }
@@ -77,19 +77,6 @@ InOrderThreadContext::suspend(int delay)
 
     thread->setStatus(ThreadContext::Suspended);
     cpu->suspendContext(thread->readTid(), delay);
-}
-
-void
-InOrderThreadContext::deallocate(int delay)
-{
-    DPRINTF(InOrderCPU, "Calling deallocate on Thread Context %d\n",
-            getThreadNum());
-
-    if (thread->status() == ThreadContext::Unallocated)
-        return;
-
-    thread->setStatus(ThreadContext::Unallocated);
-    cpu->deallocateContext(thread->readTid(), delay);
 }
 
 void

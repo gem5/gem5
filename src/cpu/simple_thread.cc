@@ -152,7 +152,7 @@ SimpleThread::takeOverFrom(ThreadContext *oldContext)
 
     storeCondFailures = 0;
 
-    oldContext->setStatus(ThreadContext::Unallocated);
+    oldContext->setStatus(ThreadContext::Halted);
 }
 
 void
@@ -253,15 +253,6 @@ SimpleThread::suspend()
     cpu->suspendContext(_threadId);
 }
 
-void
-SimpleThread::deallocate()
-{
-    if (status() == ThreadContext::Unallocated)
-        return;
-
-    _status = ThreadContext::Unallocated;
-    cpu->deallocateContext(_threadId);
-}
 
 void
 SimpleThread::halt()

@@ -737,14 +737,6 @@ OzoneCPU<Impl>::OzoneTC::suspend()
     cpu->suspendContext(thread->threadId());
 }
 
-/// Set the status to Unallocated.
-template <class Impl>
-void
-OzoneCPU<Impl>::OzoneTC::deallocate(int delay)
-{
-    cpu->deallocateContext(thread->threadId(), delay);
-}
-
 /// Set the status to Halted.
 template <class Impl>
 void
@@ -799,7 +791,7 @@ OzoneCPU<Impl>::OzoneTC::takeOverFrom(ThreadContext *old_context)
     cpu->lockFlag = false;
 #endif
 
-    old_context->setStatus(ThreadContext::Unallocated);
+    old_context->setStatus(ThreadContext::Halted);
 }
 
 template <class Impl>

@@ -87,14 +87,9 @@ class ThreadContext
     typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
   public:
+
     enum Status
     {
-        /// Initialized but not running yet.  All CPUs start in
-        /// this state, but most transition to Active on cycle 1.
-        /// In MP or SMT systems, non-primary contexts will stay
-        /// in this state until a thread is assigned to them.
-        Unallocated,
-
         /// Running.  Instructions should be executed only when
         /// the context is in this state.
         Active,
@@ -153,9 +148,6 @@ class ThreadContext
 
     /// Set the status to Suspended.
     virtual void suspend(int delay = 0) = 0;
-
-    /// Set the status to Unallocated.
-    virtual void deallocate(int delay = 0) = 0;
 
     /// Set the status to Halted.
     virtual void halt(int delay = 0) = 0;
@@ -336,9 +328,6 @@ class ProxyThreadContext : public ThreadContext
 
     /// Set the status to Suspended.
     void suspend(int delay = 0) { actualTC->suspend(); }
-
-    /// Set the status to Unallocated.
-    void deallocate(int delay = 0) { actualTC->deallocate(); }
 
     /// Set the status to Halted.
     void halt(int delay = 0) { actualTC->halt(); }

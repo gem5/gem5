@@ -481,8 +481,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     virtual void enableMultiThreading(unsigned vpe);
     virtual void disableMultiThreading(unsigned vpe);
 
-    virtual void setThreadRescheduleCondition(uint32_t cond);
-
     ////////////////////////////////////////////////////////////
     //
     //  PROGRAM COUNTERS - PC/NPC/NPC

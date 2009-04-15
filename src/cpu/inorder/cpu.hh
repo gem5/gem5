@@ -340,12 +340,6 @@ class InOrderCPU : public BaseCPU
     virtual void disableMultiThreading(unsigned tid, unsigned vpe);
     void disableThreads(unsigned tid, unsigned vpe);
 
-    // Sets a thread-rescheduling condition.
-    void setThreadRescheduleCondition(uint32_t tid)
-    {
-      //@TODO: IMPLEMENT ME
-    }
-
     /** Activate a Thread When CPU Resources are Available. */
     void activateWhenReady(int tid);
 
