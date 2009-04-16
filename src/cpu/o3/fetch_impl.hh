@@ -1326,7 +1326,10 @@ DefaultFetch<Impl>::getFetchingThread(FetchPriority &fetch_priority)
         }
     } else {
         std::list<unsigned>::iterator thread = activeThreads->begin();
-        assert(thread != activeThreads->end());
+        if (thread == activeThreads->end()) {
+            return -1;
+        }
+
         int tid = *thread;
 
         if (fetchStatus[tid] == Running ||
