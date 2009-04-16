@@ -1283,7 +1283,7 @@ template <class Impl>
 float
 FullO3CPU<Impl>::readArchFloatRegSingle(int reg_idx, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatReg(phys_reg);
@@ -1293,7 +1293,7 @@ template <class Impl>
 double
 FullO3CPU<Impl>::readArchFloatRegDouble(int reg_idx, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatReg(phys_reg, 64);
@@ -1303,7 +1303,7 @@ template <class Impl>
 uint64_t
 FullO3CPU<Impl>::readArchFloatRegInt(int reg_idx, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     return regFile.readFloatRegBits(phys_reg);
@@ -1322,7 +1322,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegSingle(int reg_idx, float val, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatReg(phys_reg, val);
@@ -1332,7 +1332,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegDouble(int reg_idx, double val, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatReg(phys_reg, val, 64);
@@ -1342,7 +1342,7 @@ template <class Impl>
 void
 FullO3CPU<Impl>::setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid)
 {
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
+    int idx = reg_idx + TheISA::NumIntRegs;
     PhysRegIndex phys_reg = commitRenameMap[tid].lookup(idx);
 
     regFile.setFloatRegBits(phys_reg, val);
