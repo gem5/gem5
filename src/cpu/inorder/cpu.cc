@@ -29,6 +29,8 @@
  *
  */
 
+#include "config/full_system.hh"
+
 #include "arch/utility.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/activity.hh"
@@ -420,16 +422,12 @@ InOrderCPU::init()
     for (int i = 0; i < number_of_threads; ++i)
         thread[i]->inSyscall = true;
 
+#if FULL_SYSTEM
     for (int tid=0; tid < number_of_threads; tid++) {
-
-        ThreadContext *src_tc = thread[tid]->getTC();
-
-        // Threads start in the Suspended State
-        if (src_tc->status() != ThreadContext::Suspended) {
-            continue;
-        }
-
+        ThreadContext *src_tc = threadContexts[tid];
+        TheISA::initCPU(src_tc, src_tc->contextId());
     }
+#endif
 
     // Clear inSyscall.
     for (int i = 0; i < number_of_threads; ++i)

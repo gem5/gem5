@@ -568,21 +568,12 @@ FullO3CPU<Impl>::init()
     for (int i = 0; i < number_of_threads; ++i)
         thread[i]->inSyscall = true;
 
+#if FULL_SYSTEM
     for (int tid=0; tid < number_of_threads; tid++) {
-#if FULL_SYSTEM
         ThreadContext *src_tc = threadContexts[tid];
-#else
-        ThreadContext *src_tc = thread[tid]->getTC();
-#endif
-        // Threads start in the Suspended State
-        if (src_tc->status() != ThreadContext::Suspended) {
-            continue;
-        }
-
-#if FULL_SYSTEM
         TheISA::initCPU(src_tc, src_tc->contextId());
-#endif
     }
+#endif
 
     // Clear inSyscall.
     for (int i = 0; i < number_of_threads; ++i)
