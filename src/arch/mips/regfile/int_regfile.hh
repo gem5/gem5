@@ -60,6 +60,11 @@ namespace MipsISA
        DSPHi0 = HI
     };
 
+    //@TODO: Implementing ShadowSets needs to
+    //edit this value such that:
+    //TotalArchRegs = NumIntArchRegs * ShadowSets
+    const int TotalArchRegs = NumIntArchRegs;
+
     class IntRegFile
     {
       protected:
