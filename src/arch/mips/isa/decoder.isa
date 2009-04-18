@@ -140,7 +140,7 @@ decode OPCODE_HI default Unknown::unknown() {
                                  }});
 #else
                     0x4: syscall({{ xc->syscall(R2); }},
-                                 IsSerializing, IsNonSpeculative);
+                                 IsSerializeAfter, IsNonSpeculative);
 #endif
                     0x7: sync({{ ; }}, IsMemBarrier);
                     0x5: break({{fault = new BreakpointFault();}});
