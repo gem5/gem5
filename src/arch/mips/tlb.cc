@@ -427,6 +427,18 @@ Fault
 TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
 {
 #if !FULL_SYSTEM
+    //@TODO: This should actually use TLB instead of going directly
+    //       to the page table in syscall mode.
+    /**
+     * Check for alignment faults
+     */
+    if (req->getVaddr() & (req->getSize() - 1)) {
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
+                req->getSize());
+        return new AlignmentFault();
+    }
+
+
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
