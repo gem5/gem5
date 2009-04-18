@@ -188,6 +188,10 @@ class BPredUnit
               wasCall(0), bpHistory(bp_history)
         { }
 
+        bool operator==(const PredictorHistory &entry) const {
+            return this->seqNum == entry.seqNum;
+        }
+
         /** The sequence number for the predictor history entry. */
         InstSeqNum seqNum;
 
@@ -220,6 +224,7 @@ class BPredUnit
     };
 
     typedef std::list<PredictorHistory> History;
+    typedef typename History::iterator HistoryIt;
 
     /**
      * The per-thread predictor history. This is used to update the predictor

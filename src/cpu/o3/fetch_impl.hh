@@ -524,12 +524,13 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
     Addr pred_PC = next_PC;
     predict_taken = branchPred.predict(inst, pred_PC, tid);
 
-/*    if (predict_taken) {
-        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be taken to %#x.\n",
-                tid, pred_PC);
+    if (predict_taken) {
+        DPRINTF(Fetch, "[tid:%i]: [sn:%i]:  Branch predicted to be taken to %#x.\n",
+                tid, inst->seqNum, pred_PC);
     } else {
-        DPRINTF(Fetch, "[tid:%i]: Branch predicted to be not taken.\n", tid);
-    }*/
+        DPRINTF(Fetch, "[tid:%i]: [sn:%i]:Branch predicted to be not taken.\n",
+                tid, inst->seqNum);
+    }
 
 #if ISA_HAS_DELAY_SLOT
     next_PC = next_NPC;
@@ -544,8 +545,9 @@ DefaultFetch<Impl>::lookupAndUpdateNextPC(DynInstPtr &inst, Addr &next_PC,
         next_PC += instSize;
     next_NPC = next_PC + instSize;
 #endif
-/*    DPRINTF(Fetch, "[tid:%i]: Branch predicted to go to %#x and then %#x.\n",
-            tid, next_PC, next_NPC);*/
+
+    DPRINTF(Fetch, "[tid:%i]: [sn:%i] Branch predicted to go to %#x and then %#x.\n",
+            tid, inst->seqNum, next_PC, next_NPC);
     inst->setPredTarg(next_PC, next_NPC, next_MicroPC);
     inst->setPredTaken(predict_taken);
 

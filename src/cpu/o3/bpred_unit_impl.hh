@@ -36,6 +36,8 @@
 
 #include "params/DerivO3CPU.hh"
 
+#include <algorithm>
+
 template<class Impl>
 BPredUnit<Impl>::BPredUnit(DerivO3CPUParams *params)
     : _name(params->name + ".BPredUnit"),
@@ -173,6 +175,10 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
                 tid, pred_taken, inst->readPC());
     }
 
+    DPRINTF(Fetch, "BranchPred: [tid:%i]: [sn:%i] Creating prediction history "
+                "for PC %#x\n",
+            tid, inst->seqNum, inst->readPC());
+
     PredictorHistory predict_record(inst->seqNum, PC, pred_taken,
                                     bp_history, tid);
 
@@ -240,7 +246,8 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
 
     predHist[tid].push_front(predict_record);
 
-    DPRINTF(Fetch, "[tid:%i]: predHist.size(): %i\n", tid, predHist[tid].size());
+    DPRINTF(Fetch, "BranchPred: [tid:%i]: [sn:%i]: History entry added."
+            "predHist.size(): %i\n", tid, inst->seqNum, predHist[tid].size());
 
     return pred_taken;
 }
@@ -249,7 +256,7 @@ template <class Impl>
 void
 BPredUnit<Impl>::update(const InstSeqNum &done_sn, unsigned tid)
 {
-    DPRINTF(Fetch, "BranchPred: [tid:%i]: Commiting branches until "
+    DPRINTF(Fetch, "BranchPred: [tid:%i]: Committing branches until "
             "[sn:%lli].\n", tid, done_sn);
 
     while (!predHist[tid].empty() &&
@@ -290,7 +297,12 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, unsigned tid)
         // This call should delete the bpHistory.
         BPSquash(pred_hist.front().bpHistory);
 
+        DPRINTF(Fetch, "BranchPred: [tid:%i]: Removing history for [sn:%i] "
+                "PC %#x.\n", tid, pred_hist.front().seqNum, pred_hist.front().PC);
+
         pred_hist.pop_front();
+
+        DPRINTF(Fetch, "[tid:%i]: predHist.size(): %i\n", tid, predHist[tid].size());
     }
 
 }
@@ -305,6 +317,13 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
     // Now that we know that a branch was mispredicted, we need to undo
     // all the branches that have been seen up until this branch and
     // fix up everything.
+    // NOTE: This should be call conceivably in 2 scenarios:
+    // (1) After an branch is executed, it updates its status in the ROB
+    //     The commit stage then checks the ROB update and sends a signal to
+    //     the fetch stage to squash history after the mispredict
+    // (2) In the decode stage, you can find out early if a unconditional
+    //     PC-relative, branch was predicted incorrectly. If so, a signal
+    //     to the fetch stage is sent to squash history after the mispredict
 
     History &pred_hist = predHist[tid];
 
@@ -314,22 +333,42 @@ BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
             "setting target to %#x.\n",
             tid, squashed_sn, corr_target);
 
+    // Squash All Branches AFTER this mispredicted branch
     squash(squashed_sn, tid);
 
     // If there's a squash due to a syscall, there may not be an entry
     // corresponding to the squash.  In that case, don't bother trying to
     // fix up the entry.
     if (!pred_hist.empty()) {
-        assert(pred_hist.front().seqNum == squashed_sn);
-        if (pred_hist.front().usedRAS) {
+
+        HistoryIt hist_it = pred_hist.begin();
+        //HistoryIt hist_it = find(pred_hist.begin(), pred_hist.end(),
+        //                       squashed_sn);
+
+        //assert(hist_it != pred_hist.end());
+        if (pred_hist.front().seqNum != squashed_sn) {
+            DPRINTF(Fetch, "Front sn %i != Squash sn %i\n",
+                    pred_hist.front().seqNum, squashed_sn);
+
+            assert(pred_hist.front().seqNum == squashed_sn);
+        }
+
+
+        if ((*hist_it).usedRAS) {
             ++RASIncorrect;
         }
 
-        BPUpdate(pred_hist.front().PC, actually_taken,
+        BPUpdate((*hist_it).PC, actually_taken,
                  pred_hist.front().bpHistory);
 
-        BTB.update(pred_hist.front().PC, corr_target, tid);
-        pred_hist.pop_front();
+        BTB.update((*hist_it).PC, corr_target, tid);
+
+        DPRINTF(Fetch, "BranchPred: [tid:%i]: Removing history for [sn:%i] "
+                "PC %#x.\n", tid, (*hist_it).seqNum, (*hist_it).PC);
+
+        pred_hist.erase(hist_it);
+
+        DPRINTF(Fetch, "[tid:%i]: predHist.size(): %i\n", tid, predHist[tid].size());
     }
 }
 
@@ -386,7 +425,7 @@ template <class Impl>
 void
 BPredUnit<Impl>::dump()
 {
-    typename History::iterator pred_hist_it;
+    HistoryIt pred_hist_it;
 
     for (int i = 0; i < Impl::MaxThreads; ++i) {
         if (!predHist[i].empty()) {

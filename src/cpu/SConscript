@@ -177,3 +177,5 @@ TraceFlag('Quiesce')
 
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
     'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro' ])
+CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
+    'ExecEffAddr', 'ExecResult', 'ExecMicro' ])

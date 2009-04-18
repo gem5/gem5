@@ -1282,7 +1282,7 @@ DefaultIEW<Impl>::executeInsts()
                 fetchRedirect[tid] = true;
 
                 DPRINTF(IEW, "Execute: Branch mispredict detected.\n");
-                DPRINTF(IEW, "Predicted target was %#x, %#x.\n",
+                DPRINTF(IEW, "Predicted target was PC:%#x, NPC:%#x.\n",
                         inst->readPredPC(), inst->readPredNPC());
                 DPRINTF(IEW, "Execute: Redirecting fetch to PC: %#x,"
                         " NPC: %#x.\n", inst->readNextPC(),
