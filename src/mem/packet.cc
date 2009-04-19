@@ -122,9 +122,9 @@ MemCmd::commandInfo[] =
             InvalidCmd, "SwapResp" },
     /* IntReq -- for interrupts */
     { SET4(IsWrite, IsRequest, NeedsResponse, HasData),
-        MessageReq, "MessageReq" },
+        MessageResp, "MessageReq" },
     /* IntResp -- for interrupts */
-    { SET2(IsWrite, IsResponse), MessageResp, "MessageResp" },
+    { SET2(IsWrite, IsResponse), InvalidCmd, "MessageResp" },
     /* NetworkNackError  -- nacked at network layer (not by protocol) */
     { SET2(IsResponse, IsError), InvalidCmd, "NetworkNackError" },
     /* InvalidDestError  -- packet dest field invalid */
