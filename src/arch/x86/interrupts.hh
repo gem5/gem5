@@ -136,6 +136,9 @@ class Interrupts : public BasicPioDevice, IntDev
     // This is a quick check whether any of the above (except ExtInt) are set.
     bool pendingUnmaskableInt;
 
+    // A count of how many IPIs are in flight.
+    int pendingIPIs;
+
     /*
      * IRR and ISR maintenance.
      */

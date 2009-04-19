@@ -338,10 +338,12 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 {
     assert(!pkt->isError());
     assert(pkt->cmd == MemCmd::MessageResp);
-    InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
-    // Record that the ICR is now idle.
-    low.deliveryStatus = 0;
-    regs[APIC_INTERRUPT_COMMAND_LOW] = low;
+    if (--pendingIPIs == 0) {
+        InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
+        // Record that the ICR is now idle.
+        low.deliveryStatus = 0;
+        regs[APIC_INTERRUPT_COMMAND_LOW] = low;
+    }
     delete pkt->req;
     delete pkt;
     DPRINTF(LocalApic, "ICR is now idle.\n");
@@ -496,17 +498,40 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             regs[APIC_INTERRUPT_COMMAND_LOW] = low;
             switch (low.destShorthand) {
               case 0:
+                pendingIPIs++;
                 intPort->sendMessage(message, timing);
                 newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
                 break;
               case 1:
-                panic("Self IPIs aren't implemented.\n");
+                newVal = val;
+                requestInterrupt(message.vector,
+                        message.deliveryMode, message.trigger);
                 break;
               case 2:
-                panic("Broadcast including self IPIs aren't implemented.\n");
-                break;
+                requestInterrupt(message.vector,
+                        message.deliveryMode, message.trigger);
+                // Fall through
               case 3:
-                panic("Broadcast excluding self IPIs aren't implemented.\n");
+                {
+                    int numContexts = sys->numContexts();
+                    pendingIPIs += (numContexts - 1);
+                    // We have no way to get at the thread context we're part
+                    // of, so we'll just have to go with the CPU for now.
+                    hack_once("Broadcast IPIs can't handle more than "
+                            "one context per CPU.\n");
+                    int myId = cpu->getContext(0)->contextId();
+                    for (int i = 0; i < numContexts; i++) {
+                        int thisId = sys->getThreadContext(i)->contextId();
+                        if (thisId != myId) {
+                            PacketPtr pkt = buildIntRequest(thisId, message);
+                            if (timing)
+                                intPort->sendMessageTiming(pkt, latency);
+                            else
+                                intPort->sendMessageAtomic(pkt);
+                        }
+                    }
+                }
+                newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
                 break;
             }
         }
@@ -563,7 +588,8 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingExtInt(false), extIntVector(0),
     pendingInit(false), initVector(0),
     pendingStartup(false), startupVector(0),
-    startedUp(false), pendingUnmaskableInt(false)
+    startedUp(false), pendingUnmaskableInt(false),
+    pendingIPIs(0)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));
