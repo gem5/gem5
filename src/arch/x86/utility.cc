@@ -280,26 +280,20 @@ void initCPU(ThreadContext *tc, int cpuId)
 
 #endif
 
-#if FULL_SYSTEM
 void startupCPU(ThreadContext *tc, int cpuId)
 {
+#if FULL_SYSTEM
     if (cpuId == 0) {
         tc->activate(0);
     } else {
         // This is an application processor (AP). It should be initialized to
         // look like only the BIOS POST has run on it and put then put it into
         // a halted state.
-        tc->suspend();
+        tc->suspend(0);
     }
-}
-
 #else
-
-void startupCPU(ThreadContext *tc, int cpuId)
-{
     tc->activate(0);
-}
-
 #endif
+}
 
 } //namespace X86_ISA
