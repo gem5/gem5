@@ -274,6 +274,27 @@ def macroop BTS_P_I {
     st t1, seg, riprel, disp
 };
 
+def macroop BTS_LOCKED_M_I {
+    limm t1, imm, dataSize=asz
+    limm t4, 1
+    roli t4, t4, imm
+    ldstl t1, seg, sib, disp
+    sexti t0, t1, imm, flags=(CF,)
+    or t1, t1, t4
+    stul t1, seg, sib, disp
+};
+
+def macroop BTS_LOCKED_P_I {
+    rdip t7, dataSize=asz
+    limm t1, imm, dataSize=asz
+    limm t4, 1
+    roli t4, t4, imm
+    ldstl t1, seg, riprel, disp
+    sexti t0, t1, imm, flags=(CF,)
+    or t1, t1, t4
+    stul t1, seg, riprel, disp
+};
+
 def macroop BTS_R_R {
     sext t0, reg, regm, flags=(CF,)
     limm t1, 1
@@ -304,5 +325,30 @@ def macroop BTS_P_R {
     sext t0, t1, reg, flags=(CF,)
     or t1, t1, t4
     st t1, seg, [1, t3, t7], disp
+};
+
+def macroop BTS_LOCKED_M_R {
+    srai t2, reg, 3, dataSize=asz
+    srai t3, t2, ldsz, dataSize=asz
+    lea t3, flatseg, [dsz, t3, base], dataSize=asz
+    limm t4, 1
+    rol t4, t4, reg
+    ldstl t1, seg, [scale, index, t3], disp
+    sext t0, t1, reg, flags=(CF,)
+    or t1, t1, t4
+    stul t1, seg, [scale, index, t3], disp
+};
+
+def macroop BTS_LOCKED_P_R {
+    rdip t7, dataSize=asz
+    srai t2, reg, 3, dataSize=asz
+    srai t3, t2, ldsz, dataSize=asz
+    lea t3, flatseg, [dsz, t3, base], dataSize=asz
+    limm t4, 1
+    rol t4, t4, reg
+    ldstl t1, seg, [1, t3, t7], disp
+    sext t0, t1, reg, flags=(CF,)
+    or t1, t1, t4
+    stul t1, seg, [1, t3, t7], disp
 };
 '''
