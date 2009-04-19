@@ -223,7 +223,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 1,
             source_bus_irq = 0 + (4 << 2),
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 16)
     assign_8259_0_to_apic = X86IntelMPIOIntAssignment(
             interrupt_type = 'ExtInt',
@@ -231,7 +231,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 0,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 0)
     self.intel_mp_table.add_entry(assign_8259_0_to_apic)
     assign_0_to_apic = X86IntelMPIOIntAssignment(
@@ -240,7 +240,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 0,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 2)
     self.intel_mp_table.add_entry(assign_0_to_apic)
     assign_8259_1_to_apic = X86IntelMPIOIntAssignment(
@@ -249,7 +249,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 1,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 0)
     self.intel_mp_table.add_entry(assign_8259_1_to_apic)
     assign_1_to_apic = X86IntelMPIOIntAssignment(
@@ -258,7 +258,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 1,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 1)
     self.intel_mp_table.add_entry(assign_1_to_apic)
     assign_8259_4_to_apic = X86IntelMPIOIntAssignment(
@@ -267,7 +267,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 4,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 0)
     self.intel_mp_table.add_entry(assign_8259_4_to_apic)
     assign_4_to_apic = X86IntelMPIOIntAssignment(
@@ -276,7 +276,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 4,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 4)
     self.intel_mp_table.add_entry(assign_4_to_apic)
     assign_8259_12_to_apic = X86IntelMPIOIntAssignment(
@@ -285,7 +285,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 12,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 0)
     self.intel_mp_table.add_entry(assign_8259_12_to_apic)
     assign_12_to_apic = X86IntelMPIOIntAssignment(
@@ -294,7 +294,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 12,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 12)
     self.intel_mp_table.add_entry(assign_12_to_apic)
     assign_8259_14_to_apic = X86IntelMPIOIntAssignment(
@@ -303,7 +303,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 14,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 0)
     self.intel_mp_table.add_entry(assign_8259_14_to_apic)
     assign_14_to_apic = X86IntelMPIOIntAssignment(
@@ -312,7 +312,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             trigger = 'ConformTrigger',
             source_bus_id = 0,
             source_bus_irq = 14,
-            dest_io_apic_id = 1,
+            dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 14)
     self.intel_mp_table.add_entry(assign_14_to_apic)
 
