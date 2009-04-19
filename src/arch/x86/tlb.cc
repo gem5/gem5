@@ -571,7 +571,10 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
         if (!efer.lma || !csAttr.longMode) {
             DPRINTF(TLB, "Not in long mode. Checking segment protection.\n");
             // Check for a NULL segment selector.
-            if (!tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
+            if (!(seg == SEGMENT_REG_TSG || seg == SYS_SEGMENT_REG_IDTR ||
+                        seg == SEGMENT_REG_HS || seg == SEGMENT_REG_LS ||
+                        seg == SEGMENT_REG_MS)
+                    && !tc->readMiscRegNoEffect(MISCREG_SEG_SEL(seg)))
                 return new GeneralProtection(0);
             bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
