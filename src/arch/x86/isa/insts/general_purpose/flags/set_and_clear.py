@@ -56,14 +56,14 @@
 microcode = '''
 def macroop CLD {
     ruflags t1
-    limm t2, "~((uint64_t)DFBit)"
+    limm t2, "~((uint64_t)DFBit)", dataSize=8
     and t1, t1, t2
     wruflags t1, t0
 };
 
 def macroop STD {
     ruflags t1
-    limm t2, "DFBit"
+    limm t2, "DFBit", dataSize=8
     or t1, t1, t2
     wruflags t1, t0
 };
@@ -87,14 +87,14 @@ def macroop CMC {
 
 def macroop STI {
     rflags t1
-    limm t2, "IFBit"
+    limm t2, "IFBit", dataSize=8
     or t1, t1, t2
     wrflags t1, t0
 };
 
 def macroop CLI {
     rflags t1
-    limm t2, "~IFBit"
+    limm t2, "~IFBit", dataSize=8
     and t1, t1, t2
     wrflags t1, t0
 };

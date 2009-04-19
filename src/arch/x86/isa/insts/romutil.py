@@ -164,8 +164,8 @@ def rom
     # The type field of the original gate starts at bit 40.
 
     # Set the TF, NT, and RF bits. We'll flip them at the end.
-    limm t6, (1 << 8) | (1 << 14) | (1 << 16)
-    or t10, t10, t6
+    limm t6, (1 << 8) | (1 << 14) | (1 << 16), dataSize=8
+    or t10, t10, t6, dataSize=8
     srli t5, t4, 40, dataSize=8
     srli t7, t10, 9, dataSize=8
     xor t5, t7, t5, dataSize=8

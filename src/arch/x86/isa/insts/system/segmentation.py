@@ -171,7 +171,7 @@ def macroop LIDT_16_P
 def macroop LTR_R
 {
     chks reg, t0, TRCheck
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, reg, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
@@ -187,7 +187,7 @@ def macroop LTR_M
 {
     ld t5, seg, sib, disp, dataSize=2
     chks t5, t0, TRCheck
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, t5, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
@@ -204,7 +204,7 @@ def macroop LTR_P
     rdip t7
     ld t5, seg, riprel, disp, dataSize=2
     chks t5, t0, TRCheck
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, t5, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
@@ -220,7 +220,7 @@ def macroop LLDT_R
 {
     chks reg, t0, InGDTCheck, flags=(EZF,)
     br label("end"), flags=(CEZF,)
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, reg, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
@@ -237,7 +237,7 @@ def macroop LLDT_M
     ld t5, seg, sib, disp, dataSize=2
     chks t5, t0, InGDTCheck, flags=(EZF,)
     br label("end"), flags=(CEZF,)
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, t5, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8
@@ -255,7 +255,7 @@ def macroop LLDT_P
     ld t5, seg, riprel, disp, dataSize=2
     chks t5, t0, InGDTCheck, flags=(EZF,)
     br label("end"), flags=(CEZF,)
-    limm t4, 0
+    limm t4, 0, dataSize=8
     srli t4, t5, 3, dataSize=2
     ldst t1, tsg, [8, t4, t0], dataSize=8
     ld t2, tsg, [8, t4, t0], 8, dataSize=8

@@ -57,14 +57,14 @@ microcode = '''
 def macroop SYSCALL_64
 {
     # All 1s.
-    limm t1, "(uint64_t)(-1)"
+    limm t1, "(uint64_t)(-1)", dataSize=8
 
     # Save the next RIP.
     rdip rcx
     
     # Stick rflags with RF masked into r11.
     rflags t2
-    limm t3, "~RFBit"
+    limm t3, "~RFBit", dataSize=8
     andi r11, t2, t3, dataSize=8
 
     rdval t3, star
@@ -78,7 +78,7 @@ def macroop SYSCALL_64
     # Not writable, read/execute-able, not expandDown,
     # dpl=0, defaultSize=0, long mode
     limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (1 << 6))
+              (0 << 3) | (0 << 5) | (1 << 6)), dataSize=8
     wrattr cs, t4
 
     # Set up SS.
@@ -89,7 +89,7 @@ def macroop SYSCALL_64
     # Writable, readable, not expandDown,
     # dpl=0, defaultSize=0, not long mode
     limm t4, ((1 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (0 << 6))
+              (0 << 3) | (0 << 5) | (0 << 6)), dataSize=8
     wrattr ss, t4
 
     # Set the new rip.
@@ -106,14 +106,14 @@ def macroop SYSCALL_64
 def macroop SYSCALL_COMPAT
 {
     # All 1s.
-    limm t1, "(uint64_t)(-1)"
+    limm t1, "(uint64_t)(-1)", dataSize=8
 
     # Save the next RIP.
     rdip rcx
     
     # Stick rflags with RF masked into r11.
     rflags t2
-    limm t3, "~RFBit"
+    limm t3, "~RFBit", dataSize=8
     andi r11, t2, t3, dataSize=8
 
     rdval t3, star
@@ -127,7 +127,7 @@ def macroop SYSCALL_COMPAT
     # Not writable, read/execute-able, not expandDown,
     # dpl=0, defaultSize=0, long mode
     limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (1 << 6))
+              (0 << 3) | (0 << 5) | (1 << 6)), dataSize=8
     wrattr cs, t4
 
     # Set up SS.
@@ -138,7 +138,7 @@ def macroop SYSCALL_COMPAT
     # Writable, readable, not expandDown,
     # dpl=0, defaultSize=0, not long mode
     limm t4, ((1 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (0 << 6))
+              (0 << 3) | (0 << 5) | (0 << 6)), dataSize=8
     wrattr ss, t4
 
     # Set the new rip.
@@ -160,14 +160,14 @@ def macroop SYSCALL_LEGACY
 def macroop SYSRET_TO_64
 {
     # All 1s.
-    limm t1, "(uint64_t)(-1)"
+    limm t1, "(uint64_t)(-1)", dataSize=8
 
     rdval t3, star
     srli t3, t3, 48, dataSize=8
     ori t3, t3, 3, dataSize=1
 
     # Set rflags to r11 with RF and VM cleared.
-    limm t4, "~(RFBit | VMBit)"
+    limm t4, "~(RFBit | VMBit)", dataSize=8
     and t4, t4, r11, dataSize=8
     wrflags t4, t0
 
@@ -179,7 +179,7 @@ def macroop SYSRET_TO_64
     # Not writable, read/execute-able, not expandDown,
     # dpl=3, defaultSize=0, long mode
     limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (3 << 3) | (0 << 5) | (1 << 6))
+              (3 << 3) | (0 << 5) | (1 << 6)), dataSize=8
     wrattr cs, t4
 
     # Only the selector is changed for SS.
@@ -193,14 +193,14 @@ def macroop SYSRET_TO_64
 def macroop SYSRET_TO_COMPAT
 {
     # All 1s.
-    limm t1, "(uint64_t)(-1)"
+    limm t1, "(uint64_t)(-1)", dataSize=8
 
     rdval t3, star
     srli t3, t3, 48, dataSize=8
     ori t3, t3, 3, dataSize=1
 
     # Set rflags to r11 with RF and VM cleared.
-    limm t4, "~(RFBit | VMBit)"
+    limm t4, "~(RFBit | VMBit)", dataSize=8
     and t4, t4, r11, dataSize=8
     wrflags t4, t0
 
@@ -211,7 +211,7 @@ def macroop SYSRET_TO_COMPAT
     # Not writable, read/execute-able, not expandDown,
     # dpl=3, defaultSize=1, not long mode
     limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (3 << 3) | (1 << 5) | (0 << 6))
+              (3 << 3) | (1 << 5) | (0 << 6)), dataSize=8
     wrattr cs, t4
 
     # Only the selector is changed for SS.
