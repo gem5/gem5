@@ -425,4 +425,19 @@ def macroop NEG_P
     sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
     st t1, seg, riprel, disp
 };
+
+def macroop NEG_LOCKED_M
+{
+    ldstl t1, seg, sib, disp
+    sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
+    stul t1, seg, sib, disp
+};
+
+def macroop NEG_LOCKED_P
+{
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    sub t1, t0, t1, flags=(CF,OF,SF,ZF,AF,PF)
+    stul t1, seg, riprel, disp
+};
 '''
