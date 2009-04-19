@@ -89,7 +89,7 @@ namespace X86ISA {
               case VendorAndLargestExtFunc:
                 assert(vendorStringSize >= 12);
                 result = CpuidResult(
-                        NumExtendedCpuidFuncs - 1,
+                        0x80000000 + NumExtendedCpuidFuncs - 1,
                         stringToRegister(vendorString),
                         stringToRegister(vendorString + 4),
                         stringToRegister(vendorString + 8));
@@ -149,7 +149,7 @@ namespace X86ISA {
                 break;
               case FamilyModelStepping:
                 result = CpuidResult(0x00020f51, 0000000405,
-                                     0xe3d3fbff, 0x00000001);
+                                     0xe7d3fbff, 0x00000001);
                 break;
               default:
                 return false;
