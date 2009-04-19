@@ -107,6 +107,13 @@ Pc::init()
     entry.vector = 0x30;
     ioApic.writeReg(0x30, entry.bottomDW);
     ioApic.writeReg(0x31, entry.topDW);
+
+    /*
+     * Mask the PICs. I'm presuming the BIOS/bootloader would have cleared
+     * these out and masked them before passing control to the OS.
+     */
+    southBridge->pic1->maskAll();
+    southBridge->pic2->maskAll();
 }
 
 Tick

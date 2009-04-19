@@ -39,8 +39,6 @@
 namespace X86ISA
 {
 
-class I82094AA;
-
 class I8259 : public BasicPioDevice, public IntDev
 {
   protected:
@@ -93,6 +91,18 @@ class I8259 : public BasicPioDevice, public IntDev
 
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
+
+    void
+    maskAll()
+    {
+        IMR = 0xFF;
+    }
+
+    void
+    unmaskAll()
+    {
+        IMR = 0x00;
+    }
 
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);
