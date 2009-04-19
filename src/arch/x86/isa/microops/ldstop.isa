@@ -484,7 +484,9 @@ let {{
 
     iop = InstObjParams("lea", "Lea", 'X86ISA::LdStOp',
             {"code": "Data = merge(Data, EA, dataSize);",
-             "ea_code": calculateEA})
+             "ea_code": '''
+             EA = bits(scale * Index + Base + disp, addressSize * 8 - 1, 0);
+             '''})
     header_output += MicroLeaDeclare.subst(iop)
     decoder_output += MicroLdStOpConstructor.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
