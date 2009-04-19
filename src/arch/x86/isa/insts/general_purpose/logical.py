@@ -340,4 +340,21 @@ def macroop NOT_P
     xor t2, t2, t1
     st t2, seg, riprel, disp
 };
+
+def macroop NOT_LOCKED_M
+{
+    limm t1, -1
+    ldstl t2, seg, sib, disp
+    xor t2, t2, t1
+    stul t2, seg, sib, disp
+};
+
+def macroop NOT_LOCKED_P
+{
+    limm t1, -1
+    rdip t7
+    ldstl t2, seg, riprel, disp
+    xor t2, t2, t1
+    stul t2, seg, riprel, disp
+};
 '''
