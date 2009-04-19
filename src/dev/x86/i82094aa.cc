@@ -162,54 +162,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         message.destMode = entry.destMode;
         message.level = entry.polarity;
         message.trigger = entry.trigger;
-
-        if (DeliveryMode::isReserved(entry.deliveryMode)) {
-            fatal("Tried to use reserved delivery mode "
-                    "for IO APIC entry %d.\n", line);
-        } else if (DTRACE(I82094AA)) {
-            DPRINTF(I82094AA, "Delivery mode is: %s.\n",
-                    DeliveryMode::names[entry.deliveryMode]);
-            DPRINTF(I82094AA, "Vector is %#x.\n", message.vector);
-        }
-
-        if (entry.destMode == 0) {
-            DPRINTF(I82094AA,
-                    "Sending interrupt to APIC ID %d.\n", entry.dest);
-            PacketPtr pkt = buildIntRequest(entry.dest, message);
-            if (sys->getMemoryMode() == Enums::timing)
-                intPort->sendMessageTiming(pkt, latency);
-            else if (sys->getMemoryMode() == Enums::atomic)
-                intPort->sendMessageAtomic(pkt);
-            else
-                panic("Unrecognized memory mode.\n");
-        } else {
-            DPRINTF(I82094AA, "Sending interrupts to APIC IDs:"
-                    "%s%s%s%s%s%s%s%s\n",
-                    bits((int)entry.dest, 0) ? " 0": "",
-                    bits((int)entry.dest, 1) ? " 1": "",
-                    bits((int)entry.dest, 2) ? " 2": "",
-                    bits((int)entry.dest, 3) ? " 3": "",
-                    bits((int)entry.dest, 4) ? " 4": "",
-                    bits((int)entry.dest, 5) ? " 5": "",
-                    bits((int)entry.dest, 6) ? " 6": "",
-                    bits((int)entry.dest, 7) ? " 7": ""
-                    );
-            uint8_t dests = entry.dest;
-            uint8_t id = 0;
-            while(dests) {
-                if (dests & 0x1) {
-                    PacketPtr pkt = buildIntRequest(id, message);
-                    if (sys->getMemoryMode() == Enums::timing)
-                        intPort->sendMessageTiming(pkt, latency);
-                    else if (sys->getMemoryMode() == Enums::atomic)
-                        intPort->sendMessageAtomic(pkt);
-                    else
-                        panic("Unrecognized memory mode.\n");
-                }
-                dests >>= 1;
-                id++;
-            }
-        }
+        intPort->sendMessage(message, sys->getMemoryMode() == Enums::timing);
     }
 }
 

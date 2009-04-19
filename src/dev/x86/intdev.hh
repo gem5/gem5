@@ -35,6 +35,7 @@
 #include <string>
 
 #include "arch/x86/x86_traits.hh"
+#include "arch/x86/intmessage.hh"
 #include "mem/mem_object.hh"
 #include "mem/mport.hh"
 #include "sim/sim_object.hh"
@@ -69,6 +70,10 @@ class IntDev
         {
             return device->recvMessage(pkt);
         }
+
+        // This is x86 focused, so if this class becomes generic, this would
+        // need to be moved into a subclass.
+        void sendMessage(TriggerIntMessage message, bool timing);
 
         void recvStatusChange(Status status)
         {
