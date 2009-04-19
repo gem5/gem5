@@ -282,6 +282,26 @@ namespace X86ISA
         tc->setNextMicroPC(romMicroPC(entry) + 1);
     }
 
+    void
+    StartupInterrupt::invoke(ThreadContext *tc)
+    {
+        DPRINTF(Faults, "Startup interrupt with vector %#x.\n", vector);
+        HandyM5Reg m5Reg = tc->readMiscReg(MISCREG_M5_REG);
+        if (m5Reg.mode != LegacyMode || m5Reg.submode != RealMode) {
+            panic("Startup IPI recived outside of real mode. "
+                    "Don't know what to do.");
+        }
+
+        tc->setMiscReg(MISCREG_CS, vector << 8);
+        tc->setMiscReg(MISCREG_CS_BASE, vector << 12);
+        tc->setMiscReg(MISCREG_CS_EFF_BASE, vector << 12);
+        // This has the base value pre-added.
+        tc->setMiscReg(MISCREG_CS_LIMIT, 0xffff);
+
+        tc->setPC(tc->readMiscReg(MISCREG_CS_BASE));
+        tc->setNextPC(tc->readPC() + sizeof(MachInst));
+    }
+
 #endif
 } // namespace X86ISA
 

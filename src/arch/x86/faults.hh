@@ -418,6 +418,16 @@ namespace X86ISA
         void invoke(ThreadContext * tc);
     };
 
+    class StartupInterrupt : public X86Interrupt
+    {
+      public:
+        StartupInterrupt(uint8_t _vector) :
+            X86Interrupt("Startup Interrupt", "#SIPI", _vector)
+        {}
+
+        void invoke(ThreadContext * tc);
+    };
+
     class SoftwareInterrupt : public X86Interrupt
     {
       public:
