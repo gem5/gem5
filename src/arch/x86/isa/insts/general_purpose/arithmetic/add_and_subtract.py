@@ -183,6 +183,23 @@ def macroop SUB_P_I
     st t1, seg, riprel, disp
 };
 
+def macroop SUB_LOCKED_M_I
+{
+    limm t2, imm
+    ldstl t1, seg, sib, disp
+    sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t1, seg, sib, disp
+};
+
+def macroop SUB_LOCKED_P_I
+{
+    rdip t7
+    limm t2, imm
+    ldstl t1, seg, riprel, disp
+    sub t1, t1, t2, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t1, seg, riprel, disp
+};
+
 def macroop SUB_M_R
 {
     ldst t1, seg, sib, disp
@@ -196,6 +213,21 @@ def macroop SUB_P_R
     ldst t1, seg, riprel, disp
     sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
     st t1, seg, riprel, disp
+};
+
+def macroop SUB_LOCKED_M_R
+{
+    ldstl t1, seg, sib, disp
+    sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t1, seg, sib, disp
+};
+
+def macroop SUB_LOCKED_P_R
+{
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    sub t1, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t1, seg, riprel, disp
 };
 
 def macroop ADC_R_R
