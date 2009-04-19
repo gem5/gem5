@@ -113,6 +113,21 @@ def macroop XADD_P_R {
     mov reg, reg, t1
 };
 
+def macroop XADD_LOCKED_M_R {
+    ldstl t1, seg, sib, disp
+    add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t2, seg, sib, disp
+    mov reg, reg, t1
+};
+
+def macroop XADD_LOCKED_P_R {
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
+    stul t2, seg, riprel, disp
+    mov reg, reg, t1
+};
+
 def macroop XADD_R_R {
     add t2, regm, reg, flags=(OF,SF,ZF,AF,PF,CF)
     mov regm, regm, reg
