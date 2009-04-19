@@ -197,9 +197,6 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
 
     int seg = flags & SegmentFlagMask;
 
-    //XXX Junk code to surpress the warning
-    if (storeCheck);
-
     // If this is true, we're dealing with a request to read an internal
     // value.
     if (seg == SEGMENT_REG_MS) {
@@ -579,7 +576,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
             bool expandDown = false;
             SegAttr attr = tc->readMiscRegNoEffect(MISCREG_SEG_ATTR(seg));
             if (seg >= SEGMENT_REG_ES && seg <= SEGMENT_REG_HS) {
-                if (!attr.writable && mode == Write)
+                if (!attr.writable && (mode == Write || storeCheck))
                     return new GeneralProtection(0);
                 if (!attr.readable && mode == Read)
                     return new GeneralProtection(0);
@@ -654,6 +651,11 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 // the first place. We'll assume the reserved bits are
                 // fine even though we're not checking them.
                 return new PageFault(vaddr, true, mode, inUser, false);
+            }
+            if (storeCheck && !entry->writable) {
+                // This would fault if this were a write, so return a page
+                // fault that reflects that happening.
+                return new PageFault(vaddr, true, Write, inUser, false);
             }
 
 
