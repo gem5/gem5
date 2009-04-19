@@ -79,7 +79,32 @@ void EmulEnv::doModRM(const ExtMachInst & machInst)
             index = NUM_INTREGS;
     } else {
         if (machInst.addrSize == 2) {
-            warn("I'm not really using 16 bit MODRM like I'm supposed to!\n");
+            unsigned rm = machInst.modRM.rm;
+            if (rm <= 3) {
+                scale = 1;
+                if (rm < 2) {
+                    base = INTREG_RBX;
+                } else {
+                    base = INTREG_RBP;
+                }
+                index = (rm % 2) ? INTREG_RDI : INTREG_RSI;
+            } else {
+                scale = 0;
+                switch (rm) {
+                  case 4:
+                    base = INTREG_RSI;
+                    break;
+                  case 5:
+                    base = INTREG_RDI;
+                    break;
+                  case 6:
+                    base = INTREG_RBP;
+                    break;
+                  case 7:
+                    base = INTREG_RBX;
+                    break;
+                }
+            }
         } else {
             scale = 0;
             base = machInst.modRM.rm | (machInst.rex.b << 3);
