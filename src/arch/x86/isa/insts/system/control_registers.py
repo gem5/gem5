@@ -32,4 +32,40 @@ def macroop CLTS {
     andi t1, t1, 0xF7, dataSize=1
     wrcr 0, t1, dataSize=8
 };
+
+def macroop LMSW_R {
+    rdcr t1, 0, dataSize=8
+    # This logic sets MP, EM, and TS to whatever is in the operand. It will
+    # set PE but not clear it.
+    limm t2, "~ULL(0xe)", dataSize=8
+    and t1, t1, t2, dataSize=8
+    andi t2, reg, 0xf, dataSize=8
+    or t1, t1, t2, dataSize=8
+    wrcr 0, t1, dataSize=8
+};
+
+def macroop LMSW_M {
+    ld t3, seg, sib, disp, dataSize=2
+    rdcr t1, 0, dataSize=8
+    # This logic sets MP, EM, and TS to whatever is in the operand. It will
+    # set PE but not clear it.
+    limm t2, "~ULL(0xe)", dataSize=8
+    and t1, t1, t2, dataSize=8
+    andi t2, t3, 0xf, dataSize=8
+    or t1, t1, t2, dataSize=8
+    wrcr 0, t1, dataSize=8
+};
+
+def macroop LMSW_P {
+    rdip t7, dataSize=asz
+    ld t3, seg, riprel, disp, dataSize=2
+    rdcr t1, 0, dataSize=8
+    # This logic sets MP, EM, and TS to whatever is in the operand. It will
+    # set PE but not clear it.
+    limm t2, "~ULL(0xe)", dataSize=8
+    and t1, t1, t2, dataSize=8
+    andi t2, t3, 0xf, dataSize=8
+    or t1, t1, t2, dataSize=8
+    wrcr 0, t1, dataSize=8
+};
 '''
