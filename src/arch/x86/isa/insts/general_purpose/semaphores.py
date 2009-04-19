@@ -79,6 +79,25 @@ def macroop CMPXCHG_P_R {
     mov rax, rax, t1, flags=(nCZF,)
 };
 
+def macroop CMPXCHG_LOCKED_M_R {
+    ldstl t1, seg, sib, disp
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
+
+    mov t1, t1, reg, flags=(CZF,)
+    stul t1, seg, sib, disp
+    mov rax, rax, t1, flags=(nCZF,)
+};
+
+def macroop CMPXCHG_LOCKED_P_R {
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
+
+    mov t1, t1, reg, flags=(CZF,)
+    stul t1, seg, riprel, disp
+    mov rax, rax, t1, flags=(nCZF,)
+};
+
 def macroop XADD_M_R {
     ldst t1, seg, sib, disp
     add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
