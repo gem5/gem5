@@ -225,6 +225,7 @@ def makeX86System(mem_mode, mdesc = None, self = None):
             source_bus_irq = 0 + (4 << 2),
             dest_io_apic_id = io_apic.id,
             dest_io_apic_intin = 16)
+    self.intel_mp_table.add_entry(pci_dev4_inta);
     assign_8259_0_to_apic = X86IntelMPIOIntAssignment(
             interrupt_type = 'ExtInt',
             polarity = 'ConformPolarity',
