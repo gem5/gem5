@@ -43,8 +43,6 @@ namespace SparcISA {
 class SparcLinuxProcess
 {
   public:
-    SparcLinuxProcess();
-
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 
@@ -55,8 +53,8 @@ class SparcLinuxProcess
     SyscallDesc* getDesc(int callnum);
     SyscallDesc* getDesc32(int callnum);
 
-    const int Num_Syscall_Descs;
-    const int Num_Syscall32_Descs;
+    static const int Num_Syscall_Descs;
+    static const int Num_Syscall32_Descs;
 };
 
 /// A process with emulated SPARC/Linux syscalls.

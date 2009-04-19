@@ -69,6 +69,7 @@ class X86_64LinuxProcess : public X86_64LiveProcess
   protected:
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
+    static const int numSyscalls;
 
   public:
     /// Constructor.
@@ -80,6 +81,7 @@ class I386LinuxProcess : public I386LiveProcess
   protected:
      /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
+    static const int numSyscalls;
 
   public:
     /// Constructor.

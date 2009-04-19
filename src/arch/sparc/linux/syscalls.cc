@@ -390,6 +390,9 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 299 */ SyscallDesc("unshare", unimplementedFunc)
 };
 
+const int SparcLinuxProcess::Num_Syscall32_Descs =
+    sizeof(SparcLinuxProcess::syscall32Descs) / sizeof(SyscallDesc);
+
 SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
@@ -676,5 +679,8 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 282 */ SyscallDesc("request_key", unimplementedFunc),
     /* 283 */ SyscallDesc("keyctl", unimplementedFunc)
 };
+
+const int SparcLinuxProcess::Num_Syscall_Descs =
+    sizeof(SparcLinuxProcess::syscallDescs) / sizeof(SyscallDesc);
 
 } // namespace SparcISA

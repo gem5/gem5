@@ -60,18 +60,6 @@ SparcLinuxProcess::getDesc32(int callnum)
     return &syscall32Descs[callnum];
 }
 
-SparcLinuxProcess::SparcLinuxProcess() :
-    Num_Syscall_Descs(284), //sizeof(syscallDescs) / sizeof(SyscallDesc)),
-    Num_Syscall32_Descs(299) //sizeof(syscall32Descs) / sizeof(SyscallDesc))
-{
-    // The sparc syscall table must be <= 284 entries because that is all there
-    // is space for.
-    assert(Num_Syscall_Descs <= 284);
-    // The sparc 32 bit syscall table bust be <= 299 entries because that is
-    // all there is space for.
-    assert(Num_Syscall_Descs <= 299);
-}
-
 Sparc32LinuxProcess::Sparc32LinuxProcess(LiveProcessParams * params,
                                          ObjectFile *objFile)
     : Sparc32LiveProcess(params, objFile)

@@ -503,6 +503,9 @@ SyscallDesc X86_64LinuxProcess::syscallDescs[] = {
     /* 272 */ SyscallDesc("unshare", unimplementedFunc)
 };
 
+const int X86_64LinuxProcess::numSyscalls = 
+    sizeof(X86_64LinuxProcess::syscallDescs) / sizeof(SyscallDesc);
+
 SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /*   0 */ SyscallDesc("restart_syscall", unimplementedFunc),
     /*   1 */ SyscallDesc("exit", unimplementedFunc),
@@ -829,3 +832,6 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 322 */ SyscallDesc("timerfd", unimplementedFunc),
     /* 323 */ SyscallDesc("eventfd", unimplementedFunc)
 };
+
+const int I386LinuxProcess::numSyscalls = 
+    sizeof(I386LinuxProcess::syscallDescs) / sizeof(SyscallDesc);

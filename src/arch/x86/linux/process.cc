@@ -70,10 +70,10 @@ using namespace X86ISA;
 
 X86_64LinuxProcess::X86_64LinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
-    : X86_64LiveProcess(params, objFile, syscallDescs, 273)
+    : X86_64LiveProcess(params, objFile, syscallDescs, numSyscalls)
 {}
 
 I386LinuxProcess::I386LinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
-    : I386LiveProcess(params, objFile, syscallDescs, 324)
+    : I386LiveProcess(params, objFile, syscallDescs, numSyscalls)
 {}
