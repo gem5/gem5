@@ -95,4 +95,19 @@ def macroop XCHG_P_R
     st reg, seg, riprel, disp
     mov reg, reg, t1
 };
+
+def macroop XCHG_LOCKED_M_R
+{
+    ldstl t1, seg, sib, disp
+    stul reg, seg, sib, disp
+    mov reg, reg, t1
+};
+
+def macroop XCHG_LOCKED_P_R
+{
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    stul reg, seg, riprel, disp
+    mov reg, reg, t1
+};
 '''
