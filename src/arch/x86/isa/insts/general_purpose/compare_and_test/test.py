@@ -57,26 +57,26 @@ microcode = '''
 def macroop TEST_M_R
 {
     ld t1, seg, sib, disp
-    and t0, t1, reg, flags=(SF, ZF, PF)
+    and t0, t1, reg, flags=(OF, SF, ZF, PF, CF)
 };
 
 def macroop TEST_P_R
 {
     rdip t7
     ld t1, seg, riprel, disp
-    and t0, t1, reg, flags=(SF, ZF, PF)
+    and t0, t1, reg, flags=(OF, SF, ZF, PF, CF)
 };
 
 def macroop TEST_R_R
 {
-    and t0, reg, regm, flags=(SF, ZF, PF)
+    and t0, reg, regm, flags=(OF, SF, ZF, PF, CF)
 };
 
 def macroop TEST_M_I
 {
     ld t1, seg, sib, disp
     limm t2, imm
-    and t0, t1, t2, flags=(SF, ZF, PF)
+    and t0, t1, t2, flags=(OF, SF, ZF, PF, CF)
 };
 
 def macroop TEST_P_I
@@ -84,12 +84,12 @@ def macroop TEST_P_I
     rdip t7
     ld t1, seg, riprel, disp
     limm t2, imm
-    and t0, t1, t2, flags=(SF, ZF, PF)
+    and t0, t1, t2, flags=(OF, SF, ZF, PF, CF)
 };
 
 def macroop TEST_R_I
 {
     limm t1, imm
-    and t0, reg, t1, flags=(SF, ZF, PF)
+    and t0, reg, t1, flags=(OF, SF, ZF, PF, CF)
 };
 '''
