@@ -478,6 +478,8 @@ let {{
         microopClasses[name] = StoreOp
 
     defineMicroStoreOp('St', 'Mem = pick(Data, 2, dataSize);')
+    defineMicroStoreOp('Stul', 'Mem = pick(Data, 2, dataSize);',
+            mem_flags="Request::LOCKED")
     defineMicroStoreOp('Stfp', 'Mem = FpData.uqw;')
     defineMicroStoreOp('Stupd', 'Mem = pick(Data, 2, dataSize);',
             'Base = merge(Base, EA - SegBase, addressSize);',
