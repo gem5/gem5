@@ -131,6 +131,7 @@ class Interrupts : public BasicPioDevice, IntDev
     uint8_t initVector;
     bool pendingStartup;
     uint8_t startupVector;
+    bool startedUp;
 
     // This is a quick check whether any of the above (except ExtInt) are set.
     bool pendingUnmaskableInt;

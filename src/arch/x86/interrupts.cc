@@ -282,7 +282,8 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
         } else if (deliveryMode == DeliveryMode::INIT && !pendingInit) {
             pendingUnmaskableInt = pendingInit = true;
             initVector = vector;
-        } else if (deliveryMode == DeliveryMode::SIPI && !pendingStartup) {
+        } else if (deliveryMode == DeliveryMode::SIPI &&
+                !pendingStartup && !startedUp) {
             pendingUnmaskableInt = pendingStartup = true;
             startupVector = vector;
         }
@@ -562,7 +563,7 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingExtInt(false), extIntVector(0),
     pendingInit(false), initVector(0),
     pendingStartup(false), startupVector(0),
-    pendingUnmaskableInt(false)
+    startedUp(false), pendingUnmaskableInt(false)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));
@@ -643,9 +644,11 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
         } else if (pendingInit) {
             DPRINTF(LocalApic, "Init sent to core.\n");
             pendingInit = false;
+            startedUp = false;
         } else if (pendingStartup) {
             DPRINTF(LocalApic, "SIPI sent to core.\n");
             pendingStartup = false;
+            startedUp = true;
         }
         if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup))
             pendingUnmaskableInt = false;
