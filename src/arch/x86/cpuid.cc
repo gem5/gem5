@@ -63,7 +63,7 @@ namespace X86ISA {
     };
 
     static const int vendorStringSize = 13;
-    static const char vendorString[vendorStringSize] = "AuthenticAMD";
+    static const char vendorString[vendorStringSize] = "M5 Simulator";
     static const int nameStringSize = 48;
     static const char nameString[nameStringSize] = "Fake M5 x86_64 CPU";
 
