@@ -253,6 +253,7 @@ let {{
     microopClasses["fault"] = Fault
 
     class Halt(X86Microop):
+        className = "MicroHalt"
         def __init__(self):
             pass
 
