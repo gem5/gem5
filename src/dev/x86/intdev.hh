@@ -71,6 +71,11 @@ class IntDev
             return device->recvMessage(pkt);
         }
 
+        Tick recvResponse(PacketPtr pkt)
+        {
+            return device->recvResponse(pkt);
+        }
+
         // This is x86 focused, so if this class becomes generic, this would
         // need to be moved into a subclass.
         void sendMessage(TriggerIntMessage message, bool timing);
@@ -122,6 +127,14 @@ class IntDev
     recvMessage(PacketPtr pkt)
     {
         panic("recvMessage not implemented.\n");
+        return 0;
+    }
+
+    virtual Tick
+    recvResponse(PacketPtr pkt)
+    {
+        delete pkt->req;
+        delete pkt;
         return 0;
     }
 

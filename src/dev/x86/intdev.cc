@@ -45,10 +45,11 @@ X86ISA::IntDev::IntPort::sendMessage(TriggerIntMessage message, bool timing)
         DPRINTF(IntDev,
                 "Sending interrupt to APIC ID %d.\n", message.destination);
         PacketPtr pkt = buildIntRequest(message.destination, message);
-        if (timing)
+        if (timing) {
             sendMessageTiming(pkt, latency);
-        else
+        } else {
             sendMessageAtomic(pkt);
+        }
     } else {
         DPRINTF(IntDev, "Sending interrupts to APIC IDs:"
                 "%s%s%s%s%s%s%s%s\n",

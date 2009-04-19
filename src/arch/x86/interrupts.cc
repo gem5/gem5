@@ -327,8 +327,7 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
                 offset);
         break;
     }
-    delete pkt->req;
-    delete pkt;
+    pkt->makeAtomicResponse();
     return latency;
 }
 

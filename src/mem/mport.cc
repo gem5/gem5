@@ -56,5 +56,8 @@ MessagePort::sendMessageTiming(PacketPtr pkt, Tick latency)
 Tick
 MessagePort::sendMessageAtomic(PacketPtr pkt)
 {
-    return sendAtomic(pkt);
+    Tick latency = sendAtomic(pkt);
+    assert(pkt->isResponse());
+    latency += recvResponse(pkt);
+    return latency;
 }

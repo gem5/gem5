@@ -213,6 +213,7 @@ class Interrupts : public BasicPioDevice, IntDev
     Tick read(PacketPtr pkt);
     Tick write(PacketPtr pkt);
     Tick recvMessage(PacketPtr pkt);
+    Tick recvResponse(PacketPtr pkt);
 
     bool
     triggerTimerInterrupt()
