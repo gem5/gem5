@@ -1102,7 +1102,12 @@ let {{
               case SegNoCheck:
                 break;
               case SegCSCheck:
-                panic("CS checks for far calls/jumps not implemented.\\n");
+                // Make sure it's the right type
+                if (desc.s == 0 || desc.type.codeOrData != 1) {
+                    fault = new GeneralProtection(0);
+                } else if (m5reg.cpl != desc.dpl) {
+                    fault = new GeneralProtection(0);
+                }
                 break;
               case SegCallGateCheck:
                 panic("CS checks for far calls/jumps through call gates"

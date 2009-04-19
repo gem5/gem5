@@ -90,4 +90,103 @@ def macroop JMP_P
     ld t1, seg, riprel, disp
     wripi t1, 0
 };
+
+def macroop JMP_FAR_M
+{
+    limm t1, 0, dataSize=8
+    limm t2, 0, dataSize=8
+    lea t1, seg, sib, disp, dataSize=asz
+    ld t2, seg, [1, t0, t1], dsz
+    ld t1, seg, [1, t0, t1]
+    br rom_label("jmpFarWork")
+};
+
+def macroop JMP_FAR_P
+{
+    limm t1, 0, dataSize=8
+    limm t2, 0, dataSize=8
+    rdip t7, dataSize=asz
+    lea t1, seg, riprel, disp, dataSize=asz
+    ld t2, seg, [1, t0, t1], dsz
+    ld t1, seg, [1, t0, t1]
+    br rom_label("jmpFarWork")
+};
+
+def macroop JMP_FAR_I
+{
+    # Put the whole far pointer into a register.
+    limm t2, imm, dataSize=8
+    # Figure out the width of the offset.
+    limm t3, dsz, dataSize=8
+    sll t3, t3, 3, dataSize=8
+    # Get the selector into t1.
+    sll t1, t2, t3, dataSize=8
+    mov t1, t0, t1, dataSize=2
+    # And get the offset into t2
+    mov t2, t0, t2
+    br rom_label("jmpFarWork")
+};
+
+def rom
+{
+    extern jmpFarWork:
+    # t1 has the offset and t2 has the new selector.
+    # This is intended to run in protected mode.
+    andi t0, t2, 0xFC, flags=(EZF,), dataSize=2
+    fault "new GeneralProtection(0)", flags=(CEZF,)
+    andi t3, t2, 0xF8, dataSize=8
+    andi t0, t2, 0x4, flags=(EZF,), dataSize=2
+    br rom_local_label("farJmpGlobalDescriptor"), flags=(CEZF,)
+    ld t4, tsl, [1, t0, t3], dataSize=8, addressSize=8, atCPL0=True
+    br rom_local_label("farJmpProcessDescriptor")
+farJmpGlobalDescriptor:
+    ld t4, tsg, [1, t0, t3], dataSize=8, addressSize=8, atCPL0=True
+farJmpProcessDescriptor:
+    rcri t0, t4, 13, flags=(ECF,), dataSize=2
+    br rom_local_label("farJmpSystemDescriptor"), flags=(nCECF,)
+    chks t2, t4, CSCheck, dataSize=8
+    wrdl cs, t4, t2
+    wrsel cs, t2
+    wrip t0, t1
+    eret
+
+farJmpSystemDescriptor:
+    panic "Far jumps to system descriptors aren't implemented"
+    eret
+};
+
+def macroop JMP_FAR_REAL_M
+{
+    lea t1, seg, sib, disp, dataSize=asz
+    ld t2, seg, [1, t0, t1], dsz
+    ld t1, seg, [1, t0, t1]
+    zexti t3, t1, 15, dataSize=8
+    slli t3, t3, 4, dataSize=8
+    wrsel cs, t1, dataSize=2
+    wrbase cs, t3
+    wrip t0, t2, dataSize=asz
+};
+
+def macroop JMP_FAR_REAL_P
+{
+    panic "Real mode far jump executed in 64 bit mode!"
+};
+
+def macroop JMP_FAR_REAL_I
+{
+    # Put the whole far pointer into a register.
+    limm t2, imm, dataSize=8
+    # Figure out the width of the offset.
+    limm t3, dsz, dataSize=8
+    sll t3, t3, 3, dataSize=8
+    # Get the selector into t1.
+    sll t1, t2, t3, dataSize=8
+    mov t1, t0, t1, dataSize=2
+    # And get the offset into t2
+    mov t2, t0, t2
+    slli t3, t3, 4, dataSize=8
+    wrsel cs, t1, dataSize=2
+    wrbase cs, t3
+    wrip t0, t2, dataSize=asz
+};
 '''
