@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr  8 2009 12:30:02
-M5 revision 233a4a1a6110 6024 default qtip tip test_unifytlb.diff
-M5 started Apr  8 2009 13:09:24
-M5 executing on maize
+M5 compiled Apr 12 2009 13:26:17
+M5 revision 8c874c02878a 6042 default qtip tip cpuidfixstats.patch
+M5 started Apr 12 2009 13:32:19
+M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 29717000 because target called exit()
+Exiting @ tick 29731000 because target called exit()
