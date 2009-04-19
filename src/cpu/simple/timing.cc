@@ -233,6 +233,9 @@ TimingSimpleCPU::suspendContext(int thread_num)
     assert(thread_num == 0);
     assert(thread);
 
+    if (_status == Idle)
+        return;
+
     assert(_status == Running);
 
     // just change status to Idle... if status != Running,

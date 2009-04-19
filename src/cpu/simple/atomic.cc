@@ -271,6 +271,9 @@ AtomicSimpleCPU::suspendContext(int thread_num)
     assert(thread_num == 0);
     assert(thread);
 
+    if (_status == Idle)
+        return;
+
     assert(_status == Running);
 
     // tick event may not be scheduled if this gets called from inside
