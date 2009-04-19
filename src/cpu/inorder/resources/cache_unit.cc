@@ -355,7 +355,7 @@ CacheUnit::doDataAccess(DynInstPtr inst)
 
     Request *memReq = cache_req->dataPkt->req;
 
-    if (cache_req->dataPkt->isWrite() && memReq->isLocked()) {
+    if (cache_req->dataPkt->isWrite() && memReq->isLlsc()) {
         assert(cache_req->inst->isStoreConditional());
         DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
         do_access = TheISA::handleLockedWrite(cpu, memReq);
@@ -395,7 +395,7 @@ CacheUnit::doDataAccess(DynInstPtr inst)
             cacheStatus = cacheWaitResponse;
             cacheBlocked = false;
         }
-    } else if (!do_access && memReq->isLocked()){
+    } else if (!do_access && memReq->isLlsc()){
         // Store-Conditional instructions complete even if they "failed"
         assert(cache_req->inst->isStoreConditional());
         cache_req->setCompleted(true);
@@ -471,7 +471,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             if (inst->isLoad()) {
                 assert(cache_pkt->isRead());
 
-                if (cache_pkt->req->isLocked()) {
+                if (cache_pkt->req->isLlsc()) {
                     DPRINTF(InOrderCachePort,
                             "[tid:%u]: Handling Load-Linked for [sn:%u]\n",
                             tid, inst->seqNum);

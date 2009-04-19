@@ -589,7 +589,7 @@ OzoneLWLSQ<Impl>::writebackStores()
 
         MemCmd command =
             req->isSwap() ? MemCmd::SwapReq :
-            (req->isLocked() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
+            (req->isLlsc() ? MemCmd::WriteReq : MemCmd::StoreCondReq);
         PacketPtr data_pkt = new Packet(req, command, Packet::Broadcast);
         data_pkt->dataStatic(inst->memData);
 
@@ -606,7 +606,7 @@ OzoneLWLSQ<Impl>::writebackStores()
                 inst->seqNum);
 
         // @todo: Remove this SC hack once the memory system handles it.
-        if (req->isLocked()) {
+        if (req->isLlsc()) {
             if (req->isUncacheable()) {
                 req->setExtraData(2);
             } else {
@@ -664,7 +664,7 @@ OzoneLWLSQ<Impl>::writebackStores()
             if (result != MA_HIT && dcacheInterface->doEvents()) {
                 store_event->miss = true;
                 typename BackEnd::LdWritebackEvent *wb = NULL;
-                if (req->isLocked()) {
+                if (req->isLlsc()) {
                     wb = new typename BackEnd::LdWritebackEvent(inst,
                                                             be);
                     store_event->wbEvent = wb;
@@ -691,7 +691,7 @@ OzoneLWLSQ<Impl>::writebackStores()
 //                DPRINTF(Activity, "Active st accessing mem hit [sn:%lli]\n",
 //                        inst->seqNum);
 
-                if (req->isLocked()) {
+                if (req->isLlsc()) {
                     // Stx_C does not generate a system port
                     // transaction in the 21264, but that might be
                     // hard to accomplish in this model.

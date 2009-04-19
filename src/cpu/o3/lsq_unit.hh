@@ -514,7 +514,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
             "storeHead: %i addr: %#x\n",
             load_idx, store_idx, storeHead, req->getPaddr());
 
-    if (req->isLocked()) {
+    if (req->isLlsc()) {
         // Disable recording the result temporarily.  Writing to misc
         // regs normally updates the result, but this is not the
         // desired behavior when handling store conditionals.
@@ -647,7 +647,7 @@ LSQUnit<Impl>::read(Request *req, T &data, int load_idx)
     if (!lsq->cacheBlocked()) {
         PacketPtr data_pkt =
             new Packet(req,
-                       (req->isLocked() ?
+                       (req->isLlsc() ?
                         MemCmd::LoadLockedReq : MemCmd::ReadReq),
                        Packet::Broadcast);
         data_pkt->dataStatic(load_inst->memData);

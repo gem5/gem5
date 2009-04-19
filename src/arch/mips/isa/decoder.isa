@@ -2089,7 +2089,7 @@ decode OPCODE_HI default Unknown::unknown() {
 
     0x6: decode OPCODE_LO {
         format LoadMemory {
-            0x0: ll({{ Rt.uw = Mem.uw; }}, mem_flags=LOCKED);
+            0x0: ll({{ Rt.uw = Mem.uw; }}, mem_flags=LLSC);
             0x1: lwc1({{ Ft.uw = Mem.uw; }});
             0x5: ldc1({{ Ft.ud = Mem.ud; }});
         }
@@ -2103,7 +2103,7 @@ decode OPCODE_HI default Unknown::unknown() {
         0x0: StoreCond::sc({{ Mem.uw = Rt.uw;}},
                            {{ uint64_t tmp = write_result;
                               Rt.uw = (tmp == 0 || tmp == 1) ? tmp : Rt.uw;
-                           }}, mem_flags=LOCKED, inst_flags = IsStoreConditional);
+                           }}, mem_flags=LLSC, inst_flags = IsStoreConditional);
 
         format StoreMemory {
           0x1: swc1({{ Mem.uw = Ft.uw;}});

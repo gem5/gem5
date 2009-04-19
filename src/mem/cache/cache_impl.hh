@@ -180,7 +180,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk)
             pkt->writeDataToBlock(blk->data, blkSize);
         }
     } else if (pkt->isRead()) {
-        if (pkt->isLocked()) {
+        if (pkt->isLlsc()) {
             blk->trackLoadLocked(pkt);
         }
         pkt->setDataFromBlock(blk->data, blkSize);
@@ -317,7 +317,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
     incMissCount(pkt);
 
-    if (blk == NULL && pkt->isLocked() && pkt->isWrite()) {
+    if (blk == NULL && pkt->isLlsc() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now
         pkt->req->setExtraData(0);
         return true;

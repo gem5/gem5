@@ -218,7 +218,7 @@ class CacheBlk
      */
     void trackLoadLocked(PacketPtr pkt)
     {
-        assert(pkt->isLocked());
+        assert(pkt->isLlsc());
         lockList.push_front(Lock(pkt->req));
     }
 
@@ -236,7 +236,7 @@ class CacheBlk
     bool checkWrite(PacketPtr pkt)
     {
         Request *req = pkt->req;
-        if (pkt->isLocked()) {
+        if (pkt->isLlsc()) {
             // it's a store conditional... have to check for matching
             // load locked.
             bool success = false;

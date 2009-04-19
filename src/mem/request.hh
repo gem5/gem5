@@ -62,7 +62,7 @@ class Request : public FastAlloc
     /** ASI information for this request if it exists. */
     static const FlagsType ASI_BITS                    = 0x000000FF;
     /** The request is a Load locked/store conditional. */
-    static const FlagsType LOCKED                      = 0x00000100;
+    static const FlagsType LLSC                        = 0x00000100;
     /** The virtual address is also the physical address. */
     static const FlagsType PHYSICAL                    = 0x00000200;
     /** The request is an ALPHA VPTE pal access (hw_ld). */
@@ -448,7 +448,7 @@ class Request : public FastAlloc
     /** Accessor Function to Check Cacheability. */
     bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
     bool isInstRead() const { return flags.isSet(INST_READ); }
-    bool isLocked() const { return flags.isSet(LOCKED); }
+    bool isLlsc() const { return flags.isSet(LLSC); }
     bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }
 

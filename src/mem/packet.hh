@@ -120,7 +120,7 @@ class MemCmd
         NeedsResponse,  //!< Requester needs response from target
         IsSWPrefetch,
         IsHWPrefetch,
-        IsLocked,       //!< Alpha/MIPS LL or SC access
+        IsLlsc,         //!< Alpha/MIPS LL or SC access
         HasData,        //!< There is an associated payload
         IsError,        //!< Error response
         IsPrint,        //!< Print state matching address (for debugging)
@@ -166,7 +166,7 @@ class MemCmd
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isReadWrite() const    { return isRead() && isWrite(); }
-    bool isLocked() const       { return testCmdAttrib(IsLocked); }
+    bool isLlsc() const         { return testCmdAttrib(IsLlsc); }
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
 
@@ -401,7 +401,7 @@ class Packet : public FastAlloc, public Printable
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
     bool isReadWrite() const    { return cmd.isReadWrite(); }
-    bool isLocked() const       { return cmd.isLocked(); }
+    bool isLlsc() const         { return cmd.isLlsc(); }
     bool isError() const        { return cmd.isError(); }
     bool isPrint() const        { return cmd.isPrint(); }
 

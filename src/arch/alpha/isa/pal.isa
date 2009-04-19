@@ -178,7 +178,7 @@ output decoder {{
         if (HW_LDST_PHYS) memAccessFlags.set(Request::PHYSICAL);
         if (HW_LDST_ALT)  memAccessFlags.set(Request::ALTMODE);
         if (HW_LDST_VPTE) memAccessFlags.set(Request::VPTE);
-        if (HW_LDST_LOCK) memAccessFlags.set(Request::LOCKED);
+        if (HW_LDST_LOCK) memAccessFlags.set(Request::LLSC);
     }
 
     std::string

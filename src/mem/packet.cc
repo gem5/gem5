@@ -105,14 +105,14 @@ MemCmd::commandInfo[] =
             InvalidCmd, "ReadExResp" },
     /* LoadLockedReq: note that we use plain ReadResp as response, so that
      *                we can also use ReadRespWithInvalidate when needed */
-    { SET4(IsRead, IsLocked, IsRequest, NeedsResponse),
+    { SET4(IsRead, IsLlsc, IsRequest, NeedsResponse),
             ReadResp, "LoadLockedReq" },
     /* StoreCondReq */
-    { SET6(IsWrite, NeedsExclusive, IsLocked,
+    { SET6(IsWrite, NeedsExclusive, IsLlsc,
            IsRequest, NeedsResponse, HasData),
             StoreCondResp, "StoreCondReq" },
     /* StoreCondResp */
-    { SET4(IsWrite, NeedsExclusive, IsLocked, IsResponse),
+    { SET4(IsWrite, NeedsExclusive, IsLlsc, IsResponse),
             InvalidCmd, "StoreCondResp" },
     /* SwapReq -- for Swap ldstub type operations */
     { SET6(IsRead, IsWrite, NeedsExclusive, IsRequest, HasData, NeedsResponse),

@@ -45,8 +45,8 @@ decode OPCODE default Unknown::unknown() {
         0x0c: ldwu({{ Ra.uq = Mem.uw; }});
         0x0b: ldq_u({{ Ra = Mem.uq; }}, ea_code = {{ EA = (Rb + disp) & ~7; }});
         0x23: ldt({{ Fa = Mem.df; }});
-        0x2a: ldl_l({{ Ra.sl = Mem.sl; }}, mem_flags = LOCKED);
-        0x2b: ldq_l({{ Ra.uq = Mem.uq; }}, mem_flags = LOCKED);
+        0x2a: ldl_l({{ Ra.sl = Mem.sl; }}, mem_flags = LLSC);
+        0x2b: ldq_l({{ Ra.uq = Mem.uq; }}, mem_flags = LLSC);
 #ifdef USE_COPY
         0x20: MiscPrefetch::copy_load({{ EA = Ra; }},
                                       {{ fault = xc->copySrcTranslate(EA); }},
@@ -87,7 +87,7 @@ decode OPCODE default Unknown::unknown() {
                         if (tmp == 1) {
                             xc->setStCondFailures(0);
                         }
-                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
+                    }}, mem_flags = LLSC, inst_flags = IsStoreConditional);
         0x2f: stq_c({{ Mem.uq = Ra; }},
                     {{
                         uint64_t tmp = write_result;
@@ -105,7 +105,7 @@ decode OPCODE default Unknown::unknown() {
                             // only.
                             xc->setStCondFailures(0);
                         }
-                    }}, mem_flags = LOCKED, inst_flags = IsStoreConditional);
+                    }}, mem_flags = LLSC, inst_flags = IsStoreConditional);
     }
 
     format IntegerOperate {

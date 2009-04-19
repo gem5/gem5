@@ -381,7 +381,7 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         }
     }
 /*
-    if (req->isLocked()) {
+    if (req->isLlsc()) {
         if (req->isUncacheable()) {
             // Don't update result register (see stq_c in isa_desc)
             req->result = 2;
