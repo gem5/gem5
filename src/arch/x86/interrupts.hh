@@ -172,19 +172,19 @@ class Interrupts : public BasicPioDevice, IntDev
     void
     setRegArrayBit(ApicRegIndex base, uint8_t vector)
     {
-        regs[base + (vector % 32)] |= (1 << (vector >> 5));
+        regs[base + (vector / 32)] |= (1 << (vector % 32));
     }
 
     void
     clearRegArrayBit(ApicRegIndex base, uint8_t vector)
     {
-        regs[base + (vector % 32)] &= ~(1 << (vector >> 5));
+        regs[base + (vector / 32)] &= ~(1 << (vector % 32));
     }
 
     bool
     getRegArrayBit(ApicRegIndex base, uint8_t vector)
     {
-        return bits(regs[base + (vector % 32)], vector >> 5);
+        return bits(regs[base + (vector / 32)], vector % 5);
     }
 
     void requestInterrupt(uint8_t vector, uint8_t deliveryMode, bool level);
