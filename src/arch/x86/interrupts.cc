@@ -332,6 +332,22 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 }
 
 
+Tick
+X86ISA::Interrupts::recvResponse(PacketPtr pkt)
+{
+    assert(!pkt->isError());
+    assert(pkt->cmd == MemCmd::MessageResp);
+    InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
+    // Record that the ICR is now idle.
+    low.deliveryStatus = 0;
+    regs[APIC_INTERRUPT_COMMAND_LOW] = low;
+    delete pkt->req;
+    delete pkt;
+    DPRINTF(LocalApic, "ICR is now idle.\n");
+    return 0;
+}
+
+
 void
 X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
 {
@@ -475,9 +491,12 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             message.level = low.level;
             message.trigger = low.trigger;
             bool timing = sys->getMemoryMode() == Enums::timing;
+            // Be careful no updates of the delivery status bit get lost.
+            regs[APIC_INTERRUPT_COMMAND_LOW] = low;
             switch (low.destShorthand) {
               case 0:
                 intPort->sendMessage(message, timing);
+                newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
                 break;
               case 1:
                 panic("Self IPIs aren't implemented.\n");
