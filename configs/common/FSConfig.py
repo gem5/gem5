@@ -336,7 +336,7 @@ def makeLinuxX86System(mem_mode, mdesc = None):
     # Mark the rest as available
     self.e820_table.entries.append(X86E820Entry(
                 addr = 0x100000,
-                size = '%dB' % (self.physmem.range.second - 0x100000 - 1),
+                size = '%dB' % (self.physmem.range.second - 0x100000 + 1),
                 range_type = 1))
 
     # Command line
