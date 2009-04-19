@@ -57,6 +57,7 @@ class AtomicSimpleCPU : public BaseSimpleCPU
     TickEvent tickEvent;
 
     const int width;
+    bool locked;
     const bool simulate_data_stalls;
     const bool simulate_inst_stalls;
 

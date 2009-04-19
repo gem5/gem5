@@ -153,7 +153,7 @@ AtomicSimpleCPU::DcachePort::setPeer(Port *port)
 }
 
 AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
-    : BaseSimpleCPU(p), tickEvent(this), width(p->width),
+    : BaseSimpleCPU(p), tickEvent(this), width(p->width), locked(false),
       simulate_data_stalls(p->simulate_data_stalls),
       simulate_inst_stalls(p->simulate_inst_stalls),
       icachePort(name() + "-iport", this), dcachePort(name() + "-iport", this),
@@ -176,6 +176,7 @@ AtomicSimpleCPU::serialize(ostream &os)
 {
     SimObject::State so_state = SimObject::getState();
     SERIALIZE_ENUM(so_state);
+    SERIALIZE_SCALAR(locked);
     BaseSimpleCPU::serialize(os);
     nameOut(os, csprintf("%s.tickEvent", name()));
     tickEvent.serialize(os);
@@ -186,6 +187,7 @@ AtomicSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 {
     SimObject::State so_state;
     UNSERIALIZE_ENUM(so_state);
+    UNSERIALIZE_SCALAR(locked);
     BaseSimpleCPU::unserialize(cp, section);
     tickEvent.unserialize(cp, csprintf("%s.tickEvent", section));
 }
@@ -357,6 +359,10 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
             if (traceData) {
                 traceData->setData(data);
             }
+            if (req->isLocked() && fault == NoFault) {
+                assert(!locked);
+                locked = true;
+            }
             return fault;
         }
 
@@ -518,6 +524,10 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             if (traceData) {
                 traceData->setData(gtoh(data));
             }
+            if (req->isLocked() && fault == NoFault) {
+                assert(locked);
+                locked = false;
+            }
             return fault;
         }
 
@@ -599,7 +609,7 @@ AtomicSimpleCPU::tick()
 
     Tick latency = 0;
 
-    for (int i = 0; i < width; ++i) {
+    for (int i = 0; i < width || locked; ++i) {
         numCycles++;
 
         if (!curStaticInst || !curStaticInst->isDelayedCommit())
