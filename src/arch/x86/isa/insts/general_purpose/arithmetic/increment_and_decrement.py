@@ -108,4 +108,19 @@ def macroop DEC_P
     subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
     st t1, seg, riprel, disp
 };
+
+def macroop DEC_LOCKED_M
+{
+    ldstl t1, seg, sib, disp
+    subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    stul t1, seg, sib, disp
+};
+
+def macroop DEC_LOCKED_P
+{
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    subi t1, t1, 1, flags=(OF, SF, ZF, AF, PF)
+    stul t1, seg, riprel, disp
+};
 '''
