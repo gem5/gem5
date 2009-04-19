@@ -191,11 +191,7 @@ class Interrupts : public BasicPioDevice, IntDev
      */
     typedef X86LocalApicParams Params;
 
-    void
-    setCPU(BaseCPU * newCPU)
-    {
-        cpu = newCPU;
-    }
+    void setCPU(BaseCPU * newCPU);
 
     void
     setClock(Tick newClock)
@@ -225,19 +221,8 @@ class Interrupts : public BasicPioDevice, IntDev
         return entry.periodic;
     }
 
-    void addressRanges(AddrRangeList &range_list)
-    {
-        range_list.clear();
-        range_list.push_back(RangeEx(x86LocalAPICAddress(0, 0),
-                                     x86LocalAPICAddress(0, 0) + PageBytes));
-    }
-
-    void getIntAddrRange(AddrRangeList &range_list)
-    {
-        range_list.clear();
-        range_list.push_back(RangeEx(x86InterruptAddress(0, 0),
-                    x86InterruptAddress(0, 0) + PhysAddrAPICRangeSize));
-    }
+    void addressRanges(AddrRangeList &range_list);
+    void getIntAddrRange(AddrRangeList &range_list);
 
     Port *getPort(const std::string &if_name, int idx = -1)
     {
@@ -262,22 +247,7 @@ class Interrupts : public BasicPioDevice, IntDev
      * Constructor.
      */
 
-    Interrupts(Params * p)
-        : BasicPioDevice(p), IntDev(this), latency(p->pio_latency), clock(0),
-          apicTimerEvent(this),
-          pendingSmi(false), smiVector(0),
-          pendingNmi(false), nmiVector(0),
-          pendingExtInt(false), extIntVector(0),
-          pendingInit(false), initVector(0),
-          pendingUnmaskableInt(false)
-    {
-        pioSize = PageBytes;
-        memset(regs, 0, sizeof(regs));
-        //Set the local apic DFR to the flat model.
-        regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
-        ISRV = 0;
-        IRRV = 0;
-    }
+    Interrupts(Params * p);
 
     /*
      * Functions for retrieving interrupts for the CPU to handle.

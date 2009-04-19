@@ -286,10 +286,20 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
     cpu->wakeup();
 }
 
+
+void
+X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
+{
+    cpu = newCPU;
+    assert(cpu);
+    regs[APIC_ID] = (cpu->cpuId() << 24);
+}
+
+
 Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 {
-    uint8_t id = 0;
+    uint8_t id = (regs[APIC_ID] >> 24);
     Addr offset = pkt->getAddr() - x86InterruptAddress(id, 0);
     assert(pkt->cmd == MemCmd::MessageReq);
     switch(offset)
@@ -316,6 +326,26 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
     delete pkt->req;
     delete pkt;
     return latency;
+}
+
+
+void
+X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
+{
+    uint8_t id = (regs[APIC_ID] >> 24);
+    range_list.clear();
+    range_list.push_back(RangeEx(x86LocalAPICAddress(id, 0),
+                                 x86LocalAPICAddress(id, 0) + PageBytes));
+}
+
+
+void
+X86ISA::Interrupts::getIntAddrRange(AddrRangeList &range_list)
+{
+    uint8_t id = (regs[APIC_ID] >> 24);
+    range_list.clear();
+    range_list.push_back(RangeEx(x86InterruptAddress(id, 0),
+                x86InterruptAddress(id, 0) + PhysAddrAPICRangeSize));
 }
 
 
@@ -478,6 +508,25 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
     regs[reg] = newVal;
     return;
 }
+
+
+X86ISA::Interrupts::Interrupts(Params * p) :
+    BasicPioDevice(p), IntDev(this), latency(p->pio_latency), clock(0),
+    apicTimerEvent(this),
+    pendingSmi(false), smiVector(0),
+    pendingNmi(false), nmiVector(0),
+    pendingExtInt(false), extIntVector(0),
+    pendingInit(false), initVector(0),
+    pendingUnmaskableInt(false)
+{
+    pioSize = PageBytes;
+    memset(regs, 0, sizeof(regs));
+    //Set the local apic DFR to the flat model.
+    regs[APIC_DESTINATION_FORMAT] = (uint32_t)(-1);
+    ISRV = 0;
+    IRRV = 0;
+}
+
 
 bool
 X86ISA::Interrupts::checkInterrupts(ThreadContext *tc) const
