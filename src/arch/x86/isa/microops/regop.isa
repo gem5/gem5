@@ -1112,6 +1112,7 @@ let {{
                 // Check permissions.
                 if (desc.dpl < m5reg.cpl) {
                     fault = new GeneralProtection(selector);
+                    break;
                 }
                 // Fall through on purpose
               case SegIntGateCheck:
