@@ -57,19 +57,20 @@ namespace X86ISA
             SMI = 2,
             NMI = 4,
             INIT = 5,
+            SIPI = 6,
             ExtInt = 7,
             NumModes
         };
 
         static const char * const names[NumModes] = {
             "Fixed", "LowestPriority", "SMI", "Reserved",
-            "NMI", "INIT", "Reserved", "ExtInt"
+            "NMI", "INIT", "Startup", "ExtInt"
         };
 
         static inline bool
         isReserved(int mode)
         {
-            return mode == 3 || mode == 6;
+            return mode == 3;
         }
     }
 

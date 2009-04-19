@@ -282,6 +282,9 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
         } else if (deliveryMode == DeliveryMode::INIT && !pendingInit) {
             pendingUnmaskableInt = pendingInit = true;
             initVector = vector;
+        } else if (deliveryMode == DeliveryMode::SIPI && !pendingStartup) {
+            pendingUnmaskableInt = pendingStartup = true;
+            startupVector = vector;
         }
     } 
     cpu->wakeup();
@@ -538,6 +541,7 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingNmi(false), nmiVector(0),
     pendingExtInt(false), extIntVector(0),
     pendingInit(false), initVector(0),
+    pendingStartup(false), startupVector(0),
     pendingUnmaskableInt(false)
 {
     pioSize = PageBytes;
@@ -587,6 +591,9 @@ X86ISA::Interrupts::getInterrupt(ThreadContext *tc)
         } else if (pendingInit) {
             DPRINTF(LocalApic, "Generated INIT fault object.\n");
             return new InitInterrupt(initVector);
+        } else if (pendingStartup) {
+            DPRINTF(LocalApic, "Generating SIPI fault object.\n");
+            return new StartupInterrupt(startupVector);
         } else {
             panic("pendingUnmaskableInt set, but no unmaskable "
                     "ints were pending.\n");
@@ -616,8 +623,11 @@ X86ISA::Interrupts::updateIntrInfo(ThreadContext *tc)
         } else if (pendingInit) {
             DPRINTF(LocalApic, "Init sent to core.\n");
             pendingInit = false;
+        } else if (pendingStartup) {
+            DPRINTF(LocalApic, "SIPI sent to core.\n");
+            pendingStartup = false;
         }
-        if (!(pendingSmi || pendingNmi || pendingInit))
+        if (!(pendingSmi || pendingNmi || pendingInit || pendingStartup))
             pendingUnmaskableInt = false;
     } else if (pendingExtInt) {
         pendingExtInt = false;
