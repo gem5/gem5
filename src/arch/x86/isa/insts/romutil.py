@@ -84,7 +84,7 @@ def rom
     sub t0, t5, t10, flags=(EZF,), dataSize=8
     # We're going to change priviledge, so zero out the stack selector. We
     # need to let the IST have priority so we don't branch yet.
-    wrsel t11, t0, flags=(nCEZF,)
+    mov t11, t0, t0, flags=(nCEZF,)
 
     # Check the IST field of the gate descriptor
     srli t12, t4, 32, dataSize=8
