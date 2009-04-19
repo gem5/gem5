@@ -113,8 +113,8 @@ namespace X86ISA {
                     result = CpuidResult(
                             stringToRegister(cleanName + offset + 0),
                             stringToRegister(cleanName + offset + 4),
-                            stringToRegister(cleanName + offset + 8),
-                            stringToRegister(cleanName + offset + 12));
+                            stringToRegister(cleanName + offset + 12),
+                            stringToRegister(cleanName + offset + 8));
                 }
                 break;
               case L1CacheAndTLB:
