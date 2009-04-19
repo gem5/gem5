@@ -338,8 +338,10 @@ X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
 {
     uint8_t id = (regs[APIC_ID] >> 24);
     range_list.clear();
-    range_list.push_back(RangeEx(x86LocalAPICAddress(id, 0),
-                                 x86LocalAPICAddress(id, 0) + PageBytes));
+    Range<Addr> range = RangeEx(x86LocalAPICAddress(id, 0),
+                                x86LocalAPICAddress(id, 0) + PageBytes);
+    range_list.push_back(range);
+    pioAddr = range.start;
 }
 
 
