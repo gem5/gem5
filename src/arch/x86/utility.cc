@@ -82,10 +82,14 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
 # if FULL_SYSTEM
 void initCPU(ThreadContext *tc, int cpuId)
 {
-    // The otherwise unmodified integer registers should be set to 0.
-    for (int index = 0; index < NUM_INTREGS; index++) {
-        tc->setIntReg(index, 0);
-    }
+    // This function is essentially performing a reset. The actual INIT
+    // interrupt does a subset of this, so we'll piggyback on some of its
+    // functionality.
+    InitInterrupt init(0);
+    init.invoke(tc);
+
+    tc->setMicroPC(0);
+    tc->setNextMicroPC(1);
 
     // These next two loops zero internal microcode and implicit registers.
     // They aren't specified by the ISA but are used internally by M5's
@@ -103,72 +107,8 @@ void initCPU(ThreadContext *tc, int cpuId)
     // register for errors.
     tc->setIntReg(INTREG_RAX, 0);
 
-    //The following values are dictated by the architecture for after a RESET#
     tc->setMiscReg(MISCREG_CR0, 0x0000000060000010ULL);
-    tc->setMiscReg(MISCREG_CR2, 0);
-    tc->setMiscReg(MISCREG_CR3, 0);
-    tc->setMiscReg(MISCREG_CR4, 0);
     tc->setMiscReg(MISCREG_CR8, 0);
-
-    tc->setMiscReg(MISCREG_RFLAGS, 0x0000000000000002ULL);
-
-    tc->setMiscReg(MISCREG_EFER, 0);
-
-    SegAttr dataAttr = 0;
-    dataAttr.writable = 1;
-    dataAttr.readable = 1;
-    dataAttr.expandDown = 0;
-    dataAttr.dpl = 0;
-    dataAttr.defaultSize = 0;
-
-    for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
-        tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
-        tc->setMiscReg(MISCREG_SEG_BASE(seg), 0);
-        tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), 0);
-        tc->setMiscReg(MISCREG_SEG_LIMIT(seg), 0xffff);
-        tc->setMiscReg(MISCREG_SEG_ATTR(seg), dataAttr);
-    }
-
-    SegAttr codeAttr = 0;
-    codeAttr.writable = 0;
-    codeAttr.readable = 1;
-    codeAttr.expandDown = 0;
-    codeAttr.dpl = 0;
-    codeAttr.defaultSize = 0;
-
-    tc->setMiscReg(MISCREG_CS, 0xf000);
-    tc->setMiscReg(MISCREG_CS_BASE,
-            0x00000000ffff0000ULL);
-    tc->setMiscReg(MISCREG_CS_EFF_BASE,
-            0x00000000ffff0000ULL);
-    // This has the base value pre-added.
-    tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
-    tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);
-
-    tc->setPC(0x000000000000fff0ULL +
-            tc->readMiscReg(MISCREG_CS_BASE));
-    tc->setNextPC(tc->readPC() + sizeof(MachInst));
-
-    tc->setMiscReg(MISCREG_TSG_BASE, 0);
-    tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
-
-    tc->setMiscReg(MISCREG_IDTR_BASE, 0);
-    tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
-
-    tc->setMiscReg(MISCREG_TSL, 0);
-    tc->setMiscReg(MISCREG_TSL_BASE, 0);
-    tc->setMiscReg(MISCREG_TSL_LIMIT, 0xffff);
-    tc->setMiscReg(MISCREG_TSL_ATTR, 0);
-
-    tc->setMiscReg(MISCREG_TR, 0);
-    tc->setMiscReg(MISCREG_TR_BASE, 0);
-    tc->setMiscReg(MISCREG_TR_LIMIT, 0xffff);
-    tc->setMiscReg(MISCREG_TR_ATTR, 0);
-
-    // This value should be the family/model/stepping of the processor.
-    // (page 418). It should be consistent with the value from CPUID, but the
-    // actual value probably doesn't matter much.
-    tc->setIntReg(INTREG_RDX, 0);
 
     // TODO initialize x87, 64 bit, and 128 bit media state
 
@@ -201,14 +141,6 @@ void initCPU(ThreadContext *tc, int cpuId)
         tc->setMiscReg(MISCREG_MC_ADDR(i), 0);
         tc->setMiscReg(MISCREG_MC_MISC(i), 0);
     }
-
-    tc->setMiscReg(MISCREG_DR0, 0);
-    tc->setMiscReg(MISCREG_DR1, 0);
-    tc->setMiscReg(MISCREG_DR2, 0);
-    tc->setMiscReg(MISCREG_DR3, 0);
-
-    tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0ULL);
-    tc->setMiscReg(MISCREG_DR7, 0x0000000000000400ULL);
 
     tc->setMiscReg(MISCREG_TSC, 0);
     tc->setMiscReg(MISCREG_TSC_AUX, 0);
@@ -250,9 +182,6 @@ void initCPU(ThreadContext *tc, int cpuId)
     tc->setMiscReg(MISCREG_LAST_EXCEPTION_TO_IP, 0);
 
     // Invalidate the caches (this should already be done for us)
-
-    // TODO Turn on the APIC. This should be handled elsewhere but it isn't
-    // currently being handled at all.
 
     LocalApicBase lApicBase = 0;
     lApicBase.base = 0xFEE00000 >> 12;

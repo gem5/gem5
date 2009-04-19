@@ -185,6 +185,103 @@ namespace X86ISA
         return ss.str();
     }
 
+    void
+    InitInterrupt::invoke(ThreadContext *tc)
+    {
+        DPRINTF(Faults, "Init interrupt.\n");
+        // The otherwise unmodified integer registers should be set to 0.
+        for (int index = 0; index < NUM_INTREGS; index++) {
+            tc->setIntReg(index, 0);
+        }
+
+        CR0 cr0 = tc->readMiscReg(MISCREG_CR0);
+        CR0 newCR0 = 1 << 4;
+        newCR0.cd = cr0.cd;
+        newCR0.nw = cr0.nw;
+        tc->setMiscReg(MISCREG_CR0, newCR0);
+        tc->setMiscReg(MISCREG_CR2, 0);
+        tc->setMiscReg(MISCREG_CR3, 0);
+        tc->setMiscReg(MISCREG_CR4, 0);
+
+        tc->setMiscReg(MISCREG_RFLAGS, 0x0000000000000002ULL);
+
+        tc->setMiscReg(MISCREG_EFER, 0);
+
+        SegAttr dataAttr = 0;
+        dataAttr.writable = 1;
+        dataAttr.readable = 1;
+        dataAttr.expandDown = 0;
+        dataAttr.dpl = 0;
+        dataAttr.defaultSize = 0;
+
+        for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
+            tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
+            tc->setMiscReg(MISCREG_SEG_BASE(seg), 0);
+            tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), 0);
+            tc->setMiscReg(MISCREG_SEG_LIMIT(seg), 0xffff);
+            tc->setMiscReg(MISCREG_SEG_ATTR(seg), dataAttr);
+        }
+
+        SegAttr codeAttr = 0;
+        codeAttr.writable = 0;
+        codeAttr.readable = 1;
+        codeAttr.expandDown = 0;
+        codeAttr.dpl = 0;
+        codeAttr.defaultSize = 0;
+
+        tc->setMiscReg(MISCREG_CS, 0xf000);
+        tc->setMiscReg(MISCREG_CS_BASE,
+                0x00000000ffff0000ULL);
+        tc->setMiscReg(MISCREG_CS_EFF_BASE,
+                0x00000000ffff0000ULL);
+        // This has the base value pre-added.
+        tc->setMiscReg(MISCREG_CS_LIMIT, 0xffffffff);
+        tc->setMiscReg(MISCREG_CS_ATTR, codeAttr);
+
+        tc->setPC(0x000000000000fff0ULL +
+                tc->readMiscReg(MISCREG_CS_BASE));
+        tc->setNextPC(tc->readPC() + sizeof(MachInst));
+
+        tc->setMiscReg(MISCREG_TSG_BASE, 0);
+        tc->setMiscReg(MISCREG_TSG_LIMIT, 0xffff);
+
+        tc->setMiscReg(MISCREG_IDTR_BASE, 0);
+        tc->setMiscReg(MISCREG_IDTR_LIMIT, 0xffff);
+
+        tc->setMiscReg(MISCREG_TSL, 0);
+        tc->setMiscReg(MISCREG_TSL_BASE, 0);
+        tc->setMiscReg(MISCREG_TSL_LIMIT, 0xffff);
+        tc->setMiscReg(MISCREG_TSL_ATTR, 0);
+
+        tc->setMiscReg(MISCREG_TR, 0);
+        tc->setMiscReg(MISCREG_TR_BASE, 0);
+        tc->setMiscReg(MISCREG_TR_LIMIT, 0xffff);
+        tc->setMiscReg(MISCREG_TR_ATTR, 0);
+
+        // This value should be the family/model/stepping of the processor.
+        // (page 418). It should be consistent with the value from CPUID, but
+        // the actual value probably doesn't matter much.
+        tc->setIntReg(INTREG_RDX, 0);
+
+        tc->setMiscReg(MISCREG_DR0, 0);
+        tc->setMiscReg(MISCREG_DR1, 0);
+        tc->setMiscReg(MISCREG_DR2, 0);
+        tc->setMiscReg(MISCREG_DR3, 0);
+
+        tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0ULL);
+        tc->setMiscReg(MISCREG_DR7, 0x0000000000000400ULL);
+
+        // We're now in real mode, effectively at CPL 0
+        HandyM5Reg m5Reg = 0;
+        m5Reg.mode = LegacyMode;
+        m5Reg.submode = RealMode;
+        m5Reg.cpl = 0;
+        tc->setMiscReg(MISCREG_M5_REG, m5Reg);
+        MicroPC entry = X86ISAInst::RomLabels::extern_label_initIntHalt;
+        tc->setMicroPC(romMicroPC(entry));
+        tc->setNextMicroPC(romMicroPC(entry) + 1);
+    }
+
 #endif
 } // namespace X86ISA
 

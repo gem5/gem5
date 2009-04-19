@@ -410,11 +410,12 @@ namespace X86ISA
 
     class InitInterrupt : public X86Interrupt
     {
-        uint8_t vector;
       public:
         InitInterrupt(uint8_t _vector) :
             X86Interrupt("INIT Interrupt", "#INIT", _vector)
         {}
+
+        void invoke(ThreadContext * tc);
     };
 
     class SoftwareInterrupt : public X86Interrupt

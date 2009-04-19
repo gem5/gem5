@@ -209,4 +209,15 @@ def rom
     panic "Legacy mode interrupts not implemented (in microcode)"
     eret
 };
+
+def rom
+{
+    extern initIntHalt:
+    rflags t1
+    limm t2, "~IFBit"
+    and t1, t1, t2
+    wrflags t1, t0
+    halt
+    eret
+};
 '''
