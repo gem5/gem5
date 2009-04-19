@@ -75,6 +75,8 @@ class Request : public FastAlloc
     static const FlagsType NO_FAULT                    = 0x00002000;
     /** The request should not cause a memory access. */
     static const FlagsType NO_ACCESS                   = 0x00004000;
+    /** This request will lock or unlock the accessed memory. */
+    static const FlagsType LOCKED                      = 0x00008000;
     /** The request should be prefetched into the exclusive state. */
     static const FlagsType PF_EXCLUSIVE                = 0x00010000;
     /** The request should be marked as LRU. */
@@ -92,7 +94,7 @@ class Request : public FastAlloc
     static const FlagsType MMAPED_IPR                  = 0x00800000;
 
   private:
-    static const FlagsType PUBLIC_FLAGS                = 0x00FF3FFF;
+    static const FlagsType PUBLIC_FLAGS                = 0x00FFFFFF;
     static const FlagsType PRIVATE_FLAGS               = 0xFF000000;
 
     /** Whether or not the size is valid. */
@@ -449,6 +451,7 @@ class Request : public FastAlloc
     bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
     bool isInstRead() const { return flags.isSet(INST_READ); }
     bool isLlsc() const { return flags.isSet(LLSC); }
+    bool isLocked() const { return flags.isSet(LOCKED); }
     bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }
 
