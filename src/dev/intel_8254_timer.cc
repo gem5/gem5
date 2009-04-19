@@ -90,7 +90,7 @@ Intel8254Timer::unserialize(const string &base, Checkpoint *cp,
 
 Intel8254Timer::Counter::Counter(Intel8254Timer *p,
         const string &name, unsigned int _num)
-    : _name(name), num(_num), event(this), count(0),
+    : _name(name), num(_num), event(this), initial_count(0),
       latched_count(0), period(0), mode(0), output_high(false),
       latch_on(false), read_byte(LSB), write_byte(LSB), parent(p)
 {
@@ -104,8 +104,22 @@ Intel8254Timer::Counter::latchCount()
     if(!latch_on) {
         latch_on = true;
         read_byte = LSB;
-        latched_count = count;
+        latched_count = currentCount();
     }
+}
+
+int
+Intel8254Timer::Counter::currentCount()
+{
+    int clocks = event.clocksLeft();
+    if (clocks == -1) {
+        warn_once("Reading current count from inactive timer.\n");
+        return 0;
+    }
+    if (mode == RateGen || mode == SquareWave)
+        return clocks + 1;
+    else
+        return clocks;
 }
 
 uint8_t
@@ -126,6 +140,7 @@ Intel8254Timer::Counter::read()
             panic("Shouldn't be here");
         }
     } else {
+        uint16_t count = currentCount();
         switch (read_byte) {
           case LSB:
             read_byte = MSB;
@@ -146,7 +161,7 @@ Intel8254Timer::Counter::write(const uint8_t data)
 {
     switch (write_byte) {
       case LSB:
-        count = (count & 0xFF00) | data;
+        initial_count = (initial_count & 0xFF00) | data;
 
         if (event.scheduled())
             parent->deschedule(event);
@@ -155,13 +170,13 @@ Intel8254Timer::Counter::write(const uint8_t data)
         break;
 
       case MSB:
-        count = (count & 0x00FF) | (data << 8);
+        initial_count = (initial_count & 0x00FF) | (data << 8);
         // In the RateGen or SquareWave modes, the timer wraps around and
         // triggers on a value of 1, not 0.
         if (mode == RateGen || mode == SquareWave)
-            period = count - 1;
+            period = initial_count - 1;
         else
-            period = count;
+            period = initial_count;
 
         if (period > 0)
             event.setTo(period);
@@ -204,7 +219,7 @@ Intel8254Timer::Counter::outputHigh()
 void
 Intel8254Timer::Counter::serialize(const string &base, ostream &os)
 {
-    paramOut(os, base + ".count", count);
+    paramOut(os, base + ".initial_count", initial_count);
     paramOut(os, base + ".latched_count", latched_count);
     paramOut(os, base + ".period", period);
     paramOut(os, base + ".mode", mode);
@@ -223,7 +238,7 @@ void
 Intel8254Timer::Counter::unserialize(const string &base, Checkpoint *cp,
                                          const string &section)
 {
-    paramIn(cp, section, base + ".count", count);
+    paramIn(cp, section, base + ".initial_count", initial_count);
     paramIn(cp, section, base + ".latched_count", latched_count);
     paramIn(cp, section, base + ".period", period);
     paramIn(cp, section, base + ".mode", mode);
@@ -269,6 +284,14 @@ Intel8254Timer::Counter::CounterEvent::setTo(int clocks)
     DPRINTF(Intel8254Timer, "Timer set to curTick + %d\n",
             clocks * interval);
     counter->parent->schedule(this, curTick + clocks * interval);
+}
+
+int
+Intel8254Timer::Counter::CounterEvent::clocksLeft()
+{
+    if (!scheduled())
+        return -1;
+    return (when() - curTick + interval - 1) / interval;
 }
 
 const char *

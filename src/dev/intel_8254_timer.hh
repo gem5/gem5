@@ -98,6 +98,8 @@ class Intel8254Timer : public EventManager
             friend class Counter;
 
             void setTo(int clocks);
+
+            int clocksLeft();
         };
 
       private:
@@ -108,8 +110,8 @@ class Intel8254Timer : public EventManager
 
         CounterEvent event;
 
-        /** Current count value */
-        uint16_t count;
+        /** Initial count value */
+        uint16_t initial_count;
 
         /** Latched count */
         uint16_t latched_count;
@@ -140,6 +142,9 @@ class Intel8254Timer : public EventManager
 
         /** Latch the current count (if one is not already latched) */
         void latchCount();
+
+        /** Get the current count for this counter */
+        int currentCount();
 
         /** Set the read/write mode */
         void setRW(int rw_val);
