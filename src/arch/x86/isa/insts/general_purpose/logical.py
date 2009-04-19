@@ -239,6 +239,23 @@ def macroop AND_P_I
     st t2, seg, riprel, disp
 };
 
+def macroop AND_LOCKED_M_I
+{
+    ldstl t2, seg, sib, disp
+    limm t1, imm
+    and t2, t2, t1, flags=(OF,SF,ZF,PF,CF)
+    stul t2, seg, sib, disp
+};
+
+def macroop AND_LOCKED_P_I
+{
+    rdip t7
+    ldstl t2, seg, riprel, disp
+    limm t1, imm
+    and t2, t2, t1, flags=(OF,SF,ZF,PF,CF)
+    stul t2, seg, riprel, disp
+};
+
 def macroop AND_M_R
 {
     ldst t1, seg, sib, disp
@@ -252,6 +269,21 @@ def macroop AND_P_R
     ldst t1, seg, riprel, disp
     and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
     st t1, seg, riprel, disp
+};
+
+def macroop AND_LOCKED_M_R
+{
+    ldstl t1, seg, sib, disp
+    and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
+    stul t1, seg, sib, disp
+};
+
+def macroop AND_LOCKED_P_R
+{
+    rdip t7
+    ldstl t1, seg, riprel, disp
+    and t1, t1, reg, flags=(OF,SF,ZF,PF,CF)
+    stul t1, seg, riprel, disp
 };
 
 def macroop NOT_R
