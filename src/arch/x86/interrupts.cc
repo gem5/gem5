@@ -60,6 +60,7 @@
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
 #include "mem/packet_access.hh"
+#include "sim/system.hh"
 
 int
 divideFromConf(uint32_t conf)
@@ -366,14 +367,6 @@ X86ISA::Interrupts::readReg(ApicRegIndex reg)
       case APIC_ERROR_STATUS:
         regs[APIC_INTERNAL_STATE] &= ~ULL(0x1);
         break;
-      case APIC_INTERRUPT_COMMAND_LOW:
-        panic("Local APIC Interrupt Command low"
-                " register unimplemented.\n");
-        break;
-      case APIC_INTERRUPT_COMMAND_HIGH:
-        panic("Local APIC Interrupt Command high"
-                " register unimplemented.\n");
-        break;
       case APIC_CURRENT_COUNT:
         {
             if (apicTimerEvent.scheduled()) {
@@ -459,12 +452,40 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
         }
         break;
       case APIC_INTERRUPT_COMMAND_LOW:
-        panic("Local APIC Interrupt Command low"
-                " register unimplemented.\n");
-        break;
-      case APIC_INTERRUPT_COMMAND_HIGH:
-        panic("Local APIC Interrupt Command high"
-                " register unimplemented.\n");
+        {
+            InterruptCommandRegLow low = regs[APIC_INTERRUPT_COMMAND_LOW];
+            // Check if we're already sending an IPI.
+            if (low.deliveryStatus) {
+                newVal = low;
+                break;
+            }
+            low = val;
+            InterruptCommandRegHigh high = regs[APIC_INTERRUPT_COMMAND_HIGH];
+            // Record that an IPI is being sent.
+            low.deliveryStatus = 1;
+            TriggerIntMessage message;
+            message.destination = high.destination;
+            message.vector = low.vector;
+            message.deliveryMode = low.deliveryMode;
+            message.destMode = low.destMode;
+            message.level = low.level;
+            message.trigger = low.trigger;
+            bool timing = sys->getMemoryMode() == Enums::timing;
+            switch (low.destShorthand) {
+              case 0:
+                intPort->sendMessage(message, timing);
+                break;
+              case 1:
+                panic("Self IPIs aren't implemented.\n");
+                break;
+              case 2:
+                panic("Broadcast including self IPIs aren't implemented.\n");
+                break;
+              case 3:
+                panic("Broadcast excluding self IPIs aren't implemented.\n");
+                break;
+            }
+        }
         break;
       case APIC_LVT_TIMER:
       case APIC_LVT_THERMAL_SENSOR:

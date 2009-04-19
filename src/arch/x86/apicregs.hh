@@ -31,6 +31,8 @@
 #ifndef __ARCH_X86_APICREGS_HH__
 #define __ARCH_X86_APICREGS_HH__
 
+#include "base/bitunion.hh"
+
 namespace X86ISA
 {
     enum ApicRegIndex
@@ -86,6 +88,20 @@ namespace X86ISA
     {
         return (ApicRegIndex)(APIC_INTERRUPT_REQUEST_BASE + index);
     }
+
+    BitUnion32(InterruptCommandRegLow)
+        Bitfield<7, 0> vector;
+        Bitfield<10, 8> deliveryMode;
+        Bitfield<11> destMode;
+        Bitfield<12> deliveryStatus;
+        Bitfield<14> level;
+        Bitfield<15> trigger;
+        Bitfield<19, 18> destShorthand;
+    EndBitUnion(InterruptCommandRegLow)
+
+    BitUnion32(InterruptCommandRegHigh)
+        Bitfield<31, 24> destination;
+    EndBitUnion(InterruptCommandRegHigh)
 }
 
 #endif
