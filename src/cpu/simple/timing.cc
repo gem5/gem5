@@ -290,7 +290,7 @@ TimingSimpleCPU::sendData(Fault fault, RequestPtr req,
     } else {
         bool do_access = true;  // flag to suppress cache access
 
-        if (req->isLlsc()) {
+        if (req->isLLSC()) {
             do_access = TheISA::handleLockedWrite(thread, req);
         } else if (req->isCondSwap()) {
             assert(res);
@@ -384,11 +384,11 @@ TimingSimpleCPU::buildPacket(PacketPtr &pkt, RequestPtr req, bool read)
     MemCmd cmd;
     if (read) {
         cmd = MemCmd::ReadReq;
-        if (req->isLlsc())
+        if (req->isLLSC())
             cmd = MemCmd::LoadLockedReq;
     } else {
         cmd = MemCmd::WriteReq;
-        if (req->isLlsc()) {
+        if (req->isLLSC()) {
             cmd = MemCmd::StoreCondReq;
         } else if (req->isSwap()) {
             cmd = MemCmd::SwapReq;
@@ -452,7 +452,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
-        assert(!req->isLlsc() && !req->isSwap());
+        assert(!req->isLLSC() && !req->isSwap());
         req->splitOnVaddr(split_addr, req1, req2);
 
         typedef SplitDataTranslation::WholeTranslationState WholeState;
@@ -571,7 +571,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
-        assert(!req->isLlsc() && !req->isSwap());
+        assert(!req->isLLSC() && !req->isSwap());
         req->splitOnVaddr(split_addr, req1, req2);
 
         typedef SplitDataTranslation::WholeTranslationState WholeState;
@@ -904,7 +904,7 @@ TimingSimpleCPU::completeDataAccess(PacketPtr pkt)
 
     // the locked flag may be cleared on the response packet, so check
     // pkt->req and not pkt to see if it was a load-locked
-    if (pkt->isRead() && pkt->req->isLlsc()) {
+    if (pkt->isRead() && pkt->req->isLLSC()) {
         TheISA::handleLockedRead(thread, pkt->req);
     }
 

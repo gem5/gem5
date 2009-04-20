@@ -324,7 +324,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         // Now do the access.
         if (fault == NoFault) {
             Packet pkt = Packet(req,
-                    req->isLlsc() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
+                    req->isLLSC() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
                     Packet::Broadcast);
             pkt.dataStatic(dataPtr);
 
@@ -340,7 +340,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
 
             assert(!pkt.isError());
 
-            if (req->isLlsc()) {
+            if (req->isLLSC()) {
                 TheISA::handleLockedRead(thread, req);
             }
         }
@@ -468,7 +468,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             MemCmd cmd = MemCmd::WriteReq; // default
             bool do_access = true;  // flag to suppress cache access
 
-            if (req->isLlsc()) {
+            if (req->isLLSC()) {
                 cmd = MemCmd::StoreCondReq;
                 do_access = TheISA::handleLockedWrite(thread, req);
             } else if (req->isSwap()) {

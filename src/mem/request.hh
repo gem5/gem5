@@ -450,7 +450,7 @@ class Request : public FastAlloc
     /** Accessor Function to Check Cacheability. */
     bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
     bool isInstRead() const { return flags.isSet(INST_READ); }
-    bool isLlsc() const { return flags.isSet(LLSC); }
+    bool isLLSC() const { return flags.isSet(LLSC); }
     bool isLocked() const { return flags.isSet(LOCKED); }
     bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }

@@ -635,7 +635,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
 
     PacketPtr data_pkt =
         new Packet(req,
-                   (req->isLlsc() ?
+                   (req->isLLSC() ?
                     MemCmd::LoadLockedReq : Packet::ReadReq),
                    Packet::Broadcast);
     data_pkt->dataStatic(inst->memData);
@@ -662,7 +662,7 @@ OzoneLWLSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
         return NoFault;
     }
 
-    if (req->isLlsc()) {
+    if (req->isLLSC()) {
         cpu->lockFlag = true;
     }
 

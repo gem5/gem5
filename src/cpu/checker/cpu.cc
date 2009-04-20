@@ -240,8 +240,8 @@ CheckerCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     // verify this data.
     if (unverifiedReq &&
         !(unverifiedReq->isUncacheable()) &&
-        (!(unverifiedReq->isLlsc()) ||
-         ((unverifiedReq->isLlsc()) &&
+        (!(unverifiedReq->isLLSC()) ||
+         ((unverifiedReq->isLLSC()) &&
           unverifiedReq->getExtraData() == 1))) {
         T inst_data;
 /*

@@ -166,7 +166,7 @@ class MemCmd
     bool isInvalidate() const   { return testCmdAttrib(IsInvalidate); }
     bool hasData() const        { return testCmdAttrib(HasData); }
     bool isReadWrite() const    { return isRead() && isWrite(); }
-    bool isLlsc() const         { return testCmdAttrib(IsLlsc); }
+    bool isLLSC() const         { return testCmdAttrib(IsLlsc); }
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
 
@@ -401,7 +401,7 @@ class Packet : public FastAlloc, public Printable
     bool isInvalidate() const   { return cmd.isInvalidate(); }
     bool hasData() const        { return cmd.hasData(); }
     bool isReadWrite() const    { return cmd.isReadWrite(); }
-    bool isLlsc() const         { return cmd.isLlsc(); }
+    bool isLLSC() const         { return cmd.isLLSC(); }
     bool isError() const        { return cmd.isError(); }
     bool isPrint() const        { return cmd.isPrint(); }
 

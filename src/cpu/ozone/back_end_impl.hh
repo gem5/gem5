@@ -1256,7 +1256,7 @@ BackEnd<Impl>::executeInsts()
 
 //                ++iewExecStoreInsts;
 
-                if (!(inst->req->isLlsc())) {
+                if (!(inst->req->isLLSC())) {
                     inst->setExecuted();
 
                     instToCommit(inst);

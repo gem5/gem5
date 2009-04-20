@@ -162,12 +162,12 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
 {
     Request *req = pkt->req;
     Addr paddr = LockedAddr::mask(req->getPaddr());
-    bool isLlsc = pkt->isLlsc();
+    bool isLLSC = pkt->isLLSC();
 
     // Initialize return value.  Non-conditional stores always
     // succeed.  Assume conditional stores will fail until proven
     // otherwise.
-    bool success = !isLlsc;
+    bool success = !isLLSC;
 
     // Iterate over list.  Note that there could be multiple matching
     // records, as more than one context could have done a load locked
@@ -179,7 +179,7 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
         if (i->addr == paddr) {
             // we have a matching address
 
-            if (isLlsc && i->matchesContext(req)) {
+            if (isLLSC && i->matchesContext(req)) {
                 // it's a store conditional, and as far as the memory
                 // system can tell, the requesting context's lock is
                 // still valid.
@@ -199,7 +199,7 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
         }
     }
 
-    if (isLlsc) {
+    if (isLLSC) {
         req->setExtraData(success ? 1 : 0);
     }
 
@@ -284,7 +284,7 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         TRACE_PACKET("Read/Write");
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
-        if (pkt->isLlsc()) {
+        if (pkt->isLLSC()) {
             trackLoadLocked(pkt);
         }
         if (pmemAddr)

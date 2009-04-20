@@ -129,11 +129,11 @@ class PhysicalMemory : public MemObject
         Request *req = pkt->req;
         if (lockedAddrList.empty()) {
             // no locked addrs: nothing to check, store_conditional fails
-            bool isLlsc = pkt->isLlsc();
-            if (isLlsc) {
+            bool isLLSC = pkt->isLLSC();
+            if (isLLSC) {
                 req->setExtraData(0);
             }
-            return !isLlsc; // only do write if not an sc
+            return !isLLSC; // only do write if not an sc
         } else {
             // iterate over list...
             return checkLockedAddrList(pkt);
