@@ -75,7 +75,12 @@ class Request : public FastAlloc
     static const FlagsType NO_FAULT                    = 0x00002000;
     /** The request should not cause a memory access. */
     static const FlagsType NO_ACCESS                   = 0x00004000;
-    /** This request will lock or unlock the accessed memory. */
+    /** This request will lock or unlock the accessed memory. When used with
+     * a load, the access locks the particular chunk of memory. When used
+     * with a store, it unlocks. The rule is that locked accesses have to be
+     * made up of a locked load, some operation on the data, and then a locked
+     * store.
+     */
     static const FlagsType LOCKED                      = 0x00008000;
     /** The request should be prefetched into the exclusive state. */
     static const FlagsType PF_EXCLUSIVE                = 0x00010000;
