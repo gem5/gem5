@@ -52,8 +52,9 @@ using namespace TheISA;
 void
 SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 {
-    DPRINTFR(SyscallVerbose, "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
-             curTick,tc->getCpuPtr()->name(), name,
+    DPRINTFR(SyscallVerbose,
+             "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
+             curTick, tc->getCpuPtr()->name(), name,
              process->getSyscallArg(tc, 0), process->getSyscallArg(tc, 1),
              process->getSyscallArg(tc, 2), process->getSyscallArg(tc, 3));
 
@@ -226,10 +227,10 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         //The seek failed.
         return -errno;
     } else {
-        //The seek succeeded.
-        //Copy "result" to "result_ptr"
-        //XXX We'll assume that the size of loff_t is 64 bits on the
-        //target platform
+        // The seek succeeded.
+        // Copy "result" to "result_ptr"
+        // XXX We'll assume that the size of loff_t is 64 bits on the
+        // target platform
         BufferArg result_buf(result_ptr, sizeof(result));
         memcpy(result_buf.bufferPtr(), &result, sizeof(result));
         result_buf.copyOut(tc->getMemPort());
@@ -389,7 +390,8 @@ truncateFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 }
 
 SyscallReturn
-ftruncateFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
+ftruncateFunc(SyscallDesc *desc, int num,
+              LiveProcess *process, ThreadContext *tc)
 {
     int fd = process->sim_fd(process->getSyscallArg(tc, 0));
 
@@ -463,7 +465,8 @@ dupFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
     Process::FdMap *fdo = process->sim_fd_obj(process->getSyscallArg(tc, 0));
 
     int result = dup(fd);
-    return (result == -1) ? -errno : process->alloc_fd(result, fdo->filename, fdo->flags, fdo->mode, false);
+    return (result == -1) ? -errno :
+        process->alloc_fd(result, fdo->filename, fdo->flags, fdo->mode, false);
 }
 
 
@@ -660,27 +663,31 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     DPRINTF(SyscallVerbose, "In sys_clone:\n");
     DPRINTF(SyscallVerbose, " Flags=%llx\n", process->getSyscallArg(tc, 0));
-    DPRINTF(SyscallVerbose, " Child stack=%llx\n", process->getSyscallArg(tc, 1));
+    DPRINTF(SyscallVerbose, " Child stack=%llx\n",
+            process->getSyscallArg(tc, 1));
 
 
     if (process->getSyscallArg(tc, 0) != 0x10f00) {
-        warn("This sys_clone implementation assumes flags CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD (0x10f00), and may not work correctly with given flags 0x%llx\n", process->getSyscallArg(tc, 0));
+        warn("This sys_clone implementation assumes flags "
+             "CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD "
+             "(0x10f00), and may not work correctly with given flags "
+             "0x%llx\n", process->getSyscallArg(tc, 0));
     }
 
-    ThreadContext* ctc; //child thread context
+    ThreadContext* ctc; // child thread context
     if ( ( ctc = process->findFreeContext() ) != NULL ) {
         DPRINTF(SyscallVerbose, " Found unallocated thread context\n");
 
         ctc->clearArchRegs();
 
-        //Arch-specific cloning code
+        // Arch-specific cloning code
         #if THE_ISA == ALPHA_ISA or THE_ISA == X86_ISA
-            //Cloning the misc. regs for these archs is enough
+            // Cloning the misc. regs for these archs is enough
             TheISA::copyMiscRegs(tc, ctc);
         #elif THE_ISA == SPARC_ISA
             TheISA::copyRegs(tc, ctc);
 
-            //TODO: Explain what this code actually does :-)
+            // TODO: Explain what this code actually does :-)
             ctc->setIntReg(NumIntArchRegs + 6, 0);
             ctc->setIntReg(NumIntArchRegs + 4, 0);
             ctc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
@@ -696,18 +703,19 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             fatal("sys_clone is not implemented for this ISA\n");
         #endif
 
-        //Set up stack register
+        // Set up stack register
         ctc->setIntReg(TheISA::StackPointerReg, process->getSyscallArg(tc, 1));
 
-        //Set up syscall return values in parent and child
-        ctc->setIntReg(ReturnValueReg, 0); //return value, child
+        // Set up syscall return values in parent and child
+        ctc->setIntReg(ReturnValueReg, 0); // return value, child
 
-        //Alpha needs SyscallSuccessReg=0 in child
+        // Alpha needs SyscallSuccessReg=0 in child
         #if THE_ISA == ALPHA_ISA
             ctc->setIntReg(TheISA::SyscallSuccessReg, 0);
         #endif
 
-        //In SPARC/Linux, clone returns 0 on pseudo-return register if parent, non-zero if child
+        // In SPARC/Linux, clone returns 0 on pseudo-return register if
+        // parent, non-zero if child
         #if THE_ISA == SPARC_ISA
             tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
             ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
@@ -716,7 +724,7 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ctc->setPC(tc->readNextPC());
         ctc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
 
-        //In SPARC, need NNPC too...
+        // In SPARC, need NNPC too...
         #if THE_ISA == SPARC_ISA
             ctc->setNextNPC(tc->readNextNPC() + sizeof(TheISA::MachInst));
         #endif
