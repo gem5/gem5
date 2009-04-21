@@ -43,7 +43,7 @@
 #
 
 use strict;
-
+use FileHandle;
 use Getopt::Std;
 
 #
@@ -165,6 +165,8 @@ sub printdiff
 
     # Set $postcontext to print the next $postcontext_lines matching lines.
     $postcontext = $postcontext_lines;
+
+    STDOUT->flush();
 }
 
 
