@@ -462,11 +462,16 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           addr(_req->paddr), size(_req->size), dest(_dest), time(curTick),
-           senderState(NULL)
+           dest(_dest), time(curTick), senderState(NULL)
     {
-        if (req->flags.isSet(Request::VALID_PADDR))
-            flags.set(VALID_ADDR|VALID_SIZE);
+        if (req->hasPaddr()) {
+            addr = req->getPaddr();
+            flags.set(VALID_ADDR);
+        }
+        if (req->hasSize()) {
+            size = req->getSize();
+            flags.set(VALID_SIZE);
+        }
     }
 
     /**
@@ -476,11 +481,14 @@ class Packet : public FastAlloc, public Printable
      */
     Packet(Request *_req, MemCmd _cmd, NodeID _dest, int _blkSize)
         :  flags(VALID_DST), cmd(_cmd), req(_req), data(NULL),
-           addr(_req->paddr & ~(_blkSize - 1)), size(_blkSize), dest(_dest),
-           time(curTick), senderState(NULL)
+           dest(_dest), time(curTick), senderState(NULL)
     {
-        if (req->flags.isSet(Request::VALID_PADDR))
-            flags.set(VALID_ADDR|VALID_SIZE);
+        if (req->hasPaddr()) {
+            addr = req->getPaddr() & ~(_blkSize - 1);
+            flags.set(VALID_ADDR);
+        }
+        size = _blkSize;
+        flags.set(VALID_SIZE);
     }
 
     /**
@@ -526,11 +534,11 @@ class Packet : public FastAlloc, public Printable
     void
     reinitFromRequest()
     {
-        assert(req->flags.isSet(Request::VALID_PADDR));
+        assert(req->hasPaddr());
         flags = 0;
-        addr = req->paddr;
-        size = req->size;
-        time = req->time;
+        addr = req->getPaddr();
+        size = req->getSize();
+        time = req->getTime();
 
         flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();

@@ -53,8 +53,6 @@ typedef Request* RequestPtr;
 
 class Request : public FastAlloc
 {
-    friend class Packet;
-
   public:
     typedef uint32_t FlagsType;
     typedef ::Flags<FlagsType> Flags;
@@ -98,23 +96,32 @@ class Request : public FastAlloc
     /** This request is to a memory mapped register. */
     static const FlagsType MMAPED_IPR                  = 0x00800000;
 
+    /** These flags are *not* cleared when a Request object is reused
+       (assigned a new address). */
+    static const FlagsType STICKY_FLAGS = INST_READ;
+
   private:
-    static const FlagsType PUBLIC_FLAGS                = 0x00FFFFFF;
-    static const FlagsType PRIVATE_FLAGS               = 0xFF000000;
+    typedef uint8_t PrivateFlagsType;
+    typedef ::Flags<PrivateFlagsType> PrivateFlags;
 
     /** Whether or not the size is valid. */
-    static const FlagsType VALID_SIZE                  = 0x01000000;
+    static const PrivateFlagsType VALID_SIZE           = 0x00000001;
     /** Whether or not paddr is valid (has been written yet). */
-    static const FlagsType VALID_PADDR                 = 0x02000000;
+    static const PrivateFlagsType VALID_PADDR          = 0x00000002;
     /** Whether or not the vaddr & asid are valid. */
-    static const FlagsType VALID_VADDR                 = 0x04000000;
+    static const PrivateFlagsType VALID_VADDR          = 0x00000004;
     /** Whether or not the pc is valid. */
-    static const FlagsType VALID_PC                    = 0x10000000;
+    static const PrivateFlagsType VALID_PC             = 0x00000010;
     /** Whether or not the context ID is valid. */
-    static const FlagsType VALID_CONTEXT_ID            = 0x20000000;
-    static const FlagsType VALID_THREAD_ID             = 0x40000000;
+    static const PrivateFlagsType VALID_CONTEXT_ID     = 0x00000020;
+    static const PrivateFlagsType VALID_THREAD_ID      = 0x00000040;
     /** Whether or not the sc result is valid. */
-    static const FlagsType VALID_EXTRA_DATA            = 0x80000000;
+    static const PrivateFlagsType VALID_EXTRA_DATA     = 0x00000080;
+
+    /** These flags are *not* cleared when a Request object is reused
+       (assigned a new address). */
+    static const PrivateFlagsType STICKY_PRIVATE_FLAGS =
+        VALID_CONTEXT_ID | VALID_THREAD_ID;
 
   private:
     /**
@@ -132,6 +139,9 @@ class Request : public FastAlloc
 
     /** Flag structure for the request. */
     Flags flags;
+
+    /** Private flags for field validity checking. */
+    PrivateFlags privateFlags;
 
     /**
      * The time this request was started. Used to calculate
@@ -177,8 +187,8 @@ class Request : public FastAlloc
     Request(int asid, Addr vaddr, int size, Flags flags, Addr pc,
             int cid, int tid)
     {
-        setThreadContext(cid, tid);
         setVirt(asid, vaddr, size, flags, pc);
+        setThreadContext(cid, tid);
     }
 
     ~Request() {}  // for FastAlloc
@@ -191,7 +201,7 @@ class Request : public FastAlloc
     {
         _contextId = context_id;
         _threadId = thread_id;
-        flags.set(VALID_CONTEXT_ID|VALID_THREAD_ID);
+        privateFlags.set(VALID_CONTEXT_ID|VALID_THREAD_ID);
     }
 
     /**
@@ -206,9 +216,10 @@ class Request : public FastAlloc
         size = _size;
         time = curTick;
 
-        flags.set(VALID_PADDR|VALID_SIZE);
-        flags.clear(VALID_VADDR|VALID_PC|VALID_EXTRA_DATA|MMAPED_IPR);
-        flags.update(_flags, PUBLIC_FLAGS);
+        flags.clear(~STICKY_FLAGS);
+        flags.set(_flags);
+        privateFlags.clear(~STICKY_PRIVATE_FLAGS);
+        privateFlags.set(VALID_PADDR|VALID_SIZE);
     }
 
     /**
@@ -222,12 +233,14 @@ class Request : public FastAlloc
         asid = _asid;
         vaddr = _vaddr;
         size = _size;
+        flags = _flags;
         pc = _pc;
         time = curTick;
 
-        flags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
-        flags.clear(VALID_PADDR|VALID_EXTRA_DATA|MMAPED_IPR);
-        flags.update(_flags, PUBLIC_FLAGS);
+        flags.clear(~STICKY_FLAGS);
+        flags.set(_flags);
+        privateFlags.clear(~STICKY_PRIVATE_FLAGS);
+        privateFlags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
     }
 
     /**
@@ -239,9 +252,9 @@ class Request : public FastAlloc
     void
     setPaddr(Addr _paddr)
     {
-        assert(flags.isSet(VALID_VADDR));
+        assert(privateFlags.isSet(VALID_VADDR));
         paddr = _paddr;
-        flags.set(VALID_PADDR);
+        privateFlags.set(VALID_PADDR);
     }
 
     /**
@@ -250,8 +263,8 @@ class Request : public FastAlloc
      */
     void splitOnVaddr(Addr split_addr, RequestPtr &req1, RequestPtr &req2)
     {
-        assert(flags.isSet(VALID_VADDR));
-        assert(flags.noneSet(VALID_PADDR));
+        assert(privateFlags.isSet(VALID_VADDR));
+        assert(privateFlags.noneSet(VALID_PADDR));
         assert(split_addr > vaddr && split_addr < vaddr + size);
         req1 = new Request;
         *req1 = *this;
@@ -265,20 +278,32 @@ class Request : public FastAlloc
     /**
      * Accessor for paddr.
      */
+    bool
+    hasPaddr()
+    {
+        return privateFlags.isSet(VALID_PADDR);
+    }
+
     Addr
     getPaddr()
     {
-        assert(flags.isSet(VALID_PADDR));
+        assert(privateFlags.isSet(VALID_PADDR));
         return paddr;
     }
 
     /**
      *  Accessor for size.
      */
+    bool
+    hasSize()
+    {
+        return privateFlags.isSet(VALID_SIZE);
+    }
+
     int
     getSize()
     {
-        assert(flags.isSet(VALID_SIZE));
+        assert(privateFlags.isSet(VALID_SIZE));
         return size;
     }
 
@@ -286,70 +311,30 @@ class Request : public FastAlloc
     Tick
     getTime()
     {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         return time;
-    }
-
-    void
-    setTime(Tick when)
-    {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        time = when;
     }
 
     /** Accessor for flags. */
     Flags
     getFlags()
     {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        return flags & PUBLIC_FLAGS;
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        return flags;
     }
 
-    Flags
-    anyFlags(Flags _flags)
-    {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        assert(_flags.noneSet(~PUBLIC_FLAGS));
-        return flags.isSet(_flags);
-    }
-
-    Flags
-    allFlags(Flags _flags)
-    {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        assert(_flags.noneSet(~PUBLIC_FLAGS));
-        return flags.allSet(_flags);
-    }
-
-    /** Accessor for flags. */
     void
     setFlags(Flags _flags)
     {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        assert(_flags.noneSet(~PUBLIC_FLAGS));
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
         flags.set(_flags);
-    }
-
-    void
-    clearFlags(Flags _flags)
-    {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        assert(_flags.noneSet(~PUBLIC_FLAGS));
-        flags.clear(_flags);
-    }
-
-    void
-    clearFlags()
-    {
-        assert(flags.isSet(VALID_PADDR|VALID_VADDR));
-        flags.clear(PUBLIC_FLAGS);
     }
 
     /** Accessor function for vaddr.*/
     Addr
     getVaddr()
     {
-        assert(flags.isSet(VALID_VADDR));
+        assert(privateFlags.isSet(VALID_VADDR));
         return vaddr;
     }
 
@@ -357,7 +342,7 @@ class Request : public FastAlloc
     int
     getAsid()
     {
-        assert(flags.isSet(VALID_VADDR));
+        assert(privateFlags.isSet(VALID_VADDR));
         return asid;
     }
 
@@ -365,27 +350,18 @@ class Request : public FastAlloc
     uint8_t
     getAsi()
     {
-        assert(flags.isSet(VALID_VADDR));
+        assert(privateFlags.isSet(VALID_VADDR));
         return flags & ASI_BITS;
     }
 
-    /** Accessor function for asi.*/
-    void
-    setAsi(uint8_t a)
-    {
-        assert(flags.isSet(VALID_VADDR));
-        flags.update(a, ASI_BITS);
-    }
-
-    /** Accessor function for asi.*/
+    /** Accessor function for MMAPED_IPR flag. */
     bool
     isMmapedIpr()
     {
-        assert(flags.isSet(VALID_PADDR));
+        assert(privateFlags.isSet(VALID_PADDR));
         return flags.isSet(MMAPED_IPR);
     }
 
-    /** Accessor function for asi.*/
     void
     setMmapedIpr(bool r)
     {
@@ -397,14 +373,14 @@ class Request : public FastAlloc
     bool
     extraDataValid()
     {
-        return flags.isSet(VALID_EXTRA_DATA);
+        return privateFlags.isSet(VALID_EXTRA_DATA);
     }
 
     /** Accessor function for store conditional return value.*/
     uint64_t
     getExtraData() const
     {
-        assert(flags.isSet(VALID_EXTRA_DATA));
+        assert(privateFlags.isSet(VALID_EXTRA_DATA));
         return extraData;
     }
 
@@ -413,20 +389,20 @@ class Request : public FastAlloc
     setExtraData(uint64_t _extraData)
     {
         extraData = _extraData;
-        flags.set(VALID_EXTRA_DATA);
+        privateFlags.set(VALID_EXTRA_DATA);
     }
 
     bool
     hasContextId() const
     {
-        return flags.isSet(VALID_CONTEXT_ID);
+        return privateFlags.isSet(VALID_CONTEXT_ID);
     }
 
     /** Accessor function for context ID.*/
     int
     contextId() const
     {
-        assert(flags.isSet(VALID_CONTEXT_ID));
+        assert(privateFlags.isSet(VALID_CONTEXT_ID));
         return _contextId;
     }
 
@@ -434,21 +410,21 @@ class Request : public FastAlloc
     int
     threadId() const
     {
-        assert(flags.isSet(VALID_THREAD_ID));
+        assert(privateFlags.isSet(VALID_THREAD_ID));
         return _threadId;
     }
 
     bool
     hasPC() const
     {
-        return flags.isSet(VALID_PC);
+        return privateFlags.isSet(VALID_PC);
     }
 
     /** Accessor function for pc.*/
     Addr
     getPC() const
     {
-        assert(flags.isSet(VALID_PC));
+        assert(privateFlags.isSet(VALID_PC));
         return pc;
     }
 
