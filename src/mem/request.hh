@@ -86,8 +86,8 @@ class Request : public FastAlloc
     static const FlagsType EVICT_NEXT                  = 0x00020000;
     /** The request should ignore unaligned access faults */
     static const FlagsType NO_ALIGN_FAULT              = 0x00040000;
-    /** The request was an instruction read. */
-    static const FlagsType INST_READ                   = 0x00080000;
+    /** The request was an instruction fetch. */
+    static const FlagsType INST_FETCH                  = 0x00080000;
     /** This request is for a memory swap. */
     static const FlagsType MEM_SWAP                    = 0x00100000;
     static const FlagsType MEM_SWAP_COND               = 0x00200000;
@@ -98,7 +98,7 @@ class Request : public FastAlloc
 
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
-    static const FlagsType STICKY_FLAGS = INST_READ;
+    static const FlagsType STICKY_FLAGS = INST_FETCH;
 
   private:
     typedef uint8_t PrivateFlagsType;
@@ -430,7 +430,7 @@ class Request : public FastAlloc
 
     /** Accessor Function to Check Cacheability. */
     bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
-    bool isInstRead() const { return flags.isSet(INST_READ); }
+    bool isInstFetch() const { return flags.isSet(INST_FETCH); }
     bool isLLSC() const { return flags.isSet(LLSC); }
     bool isLocked() const { return flags.isSet(LOCKED); }
     bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }

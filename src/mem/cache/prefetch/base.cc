@@ -170,7 +170,7 @@ BasePrefetcher::getPacket()
 Tick
 BasePrefetcher::notify(PacketPtr &pkt, Tick time)
 {
-    if (!pkt->req->isUncacheable() && !(pkt->req->isInstRead() && onlyData)) {
+    if (!pkt->req->isUncacheable() && !(pkt->req->isInstFetch() && onlyData)) {
         // Calculate the blk address
         Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
 

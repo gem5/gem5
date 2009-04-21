@@ -48,6 +48,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
+#include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
 #include "sim/host.hh"
@@ -280,7 +281,7 @@ BaseSimpleCPU::copy(Addr dest)
             memReq->dest = dest_addr;
             memReq->size = 64;
             memReq->time = curTick;
-            memReq->flags &= ~INST_READ;
+            memReq->flags &= ~INST_FETCH;
             dcacheInterface->access(memReq);
         }
     }
@@ -346,7 +347,7 @@ BaseSimpleCPU::setupFetchRequest(Request *req)
 #endif
 
     Addr fetchPC = (threadPC & PCMask) + fetchOffset;
-    req->setVirt(0, fetchPC, sizeof(MachInst), 0, threadPC);
+    req->setVirt(0, fetchPC, sizeof(MachInst), Request::INST_FETCH, threadPC);
 }
 
 

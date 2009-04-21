@@ -68,7 +68,7 @@ TraceCPU::tick()
 
     while (nextReq && curTick >= nextCycle) {
         assert(nextReq->thread_num < 4 && "Not enough threads");
-        if (nextReq->isInstRead() && icacheInterface) {
+        if (nextReq->isInstFetch() && icacheInterface) {
             if (icacheInterface->isBlocked())
                 break;
 

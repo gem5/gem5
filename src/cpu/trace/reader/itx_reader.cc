@@ -168,7 +168,7 @@ ITXReader::getNextReq(MemReqPtr &req)
                     break;
                   case ITXCode:
                     tmp_req->cmd = Read;
-                    tmp_req->flags |= INST_READ;
+                    tmp_req->flags |= INST_FETCH;
                     break;
                   default:
                     fatal("Unknown ITX type");
