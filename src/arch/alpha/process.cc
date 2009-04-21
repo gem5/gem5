@@ -42,8 +42,6 @@
 using namespace AlphaISA;
 using namespace std;
 
-static const int SyscallSuccessReg = 19;
-
 AlphaLiveProcess::AlphaLiveProcess(LiveProcessParams *params,
                                    ObjectFile *objFile)
     : LiveProcess(params, objFile)

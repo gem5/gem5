@@ -69,6 +69,7 @@ namespace SparcISA
     const int ZeroReg = 0;      // architecturally meaningful
     // the rest of these depend on the ABI
     const int ReturnAddressReg = 31; // post call, precall is 15
+    const int ReturnValueReg = 8;  // Post return, 24 is pre-return.
     const int StackPointerReg = 14;
     const int FramePointerReg = 30;
 

@@ -40,10 +40,6 @@
 using namespace std;
 using namespace MipsISA;
 
-static const int SyscallSuccessReg = 7;
-static const int FirstArgumentReg = 4;
-static const int ReturnValueReg = 2;
-
 MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
         ObjectFile *objFile)
     : LiveProcess(params, objFile)

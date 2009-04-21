@@ -47,7 +47,6 @@ using namespace std;
 using namespace SparcISA;
 
 static const int FirstArgumentReg = 8;
-static const int ReturnValueReg = 8;
 
 
 SparcLiveProcess::SparcLiveProcess(LiveProcessParams * params,

@@ -104,7 +104,6 @@
 using namespace std;
 using namespace X86ISA;
 
-static const int ReturnValueReg = INTREG_RAX;
 static const int ArgumentReg[] = {
     INTREG_RDI,
     INTREG_RSI,

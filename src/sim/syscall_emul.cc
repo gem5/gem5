@@ -659,12 +659,12 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     DPRINTF(SyscallVerbose, "In sys_clone:\n");
-    DPRINTF(SyscallVerbose, " Flags=%llx\n", tc->getSyscallArg(0));
-    DPRINTF(SyscallVerbose, " Child stack=%llx\n", tc->getSyscallArg(1));
+    DPRINTF(SyscallVerbose, " Flags=%llx\n", process->getSyscallArg(tc, 0));
+    DPRINTF(SyscallVerbose, " Child stack=%llx\n", process->getSyscallArg(tc, 1));
 
 
-    if (tc->getSyscallArg(0) != 0x10f00) {
-        warn("This sys_clone implementation assumes flags CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD (0x10f00), and may not work correctly with given flags 0x%llx\n", tc->getSyscallArg(0));
+    if (process->getSyscallArg(tc, 0) != 0x10f00) {
+        warn("This sys_clone implementation assumes flags CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD (0x10f00), and may not work correctly with given flags 0x%llx\n", process->getSyscallArg(tc, 0));
     }
 
     ThreadContext* ctc; //child thread context
@@ -697,14 +697,14 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         #endif
 
         //Set up stack register
-        ctc->setIntReg(TheISA::StackPointerReg, tc->getSyscallArg(1));
+        ctc->setIntReg(TheISA::StackPointerReg, process->getSyscallArg(tc, 1));
 
         //Set up syscall return values in parent and child
         ctc->setIntReg(ReturnValueReg, 0); //return value, child
 
         //Alpha needs SyscallSuccessReg=0 in child
         #if THE_ISA == ALPHA_ISA
-            ctc->setIntReg(SyscallSuccessReg, 0);
+            ctc->setIntReg(TheISA::SyscallSuccessReg, 0);
         #endif
 
         //In SPARC/Linux, clone returns 0 on pseudo-return register if parent, non-zero if child

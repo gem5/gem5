@@ -155,6 +155,7 @@ const int FramePointerReg = 15;
 const int SyscallNumReg = 0;
 const int FirstArgumentReg = 16;
 const int SyscallPseudoReturnReg = 20;
+const int SyscallSuccessReg = 19;
 
 const int LogVMPageSize = 13;       // 8K bytes
 const int VMPageSize = (1 << LogVMPageSize);

@@ -188,6 +188,10 @@ namespace MipsISA
     // semantically meaningful register indices
     const int ZeroReg = 0;
     const int AssemblerReg = 1;
+    const int SyscallSuccessReg = 7;
+    const int FirstArgumentReg = 4;
+    const int ReturnValueReg = 2;
+
     const int KernelReg0 = 26;
     const int KernelReg1 = 27;
     const int GlobalPointerReg = 28;
