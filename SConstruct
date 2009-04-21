@@ -273,7 +273,7 @@ if COMMAND_LINE_TARGETS:
                     COMMAND_LINE_TARGETS]
 else:
     # Default targets are relative to root of tree
-    abs_targets = [ normpath(joinpath(ROOT, str(x))) for x in \
+    abs_targets = [ normpath(joinpath(env.root.abspath, str(x))) for x in \
                     DEFAULT_TARGETS]
 
 
