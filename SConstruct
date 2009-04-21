@@ -654,6 +654,10 @@ Export('all_cpu_list', 'default_cpus')
 sticky_vars = Variables(args=ARGUMENTS)
 Export('sticky_vars')
 
+# Sticky variables that should be exported
+export_vars = []
+Export('export_vars')
+
 # Non-sticky variables only apply to the current build.
 nonsticky_vars = Variables(args=ARGUMENTS)
 Export('nonsticky_vars')
@@ -698,10 +702,9 @@ nonsticky_vars.AddVariables(
     )
 
 # These variables get exported to #defines in config/*.hh (see src/SConscript).
-env.ExportVariables = ['FULL_SYSTEM', 'USE_FENV', \
-                       'USE_MYSQL', 'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', \
-                       'FAST_ALLOC_STATS', 'SS_COMPATIBLE_FP', \
-                       'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE']
+export_vars += ['FULL_SYSTEM', 'USE_FENV', 'USE_MYSQL',
+                'NO_FAST_ALLOC', 'FAST_ALLOC_DEBUG', 'FAST_ALLOC_STATS',
+                'SS_COMPATIBLE_FP', 'USE_CHECKER', 'TARGET_ISA', 'CP_ANNOTATE']
 
 ###################################################
 #

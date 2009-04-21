@@ -48,7 +48,7 @@ Import('*')
 # Children need to see the environment
 Export('env')
 
-build_env = dict([(opt, env[opt]) for opt in env.ExportVariables])
+build_env = dict([(opt, env[opt]) for opt in export_vars])
 
 def sort_list(_list):
     """return a sorted copy of '_list'"""
@@ -242,7 +242,7 @@ for extra_dir in extras_dir_list:
             build_dir = joinpath(env['BUILDDIR'], root[prefix_len:])
             SConscript(joinpath(root, 'SConscript'), build_dir=build_dir)
 
-for opt in env.ExportVariables:
+for opt in export_vars:
     env.ConfigFile(opt)
 
 ########################################################################
