@@ -32,23 +32,6 @@ from m5.SimObject import SimObject
 from m5.params import *
 
 class ArmTLB(SimObject):
-    abstract = True
     type = 'ArmTLB'
     cxx_class = 'ArmISA::TLB'
-    size = Param.Int("TLB size")
-
-class ArmDTB(ArmTLB):
-    type = 'ArmDTB'
-    cxx_class = 'ArmISA::DTB'
-    size = 64
-
-class ArmITB(ArmTLB):
-    type = 'ArmITB'
-    cxx_class = 'ArmISA::ITB'
-    size = 64
-
-class ArmUTB(ArmTLB):
-    type = 'ArmUTB'
-    cxx_class = 'ArmISA::UTB'
-    size = 64
-
+    size = Param.Int(64, "TLB size")

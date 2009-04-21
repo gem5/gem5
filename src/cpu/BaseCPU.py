@@ -54,7 +54,7 @@ elif build_env['TARGET_ISA'] == 'mips':
     if build_env['FULL_SYSTEM']:
         from MipsInterrupts import MipsInterrupts
 elif build_env['TARGET_ISA'] == 'arm':
-    from ArmTLB import ArmDTB
+    from ArmTLB import ArmTLB
     if build_env['FULL_SYSTEM']:
         from ArmInterrupts import ArmInterrupts
 
@@ -109,8 +109,8 @@ class BaseCPU(MemObject):
                     MipsInterrupts(), "Interrupt Controller")
     elif build_env['TARGET_ISA'] == 'arm':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
-        dtb = Param.ArmTLB(ArmDTB(), "Data TLB")
-        itb = Param.ArmTLB(ArmITB(), "Instruction TLB")
+        dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
+        itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
         if build_env['FULL_SYSTEM']:
             interrupts = Param.ArmInterrupts(
                     ArmInterrupts(), "Interrupt Controller")

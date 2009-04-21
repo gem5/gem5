@@ -43,8 +43,7 @@
 #include "arch/arm/pagetable.hh"
 #include "base/statistics.hh"
 #include "mem/request.hh"
-#include "params/ArmDTB.hh"
-#include "params/ArmITB.hh"
+#include "params/ArmTLB.hh"
 #include "sim/faults.hh"
 #include "sim/tlb.hh"
 
@@ -135,6 +134,10 @@ class TLB : public BaseTLB
 
     static Fault checkCacheability(RequestPtr &req);
 
+    Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
+    void translateTiming(RequestPtr req, ThreadContext *tc,
+            Translation *translation, Mode mode);
+
     // Checkpointing
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
@@ -142,36 +145,6 @@ class TLB : public BaseTLB
     void regStats();
 };
 
-class ITB : public TLB
-{
-  public:
-    typedef ArmTLBParams Params;
-    ITB(const Params *p);
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation);
-};
-
-class DTB : public TLB
-{
-  public:
-    typedef ArmTLBParams Params;
-    DTB(const Params *p);
-
-    Fault translateAtomic(RequestPtr req, ThreadContext *tc, bool write);
-    void translateTiming(RequestPtr req, ThreadContext *tc,
-            Translation *translation, bool write);
-};
-
-class UTB : public ITB, public DTB
-{
-  public:
-    typedef ArmTLBParams Params;
-    UTB(const Params *p);
-
-};
-
-}
+/* namespace ArmISA */ }
 
 #endif // __ARCH_ARM_TLB_HH__
