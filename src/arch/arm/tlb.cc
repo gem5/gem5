@@ -36,20 +36,17 @@
 #include <string>
 #include <vector>
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/pagetable.hh"
 #include "arch/arm/tlb.hh"
-#include "arch/arm/faults.hh"
 #include "arch/arm/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "sim/process.hh"
 #include "mem/page_table.hh"
-#include "params/ArmDTB.hh"
-#include "params/ArmITB.hh"
 #include "params/ArmTLB.hh"
-#include "params/ArmUTB.hh"
+#include "sim/process.hh"
 
 
 using namespace std;
@@ -279,7 +276,7 @@ TLB::regStats()
 }
 
 Fault
-ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 {
 #if !FULL_SYSTEM
     Process * p = tc->getProcessPtr();
@@ -290,67 +287,17 @@ ITB::translateAtomic(RequestPtr req, ThreadContext *tc)
 
     return NoFault;
 #else
-  fatal("ITB translate not yet implemented\n");
+  fatal("translate atomic not yet implemented\n");
 #endif
 }
 
 void
-ITB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation)
+TLB::translateTiming(RequestPtr req, ThreadContext *tc,
+        Translation *translation, Mode mode)
 {
     assert(translation);
-    translation->finish(translateAtomic(req, tc), req, tc, false);
+    translation->finish(translateAtomic(req, tc, mode), req, tc, mode);
 }
-
-
-Fault
-DTB::translateAtomic(RequestPtr req, ThreadContext *tc, bool write)
-{
-#if !FULL_SYSTEM
-    Process * p = tc->getProcessPtr();
-
-    Fault fault = p->pTable->translate(req);
-    if(fault != NoFault)
-        return fault;
-
-    return NoFault;
-#else
-  fatal("DTB translate not yet implemented\n");
-#endif
-}
-
-void
-DTB::translateTiming(RequestPtr req, ThreadContext *tc,
-        Translation *translation, bool write)
-{
-    assert(translation);
-    translation->finish(translateAtomic(req, tc, write), req, tc, write);
-}
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Arm ITB
-//
-ITB::ITB(const Params *p)
-    : TLB(p)
-{}
-
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Arm DTB
-//
-DTB::DTB(const Params *p)
-    : TLB(p)
-{}
-
-///////////////////////////////////////////////////////////////////////
-//
-//  Arm UTB
-//
-UTB::UTB(const Params *p)
-    : ITB(p), DTB(p)
-{}
 
 ArmISA::PTE &
 TLB::index(bool advance)
@@ -363,20 +310,8 @@ TLB::index(bool advance)
     return *pte;
 }
 
-ArmISA::ITB *
-ArmITBParams::create()
+ArmISA::TLB *
+ArmTLBParams::create()
 {
-    return new ArmISA::ITB(this);
-}
-
-ArmISA::DTB *
-ArmDTBParams::create()
-{
-    return new ArmISA::DTB(this);
-}
-
-ArmISA::UTB *
-ArmUTBParams::create()
-{
-    return new ArmISA::UTB(this);
+    return new ArmISA::TLB(this);
 }
