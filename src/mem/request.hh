@@ -95,6 +95,8 @@ class Request : public FastAlloc
     static const FlagsType NO_HALF_WORD_ALIGN_FAULT    = 0x00400000;
     /** This request is to a memory mapped register. */
     static const FlagsType MMAPED_IPR                  = 0x00800000;
+    /** The request is a prefetch. */
+    static const FlagsType PREFETCH                    = 0x01000000;
 
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
@@ -431,6 +433,7 @@ class Request : public FastAlloc
     /** Accessor Function to Check Cacheability. */
     bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
     bool isInstFetch() const { return flags.isSet(INST_FETCH); }
+    bool isPrefetch() const { return flags.isSet(PREFETCH); }
     bool isLLSC() const { return flags.isSet(LLSC); }
     bool isLocked() const { return flags.isSet(LOCKED); }
     bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
