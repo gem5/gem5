@@ -49,6 +49,8 @@
 //
 class PhysicalMemory : public MemObject
 {
+  protected:
+
     class MemoryPort : public SimpleTimingPort
     {
         PhysicalMemory *memory;

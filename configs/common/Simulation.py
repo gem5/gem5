@@ -31,7 +31,6 @@ from os.path import join as joinpath
 import m5
 from m5.objects import *
 m5.AddToPath('../common')
-from Caches import L1Cache
 
 def setCPUClass(options):
 
@@ -151,9 +150,8 @@ def run(options, root, testsys, cpu_class):
 
             if not options.caches:
                 # O3 CPU must have a cache to work.
-                switch_cpus_1[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                         L1Cache(size = '64kB'))
-                switch_cpus_1[i].connectMemPorts(testsys.membus)
+                print "O3 CPU must be used with caches"
+                sys.exit(1)
 
             testsys.switch_cpus = switch_cpus
             testsys.switch_cpus_1 = switch_cpus_1
