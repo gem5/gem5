@@ -250,7 +250,17 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 
 void X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
-    panic("copyMiscRegs not implemented for x86!\n");
+    //panic("copyMiscRegs not implemented for x86!\n");
+    warn("copyMiscRegs is naively implemented for x86\n");
+    for (int i = 0; i < X86ISA::NumMiscRegs; ++i) {
+        if ( ( i != MISCREG_CR1 &&
+             !(i > MISCREG_CR4 && i < MISCREG_CR8) &&
+             !(i > MISCREG_CR8 && i <= MISCREG_CR15) ) == false) {
+             continue;
+        }
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
+    }
+
 }
 
 void X86ISA::copyRegs(ThreadContext *src, ThreadContext *dest)

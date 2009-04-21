@@ -434,7 +434,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 309 */ SyscallDesc("get_kernel_syms", unimplementedFunc),
     /* 310 */ SyscallDesc("syslog", unimplementedFunc),
     /* 311 */ SyscallDesc("reboot", unimplementedFunc),
-    /* 312 */ SyscallDesc("clone", unimplementedFunc),
+    /* 312 */ SyscallDesc("clone", cloneFunc),
     /* 313 */ SyscallDesc("uselib", unimplementedFunc),
     /* 314 */ SyscallDesc("mlock", unimplementedFunc),
     /* 315 */ SyscallDesc("munlock", unimplementedFunc),
@@ -527,7 +527,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 402 */ SyscallDesc("io_cancel", unimplementedFunc),
     /* 403 */ SyscallDesc("unknown #403", unimplementedFunc),
     /* 404 */ SyscallDesc("unknown #404", unimplementedFunc),
-    /* 405 */ SyscallDesc("exit_group", exitFunc), // exit all threads...
+    /* 405 */ SyscallDesc("exit_group", exitGroupFunc), // exit all threads...
     /* 406 */ SyscallDesc("lookup_dcookie", unimplementedFunc),
     /* 407 */ SyscallDesc("sys_epoll_create", unimplementedFunc),
     /* 408 */ SyscallDesc("sys_epoll_ctl", unimplementedFunc),

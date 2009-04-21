@@ -183,8 +183,12 @@ SyscallReturn unimplementedFunc(SyscallDesc *desc, int num,
 SyscallReturn ignoreFunc(SyscallDesc *desc, int num,
                          LiveProcess *p, ThreadContext *tc);
 
-/// Target exit() handler: terminate simulation.
+/// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, int num,
+                       LiveProcess *p, ThreadContext *tc);
+
+/// Target exit_group() handler: terminate simulation. (exit all threads)
+SyscallReturn exitGroupFunc(SyscallDesc *desc, int num,
                        LiveProcess *p, ThreadContext *tc);
 
 /// Target getpagesize() handler.
@@ -308,6 +312,9 @@ SyscallReturn geteuidFunc(SyscallDesc *desc, int num,
 SyscallReturn getegidFunc(SyscallDesc *desc, int num,
                                LiveProcess *p, ThreadContext *tc);
 
+/// Target clone() handler.
+SyscallReturn cloneFunc(SyscallDesc *desc, int num,
+                               LiveProcess *p, ThreadContext *tc);
 
 
 /// Pseudo Funcs  - These functions use a different return convension,
@@ -1013,8 +1020,8 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     getElapsedTime(tp->tv_sec, tp->tv_usec);
     tp->tv_sec += seconds_since_epoch;
-    tp->tv_sec = htog(tp->tv_sec);
-    tp->tv_usec = htog(tp->tv_usec);
+    tp->tv_sec = TheISA::htog(tp->tv_sec);
+    tp->tv_usec = TheISA::htog(tp->tv_usec);
 
     tp.copyOut(tc->getMemPort());
 

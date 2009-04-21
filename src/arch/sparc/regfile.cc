@@ -352,10 +352,31 @@ void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 
 void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
-    // First loop through the integer registers.
-    for (int i = 0; i < SparcISA::NumIntRegs; ++i) {
-        dest->setIntReg(i, src->readIntReg(i));
+    //First loop through the integer registers.
+    int old_gl = src->readMiscRegNoEffect(MISCREG_GL);
+    int old_cwp = src->readMiscRegNoEffect(MISCREG_CWP);
+    //Globals
+    for (int x = 0; x < MaxGL; ++x) {
+        src->setMiscRegNoEffect(MISCREG_GL, x);
+        dest->setMiscRegNoEffect(MISCREG_GL, x);
+        for (int y = 0; y < 8; y++)
+            dest->setIntReg(y, src->readIntReg(y));
     }
+    //Locals/Ins/Outs
+    for (int x = 0; x < NWindows; ++x) {
+         src->setMiscRegNoEffect(MISCREG_CWP, x);
+         dest->setMiscRegNoEffect(MISCREG_CWP, x);
+         for (int y = 8; y < 32; y++)
+             dest->setIntReg(y, src->readIntReg(y));
+    }
+    //MicroIntRegs
+    for (int y = 0; y < NumMicroIntRegs; ++y)
+        dest->setIntReg(y+32, src->readIntReg(y+32));
+
+    //Restore src's GL, CWP
+    src->setMiscRegNoEffect(MISCREG_GL, old_gl);
+    src->setMiscRegNoEffect(MISCREG_CWP, old_cwp);
+
 
     // Then loop through the floating point registers.
     for (int i = 0; i < SparcISA::NumFloatRegs; ++i) {
@@ -365,8 +386,10 @@ void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
     // Copy misc. registers
     copyMiscRegs(src, dest);
 
+
     // Lastly copy PC/NPC
     dest->setPC(src->readPC());
     dest->setNextPC(src->readNextPC());
     dest->setNextNPC(src->readNextNPC());
 }
+

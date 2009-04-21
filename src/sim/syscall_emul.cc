@@ -106,6 +106,19 @@ exitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 
 SyscallReturn
+exitGroupFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+              ThreadContext *tc)
+{
+    // really should just halt all thread contexts belonging to this
+    // process in case there's another process running...
+    exitSimLoop("target called exit()",
+                process->getSyscallArg(tc, 0) & 0xff);
+
+    return 1;
+}
+
+
+SyscallReturn
 getpagesizeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     return (int)VMPageSize;
@@ -640,4 +653,82 @@ getegidFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return process->egid();
 }
 
+
+SyscallReturn
+cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+           ThreadContext *tc)
+{
+    DPRINTF(SyscallVerbose, "In sys_clone:\n");
+    DPRINTF(SyscallVerbose, " Flags=%llx\n", tc->getSyscallArg(0));
+    DPRINTF(SyscallVerbose, " Child stack=%llx\n", tc->getSyscallArg(1));
+
+
+    if (tc->getSyscallArg(0) != 0x10f00) {
+        warn("This sys_clone implementation assumes flags CLONE_VM|CLONE_FS|CLONE_FILES|CLONE_SIGHAND|CLONE_THREAD (0x10f00), and may not work correctly with given flags 0x%llx\n", tc->getSyscallArg(0));
+    }
+
+    ThreadContext* ctc; //child thread context
+    if ( ( ctc = process->findFreeContext() ) != NULL ) {
+        DPRINTF(SyscallVerbose, " Found unallocated thread context\n");
+
+        ctc->clearArchRegs();
+
+        //Arch-specific cloning code
+        #if THE_ISA == ALPHA_ISA or THE_ISA == X86_ISA
+            //Cloning the misc. regs for these archs is enough
+            TheISA::copyMiscRegs(tc, ctc);
+        #elif THE_ISA == SPARC_ISA
+            TheISA::copyRegs(tc, ctc);
+
+            //TODO: Explain what this code actually does :-)
+            ctc->setIntReg(NumIntArchRegs + 6, 0);
+            ctc->setIntReg(NumIntArchRegs + 4, 0);
+            ctc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
+            ctc->setIntReg(NumIntArchRegs + 5, NWindows);
+            ctc->setMiscRegNoEffect(MISCREG_CWP, 0);
+            ctc->setIntReg(NumIntArchRegs + 7, 0);
+            ctc->setMiscRegNoEffect(MISCREG_TL, 0);
+            ctc->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
+
+            for (int y = 8; y < 32; y++)
+                ctc->setIntReg(y, tc->readIntReg(y));
+        #else
+            fatal("sys_clone is not implemented for this ISA\n");
+        #endif
+
+        //Set up stack register
+        ctc->setIntReg(TheISA::StackPointerReg, tc->getSyscallArg(1));
+
+        //Set up syscall return values in parent and child
+        ctc->setIntReg(ReturnValueReg, 0); //return value, child
+
+        //Alpha needs SyscallSuccessReg=0 in child
+        #if THE_ISA == ALPHA_ISA
+            ctc->setIntReg(SyscallSuccessReg, 0);
+        #endif
+
+        //In SPARC/Linux, clone returns 0 on pseudo-return register if parent, non-zero if child
+        #if THE_ISA == SPARC_ISA
+            tc->setIntReg(TheISA::SyscallPseudoReturnReg, 0);
+            ctc->setIntReg(TheISA::SyscallPseudoReturnReg, 1);
+        #endif
+
+        ctc->setPC(tc->readNextPC());
+        ctc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
+
+        //In SPARC, need NNPC too...
+        #if THE_ISA == SPARC_ISA
+            ctc->setNextNPC(tc->readNextNPC() + sizeof(TheISA::MachInst));
+        #endif
+
+        ctc->activate();
+
+        // Should return nonzero child TID in parent's syscall return register,
+        // but for our pthread library any non-zero value will work
+        return 1;
+    } else {
+        fatal("Called sys_clone, but no unallocated thread contexts found!\n");
+        return 0;
+    }
+}
 

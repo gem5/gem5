@@ -162,7 +162,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /*  71 */ SyscallDesc("mmap", mmapFunc<Sparc32Linux>),
     /*  72 */ SyscallDesc("setreuid32", unimplementedFunc),
     /*  73 */ SyscallDesc("munmap", munmapFunc),
-    /*  74 */ SyscallDesc("mprotect", unimplementedFunc),
+    /*  74 */ SyscallDesc("mprotect", ignoreFunc),
     /*  75 */ SyscallDesc("madvise", unimplementedFunc),
     /*  76 */ SyscallDesc("vhangup", unimplementedFunc),
     /*  77 */ SyscallDesc("truncate64", unimplementedFunc), //32 bit
@@ -191,20 +191,20 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 100 */ SyscallDesc("getpriority", unimplementedFunc), //32 bit
     /* 101 */ SyscallDesc("rt_sigreturn", unimplementedFunc), //32 bit
     /* 102 */ SyscallDesc("rt_sigaction", ignoreFunc), //32 bit
-    /* 103 */ SyscallDesc("rt_sigprocmask", unimplementedFunc), //32 bit
+    /* 103 */ SyscallDesc("rt_sigprocmask", ignoreFunc), //32 bit
     /* 104 */ SyscallDesc("rt_sigpending", unimplementedFunc), //32 bit
     /* 105 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),
     /* 106 */ SyscallDesc("rt_sigqueueinfo", unimplementedFunc), //32 bit
     /* 107 */ SyscallDesc("rt_sigsuspend", unimplementedFunc),
     /* 108 */ SyscallDesc("setresuid32", unimplementedFunc),
     /* 109 */ SyscallDesc("getresuid32", getresuidFunc),
-    /* 110 */ SyscallDesc("setresgid32", unimplementedFunc),
+    /* 110 */ SyscallDesc("setresgid32", ignoreFunc),
     /* 111 */ SyscallDesc("getresgid32", unimplementedFunc),
     /* 112 */ SyscallDesc("setregid32", unimplementedFunc),
     /* 113 */ SyscallDesc("revcmsg", unimplementedFunc),
     /* 114 */ SyscallDesc("sendmsg", unimplementedFunc),
     /* 115 */ SyscallDesc("getgroups32", unimplementedFunc), //32 bit
-    /* 116 */ SyscallDesc("gettimeofday", unimplementedFunc), //32 bit
+    /* 116 */ SyscallDesc("gettimeofday", gettimeofdayFunc<Sparc32Linux>), //32 bit
     /* 117 */ SyscallDesc("getrusage", unimplementedFunc), //32 bit
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
     /* 119 */ SyscallDesc("getcwd", getcwdFunc),
@@ -276,7 +276,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 185 */ SyscallDesc("setpgid", unimplementedFunc), //32 bit
     /* 186 */ SyscallDesc("fremovexattr", unimplementedFunc), //32 bit
     /* 187 */ SyscallDesc("tkill", unimplementedFunc), //32 bit
-    /* 188 */ SyscallDesc("exit_group", exitFunc), //32 bit
+    /* 188 */ SyscallDesc("exit_group", exitGroupFunc), //32 bit
     /* 189 */ SyscallDesc("uname", unameFunc),
     /* 190 */ SyscallDesc("init_module", unimplementedFunc), //32 bit
     /* 191 */ SyscallDesc("personality", unimplementedFunc),
@@ -305,7 +305,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 214 */ SyscallDesc("sysinfo", unimplementedFunc), //32 bit
     /* 215 */ SyscallDesc("ipc", unimplementedFunc), //32 bit
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc), //32 bit
-    /* 217 */ SyscallDesc("clone", unimplementedFunc),
+    /* 217 */ SyscallDesc("clone", cloneFunc),
     /* 218 */ SyscallDesc("ioprio_get", unimplementedFunc), //32 bit
     /* 219 */ SyscallDesc("adjtimex", unimplementedFunc), //32 bit
     /* 220 */ SyscallDesc("sigprocmask", unimplementedFunc), //32 bit
@@ -468,7 +468,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 71 */ SyscallDesc("mmap", mmapFunc<SparcLinux>),
     /* 72 */ SyscallDesc("setreuid32", unimplementedFunc),
     /* 73 */ SyscallDesc("munmap", munmapFunc),
-    /* 74 */ SyscallDesc("mprotect", unimplementedFunc),
+    /* 74 */ SyscallDesc("mprotect", ignoreFunc),
     /* 75 */ SyscallDesc("madvise", unimplementedFunc),
     /* 76 */ SyscallDesc("vhangup", unimplementedFunc),
     /* 77 */ SyscallDesc("truncate64", unimplementedFunc),
@@ -497,20 +497,20 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 100 */ SyscallDesc("getpriority", unimplementedFunc),
     /* 101 */ SyscallDesc("rt_sigreturn", unimplementedFunc),
     /* 102 */ SyscallDesc("rt_sigaction", ignoreFunc),
-    /* 103 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
+    /* 103 */ SyscallDesc("rt_sigprocmask", ignoreFunc),
     /* 104 */ SyscallDesc("rt_sigpending", unimplementedFunc),
     /* 105 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),
     /* 106 */ SyscallDesc("rt_sigqueueinfo", unimplementedFunc),
     /* 107 */ SyscallDesc("rt_sigsuspend", unimplementedFunc),
     /* 108 */ SyscallDesc("setresuid", unimplementedFunc),
     /* 109 */ SyscallDesc("getresuid", getresuidFunc),
-    /* 110 */ SyscallDesc("setresgid", unimplementedFunc),
+    /* 110 */ SyscallDesc("setresgid", ignoreFunc),
     /* 111 */ SyscallDesc("getresgid", unimplementedFunc),
     /* 112 */ SyscallDesc("setregid32", unimplementedFunc),
     /* 113 */ SyscallDesc("recvmsg", unimplementedFunc),
     /* 114 */ SyscallDesc("sendmsg", unimplementedFunc),
     /* 115 */ SyscallDesc("getgroups32", unimplementedFunc),
-    /* 116 */ SyscallDesc("gettimeofday", unimplementedFunc),
+    /* 116 */ SyscallDesc("gettimeofday", gettimeofdayFunc<SparcLinux>),
     /* 117 */ SyscallDesc("getrusage", unimplementedFunc),
     /* 118 */ SyscallDesc("getsockopt", unimplementedFunc),
     /* 119 */ SyscallDesc("getcwd", unimplementedFunc),
@@ -582,7 +582,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 185 */ SyscallDesc("setpgid", unimplementedFunc),
     /* 186 */ SyscallDesc("fremovexattr", unimplementedFunc),
     /* 187 */ SyscallDesc("tkill", unimplementedFunc),
-    /* 188 */ SyscallDesc("exit_group", exitFunc),
+    /* 188 */ SyscallDesc("exit_group", exitGroupFunc),
     /* 189 */ SyscallDesc("uname", unameFunc),
     /* 190 */ SyscallDesc("init_module", unimplementedFunc),
     /* 191 */ SyscallDesc("personality", unimplementedFunc),
@@ -611,7 +611,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 214 */ SyscallDesc("sysinfo", unimplementedFunc),
     /* 215 */ SyscallDesc("ipc", unimplementedFunc),
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 217 */ SyscallDesc("clone", unimplementedFunc),
+    /* 217 */ SyscallDesc("clone", cloneFunc),
     /* 218 */ SyscallDesc("ioprio_get", unimplementedFunc),
     /* 219 */ SyscallDesc("adjtimex", unimplementedFunc),
     /* 220 */ SyscallDesc("sigprocmask", unimplementedFunc),
