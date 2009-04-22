@@ -557,13 +557,15 @@ py_lib_path = [ py_getvar('LIBDIR') ]
 # add the prefix/lib/pythonX.Y/config dir, but only if there is no
 # shared library in prefix/lib/.
 if not py_getvar('Py_ENABLE_SHARED'):
-    py_lib_path.append('-L' + py_getvar('LIBPL'))
+    py_lib_path.append(py_getvar('LIBPL'))
 
 py_libs = []
 for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
+    assert lib.startswith('-l')
+    lib = lib[2:]   
     if lib not in py_libs:
         py_libs.append(lib)
-py_libs.append('-l' + py_version)
+py_libs.append(py_version)
 
 env.Append(CPPPATH=py_includes)
 env.Append(LIBPATH=py_lib_path)
@@ -574,8 +576,6 @@ if not conf.CheckHeader('Python.h', '<>'):
     Exit(1)
 
 for lib in py_libs:
-    assert lib.startswith('-l')
-    lib = lib[2:]
     if not conf.CheckLib(lib):
         print "Error: can't find library %s required by python" % lib
         Exit(1)

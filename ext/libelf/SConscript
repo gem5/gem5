@@ -119,7 +119,7 @@ m4env.M4(target=File('libelf_msize.c'),
 # into either m5 or the library
 m4env.Library('elf', [m4env.SharedObject(f) for f in elf_files])
 
-env.Append(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.'))
 env.Append(LIBS=['elf'])
-env.Append(LIBPATH=[Dir('.')])
+env.Prepend(LIBPATH=[Dir('.')])
 

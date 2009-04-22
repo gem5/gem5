@@ -32,7 +32,7 @@ Import('env')
 
 env.Library('gzstream', [File('gzstream.cc')])
 
-env.Append(CPPPATH=Dir('.'))
+env.Prepend(CPPPATH=Dir('.'))
 env.Append(LIBS=['gzstream'])
-env.Append(LIBPATH=[Dir('.')])
+env.Prepend(LIBPATH=[Dir('.')])
 
