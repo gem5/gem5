@@ -65,8 +65,9 @@
 #include "base/refcnt.hh"
 #include "base/str.hh"
 #include "base/stats/flags.hh"
-#include "base/stats/visit.hh"
+#include "base/stats/info.hh"
 #include "base/stats/types.hh"
+#include "base/stats/visit.hh"
 #include "sim/host.hh"
 
 class Callback;
@@ -76,92 +77,6 @@ extern Tick curTick;
 
 /* A namespace for all of the Statistics */
 namespace Stats {
-
-struct StorageParams
-{
-    virtual ~StorageParams();
-};
-
-//////////////////////////////////////////////////////////////////////
-//
-// Statistics Framework Base classes
-//
-//////////////////////////////////////////////////////////////////////
-class Info
-{
-  public:
-    /** The name of the stat. */
-    std::string name;
-    /** The description of the stat. */
-    std::string desc;
-    /** The formatting flags. */
-    StatFlags flags;
-    /** The display precision. */
-    int precision;
-    /** A pointer to a prerequisite Stat. */
-    const Info *prereq;
-    /**
-     * A unique stat ID for each stat in the simulator.
-     * Can be used externally for lookups as well as for debugging.
-     */
-    static int id_count;
-    int id;
-
-  public:
-    const StorageParams *storageParams;
-
-  public:
-    Info();
-    virtual ~Info();
-
-    /** Set the name of this statistic */
-    void setName(const std::string &name);
-
-    /**
-     * Check that this stat has been set up properly and is ready for
-     * use
-     * @return true for success
-     */
-    virtual bool check() const = 0;
-    bool baseCheck() const;
-
-    /**
-     * Enable the stat for use
-     */
-    virtual void enable();
-
-    /**
-     * Prepare the stat for dumping.
-     */
-    virtual void prepare() = 0;
-
-    /**
-     * Reset the stat to the default state.
-     */
-    virtual void reset() = 0;
-
-    /**
-     * @return true if this stat has a value and satisfies its
-     * requirement as a prereq
-     */
-    virtual bool zero() const = 0;
-
-    /**
-     * Visitor entry for outputing statistics data
-     */
-    virtual void visit(Visit &visitor) = 0;
-
-    /**
-     * Checks if the first stat's name is alphabetically less than the second.
-     * This function breaks names up at periods and considers each subname
-     * separately.
-     * @param stat1 The first stat.
-     * @param stat2 The second stat.
-     * @return stat1's name is alphabetically before stat2's
-     */
-    static bool less(Info *stat1, Info *stat2);
-};
-struct StorageParams;
 
 template <class Stat, class Base>
 class InfoProxy : public Base
@@ -183,14 +98,6 @@ class InfoProxy : public Base
     bool zero() const { return s.zero(); }
 };
 
-class ScalarInfo : public Info
-{
-  public:
-    virtual Counter value() const = 0;
-    virtual Result result() const = 0;
-    virtual Result total() const = 0;
-};
-
 template <class Stat>
 class ScalarInfoProxy : public InfoProxy<Stat, ScalarInfo>
 {
@@ -200,23 +107,6 @@ class ScalarInfoProxy : public InfoProxy<Stat, ScalarInfo>
     Counter value() const { return this->s.value(); }
     Result result() const { return this->s.result(); }
     Result total() const { return this->s.total(); }
-};
-
-class VectorInfo : public Info
-{
-  public:
-    /** Names and descriptions of subfields. */
-    std::vector<std::string> subnames;
-    std::vector<std::string> subdescs;
-
-  public:
-    void enable();
-
-  public:
-    virtual size_type size() const = 0;
-    virtual const VCounter &value() const = 0;
-    virtual const VResult &result() const = 0;
-    virtual Result total() const = 0;
 };
 
 template <class Stat>
@@ -248,48 +138,11 @@ class VectorInfoProxy : public InfoProxy<Stat, VectorInfo>
     Result total() const { return this->s.total(); }
 };
 
-struct DistData
-{
-    Counter min_val;
-    Counter max_val;
-    Counter underflow;
-    Counter overflow;
-    VCounter cvec;
-    Counter sum;
-    Counter squares;
-    Counter samples;
-};
-
-class DistInfo : public Info
-{
-  public:
-    /** Local storage for the entry values, used for printing. */
-    DistData data;
-};
-
 template <class Stat>
 class DistInfoProxy : public InfoProxy<Stat, DistInfo>
 {
   public:
     DistInfoProxy(Stat &stat) : InfoProxy<Stat, DistInfo>(stat) {}
-};
-
-class VectorDistInfo : public Info
-{
-  public:
-    std::vector<DistData> data;
-
-    /** Names and descriptions of subfields. */
-    std::vector<std::string> subnames;
-    std::vector<std::string> subdescs;
-    void enable();
-
-  protected:
-    /** Local storage for the entry values, used for printing. */
-    mutable VResult rvec;
-
-  public:
-    virtual size_type size() const = 0;
 };
 
 template <class Stat>
@@ -299,23 +152,6 @@ class VectorDistInfoProxy : public InfoProxy<Stat, VectorDistInfo>
     VectorDistInfoProxy(Stat &stat) : InfoProxy<Stat, VectorDistInfo>(stat) {}
 
     size_type size() const { return this->s.size(); }
-};
-
-class Vector2dInfo : public Info
-{
-  public:
-    /** Names and descriptions of subfields. */
-    std::vector<std::string> subnames;
-    std::vector<std::string> subdescs;
-    std::vector<std::string> y_subnames;
-
-    size_type x;
-    size_type y;
-
-    /** Local storage for the entry values, used for printing. */
-    mutable VCounter cvec;
-
-    void enable();
 };
 
 template <class Stat>
@@ -1427,22 +1263,6 @@ class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
 //
 //////////////////////////////////////////////////////////////////////
 
-struct DistParams : public StorageParams
-{
-    const bool fancy;
-
-    /** The minimum value to track. */
-    Counter min;
-    /** The maximum value to track. */
-    Counter max;
-    /** The number of entries in each bucket. */
-    Counter bucket_size;
-    /** The number of buckets. Equal to (max-min)/bucket_size. */
-    size_type buckets;
-
-    explicit DistParams(bool f) : fancy(f) {}
-};
-
 /**
  * Templatized storage and interface for a distrbution stat.
  */
@@ -2553,12 +2373,6 @@ class VectorAverageDeviation
         this->doInit(size);
         return this->self();
     }
-};
-
-class FormulaInfo : public VectorInfo
-{
-  public:
-    virtual std::string str() const = 0;
 };
 
 template <class Stat>

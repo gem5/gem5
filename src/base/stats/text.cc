@@ -36,13 +36,20 @@
 #include <math.h>
 #endif
 
+#include <cassert>
+#ifdef __SUNPRO_CC
+#include <math.h>
+#endif
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <string>
 
+#include "base/cast.hh"
 #include "base/misc.hh"
-#include "base/statistics.hh"
+#include "base/str.hh"
+#include "base/stats/info.hh"
 #include "base/stats/text.hh"
 #include "base/stats/visit.hh"
 
@@ -71,6 +78,8 @@ __nan()
 #endif
 
 namespace Stats {
+
+std::list<Info *> &statsList();
 
 Text::Text()
     : mystream(false), stream(NULL), descriptions(false)
