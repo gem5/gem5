@@ -158,7 +158,7 @@ def compare_versions(v1, v2):
 
 ########################################################################
 #
-# Set up the base build environment.
+# Set up the main build environment.
 #
 ########################################################################
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
@@ -169,9 +169,9 @@ for key,val in os.environ.iteritems():
     if key in use_vars or key.startswith("M5"):
         use_env[key] = val
 
-env = Environment(ENV=use_env)
-env.root = Dir(".")          # The current directory (where this file lives).
-env.srcdir = Dir("src")      # The source directory
+main = Environment(ENV=use_env)
+main.root = Dir(".")         # The current directory (where this file lives).
+main.srcdir = Dir("src")     # The source directory
 
 ########################################################################
 #
@@ -182,7 +182,7 @@ env.srcdir = Dir("src")      # The source directory
 #
 ########################################################################
 
-hgdir = env.root.Dir(".hg")
+hgdir = main.root.Dir(".hg")
 
 mercurial_style_message = """
 You're missing the M5 style hook.
@@ -197,7 +197,7 @@ style = %s/util/style.py
 
 [hooks]
 pretxncommit.style = python:style.check_whitespace
-""" % (env.root)
+""" % (main.root)
 
 mercurial_bin_not_found = """
 Mercurial binary cannot be found, unfortunately this means that we
@@ -217,7 +217,7 @@ if hgdir.exists():
     # 1) Grab repository revision if we know it.
     cmd = "hg id -n -i -t -b"
     try:
-        hg_info = read_command(cmd, cwd=env.root.abspath).strip()
+        hg_info = read_command(cmd, cwd=main.root.abspath).strip()
     except OSError:
         print mercurial_bin_not_found
 
@@ -239,7 +239,8 @@ if hgdir.exists():
             sys.exit(1)
 else:
     print ".hg directory not found"
-env['HG_INFO'] = hg_info
+
+main['HG_INFO'] = hg_info
 
 ###################################################
 #
@@ -273,7 +274,7 @@ if COMMAND_LINE_TARGETS:
                     COMMAND_LINE_TARGETS]
 else:
     # Default targets are relative to root of tree
-    abs_targets = [ normpath(joinpath(env.root.abspath, str(x))) for x in \
+    abs_targets = [ normpath(joinpath(main.root.abspath, str(x))) for x in \
                     DEFAULT_TARGETS]
 
 
@@ -304,15 +305,15 @@ for t in abs_targets:
 if not isdir(build_root):
     mkdir(build_root)
 
-Export('env')
+Export('main')
 
-env.SConsignFile(joinpath(build_root, "sconsign"))
+main.SConsignFile(joinpath(build_root, "sconsign"))
 
 # Default duplicate option is to use hard links, but this messes up
 # when you use emacs to edit a file in the target dir, as emacs moves
 # file to file~ then copies to file, breaking the link.  Symbolic
 # (soft) links work better.
-env.SetOption('duplicate', 'soft-copy')
+main.SetOption('duplicate', 'soft-copy')
 
 #
 # Set up global sticky variables... these are common to an entire build
@@ -339,8 +340,8 @@ global_sticky_vars_file = joinpath(build_root, 'variables.global')
 global_sticky_vars = Variables(global_sticky_vars_file, args=ARGUMENTS)
 
 global_sticky_vars.AddVariables(
-    ('CC', 'C compiler', environ.get('CC', env['CC'])),
-    ('CXX', 'C++ compiler', environ.get('CXX', env['CXX'])),
+    ('CC', 'C compiler', environ.get('CC', main['CC'])),
+    ('CXX', 'C++ compiler', environ.get('CXX', main['CXX'])),
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
@@ -354,19 +355,19 @@ Usage: scons [scons options] [build options] [target(s)]
 Global sticky options:
 '''
 
-help_text += global_sticky_vars.GenerateHelpText(env)
+help_text += global_sticky_vars.GenerateHelpText(main)
 
-# Update env with values from ARGUMENTS & file global_sticky_vars_file
-global_sticky_vars.Update(env)
+# Update main environment with values from ARGUMENTS & global_sticky_vars_file
+global_sticky_vars.Update(main)
 
 # Save sticky variable settings back to current variables file
-global_sticky_vars.Save(global_sticky_vars_file, env)
+global_sticky_vars.Save(global_sticky_vars_file, main)
 
 # Parse EXTRAS variable to build list of all directories where we're
 # look for sources etc.  This list is exported as base_dir_list.
-base_dir = env.srcdir.abspath
-if env['EXTRAS']:
-    extras_dir_list = env['EXTRAS'].split(':')
+base_dir = main.srcdir.abspath
+if main['EXTRAS']:
+    extras_dir_list = main['EXTRAS'].split(':')
 else:
     extras_dir_list = []
 
@@ -374,36 +375,36 @@ Export('base_dir')
 Export('extras_dir_list')
 
 # the ext directory should be on the #includes path
-env.Append(CPPPATH=[Dir('ext')])
+main.Append(CPPPATH=[Dir('ext')])
 
 # M5_PLY is used by isa_parser.py to find the PLY package.
-env.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
+main.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
 
-CXX_version = read_command([env['CXX'],'--version'], exception=False)
-CXX_V = read_command([env['CXX'],'-V'], exception=False)
+CXX_version = read_command([main['CXX'],'--version'], exception=False)
+CXX_V = read_command([main['CXX'],'-V'], exception=False)
 
-env['GCC'] = CXX_version and CXX_version.find('g++') >= 0
-env['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
-env['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
-if env['GCC'] + env['SUNCC'] + env['ICC'] > 1:
+main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
+main['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
+main['ICC'] = CXX_V and CXX_V.find('Intel') >= 0
+if main['GCC'] + main['SUNCC'] + main['ICC'] > 1:
     print 'Error: How can we have two at the same time?'
     Exit(1)
 
 # Set up default C++ compiler flags
-if env['GCC']:
-    env.Append(CCFLAGS='-pipe')
-    env.Append(CCFLAGS='-fno-strict-aliasing')
-    env.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
-    env.Append(CXXFLAGS='-Wno-deprecated')
-elif env['ICC']:
+if main['GCC']:
+    main.Append(CCFLAGS='-pipe')
+    main.Append(CCFLAGS='-fno-strict-aliasing')
+    main.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+    main.Append(CXXFLAGS='-Wno-deprecated')
+elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings
-elif env['SUNCC']:
-    env.Append(CCFLAGS='-Qoption ccfe')
-    env.Append(CCFLAGS='-features=gcc')
-    env.Append(CCFLAGS='-features=extensions')
-    env.Append(CCFLAGS='-library=stlport4')
-    env.Append(CCFLAGS='-xar')
-    #env.Append(CCFLAGS='-instances=semiexplicit')
+elif main['SUNCC']:
+    main.Append(CCFLAGS='-Qoption ccfe')
+    main.Append(CCFLAGS='-features=gcc')
+    main.Append(CCFLAGS='-features=extensions')
+    main.Append(CCFLAGS='-library=stlport4')
+    main.Append(CCFLAGS='-xar')
+    #main.Append(CCFLAGS='-instances=semiexplicit')
 else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'
@@ -411,19 +412,19 @@ else:
 
 # Do this after we save setting back, or else we'll tack on an
 # extra 'qdo' every time we run scons.
-if env['BATCH']:
-    env['CC']     = env['BATCH_CMD'] + ' ' + env['CC']
-    env['CXX']    = env['BATCH_CMD'] + ' ' + env['CXX']
-    env['AS']     = env['BATCH_CMD'] + ' ' + env['AS']
-    env['AR']     = env['BATCH_CMD'] + ' ' + env['AR']
-    env['RANLIB'] = env['BATCH_CMD'] + ' ' + env['RANLIB']
+if main['BATCH']:
+    main['CC']     = main['BATCH_CMD'] + ' ' + main['CC']
+    main['CXX']    = main['BATCH_CMD'] + ' ' + main['CXX']
+    main['AS']     = main['BATCH_CMD'] + ' ' + main['AS']
+    main['AR']     = main['BATCH_CMD'] + ' ' + main['AR']
+    main['RANLIB'] = main['BATCH_CMD'] + ' ' + main['RANLIB']
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
-    env.Append(CCFLAGS=Split("-Wno-uninitialized"))
+    main.Append(CCFLAGS=Split("-Wno-uninitialized"))
 
 # Check for SWIG
-if not env.has_key('SWIG'):
+if not main.has_key('SWIG'):
     print 'Error: SWIG utility not found.'
     print '       Please install (see http://www.swig.org) and retry.'
     Exit(1)
@@ -444,12 +445,12 @@ if compare_versions(swig_version[2], min_swig_version) < 0:
 
 # Set up SWIG flags & scanner
 swig_flags=Split('-c++ -python -modern -templatereduce $_CPPINCFLAGS')
-env.Append(SWIGFLAGS=swig_flags)
+main.Append(SWIGFLAGS=swig_flags)
 
 # filter out all existing swig scanners, they mess up the dependency
 # stuff for some reason
 scanners = []
-for scanner in env['SCANNERS']:
+for scanner in main['SCANNERS']:
     skeys = scanner.skeys
     if skeys == '.i':
         continue
@@ -465,7 +466,7 @@ swig_inc_re = '^[ \t]*[%,#][ \t]*(?:include|import)[ \t]*(<|")([^>"]+)(>|")'
 scanners.append(CPPScanner("SwigScan", [ ".i" ], "CPPPATH", swig_inc_re))
 
 # replace the scanners list that has what we want
-env['SCANNERS'] = scanners
+main['SCANNERS'] = scanners
 
 # Add a custom Check function to the Configure context so that we can
 # figure out if the compiler adds leading underscores to global
@@ -495,7 +496,7 @@ def CheckLeading(context):
 
 # Platform-specific configuration.  Note again that we assume that all
 # builds under a given build root run on the same host platform.
-conf = Configure(env,
+conf = Configure(main,
                  conf_dir = joinpath(build_root, '.scons_config'),
                  log_file = joinpath(build_root, 'scons_config.log'),
                  custom_tests = { 'CheckLeading' : CheckLeading })
@@ -510,10 +511,10 @@ try:
     uname = platform.uname()
     if uname[0] == 'Darwin' and compare_versions(uname[2], '9.0.0') >= 0:
         if int(read_command('sysctl -n hw.cpu64bit_capable')[0]):
-            env.Append(CCFLAGS='-arch x86_64')
-            env.Append(CFLAGS='-arch x86_64')
-            env.Append(LINKFLAGS='-arch x86_64')
-            env.Append(ASFLAGS='-arch x86_64')
+            main.Append(CCFLAGS='-arch x86_64')
+            main.Append(CFLAGS='-arch x86_64')
+            main.Append(LINKFLAGS='-arch x86_64')
+            main.Append(ASFLAGS='-arch x86_64')
 except:
     pass
 
@@ -534,7 +535,7 @@ if not conf:
         def __getattr__(self, mname):
             return NullCheck
 
-    conf = NullConf(env)
+    conf = NullConf(main)
 
 # Find Python include and library directories for embedding the
 # interpreter.  For consistency, we will use the same Python
@@ -567,8 +568,8 @@ for lib in py_getvar('LIBS').split() + py_getvar('SYSLIBS').split():
         py_libs.append(lib)
 py_libs.append(py_version)
 
-env.Append(CPPPATH=py_includes)
-env.Append(LIBPATH=py_lib_path)
+main.Append(CPPPATH=py_includes)
+main.Append(LIBPATH=py_lib_path)
 
 # verify that this stuff works
 if not conf.CheckHeader('Python.h', '<>'):
@@ -630,14 +631,12 @@ if have_mysql:
 #
 # Finish the configuration
 #
-env = conf.Finish()
+main = conf.Finish()
 
 ######################################################################
 #
 # Collect all non-global variables
 #
-
-Export('env')
 
 # Define the universe of supported ISAs
 all_isa_list = [ ]
@@ -750,15 +749,15 @@ def config_emitter(target, source, env):
 
 config_builder = Builder(emitter = config_emitter, action = config_action)
 
-env.Append(BUILDERS = { 'ConfigFile' : config_builder })
+main.Append(BUILDERS = { 'ConfigFile' : config_builder })
 
 # libelf build is shared across all configs in the build root.
-env.SConscript('ext/libelf/SConscript',
-               variant_dir = joinpath(build_root, 'libelf'))
+main.SConscript('ext/libelf/SConscript',
+                variant_dir = joinpath(build_root, 'libelf'))
 
 # gzstream build is shared across all configs in the build root.
-env.SConscript('ext/gzstream/SConscript',
-               variant_dir = joinpath(build_root, 'gzstream'))
+main.SConscript('ext/gzstream/SConscript',
+                variant_dir = joinpath(build_root, 'gzstream'))
 
 ###################################################
 #
@@ -766,7 +765,7 @@ env.SConscript('ext/gzstream/SConscript',
 #
 ###################################################
 
-env['ALL_ISA_LIST'] = all_isa_list
+main['ALL_ISA_LIST'] = all_isa_list
 def make_switching_dir(dname, switch_headers, env):
     # Generate the header.  target[0] is the full path of the output
     # header to generate.  'source' is a dummy variable, since we get the
@@ -806,14 +805,11 @@ Export('make_switching_dir')
 #
 ###################################################
 
-# rename base env
-base_env = env
-
 for variant_path in variant_paths:
     print "Building in", variant_path
 
     # Make a copy of the build-root environment to use for this config.
-    env = base_env.Clone()
+    env = main.Clone()
     env['BUILDDIR'] = variant_path
 
     # variant_dir is the tail component of build path, and is used to

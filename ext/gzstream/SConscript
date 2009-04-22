@@ -28,11 +28,11 @@
 #
 # Authors: Nathan Binkert
 
-Import('env')
+Import('main')
 
-env.Library('gzstream', [File('gzstream.cc')])
+main.Library('gzstream', [File('gzstream.cc')])
 
-env.Prepend(CPPPATH=Dir('.'))
-env.Append(LIBS=['gzstream'])
-env.Prepend(LIBPATH=[Dir('.')])
+main.Prepend(CPPPATH=Dir('.'))
+main.Append(LIBS=['gzstream'])
+main.Prepend(LIBPATH=[Dir('.')])
 
