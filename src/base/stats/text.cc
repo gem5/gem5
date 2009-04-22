@@ -299,19 +299,19 @@ struct DistPrint
 
     const DistData &data;
 
-    DistPrint(const Text *text, const DistInfoBase &info);
-    DistPrint(const Text *text, const VectorDistInfoBase &info, int i);
+    DistPrint(const Text *text, const DistInfo &info);
+    DistPrint(const Text *text, const VectorDistInfo &info, int i);
     void init(const Text *text, const Info &info, const DistParams *params);
     void operator()(ostream &stream) const;
 };
 
-DistPrint::DistPrint(const Text *text, const DistInfoBase &info)
+DistPrint::DistPrint(const Text *text, const DistInfo &info)
     : data(info.data)
 {
     init(text, info, safe_cast<const DistParams *>(info.storageParams));
 }
 
-DistPrint::DistPrint(const Text *text, const VectorDistInfoBase &info, int i)
+DistPrint::DistPrint(const Text *text, const VectorDistInfo &info, int i)
     : data(info.data[i])
 {
     init(text, info, safe_cast<const DistParams *>(info.storageParams));
@@ -458,7 +458,7 @@ DistPrint::operator()(ostream &stream) const
 }
 
 void
-Text::visit(const ScalarInfoBase &info)
+Text::visit(const ScalarInfo &info)
 {
     if (noOutput(info))
         return;
@@ -477,7 +477,7 @@ Text::visit(const ScalarInfoBase &info)
 }
 
 void
-Text::visit(const VectorInfoBase &info)
+Text::visit(const VectorInfo &info)
 {
     if (noOutput(info))
         return;
@@ -515,7 +515,7 @@ Text::visit(const VectorInfoBase &info)
 }
 
 void
-Text::visit(const Vector2dInfoBase &info)
+Text::visit(const Vector2dInfo &info)
 {
     if (noOutput(info))
         return;
@@ -569,7 +569,7 @@ Text::visit(const Vector2dInfoBase &info)
 }
 
 void
-Text::visit(const DistInfoBase &info)
+Text::visit(const DistInfo &info)
 {
     if (noOutput(info))
         return;
@@ -579,7 +579,7 @@ Text::visit(const DistInfoBase &info)
 }
 
 void
-Text::visit(const VectorDistInfoBase &info)
+Text::visit(const VectorDistInfo &info)
 {
     if (noOutput(info))
         return;
@@ -591,9 +591,9 @@ Text::visit(const VectorDistInfoBase &info)
 }
 
 void
-Text::visit(const FormulaInfoBase &info)
+Text::visit(const FormulaInfo &info)
 {
-    visit((const VectorInfoBase &)info);
+    visit((const VectorInfo &)info);
 }
 
 bool

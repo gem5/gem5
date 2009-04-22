@@ -206,7 +206,7 @@ Info::enable()
 }
 
 void
-VectorInfoBase::enable()
+VectorInfo::enable()
 {
     size_type s = size();
     if (subnames.size() < s)
@@ -216,7 +216,7 @@ VectorInfoBase::enable()
 }
 
 void
-VectorDistInfoBase::enable()
+VectorDistInfo::enable()
 {
     size_type s = size();
     if (subnames.size() < s)
@@ -226,7 +226,7 @@ VectorDistInfoBase::enable()
 }
 
 void
-Vector2dInfoBase::enable()
+Vector2dInfo::enable()
 {
     if (subnames.size() < x)
         subnames.resize(x);

@@ -544,7 +544,7 @@ MySql::configure(const Info &info, string type)
 }
 
 void
-MySql::configure(const ScalarInfoBase &info)
+MySql::configure(const ScalarInfo &info)
 {
     if (!configure(info, "SCALAR"))
         return;
@@ -553,7 +553,7 @@ MySql::configure(const ScalarInfoBase &info)
 }
 
 void
-MySql::configure(const VectorInfoBase &info)
+MySql::configure(const VectorInfo &info)
 {
     if (!configure(info, "VECTOR"))
         return;
@@ -578,7 +578,7 @@ MySql::configure(const VectorInfoBase &info)
 }
 
 void
-MySql::configure(const DistInfoBase &info)
+MySql::configure(const DistInfo &info)
 {
     if (!configure(info, "DIST"))
         return;
@@ -595,7 +595,7 @@ MySql::configure(const DistInfoBase &info)
 }
 
 void
-MySql::configure(const VectorDistInfoBase &info)
+MySql::configure(const VectorDistInfo &info)
 {
     if (!configure(info, "VECTORDIST"))
         return;
@@ -628,7 +628,7 @@ MySql::configure(const VectorDistInfoBase &info)
 }
 
 void
-MySql::configure(const Vector2dInfoBase &info)
+MySql::configure(const Vector2dInfo &info)
 {
     if (!configure(info, "VECTOR2D"))
         return;
@@ -665,7 +665,7 @@ MySql::configure(const Vector2dInfoBase &info)
 }
 
 void
-MySql::configure(const FormulaInfoBase &info)
+MySql::configure(const FormulaInfo &info)
 {
     MySQL::Connection &mysql = run->conn();
     assert(mysql.connected());
@@ -735,7 +735,7 @@ MySql::event(const std::string &event)
 }
 
 void
-MySql::output(const ScalarInfoBase &info)
+MySql::output(const ScalarInfo &info)
 {
     if (!(info.flags & print))
         return;
@@ -749,7 +749,7 @@ MySql::output(const ScalarInfoBase &info)
 }
 
 void
-MySql::output(const VectorInfoBase &info)
+MySql::output(const VectorInfo &info)
 {
     if (!(info.flags & print))
         return;
@@ -816,7 +816,7 @@ MySql::output(const DistData &data, const DistParams *params)
 }
 
 void
-MySql::output(const DistInfoBase &info)
+MySql::output(const DistInfo &info)
 {
     if (!(info.flags & print))
         return;
@@ -827,7 +827,7 @@ MySql::output(const DistInfoBase &info)
 }
 
 void
-MySql::output(const VectorDistInfoBase &info)
+MySql::output(const VectorDistInfo &info)
 {
     if (!(info.flags & print))
         return;
@@ -843,7 +843,7 @@ MySql::output(const VectorDistInfoBase &info)
 }
 
 void
-MySql::output(const Vector2dInfoBase &info)
+MySql::output(const Vector2dInfo &info)
 {
     if (!(info.flags & print))
         return;
@@ -862,7 +862,7 @@ MySql::output(const Vector2dInfoBase &info)
 }
 
 void
-MySql::output(const FormulaInfoBase &info)
+MySql::output(const FormulaInfo &info)
 {
 }
 
@@ -870,7 +870,7 @@ MySql::output(const FormulaInfoBase &info)
  * Implement the visitor
  */
 void
-MySql::visit(const ScalarInfoBase &info)
+MySql::visit(const ScalarInfo &info)
 {
     if (!configured)
         configure(info);
@@ -879,7 +879,7 @@ MySql::visit(const ScalarInfoBase &info)
 }
 
 void
-MySql::visit(const VectorInfoBase &info)
+MySql::visit(const VectorInfo &info)
 {
     if (!configured)
         configure(info);
@@ -888,17 +888,7 @@ MySql::visit(const VectorInfoBase &info)
 }
 
 void
-MySql::visit(const DistInfoBase &info)
-{
-    return;
-    if (!configured)
-        configure(info);
-    else
-        output(info);
-}
-
-void
-MySql::visit(const VectorDistInfoBase &info)
+MySql::visit(const DistInfo &info)
 {
     return;
     if (!configured)
@@ -908,7 +898,7 @@ MySql::visit(const VectorDistInfoBase &info)
 }
 
 void
-MySql::visit(const Vector2dInfoBase &info)
+MySql::visit(const VectorDistInfo &info)
 {
     return;
     if (!configured)
@@ -918,7 +908,17 @@ MySql::visit(const Vector2dInfoBase &info)
 }
 
 void
-MySql::visit(const FormulaInfoBase &info)
+MySql::visit(const Vector2dInfo &info)
+{
+    return;
+    if (!configured)
+        configure(info);
+    else
+        output(info);
+}
+
+void
+MySql::visit(const FormulaInfo &info)
 {
     if (!configured)
         configure(info);

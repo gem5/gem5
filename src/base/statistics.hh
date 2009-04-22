@@ -161,15 +161,16 @@ class Info
      */
     static bool less(Info *stat1, Info *stat2);
 };
+struct StorageParams;
 
 template <class Stat, class Base>
-class InfoWrap : public Base
+class InfoProxy : public Base
 {
   protected:
     Stat &s;
 
   public:
-    InfoWrap(Stat &stat) : s(stat) {}
+    InfoProxy(Stat &stat) : s(stat) {}
 
     bool check() const { return s.check(); }
     void prepare() { s.prepare(); }
@@ -182,7 +183,7 @@ class InfoWrap : public Base
     bool zero() const { return s.zero(); }
 };
 
-class ScalarInfoBase : public Info
+class ScalarInfo : public Info
 {
   public:
     virtual Counter value() const = 0;
@@ -191,17 +192,17 @@ class ScalarInfoBase : public Info
 };
 
 template <class Stat>
-class ScalarInfo : public InfoWrap<Stat, ScalarInfoBase>
+class ScalarInfoProxy : public InfoProxy<Stat, ScalarInfo>
 {
   public:
-    ScalarInfo(Stat &stat) : InfoWrap<Stat, ScalarInfoBase>(stat) {}
+    ScalarInfoProxy(Stat &stat) : InfoProxy<Stat, ScalarInfo>(stat) {}
 
     Counter value() const { return this->s.value(); }
     Result result() const { return this->s.result(); }
     Result total() const { return this->s.total(); }
 };
 
-class VectorInfoBase : public Info
+class VectorInfo : public Info
 {
   public:
     /** Names and descriptions of subfields. */
@@ -219,14 +220,14 @@ class VectorInfoBase : public Info
 };
 
 template <class Stat>
-class VectorInfo : public InfoWrap<Stat, VectorInfoBase>
+class VectorInfoProxy : public InfoProxy<Stat, VectorInfo>
 {
   protected:
     mutable VCounter cvec;
     mutable VResult rvec;
 
   public:
-    VectorInfo(Stat &stat) : InfoWrap<Stat, VectorInfoBase>(stat) {}
+    VectorInfoProxy(Stat &stat) : InfoProxy<Stat, VectorInfo>(stat) {}
 
     size_type size() const { return this->s.size(); }
 
@@ -259,7 +260,7 @@ struct DistData
     Counter samples;
 };
 
-class DistInfoBase : public Info
+class DistInfo : public Info
 {
   public:
     /** Local storage for the entry values, used for printing. */
@@ -267,13 +268,13 @@ class DistInfoBase : public Info
 };
 
 template <class Stat>
-class DistInfo : public InfoWrap<Stat, DistInfoBase>
+class DistInfoProxy : public InfoProxy<Stat, DistInfo>
 {
   public:
-    DistInfo(Stat &stat) : InfoWrap<Stat, DistInfoBase>(stat) {}
+    DistInfoProxy(Stat &stat) : InfoProxy<Stat, DistInfo>(stat) {}
 };
 
-class VectorDistInfoBase : public Info
+class VectorDistInfo : public Info
 {
   public:
     std::vector<DistData> data;
@@ -292,15 +293,15 @@ class VectorDistInfoBase : public Info
 };
 
 template <class Stat>
-class VectorDistInfo : public InfoWrap<Stat, VectorDistInfoBase>
+class VectorDistInfoProxy : public InfoProxy<Stat, VectorDistInfo>
 {
   public:
-    VectorDistInfo(Stat &stat) : InfoWrap<Stat, VectorDistInfoBase>(stat) {}
+    VectorDistInfoProxy(Stat &stat) : InfoProxy<Stat, VectorDistInfo>(stat) {}
 
     size_type size() const { return this->s.size(); }
 };
 
-class Vector2dInfoBase : public Info
+class Vector2dInfo : public Info
 {
   public:
     /** Names and descriptions of subfields. */
@@ -318,10 +319,10 @@ class Vector2dInfoBase : public Info
 };
 
 template <class Stat>
-class Vector2dInfo : public InfoWrap<Stat, Vector2dInfoBase>
+class Vector2dInfoProxy : public InfoProxy<Stat, Vector2dInfo>
 {
   public:
-    Vector2dInfo(Stat &stat) : InfoWrap<Stat, Vector2dInfoBase>(stat) {}
+    Vector2dInfoProxy(Stat &stat) : InfoProxy<Stat, Vector2dInfo>(stat) {}
 };
 
 class InfoAccess
@@ -359,11 +360,11 @@ class InfoAccess
     bool check() const { return true; }
 };
 
-template <class Derived, template <class> class InfoType>
+template <class Derived, template <class> class InfoProxyType>
 class DataWrap : public InfoAccess
 {
   public:
-    typedef InfoType<Derived> Info;
+    typedef InfoProxyType<Derived> Info;
 
   protected:
     Derived &self() { return *static_cast<Derived *>(this); }
@@ -466,11 +467,11 @@ class DataWrap : public InfoAccess
     }
 };
 
-template <class Derived, template <class> class InfoType>
-class DataWrapVec : public DataWrap<Derived, InfoType>
+template <class Derived, template <class> class InfoProxyType>
+class DataWrapVec : public DataWrap<Derived, InfoProxyType>
 {
   public:
-    typedef InfoType<Derived> Info;
+    typedef InfoProxyType<Derived> Info;
 
     // The following functions are specific to vectors.  If you use them
     // in a non vector context, you will get a nice compiler error!
@@ -542,11 +543,11 @@ class DataWrapVec : public DataWrap<Derived, InfoType>
     }
 };
 
-template <class Derived, template <class> class InfoType>
-class DataWrapVec2d : public DataWrapVec<Derived, InfoType>
+template <class Derived, template <class> class InfoProxyType>
+class DataWrapVec2d : public DataWrapVec<Derived, InfoProxyType>
 {
   public:
-    typedef InfoType<Derived> Info;
+    typedef InfoProxyType<Derived> Info;
 
     /**
      * @warning This makes the assumption that if you're gonna subnames a 2d
@@ -746,7 +747,7 @@ class AvgStor
  * Storage template.
  */
 template <class Derived, class Stor>
-class ScalarBase : public DataWrap<Derived, ScalarInfo>
+class ScalarBase : public DataWrap<Derived, ScalarInfoProxy>
 {
   public:
     typedef Stor Storage;
@@ -860,7 +861,7 @@ class ScalarBase : public DataWrap<Derived, ScalarInfo>
     void prepare() { data()->prepare(this->info()); }
 };
 
-class ProxyInfo : public ScalarInfoBase
+class ProxyInfo : public ScalarInfo
 {
   public:
     std::string str() const { return to_string(value()); }
@@ -900,7 +901,7 @@ class FunctorProxy : public ProxyInfo
 };
 
 template <class Derived>
-class ValueBase : public DataWrap<Derived, ScalarInfo>
+class ValueBase : public DataWrap<Derived, ScalarInfoProxy>
 {
   private:
     ProxyInfo *proxy;
@@ -1076,7 +1077,7 @@ class ScalarProxy
  * Storage class. @sa ScalarBase
  */
 template <class Derived, class Stor>
-class VectorBase : public DataWrapVec<Derived, VectorInfo>
+class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
 {
   public:
     typedef Stor Storage;
@@ -1085,7 +1086,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfo>
     /** Proxy type */
     typedef ScalarProxy<Derived> Proxy;
     friend class ScalarProxy<Derived>;
-    friend class DataWrapVec<Derived, VectorInfo>;
+    friend class DataWrapVec<Derived, VectorInfoProxy>;
 
   protected:
     /** The storage of this stat. */
@@ -1295,17 +1296,17 @@ class VectorProxy
 };
 
 template <class Derived, class Stor>
-class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfo>
+class Vector2dBase : public DataWrapVec2d<Derived, Vector2dInfoProxy>
 {
   public:
-    typedef Vector2dInfo<Derived> Info;
+    typedef Vector2dInfoProxy<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
     typedef VectorProxy<Derived> Proxy;
     friend class ScalarProxy<Derived>;
     friend class VectorProxy<Derived>;
-    friend class DataWrapVec<Derived, Vector2dInfo>;
-    friend class DataWrapVec2d<Derived, Vector2dInfo>;
+    friend class DataWrapVec<Derived, Vector2dInfoProxy>;
+    friend class DataWrapVec2d<Derived, Vector2dInfoProxy>;
 
   protected:
     size_type x;
@@ -1733,10 +1734,10 @@ class AvgFancy
  * determined by the Storage template. @sa ScalarBase
  */
 template <class Derived, class Stor>
-class DistBase : public DataWrap<Derived, DistInfo>
+class DistBase : public DataWrap<Derived, DistInfoProxy>
 {
   public:
-    typedef DistInfo<Derived> Info;
+    typedef DistInfoProxy<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
 
@@ -1816,15 +1817,15 @@ template <class Stat>
 class DistProxy;
 
 template <class Derived, class Stor>
-class VectorDistBase : public DataWrapVec<Derived, VectorDistInfo>
+class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
 {
   public:
-    typedef VectorDistInfo<Derived> Info;
+    typedef VectorDistInfoProxy<Derived> Info;
     typedef Stor Storage;
     typedef typename Stor::Params Params;
     typedef DistProxy<Derived> Proxy;
     friend class DistProxy<Derived>;
-    friend class DataWrapVec<Derived, VectorDistInfo>;
+    friend class DataWrapVec<Derived, VectorDistInfoProxy>;
 
   protected:
     Storage *storage;
@@ -2027,11 +2028,11 @@ typedef RefCountingPtr<Node> NodePtr;
 class ScalarStatNode : public Node
 {
   private:
-    const ScalarInfoBase *data;
+    const ScalarInfo *data;
     mutable VResult vresult;
 
   public:
-    ScalarStatNode(const ScalarInfoBase *d) : data(d), vresult(1) {}
+    ScalarStatNode(const ScalarInfo *d) : data(d), vresult(1) {}
 
     const VResult &
     result() const
@@ -2094,10 +2095,10 @@ class ScalarProxyNode : public Node
 class VectorStatNode : public Node
 {
   private:
-    const VectorInfoBase *data;
+    const VectorInfo *data;
 
   public:
-    VectorStatNode(const VectorInfoBase *d) : data(d) { }
+    VectorStatNode(const VectorInfo *d) : data(d) { }
     const VResult &result() const { return data->result(); }
     Result total() const { return data->total(); };
 
@@ -2554,21 +2555,21 @@ class VectorAverageDeviation
     }
 };
 
-class FormulaInfoBase : public VectorInfoBase
+class FormulaInfo : public VectorInfo
 {
   public:
     virtual std::string str() const = 0;
 };
 
 template <class Stat>
-class FormulaInfo : public InfoWrap<Stat, FormulaInfoBase>
+class FormulaInfoProxy : public InfoProxy<Stat, FormulaInfo>
 {
   protected:
     mutable VResult vec;
     mutable VCounter cvec;
 
   public:
-    FormulaInfo(Stat &stat) : InfoWrap<Stat, FormulaInfoBase>(stat) {}
+    FormulaInfoProxy(Stat &stat) : InfoProxy<Stat, FormulaInfo>(stat) {}
 
     size_type size() const { return this->s.size(); }
 
@@ -2590,7 +2591,7 @@ class Temp;
  * stored as a tree of Nodes that represent the equation to calculate.
  * @sa Stat, ScalarStat, VectorStat, Node, Temp
  */
-class Formula : public DataWrapVec<Formula, FormulaInfo>
+class Formula : public DataWrapVec<Formula, FormulaInfoProxy>
 {
   protected:
     /** The root of the tree which represents the Formula */

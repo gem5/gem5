@@ -61,12 +61,12 @@ class Text : public Output
     void open(const std::string &file);
 
     // Implement Visit
-    virtual void visit(const ScalarInfoBase &info);
-    virtual void visit(const VectorInfoBase &info);
-    virtual void visit(const DistInfoBase &info);
-    virtual void visit(const VectorDistInfoBase &info);
-    virtual void visit(const Vector2dInfoBase &info);
-    virtual void visit(const FormulaInfoBase &info);
+    virtual void visit(const ScalarInfo &info);
+    virtual void visit(const VectorInfo &info);
+    virtual void visit(const DistInfo &info);
+    virtual void visit(const VectorDistInfo &info);
+    virtual void visit(const Vector2dInfo &info);
+    virtual void visit(const FormulaInfo &info);
 
     // Implement Output
     virtual bool valid() const;

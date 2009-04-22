@@ -39,25 +39,25 @@
 namespace Stats {
 
 class Info;
-class ScalarInfoBase;
-class VectorInfoBase;
-class DistInfoBase;
-class DistInfoBase;
-class VectorDistInfoBase;
-class Vector2dInfoBase;
-class FormulaInfoBase;
+class ScalarInfo;
+class VectorInfo;
+class DistInfo;
+class DistInfo;
+class VectorDistInfo;
+class Vector2dInfo;
+class FormulaInfo;
 
 struct Visit
 {
     Visit();
     virtual ~Visit();
 
-    virtual void visit(const ScalarInfoBase &info) = 0;
-    virtual void visit(const VectorInfoBase &info) = 0;
-    virtual void visit(const DistInfoBase &info) = 0;
-    virtual void visit(const VectorDistInfoBase &info) = 0;
-    virtual void visit(const Vector2dInfoBase &info) = 0;
-    virtual void visit(const FormulaInfoBase &info) = 0;
+    virtual void visit(const ScalarInfo &info) = 0;
+    virtual void visit(const VectorInfo &info) = 0;
+    virtual void visit(const DistInfo &info) = 0;
+    virtual void visit(const VectorDistInfo &info) = 0;
+    virtual void visit(const Vector2dInfo &info) = 0;
+    virtual void visit(const FormulaInfo &info) = 0;
 };
 
 /* namespace Stats */ }

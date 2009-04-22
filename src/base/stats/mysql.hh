@@ -40,7 +40,7 @@
 namespace MySQL { class Connection; }
 namespace Stats {
 
-class DistInfoBase;
+class DistInfo;
 class MySqlRun;
 
 struct SetupStat
@@ -122,7 +122,7 @@ class MySql : public Output
     SetupStat stat;
     InsertData newdata;
     InsertEvent newevent;
-    std::list<FormulaInfoBase *> formulas;
+    std::list<FormulaInfo *> formulas;
     bool configured;
 
   protected:
@@ -156,12 +156,12 @@ class MySql : public Output
 
   public:
     // Implement Visit
-    virtual void visit(const ScalarInfoBase &info);
-    virtual void visit(const VectorInfoBase &info);
-    virtual void visit(const DistInfoBase &info);
-    virtual void visit(const VectorDistInfoBase &info);
-    virtual void visit(const Vector2dInfoBase &info);
-    virtual void visit(const FormulaInfoBase &info);
+    virtual void visit(const ScalarInfo &info);
+    virtual void visit(const VectorInfo &info);
+    virtual void visit(const DistInfo &info);
+    virtual void visit(const VectorDistInfo &info);
+    virtual void visit(const Vector2dInfo &info);
+    virtual void visit(const FormulaInfo &info);
 
     // Implement Output
     virtual bool valid() const;
@@ -172,22 +172,22 @@ class MySql : public Output
 
   protected:
     // Output helper
-    void output(const ScalarInfoBase &info);
-    void output(const VectorInfoBase &info);
-    void output(const DistInfoBase &info);
-    void output(const VectorDistInfoBase &info);
-    void output(const Vector2dInfoBase &info);
-    void output(const FormulaInfoBase &info);
+    void output(const ScalarInfo &info);
+    void output(const VectorInfo &info);
+    void output(const DistInfo &info);
+    void output(const VectorDistInfo &info);
+    void output(const Vector2dInfo &info);
+    void output(const FormulaInfo &info);
     void output(const DistData &data, const DistParams *params);
 
     void configure();
     bool configure(const Info &info, std::string type);
-    void configure(const ScalarInfoBase &info);
-    void configure(const VectorInfoBase &info);
-    void configure(const DistInfoBase &info);
-    void configure(const VectorDistInfoBase &info);
-    void configure(const Vector2dInfoBase &info);
-    void configure(const FormulaInfoBase &info);
+    void configure(const ScalarInfo &info);
+    void configure(const VectorInfo &info);
+    void configure(const DistInfo &info);
+    void configure(const VectorDistInfo &info);
+    void configure(const Vector2dInfo &info);
+    void configure(const FormulaInfo &info);
 };
 
 bool initMySQL(std::string host, std::string database, std::string user,
