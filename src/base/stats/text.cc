@@ -359,22 +359,22 @@ struct DistPrint
 
     const DistData &data;
 
-    DistPrint(const DistInfoBase &info);
-    DistPrint(const VectorDistInfoBase &info, int i);
-    void init(const Info &info, const DistParams *params);
+    DistPrint(const Text *text, const DistInfoBase &info);
+    DistPrint(const Text *text, const VectorDistInfoBase &info, int i);
+    void init(const Text *text, const Info &info, const DistParams *params);
     void operator()(ostream &stream) const;
 };
 
-DistPrint::DistPrint(const DistInfoBase &info)
+DistPrint::DistPrint(const Text *text, const DistInfoBase &info)
     : data(info.data)
 {
-    init(info, safe_cast<const DistParams *>(info.storageParams));
+    init(text, info, safe_cast<const DistParams *>(info.storageParams));
 }
 
-DistPrint::DistPrint(const VectorDistInfoBase &info, int i)
+DistPrint::DistPrint(const Text *text, const VectorDistInfoBase &info, int i)
     : data(info.data[i])
 {
-    init(info, safe_cast<const DistParams *>(info.storageParams));
+    init(text, info, safe_cast<const DistParams *>(info.storageParams));
 
     name = info.name + "_" +
         (info.subnames[i].empty() ? (to_string(i)) : info.subnames[i]);
@@ -384,14 +384,14 @@ DistPrint::DistPrint(const VectorDistInfoBase &info, int i)
 }
 
 void
-DistPrint::init(const Info &info, const DistParams *params)
+DistPrint::init(const Text *text, const Info &info, const DistParams *params)
 {
     name = info.name;
     desc = info.desc;
     flags = info.flags;
-    compat = compat;
-    descriptions = descriptions;
     precision = info.precision;
+    compat = text->compat;
+    descriptions = text->descriptions;
 
     fancy = params->fancy;
     min = params->min;
@@ -685,7 +685,7 @@ Text::visit(const DistInfoBase &info)
     if (noOutput(info))
         return;
 
-    DistPrint print(info);
+    DistPrint print(this, info);
     print(*stream);
 }
 
@@ -696,7 +696,7 @@ Text::visit(const VectorDistInfoBase &info)
         return;
 
     for (off_type i = 0; i < info.size(); ++i) {
-        DistPrint print(info, i);
+        DistPrint print(this, info, i);
         print(*stream);
     }
 }
