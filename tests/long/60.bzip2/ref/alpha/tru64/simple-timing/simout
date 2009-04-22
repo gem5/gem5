@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2009 16:38:39
-M5 revision e6dd09514462 6117 default qtip tip stats-update
-M5 started Apr 21 2009 16:41:08
-M5 executing on zizzer
+M5 compiled Apr 22 2009 06:58:26
+M5 revision ce26a627c841 6126 default qtip tip stats_no_compat.diff
+M5 started Apr 22 2009 07:13:47
+M5 executing on maize
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/simple-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/60.bzip2/alpha/tru64/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

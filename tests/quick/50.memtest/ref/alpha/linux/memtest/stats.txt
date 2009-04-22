@@ -1,8 +1,8 @@
 
 ---------- Begin Simulation Statistics ----------
-host_mem_usage                                 326608                       # Number of bytes of host memory used
-host_seconds                                   197.86                       # Real time elapsed on the host
-host_tick_rate                                1359114                       # Simulator tick rate (ticks/s)
+host_mem_usage                                 328320                       # Number of bytes of host memory used
+host_seconds                                   137.46                       # Real time elapsed on the host
+host_tick_rate                                1956295                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_seconds                                  0.000269                       # Number of seconds simulated
 sim_ticks                                   268915439                       # Number of ticks simulated
@@ -30,13 +30,13 @@ system.cpu0.l1c.WriteReq_mshr_miss_latency   1118158588                       # 
 system.cpu0.l1c.WriteReq_mshr_miss_rate      0.962429                       # mshr miss rate for WriteReq accesses
 system.cpu0.l1c.WriteReq_mshr_misses            23362                       # number of WriteReq MSHR misses
 system.cpu0.l1c.WriteReq_mshr_uncacheable_latency    529803827                       # number of WriteReq MSHR uncacheable cycles
-system.cpu0.l1c.avg_blocked_cycles_no_mshrs  3772.150399                       # average number of cycles each access was blocked
-system.cpu0.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu0.l1c.avg_blocked_cycles::no_mshrs  3772.150399                       # average number of cycles each access was blocked
+system.cpu0.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu0.l1c.avg_refs                     0.412252                       # Average number of references to valid blocks.
-system.cpu0.l1c.blocked_no_mshrs                69914                       # number of cycles access was blocked
-system.cpu0.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu0.l1c.blocked_cycles_no_mshrs     263726123                       # number of cycles access was blocked
-system.cpu0.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu0.l1c.blocked::no_mshrs               69914                       # number of cycles access was blocked
+system.cpu0.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu0.l1c.blocked_cycles::no_mshrs    263726123                       # number of cycles access was blocked
+system.cpu0.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu0.l1c.demand_accesses                 69441                       # number of demand (read+write) accesses
 system.cpu0.l1c.demand_avg_miss_latency  40312.026198                       # average overall miss latency
@@ -100,13 +100,13 @@ system.cpu1.l1c.WriteReq_mshr_miss_latency   1120477355                       # 
 system.cpu1.l1c.WriteReq_mshr_miss_rate      0.961570                       # mshr miss rate for WriteReq accesses
 system.cpu1.l1c.WriteReq_mshr_misses            23370                       # number of WriteReq MSHR misses
 system.cpu1.l1c.WriteReq_mshr_uncacheable_latency    526051093                       # number of WriteReq MSHR uncacheable cycles
-system.cpu1.l1c.avg_blocked_cycles_no_mshrs  3775.982019                       # average number of cycles each access was blocked
-system.cpu1.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu1.l1c.avg_blocked_cycles::no_mshrs  3775.982019                       # average number of cycles each access was blocked
+system.cpu1.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu1.l1c.avg_refs                     0.415709                       # Average number of references to valid blocks.
-system.cpu1.l1c.blocked_no_mshrs                69517                       # number of cycles access was blocked
-system.cpu1.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu1.l1c.blocked_cycles_no_mshrs     262494942                       # number of cycles access was blocked
-system.cpu1.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu1.l1c.blocked::no_mshrs               69517                       # number of cycles access was blocked
+system.cpu1.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu1.l1c.blocked_cycles::no_mshrs    262494942                       # number of cycles access was blocked
+system.cpu1.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu1.l1c.demand_accesses                 69001                       # number of demand (read+write) accesses
 system.cpu1.l1c.demand_avg_miss_latency  40493.835004                       # average overall miss latency
@@ -170,13 +170,13 @@ system.cpu2.l1c.WriteReq_mshr_miss_latency   1123923519                       # 
 system.cpu2.l1c.WriteReq_mshr_miss_rate      0.963011                       # mshr miss rate for WriteReq accesses
 system.cpu2.l1c.WriteReq_mshr_misses            23171                       # number of WriteReq MSHR misses
 system.cpu2.l1c.WriteReq_mshr_uncacheable_latency    515570726                       # number of WriteReq MSHR uncacheable cycles
-system.cpu2.l1c.avg_blocked_cycles_no_mshrs  3785.643263                       # average number of cycles each access was blocked
-system.cpu2.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu2.l1c.avg_blocked_cycles::no_mshrs  3785.643263                       # average number of cycles each access was blocked
+system.cpu2.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu2.l1c.avg_refs                     0.410349                       # Average number of references to valid blocks.
-system.cpu2.l1c.blocked_no_mshrs                69704                       # number of cycles access was blocked
-system.cpu2.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu2.l1c.blocked_cycles_no_mshrs     263874478                       # number of cycles access was blocked
-system.cpu2.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu2.l1c.blocked::no_mshrs               69704                       # number of cycles access was blocked
+system.cpu2.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu2.l1c.blocked_cycles::no_mshrs    263874478                       # number of cycles access was blocked
+system.cpu2.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu2.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu2.l1c.demand_accesses                 68999                       # number of demand (read+write) accesses
 system.cpu2.l1c.demand_avg_miss_latency  40589.092748                       # average overall miss latency
@@ -240,13 +240,13 @@ system.cpu3.l1c.WriteReq_mshr_miss_latency   1132346910                       # 
 system.cpu3.l1c.WriteReq_mshr_miss_rate      0.962721                       # mshr miss rate for WriteReq accesses
 system.cpu3.l1c.WriteReq_mshr_misses            23397                       # number of WriteReq MSHR misses
 system.cpu3.l1c.WriteReq_mshr_uncacheable_latency    535399356                       # number of WriteReq MSHR uncacheable cycles
-system.cpu3.l1c.avg_blocked_cycles_no_mshrs  3780.086099                       # average number of cycles each access was blocked
-system.cpu3.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu3.l1c.avg_blocked_cycles::no_mshrs  3780.086099                       # average number of cycles each access was blocked
+system.cpu3.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu3.l1c.avg_refs                     0.418843                       # Average number of references to valid blocks.
-system.cpu3.l1c.blocked_no_mshrs                69350                       # number of cycles access was blocked
-system.cpu3.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu3.l1c.blocked_cycles_no_mshrs     262148971                       # number of cycles access was blocked
-system.cpu3.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu3.l1c.blocked::no_mshrs               69350                       # number of cycles access was blocked
+system.cpu3.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu3.l1c.blocked_cycles::no_mshrs    262148971                       # number of cycles access was blocked
+system.cpu3.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu3.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu3.l1c.demand_accesses                 69068                       # number of demand (read+write) accesses
 system.cpu3.l1c.demand_avg_miss_latency  40627.332546                       # average overall miss latency
@@ -310,13 +310,13 @@ system.cpu4.l1c.WriteReq_mshr_miss_latency   1122901711                       # 
 system.cpu4.l1c.WriteReq_mshr_miss_rate      0.959737                       # mshr miss rate for WriteReq accesses
 system.cpu4.l1c.WriteReq_mshr_misses            23193                       # number of WriteReq MSHR misses
 system.cpu4.l1c.WriteReq_mshr_uncacheable_latency    528019968                       # number of WriteReq MSHR uncacheable cycles
-system.cpu4.l1c.avg_blocked_cycles_no_mshrs  3787.291600                       # average number of cycles each access was blocked
-system.cpu4.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu4.l1c.avg_blocked_cycles::no_mshrs  3787.291600                       # average number of cycles each access was blocked
+system.cpu4.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu4.l1c.avg_refs                     0.411354                       # Average number of references to valid blocks.
-system.cpu4.l1c.blocked_no_mshrs                69537                       # number of cycles access was blocked
-system.cpu4.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu4.l1c.blocked_cycles_no_mshrs     263356896                       # number of cycles access was blocked
-system.cpu4.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu4.l1c.blocked::no_mshrs               69537                       # number of cycles access was blocked
+system.cpu4.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu4.l1c.blocked_cycles::no_mshrs    263356896                       # number of cycles access was blocked
+system.cpu4.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu4.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu4.l1c.demand_accesses                 68853                       # number of demand (read+write) accesses
 system.cpu4.l1c.demand_avg_miss_latency  40544.624979                       # average overall miss latency
@@ -380,13 +380,13 @@ system.cpu5.l1c.WriteReq_mshr_miss_latency   1133045938                       # 
 system.cpu5.l1c.WriteReq_mshr_miss_rate      0.963352                       # mshr miss rate for WriteReq accesses
 system.cpu5.l1c.WriteReq_mshr_misses            23395                       # number of WriteReq MSHR misses
 system.cpu5.l1c.WriteReq_mshr_uncacheable_latency    539640321                       # number of WriteReq MSHR uncacheable cycles
-system.cpu5.l1c.avg_blocked_cycles_no_mshrs  3783.632237                       # average number of cycles each access was blocked
-system.cpu5.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu5.l1c.avg_blocked_cycles::no_mshrs  3783.632237                       # average number of cycles each access was blocked
+system.cpu5.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu5.l1c.avg_refs                     0.410620                       # Average number of references to valid blocks.
-system.cpu5.l1c.blocked_no_mshrs                69474                       # number of cycles access was blocked
-system.cpu5.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu5.l1c.blocked_cycles_no_mshrs     262864066                       # number of cycles access was blocked
-system.cpu5.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu5.l1c.blocked::no_mshrs               69474                       # number of cycles access was blocked
+system.cpu5.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu5.l1c.blocked_cycles::no_mshrs    262864066                       # number of cycles access was blocked
+system.cpu5.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu5.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu5.l1c.demand_accesses                 68832                       # number of demand (read+write) accesses
 system.cpu5.l1c.demand_avg_miss_latency  40557.685431                       # average overall miss latency
@@ -450,13 +450,13 @@ system.cpu6.l1c.WriteReq_mshr_miss_latency   1120873568                       # 
 system.cpu6.l1c.WriteReq_mshr_miss_rate      0.962032                       # mshr miss rate for WriteReq accesses
 system.cpu6.l1c.WriteReq_mshr_misses            23387                       # number of WriteReq MSHR misses
 system.cpu6.l1c.WriteReq_mshr_uncacheable_latency    545355496                       # number of WriteReq MSHR uncacheable cycles
-system.cpu6.l1c.avg_blocked_cycles_no_mshrs  3751.801399                       # average number of cycles each access was blocked
-system.cpu6.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu6.l1c.avg_blocked_cycles::no_mshrs  3751.801399                       # average number of cycles each access was blocked
+system.cpu6.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu6.l1c.avg_refs                     0.403583                       # Average number of references to valid blocks.
-system.cpu6.l1c.blocked_no_mshrs                69894                       # number of cycles access was blocked
-system.cpu6.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu6.l1c.blocked_cycles_no_mshrs     262228407                       # number of cycles access was blocked
-system.cpu6.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu6.l1c.blocked::no_mshrs               69894                       # number of cycles access was blocked
+system.cpu6.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu6.l1c.blocked_cycles::no_mshrs    262228407                       # number of cycles access was blocked
+system.cpu6.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu6.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu6.l1c.demand_accesses                 69369                       # number of demand (read+write) accesses
 system.cpu6.l1c.demand_avg_miss_latency  40232.426927                       # average overall miss latency
@@ -520,13 +520,13 @@ system.cpu7.l1c.WriteReq_mshr_miss_latency   1127847937                       # 
 system.cpu7.l1c.WriteReq_mshr_miss_rate      0.961909                       # mshr miss rate for WriteReq accesses
 system.cpu7.l1c.WriteReq_mshr_misses            23283                       # number of WriteReq MSHR misses
 system.cpu7.l1c.WriteReq_mshr_uncacheable_latency    536405254                       # number of WriteReq MSHR uncacheable cycles
-system.cpu7.l1c.avg_blocked_cycles_no_mshrs  3782.889997                       # average number of cycles each access was blocked
-system.cpu7.l1c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu7.l1c.avg_blocked_cycles::no_mshrs  3782.889997                       # average number of cycles each access was blocked
+system.cpu7.l1c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu7.l1c.avg_refs                     0.414017                       # Average number of references to valid blocks.
-system.cpu7.l1c.blocked_no_mshrs                69498                       # number of cycles access was blocked
-system.cpu7.l1c.blocked_no_targets                  0                       # number of cycles access was blocked
-system.cpu7.l1c.blocked_cycles_no_mshrs     262903289                       # number of cycles access was blocked
-system.cpu7.l1c.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu7.l1c.blocked::no_mshrs               69498                       # number of cycles access was blocked
+system.cpu7.l1c.blocked::no_targets                 0                       # number of cycles access was blocked
+system.cpu7.l1c.blocked_cycles::no_mshrs    262903289                       # number of cycles access was blocked
+system.cpu7.l1c.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu7.l1c.cache_copies                        0                       # number of cache copies performed
 system.cpu7.l1c.demand_accesses                 68921                       # number of demand (read+write) accesses
 system.cpu7.l1c.demand_avg_miss_latency  40632.412244                       # average overall miss latency
@@ -603,13 +603,13 @@ system.l2c.WriteReq_avg_mshr_uncacheable_latency          inf                   
 system.l2c.WriteReq_mshr_uncacheable_latency   1717039696                       # number of WriteReq MSHR uncacheable cycles
 system.l2c.Writeback_accesses                   86929                       # number of Writeback accesses(hits+misses)
 system.l2c.Writeback_hits                       86929                       # number of Writeback hits
-system.l2c.avg_blocked_cycles_no_mshrs    7154.090909                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_mshrs   7154.090909                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.l2c.avg_refs                          2.005630                       # Average number of references to valid blocks.
-system.l2c.blocked_no_mshrs                        11                       # number of cycles access was blocked
-system.l2c.blocked_no_targets                       0                       # number of cycles access was blocked
-system.l2c.blocked_cycles_no_mshrs              78695                       # number of cycles access was blocked
-system.l2c.blocked_cycles_no_targets                0                       # number of cycles access was blocked
+system.l2c.blocked::no_mshrs                       11                       # number of cycles access was blocked
+system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
+system.l2c.blocked_cycles::no_mshrs             78695                       # number of cycles access was blocked
+system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.demand_accesses                     213064                       # number of demand (read+write) accesses
 system.l2c.demand_avg_miss_latency       49775.478970                       # average overall miss latency

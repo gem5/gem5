@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2009 17:45:48
-M5 revision e6dd09514462 6117 default qtip tip stats-update
-M5 started Apr 21 2009 17:46:13
-M5 executing on zizzer
+M5 compiled Apr 22 2009 06:58:24
+M5 revision ce26a627c841 6126 default qtip tip stats_no_compat.diff
+M5 started Apr 22 2009 07:05:26
+M5 executing on maize
 command line: build/ALPHA_FS/m5.fast -d build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3 -re tests/run.py build/ALPHA_FS/tests/fast/long/10.linux-boot/alpha/linux/tsunami-o3
 Global frequency set at 1000000000000 ticks per second
 info: kernel located at: /dist/m5/system/binaries/vmlinux

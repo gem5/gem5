@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                1283961                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 290228                       # Number of bytes of host memory used
-host_seconds                                    46.28                       # Real time elapsed on the host
-host_tick_rate                            42613693899                       # Simulator tick rate (ticks/s)
+host_inst_rate                                2079010                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 291764                       # Number of bytes of host memory used
+host_seconds                                    28.58                       # Real time elapsed on the host
+host_tick_rate                            69000495741                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    59420593                       # Number of instructions simulated
 sim_seconds                                  1.972135                       # Number of seconds simulated
@@ -52,13 +52,13 @@ system.cpu0.dcache.WriteReq_mshr_miss_latency  20059318000                      
 system.cpu0.dcache.WriteReq_mshr_miss_rate     0.064858                       # mshr miss rate for WriteReq accesses
 system.cpu0.dcache.WriteReq_mshr_misses        379255                       # number of WriteReq MSHR misses
 system.cpu0.dcache.WriteReq_mshr_uncacheable_latency   1240870000                       # number of WriteReq MSHR uncacheable cycles
-system.cpu0.dcache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
-system.cpu0.dcache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu0.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu0.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu0.dcache.avg_refs                  9.990826                       # Average number of references to valid blocks.
-system.cpu0.dcache.blocked_no_mshrs                 0                       # number of cycles access was blocked
-system.cpu0.dcache.blocked_no_targets               0                       # number of cycles access was blocked
-system.cpu0.dcache.blocked_cycles_no_mshrs            0                       # number of cycles access was blocked
-system.cpu0.dcache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu0.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
+system.cpu0.dcache.blocked::no_targets              0                       # number of cycles access was blocked
+system.cpu0.dcache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
+system.cpu0.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.dcache.demand_accesses           14335823                       # number of demand (read+write) accesses
 system.cpu0.dcache.demand_avg_miss_latency 33770.954076                       # average overall miss latency
@@ -121,13 +121,13 @@ system.cpu0.icache.ReadReq_misses              916324                       # nu
 system.cpu0.icache.ReadReq_mshr_miss_latency  10703476000                       # number of ReadReq MSHR miss cycles
 system.cpu0.icache.ReadReq_mshr_miss_rate     0.016917                       # mshr miss rate for ReadReq accesses
 system.cpu0.icache.ReadReq_mshr_misses         916324                       # number of ReadReq MSHR misses
-system.cpu0.icache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
-system.cpu0.icache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu0.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu0.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu0.icache.avg_refs                 58.118732                       # Average number of references to valid blocks.
-system.cpu0.icache.blocked_no_mshrs                 0                       # number of cycles access was blocked
-system.cpu0.icache.blocked_no_targets               0                       # number of cycles access was blocked
-system.cpu0.icache.blocked_cycles_no_mshrs            0                       # number of cycles access was blocked
-system.cpu0.icache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu0.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
+system.cpu0.icache.blocked::no_targets              0                       # number of cycles access was blocked
+system.cpu0.icache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
+system.cpu0.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu0.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu0.icache.demand_accesses           54164416                       # number of demand (read+write) accesses
 system.cpu0.icache.demand_avg_miss_latency 14681.637172                       # average overall miss latency
@@ -146,7 +146,7 @@ system.cpu0.icache.no_allocate_misses               0                       # Nu
 system.cpu0.icache.overall_accesses          54164416                       # number of overall (read+write) accesses
 system.cpu0.icache.overall_avg_miss_latency 14681.637172                       # average overall miss latency
 system.cpu0.icache.overall_avg_mshr_miss_latency 11680.885800                       # average overall mshr miss latency
-system.cpu0.icache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
+system.cpu0.icache.overall_avg_mshr_uncacheable_latency     no_value                       # average overall mshr uncacheable latency
 system.cpu0.icache.overall_hits              53248092                       # number of overall hits
 system.cpu0.icache.overall_miss_latency   13453136500                       # number of overall miss cycles
 system.cpu0.icache.overall_miss_rate         0.016917                       # miss rate for overall accesses
@@ -181,95 +181,95 @@ system.cpu0.itb.write_accesses                      0                       # DT
 system.cpu0.itb.write_acv                           0                       # DTB write access violations
 system.cpu0.itb.write_hits                          0                       # DTB write hits
 system.cpu0.itb.write_misses                        0                       # DTB write misses
-system.cpu0.kern.callpal                       188012                       # number of callpals executed
-system.cpu0.kern.callpal_cserve                     1      0.00%      0.00% # number of callpals executed
-system.cpu0.kern.callpal_wripir                    91      0.05%      0.05% # number of callpals executed
-system.cpu0.kern.callpal_wrmces                     1      0.00%      0.05% # number of callpals executed
-system.cpu0.kern.callpal_wrfen                      1      0.00%      0.05% # number of callpals executed
-system.cpu0.kern.callpal_wrvptptr                   1      0.00%      0.05% # number of callpals executed
-system.cpu0.kern.callpal_swpctx                  3868      2.06%      2.11% # number of callpals executed
-system.cpu0.kern.callpal_tbi                       44      0.02%      2.13% # number of callpals executed
-system.cpu0.kern.callpal_wrent                      7      0.00%      2.13% # number of callpals executed
-system.cpu0.kern.callpal_swpipl                172068     91.52%     93.65% # number of callpals executed
-system.cpu0.kern.callpal_rdps                    6698      3.56%     97.22% # number of callpals executed
-system.cpu0.kern.callpal_wrkgp                      1      0.00%     97.22% # number of callpals executed
-system.cpu0.kern.callpal_wrusp                      4      0.00%     97.22% # number of callpals executed
-system.cpu0.kern.callpal_rdusp                      7      0.00%     97.22% # number of callpals executed
-system.cpu0.kern.callpal_whami                      2      0.00%     97.22% # number of callpals executed
-system.cpu0.kern.callpal_rti                     4713      2.51%     99.73% # number of callpals executed
-system.cpu0.kern.callpal_callsys                  356      0.19%     99.92% # number of callpals executed
-system.cpu0.kern.callpal_imb                      149      0.08%    100.00% # number of callpals executed
+system.cpu0.kern.callpal::cserve                    1      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::wripir                   91      0.05%            # number of callpals executed
+system.cpu0.kern.callpal::wrmces                    1      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::wrfen                     1      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::wrvptptr                  1      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::swpctx                 3868      2.06%            # number of callpals executed
+system.cpu0.kern.callpal::tbi                      44      0.02%            # number of callpals executed
+system.cpu0.kern.callpal::wrent                     7      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::swpipl               172068     91.52%            # number of callpals executed
+system.cpu0.kern.callpal::rdps                   6698      3.56%            # number of callpals executed
+system.cpu0.kern.callpal::wrkgp                     1      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::wrusp                     4      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::rdusp                     7      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::whami                     2      0.00%            # number of callpals executed
+system.cpu0.kern.callpal::rti                    4713      2.51%            # number of callpals executed
+system.cpu0.kern.callpal::callsys                 356      0.19%            # number of callpals executed
+system.cpu0.kern.callpal::imb                     149      0.08%            # number of callpals executed
+system.cpu0.kern.callpal::total                188012                       # number of callpals executed
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.hwrei                    202896                       # number of hwrei instructions executed
 system.cpu0.kern.inst.quiesce                    6369                       # number of quiesce instructions executed
-system.cpu0.kern.ipl_count                     178906                       # number of times we switched to this ipl
-system.cpu0.kern.ipl_count_0                    72641     40.60%     40.60% # number of times we switched to this ipl
-system.cpu0.kern.ipl_count_21                     131      0.07%     40.68% # number of times we switched to this ipl
-system.cpu0.kern.ipl_count_22                    1987      1.11%     41.79% # number of times we switched to this ipl
-system.cpu0.kern.ipl_count_30                       6      0.00%     41.79% # number of times we switched to this ipl
-system.cpu0.kern.ipl_count_31                  104141     58.21%    100.00% # number of times we switched to this ipl
-system.cpu0.kern.ipl_good                      144662                       # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good_0                     71272     49.27%     49.27% # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good_21                      131      0.09%     49.36% # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good_22                     1987      1.37%     50.73% # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good_30                        6      0.00%     50.74% # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good_31                    71266     49.26%    100.00% # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_ticks               1972134703000                       # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks_0             1908230091000     96.76%     96.76% # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks_21                96186500      0.00%     96.76% # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks_22               576952000      0.03%     96.79% # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks_30                 5442500      0.00%     96.79% # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks_31             63226031000      3.21%    100.00% # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_used_0                  0.981154                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.ipl_used_21                        1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.ipl_used_22                        1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.ipl_used_30                        1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.ipl_used_31                 0.684322                       # fraction of swpipl calls that actually changed the ipl
-system.cpu0.kern.mode_good_kernel                1231                      
-system.cpu0.kern.mode_good_user                  1232                      
-system.cpu0.kern.mode_good_idle                     0                      
-system.cpu0.kern.mode_switch_kernel              7237                       # number of protection mode switches
-system.cpu0.kern.mode_switch_user                1232                       # number of protection mode switches
-system.cpu0.kern.mode_switch_idle                   0                       # number of protection mode switches
-system.cpu0.kern.mode_switch_good        <err: div-0>                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good_kernel     0.170098                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good_user              1                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_switch_good_idle   <err: div-0>                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_ticks_kernel       1968330503000     99.81%     99.81% # number of ticks spent at the given mode
-system.cpu0.kern.mode_ticks_user           3804198000      0.19%    100.00% # number of ticks spent at the given mode
-system.cpu0.kern.mode_ticks_idle                    0      0.00%    100.00% # number of ticks spent at the given mode
+system.cpu0.kern.ipl_count::0                   72641     40.60%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::21                    131      0.07%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::22                   1987      1.11%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::30                      6      0.00%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::31                 104141     58.21%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::total              178906                       # number of times we switched to this ipl
+system.cpu0.kern.ipl_good::0                    71272     49.27%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::21                     131      0.09%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::22                    1987      1.37%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::30                       6      0.00%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::31                   71266     49.26%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::total               144662                       # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_ticks::0            1908230091000     96.76%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::21               96186500      0.00%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::22              576952000      0.03%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::30                5442500      0.00%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::31            63226031000      3.21%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::total        1972134703000                       # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_used::0                 0.981154                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.ipl_used::31                0.684322                       # fraction of swpipl calls that actually changed the ipl
+system.cpu0.kern.mode_good::kernel               1231                      
+system.cpu0.kern.mode_good::user                 1232                      
+system.cpu0.kern.mode_good::idle                    0                      
+system.cpu0.kern.mode_switch::kernel             7237                       # number of protection mode switches
+system.cpu0.kern.mode_switch::user               1232                       # number of protection mode switches
+system.cpu0.kern.mode_switch::idle                  0                       # number of protection mode switches
+system.cpu0.kern.mode_switch_good::kernel     0.170098                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::idle      no_value                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_switch_good::total     no_value                       # fraction of useful protection mode switches
+system.cpu0.kern.mode_ticks::kernel      1968330503000     99.81%            # number of ticks spent at the given mode
+system.cpu0.kern.mode_ticks::user          3804198000      0.19%            # number of ticks spent at the given mode
+system.cpu0.kern.mode_ticks::idle                   0      0.00%            # number of ticks spent at the given mode
 system.cpu0.kern.swap_context                    3869                       # number of times the context was actually changed
-system.cpu0.kern.syscall                          224                       # number of syscalls executed
-system.cpu0.kern.syscall_2                          6      2.68%      2.68% # number of syscalls executed
-system.cpu0.kern.syscall_3                         19      8.48%     11.16% # number of syscalls executed
-system.cpu0.kern.syscall_4                          3      1.34%     12.50% # number of syscalls executed
-system.cpu0.kern.syscall_6                         30     13.39%     25.89% # number of syscalls executed
-system.cpu0.kern.syscall_12                         1      0.45%     26.34% # number of syscalls executed
-system.cpu0.kern.syscall_15                         1      0.45%     26.79% # number of syscalls executed
-system.cpu0.kern.syscall_17                        10      4.46%     31.25% # number of syscalls executed
-system.cpu0.kern.syscall_19                         6      2.68%     33.93% # number of syscalls executed
-system.cpu0.kern.syscall_20                         4      1.79%     35.71% # number of syscalls executed
-system.cpu0.kern.syscall_23                         2      0.89%     36.61% # number of syscalls executed
-system.cpu0.kern.syscall_24                         4      1.79%     38.39% # number of syscalls executed
-system.cpu0.kern.syscall_33                         8      3.57%     41.96% # number of syscalls executed
-system.cpu0.kern.syscall_41                         2      0.89%     42.86% # number of syscalls executed
-system.cpu0.kern.syscall_45                        39     17.41%     60.27% # number of syscalls executed
-system.cpu0.kern.syscall_47                         4      1.79%     62.05% # number of syscalls executed
-system.cpu0.kern.syscall_48                         7      3.12%     65.18% # number of syscalls executed
-system.cpu0.kern.syscall_54                         9      4.02%     69.20% # number of syscalls executed
-system.cpu0.kern.syscall_58                         1      0.45%     69.64% # number of syscalls executed
-system.cpu0.kern.syscall_59                         5      2.23%     71.88% # number of syscalls executed
-system.cpu0.kern.syscall_71                        32     14.29%     86.16% # number of syscalls executed
-system.cpu0.kern.syscall_73                         3      1.34%     87.50% # number of syscalls executed
-system.cpu0.kern.syscall_74                         9      4.02%     91.52% # number of syscalls executed
-system.cpu0.kern.syscall_87                         1      0.45%     91.96% # number of syscalls executed
-system.cpu0.kern.syscall_90                         2      0.89%     92.86% # number of syscalls executed
-system.cpu0.kern.syscall_92                         7      3.12%     95.98% # number of syscalls executed
-system.cpu0.kern.syscall_97                         2      0.89%     96.87% # number of syscalls executed
-system.cpu0.kern.syscall_98                         2      0.89%     97.77% # number of syscalls executed
-system.cpu0.kern.syscall_132                        2      0.89%     98.66% # number of syscalls executed
-system.cpu0.kern.syscall_144                        1      0.45%     99.11% # number of syscalls executed
-system.cpu0.kern.syscall_147                        2      0.89%    100.00% # number of syscalls executed
+system.cpu0.kern.syscall::2                         6      2.68%            # number of syscalls executed
+system.cpu0.kern.syscall::3                        19      8.48%            # number of syscalls executed
+system.cpu0.kern.syscall::4                         3      1.34%            # number of syscalls executed
+system.cpu0.kern.syscall::6                        30     13.39%            # number of syscalls executed
+system.cpu0.kern.syscall::12                        1      0.45%            # number of syscalls executed
+system.cpu0.kern.syscall::15                        1      0.45%            # number of syscalls executed
+system.cpu0.kern.syscall::17                       10      4.46%            # number of syscalls executed
+system.cpu0.kern.syscall::19                        6      2.68%            # number of syscalls executed
+system.cpu0.kern.syscall::20                        4      1.79%            # number of syscalls executed
+system.cpu0.kern.syscall::23                        2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::24                        4      1.79%            # number of syscalls executed
+system.cpu0.kern.syscall::33                        8      3.57%            # number of syscalls executed
+system.cpu0.kern.syscall::41                        2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::45                       39     17.41%            # number of syscalls executed
+system.cpu0.kern.syscall::47                        4      1.79%            # number of syscalls executed
+system.cpu0.kern.syscall::48                        7      3.12%            # number of syscalls executed
+system.cpu0.kern.syscall::54                        9      4.02%            # number of syscalls executed
+system.cpu0.kern.syscall::58                        1      0.45%            # number of syscalls executed
+system.cpu0.kern.syscall::59                        5      2.23%            # number of syscalls executed
+system.cpu0.kern.syscall::71                       32     14.29%            # number of syscalls executed
+system.cpu0.kern.syscall::73                        3      1.34%            # number of syscalls executed
+system.cpu0.kern.syscall::74                        9      4.02%            # number of syscalls executed
+system.cpu0.kern.syscall::87                        1      0.45%            # number of syscalls executed
+system.cpu0.kern.syscall::90                        2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::92                        7      3.12%            # number of syscalls executed
+system.cpu0.kern.syscall::97                        2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::98                        2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::132                       2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::144                       1      0.45%            # number of syscalls executed
+system.cpu0.kern.syscall::147                       2      0.89%            # number of syscalls executed
+system.cpu0.kern.syscall::total                   224                       # number of syscalls executed
 system.cpu0.not_idle_fraction                0.066840                       # Percentage of non-idle cycles
 system.cpu0.numCycles                      3944270922                       # number of cpu cycles simulated
 system.cpu0.num_insts                        54155641                       # Number of instructions executed
@@ -318,13 +318,13 @@ system.cpu1.dcache.WriteReq_mshr_miss_latency   1360945000                      
 system.cpu1.dcache.WriteReq_mshr_miss_rate     0.040541                       # mshr miss rate for WriteReq accesses
 system.cpu1.dcache.WriteReq_mshr_misses         26352                       # number of WriteReq MSHR misses
 system.cpu1.dcache.WriteReq_mshr_uncacheable_latency    303019000                       # number of WriteReq MSHR uncacheable cycles
-system.cpu1.dcache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
-system.cpu1.dcache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu1.dcache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu1.dcache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu1.dcache.avg_refs                 30.141759                       # Average number of references to valid blocks.
-system.cpu1.dcache.blocked_no_mshrs                 0                       # number of cycles access was blocked
-system.cpu1.dcache.blocked_no_targets               0                       # number of cycles access was blocked
-system.cpu1.dcache.blocked_cycles_no_mshrs            0                       # number of cycles access was blocked
-system.cpu1.dcache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu1.dcache.blocked::no_mshrs                0                       # number of cycles access was blocked
+system.cpu1.dcache.blocked::no_targets              0                       # number of cycles access was blocked
+system.cpu1.dcache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
+system.cpu1.dcache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.dcache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.dcache.demand_accesses            1670551                       # number of demand (read+write) accesses
 system.cpu1.dcache.demand_avg_miss_latency 32269.608001                       # average overall miss latency
@@ -387,13 +387,13 @@ system.cpu1.icache.ReadReq_misses               87436                       # nu
 system.cpu1.icache.ReadReq_mshr_miss_latency   1015724000                       # number of ReadReq MSHR miss cycles
 system.cpu1.icache.ReadReq_mshr_miss_rate     0.016597                       # mshr miss rate for ReadReq accesses
 system.cpu1.icache.ReadReq_mshr_misses          87436                       # number of ReadReq MSHR misses
-system.cpu1.icache.avg_blocked_cycles_no_mshrs <err: div-0>                       # average number of cycles each access was blocked
-system.cpu1.icache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.cpu1.icache.avg_blocked_cycles::no_mshrs     no_value                       # average number of cycles each access was blocked
+system.cpu1.icache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.cpu1.icache.avg_refs                 59.270387                       # Average number of references to valid blocks.
-system.cpu1.icache.blocked_no_mshrs                 0                       # number of cycles access was blocked
-system.cpu1.icache.blocked_no_targets               0                       # number of cycles access was blocked
-system.cpu1.icache.blocked_cycles_no_mshrs            0                       # number of cycles access was blocked
-system.cpu1.icache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.cpu1.icache.blocked::no_mshrs                0                       # number of cycles access was blocked
+system.cpu1.icache.blocked::no_targets              0                       # number of cycles access was blocked
+system.cpu1.icache.blocked_cycles::no_mshrs            0                       # number of cycles access was blocked
+system.cpu1.icache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.cpu1.icache.cache_copies                     0                       # number of cache copies performed
 system.cpu1.icache.demand_accesses            5268142                       # number of demand (read+write) accesses
 system.cpu1.icache.demand_avg_miss_latency 14617.211446                       # average overall miss latency
@@ -412,7 +412,7 @@ system.cpu1.icache.no_allocate_misses               0                       # Nu
 system.cpu1.icache.overall_accesses           5268142                       # number of overall (read+write) accesses
 system.cpu1.icache.overall_avg_miss_latency 14617.211446                       # average overall miss latency
 system.cpu1.icache.overall_avg_mshr_miss_latency 11616.771124                       # average overall mshr miss latency
-system.cpu1.icache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
+system.cpu1.icache.overall_avg_mshr_uncacheable_latency     no_value                       # average overall mshr uncacheable latency
 system.cpu1.icache.overall_hits               5180706                       # number of overall hits
 system.cpu1.icache.overall_miss_latency    1278070500                       # number of overall miss cycles
 system.cpu1.icache.overall_miss_rate         0.016597                       # miss rate for overall accesses
@@ -447,82 +447,82 @@ system.cpu1.itb.write_accesses                      0                       # DT
 system.cpu1.itb.write_acv                           0                       # DTB write access violations
 system.cpu1.itb.write_hits                          0                       # DTB write hits
 system.cpu1.itb.write_misses                        0                       # DTB write misses
-system.cpu1.kern.callpal                        29503                       # number of callpals executed
-system.cpu1.kern.callpal_cserve                     1      0.00%      0.00% # number of callpals executed
-system.cpu1.kern.callpal_wripir                     6      0.02%      0.02% # number of callpals executed
-system.cpu1.kern.callpal_wrmces                     1      0.00%      0.03% # number of callpals executed
-system.cpu1.kern.callpal_wrfen                      1      0.00%      0.03% # number of callpals executed
-system.cpu1.kern.callpal_swpctx                   365      1.24%      1.27% # number of callpals executed
-system.cpu1.kern.callpal_tbi                       10      0.03%      1.30% # number of callpals executed
-system.cpu1.kern.callpal_wrent                      7      0.02%      1.33% # number of callpals executed
-system.cpu1.kern.callpal_swpipl                 24144     81.84%     83.16% # number of callpals executed
-system.cpu1.kern.callpal_rdps                    2172      7.36%     90.52% # number of callpals executed
-system.cpu1.kern.callpal_wrkgp                      1      0.00%     90.53% # number of callpals executed
-system.cpu1.kern.callpal_wrusp                      3      0.01%     90.54% # number of callpals executed
-system.cpu1.kern.callpal_rdusp                      2      0.01%     90.54% # number of callpals executed
-system.cpu1.kern.callpal_whami                      3      0.01%     90.55% # number of callpals executed
-system.cpu1.kern.callpal_rti                     2594      8.79%     99.35% # number of callpals executed
-system.cpu1.kern.callpal_callsys                  161      0.55%     99.89% # number of callpals executed
-system.cpu1.kern.callpal_imb                       31      0.11%    100.00% # number of callpals executed
-system.cpu1.kern.callpal_rdunique                   1      0.00%    100.00% # number of callpals executed
+system.cpu1.kern.callpal::cserve                    1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::wripir                    6      0.02%            # number of callpals executed
+system.cpu1.kern.callpal::wrmces                    1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::wrfen                     1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::swpctx                  365      1.24%            # number of callpals executed
+system.cpu1.kern.callpal::tbi                      10      0.03%            # number of callpals executed
+system.cpu1.kern.callpal::wrent                     7      0.02%            # number of callpals executed
+system.cpu1.kern.callpal::swpipl                24144     81.84%            # number of callpals executed
+system.cpu1.kern.callpal::rdps                   2172      7.36%            # number of callpals executed
+system.cpu1.kern.callpal::wrkgp                     1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::wrusp                     3      0.01%            # number of callpals executed
+system.cpu1.kern.callpal::rdusp                     2      0.01%            # number of callpals executed
+system.cpu1.kern.callpal::whami                     3      0.01%            # number of callpals executed
+system.cpu1.kern.callpal::rti                    2594      8.79%            # number of callpals executed
+system.cpu1.kern.callpal::callsys                 161      0.55%            # number of callpals executed
+system.cpu1.kern.callpal::imb                      31      0.11%            # number of callpals executed
+system.cpu1.kern.callpal::rdunique                  1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::total                 29503                       # number of callpals executed
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.hwrei                     36053                       # number of hwrei instructions executed
 system.cpu1.kern.inst.quiesce                    2351                       # number of quiesce instructions executed
-system.cpu1.kern.ipl_count                      28810                       # number of times we switched to this ipl
-system.cpu1.kern.ipl_count_0                     9173     31.84%     31.84% # number of times we switched to this ipl
-system.cpu1.kern.ipl_count_22                    1980      6.87%     38.71% # number of times we switched to this ipl
-system.cpu1.kern.ipl_count_30                      91      0.32%     39.03% # number of times we switched to this ipl
-system.cpu1.kern.ipl_count_31                   17566     60.97%    100.00% # number of times we switched to this ipl
-system.cpu1.kern.ipl_good                       20310                       # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good_0                      9165     45.13%     45.13% # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good_22                     1980      9.75%     54.87% # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good_30                       91      0.45%     55.32% # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good_31                     9074     44.68%    100.00% # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_ticks               1971683837000                       # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks_0             1927968787500     97.78%     97.78% # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks_22               511194500      0.03%     97.81% # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks_30                58584000      0.00%     97.81% # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks_31             43145271000      2.19%    100.00% # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_used_0                  0.999128                       # fraction of swpipl calls that actually changed the ipl
-system.cpu1.kern.ipl_used_22                        1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu1.kern.ipl_used_30                        1                       # fraction of swpipl calls that actually changed the ipl
-system.cpu1.kern.ipl_used_31                 0.516566                       # fraction of swpipl calls that actually changed the ipl
-system.cpu1.kern.mode_good_kernel                 532                      
-system.cpu1.kern.mode_good_user                   516                      
-system.cpu1.kern.mode_good_idle                    16                      
-system.cpu1.kern.mode_switch_kernel               880                       # number of protection mode switches
-system.cpu1.kern.mode_switch_user                 516                       # number of protection mode switches
-system.cpu1.kern.mode_switch_idle                2081                       # number of protection mode switches
-system.cpu1.kern.mode_switch_good            1.612234                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_switch_good_kernel     0.604545                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_switch_good_user              1                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_switch_good_idle       0.007689                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_ticks_kernel         4596640000      0.23%      0.23% # number of ticks spent at the given mode
-system.cpu1.kern.mode_ticks_user           1703543000      0.09%      0.32% # number of ticks spent at the given mode
-system.cpu1.kern.mode_ticks_idle         1964670722000     99.68%    100.00% # number of ticks spent at the given mode
+system.cpu1.kern.ipl_count::0                    9173     31.84%            # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::22                   1980      6.87%            # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::30                     91      0.32%            # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::31                  17566     60.97%            # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::total               28810                       # number of times we switched to this ipl
+system.cpu1.kern.ipl_good::0                     9165     45.13%            # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::22                    1980      9.75%            # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::30                      91      0.45%            # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::31                    9074     44.68%            # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::total                20310                       # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_ticks::0            1927968787500     97.78%            # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::22              511194500      0.03%            # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::30               58584000      0.00%            # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::31            43145271000      2.19%            # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::total        1971683837000                       # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_used::0                 0.999128                       # fraction of swpipl calls that actually changed the ipl
+system.cpu1.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
+system.cpu1.kern.ipl_used::30                       1                       # fraction of swpipl calls that actually changed the ipl
+system.cpu1.kern.ipl_used::31                0.516566                       # fraction of swpipl calls that actually changed the ipl
+system.cpu1.kern.mode_good::kernel                532                      
+system.cpu1.kern.mode_good::user                  516                      
+system.cpu1.kern.mode_good::idle                   16                      
+system.cpu1.kern.mode_switch::kernel              880                       # number of protection mode switches
+system.cpu1.kern.mode_switch::user                516                       # number of protection mode switches
+system.cpu1.kern.mode_switch::idle               2081                       # number of protection mode switches
+system.cpu1.kern.mode_switch_good::kernel     0.604545                       # fraction of useful protection mode switches
+system.cpu1.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
+system.cpu1.kern.mode_switch_good::idle      0.007689                       # fraction of useful protection mode switches
+system.cpu1.kern.mode_switch_good::total     1.612234                       # fraction of useful protection mode switches
+system.cpu1.kern.mode_ticks::kernel        4596640000      0.23%            # number of ticks spent at the given mode
+system.cpu1.kern.mode_ticks::user          1703543000      0.09%            # number of ticks spent at the given mode
+system.cpu1.kern.mode_ticks::idle        1964670722000     99.68%            # number of ticks spent at the given mode
 system.cpu1.kern.swap_context                     366                       # number of times the context was actually changed
-system.cpu1.kern.syscall                          102                       # number of syscalls executed
-system.cpu1.kern.syscall_2                          2      1.96%      1.96% # number of syscalls executed
-system.cpu1.kern.syscall_3                         11     10.78%     12.75% # number of syscalls executed
-system.cpu1.kern.syscall_4                          1      0.98%     13.73% # number of syscalls executed
-system.cpu1.kern.syscall_6                         12     11.76%     25.49% # number of syscalls executed
-system.cpu1.kern.syscall_17                         5      4.90%     30.39% # number of syscalls executed
-system.cpu1.kern.syscall_19                         4      3.92%     34.31% # number of syscalls executed
-system.cpu1.kern.syscall_20                         2      1.96%     36.27% # number of syscalls executed
-system.cpu1.kern.syscall_23                         2      1.96%     38.24% # number of syscalls executed
-system.cpu1.kern.syscall_24                         2      1.96%     40.20% # number of syscalls executed
-system.cpu1.kern.syscall_33                         3      2.94%     43.14% # number of syscalls executed
-system.cpu1.kern.syscall_45                        15     14.71%     57.84% # number of syscalls executed
-system.cpu1.kern.syscall_47                         2      1.96%     59.80% # number of syscalls executed
-system.cpu1.kern.syscall_48                         3      2.94%     62.75% # number of syscalls executed
-system.cpu1.kern.syscall_54                         1      0.98%     63.73% # number of syscalls executed
-system.cpu1.kern.syscall_59                         2      1.96%     65.69% # number of syscalls executed
-system.cpu1.kern.syscall_71                        22     21.57%     87.25% # number of syscalls executed
-system.cpu1.kern.syscall_74                         7      6.86%     94.12% # number of syscalls executed
-system.cpu1.kern.syscall_90                         1      0.98%     95.10% # number of syscalls executed
-system.cpu1.kern.syscall_92                         2      1.96%     97.06% # number of syscalls executed
-system.cpu1.kern.syscall_132                        2      1.96%     99.02% # number of syscalls executed
-system.cpu1.kern.syscall_144                        1      0.98%    100.00% # number of syscalls executed
+system.cpu1.kern.syscall::2                         2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::3                        11     10.78%            # number of syscalls executed
+system.cpu1.kern.syscall::4                         1      0.98%            # number of syscalls executed
+system.cpu1.kern.syscall::6                        12     11.76%            # number of syscalls executed
+system.cpu1.kern.syscall::17                        5      4.90%            # number of syscalls executed
+system.cpu1.kern.syscall::19                        4      3.92%            # number of syscalls executed
+system.cpu1.kern.syscall::20                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::23                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::24                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::33                        3      2.94%            # number of syscalls executed
+system.cpu1.kern.syscall::45                       15     14.71%            # number of syscalls executed
+system.cpu1.kern.syscall::47                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::48                        3      2.94%            # number of syscalls executed
+system.cpu1.kern.syscall::54                        1      0.98%            # number of syscalls executed
+system.cpu1.kern.syscall::59                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::71                       22     21.57%            # number of syscalls executed
+system.cpu1.kern.syscall::74                        7      6.86%            # number of syscalls executed
+system.cpu1.kern.syscall::90                        1      0.98%            # number of syscalls executed
+system.cpu1.kern.syscall::92                        2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::132                       2      1.96%            # number of syscalls executed
+system.cpu1.kern.syscall::144                       1      0.98%            # number of syscalls executed
+system.cpu1.kern.syscall::total                   102                       # number of syscalls executed
 system.cpu1.not_idle_fraction                0.005345                       # Percentage of non-idle cycles
 system.cpu1.numCycles                      3943367734                       # number of cpu cycles simulated
 system.cpu1.num_insts                         5264952                       # Number of instructions executed
@@ -557,13 +557,13 @@ system.iocache.WriteReq_misses                  41552                       # nu
 system.iocache.WriteReq_mshr_miss_latency   3569262880                       # number of WriteReq MSHR miss cycles
 system.iocache.WriteReq_mshr_miss_rate              1                       # mshr miss rate for WriteReq accesses
 system.iocache.WriteReq_mshr_misses             41552                       # number of WriteReq MSHR misses
-system.iocache.avg_blocked_cycles_no_mshrs  6169.706090                       # average number of cycles each access was blocked
-system.iocache.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles::no_mshrs  6169.706090                       # average number of cycles each access was blocked
+system.iocache.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.iocache.avg_refs                             0                       # Average number of references to valid blocks.
-system.iocache.blocked_no_mshrs                 10459                       # number of cycles access was blocked
-system.iocache.blocked_no_targets                   0                       # number of cycles access was blocked
-system.iocache.blocked_cycles_no_mshrs       64528956                       # number of cycles access was blocked
-system.iocache.blocked_cycles_no_targets            0                       # number of cycles access was blocked
+system.iocache.blocked::no_mshrs                10459                       # number of cycles access was blocked
+system.iocache.blocked::no_targets                  0                       # number of cycles access was blocked
+system.iocache.blocked_cycles::no_mshrs      64528956                       # number of cycles access was blocked
+system.iocache.blocked_cycles::no_targets            0                       # number of cycles access was blocked
 system.iocache.cache_copies                         0                       # number of cache copies performed
 system.iocache.demand_accesses                  41730                       # number of demand (read+write) accesses
 system.iocache.demand_avg_miss_latency   137805.458998                       # average overall miss latency
@@ -582,7 +582,7 @@ system.iocache.no_allocate_misses                   0                       # Nu
 system.iocache.overall_accesses                 41730                       # number of overall (read+write) accesses
 system.iocache.overall_avg_miss_latency  137805.458998                       # average overall miss latency
 system.iocache.overall_avg_mshr_miss_latency 85801.866235                       # average overall mshr miss latency
-system.iocache.overall_avg_mshr_uncacheable_latency <err: div-0>                       # average overall mshr uncacheable latency
+system.iocache.overall_avg_mshr_uncacheable_latency     no_value                       # average overall mshr uncacheable latency
 system.iocache.overall_hits                         0                       # number of overall hits
 system.iocache.overall_miss_latency        5750621804                       # number of overall miss cycles
 system.iocache.overall_miss_rate                    1                       # miss rate for overall accesses
@@ -635,13 +635,13 @@ system.l2c.WriteReq_avg_mshr_uncacheable_latency          inf                   
 system.l2c.WriteReq_mshr_uncacheable_latency   1394774000                       # number of WriteReq MSHR uncacheable cycles
 system.l2c.Writeback_accesses                  430351                       # number of Writeback accesses(hits+misses)
 system.l2c.Writeback_hits                      430351                       # number of Writeback hits
-system.l2c.avg_blocked_cycles_no_mshrs   <err: div-0>                       # average number of cycles each access was blocked
-system.l2c.avg_blocked_cycles_no_targets <err: div-0>                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_mshrs      no_value                       # average number of cycles each access was blocked
+system.l2c.avg_blocked_cycles::no_targets     no_value                       # average number of cycles each access was blocked
 system.l2c.avg_refs                          4.554189                       # Average number of references to valid blocks.
-system.l2c.blocked_no_mshrs                         0                       # number of cycles access was blocked
-system.l2c.blocked_no_targets                       0                       # number of cycles access was blocked
-system.l2c.blocked_cycles_no_mshrs                  0                       # number of cycles access was blocked
-system.l2c.blocked_cycles_no_targets                0                       # number of cycles access was blocked
+system.l2c.blocked::no_mshrs                        0                       # number of cycles access was blocked
+system.l2c.blocked::no_targets                      0                       # number of cycles access was blocked
+system.l2c.blocked_cycles::no_mshrs                 0                       # number of cycles access was blocked
+system.l2c.blocked_cycles::no_targets               0                       # number of cycles access was blocked
 system.l2c.cache_copies                             0                       # number of cache copies performed
 system.l2c.demand_accesses                    2397119                       # number of demand (read+write) accesses
 system.l2c.demand_avg_miss_latency       52009.472790                       # average overall miss latency
@@ -678,15 +678,15 @@ system.l2c.tagsinuse                     30859.505450                       # Cy
 system.l2c.total_refs                         1961635                       # Total number of references to valid blocks.
 system.l2c.warmup_cycle                   10912833000                       # Cycle when the warmup percentage was hit.
 system.l2c.writebacks                          123162                       # number of writebacks
-system.tsunami.ethernet.coalescedRxDesc  <err: div-0>                       # average number of RxDesc's coalesced into each post
-system.tsunami.ethernet.coalescedRxIdle  <err: div-0>                       # average number of RxIdle's coalesced into each post
-system.tsunami.ethernet.coalescedRxOk    <err: div-0>                       # average number of RxOk's coalesced into each post
-system.tsunami.ethernet.coalescedRxOrn   <err: div-0>                       # average number of RxOrn's coalesced into each post
-system.tsunami.ethernet.coalescedSwi     <err: div-0>                       # average number of Swi's coalesced into each post
-system.tsunami.ethernet.coalescedTotal   <err: div-0>                       # average number of interrupts coalesced into each post
-system.tsunami.ethernet.coalescedTxDesc  <err: div-0>                       # average number of TxDesc's coalesced into each post
-system.tsunami.ethernet.coalescedTxIdle  <err: div-0>                       # average number of TxIdle's coalesced into each post
-system.tsunami.ethernet.coalescedTxOk    <err: div-0>                       # average number of TxOk's coalesced into each post
+system.tsunami.ethernet.coalescedRxDesc      no_value                       # average number of RxDesc's coalesced into each post
+system.tsunami.ethernet.coalescedRxIdle      no_value                       # average number of RxIdle's coalesced into each post
+system.tsunami.ethernet.coalescedRxOk        no_value                       # average number of RxOk's coalesced into each post
+system.tsunami.ethernet.coalescedRxOrn       no_value                       # average number of RxOrn's coalesced into each post
+system.tsunami.ethernet.coalescedSwi         no_value                       # average number of Swi's coalesced into each post
+system.tsunami.ethernet.coalescedTotal       no_value                       # average number of interrupts coalesced into each post
+system.tsunami.ethernet.coalescedTxDesc      no_value                       # average number of TxDesc's coalesced into each post
+system.tsunami.ethernet.coalescedTxIdle      no_value                       # average number of TxIdle's coalesced into each post
+system.tsunami.ethernet.coalescedTxOk        no_value                       # average number of TxOk's coalesced into each post
 system.tsunami.ethernet.descDMAReads                0                       # Number of descriptors the device read w/ DMA
 system.tsunami.ethernet.descDMAWrites               0                       # Number of descriptors the device wrote w/ DMA
 system.tsunami.ethernet.descDmaReadBytes            0                       # number of descriptor bytes read w/ DMA

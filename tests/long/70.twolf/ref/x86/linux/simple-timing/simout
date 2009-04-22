@@ -5,11 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2009 19:00:07
-M5 revision e6dd09514462 6117 default qtip tip stats-update
-M5 started Apr 21 2009 19:54:37
-M5 executing on zizzer
+M5 compiled Apr 22 2009 06:58:55
+M5 revision ce26a627c841 6126 default qtip tip stats_no_compat.diff
+M5 started Apr 22 2009 07:46:04
+M5 executing on maize
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing
+Couldn't unlink  build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-timing/smred.sv2
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 
