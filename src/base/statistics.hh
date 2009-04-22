@@ -64,7 +64,6 @@
 #include "base/intmath.hh"
 #include "base/refcnt.hh"
 #include "base/str.hh"
-#include "base/stats/flags.hh"
 #include "base/stats/info.hh"
 #include "base/stats/types.hh"
 #include "base/stats/visit.hh"
@@ -246,7 +245,7 @@ class DataWrap : public InfoAccess
     {
         Info *info = this->info();
         info->setName(name);
-        info->flags |= print;
+        info->flags.set(print);
         return this->self();
     }
     const std::string &name() const { return this->info()->name; }
@@ -282,9 +281,9 @@ class DataWrap : public InfoAccess
      * @return A reference to this stat.
      */
     Derived &
-    flags(StatFlags _flags)
+    flags(Flags _flags)
     {
-        this->info()->flags |= _flags;
+        this->info()->flags.set(_flags);
         return this->self();
     }
 

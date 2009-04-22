@@ -36,7 +36,6 @@
 
 #include "base/misc.hh"
 #include "base/mysql.hh"
-#include "base/stats/flags.hh"
 #include "base/stats/info.hh"
 #include "base/stats/mysql.hh"
 #include "base/stats/mysql_run.hh"

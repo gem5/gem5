@@ -151,7 +151,7 @@ Text::output()
 bool
 Text::noOutput(const Info &info)
 {
-    if (!(info.flags & print))
+    if (!info.flags.isSet(print))
         return true;
 
     if (info.prereq && info.prereq->zero())
@@ -186,7 +186,7 @@ struct ScalarPrint
     Result value;
     string name;
     string desc;
-    StatFlags flags;
+    Flags flags;
     bool descriptions;
     int precision;
     Result pdf;
@@ -198,8 +198,8 @@ struct ScalarPrint
 void
 ScalarPrint::operator()(ostream &stream) const
 {
-    if ((flags & nozero && value == 0.0) ||
-        (flags & nonan && isnan(value)))
+    if ((flags.isSet(nozero) && value == 0.0) ||
+        (flags.isSet(nonan) && isnan(value)))
         return;
 
     stringstream pdfstr, cdfstr;
@@ -226,7 +226,7 @@ struct VectorPrint
     string desc;
     vector<string> subnames;
     vector<string> subdescs;
-    StatFlags flags;
+    Flags flags;
     bool descriptions;
     int precision;
     VResult vec;
@@ -241,7 +241,7 @@ VectorPrint::operator()(std::ostream &stream) const
     size_type _size = vec.size();
     Result _total = 0.0;
 
-    if (flags & (pdf | cdf)) {
+    if (flags.isSet(pdf | cdf)) {
         for (off_type i = 0; i < _size; ++i) {
             _total += vec[i];
         }
@@ -274,7 +274,7 @@ VectorPrint::operator()(std::ostream &stream) const
         print.desc = subdescs.empty() ? desc : subdescs[i];
         print.value = vec[i];
 
-        if (_total && flags & pdf) {
+        if (_total && flags.isSet(pdf)) {
             print.pdf = vec[i] / _total;
             print.cdf += print.pdf;
         }
@@ -282,7 +282,7 @@ VectorPrint::operator()(std::ostream &stream) const
         print(stream);
     }
 
-    if (flags & ::Stats::total) {
+    if (flags.isSet(::Stats::total)) {
         print.pdf = NAN;
         print.cdf = NAN;
         print.name = base + "total";
@@ -296,7 +296,7 @@ struct DistPrint
 {
     string name;
     string desc;
-    StatFlags flags;
+    Flags flags;
     bool descriptions;
     int precision;
 
@@ -568,7 +568,7 @@ Text::visit(const Vector2dInfo &info)
         print(*stream);
     }
 
-    if ((info.flags & ::Stats::total) && (info.x > 1)) {
+    if (info.flags.isSet(::Stats::total) && (info.x > 1)) {
         print.name = info.name;
         print.desc = info.desc;
         print.vec = tot_vec;

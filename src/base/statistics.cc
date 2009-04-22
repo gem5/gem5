@@ -90,7 +90,7 @@ InfoAccess::setParams(const StorageParams *params)
 void
 InfoAccess::setInit()
 {
-    info()->flags |= init;
+    info()->flags.set(init);
 }
 
 Info *

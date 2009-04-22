@@ -28,10 +28,37 @@
  * Authors: Nathan Binkert
  */
 
-#include "base/stats/flags.hh"
+#include "base/flags.hh"
 #include "base/stats/types.hh"
 
 namespace Stats {
+
+typedef uint16_t FlagsType;
+typedef ::Flags<FlagsType> Flags;
+
+/** Nothing extra to print. */
+const FlagsType none =          0x0000;
+/** This Stat is Initialized */
+const FlagsType init =          0x0001;
+/** Print this stat. */
+const FlagsType print =         0x0002;
+/** Print the total. */
+const FlagsType total =         0x0010;
+/** Print the percent of the total that this entry represents. */
+const FlagsType pdf =           0x0020;
+/** Print the cumulative percentage of total upto this entry. */
+const FlagsType cdf =           0x0040;
+/** Print the distribution. */
+const FlagsType dist =          0x0080;
+/** Don't print if this is zero. */
+const FlagsType nozero =        0x0100;
+/** Don't print if this is NAN */
+const FlagsType nonan =         0x0200;
+/** Used for SS compatability. */
+const FlagsType __substat =     0x8000;
+
+/** Mask of flags that can't be set directly */
+const FlagsType __reserved =    init | print | __substat;
 
 struct StorageParams
 {
@@ -48,7 +75,7 @@ class Info
     /** The description of the stat. */
     std::string desc;
     /** The formatting flags. */
-    StatFlags flags;
+    Flags flags;
     /** The display precision. */
     int precision;
     /** A pointer to a prerequisite Stat. */
