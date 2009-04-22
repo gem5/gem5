@@ -49,7 +49,6 @@ class Text : public Output
     bool noOutput(const Info &info);
 
   public:
-    bool compat;
     bool descriptions;
 
   public:
@@ -77,7 +76,7 @@ class Text : public Output
     virtual void event(const std::string &event) {}
 };
 
-bool initText(const std::string &filename, bool desc=true, bool compat=true);
+bool initText(const std::string &filename, bool desc);
 
 /* namespace Stats */ }
 

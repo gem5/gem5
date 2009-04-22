@@ -57,11 +57,9 @@ const StatFlags dist =          0x00000080;
 const StatFlags nozero =        0x00000100;
 /** Don't print if this is NAN */
 const StatFlags nonan =         0x00000200;
-/** Used for SS compatability. */
-const StatFlags __substat =     0x80000000;
 
 /** Mask of flags that can't be set directly */
-const StatFlags __reserved =    init | print | __substat;
+const StatFlags __reserved =    init | print;
 
 enum DisplayMode
 {

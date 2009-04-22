@@ -41,7 +41,7 @@
 
 namespace Stats {
 void initSimStats();
-void initText(const std::string &filename, bool desc=true, bool compat=true);
+void initText(const std::string &filename, bool desc);
 void initMySQL(std::string host, std::string database, std::string user,
     std::string passwd, std::string project, std::string name,
     std::string sample);

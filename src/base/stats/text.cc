@@ -73,18 +73,18 @@ __nan()
 namespace Stats {
 
 Text::Text()
-    : mystream(false), stream(NULL), compat(false), descriptions(false)
+    : mystream(false), stream(NULL), descriptions(false)
 {
 }
 
 Text::Text(std::ostream &stream)
-    : mystream(false), stream(NULL), compat(false), descriptions(false)
+    : mystream(false), stream(NULL), descriptions(false)
 {
     open(stream);
 }
 
 Text::Text(const std::string &file)
-    : mystream(false), stream(NULL), compat(false), descriptions(false)
+    : mystream(false), stream(NULL), descriptions(false)
 {
     open(file);
 }
@@ -152,7 +152,7 @@ Text::noOutput(const Info &info)
 }
 
 string
-ValueToString(Result value, int precision, bool compat)
+ValueToString(Result value, int precision)
 {
     stringstream val;
 
@@ -166,7 +166,7 @@ ValueToString(Result value, int precision, bool compat)
         val.setf(ios::fixed);
         val << value;
     } else {
-        val << (compat ? "<err: div-0>" : "no value");
+        val << "no_value";
     }
 
     return val.str();
@@ -178,7 +178,6 @@ struct ScalarPrint
     string name;
     string desc;
     StatFlags flags;
-    bool compat;
     bool descriptions;
     int precision;
     Result pdf;
@@ -202,13 +201,8 @@ ScalarPrint::operator()(ostream &stream) const
     if (!isnan(cdf))
         ccprintf(cdfstr, "%.2f%%", cdf * 100.0);
 
-    if (compat && flags & __substat) {
-        ccprintf(stream, "%32s %12s %10s %10s", name,
-                 ValueToString(value, precision, compat), pdfstr, cdfstr);
-    } else {
-        ccprintf(stream, "%-40s %12s %10s %10s", name,
-                 ValueToString(value, precision, compat), pdfstr, cdfstr);
-    }
+    ccprintf(stream, "%-40s %12s %10s %10s", name,
+             ValueToString(value, precision), pdfstr, cdfstr);
 
     if (descriptions) {
         if (!desc.empty())
@@ -224,7 +218,6 @@ struct VectorPrint
     vector<string> subnames;
     vector<string> subdescs;
     StatFlags flags;
-    bool compat;
     bool descriptions;
     int precision;
     VResult vec;
@@ -245,12 +238,11 @@ VectorPrint::operator()(std::ostream &stream) const
         }
     }
 
-    string base = name + (compat ? "_" : "::");
+    string base = name + "::";
 
     ScalarPrint print;
     print.name = name;
     print.desc = desc;
-    print.compat = compat;
     print.precision = precision;
     print.descriptions = descriptions;
     print.flags = flags;
@@ -262,83 +254,32 @@ VectorPrint::operator()(std::ostream &stream) const
     if (_size == 1) {
         print.value = vec[0];
         print(stream);
-    } else if (!compat) {
-        for (off_type i = 0; i < _size; ++i) {
-            if (havesub && (i >= subnames.size() || subnames[i].empty()))
-                continue;
+        return;
+    }
 
-            print.name = base + (havesub ? subnames[i] : to_string(i));
-            print.desc = subdescs.empty() ? desc : subdescs[i];
-            print.value = vec[i];
+    for (off_type i = 0; i < _size; ++i) {
+        if (havesub && (i >= subnames.size() || subnames[i].empty()))
+            continue;
 
-            if (_total && (flags & pdf)) {
-                print.pdf = vec[i] / _total;
-                print.cdf += print.pdf;
-            }
+        print.name = base + (havesub ? subnames[i] : to_string(i));
+        print.desc = subdescs.empty() ? desc : subdescs[i];
+        print.value = vec[i];
 
-            print(stream);
+        if (_total && flags & pdf) {
+            print.pdf = vec[i] / _total;
+            print.cdf += print.pdf;
         }
 
-        if (flags & ::Stats::total) {
-            print.name = base + "total";
-            print.desc = desc;
-            print.value = total;
-            print(stream);
-        }
-    } else {
-        if (flags & ::Stats::total) {
-            print.value = total;
-            print(stream);
-        }
+        print(stream);
+    }
 
-        Result _pdf = 0.0;
-        Result _cdf = 0.0;
-        if (flags & dist) {
-            ccprintf(stream, "%s.start_dist\n", name);
-            for (off_type i = 0; i < _size; ++i) {
-                print.name = havesub ? subnames[i] : to_string(i);
-                print.desc = subdescs.empty() ? desc : subdescs[i];
-                print.flags |= __substat;
-                print.value = vec[i];
-
-                if (_total) {
-                    _pdf = vec[i] / _total;
-                    _cdf += _pdf;
-                }
-
-                if (flags & pdf)
-                    print.pdf = _pdf;
-                if (flags & cdf)
-                    print.cdf = _cdf;
-
-                print(stream);
-            }
-            ccprintf(stream, "%s.end_dist\n", name);
-        } else {
-            for (off_type i = 0; i < _size; ++i) {
-                if (havesub && subnames[i].empty())
-                    continue;
-
-                print.name = base;
-                print.name += havesub ? subnames[i] : to_string(i);
-                print.desc = subdescs.empty() ? desc : subdescs[i];
-                print.value = vec[i];
-
-                if (_total) {
-                    _pdf = vec[i] / _total;
-                    _cdf += _pdf;
-                } else {
-                    _pdf = _cdf = NAN;
-                }
-
-                if (flags & pdf) {
-                    print.pdf = _pdf;
-                    print.cdf = _cdf;
-                }
-
-                print(stream);
-            }
-        }
+    if (flags & ::Stats::total) {
+        print.pdf = NAN;
+        print.cdf = NAN;
+        print.name = base + "total";
+        print.desc = desc;
+        print.value = total;
+        print(stream);
     }
 }
 
@@ -347,7 +288,6 @@ struct DistPrint
     string name;
     string desc;
     StatFlags flags;
-    bool compat;
     bool descriptions;
     int precision;
 
@@ -390,7 +330,6 @@ DistPrint::init(const Text *text, const Info &info, const DistParams *params)
     desc = info.desc;
     flags = info.flags;
     precision = info.precision;
-    compat = text->compat;
     descriptions = text->descriptions;
 
     fancy = params->fancy;
@@ -410,11 +349,10 @@ DistPrint::operator()(ostream &stream) const
 
     if (fancy) {
         ScalarPrint print;
-        string base = name + (compat ? "_" : "::");
+        string base = name + "::";
 
         print.precision = precision;
         print.flags = flags;
-        print.compat = compat;
         print.descriptions = descriptions;
         print.desc = desc;
         print.pdf = NAN;
@@ -443,23 +381,15 @@ DistPrint::operator()(ostream &stream) const
         total += data.cvec[i];
     total += data.overflow;
 
-    string base = name + (compat ? "." : "::");
+    string base = name + "::";
 
     ScalarPrint print;
-    print.desc = compat ? "" : desc;
+    print.desc = desc;
     print.flags = flags;
-    print.compat = compat;
     print.descriptions = descriptions;
     print.precision = precision;
     print.pdf = NAN;
     print.cdf = NAN;
-
-    if (compat) {
-        ccprintf(stream, "%-42s", base + "start_dist");
-        if (descriptions && !desc.empty())
-            ccprintf(stream, "                     # %s", desc);
-        stream << endl;
-    }
 
     print.name = base + "samples";
     print.value = data.samples;
@@ -469,100 +399,62 @@ DistPrint::operator()(ostream &stream) const
     print.value = data.min_val;
     print(stream);
 
-    if (!compat || data.underflow > 0.0) {
-        print.name = base + "underflows";
-        print.value = data.underflow;
-        if (!compat && total) {
-            print.pdf = data.underflow / total;
+    print.name = base + "underflows";
+    print.value = data.underflow;
+    if (total) {
+        print.pdf = data.underflow / total;
+        print.cdf += print.pdf;
+    }
+    print(stream);
+
+    for (off_type i = 0; i < size; ++i) {
+        stringstream namestr;
+        namestr << base;
+
+        Counter low = i * bucket_size + min;
+        Counter high = ::min(low + bucket_size, max);
+        namestr << low;
+        if (low < high)
+            namestr << "-" << high;
+
+        print.name = namestr.str();
+        print.value = data.cvec[i];
+        if (total) {
+            print.pdf = data.cvec[i] / total;
             print.cdf += print.pdf;
         }
         print(stream);
     }
 
-    if (!compat) {
-        for (off_type i = 0; i < size; ++i) {
-            stringstream namestr;
-            namestr << base;
-
-            Counter low = i * bucket_size + min;
-            Counter high = ::min(low + bucket_size, max);
-            namestr << low;
-            if (low < high)
-                namestr << "-" << high;
-
-            print.name = namestr.str();
-            print.value = data.cvec[i];
-            if (total) {
-                print.pdf = data.cvec[i] / total;
-                print.cdf += print.pdf;
-            }
-            print(stream);
-        }
+    print.name = base + "overflows";
+    print.value = data.overflow;
+    if (total) {
+        print.pdf = data.overflow / total;
+        print.cdf += print.pdf;
     } else {
-        Counter _min;
-        Result _pdf;
-        Result _cdf = 0.0;
-
-        print.flags = flags | __substat;
-
-        for (off_type i = 0; i < size; ++i) {
-            if ((flags & nozero && data.cvec[i] == 0.0) ||
-                (flags & nonan && isnan(data.cvec[i])))
-                continue;
-
-            _min = i * bucket_size + min;
-            _pdf = data.cvec[i] / total * 100.0;
-            _cdf += _pdf;
-
-
-            print.name = ValueToString(_min, 0, compat);
-            print.value = data.cvec[i];
-            print.pdf = (flags & pdf) ? _pdf : NAN;
-            print.cdf = (flags & cdf) ? _cdf : NAN;
-            print(stream);
-        }
-
-        print.flags = flags;
+        print.pdf = NAN;
+        print.cdf = NAN;
     }
-
-    if (!compat || data.overflow > 0.0) {
-        print.name = base + "overflows";
-        print.value = data.overflow;
-        if (!compat && total) {
-            print.pdf = data.overflow / total;
-            print.cdf += print.pdf;
-        } else {
-            print.pdf = NAN;
-            print.cdf = NAN;
-        }
-        print(stream);
-    }
+    print(stream);
 
     print.pdf = NAN;
     print.cdf = NAN;
 
-    if (!compat) {
-        print.name = base + "total";
-        print.value = total;
-        print(stream);
-    }
+    print.name = base + "total";
+    print.value = total;
+    print(stream);
 
     print.name = base + "max_value";
     print.value = data.max_val;
     print(stream);
 
-    if (!compat && data.samples != 0) {
-        print.name = base + "mean";
-        print.value = data.sum / data.samples;
-        print(stream);
+    print.name = base + "mean";
+    print.value = data.sum / data.samples;
+    print(stream);
 
-        print.name = base + "stdev";
-        print.value = stdev;
-        print(stream);
-    }
-
-    if (compat)
-        ccprintf(stream, "%send_dist\n\n", base);
+    print.name = base + "stdev";
+    print.value = stdev;
+    print(stream);
 }
 
 void
@@ -576,7 +468,6 @@ Text::visit(const ScalarInfoBase &info)
     print.name = info.name;
     print.desc = info.desc;
     print.flags = info.flags;
-    print.compat = compat;
     print.descriptions = descriptions;
     print.precision = info.precision;
     print.pdf = NAN;
@@ -597,7 +488,6 @@ Text::visit(const VectorInfoBase &info)
     print.name = info.name;
     print.desc = info.desc;
     print.flags = info.flags;
-    print.compat = compat;
     print.descriptions = descriptions;
     print.precision = info.precision;
     print.vec = info.result();
@@ -635,7 +525,6 @@ Text::visit(const Vector2dInfoBase &info)
 
     print.subnames = info.y_subnames;
     print.flags = info.flags;
-    print.compat = compat;
     print.descriptions = descriptions;
     print.precision = info.precision;
 
@@ -708,7 +597,7 @@ Text::visit(const FormulaInfoBase &info)
 }
 
 bool
-initText(const string &filename, bool desc, bool compat)
+initText(const string &filename, bool desc)
 {
     static Text text;
     static bool connected = false;
@@ -720,7 +609,6 @@ initText(const string &filename, bool desc, bool compat)
 
     text.open(*simout.find(filename));
     text.descriptions = desc;
-    text.compat = compat;
     OutputList.push_back(&text);
     connected = true;
 
