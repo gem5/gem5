@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 14 2009 16:03:56
-M5 revision 5716400b2110+ 6033+ default qtip tip new-thread-status-stats-update
-M5 started Apr 14 2009 16:03:59
-M5 executing on phenom
-command line: build/ALPHA_SE/m5.opt -d build/ALPHA_SE/tests/opt/quick/00.hello/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/opt/quick/00.hello/alpha/tru64/o3-timing
+M5 compiled Apr 21 2009 16:38:39
+M5 revision e6dd09514462 6117 default qtip tip stats-update
+M5 started Apr 21 2009 16:39:11
+M5 executing on zizzer
+command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 12 2009 13:26:17
-M5 revision 8c874c02878a 6042 default qtip tip cpuidfixstats.patch
-M5 started Apr 12 2009 13:31:26
-M5 executing on tater
+M5 compiled Apr 21 2009 19:00:07
+M5 revision e6dd09514462 6117 default qtip tip stats-update
+M5 started Apr 21 2009 19:10:33
+M5 executing on zizzer
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-timing -re tests/run.py build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

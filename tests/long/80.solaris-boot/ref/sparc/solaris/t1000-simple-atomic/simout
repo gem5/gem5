@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr  8 2009 12:30:03
-M5 revision 233a4a1a6110 6024 default qtip tip test_unifytlb.diff
-M5 started Apr  8 2009 12:30:19
-M5 executing on maize
+M5 compiled Apr 21 2009 18:38:50
+M5 revision e6dd09514462 6117 default qtip tip stats-update
+M5 started Apr 21 2009 18:39:20
+M5 executing on zizzer
 command line: build/SPARC_FS/m5.fast -d build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic -re tests/run.py build/SPARC_FS/tests/fast/long/80.solaris-boot/sparc/solaris/t1000-simple-atomic
 Global frequency set at 2000000000 ticks per second
 info: No kernel set for full system simulation. Assuming you know what you're doing...

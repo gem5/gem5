@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr  8 2009 12:30:02
-M5 revision 233a4a1a6110 6024 default qtip tip test_unifytlb.diff
-M5 started Apr  8 2009 12:30:42
-M5 executing on maize
+M5 compiled Apr 21 2009 18:04:32
+M5 revision e6dd09514462 6117 default qtip tip stats-update
+M5 started Apr 21 2009 18:10:11
+M5 executing on zizzer
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-timing -re tests/run.py build/SPARC_SE/tests/fast/long/10.mcf/sparc/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
