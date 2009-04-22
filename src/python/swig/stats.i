@@ -30,6 +30,7 @@
 
 %module stats
 
+%include "std_list.i"
 %include "std_string.i"
 
 %{
@@ -38,6 +39,9 @@
 #include "base/stats/text.hh"
 #include "sim/stat_control.hh"
 %}
+
+%import "base/stats/types.hh"
+%include "base/stats/info.hh"
 
 namespace Stats {
 void initSimStats();
@@ -53,7 +57,9 @@ void prepare();
 void dump();
 void reset();
 
-/* namespace Stat */ }
+std::list<Info *> &statsList();
+
+/* namespace Stats */ }
 
 %wrapper %{
 // fix up module name to reflect the fact that it's inside the m5 package
