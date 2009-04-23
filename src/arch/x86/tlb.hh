@@ -79,8 +79,6 @@ namespace X86ISA
 {
     class Walker;
 
-    static const unsigned StoreCheck = 1 << NUM_SEGMENTREGS;
-
     class TLB : public BaseTLB
     {
       protected:

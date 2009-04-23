@@ -68,7 +68,8 @@ namespace X86ISA
     static const int FlagShift = 4;
     enum FlagBit {
         CPL0FlagBit = 1,
-        AddrSizeFlagBit = 2
+        AddrSizeFlagBit = 2,
+        StoreCheck = 4
     };
 
     /**

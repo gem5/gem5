@@ -439,9 +439,9 @@ let {{
 
     defineMicroLoadOp('Ld', 'Data = merge(Data, Mem, dataSize);')
     defineMicroLoadOp('Ldst', 'Data = merge(Data, Mem, dataSize);',
-            'X86ISA::StoreCheck')
+            '(StoreCheck << FlagShift)')
     defineMicroLoadOp('Ldstl', 'Data = merge(Data, Mem, dataSize);',
-            'X86ISA::StoreCheck | Request::LOCKED')
+            '(StoreCheck << FlagShift) | Request::LOCKED')
     defineMicroLoadOp('Ldfp', 'FpData.uqw = Mem;')
 
     def defineMicroStoreOp(mnemonic, code, \

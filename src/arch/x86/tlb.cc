@@ -193,7 +193,7 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
     Addr vaddr = req->getVaddr();
     DPRINTF(TLB, "Translating vaddr %#x.\n", vaddr);
     uint32_t flags = req->getFlags();
-    bool storeCheck = flags & StoreCheck;
+    bool storeCheck = flags & (StoreCheck << FlagShift);
 
     int seg = flags & SegmentFlagMask;
 
