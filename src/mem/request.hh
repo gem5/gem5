@@ -59,8 +59,8 @@ class Request : public FastAlloc
 
     /** ASI information for this request if it exists. */
     static const FlagsType ASI_BITS                    = 0x000000FF;
-    /** The request is a Load locked/store conditional. */
-    static const FlagsType LLSC                        = 0x00000100;
+    /** The request was an instruction fetch. */
+    static const FlagsType INST_FETCH                  = 0x00000100;
     /** The virtual address is also the physical address. */
     static const FlagsType PHYSICAL                    = 0x00000200;
     /** The request is an ALPHA VPTE pal access (hw_ld). */
@@ -69,34 +69,36 @@ class Request : public FastAlloc
     static const FlagsType ALTMODE                     = 0x00000800;
     /** The request is to an uncacheable address. */
     static const FlagsType UNCACHEABLE                 = 0x00001000;
+    /** This request is to a memory mapped register. */
+    static const FlagsType MMAPED_IPR                  = 0x00002000;
+
     /** The request should not cause a page fault. */
-    static const FlagsType NO_FAULT                    = 0x00002000;
+    static const FlagsType NO_FAULT                    = 0x00010000;
+    /** The request should ignore unaligned access faults */
+    static const FlagsType NO_ALIGN_FAULT              = 0x00020000;
+    /** The request should ignore unaligned access faults */
+    static const FlagsType NO_HALF_WORD_ALIGN_FAULT    = 0x00040000;
     /** The request should not cause a memory access. */
-    static const FlagsType NO_ACCESS                   = 0x00004000;
+    static const FlagsType NO_ACCESS                   = 0x00080000;
     /** This request will lock or unlock the accessed memory. When used with
      * a load, the access locks the particular chunk of memory. When used
      * with a store, it unlocks. The rule is that locked accesses have to be
      * made up of a locked load, some operation on the data, and then a locked
      * store.
      */
-    static const FlagsType LOCKED                      = 0x00008000;
-    /** The request should be prefetched into the exclusive state. */
-    static const FlagsType PF_EXCLUSIVE                = 0x00010000;
-    /** The request should be marked as LRU. */
-    static const FlagsType EVICT_NEXT                  = 0x00020000;
-    /** The request should ignore unaligned access faults */
-    static const FlagsType NO_ALIGN_FAULT              = 0x00040000;
-    /** The request was an instruction fetch. */
-    static const FlagsType INST_FETCH                  = 0x00080000;
+    static const FlagsType LOCKED                      = 0x00100000;
+    /** The request is a Load locked/store conditional. */
+    static const FlagsType LLSC                        = 0x00200000;
     /** This request is for a memory swap. */
-    static const FlagsType MEM_SWAP                    = 0x00100000;
-    static const FlagsType MEM_SWAP_COND               = 0x00200000;
-    /** The request should ignore unaligned access faults */
-    static const FlagsType NO_HALF_WORD_ALIGN_FAULT    = 0x00400000;
-    /** This request is to a memory mapped register. */
-    static const FlagsType MMAPED_IPR                  = 0x00800000;
+    static const FlagsType MEM_SWAP                    = 0x00400000;
+    static const FlagsType MEM_SWAP_COND               = 0x00800000;
+
     /** The request is a prefetch. */
     static const FlagsType PREFETCH                    = 0x01000000;
+    /** The request should be prefetched into the exclusive state. */
+    static const FlagsType PF_EXCLUSIVE                = 0x02000000;
+    /** The request should be marked as LRU. */
+    static const FlagsType EVICT_NEXT                  = 0x04000000;
 
     /** These flags are *not* cleared when a Request object is reused
        (assigned a new address). */
