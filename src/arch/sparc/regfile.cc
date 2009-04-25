@@ -359,19 +359,20 @@ void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
     for (int x = 0; x < MaxGL; ++x) {
         src->setMiscRegNoEffect(MISCREG_GL, x);
         dest->setMiscRegNoEffect(MISCREG_GL, x);
-        for (int y = 0; y < 8; y++)
+        // Skip %g0 which is always zero.
+        for (int y = 1; y < 8; y++)
             dest->setIntReg(y, src->readIntReg(y));
     }
-    //Locals/Ins/Outs
+    //Locals and ins. Outs are all also ins.
     for (int x = 0; x < NWindows; ++x) {
          src->setMiscRegNoEffect(MISCREG_CWP, x);
          dest->setMiscRegNoEffect(MISCREG_CWP, x);
-         for (int y = 8; y < 32; y++)
+         for (int y = 16; y < 32; y++)
              dest->setIntReg(y, src->readIntReg(y));
     }
-    //MicroIntRegs
-    for (int y = 0; y < NumMicroIntRegs; ++y)
-        dest->setIntReg(y+32, src->readIntReg(y+32));
+    //Microcode reg and pseudo int regs (misc regs in the integer regfile).
+    for (int y = NumIntArchRegs; y < NumIntArchRegs + NumMicroIntRegs; ++y)
+        dest->setIntReg(y, src->readIntReg(y));
 
     //Restore src's GL, CWP
     src->setMiscRegNoEffect(MISCREG_GL, old_gl);
@@ -379,7 +380,7 @@ void SparcISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 
 
     // Then loop through the floating point registers.
-    for (int i = 0; i < SparcISA::NumFloatRegs; ++i) {
+    for (int i = 0; i < SparcISA::NumFloatArchRegs; ++i) {
         dest->setFloatRegBits(i, src->readFloatRegBits(i));
     }
 

@@ -723,11 +723,7 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
         ctc->setPC(tc->readNextPC());
         ctc->setNextPC(tc->readNextPC() + sizeof(TheISA::MachInst));
-
-        // In SPARC, need NNPC too...
-        #if THE_ISA == SPARC_ISA
-            ctc->setNextNPC(tc->readNextNPC() + sizeof(TheISA::MachInst));
-        #endif
+        ctc->setNextNPC(tc->readNextNPC() + sizeof(TheISA::MachInst));
 
         ctc->activate();
 
