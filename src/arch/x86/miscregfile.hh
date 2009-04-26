@@ -107,6 +107,8 @@ namespace X86ISA
     {
       protected:
         MiscReg regVal[NumMiscRegs];
+        void updateHandyM5Reg(Efer efer, CR0 cr0,
+                SegAttr csAttr, RFLAGS rflags);
 
       public:
         void clear();
