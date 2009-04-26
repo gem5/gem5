@@ -182,6 +182,13 @@ X86ISA::I82094AA::lowerInterruptPin(int number)
     pinStates[number] = false;
 }
 
+void
+X86ISA::I82094AA::registerLocalApic(int initialId, Interrupts *localApic)
+{
+    assert(localApic);
+    localApics[initialId] = localApic;
+}
+
 X86ISA::I82094AA *
 I82094AAParams::create()
 {

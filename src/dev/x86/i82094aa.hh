@@ -37,10 +37,13 @@
 #include "dev/x86/intdev.hh"
 #include "params/I82094AA.hh"
 
+#include <map>
+
 namespace X86ISA
 {
 
 class I8259;
+class Interrupts;
 
 class I82094AA : public PioDevice, public IntDev
 {
@@ -66,6 +69,8 @@ class I82094AA : public PioDevice, public IntDev
     Addr pioAddr;
 
     I8259 * extIntPic;
+
+    std::map<int, Interrupts *> localApics;
 
     uint8_t regSel;
     uint8_t initialApicId;
@@ -122,6 +127,7 @@ class I82094AA : public PioDevice, public IntDev
     void signalInterrupt(int line);
     void raiseInterruptPin(int number);
     void lowerInterruptPin(int number);
+    void registerLocalApic(int id, Interrupts *localApic);
 };
 
 }; // namespace X86ISA

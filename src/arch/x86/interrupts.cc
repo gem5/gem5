@@ -59,6 +59,9 @@
 #include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "cpu/base.hh"
+#include "dev/x86/i82094aa.hh"
+#include "dev/x86/pc.hh"
+#include "dev/x86/south_bridge.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
@@ -303,6 +306,16 @@ X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
     cpu = newCPU;
     initialApicId = cpu->cpuId();
     regs[APIC_ID] = (initialApicId << 24);
+}
+
+
+void
+X86ISA::Interrupts::init()
+{
+    BasicPioDevice::init();
+    Pc * pc = dynamic_cast<Pc *>(platform);
+    assert(pc);
+    pc->southBridge->ioApic->registerLocalApic(initialApicId, this);
 }
 
 

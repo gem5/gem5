@@ -214,6 +214,11 @@ class Interrupts : public BasicPioDevice, IntDev
     }
 
     /*
+     * Initialize this object by registering it with the IO APIC.
+     */
+    void init();
+
+    /*
      * Functions to interact with the interrupt port from IntDev.
      */
     Tick read(PacketPtr pkt);
