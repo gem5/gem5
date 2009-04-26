@@ -97,7 +97,7 @@ using namespace std;
 class Checkpoint;
 
 void MiscRegFile::updateHandyM5Reg(Efer efer, CR0 cr0,
-        SegAttr csAttr, RFLAGS rflags)
+        SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
 {
     HandyM5Reg m5reg;
     if (efer.lma) {
@@ -120,6 +120,37 @@ void MiscRegFile::updateHandyM5Reg(Efer efer, CR0 cr0,
     m5reg.cpl = csAttr.dpl;
     m5reg.paging = cr0.pg;
     m5reg.prot = cr0.pe;
+
+    // Compute the default and alternate operand size.
+    if (m5reg.submode == SixtyFourBitMode || csAttr.defaultSize) {
+        m5reg.defOp = 2;
+        m5reg.altOp = 1;
+    } else {
+        m5reg.defOp = 1;
+        m5reg.altOp = 2;
+    }
+
+    // Compute the default and alternate address size.
+    if (m5reg.submode == SixtyFourBitMode) {
+        m5reg.defAddr = 3;
+        m5reg.altAddr = 2;
+    } else if (csAttr.defaultSize) {
+        m5reg.defAddr = 2;
+        m5reg.altAddr = 1;
+    } else {
+        m5reg.defAddr = 1;
+        m5reg.altAddr = 2;
+    }
+
+    // Compute the stack size
+    if (m5reg.submode == SixtyFourBitMode) {
+        m5reg.stack = 3;
+    } else if (ssAttr.defaultSize) {
+        m5reg.stack = 2;
+    } else {
+        m5reg.stack = 1;
+    }
+
     regVal[MISCREG_M5_REG] = m5reg;
 }
 
@@ -199,6 +230,7 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
             updateHandyM5Reg(regVal[MISCREG_EFER],
                              newCR0,
                              regVal[MISCREG_CS_ATTR],
+                             regVal[MISCREG_SS_ATTR],
                              regVal[MISCREG_RFLAGS]);
         }
         break;
@@ -239,8 +271,16 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
             updateHandyM5Reg(regVal[MISCREG_EFER],
                              regVal[MISCREG_CR0],
                              newCSAttr,
+                             regVal[MISCREG_SS_ATTR],
                              regVal[MISCREG_RFLAGS]);
         }
+        break;
+      case MISCREG_SS_ATTR:
+        updateHandyM5Reg(regVal[MISCREG_EFER],
+                         regVal[MISCREG_CR0],
+                         regVal[MISCREG_CS_ATTR],
+                         val,
+                         regVal[MISCREG_RFLAGS]);
         break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
@@ -346,6 +386,7 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
         updateHandyM5Reg(regVal[MISCREG_EFER],
                          regVal[MISCREG_CR0],
                          regVal[MISCREG_CS_ATTR],
+                         regVal[MISCREG_SS_ATTR],
                          regVal[MISCREG_RFLAGS]);
         return;
       default:

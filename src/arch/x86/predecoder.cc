@@ -80,9 +80,9 @@ namespace X86ISA
 
         emi.modRM = 0;
         emi.sib = 0;
-        HandyM5Reg m5reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
-        emi.mode.mode = m5reg.mode;
-        emi.mode.submode = m5reg.submode;
+        m5Reg = tc->readMiscRegNoEffect(MISCREG_M5_REG);
+        emi.mode.mode = m5Reg.mode;
+        emi.mode.submode = m5Reg.submode;
     }
 
     void Predecoder::process()
@@ -216,34 +216,15 @@ namespace X86ISA
             DPRINTF(Predecoder, "Found opcode %#x.\n", nextByte);
             emi.opcode.op = nextByte;
 
-            SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
-
             //Figure out the effective operand size. This can be overriden to
             //a fixed value at the decoder level.
             int logOpSize;
-            if (emi.mode.submode == SixtyFourBitMode)
-            {
-                if(emi.rex.w)
-                    logOpSize = 3; // 64 bit operand size
-                else if(emi.legacy.op)
-                    logOpSize = 1; // 16 bit operand size
-                else
-                    logOpSize = 2; // 32 bit operand size
-            }
-            else if(csAttr.defaultSize)
-            {
-                if(emi.legacy.op)
-                    logOpSize = 1; // 16 bit operand size
-                else
-                    logOpSize = 2; // 32 bit operand size
-            }
-            else // 16 bit default operand size
-            {
-                if(emi.legacy.op)
-                    logOpSize = 2; // 32 bit operand size
-                else
-                    logOpSize = 1; // 16 bit operand size
-            }
+            if (emi.rex.w)
+                logOpSize = 3; // 64 bit operand size
+            else if (emi.legacy.op)
+                logOpSize = m5Reg.altOp;
+            else
+                logOpSize = m5Reg.defOp;
 
             //Set the actual op size
             emi.opSize = 1 << logOpSize;
@@ -251,40 +232,17 @@ namespace X86ISA
             //Figure out the effective address size. This can be overriden to
             //a fixed value at the decoder level.
             int logAddrSize;
-            if(emi.mode.submode == SixtyFourBitMode)
-            {
-                if(emi.legacy.addr)
-                    logAddrSize = 2; // 32 bit address size
-                else
-                    logAddrSize = 3; // 64 bit address size
-            }
-            else if(csAttr.defaultSize)
-            {
-                if(emi.legacy.addr)
-                    logAddrSize = 1; // 16 bit address size
-                else
-                    logAddrSize = 2; // 32 bit address size
-            }
-            else // 16 bit default operand size
-            {
-                if(emi.legacy.addr)
-                    logAddrSize = 2; // 32 bit address size
-                else
-                    logAddrSize = 1; // 16 bit address size
-            }
-
-            SegAttr ssAttr = tc->readMiscRegNoEffect(MISCREG_SS_ATTR);
-            //Figure out the effective stack width. This can be overriden to
-            //a fixed value at the decoder level.
-            if(emi.mode.submode == SixtyFourBitMode)
-                emi.stackSize = 8; // 64 bit stack width
-            else if(ssAttr.defaultSize)
-                emi.stackSize = 4; // 32 bit stack width
+            if(emi.legacy.addr)
+                logAddrSize = m5Reg.altAddr;
             else
-                emi.stackSize = 2; // 16 bit stack width
+                logAddrSize = m5Reg.defAddr;
 
             //Set the actual address size
             emi.addrSize = 1 << logAddrSize;
+
+            //Figure out the effective stack width. This can be overriden to
+            //a fixed value at the decoder level.
+            emi.stackSize = 1 << m5Reg.stack;
 
             //Figure out how big of an immediate we'll retreive based
             //on the opcode.
@@ -318,9 +276,7 @@ namespace X86ISA
         ModRM modRM;
         modRM = nextByte;
         DPRINTF(Predecoder, "Found modrm byte %#x.\n", nextByte);
-        SegAttr csAttr = tc->readMiscRegNoEffect(MISCREG_CS_ATTR);
-        if (emi.mode.submode != SixtyFourBitMode &&
-                !csAttr.defaultSize) {
+        if (m5Reg.defOp == 1) {
             //figure out 16 bit displacement size
             if ((modRM.mod == 0 && modRM.rm == 6) || modRM.mod == 2)
                 displacementSize = 2;

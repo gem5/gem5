@@ -61,6 +61,7 @@
 #include <cassert>
 
 #include "arch/x86/types.hh"
+#include "arch/x86/miscregs.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
@@ -91,10 +92,11 @@ namespace X86ISA
         int offset;
         //The extended machine instruction being generated
         ExtMachInst emi;
+        HandyM5Reg m5Reg;
 
         inline uint8_t getNextByte()
         {
-            return (fetchChunk >> (offset * 8)) & 0xff;
+            return ((uint8_t *)&fetchChunk)[offset];
         }
 
         void getImmediate(int &collected, uint64_t &current, int size)
@@ -182,6 +184,7 @@ namespace X86ISA
         {
             emi.mode.mode = LongMode;
             emi.mode.submode = SixtyFourBitMode;
+            m5Reg = 0;
         }
 
         void reset()
