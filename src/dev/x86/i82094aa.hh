@@ -68,6 +68,7 @@ class I82094AA : public PioDevice, public IntDev
     I8259 * extIntPic;
 
     uint8_t regSel;
+    uint8_t initialApicId;
     uint8_t id;
     uint8_t arbId;
 
@@ -103,8 +104,9 @@ class I82094AA : public PioDevice, public IntDev
     void getIntAddrRange(AddrRangeList &range_list)
     {
         range_list.clear();
-        range_list.push_back(RangeEx(x86InterruptAddress(id, 0),
-                    x86InterruptAddress(id, 0) + PhysAddrAPICRangeSize));
+        range_list.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
+                    x86InterruptAddress(initialApicId, 0) +
+                    PhysAddrAPICRangeSize));
     }
 
     void writeReg(uint8_t offset, uint32_t value);

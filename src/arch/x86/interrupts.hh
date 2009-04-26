@@ -191,6 +191,8 @@ class Interrupts : public BasicPioDevice, IntDev
 
     BaseCPU *cpu;
 
+    int initialApicId;
+
   public:
     /*
      * Params stuff.

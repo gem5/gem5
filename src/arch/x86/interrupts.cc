@@ -295,17 +295,21 @@ X86ISA::Interrupts::requestInterrupt(uint8_t vector,
 void
 X86ISA::Interrupts::setCPU(BaseCPU * newCPU)
 {
+    assert(newCPU);
+    if (cpu != NULL && cpu->cpuId() != newCPU->cpuId()) {
+        panic("Local APICs can't be moved between CPUs"
+                " with different IDs.\n");
+    }
     cpu = newCPU;
-    assert(cpu);
-    regs[APIC_ID] = (cpu->cpuId() << 24);
+    initialApicId = cpu->cpuId();
+    regs[APIC_ID] = (initialApicId << 24);
 }
 
 
 Tick
 X86ISA::Interrupts::recvMessage(PacketPtr pkt)
 {
-    uint8_t id = (regs[APIC_ID] >> 24);
-    Addr offset = pkt->getAddr() - x86InterruptAddress(id, 0);
+    Addr offset = pkt->getAddr() - x86InterruptAddress(initialApicId, 0);
     assert(pkt->cmd == MemCmd::MessageReq);
     switch(offset)
     {
@@ -315,9 +319,6 @@ X86ISA::Interrupts::recvMessage(PacketPtr pkt)
             DPRINTF(LocalApic,
                     "Got Trigger Interrupt message with vector %#x.\n",
                     message.vector);
-            // Make sure we're really supposed to get this.
-            assert((message.destMode == 0 && message.destination == id) ||
-                   (bits((int)message.destination, id)));
 
             requestInterrupt(message.vector,
                     message.deliveryMode, message.trigger);
@@ -354,10 +355,10 @@ X86ISA::Interrupts::recvResponse(PacketPtr pkt)
 void
 X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
 {
-    uint8_t id = (regs[APIC_ID] >> 24);
     range_list.clear();
-    Range<Addr> range = RangeEx(x86LocalAPICAddress(id, 0),
-                                x86LocalAPICAddress(id, 0) + PageBytes);
+    Range<Addr> range = RangeEx(x86LocalAPICAddress(initialApicId, 0),
+                                x86LocalAPICAddress(initialApicId, 0) + 
+                                PageBytes);
     range_list.push_back(range);
     pioAddr = range.start;
 }
@@ -366,10 +367,10 @@ X86ISA::Interrupts::addressRanges(AddrRangeList &range_list)
 void
 X86ISA::Interrupts::getIntAddrRange(AddrRangeList &range_list)
 {
-    uint8_t id = (regs[APIC_ID] >> 24);
     range_list.clear();
-    range_list.push_back(RangeEx(x86InterruptAddress(id, 0),
-                x86InterruptAddress(id, 0) + PhysAddrAPICRangeSize));
+    range_list.push_back(RangeEx(x86InterruptAddress(initialApicId, 0),
+                x86InterruptAddress(initialApicId, 0) +
+                PhysAddrAPICRangeSize));
 }
 
 
@@ -515,14 +516,9 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 {
                     int numContexts = sys->numContexts();
                     pendingIPIs += (numContexts - 1);
-                    // We have no way to get at the thread context we're part
-                    // of, so we'll just have to go with the CPU for now.
-                    hack_once("Broadcast IPIs can't handle more than "
-                            "one context per CPU.\n");
-                    int myId = cpu->getContext(0)->contextId();
                     for (int i = 0; i < numContexts; i++) {
                         int thisId = sys->getThreadContext(i)->contextId();
-                        if (thisId != myId) {
+                        if (thisId != initialApicId) {
                             PacketPtr pkt = buildIntRequest(thisId, message);
                             if (timing)
                                 intPort->sendMessageTiming(pkt, latency);
@@ -589,7 +585,7 @@ X86ISA::Interrupts::Interrupts(Params * p) :
     pendingInit(false), initVector(0),
     pendingStartup(false), startupVector(0),
     startedUp(false), pendingUnmaskableInt(false),
-    pendingIPIs(0)
+    pendingIPIs(0), cpu(NULL)
 {
     pioSize = PageBytes;
     memset(regs, 0, sizeof(regs));
