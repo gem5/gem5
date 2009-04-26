@@ -518,6 +518,8 @@ namespace X86ISA
         Bitfield<0> mode;
         Bitfield<3, 1> submode;
         Bitfield<5, 4> cpl;
+        Bitfield<6> paging;
+        Bitfield<7> prot;
     EndBitUnion(HandyM5Reg)
 
     /**

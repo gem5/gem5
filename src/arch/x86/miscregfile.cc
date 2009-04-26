@@ -118,6 +118,8 @@ void MiscRegFile::updateHandyM5Reg(Efer efer, CR0 cr0,
         }
     }
     m5reg.cpl = csAttr.dpl;
+    m5reg.paging = cr0.pg;
+    m5reg.prot = cr0.pe;
     regVal[MISCREG_M5_REG] = m5reg;
 }
 
