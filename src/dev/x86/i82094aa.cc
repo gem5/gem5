@@ -40,7 +40,7 @@ X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
     extIntPic(p->external_int_pic)
 {
     // This assumes there's only one I/O APIC in the system
-    id = sys->numContexts();
+    id = p->apic_id;
     assert(id <= 0xf);
     arbId = id;
     regSel = 0;

@@ -96,6 +96,8 @@ else:
     else:
         bm = [SysConfig()]
 
+np = options.num_cpus
+
 if m5.build_env['TARGET_ISA'] == "alpha":
     test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
 elif m5.build_env['TARGET_ISA'] == "mips":
@@ -103,7 +105,7 @@ elif m5.build_env['TARGET_ISA'] == "mips":
 elif m5.build_env['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
 elif m5.build_env['TARGET_ISA'] == "x86":
-    test_sys = makeLinuxX86System(test_mem_mode, bm[0])
+    test_sys = makeLinuxX86System(test_mem_mode, np, bm[0])
 else:
     m5.fatal("incapable of building non-alpha or non-sparc full system!")
 
@@ -112,8 +114,6 @@ if options.kernel is not None:
 
 if options.script is not None:
     test_sys.readfile = options.script
-
-np = options.num_cpus
 
 if options.l2cache:
     test_sys.l2 = L2Cache(size = '2MB')
@@ -153,7 +153,7 @@ if len(bm) == 2:
     elif m5.build_env['TARGET_ISA'] == 'sparc':
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
     elif m5.build.env['TARGET_ISA'] == 'x86':
-        drive_sys = makeX86System(drive_mem_mode, bm[1])
+        drive_sys = makeX86System(drive_mem_mode, np, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)
     if options.fastmem:

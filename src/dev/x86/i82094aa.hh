@@ -103,8 +103,8 @@ class I82094AA : public PioDevice, public IntDev
     void getIntAddrRange(AddrRangeList &range_list)
     {
         range_list.clear();
-        range_list.push_back(RangeEx(x86InterruptAddress(1, 0),
-                    x86InterruptAddress(1, 0) + PhysAddrAPICRangeSize));
+        range_list.push_back(RangeEx(x86InterruptAddress(id, 0),
+                    x86InterruptAddress(id, 0) + PhysAddrAPICRangeSize));
     }
 
     void writeReg(uint8_t offset, uint32_t value);
