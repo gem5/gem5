@@ -510,11 +510,41 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             bool timing = sys->getMemoryMode() == Enums::timing;
             // Be careful no updates of the delivery status bit get lost.
             regs[APIC_INTERRUPT_COMMAND_LOW] = low;
+            ApicList apics;
+            int numContexts = sys->numContexts();
             switch (low.destShorthand) {
               case 0:
-                pendingIPIs++;
-                intPort->sendMessage(message, timing);
-                newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
+                if (message.deliveryMode == DeliveryMode::LowestPriority) {
+                    panic("Lowest priority delivery mode "
+                            "IPIs aren't implemented.\n");
+                }
+                if (message.destMode == 1) {
+                    int dest = message.destination;
+                    hack_once("Assuming logical destinations are 1 << id.\n");
+                    for (int i = 0; i < numContexts; i++) {
+                        if (dest & 0x1)
+                            apics.push_back(i);
+                        dest = dest >> 1;
+                    }
+                } else {
+                    if (message.destination == 0xFF) {
+                        for (int i = 0; i < numContexts; i++) {
+                            if (i == initialApicId) {
+                                requestInterrupt(message.vector,
+                                        message.deliveryMode, message.trigger);
+                            } else {
+                                apics.push_back(i);
+                            }
+                        }
+                    } else {
+                        if (message.destination == initialApicId) {
+                            requestInterrupt(message.vector,
+                                    message.deliveryMode, message.trigger);
+                        } else {
+                            apics.push_back(message.destination);
+                        }
+                    }
+                }
                 break;
               case 1:
                 newVal = val;
@@ -527,22 +557,17 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
                 // Fall through
               case 3:
                 {
-                    int numContexts = sys->numContexts();
-                    pendingIPIs += (numContexts - 1);
                     for (int i = 0; i < numContexts; i++) {
-                        int thisId = sys->getThreadContext(i)->contextId();
-                        if (thisId != initialApicId) {
-                            PacketPtr pkt = buildIntRequest(thisId, message);
-                            if (timing)
-                                intPort->sendMessageTiming(pkt, latency);
-                            else
-                                intPort->sendMessageAtomic(pkt);
+                        if (i != initialApicId) {
+                            apics.push_back(i);
                         }
                     }
                 }
-                newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
                 break;
             }
+            pendingIPIs += apics.size();
+            intPort->sendMessage(apics, message, timing);
+            newVal = regs[APIC_INTERRUPT_COMMAND_LOW];
         }
         break;
       case APIC_LVT_TIMER:

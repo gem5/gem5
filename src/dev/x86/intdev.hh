@@ -43,7 +43,11 @@
 #include "params/X86IntSinkPin.hh"
 #include "params/X86IntLine.hh"
 
+#include <list>
+
 namespace X86ISA {
+
+typedef std::list<int> ApicList;
 
 class IntDev
 {
@@ -78,7 +82,8 @@ class IntDev
 
         // This is x86 focused, so if this class becomes generic, this would
         // need to be moved into a subclass.
-        void sendMessage(TriggerIntMessage message, bool timing);
+        void sendMessage(ApicList apics,
+                TriggerIntMessage message, bool timing);
 
         void recvStatusChange(Status status)
         {

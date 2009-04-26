@@ -31,50 +31,16 @@
 #include "dev/x86/intdev.hh"
 
 void
-X86ISA::IntDev::IntPort::sendMessage(TriggerIntMessage message, bool timing)
+X86ISA::IntDev::IntPort::sendMessage(ApicList apics,
+        TriggerIntMessage message, bool timing)
 {
-    if (DeliveryMode::isReserved(message.deliveryMode)) {
-        fatal("Tried to use reserved delivery mode %d\n",
-                message.deliveryMode);
-    } else if (DTRACE(IntDev)) {
-        DPRINTF(IntDev, "Delivery mode is: %s.\n",
-                DeliveryMode::names[message.deliveryMode]);
-        DPRINTF(IntDev, "Vector is %#x.\n", message.vector);
-    }
-    if (message.destMode == 0) {
-        DPRINTF(IntDev,
-                "Sending interrupt to APIC ID %d.\n", message.destination);
-        PacketPtr pkt = buildIntRequest(message.destination, message);
-        if (timing) {
+    ApicList::iterator apicIt;
+    for (apicIt = apics.begin(); apicIt != apics.end(); apicIt++) {
+        PacketPtr pkt = buildIntRequest(*apicIt, message);
+        if (timing)
             sendMessageTiming(pkt, latency);
-        } else {
+        else
             sendMessageAtomic(pkt);
-        }
-    } else {
-        DPRINTF(IntDev, "Sending interrupts to APIC IDs:"
-                "%s%s%s%s%s%s%s%s\n",
-                bits((int)message.destination, 0) ? " 0": "",
-                bits((int)message.destination, 1) ? " 1": "",
-                bits((int)message.destination, 2) ? " 2": "",
-                bits((int)message.destination, 3) ? " 3": "",
-                bits((int)message.destination, 4) ? " 4": "",
-                bits((int)message.destination, 5) ? " 5": "",
-                bits((int)message.destination, 6) ? " 6": "",
-                bits((int)message.destination, 7) ? " 7": ""
-                );
-        uint8_t dests = message.destination;
-        uint8_t id = 0;
-        while(dests) {
-            if (dests & 0x1) {
-                PacketPtr pkt = buildIntRequest(id, message);
-                if (timing)
-                    sendMessageTiming(pkt, latency);
-                else
-                    sendMessageAtomic(pkt);
-            }
-            dests >>= 1;
-            id++;
-        }
     }
 }
 

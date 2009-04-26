@@ -28,6 +28,7 @@
  * Authors: Gabe Black
  */
 
+#include "arch/x86/interrupts.hh"
 #include "arch/x86/intmessage.hh"
 #include "dev/x86/i82094aa.hh"
 #include "dev/x86/i8259.hh"
@@ -162,7 +163,38 @@ X86ISA::I82094AA::signalInterrupt(int line)
         message.destMode = entry.destMode;
         message.level = entry.polarity;
         message.trigger = entry.trigger;
-        intPort->sendMessage(message, sys->getMemoryMode() == Enums::timing);
+        ApicList apics;
+        int numContexts = sys->numContexts();
+        if (message.destMode == 0) {
+            if (message.deliveryMode == DeliveryMode::LowestPriority) {
+                panic("Lowest priority delivery mode from the "
+                        "IO APIC aren't supported in physical "
+                        "destination mode.\n");
+            }
+            if (message.destination == 0xFF) {
+                for (int i = 0; i < numContexts; i++) {
+                    apics.push_back(i);
+                }
+            } else {
+                apics.push_back(message.destination);
+            }
+        } else {
+            for (int i = 0; i < numContexts; i++) {
+                std::map<int, Interrupts *>::iterator localApicIt =
+                    localApics.find(i);
+                assert(localApicIt != localApics.end());
+                Interrupts *localApic = localApicIt->second;
+                if ((localApic->readReg(APIC_LOGICAL_DESTINATION) >> 24) &
+                        message.destination) {
+                    apics.push_back(localApicIt->first);
+                }
+            }
+            if (message.deliveryMode == DeliveryMode::LowestPriority) {
+                panic("Lowest priority delivery mode is not implemented.\n");
+            }
+        }
+        intPort->sendMessage(apics, message,
+                sys->getMemoryMode() == Enums::timing);
     }
 }
 
