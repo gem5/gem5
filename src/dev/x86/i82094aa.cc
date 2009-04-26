@@ -38,7 +38,7 @@
 
 X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
     latency(p->pio_latency), pioAddr(p->pio_addr),
-    extIntPic(p->external_int_pic)
+    extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
     // This assumes there's only one I/O APIC in the system
     initialApicId = id = p->apic_id;
@@ -189,8 +189,22 @@ X86ISA::I82094AA::signalInterrupt(int line)
                     apics.push_back(localApicIt->first);
                 }
             }
-            if (message.deliveryMode == DeliveryMode::LowestPriority) {
-                panic("Lowest priority delivery mode is not implemented.\n");
+            if (message.deliveryMode == DeliveryMode::LowestPriority &&
+                    apics.size()) {
+                // The manual seems to suggest that the chipset just does
+                // something reasonable for these instead of actually using
+                // state from the local APIC. We'll just rotate an offset
+                // through the set of APICs selected above.
+                uint64_t modOffset = lowestPriorityOffset % apics.size();
+                lowestPriorityOffset++;
+                ApicList::iterator apicIt = apics.begin();
+                while (modOffset--) {
+                    apicIt++;
+                    assert(apicIt != apics.end());
+                }
+                int selected = *apicIt;
+                apics.clear();
+                apics.push_back(selected);
             }
         }
         intPort->sendMessage(apics, message,

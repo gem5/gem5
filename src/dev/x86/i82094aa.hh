@@ -77,6 +77,8 @@ class I82094AA : public PioDevice, public IntDev
     uint8_t id;
     uint8_t arbId;
 
+    uint64_t lowestPriorityOffset;
+
     static const uint8_t TableSize = 24;
     // This implementation is based on version 0x11, but 0x14 avoids having
     // to deal with the arbitration and APIC bus guck.
