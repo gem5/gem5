@@ -29,6 +29,7 @@
 # Authors: Nathan Binkert
 
 import array
+import bisect
 import imp
 import marshal
 import os
@@ -50,122 +51,144 @@ Export('env')
 
 build_env = dict([(opt, env[opt]) for opt in export_vars])
 
-def sort_list(_list):
-    """return a sorted copy of '_list'"""
-    if isinstance(_list, list):
-        _list = _list[:]
-    else:
-        _list = list(_list)
-    _list.sort()
-    return _list
+########################################################################
+# Code for adding source files of various types
+#
+class SourceMeta(type):
+    def __init__(cls, name, bases, dict):
+        super(SourceMeta, cls).__init__(name, bases, dict)
+        cls.all = []
+        
+    def get(cls, **kwargs):
+        for src in cls.all:
+            for attr,value in kwargs.iteritems():
+                if getattr(src, attr) != value:
+                    break
+            else:
+                yield src
 
-class PySourceFile(object):
+class SourceFile(object):
+    __metaclass__ = SourceMeta
+    def __init__(self, source):
+        tnode = source
+        if not isinstance(source, SCons.Node.FS.File):
+            tnode = File(source)
+
+        self.tnode = tnode
+        self.snode = tnode.srcnode()
+        self.filename = str(tnode)
+        self.dirname = dirname(self.filename)
+        self.basename = basename(self.filename)
+        index = self.basename.rfind('.')
+        if index <= 0:
+            # dot files aren't extensions
+            self.extname = self.basename, None
+        else:
+            self.extname = self.basename[:index], self.basename[index+1:]
+
+        for base in type(self).__mro__:
+            if issubclass(base, SourceFile):
+                bisect.insort_right(base.all, self)       
+
+    def __lt__(self, other): return self.filename < other.filename
+    def __le__(self, other): return self.filename <= other.filename
+    def __gt__(self, other): return self.filename > other.filename
+    def __ge__(self, other): return self.filename >= other.filename
+    def __eq__(self, other): return self.filename == other.filename
+    def __ne__(self, other): return self.filename != other.filename
+        
+class Source(SourceFile):
+    '''Add a c/c++ source file to the build'''
+    def __init__(self, source, Werror=True, swig=False, bin_only=False,
+                 skip_lib=False):
+        super(Source, self).__init__(source)
+
+        self.Werror = Werror
+        self.swig = swig
+        self.bin_only = bin_only
+        self.skip_lib = bin_only or skip_lib
+
+class PySource(SourceFile):
+    '''Add a python source file to the named package'''
     invalid_sym_char = re.compile('[^A-z0-9_]')
-    def __init__(self, package, tnode):
-        snode = tnode.srcnode()
-        filename = str(tnode)
-        pyname = basename(filename)
-        assert pyname.endswith('.py')
-        name = pyname[:-3]
+    modules = {}
+    tnodes = {}
+    symnames = {}
+    
+    def __init__(self, package, source):
+        super(PySource, self).__init__(source)
+
+        modname,ext = self.extname
+        assert ext == 'py'
+
         if package:
             path = package.split('.')
         else:
             path = []
 
         modpath = path[:]
-        if name != '__init__':
-            modpath += [name]
+        if modname != '__init__':
+            modpath += [ modname ]
         modpath = '.'.join(modpath)
 
-        arcpath = path + [ pyname ]
-        arcname = joinpath(*arcpath)
-
-        debugname = snode.abspath
+        arcpath = path + [ self.basename ]
+        debugname = self.snode.abspath
         if not exists(debugname):
-            debugname = tnode.abspath
+            debugname = self.tnode.abspath
 
-        self.tnode = tnode
-        self.snode = snode
-        self.pyname = pyname
         self.package = package
+        self.modname = modname
         self.modpath = modpath
-        self.arcname = arcname
+        self.arcname = joinpath(*arcpath)
         self.debugname = debugname
-        self.compiled = File(filename + 'c')
-        self.assembly = File(filename + '.s')
-        self.symname = "PyEMB_" + self.invalid_sym_char.sub('_', modpath)
-        
+        self.compiled = File(self.filename + 'c')
+        self.assembly = File(self.filename + '.s')
+        self.symname = "PyEMB_" + PySource.invalid_sym_char.sub('_', modpath)
 
-########################################################################
-# Code for adding source files of various types
-#
-cc_lib_sources = []
-def Source(source):
-    '''Add a source file to the libm5 build'''
-    if not isinstance(source, SCons.Node.FS.File):
-        source = File(source)
+        PySource.modules[modpath] = self
+        PySource.tnodes[self.tnode] = self
+        PySource.symnames[self.symname] = self
 
-    cc_lib_sources.append(source)
-
-cc_bin_sources = []
-def BinSource(source):
-    '''Add a source file to the m5 binary build'''
-    if not isinstance(source, SCons.Node.FS.File):
-        source = File(source)
-
-    cc_bin_sources.append(source)
-
-py_sources = []
-def PySource(package, source):
-    '''Add a python source file to the named package'''
-    if not isinstance(source, SCons.Node.FS.File):
-        source = File(source)
-
-    source = PySourceFile(package, source)
-    py_sources.append(source)
-
-sim_objects_fixed = False
-sim_object_modfiles = set()
-def SimObject(source):
+class SimObject(PySource):
     '''Add a SimObject python file as a python source object and add
     it to a list of sim object modules'''
 
-    if sim_objects_fixed:
-        raise AttributeError, "Too late to call SimObject now."
+    fixed = False
+    modnames = []
 
-    if not isinstance(source, SCons.Node.FS.File):
-        source = File(source)
+    def __init__(self, source):
+        super(SimObject, self).__init__('m5.objects', source)
+        if self.fixed:
+            raise AttributeError, "Too late to call SimObject now."
 
-    PySource('m5.objects', source)
-    modfile = basename(str(source))
-    assert modfile.endswith('.py')
-    modname = modfile[:-3]
-    sim_object_modfiles.add(modname)
+        bisect.insort_right(SimObject.modnames, self.modname)
 
-swig_sources = []
-def SwigSource(package, source):
+class SwigSource(SourceFile):
     '''Add a swig file to build'''
-    if not isinstance(source, SCons.Node.FS.File):
-        source = File(source)
-    val = source,package
-    swig_sources.append(val)
+
+    def __init__(self, package, source):
+        super(SwigSource, self).__init__(source)
+
+        modname,ext = self.extname
+        assert ext == 'i'
+
+        self.module = modname
+        cc_file = joinpath(self.dirname, modname + '_wrap.cc')
+        py_file = joinpath(self.dirname, modname + '.py')
+
+        self.cc_source = Source(cc_file, swig=True)
+        self.py_source = PySource(package, py_file)
 
 unit_tests = []
 def UnitTest(target, sources):
     if not isinstance(sources, (list, tuple)):
         sources = [ sources ]
-    
-    srcs = []
-    for source in sources:
-        if not isinstance(source, SCons.Node.FS.File):
-            source = File(source)
-        srcs.append(source)
-            
-    unit_tests.append((target, srcs))
+
+    sources = [ Source(src, skip_lib=True) for src in sources ]
+    unit_tests.append((target, sources))
 
 # Children should have access
 Export('Source')
-Export('BinSource')
 Export('PySource')
 Export('SimObject')
 Export('SwigSource')
@@ -276,7 +299,8 @@ class DictImporter(object):
         if fullname.startswith('m5.internal'):
             return None
 
-        if fullname in self.modules and exists(self.modules[fullname]):
+        source = self.modules.get(fullname, None)
+        if source is not None and exists(source.snode.abspath):
             return self
 
         return None
@@ -295,34 +319,28 @@ class DictImporter(object):
             mod.__dict__['buildEnv'] = build_env
             return mod
 
-        srcfile = self.modules[fullname]
-        if basename(srcfile) == '__init__.py':
-            mod.__path__ = fullname.split('.')
-        mod.__file__ = srcfile
+        source = self.modules[fullname]
+        if source.modname == '__init__':
+            mod.__path__ = source.modpath
+        mod.__file__ = source.snode.abspath
 
-        exec file(srcfile, 'r') in mod.__dict__
+        exec file(source.snode.abspath, 'r') in mod.__dict__
 
         return mod
-
-py_modules = {}
-for source in py_sources:
-    py_modules[source.modpath] = source.snode.abspath
 
 # install the python importer so we can grab stuff from the source
 # tree itself.  We can't have SimObjects added after this point or
 # else we won't know about them for the rest of the stuff.
-sim_objects_fixed = True
-importer = DictImporter(py_modules)
+SimObject.fixed = True
+importer = DictImporter(PySource.modules)
 sys.meta_path[0:0] = [ importer ]
 
 import m5
 
 # import all sim objects so we can populate the all_objects list
 # make sure that we're working with a list, then let's sort it
-sim_objects = list(sim_object_modfiles)
-sim_objects.sort()
-for simobj in sim_objects:
-    exec('from m5.objects import %s' % simobj)
+for modname in SimObject.modnames:
+    exec('from m5.objects import %s' % modname)
 
 # we need to unload all of the currently imported modules so that they
 # will be re-imported the next time the sconscript is run
@@ -333,7 +351,7 @@ sim_objects = m5.SimObject.allClasses
 all_enums = m5.params.allEnums
 
 all_params = {}
-for name,obj in sim_objects.iteritems():
+for name,obj in sorted(sim_objects.iteritems()):
     for param in obj._params.local.values():
         if not hasattr(param, 'swig_decl'):
             continue
@@ -346,7 +364,7 @@ for name,obj in sim_objects.iteritems():
 # calculate extra dependencies
 #
 module_depends = ["m5", "m5.SimObject", "m5.params"]
-depends = [ File(py_modules[dep]) for dep in module_depends ]
+depends = [ PySource.modules[dep].tnode for dep in module_depends ]
 
 ########################################################################
 #
@@ -392,7 +410,7 @@ def makeObjectsInitFile(target, source, env):
 
 # Generate an __init__.py file for the objects package
 env.Command('python/m5/objects/__init__.py',
-            [ Value(o) for o in sort_list(sim_object_modfiles) ],
+            map(Value, SimObject.modnames),
             makeObjectsInitFile)
 PySource('m5.objects', 'python/m5/objects/__init__.py')
 
@@ -409,6 +427,7 @@ def createSimObjectParam(target, source, env):
     obj = sim_objects[name]
 
     print >>hh_file, obj.cxx_decl()
+    hh_file.close()
 
 def createSwigParam(target, source, env):
     assert len(target) == 1 and len(source) == 1
@@ -419,6 +438,7 @@ def createSwigParam(target, source, env):
 
     for line in param.swig_decl():
         print >>i_file, line
+    i_file.close()
 
 def createEnumStrings(target, source, env):
     assert len(target) == 1 and len(source) == 1
@@ -438,11 +458,13 @@ def createEnumParam(target, source, env):
     obj = all_enums[name]
 
     print >>hh_file, obj.cxx_decl()
+    hh_file.close()
 
 # Generate all of the SimObject param struct header files
 params_hh_files = []
-for name,simobj in sim_objects.iteritems():
-    extra_deps = [ File(py_modules[simobj.__module__]) ]
+for name,simobj in sorted(sim_objects.iteritems()):
+    py_source = PySource.modules[simobj.__module__]
+    extra_deps = [ py_source.tnode ]
 
     hh_file = File('params/%s.hh' % name)
     params_hh_files.append(hh_file)
@@ -463,8 +485,9 @@ for name,param in all_params.iteritems():
     env.Depends(i_file, depends)
 
 # Generate all enum header files
-for name,enum in all_enums.iteritems():
-    extra_deps = [ File(py_modules[enum.__module__]) ]
+for name,enum in sorted(all_enums.iteritems()):
+    py_source = PySource.modules[enum.__module__]
+    extra_deps = [ py_source.tnode ]
 
     cc_file = File('enums/%s.cc' % name)
     env.Command(cc_file, Value(name), createEnumStrings)
@@ -576,32 +599,18 @@ def buildParams(target, source, env):
         print >>out, '%%include "params/%s.hh"' % obj
 
 params_file = File('params/params.i')
-names = sort_list(sim_objects.keys())
-env.Command(params_file, [ Value(v) for v in names ], buildParams)
+names = sorted(sim_objects.keys())
+env.Command(params_file, map(Value, names), buildParams)
 env.Depends(params_file, params_hh_files + params_i_files + depends)
 SwigSource('m5.objects', params_file)
 
 # Build all swig modules
-swig_modules = []
-cc_swig_sources = []
-for source,package in swig_sources:
-    filename = str(source)
-    assert filename.endswith('.i')
-
-    base = '.'.join(filename.split('.')[:-1])
-    module = basename(base)
-    cc_file = base + '_wrap.cc'
-    py_file = base + '.py'
-
-    env.Command([cc_file, py_file], source,
+for swig in SwigSource.all:
+    env.Command([swig.cc_source.tnode, swig.py_source.tnode], swig.tnode,
                 '$SWIG $SWIGFLAGS -outdir ${TARGETS[1].dir} '
                 '-o ${TARGETS[0]} $SOURCES')
-    env.Depends(py_file, source)
-    env.Depends(cc_file, source)
-
-    swig_modules.append(Value(module))
-    cc_swig_sources.append(File(cc_file))
-    PySource(package, py_file)
+    env.Depends(swig.py_source.tnode, swig.tnode)
+    env.Depends(swig.cc_source.tnode, swig.tnode)
 
 # Generate the main swig init file
 def makeSwigInit(target, source, env):
@@ -616,7 +625,9 @@ def makeSwigInit(target, source, env):
     print >>f, '}'
     f.close()
 
-env.Command('python/swig/init.cc', swig_modules, makeSwigInit)
+env.Command('python/swig/init.cc',
+            map(Value, sorted(s.module for s in SwigSource.all)),
+            makeSwigInit)
 Source('python/swig/init.cc')
 
 # Generate traceflags.py
@@ -813,7 +824,7 @@ extern const Flags *compoundFlags[];
 
     f.close()
 
-flags = [ Value(f) for f in trace_flags.values() ]
+flags = map(Value, trace_flags.values())
 env.Command('base/traceflags.py', flags, traceFlagsPy)
 PySource('m5', 'base/traceflags.py')
 
@@ -827,10 +838,6 @@ Source('base/traceflags.cc')
 # byte code, compress it, and then generate an assembly file that
 # inserts the result into the data section with symbols indicating the
 # beginning, and end (and with the size at the end)
-py_sources_tnodes = {}
-for pysource in py_sources:
-    py_sources_tnodes[pysource.tnode] = pysource
-
 def objectifyPyFile(target, source, env):
     '''Action function to compile a .py into a code object, marshal
     it, compress it, and stick it into an asm file so the code appears
@@ -839,7 +846,7 @@ def objectifyPyFile(target, source, env):
     src = file(str(source[0]), 'r').read()
     dst = file(str(target[0]), 'w')
 
-    pysource = py_sources_tnodes[source[0]]
+    pysource = PySource.tnodes[source[0]]
     compiled = compile(src, pysource.debugname, 'exec')
     marshalled = marshal.dumps(compiled)
     compressed = zlib.compress(marshalled)
@@ -864,7 +871,7 @@ def objectifyPyFile(target, source, env):
     print >>dst, "%s_end:" % sym
     print >>dst, ".long %d" % len(marshalled)
 
-for source in py_sources:
+for source in PySource.all:
     env.Command(source.assembly, source.tnode, objectifyPyFile)
     Source(source.assembly)
 
@@ -873,14 +880,11 @@ for source in py_sources:
 # contains information about the importer that python uses to get at
 # the embedded files, and then there's a list of all of the rest that
 # the importer uses to load the rest on demand.
-py_sources_symbols = {}
-for pysource in py_sources:
-    py_sources_symbols[pysource.symname] = pysource
 def pythonInit(target, source, env):
     dst = file(str(target[0]), 'w')
 
     def dump_mod(sym, endchar=','):
-        pysource = py_sources_symbols[sym]
+        pysource = PySource.symnames[sym]
         print >>dst, '    { "%s",' % pysource.arcname
         print >>dst, '      "%s",' % pysource.modpath
         print >>dst, '       %s_beg, %s_end,' % (sym, sym)
@@ -907,8 +911,10 @@ def pythonInit(target, source, env):
     print >>dst, "    { 0, 0, 0, 0, 0, 0 }"
     print >>dst, "};"
 
-symbols = [Value(s.symname) for s in py_sources]
-env.Command('sim/init_python.cc', symbols, pythonInit)
+
+env.Command('sim/init_python.cc',
+            map(Value, (s.symname for s in PySource.all)),
+            pythonInit)
 Source('sim/init_python.cc')
 
 ########################################################################
@@ -920,26 +926,7 @@ Source('sim/init_python.cc')
 # List of constructed environments to pass back to SConstruct
 envList = []
 
-# This function adds the specified sources to the given build
-# environment, and returns a list of all the corresponding SCons
-# Object nodes (including an extra one for date.cc).  We explicitly
-# add the Object nodes so we can set up special dependencies for
-# date.cc.
-def make_objs(sources, env, static):
-    if static:
-        XObject = env.StaticObject
-    else:
-        XObject = env.SharedObject
-
-    objs = [ XObject(s) for s in sources ]
-  
-    # make date.cc depend on all other objects so it always gets
-    # recompiled whenever anything else does
-    date_obj = XObject('base/date.cc')
-
-    env.Depends(date_obj, objs)
-    objs.append(date_obj)
-    return objs
+date_source = Source('base/date.cc', skip_lib=True)
 
 # Function to create a new build environment as clone of current
 # environment 'env' with modified object suffix and optional stripped
@@ -956,15 +943,45 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     new_env.Append(**kwargs)
 
     swig_env = new_env.Clone()
+    swig_env.Append(CCFLAGS='-Werror')
     if env['GCC']:
         swig_env.Append(CCFLAGS='-Wno-uninitialized')
         swig_env.Append(CCFLAGS='-Wno-sign-compare')
         swig_env.Append(CCFLAGS='-Wno-parentheses')
 
-    static_objs = make_objs(cc_lib_sources, new_env, static=True)
-    shared_objs = make_objs(cc_lib_sources, new_env, static=False)
-    static_objs += [ swig_env.StaticObject(s) for s in cc_swig_sources ]
-    shared_objs += [ swig_env.SharedObject(s) for s in cc_swig_sources ]
+    werror_env = new_env.Clone()
+    werror_env.Append(CCFLAGS='-Werror')
+
+    def make_obj(source, static, extra_deps = None):
+        '''This function adds the specified source to the correct
+        build environment, and returns the corresponding SCons Object
+        nodes'''
+
+        if source.swig:
+            env = swig_env
+        elif source.Werror:
+            env = werror_env
+        else:
+            env = new_env
+
+        if static:
+            obj = env.StaticObject(source.tnode)
+        else:
+            obj = env.SharedObject(source.tnode)
+
+        if extra_deps:
+            env.Depends(obj, extra_deps)
+
+        return obj
+
+    static_objs = [ make_obj(s, True) for s in Source.get(skip_lib=False)]
+    shared_objs = [ make_obj(s, False) for s in Source.get(skip_lib=False)]
+
+    static_date = make_obj(date_source, static=True, extra_deps=static_objs)
+    static_objs.append(static_date)
+    
+    shared_date = make_obj(date_source, static=False, extra_deps=shared_objs)
+    shared_objs.append(static_date)
 
     # First make a library of everything but main() so other programs can
     # link against m5.
@@ -972,21 +989,23 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     shared_lib = new_env.SharedLibrary(libname, shared_objs)
 
     for target, sources in unit_tests:
-        objs = [ new_env.StaticObject(s) for s in sources ]
+        objs = [ make_obj(s, static=True) for s in sources ]
         new_env.Program("unittest/%s.%s" % (target, label), objs + static_objs)
 
     # Now link a stub with main() and the static library.
-    objects = [new_env.Object(s) for s in cc_bin_sources] + static_objs
+    bin_objs = [make_obj(s, True) for s in Source.get(bin_only=True) ]
+    progname = exename
     if strip:
-        unstripped_exe = exename + '.unstripped'
-        new_env.Program(unstripped_exe, objects)
+        progname += '.unstripped'
+
+    targets = new_env.Program(progname, bin_objs + static_objs)
+
+    if strip:
         if sys.platform == 'sunos5':
             cmd = 'cp $SOURCE $TARGET; strip $TARGET'
         else:
             cmd = 'strip $SOURCE -o $TARGET'
-        targets = new_env.Command(exename, unstripped_exe, cmd)
-    else:
-        targets = new_env.Program(exename, objects)
+        targets = new_env.Command(exename, progname, cmd)
             
     new_env.M5Binary = targets[0]
     envList.append(new_env)
