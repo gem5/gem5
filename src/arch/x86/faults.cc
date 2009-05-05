@@ -271,12 +271,8 @@ namespace X86ISA
         tc->setMiscReg(MISCREG_DR6, 0x00000000ffff0ff0ULL);
         tc->setMiscReg(MISCREG_DR7, 0x0000000000000400ULL);
 
-        // We're now in real mode, effectively at CPL 0
-        HandyM5Reg m5Reg = 0;
-        m5Reg.mode = LegacyMode;
-        m5Reg.submode = RealMode;
-        m5Reg.cpl = 0;
-        tc->setMiscReg(MISCREG_M5_REG, m5Reg);
+        // Update the handy M5 Reg.
+        tc->setMiscReg(MISCREG_M5_REG, 0);
         MicroPC entry = X86ISAInst::RomLabels::extern_label_initIntHalt;
         tc->setMicroPC(romMicroPC(entry));
         tc->setNextMicroPC(romMicroPC(entry) + 1);
@@ -289,7 +285,7 @@ namespace X86ISA
         HandyM5Reg m5Reg = tc->readMiscReg(MISCREG_M5_REG);
         if (m5Reg.mode != LegacyMode || m5Reg.submode != RealMode) {
             panic("Startup IPI recived outside of real mode. "
-                    "Don't know what to do.");
+                    "Don't know what to do. %d, %d", m5Reg.mode, m5Reg.submode);
         }
 
         tc->setMiscReg(MISCREG_CS, vector << 8);

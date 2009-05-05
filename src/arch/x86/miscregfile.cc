@@ -96,6 +96,64 @@ using namespace std;
 
 class Checkpoint;
 
+void MiscRegFile::updateHandyM5Reg(Efer efer, CR0 cr0,
+        SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
+{
+    HandyM5Reg m5reg;
+    if (efer.lma) {
+        m5reg.mode = LongMode;
+        if (csAttr.longMode)
+            m5reg.submode = SixtyFourBitMode;
+        else
+            m5reg.submode = CompatabilityMode;
+    } else {
+        m5reg.mode = LegacyMode;
+        if (cr0.pe) {
+            if (rflags.vm)
+                m5reg.submode = Virtual8086Mode;
+            else
+                m5reg.submode = ProtectedMode;
+        } else {
+            m5reg.submode = RealMode;
+        }
+    }
+    m5reg.cpl = csAttr.dpl;
+    m5reg.paging = cr0.pg;
+    m5reg.prot = cr0.pe;
+
+    // Compute the default and alternate operand size.
+    if (m5reg.submode == SixtyFourBitMode || csAttr.defaultSize) {
+        m5reg.defOp = 2;
+        m5reg.altOp = 1;
+    } else {
+        m5reg.defOp = 1;
+        m5reg.altOp = 2;
+    }
+
+    // Compute the default and alternate address size.
+    if (m5reg.submode == SixtyFourBitMode) {
+        m5reg.defAddr = 3;
+        m5reg.altAddr = 2;
+    } else if (csAttr.defaultSize) {
+        m5reg.defAddr = 2;
+        m5reg.altAddr = 1;
+    } else {
+        m5reg.defAddr = 1;
+        m5reg.altAddr = 2;
+    }
+
+    // Compute the stack size
+    if (m5reg.submode == SixtyFourBitMode) {
+        m5reg.stack = 3;
+    } else if (ssAttr.defaultSize) {
+        m5reg.stack = 2;
+    } else {
+        m5reg.stack = 1;
+    }
+
+    regVal[MISCREG_M5_REG] = m5reg;
+}
+
 void MiscRegFile::clear()
 {
     // Blank everything. 0 might not be an appropriate value for some things,
@@ -151,39 +209,17 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
             CR0 toggled = regVal[miscReg] ^ val;
             CR0 newCR0 = val;
             Efer efer = regVal[MISCREG_EFER];
-            HandyM5Reg m5reg = regVal[MISCREG_M5_REG];
             if (toggled.pg && efer.lme) {
                 if (newCR0.pg) {
                     //Turning on long mode
                     efer.lma = 1;
-                    m5reg.mode = LongMode;
                     regVal[MISCREG_EFER] = efer;
                 } else {
                     //Turning off long mode
                     efer.lma = 0;
-                    m5reg.mode = LegacyMode;
                     regVal[MISCREG_EFER] = efer;
                 }
             }
-            // Figure out what submode we're in.
-            if (m5reg.mode == LongMode) {
-                SegAttr csAttr = regVal[MISCREG_CS_ATTR];
-                if (csAttr.longMode)
-                    m5reg.submode = SixtyFourBitMode;
-                else
-                    m5reg.submode = CompatabilityMode;
-            } else {
-                if (newCR0.pe) {
-                    RFLAGS rflags = regVal[MISCREG_RFLAGS];
-                    if (rflags.vm)
-                        m5reg.submode = Virtual8086Mode;
-                    else
-                        m5reg.submode = ProtectedMode;
-                } else {
-                    m5reg.submode = RealMode;
-                }
-            }
-            regVal[MISCREG_M5_REG] = m5reg;
             if (toggled.pg) {
                 tc->getITBPtr()->invalidateAll();
                 tc->getDTBPtr()->invalidateAll();
@@ -191,6 +227,11 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
             //This must always be 1.
             newCR0.et = 1;
             newVal = newCR0;
+            updateHandyM5Reg(regVal[MISCREG_EFER],
+                             newCR0,
+                             regVal[MISCREG_CS_ATTR],
+                             regVal[MISCREG_SS_ATTR],
+                             regVal[MISCREG_RFLAGS]);
         }
         break;
       case MISCREG_CR2:
@@ -214,27 +255,32 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
         {
             SegAttr toggled = regVal[miscReg] ^ val;
             SegAttr newCSAttr = val;
-            HandyM5Reg m5reg = regVal[MISCREG_M5_REG];
             if (toggled.longMode) {
                 if (newCSAttr.longMode) {
-                    if (m5reg.mode == LongMode)
-                        m5reg.submode = SixtyFourBitMode;
                     regVal[MISCREG_ES_EFF_BASE] = 0;
                     regVal[MISCREG_CS_EFF_BASE] = 0;
                     regVal[MISCREG_SS_EFF_BASE] = 0;
                     regVal[MISCREG_DS_EFF_BASE] = 0;
                 } else {
-                    if (m5reg.mode == LongMode)
-                        m5reg.submode = CompatabilityMode;
                     regVal[MISCREG_ES_EFF_BASE] = regVal[MISCREG_ES_BASE];
                     regVal[MISCREG_CS_EFF_BASE] = regVal[MISCREG_CS_BASE];
                     regVal[MISCREG_SS_EFF_BASE] = regVal[MISCREG_SS_BASE];
                     regVal[MISCREG_DS_EFF_BASE] = regVal[MISCREG_DS_BASE];
                 }
             }
-            m5reg.cpl = newCSAttr.dpl;
-            regVal[MISCREG_M5_REG] = m5reg;
+            updateHandyM5Reg(regVal[MISCREG_EFER],
+                             regVal[MISCREG_CR0],
+                             newCSAttr,
+                             regVal[MISCREG_SS_ATTR],
+                             regVal[MISCREG_RFLAGS]);
         }
+        break;
+      case MISCREG_SS_ATTR:
+        updateHandyM5Reg(regVal[MISCREG_EFER],
+                         regVal[MISCREG_CR0],
+                         regVal[MISCREG_CS_ATTR],
+                         val,
+                         regVal[MISCREG_RFLAGS]);
         break;
       // These segments always actually use their bases, or in other words
       // their effective bases must stay equal to their actual bases.
@@ -333,6 +379,16 @@ void MiscRegFile::setReg(MiscRegIndex miscReg,
             dr7.len3 = newDR7.len3;
         }
         break;
+      case MISCREG_M5_REG:
+        // Writing anything to the m5reg with side effects makes it update
+        // based on the current values of the relevant registers. The actual
+        // value written is discarded.
+        updateHandyM5Reg(regVal[MISCREG_EFER],
+                         regVal[MISCREG_CR0],
+                         regVal[MISCREG_CS_ATTR],
+                         regVal[MISCREG_SS_ATTR],
+                         regVal[MISCREG_RFLAGS]);
+        return;
       default:
         break;
     }

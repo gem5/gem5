@@ -124,6 +124,8 @@ namespace X86ISA
         EntryList freeList;
         EntryList entryList;
 
+        Fault translateInt(RequestPtr req, ThreadContext *tc);
+
         Fault translate(RequestPtr req, ThreadContext *tc,
                 Translation *translation, Mode mode,
                 bool &delayedResponse, bool timing);

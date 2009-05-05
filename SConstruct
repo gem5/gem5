@@ -394,7 +394,7 @@ if main['GCC'] + main['SUNCC'] + main['ICC'] > 1:
 if main['GCC']:
     main.Append(CCFLAGS='-pipe')
     main.Append(CCFLAGS='-fno-strict-aliasing')
-    main.Append(CCFLAGS=Split('-Wall -Wno-sign-compare -Werror -Wundef'))
+    main.Append(CCFLAGS=['-Wall', '-Wno-sign-compare', '-Wundef'])
     main.Append(CXXFLAGS='-Wno-deprecated')
 elif main['ICC']:
     pass #Fix me... add warning flags once we clean up icc warnings

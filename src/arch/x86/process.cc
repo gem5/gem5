@@ -232,6 +232,15 @@ X86_64LiveProcess::startup()
 
         tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
 
+        Efer efer = 0;
+        efer.sce = 1; // Enable system call extensions.
+        efer.lme = 1; // Enable long mode.
+        efer.lma = 1; // Activate long mode.
+        efer.nxe = 1; // Enable nx support.
+        efer.svme = 0; // Disable svm support for now. It isn't implemented.
+        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
+        tc->setMiscReg(MISCREG_EFER, efer);
+
         //Set up the registers that describe the operating mode.
         CR0 cr0 = 0;
         cr0.pg = 1; // Turn on paging.
@@ -248,15 +257,6 @@ X86_64LiveProcess::startup()
                     // setting it to one.
         cr0.pe = 1; // We're definitely in protected mode.
         tc->setMiscReg(MISCREG_CR0, cr0);
-
-        Efer efer = 0;
-        efer.sce = 1; // Enable system call extensions.
-        efer.lme = 1; // Enable long mode.
-        efer.lma = 1; // Activate long mode.
-        efer.nxe = 1; // Enable nx support.
-        efer.svme = 0; // Disable svm support for now. It isn't implemented.
-        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
-        tc->setMiscReg(MISCREG_EFER, efer);
     }
 }
 
@@ -340,6 +340,15 @@ I386LiveProcess::startup()
         // Set the LDT selector to 0 to deactivate it.
         tc->setMiscRegNoEffect(MISCREG_TSL, 0);
 
+        Efer efer = 0;
+        efer.sce = 1; // Enable system call extensions.
+        efer.lme = 1; // Enable long mode.
+        efer.lma = 0; // Deactivate long mode.
+        efer.nxe = 1; // Enable nx support.
+        efer.svme = 0; // Disable svm support for now. It isn't implemented.
+        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
+        tc->setMiscReg(MISCREG_EFER, efer);
+
         //Set up the registers that describe the operating mode.
         CR0 cr0 = 0;
         cr0.pg = 1; // Turn on paging.
@@ -356,15 +365,6 @@ I386LiveProcess::startup()
                     // setting it to one.
         cr0.pe = 1; // We're definitely in protected mode.
         tc->setMiscReg(MISCREG_CR0, cr0);
-
-        Efer efer = 0;
-        efer.sce = 1; // Enable system call extensions.
-        efer.lme = 1; // Enable long mode.
-        efer.lma = 0; // Deactivate long mode.
-        efer.nxe = 1; // Enable nx support.
-        efer.svme = 0; // Disable svm support for now. It isn't implemented.
-        efer.ffxsr = 1; // Turn on fast fxsave and fxrstor.
-        tc->setMiscReg(MISCREG_EFER, efer);
     }
 }
 
