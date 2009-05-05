@@ -38,6 +38,8 @@ parser.add_option("--fastmem", action="store_true")
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("--maxtime", type="float")
+parser.add_option("--prog_intvl", type="int")
+
 
 # Checkpointing options
 ###Note that performing checkpointing via python script files will override

@@ -61,14 +61,20 @@ namespace TheISA
 class CPUProgressEvent : public Event
 {
   protected:
-    Tick interval;
+    Tick _interval;
     Counter lastNumInst;
     BaseCPU *cpu;
+    bool _repeatEvent;
 
   public:
-    CPUProgressEvent(BaseCPU *_cpu, Tick ival);
+    CPUProgressEvent(BaseCPU *_cpu, Tick ival = 0);
 
     void process();
+
+    void interval(Tick ival) { _interval = ival; }
+    Tick interval() { return _interval; }
+
+    void repeatEvent(bool repeat) { _repeatEvent = repeat; }
 
     virtual const char *description() const;
 };

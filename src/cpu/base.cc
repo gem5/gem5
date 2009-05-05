@@ -61,11 +61,11 @@ vector<BaseCPU *> BaseCPU::cpuList;
 int maxThreadsPerCPU = 1;
 
 CPUProgressEvent::CPUProgressEvent(BaseCPU *_cpu, Tick ival)
-    : Event(Event::Progress_Event_Pri), interval(ival), lastNumInst(0),
-      cpu(_cpu)
+    : Event(Event::Progress_Event_Pri), _interval(ival), lastNumInst(0),
+      cpu(_cpu), _repeatEvent(true)
 {
-    if (interval)
-        cpu->schedule(this, curTick + interval);
+    if (_interval)
+        cpu->schedule(this, curTick + _interval);
 }
 
 void
@@ -73,17 +73,21 @@ CPUProgressEvent::process()
 {
     Counter temp = cpu->totalInstructions();
 #ifndef NDEBUG
-    double ipc = double(temp - lastNumInst) / (interval / cpu->ticks(1));
+    double ipc = double(temp - lastNumInst) / (_interval / cpu->ticks(1));
 
-    DPRINTFN("%s progress event, instructions committed: %lli, IPC: %0.8d\n",
-             cpu->name(), temp - lastNumInst, ipc);
+    DPRINTFN("%s progress event, total committed:%i, progress insts committed: "
+             "%lli, IPC: %0.8d\n", cpu->name(), temp, temp - lastNumInst,
+             ipc);
     ipc = 0.0;
 #else
-    cprintf("%lli: %s progress event, instructions committed: %lli\n",
-            curTick, cpu->name(), temp - lastNumInst);
+    cprintf("%lli: %s progress event, total committed:%i, progress insts "
+            "committed: %lli\n", curTick, cpu->name(), temp,
+            temp - lastNumInst);
 #endif
     lastNumInst = temp;
-    cpu->schedule(this, curTick + interval);
+
+    if (_repeatEvent)
+        cpu->schedule(this, curTick + _interval);
 }
 
 const char *
@@ -230,8 +234,9 @@ BaseCPU::startup()
 
     if (params()->progress_interval) {
         Tick num_ticks = ticks(params()->progress_interval);
-        Event *event = new CPUProgressEvent(this, num_ticks);
-        schedule(event, curTick + num_ticks);
+
+        Event *event;
+        event = new CPUProgressEvent(this, num_ticks);
     }
 }
 
