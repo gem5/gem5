@@ -91,6 +91,10 @@ def run(options, root, testsys, cpu_class):
     max_checkpoints = options.max_checkpoints
     switch_cpus = None
 
+    if options.prog_intvl:
+        for i in xrange(np):
+            testsys.cpu[i].progress_interval = options.prog_intvl
+
     if cpu_class:
         switch_cpus = [cpu_class(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]

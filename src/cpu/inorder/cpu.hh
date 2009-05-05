@@ -589,6 +589,17 @@ class InOrderCPU : public BaseCPU
         return thread[tid]->getTC();
     }
 
+    /** Count the Total Instructions Committed in the CPU. */
+    virtual Counter totalInstructions() const
+    {
+        Counter total(0);
+
+        for (int i=0; i < thread.size(); i++)
+            total += thread[i]->numInst;
+
+        return total;
+    }
+
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum[ThePipeline::MaxThreads];
 
