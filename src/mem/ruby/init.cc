@@ -54,7 +54,7 @@ using namespace std;
 
 // A generated file containing the default parameters in string form
 // The defaults are stored in the variable global_default_param
-#include "mem/protocol/default_param.hh"
+#include "mem/ruby/default_param.hh"
 
 static initvar_t *ruby_initvar_obj = NULL;
 

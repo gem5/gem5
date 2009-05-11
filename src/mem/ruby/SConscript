@@ -1,0 +1,116 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2009 The Hewlett-Packard Development Company
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+import os
+import sys
+
+from os.path import basename, isdir, join as joinpath
+
+import SCons
+
+Import('*')
+
+Source('init.cc')
+
+def do_embed_text(target, source, env):
+    """convert a text file into a file that can be embedded in C
+    using an #include statement, that defines a \"const char *\" pointing
+    to the same text.
+
+    This is useful to embed scripts and configuration files in object files.
+    """
+
+    escape = [ "\'", "\"", "\\", "\?" ]
+
+    # reads the text file in, line by line, converting it to a C string
+    fin = open(str(source[0]), 'r')
+    fout = open(str(target[0]), 'w' )
+    fout.write("static const char *%s =\n" % source[1].get_contents());
+    for l in fin:
+        # add escape sequences for the characters in escape
+        fout.write("\"")
+        for char in l:
+            if char == "\n":
+                break
+            if char in escape:
+                fout.write("\\")
+                fout.write(char)
+            else:
+                fout.write(char)
+        fout.write("\\n\"\n");
+    fout.write(";\n");
+    fin.close()
+    fout.close()
+
+def EmbedText(target, source, param):
+    env.Command(target, [source, Value(param)], do_embed_text)
+
+EmbedText('default_param.hh', 'config/rubyconfig.defaults',
+          'global_default_param')
+EmbedText('tester_param.hh', 'config/tester.defaults',
+          'global_default_tester_param')
+
+#
+# Link includes
+#
+generated_dir = Dir('../protocol')
+
+def MakeIncludeAction(target, source, env):
+    f = file(str(target[0]), 'w')
+    for s in source:
+        print >>f, '#include "%s"' % str(s.abspath)
+    f.close()
+
+def MakeInclude(source):
+    target = generated_dir.File(basename(source))
+    env.Command(target, source, MakeIncludeAction)
+
+MakeInclude('buffers/MessageBuffer.hh')
+MakeInclude('common/Address.hh')
+MakeInclude('common/DataBlock.hh')
+MakeInclude('common/NetDest.hh')
+MakeInclude('common/Set.hh')
+MakeInclude('slicc_interface/AbstractCacheEntry.hh')
+MakeInclude('slicc_interface/AbstractProtocol.hh')
+MakeInclude('slicc_interface/Message.hh')
+MakeInclude('slicc_interface/NetworkMessage.hh')
+MakeInclude('system/CacheMemory.hh')
+MakeInclude('system/DirectoryMemory.hh')
+MakeInclude('system/GenericBloomFilter.hh')
+MakeInclude('system/MachineID.hh')
+MakeInclude('system/MemoryControl.hh')
+MakeInclude('system/NodeID.hh')
+MakeInclude('system/NodePersistentTable.hh')
+MakeInclude('system/PerfectCacheMemory.hh')
+MakeInclude('system/PersistentTable.hh')
+MakeInclude('system/Sequencer.hh')
+MakeInclude('system/StoreBuffer.hh')
+MakeInclude('system/TBETable.hh')
+MakeInclude('system/TimerTable.hh')

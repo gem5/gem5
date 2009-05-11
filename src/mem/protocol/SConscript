@@ -1,0 +1,94 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2009 The Hewlett-Packard Development Company
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+import os
+import re
+import string
+import sys
+
+from os.path import basename, dirname, exists, expanduser, isdir, isfile
+from os.path import join as joinpath
+
+import SCons
+
+Import('*')
+
+slicc_dir = Dir('../slicc')
+protocol_dir = Dir('.')
+html_dir = Dir('html')
+
+#
+# Use SLICC
+#
+def slicc_action(target, source, env):
+    slicc_bin = str(source[0])
+    protocol = source[1].get_contents()
+    pdir = str(protocol_dir)
+    hdir = str(html_dir)
+
+    if not isdir(pdir):
+        os.mkdir(pdir)
+    if not isdir(hdir):
+        os.mkdir(hdir)
+
+    do_html = "no_html"
+    cmdline = [ slicc_bin, pdir, hdir, protocol, do_html ]
+    cmdline += [ str(s) for s in source[2:] ]
+    cmdline = ' '.join(cmdline)
+    os.system(cmdline)
+
+protocol = env['PROTOCOL']
+sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),
+            protocol_dir.File("%s.slicc" % protocol) ]
+
+sm_files = []
+for s in sources:
+    for sm_file in file(File(s).srcnode().abspath, "r"):
+        sm_file = sm_file.strip()
+        if not sm_file:
+            continue
+        if sm_file.startswith("#"):
+            continue
+        sm_file = protocol_dir.File(sm_file)
+        sm_file.srcnode().abspath
+        sm_files.append(sm_file)
+
+sys.path[0:0] = [env['ENV']['M5_PLY']]
+execfile(slicc_dir.File('parser/parser.py').srcnode().abspath)
+
+hh, cc = scan([s.srcnode().abspath for s in sm_files])
+hh = [ protocol_dir.File(f) for f in hh ]
+cc = [ protocol_dir.File(f) for f in cc ]
+
+slicc_bin = slicc_dir.File("slicc")
+env.Command(hh + cc, [ slicc_bin, Value(protocol) ] + sm_files, slicc_action)
+
+for f in cc:
+    Source(f)

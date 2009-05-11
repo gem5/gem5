@@ -37,6 +37,8 @@
 #include <unistd.h>
 #include <iostream>
 
+#include "config/ruby_debug.hh"
+
 extern std::ostream * debug_cout_ptr;
 
 // component enumeration

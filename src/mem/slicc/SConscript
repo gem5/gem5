@@ -1,0 +1,125 @@
+# -*- mode:python -*-
+
+# Copyright (c) 2009 The Hewlett-Packard Development Company
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# Authors: Nathan Binkert
+
+import os
+import re
+import string
+import sys
+
+from os.path import basename, dirname, exists, expanduser, isdir, isfile
+from os.path import join as joinpath
+
+import SCons
+
+Import('*')
+
+common_dir = Dir('../gems_common')
+
+#
+# Build SLICC
+#
+slicc_env = env.Clone()
+slicc_env['CPPDEFINES'] = ''
+slicc_env['CPPPATH'] = Dir('../..')
+slicc_env['CCFLAGS'] = ''
+slicc_env['CXXFLAGS'] = '-Wall -W -Wwrite-strings -Woverloaded-virtual -Wno-unused -Wno-deprecated'
+slicc_env['LIBS'] = ''
+slicc_env['LIBPATH'] = ''
+all_slicc_sources = []
+def SliccSource(filename):
+    if filename.endswith('.ll') or filename.endswith('.yy'):
+        slicc_env.CXXFile(filename)
+        filename = filename[:-2] + "cc"
+    x = slicc_env.StaticObject(filename)
+    all_slicc_sources.append(x)
+    return x
+
+# BE CAREFUL WITH THE ORDER OF FILENAMES HERE.  SLICC IS VERY FRAGILE
+# BECAUSE IT VIOLATES ESTABLISHED RULES ABOUT HOW YOU'RE ALLOWED TO
+# CREATE STATIC OBJECTS.  (SLICC HAS DEPENDENCIES DURING STATIC OBJECT
+# CONSTRUCTION ACROSS FILES.  THAT'S A NO-NO.)  WITH THIS FILE ORDER,
+# WE GET LUCKY AND OBJECTS GET CONSTRUCTED IN THE RIGHT ORDER.
+SliccSource('parser/parser.yy')
+SliccSource('parser/lexer.ll')
+SliccSource('main.cc')
+SliccSource('symbols/Func.cc')
+SliccSource('symbols/StateMachine.cc')
+SliccSource('symbols/Symbol.cc')
+SliccSource('symbols/SymbolTable.cc')
+SliccSource('symbols/Transition.cc')
+SliccSource('symbols/Type.cc')
+SliccSource('symbols/Var.cc')
+SliccSource('generator/fileio.cc')
+SliccSource('generator/html_gen.cc')
+SliccSource('generator/mif_gen.cc')
+SliccSource('ast/AST.cc')
+SliccSource('ast/ActionDeclAST.cc')
+SliccSource('ast/AssignStatementAST.cc')
+SliccSource('ast/CheckAllocateStatementAST.cc')
+SliccSource('ast/CheckStopSlotsStatementAST.cc')
+SliccSource('ast/ChipComponentAccessAST.cc')
+SliccSource('ast/CopyHeadStatementAST.cc')
+SliccSource('ast/DeclAST.cc')
+SliccSource('ast/DeclListAST.cc')
+SliccSource('ast/EnqueueStatementAST.cc')
+SliccSource('ast/EnumDeclAST.cc')
+SliccSource('ast/EnumExprAST.cc')
+SliccSource('ast/ExprAST.cc')
+SliccSource('ast/ExprStatementAST.cc')
+SliccSource('ast/FormalParamAST.cc')
+SliccSource('ast/FuncCallExprAST.cc')
+SliccSource('ast/FuncDeclAST.cc')
+SliccSource('ast/IfStatementAST.cc')
+SliccSource('ast/InPortDeclAST.cc')
+SliccSource('ast/InfixOperatorExprAST.cc')
+SliccSource('ast/LiteralExprAST.cc')
+SliccSource('ast/Location.cc')
+SliccSource('ast/MachineAST.cc')
+SliccSource('ast/MemberExprAST.cc')
+SliccSource('ast/MethodCallExprAST.cc')
+SliccSource('ast/ObjDeclAST.cc')
+SliccSource('ast/OutPortDeclAST.cc')
+SliccSource('ast/PairAST.cc')
+SliccSource('ast/PairListAST.cc')
+SliccSource('ast/PeekStatementAST.cc')
+SliccSource('ast/ReturnStatementAST.cc')
+SliccSource('ast/StatementAST.cc')
+SliccSource('ast/StatementListAST.cc')
+SliccSource('ast/TransitionDeclAST.cc')
+SliccSource('ast/TypeAST.cc')
+SliccSource('ast/TypeDeclAST.cc')
+SliccSource('ast/TypeFieldAST.cc')
+SliccSource('ast/TypeFieldEnumAST.cc')
+SliccSource('ast/TypeFieldMemberAST.cc')
+SliccSource('ast/TypeFieldMethodAST.cc')
+SliccSource('ast/VarExprAST.cc')
+
+slicc_bin = File('slicc')
+slicc_env.Program(slicc_bin, all_slicc_sources + [ common_dir.File('util.o') ])

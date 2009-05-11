@@ -410,6 +410,10 @@ else:
     print '       Please fix SConstruct and src/SConscript and try again.'
     Exit(1)
 
+# Set up common yacc/bison flags (needed for Ruby)
+main['YACCFLAGS'] = '-d'
+main['YACCHXXFILESUFFIX'] = '.hh'
+
 # Do this after we save setting back, or else we'll tack on an
 # extra 'qdo' every time we run scons.
 if main['BATCH']:

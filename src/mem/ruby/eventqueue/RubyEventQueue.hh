@@ -59,6 +59,7 @@
 #ifndef RUBYEVENTQUEUE_H
 #define RUBYEVENTQUEUE_H
 
+#include "config/no_vector_bounds_checks.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 

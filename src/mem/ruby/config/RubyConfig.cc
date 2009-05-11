@@ -36,6 +36,7 @@
  *
  */
 
+#include "config/ruby_debug.hh"
 #include "mem/ruby/config/RubyConfig.hh"
 #include "mem/protocol/protocol_name.hh"
 #include "mem/gems_common/util.hh"
