@@ -42,11 +42,6 @@
 
 SyntheticDriver::SyntheticDriver(RubySystem* sys_ptr)
 {
-  cout << "SyntheticDriver::SyntheticDriver" << endl;
-  if (g_SIMULATING) {
-    ERROR_MSG("g_SIMULATING should not be defined.");
-  }
-
   m_finish_time = 0;
   m_done_counter = 0;
 

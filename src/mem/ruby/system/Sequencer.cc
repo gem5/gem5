@@ -939,157 +939,18 @@ void Sequencer::checkCoherence(const Address& addr) {
 
 bool Sequencer::getRubyMemoryValue(const Address& addr, char* value,
                                    unsigned int size_in_bytes ) {
-  if(g_SIMULATING){
-    for(unsigned int i=0; i < size_in_bytes; i++) {
-      std::cerr << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-      value[i] = 0; // _read_physical_memory( m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version,
-                    //                          addr.getAddress() + i, 1 );
-    }
-    return false; // Do nothing?
-  } else {
-    bool found = false;
-    const Address lineAddr = line_address(addr);
-    DataBlock data;
-    PhysAddress paddr(addr);
-    DataBlock* dataPtr = &data;
-    Chip* n = dynamic_cast<Chip*>(m_chip_ptr);
-    // LUKE - use variable names instead of macros
-    assert(n->m_L1Cache_L1IcacheMemory_vec[m_version] != NULL);
-    assert(n->m_L1Cache_L1DcacheMemory_vec[m_version] != NULL);
-
-    MachineID l2_mach = map_L2ChipId_to_L2Cache(addr, m_chip_ptr->getID() );
-    int l2_ver = l2_mach.num%RubyConfig::numberOfL2CachePerChip();
-
-    if (Protocol::m_TwoLevelCache) {
-      if(Protocol::m_CMP){
-        assert(n->m_L2Cache_L2cacheMemory_vec[l2_ver] != NULL);
-      }
-      else{
-        assert(n->m_L1Cache_cacheMemory_vec[m_version] != NULL);
-      }
-    }
-
-    if (n->m_L1Cache_L1IcacheMemory_vec[m_version]->tryCacheAccess(lineAddr, CacheRequestType_IFETCH, dataPtr)){
-      n->m_L1Cache_L1IcacheMemory_vec[m_version]->getMemoryValue(addr, value, size_in_bytes);
-      found = true;
-    } else if (n->m_L1Cache_L1DcacheMemory_vec[m_version]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
-      n->m_L1Cache_L1DcacheMemory_vec[m_version]->getMemoryValue(addr, value, size_in_bytes);
-      found = true;
-    } else if (Protocol::m_CMP && n->m_L2Cache_L2cacheMemory_vec[l2_ver]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
-      n->m_L2Cache_L2cacheMemory_vec[l2_ver]->getMemoryValue(addr, value, size_in_bytes);
-      found = true;
-      // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr)){
-      //       ASSERT(n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr));
-      //       L1Cache_TBE tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
-
-      //       int offset = addr.getOffset();
-      //       for(int i=0; i<size_in_bytes; ++i){
-      //         value[i] = tbeEntry.getDataBlk().getByte(offset + i);
-      //       }
-
-      //       found = true;
-    } else {
-      // Address not found
-      //cout << "  " << m_chip_ptr->getID() << " NOT IN CACHE, Value at Directory is: " << (int) value[0] << endl;
-      n = dynamic_cast<Chip*>(g_system_ptr->getChip(map_Address_to_DirectoryNode(addr)/RubyConfig::numberOfDirectoryPerChip()));
-      int dir_version = map_Address_to_DirectoryNode(addr)%RubyConfig::numberOfDirectoryPerChip();
-      for(unsigned int i=0; i<size_in_bytes; ++i){
-        int offset = addr.getOffset();
-        value[i] = n->m_Directory_directory_vec[dir_version]->lookup(lineAddr).m_DataBlk.getByte(offset + i);
-      }
-      // Address not found
-      //WARN_MSG("Couldn't find address");
-      //WARN_EXPR(addr);
-      found = false;
-    }
-    return true;
+  for(unsigned int i=0; i < size_in_bytes; i++) {
+    std::cerr << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
+    value[i] = 0; // _read_physical_memory( m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version,
+                  //                          addr.getAddress() + i, 1 );
   }
+  return false; // Do nothing?
 }
 
 bool Sequencer::setRubyMemoryValue(const Address& addr, char *value,
                                    unsigned int size_in_bytes) {
   char test_buffer[64];
 
-  if(g_SIMULATING){
-    return false; // Do nothing?
-  } else {
-    // idea here is that coherent cache should find the
-    // latest data, the update it
-    bool found = false;
-    const Address lineAddr = line_address(addr);
-    PhysAddress paddr(addr);
-    DataBlock data;
-    DataBlock* dataPtr = &data;
-    Chip* n = dynamic_cast<Chip*>(m_chip_ptr);
-
-    MachineID l2_mach = map_L2ChipId_to_L2Cache(addr, m_chip_ptr->getID() );
-    int l2_ver = l2_mach.num%RubyConfig::numberOfL2CachePerChip();
-    // LUKE - use variable names instead of macros
-    //cout << "number of L2caches per chip = " << RubyConfig::numberOfL2CachePerChip(m_version) << endl;
-    //cout << "L1I cache vec size = " << n->m_L1Cache_L1IcacheMemory_vec.size() << endl;
-    //cout << "L1D cache vec size = " << n->m_L1Cache_L1DcacheMemory_vec.size() << endl;
-    //cout << "L1cache_cachememory size = " << n->m_L1Cache_cacheMemory_vec.size() << endl;
-    //cout << "L1cache_l2cachememory size = " << n->m_L1Cache_L2cacheMemory_vec.size() << endl;
-    // if (Protocol::m_TwoLevelCache) {
-    //       if(Protocol::m_CMP){
-    //         cout << "CMP L2 cache vec size = " << n->m_L2Cache_L2cacheMemory_vec.size() << endl;
-    //       }
-    //       else{
-    //        cout << "L2 cache vec size = " << n->m_L1Cache_cacheMemory_vec.size() << endl;
-    //       }
-    //     }
-
-    assert(n->m_L1Cache_L1IcacheMemory_vec[m_version] != NULL);
-    assert(n->m_L1Cache_L1DcacheMemory_vec[m_version] != NULL);
-    if (Protocol::m_TwoLevelCache) {
-      if(Protocol::m_CMP){
-        assert(n->m_L2Cache_L2cacheMemory_vec[l2_ver] != NULL);
-      }
-      else{
-        assert(n->m_L1Cache_cacheMemory_vec[m_version] != NULL);
-      }
-    }
-
-    if (n->m_L1Cache_L1IcacheMemory_vec[m_version]->tryCacheAccess(lineAddr, CacheRequestType_IFETCH, dataPtr)){
-      n->m_L1Cache_L1IcacheMemory_vec[m_version]->setMemoryValue(addr, value, size_in_bytes);
-      found = true;
-    } else if (n->m_L1Cache_L1DcacheMemory_vec[m_version]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
-      n->m_L1Cache_L1DcacheMemory_vec[m_version]->setMemoryValue(addr, value, size_in_bytes);
-      found = true;
-    } else if (Protocol::m_CMP && n->m_L2Cache_L2cacheMemory_vec[l2_ver]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
-      n->m_L2Cache_L2cacheMemory_vec[l2_ver]->setMemoryValue(addr, value, size_in_bytes);
-      found = true;
-      // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isTagPresent(lineAddr)){
-      //       L1Cache_TBE& tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
-      //       DataBlock tmpData;
-      //       int offset = addr.getOffset();
-      //       for(int i=0; i<size_in_bytes; ++i){
-      //         tmpData.setByte(offset + i, value[i]);
-      //       }
-      //       tbeEntry.setDataBlk(tmpData);
-      //       tbeEntry.setDirty(true);
-    } else {
-      // Address not found
-      n = dynamic_cast<Chip*>(g_system_ptr->getChip(map_Address_to_DirectoryNode(addr)/RubyConfig::numberOfDirectoryPerChip()));
-      int dir_version = map_Address_to_DirectoryNode(addr)%RubyConfig::numberOfDirectoryPerChip();
-      for(unsigned int i=0; i<size_in_bytes; ++i){
-        int offset = addr.getOffset();
-        n->m_Directory_directory_vec[dir_version]->lookup(lineAddr).m_DataBlk.setByte(offset + i, value[i]);
-      }
-      found = false;
-    }
-
-    if (found){
-      found = getRubyMemoryValue(addr, test_buffer, size_in_bytes);
-      assert(found);
-      if(value[0] != test_buffer[0]){
-        WARN_EXPR((int) value[0]);
-        WARN_EXPR((int) test_buffer[0]);
-        ERROR_MSG("setRubyMemoryValue failed to set value.");
-      }
-    }
-
-    return true;
-  }
+  return false; // Do nothing?
 }
 

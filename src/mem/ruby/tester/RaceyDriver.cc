@@ -41,10 +41,6 @@
 
 RaceyDriver::RaceyDriver()
 {
-  if (g_SIMULATING) {
-    ERROR_MSG("g_SIMULATING should not be defined.");
-  }
-
   // debug transition?
   if(false) {
     assert(g_debug_ptr);

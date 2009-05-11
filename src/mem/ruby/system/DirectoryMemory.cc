@@ -51,6 +51,7 @@ DirectoryMemory::DirectoryMemory(Chip* chip_ptr, int version)
   // m_size = RubyConfig::memoryModuleBlocks()/RubyConfig::numberOfDirectory();
   m_size = RubyConfig::memoryModuleBlocks();
   assert(m_size > 0);
+  /*********************************************************************
   // allocates an array of directory entry pointers & sets them to NULL
   m_entries = new Directory_Entry*[m_size];
   if (m_entries == NULL) {
@@ -60,10 +61,12 @@ DirectoryMemory::DirectoryMemory(Chip* chip_ptr, int version)
   for (int i=0; i < m_size; i++) {
     m_entries[i] = NULL;
   }
+  */////////////////////////////////////////////////////////////////////
 }
 
 DirectoryMemory::~DirectoryMemory()
 {
+  /*********************************************************************
   // free up all the directory entries
   for (int i=0; i < m_size; i++) {
     if (m_entries[i] != NULL) {
@@ -74,6 +77,8 @@ DirectoryMemory::~DirectoryMemory()
 
   // free up the array of directory entries
   delete[] m_entries;
+  *//////////////////////////////////////////////////////////////////////
+  m_entries.clear();
 }
 
 // Static method
@@ -99,6 +104,10 @@ bool DirectoryMemory::isPresent(PhysAddress address)
   return (map_Address_to_DirectoryNode(address) == m_chip_ptr->getID()*RubyConfig::numberOfDirectoryPerChip()+m_version);
 }
 
+void DirectoryMemory::readPhysMem(uint64 address, int size, void * data)
+{
+}
+
 Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
 {
   assert(isPresent(address));
@@ -111,35 +120,29 @@ Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
     WARN_EXPR(m_size);
     ERROR_MSG("Directory Memory Assertion: accessing memory out of range.");
   }
-  Directory_Entry* entry = m_entries[index];
+
+  map<Index, Directory_Entry*>::iterator iter =  m_entries.find(index);
+  Directory_Entry* entry = m_entries.find(index)->second;
 
   // allocate the directory entry on demand.
-  if (entry == NULL) {
+  if (iter == m_entries.end()) {
     entry = new Directory_Entry;
 
     //    entry->getProcOwner() = m_chip_ptr->getID(); // FIXME - This should not be hard coded
     //    entry->getDirOwner() = true;        // FIXME - This should not be hard-coded
 
-    // load the data from SimICS when first initalizing
-    if (g_SIMULATING) {
-      if (DATA_BLOCK) {
-        //physical_address_t physAddr = address.getAddress();
+    // load the data from physicalMemory when first initalizing
+    physical_address_t physAddr = address.getAddress();
+    int8 * dataArray = (int8 * )malloc(RubyConfig::dataBlockBytes() * sizeof(int8));
+    readPhysMem(physAddr, RubyConfig::dataBlockBytes(), dataArray);
 
-        for(int j=0; j < RubyConfig::dataBlockBytes(); j++) {
-          //int8 data_byte = (int8) SIMICS_read_physical_memory( m_chip_ptr->getID(),
-          //                                                     physAddr + j, 1 );
-          //printf("SimICS, byte %d: %lld\n", j, data_byte );
-          int8 data_byte = 0;
-          entry->getDataBlk().setByte(j, data_byte);
-        }
-        DEBUG_EXPR(NODE_COMP, MedPrio,entry->getDataBlk());
-      }
+    for(int j=0; j < RubyConfig::dataBlockBytes(); j++) {
+      entry->getDataBlk().setByte(j, dataArray[j]);
     }
-
+    DEBUG_EXPR(NODE_COMP, MedPrio,entry->getDataBlk());
     // store entry to the table
-    m_entries[index] = entry;
+    m_entries.insert(make_pair(index, entry));
   }
-
   return (*entry);
 }
 
@@ -165,11 +168,9 @@ void DirectoryMemory::invalidateBlock(PhysAddress address)
 void DirectoryMemory::print(ostream& out) const
 {
   out << "Directory dump: " << endl;
-  for (int i=0; i < m_size; i++) {
-    if (m_entries[i] != NULL) {
-      out << i << ": ";
-      out << *m_entries[i] << endl;
-    }
+  for(map<Index, Directory_Entry*>::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
+      out << it->first << ": ";
+      out << *(it->second) << endl;
   }
 }
 

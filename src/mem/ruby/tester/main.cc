@@ -43,9 +43,5 @@
 
 int main(int argc, char *argv[])
 {
-  if (g_SIMULATING) {
-    ERROR_MSG("g_SIMULATING should not be defined.");
-  }
-
   tester_main(argc, argv);
 }

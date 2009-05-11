@@ -45,10 +45,6 @@
 
 DeterministicDriver::DeterministicDriver(RubySystem* sys_ptr)
 {
-  if (g_SIMULATING) {
-    ERROR_MSG("g_SIMULATING should not be defined.");
-  }
-
   m_finish_time = 0;
   m_last_issue = -11;
   m_done_counter = 0;

@@ -42,10 +42,6 @@
 
 Tester::Tester(RubySystem* sys_ptr)
 {
-  if (g_SIMULATING) {
-    ERROR_MSG("g_SIMULATING should not be defined.");
-  }
-
   g_callback_counter = 0;
 
   // add the tester consumer to the global event queue

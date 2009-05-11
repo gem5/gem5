@@ -42,6 +42,7 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/protocol/Directory_Entry.hh"
+#include <map>
 
 class Chip;
 
@@ -56,6 +57,8 @@ public:
   // Public Methods
   static void printConfig(ostream& out);
   bool isPresent(PhysAddress address);
+  // dummy function
+  void readPhysMem(uint64 address, int size, void * data);
   Directory_Entry& lookup(PhysAddress address);
 
   void print(ostream& out) const;
@@ -68,7 +71,7 @@ private:
   DirectoryMemory& operator=(const DirectoryMemory& obj);
 
   // Data Members (m_ prefix)
-  Directory_Entry **m_entries;
+  map<Index, Directory_Entry*> m_entries;
   Chip* m_chip_ptr;
   int m_size;  // # of memory module blocks for this directory
   int m_version;
