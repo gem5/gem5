@@ -43,20 +43,31 @@ class Debug;
 extern Debug* g_debug_ptr;
 std::ostream * debug_cout_ptr;
 
-// component character list
-const char DEFINE_COMP_CHAR[] =
+struct DebugComponentData
 {
-#undef DEFINE_COMP
-#define DEFINE_COMP(component, character, description) character,
-#include "Debug.def"
+    const char *desc;
+    const char ch;
 };
 
-// component description list
-const char* DEFINE_COMP_DESCRIPTION[] =
+// component character list
+DebugComponentData debugComponents[] =
 {
-#undef DEFINE_COMP
-#define DEFINE_COMP(component, character, description) description,
-#include "Debug.def"
+    {"System",            's' },
+    {"Node",              'N' },
+    {"Queue",             'q' },
+    {"Event Queue",       'e' },
+    {"Network",           'n' },
+    {"Sequencer",         'S' },
+    {"Tester",            't' },
+    {"Generated",         'g' },
+    {"SLICC",             'l' },
+    {"Network Queues",    'Q' },
+    {"Time",              'T' },
+    {"Network Internals", 'i' },
+    {"Store Buffer",      'b' },
+    {"Cache",             'c' },
+    {"Predictor",         'p' },
+    {"Allocator",         'a' },
 };
 
 extern "C" void changeDebugVerbosity(VerbosityLevel vb);
@@ -197,7 +208,7 @@ bool Debug::checkFilter(char ch)
 {
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
     // Look at all components to find a character match
-    if (DEFINE_COMP_CHAR[i] == ch) {
+    if (debugComponents[i].ch == ch) {
       // We found a match - return no error
       return false; // no error
     }
@@ -263,9 +274,9 @@ bool Debug::addFilter(char ch)
 {
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
     // Look at all components to find a character match
-    if (DEFINE_COMP_CHAR[i] == ch) {
+    if (debugComponents[i].ch == ch) {
       // We found a match - update the filter bit mask
-      cout << "  Debug: Adding to filter: '" << ch << "' (" << DEFINE_COMP_DESCRIPTION[i] << ")" << endl;
+      cout << "  Debug: Adding to filter: '" << ch << "' (" << debugComponents[i].desc << ")" << endl;
       m_filter |= (1 << i);
       return false; // no error
     }
@@ -291,7 +302,7 @@ void Debug::usageInstructions(void)
 {
   cerr << "Debug components: " << endl;
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
-    cerr << "  " << DEFINE_COMP_CHAR[i] << ": " << DEFINE_COMP_DESCRIPTION[i] << endl;
+    cerr << "  " << debugComponents[i].ch << ": " << debugComponents[i].desc << endl;
   }
 }
 

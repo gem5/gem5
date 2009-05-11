@@ -42,10 +42,23 @@ extern std::ostream * debug_cout_ptr;
 // component enumeration
 enum DebugComponents
 {
-#undef DEFINE_COMP
-#define DEFINE_COMP(component, character, description) component,
-#include "Debug.def"
-  NUMBER_OF_COMPS
+    SYSTEM_COMP,
+    NODE_COMP,
+    QUEUE_COMP,
+    EVENTQUEUE_COMP,
+    NETWORK_COMP,
+    SEQUENCER_COMP,
+    TESTER_COMP,
+    GENERATED_COMP,
+    SLICC_COMP,
+    NETWORKQUEUE_COMP,
+    TIME_COMP,
+    NETWORK_INTERNALS_COMP,
+    STOREBUFFER_COMP,
+    CACHE_COMP,
+    PREDICTOR_COMP,
+    ALLOCATOR_COMP,
+    NUMBER_OF_COMPS
 };
 
 enum PriorityLevel {HighPrio, MedPrio, LowPrio};
