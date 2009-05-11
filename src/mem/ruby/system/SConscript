@@ -30,18 +30,10 @@
 
 Import('*')
 
-Source('BlockBloomFilter.cc')
-Source('BulkBloomFilter.cc')
 Source('DirectoryMemory.cc')
-Source('GenericBloomFilter.cc')
-Source('H3BloomFilter.cc')
-Source('LSB_CountingBloomFilter.cc')
 Source('MemoryControl.cc')
 Source('MemoryNode.cc')
-Source('MultiBitSelBloomFilter.cc')
-Source('MultiGrainBloomFilter.cc')
 Source('NodePersistentTable.cc')
-Source('NonCountingBloomFilter.cc')
 Source('PersistentTable.cc')
 Source('Sequencer.cc', Werror=False)
 Source('StoreBuffer.cc')

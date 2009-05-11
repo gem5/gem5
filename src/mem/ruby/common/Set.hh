@@ -32,24 +32,15 @@
  *
  * Description:
  *
- * $Id$
+ * $Id: BigSet.h 1.6 05/01/19 13:12:25-06:00 mikem@maya.cs.wisc.edu $
  *
  */
 
-// Define this to use the BigSet class which is slower, but supports
-// sets of size larger than 32.
+// modified by Dan Gibson on 05/20/05 to accomidate FASTER
+// >32 set lengths, using an array of ints w/ 32 bits/int
 
-// #define BIGSET
-
-#define OPTBIGSET
-
-#ifdef OPTBIGSET
-#include "mem/ruby/common/OptBigSet.hh"
-#else
-
-#ifdef BIGSET
-#include "mem/ruby/common/BigSet.hh" // code to supports sets larger than 32
-#else
+// NOTE: Never include this file directly, this should only be
+// included from Set.h
 
 #ifndef SET_H
 #define SET_H
@@ -59,46 +50,95 @@
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/config/RubyConfig.hh"
 
+// gibson 05/20/05
+// enum PresenceBit {NotPresent, Present};
+
 class Set {
 public:
   // Constructors
   // creates and empty set
   Set();
-  Set(int size);
+  Set (int size);
 
   // used during the replay mechanism
   //  Set(const char *str);
 
-  //  Set(const Set& obj);
-  //  Set& operator=(const Set& obj);
+  Set(const Set& obj);
+  Set& operator=(const Set& obj);
 
   // Destructor
-  // ~Set();
+  ~Set();
 
   // Public Methods
 
-  void add(NodeID newElement);
+  inline void add(NodeID index)
+    {
+#ifdef __32BITS__
+      m_p_nArray[index>>5] |= (1 << (index & 0x01F));
+#else
+      m_p_nArray[index>>6] |= (((unsigned long) 1) << (index & 0x03F));
+#endif // __32BITS__
+    }
+
   void addSet(const Set& set);
   void addRandom();
-  void remove(NodeID newElement);
+
+  inline void remove(NodeID index)
+    {
+#ifdef __32BITS__
+      m_p_nArray[index>>5] &= ~(0x00000001         << (index & 0x01F));
+#else
+      m_p_nArray[index>>6] &= ~(((unsigned long) 0x0000000000000001) << (index & 0x03F));
+#endif // __32BITS__
+    }
+
+
   void removeSet(const Set& set);
-  void clear();
+
+  inline void clear() { for(int i=0; i<m_nArrayLen; i++) m_p_nArray[i] = 0; }
+
   void broadcast();
   int count() const;
-  bool isEqual(const Set& set);
+  bool isEqual(const Set& set) const;
 
   Set OR(const Set& orSet) const;  // return the logical OR of this set and orSet
   Set AND(const Set& andSet) const;  // return the logical AND of this set and andSet
 
   // Returns true if the intersection of the two sets is non-empty
-  bool intersectionIsNotEmpty(const Set& other_set) const;
+  inline bool intersectionIsNotEmpty(const Set& other_set) const
+    {
+      for(int i=0; i< m_nArrayLen; i++) {
+        if(m_p_nArray[i] & other_set.m_p_nArray[i]) {
+          return true;
+        }
+      }
+      return false;
+    }
 
   // Returns true if the intersection of the two sets is empty
-  bool intersectionIsEmpty(const Set& other_set) const;
+  inline bool intersectionIsEmpty(const Set& other_set) const
+    {
+      for(int i=0; i< m_nArrayLen; i++) {
+        if(m_p_nArray[i] & other_set.m_p_nArray[i]) {
+          return false;
+        }
+      }
+      return true;
+    }
 
   bool isSuperset(const Set& test) const;
   bool isSubset(const Set& test) const { return test.isSuperset(*this); }
-  bool isElement(NodeID element) const;
+
+  inline bool isElement(NodeID element) const
+    {
+#ifdef __32BITS__
+      return ((m_p_nArray[element>>5] & (0x00000001         << (element & 0x01F)))!=0);
+#else
+      return ((m_p_nArray[element>>6] & (((unsigned long) 0x0000000000000001) << (element & 0x03F)))!=0);
+#endif // __32BITS__
+
+    }
+
   bool isBroadcast() const;
   bool isEmpty() const;
 
@@ -108,8 +148,14 @@ public:
   void setSize (int size);
 
   // get element for a index
-  NodeID elementAt(int index);
-  int getSize() const { return m_size; }
+  inline NodeID elementAt(int index) const
+    {
+      if(isElement(index)) return (NodeID) true;
+      else return 0;
+    }
+
+  // gibson 05/20/05
+  int getSize() const { return m_nSize; }
 
   // DEPRECATED METHODS
   void addToSet(NodeID newElement) { add(newElement); }  // Deprecated
@@ -123,10 +169,19 @@ private:
   // Private Methods
 
   // Data Members (m_ prefix)
-  int m_size;
-  uint32 m_bits;  // Set as a bit vector
-  uint32 m_mask;  // a 000001111 mask where the number of 1s is equal to m_size
+  // gibson 05/20/05
+  // Vector<uint8> m_bits;  // This is an vector of uint8 to reduce the size of the set
 
+  int m_nSize;              // the number of bits in this set
+  int m_nArrayLen;          // the number of 32-bit words that are held in the array
+
+  // Changed 5/24/05 for static allocation of array
+  // note that "long" corresponds to 32 bits on a 32-bit machine,
+  // 64 bits if the -m64 parameter is passed to g++, which it is
+  // for an AMD opteron under our configuration
+
+  long * m_p_nArray;      // an word array to hold the bits in the set
+  long m_p_nArray_Static[NUMBER_WORDS_PER_SET];
 };
 
 // Output operator declaration
@@ -144,6 +199,4 @@ ostream& operator<<(ostream& out, const Set& obj)
 }
 
 #endif //SET_H
-#endif //BIGSET
-#endif //OPTBIGSET
 

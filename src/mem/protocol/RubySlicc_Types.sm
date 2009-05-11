@@ -153,16 +153,4 @@ external_type(TimerTable, inport="yes") {
   bool isSet(Address);
 }
 
-external_type(GenericBloomFilter) {
-
-  void clear(int);
-  void increment(Address, int);
-  void decrement(Address, int);
-  void set(Address, int);
-  void unset(Address, int);
-
-  bool isSet(Address, int);
-  int getCount(Address, int);
-}
-
 
