@@ -131,12 +131,6 @@ enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   IO,          desc="I/O";
   REPLACEMENT, desc="Replacement";
   COMMIT,      desc="Commit version";
-  LD_XACT,     desc="Transactional Load";
-  LDX_XACT,    desc="Transactional Load-Intend-To-Modify";
-  ST_XACT,     desc="Transactional Store";
-  BEGIN_XACT,  desc="Begin Transaction";
-  COMMIT_XACT, desc="Commit Transaction";
-  ABORT_XACT,  desc="Abort Transaction";
   NULL,        desc="Invalid request type";
 }
 
@@ -162,12 +156,6 @@ enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
   WB_ACK,      desc="WriteBack ack";
   EXE_ACK,     desc="Execlusive ack";
   COMMIT,      desc="Commit version";
-  LD_XACT,     desc="Transactional Load";
-  LDX_XACT,     desc="Transactional Load-Intend-Modify";
-  ST_XACT,     desc="Transactional Store";
-  BEGIN_XACT,  desc="Begin Transaction";
-  COMMIT_XACT, desc="Commit Transaction";
-  ABORT_XACT,  desc="Abort Transaction";
   NULL,        desc="null request type";
 }
 

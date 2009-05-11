@@ -1006,15 +1006,6 @@ GenericRequestType Profiler::CacheRequestType_to_GenericRequestType(const CacheR
   case CacheRequestType_IFETCH:
     return GenericRequestType_IFETCH;
     break;
-  case CacheRequestType_LD_XACT:
-    return GenericRequestType_LD_XACT;
-    break;
-  case CacheRequestType_LDX_XACT:
-    return GenericRequestType_LDX_XACT;
-    break;
-  case CacheRequestType_ST_XACT:
-    return GenericRequestType_ST_XACT;
-    break;
   case CacheRequestType_NULL:
     return GenericRequestType_NULL;
     break;

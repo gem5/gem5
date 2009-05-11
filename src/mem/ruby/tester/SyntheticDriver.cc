@@ -36,11 +36,7 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/tester/SyntheticDriver.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
-//#ifndef XACT_MEM
 #include "mem/ruby/tester/RequestGenerator.hh"
-//#endif
-//#include "mem/ruby/tester/XactAbortRequestGenerator.hh"
-//#include "mem/ruby/tester/XactRequestGenerator.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/protocol/Chip.hh"
 
@@ -150,7 +146,6 @@ void SyntheticDriver::notifyReceiveNackFinal(int proc, const Address & addr){
     //reqGen->notifyReceiveNackFinal(addr);
   }
   else{
-    cout << "notifyReceiveNackFinal NOT USING TM" << endl;
     ASSERT(0);
   }
 }
