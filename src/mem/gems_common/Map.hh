@@ -1,0 +1,186 @@
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * $Id$
+ *
+ */
+
+#ifndef MAP_H
+#define MAP_H
+
+#include "mem/gems_common/Vector.hh"
+
+namespace __gnu_cxx {
+  template <> struct hash <std::string>
+  {
+    size_t operator()(const string& s) const { return hash<char*>()(s.c_str()); }
+  };
+}
+
+typedef unsigned long long uint64;
+//hack for uint64 hashes...
+namespace __gnu_cxx {
+  template <> struct hash <uint64>
+  {
+    size_t operator()(const uint64 & s) const { return (size_t) s; }
+  };
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+class Map
+{
+public:
+  Map() { /* empty */ }
+  ~Map() { /* empty */ }
+
+  void add(const KEY_TYPE& key, const VALUE_TYPE& value);
+  bool exist(const KEY_TYPE& key) const;
+  int size() const { return m_map.size(); }
+  void erase(const KEY_TYPE& key) { assert(exist(key)); m_map.erase(key); }
+  Vector<KEY_TYPE> keys() const;
+  Vector<VALUE_TYPE> values() const;
+  void deleteKeys();
+  void deleteValues();
+  VALUE_TYPE& lookup(const KEY_TYPE& key) const;
+  void clear() { m_map.clear(); }
+  void print(ostream& out) const;
+
+  // Synonyms
+  void remove(const KEY_TYPE& key) { erase(key); }
+  void deallocate(const KEY_TYPE& key) { erase(key); }
+  void allocate(const KEY_TYPE& key) { add(key, VALUE_TYPE()); }
+  void insert(const KEY_TYPE& key, const VALUE_TYPE& value) { add(key, value); }
+
+  // Use default copy constructor and assignment operator
+private:
+  // Data members
+
+  // m_map is declared mutable because some methods from the STL "map"
+  // class that should be const are not.  Thus we define this as
+  // mutable so we can still have conceptually const accessors.
+  mutable __gnu_cxx::hash_map<KEY_TYPE, VALUE_TYPE> m_map;
+};
+
+template <class KEY_TYPE, class VALUE_TYPE>
+ostream& operator<<(ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map);
+
+// *********************
+
+template <class KEY_TYPE, class VALUE_TYPE>
+void Map<KEY_TYPE, VALUE_TYPE>::add(const KEY_TYPE& key, const VALUE_TYPE& value)
+{
+  // Update or add a new key/value pair
+  m_map[key] = value;
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+bool Map<KEY_TYPE, VALUE_TYPE>::exist(const KEY_TYPE& key) const
+{
+  return (m_map.count(key) != 0);
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+VALUE_TYPE& Map<KEY_TYPE, VALUE_TYPE>::lookup(const KEY_TYPE& key) const
+{
+  assert(exist(key));
+  return m_map[key];
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+Vector<KEY_TYPE> Map<KEY_TYPE, VALUE_TYPE>::keys() const
+{
+  Vector<KEY_TYPE> keys;
+  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
+    keys.insertAtBottom((*iter).first);
+  }
+  return keys;
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+Vector<VALUE_TYPE> Map<KEY_TYPE, VALUE_TYPE>::values() const
+{
+  Vector<VALUE_TYPE> values;
+  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  pair<KEY_TYPE, VALUE_TYPE> p;
+
+  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
+    p = *iter;
+    values.insertAtBottom(p.second);
+  }
+  return values;
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+void Map<KEY_TYPE, VALUE_TYPE>::deleteKeys()
+{
+  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  pair<KEY_TYPE, VALUE_TYPE> p;
+
+  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
+    p = *iter;
+    delete p.first;
+  }
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+void Map<KEY_TYPE, VALUE_TYPE>::deleteValues()
+{
+  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  pair<KEY_TYPE, VALUE_TYPE> p;
+
+  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
+    p = *iter;
+    delete p.second;
+  }
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+void Map<KEY_TYPE, VALUE_TYPE>::print(ostream& out) const
+{
+  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  pair<KEY_TYPE, VALUE_TYPE> p;
+
+  out << "[";
+  for (iter = m_map.begin(); iter != m_map.end(); iter++) {
+    // unparse each basic block
+    p = *iter;
+    out << " " << p.first << "=" << p.second;
+  }
+  out << " ]";
+}
+
+template <class KEY_TYPE, class VALUE_TYPE>
+ostream& operator<<(ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map)
+{
+  map.print(out);
+  return out;
+}
+
+#endif //MAP_H

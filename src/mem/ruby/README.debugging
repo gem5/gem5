@@ -1,0 +1,104 @@
+# ------ Debugging the Ruby Tester ------
+
+You can compile Ruby with debugging turned on.
+
+cd ruby
+[vim or emacs] Makefile
+
+Change OPT_FLAGS to "-g -O0" (the first OPT_FLAGS line). Make
+sure all the other OPT_FLAGS lines are commented out.
+
+Change DEBUG_FLAGS to "-DRUBY_DEBUG=true". (Just uncomment the
+first DEBUG_FLAGS line, and comment out the second DEBUG_FLAGS
+line.)
+
+You can choose which component or components to debug, and the
+level of verbosity. For example,
+
+"x86-linux/generated/MOSI_SMP_bcast/bin/tester.exec -l 100000 -v med -c n"
+
+gives you debugging information about the network component at
+the medium verbosity level. -v selects the verbosity, which may
+be low, med, high, or none. -c selects the component or
+components.
+
+"x86-linux/generated/MOSI_SMP_bcast/bin/tester.exec -l 100000 -v med -c nSt"
+
+debugs the network, the sequencer, and the tester.
+
+For a list of the components you can debug, just run the tester with
+no arguments, and it will display a list of valid components. The
+components are defined in ruby/common/Debug.def.
+
+The protocol debug trace is especially useful for debugging cache coherence protocols.  This must be enabled at compile-time by ensuring that PROTOCOL_DEBUG_TRACE is set to true for rubyconfig.defaults (if running in Simics) or tester.defaults.  You must specify the time to start tracing.  The following starts the protocol trace immediately (at time 1)
+
+"x86-linux/generated/MOSI_SMP_bcast/bin/tester.exec -l 100000 -s 1"
+
+Also, if something seems to be wrong and you're not sure where to
+start looking, it may help to run the tester for a longer time,
+e.g.
+
+"x86-linux/generated/MOSI_SMP_bcast/bin/tester.exec -l 500000"
+
+This may help because some problems eventually show up as
+deadlock, but the tester has to run for a long time before a
+deadlock is detected.
+
+Once your simulator has succeeded on the tester for a certain
+number of cycles, say 1000000, you may want to set the
+RANDOMIZATION variable in ruby/config/tester.defaults to "true"
+for more thorough testing.  However, RANDOMIZATION may not work in
+all situations because it overrides some of the ordering in the
+network and may break your simulator in ways you don't like.  For
+example, messages are added to MessageBuffers with random
+latency.
+
+By default the tester driver is a generator that issues random store
+and load requests. This driver does a good job of stressing the
+cache coherency protocol by issuing racy store requests from multiple
+processors to a cache line then checks the stores with a single load.
+
+Other tester drivers are available.  By setting the g_SYNTHETIC_DRIVER
+to true in ruby/config/tester.defaults, you enable a tester that generates
+racy lock requests for a number of locks indicated by g_synthetic_locks.
+
+Another tester driver is a series of non-racy deterministic testers.  By
+setting the g_DETERMINISTIC_DRIVER in ruby/config/tester.defaults to true,
+you enable the deterministic tester.  The deterministic tester can do
+different types of deterministic tests as specified by g_SpecifiedGenerator
+string.  The deterministic tester works best when RANDOMIZATION is set to
+false.  To easily track the queues being used with the deterministic tester,
+use the following debug flags "-v low -c nq".
+
+# ------ Debugging Ruby in Simics ------
+
+When you're running Simics, the debugging components and
+verbosity levels are the same. However, the way you communicate
+with Ruby changes.
+
+See the README.quickstart for information on compiling the Ruby
+module and loading it into Simics. Once you've got Simics
+running, with the Ruby module loaded, you can set up Ruby
+debugging.
+
+To set the debugging verbosity level, run:
+
+simics> ruby0.debug-verb med
+
+To set the debugging components, run: (see common/Debug.def for complete list
+                                       of component shortcuts)
+
+simics> ruby0.debug-filter n
+
+(NOTE: sometimes simics will interpret a single letter as a
+command; e.g. expanding "p" into "print". If simics gives you an
+error when setting the debug filter, try setting it like so:
+simics> ruby0.debug-filter "n")
+
+This gives the same kind of debugging information as running the
+tester with "-v med -c n".
+
+You can also send the debugging output to a file (may be a good
+idea, since there's a lot of it). To do this, run:
+
+simics> ruby0.debug-output-file <filename>

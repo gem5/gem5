@@ -1,0 +1,325 @@
+
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * $Id$
+ *
+ */
+
+// defines
+external_type(int, primitive="yes", default="0");
+external_type(bool, primitive="yes", default="false");
+external_type(string, primitive="yes");
+external_type(uint64, primitive="yes");
+external_type(Time, primitive="yes", default="0");
+external_type(Address);
+
+
+// Declarations of external types that are common to all protocols
+
+// AccessPermission
+enumeration(AccessPermission, desc="...", default="AccessPermission_NotPresent") {
+  Busy,       desc="No Read or Write";
+  Read_Only,  desc="Read Only";
+  Read_Write, desc="Read/Write";
+  Invalid,    desc="Invalid";
+  NotPresent, desc="NotPresent";
+  OnHold,     desc="Holding a place in dnuca cache";
+  ReadUpgradingToWrite, desc="Read only, but trying to get Read/Write";
+  Stale,      desc="local L1 has a modified copy, assume L2 copy is stale data";
+}
+
+// TesterStatus
+enumeration(TesterStatus, desc="...") {
+  Idle,            desc="Idle";
+  Action_Pending,  desc="Action Pending";
+  Ready,           desc="Ready";
+  Check_Pending,   desc="Check Pending";
+}
+
+// SpecifiedGeneratorTypes
+enumeration(SpecifiedGeneratorType, desc="...") {
+  DetermGETXGenerator,       desc="deterministic GETX Tester";
+  DetermInvGenerator,        desc="deterministic all shared then invalidate Tester";
+  DetermSeriesGETSGenerator, desc="deterministic Series of GETSs Tester for prefetcher tuning";
+}
+
+// RequestGeneratorStatus
+enumeration(RequestGeneratorStatus, desc="...") {
+  Thinking,        desc="Doing work between release and next acquire";
+  Test_Pending,    desc="Test pending";
+  Before_Swap,     desc="We're about to perform the swap";
+  Swap_Pending,    desc="The swap used for test-and-send is pending";
+  Holding,         desc="We are holding the lock performing the critical section";
+  Release_Pending, desc="The write for the release is pending";
+  Done,            desc="Done, waiting for end of run";
+}
+
+// DetermGETXGeneratorStatus
+enumeration(DetermGETXGeneratorStatus, desc="...") {
+  Thinking,        desc="Doing work before next action";
+  Store_Pending,   desc="Store pending";
+  Done,            desc="Done, waiting for end of run";
+}
+
+// DetermGETXGeneratorStatus
+enumeration(DetermInvGeneratorStatus, desc="...") {
+  Thinking,        desc="Doing work before next action";
+  Store_Pending,   desc="Store pending";
+  Load_Complete,   desc="Load complete";
+  Load_Pending,    desc="Load pending";
+  Done,            desc="Done, waiting for end of run";
+}
+
+// DetermSeriesGETSGeneratorStatus
+enumeration(DetermSeriesGETSGeneratorStatus, desc="...") {
+  Thinking,        desc="Doing work before next action";
+  Load_Pending,    desc="Load pending";
+  Done,            desc="Done, waiting for end of run";
+}
+
+// LockStatus
+enumeration(LockStatus, desc="...") {
+  Unlocked,        desc="Lock is not held";
+  Locked,          desc="Lock is held";
+}
+
+// SequencerStatus
+enumeration(SequencerStatus, desc="...") {
+  Idle,            desc="Idle";
+  Pending,         desc="Pending";
+}
+
+enumeration(TransitionResult, desc="...") {
+  Valid,         desc="Valid transition";
+  ResourceStall, desc="Stalled due to insufficient resources";
+  ProtocolStall, desc="Protocol specified stall";
+}
+
+// CacheRequestType
+enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
+  LD,          desc="Load";
+  ST,          desc="Store";
+  ATOMIC,      desc="Atomic Load/Store";
+  IFETCH,      desc="Instruction fetch";
+  IO,          desc="I/O";
+  REPLACEMENT, desc="Replacement";
+  COMMIT,      desc="Commit version";
+  NULL,        desc="Invalid request type";
+}
+
+enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
+  GETS,        desc="gets request";
+  GET_INSTR,   desc="get instr request";
+  GETX,        desc="getx request";
+  UPGRADE,     desc="upgrade request";
+  DOWNGRADE,   desc="downgrade request";
+  INV,         desc="invalidate request";
+  INV_S,       desc="invalidate shared copy request";
+  PUTS,        desc="puts request";
+  PUTO,        desc="puto request";
+  PUTX,        desc="putx request";
+  L2_PF,       desc="L2 prefetch";
+  LD,          desc="Load";
+  ST,          desc="Store";
+  ATOMIC,      desc="Atomic Load/Store";
+  IFETCH,      desc="Instruction fetch";
+  IO,          desc="I/O";
+  NACK,        desc="Nack";
+  REPLACEMENT, desc="Replacement";
+  WB_ACK,      desc="WriteBack ack";
+  EXE_ACK,     desc="Execlusive ack";
+  COMMIT,      desc="Commit version";
+  NULL,        desc="null request type";
+}
+
+enumeration(GenericMachineType, desc="...", default="GenericMachineType_NULL") {
+  L1Cache,     desc="L1 Cache Mach";
+  L2Cache,     desc="L2 Cache Mach";
+  L3Cache,     desc="L3 Cache Mach";
+  Directory,   desc="Directory Mach";
+  Collector,   desc="Collector Mach";
+  L1Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";
+  L2Cache_wCC, desc="L1 Cache Mach with Cache Coherence (used for miss latency profile)";
+  NULL,        desc="null mach type";
+}
+
+// MessageSizeType
+enumeration(MessageSizeType, default="MessageSizeType_Undefined", desc="...") {
+  Undefined,  desc="Undefined";
+  Control,    desc="Control Message";
+  Data,       desc="Data Message";
+  Request_Control, desc="Request";
+  Reissue_Control, desc="Reissued request";
+  Response_Data, desc="data response";
+  ResponseL2hit_Data, desc="data response";
+  ResponseLocal_Data, desc="data response";
+  Response_Control, desc="non-data response";
+  Writeback_Data, desc="Writeback data";
+  Writeback_Control, desc="Writeback control";
+  Forwarded_Control, desc="Forwarded control";
+  Invalidate_Control, desc="Invalidate control";
+  Unblock_Control, desc="Unblock control";
+  Persistent_Control, desc="Persistent request activation messages";
+  Completion_Control, desc="Completion messages";
+}
+
+// AccessType
+enumeration(AccessType, desc="...") {
+  Read, desc="Reading from cache";
+  Write, desc="Writing to cache";
+}
+
+// AccessModeType
+enumeration(AccessModeType, default="AccessModeType_UserMode", desc="...") {
+  SupervisorMode, desc="Supervisor mode";
+  UserMode,       desc="User mode";
+}
+
+enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
+  No,    desc="No, not a prefetch";
+  Yes,   desc="Yes, a prefetch";
+  L1_HW, desc="This is a L1 hardware prefetch";
+  L2_HW, desc="This is a L2 hardware prefetch";
+}
+
+// CacheMsg
+structure(CacheMsg, desc="...", interface="Message") {
+  Address Address,           desc="Line address for this request";
+  Address PhysicalAddress,   desc="Physical address for this request";
+  CacheRequestType Type,     desc="Type of request (LD, ST, etc)";
+  Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
+  AccessModeType AccessMode, desc="user/supervisor access type";
+  int Size,                  desc="size in bytes of access";
+  PrefetchBit Prefetch,      desc="Is this a prefetch request";
+  // following field only used for MVC
+  int Version,     desc="Version associated with this request";
+  // trans mem fields
+  //bool Aborted,              desc="This flag is set if the request is from an aborted xact.";
+  Address LogicalAddress,    desc="Virtual address for this request";
+  //int TransactionLevel,         desc="Transaction Level of this request";
+  //uint64 SequenceNumber,   desc="Sequence number of this request";
+  int ThreadID,            desc="The SMT thread that initiated this request";
+  //uint64 RequestTime,      desc="The cycle in which this request was issued";
+}
+
+
+
+
+// MaskPredictorType
+enumeration(MaskPredictorType, "MaskPredictorType_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  AlwaysUnicast, desc="AlwaysUnicast";
+  TokenD, desc="TokenD";
+  AlwaysBroadcast, desc="AlwaysBroadcast";
+  TokenB, desc="TokenB";
+  TokenNull, desc="TokenNull";
+  Random, desc="Random";
+  Pairwise, desc="Pairwise";
+  Owner, desc="Owner";
+  BroadcastIfShared, desc="Broadcast-If-Shared";
+  BroadcastCounter, desc="Broadcast Counter";
+  Group, desc="Group";
+  Counter, desc="Counter";
+  StickySpatial, desc="StickySpatial";
+  OwnerBroadcast, desc="Owner/Broadcast Hybrid";
+  OwnerGroup, desc="Owner/Group Hybrid";
+  OwnerBroadcastMod, desc="Owner/Broadcast Hybrid-Mod";
+  OwnerGroupMod, desc="Owner/Group Hybrid-Mod";
+  LastNMasks, desc="Last N Masks";
+  BandwidthAdaptive, desc="Bandwidth Adaptive";
+}
+
+// MaskPredictorIndex
+enumeration(MaskPredictorIndex, "MaskPredictorIndex_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  DataBlock, desc="Data Block";
+  PC, desc="Program Counter";
+}
+
+// MaskPredictorTraining
+enumeration(MaskPredictorTraining, "MaskPredictorTraining_Undefined", desc="...") {
+  Undefined, desc="Undefined";
+  None, desc="None";
+  Implicit, desc="Implicit";
+  Explicit, desc="Explicit";
+  Both, desc="Both";
+}
+
+// Network Topologies
+enumeration(TopologyType, desc="...") {
+  CROSSBAR, desc="One node per chip, single switch crossbar";
+  HIERARCHICAL_SWITCH, desc="One node per chip, totally ordered hierarchical tree switched network";
+  TORUS_2D, desc="One node per chip, 2D torus";
+  PT_TO_PT, desc="One node per chip, Point to Point Network";
+  FILE_SPECIFIED, desc="described by the file NETWORK_FILE";
+}
+
+// DNUCA AllocationStrategy
+enumeration(AllocationStrategy, desc="...") {
+  InMiddle, desc="";
+  InInvCorners, desc="";
+  InSharedSides, desc="";
+  StaticDist, desc="";
+  RandomBank, desc="";
+  FrequencyBank, desc="";
+  FrequencyBlock, desc="";
+  LRUBlock, desc="";
+}
+
+// DNUCA SearchMechanism
+enumeration(SearchMechanism, desc="...") {
+  Perfect, desc="";
+  PartialTag, desc="";
+  BloomFilter, desc="";
+  Random, desc="";
+  None, desc="";
+}
+
+// DNUCA link type
+enumeration(LinkType, desc="...") {
+  RC_1500UM, desc="";
+  RC_2500UM, desc="";
+  TL_9000UM, desc="";
+  TL_11000UM, desc="";
+  TL_13000UM, desc="";
+  NO_ENERGY, desc="";
+  NULL, desc="";
+}
+
+// transient request type
+enumeration(TransientRequestType, desc="...", default="TransientRequestType_Undefined") {
+  Undefined, desc="";
+  OffChip, desc="";
+  OnChip, desc="";
+  LocalTransient, desc="";
+}
+
+
+

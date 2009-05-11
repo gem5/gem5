@@ -1,0 +1,257 @@
+
+machine(Directory, "Directory protocol") {
+
+  MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="true";
+  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
+
+  MessageBuffer requestToDir, network="From", virtual_network="0", ordered="true";
+  MessageBuffer unblockToDir, network="From", virtual_network="3", ordered="true";
+
+  // STATES
+  enumeration(State, desc="Directory states", default="Directory_State_I") {
+    // Base states
+    I, desc="Invalid";
+    M, desc="Modified";
+
+    MI, desc="Blocked on a writeback";
+  }
+
+  // Events
+  enumeration(Event, desc="Directory events") {
+    GETX, desc="A GETX arrives";
+    GETS, desc="A GETS arrives";
+    PUTX, desc="A PUTX arrives";
+    PUTX_NotOwner, desc="A PUTX arrives";
+    PUTO, desc="A PUTO arrives";
+    Unblock, desc="An unblock message arrives";
+  }
+
+  // TYPES
+
+  // DirectoryEntry
+  structure(Entry, desc="...") {
+    State DirectoryState,          desc="Directory state";
+    DataBlock DataBlk,             desc="data for the block";
+    NetDest Sharers,                   desc="Sharers for this block";
+    NetDest Owner,                     desc="Owner of this block";
+  }
+
+  external_type(DirectoryMemory) {
+    Entry lookup(Address);
+    bool isPresent(Address);
+  }
+
+
+  // ** OBJECTS **
+
+  DirectoryMemory directory, constructor_hack="i";
+
+  State getState(Address addr) {
+    return directory[addr].DirectoryState;
+  }
+
+  void setState(Address addr, State state) {
+    if (directory.isPresent(addr)) {
+
+      if (state == State:I)  {
+        assert(directory[addr].Owner.count() == 0);
+        assert(directory[addr].Sharers.count() == 0);
+      }
+
+      if (state == State:M) {
+        assert(directory[addr].Owner.count() == 1);
+        assert(directory[addr].Sharers.count() == 0);
+      }
+
+      directory[addr].DirectoryState := state;
+    }
+  }
+
+  // ** OUT_PORTS **
+  out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
+  out_port(responseNetwork_out, ResponseMsg, responseFromDir);
+  out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests
+
+  // ** IN_PORTS **
+
+
+  in_port(requestQueue_in, RequestMsg, requestToDir) {
+    if (requestQueue_in.isReady()) {
+      peek(requestQueue_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:GETS) {
+          trigger(Event:GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GETX) {
+          trigger(Event:GETX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:PUTX) {
+          if (directory[in_msg.Address].Owner.isElement(in_msg.Requestor)) {
+            trigger(Event:PUTX, in_msg.Address);
+          } else {
+            trigger(Event:PUTX_NotOwner, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:PUTO) {
+          trigger(Event:PUTO, in_msg.Address);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  in_port(unblockNetwork_in, ResponseMsg, unblockToDir) {
+    if (unblockNetwork_in.isReady()) {
+      peek(unblockNetwork_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
+          trigger(Event:Unblock, in_msg.Address);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+
+
+  // Actions
+
+  action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:WB_ACK;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:WB_NACK;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(c_clearOwner, "c", desc="Clear the owner field") {
+    directory[address].Owner.clear();
+  }
+
+  action(d_sendData, "d", desc="Send data to requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="MEMORY_LATENCY") {
+        out_msg.Address := address;
+
+        if (in_msg.Type == CoherenceRequestType:GETS && directory[address].Sharers.count() == 0) {
+          // out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE_CLEAN;
+          out_msg.Type := CoherenceResponseType:DATA;
+        } else {
+          out_msg.Type := CoherenceResponseType:DATA;
+        }
+
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        out_msg.Dirty := false; // By definition, the block is now clean
+        out_msg.Acks := directory[address].Sharers.count();
+        if (directory[address].Sharers.isElement(in_msg.Requestor)) {
+          out_msg.Acks := out_msg.Acks - 1;
+        }
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(e_ownerIsRequestor, "e", desc="The owner is now the requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      directory[address].Owner.clear();
+      directory[address].Owner.add(in_msg.Requestor);
+    }
+  }
+
+  action(f_forwardRequest, "f", desc="Forward request to owner") {
+    peek(requestQueue_in, RequestMsg) {
+      APPEND_TRANSITION_COMMENT("Own: ");
+      APPEND_TRANSITION_COMMENT(directory[in_msg.Address].Owner);
+      APPEND_TRANSITION_COMMENT("Req: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := in_msg.Type;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination := directory[in_msg.Address].Owner;
+        out_msg.Acks := directory[address].Sharers.count();
+        if (directory[address].Sharers.isElement(in_msg.Requestor)) {
+          out_msg.Acks := out_msg.Acks - 1;
+        }
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      }
+    }
+  }
+
+
+  action(i_popIncomingRequestQueue, "i", desc="Pop incoming request queue") {
+    requestQueue_in.dequeue();
+  }
+
+  action(j_popIncomingUnblockQueue, "j", desc="Pop incoming unblock queue") {
+    unblockNetwork_in.dequeue();
+  }
+
+  action(l_writeDataToMemory, "l", desc="Write PUTX/PUTO data to memory") {
+    // peek(unblockNetwork_in, ResponseMsg) {
+    peek(requestQueue_in, RequestMsg) {
+      // assert(in_msg.Dirty);
+      // assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
+      directory[in_msg.Address].DataBlk := in_msg.DataBlk;
+      DEBUG_EXPR(in_msg.Address);
+      DEBUG_EXPR(in_msg.DataBlk);
+    }
+  }
+
+
+
+  // TRANSITIONS
+
+  transition(I, GETX, M) {
+    d_sendData;
+    e_ownerIsRequestor;
+    i_popIncomingRequestQueue;
+  }
+
+
+
+  transition(M, GETX, M) {
+    f_forwardRequest;
+    e_ownerIsRequestor;
+    i_popIncomingRequestQueue;
+  }
+
+  // transition(M, PUTX, MI) {
+  transition(M, PUTX, I) {
+    c_clearOwner;
+    l_writeDataToMemory;
+    a_sendWriteBackAck;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(M, PUTX_NotOwner, M) {
+    b_sendWriteBackNack;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(I, PUTX_NotOwner, I) {
+    b_sendWriteBackNack;
+    i_popIncomingRequestQueue;
+  }
+
+
+  transition(MI, Unblock, M) {
+    j_popIncomingUnblockQueue;
+  }
+
+}

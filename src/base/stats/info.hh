@@ -28,6 +28,9 @@
  * Authors: Nathan Binkert
  */
 
+#ifndef __BASE_STATS_INFO_HH__
+#define __BASE_STATS_INFO_HH__
+
 #include "base/flags.hh"
 #include "base/stats/types.hh"
 
@@ -54,11 +57,9 @@ const FlagsType dist =          0x0080;
 const FlagsType nozero =        0x0100;
 /** Don't print if this is NAN */
 const FlagsType nonan =         0x0200;
-/** Used for SS compatability. */
-const FlagsType __substat =     0x8000;
 
 /** Mask of flags that can't be set directly */
-const FlagsType __reserved =    init | print | __substat;
+const FlagsType __reserved =    init | print;
 
 struct StorageParams
 {
@@ -245,3 +246,5 @@ class FormulaInfo : public VectorInfo
 
 
 /* namespace Stats */ }
+
+#endif // __BASE_STATS_INFO_HH__

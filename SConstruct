@@ -345,8 +345,9 @@ global_sticky_vars.AddVariables(
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
-     PathListAllExist, PathListMakeAbsolute)
-    )    
+     PathListAllExist, PathListMakeAbsolute),
+    BoolVariable('RUBY', 'Build with Ruby', False),
+    )
 
 # base help text
 help_text = '''
@@ -409,6 +410,10 @@ else:
     print 'Error: Don\'t know what compiler options to use for your compiler.'
     print '       Please fix SConstruct and src/SConscript and try again.'
     Exit(1)
+
+# Set up common yacc/bison flags (needed for Ruby)
+main['YACCFLAGS'] = '-d'
+main['YACCHXXFILESUFFIX'] = '.hh'
 
 # Do this after we save setting back, or else we'll tack on an
 # extra 'qdo' every time we run scons.

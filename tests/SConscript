@@ -265,6 +265,10 @@ else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
                 'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp']
 
+if env['RUBY']:
+    # Hack for Ruby
+    configs += [c + '-ruby' for c in configs]
+
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))
 for config in configs:
