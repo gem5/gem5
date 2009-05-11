@@ -1,0 +1,22 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled May  5 2009 07:34:00
+M5 revision 8bea207e2193 6172 default qtip tip ruby_tests_refs.diff
+M5 started May  5 2009 07:34:02
+M5 executing on piton
+command line: /n/piton/z/nate/build/xgem5/build/SPARC_SE/m5.fast -d /n/piton/z/nate/build/xgem5/build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-atomic-ruby -re tests/run.py /n/piton/z/nate/build/xgem5/build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-atomic-ruby
+Global frequency set at 1000000000000 ticks per second
+Ruby Timing Mode
+Creating event queue...
+Creating event queue done
+Creating system...
+  Processors: 1
+Creating system done
+Ruby initialization complete
+info: Entering event queue @ 0.  Starting simulation...
+Hello World!Exiting @ tick 2701000 because target called exit()
