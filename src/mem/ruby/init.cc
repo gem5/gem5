@@ -84,12 +84,12 @@ void init_simulator()
 
     cout << "Ruby Timing Mode" << endl;
 
-    RubyConfig::init();
 
     g_debug_ptr = new Debug( DEBUG_FILTER_STRING,
                              DEBUG_VERBOSITY_STRING,
                              DEBUG_START_TIME,
                              DEBUG_OUTPUT_FILENAME );
+    RubyConfig::init();
 
     cout << "Creating event queue..." << endl;
     g_eventQueue_ptr = new RubyEventQueue;
