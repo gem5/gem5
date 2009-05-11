@@ -121,6 +121,15 @@ set_group("Help Options")
 add_option("--list-sim-objects", action='store_true', default=False,
     help="List all built-in SimObjects, their parameters and default values")
 
+# load the options.py config file to allow people to set their own
+# default options
+options_file = config.get('options.py')
+if options_file:
+    scope = { 'options' : options }
+    execfile(options_file, scope)
+
+arguments = options.parse_args()
+
 def main():
     import core
     import debug
@@ -135,15 +144,6 @@ def main():
             return
 
         fatal("Tracing is not enabled.  Compile with TRACING_ON")
-
-    # load the options.py config file to allow people to set their own
-    # default options
-    options_file = config.get('options.py')
-    if options_file:
-        scope = { 'options' : options }
-        execfile(options_file, scope)
-
-    arguments = options.parse_args()
 
     if not os.path.isdir(options.outdir):
         os.makedirs(options.outdir)
@@ -365,15 +365,6 @@ def main():
 
 if __name__ == '__main__':
     from pprint import pprint
-
-    # load the options.py config file to allow people to set their own
-    # default options
-    options_file = config.get('options.py')
-    if options_file:
-        scope = { 'options' : options }
-        execfile(options_file, scope)
-
-    arguments = options.parse_args()
 
     print 'opts:'
     pprint(options, indent=4)
