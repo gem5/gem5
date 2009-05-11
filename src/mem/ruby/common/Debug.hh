@@ -154,7 +154,7 @@ const bool ASSERT_FLAG = true;
            << __PRETTY_FUNCTION__ << " in "\
            << __FILE__ << ":"\
            << __LINE__ << endl << flush;\
-      if(isatty(STDIN_FILENO)) {\
+      if(isatty(STDERR_FILENO)) {\
         cerr << "At this point you might want to attach a debug to ";\
         cerr << "the running and get to the" << endl;\
         cerr << "crash site; otherwise press enter to continue" << endl;\
@@ -175,7 +175,7 @@ const bool ASSERT_FLAG = true;
          << __PRETTY_FUNCTION__ << " in "\
          << __FILE__ << ":"\
          << __LINE__ << endl << flush;\
-    if(isatty(STDIN_FILENO)) {\
+    if(isatty(STDERR_FILENO)) {\
       cerr << "press enter to continue" << endl;\
       cerr << "PID: " << getpid();\
       cerr << endl << flush; \
