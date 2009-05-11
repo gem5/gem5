@@ -47,8 +47,8 @@
 SyntheticDriver::SyntheticDriver(RubySystem* sys_ptr)
 {
   cout << "SyntheticDriver::SyntheticDriver" << endl;
-  if (g_SIMICS) {
-    ERROR_MSG("g_SIMICS should not be defined.");
+  if (g_SIMULATING) {
+    ERROR_MSG("g_SIMULATING should not be defined.");
   }
 
   m_finish_time = 0;

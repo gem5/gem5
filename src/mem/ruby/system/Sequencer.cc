@@ -46,7 +46,6 @@
 #include "SubBlock.hh"
 #include "Protocol.hh"
 #include "Map.hh"
-#include "interface.hh"
 
 Sequencer::Sequencer(AbstractChip* chip_ptr, int version) {
   m_chip_ptr = chip_ptr;
@@ -597,14 +596,6 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
   if (miss_latency != 0) {
     g_system_ptr->getProfiler()->missLatency(miss_latency, type, respondingMach);
 
-#if 0
-    uinteger_t tick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick"));
-    uinteger_t tick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick_cmpr"));
-    uinteger_t stick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick"));
-    uinteger_t stick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick_cmpr"));
-    cout << "END PROC " << m_version << hex << " tick = " << tick << " tick_cmpr = " << tick_cmpr << " stick = " << stick << " stick_cmpr = " << stick_cmpr << " cycle = "<< g_eventQueue_ptr->getTime() << dec << endl;
-#endif
-
   }
 
   bool write =
@@ -624,7 +615,7 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
       m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->updateSubBlock(subblock);
     }
 
-    // Call into the Driver (Tester or Simics) and let it read and/or modify the sub-block
+    // Call into the Driver and let it read and/or modify the sub-block
     g_system_ptr->getDriver()->hitCallback(m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version, subblock, type, threadID);
 
     // If the request was a Store or Atomic, apply the changes in the SubBlock to the DataBlock
@@ -633,6 +624,130 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
       assert(!TSO);
       subblock.mergeTo(data);    // copy the correct bytes from SubBlock into the DataBlock
     }
+  }
+}
+
+void Sequencer::readConflictCallback(const Address& address) {
+  // process oldest thread first
+  int thread = -1;
+  Time oldest_time = 0;
+  int smt_threads = RubyConfig::numberofSMTThreads();
+  for(int t=0; t < smt_threads; ++t){
+    if(m_readRequestTable_ptr[t]->exist(address)){
+      CacheMsg & request = m_readRequestTable_ptr[t]->lookup(address);
+      if(thread == -1 || (request.getTime() < oldest_time) ){
+        thread = t;
+        oldest_time = request.getTime();
+      }
+    }
+  }
+  // make sure we found an oldest thread
+  ASSERT(thread != -1);
+
+  CacheMsg & request = m_readRequestTable_ptr[thread]->lookup(address);
+
+  readConflictCallback(address, GenericMachineType_NULL, thread);
+}
+
+void Sequencer::readConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
+  assert(address == line_address(address));
+  assert(m_readRequestTable_ptr[thread]->exist(line_address(address)));
+
+  CacheMsg request = m_readRequestTable_ptr[thread]->lookup(address);
+  assert( request.getThreadID() == thread );
+  removeRequest(request);
+
+  assert((request.getType() == CacheRequestType_LD) ||
+         (request.getType() == CacheRequestType_LD_XACT) ||
+         (request.getType() == CacheRequestType_IFETCH)
+         );
+
+  conflictCallback(request, respondingMach, thread);
+}
+
+void Sequencer::writeConflictCallback(const Address& address) {
+  // process oldest thread first
+  int thread = -1;
+  Time oldest_time = 0;
+  int smt_threads = RubyConfig::numberofSMTThreads();
+  for(int t=0; t < smt_threads; ++t){
+    if(m_writeRequestTable_ptr[t]->exist(address)){
+      CacheMsg & request = m_writeRequestTable_ptr[t]->lookup(address);
+      if(thread == -1 || (request.getTime() < oldest_time) ){
+        thread = t;
+        oldest_time = request.getTime();
+      }
+    }
+  }
+  // make sure we found an oldest thread
+  ASSERT(thread != -1);
+
+  CacheMsg & request = m_writeRequestTable_ptr[thread]->lookup(address);
+
+  writeConflictCallback(address, GenericMachineType_NULL, thread);
+}
+
+void Sequencer::writeConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
+  assert(address == line_address(address));
+  assert(m_writeRequestTable_ptr[thread]->exist(line_address(address)));
+  CacheMsg request = m_writeRequestTable_ptr[thread]->lookup(address);
+  assert( request.getThreadID() == thread);
+  removeRequest(request);
+
+  assert((request.getType() == CacheRequestType_ST) ||
+         (request.getType() == CacheRequestType_ST_XACT) ||
+         (request.getType() == CacheRequestType_LDX_XACT) ||
+         (request.getType() == CacheRequestType_ATOMIC));
+
+  conflictCallback(request, respondingMach, thread);
+
+}
+
+void Sequencer::conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread) {
+  assert(XACT_MEMORY);
+  int size = request.getSize();
+  Address request_address = request.getAddress();
+  Address request_logical_address = request.getLogicalAddress();
+  Address request_line_address = line_address(request_address);
+  CacheRequestType type = request.getType();
+  int threadID = request.getThreadID();
+  Time issued_time = request.getTime();
+  int logical_proc_no = ((m_chip_ptr->getID() * RubyConfig::numberOfProcsPerChip()) + m_version) * RubyConfig::numberofSMTThreads() + threadID;
+
+  DEBUG_MSG(SEQUENCER_COMP, MedPrio, size);
+
+  assert(g_eventQueue_ptr->getTime() >= issued_time);
+  Time miss_latency = g_eventQueue_ptr->getTime() - issued_time;
+
+  if (PROTOCOL_DEBUG_TRACE) {
+    g_system_ptr->getProfiler()->profileTransition("Seq", (m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version), -1, request.getAddress(), "", "Conflict", "",
+                                                   int_to_string(miss_latency)+" cycles "+GenericMachineType_to_string(respondingMach)+" "+CacheRequestType_to_string(request.getType())+" "+PrefetchBit_to_string(request.getPrefetch()));
+  }
+
+  DEBUG_MSG(SEQUENCER_COMP, MedPrio, request_address);
+  DEBUG_MSG(SEQUENCER_COMP, MedPrio, request.getPrefetch());
+  if (request.getPrefetch() == PrefetchBit_Yes) {
+    DEBUG_MSG(SEQUENCER_COMP, MedPrio, "return");
+    g_system_ptr->getProfiler()->swPrefetchLatency(miss_latency, type, respondingMach);
+    return; // Ignore the software prefetch, don't callback the driver
+  }
+
+  bool write =
+    (type == CacheRequestType_ST) ||
+    (type == CacheRequestType_ST_XACT) ||
+    (type == CacheRequestType_LDX_XACT) ||
+    (type == CacheRequestType_ATOMIC);
+
+  // Copy the correct bytes out of the cache line into the subblock
+  SubBlock subblock(request_address, request_logical_address, size);
+
+  // Call into the Driver
+  g_system_ptr->getDriver()->conflictCallback(m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version, subblock, type, threadID);
+
+  // If the request was a Store or Atomic, apply the changes in the SubBlock to the DataBlock
+  // (This is only triggered for the non-TSO case)
+  if (write) {
+    assert(!TSO);
   }
 }
 
@@ -710,7 +825,7 @@ Sequencer::isReady(const CacheMsg& request) const
   return true;
 }
 
-// Called by Driver (Simics or Tester).
+// Called by Driver
 void
 Sequencer::makeRequest(const Packet* pkt, void* data)
 {
@@ -785,14 +900,6 @@ bool Sequencer::doRequest(const CacheMsg& request) {
     hitCallback(request, *data_ptr, GenericMachineType_L1Cache, thread);
     return true;
   }
-
-#if 0
-  uinteger_t tick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick"));
-  uinteger_t tick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick_cmpr"));
-  uinteger_t stick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick"));
-  uinteger_t stick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick_cmpr"));
-  cout << "START PROC " << m_version << hex << " tick = " << tick << " tick_cmpr = " << tick_cmpr << " stick = " << stick << " stick_cmpr = " << stick_cmpr << " cycle = "<< g_eventQueue_ptr->getTime() << dec << endl;;
-#endif
 
   if (TSO && (request.getType() == CacheRequestType_LD || request.getType() == CacheRequestType_IFETCH)) {
 
@@ -936,10 +1043,11 @@ void Sequencer::checkCoherence(const Address& addr) {
 
 bool Sequencer::getRubyMemoryValue(const Address& addr, char* value,
                                    unsigned int size_in_bytes ) {
-  if(g_SIMICS){
+  if(g_SIMULATING){
     for(unsigned int i=0; i < size_in_bytes; i++) {
-      value[i] = SIMICS_read_physical_memory( m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version,
-                                              addr.getAddress() + i, 1 );
+      std::cerr << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
+      value[i] = 0; // _read_physical_memory( m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version,
+                    //                          addr.getAddress() + i, 1 );
     }
     return false; // Do nothing?
   } else {
@@ -1006,7 +1114,7 @@ bool Sequencer::setRubyMemoryValue(const Address& addr, char *value,
                                    unsigned int size_in_bytes) {
   char test_buffer[64];
 
-  if(g_SIMICS){
+  if(g_SIMULATING){
     return false; // Do nothing?
   } else {
     // idea here is that coherent cache should find the
@@ -1088,3 +1196,4 @@ bool Sequencer::setRubyMemoryValue(const Address& addr, char *value,
     return true;
   }
 }
+

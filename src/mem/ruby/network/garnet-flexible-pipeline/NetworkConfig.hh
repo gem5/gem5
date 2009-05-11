@@ -58,9 +58,6 @@ class NetworkConfig {
                         string filename = "network/garnet-flexible-pipeline/";
                         filename += NETCONFIG_DEFAULTS;
 
-                if (g_SIMICS) {
-                        filename = "../../../ruby/"+filename;
-                }
                         ifstream NetconfigFile( filename.c_str(), ios::in);
                         if(!NetconfigFile.is_open())
                         {

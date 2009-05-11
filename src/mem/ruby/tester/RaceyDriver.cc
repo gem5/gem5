@@ -41,8 +41,8 @@
 
 RaceyDriver::RaceyDriver()
 {
-  if (g_SIMICS) {
-    ERROR_MSG("g_SIMICS should not be defined.");
+  if (g_SIMULATING) {
+    ERROR_MSG("g_SIMULATING should not be defined.");
   }
 
   // debug transition?

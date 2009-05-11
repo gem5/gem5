@@ -43,7 +43,6 @@
 #include "Tester.hh"
 #include "SyntheticDriver.hh"
 #include "DeterministicDriver.hh"
-#include "OpalInterface.hh"
 #include "Chip.hh"
 //#include "Tracer.hh"
 #include "Protocol.hh"
@@ -199,15 +198,6 @@ void RubySystem::recordCacheContents(CacheRecorder& tr) const
       }
     }
     m_chip_vector[i]->recordCacheContents(tr);
-  }
-}
-
-void System::opalLoadNotify()
-{
-  if (OpalInterface::isOpalLoaded()) {
-    // change the driver pointer to point to an opal driver
-    delete m_driver_ptr;
-    m_driver_ptr  = new OpalInterface(this);
   }
 }
 

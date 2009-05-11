@@ -39,7 +39,6 @@
 #include "RubyConfig.hh"
 #include "protocol_name.hh"
 #include "util.hh"
-#include "interface.hh"
 #include "Protocol.hh"
 
 #define CHECK_POWER_OF_2(N) { if (!is_power_of_2(N)) { ERROR_MSG(#N " must be a power of 2."); }}
@@ -179,7 +178,6 @@ void RubyConfig::printConfiguration(ostream& out) {
   out << "------------------" << endl;
 
   out << "protocol: " << CURRENT_PROTOCOL << endl;
-  SIMICS_print_version(out);
   out << "compiled_at: " << __TIME__ << ", " << __DATE__ << endl;
   out << "RUBY_DEBUG: " << bool_to_string(RUBY_DEBUG) << endl;
 

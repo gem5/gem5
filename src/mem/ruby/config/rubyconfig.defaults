@@ -36,7 +36,7 @@
 //
 
 g_RANDOM_SEED: 1
-g_SIMICS: true
+g_SIMULATING: true
 
 g_DEADLOCK_THRESHOLD: 500000
 

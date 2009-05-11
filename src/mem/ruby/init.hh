@@ -39,18 +39,8 @@
 #ifndef INIT_H
 #define INIT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 extern void init_variables();
 extern void init_simulator();
-extern void init_opal_interface( mf_ruby_api_t *api );
-extern int  init_use_snoop();
 extern void destroy_simulator();
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
 
 #endif //INIT_H

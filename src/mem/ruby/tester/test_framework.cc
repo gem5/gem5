@@ -35,7 +35,6 @@
 #include "protocol_name.hh"
 #include "test_framework.hh"
 #include "System.hh"
-#include "OpalInterface.hh"
 #include "init.hh"
 #include "Tester.hh"
 #include "RubyEventQueue.hh"
@@ -157,11 +156,7 @@ void tester_destroy()
 
 void tester_install_opal(mf_opal_api_t* opal_api, mf_ruby_api_t* ruby_api)
 {
-  // initialize our api interface
-  OpalInterface::installInterface(ruby_api);
-
-  // update the OpalInterface object to point to opal's interface
-  ((OpalInterface *) g_system_ptr->getDriver())->setOpalInterface(opal_api);
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
 }
 
 void tester_record_cache()

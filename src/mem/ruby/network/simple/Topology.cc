@@ -433,9 +433,6 @@ void Topology::makeFileSpecified()
     +"_Memories-"+int_to_string(RubyConfig::numberOfMemories())
     +".txt";
 
-  if (g_SIMICS) {
-    filename = "../../../ruby/"+filename;
-  }
   ifstream networkFile( filename.c_str() , ios::in);
   if (!networkFile.is_open()) {
     cerr << "Error: Could not open network file: " << filename << endl;

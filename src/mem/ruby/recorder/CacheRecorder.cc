@@ -36,40 +36,44 @@
 #include "TraceRecord.hh"
 #include "RubyEventQueue.hh"
 #include "PrioHeap.hh"
-#include "gzstream.hh"
 
 CacheRecorder::CacheRecorder()
 {
-  m_records_ptr = new PrioHeap<TraceRecord>;
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
+  // m_records_ptr = new PrioHeap<TraceRecord>;
 }
 
 CacheRecorder::~CacheRecorder()
 {
-  delete m_records_ptr;
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
+  // delete m_records_ptr;
 }
 
 void CacheRecorder::addRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
 {
-  m_records_ptr->insert(TraceRecord(id, data_addr, pc_addr, type, time));
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
+  // m_records_ptr->insert(TraceRecord(id, data_addr, pc_addr, type, time));
 }
 
 int CacheRecorder::dumpRecords(string filename)
 {
-  ogzstream out(filename.c_str());
-  if (out.fail()) {
-    cout << "Error: error opening file '" << filename << "'" << endl;
-    return 0;
-  }
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
+  // ogzstream out(filename.c_str());
+  // if (out.fail()) {
+  //   cout << "Error: error opening file '" << filename << "'" << endl;
+  //   return 0;
+  // }
 
-  int counter = 0;
-  while (m_records_ptr->size() != 0) {
-    TraceRecord record = m_records_ptr->extractMin();
-    record.output(out);
-    counter++;
-  }
-  return counter;
+  // int counter = 0;
+  // while (m_records_ptr->size() != 0) {
+  //   TraceRecord record = m_records_ptr->extractMin();
+  //   record.output(out);
+  //   counter++;
+  // }
+  // return counter;
 }
 
 void CacheRecorder::print(ostream& out) const
 {
+  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
 }

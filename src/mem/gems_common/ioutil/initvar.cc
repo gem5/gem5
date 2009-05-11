@@ -70,8 +70,6 @@ using namespace std;
 // #endif
 // };
 
-#include "FakeSimicsDataTypes.hh"
-
 #include "Global.hh"
 
 #include "confio.hh"
@@ -124,8 +122,7 @@ static set_error_t  initvar_set_attr( void *ptr, void *obj,
 initvar_t::initvar_t( const char *name, const char *relativeIncludePath,
                       const char *initializingString,
                       void (*allocate_fn)(void),
-                      void (*my_generate_fn)(void),
-                      get_attr_t my_get_attr, set_attr_t my_set_attr )
+                      void (*my_generate_fn)(void) )
 {
   m_is_init           = false;
   m_name              = (char *) malloc( sizeof(char)*(strlen( name ) + 2) );
@@ -135,8 +132,6 @@ initvar_t::initvar_t( const char *name, const char *relativeIncludePath,
   strcpy( m_rel_include_path, relativeIncludePath );
   m_allocate_f        = allocate_fn;
   m_generate_values_f = my_generate_fn;
-  m_my_get_attr       = my_get_attr;
-  m_my_set_attr       = my_set_attr;
 
   initvar_t::m_inst = this;
   init_config_reader( initializingString );
@@ -247,7 +242,7 @@ void initvar_t::checkInitialization( void )
 }
 
 //**************************************************************************
-attr_value_t initvar_t::dispatch_get( void *id, void *obj,
+int initvar_t::dispatch_get( void *id, void *obj,
                                       attr_value_t *idx )
 {
   const char *command = (const char *) id;
@@ -256,13 +251,11 @@ attr_value_t initvar_t::dispatch_get( void *id, void *obj,
     DEBUG_OUT("     : you must initialize %s with a configuration file first.\n", m_name);
     DEBUG_OUT("     : use the command \'%s0.init\'\n", m_name);
 
-    attr_value_t ret;
-    ret.kind      = Sim_Val_Invalid;
-    ret.u.integer = 0;
-    return ret;
+    return 0;
   }
 
-  return ((*m_my_get_attr)(id, obj, idx));
+  std::cerr << __FILE__ << "(" << __LINE__ << "): Not implmented." << std::endl;
+  return 0;
 }
 
 
@@ -331,7 +324,9 @@ set_error_t initvar_t::dispatch_set( void *id, void *obj,
     return Sim_Set_Illegal_Value;
   }
 
-  return (*m_my_set_attr)( id, obj, val, idx );
+
+  std::cerr << __FILE__ << "(" << __LINE__ << "): Not implmented." << std::endl;
+  return Sim_Set_Illegal_Value;
 }
 
 /*------------------------------------------------------------------------*/
@@ -588,22 +583,3 @@ const char *initvar_t::get_config_name( void )
   return m_config_filename;
 }
 
-/*------------------------------------------------------------------------*/
-/* Global functions                                                       */
-/*------------------------------------------------------------------------*/
-
-//**************************************************************************
-attr_value_t initvar_dispatch_get( void *id, void *obj,
-                                   attr_value_t *idx )
-{
-  initvar_t  *init_obj = initvar_t::m_inst;
-  return (init_obj->dispatch_get( id, obj, idx ));
-}
-
-//**************************************************************************
-set_error_t initvar_dispatch_set( void *id, void *obj,
-                                  attr_value_t *val, attr_value_t *idx )
-{
-  initvar_t  *init_obj = initvar_t::m_inst;
-  return (init_obj->dispatch_set( id, obj, val, idx ));
-}

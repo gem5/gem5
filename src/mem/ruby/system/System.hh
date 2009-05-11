@@ -91,9 +91,6 @@ public:
   void printStats(ostream& out);
   void clearStats() const;
 
-  // called to notify the system when opal is loaded
-  void opalLoadNotify();
-
   void print(ostream& out) const;
 #ifdef CHECK_COHERENCE
   void checkGlobalCoherenceInvariant(const Address& addr);

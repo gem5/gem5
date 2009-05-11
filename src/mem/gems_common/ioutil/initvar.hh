@@ -70,8 +70,8 @@ public:
   initvar_t( const char *name, const char *relativeIncludePath,
              const char *initializingString,
              void (*allocate_fn)(void),
-             void (*my_generate_fn)(void),
-             get_attr_t my_get_attr, set_attr_t my_set_attr );
+             void (*my_generate_fn)(void)
+           );
 
   /**
    * Destructor: frees object.
@@ -96,8 +96,8 @@ public:
   const char  *get_config_name( void );
 
   /// calls through to the get_attr function, if object is initialized
-  attr_value_t dispatch_get( void *id, void *obj,
-                             attr_value_t *idx );
+  int dispatch_get( void *id, void *obj,
+                    attr_value_t *idx );
 
   /** adds initialization attributes, calls through to the set_attr function,
    *  if object is initialized.
@@ -144,10 +144,6 @@ protected:
   /// a pointer to the generate values function
   void     (*m_generate_values_f)(void);
 
-  /// a pointer to the session get function
-  get_attr_t m_my_get_attr;
-  /// a pointer to the session set function
-  set_attr_t m_my_set_attr;
 };
 
 

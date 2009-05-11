@@ -46,7 +46,6 @@
 #include "AccessType.hh"
 #include "RubyConfig.hh"
 #include "Address.hh"
-#include "interface.hh"
 
 struct ArbiterEntry {
   bool valid;

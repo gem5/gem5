@@ -42,7 +42,6 @@
 #include "RubySlicc_Util.hh"
 #include "RubyConfig.hh"
 #include "Chip.hh"
-#include "interface.hh"
 
 DirectoryMemory::DirectoryMemory(Chip* chip_ptr, int version)
 {
@@ -122,14 +121,15 @@ Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
     //    entry->getDirOwner() = true;        // FIXME - This should not be hard-coded
 
     // load the data from SimICS when first initalizing
-    if (g_SIMICS) {
+    if (g_SIMULATING) {
       if (DATA_BLOCK) {
-        physical_address_t physAddr = address.getAddress();
+        //physical_address_t physAddr = address.getAddress();
 
         for(int j=0; j < RubyConfig::dataBlockBytes(); j++) {
-          int8 data_byte = (int8) SIMICS_read_physical_memory( m_chip_ptr->getID(),
-                                                               physAddr + j, 1 );
+          //int8 data_byte = (int8) SIMICS_read_physical_memory( m_chip_ptr->getID(),
+          //                                                     physAddr + j, 1 );
           //printf("SimICS, byte %d: %lld\n", j, data_byte );
+          int8 data_byte = 0;
           entry->getDataBlk().setByte(j, data_byte);
         }
         DEBUG_EXPR(NODE_COMP, MedPrio,entry->getDataBlk());

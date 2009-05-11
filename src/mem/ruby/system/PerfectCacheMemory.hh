@@ -44,7 +44,6 @@
 #include "AccessPermission.hh"
 #include "RubyConfig.hh"
 #include "Address.hh"
-#include "interface.hh"
 #include "AbstractChip.hh"
 
 template<class ENTRY>

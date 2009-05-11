@@ -59,8 +59,6 @@ using namespace std;
 // #endif
 // };
 
-#include "FakeSimicsDataTypes.hh"
-
 #include "confio.hh"
 
 /*------------------------------------------------------------------------*/

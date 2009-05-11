@@ -6,7 +6,7 @@
 // Please: - Add new variables only to rubyconfig.defaults file.
 //         - Change them here only when necessary.
 
-g_SIMICS: false
+g_SIMULATING: false
 DATA_BLOCK: true
 RANDOMIZATION: true
 g_SYNTHETIC_DRIVER: true
