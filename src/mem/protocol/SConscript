@@ -40,6 +40,9 @@ import SCons
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 slicc_dir = Dir('../slicc')
 protocol_dir = Dir('.')
 html_dir = Dir('html')

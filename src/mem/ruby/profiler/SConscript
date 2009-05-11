@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('AccessTraceForAddress.cc')
 Source('AddressProfiler.cc')
 Source('CacheProfiler.cc')

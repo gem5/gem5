@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('AbstractCacheEntry.cc')
 Source('AbstractChip.cc')
 Source('RubySlicc_Profiler_interface.cc')

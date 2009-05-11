@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('NetworkPower.cc', Werror=False)
 Source('power_arbiter.cc')
 Source('power_array.cc', Werror=False)

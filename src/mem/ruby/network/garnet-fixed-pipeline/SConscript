@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('GarnetNetwork_d.cc')
 Source('InputUnit_d.cc')
 Source('NetworkInterface_d.cc')

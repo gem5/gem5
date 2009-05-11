@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('PerfectSwitch.cc')
 Source('SimpleNetwork.cc')
 Source('Switch.cc')

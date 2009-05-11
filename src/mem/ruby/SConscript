@@ -37,6 +37,9 @@ import SCons
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('init.cc')
 
 def do_embed_text(target, source, env):

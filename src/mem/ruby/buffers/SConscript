@@ -30,5 +30,8 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('MessageBuffer.cc')
 Source('MessageBufferNode.cc')

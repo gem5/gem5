@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 #benv['LEXCOM'] = "$LEX $LEXFLAGS -o$TARGET $SOURCES"
 benv = env.Clone()
 benv.Append(YACCFLAGS=["-pat"])

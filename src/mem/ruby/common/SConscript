@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('Address.cc')
 Source('DataBlock.cc')
 Source('Debug.cc')

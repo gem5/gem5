@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('DirectoryMemory.cc')
 Source('MemoryControl.cc')
 Source('MemoryNode.cc')

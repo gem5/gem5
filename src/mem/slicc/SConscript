@@ -40,6 +40,9 @@ import SCons
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 common_dir = Dir('../gems_common')
 
 #

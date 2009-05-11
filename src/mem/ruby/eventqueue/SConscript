@@ -30,5 +30,8 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('RubyEventQueue.cc')
 Source('RubyEventQueueNode.cc')

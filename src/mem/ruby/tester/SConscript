@@ -30,6 +30,9 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('Check.cc')
 Source('CheckTable.cc')
 Source('DetermGETXGenerator.cc')

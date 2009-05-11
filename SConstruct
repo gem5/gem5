@@ -345,8 +345,9 @@ global_sticky_vars.AddVariables(
     ('BATCH', 'Use batch pool for build and tests', False),
     ('BATCH_CMD', 'Batch pool submission command name', 'qdo'),
     ('EXTRAS', 'Add Extra directories to the compilation', '',
-     PathListAllExist, PathListMakeAbsolute)
-    )    
+     PathListAllExist, PathListMakeAbsolute),
+    BoolVariable('RUBY', 'Build with Ruby', False),
+    )
 
 # base help text
 help_text = '''

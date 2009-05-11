@@ -30,4 +30,7 @@
 
 Import('*')
 
+if not env['RUBY']:
+    Return()
+
 Source('RubyConfig.cc')
