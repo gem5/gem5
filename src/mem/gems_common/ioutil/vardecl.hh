@@ -59,7 +59,7 @@
    extern char  *NAME;
 #define PARAM_ARRAY( PTYPE, NAME, ARRAY_SIZE ) \
    extern PTYPE  NAME[ARRAY_SIZE];
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

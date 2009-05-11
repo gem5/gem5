@@ -41,7 +41,6 @@
 #define RUBYCONFIG_H
 
 #include "Global.hh"
-#define   CONFIG_VAR_FILENAME "config.include"
 #include "vardecl.hh"
 #include "NodeID.hh"
 

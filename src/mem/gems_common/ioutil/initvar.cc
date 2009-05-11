@@ -78,12 +78,6 @@ using namespace std;
 #include "initvar.hh"
 
 /*------------------------------------------------------------------------*/
-/* Macro declarations                                                     */
-/*------------------------------------------------------------------------*/
-
-#define  CONFIG_VAR_FILENAME "config.include"
-
-/*------------------------------------------------------------------------*/
 /* Variable declarations                                                  */
 /*------------------------------------------------------------------------*/
 
@@ -102,7 +96,7 @@ using namespace std;
    char  *NAME;
 #define PARAM_ARRAY( PTYPE, NAME, ARRAY_SIZE ) \
    PTYPE  NAME[ARRAY_SIZE];
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -162,7 +156,7 @@ initvar_t::~initvar_t( )
       NAME = NULL;           \
    }
 #define PARAM_ARRAY( PTYPE, NAME, ARRAY_SIZE )
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -215,7 +209,7 @@ void initvar_t::init_config_reader( const char *initString )
                                      initvar_get_attr, (void *) name,   \
                                      initvar_set_attr, (void *) name );
 
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -391,7 +385,7 @@ static attr_value_t initvar_get_attr( void *ptr, void *obj )
     return (ret);                                         \
   }
 
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -475,7 +469,7 @@ static set_error_t initvar_set_attr( void *ptr, void *obj,
     return Sim_Set_Ok;                                        \
   }
 
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -575,7 +569,7 @@ void initvar_t::list_param( FILE *fp )
   }                                                     \
   fprintf( fp, ")\n" );
 
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

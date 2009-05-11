@@ -164,7 +164,7 @@ static void print_parameters(ostream& out)
   }                                            \
 
 
-#include CONFIG_VAR_FILENAME
+#include "config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

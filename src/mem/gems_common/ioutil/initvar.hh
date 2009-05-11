@@ -46,9 +46,6 @@
 * setting the varibles (from the command line), printing the configuration,
 * and saving it to a file.
 *
-* Before including this file, you must define the variable CONFIG_VAR_FILENAME
-* to define which variables are to be used.
-*
 * @see     confio_t
 * @author  cmauer
 * @version $Id$
