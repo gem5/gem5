@@ -49,7 +49,7 @@ RubyEventQueue::RubyEventQueue()
 
 RubyEventQueue::~RubyEventQueue()
 {
-  delete m_prio_heap_ptr;
+  // delete m_prio_heap_ptr;
 }
 
 void RubyEventQueue::init()
