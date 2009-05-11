@@ -28,6 +28,9 @@
  * Authors: Nathan Binkert
  */
 
+#ifndef __BASE_STATS_INFO_HH__
+#define __BASE_STATS_INFO_HH__
+
 #include "base/flags.hh"
 #include "base/stats/types.hh"
 
@@ -245,3 +248,5 @@ class FormulaInfo : public VectorInfo
 
 
 /* namespace Stats */ }
+
+#endif // __BASE_STATS_INFO_HH__
