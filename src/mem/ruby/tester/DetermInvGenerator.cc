@@ -112,8 +112,6 @@ void DetermInvGenerator::performCallback(NodeID proc, SubBlock& data)
 
   if (m_status == DetermInvGeneratorStatus_Load_Pending) {
     m_driver.recordLoadLatency(g_eventQueue_ptr->getTime() - m_last_transition);
-    NodeID firstByte = data.readByte();  // dummy read
-
     m_driver.loadCompleted(m_node, data.getAddress());
 
     if (!m_driver.isStoreReady(m_node, m_address))  {  // if we don't have to store, we are done for this transaction

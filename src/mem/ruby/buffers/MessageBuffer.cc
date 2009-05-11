@@ -294,7 +294,7 @@ void MessageBuffer::pop()
 {
   DEBUG_MSG(QUEUE_COMP,MedPrio,"pop from " + m_name);
   assert(isReady());
-  Time ready_time = m_prio_heap.extractMin().m_time;
+  m_prio_heap.extractMin();
   // record previous size and time so the current buffer size isn't adjusted until next cycle
   if (m_time_last_time_pop < g_eventQueue_ptr->getTime()) {
     m_size_at_cycle_start = m_size;

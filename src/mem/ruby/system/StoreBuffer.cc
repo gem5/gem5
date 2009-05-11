@@ -210,7 +210,7 @@ void StoreBuffer::callBack(const Address& addr, DataBlock& data)
   assert(line_address(m_pending_address) == addr);
   assert(line_address(peek().m_subblock.getAddress()) == addr);
   CacheRequestType type = peek().m_type;
-  int threadID = peek().m_thread;
+  //int threadID = peek().m_thread;
   assert((type == CacheRequestType_ST) || (type == CacheRequestType_ATOMIC));
   m_pending = false;
 

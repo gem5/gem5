@@ -57,7 +57,7 @@ static const int DEFAULT_BW_MULTIPLIER = 1;  // Just to be consistent with above
 // of the network.
 
 // Helper functions based on chapter 29 of Cormen et al.
-static Matrix extend_shortest_path(const Matrix& current_dist, Matrix& latencies, Matrix& inter_switches);
+static void extend_shortest_path(Matrix& current_dist, Matrix& latencies, Matrix& inter_switches);
 static Matrix shortest_path(const Matrix& weights, Matrix& latencies, Matrix& inter_switches);
 static bool link_is_shortest_path_to_node(SwitchID src, SwitchID next, SwitchID final, const Matrix& weights, const Matrix& dist);
 static NetDest shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& weights, const Matrix& dist);

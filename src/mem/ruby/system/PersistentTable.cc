@@ -182,7 +182,6 @@ int PersistentTable::countStarvingForAddress(const Address& address) const
 
 int PersistentTable::countReadStarvingForAddress(const Address& address) const
 {
-  int count = 0;
   if (m_map_ptr->exist(address)) {
     PersistentTableEntry& entry = m_map_ptr->lookup(address);
     return (entry.m_starving.count() - entry.m_request_to_write.count());

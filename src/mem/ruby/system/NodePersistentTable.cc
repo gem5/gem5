@@ -181,7 +181,6 @@ int NodePersistentTable::countStarvingForAddress(const Address& address) const
 
 int NodePersistentTable::countReadStarvingForAddress(const Address& address) const
 {
-  int count = 0;
   if (m_map_ptr->exist(address)) {
     NodePersistentTableEntry& entry = m_map_ptr->lookup(address);
     return (entry.m_starving.count() - entry.m_request_to_write.count());

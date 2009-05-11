@@ -253,7 +253,9 @@ void DeterministicDriver::checkForDeadlock()
   for (int processor=0; processor<size; processor++) {
     if ((current_time - m_last_progress_vector[processor]) > g_DEADLOCK_THRESHOLD) {
       WARN_EXPR(processor);
+#ifndef NDEBUG
       Sequencer* seq_ptr = g_system_ptr->getChip(processor/RubyConfig::numberOfProcsPerChip())->getSequencer(processor%RubyConfig::numberOfProcsPerChip());
+#endif
       assert(seq_ptr != NULL);
       //     if (seq_ptr->isRequestPending()) {
       //       WARN_EXPR(seq_ptr->pendingAddress());

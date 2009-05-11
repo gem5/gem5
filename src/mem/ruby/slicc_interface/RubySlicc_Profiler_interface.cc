@@ -141,6 +141,7 @@ void profileGetS(const Address& datablock, const Address& PC, const Set& owner, 
 
 void profileOverflow(const Address & addr, MachineID mach)
 {
+#if 0
   if(mach.type == MACHINETYPE_L1CACHE_ENUM){
     // for L1 overflows
     int proc_num = L1CacheMachIDToProcessorNum(mach);
@@ -156,6 +157,7 @@ void profileOverflow(const Address & addr, MachineID mach)
       // g_system_ptr->getChip(chip_num)->m_L1Cache_xact_mgr_vec[p]->profileOverflow(addr, false);
     }
   }
+#endif
 }
 
 

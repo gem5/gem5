@@ -707,7 +707,7 @@ void Profiler::profileConflictingRequests(const Address& addr)
   assert(addr == line_address(addr));
   Time last_time = m_ruby_start;
   if (m_conflicting_map_ptr->exist(addr)) {
-    Time last_time = m_conflicting_map_ptr->lookup(addr);
+    last_time = m_conflicting_map_ptr->lookup(addr);
   }
   Time current_time = g_eventQueue_ptr->getTime();
   assert (current_time - last_time > 0);

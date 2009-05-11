@@ -159,7 +159,7 @@ double SIM_reg_stat_energy(power_array_info *info, power_array *arr, double n_re
 //crossbar
 double SIM_crossbar_stat_energy(power_crossbar *crsbar, double n_data)
 {
-  double Eavg = 0, Eatomic, Estatic;
+  double Eavg = 0, Eatomic;
 
   if (n_data > crsbar->n_out) {
     n_data = crsbar->n_out;
