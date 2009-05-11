@@ -627,26 +627,6 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
   }
 }
 
-void Sequencer::readConflictCallback(const Address& address) {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-}
-
-void Sequencer::readConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-}
-
-void Sequencer::writeConflictCallback(const Address& address) {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-}
-
-void Sequencer::writeConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-}
-
-void Sequencer::conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread) {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented. " << std::endl;
-}
-
 void Sequencer::printDebug(){
   //notify driver of debug
   g_system_ptr->getDriver()->printDebug();
