@@ -100,7 +100,7 @@ void Check::initiatePrefetch(Sequencer* targetSequencer_ptr)
   } else if (type == CacheRequestType_ATOMIC) {
     command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
   } else {
-    assert(false);
+    panic("Cannot convert request to packet");
   }
 
   Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
@@ -143,7 +143,7 @@ void Check::initiateAction()
   } else if (type == CacheRequestType_ATOMIC) {
     command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
   } else {
-    assert(false);
+    panic("Cannot convert request to packet");
   }
 
   Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
@@ -186,7 +186,7 @@ void Check::initiateCheck()
   } else if (type == CacheRequestType_ATOMIC) {
     command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
   } else {
-    assert(false);
+    panic("Cannot convert request to packet");
   }
 
   Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
