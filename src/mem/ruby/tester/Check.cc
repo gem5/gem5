@@ -85,7 +85,7 @@ void Check::initiatePrefetch(Sequencer* targetSequencer_ptr)
     type = CacheRequestType_ST;
   }
   assert(targetSequencer_ptr != NULL);
-  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */, 0, false);
+  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */);
   if (targetSequencer_ptr->isReady(request)) {
     targetSequencer_ptr->makeRequest(request);
   }
@@ -109,7 +109,7 @@ void Check::initiateAction()
     type = CacheRequestType_ATOMIC;
   }
 
-  CacheMsg request(Address(m_address.getAddress()+m_store_count), Address(m_address.getAddress()+m_store_count), type, m_pc, m_access_mode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false);
+  CacheMsg request(Address(m_address.getAddress()+m_store_count), Address(m_address.getAddress()+m_store_count), type, m_pc, m_access_mode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */);
   Sequencer* sequencer_ptr = initiatingSequencer();
   if (sequencer_ptr->isReady(request) == false) {
     DEBUG_MSG(TESTER_COMP, MedPrio, "failed to initiate action - sequencer not ready\n");
@@ -132,7 +132,7 @@ void Check::initiateCheck()
     type = CacheRequestType_IFETCH;
   }
 
-  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, CHECK_SIZE, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false);
+  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, CHECK_SIZE, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */);
   Sequencer* sequencer_ptr = initiatingSequencer();
   if (sequencer_ptr->isReady(request) == false) {
     DEBUG_MSG(TESTER_COMP, MedPrio, "failed to initiate check - sequencer not ready\n");

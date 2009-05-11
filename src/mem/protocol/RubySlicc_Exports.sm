@@ -238,8 +238,6 @@ structure(CacheMsg, desc="...", interface="Message") {
   //int TransactionLevel,         desc="Transaction Level of this request";
   //uint64 SequenceNumber,   desc="Sequence number of this request";
   int ThreadID,            desc="The SMT thread that initiated this request";
-  uint64 Timestamp,        desc="The transaction timestamp of this request. Last commit time if request is non-transactional";
-  bool ExposedAction,      desc="Is this request part of an exposed action";
   //uint64 RequestTime,      desc="The cycle in which this request was issued";
 }
 

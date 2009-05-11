@@ -181,13 +181,13 @@ void DetermInvGenerator::pickLoadAddress()
 void DetermInvGenerator::initiateLoad()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Load");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 void DetermInvGenerator::initiateStore()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Store");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 Sequencer* DetermInvGenerator::sequencer() const

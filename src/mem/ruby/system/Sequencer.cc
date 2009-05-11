@@ -47,12 +47,6 @@
 #include "Protocol.hh"
 #include "Map.hh"
 #include "interface.hh"
-//#include "XactCommitArbiter.hh"
-// #include "TransactionInterfaceManager.hh"
-//#include "TransactionVersionManager.hh"
-//#include "LazyTransactionVersionManager.hh"
-
-//#define XACT_MGR g_system_ptr->getChip(m_chip_ptr->getID())->getTransactionInterfaceManager(m_version)
 
 Sequencer::Sequencer(AbstractChip* chip_ptr, int version) {
   m_chip_ptr = chip_ptr;
@@ -158,11 +152,8 @@ int Sequencer::getNumberOutstandingDemand(){
     Vector<Address> keys = m_readRequestTable_ptr[p]->keys();
     for (int i=0; i< keys.size(); i++) {
       CacheMsg& request = m_readRequestTable_ptr[p]->lookup(keys[i]);
-      // don't count transactional begin/commit requests
-      if(request.getType() != CacheRequestType_BEGIN_XACT && request.getType() != CacheRequestType_COMMIT_XACT){
-        if(request.getPrefetch() == PrefetchBit_No){
-          total_demand++;
-        }
+      if(request.getPrefetch() == PrefetchBit_No){
+        total_demand++;
       }
     }
 
@@ -394,8 +385,6 @@ bool Sequencer::insertRequest(const CacheMsg& request) {
   }
 
   if ((request.getType() == CacheRequestType_ST) ||
-      (request.getType() == CacheRequestType_ST_XACT) ||
-      (request.getType() == CacheRequestType_LDX_XACT) ||
       (request.getType() == CacheRequestType_ATOMIC)) {
     if (m_writeRequestTable_ptr[thread]->exist(line_address(request.getAddress()))) {
       m_writeRequestTable_ptr[thread]->lookup(line_address(request.getAddress())) = request;
@@ -436,8 +425,6 @@ void Sequencer::removeRequest(const CacheMsg& request) {
   assert(m_outstanding_count == total_outstanding);
 
   if ((request.getType() == CacheRequestType_ST) ||
-      (request.getType() == CacheRequestType_ST_XACT) ||
-      (request.getType() == CacheRequestType_LDX_XACT) ||
       (request.getType() == CacheRequestType_ATOMIC)) {
     m_writeRequestTable_ptr[thread]->deallocate(line_address(request.getAddress()));
   } else {
@@ -497,8 +484,6 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data, GenericMa
   removeRequest(request);
 
   assert((request.getType() == CacheRequestType_ST) ||
-         (request.getType() == CacheRequestType_ST_XACT) ||
-         (request.getType() == CacheRequestType_LDX_XACT) ||
          (request.getType() == CacheRequestType_ATOMIC));
 
   hitCallback(request, data, respondingMach, thread);
@@ -549,7 +534,6 @@ void Sequencer::readCallback(const Address& address, DataBlock& data, GenericMac
   removeRequest(request);
 
   assert((request.getType() == CacheRequestType_LD) ||
-         (request.getType() == CacheRequestType_LD_XACT) ||
          (request.getType() == CacheRequestType_IFETCH)
          );
 
@@ -625,8 +609,6 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
 
   bool write =
     (type == CacheRequestType_ST) ||
-    (type == CacheRequestType_ST_XACT) ||
-    (type == CacheRequestType_LDX_XACT) ||
     (type == CacheRequestType_ATOMIC);
 
   if (TSO && write) {
@@ -651,130 +633,6 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
       assert(!TSO);
       subblock.mergeTo(data);    // copy the correct bytes from SubBlock into the DataBlock
     }
-  }
-}
-
-void Sequencer::readConflictCallback(const Address& address) {
-  // process oldest thread first
-  int thread = -1;
-  Time oldest_time = 0;
-  int smt_threads = RubyConfig::numberofSMTThreads();
-  for(int t=0; t < smt_threads; ++t){
-    if(m_readRequestTable_ptr[t]->exist(address)){
-      CacheMsg & request = m_readRequestTable_ptr[t]->lookup(address);
-      if(thread == -1 || (request.getTime() < oldest_time) ){
-        thread = t;
-        oldest_time = request.getTime();
-      }
-    }
-  }
-  // make sure we found an oldest thread
-  ASSERT(thread != -1);
-
-  CacheMsg & request = m_readRequestTable_ptr[thread]->lookup(address);
-
-  readConflictCallback(address, GenericMachineType_NULL, thread);
-}
-
-void Sequencer::readConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
-  assert(address == line_address(address));
-  assert(m_readRequestTable_ptr[thread]->exist(line_address(address)));
-
-  CacheMsg request = m_readRequestTable_ptr[thread]->lookup(address);
-  assert( request.getThreadID() == thread );
-  removeRequest(request);
-
-  assert((request.getType() == CacheRequestType_LD) ||
-         (request.getType() == CacheRequestType_LD_XACT) ||
-         (request.getType() == CacheRequestType_IFETCH)
-         );
-
-  conflictCallback(request, respondingMach, thread);
-}
-
-void Sequencer::writeConflictCallback(const Address& address) {
-  // process oldest thread first
-  int thread = -1;
-  Time oldest_time = 0;
-  int smt_threads = RubyConfig::numberofSMTThreads();
-  for(int t=0; t < smt_threads; ++t){
-    if(m_writeRequestTable_ptr[t]->exist(address)){
-      CacheMsg & request = m_writeRequestTable_ptr[t]->lookup(address);
-      if(thread == -1 || (request.getTime() < oldest_time) ){
-        thread = t;
-        oldest_time = request.getTime();
-      }
-    }
-  }
-  // make sure we found an oldest thread
-  ASSERT(thread != -1);
-
-  CacheMsg & request = m_writeRequestTable_ptr[thread]->lookup(address);
-
-  writeConflictCallback(address, GenericMachineType_NULL, thread);
-}
-
-void Sequencer::writeConflictCallback(const Address& address, GenericMachineType respondingMach, int thread) {
-  assert(address == line_address(address));
-  assert(m_writeRequestTable_ptr[thread]->exist(line_address(address)));
-  CacheMsg request = m_writeRequestTable_ptr[thread]->lookup(address);
-  assert( request.getThreadID() == thread);
-  removeRequest(request);
-
-  assert((request.getType() == CacheRequestType_ST) ||
-         (request.getType() == CacheRequestType_ST_XACT) ||
-         (request.getType() == CacheRequestType_LDX_XACT) ||
-         (request.getType() == CacheRequestType_ATOMIC));
-
-  conflictCallback(request, respondingMach, thread);
-
-}
-
-void Sequencer::conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread) {
-  assert(XACT_MEMORY);
-  int size = request.getSize();
-  Address request_address = request.getAddress();
-  Address request_logical_address = request.getLogicalAddress();
-  Address request_line_address = line_address(request_address);
-  CacheRequestType type = request.getType();
-  int threadID = request.getThreadID();
-  Time issued_time = request.getTime();
-  int logical_proc_no = ((m_chip_ptr->getID() * RubyConfig::numberOfProcsPerChip()) + m_version) * RubyConfig::numberofSMTThreads() + threadID;
-
-  DEBUG_MSG(SEQUENCER_COMP, MedPrio, size);
-
-  assert(g_eventQueue_ptr->getTime() >= issued_time);
-  Time miss_latency = g_eventQueue_ptr->getTime() - issued_time;
-
-  if (PROTOCOL_DEBUG_TRACE) {
-    g_system_ptr->getProfiler()->profileTransition("Seq", (m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version), -1, request.getAddress(), "", "Conflict", "",
-                                                   int_to_string(miss_latency)+" cycles "+GenericMachineType_to_string(respondingMach)+" "+CacheRequestType_to_string(request.getType())+" "+PrefetchBit_to_string(request.getPrefetch()));
-  }
-
-  DEBUG_MSG(SEQUENCER_COMP, MedPrio, request_address);
-  DEBUG_MSG(SEQUENCER_COMP, MedPrio, request.getPrefetch());
-  if (request.getPrefetch() == PrefetchBit_Yes) {
-    DEBUG_MSG(SEQUENCER_COMP, MedPrio, "return");
-    g_system_ptr->getProfiler()->swPrefetchLatency(miss_latency, type, respondingMach);
-    return; // Ignore the software prefetch, don't callback the driver
-  }
-
-  bool write =
-    (type == CacheRequestType_ST) ||
-    (type == CacheRequestType_ST_XACT) ||
-    (type == CacheRequestType_LDX_XACT) ||
-    (type == CacheRequestType_ATOMIC);
-
-  // Copy the correct bytes out of the cache line into the subblock
-  SubBlock subblock(request_address, request_logical_address, size);
-
-  // Call into the Driver (Tester or Simics)
-  g_system_ptr->getDriver()->conflictCallback(m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version, subblock, type, threadID);
-
-  // If the request was a Store or Atomic, apply the changes in the SubBlock to the DataBlock
-  // (This is only triggered for the non-TSO case)
-  if (write) {
-    assert(!TSO);
   }
 }
 
@@ -814,9 +672,7 @@ Sequencer::isReady(const Packet* pkt) const
                    PrefetchBit_No,  // Not a prefetch
                    0,              // Version number
                    Address(logical_addr),   // Virtual Address
-                   thread,              // SMT thread
-                   0,          // TM specific - timestamp of memory request
-                   false      // TM specific - whether request is part of escape action
+                   thread              // SMT thread
                    );
   isReady(request);
 }
@@ -834,8 +690,6 @@ Sequencer::isReady(const CacheMsg& request) const
   // request outstanding for the line
   bool write =
     (request.getType() == CacheRequestType_ST) ||
-    (request.getType() == CacheRequestType_ST_XACT) ||
-    (request.getType() == CacheRequestType_LDX_XACT) ||
     (request.getType() == CacheRequestType_ATOMIC);
 
   // LUKE - disallow more than one request type per address
@@ -891,9 +745,7 @@ Sequencer::makeRequest(const Packet* pkt, void* data)
                    PrefetchBit_No, // Not a prefetch
                    0,              // Version number
                    Address(logical_addr),   // Virtual Address
-                   thread,         // SMT thread
-                   0,              // TM specific - timestamp of memory request
-                   false           // TM specific - whether request is part of escape action
+                   thread         // SMT thread
                    );
   makeRequest(request);
 }
@@ -902,8 +754,6 @@ void
 Sequencer::makeRequest(const CacheMsg& request)
 {
   bool write = (request.getType() == CacheRequestType_ST) ||
-    (request.getType() == CacheRequestType_ST_XACT) ||
-    (request.getType() == CacheRequestType_LDX_XACT) ||
     (request.getType() == CacheRequestType_ATOMIC);
 
   if (TSO && (request.getPrefetch() == PrefetchBit_No) && write) {

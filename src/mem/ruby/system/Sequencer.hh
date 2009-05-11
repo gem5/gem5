@@ -83,12 +83,6 @@ public:
   CacheMsg & getReadRequest( const Address & addr, int thread );
   CacheMsg & getWriteRequest( const Address & addr, int thread );
 
-  // called by Ruby when transaction completes
-  void writeConflictCallback(const Address& address);
-  void readConflictCallback(const Address& address);
-  void writeConflictCallback(const Address& address, GenericMachineType respondingMach, int thread);
-  void readConflictCallback(const Address& address, GenericMachineType respondingMach, int thread);
-
   void writeCallback(const Address& address, DataBlock& data);
   void readCallback(const Address& address, DataBlock& data);
   void writeCallback(const Address& address);
@@ -131,7 +125,7 @@ public:
 private:
   // Private Methods
   bool tryCacheAccess(const Address& addr, CacheRequestType type, const Address& pc, AccessModeType access_mode, int size, DataBlock*& data_ptr);
-  void conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread);
+  //  void conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread);
   void hitCallback(const CacheMsg& request, DataBlock& data, GenericMachineType respondingMach, int thread);
   bool insertRequest(const CacheMsg& request);
 

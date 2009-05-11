@@ -169,19 +169,19 @@ void RequestGenerator::pickAddress()
 void RequestGenerator::initiateTest()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Test");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 void RequestGenerator::initiateSwap()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Swap");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ATOMIC, Address(2), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ATOMIC, Address(2), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 void RequestGenerator::initiateRelease()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Release");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 Sequencer* RequestGenerator::sequencer() const

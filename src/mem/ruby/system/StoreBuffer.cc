@@ -255,7 +255,7 @@ void StoreBuffer::processHeadOfQueue()
     assert(m_pending == false);
     m_pending = true;
     m_pending_address = entry.m_subblock.getAddress();
-    CacheMsg request(entry.m_subblock.getAddress(), entry.m_subblock.getAddress(), entry.m_type, entry.m_pc, entry.m_access_mode, entry.m_size, PrefetchBit_No, 0, Address(0), entry.m_thread, 0, false);
+    CacheMsg request(entry.m_subblock.getAddress(), entry.m_subblock.getAddress(), entry.m_type, entry.m_pc, entry.m_access_mode, entry.m_size, PrefetchBit_No, 0, Address(0), entry.m_thread);
     m_chip_ptr->getSequencer(m_version)->doRequest(request);
   }
 }

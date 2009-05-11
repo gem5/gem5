@@ -78,7 +78,7 @@ void TraceRecord::issueRequest() const
   Sequencer* sequencer_ptr = chip_ptr->getSequencer((m_node_num/RubyConfig::numberofSMTThreads())%RubyConfig::numberOfProcsPerChip());
   assert(sequencer_ptr != NULL);
 
-  CacheMsg request(m_data_address, m_data_address, m_type, m_pc_address, AccessModeType_UserMode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */, 0, false);
+  CacheMsg request(m_data_address, m_data_address, m_type, m_pc_address, AccessModeType_UserMode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */);
 
   // Clear out the sequencer
   while (!sequencer_ptr->empty()) {

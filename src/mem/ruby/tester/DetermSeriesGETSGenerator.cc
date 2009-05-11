@@ -135,7 +135,7 @@ void DetermSeriesGETSGenerator::pickAddress()
 void DetermSeriesGETSGenerator::initiateLoad()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Load");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_IFETCH, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */, 0, false));
+  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_IFETCH, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
 }
 
 Sequencer* DetermSeriesGETSGenerator::sequencer() const
