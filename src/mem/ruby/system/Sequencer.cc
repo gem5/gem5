@@ -613,13 +613,13 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
   if (miss_latency != 0) {
     g_system_ptr->getProfiler()->missLatency(miss_latency, type, respondingMach);
 
- #if 0
-  uinteger_t tick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick"));
-  uinteger_t tick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick_cmpr"));
-  uinteger_t stick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick"));
-  uinteger_t stick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick_cmpr"));
-  cout << "END PROC " << m_version << hex << " tick = " << tick << " tick_cmpr = " << tick_cmpr << " stick = " << stick << " stick_cmpr = " << stick_cmpr << " cycle = "<< g_eventQueue_ptr->getTime() << dec << endl;
- #endif
+#if 0
+    uinteger_t tick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick"));
+    uinteger_t tick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick_cmpr"));
+    uinteger_t stick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick"));
+    uinteger_t stick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick_cmpr"));
+    cout << "END PROC " << m_version << hex << " tick = " << tick << " tick_cmpr = " << tick_cmpr << " stick = " << stick << " stick_cmpr = " << stick_cmpr << " cycle = "<< g_eventQueue_ptr->getTime() << dec << endl;
+#endif
 
   }
 
@@ -784,14 +784,51 @@ void Sequencer::printDebug(){
 }
 
 // Returns true if the sequencer already has a load or store outstanding
-bool Sequencer::isReady(const CacheMsg& request) const {
+bool
+Sequencer::isReady(const Packet* pkt) const
+{
 
+  int cpu_number = pkt->req->contextId();
+  la_t logical_addr = pkt->req->getVaddr();
+  pa_t physical_addr = pkt->req->getPaddr();
+  CacheRequestType type_of_request;
+  if ( pkt->req->isInstFetch() ) {
+    type_of_request = CacheRequestType_IFETCH;
+  } else if ( pkt->req->isLocked() || pkt->req->isSwap() ) {
+    type_of_request = CacheRequestType_ATOMIC;
+  } else if ( pkt->isRead() ) {
+    type_of_request = CacheRequestType_LD;
+  } else if ( pkt->isWrite() ) {
+    type_of_request = CacheRequestType_ST;
+  } else {
+    assert(false);
+  }
+  int thread = pkt->req->threadId();
+
+  CacheMsg request(Address( physical_addr ),
+                   Address( physical_addr ),
+                   type_of_request,
+                   Address(0),
+                   AccessModeType_UserMode,   // User/supervisor mode
+                   0,   // Size in bytes of request
+                   PrefetchBit_No,  // Not a prefetch
+                   0,              // Version number
+                   Address(logical_addr),   // Virtual Address
+                   thread,              // SMT thread
+                   0,          // TM specific - timestamp of memory request
+                   false      // TM specific - whether request is part of escape action
+                   );
+  isReady(request);
+}
+
+bool
+Sequencer::isReady(const CacheMsg& request) const
+{
   if (m_outstanding_count >= g_SEQUENCER_OUTSTANDING_REQUESTS) {
     //cout << "TOO MANY OUTSTANDING: " << m_outstanding_count << " " << g_SEQUENCER_OUTSTANDING_REQUESTS << " VER " << m_version << endl;
     //printProgress(cout);
     return false;
   }
-  int thread = request.getThreadID();
 
   // This code allows reads to be performed even when we have a write
   // request outstanding for the line
@@ -820,8 +857,50 @@ bool Sequencer::isReady(const CacheMsg& request) const {
 }
 
 // Called by Driver (Simics or Tester).
-void Sequencer::makeRequest(const CacheMsg& request) {
-  //assert(isReady(request));
+void
+Sequencer::makeRequest(const Packet* pkt, void* data)
+{
+  int cpu_number = pkt->req->contextId();
+  la_t logical_addr = pkt->req->getVaddr();
+  pa_t physical_addr = pkt->req->getPaddr();
+  int request_size = pkt->getSize();
+  CacheRequestType type_of_request;
+  if ( pkt->req->isInstFetch() ) {
+    type_of_request = CacheRequestType_IFETCH;
+  } else if ( pkt->req->isLocked() || pkt->req->isSwap() ) {
+    type_of_request = CacheRequestType_ATOMIC;
+  } else if ( pkt->isRead() ) {
+    type_of_request = CacheRequestType_LD;
+  } else if ( pkt->isWrite() ) {
+    type_of_request = CacheRequestType_ST;
+  } else {
+    assert(false);
+  }
+  la_t virtual_pc = pkt->req->getPC();
+  int isPriv = false;  // TODO: get permission data
+  int thread = pkt->req->threadId();
+
+  AccessModeType access_mode = AccessModeType_UserMode; // TODO: get actual permission
+
+  CacheMsg request(Address( physical_addr ),
+                   Address( physical_addr ),
+                   type_of_request,
+                   Address(virtual_pc),
+                   access_mode,   // User/supervisor mode
+                   request_size,   // Size in bytes of request
+                   PrefetchBit_No, // Not a prefetch
+                   0,              // Version number
+                   Address(logical_addr),   // Virtual Address
+                   thread,         // SMT thread
+                   0,              // TM specific - timestamp of memory request
+                   false           // TM specific - whether request is part of escape action
+                   );
+  makeRequest(request);
+}
+
+void
+Sequencer::makeRequest(const CacheMsg& request)
+{
   bool write = (request.getType() == CacheRequestType_ST) ||
     (request.getType() == CacheRequestType_ST_XACT) ||
     (request.getType() == CacheRequestType_LDX_XACT) ||
@@ -857,13 +936,13 @@ bool Sequencer::doRequest(const CacheMsg& request) {
     return true;
   }
 
- #if 0
+#if 0
   uinteger_t tick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick"));
   uinteger_t tick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "tick_cmpr"));
   uinteger_t stick = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick"));
   uinteger_t stick_cmpr = SIMICS_read_control_register(m_version, SIMICS_get_register_number(m_version, "stick_cmpr"));
   cout << "START PROC " << m_version << hex << " tick = " << tick << " tick_cmpr = " << tick_cmpr << " stick = " << stick << " stick_cmpr = " << stick_cmpr << " cycle = "<< g_eventQueue_ptr->getTime() << dec << endl;;
-  #endif
+#endif
 
   if (TSO && (request.getType() == CacheRequestType_LD || request.getType() == CacheRequestType_IFETCH)) {
 
@@ -1045,16 +1124,16 @@ bool Sequencer::getRubyMemoryValue(const Address& addr, char* value,
     } else if (Protocol::m_CMP && n->m_L2Cache_L2cacheMemory_vec[l2_ver]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
       n->m_L2Cache_L2cacheMemory_vec[l2_ver]->getMemoryValue(addr, value, size_in_bytes);
       found = true;
-    // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr)){
-//       ASSERT(n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr));
-//       L1Cache_TBE tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
+      // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr)){
+      //       ASSERT(n->TBE_TABLE_MEMBER_VARIABLE->isPresent(lineAddr));
+      //       L1Cache_TBE tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
 
-//       int offset = addr.getOffset();
-//       for(int i=0; i<size_in_bytes; ++i){
-//         value[i] = tbeEntry.getDataBlk().getByte(offset + i);
-//       }
+      //       int offset = addr.getOffset();
+      //       for(int i=0; i<size_in_bytes; ++i){
+      //         value[i] = tbeEntry.getDataBlk().getByte(offset + i);
+      //       }
 
-//       found = true;
+      //       found = true;
     } else {
       // Address not found
       //cout << "  " << m_chip_ptr->getID() << " NOT IN CACHE, Value at Directory is: " << (int) value[0] << endl;
@@ -1098,13 +1177,13 @@ bool Sequencer::setRubyMemoryValue(const Address& addr, char *value,
     //cout << "L1cache_cachememory size = " << n->m_L1Cache_cacheMemory_vec.size() << endl;
     //cout << "L1cache_l2cachememory size = " << n->m_L1Cache_L2cacheMemory_vec.size() << endl;
     // if (Protocol::m_TwoLevelCache) {
-//       if(Protocol::m_CMP){
-//         cout << "CMP L2 cache vec size = " << n->m_L2Cache_L2cacheMemory_vec.size() << endl;
-//       }
-//       else{
-//        cout << "L2 cache vec size = " << n->m_L1Cache_cacheMemory_vec.size() << endl;
-//       }
-//     }
+    //       if(Protocol::m_CMP){
+    //         cout << "CMP L2 cache vec size = " << n->m_L2Cache_L2cacheMemory_vec.size() << endl;
+    //       }
+    //       else{
+    //        cout << "L2 cache vec size = " << n->m_L1Cache_cacheMemory_vec.size() << endl;
+    //       }
+    //     }
 
     assert(n->m_L1Cache_L1IcacheMemory_vec[m_version] != NULL);
     assert(n->m_L1Cache_L1DcacheMemory_vec[m_version] != NULL);
@@ -1126,15 +1205,15 @@ bool Sequencer::setRubyMemoryValue(const Address& addr, char *value,
     } else if (Protocol::m_CMP && n->m_L2Cache_L2cacheMemory_vec[l2_ver]->tryCacheAccess(lineAddr, CacheRequestType_LD, dataPtr)){
       n->m_L2Cache_L2cacheMemory_vec[l2_ver]->setMemoryValue(addr, value, size_in_bytes);
       found = true;
-    // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isTagPresent(lineAddr)){
-//       L1Cache_TBE& tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
-//       DataBlock tmpData;
-//       int offset = addr.getOffset();
-//       for(int i=0; i<size_in_bytes; ++i){
-//         tmpData.setByte(offset + i, value[i]);
-//       }
-//       tbeEntry.setDataBlk(tmpData);
-//       tbeEntry.setDirty(true);
+      // } else if (n->TBE_TABLE_MEMBER_VARIABLE->isTagPresent(lineAddr)){
+      //       L1Cache_TBE& tbeEntry = n->TBE_TABLE_MEMBER_VARIABLE->lookup(lineAddr);
+      //       DataBlock tmpData;
+      //       int offset = addr.getOffset();
+      //       for(int i=0; i<size_in_bytes; ++i){
+      //         tmpData.setByte(offset + i, value[i]);
+      //       }
+      //       tbeEntry.setDataBlk(tmpData);
+      //       tbeEntry.setDirty(true);
     } else {
       // Address not found
       n = dynamic_cast<Chip*>(g_system_ptr->getChip(map_Address_to_DirectoryNode(addr)/RubyConfig::numberOfDirectoryPerChip()));

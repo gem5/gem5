@@ -45,6 +45,7 @@
 #include "GenericMachineType.hh"
 #include "PrefetchBit.hh"
 #include "Map.hh"
+#include "packet.hh"
 
 class DataBlock;
 class AbstractChip;
@@ -108,10 +109,12 @@ public:
   void printDebug();
 
   // called by Tester or Simics
-  void makeRequest(const CacheMsg& request);
+  void makeRequest(const Packet* pkt, void* data);
+  void makeRequest(const CacheMsg& request); // depricate this function
   bool doRequest(const CacheMsg& request);
   void issueRequest(const CacheMsg& request);
-  bool isReady(const CacheMsg& request) const;
+  bool isReady(const Packet* pkt) const;
+  bool isReady(const CacheMsg& request) const; // depricate this function
   bool empty() const;
   void resetRequestTime(const Address& addr, int thread);
   Address getLogicalAddressOfRequest(Address address, int thread);

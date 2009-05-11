@@ -61,7 +61,7 @@ public:
   void recordReleaseLatency(Time time);
 
   void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
-  void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) {assert(0)};
+  void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) {assert(0);}
   void abortCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
   void wakeup();
   void printStats(ostream& out) const;
