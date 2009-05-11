@@ -17,17 +17,12 @@
  * */
 
 /*
- * EventQueueNode.h
- *
  * Description:
  * This structure records everything known about a single
  * memory request that is queued in the memory controller.
  * It is created when the memory request first arrives
  * at a memory controller and is deleted when the underlying
  * message is enqueued to be sent back to the directory.
- *
- * $Id: MemoryNode.h,v 3.3 2003/12/04 15:01:34 xu Exp $
- *
  */
 
 #ifndef MEMORYNODE_H

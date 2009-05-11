@@ -33,7 +33,7 @@
  */
 
 #include "main.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "RubyConfig.hh"
 #include "test_framework.hh"
 

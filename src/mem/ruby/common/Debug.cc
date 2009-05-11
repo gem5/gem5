@@ -37,7 +37,7 @@
 
 #include "Global.hh"
 #include "Debug.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 class Debug;
 extern Debug* g_debug_ptr;

@@ -35,7 +35,7 @@
 #include "Global.hh"
 #include "System.hh"
 #include "SyntheticDriver.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 //#ifndef XACT_MEM
 #include "RequestGenerator.hh"
 //#endif

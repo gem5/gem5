@@ -35,7 +35,7 @@
 #include "Global.hh"
 #include "System.hh"
 #include "Tester.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "SubBlock.hh"
 #include "Check.hh"
 #include "Chip.hh"

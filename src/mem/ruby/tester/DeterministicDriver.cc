@@ -35,7 +35,7 @@
 #include "Global.hh"
 #include "System.hh"
 #include "DeterministicDriver.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "SpecifiedGenerator.hh"
 #include "DetermGETXGenerator.hh"
 #include "DetermInvGenerator.hh"

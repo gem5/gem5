@@ -37,7 +37,7 @@
  */
 
 #include "Global.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "System.hh"
 #include "Debug.hh"
 #include "Profiler.hh"
@@ -213,7 +213,7 @@ void init_simulator()
                            DEBUG_OUTPUT_FILENAME );
 
   cout << "Creating event queue..." << endl;
-  g_eventQueue_ptr = new EventQueue;
+  g_eventQueue_ptr = new RubyEventQueue;
   cout << "Creating event queue done" << endl;
 
   cout << "Creating system..." << endl;

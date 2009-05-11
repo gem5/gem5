@@ -39,7 +39,7 @@
 #include "System.hh"
 #include "Driver.hh"
 #include "Vector.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "AddressProfiler.hh"
 #include "Sequencer.hh"
 #include "SubBlock.hh"

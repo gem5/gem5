@@ -38,7 +38,7 @@
 #include "OpalInterface.hh"
 #include "init.hh"
 #include "Tester.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "getopt.hh"
 #include "Network.hh"
 #include "CacheRecorder.hh"

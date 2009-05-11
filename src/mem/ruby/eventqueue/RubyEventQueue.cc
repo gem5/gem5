@@ -31,48 +31,48 @@
  * $Id$
  */
 
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "RubyConfig.hh"
 #include "Consumer.hh"
 #include "Profiler.hh"
 #include "System.hh"
 #include "PrioHeap.hh"
-#include "EventQueueNode.hh"
+#include "RubyEventQueueNode.hh"
 
 // Class public method definitions
 
-EventQueue::EventQueue()
+RubyEventQueue::RubyEventQueue()
 {
   m_prio_heap_ptr = NULL;
   init();
 }
 
-EventQueue::~EventQueue()
+RubyEventQueue::~RubyEventQueue()
 {
   delete m_prio_heap_ptr;
 }
 
-void EventQueue::init()
+void RubyEventQueue::init()
 {
   m_globalTime = 1;
   m_timeOfLastRecovery = 1;
-  m_prio_heap_ptr = new PrioHeap<EventQueueNode>;
+  m_prio_heap_ptr = new PrioHeap<RubyEventQueueNode>;
   m_prio_heap_ptr->init();
 }
 
-bool EventQueue::isEmpty() const
+bool RubyEventQueue::isEmpty() const
 {
   return (m_prio_heap_ptr->size() == 0);
 }
 
-void EventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
+void RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
 {
   // Check to see if this is a redundant wakeup
   //  Time time = timeDelta + m_globalTime;
   ASSERT(consumer != NULL);
   if (consumer->getLastScheduledWakeup() != timeAbs) {
     // This wakeup is not redundant
-    EventQueueNode thisNode;
+    RubyEventQueueNode thisNode;
     thisNode.m_consumer_ptr = consumer;
     assert(timeAbs > m_globalTime);
     thisNode.m_time = timeAbs;
@@ -81,9 +81,9 @@ void EventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
   }
 }
 
-void EventQueue::triggerEvents(Time t)
+void RubyEventQueue::triggerEvents(Time t)
 {
-  EventQueueNode thisNode;
+  RubyEventQueueNode thisNode;
 
   while(m_prio_heap_ptr->size() > 0 && m_prio_heap_ptr->peekMin().m_time <= t) {
     m_globalTime = m_prio_heap_ptr->peekMin().m_time;
@@ -96,10 +96,10 @@ void EventQueue::triggerEvents(Time t)
   m_globalTime = t;
 }
 
-void EventQueue::triggerAllEvents()
+void RubyEventQueue::triggerAllEvents()
 {
   // FIXME - avoid repeated code
-  EventQueueNode thisNode;
+  RubyEventQueueNode thisNode;
 
   while(m_prio_heap_ptr->size() > 0) {
     m_globalTime = m_prio_heap_ptr->peekMin().m_time;
@@ -114,7 +114,7 @@ void EventQueue::triggerAllEvents()
 // Class private method definitions
 
 void
-EventQueue::print(ostream& out) const
+RubyEventQueue::print(ostream& out) const
 {
   out << "[Event Queue: " << *m_prio_heap_ptr << "]";
 }

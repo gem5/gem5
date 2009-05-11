@@ -40,7 +40,7 @@
 #define CONSUMER_H
 
 #include "Global.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 class MessageBuffer;
 

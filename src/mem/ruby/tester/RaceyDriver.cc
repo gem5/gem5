@@ -35,7 +35,7 @@
 #include "Global.hh"
 #include "System.hh"
 #include "RaceyDriver.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "RaceyPseudoThread.hh"
 #include "SubBlock.hh"
 

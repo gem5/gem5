@@ -29,7 +29,7 @@
 
 #include "Global.hh"
 
-EventQueue* g_eventQueue_ptr = NULL;
+RubyEventQueue* g_eventQueue_ptr = NULL;
 RubySystem* g_system_ptr = NULL;
 Debug* g_debug_ptr = NULL;
 

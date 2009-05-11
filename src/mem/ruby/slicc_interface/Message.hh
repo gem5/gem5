@@ -37,7 +37,7 @@
 #include "Global.hh"
 #include "RefCnt.hh"
 #include "RefCountable.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 class Message;
 typedef RefCnt<Message> MsgPtr;

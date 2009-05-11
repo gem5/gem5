@@ -89,8 +89,8 @@ typedef unsigned int uint;
 typedef int SwitchID;
 typedef int LinkID;
 
-class EventQueue;
-extern EventQueue* g_eventQueue_ptr;
+class RubyEventQueue;
+extern RubyEventQueue* g_eventQueue_ptr;
 
 class RubySystem;
 extern RubySystem* g_system_ptr;

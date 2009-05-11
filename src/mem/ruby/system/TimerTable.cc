@@ -33,7 +33,7 @@
 
 #include "Global.hh"
 #include "TimerTable.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 TimerTable::TimerTable(Chip* chip_ptr)
 {

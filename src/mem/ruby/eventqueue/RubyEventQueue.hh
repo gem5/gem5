@@ -56,23 +56,23 @@
  *
  */
 
-#ifndef EVENTQUEUE_H
-#define EVENTQUEUE_H
+#ifndef RUBYEVENTQUEUE_H
+#define RUBYEVENTQUEUE_H
 
 #include "Global.hh"
 #include "Vector.hh"
 
 class Consumer;
 template <class TYPE> class PrioHeap;
-class EventQueueNode;
+class RubyEventQueueNode;
 
-class EventQueue {
+class RubyEventQueue {
 public:
   // Constructors
-  EventQueue();
+  RubyEventQueue();
 
   // Destructor
-  ~EventQueue();
+  ~RubyEventQueue();
 
   // Public Methods
 
@@ -91,24 +91,24 @@ public:
 private:
   // Private copy constructor and assignment operator
   void init();
-  EventQueue(const EventQueue& obj);
-  EventQueue& operator=(const EventQueue& obj);
+  RubyEventQueue(const RubyEventQueue& obj);
+  RubyEventQueue& operator=(const RubyEventQueue& obj);
 
   // Data Members (m_ prefix)
-  PrioHeap<EventQueueNode>* m_prio_heap_ptr;
+  PrioHeap<RubyEventQueueNode>* m_prio_heap_ptr;
   Time m_globalTime;
   Time m_timeOfLastRecovery;
 };
 
 // Output operator declaration
 inline extern
-ostream& operator<<(ostream& out, const EventQueue& obj);
+ostream& operator<<(ostream& out, const RubyEventQueue& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 inline extern
-ostream& operator<<(ostream& out, const EventQueue& obj)
+ostream& operator<<(ostream& out, const RubyEventQueue& obj)
 {
   obj.print(out);
   out << flush;

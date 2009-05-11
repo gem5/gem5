@@ -33,7 +33,7 @@
  */
 
 #include "StoreTrace.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 bool StoreTrace::s_init = false; // Total number of store lifetimes of all lines
 int64 StoreTrace::s_total_samples = 0; // Total number of store lifetimes of all lines

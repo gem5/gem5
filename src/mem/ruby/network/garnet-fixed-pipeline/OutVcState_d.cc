@@ -35,7 +35,7 @@
 
 #include "OutVcState_d.hh"
 #include "NetworkConfig.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 
 OutVcState_d::OutVcState_d(int id)
 {

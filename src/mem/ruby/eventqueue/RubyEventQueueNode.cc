@@ -32,58 +32,16 @@
  *
  */
 
-#include "EventQueue.hh"
-#include "Consumer.hh"
+#include "RubyEventQueueNode.hh"
 
-//static int global_counter = 0;
-
-class TestConsumer1 : public Consumer {
-public:
-  TestConsumer1(int description) { m_description = description; }
-  ~TestConsumer1() { }
-  void wakeup() { cout << "Wakeup#1: " << m_description << endl; }
-  // void wakeup() { global_counter++; }
-  void print(ostream& out) const { out << "1:" << m_description << endl; }
-
-private:
-  int m_description;
-};
-
-class TestConsumer2 : public Consumer {
-public:
-  TestConsumer2(int description) { m_description = description; }
-  ~TestConsumer2() { }
-  void wakeup() { cout << "Wakeup#2: " << m_description << endl; }
-  // void wakeup() { global_counter++; }
-  void print(ostream& out) const { out << "2:" << m_description << endl; }
-private:
-  int m_description;
-};
-
-int main()
+void RubyEventQueueNode::print(ostream& out) const
 {
-  EventQueue q;
-  const int SIZE = 200;
-  const int MAX_TIME = 10000;
-  int numbers[SIZE];
-  Consumer* consumers[SIZE];
-
-  for (int i=0; i<SIZE; i++) {
-    numbers[i] = random() % MAX_TIME;
-    if (i%2 == 0) {
-      consumers[i] = new TestConsumer1(i);
-    } else {
-      consumers[i] = new TestConsumer2(i);
-    }
+  out << "[";
+  out << "Time=" << m_time;
+  if (m_consumer_ptr != NULL) {
+    out << " Consumer=" << m_consumer_ptr;
+  } else {
+    out << " Consumer=NULL";
   }
-
-  for(int i=0; i<SIZE; i++) {
-    q.scheduleEvent(consumers[i], numbers[i]);
-  }
-
-  q.triggerEvents(MAX_TIME);
-
-  for (int i=0; i<SIZE; i++) {
-    delete consumers[i];
-  }
+  out << "]";
 }

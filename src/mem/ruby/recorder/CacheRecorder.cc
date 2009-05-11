@@ -34,7 +34,7 @@
 
 #include "CacheRecorder.hh"
 #include "TraceRecord.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "PrioHeap.hh"
 #include "gzstream.hh"
 

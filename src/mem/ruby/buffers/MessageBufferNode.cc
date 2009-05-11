@@ -27,15 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * EventQueueNode.C
- *
- * Description: See EventQueueNode.h
- *
- * $Id: MessageBufferNode.C,v 3.1 2001/02/02 16:57:54 sorin Exp $
- *
- */
-
 #include "MessageBufferNode.hh"
 
 void MessageBufferNode::print(ostream& out) const

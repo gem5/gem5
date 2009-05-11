@@ -35,7 +35,7 @@
 #include "Global.hh"
 #include "System.hh"
 #include "OpalInterface.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "mf_api.hh"
 #include "interface.hh"
 #include "Sequencer.hh"

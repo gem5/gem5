@@ -41,7 +41,7 @@
 #include "Global.hh"
 #include "MessageBufferNode.hh"
 #include "Consumer.hh"
-#include "EventQueue.hh"
+#include "RubyEventQueue.hh"
 #include "Message.hh"
 #include "PrioHeap.hh"
 #include "util.hh"
