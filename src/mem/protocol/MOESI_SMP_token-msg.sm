@@ -1,0 +1,61 @@
+/*
+ * $Id: MOESI_token-msg.sm 1.3 04/06/05 22:43:20-00:00 kmoore@cottons.cs.wisc.edu $
+ *
+ */
+
+//int max_tokens();
+
+// CoherenceRequestType
+enumeration(CoherenceRequestType, desc="...") {
+  GETX,      desc="Get eXclusive";
+  GETS,      desc="Get Shared";
+}
+
+// StarvationType
+enumeration(PersistentRequestType, desc="...") {
+  GETX_PERSISTENT,  desc="...";
+  GETS_PERSISTENT,  desc="...";
+  DEACTIVATE_PERSISTENT,     desc="...";
+}
+
+// CoherenceResponseType
+enumeration(CoherenceResponseType, desc="...") {
+  DATA_OWNER,  desc="Data, with the owner token";
+  DATA_SHARED, desc="Data, without the owner token";
+  ACK,         desc="ACKnowledgment";
+  ACK_OWNER,   desc="ACKnowledgment, includes the clean owner token";
+}
+
+// StarvationMsg
+structure(PersistentMsg, desc="...", interface="NetworkMessage") {
+  Address Address,             desc="Physical address for this request";
+  PersistentRequestType Type,  desc="Type of starvation request";
+  MachineID Requestor,            desc="Node who initiated the request";
+  NetDest Destination,             desc="Destination set";
+  MessageSizeType MessageSize, desc="size category of the message";
+}
+
+// RequestMsg
+structure(RequestMsg, desc="...", interface="NetworkMessage") {
+  Address Address,             desc="Physical address for this request";
+  CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
+  MachineID Requestor,            desc="Node who initiated the request";
+  NetDest Destination,             desc="Multicast destination mask";
+  MachineType DestMachine,     desc="What component receives the data";
+  MessageSizeType MessageSize, desc="size category of the message";
+}
+
+// ResponseMsg
+structure(ResponseMsg, desc="...", interface="NetworkMessage") {
+  Address Address,             desc="Physical address for this request";
+  CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
+  MachineID Sender,               desc="Node who sent the data";
+  MachineType SenderMachine,   desc="What component sent the data";
+  NetDest Destination,         desc="Node to whom the data is sent";
+  MachineType DestMachine,     desc="What component receives the data";
+  int Tokens,                  desc="Number of tokens being transfered for this line";
+  DataBlock DataBlk,           desc="data for the cache line";
+  bool Dirty,                  desc="Is the data dirty (different than memory)?";
+  MessageSizeType MessageSize, desc="size category of the message";
+}
+

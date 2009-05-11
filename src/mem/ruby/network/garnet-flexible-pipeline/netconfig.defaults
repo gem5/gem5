@@ -1,0 +1,8 @@
+// Note: You should set Garnet's parameters in config/rubyconfig.defaults and not here
+g_GARNET_NETWORK:true
+g_DETAIL_NETWORK:true
+g_NETWORK_TESTING:false
+g_FLIT_SIZE:16
+g_NUM_PIPE_STAGES:4
+g_VCS_PER_CLASS:4
+g_BUFFER_SIZE:4

@@ -1,0 +1,10 @@
+
+processors:1
+procs_per_chip:1
+L2banks:1
+memories:1
+bw_unit:1000
+
+ext_node:L1Cache:0 int_node:0 link_latency:1 bw_multiplier:64
+ext_node:L2Cache:0 int_node:0 link_latency:1 bw_multiplier:64
+ext_node:Directory:0 int_node:0 link_latency:40 bw_multiplier:10

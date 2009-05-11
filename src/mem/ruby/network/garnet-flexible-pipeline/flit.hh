@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * flit.h
+ *
+ * Niket Agarwal, Princeton University
+ *
+ * */
+
+#include "NetworkHeader.hh"
+#include "Message.hh"
+
+#ifndef FLIT_H
+#define FLIT_H
+
+class flit {
+public:
+        flit(int id, int vc, int vnet, int size, MsgPtr msg_ptr);
+
+        int get_size();
+        int get_id();
+        Time get_time();
+        Time get_enqueue_time();
+        void set_time(Time time);
+        int get_vnet();
+        int get_vc();
+        void set_vc(int vc);
+        MsgPtr& get_msg_ptr();
+        flit_type get_type();
+        void print(ostream&out) const;
+
+private:
+/************Data Members*************/
+        int m_id;
+        int m_vnet;
+        int m_vc;
+        int m_size;
+        Time m_enqueue_time, m_time;
+        flit_type m_type;
+        MsgPtr m_msg_ptr;
+
+};
+
+inline extern bool node_less_then_eq(flit* n1, flit* n2);
+
+inline extern
+bool node_less_then_eq(flit* n1, flit* n2)
+{
+  if (n1->get_time() == n2->get_time()) {
+//    ASSERT(n1->flit_id != n2->flit_id);
+    return (n1->get_id() <= n2->get_id());
+  } else {
+    return (n1->get_time() <= n2->get_time());
+  }
+}
+
+// Output operator declaration
+ostream& operator<<(ostream& out, const flit& obj);
+
+// ******************* Definitions *******************
+
+// Output operator definition
+extern inline
+ostream& operator<<(ostream& out, const flit& obj)
+{
+  obj.print(out);
+  out << flush;
+  return out;
+}
+
+#endif

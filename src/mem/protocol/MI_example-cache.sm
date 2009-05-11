@@ -1,0 +1,369 @@
+
+machine(L1Cache, "MI Example") {
+
+  // NETWORK BUFFERS
+  MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="true";
+  MessageBuffer responseFromCache, network="To", virtual_network="1", ordered="true";
+
+  MessageBuffer forwardToCache, network="From", virtual_network="2", ordered="true";
+  MessageBuffer responseToCache, network="From", virtual_network="1", ordered="true";
+
+  // STATES
+  enumeration(State, desc="Cache states") {
+    I, desc="Not Present/Invalid";
+    II, desc="Not Present/Invalid, issued PUT";
+    M,  desc="Modified";
+    MI,  desc="Modified, issued PUT";
+
+    IS,  desc="Issued request for IFETCH/GETX";
+    IM,  desc="Issued request for STORE/ATOMIC";
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+    // From processor
+
+    Load,       desc="Load request from processor";
+    Ifetch,     desc="Ifetch request from processor";
+    Store,      desc="Store request from processor";
+
+    Data,       desc="Data from network";
+    Fwd_GETX,        desc="Forward from network";
+
+    Replacement,  desc="Replace a block";
+    Writeback_Ack,   desc="Ack from the directory for a writeback";
+    Writeback_Nack,   desc="Nack from the directory for a writeback";
+  }
+
+  // STRUCTURE DEFINITIONS
+
+  MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
+  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,        desc="cache state";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    DataBlock DataBlk,       desc="data for the block";
+  }
+
+
+  external_type(CacheMemory) {
+    bool cacheAvail(Address);
+    Address cacheProbe(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    Entry lookup(Address);
+    void changePermission(Address, AccessPermission);
+    bool isTagPresent(Address);
+  }
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    State TBEState,          desc="Transient state";
+    DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
+    bool Trans,              desc="Is this block part of a the current transaction?";
+    bool Logged,             desc="Has this block been logged in the current transaction?";
+  }
+
+  external_type(TBETable) {
+    TBE lookup(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    bool isPresent(Address);
+  }
+
+
+  // STRUCTURES
+
+  CacheMemory cacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS, L1_CACHE_ASSOC, MachineType_L1Cache, int_to_string(i)+"_L1"', abstract_chip_ptr="true";
+
+  TBETable TBEs, template_hack="<L1Cache_TBE>";
+
+
+
+  // FUNCTIONS
+  Event mandatory_request_type_to_event(CacheRequestType type) {
+   if (type == CacheRequestType:LD) {
+      return Event:Load;
+    } else if (type == CacheRequestType:IFETCH) {
+      return Event:Ifetch;
+    } else if ((type == CacheRequestType:ST) || (type == CacheRequestType:ATOMIC)) {
+      return Event:Store;
+    } else {
+      error("Invalid CacheRequestType");
+    }
+  }
+
+
+  State getState(Address addr) {
+
+    if (TBEs.isPresent(addr)) {
+      return TBEs[addr].TBEState;
+    }
+    else if (cacheMemory.isTagPresent(addr)) {
+      return cacheMemory[addr].CacheState;
+    }
+    else {
+      return State:I;
+    }
+  }
+
+  void setState(Address addr, State state) {
+
+    if (TBEs.isPresent(addr)) {
+      TBEs[addr].TBEState := state;
+    }
+
+    if (cacheMemory.isTagPresent(addr)) {
+      cacheMemory[addr].CacheState := state;
+    }
+  }
+
+
+  // NETWORK PORTS
+
+  out_port(requestNetwork_out, RequestMsg, requestFromCache);
+  out_port(responseNetwork_out, ResponseMsg, responseFromCache);
+
+  in_port(forwardRequestNetwork_in, RequestMsg, forwardToCache) {
+    if (forwardRequestNetwork_in.isReady()) {
+      peek(forwardRequestNetwork_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:GETX) {
+          trigger(Event:Fwd_GETX, in_msg.Address);
+        }
+        else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
+          trigger(Event:Writeback_Ack, in_msg.Address);
+        }
+        else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
+          trigger(Event:Writeback_Nack, in_msg.Address);
+        }
+        else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  in_port(responseNetwork_in, ResponseMsg, responseToCache) {
+    if (responseNetwork_in.isReady()) {
+      peek(responseNetwork_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, in_msg.Address);
+        }
+        else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+    // Mandatory Queue
+  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady()) {
+      peek(mandatoryQueue_in, CacheMsg) {
+
+
+        if (cacheMemory.isTagPresent(in_msg.Address) == false &&
+            cacheMemory.cacheAvail(in_msg.Address) == false ) {
+          // make room for the block
+          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.Address));
+        }
+        else {
+          trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+        }
+      }
+    }
+  }
+
+  // ACTIONS
+
+  action(a_issueRequest, "a", desc="Issue a request") {
+    enqueue(requestNetwork_out, RequestMsg, latency="ISSUE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:GETX;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Control;
+    }
+  }
+
+  action(b_issuePUT, "b", desc="Issue a PUT request") {
+    enqueue(requestNetwork_out, RequestMsg, latency="ISSUE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTX;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.DataBlk := cacheMemory[address].DataBlk;
+      out_msg.MessageSize := MessageSizeType:Data;
+    }
+  }
+
+
+  action(e_sendData, "e", desc="Send data from cache to requestor") {
+    peek(forwardRequestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="CACHE_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := cacheMemory[address].DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(ee_sendDataFromTBE, "\e", desc="Send data from TBE to requestor") {
+    peek(forwardRequestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="CACHE_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := TBEs[address].DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+
+  action(i_allocateL1CacheBlock, "i", desc="Allocate a cache block") {
+    if (cacheMemory.isTagPresent(address) == false) {
+      cacheMemory.allocate(address);
+    }
+  }
+
+  action(h_deallocateL1CacheBlock, "h", desc="deallocate a cache block") {
+    if (cacheMemory.isTagPresent(address) == true) {
+      cacheMemory.deallocate(address);
+    }
+  }
+
+  action(m_popMandatoryQueue, "m", desc="Pop the mandatory request queue") {
+    mandatoryQueue_in.dequeue();
+  }
+
+  action(n_popResponseQueue, "n", desc="Pop the response queue") {
+    responseNetwork_in.dequeue();
+  }
+
+  action(o_popForwardedRequestQueue, "o", desc="Pop the forwarded request queue") {
+    forwardRequestNetwork_in.dequeue();
+  }
+
+  action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
+    DEBUG_EXPR(cacheMemory[address].DataBlk);
+    sequencer.readCallback(address, cacheMemory[address].DataBlk);
+  }
+
+  action(s_store_hit, "s", desc="Notify sequencer that store completed.") {
+    DEBUG_EXPR(cacheMemory[address].DataBlk);
+    sequencer.writeCallback(address, cacheMemory[address].DataBlk);
+  }
+
+
+  action(u_writeDataToCache, "u", desc="Write data to the cache") {
+    peek(responseNetwork_in, ResponseMsg) {
+      cacheMemory[address].DataBlk := in_msg.DataBlk;
+    }
+  }
+
+
+  action(v_allocateTBE, "v", desc="Allocate TBE") {
+    TBEs.allocate(address);
+  }
+
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+  }
+
+  action(x_copyDataFromCacheToTBE, "x", desc="Copy data from cache to TBE") {
+    TBEs[address].DataBlk := cacheMemory[address].DataBlk;
+  }
+
+  action(z_stall, "z", desc="stall") {
+    // do nothing
+  }
+
+  // TRANSITIONS
+
+  transition({IS, IM, MI, II}, {Load, Ifetch, Store, Replacement}) {
+    z_stall;
+  }
+
+  transition({IS, IM}, Fwd_GETX) {
+    z_stall;
+  }
+
+  transition(M, Store) {
+    s_store_hit;
+    m_popMandatoryQueue;
+  }
+
+  transition(M, {Load, Ifetch}) {
+    r_load_hit;
+    m_popMandatoryQueue;
+  }
+
+
+  transition(I, Store, IM) {
+    v_allocateTBE;
+    i_allocateL1CacheBlock;
+    a_issueRequest;
+    m_popMandatoryQueue;
+  }
+
+  transition(I, {Load, Ifetch}, IS) {
+    v_allocateTBE;
+    i_allocateL1CacheBlock;
+    a_issueRequest;
+    m_popMandatoryQueue;
+  }
+
+  transition(IS, Data, M) {
+    u_writeDataToCache;
+    r_load_hit;
+    w_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(IM, Data, M) {
+    u_writeDataToCache;
+    s_store_hit;
+    w_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(M, Fwd_GETX, I) {
+    e_sendData;
+    o_popForwardedRequestQueue;
+  }
+
+  transition(I, Replacement) {
+     h_deallocateL1CacheBlock;
+  }
+
+  transition(M, Replacement, MI) {
+     v_allocateTBE;
+     b_issuePUT;
+     x_copyDataFromCacheToTBE;
+     h_deallocateL1CacheBlock;
+  }
+
+  transition(MI, Writeback_Ack, I) {
+    w_deallocateTBE;
+    o_popForwardedRequestQueue;
+  }
+
+  transition(MI, Fwd_GETX, II) {
+    ee_sendDataFromTBE;
+    o_popForwardedRequestQueue;
+  }
+
+  transition(II, Writeback_Nack, I) {
+    w_deallocateTBE;
+    o_popForwardedRequestQueue;
+  }
+}
+

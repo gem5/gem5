@@ -1,0 +1,95 @@
+/*
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * InputUnit_d.C
+ *
+ * Niket Agarwal, Princeton University
+ *
+ * */
+
+#include "InputUnit_d.hh"
+#include "Router_d.hh"
+
+InputUnit_d::InputUnit_d(int id, Router_d *router)
+{
+        m_id = id;
+        m_router = router;
+        m_num_vcs = m_router->get_num_vcs();
+
+        m_num_buffer_reads = 0;
+        m_num_buffer_writes = 0;
+
+        creditQueue = new flitBuffer_d();
+        // Instantiating the virtual channels
+        m_vcs.setSize(m_num_vcs);
+        for(int i=0; i < m_num_vcs; i++)
+        {
+                m_vcs[i] = new VirtualChannel_d(i);
+        }
+}
+
+InputUnit_d::~InputUnit_d()
+{
+        delete creditQueue;
+        m_vcs.deletePointers();
+}
+
+void InputUnit_d::wakeup()
+{
+        flit_d *t_flit;
+        if(m_in_link->isReady())
+        {
+                t_flit = m_in_link->consumeLink();
+                int vc = t_flit->get_vc();
+                if((t_flit->get_type() == HEAD_) || (t_flit->get_type() == HEAD_TAIL_))
+                {
+                        assert(m_vcs[vc]->get_state() == IDLE_);
+                        m_router->route_req(t_flit, this, vc); // Do the route computation for this vc
+                        m_vcs[vc]->set_enqueue_time(g_eventQueue_ptr->getTime());
+                }
+                else
+                {
+                        t_flit->advance_stage(SA_);
+                        m_router->swarb_req();
+                }
+                m_vcs[vc]->insertFlit(t_flit);   // write flit into input buffer
+                m_num_buffer_writes++;
+                m_num_buffer_reads++; // same as read because any flit that is written will be read only once
+        }
+}
+
+
+void InputUnit_d::printConfig(ostream& out)
+{
+        out << endl;
+        out << "InputUnit Configuration" << endl;
+        out << "---------------------" << endl;
+        out << "id = " << m_id << endl;
+        out << "In link is " << m_in_link->get_id() << endl;
+}

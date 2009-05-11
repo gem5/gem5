@@ -1,0 +1,168 @@
+
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+// External Types
+
+external_type(DataBlock, desc="..."){
+  void clear();
+}
+
+external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
+
+external_type(OutPort, primitive="yes");
+
+external_type(InPort, primitive="yes") {
+  bool isReady();
+  void dequeue();
+  int dequeue_getDelayCycles();
+  void recycle();
+  bool isEmpty();
+}
+
+external_type(NodeID, default="0");
+external_type(MachineID);
+
+external_type(StoreBuffer);
+
+
+external_type(Set, non_obj="yes") {
+  void setSize(int);
+  void add(NodeID);
+  void addSet(Set);
+  void remove(NodeID);
+  void removeSet(Set);
+  void broadcast();
+  void addRandom();
+  void clear();
+  int count();
+  bool isElement(NodeID);
+  bool isEqual(Set);
+  bool isSuperset(Set);
+  bool intersectionIsEmpty(Set);
+  NodeID smallestElement();
+}
+
+external_type(NetDest, non_obj="yes") {
+  void setSize(int);
+  void setSize(int, int);
+  void add(NodeID);
+  void add(MachineID);
+  void addSet(Set);
+  void addNetDest(NetDest);
+  void setNetDest(MachineType, Set);
+  void remove(NodeID);
+  void remove(MachineID);
+  void removeSet(Set);
+  void removeNetDest(NetDest);
+  void broadcast();
+  void broadcast(MachineType);
+  void addRandom();
+  void clear();
+  Set toSet();
+  int count();
+  bool isElement(NodeID);
+  bool isElement(MachineID);
+  bool isSuperset(Set);
+  bool isSuperset(NetDest);
+  bool isEmpty();
+  bool intersectionIsEmpty(Set);
+  bool intersectionIsEmpty(NetDest);
+  MachineID smallestElement(MachineType);
+}
+
+external_type(PersistentTable) {
+  void persistentRequestLock(Address, MachineID, AccessType);
+  void persistentRequestUnlock(Address, MachineID);
+  bool okToIssueStarving(Address);
+  MachineID findSmallest(Address);
+  AccessType typeOfSmallest(Address);
+  void markEntries(Address);
+  bool isLocked(Address);
+  int countStarvingForAddress(Address);
+  int countReadStarvingForAddress(Address);
+}
+
+external_type(NodePersistentTable) {
+  void persistentRequestLock(Address, NodeID, AccessType);
+  void persistentRequestUnlock(Address, NodeID);
+  bool okToIssueStarving(Address);
+  NodeID findSmallest(Address);
+  AccessType typeOfSmallest(Address);
+  void markEntries(Address);
+  bool isLocked(Address);
+  int countStarvingForAddress(Address);
+  int countReadStarvingForAddress(Address);
+}
+
+external_type(Sequencer) {
+  void readCallback(Address, DataBlock, GenericMachineType, PrefetchBit, int);
+  void writeCallback(Address, DataBlock, GenericMachineType, PrefetchBit, int);
+  void readCallback(Address, DataBlock, GenericMachineType, PrefetchBit);
+  void writeCallback(Address, DataBlock, GenericMachineType, PrefetchBit);
+  void readCallback(Address, DataBlock);
+  void writeCallback(Address, DataBlock);
+  void readCallback(Address);
+  void writeCallback(Address);
+  void readCallbackAbort(Address, int);
+  void writeCallbackAbort(Address, int);
+  void readConflictCallback(Address);
+  void writeConflictCallback(Address);
+  void xactCallback(Address);
+  void updateCurrentVersion();
+  void updateLastCommittedVersion();
+  void systemRecovery();
+  void systemRestart();
+  void checkCoherence(Address);
+  void profileNack(Address, int, int, uint64);
+  void resetRequestTime(Address, int);
+  bool isReadAborted(Address, int);
+  bool isWriteAborted(Address, int);
+}
+
+external_type(TimerTable, inport="yes") {
+  bool isReady();
+  Address readyAddress();
+  void set(Address, int);
+  void unset(Address);
+  bool isSet(Address);
+}
+
+external_type(GenericBloomFilter) {
+
+  void clear(int);
+  void increment(Address, int);
+  void decrement(Address, int);
+  void set(Address, int);
+  void unset(Address, int);
+
+  bool isSet(Address, int);
+  int getCount(Address, int);
+}
+
+

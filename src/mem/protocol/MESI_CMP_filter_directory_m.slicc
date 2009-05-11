@@ -1,0 +1,7 @@
+../protocols/LogTM.sm
+../protocols/MESI_CMP_filter_directory-msg.sm
+../protocols/MESI_CMP_filter_directory-L2cache.sm
+../protocols/MESI_CMP_filter_directory-L1cache.sm
+../protocols/MESI_CMP_filter_directory_m-mem.sm
+../protocols/standard_CMP-protocol.sm
+

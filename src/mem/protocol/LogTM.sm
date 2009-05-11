@@ -1,0 +1,83 @@
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+   This file has been modified by Kevin Moore and Dan Nussbaum of the
+   Scalable Systems Research Group at Sun Microsystems Laboratories
+   (http://research.sun.com/scalable/) to support the Adaptive
+   Transactional Memory Test Platform (ATMTP).
+
+   Please send email to atmtp-interest@sun.com with feedback, questions, or
+   to request future announcements about ATMTP.
+
+   ----------------------------------------------------------------------
+
+   File modification date: 2008-02-23
+
+   ----------------------------------------------------------------------
+*/
+
+external_type(PartialAddressFilter, desc="Bloom filter for tracking transaction locks."){
+  bool isRead(Address);
+  bool isWrite(Address);
+
+  void addEntry(Address, bool);
+  void clear();
+}
+
+external_type(TransactionInterfaceManager) {
+  bool shouldNackLoad(Address, uint64, MachineID);
+  bool shouldNackStore(Address, uint64, MachineID);
+  bool checkReadWriteSignatures(Address);
+  bool checkWriteSignatures(Address);
+
+  void notifySendNack(Address, uint64, MachineID);
+  void notifyReceiveNack(int, Address, uint64, uint64, MachineID);
+  void notifyReceiveNackFinal(int, Address);
+
+  uint64 getTimestamp(int);
+  uint64 getOldestTimestamp();
+
+  bool existGlobalLoadConflict(int, Address);
+  bool existGlobalStoreConflict(int, Address);
+
+  void profileTransactionMiss(int, bool);
+
+  void xactReplacement(Address);
+
+  /* DEPRECATED */
+  bool existLoadConflict(Address);
+  bool existStoreConflict(Address);
+  bool isInReadFilterSummary(Address);
+  bool isInWriteFilterSummary(Address);
+  bool isTokenOwner(int);
+  void setAbortFlag(int, Address);
+  void setEnemyProcessor(int, MachineID);
+  bool isRemoteOlder(uint64);
+
+}

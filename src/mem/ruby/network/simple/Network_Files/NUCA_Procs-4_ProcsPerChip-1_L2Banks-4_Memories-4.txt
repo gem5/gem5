@@ -1,0 +1,28 @@
+
+processors:4
+procs_per_chip:1
+L2banks:4
+memories:4
+bw_unit:10000
+
+ext_node:L1Cache:0 int_node:0 link_latency:1 bw_multiplier:64
+ext_node:L2Cache:0 int_node:0 link_latency:1 bw_multiplier:64
+ext_node:Directory:0 int_node:0 link_latency:40 bw_multiplier:10
+int_node:0 int_node:1 link_latency:40 bw_multiplier:16
+int_node:0 int_node:2 link_latency:40 bw_multiplier:16
+int_node:0 int_node:3 link_latency:40 bw_multiplier:16
+
+ext_node:L1Cache:1 int_node:1 link_latency:1 bw_multiplier:64
+ext_node:L2Cache:1 int_node:1 link_latency:1 bw_multiplier:64
+ext_node:Directory:1 int_node:1 link_latency:40 bw_multiplier:10
+int_node:1 int_node:2 link_latency:40 bw_multiplier:16
+int_node:1 int_node:3 link_latency:40 bw_multiplier:16
+
+ext_node:L1Cache:2 int_node:2 link_latency:1 bw_multiplier:64
+ext_node:L2Cache:2 int_node:2 link_latency:1 bw_multiplier:64
+ext_node:Directory:2 int_node:2 link_latency:40 bw_multiplier:10
+int_node:2 int_node:3 link_latency:40 bw_multiplier:16
+
+ext_node:L1Cache:3 int_node:3 link_latency:1 bw_multiplier:64
+ext_node:L2Cache:3 int_node:3 link_latency:1 bw_multiplier:64
+ext_node:Directory:3 int_node:3 link_latency:40 bw_multiplier:10

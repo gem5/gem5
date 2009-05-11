@@ -1,0 +1,107 @@
+
+processors:1
+procs_per_chip:1
+L2banks:32
+memories:1
+bw_unit:1000
+
+ext_node:L1Cache:0 int_node:28 link_latency:1 bw_multiplier:64
+ext_node:Directory:0 int_node:28 link_latency:80 bw_multiplier:10
+
+ext_node:L2Cache:0:bank:0 int_node:0 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:1 int_node:1 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:2 int_node:2 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:3 int_node:3 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:4 int_node:4 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:5 int_node:5 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:6 int_node:6 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:7 int_node:7 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:8 int_node:8 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:9 int_node:9 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:10 int_node:10 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:11 int_node:11 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:12 int_node:12 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:13 int_node:13 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:14 int_node:14 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:15 int_node:15 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:16 int_node:16 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:17 int_node:17 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:18 int_node:18 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:19 int_node:19 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:20 int_node:20 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:21 int_node:21 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:22 int_node:22 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:23 int_node:23 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:24 int_node:24 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:25 int_node:25 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:26 int_node:26 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:27 int_node:27 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:28 int_node:28 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:29 int_node:29 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:30 int_node:30 link_latency:1 bw_multiplier:16
+ext_node:L2Cache:0:bank:31 int_node:31 link_latency:1 bw_multiplier:16
+
+int_node:0 int_node:1 link_latency:1 bw_multiplier:16
+int_node:1 int_node:2 link_latency:1 bw_multiplier:16
+int_node:2 int_node:3 link_latency:1 bw_multiplier:16
+int_node:3 int_node:4 link_latency:1 bw_multiplier:16
+int_node:4 int_node:5 link_latency:1 bw_multiplier:16
+int_node:5 int_node:6 link_latency:1 bw_multiplier:16
+int_node:6 int_node:7 link_latency:1 bw_multiplier:16
+
+int_node:8 int_node:9 link_latency:1 bw_multiplier:16
+int_node:9 int_node:10 link_latency:1 bw_multiplier:16
+int_node:10 int_node:11 link_latency:1 bw_multiplier:16
+int_node:11 int_node:12 link_latency:1 bw_multiplier:16
+int_node:12 int_node:13 link_latency:1 bw_multiplier:16
+int_node:13 int_node:14 link_latency:1 bw_multiplier:16
+int_node:14 int_node:15 link_latency:1 bw_multiplier:16
+
+int_node:16 int_node:17 link_latency:1 bw_multiplier:16
+int_node:17 int_node:18 link_latency:1 bw_multiplier:16
+int_node:18 int_node:19 link_latency:1 bw_multiplier:16
+int_node:19 int_node:20 link_latency:1 bw_multiplier:16
+int_node:20 int_node:21 link_latency:1 bw_multiplier:16
+int_node:21 int_node:22 link_latency:1 bw_multiplier:16
+int_node:22 int_node:23 link_latency:1 bw_multiplier:16
+
+int_node:24 int_node:25 link_latency:1 bw_multiplier:16
+int_node:25 int_node:26 link_latency:1 bw_multiplier:16
+int_node:26 int_node:27 link_latency:1 bw_multiplier:16
+int_node:27 int_node:28 link_latency:1 bw_multiplier:16
+int_node:28 int_node:29 link_latency:1 bw_multiplier:16
+int_node:29 int_node:30 link_latency:1 bw_multiplier:16
+int_node:30 int_node:31 link_latency:1 bw_multiplier:16
+
+int_node:0 int_node:8 link_latency:1 bw_multiplier:16
+int_node:8 int_node:16 link_latency:1 bw_multiplier:16
+int_node:16 int_node:24 link_latency:1 bw_multiplier:16
+
+int_node:1 int_node:9 link_latency:1 bw_multiplier:16
+int_node:9 int_node:17 link_latency:1 bw_multiplier:16
+int_node:17 int_node:25 link_latency:1 bw_multiplier:16
+
+int_node:2 int_node:10 link_latency:1 bw_multiplier:16
+int_node:10 int_node:18 link_latency:1 bw_multiplier:16
+int_node:18 int_node:26 link_latency:1 bw_multiplier:16
+
+int_node:3 int_node:11 link_latency:1 bw_multiplier:16
+int_node:11 int_node:19 link_latency:1 bw_multiplier:16
+int_node:19 int_node:27 link_latency:1 bw_multiplier:16
+
+int_node:4 int_node:12 link_latency:1 bw_multiplier:16
+int_node:12 int_node:20 link_latency:1 bw_multiplier:16
+int_node:20 int_node:28 link_latency:1 bw_multiplier:16
+
+int_node:5 int_node:13 link_latency:1 bw_multiplier:16
+int_node:13 int_node:21 link_latency:1 bw_multiplier:16
+int_node:21 int_node:29 link_latency:1 bw_multiplier:16
+
+int_node:6 int_node:14 link_latency:1 bw_multiplier:16
+int_node:14 int_node:22 link_latency:1 bw_multiplier:16
+int_node:22 int_node:30 link_latency:1 bw_multiplier:16
+
+int_node:7 int_node:15 link_latency:1 bw_multiplier:16
+int_node:15 int_node:23 link_latency:1 bw_multiplier:16
+int_node:23 int_node:31 link_latency:1 bw_multiplier:16
+

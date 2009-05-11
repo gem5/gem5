@@ -1,0 +1,1800 @@
+
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+   This file has been modified by Kevin Moore and Dan Nussbaum of the
+   Scalable Systems Research Group at Sun Microsystems Laboratories
+   (http://research.sun.com/scalable/) to support the Adaptive
+   Transactional Memory Test Platform (ATMTP).
+
+   Please send email to atmtp-interest@sun.com with feedback, questions, or
+   to request future announcements about ATMTP.
+
+   ----------------------------------------------------------------------
+
+   File modification date: 2008-02-23
+
+   ----------------------------------------------------------------------
+*/
+
+/*
+ * $Id$
+ *
+ */
+
+
+machine(L1Cache, "MESI Directory L1 Cache CMP") {
+
+  // NODE L1 CACHE
+  // From this node's L1 cache TO the network
+  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
+  // a local L1 -> this L2 bank
+  MessageBuffer responseFromL1Cache, network="To", virtual_network="3", ordered="false";
+  MessageBuffer unblockFromL1Cache, network="To", virtual_network="4", ordered="false";
+
+
+  // To this node's L1 cache FROM the network
+  // a L2 bank -> this L1
+  MessageBuffer requestToL1Cache, network="From", virtual_network="1", ordered="false";
+  // a L2 bank -> this L1
+  MessageBuffer responseToL1Cache, network="From", virtual_network="3", ordered="false";
+
+  // STATES
+  enumeration(State, desc="Cache states", default="L1Cache_State_I") {
+    // Base states
+    NP, desc="Not present in either cache";
+    I, desc="a L1 cache entry Idle";
+    S, desc="a L1 cache entry Shared";
+    E, desc="a L1 cache entry Exclusive";
+    M, desc="a L1 cache entry Modified", format="!b";
+
+    // Transient States
+    IS, desc="L1 idle, issued GETS, have not seen response yet";
+    IM, desc="L1 idle, issued GETX, have not seen response yet";
+    SM, desc="L1 idle, issued GETX, have not seen response yet";
+    IS_I, desc="L1 idle, issued GETS, saw Inv before data because directory doesn't block on GETS hit";
+    IS_S, desc="L1 idle, issued GETS, L2 sent us data but responses from filters have not arrived";
+    IS_E, desc="L1 idle, issued GETS, L2 sent us exclusive data, but responses from filters have not arrived";
+    IM_M, desc="L1 idle, issued GETX, L2 sent us data, but responses from filters have not arrived";
+
+    M_I, desc="L1 replacing, waiting for ACK";
+    E_I, desc="L1 replacing, waiting for ACK";
+
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+    // L1 events
+    Load,            desc="Load request from the home processor";
+    Ifetch,          desc="I-fetch request from the home processor";
+    Store,           desc="Store request from the home processor";
+
+    Replace,        desc="lower level cache replaced this line, also need to invalidate to maintain inclusion";
+    Inv,           desc="Invalidate request from L2 bank";
+    Inv_X,           desc="Invalidate request from L2 bank, trans CONFLICT";
+
+    // internal generated request
+    L1_Replacement,  desc="L1 Replacement", format="!r";
+    L1_Replacement_XACT, desc="L1 Replacement of trans. data", format="!r";
+
+    // other requests
+    Fwd_GETX,   desc="GETX from other processor";
+    Fwd_GETS,   desc="GETS from other processor";
+    Fwd_GET_INSTR,   desc="GET_INSTR from other processor";
+
+    //Data,       desc="Data for processor";
+    L2_Data,           desc="Data for processor, from L2";
+    L2_Data_all_Acks,           desc="Data for processor, from L2, all acks";
+    L2_Exclusive_Data,       desc="Exlusive Data for processor, from L2";
+    L2_Exclusive_Data_all_Acks,       desc="Exlusive Data for processor, from L2, all acks";
+    DataS_fromL1,       desc="data for GETS request, need to unblock directory";
+    Data_all_Acks,       desc="Data for processor, all acks";
+
+    Ack,        desc="Ack for processor";
+    Ack_all,      desc="Last ack for processor";
+
+    WB_Ack,        desc="Ack for replacement";
+
+    // Transactional responses/requests
+    Nack,         desc="Nack for processor";
+    Nack_all,     desc="Last Nack for processor";
+    Check_Write_Filter, desc="Check the write filter";
+    Check_Read_Write_Filter, desc="Check the read and write filters";
+
+    //Fwd_GETS_T,    desc="A GetS from another processor, part of a trans, but not a conflict";
+    Fwd_GETS_X,    desc="A GetS from another processor, trans CONFLICT";
+    Fwd_GETX_X,    desc="A GetS from another processor, trans CONFLICT";
+    Fwd_GET_INSTR_X,  desc="A GetInstr from another processor, trans CONFLICT";
+  }
+
+  // TYPES
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry" ) {
+    State CacheState,        desc="cache state";
+    DataBlock DataBlk,       desc="data for the block";
+    bool Dirty, default="false",   desc="data is dirty";
+  }
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    Address Address,              desc="Line address for this TBE";
+    Address PhysicalAddress,      desc="Physical address for this TBE";
+    State TBEState,        desc="Transient state";
+    DataBlock DataBlk,                desc="Buffer for the data block";
+    bool Dirty, default="false",   desc="data is dirty";
+    bool isPrefetch,    desc="Set if this was caused by a prefetch";
+    int pendingAcks, default="0", desc="number of pending acks";
+    int ThreadID, default="0", desc="SMT thread issuing the request";
+
+    bool RemoveLastOwnerFromDir, default="false", desc="The forwarded data was being replaced";
+    MachineID LastOwnerID,       desc="What component forwarded (last owned) the data"; // For debugging
+
+    // for Transactional Memory
+    uint64 Timestamp, default="0", desc="Timestamp of request";
+    bool nack, default="false",      desc="has this request been nacked?";
+    NetDest Nackers,               desc="The nodes which sent a NACK to us";
+  }
+
+  external_type(CacheMemory) {
+    bool cacheAvail(Address);
+    Address cacheProbe(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    Entry lookup(Address);
+    void changePermission(Address, AccessPermission);
+    bool isTagPresent(Address);
+  }
+
+  external_type(TBETable) {
+    TBE lookup(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    bool isPresent(Address);
+  }
+
+  TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
+
+  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
+  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
+
+
+  MessageBuffer mandatoryQueue, ordered="false", rank="100", abstract_chip_ptr="true";
+
+  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+  TransactionInterfaceManager xact_mgr, abstract_chip_ptr="true", constructor_hack="i";
+
+  // triggerQueue used to indicate when all acks/nacks have been received
+  MessageBuffer triggerQueue, ordered="false";
+
+  int cache_state_to_int(State state);
+
+  // inclusive cache returns L1 entries only
+  Entry getL1CacheEntry(Address addr), return_by_ref="yes" {
+    if (L1DcacheMemory.isTagPresent(addr)) {
+      return L1DcacheMemory[addr];
+    } else {
+      return L1IcacheMemory[addr];
+    }
+  }
+
+  void changeL1Permission(Address addr, AccessPermission permission) {
+    if (L1DcacheMemory.isTagPresent(addr)) {
+      return L1DcacheMemory.changePermission(addr, permission);
+    } else if(L1IcacheMemory.isTagPresent(addr)) {
+      return L1IcacheMemory.changePermission(addr, permission);
+    } else {
+      error("cannot change permission, L1 block not present");
+    }
+  }
+
+  bool isL1CacheTagPresent(Address addr) {
+    return (L1DcacheMemory.isTagPresent(addr) || L1IcacheMemory.isTagPresent(addr));
+  }
+
+  State getState(Address addr) {
+    if((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == true){
+      DEBUG_EXPR(id);
+      DEBUG_EXPR(addr);
+    }
+    assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
+
+    if(L1_TBEs.isPresent(addr)) {
+      return L1_TBEs[addr].TBEState;
+    } else if (isL1CacheTagPresent(addr)) {
+      return getL1CacheEntry(addr).CacheState;
+    }
+    return State:NP;
+  }
+
+
+  // For detecting read/write conflicts on requests from remote processors
+  bool shouldNackLoad(Address addr, uint64 remote_timestamp, MachineID remote_id){
+    return xact_mgr.shouldNackLoad(addr, remote_timestamp, remote_id);
+  }
+
+  bool shouldNackStore(Address addr, uint64 remote_timestamp, MachineID remote_id){
+    return xact_mgr.shouldNackStore(addr, remote_timestamp, remote_id);
+  }
+
+  // For querying read/write signatures on current processor
+  bool checkReadWriteSignatures(Address addr){
+    return xact_mgr.checkReadWriteSignatures(addr);
+  }
+
+  bool checkWriteSignatures(Address addr){
+    return xact_mgr.checkWriteSignatures(addr);
+  }
+
+  void setState(Address addr, State state) {
+    assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
+
+    // MUST CHANGE
+    if(L1_TBEs.isPresent(addr)) {
+      L1_TBEs[addr].TBEState := state;
+    }
+
+    if (isL1CacheTagPresent(addr)) {
+      getL1CacheEntry(addr).CacheState := state;
+
+      // Set permission
+      if (state == State:I) {
+        changeL1Permission(addr, AccessPermission:Invalid);
+      } else if (state == State:S || state == State:E) {
+        changeL1Permission(addr, AccessPermission:Read_Only);
+      } else if (state == State:M) {
+        changeL1Permission(addr, AccessPermission:Read_Write);
+      } else {
+        changeL1Permission(addr, AccessPermission:Busy);
+      }
+    }
+  }
+
+  Event mandatory_request_type_to_event(CacheRequestType type) {
+    if (type == CacheRequestType:LD) {
+      return Event:Load;
+    } else if (type == CacheRequestType:LD_XACT) {
+      return Event:Load;
+    } else if (type == CacheRequestType:IFETCH) {
+      return Event:Ifetch;
+    } else if ((type == CacheRequestType:ST) || (type == CacheRequestType:ATOMIC)) {
+      return Event:Store;
+    } else if((type == CacheRequestType:ST_XACT) || (type == CacheRequestType:LDX_XACT) ) {
+      return Event:Store;
+    } else {
+      error("Invalid CacheRequestType");
+    }
+  }
+
+
+  void printRequest(CacheMsg in_msg){
+    DEBUG_EXPR("Regquest msg: ");
+    DEBUG_EXPR(machineID);
+    DEBUG_EXPR(in_msg.Address);
+    DEBUG_EXPR(in_msg.PhysicalAddress);
+    DEBUG_EXPR(in_msg.Type);
+    DEBUG_EXPR(in_msg.ProgramCounter);
+    DEBUG_EXPR(in_msg.AccessMode);
+    DEBUG_EXPR(in_msg.Size);
+    DEBUG_EXPR(in_msg.Prefetch);
+    DEBUG_EXPR(in_msg.Version);
+    DEBUG_EXPR(in_msg.LogicalAddress);
+    DEBUG_EXPR(in_msg.ThreadID);
+    DEBUG_EXPR(in_msg.Timestamp);
+    DEBUG_EXPR(in_msg.ExposedAction);
+  }
+
+  out_port(requestIntraChipL1Network_out, RequestMsg, requestFromL1Cache);
+  out_port(responseIntraChipL1Network_out, ResponseMsg, responseFromL1Cache);
+  out_port(unblockNetwork_out, ResponseMsg, unblockFromL1Cache);
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+
+  // Trigger Queue
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+    if (triggerQueue_in.isReady()) {
+      peek(triggerQueue_in, TriggerMsg) {
+        if (in_msg.Type == TriggerType:ALL_ACKS) {
+          if (L1_TBEs[in_msg.Address].nack == true){
+            trigger(Event:Nack_all, in_msg.Address);
+          } else {
+            trigger(Event:Ack_all, in_msg.Address);
+          }
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  // Response IntraChip L1 Network - response msg to this L1 cache
+  in_port(responseIntraChipL1Network_in, ResponseMsg, responseToL1Cache) {
+    if (responseIntraChipL1Network_in.isReady()) {
+      peek(responseIntraChipL1Network_in, ResponseMsg) {
+        assert(in_msg.Destination.isElement(machineID));
+        if(in_msg.Type == CoherenceResponseType:L2_DATA_EXCLUSIVE) {
+          if( in_msg.AckCount == 0 ){
+            trigger(Event:L2_Exclusive_Data_all_Acks, in_msg.Address);
+          }
+          else{
+            trigger(Event:L2_Exclusive_Data, in_msg.Address);
+          }
+        } else if(in_msg.Type == CoherenceResponseType:L2_DATA) {
+          if( in_msg.AckCount == 0 ){
+            trigger(Event:L2_Data_all_Acks, in_msg.Address);
+          }
+          else{
+            trigger(Event:L2_Data, in_msg.Address);
+          }
+        } else if(in_msg.Type == CoherenceResponseType:DATA) {
+          if ( (getState(in_msg.Address) == State:IS || getState(in_msg.Address) == State:IS_I) &&
+                machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache ) {
+
+              trigger(Event:DataS_fromL1, in_msg.Address);
+          } else if ( (L1_TBEs[in_msg.Address].pendingAcks - in_msg.AckCount) == 0 ) {
+            trigger(Event:Data_all_Acks, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:ACK) {
+            trigger(Event:Ack, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:NACK) {
+            trigger(Event:Nack, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
+          trigger(Event:WB_Ack, in_msg.Address);
+        } else {
+          error("Invalid L1 response type");
+        }
+      }
+    }
+  }
+
+  // Request InterChip network - request from this L1 cache to the shared L2
+  in_port(requestIntraChipL1Network_in, RequestMsg, requestToL1Cache) {
+    if(requestIntraChipL1Network_in.isReady()) {
+      peek(requestIntraChipL1Network_in, RequestMsg) {
+        assert(in_msg.Destination.isElement(machineID));
+        if (in_msg.Type == CoherenceRequestType:INV) {
+          // check whether we have a inter-proc conflict
+          if(shouldNackStore(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor) == false){
+            trigger(Event:Inv, in_msg.Address);
+          }
+          else{
+            // there's a conflict
+            trigger(Event:Inv_X, in_msg.Address);
+          }
+        } else if(in_msg.Type == CoherenceRequestType:INV_ESCAPE) {
+          // we cannot NACK this
+          trigger(Event:Inv, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:UPGRADE) {
+          // check whether we have a conflict
+          if(shouldNackStore(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor) == true){
+            trigger(Event:Fwd_GETX_X, in_msg.Address);
+          }
+          else{
+            // else no conflict
+            // upgrade transforms to GETX due to race
+            trigger(Event:Fwd_GETX, in_msg.Address);
+          }
+        } else if(in_msg.Type == CoherenceRequestType:GETX_ESCAPE) {
+          // no need for filter checks
+          trigger(Event:Fwd_GETX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GETS) {
+          // check whether we have a conflict
+          if(shouldNackLoad(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor) == true){
+            trigger(Event:Fwd_GETS_X, in_msg.Address);
+          }
+          else{
+            // else no conflict
+            trigger(Event:Fwd_GETS, in_msg.Address);
+          }
+        } else if(in_msg.Type == CoherenceRequestType:GETS_ESCAPE) {
+          // no need for filter checks
+          trigger(Event:Fwd_GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GET_INSTR) {
+          if(shouldNackLoad(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor) == true){
+            trigger(Event:Fwd_GET_INSTR_X, in_msg.Address);
+          }
+          else{
+            // else no conflict
+            trigger(Event:Fwd_GET_INSTR, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:GET_INSTR_ESCAPE) {
+          // no need for filter checks
+          trigger(Event:Fwd_GET_INSTR, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:REPLACE) {
+          trigger(Event:Replace, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:CHECK_WRITE_FILTER) {
+          trigger(Event:Check_Write_Filter, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:CHECK_READ_WRITE_FILTER) {
+          trigger(Event:Check_Read_Write_Filter, in_msg.Address);
+        } else {
+          error("Invalid forwarded request type");
+        }
+      }
+    }
+  }
+
+  // Mandatory Queue betweens Node's CPU and it's L1 caches
+  in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
+    if (mandatoryQueue_in.isReady()) {
+      peek(mandatoryQueue_in, CacheMsg) {
+
+        // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
+
+        if (in_msg.Type == CacheRequestType:IFETCH) {
+          // ** INSTRUCTION ACCESS ***
+
+          // Check to see if it is in the OTHER L1
+          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+            // check whether block is transactional
+            if (checkReadWriteSignatures(in_msg.Address) == true){
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement_XACT, in_msg.Address);
+            }
+            else{
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.Address);
+            }
+          }
+          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+            // The tag matches for the L1, so the L1 asks the L2 for it.
+            printRequest(in_msg);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+          } else {
+            if (L1IcacheMemory.cacheAvail(in_msg.Address)) {
+              // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
+              printRequest(in_msg);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            } else {
+              // check whether block is transactional
+              if(checkReadWriteSignatures( L1IcacheMemory.cacheProbe(in_msg.Address) ) == true){
+                // No room in the L1, so we need to make room in the L1
+                trigger(Event:L1_Replacement_XACT, L1IcacheMemory.cacheProbe(in_msg.Address));
+              }
+              else{
+                // No room in the L1, so we need to make room in the L1
+                trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.Address));
+              }
+            }
+          }
+        } else {
+          // *** DATA ACCESS ***
+
+          // Check to see if it is in the OTHER L1
+          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+            // check whether block is transactional
+            if(checkReadWriteSignatures(in_msg.Address) == true){
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement_XACT, in_msg.Address);
+            }
+            else{
+              // The block is in the wrong L1, put the request on the queue to the shared L2
+              trigger(Event:L1_Replacement, in_msg.Address);
+            }
+          }
+          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+            // The tag matches for the L1, so the L1 ask the L2 for it
+            printRequest(in_msg);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+          } else {
+            if (L1DcacheMemory.cacheAvail(in_msg.Address)) {
+              // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
+              printRequest(in_msg);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            } else {
+              // check whether block is transactional
+              if(checkReadWriteSignatures( L1DcacheMemory.cacheProbe(in_msg.Address) ) == true){
+                // No room in the L1, so we need to make room in the L1
+                trigger(Event:L1_Replacement_XACT, L1DcacheMemory.cacheProbe(in_msg.Address));
+              }
+              else{
+                // No room in the L1, so we need to make room in the L1
+                trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.Address));
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // ACTIONS
+  action(a_issueGETS, "a", desc="Issue GETS") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        if(in_msg.ExposedAction){
+          out_msg.Type := CoherenceRequestType:GETS_ESCAPE;
+        }
+        else{
+          out_msg.Type := CoherenceRequestType:GETS;
+        }
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        DEBUG_EXPR(address);
+        DEBUG_EXPR(out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+        // either return transactional timestamp or current time
+        out_msg.Timestamp := in_msg.Timestamp;
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+      }
+    }
+  }
+
+  action(ai_issueGETINSTR, "ai", desc="Issue GETINSTR") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        if(in_msg.ExposedAction){
+          out_msg.Type := CoherenceRequestType:GET_INSTR_ESCAPE;
+        }
+        else{
+          out_msg.Type := CoherenceRequestType:GET_INSTR;
+        }
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        DEBUG_EXPR(address);
+        DEBUG_EXPR(out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+        // either return transactional timestamp or current time
+        out_msg.Timestamp := in_msg.Timestamp;
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+      }
+    }
+  }
+
+
+  action(b_issueGETX, "b", desc="Issue GETX") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        if(in_msg.ExposedAction){
+          out_msg.Type := CoherenceRequestType:GETX_ESCAPE;
+        }
+        else{
+          out_msg.Type := CoherenceRequestType:GETX;
+        }
+        out_msg.Requestor := machineID;
+        DEBUG_EXPR(machineID);
+        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        DEBUG_EXPR(address);
+        DEBUG_EXPR(out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+        // either return transactional timestamp or current time
+        out_msg.Timestamp := in_msg.Timestamp;
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+      }
+    }
+  }
+
+  action(c_issueUPGRADE, "c", desc="Issue GETX") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceRequestType:UPGRADE;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        DEBUG_EXPR(address);
+        DEBUG_EXPR(out_msg.Destination);
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Prefetch := in_msg.Prefetch;
+        out_msg.AccessMode := in_msg.AccessMode;
+        // either return transactional timestamp or current time
+        out_msg.Timestamp := in_msg.Timestamp;
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+      }
+    }
+  }
+
+  /****************************BEGIN Transactional Actions*************************/
+  // send a NACK to requestor - the equivalent of a NACKed data response
+  //  Note we don't have to track the ackCount here because we only send data NACKs when
+  //    we are exclusive with the data. Otherwise the L2 will source the data (and set the ackCount
+  //    appropriately)
+  action(e_sendNackToRequestor, "en", desc="send nack to requestor (could be L2 or L1)") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceResponseType:NACK;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        // send oldest timestamp (or current time if no thread in transaction)
+        out_msg.Timestamp := xact_mgr.getOldestTimestamp();
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.Timestamp);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+        // ackCount is by default 0
+      }
+      // also inform driver about sending NACK
+      xact_mgr.notifySendNack(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor);
+    }
+  }
+
+  // send a NACK when L2 wants us to invalidate ourselves
+  action(fi_sendInvNack, "fin", desc="send data to the L2 cache") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceResponseType:NACK;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        // send oldest timestamp (or current time if no thread in transaction)
+        out_msg.Timestamp := xact_mgr.getOldestTimestamp();
+        out_msg.AckCount := 1;
+        APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.Timestamp);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+      }
+      // also inform driver about sending NACK
+      xact_mgr.notifySendNack(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor);
+    }
+  }
+
+  // for when we want to check our Write filters
+  action(a_checkWriteFilter, "awf", desc="Check our write filter for conflicts") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      // For correct conflict detection, should call shouldNackLoad() NOT
+      //  checkWriteSignatures()
+      if(shouldNackLoad(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor) == true){
+        // conflict - send a NACK
+        enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceResponseType:NACK;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+          // send oldest timestamp (or current time if no thread in transaction)
+          out_msg.Timestamp := xact_mgr.getOldestTimestamp();
+          out_msg.AckCount := 1;
+          APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.Timestamp);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+        }
+        // also inform driver about sending NACK
+        xact_mgr.notifySendNack(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor);
+      }
+      else{
+        // no conflict - send ACK
+        enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceResponseType:ACK;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+          out_msg.AckCount := 1;
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+        }
+      }
+    }
+  }
+
+  // for when we want to check our Read + Write filters
+  action(a_checkReadWriteFilter, "arwf", desc="Check our write filter for conflicts") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      // For correct conflict detection, we should call shouldNackStore() NOT
+      //  checkReadWriteSignatures()
+      if(shouldNackStore(in_msg.PhysicalAddress, in_msg.Timestamp,in_msg.Requestor ) == true){
+        // conflict - send a NACK
+        enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceResponseType:NACK;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+          // send oldest timestamp (or current time if no thread in transaction)
+          out_msg.Timestamp := xact_mgr.getOldestTimestamp();
+          out_msg.AckCount := 1;
+          APPEND_TRANSITION_COMMENT(out_msg.Timestamp);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.Timestamp);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+        }
+        // also inform driver about sending NACK
+        xact_mgr.notifySendNack(in_msg.PhysicalAddress, in_msg.Timestamp, in_msg.Requestor);
+      }
+      else{
+        // no conflict - send ACK
+        enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceResponseType:ACK;
+          out_msg.Sender := machineID;
+          out_msg.Destination.add(in_msg.Requestor);
+          out_msg.MessageSize := MessageSizeType:Response_Control;
+          out_msg.AckCount := 1;
+          APPEND_TRANSITION_COMMENT(" ");
+          APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+        }
+      }
+    }
+  }
+
+  action(r_notifyReceiveNack, "nrn", desc="Notify the driver when a nack is received"){
+    peek(responseIntraChipL1Network_in, ResponseMsg) {
+      xact_mgr.notifyReceiveNack(L1_TBEs[address].ThreadID, in_msg.PhysicalAddress, L1_TBEs[address].Timestamp, in_msg.Timestamp, in_msg.Sender);
+    }
+  }
+
+  // Used to driver to take abort or retry action
+  action(r_notifyReceiveNackFinal, "nrnf", desc="Notify the driver when the final nack is received"){
+    xact_mgr.notifyReceiveNackFinal(L1_TBEs[address].ThreadID, L1_TBEs[address].PhysicalAddress);
+  }
+
+  // this version uses physical address stored in TBE
+
+  action(x_tbeSetPrefetch,  "xp",  desc="Set the prefetch bit in the TBE."){
+    peek(mandatoryQueue_in, CacheMsg) {
+      if(in_msg.Prefetch == PrefetchBit:No){
+        L1_TBEs[address].isPrefetch := false;
+      }
+      else{
+        assert(in_msg.Prefetch == PrefetchBit:Yes);
+        L1_TBEs[address].isPrefetch := true;
+      }
+    }
+  }
+
+  action(x_tbeSetPhysicalAddress, "ia", desc="Sets the physical address field of the TBE"){
+    peek(mandatoryQueue_in, CacheMsg) {
+      L1_TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
+      L1_TBEs[address].ThreadID := in_msg.ThreadID;
+      L1_TBEs[address].Timestamp := in_msg.Timestamp;
+    }
+  }
+
+  // Send unblock cancel to L2 (for nacked requests that blocked directory)
+  action(jj_sendUnblockCancel, "\jc", desc="send unblock to the L2 cache") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCK_CANCEL;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      // also pass along list of NACKers
+      out_msg.Nackers := L1_TBEs[address].Nackers;
+    }
+  }
+
+  //same as ACK case, but sets the NACK flag for TBE entry
+  action(q_updateNackCount, "qn", desc="Update ack count") {
+    peek(responseIntraChipL1Network_in, ResponseMsg) {
+      // mark this request as having been NACKed
+      L1_TBEs[address].nack := true;
+      APPEND_TRANSITION_COMMENT(" before pendingAcks: ");
+      APPEND_TRANSITION_COMMENT(L1_TBEs[address].pendingAcks);
+      L1_TBEs[address].pendingAcks := L1_TBEs[address].pendingAcks - in_msg.AckCount;
+      L1_TBEs[address].Nackers.add(in_msg.Sender);
+      APPEND_TRANSITION_COMMENT(" ");
+      APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+      APPEND_TRANSITION_COMMENT(" ");
+      APPEND_TRANSITION_COMMENT(in_msg.AckCount);
+
+      APPEND_TRANSITION_COMMENT(" after pendingAcks: ");
+      APPEND_TRANSITION_COMMENT(L1_TBEs[address].pendingAcks);
+      APPEND_TRANSITION_COMMENT(" sender: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Sender);
+      if (L1_TBEs[address].pendingAcks == 0) {
+        enqueue(triggerQueue_out, TriggerMsg) {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := TriggerType:ALL_ACKS;
+          APPEND_TRANSITION_COMMENT(" Triggering All_Acks");
+        }
+      }
+    }
+  }
+
+  action(q_profileOverflow, "po", desc="profile the overflowed block"){
+    profileOverflow(address, machineID);
+  }
+
+  action(qq_xactReplacement, "\q", desc="replaced a transactional block"){
+    xact_mgr.xactReplacement(address);
+  }
+
+  action(p_profileRequest, "pcc", desc="Profile request msg") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      APPEND_TRANSITION_COMMENT(" request: Timestamp: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Timestamp);
+      APPEND_TRANSITION_COMMENT(" PA: ");
+      APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+      APPEND_TRANSITION_COMMENT(" Type: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Type);
+      APPEND_TRANSITION_COMMENT(" VPC: ");
+      APPEND_TRANSITION_COMMENT(in_msg.ProgramCounter);
+      APPEND_TRANSITION_COMMENT(" Mode: ");
+      APPEND_TRANSITION_COMMENT(in_msg.AccessMode);
+      APPEND_TRANSITION_COMMENT(" PF: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Prefetch);
+      APPEND_TRANSITION_COMMENT(" VA: ");
+      APPEND_TRANSITION_COMMENT(in_msg.LogicalAddress);
+      APPEND_TRANSITION_COMMENT(" Thread: ");
+      APPEND_TRANSITION_COMMENT(in_msg.ThreadID);
+      APPEND_TRANSITION_COMMENT(" Exposed: ");
+      APPEND_TRANSITION_COMMENT(in_msg.ExposedAction);
+    }
+  }
+
+  /********************************END Transactional Actions************************/
+
+  action(d_sendDataToRequestor, "d", desc="send data to requestor") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+        out_msg.Dirty := getL1CacheEntry(address).Dirty;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(d2_sendDataToL2, "d2", desc="send data to the L2 cache because of M downgrade") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(dt_sendDataToRequestor_fromTBE, "dt", desc="send data to requestor") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.DataBlk := L1_TBEs[address].DataBlk;
+        out_msg.Dirty := L1_TBEs[address].Dirty;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.RemoveLastOwnerFromDir := true;
+        out_msg.LastOwnerID := machineID;
+      }
+    }
+  }
+
+  action(d2t_sendDataToL2_fromTBE, "d2t", desc="send data to the L2 cache") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.DataBlk := L1_TBEs[address].DataBlk;
+      out_msg.Dirty := L1_TBEs[address].Dirty;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(f_sendDataToL2, "f", desc="send data to the L2 cache") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+    }
+  }
+
+  action(ft_sendDataToL2_fromTBE, "ft", desc="send data to the L2 cache") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.DataBlk := L1_TBEs[address].DataBlk;
+      out_msg.Dirty := L1_TBEs[address].Dirty;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Writeback_Data;
+    }
+  }
+
+  action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
+    peek(requestIntraChipL1Network_in, RequestMsg) {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceResponseType:ACK;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+        out_msg.AckCount := 1;
+        APPEND_TRANSITION_COMMENT(" ");
+        APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+      }
+    }
+  }
+
+
+  action(g_issuePUTX, "g", desc="send data to the L2 cache") {
+    enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTX;
+      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.Requestor:= machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      if (getL1CacheEntry(address).Dirty) {
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      } else {
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(g_issuePUTS, "gs", desc="send clean data to the L2 cache") {
+    enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTS;
+      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.Requestor:= machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      if (getL1CacheEntry(address).Dirty) {
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      } else {
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  // used to determine whether to set sticky-M or sticky-S state in directory (M or SS in L2)
+  action(g_issuePUTXorPUTS, "gxs", desc="send data to the L2 cache") {
+    enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      if(checkWriteSignatures(address) == true){
+        // we should set sticky-M
+        out_msg.Type := CoherenceRequestType:PUTX;
+      }
+      else{
+        // we should set sticky-S
+        out_msg.Type := CoherenceRequestType:PUTS;
+      }
+      out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
+      out_msg.Dirty := getL1CacheEntry(address).Dirty;
+      out_msg.Requestor:= machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      if (getL1CacheEntry(address).Dirty) {
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      } else {
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCK;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      // inform L2 whether request was transactional
+      //out_msg.Transactional := L1_TBEs[address].Trans;
+      out_msg.Transactional := checkReadWriteSignatures(address);
+
+      out_msg.RemoveLastOwnerFromDir := L1_TBEs[address].RemoveLastOwnerFromDir;
+      out_msg.LastOwnerID := L1_TBEs[address].LastOwnerID;
+    }
+  }
+
+  action(jj_sendExclusiveUnblock, "\j", desc="send unblock to the L2 cache") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:EXCLUSIVE_UNBLOCK;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      // inform L2 whether request was transactional
+      // out_msg.Transactional := L1_TBEs[address].Trans;
+      out_msg.Transactional := checkReadWriteSignatures(address);
+
+      out_msg.RemoveLastOwnerFromDir :=  L1_TBEs[address].RemoveLastOwnerFromDir;
+      out_msg.LastOwnerID := L1_TBEs[address].LastOwnerID;
+    }
+  }
+
+
+
+  action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
+    DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    sequencer.readCallback(address, getL1CacheEntry(address).DataBlk);
+  }
+
+  action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
+    DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    sequencer.writeCallback(address, getL1CacheEntry(address).DataBlk);
+    getL1CacheEntry(address).Dirty := true;
+  }
+
+  action(h_load_conflict, "hc", desc="Notify sequencer of conflict on load") {
+    sequencer.readConflictCallback(address);
+  }
+
+  action(hh_store_conflict, "\hc", desc="If not prefetch, notify sequencer that store completed.") {
+    sequencer.writeConflictCallback(address);
+  }
+
+  action(i_allocateTBE, "i", desc="Allocate TBE (isPrefetch=0, number of invalidates=0)") {
+    check_allocate(L1_TBEs);
+    L1_TBEs.allocate(address);
+    L1_TBEs[address].isPrefetch := false;
+    L1_TBEs[address].Dirty := getL1CacheEntry(address).Dirty;
+    L1_TBEs[address].DataBlk := getL1CacheEntry(address).DataBlk;
+  }
+
+  action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
+    mandatoryQueue_in.dequeue();
+  }
+
+  action(j_popTriggerQueue, "jp", desc="Pop trigger queue.") {
+    triggerQueue_in.dequeue();
+  }
+
+  action(l_popRequestQueue, "l", desc="Pop incoming request queue and profile the delay within this virtual network") {
+    profileMsgDelay(2, requestIntraChipL1Network_in.dequeue_getDelayCycles());
+  }
+
+  action(o_popIncomingResponseQueue, "o", desc="Pop Incoming Response queue and profile the delay within this virtual network") {
+    profileMsgDelay(3, responseIntraChipL1Network_in.dequeue_getDelayCycles());
+  }
+
+  action(s_deallocateTBE, "s", desc="Deallocate TBE") {
+    L1_TBEs.deallocate(address);
+  }
+
+  action(u_writeDataToL1Cache, "u", desc="Write data to cache") {
+    peek(responseIntraChipL1Network_in, ResponseMsg) {
+      getL1CacheEntry(address).DataBlk := in_msg.DataBlk;
+      getL1CacheEntry(address).Dirty := in_msg.Dirty;
+      if (machineIDToMachineType(in_msg.Sender) == MachineType:L1Cache) {
+        L1_TBEs[address].RemoveLastOwnerFromDir := in_msg.RemoveLastOwnerFromDir;
+        L1_TBEs[address].LastOwnerID := in_msg.LastOwnerID;
+      }
+    }
+  }
+
+  action(q_updateAckCount, "q", desc="Update ack count") {
+    peek(responseIntraChipL1Network_in, ResponseMsg) {
+      APPEND_TRANSITION_COMMENT(" before pendingAcks: ");
+      APPEND_TRANSITION_COMMENT(L1_TBEs[address].pendingAcks);
+      L1_TBEs[address].pendingAcks := L1_TBEs[address].pendingAcks - in_msg.AckCount;
+      APPEND_TRANSITION_COMMENT(" ");
+      APPEND_TRANSITION_COMMENT(in_msg.PhysicalAddress);
+      APPEND_TRANSITION_COMMENT(" ");
+      APPEND_TRANSITION_COMMENT(in_msg.AckCount);
+      APPEND_TRANSITION_COMMENT(" after pendingAcks: ");
+      APPEND_TRANSITION_COMMENT(L1_TBEs[address].pendingAcks);
+      APPEND_TRANSITION_COMMENT(" sender: ");
+      APPEND_TRANSITION_COMMENT(in_msg.Sender);
+      if (L1_TBEs[address].pendingAcks == 0) {
+        enqueue(triggerQueue_out, TriggerMsg) {
+          out_msg.Address := address;
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.Type := TriggerType:ALL_ACKS;
+          APPEND_TRANSITION_COMMENT(" Triggering All_Acks");
+        }
+      }
+    }
+  }
+
+  action(z_stall, "z", desc="Stall") {
+  }
+
+  action(ff_deallocateL1CacheBlock, "\f", desc="Deallocate L1 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
+    if (L1DcacheMemory.isTagPresent(address)) {
+      L1DcacheMemory.deallocate(address);
+    } else {
+      L1IcacheMemory.deallocate(address);
+    }
+  }
+
+  action(oo_allocateL1DCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B.") {
+    if (L1DcacheMemory.isTagPresent(address) == false) {
+      L1DcacheMemory.allocate(address);
+      // reset trans bit
+    }
+  }
+
+  action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
+    if (L1IcacheMemory.isTagPresent(address) == false) {
+      L1IcacheMemory.allocate(address);
+      // reset trans bit
+    }
+  }
+
+  action(zz_recycleRequestQueue, "zz", desc="recycle L1 request queue") {
+    requestIntraChipL1Network_in.recycle();
+  }
+
+  action(z_recycleMandatoryQueue, "\z", desc="recycle L1 request queue") {
+    mandatoryQueue_in.recycle();
+  }
+
+  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      profile_L1Cache_miss(in_msg, id);
+    }
+  }
+
+  action(uuu_profileTransactionLoadMiss, "\uu", desc="Profile Miss") {
+    xact_mgr.profileTransactionMiss(L1_TBEs[address].ThreadID, true);
+  }
+
+  action(uuu_profileTransactionStoreMiss, "\uuu", desc="Profile Miss") {
+    xact_mgr.profileTransactionMiss(L1_TBEs[address].ThreadID, false);
+  }
+
+
+  //*****************************************************
+  // TRANSITIONS
+  //*****************************************************
+
+  // For filter responses
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, IS_S, IS_E, IM_M, M_I, E_I}, Check_Write_Filter){
+    a_checkWriteFilter;
+    l_popRequestQueue;
+  }
+
+  transition({NP, I, S, E, M, IS, IM, SM, IS_I, IS_S, IS_E, IM_M, M_I, E_I}, Check_Read_Write_Filter){
+    a_checkReadWriteFilter;
+    l_popRequestQueue;
+  }
+
+  // Transitions for Load/Store/Replacement/WriteBack from transient states
+  transition({IS, IM, IS_I, IS_S, IS_E, IM_M, M_I, E_I}, {Load, Ifetch, Store, L1_Replacement, L1_Replacement_XACT}) {
+    z_recycleMandatoryQueue;
+  }
+
+  // Transitions from Idle
+  transition({NP,I}, {L1_Replacement, L1_Replacement_XACT}) {
+    ff_deallocateL1CacheBlock;
+  }
+
+  transition({NP,I}, Load, IS) {
+    p_profileRequest;
+    oo_allocateL1DCacheBlock;
+    i_allocateTBE;
+    x_tbeSetPrefetch;
+    x_tbeSetPhysicalAddress;
+    a_issueGETS;
+    uu_profileMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition({NP,I}, Ifetch, IS) {
+    p_profileRequest;
+    pp_allocateL1ICacheBlock;
+    i_allocateTBE;
+    x_tbeSetPhysicalAddress;
+    ai_issueGETINSTR;
+    uu_profileMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition({NP,I}, Store, IM) {
+    p_profileRequest;
+    oo_allocateL1DCacheBlock;
+    i_allocateTBE;
+    x_tbeSetPrefetch;
+    x_tbeSetPhysicalAddress;
+    b_issueGETX;
+    uu_profileMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition({NP, I}, Inv) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // Transactional invalidates to blocks in NP or I are
+  //   transactional blocks that have been silently replaced
+  // FALSE POSITIVE - can't tell whether block was never in our read/write set or was replaced
+  transition({NP, I}, Inv_X) {
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  // for L2 replacements. This happens due to our silent replacements.
+  transition({NP, I}, Replace) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Shared
+  transition(S, {Load,Ifetch}) {
+    p_profileRequest;
+    h_load_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, Store, IM) {
+    p_profileRequest;
+    i_allocateTBE;
+    x_tbeSetPrefetch;
+    x_tbeSetPhysicalAddress;
+    b_issueGETX;
+    uu_profileMiss;
+    k_popMandatoryQueue;
+  }
+
+  transition(S, L1_Replacement, I) {
+    ff_deallocateL1CacheBlock;
+  }
+
+  transition(S, L1_Replacement_XACT, I) {
+    q_profileOverflow;
+    qq_xactReplacement;
+    ff_deallocateL1CacheBlock;
+  }
+
+  transition(S, Inv, I) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(S, Inv_X) {
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  // for L2 replacements.
+  transition(S, Replace, I){
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Exclusive
+
+  transition(E, {Load, Ifetch}) {
+    p_profileRequest;
+    h_load_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(E, Store, M) {
+    p_profileRequest;
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(E, L1_Replacement, M_I) {
+    // The data is clean
+    i_allocateTBE;
+    g_issuePUTX;   // send data, but hold in case forwarded request
+    ff_deallocateL1CacheBlock;
+  }
+
+  // we can't go to M_I here because we need to maintain transactional read isolation on this line, and M_I allows GETS and GETXs to
+  //        be serviced. For correctness we need to make sure we are marked as a transactional reader (if we never read transactionally written data back exclusively) or transactional writer
+  transition(E, L1_Replacement_XACT, E_I) {
+    q_profileOverflow;
+    qq_xactReplacement;
+    // The data is clean
+    i_allocateTBE;
+    g_issuePUTXorPUTS;   // send data and hold, but do not release on forwarded requests
+    ff_deallocateL1CacheBlock;
+  }
+
+  transition(E, Inv, I) {
+    // don't send data
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(E, Inv_X){
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  // for L2 replacements
+  transition(E, Replace, I) {
+    // don't send data
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition(E, Fwd_GETX, I) {
+    d_sendDataToRequestor;
+    l_popRequestQueue;
+  }
+
+  transition(E, {Fwd_GETS, Fwd_GET_INSTR}, S) {
+    d_sendDataToRequestor;
+    d2_sendDataToL2;
+    l_popRequestQueue;
+  }
+
+  // If we see Fwd_GETS_X this is a FALSE POSITIVE, since we never
+  //  modified this block
+  transition(E, {Fwd_GETS_X, Fwd_GETX_X, Fwd_GET_INSTR_X}){
+    // send NACK instead of data
+    e_sendNackToRequestor;
+    l_popRequestQueue;
+  }
+
+  // Transitions from Modified
+  transition(M, {Load, Ifetch}) {
+    p_profileRequest;
+    h_load_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M, Store) {
+    p_profileRequest;
+    hh_store_hit;
+    k_popMandatoryQueue;
+  }
+
+  transition(M, L1_Replacement, M_I) {
+    i_allocateTBE;
+    g_issuePUTX;   // send data, but hold in case forwarded request
+    ff_deallocateL1CacheBlock;
+  }
+
+  // in order to prevent releasing isolation of transactional data (either written to just read) we need to
+  //        mark ourselves as a transactional reader (e.g. SS state in L2) or transactional writer (e.g. M state in L2). We need to transition to the same E_I
+  //        state as for transactional replacements from E state, and ignore all requests.
+  transition(M, L1_Replacement_XACT, E_I) {
+    q_profileOverflow;
+    qq_xactReplacement;
+    i_allocateTBE;
+    g_issuePUTXorPUTS;   // send data, but do not release on forwarded requests
+    ff_deallocateL1CacheBlock;
+  }
+
+  transition({M_I, E_I}, WB_Ack, I) {
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(M, Inv, I) {
+    f_sendDataToL2;
+    l_popRequestQueue;
+  }
+
+  // for L2 replacement
+  transition(M, Replace, I) {
+    f_sendDataToL2;
+    l_popRequestQueue;
+  }
+
+  transition(M, Inv_X){
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  transition(E_I, Inv) {
+    // ack requestor's GETX, but wait for WB_Ack from L2
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // maintain isolation on M or E replacements
+  // took out M_I, since L2 transitions to M upon PUTX, and we should no longer receives invalidates
+  transition(E_I, Inv_X) {
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  // allow L2 to get data while we replace
+  transition({M_I, E_I}, Replace, I) {
+    ft_sendDataToL2_fromTBE;
+    s_deallocateTBE;
+    l_popRequestQueue;
+  }
+
+  transition(M, Fwd_GETX, I) {
+    d_sendDataToRequestor;
+    l_popRequestQueue;
+  }
+
+  transition(M, {Fwd_GETS, Fwd_GET_INSTR}, S) {
+    d_sendDataToRequestor;
+    d2_sendDataToL2;
+    l_popRequestQueue;
+  }
+
+  transition(M, {Fwd_GETX_X, Fwd_GETS_X, Fwd_GET_INSTR_X}) {
+    // send NACK instead of data
+    e_sendNackToRequestor;
+    l_popRequestQueue;
+  }
+
+  // for simplicity we ignore all other requests while we wait for L2 to receive the clean data.  Otherwise we will incorrectly transfer
+  //  ownership and not mark ourselves as a transactional sharer in the L2 directory
+  transition(E_I, {Fwd_GETX, Fwd_GETS, Fwd_GET_INSTR, Fwd_GETS_X, Fwd_GETX_X, Fwd_GET_INSTR_X}) {
+    // send NACK instead of data
+    e_sendNackToRequestor;
+    l_popRequestQueue;
+  }
+
+  transition(M_I, Fwd_GETX, I) {
+    dt_sendDataToRequestor_fromTBE;
+    s_deallocateTBE;
+    l_popRequestQueue;
+  }
+
+  transition(M_I, {Fwd_GETS, Fwd_GET_INSTR}, I) {
+    dt_sendDataToRequestor_fromTBE;
+    d2t_sendDataToL2_fromTBE;
+    s_deallocateTBE;
+    l_popRequestQueue;
+  }
+
+  // don't release isolation on forwarded conflicting requests
+  transition(M_I, {Fwd_GETS_X, Fwd_GETX_X, Fwd_GET_INSTR_X}) {
+    // send NACK instead of data
+    e_sendNackToRequestor;
+    l_popRequestQueue;
+  }
+
+  // Transitions from IS
+  transition({IS, IS_I}, Inv, IS_I) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // Only possible when L2 sends us data in SS state. No conflict is possible, so no need to unblock L2
+  transition(IS, L2_Data_all_Acks, S) {
+    u_writeDataToL1Cache;
+    // unblock L2 because it blocks on GETS
+    j_sendUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  // Made the L2 block on GETS requests, so we are guaranteed to have no races with GETX
+  //   We only get into this transition if the writer had to retry his GETX request that invalidated us, and L2 went back to SS
+  transition(IS_I, L2_Data_all_Acks, S) {
+    u_writeDataToL1Cache;
+    // unblock L2 because it blocks on GETS
+    j_sendUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  // for L2 replacements
+  transition({IS, IS_I}, Replace, IS_I) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // These transitions are for when L2 sends us data, because it has exclusive copy, but L1 filter responses have not arrived
+  transition({IS, IS_I}, Ack){
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition({IS, IS_I}, Nack) {
+    r_notifyReceiveNack;
+    q_updateNackCount;
+    o_popIncomingResponseQueue;
+  }
+
+  // IS_I also allowed because L2 Inv beat our GETS request, and now L2 is in NP state, ready to service our GETS.
+  transition({IS, IS_I}, L2_Data, IS_S) {
+    u_writeDataToL1Cache;
+    // This message carries the inverse of the ack count
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_S, Ack){
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_S, Nack) {
+    r_notifyReceiveNack;
+    q_updateNackCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_S, Ack_all, S){
+    // tell L2 we succeeded
+    j_sendUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // retry request from I
+  transition(IS_S, Nack_all, I){
+    ff_deallocateL1CacheBlock;
+    // This is also the final NACK
+    r_notifyReceiveNackFinal;
+    // tell L2 we failed
+    jj_sendUnblockCancel;
+    h_load_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // L2 is trying to give us exclusive data
+  // we can go to E because L2 is guaranteed to have only copy (ie no races from other L1s possible)
+  transition({IS, IS_I}, L2_Exclusive_Data, IS_E) {
+    u_writeDataToL1Cache;
+    // This message carries the inverse of the ack count
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition({IS, IS_I}, L2_Exclusive_Data_all_Acks, E){
+    u_writeDataToL1Cache;
+    // tell L2 we succeeded
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_E, Ack){
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_E, Nack) {
+    r_notifyReceiveNack;
+    q_updateNackCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IS_E, Ack_all, E){
+    // tell L2 we succeeded
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // retry request from I
+  transition(IS_E, Nack_all, I){
+    ff_deallocateL1CacheBlock;
+    // This is also the final NACK
+    r_notifyReceiveNackFinal;
+    // need to tell L2 we failed
+    jj_sendUnblockCancel;
+    h_load_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // Normal case - when L2 doesn't have exclusive line, but L1 has line.
+  // We got NACKed . Try again in state I
+  // IMPORTANT: filters are NOT checked when L2 is in SS, because nobody has modified the line.
+  //  For this transition we only receive NACKs from the exclusive writer
+  transition({IS, IS_I}, Nack_all, I) {
+    // This is also the final NACK
+    r_notifyReceiveNackFinal;
+    // L2 is blocked when L1 is exclusive
+    jj_sendUnblockCancel;
+    h_load_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  transition({IS, IS_I}, Inv_X) {
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  transition(IS, DataS_fromL1, S) {
+    u_writeDataToL1Cache;
+    j_sendUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  // This occurs when there is a race between our GETS and another L1's GETX, and the GETX wins
+  //  The L2 is now blocked because our request was forwarded to exclusive L1 (ie MT_IIB)
+  transition(IS_I, DataS_fromL1, S) {
+    u_writeDataToL1Cache;
+    j_sendUnblock;
+    uuu_profileTransactionLoadMiss;
+    h_load_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  // Transitions from IM
+  transition({IM, SM}, Inv, IM) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  transition({IM, SM}, Inv_X) {
+    fi_sendInvNack;
+    l_popRequestQueue;
+  }
+
+  // for L2 replacements
+  transition({IM, SM}, Replace, IM) {
+    fi_sendInvAck;
+    l_popRequestQueue;
+  }
+
+  // only possible when L1 exclusive sends us the line
+  transition(IM, Data_all_Acks, M) {
+    u_writeDataToL1Cache;
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionStoreMiss;
+    hh_store_hit;
+    s_deallocateTBE;
+   o_popIncomingResponseQueue;
+  }
+
+  // L2 is trying to give us data
+  // Don't go to SM because we do not want a S copy on failure. This might cause conflicts for older writers that
+  //  nacked us.
+  transition(IM, L2_Data, IM_M) {
+    u_writeDataToL1Cache;
+    // This message carries the inverse of the ack count
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IM, L2_Data_all_Acks, M){
+    u_writeDataToL1Cache;
+    // tell L2 we succeeded
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionStoreMiss;
+    hh_store_hit;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IM_M, Ack){
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IM_M, Nack) {
+    r_notifyReceiveNack;
+    q_updateNackCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(IM_M, Ack_all, M){
+    // tell L2 we succeeded
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionStoreMiss;
+    hh_store_hit;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // retry request from I
+  transition(IM_M, Nack_all, I){
+    ff_deallocateL1CacheBlock;
+    // This is also the final NACK
+    r_notifyReceiveNackFinal;
+    // need to tell L2 we failed
+    jj_sendUnblockCancel;
+    hh_store_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // transitions from SM
+  transition({SM, IM}, Ack) {
+    q_updateAckCount;
+    o_popIncomingResponseQueue;
+  }
+
+  // instead of Data we receive Nacks
+  transition({SM, IM}, Nack) {
+    r_notifyReceiveNack;
+    // mark this request as being NACKed
+    q_updateNackCount;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(SM, Ack_all, M) {
+    jj_sendExclusiveUnblock;
+    uuu_profileTransactionStoreMiss;
+    hh_store_hit;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // retry in state S
+  transition(SM, Nack_all, S){
+     // This is the final nack
+    r_notifyReceiveNackFinal;
+    // unblock the L2
+    jj_sendUnblockCancel;
+    hh_store_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+  // retry in state I
+  transition(IM, Nack_all, I){
+    // This is the final NACK
+    r_notifyReceiveNackFinal;
+    // unblock the L2
+    jj_sendUnblockCancel;
+    hh_store_conflict;
+    s_deallocateTBE;
+    j_popTriggerQueue;
+  }
+
+}
+
+
+

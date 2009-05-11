@@ -1,0 +1,10 @@
+
+1. While decomissioning log_tm
+
+	a. I left lots of transaction related stuff ( Xact.... ) in commands.C
+ 	   Made the minimal changes to compile it properly
+
+
+make[1]: *** No rule to make target `amd64-linux/generated/MI_example/obj/PartialAddressFilter.o', needed by `amd64-linux/generated/MI_example/bin/libruby.so
+
+

@@ -1,0 +1,466 @@
+//
+// This file has been modified by Kevin Moore and Dan Nussbaum of the
+// Scalable Systems Research Group at Sun Microsystems Laboratories
+// (http://research.sun.com/scalable/) to support the Adaptive
+// Transactional Memory Test Platform (ATMTP).  For information about
+// ATMTP, see the GEMS website: http://www.cs.wisc.edu/gems/.
+//
+// Please send email to atmtp-interest@sun.com with feedback, questions, or
+// to request future announcements about ATMTP.
+//
+// ----------------------------------------------------------------------
+//
+// File modification date: 2008-02-23
+//
+// ----------------------------------------------------------------------
+//
+// ATMTP is distributed as part of the GEMS software toolset and is
+// available for use and modification under the terms of version 2 of the
+// GNU General Public License.  The GNU General Public License is contained
+// in the file $GEMS/LICENSE.
+//
+// Multifacet GEMS is free software; you can redistribute it and/or modify
+// it under the terms of version 2 of the GNU General Public License as
+// published by the Free Software Foundation.
+//
+// Multifacet GEMS is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along
+// with the Multifacet GEMS; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA
+//
+// ----------------------------------------------------------------------
+//
+
+g_RANDOM_SEED: 1
+g_SIMICS: true
+
+g_DEADLOCK_THRESHOLD: 500000
+
+// determines how many Simics cycles advance for every Ruby cycle
+//  (does not apply when running Opal)
+SIMICS_RUBY_MULTIPLIER: 4
+
+// corresponding parameter when using Opal+Ruby+Simics
+OPAL_RUBY_MULTIPLIER: 1
+
+
+// Ruby cycles between when a sequencer issues a request and it arrives at
+// the L1 cache controller
+//
+// ** important ** this parameter determines the L2 hit latency when
+//  using the SMP protocols with a combined L1/L2 controller (-cache.sm)
+//
+SEQUENCER_TO_CONTROLLER_LATENCY: 4
+
+
+// When set to false, the L1 cache structures are probed for a hit in Sequencer.C
+//  If a request hits, it is *not* issued to the cache controller
+// When set to true, all processor data requests issue to cache controller
+//
+// ** important ** this parameter must be set to false for proper L1/L2 hit timing
+//  for the SMP protocols with combined L1/L2 controllers (-cache.sm)
+//
+REMOVE_SINGLE_CYCLE_DCACHE_FAST_PATH: false
+
+
+// When running with Opal in SMT configurations, this indicates the number of threads per physical processor
+g_NUM_SMT_THREADS: 1
+
+
+// Maximum number of requests (including SW prefetches) outstanding from
+// the sequencer (Note: this also include items buffered in the store
+// buffer)
+g_SEQUENCER_OUTSTANDING_REQUESTS: 16
+
+
+PROTOCOL_DEBUG_TRACE: true
+DEBUG_FILTER_STRING: none
+DEBUG_VERBOSITY_STRING: none
+DEBUG_START_TIME: 0
+DEBUG_OUTPUT_FILENAME: none
+
+
+TRANSACTION_TRACE_ENABLED: false
+USER_MODE_DATA_ONLY: false
+PROFILE_HOT_LINES: false
+
+PROFILE_ALL_INSTRUCTIONS: false
+PRINT_INSTRUCTION_TRACE: false
+g_DEBUG_CYCLE: 0
+BLOCK_STC: false
+PERFECT_MEMORY_SYSTEM: false
+PERFECT_MEMORY_SYSTEM_LATENCY: 0
+DATA_BLOCK: false
+
+
+// *********************************************
+// CACHE & MEMORY PARAMETERS
+// *********************************************
+
+
+L1_CACHE_ASSOC: 4
+L1_CACHE_NUM_SETS_BITS: 8
+L2_CACHE_ASSOC: 4
+L2_CACHE_NUM_SETS_BITS: 16
+
+// 32 bits = 4 GB address space
+g_MEMORY_SIZE_BYTES: 4294967296
+g_DATA_BLOCK_BYTES: 64
+g_PAGE_SIZE_BYTES: 4096
+g_REPLACEMENT_POLICY: PSEDUO_LRU // currently, only other option is LRU
+
+g_PROCS_PER_CHIP: 1
+
+
+// set automatically
+g_NUM_PROCESSORS: 0
+g_NUM_L2_BANKS: 0
+g_NUM_MEMORIES: 0
+
+// The following group of parameters are calculated.  They must
+// _always_ be left at zero.
+g_NUM_CHIPS: 0
+g_NUM_CHIP_BITS: 0
+g_MEMORY_SIZE_BITS: 0
+g_DATA_BLOCK_BITS: 0
+g_PAGE_SIZE_BITS: 0
+g_NUM_PROCESSORS_BITS: 0
+g_PROCS_PER_CHIP_BITS: 0
+g_NUM_L2_BANKS_BITS: 0
+g_NUM_L2_BANKS_PER_CHIP: 0
+g_NUM_L2_BANKS_PER_CHIP_BITS: 0
+g_NUM_MEMORIES_BITS: 0
+g_NUM_MEMORIES_PER_CHIP: 0
+g_MEMORY_MODULE_BITS: 0
+g_MEMORY_MODULE_BLOCKS: 0
+
+
+// For certain CMP protocols, determines whether the lowest bits of a block address
+// are used to index to a L2 cache bank or into the sets of a
+// single bank
+//        lowest                                                             highest
+// true:   g_DATA_BLOCK_BITS | g_NUM_L2_BANKS_PER_CHIP_BITS | L2_CACHE_NUM_SETS_BITS
+// false:  g_DATA_BLOCK_BITS | L2_CACHE_NUM_SETS_BITS | g_NUM_L2_BANKS_PER_CHIP_BITS
+MAP_L2BANKS_TO_LOWEST_BITS: false
+
+
+
+// TIMING PARAMETERS  -- many of these are protocol specific.  See SLICC files
+//                       to determine where they apply
+
+MEMORY_RESPONSE_LATENCY_MINUS_2: 158  // determines memory response latency
+DIRECTORY_CACHE_LATENCY: 6
+NULL_LATENCY: 1
+ISSUE_LATENCY: 2
+CACHE_RESPONSE_LATENCY: 12
+L1_RESPONSE_LATENCY: 3
+L2_RESPONSE_LATENCY: 6
+L2_TAG_LATENCY: 6
+DIRECTORY_LATENCY: 80
+NETWORK_LINK_LATENCY: 1
+COPY_HEAD_LATENCY: 4
+ON_CHIP_LINK_LATENCY: 1
+RECYCLE_LATENCY: 10
+L2_RECYCLE_LATENCY: 5
+TIMER_LATENCY: 10000
+TBE_RESPONSE_LATENCY: 1
+PERIODIC_TIMER_WAKEUPS: true
+
+
+// constants used by CMP protocols
+// cache bank access times
+L1_REQUEST_LATENCY: 2
+L2_REQUEST_LATENCY: 4
+
+
+
+
+// Number of transitions each controller state machines can complete per cycle
+// i.e. the number of ports to each controller
+// L1cache is the sum of the L1I and L1D cache ports
+L1CACHE_TRANSITIONS_PER_RUBY_CYCLE: 32
+// Note: if SINGLE_ACCESS_L2_BANKS is enabled, this will probably enforce a
+// much greater constraint on the concurrency of a L2 cache bank
+L2CACHE_TRANSITIONS_PER_RUBY_CYCLE: 32
+DIRECTORY_TRANSITIONS_PER_RUBY_CYCLE: 32
+
+
+// Number of TBEs available for demand misses, ALL prefetches, and replacements
+// used by one-level protocols
+NUMBER_OF_TBES: 128
+// two-level protocols
+NUMBER_OF_L1_TBES: 32
+NUMBER_OF_L2_TBES: 32
+
+// TSO is deprecated
+TSO: false
+
+
+// ** INTERCONECT PARAMETERS **
+//
+g_PRINT_TOPOLOGY: true
+g_NETWORK_TOPOLOGY: HIERARCHICAL_SWITCH
+g_CACHE_DESIGN: NUCA  // specifies file prefix for FILE_SPECIFIED topology
+FAN_OUT_DEGREE: 4  // for HIERARCHICAL SWITCH topology
+
+g_adaptive_routing: true
+NUMBER_OF_VIRTUAL_NETWORKS: 4
+
+// bandwidth unit is 1/1000 byte per cycle.  the following parameter is multiplied by
+//  topology specific link weights
+g_endpoint_bandwidth: 10000
+
+
+// ** finite buffering parameters
+//
+// note: Finite buffering allows us to simulate a realistic virtual cut-through
+// routed network with idealized flow control.  this feature is NOT heavily tested
+FINITE_BUFFERING: false
+// All message buffers within the network (i.e. the switch's input and
+// output buffers) are set to the size specified below by the FINITE_BUFFER_SIZE
+FINITE_BUFFER_SIZE: 3
+// g_SEQUENCER_OUTSTANDING_REQUESTS (above) controlls the number of demand requests
+// issued by the sequencer.  The PROCESSOR_BUFFER_SIZE controlls the
+// number of requests in the mandatory queue
+// Only effects the simualtion when FINITE_BUFFERING is enabled
+PROCESSOR_BUFFER_SIZE: 10
+// The PROTOCOL_BUFFER_SIZE limits the size of all other buffers connecting to
+// Controllers.  Controlls the number of request issued by the L2 HW Prefetcher
+PROTOCOL_BUFFER_SIZE: 32
+// ** end finite buffering parameters
+
+
+// (deprecated)
+// Allows on a single accesses to a multi-cycle L2 bank.
+// Ensures the cache array is only accessed once for every L2_REQUEST_LATENCY
+// number of cycles.  However the TBE table can be accessed in parallel.
+SINGLE_ACCESS_L2_BANKS: true
+
+
+// constants used by TM protocols
+PROFILE_EXCEPTIONS: false
+PROFILE_XACT: true
+PROFILE_NONXACT: false
+XACT_DEBUG: true
+XACT_DEBUG_LEVEL: 1
+//XACT_MEMORY: true  // set to true for TM protocols. set it HERE for lazy systems to register the proper SIMICS interfaces
+XACT_MEMORY: false
+XACT_ENABLE_TOURMALINE: false // perfect memory system
+XACT_NUM_CURRENT: 0 // must be 0
+XACT_LAST_UPDATE: 0 // must be 0
+XACT_ISOLATION_CHECK: false // Checks whether each memory access preserves transaction isolation
+PERFECT_FILTER: true                // If true, use perfect physical read/write filters
+READ_WRITE_FILTER: Perfect_
+PERFECT_VIRTUAL_FILTER: true        // If true, use perfect virtual read/write filters
+VIRTUAL_READ_WRITE_FILTER: Perfect_
+PERFECT_SUMMARY_FILTER: true        // If true, use perfect summary read/write filters
+SUMMARY_READ_WRITE_FILTER: Perfect_
+XACT_EAGER_CD: true
+XACT_LAZY_VM: false
+XACT_CONFLICT_RES: BASE
+XACT_COMMIT_TOKEN_LATENCY: 0
+XACT_VISUALIZER: false
+XACT_NO_BACKOFF: false
+XACT_LOG_BUFFER_SIZE: 0
+XACT_STORE_PREDICTOR_ENTRIES: 256
+XACT_STORE_PREDICTOR_HISTORY: 256
+XACT_STORE_PREDICTOR_THRESHOLD: 4
+XACT_FIRST_ACCESS_COST: 0
+XACT_FIRST_PAGE_ACCESS_COST: 0
+ENABLE_MAGIC_WAITING: false
+ENABLE_WATCHPOINT: false
+XACT_ENABLE_VIRTUALIZATION_LOGTM_SE: false
+// g_NETWORK_TOPOLOGY: FILE_SPECIFIED
+// NUMBER_OF_VIRTUAL_NETWORKS: 5
+// L2_REQUEST_LATENCY: 15
+// SEQUENCER_TO_CONTROLLER_LATENCY: 3
+// L2_RESPONSE_LATENCY: 20
+// L2_TAG_LATENCY: 6
+// MEMORY_RESPONSE_LATENCY_MINUS_2: 448
+// RECYCLE_LATENCY: 1
+// g_MEMORY_SIZE_BYTES: 268435456
+// REMOVE_SINGLE_CYCLE_DCACHE_FAST_PATH: true
+
+// ATMTP
+ATMTP_ENABLED: false
+ATMTP_ABORT_ON_NON_XACT_INST: false
+ATMTP_ALLOW_SAVE_RESTORE_IN_XACT: false
+ATMTP_XACT_MAX_STORES: 32
+ATMTP_DEBUG_LEVEL: 0
+
+// MOESI_CMP_token parameters (some might be deprecated)
+g_FILTERING_ENABLED: false
+g_DISTRIBUTED_PERSISTENT_ENABLED: true
+g_RETRY_THRESHOLD: 1
+g_DYNAMIC_TIMEOUT_ENABLED: true
+g_FIXED_TIMEOUT_LATENCY: 300
+
+
+// tester parameters (overridden by testerconfig.defaults)
+//
+//  injects random message delays to excite protocol races
+RANDOMIZATION: false
+g_SYNTHETIC_DRIVER: false
+g_DETERMINISTIC_DRIVER: false
+g_trace_warmup_length: 1000000
+g_bash_bandwidth_adaptive_threshold: 0.75
+
+g_tester_length: 0
+// # of synthetic locks == 16 * 128
+g_synthetic_locks: 2048
+g_deterministic_addrs: 1
+g_SpecifiedGenerator: DetermInvGenerator
+g_callback_counter: 0
+g_NUM_COMPLETIONS_BEFORE_PASS: 0
+// parameters used by locking synthetic tester
+g_think_time: 5
+g_hold_time:  5
+g_wait_time:  5
+
+// Princeton Network (Garnet)
+g_GARNET_NETWORK: false
+g_DETAIL_NETWORK: false
+g_NETWORK_TESTING: false
+g_FLIT_SIZE: 16
+g_NUM_PIPE_STAGES: 4
+g_VCS_PER_CLASS: 4
+g_BUFFER_SIZE: 4
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// MemoryControl:
+
+// Basic cycle time of the memory controller.  This defines the period which is
+// used as the memory channel clock period, the address bus bit time, and the
+// memory controller cycle time.
+// Assuming a 200 MHz memory channel (DDR-400, which has 400 bits/sec data),
+// and a 2 GHz Ruby clock:
+MEM_BUS_CYCLE_MULTIPLIER: 10
+
+// How many internal banks in each DRAM chip:
+BANKS_PER_RANK: 8
+
+// How many sets of DRAM chips per DIMM.
+RANKS_PER_DIMM: 2
+
+// How many DIMMs per channel.  (Currently the only thing that
+// matters is the number of ranks per channel, i.e. the product
+// of this parameter and RANKS_PER_DIMM.  But if and when this is
+// expanded to do FB-DIMMs, the distinction between the two
+// will matter.)
+DIMMS_PER_CHANNEL: 2
+
+// Which bits to use to find the bank, rank, and DIMM numbers.
+// You could choose to have the bank bits, rank bits, and DIMM bits
+// in any order; here they are in that order.
+// For these defaults, we assume this format for addresses:
+//    Offset within line:     [5:0]
+//    Memory controller #:    [7:6]
+//    Bank:                  [10:8]
+//    Rank:                    [11]
+//    DIMM:                    [12]
+//    Row addr / Col addr: [top:13]
+// If you get these bits wrong, then some banks won't see any
+// requests; you need to check for this in the .stats output.
+BANK_BIT_0: 8
+RANK_BIT_0: 11
+DIMM_BIT_0: 12
+
+// Number of entries max in each bank queues; set to whatever you want.
+// If it is too small, you will see in the .stats file a lot of delay
+// time spent in the common input queue.
+BANK_QUEUE_SIZE: 12
+
+// Bank cycle time (tRC) measured in memory cycles:
+BANK_BUSY_TIME: 11
+
+// This is how many memory address cycles to delay between reads to
+// different ranks of DRAMs to allow for clock skew:
+RANK_RANK_DELAY: 1
+
+// This is how many memory address cycles to delay between a read
+// and a write.  This is based on two things:  (1) the data bus is
+// used one cycle earlier in the operation; (2) a round-trip wire
+// delay from the controller to the DIMM that did the reading.
+READ_WRITE_DELAY: 2
+
+// Basic address and data bus occupancy.  If you are assuming a
+// 16-byte-wide data bus (pairs of DIMMs side-by-side), then
+// the data bus occupancy matches the address bus occupancy at
+// two cycles.  But if the channel is only 8 bytes wide, you
+// need to increase this bus occupancy time to 4 cycles.
+BASIC_BUS_BUSY_TIME: 2
+
+// Latency to returning read request or writeback acknowledgement.
+// Measured in memory address cycles.
+// This equals tRCD + CL + AL + (four bit times)
+//                            + (round trip on channel)
+//                            + (memory control internal delays)
+// It's going to be an approximation, so pick what you like.
+// Note:  The fact that latency is a constant, and does not depend on two
+// low-order address bits, implies that our memory controller either:
+// (a) tells the DRAM to read the critical word first, and sends the
+// critical word first back to the CPU, or (b) waits until it has
+// seen all four bit times on the data wires before sending anything
+// back.  Either is plausible.  If (a), remove the "four bit times"
+// term from the calculation above.
+MEM_CTL_LATENCY: 12
+
+// refresh_period is the number of memory cycles between refresh
+// of row x in bank n and refresh of row x+1 in bank n.  For DDR-400,
+// this is typically 7.8 usec for commercial systems; after 8192 such
+// refreshes, this will have refreshed the whole chip in 64 msec.  If
+// we have a 5 nsec memory clock, 7800 / 5 = 1560 cycles.  The memory
+// controller will divide this by the total number of banks, and kick
+// off a refresh to *somebody* every time that amount is counted
+// down to zero. (There will be some rounding error there, but it
+// should have minimal effect.)
+REFRESH_PERIOD: 1560
+
+// tFAW is a DRAM chip parameter which restricts the number of
+// activates that can be done within a certain window of time.
+// The window is specified here in terms of number of memory
+// controller cycles.  At most four activates may be done during
+// any such sliding window.  If this number is set to be no more
+// than 4 * BASIC_BUS_BUSY_TIME, it will have no effect.
+// It is typical in real systems for tFAW to have no effect, but
+// it may be useful in throttling power.  Set to zero to ignore.
+TFAW: 0
+
+// By default, the memory controller uses round-robin to arbitrate
+// between ready bank queues for use of the address bus.  If you
+// wish to add randomness to the system, set this parameter to
+// one instead, and it will restart the round-robin pointer at a
+// random bank number each cycle.  If you want additional
+// nondeterminism, set the parameter to some integer n >= 2, and
+// it will in addition add a n% chance each cycle that a ready bank
+// will be delayed an additional cycle.  Note that if you are
+// in MEM_FIXED_DELAY mode (see below), MEM_RANDOM_ARBITRATE=1 will
+// have no effect, but MEM_RANDOM_ARBITRATE=2 or more will.
+MEM_RANDOM_ARBITRATE: 0
+
+// The following parameter, if nonzero, will disable the memory
+// controller and instead give every request a fixed latency.  The
+// nonzero value specified here is measured in memory cycles and is
+// just added to MEM_CTL_LATENCY.  It will also show up in the stats
+// file as a contributor to memory_delays_stalled_at_head_of_bank_queue.
+MEM_FIXED_DELAY: 0
+
+// If instead of DDR-400, you wanted DDR-800, the channel gets faster
+// but the basic operation of the DRAM core is unchanged.
+// Busy times appear to double just because they are measured
+// in smaller clock cycles.  The performance advantage comes because
+// the bus busy times don't actually quite double.
+// You would use something like these values:
+//
+// MEM_BUS_CYCLE_MULTIPLIER: 5
+// BANK_BUSY_TIME: 22
+// RANK_RANK_DELAY: 2
+// READ_WRITE_DELAY: 3
+// BASIC_BUS_BUSY_TIME: 3
+// MEM_CTL_LATENCY: 20
+// REFRESH_PERIOD: 3120

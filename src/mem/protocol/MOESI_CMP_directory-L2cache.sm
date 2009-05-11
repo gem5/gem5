@@ -1,0 +1,2569 @@
+
+/*
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/*
+ * $Id$
+ *
+ */
+
+machine(L2Cache, "Token protocol") {
+
+  // L2 BANK QUEUES
+  // From local bank of L2 cache TO the network
+  MessageBuffer L1RequestFromL2Cache, network="To", virtual_network="0", ordered="false";  // this L2 bank -> a local L1
+  MessageBuffer GlobalRequestFromL2Cache, network="To", virtual_network="1", ordered="false";  // this L2 bank -> mod-directory
+  MessageBuffer responseFromL2Cache, network="To", virtual_network="2", ordered="false";  // this L2 bank -> a local L1 || mod-directory
+
+  // FROM the network to this local bank of L2 cache
+  MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0", ordered="false";  // a local L1 -> this L2 bank, Lets try this???
+  MessageBuffer GlobalRequestToL2Cache, network="From", virtual_network="1", ordered="false";  // mod-directory -> this L2 bank
+  MessageBuffer responseToL2Cache, network="From", virtual_network="2", ordered="false";  // a local L1 || mod-directory -> this L2 bank
+//  MessageBuffer L1WritebackToL2Cache, network="From", virtual_network="3", ordered="false";
+
+  // STATES
+  enumeration(State, desc="L2 Cache states", default="L2Cache_State_I") {
+
+    // Stable states
+    NP, desc="Not Present";
+    I, desc="Invalid";
+    ILS, desc="Idle/NP, but local sharers exist";
+    ILX, desc="Idle/NP, but local exclusive exists";
+    ILO, desc="Idle/NP, but local owner exists";
+    ILOX, desc="Idle/NP, but local owner exists and chip is exclusive";
+    ILOS, desc="Idle/NP, but local owner exists and local sharers as well";
+    ILOSX, desc="Idle/NP, but local owner exists, local sharers exist, chip is exclusive ";
+    S, desc="Shared, no local sharers";
+    O, desc="Owned, no local sharers";
+    OLS, desc="Owned with local sharers";
+    OLSX, desc="Owned with local sharers, chip is exclusive";
+    SLS, desc="Shared with local sharers";
+    M, desc="Modified";
+
+    // Transient States
+
+    IFGX, desc="Blocked, forwarded global GETX to local owner/exclusive.  No other on-chip invs needed";
+    IFGS, desc="Blocked, forwarded global GETS to local owner";
+    ISFGS, desc="Blocked, forwarded global GETS to local owner, local sharers exist";
+    // UNUSED
+    IFGXX, desc="Blocked, forwarded global GETX to local owner but may need acks from other sharers";
+    OFGX, desc="Blocked, forwarded global GETX to owner and got data but may need acks";
+
+    OLSF, desc="Blocked, got Fwd_GETX with local sharers, waiting for local inv acks";
+
+    // writebacks
+    ILOW, desc="local WB request, was ILO";
+    ILOXW, desc="local WB request, was ILOX";
+    ILOSW, desc="local WB request, was ILOS";
+    ILOSXW, desc="local WB request, was ILOSX";
+    SLSW, desc="local WB request, was SLS";
+    OLSW, desc="local WB request, was OLS";
+    ILSW, desc="local WB request, was ILS";
+    IW, desc="local WB request from only sharer, was ILS";
+    OW, desc="local WB request from only sharer, was OLS";
+    SW, desc="local WB request from only sharer, was SLS";
+    OXW, desc="local WB request from only sharer, was OLSX";
+    OLSXW, desc="local WB request from sharer, was OLSX";
+    ILXW, desc="local WB request, was ILX";
+
+    IFLS, desc="Blocked, forwarded local GETS to _some_ local sharer";
+    IFLO, desc="Blocked, forwarded local GETS to local owner";
+    IFLOX, desc="Blocked, forwarded local GETS to local owner but chip is exclusive";
+    IFLOXX, desc="Blocked, forwarded local GETX to local owner/exclusive, chip is exclusive";
+    IFLOSX, desc="Blocked, forwarded local GETS to local owner w/ other sharers, chip is exclusive";
+    IFLXO, desc="Blocked, forwarded local GETX to local owner with other sharers, chip is exclusive";
+
+    IGS, desc="Semi-blocked, issued local GETS to directory";
+    IGM, desc="Blocked, issued local GETX to directory. Need global acks and data";
+    IGMLS, desc="Blocked, issued local GETX to directory but may need to INV local sharers";
+    IGMO, desc="Blocked, have data for local GETX but need all acks";
+    IGMIO, desc="Blocked, issued local GETX, local owner with possible local sharer, may need to INV";
+    OGMIO, desc="Blocked, issued local GETX, was owner, may need to INV";
+    IGMIOF, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETX";
+    IGMIOFS, desc="Blocked, issued local GETX, local owner, waiting for global acks, got Fwd_GETS";
+    OGMIOF, desc="Blocked, issued local GETX, was owner, waiting for global acks, got Fwd_GETX";
+
+    II, desc="Blocked, handling invalidations";
+    MM, desc="Blocked, was M satisfying local GETX";
+    SS, desc="Blocked, was S satisfying local GETS";
+    OO, desc="Blocked, was O satisfying local GETS";
+    OLSS, desc="Blocked, satisfying local GETS";
+    OLSXS, desc="Blocked, satisfying local GETS";
+    SLSS, desc="Blocked, satisfying local GETS";
+
+    OI, desc="Blocked, doing writeback, was O";
+    MI, desc="Blocked, doing writeback, was M";
+    MII, desc="Blocked, doing writeback, was M, got Fwd_GETX";
+    OLSI, desc="Blocked, doing writeback, was OLS";
+    ILSI, desc="Blocked, doing writeback, was OLS got Fwd_GETX";
+  }
+
+  // EVENTS
+  enumeration(Event, desc="Cache events") {
+
+    // Requests
+    L1_GETS,             desc="local L1 GETS request";
+    L1_GETX,             desc="local L1 GETX request";
+    L1_PUTO,             desc="local owner wants to writeback";
+    L1_PUTX,             desc="local exclusive wants to writeback";
+    L1_PUTS_only,             desc="only local sharer wants to writeback";
+    L1_PUTS,             desc="local sharer wants to writeback";
+    Fwd_GETX,      desc="A GetX from another processor";
+    Fwd_GETS,      desc="A GetS from another processor";
+    Own_GETX,      desc="A GetX from this node";
+    Inv,           desc="Invalidations from the directory";
+
+    // Responses
+    IntAck,             desc="Received an ack message";
+    ExtAck,             desc="Received an ack message";
+    All_Acks,         desc="Received all ack messages";
+    Data,            desc="Received a data message, responder has a shared copy";
+    Data_Exclusive,  desc="Received a data message";
+    L1_WBCLEANDATA,       desc="Writeback from L1, with data";
+    L1_WBDIRTYDATA,       desc="Writeback from L1, with data";
+
+    Writeback_Ack,   desc="Writeback O.K. from directory";
+    Writeback_Nack,  desc="Writeback not O.K. from directory";
+
+    Unblock,         desc="Local L1 is telling L2 dir to unblock";
+    Exclusive_Unblock,         desc="Local L1 is telling L2 dir to unblock";
+
+
+    // events initiated by this L2
+    L2_Replacement,     desc="L2 Replacement", format="!r";
+
+  }
+
+  // TYPES
+
+  // CacheEntry
+  structure(Entry, desc="...", interface="AbstractCacheEntry") {
+    State CacheState,        desc="cache state";
+    NetDest Sharers,            desc="Set of the internal processors that want the block in shared state";
+    MachineID Owner,    desc="ID of the L1 cache to forward the block to once we get a response";
+    bool OwnerValid, default="false", desc="true if Owner means something";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+    DataBlock DataBlk,       desc="data for the block";
+  }
+
+
+  structure(DirEntry, desc="...") {
+    NetDest Sharers,            desc="Set of the internal processors that want the block in shared state";
+    MachineID Owner,   desc="ID of the L1 cache to forward the block to once we get a response";
+    bool OwnerValid, default="false", desc="true if Owner means something";
+    State DirState,        desc="directory state";
+  }
+
+  // TBE fields
+  structure(TBE, desc="...") {
+    Address Address,                      desc="Physical address for this TBE";
+    State TBEState,                       desc="Transient state";
+    Address PC,                           desc="Program counter of request";
+    DataBlock DataBlk,                    desc="Buffer for the data block";
+    bool Dirty,              desc="Is the data dirty (different than memory)?";
+
+    int NumExtPendingAcks, default="0",      desc="Number of global acks/data messages waiting for";
+    int NumIntPendingAcks, default="0",      desc="Number of global acks/data messages waiting for";
+    int Fwd_GETX_ExtAcks, default="0",                 desc="Number of acks that requestor will need";
+    int Local_GETX_IntAcks, default="0",                 desc="Number of acks that requestor will need";
+
+    NetDest L1_GetS_IDs,            desc="Set of the internal processors that want the block in shared state";
+    MachineID L1_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
+    NetDest Fwd_GetS_IDs,            desc="Set of the internal processors that want the block in shared state";
+    MachineID Fwd_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
+  }
+
+  external_type(TBETable) {
+    TBE lookup(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    bool isPresent(Address);
+  }
+
+  external_type(CacheMemory) {
+    bool cacheAvail(Address);
+    Address cacheProbe(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    Entry lookup(Address);
+    void changePermission(Address, AccessPermission);
+    bool isTagPresent(Address);
+    void setMRU(Address);
+  }
+
+  external_type(PerfectCacheMemory) {
+    void allocate(Address);
+    void deallocate(Address);
+    DirEntry lookup(Address);
+    bool isTagPresent(Address);
+  }
+
+
+  TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
+  CacheMemory L2cacheMemory, template_hack="<L2Cache_Entry>", constructor_hack='L2_CACHE_NUM_SETS_BITS,L2_CACHE_ASSOC,MachineType_L2Cache,int_to_string(i)+"_L2"';
+  PerfectCacheMemory localDirectory, template_hack="<L2Cache_DirEntry>";
+
+
+  Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
+    if (L2cacheMemory.isTagPresent(addr)) {
+      return L2cacheMemory[addr];
+    }
+  }
+
+  void changePermission(Address addr, AccessPermission permission) {
+    if (L2cacheMemory.isTagPresent(addr)) {
+      return L2cacheMemory.changePermission(addr, permission);
+    }
+  }
+
+  bool isCacheTagPresent(Address addr) {
+    return (L2cacheMemory.isTagPresent(addr) );
+  }
+
+  bool isDirTagPresent(Address addr) {
+    return (localDirectory.isTagPresent(addr) );
+  }
+
+  bool isOnlySharer(Address addr, MachineID shar_id) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      if (L2cacheMemory[addr].Sharers.count() > 1) {
+        return false;
+      }
+      else if (L2cacheMemory[addr].Sharers.count() == 1) {
+        if (L2cacheMemory[addr].Sharers.isElement(shar_id)) {
+          return true;
+        }
+        else {
+          return false;  // something happened which should cause this PUTS to be nacked
+        }
+        return true;
+      }
+      else {
+        return false;
+      }
+    }
+    else if (localDirectory.isTagPresent(addr)){
+      if (localDirectory[addr].Sharers.count() > 1) {
+        return false;
+      }
+      else if (localDirectory[addr].Sharers.count() == 1) {
+        if (localDirectory[addr].Sharers.isElement(shar_id)) {
+          return true;
+        }
+        else {
+          return false;  // something happened which should cause this PUTS to be nacked
+        }
+      }
+      else {
+        return false;
+      }
+    }
+    else {
+      // shouldn't happen unless L1 issues PUTS before unblock received
+      return false;
+    }
+  }
+
+  void copyCacheStateToDir(Address addr) {
+    assert(localDirectory.isTagPresent(addr) == false);
+    localDirectory.allocate(addr);
+    localDirectory[addr].DirState := L2cacheMemory[addr].CacheState;
+    localDirectory[addr].Sharers := L2cacheMemory[addr].Sharers;
+    localDirectory[addr].Owner := L2cacheMemory[addr].Owner;
+    localDirectory[addr].OwnerValid := L2cacheMemory[addr].OwnerValid;
+
+  }
+
+  void copyDirToCache(Address addr) {
+    L2cacheMemory[addr].Sharers := localDirectory[addr].Sharers;
+    L2cacheMemory[addr].Owner := localDirectory[addr].Owner;
+    L2cacheMemory[addr].OwnerValid := localDirectory[addr].OwnerValid;
+  }
+
+
+  void recordLocalSharerInDir(Address addr, MachineID shar_id) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      L2cacheMemory[addr].Sharers.add(shar_id);
+    }
+    else {
+      if (localDirectory.isTagPresent(addr) == false) {
+        localDirectory.allocate(addr);
+        localDirectory[addr].Sharers.clear();
+        localDirectory[addr].OwnerValid := false;
+      }
+      localDirectory[addr].Sharers.add(shar_id);
+    }
+  }
+
+  void recordNewLocalExclusiveInDir(Address addr, MachineID exc_id) {
+
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      L2cacheMemory[addr].Sharers.clear();
+      L2cacheMemory[addr].OwnerValid := true;
+      L2cacheMemory[addr].Owner := exc_id;
+    }
+    else {
+      if (localDirectory.isTagPresent(addr) == false) {
+        localDirectory.allocate(addr);
+      }
+      localDirectory[addr].Sharers.clear();
+      localDirectory[addr].OwnerValid := true;
+      localDirectory[addr].Owner := exc_id;
+    }
+  }
+
+
+  void removeAllLocalSharersFromDir(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      L2cacheMemory[addr].Sharers.clear();
+      L2cacheMemory[addr].OwnerValid := false;
+    }
+    else {
+      localDirectory[addr].Sharers.clear();
+      localDirectory[addr].OwnerValid := false;
+    }
+  }
+
+  void removeSharerFromDir(Address addr, MachineID sender) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      L2cacheMemory[addr].Sharers.remove(sender);
+    }
+    else {
+      localDirectory[addr].Sharers.remove(sender);
+    }
+  }
+
+  void removeOwnerFromDir(Address addr, MachineID sender) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      L2cacheMemory[addr].OwnerValid := false;
+    }
+    else {
+      localDirectory[addr].OwnerValid := false;
+    }
+  }
+
+  bool isLocalSharer(Address addr, MachineID shar_id) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      return L2cacheMemory[addr].Sharers.isElement(shar_id);
+    }
+    else {
+      return localDirectory[addr].Sharers.isElement(shar_id);
+    }
+
+  }
+
+  NetDest getLocalSharers(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      return L2cacheMemory[addr].Sharers;
+    }
+    else {
+      return localDirectory[addr].Sharers;
+    }
+
+  }
+
+  MachineID getLocalOwner(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      return L2cacheMemory[addr].Owner;
+    }
+    else {
+      return localDirectory[addr].Owner;
+    }
+
+  }
+
+
+  int countLocalSharers(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      return L2cacheMemory[addr].Sharers.count();
+    }
+    else {
+      return localDirectory[addr].Sharers.count();
+    }
+  }
+
+  bool isLocalOwnerValid(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      return L2cacheMemory[addr].OwnerValid;
+    }
+    else {
+      return localDirectory[addr].OwnerValid;
+    }
+  }
+
+  int countLocalSharersExceptRequestor(Address addr, MachineID requestor) {
+    if (isCacheTagPresent(addr)) {
+      assert (localDirectory.isTagPresent(addr) == false);
+      if (L2cacheMemory[addr].Sharers.isElement(requestor)) {
+        return ( L2cacheMemory[addr].Sharers.count() - 1 );
+      }
+      else {
+        return L2cacheMemory[addr].Sharers.count();
+      }
+    }
+    else {
+      if (localDirectory[addr].Sharers.isElement(requestor)) {
+        return ( localDirectory[addr].Sharers.count() - 1 );
+      }
+      else {
+        return localDirectory[addr].Sharers.count();
+      }
+    }
+  }
+
+
+
+  State getState(Address addr) {
+
+    if (L2_TBEs.isPresent(addr)) {
+      return L2_TBEs[addr].TBEState;
+    } else if (isCacheTagPresent(addr)) {
+      return getL2CacheEntry(addr).CacheState;
+    } else if (isDirTagPresent(addr)) {
+      return localDirectory[addr].DirState;
+    } else {
+      return State:NP;
+    }
+  }
+
+  string getStateStr(Address addr) {
+    return L2Cache_State_to_string(getState(addr));
+  }
+
+  string getCoherenceRequestTypeStr(CoherenceRequestType type) {
+    return CoherenceRequestType_to_string(type);
+  }
+
+
+  void setState(Address addr, State state) {
+    assert((localDirectory.isTagPresent(addr) && L2cacheMemory.isTagPresent(addr)) == false);
+
+    if (L2_TBEs.isPresent(addr)) {
+      L2_TBEs[addr].TBEState := state;
+    }
+
+    if (
+         (state == State:M) ||
+         (state == State:O) ||
+         (state == State:S) ||
+         (state == State:OLS) ||
+         (state == State:SLS) ||
+         (state == State:OLSX) ||
+         (state == State:SLS)
+       ) {
+       assert(isCacheTagPresent(addr));
+    }
+    else if (
+         (state == State:ILS) ||
+         (state == State:ILX) ||
+         (state == State:ILO) ||
+         (state == State:ILOX) ||
+         (state == State:ILOS) ||
+         (state == State:ILOSX)
+       ) {
+       // assert(isCacheTagPresent(addr) == false);
+    }
+
+
+
+    if (isCacheTagPresent(addr)) {
+      if ( ((getL2CacheEntry(addr).CacheState != State:M) && (state == State:M)) ||
+           ((getL2CacheEntry(addr).CacheState != State:S) && (state == State:S)) ||
+           ((getL2CacheEntry(addr).CacheState != State:O) && (state == State:O)) ) {
+        getL2CacheEntry(addr).CacheState := state;
+        // disable Coherence Checker for now
+        // sequencer.checkCoherence(addr);
+      }
+      else {
+        getL2CacheEntry(addr).CacheState := state;
+      }
+
+      // Set permission
+      changePermission(addr, AccessPermission:Read_Only);
+    }
+    else if (localDirectory.isTagPresent(addr)) {
+      localDirectory[addr].DirState := state;
+    }
+
+  }
+
+
+  bool isBlockExclusive(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      // the list of exclusive states below is likely incomplete
+      if ( (getL2CacheEntry(addr).CacheState == State:M) ||
+           (getL2CacheEntry(addr).CacheState == State:MI) ) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool isBlockShared(Address addr) {
+    if (isCacheTagPresent(addr)) {
+      // the list of shared states below is likely incomplete
+      if ( (getL2CacheEntry(addr).CacheState == State:S) ||
+           (getL2CacheEntry(addr).CacheState == State:O)  ||
+           (getL2CacheEntry(addr).CacheState == State:OI) ||
+           (getL2CacheEntry(addr).CacheState == State:OXW)  ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  MessageBuffer triggerQueue, ordered="true";
+
+  out_port(globalRequestNetwork_out, RequestMsg, GlobalRequestFromL2Cache);
+  out_port(localRequestNetwork_out, RequestMsg, L1RequestFromL2Cache);
+  out_port(responseNetwork_out, ResponseMsg, responseFromL2Cache);
+
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+
+
+
+  // ** IN_PORTS **
+
+  // Trigger Queue
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+    if (triggerQueue_in.isReady()) {
+      peek(triggerQueue_in, TriggerMsg) {
+        if (in_msg.Type == TriggerType:ALL_ACKS) {
+          trigger(Event:All_Acks, in_msg.Address);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+
+  // Request Network
+  in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache) {
+    if (requestNetwork_in.isReady()) {
+      peek(requestNetwork_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:GETX) {
+          if (in_msg.Requestor == machineID) {
+            trigger(Event:Own_GETX, in_msg.Address);
+          } else {
+            trigger(Event:Fwd_GETX, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:GETS) {
+          trigger(Event:Fwd_GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:INV) {
+          trigger(Event:Inv, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
+          trigger(Event:Writeback_Ack, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
+          trigger(Event:Writeback_Nack, in_msg.Address);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  in_port(L1requestNetwork_in, RequestMsg, L1RequestToL2Cache) {
+    if (L1requestNetwork_in.isReady()) {
+      peek(L1requestNetwork_in, RequestMsg) {
+        assert(in_msg.Destination.isElement(machineID));
+        if (in_msg.Type == CoherenceRequestType:GETX) {
+          trigger(Event:L1_GETX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GETS) {
+            trigger(Event:L1_GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:PUTO) {
+          trigger(Event:L1_PUTO, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:PUTX) {
+          trigger(Event:L1_PUTX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:PUTS) {
+          if (isOnlySharer(in_msg.Address, in_msg.Requestor)) {
+            trigger(Event:L1_PUTS_only, in_msg.Address);
+          }
+          else {
+            trigger(Event:L1_PUTS, in_msg.Address);
+          }
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+
+  // Response Network
+  in_port(responseNetwork_in, ResponseMsg, responseToL2Cache) {
+    if (responseNetwork_in.isReady()) {
+      peek(responseNetwork_in, ResponseMsg) {
+        assert(in_msg.Destination.isElement(machineID));
+        if (in_msg.Type == CoherenceResponseType:ACK) {
+          if (in_msg.SenderMachine == MachineType:L2Cache) {
+            trigger(Event:ExtAck, in_msg.Address);
+          }
+          else {
+            trigger(Event:IntAck, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
+          trigger(Event:Data_Exclusive, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
+          trigger(Event:Unblock, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:UNBLOCK_EXCLUSIVE) {
+          trigger(Event:Exclusive_Unblock, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_DIRTY_DATA) {
+          if (L2cacheMemory.isTagPresent(in_msg.Address) == false &&
+                   L2cacheMemory.cacheAvail(in_msg.Address) == false) {
+            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address));
+          }
+          else {
+            trigger(Event:L1_WBDIRTYDATA, in_msg.Address);
+          }
+        } else if (in_msg.Type == CoherenceResponseType:WRITEBACK_CLEAN_DATA) {
+          if (L2cacheMemory.isTagPresent(in_msg.Address) == false &&
+                   L2cacheMemory.cacheAvail(in_msg.Address) == false) {
+            trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address));
+          }
+          else {
+            trigger(Event:L1_WBCLEANDATA, in_msg.Address);
+          }
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+
+  // ACTIONS
+
+  action(a_issueGETS, "a", desc="issue local request globally") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue(globalRequestNetwork_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:GETS;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+      }
+    }
+  }
+
+  action(a_issueGETX, "\a", desc="issue local request globally") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue(globalRequestNetwork_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:GETX;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+      }
+    }
+  }
+
+  action(b_issuePUTX, "b", desc="Issue PUTX") {
+    enqueue(globalRequestNetwork_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTX;
+      out_msg.RequestorMachine := MachineType:L2Cache;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  action(b_issuePUTO, "\b", desc="Issue PUTO") {
+    enqueue(globalRequestNetwork_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTO;
+      out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L2Cache;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  /* PUTO, but local sharers exist */
+  action(b_issuePUTO_ls, "\bb", desc="Issue PUTO") {
+    enqueue(globalRequestNetwork_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:PUTO_SHARERS;
+      out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L2Cache;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  action(c_sendDataFromTBEToL1GETS, "c", desc="Send data from TBE to L1 requestors in TBE") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.Sender := machineID;
+      out_msg.Destination.addNetDest(L2_TBEs[address].L1_GetS_IDs);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      // out_msg.Dirty := L2_TBEs[address].Dirty;
+      // shared data should be clean
+      out_msg.Dirty := false;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+  }
+
+  action(c_sendDataFromTBEToL1GETX, "\c", desc="Send data from TBE to L1 requestors in TBE") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+  }
+
+  action(c_sendExclusiveDataFromTBEToL1GETS, "\cc", desc="Send data from TBE to L1 requestors in TBE") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.addNetDest(L2_TBEs[address].L1_GetS_IDs);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(c_sendDataFromTBEToFwdGETX, "cc", desc="Send data from TBE to external GETX") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.add(L2_TBEs[address].Fwd_GetX_ID);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+  }
+
+  action(c_sendDataFromTBEToFwdGETS, "ccc", desc="Send data from TBE to external GETX") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA;
+      out_msg.Sender := machineID;
+      out_msg.Destination.addNetDest(L2_TBEs[address].Fwd_GetS_IDs);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      // out_msg.Dirty := L2_TBEs[address].Dirty;
+      // shared data should be clean
+      out_msg.Dirty := false;
+      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+  }
+
+  action(c_sendExclusiveDataFromTBEToFwdGETS, "\ccc", desc="Send data from TBE to external GETX") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.addNetDest(L2_TBEs[address].Fwd_GetS_IDs);
+      out_msg.DataBlk := L2_TBEs[address].DataBlk;
+      out_msg.Dirty := L2_TBEs[address].Dirty;
+      out_msg.Acks := L2_TBEs[address].Fwd_GETX_ExtAcks;
+      out_msg.MessageSize := MessageSizeType:Response_Data;
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(L2_TBEs[address].DataBlk);
+  }
+
+  action(d_sendDataToL1GETS, "d", desc="Send data directly to L1 requestor") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        // out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        // shared data should be clean
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
+      }
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+  }
+
+  action(d_sendDataToL1GETX, "\d", desc="Send data and a token from TBE to L1 requestor") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.MessageSize := MessageSizeType:ResponseL2hit_Data;
+        out_msg.Acks := L2_TBEs[address].Local_GETX_IntAcks;
+      }
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+  }
+
+  action(dd_sendDataToFwdGETX, "dd", desc="send data") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+        out_msg.Acks := in_msg.Acks;
+      }
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+  }
+
+
+  action(dd_sendDataToFwdGETS, "\dd", desc="send data") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        // out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        // shared data should be clean
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(getL2CacheEntry(address).DataBlk);
+  }
+
+  action(dd_sendExclusiveDataToFwdGETS, "\d\d", desc="send data") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
+        out_msg.Dirty := getL2CacheEntry(address).Dirty;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(e_sendAck, "e", desc="Send ack with the tokens we've collected thus far.") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:ACK;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+
+      out_msg.Destination.add( L2_TBEs[address].Fwd_GetX_ID);
+      out_msg.Acks := 0 - 1;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(e_sendAckToL1Requestor, "\e", desc="Send ack with the tokens we've collected thus far.") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:ACK;
+        out_msg.Sender := machineID;
+        out_msg.SenderMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.Acks := 0 - 1;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+  }
+
+  action(e_sendAckToL1RequestorFromTBE, "eee", desc="Send ack with the tokens we've collected thus far.") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:ACK;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
+      out_msg.Acks := 0 - 1;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+  action(ee_sendLocalInv, "\ee", desc="Send local invalidates") {
+    L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+    DEBUG_EXPR(address);
+    DEBUG_EXPR(getLocalSharers(address));
+    DEBUG_EXPR(id);
+    DEBUG_EXPR(L2_TBEs[address].NumIntPendingAcks);
+    if (isLocalOwnerValid(address)) {
+      L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + 1;
+      DEBUG_EXPR(getLocalOwner(address));
+    }
+
+    enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:INV;
+      out_msg.Requestor := machineID;
+      out_msg.RequestorMachine := MachineType:L2Cache;
+      out_msg.Destination.addNetDest(getLocalSharers(address));
+      if (isLocalOwnerValid(address))
+      {
+        out_msg.Destination.add(getLocalOwner(address));
+      }
+      out_msg.MessageSize := MessageSizeType:Invalidate_Control;
+    }
+  }
+
+  action(ee_sendLocalInvSharersOnly, "\eee", desc="Send local invalidates to sharers if they exist") {
+
+    // assert(countLocalSharers(address)  > 0);
+    L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+
+    if (countLocalSharers(address) > 0) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:INV;
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Destination.addNetDest(getLocalSharers(address));
+        out_msg.MessageSize := MessageSizeType:Invalidate_Control;
+      }
+    }
+  }
+
+  action(ee_addLocalIntAck, "e\ee", desc="add a local ack to wait for") {
+    L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + 1;
+  }
+
+  action(ee_issueLocalInvExceptL1Requestor, "\eeee", desc="Send local invalidates to sharers if they exist") {
+      peek(L1requestNetwork_in, RequestMsg) {
+
+//         assert(countLocalSharers(address) > 0);
+        if (countLocalSharers(address) == 0) {
+          L2_TBEs[address].NumIntPendingAcks := 0;
+        }
+        else {
+
+          if (isLocalSharer(address, in_msg.Requestor)) {
+            L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address) - 1;
+          }
+          else {
+            L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+          }
+
+          enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+            out_msg.Address := address;
+            out_msg.Type := CoherenceRequestType:INV;
+            out_msg.Requestor := in_msg.Requestor;
+            out_msg.RequestorMachine := MachineType:L1Cache;
+            out_msg.Destination.addNetDest(getLocalSharers(address));
+            out_msg.Destination.remove(in_msg.Requestor);
+            out_msg.MessageSize := MessageSizeType:Invalidate_Control;
+          }
+        }
+      }
+  }
+
+  action(ee_issueLocalInvExceptL1RequestorInTBE, "\eeeeee", desc="Send local invalidates to sharers if they exist") {
+    if (countLocalSharers(address) == 0) {
+      L2_TBEs[address].NumIntPendingAcks := 0;
+    }
+    else {
+      if (isLocalSharer(address, L2_TBEs[address].L1_GetX_ID)) {
+        L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address) - 1;
+      }
+      else {
+        L2_TBEs[address].NumIntPendingAcks := countLocalSharers(address);
+      }
+    }
+    enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:INV;
+        out_msg.Requestor := L2_TBEs[address].L1_GetX_ID;
+        out_msg.RequestorMachine := MachineType:L1Cache;
+        out_msg.Destination.addNetDest(getLocalSharers(address));
+        out_msg.Destination.remove(L2_TBEs[address].L1_GetX_ID);
+        out_msg.MessageSize := MessageSizeType:Invalidate_Control;
+    }
+  }
+
+
+  action(f_sendUnblock, "f", desc="Send unblock to global directory") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCK;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+    }
+  }
+
+
+  action(f_sendExclusiveUnblock, "\f", desc="Send unblock to global directory") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.MessageSize := MessageSizeType:Unblock_Control;
+    }
+  }
+
+
+  action(g_recordLocalSharer, "g", desc="Record new local sharer from unblock message") {
+    peek(responseNetwork_in, ResponseMsg) {
+      recordLocalSharerInDir(in_msg.Address, in_msg.Sender);
+    }
+  }
+
+  action(g_recordLocalExclusive, "\g", desc="Record new local exclusive sharer from unblock message") {
+    peek(responseNetwork_in, ResponseMsg) {
+      recordNewLocalExclusiveInDir(address, in_msg.Sender);
+    }
+  }
+
+  action(gg_clearLocalSharers, "gg", desc="Clear local sharers") {
+    removeAllLocalSharersFromDir(address);
+  }
+
+  action(gg_clearSharerFromL1Response, "\gg", desc="Clear sharer from L1 response queue") {
+    peek(responseNetwork_in, ResponseMsg) {
+      removeSharerFromDir(in_msg.Address, in_msg.Sender);
+    }
+  }
+
+  action(gg_clearOwnerFromL1Response, "g\g", desc="Clear sharer from L1 response queue") {
+    peek(responseNetwork_in, ResponseMsg) {
+      removeOwnerFromDir(in_msg.Address, in_msg.Sender);
+    }
+  }
+
+  action(h_countLocalSharersExceptRequestor, "h", desc="counts number of acks needed for L1 GETX") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].Local_GETX_IntAcks := countLocalSharersExceptRequestor(address, in_msg.Requestor);
+    }
+  }
+
+  action(h_clearIntAcks, "\h", desc="clear IntAcks") {
+    L2_TBEs[address].Local_GETX_IntAcks := 0;
+  }
+
+  action(hh_countLocalSharersExceptL1GETXRequestorInTBE, "hh", desc="counts number of acks needed for L1 GETX") {
+    L2_TBEs[address].Local_GETX_IntAcks := countLocalSharersExceptRequestor(address, L2_TBEs[address].L1_GetX_ID);
+  }
+
+  action(i_copyDataToTBE, "\i", desc="Copy data from response queue to TBE") {
+    peek(responseNetwork_in, ResponseMsg) {
+      L2_TBEs[address].DataBlk := in_msg.DataBlk;
+      L2_TBEs[address].Dirty := in_msg.Dirty;
+    }
+  }
+
+  action(i_allocateTBE, "i", desc="Allocate TBE for internal/external request(isPrefetch=0, number of invalidates=0)") {
+    check_allocate(L2_TBEs);
+    L2_TBEs.allocate(address);
+    if(isCacheTagPresent(address)) {
+      L2_TBEs[address].DataBlk := getL2CacheEntry(address).DataBlk;
+      L2_TBEs[address].Dirty := getL2CacheEntry(address).Dirty;
+    }
+    L2_TBEs[address].NumIntPendingAcks := 0;  // default value
+    L2_TBEs[address].NumExtPendingAcks := 0;  // default value
+    L2_TBEs[address].Fwd_GetS_IDs.clear();
+    L2_TBEs[address].L1_GetS_IDs.clear();
+  }
+
+
+
+  action(j_forwardGlobalRequestToLocalOwner, "j", desc="Forward external request to local owner") {
+    peek(requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        out_msg.Type := in_msg.Type;
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.Type := in_msg.Type;
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+        out_msg.Acks := 0 - 1;
+      }
+    }
+  }
+
+
+  action(k_forwardLocalGETSToLocalSharer, "k", desc="Forward local request to local sharer/owner") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        out_msg.Type := CoherenceRequestType:GETS;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := MachineType:L1Cache;
+        // should randomize this so one node doesn't get abused more than others
+        out_msg.Destination.add(localDirectory[in_msg.Address].Sharers.smallestElement(MachineType:L1Cache));
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      }
+    }
+  }
+
+  action(k_forwardLocalGETXToLocalOwner, "\k", desc="Forward local request to local owner") {
+    enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceRequestType:GETX;
+      out_msg.Requestor := L2_TBEs[address].L1_GetX_ID;
+      out_msg.RequestorMachine := MachineType:L1Cache;
+      out_msg.Destination.add(localDirectory[address].Owner);
+      out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      out_msg.Acks := 1 + L2_TBEs[address].Local_GETX_IntAcks;
+    }
+  }
+
+  // same as previous except that it assumes to TBE is present to get number of acks
+  action(kk_forwardLocalGETXToLocalExclusive, "kk", desc="Forward local request to local owner") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        out_msg.Type := CoherenceRequestType:GETX;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := MachineType:L1Cache;
+        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+        out_msg.Acks := 1;
+      }
+    }
+  }
+
+  action(kk_forwardLocalGETSToLocalOwner, "\kk", desc="Forward local request to local owner") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        out_msg.Type := CoherenceRequestType:GETS;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.RequestorMachine := MachineType:L1Cache;
+        out_msg.Destination.add(getLocalOwner(in_msg.Address));
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      }
+    }
+  }
+
+
+  action(l_writebackAckNeedData, "l", desc="Send writeback ack to L1 requesting data") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        // out_msg.Type := CoherenceResponseType:WRITEBACK_SEND_DATA;
+        out_msg.Type := CoherenceRequestType:WB_ACK_DATA;
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(l_writebackAckDropData, "\l", desc="Send writeback ack to L1 indicating to drop data") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        // out_msg.Type := CoherenceResponseType:WRITEBACK_ACK;
+        out_msg.Type := CoherenceRequestType:WB_ACK;
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(ll_writebackNack, "\ll", desc="Send writeback nack to L1") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      enqueue( localRequestNetwork_out, RequestMsg, latency="L2_RESPONSE_LATENCY" ) {
+        out_msg.Address := in_msg.Address;
+        out_msg.Type := CoherenceRequestType:WB_NACK;
+        out_msg.Requestor := machineID;
+        out_msg.RequestorMachine := MachineType:L2Cache;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(m_popRequestQueue, "m", desc="Pop request queue.") {
+    requestNetwork_in.dequeue();
+  }
+
+  action(m_decrementNumberOfMessagesInt, "\m", desc="Decrement the number of messages for which we're waiting") {
+    peek(responseNetwork_in, ResponseMsg) {
+      L2_TBEs[address].NumIntPendingAcks := L2_TBEs[address].NumIntPendingAcks + in_msg.Acks;
+    }
+  }
+
+  action(m_decrementNumberOfMessagesExt, "\mmm", desc="Decrement the number of messages for which we're waiting") {
+    peek(responseNetwork_in, ResponseMsg) {
+      L2_TBEs[address].NumExtPendingAcks := L2_TBEs[address].NumExtPendingAcks - in_msg.Acks;
+    }
+  }
+
+  action(mm_decrementNumberOfMessagesExt, "\mm", desc="Decrement the number of messages for which we're waiting") {
+    peek(requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].NumExtPendingAcks := L2_TBEs[address].NumExtPendingAcks - in_msg.Acks;
+    }
+  }
+
+  action(n_popResponseQueue, "n", desc="Pop response queue") {
+    responseNetwork_in.dequeue();
+  }
+
+  action(n_popTriggerQueue, "\n", desc="Pop trigger queue.") {
+    triggerQueue_in.dequeue();
+  }
+
+  action(o_popL1RequestQueue, "o", desc="Pop L1 request queue.") {
+    L1requestNetwork_in.dequeue();
+  }
+
+
+  action(o_checkForIntCompletion, "\o", desc="Check if we have received all the messages required for completion") {
+    if (L2_TBEs[address].NumIntPendingAcks == 0) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.Address := address;
+        out_msg.Type := TriggerType:ALL_ACKS;
+      }
+    }
+  }
+
+  action(o_checkForExtCompletion, "\oo", desc="Check if we have received all the messages required for completion") {
+    if (L2_TBEs[address].NumExtPendingAcks == 0) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.Address := address;
+        out_msg.Type := TriggerType:ALL_ACKS;
+      }
+    }
+  }
+
+
+  action( qq_sendDataFromTBEToMemory, "qq", desc="Send data from TBE to directory") {
+    enqueue(responseNetwork_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      out_msg.Address := address;
+      out_msg.Sender := machineID;
+      out_msg.SenderMachine := MachineType:L2Cache;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.Dirty := L2_TBEs[address].Dirty;
+      if (L2_TBEs[address].Dirty) {
+        out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;
+        out_msg.DataBlk := L2_TBEs[address].DataBlk;
+        out_msg.MessageSize := MessageSizeType:Writeback_Data;
+      } else {
+         out_msg.Type := CoherenceResponseType:WRITEBACK_CLEAN_ACK;
+        // NOTE: in a real system this would not send data.  We send
+        // data here only so we can check it at the memory
+         out_msg.DataBlk := L2_TBEs[address].DataBlk;
+         out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action( r_setMRU, "\rrr", desc="manually set the MRU bit for cache line" ) {
+    if(isCacheTagPresent(address)) {
+      L2cacheMemory.setMRU(address);
+    }
+  }
+
+  action( s_recordGetXL1ID, "ss", desc="record local GETX requestor") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].L1_GetX_ID := in_msg.Requestor;
+    }
+  }
+
+  action(s_deallocateTBE, "s", desc="Deallocate external TBE") {
+    L2_TBEs.deallocate(address);
+  }
+
+  action( s_recordGetSL1ID, "\ss", desc="record local GETS requestor") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].L1_GetS_IDs.add(in_msg.Requestor);
+    }
+  }
+
+  action(t_recordFwdXID, "t", desc="record global GETX requestor") {
+    peek(requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].Fwd_GetX_ID := in_msg.Requestor;
+      L2_TBEs[address].Fwd_GETX_ExtAcks := in_msg.Acks;
+    }
+  }
+
+  action(t_recordFwdSID, "\t", desc="record global GETS requestor") {
+    peek(requestNetwork_in, RequestMsg) {
+      L2_TBEs[address].Fwd_GetS_IDs.clear();
+      L2_TBEs[address].Fwd_GetS_IDs.add(in_msg.Requestor);
+    }
+  }
+
+
+  action(u_writeDataToCache, "u", desc="Write data to cache") {
+    peek(responseNetwork_in, ResponseMsg) {
+      getL2CacheEntry(address).DataBlk := in_msg.DataBlk;
+      if ((getL2CacheEntry(address).Dirty == false) && in_msg.Dirty) {
+        getL2CacheEntry(address).Dirty := in_msg.Dirty;
+      }
+    }
+  }
+
+  action(vv_allocateL2CacheBlock, "\v", desc="Set L2 cache tag equal to tag of block B.") {
+    L2cacheMemory.allocate(address);
+  }
+
+  action(rr_deallocateL2CacheBlock, "\r", desc="Deallocate L2 cache block.  Sets the cache to not present, allowing a replacement in parallel with a fetch.") {
+    L2cacheMemory.deallocate(address);
+  }
+
+
+  action(w_assertIncomingDataAndCacheDataMatch, "w", desc="Assert that the incoming data and the data in the cache match") {
+    peek(responseNetwork_in, ResponseMsg) {
+      assert(getL2CacheEntry(address).DataBlk == in_msg.DataBlk);
+    }
+  }
+
+  action(uu_profileMiss, "\u", desc="Profile the demand miss") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      // AccessModeType not implemented
+      profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize),  in_msg.Prefetch, machineIDToNodeID(in_msg.Requestor));
+    }
+  }
+
+
+
+  action(y_copyCacheStateToDir, "y", desc="Copy cache state to directory state") {
+
+    assert(isCacheTagPresent(address));
+    copyCacheStateToDir(address);
+
+  }
+
+  action(y_copyDirToCacheAndRemove, "/y", desc="Copy dir state to cache and remove") {
+    copyDirToCache(address);
+    localDirectory.deallocate(address);
+  }
+
+
+  action(z_stall, "z", desc="Stall") {
+  }
+
+
+  action(zz_recycleL1RequestQueue, "zz", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(L1requestNetwork_in, RequestMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    }
+    L1requestNetwork_in.recycle();
+  }
+
+  action(zz_recycleRequestQueue, "\zz", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(requestNetwork_in, RequestMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.Requestor);
+    }
+    requestNetwork_in.recycle();
+  }
+
+
+  action(zz_recycleResponseQueue, "\z\z", desc="Send the head of the mandatory queue to the back of the queue.") {
+    peek(responseNetwork_in, ResponseMsg) {
+      APPEND_TRANSITION_COMMENT(in_msg.Sender);
+    }
+    responseNetwork_in.recycle();
+  }
+
+
+
+  //*****************************************************
+  // TRANSITIONS
+  //*****************************************************
+
+  transition({II, IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX, OLSXS, IGS, IGM, IGMLS, IGMO, IGMIO, OGMIO, IGMIOF, OGMIOF, MM, SS, OO, OI, MI, MII, OLSI, ILSI, SLSS, OLSS, OLSF, IGMIOFS}, {L1_PUTO, L1_PUTS, L1_PUTS_only, L1_PUTX}) {
+    zz_recycleL1RequestQueue;
+  }
+
+  transition({II, IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX, OLSXS, IGS, IGM, IGMLS, IGMO, IGMIO, OGMIO, IGMIOF, OGMIOF, MM, SS, OO, OI, MI, MII, OLSI, ILSI, SLSS, OLSS, OLSF, IGMIOFS}, {L1_GETX, L1_GETS}) {
+    zz_recycleL1RequestQueue;
+  }
+
+  transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, ILXW, OW, SW, OXW, OLSXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS,  IGS, IGM, IGMLS, IGMO, MM, SS, OO, OI, MI, MII, OLSI, ILSI, SLSS, OLSS, OLSF, IGMIOFS}, L2_Replacement) {
+    zz_recycleResponseQueue;
+  }
+
+  transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS}, {Fwd_GETX, Fwd_GETS, Inv}) {
+    zz_recycleRequestQueue;
+  }
+
+  // must happened because we forwarded GETX to local exclusive trying to do wb
+  transition({I, M, O, ILS, ILOX, OLS, OLSX, SLS, S}, L1_PUTX) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition({M}, {L1_PUTS, L1_PUTO} ) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition({ILS, OLSX}, L1_PUTO){
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+// happened if we forwarded GETS to exclusive who tried to do writeback
+//  ?? should we just Nack these instead?  Could be a bugs here
+  transition(ILO, L1_PUTX, ILOW) {
+     l_writebackAckNeedData;
+     o_popL1RequestQueue;
+  }
+
+  // this can happen if we forwarded a L1_GETX to exclusiver after it issued a PUTX
+  transition(ILOS, L1_PUTX, ILOSW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOSX, L1_PUTX, ILOSXW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  // must happened because we got Inv when L1 attempted PUTS
+  transition(I, L1_PUTS) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition(I, L1_PUTO) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  // FORWARDED REQUESTS
+
+  transition({ILO, ILX, ILOX}, Fwd_GETS, IFGS) {
+    i_allocateTBE;
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition({ILOS, ILOSX}, Fwd_GETS, ISFGS) {
+    i_allocateTBE;
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition(IFGS, Data, ILO) {
+    i_copyDataToTBE;
+    c_sendDataFromTBEToFwdGETS;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(ISFGS, Data, ILOS) {
+    i_copyDataToTBE;
+    c_sendDataFromTBEToFwdGETS;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(IFGS, Data_Exclusive, I) {
+    i_copyDataToTBE;
+    c_sendExclusiveDataFromTBEToFwdGETS;
+    gg_clearLocalSharers;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+
+  transition({ILX, ILO, ILOX}, Fwd_GETX, IFGX) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition(IFGX, {Data_Exclusive, Data}, I) {
+    i_copyDataToTBE;
+    c_sendDataFromTBEToFwdGETX;
+    gg_clearLocalSharers;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition({ILOSX, ILOS}, Fwd_GETX, IFGXX) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    j_forwardGlobalRequestToLocalOwner;
+    ee_sendLocalInvSharersOnly;
+    ee_addLocalIntAck;
+    m_popRequestQueue;
+  }
+
+
+  transition(IFGXX, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IFGXX, Data_Exclusive) {
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IFGXX, All_Acks, I) {
+    c_sendDataFromTBEToFwdGETX;
+    gg_clearLocalSharers;
+    s_deallocateTBE;
+    n_popTriggerQueue;
+  }
+
+
+  // transition({O, OX}, Fwd_GETX, I) {
+  transition(O, Fwd_GETX, I) {
+    dd_sendDataToFwdGETX;
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    m_popRequestQueue;
+  }
+
+  transition({O, OLS}, Fwd_GETS) {
+    dd_sendDataToFwdGETS;
+    m_popRequestQueue;
+  }
+
+  // transition({OLSX, OX}, Fwd_GETS, O) {
+  transition(OLSX, Fwd_GETS, OLS) {
+    dd_sendDataToFwdGETS;
+    m_popRequestQueue;
+  }
+
+
+  transition(M, Fwd_GETX, I) {
+    dd_sendDataToFwdGETX;
+    rr_deallocateL2CacheBlock;
+    m_popRequestQueue;
+  }
+
+  // MAKE THIS THE SAME POLICY FOR NOW
+
+  // transition(M, Fwd_GETS, O) {
+  //   dd_sendDataToFwdGETS;
+  //   m_popRequestQueue;
+  // }
+
+  transition(M, Fwd_GETS, I) {
+     dd_sendExclusiveDataToFwdGETS;
+     rr_deallocateL2CacheBlock;
+     m_popRequestQueue;
+  }
+
+
+  transition({OLS, OLSX}, Fwd_GETX, OLSF) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    ee_sendLocalInv;
+    m_popRequestQueue;
+  }
+
+  transition(OLSF, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(OLSF, All_Acks, I) {
+    c_sendDataFromTBEToFwdGETX;
+    gg_clearLocalSharers;
+    s_deallocateTBE;
+    rr_deallocateL2CacheBlock;
+    n_popTriggerQueue;
+  }
+
+
+
+  // INVALIDATIONS FROM GLOBAL DIRECTORY
+
+  transition({IGM, IGS}, Inv) {
+    t_recordFwdXID;
+    e_sendAck;
+    m_popRequestQueue;
+  }
+
+  transition({I,NP}, Inv) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    e_sendAck;
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+
+  // NEED INV for S state
+
+  transition({ILS, ILO, ILX}, Inv, II) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    ee_sendLocalInv;
+    gg_clearLocalSharers;
+    m_popRequestQueue;
+  }
+
+  transition(SLS, Inv, II) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    ee_sendLocalInv;
+    rr_deallocateL2CacheBlock;
+    m_popRequestQueue;
+  }
+
+  transition(II, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(II, All_Acks, I) {
+    e_sendAck;
+    s_deallocateTBE;
+    n_popTriggerQueue;
+  }
+
+  transition(S, Inv, I) {
+    i_allocateTBE;
+    t_recordFwdXID;
+    e_sendAck;
+    s_deallocateTBE;
+    rr_deallocateL2CacheBlock;
+    m_popRequestQueue;
+  }
+
+
+  // LOCAL REQUESTS SATISFIED LOCALLY
+
+  transition(OLSX, L1_GETX, IFLOX) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    // count number of INVs needed that doesn't include requestor
+    h_countLocalSharersExceptRequestor;
+    // issue INVs to everyone except requestor
+    ee_issueLocalInvExceptL1Requestor;
+    d_sendDataToL1GETX
+    y_copyCacheStateToDir;
+    r_setMRU;
+    rr_deallocateL2CacheBlock;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(IFLOX, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(OLSX, L1_GETS, OLSXS) {
+    d_sendDataToL1GETS;
+    r_setMRU;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLSXS, Unblock, OLSX) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  // after this, can't get Fwd_GETX
+  transition(IGMO, Own_GETX) {
+    mm_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    m_popRequestQueue;
+
+  }
+
+
+  transition(ILX, L1_GETS, IFLOXX) {
+    kk_forwardLocalGETSToLocalOwner;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOSX, L1_GETS, IFLOSX) {
+    kk_forwardLocalGETSToLocalOwner;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition({ILOS, ILO}, L1_GETS, IFLO) {
+    kk_forwardLocalGETSToLocalOwner;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILS, L1_GETS, IFLS) {
+    k_forwardLocalGETSToLocalSharer;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition({ILX, ILOX}, L1_GETX, IFLOXX) {
+    kk_forwardLocalGETXToLocalExclusive;
+    e_sendAckToL1Requestor;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOX, L1_GETS, IFLOX) {
+    kk_forwardLocalGETSToLocalOwner;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(IFLOX, Unblock, ILOSX) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(IFLS, Unblock, ILS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(IFLOXX, Unblock, ILOSX) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(IFLOSX, Unblock, ILOSX) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition({IFLOSX, IFLOXX}, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    n_popResponseQueue;
+  }
+
+  transition(IFLO, Unblock, ILOS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+
+  transition(ILOSX, L1_GETX, IFLXO) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    h_countLocalSharersExceptRequestor;
+    ee_issueLocalInvExceptL1Requestor;
+    k_forwardLocalGETXToLocalOwner;
+    e_sendAckToL1RequestorFromTBE;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(IFLXO, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+
+
+  // LOCAL REQUESTS THAT MUST ISSUE
+
+  transition(NP, {L1_PUTS, L1_PUTX, L1_PUTO}) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition({NP, I}, L1_GETS, IGS) {
+    i_allocateTBE;
+    s_recordGetSL1ID;
+    a_issueGETS;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition({NP, I}, L1_GETX, IGM) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(S, L1_GETX, IGM) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    y_copyCacheStateToDir;
+    r_setMRU;
+    rr_deallocateL2CacheBlock;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILS, L1_GETX, IGMLS) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    // count number of INVs (just sharers?) needed that doesn't include requestor
+    h_countLocalSharersExceptRequestor;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(IGMLS, Inv) {
+    t_recordFwdXID;
+    ee_sendLocalInv;
+    m_popRequestQueue;
+  }
+
+  transition(IGMLS, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGMLS, All_Acks, IGM) {
+    gg_clearLocalSharers;
+    h_clearIntAcks;
+    e_sendAck;
+    n_popTriggerQueue;
+  }
+
+  // transition(IGMLS, ExtAck, IGMO) {
+  transition(IGMLS, ExtAck) {
+    m_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGMLS, {Data, Data_Exclusive}, IGMO) {
+    ee_issueLocalInvExceptL1RequestorInTBE;
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    n_popResponseQueue;
+  }
+
+
+  transition(ILOS, L1_GETX, IGMIO) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  // new exclusive happened while sharer attempted writeback
+  transition(ILX, {L1_PUTS, L1_PUTS_only, L1_PUTO}) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition(S, L1_PUTS) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLS, L1_GETX, OGMIO) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    h_countLocalSharersExceptRequestor;
+    // COPY DATA FROM CACHE TO TBE (happens during i_allocateTBE)
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(OGMIO, Fwd_GETS) {
+    t_recordFwdSID;
+    c_sendDataFromTBEToFwdGETS;
+    m_popRequestQueue;
+  }
+
+  transition(ILO, L1_GETX, IGMIO) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    // the following, of course, returns 0 sharers but do anyways for consistency
+    h_countLocalSharersExceptRequestor;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition({ILO, ILOX}, L1_PUTS) {
+    ll_writebackNack;
+    o_popL1RequestQueue;
+  }
+
+  transition(IGMIO, Fwd_GETX, IGMIOF) {
+    t_recordFwdXID;
+    j_forwardGlobalRequestToLocalOwner;
+    ee_sendLocalInvSharersOnly;
+    ee_addLocalIntAck;
+    m_popRequestQueue;
+  }
+
+  transition(IGMIO, Fwd_GETS, IGMIOFS) {
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition(IGMIOFS, Data, IGMIO) {
+    i_copyDataToTBE;
+    c_sendDataFromTBEToFwdGETS;
+    n_popResponseQueue;
+  }
+
+  transition(OGMIO, Fwd_GETX, OGMIOF) {
+    t_recordFwdXID;
+    ee_sendLocalInvSharersOnly;
+    m_popRequestQueue;
+  }
+
+  transition(OGMIOF, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(OGMIOF, All_Acks, IGM) {
+    gg_clearLocalSharers;
+    hh_countLocalSharersExceptL1GETXRequestorInTBE;
+    c_sendDataFromTBEToFwdGETX;
+    n_popTriggerQueue;
+  }
+
+  transition(IGMIOF, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGMIOF, Data_Exclusive) {
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGMIOF, All_Acks, IGM) {
+    gg_clearLocalSharers;
+    c_sendDataFromTBEToFwdGETX;
+    n_popTriggerQueue;
+  }
+
+  transition(IGMIO, All_Acks, IGMO) {
+    hh_countLocalSharersExceptL1GETXRequestorInTBE;
+    ee_issueLocalInvExceptL1RequestorInTBE;
+    k_forwardLocalGETXToLocalOwner;
+    e_sendAckToL1RequestorFromTBE;
+    n_popTriggerQueue;
+  }
+
+  transition(OGMIO, All_Acks, IGMO) {
+    ee_issueLocalInvExceptL1RequestorInTBE;
+    c_sendDataFromTBEToL1GETX;
+    n_popTriggerQueue;
+  }
+
+  transition({IGMIO, OGMIO}, Own_GETX) {
+    mm_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    m_popRequestQueue;
+
+  }
+
+  transition(IGM, {Data, Data_Exclusive}, IGMO) {
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    n_popResponseQueue;
+  }
+
+  transition({IGM, IGMIO, OGMIO}, ExtAck) {
+    m_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGMO, ExtAck) {
+    m_decrementNumberOfMessagesExt;
+    o_checkForExtCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(IGS, Data) {
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesExt;
+    c_sendDataFromTBEToL1GETS;
+    n_popResponseQueue;
+  }
+
+  transition(IGS, Data_Exclusive) {
+    i_copyDataToTBE;
+    m_decrementNumberOfMessagesExt;
+    c_sendExclusiveDataFromTBEToL1GETS;
+    n_popResponseQueue;
+  }
+
+  transition(IGS, Unblock, ILS) {
+    g_recordLocalSharer;
+    f_sendUnblock;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(IGS, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    f_sendExclusiveUnblock;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+  transition(IGMO, All_Acks) {
+    c_sendDataFromTBEToL1GETX;
+    n_popTriggerQueue;
+  }
+
+  transition(IGMO, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    f_sendExclusiveUnblock;
+    s_deallocateTBE;
+    n_popResponseQueue;
+  }
+
+
+  transition(SLS, L1_GETX, IGMLS) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    // count number of INVs needed that doesn't include requestor
+    h_countLocalSharersExceptRequestor;
+    // issue INVs to everyone except requestor
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+
+  }
+
+  transition(SLS, L1_GETS, SLSS ) {
+    d_sendDataToL1GETS;
+    r_setMRU;
+    o_popL1RequestQueue;
+  }
+
+  transition(SLSS, Unblock, SLS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+
+  transition(O, L1_GETX, IGMO) {
+    i_allocateTBE;
+    s_recordGetXL1ID;
+    a_issueGETX;
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    uu_profileMiss;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLS, L1_GETS, OLSS) {
+    d_sendDataToL1GETS;
+    r_setMRU;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLSS, Unblock, OLS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(IGMO, Fwd_GETX, IGM) {
+    t_recordFwdXID;
+    c_sendDataFromTBEToFwdGETX;
+    m_popRequestQueue;
+
+  }
+
+  transition(IGMO, Fwd_GETS) {
+    t_recordFwdSID;
+    c_sendDataFromTBEToFwdGETS;
+    m_popRequestQueue;
+  }
+
+
+  // LOCAL REQUESTS SATISFIED DIRECTLY BY L2
+
+  transition(M, L1_GETX, MM) {
+    i_allocateTBE;
+    // should count 0 of course
+    h_countLocalSharersExceptRequestor;
+    d_sendDataToL1GETX
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    s_deallocateTBE;
+    o_popL1RequestQueue;
+  }
+
+  transition(MM, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive;
+    n_popResponseQueue;
+  }
+
+  transition(M, L1_GETS, OO) {
+    i_allocateTBE;
+    // should count 0 of course
+    h_countLocalSharersExceptRequestor;
+    d_sendDataToL1GETX;
+    r_setMRU;
+    s_deallocateTBE;
+    o_popL1RequestQueue;
+  }
+
+  transition(S, L1_GETS, SS) {
+    d_sendDataToL1GETS;
+    r_setMRU;
+    o_popL1RequestQueue;
+  }
+
+  transition(SS, Unblock, SLS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(O, L1_GETS, OO) {
+    d_sendDataToL1GETS;
+    r_setMRU;
+    o_popL1RequestQueue;
+  }
+
+  transition(OO, Unblock, OLS) {
+    g_recordLocalSharer;
+    n_popResponseQueue;
+  }
+
+  transition(OO, Exclusive_Unblock, ILX) {
+    g_recordLocalExclusive
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+    n_popResponseQueue;
+  }
+
+
+  // L1 WRITEBACKS
+  transition(ILO, L1_PUTO, ILOW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOX, L1_PUTO, ILOXW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+
+  transition(ILOS, L1_PUTO, ILOSW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOSX, L1_PUTO, ILOSXW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+
+  // hmmm...keep data or drop.  Just drop for now
+  transition(ILOS, L1_PUTS_only, ILOW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILSW, Unblock, ILS) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(ILOW, Unblock, ILO) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(ILOSX, L1_PUTS_only, ILOXW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOXW, Unblock, ILOX) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  // hmmm...keep data or drop.  Just drop for now
+  transition(ILOS, L1_PUTS, ILOSW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOSX, L1_PUTS, ILOSXW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILOSW, Unblock, ILOS) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(ILOSXW, Unblock, ILOSX) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(SLS, L1_PUTS, SLSW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(SLS, L1_PUTS_only, SW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(SW, {Unblock}, S) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(OLS, L1_PUTS, OLSW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILS, L1_PUTS, ILSW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILS, L1_PUTS_only, IW) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+   transition(OLS, L1_PUTS_only, OW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLSX, L1_PUTS_only, OXW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLSX, L1_PUTS, OLSXW) {
+    l_writebackAckDropData;
+    o_popL1RequestQueue;
+  }
+
+  transition(OLSXW, {Unblock}, OLSX) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(OW, {Unblock}, O) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(OXW, {Unblock}, M) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(ILX, L1_PUTX, ILXW ) {
+    l_writebackAckNeedData;
+    o_popL1RequestQueue;
+  }
+
+  transition(ILXW, L1_WBDIRTYDATA, M) {
+    gg_clearLocalSharers;
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  // clean writeback
+  transition(ILXW, L1_WBCLEANDATA, M) {
+    gg_clearLocalSharers;
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  transition(ILXW, Unblock, ILX) {
+    // writeback canceled because L1 invalidated
+    n_popResponseQueue;
+  }
+
+  transition(ILSW, L1_WBCLEANDATA, SLS) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    u_writeDataToCache;
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(IW, L1_WBCLEANDATA, S) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    u_writeDataToCache;
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+
+  }
+
+  // Owner can have dirty data
+  transition(ILOW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, O) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Response;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  transition(ILOXW, L1_WBDIRTYDATA, M) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Response;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  transition(ILOXW, L1_WBCLEANDATA, M) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Response;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  transition(ILOSW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, OLS) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Response;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+  transition(ILOSXW, {L1_WBCLEANDATA, L1_WBDIRTYDATA}, OLSX) {
+    vv_allocateL2CacheBlock;
+    y_copyDirToCacheAndRemove;
+    gg_clearOwnerFromL1Response;
+    u_writeDataToCache;
+    n_popResponseQueue;
+  }
+
+
+  transition(SLSW, {Unblock}, SLS) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+  transition(OLSW, {Unblock}, OLS) {
+    gg_clearSharerFromL1Response;
+    n_popResponseQueue;
+  }
+
+
+  // L2 WRITEBACKS
+  transition({I, S}, L2_Replacement, I) {
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition(ILS, L2_Replacement) {
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition(ILX, L2_Replacement )  {
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition({ILO, ILOS}, L2_Replacement )  {
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition(SLS, L2_Replacement, ILS) {
+    y_copyCacheStateToDir;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition({OLS, OLSX}, L2_Replacement, OLSI) {
+    y_copyCacheStateToDir;
+    b_issuePUTO_ls;
+    i_allocateTBE;
+    rr_deallocateL2CacheBlock;
+  }
+
+
+  transition(O, L2_Replacement, OI) {
+    b_issuePUTO;
+    i_allocateTBE;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition(M, L2_Replacement, MI) {
+    b_issuePUTX;
+    i_allocateTBE;
+    rr_deallocateL2CacheBlock;
+  }
+
+  transition(OLSI, Fwd_GETX, ILSI) {
+    t_recordFwdXID;
+    ee_sendLocalInv;
+    m_popRequestQueue;
+  }
+
+  transition(ILSI, IntAck) {
+    m_decrementNumberOfMessagesInt;
+    o_checkForIntCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(ILSI, All_Acks, MII) {
+    gg_clearLocalSharers;
+    c_sendDataFromTBEToFwdGETX;
+    n_popTriggerQueue;
+  }
+
+  transition(OLSI, Fwd_GETS) {
+    t_recordFwdSID;
+    c_sendDataFromTBEToFwdGETS;
+    m_popRequestQueue;
+  }
+
+  transition({MI, OI}, Fwd_GETS, OI) {
+    t_recordFwdSID;
+    c_sendDataFromTBEToFwdGETS;
+    m_popRequestQueue;
+  }
+
+  transition({MI, OI}, Fwd_GETX, MII) {
+    t_recordFwdXID;
+    c_sendDataFromTBEToFwdGETX;
+    m_popRequestQueue;
+  }
+
+  transition({MI, OI}, Writeback_Ack, I) {
+    qq_sendDataFromTBEToMemory;
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+
+  transition(MII, Writeback_Nack, I) {
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+
+  transition(OI, Writeback_Nack) {
+    b_issuePUTO;
+    m_popRequestQueue;
+  }
+
+  transition(OLSI, Writeback_Ack, ILS) {
+    qq_sendDataFromTBEToMemory;
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+
+  transition(MII, Writeback_Ack, I) {
+    f_sendUnblock;
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+
+  transition(ILSI, Writeback_Ack, ILS) {
+    f_sendUnblock;
+    s_deallocateTBE;
+    m_popRequestQueue;
+  }
+}
+
