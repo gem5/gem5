@@ -34,6 +34,7 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "mem/packet.hh"
 
 class RubySystem;
 class SubBlock;
@@ -51,35 +52,16 @@ public:
 
   // Public Methods
   virtual void get_network_config() {}
-  virtual void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) = 0; // Called by sequencer
-  virtual void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) { assert(0); } // Called by sequencer
+  virtual void hitCallback(Packet* pkt) = 0;
   virtual integer_t getInstructionCount(int procID) const { return 1; }
   virtual integer_t getCycleCount(int procID) const { return 1; }
-  virtual SimicsHypervisor * getHypervisor() { return NULL; }
-  virtual void notifySendNack( int procID, const Address & addr, uint64 remote_timestamp, const MachineID & remote_id) { assert(0); };   //Called by Sequencer
-  virtual void notifyReceiveNack( int procID, const Address & addr, uint64 remote_timestamp, const MachineID & remote_id) { assert(0); };   //Called by Sequencer
-  virtual void notifyReceiveNackFinal( int procID, const Address & addr) { assert(0); }; // Called by Sequencer
-  virtual void notifyTrapStart( int procID, const Address & handlerPC, int threadID, int smtThread ) { assert(0); } //called by Sequencer
-  virtual void notifyTrapComplete( int procID, const Address & newPC, int smtThread ) {assert(0);  }  // called by Sequencer
-  virtual int getOpalTransactionLevel(int procID, int thread) const {
-    cout << "mem/ruby/common/Driver.hh getOpalTransactionLevel() " << endl;
-   return 0; }  //called by Sequencer
-  virtual void addThreadDependency(int procID, int requestor_thread, int conflict_thread) const { assert(0);}
-  virtual uint64 getOpalTime(int procID) const{ return 0; }  //called by Sequencer
-  virtual uint64 getOpalTimestamp(int procID, int thread) const{
-    cout << "mem/ruby/common/Driver.hh getOpalTimestamp " << endl;
- return 0; } // called by Sequencer
-  virtual int inTransaction(int procID, int thread ) const{
-    cout << "mem/ruby/common/Driver.hh inTransaction " << endl;
-return false; } //called by Sequencer
+
   virtual void printDebug(){}  //called by Sequencer
 
   virtual void printStats(ostream& out) const = 0;
   virtual void clearStats() = 0;
 
   virtual void printConfig(ostream& out) const = 0;
-
-  //virtual void abortCallback(NodeID proc){}
 
   virtual integer_t readPhysicalMemory(int procID, physical_address_t address,
                                        int len ){ ASSERT(0); return 0; }

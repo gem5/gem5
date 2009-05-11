@@ -42,6 +42,7 @@
 #include "mem/ruby/tester/DetermSeriesGETSGenerator.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/protocol/Chip.hh"
+#include "mem/packet.hh"
 
 DeterministicDriver::DeterministicDriver(RubySystem* sys_ptr)
 {
@@ -99,13 +100,17 @@ DeterministicDriver::~DeterministicDriver()
   }
 }
 
-void DeterministicDriver::hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread)
+void
+DeterministicDriver::hitCallback(Packet * pkt)
 {
-  DEBUG_EXPR(TESTER_COMP, MedPrio, data);
-
+  NodeID proc = pkt->req->contextId();
+  SubBlock data(Address(pkt->getAddr()), pkt->req->getSize());
+  if (pkt->hasData()) {
+    for (int i = 0; i < pkt->req->getSize(); i++) {
+      data.setByte(i, *(pkt->getPtr<uint8>()+i));
+    }
+  }
   m_generator_vector[proc]->performCallback(proc, data);
-
-  // Mark that we made progress
   m_last_progress_vector[proc] = g_eventQueue_ptr->getTime();
 }
 

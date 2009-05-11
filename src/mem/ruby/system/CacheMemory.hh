@@ -42,7 +42,9 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/recorder/CacheRecorder.hh"
+
+//dsm: PRUNED
+//#include "mem/ruby/recorder/CacheRecorder.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/DataBlock.hh"
@@ -142,6 +144,8 @@ private:
   int m_cache_num_sets;
   int m_cache_num_set_bits;
   int m_cache_assoc;
+
+  bool is_locked; // for LL/SC
 };
 
 // Output operator declaration
@@ -489,7 +493,10 @@ template<class ENTRY>
 inline
 void CacheMemory<ENTRY>::recordCacheContents(CacheRecorder& tr) const
 {
-  for (int i = 0; i < m_cache_num_sets; i++) {
+//dsm: Uses CacheRecorder, PRUNED
+assert(false);
+
+/*  for (int i = 0; i < m_cache_num_sets; i++) {
     for (int j = 0; j < m_cache_assoc; j++) {
       AccessPermission perm = m_cache[i][j].m_Permission;
       CacheRequestType request_type = CacheRequestType_NULL;
@@ -508,7 +515,7 @@ void CacheMemory<ENTRY>::recordCacheContents(CacheRecorder& tr) const
                      Address(0), request_type, m_replacementPolicy_ptr->getLastAccess(i, j));
       }
     }
-  }
+  }*/
 }
 
 template<class ENTRY>

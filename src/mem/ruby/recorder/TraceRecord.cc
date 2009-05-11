@@ -37,6 +37,7 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/slicc_interface/AbstractChip.hh"
 #include "mem/protocol/CacheMsg.hh"
+#include "mem/packet.hh"
 
 TraceRecord::TraceRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
 {
@@ -78,14 +79,27 @@ void TraceRecord::issueRequest() const
   Sequencer* sequencer_ptr = chip_ptr->getSequencer((m_node_num/RubyConfig::numberofSMTThreads())%RubyConfig::numberOfProcsPerChip());
   assert(sequencer_ptr != NULL);
 
-  CacheMsg request(m_data_address, m_data_address, m_type, m_pc_address, AccessModeType_UserMode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */);
+  Addr data_addr = m_data_address.getAddress();
+  Addr pc_addr = m_pc_address.getAddress();
+  Request request(0, data_addr, 0, Flags<unsigned int>(Request::PREFETCH), pc_addr, m_node_num, 0);
+  MemCmd::Command command;
+  if (m_type == CacheRequestType_LD || m_type == CacheRequestType_IFETCH)
+    command = MemCmd::ReadReq;
+  else if (m_type == CacheRequestType_ST)
+    command = MemCmd::WriteReq;
+  else if (m_type == CacheRequestType_ATOMIC)
+    command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
+  else
+    assert(false);
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
 
   // Clear out the sequencer
   while (!sequencer_ptr->empty()) {
     g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
   }
 
-  sequencer_ptr->makeRequest(request);
+  sequencer_ptr->makeRequest(&pkt);
 
   // Clear out the sequencer
   while (!sequencer_ptr->empty()) {

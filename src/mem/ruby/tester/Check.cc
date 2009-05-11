@@ -37,6 +37,7 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/protocol/Chip.hh"
+#include "mem/packet.hh"
 
 Check::Check(const Address& address, const Address& pc)
 {
@@ -84,10 +85,29 @@ void Check::initiatePrefetch(Sequencer* targetSequencer_ptr)
   } else {
     type = CacheRequestType_ST;
   }
+
+  Addr data_addr = m_address.getAddress();
+  Addr pc_addr = m_pc.getAddress();
+  Request request(0, data_addr, 0, Flags<unsigned int>(Request::PREFETCH), pc_addr, 0, 0);
+  MemCmd::Command command;
+  if (type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+    request.setFlags(Request::INST_FETCH);
+  } else if (type == CacheRequestType_LD || type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+  } else if (type == CacheRequestType_ST) {
+    command = MemCmd::WriteReq;
+  } else if (type == CacheRequestType_ATOMIC) {
+    command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
+  } else {
+    assert(false);
+  }
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
   assert(targetSequencer_ptr != NULL);
-  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, 0, PrefetchBit_Yes, 0, Address(0), 0 /* only 1 SMT thread */);
-  if (targetSequencer_ptr->isReady(request)) {
-    targetSequencer_ptr->makeRequest(request);
+  if (targetSequencer_ptr->isReady(&pkt)) {
+    targetSequencer_ptr->makeRequest(&pkt);
   }
 }
 
@@ -109,15 +129,34 @@ void Check::initiateAction()
     type = CacheRequestType_ATOMIC;
   }
 
-  CacheMsg request(Address(m_address.getAddress()+m_store_count), Address(m_address.getAddress()+m_store_count), type, m_pc, m_access_mode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */);
+  Addr data_addr = m_address.getAddress()+m_store_count;
+  Addr pc_addr = m_pc.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), pc_addr, 0, 0);
+  MemCmd::Command command;
+  if (type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+    request.setFlags(Request::INST_FETCH);
+  } else if (type == CacheRequestType_LD || type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+  } else if (type == CacheRequestType_ST) {
+    command = MemCmd::WriteReq;
+  } else if (type == CacheRequestType_ATOMIC) {
+    command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
+  } else {
+    assert(false);
+  }
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
   Sequencer* sequencer_ptr = initiatingSequencer();
-  if (sequencer_ptr->isReady(request) == false) {
+  if (sequencer_ptr->isReady(&pkt) == false) {
     DEBUG_MSG(TESTER_COMP, MedPrio, "failed to initiate action - sequencer not ready\n");
   } else {
     DEBUG_MSG(TESTER_COMP, MedPrio, "initiating action - successful\n");
     DEBUG_EXPR(TESTER_COMP, MedPrio, m_status);
     m_status = TesterStatus_Action_Pending;
-    sequencer_ptr->makeRequest(request);
+
+    sequencer_ptr->makeRequest(&pkt);
   }
   DEBUG_EXPR(TESTER_COMP, MedPrio, m_status);
 }
@@ -132,15 +171,35 @@ void Check::initiateCheck()
     type = CacheRequestType_IFETCH;
   }
 
-  CacheMsg request(m_address, m_address, type, m_pc, m_access_mode, CHECK_SIZE, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */);
+
+  Addr data_addr = m_address.getAddress()+m_store_count;
+  Addr pc_addr = m_pc.getAddress();
+  Request request(0, data_addr, CHECK_SIZE, Flags<unsigned int>(), pc_addr, 0, 0);
+  MemCmd::Command command;
+  if (type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+    request.setFlags(Request::INST_FETCH);
+  } else if (type == CacheRequestType_LD || type == CacheRequestType_IFETCH) {
+    command = MemCmd::ReadReq;
+  } else if (type == CacheRequestType_ST) {
+    command = MemCmd::WriteReq;
+  } else if (type == CacheRequestType_ATOMIC) {
+    command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
+  } else {
+    assert(false);
+  }
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
   Sequencer* sequencer_ptr = initiatingSequencer();
-  if (sequencer_ptr->isReady(request) == false) {
+  if (sequencer_ptr->isReady(&pkt) == false) {
     DEBUG_MSG(TESTER_COMP, MedPrio, "failed to initiate check - sequencer not ready\n");
   } else {
     DEBUG_MSG(TESTER_COMP, MedPrio, "initiating check - successful\n");
     DEBUG_MSG(TESTER_COMP, MedPrio, m_status);
     m_status = TesterStatus_Check_Pending;
-    sequencer_ptr->makeRequest(request);
+
+    sequencer_ptr->makeRequest(&pkt);
   }
   DEBUG_MSG(TESTER_COMP, MedPrio, m_status);
 }

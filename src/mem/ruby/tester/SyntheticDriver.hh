@@ -60,7 +60,7 @@ public:
   void recordSwapLatency(Time time);
   void recordReleaseLatency(Time time);
 
-  void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
+  void hitCallback(Packet* pkt);
   void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) {assert(0);}
   void abortCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
   void wakeup();

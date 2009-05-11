@@ -44,6 +44,7 @@
 
 class RubySystem;
 class SpecifiedGenerator;
+class Packet;
 
 class DeterministicDriver : public Driver, public Consumer {
 public:
@@ -69,7 +70,7 @@ public:
   void recordLoadLatency(Time time);
   void recordStoreLatency(Time time);
 
-  void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
+  void hitCallback(Packet* pkt);
   void wakeup();
   void printStats(ostream& out) const;
   void clearStats() {}

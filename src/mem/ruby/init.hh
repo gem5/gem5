@@ -39,8 +39,12 @@
 #ifndef INIT_H
 #define INIT_H
 
+class Driver;
+
 extern void init_variables();
+//extern void init_variables(const char* config_str);
 extern void init_simulator();
+extern void init_simulator(Driver* _driver);
 extern void destroy_simulator();
 
 #endif //INIT_H

@@ -46,6 +46,7 @@
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/gems_common/Map.hh"
+#include "mem/packet.hh"
 
 Sequencer::Sequencer(AbstractChip* chip_ptr, int version) {
   m_chip_ptr = chip_ptr;
@@ -57,6 +58,8 @@ Sequencer::Sequencer(AbstractChip* chip_ptr, int version) {
   int smt_threads = RubyConfig::numberofSMTThreads();
   m_writeRequestTable_ptr = new Map<Address, CacheMsg>*[smt_threads];
   m_readRequestTable_ptr = new Map<Address, CacheMsg>*[smt_threads];
+
+  m_packetTable_ptr = new Map<Address, Packet*>;
 
   for(int p=0; p < smt_threads; ++p){
     m_writeRequestTable_ptr[p] = new Map<Address, CacheMsg>;
@@ -603,7 +606,8 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
     (type == CacheRequestType_ATOMIC);
 
   if (TSO && write) {
-    m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->callBack(line_address(request.getAddress()), data);
+    m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->callBack(line_address(request.getAddress()), data,
+                                                               m_packetTable_ptr->lookup(request.getAddress()));
   } else {
 
     // Copy the correct bytes out of the cache line into the subblock
@@ -616,7 +620,23 @@ void Sequencer::hitCallback(const CacheMsg& request, DataBlock& data, GenericMac
     }
 
     // Call into the Driver and let it read and/or modify the sub-block
-    g_system_ptr->getDriver()->hitCallback(m_chip_ptr->getID()*RubyConfig::numberOfProcsPerChip()+m_version, subblock, type, threadID);
+    Packet* pkt = m_packetTable_ptr->lookup(request.getAddress());
+
+    // update data if this is a store/atomic
+
+    /*
+    if (pkt->req->isCondSwap()) {
+      L1Cache_Entry entry = m_L1Cache_vec[m_version]->lookup(Address(pkt->req->physAddr()));
+      DataBlk datablk = entry->getDataBlk();
+      uint8_t *orig_data = datablk.getArray();
+      if ( datablk.equal(pkt->req->getExtraData()) )
+        datablk->setArray(pkt->getData());
+      pkt->setData(orig_data);
+    }
+    */
+
+    g_system_ptr->getDriver()->hitCallback(pkt);
+    m_packetTable_ptr->remove(request.getAddress());
 
     // If the request was a Store or Atomic, apply the changes in the SubBlock to the DataBlock
     // (This is only triggered for the non-TSO case)
@@ -632,6 +652,7 @@ void Sequencer::printDebug(){
   g_system_ptr->getDriver()->printDebug();
 }
 
+//dsm: breaks build, delayed
 // Returns true if the sequencer already has a load or store outstanding
 bool
 Sequencer::isReady(const Packet* pkt) const
@@ -665,7 +686,7 @@ Sequencer::isReady(const Packet* pkt) const
                    Address(logical_addr),   // Virtual Address
                    thread              // SMT thread
                    );
-  isReady(request);
+  return isReady(request);
 }
 
 bool
@@ -701,25 +722,35 @@ Sequencer::isReady(const CacheMsg& request) const
   return true;
 }
 
-// Called by Driver
+//dsm: breaks build, delayed
+// Called by Driver (Simics or Tester).
 void
-Sequencer::makeRequest(const Packet* pkt, void* data)
+Sequencer::makeRequest(Packet* pkt)
 {
   int cpu_number = pkt->req->contextId();
   la_t logical_addr = pkt->req->getVaddr();
   pa_t physical_addr = pkt->req->getPaddr();
   int request_size = pkt->getSize();
   CacheRequestType type_of_request;
+  PrefetchBit prefetch;
+  bool write = false;
   if ( pkt->req->isInstFetch() ) {
     type_of_request = CacheRequestType_IFETCH;
   } else if ( pkt->req->isLocked() || pkt->req->isSwap() ) {
     type_of_request = CacheRequestType_ATOMIC;
+    write = true;
   } else if ( pkt->isRead() ) {
     type_of_request = CacheRequestType_LD;
   } else if ( pkt->isWrite() ) {
     type_of_request = CacheRequestType_ST;
+    write = true;
   } else {
     assert(false);
+  }
+  if (pkt->req->isPrefetch()) {
+    prefetch = PrefetchBit_Yes;
+  } else {
+    prefetch = PrefetchBit_No;
   }
   la_t virtual_pc = pkt->req->getPC();
   int isPriv = false;  // TODO: get permission data
@@ -733,28 +764,21 @@ Sequencer::makeRequest(const Packet* pkt, void* data)
                    Address(virtual_pc),
                    access_mode,   // User/supervisor mode
                    request_size,   // Size in bytes of request
-                   PrefetchBit_No, // Not a prefetch
+                   prefetch,
                    0,              // Version number
                    Address(logical_addr),   // Virtual Address
                    thread         // SMT thread
                    );
-  makeRequest(request);
-}
 
-void
-Sequencer::makeRequest(const CacheMsg& request)
-{
-  bool write = (request.getType() == CacheRequestType_ST) ||
-    (request.getType() == CacheRequestType_ATOMIC);
-
-  if (TSO && (request.getPrefetch() == PrefetchBit_No) && write) {
+  if ( TSO && write && !pkt->req->isPrefetch() ) {
     assert(m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->isReady());
-    m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->insertStore(request);
+    m_chip_ptr->m_L1Cache_storeBuffer_vec[m_version]->insertStore(pkt, request);
     return;
   }
 
-  bool hit = doRequest(request);
+  m_packetTable_ptr->insert(Address( physical_addr ), pkt);
 
+  doRequest(request);
 }
 
 bool Sequencer::doRequest(const CacheMsg& request) {

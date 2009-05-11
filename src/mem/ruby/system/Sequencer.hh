@@ -45,13 +45,13 @@
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/gems_common/Map.hh"
-#include "mem/packet.hh"
 
 class DataBlock;
 class AbstractChip;
 class CacheMsg;
 class Address;
 class MachineID;
+class Packet;
 
 class Sequencer : public Consumer {
 public:
@@ -103,8 +103,7 @@ public:
   void printDebug();
 
   // called by Tester or Simics
-  void makeRequest(const Packet* pkt, void* data);
-  void makeRequest(const CacheMsg& request); // depricate this function
+  void makeRequest(Packet* pkt);
   bool doRequest(const CacheMsg& request);
   void issueRequest(const CacheMsg& request);
   bool isReady(const Packet* pkt) const;
@@ -143,6 +142,9 @@ private:
   // One request table per SMT thread
   Map<Address, CacheMsg>** m_writeRequestTable_ptr;
   Map<Address, CacheMsg>** m_readRequestTable_ptr;
+
+  Map<Address, Packet*>* m_packetTable_ptr;
+
   // Global outstanding request count, across all request tables
   int m_outstanding_count;
   bool m_deadlock_check_scheduled;

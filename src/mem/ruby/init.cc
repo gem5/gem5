@@ -40,6 +40,7 @@
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/common/Debug.hh"
+#include "mem/ruby/common/Driver.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/tester/Tester.hh"
 #include "mem/ruby/init.hh"
@@ -65,14 +66,27 @@ static void init_generate_values( void )
 }
 
 //***************************************************************************
+
 void init_variables( void )
 {
-   // allocate the "variable initialization" package
-   ruby_initvar_obj = new initvar_t( "ruby", "../../../ruby/",
-                                     global_default_param,
-                                     &init_simulator,
-                                     &init_generate_values );
+  // allocate the "variable initialization" package
+  ruby_initvar_obj = new initvar_t( "ruby", "../../../ruby/",
+                                    global_default_param,
+                                    &init_simulator,
+                                    &init_generate_values);
 }
+
+
+ /*
+void init_variables(const char* config_str )
+{
+  // allocate the "variable initialization" package
+  ruby_initvar_obj = new initvar_t( "ruby", "../../../ruby/",
+                                    config_str,
+                                    &init_simulator,
+                                    &init_generate_values );
+}
+ */
 
 void init_simulator()
 {
@@ -104,6 +118,36 @@ void init_simulator()
     cout << "Ruby initialization complete" << endl;
 }
 
+void init_simulator(Driver* _driver)
+{
+    // Set things to NULL to make sure we don't de-reference them
+    // without a seg. fault.
+    g_system_ptr = NULL;
+    g_debug_ptr = NULL;
+    g_eventQueue_ptr = NULL;
+
+    cout << "Ruby Timing Mode" << endl;
+
+
+    g_debug_ptr = new Debug( DEBUG_FILTER_STRING,
+                             DEBUG_VERBOSITY_STRING,
+                             DEBUG_START_TIME,
+                             DEBUG_OUTPUT_FILENAME );
+    RubyConfig::init();
+
+    cout << "Creating event queue..." << endl;
+    g_eventQueue_ptr = new RubyEventQueue;
+    cout << "Creating event queue done" << endl;
+
+    cout << "Creating system..." << endl;
+    cout << "  Processors: " << RubyConfig::numberOfProcessors() << endl;
+
+    g_system_ptr = new RubySystem(_driver);
+    cout << "Creating system done" << endl;
+
+    cout << "Ruby initialization complete" << endl;
+}
+
 void destroy_simulator()
 {
     cout << "Deleting system..." << endl;
@@ -122,7 +166,8 @@ void destroy_simulator()
  | M5 in phase 1 integration, and possibly afterwards, too.                |
  +-------------------------------------------------------------------------*/
 
-extern "C"
+//dsm: superfluous
+/*extern "C"
 int OnLoadRuby() {
     init_variables();
     return 0;
@@ -136,9 +181,9 @@ int OnInitRuby() {
 
 extern "C"
 int OnUnloadRuby() {
-    destroy_simulator();
-    return 0;
-}
+  destroy_simulator();
+  return 0;
+}*/
 
 /* I have to put it somewhere for now */
 void tester_main(int argc, char **argv) {

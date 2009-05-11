@@ -46,12 +46,48 @@
 #include "mem/protocol/Chip.hh"
 //#include "mem/ruby/recorder/Tracer.hh"
 #include "mem/protocol/Protocol.hh"
-//#include "XactIsolationChecker.hh"  // gem5:Arka for decomissioning of log_tm
-//#include "XactCommitArbiter.hh"
-//#include "XactVisualizer.hh"
-#include "mem/ruby/interfaces/M5Driver.hh"
 
 RubySystem::RubySystem()
+{
+  init();
+  m_preinitialized_driver = false;
+  createDriver();
+
+ /*  gem5:Binkert for decomissiong of tracer
+     m_tracer_ptr = new Tracer;
+ */
+
+ /*  gem5:Arka for decomissiong of log_tm
+  if (XACT_MEMORY) {
+    m_xact_isolation_checker = new XactIsolationChecker;
+    m_xact_commit_arbiter    = new XactCommitArbiter;
+    m_xact_visualizer        = new XactVisualizer;
+  }
+*/
+}
+
+RubySystem::RubySystem(Driver* _driver)
+{
+  init();
+  m_preinitialized_driver = true;
+  m_driver_ptr = _driver;
+}
+
+RubySystem::~RubySystem()
+{
+  for (int i = 0; i < m_chip_vector.size(); i++) {
+    delete m_chip_vector[i];
+  }
+  if (!m_preinitialized_driver)
+    delete m_driver_ptr;
+  delete m_network_ptr;
+  delete m_profiler_ptr;
+ /*  gem5:Binkert for decomissiong of tracer
+     delete m_tracer_ptr;
+ */
+}
+
+void RubySystem::init()
 {
   DEBUG_MSG(SYSTEM_COMP, MedPrio,"initializing");
 
@@ -101,44 +137,19 @@ RubySystem::RubySystem()
     }
   }
 #endif
+  DEBUG_MSG(SYSTEM_COMP, MedPrio,"finished initializing");
+  DEBUG_NEWLINE(SYSTEM_COMP, MedPrio);
+}
 
+void RubySystem::createDriver()
+{
     if (g_SYNTHETIC_DRIVER && !g_DETERMINISTIC_DRIVER) {
       cerr << "Creating Synthetic Driver" << endl;
       m_driver_ptr = new SyntheticDriver(this);
     } else if (!g_SYNTHETIC_DRIVER && g_DETERMINISTIC_DRIVER) {
       cerr << "Creating Deterministic Driver" << endl;
       m_driver_ptr = new DeterministicDriver(this);
-    } else {
-      cerr << "Creating M5 Driver" << endl;
-      m_driver_ptr = new M5Driver(this);
     }
- /*  gem5:Binkert for decomissiong of tracer
-     m_tracer_ptr = new Tracer;
- */
-
- /*  gem5:Arka for decomissiong of log_tm
-  if (XACT_MEMORY) {
-    m_xact_isolation_checker = new XactIsolationChecker;
-    m_xact_commit_arbiter    = new XactCommitArbiter;
-    m_xact_visualizer        = new XactVisualizer;
-  }
-*/
-  DEBUG_MSG(SYSTEM_COMP, MedPrio,"finished initializing");
-  DEBUG_NEWLINE(SYSTEM_COMP, MedPrio);
-
-}
-
-RubySystem::~RubySystem()
-{
-  for (int i = 0; i < m_chip_vector.size(); i++) {
-    delete m_chip_vector[i];
-  }
-  delete m_driver_ptr;
-  delete m_network_ptr;
-  delete m_profiler_ptr;
- /*  gem5:Binkert for decomissiong of tracer
-     delete m_tracer_ptr;
- */
 }
 
 void RubySystem::printConfig(ostream& out) const

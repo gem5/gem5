@@ -63,6 +63,7 @@ class RubySystem {
 public:
   // Constructors
   RubySystem();
+  RubySystem(Driver* _driver); // used when driver is already instantiated (e.g. M5's RubyMem)
 
   // Destructor
   ~RubySystem();
@@ -98,6 +99,8 @@ public:
 
 private:
   // Private Methods
+  void init();
+  void createDriver();
 
   // Private copy constructor and assignment operator
   RubySystem(const RubySystem& obj);
@@ -107,6 +110,7 @@ private:
   Network* m_network_ptr;
   Vector<AbstractChip*> m_chip_vector;
   Profiler* m_profiler_ptr;
+  bool m_preinitialized_driver;
   Driver* m_driver_ptr;
   Tracer* m_tracer_ptr;
   XactIsolationChecker *m_xact_isolation_checker;

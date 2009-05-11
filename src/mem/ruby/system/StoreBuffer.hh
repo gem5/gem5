@@ -49,6 +49,7 @@ class DataBlock;
 class SubBlock;
 class StoreBufferEntry;
 class AbstractChip;
+class Packet;
 
 template <class TYPE> class Vector;
 
@@ -62,8 +63,8 @@ public:
 
   // Public Methods
   void wakeup(); // Used only for deadlock detection
-  void callBack(const Address& addr, DataBlock& data);
-  void insertStore(const CacheMsg& request);
+  void callBack(const Address& addr, DataBlock& data, Packet* pkt);
+  void insertStore(Packet* pkt, const CacheMsg& request);
   void updateSubBlock(SubBlock& sub_block) const { m_store_cache.update(sub_block); }
   bool trySubBlock(const SubBlock& sub_block) const { assert(isReady()); return m_store_cache.check(sub_block); }
   void print(ostream& out) const;

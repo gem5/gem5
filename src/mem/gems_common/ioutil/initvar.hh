@@ -64,8 +64,6 @@ public:
    * @param initializingString  A string (with value pairs) for initialization
    * @param allocate_f        A ptr to the allocate function
    * @param generate_values   A ptr to the generate values function
-   * @param my_get_attr       A ptr to the get attribute function
-   * @param my_set_attr       A ptr to the set attribute function
    */
   initvar_t( const char *name, const char *relativeIncludePath,
              const char *initializingString,

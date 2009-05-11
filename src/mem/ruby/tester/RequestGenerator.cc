@@ -169,19 +169,43 @@ void RequestGenerator::pickAddress()
 void RequestGenerator::initiateTest()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Test");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
+
+  Addr data_addr = m_address.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), 1, 0, 0);
+  MemCmd::Command command;
+  command = MemCmd::ReadReq;
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
+  sequencer()->makeRequest(&pkt);
 }
 
 void RequestGenerator::initiateSwap()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Swap");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ATOMIC, Address(2), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
+
+  Addr data_addr = m_address.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), 2, 0, 0);
+  MemCmd::Command command;
+  command = MemCmd::SwapReq;
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
+  sequencer()->makeRequest(&pkt);
 }
 
 void RequestGenerator::initiateRelease()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Release");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
+
+  Addr data_addr = m_address.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
+  MemCmd::Command command;
+  command = MemCmd::WriteReq;
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
+  sequencer()->makeRequest(&pkt);
 }
 
 Sequencer* RequestGenerator::sequencer() const

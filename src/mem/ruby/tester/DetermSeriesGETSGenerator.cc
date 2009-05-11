@@ -135,7 +135,16 @@ void DetermSeriesGETSGenerator::pickAddress()
 void DetermSeriesGETSGenerator::initiateLoad()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Load");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_IFETCH, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
+
+  Addr data_addr = m_address.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
+  MemCmd::Command command;
+  command = MemCmd::ReadReq;
+  request.setFlags(Request::INST_FETCH);
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
+  sequencer()->makeRequest(&pkt);
 }
 
 Sequencer* DetermSeriesGETSGenerator::sequencer() const

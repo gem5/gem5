@@ -35,7 +35,7 @@
 #include "mem/ruby/tester/main.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/config/RubyConfig.hh"
-#include "mem/ruby/tester/test_framework.hh"
+//#include "mem/ruby/tester/test_framework.hh"
 
 // *******************
 // *** tester main ***
@@ -43,5 +43,6 @@
 
 int main(int argc, char *argv[])
 {
-  tester_main(argc, argv);
+    //dsm: PRUNED
+    //tester_main(argc, argv);
 }

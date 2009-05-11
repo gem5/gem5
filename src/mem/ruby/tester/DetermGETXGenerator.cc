@@ -44,6 +44,7 @@
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
 #include "mem/protocol/Chip.hh"
+#include "mem/packet.hh"
 
 DetermGETXGenerator::DetermGETXGenerator(NodeID node, DeterministicDriver& driver) :
   m_driver(driver)
@@ -137,7 +138,15 @@ void DetermGETXGenerator::pickAddress()
 void DetermGETXGenerator::initiateStore()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Store");
-  sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, 0, Address(0), 0 /* only 1 SMT thread */));
+
+  Addr data_addr = m_address.getAddress();
+  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
+  MemCmd::Command command;
+  command = MemCmd::WriteReq;
+
+  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+
+  sequencer()->makeRequest(&pkt);
 }
 
 Sequencer* DetermGETXGenerator::sequencer() const

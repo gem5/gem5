@@ -44,6 +44,7 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/packet.hh"
 
 // *** Begin Helper class ***
 struct StoreBufferEntry {
@@ -150,7 +151,8 @@ void StoreBuffer::printConfig(ostream& out)
 
 // Handle an incoming store request, this method is responsible for
 // calling hitCallback as needed
-void StoreBuffer::insertStore(const CacheMsg& request)
+void
+StoreBuffer::insertStore(Packet* pkt, const CacheMsg& request)
 {
   Address addr = request.getAddress();
   CacheRequestType type = request.getType();
@@ -173,7 +175,7 @@ void StoreBuffer::insertStore(const CacheMsg& request)
   // Perform the hit-callback for the store
   SubBlock subblock(addr, size);
   if(type == CacheRequestType_ST) {
-    g_system_ptr->getDriver()->hitCallback(m_chip_ptr->getID(), subblock, type, threadID);
+    g_system_ptr->getDriver()->hitCallback(pkt);
     assert(subblock.getSize() != 0);
   } else {
     // wait to perform the hitCallback until later for Atomics
@@ -181,9 +183,9 @@ void StoreBuffer::insertStore(const CacheMsg& request)
 
   // Perform possible pre-fetch
   if(!isEmpty()) {
-    CacheMsg new_request = request;
-    new_request.getPrefetch() = PrefetchBit_Yes;
-    m_chip_ptr->getSequencer(m_version)->makeRequest(new_request);
+    Packet new_pkt(pkt);
+    pkt->req->setFlags(Request::PREFETCH);
+    m_chip_ptr->getSequencer(m_version)->makeRequest(&new_pkt);
   }
 
   // Update the StoreCache
@@ -200,7 +202,7 @@ void StoreBuffer::insertStore(const CacheMsg& request)
   processHeadOfQueue();
 }
 
-void StoreBuffer::callBack(const Address& addr, DataBlock& data)
+void StoreBuffer::callBack(const Address& addr, DataBlock& data, Packet* pkt)
 {
   DEBUG_MSG(STOREBUFFER_COMP, MedPrio, "callBack");
   DEBUG_EXPR(STOREBUFFER_COMP, MedPrio, g_eventQueue_ptr->getTime());
@@ -220,7 +222,7 @@ void StoreBuffer::callBack(const Address& addr, DataBlock& data)
   } else {
     // We waited to perform the hitCallback until now for Atomics
     peek().m_subblock.mergeFrom(data);  // copy the correct bytes from DataBlock into the SubBlock for the Load part of the atomic Load/Store
-    g_system_ptr->getDriver()->hitCallback(m_chip_ptr->getID(), peek().m_subblock, type, threadID);
+    g_system_ptr->getDriver()->hitCallback(pkt);
     m_seen_atomic = false;
 
     /// FIXME - record the time spent in the store buffer - split out ST vs ATOMIC

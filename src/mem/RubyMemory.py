@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2008 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,34 +26,21 @@
 #
 # Authors: Nathan Binkert
 
-Import('*')
+from m5.params import *
+from m5.proxy import *
 
-SimObject('Bridge.py')
-SimObject('Bus.py')
-SimObject('MemObject.py')
-SimObject('PhysicalMemory.py')
-SimObject('RubyMemory.py')
+from PhysicalMemory import PhysicalMemory
 
-Source('bridge.cc')
-Source('bus.cc')
-Source('dram.cc')
-Source('mem_object.cc')
-Source('packet.cc')
-Source('physical.cc')
-Source('port.cc')
-Source('tport.cc')
-Source('mport.cc')
-Source('rubymem.cc')
+class RubyMemory(PhysicalMemory):
+    type = 'RubyMemory'
+    clock = Param.Clock('1t', "ruby clock speed")
+    phase = Param.Latency('0ns', "ruby clock phase")
+    config_file = Param.String("", "path to the Ruby config file")
+    config_options = Param.String("", "extra Ruby options (one per line)")
+    stats_file = Param.String("ruby.stats",
+        "file to which ruby dumps its stats")
+    num_cpus = Param.Int(1, "Number of CPUs connected to the Ruby memory")
+    debug = Param.Bool(False, "Use ruby debug")
+    debug_file = Param.String("",
+        "path to the Ruby debug output file (stdout if blank)")
 
-if env['FULL_SYSTEM']:
-    Source('vport.cc')
-else:
-    Source('page_table.cc')
-    Source('translating_port.cc')
-
-TraceFlag('Bus')
-TraceFlag('BusAddrRanges')
-TraceFlag('BusBridge')
-TraceFlag('LLSC')
-TraceFlag('MMU')
-TraceFlag('MemoryAccess')

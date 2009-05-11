@@ -75,18 +75,17 @@ SyntheticDriver::~SyntheticDriver()
   }
 }
 
-void SyntheticDriver::hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread)
+void
+SyntheticDriver::hitCallback(Packet * pkt)
 {
-  DEBUG_EXPR(TESTER_COMP, MedPrio, data);
-  //cout << "  " << proc << " in S.D. hitCallback" << endl;
-  if(XACT_MEMORY){
-    //XactRequestGenerator* reqGen = static_cast<XactRequestGenerator*>(m_request_generator_vector[proc]);
-    //reqGen->performCallback(proc, data);
-  } else {
-    m_request_generator_vector[proc]->performCallback(proc, data);
+  NodeID proc = pkt->req->contextId();
+  SubBlock data(Address(pkt->getAddr()), pkt->req->getSize());
+  if (pkt->hasData()) {
+    for (int i = 0; i < pkt->req->getSize(); i++) {
+      data.setByte(i, *(pkt->getPtr<uint8>()+i));
+    }
   }
-
-  // Mark that we made progress
+  m_request_generator_vector[proc]->performCallback(proc, data);
   m_last_progress_vector[proc] = g_eventQueue_ptr->getTime();
 }
 
