@@ -39,7 +39,7 @@
 #ifndef LOCATION_H
 #define LOCATION_H
 
-#include "slicc_global.hh"
+#include "mem/slicc/slicc_global.hh"
 
 extern int g_line_number;
 extern string g_file_name;

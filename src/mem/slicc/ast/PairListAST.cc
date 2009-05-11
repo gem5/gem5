@@ -36,7 +36,7 @@
  *
  */
 
-#include "PairListAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
 
 void PairListAST::addPair(PairAST* pair_ptr)
 {

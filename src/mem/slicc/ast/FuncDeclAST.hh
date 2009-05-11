@@ -39,11 +39,11 @@
 #ifndef FuncDeclAST_H
 #define FuncDeclAST_H
 
-#include "slicc_global.hh"
-#include "DeclAST.hh"
-#include "TypeFieldAST.hh"
-#include "TypeAST.hh"
-#include "FormalParamAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclAST.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
+#include "mem/slicc/ast/FormalParamAST.hh"
 
 class FuncDeclAST : public DeclAST {
 public:

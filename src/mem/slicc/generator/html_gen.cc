@@ -36,9 +36,9 @@
  *
  * */
 
-#include "html_gen.hh"
-#include "fileio.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/generator/html_gen.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 string formatHTMLShorthand(const string shorthand);
 

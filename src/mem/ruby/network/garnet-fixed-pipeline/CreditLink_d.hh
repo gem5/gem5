@@ -7,7 +7,7 @@
 #ifndef CREDIT_LINK_D_H
 #define CREDIT_LINK_D_H
 
-#include "NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
 
 class CreditLink_d : public NetworkLink_d {
 public:

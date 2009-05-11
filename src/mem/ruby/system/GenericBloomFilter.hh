@@ -38,11 +38,11 @@
 #ifndef GENERIC_BLOOM_FILTER_H
 #define GENERIC_BLOOM_FILTER_H
 
-#include "Global.hh"
-#include "AbstractChip.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
-#include "AbstractBloomFilter.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/AbstractBloomFilter.hh"
 
 class GenericBloomFilter {
 public:

@@ -31,7 +31,7 @@
  * $Id$
  */
 
-#include "SubBlock.hh"
+#include "mem/ruby/common/SubBlock.hh"
 
 SubBlock::SubBlock(const Address& addr, int size)
 {

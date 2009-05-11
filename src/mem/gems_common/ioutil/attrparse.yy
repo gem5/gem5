@@ -65,7 +65,7 @@
 /* Includes                                                               */
 /*------------------------------------------------------------------------*/
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 
 using namespace std;
 #include <string>
@@ -77,9 +77,9 @@ using namespace std;
 // #include "simics/api.h"
 // };
 
-#include "FakeSimicsDataTypes.hh"
+#include "mem/gems_common/ioutil/FakeSimicsDataTypes.hh"
 
-#include "confio.hh"
+#include "mem/gems_common/ioutil/confio.hh"
 
 // CM FIX: if I wasn't working on a paper: I'd re-write the grammer to
 //         be left (or right) recursive, which ever is more efficient

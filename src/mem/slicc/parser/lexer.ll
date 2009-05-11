@@ -29,8 +29,8 @@
 %{
 
 #include <assert.h>
-#include "ASTs.hh"
-#include "parser.h"
+#include "mem/slicc/ast/ASTs.hh"
+#include "mem/slicc/parser/parser.hh"
 #include <string>
 
 extern "C" int yylex();

@@ -36,4 +36,4 @@
  *
  */
 
-#include "AST.hh"
+#include "mem/slicc/ast/AST.hh"

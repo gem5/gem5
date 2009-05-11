@@ -36,7 +36,7 @@
  *
  */
 
-#include "MemberExprAST.hh"
+#include "mem/slicc/ast/MemberExprAST.hh"
 
 MemberExprAST::MemberExprAST(ExprAST* expr_ast_ptr, string* field_ptr)
   : ExprAST()

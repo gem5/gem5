@@ -39,8 +39,8 @@
 #ifndef STATEMENTAST_H
 #define STATEMENTAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
 
 void inc_indent();
 void dec_indent();

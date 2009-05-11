@@ -36,8 +36,8 @@
  *
  */
 
-#include "TransitionDeclAST.hh"
-#include "Transition.hh"
+#include "mem/slicc/ast/TransitionDeclAST.hh"
+#include "mem/slicc/symbols/Transition.hh"
 
 TransitionDeclAST::TransitionDeclAST(Vector<string>* state_list_ptr,
                                      Vector<string>* event_list_ptr,

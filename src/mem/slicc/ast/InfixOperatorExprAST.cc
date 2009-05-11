@@ -36,7 +36,7 @@
  *
  */
 
-#include "InfixOperatorExprAST.hh"
+#include "mem/slicc/ast/InfixOperatorExprAST.hh"
 
 InfixOperatorExprAST::InfixOperatorExprAST(ExprAST* left_ptr,
                                            string* op_ptr,

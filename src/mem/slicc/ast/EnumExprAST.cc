@@ -36,7 +36,7 @@
  *
  */
 
-#include "EnumExprAST.hh"
+#include "mem/slicc/ast/EnumExprAST.hh"
 
 EnumExprAST::EnumExprAST(TypeAST* type_ast_ptr,
                          string* value_ptr)

@@ -32,11 +32,11 @@
  *
  */
 
-#include "EnqueueStatementAST.hh"
-#include "SymbolTable.hh"
-#include "VarExprAST.hh"
-#include "PairListAST.hh"
-#include "util.hh"
+#include "mem/slicc/ast/EnqueueStatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
+#include "mem/gems_common/util.hh"
 
 EnqueueStatementAST::EnqueueStatementAST(VarExprAST* queue_name_ptr,
                                          TypeAST* type_name_ptr,

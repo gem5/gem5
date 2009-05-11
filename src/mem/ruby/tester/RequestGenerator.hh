@@ -37,11 +37,11 @@
 #ifndef REQUESTGENERATOR_H
 #define REQUESTGENERATOR_H
 
-#include "Global.hh"
-#include "Consumer.hh"
-#include "RequestGeneratorStatus.hh"
-#include "NodeID.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/protocol/RequestGeneratorStatus.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Address.hh"
 
 class Sequencer;
 class SubBlock;

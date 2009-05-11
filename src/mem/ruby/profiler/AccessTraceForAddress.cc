@@ -32,8 +32,8 @@
  *
  */
 
-#include "AccessTraceForAddress.hh"
-#include "Histogram.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
+#include "mem/ruby/common/Histogram.hh"
 
 AccessTraceForAddress::AccessTraceForAddress()
 {

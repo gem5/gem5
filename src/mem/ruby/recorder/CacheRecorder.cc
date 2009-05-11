@@ -32,10 +32,10 @@
  *
  */
 
-#include "CacheRecorder.hh"
-#include "TraceRecord.hh"
-#include "RubyEventQueue.hh"
-#include "PrioHeap.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/ruby/recorder/TraceRecord.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/gems_common/PrioHeap.hh"
 
 CacheRecorder::CacheRecorder()
 {

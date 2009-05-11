@@ -32,9 +32,9 @@
  *
  */
 
-#include "CheckTable.hh"
-#include "Check.hh"
-#include "Map.hh"
+#include "mem/ruby/tester/CheckTable.hh"
+#include "mem/ruby/tester/Check.hh"
+#include "mem/gems_common/Map.hh"
 
 CheckTable::CheckTable()
 {

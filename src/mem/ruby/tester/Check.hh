@@ -37,11 +37,11 @@
 #ifndef CHECK_H
 #define CHECK_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "NodeID.hh"
-#include "TesterStatus.hh"
-#include "AccessModeType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/TesterStatus.hh"
+#include "mem/protocol/AccessModeType.hh"
 class Sequencer;
 class SubBlock;
 

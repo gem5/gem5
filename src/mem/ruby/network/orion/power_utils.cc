@@ -27,8 +27,8 @@
  */
 
 #include <stdio.h>
-#include "parm_technology.hh"
-#include "power_utils.hh"
+#include "mem/ruby/network/orion/parm_technology.hh"
+#include "mem/ruby/network/orion/power_utils.hh"
 #include <assert.h>
 #include <math.h>
 

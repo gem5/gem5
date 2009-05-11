@@ -32,16 +32,16 @@
  *
  */
 
-#include "protocol_name.hh"
-#include "test_framework.hh"
-#include "System.hh"
-#include "init.hh"
-#include "Tester.hh"
-#include "RubyEventQueue.hh"
+#include "mem/protocol/protocol_name.hh"
+#include "mem/ruby/tester/test_framework.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/init.hh"
+#include "mem/ruby/tester/Tester.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "getopt.hh"
-#include "Network.hh"
-#include "CacheRecorder.hh"
-#include "Tracer.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/ruby/recorder/Tracer.hh"
 
 using namespace std;
 #include <string>
@@ -52,14 +52,14 @@ using namespace std;
 // #include "simics/api.hh"
 // };
 
-#include "confio.hh"
-#include "initvar.hh"
+#include "mem/gems_common/ioutil/confio.hh"
+#include "mem/gems_common/ioutil/initvar.hh"
 
 // A generated file containing the default tester parameters in string form
 // The defaults are stored in the variables
 // global_default_param and global_default_tester_param
-#include "default_param.hh"
-#include "tester_param.hh"
+#include "mem/ruby/default_param.hh"
+#include "mem/ruby/tester_param.hh"
 
 static void parseOptions(int argc, char **argv);
 static void usageInstructions();

@@ -37,12 +37,12 @@
 #ifndef StoreBuffer_H
 #define StoreBuffer_H
 
-#include "Global.hh"
-#include "Consumer.hh"
-#include "Address.hh"
-#include "AccessModeType.hh"
-#include "CacheRequestType.hh"
-#include "StoreCache.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/ruby/system/StoreCache.hh"
 
 class CacheMsg;
 class DataBlock;

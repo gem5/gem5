@@ -36,25 +36,25 @@
  *
  */
 
-#include "Global.hh"
-#include "RubyEventQueue.hh"
-#include "System.hh"
-#include "Debug.hh"
-#include "Profiler.hh"
-#include "Tester.hh"
-#include "init.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/tester/Tester.hh"
+#include "mem/ruby/init.hh"
 
 using namespace std;
 #include <string>
 #include <map>
 #include <stdlib.h>
 
-#include "confio.hh"
-#include "initvar.hh"
+#include "mem/gems_common/ioutil/confio.hh"
+#include "mem/gems_common/ioutil/initvar.hh"
 
 // A generated file containing the default parameters in string form
 // The defaults are stored in the variable global_default_param
-#include "default_param.hh"
+#include "mem/protocol/default_param.hh"
 
 static initvar_t *ruby_initvar_obj = NULL;
 

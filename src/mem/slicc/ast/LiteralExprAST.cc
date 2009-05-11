@@ -36,7 +36,7 @@
  *
  */
 
-#include "LiteralExprAST.hh"
+#include "mem/slicc/ast/LiteralExprAST.hh"
 
 Type* LiteralExprAST::generate(string& code) const
 {

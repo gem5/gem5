@@ -39,9 +39,9 @@
 #ifndef EnumExprAST_H
 #define EnumExprAST_H
 
-#include "slicc_global.hh"
-#include "ExprAST.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/ExprAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 
 class EnumExprAST : public ExprAST {

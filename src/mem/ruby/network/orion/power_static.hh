@@ -29,7 +29,7 @@
 #ifndef _POWER_STATIC_H
 #define _POWER_STATIC_H
 
-#include "parm_technology.hh"
+#include "mem/ruby/network/orion/parm_technology.hh"
 
 extern double NMOS_TAB[1];
 extern double PMOS_TAB[1];

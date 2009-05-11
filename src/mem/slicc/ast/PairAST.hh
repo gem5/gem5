@@ -39,8 +39,8 @@
 #ifndef PAIRAST_H
 #define PAIRAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
 
 class PairAST : public AST {
 public:

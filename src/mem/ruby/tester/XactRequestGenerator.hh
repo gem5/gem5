@@ -27,10 +27,10 @@
 #define XACTREQUESTGENERATOR_H
 
 #include "global.hh"
-#include "RequestGenerator.hh"
-#include "Consumer.hh"
-#include "NodeID.hh"
-#include "Address.hh"
+#include "mem/ruby/tester/RequestGenerator.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Address.hh"
 #include "TransactionManager.hh"
 
 class Sequencer;

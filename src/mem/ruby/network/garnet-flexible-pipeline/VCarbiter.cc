@@ -33,8 +33,8 @@
  *
  * */
 
-#include "VCarbiter.hh"
-#include "Router.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/VCarbiter.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/Router.hh"
 
 VCarbiter::VCarbiter(Router *router)
 {

@@ -34,8 +34,8 @@
                      * ../common directory.
                      */
 
-#include "std-includes.hh"
-#include "Map.hh"
+#include "mem/gems_common/std-includes.hh"
+#include "mem/gems_common/Map.hh"
 
 typedef unsigned char uint8;
 typedef unsigned int uint32;

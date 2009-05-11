@@ -36,9 +36,9 @@
  *
  */
 
-#include "NetDest.hh"
-#include "RubyConfig.hh"
-#include "Protocol.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/Protocol.hh"
 
 NetDest::NetDest()
 {

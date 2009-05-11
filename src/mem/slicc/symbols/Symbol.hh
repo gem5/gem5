@@ -34,9 +34,9 @@
 #ifndef SYMBOL_H
 #define SYMBOL_H
 
-#include "slicc_global.hh"
-#include "Map.hh"
-#include "Location.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/slicc/ast/Location.hh"
 
 class Symbol {
 public:

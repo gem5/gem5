@@ -35,11 +35,11 @@
 #ifndef ROUTER_D_H
 #define ROUTER_D_H
 
-#include "NetworkHeader.hh"
-#include "Vector.hh"
-#include "flit_d.hh"
-#include "NetDest.hh"
-#include "power_router_init.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flit_d.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/orion/power_router_init.hh"
 
 class GarnetNetwork_d;
 class NetworkLink_d;

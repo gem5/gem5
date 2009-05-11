@@ -36,9 +36,9 @@
  *
  */
 
-#include "ObjDeclAST.hh"
-#include "SymbolTable.hh"
-#include "main.hh"
+#include "mem/slicc/ast/ObjDeclAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/main.hh"
 
 ObjDeclAST::ObjDeclAST(TypeAST* type_ptr,
                        string* ident_ptr,

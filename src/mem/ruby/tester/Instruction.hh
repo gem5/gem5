@@ -26,7 +26,7 @@
 #ifndef INSTRUCTION_H
 #define INSTRUCTION_H
 
-#include "Address.hh"
+#include "mem/ruby/common/Address.hh"
 
 
 enum Opcode {

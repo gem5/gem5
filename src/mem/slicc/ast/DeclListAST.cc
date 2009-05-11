@@ -36,7 +36,7 @@
  *
  */
 
-#include "DeclListAST.hh"
+#include "mem/slicc/ast/DeclListAST.hh"
 
 DeclListAST::DeclListAST(Vector<DeclAST*>* vec_ptr)
   : AST()

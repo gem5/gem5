@@ -32,16 +32,16 @@
  *
  */
 
-#include "Global.hh"
-#include "System.hh"
-#include "DeterministicDriver.hh"
-#include "RubyEventQueue.hh"
-#include "SpecifiedGenerator.hh"
-#include "DetermGETXGenerator.hh"
-#include "DetermInvGenerator.hh"
-#include "DetermSeriesGETSGenerator.hh"
-#include "SubBlock.hh"
-#include "Chip.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/DeterministicDriver.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/tester/SpecifiedGenerator.hh"
+#include "mem/ruby/tester/DetermGETXGenerator.hh"
+#include "mem/ruby/tester/DetermInvGenerator.hh"
+#include "mem/ruby/tester/DetermSeriesGETSGenerator.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/protocol/Chip.hh"
 
 DeterministicDriver::DeterministicDriver(RubySystem* sys_ptr)
 {

@@ -31,8 +31,8 @@
  * $Id$
  */
 
-#include "MessageBuffer.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 MessageBuffer::MessageBuffer()
 {

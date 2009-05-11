@@ -32,11 +32,11 @@
  *
  */
 
-#include "TraceRecord.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "AbstractChip.hh"
-#include "CacheMsg.hh"
+#include "mem/ruby/recorder/TraceRecord.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/protocol/CacheMsg.hh"
 
 TraceRecord::TraceRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
 {

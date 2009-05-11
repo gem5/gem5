@@ -36,8 +36,8 @@
  *
  */
 
-#include "OutPortDeclAST.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/ast/OutPortDeclAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 OutPortDeclAST::OutPortDeclAST(string* ident_ptr,
                                TypeAST* msg_type_ptr,

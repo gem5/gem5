@@ -39,12 +39,12 @@
 #ifndef NetworkMessage_H
 #define NetworkMessage_H
 
-#include "Global.hh"
-#include "RefCnt.hh"
-#include "RefCountable.hh"
-#include "Message.hh"
-#include "MessageSizeType.hh"
-#include "NetDest.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/RefCnt.hh"
+#include "mem/gems_common/RefCountable.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 class Address;
 

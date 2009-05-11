@@ -37,10 +37,10 @@
 #ifndef StoreTrace_H
 #define StoreTrace_H
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
-#include "Histogram.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Histogram.hh"
 
 class StoreTrace {
 public:

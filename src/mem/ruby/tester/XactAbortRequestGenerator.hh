@@ -28,11 +28,11 @@
 
 #ifdef XACT_MEM
 
-#include "RequestGenerator.hh"
+#include "mem/ruby/tester/RequestGenerator.hh"
 #include "global.hh"
-#include "Consumer.hh"
-#include "NodeID.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Address.hh"
 
 class Sequencer;
 class SubBlock;

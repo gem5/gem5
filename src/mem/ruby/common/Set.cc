@@ -36,8 +36,8 @@
  *
  */
 
-#include "Set.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 #ifdef OPTBIGSET
 #include "OptBigSet.cc"

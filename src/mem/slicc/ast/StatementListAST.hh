@@ -39,9 +39,9 @@
 #ifndef STATEMENTLISTAST_H
 #define STATEMENTLISTAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
-#include "StatementAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
+#include "mem/slicc/ast/StatementAST.hh"
 class Var;
 
 class StatementListAST : public AST {

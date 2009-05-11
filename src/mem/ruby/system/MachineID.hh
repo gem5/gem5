@@ -39,9 +39,9 @@
 #ifndef MACHINEID_H
 #define MACHINEID_H
 
-#include "Global.hh"
-#include "util.hh"
-#include "MachineType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/protocol/MachineType.hh"
 
 struct MachineID {
   MachineType type;

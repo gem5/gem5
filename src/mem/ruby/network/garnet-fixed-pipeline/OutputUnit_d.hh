@@ -36,12 +36,12 @@
 #ifndef OUTPUT_UNIT_D_H
 #define OUTPUT_UNIT_D_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
-#include "flitBuffer_d.hh"
-#include "OutVcState_d.hh"
-#include "NetworkLink_d.hh"
-#include "CreditLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/OutVcState_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/CreditLink_d.hh"
 
 class Router_d;
 

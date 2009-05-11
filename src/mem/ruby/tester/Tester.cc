@@ -32,13 +32,13 @@
  *
  */
 
-#include "Global.hh"
-#include "System.hh"
-#include "Tester.hh"
-#include "RubyEventQueue.hh"
-#include "SubBlock.hh"
-#include "Check.hh"
-#include "Chip.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/Tester.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/tester/Check.hh"
+#include "mem/protocol/Chip.hh"
 
 Tester::Tester(RubySystem* sys_ptr)
 {

@@ -39,12 +39,12 @@
 #ifndef ADDRESSPROFILER_H
 #define ADDRESSPROFILER_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "Histogram.hh"
-#include "Address.hh"
-#include "CacheMsg.hh"
-#include "AccessType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/AccessType.hh"
 
 class AccessTraceForAddress;
 class Set;

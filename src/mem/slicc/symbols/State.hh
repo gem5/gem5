@@ -34,7 +34,7 @@
 #ifndef STATE_H
 #define STATE_H
 
-#include "Symbol.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 class State : public Symbol {
 public:

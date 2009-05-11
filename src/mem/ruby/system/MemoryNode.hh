@@ -28,9 +28,9 @@
 #ifndef MEMORYNODE_H
 #define MEMORYNODE_H
 
-#include "Global.hh"
-#include "Message.hh"
-#include "MemoryRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/protocol/MemoryRequestType.hh"
 
 class MemoryNode {
 

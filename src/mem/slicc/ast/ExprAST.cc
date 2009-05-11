@@ -36,4 +36,4 @@
  *
  */
 
-#include "ExprAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"

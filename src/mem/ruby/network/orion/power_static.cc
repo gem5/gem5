@@ -26,7 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "power_static.hh"
+#include "mem/ruby/network/orion/power_static.hh"
 
 #if (PARM_TECH_POINT == 18)
 double NMOS_TAB[1] = {20.5e-9};

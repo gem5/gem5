@@ -33,7 +33,7 @@
  *
  * */
 
-#include "InVcState.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/InVcState.hh"
 
 InVcState::InVcState(int id)
 {

@@ -33,10 +33,10 @@
  *
  * */
 
-#include "NetworkInterface_d.hh"
-#include "MessageBuffer.hh"
-#include "flitBuffer_d.hh"
-#include "NetworkMessage.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkInterface_d.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
 
 NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwork_d *network_ptr)
 {

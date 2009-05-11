@@ -29,9 +29,9 @@
 #ifndef _POWER_ROUTER_INIT_H
 #define _POWER_ROUTER_INIT_H
 
-#include "power_array.hh"
-#include "power_arbiter.hh"
-#include "power_crossbar.hh"
+#include "mem/ruby/network/orion/power_array.hh"
+#include "mem/ruby/network/orion/power_arbiter.hh"
+#include "mem/ruby/network/orion/power_crossbar.hh"
 
 /* ------------ Models ------------------------ */
 /*typedef enum {

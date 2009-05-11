@@ -36,7 +36,7 @@
  *
  */
 
-#include "TypeFieldMethodAST.hh"
+#include "mem/slicc/ast/TypeFieldMethodAST.hh"
 
 TypeFieldMethodAST::TypeFieldMethodAST(TypeAST* return_type_ast_ptr,
                                        string* ident_ptr,

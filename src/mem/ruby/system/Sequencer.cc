@@ -32,20 +32,20 @@
  *
  */
 
-#include "Global.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "Protocol.hh"
-#include "Profiler.hh"
-#include "CacheMemory.hh"
-#include "RubyConfig.hh"
-//#include "Tracer.hh"
-#include "AbstractChip.hh"
-#include "Chip.hh"
-#include "Tester.hh"
-#include "SubBlock.hh"
-#include "Protocol.hh"
-#include "Map.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/CacheMemory.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+//#include "mem/ruby/recorder/Tracer.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/protocol/Chip.hh"
+#include "mem/ruby/tester/Tester.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/gems_common/Map.hh"
 
 Sequencer::Sequencer(AbstractChip* chip_ptr, int version) {
   m_chip_ptr = chip_ptr;

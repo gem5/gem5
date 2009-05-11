@@ -36,10 +36,10 @@
 #ifndef ROUTING_UNIT_D_H
 #define ROUTING_UNIT_D_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
-#include "flit_d.hh"
-#include "NetDest.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flit_d.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 class InputUnit_d;
 class Router_d;

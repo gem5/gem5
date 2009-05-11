@@ -39,10 +39,10 @@
 #ifndef TRACERECORD_H
 #define TRACERECORD_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "NodeID.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/CacheRequestType.hh"
 class CacheMsg;
 
 class TraceRecord {

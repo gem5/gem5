@@ -37,13 +37,13 @@
 #ifndef ACCESSTRACEFORADDRESS_H
 #define ACCESSTRACEFORADDRESS_H
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
-#include "CacheRequestType.hh"
-#include "AccessModeType.hh"
-#include "NodeID.hh"
-#include "Set.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Set.hh"
 class Histogram;
 
 class AccessTraceForAddress {

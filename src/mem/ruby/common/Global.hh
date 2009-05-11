@@ -78,8 +78,8 @@ typedef uint64 pa_t;
 typedef integer_t simtime_t;
 
 // external includes for all classes
-#include "std-includes.hh"
-#include "Debug.hh"
+#include "mem/gems_common/std-includes.hh"
+#include "mem/ruby/common/Debug.hh"
 
 // simple type declarations
 typedef Time LogicalTime;

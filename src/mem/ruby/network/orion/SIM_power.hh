@@ -30,7 +30,7 @@
 #define _SIM_POWER_H
 
 #include <sys/types.h>
-#include "SIM_power_test.hh"
+#include "mem/ruby/network/orion/SIM_power_test.hh"
 
 #define SIM_NO_MODEL    0
 

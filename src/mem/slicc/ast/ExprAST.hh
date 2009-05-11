@@ -39,8 +39,8 @@
 #ifndef EXPRAST_H
 #define EXPRAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
 
 
 class ExprAST : public AST {

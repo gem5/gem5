@@ -36,10 +36,10 @@
 #ifndef GARNET_NETWORK_H
 #define GARNET_NETWORK_H
 
-#include "NetworkHeader.hh"
-#include "Vector.hh"
-#include "NetworkConfig.hh"
-#include "Network.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/network/Network.hh"
 
 class NetworkInterface;
 class MessageBuffer;

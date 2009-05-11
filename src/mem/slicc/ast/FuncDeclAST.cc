@@ -36,9 +36,9 @@
  *
  */
 
-#include "FuncDeclAST.hh"
-#include "SymbolTable.hh"
-#include "main.hh"
+#include "mem/slicc/ast/FuncDeclAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/main.hh"
 
 FuncDeclAST::FuncDeclAST(TypeAST* return_type_ast_ptr,
                          string* ident_ptr,

@@ -36,9 +36,9 @@
 #ifndef SWITCH_D_H
 #define SWITCH_D_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
-#include "flitBuffer_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
 
 class Router_d;
 class OutputUnit_d;

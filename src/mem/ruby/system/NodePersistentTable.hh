@@ -37,9 +37,9 @@
 #ifndef NodePersistentTable_H
 #define NodePersistentTable_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "AccessType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/AccessType.hh"
 
 class AbstractChip;
 

@@ -36,17 +36,17 @@
  *
  */
 
-#include "SimpleNetwork.hh"
-#include "Profiler.hh"
-#include "System.hh"
-#include "Switch.hh"
-#include "NetDest.hh"
-#include "Topology.hh"
-#include "TopologyType.hh"
-#include "MachineType.hh"
-#include "MessageBuffer.hh"
-#include "Protocol.hh"
-#include "Map.hh"
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/network/simple/Switch.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/protocol/TopologyType.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/gems_common/Map.hh"
 
 // ***BIG HACK*** - This is actually code that _should_ be in Network.C
 

@@ -41,10 +41,10 @@
 #ifndef PerfectSwitch_H
 #define PerfectSwitch_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "Consumer.hh"
-#include "NodeID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 class MessageBuffer;
 class NetDest;

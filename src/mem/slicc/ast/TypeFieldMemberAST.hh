@@ -39,13 +39,13 @@
 #ifndef TypeFieldMemberAST_H
 #define TypeFieldMemberAST_H
 
-#include "slicc_global.hh"
-#include "TypeFieldAST.hh"
-#include "StateMachine.hh"
-#include "StatementListAST.hh"
-#include "PairListAST.hh"
-#include "ExprAST.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 class TypeFieldMemberAST : public TypeFieldAST {
 public:

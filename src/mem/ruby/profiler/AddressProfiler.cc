@@ -36,13 +36,13 @@
  *
  */
 
-#include "AddressProfiler.hh"
-#include "CacheMsg.hh"
-#include "AccessTraceForAddress.hh"
-#include "PrioHeap.hh"
-#include "Map.hh"
-#include "System.hh"
-#include "Profiler.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/profiler/Profiler.hh"
 
 // Helper functions
 static AccessTraceForAddress& lookupTraceForAddress(const Address& addr, Map<Address, AccessTraceForAddress>* record_map);

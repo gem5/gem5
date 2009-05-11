@@ -33,7 +33,7 @@
  *
  * */
 
-#include "flitBuffer.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/flitBuffer.hh"
 
 flitBuffer::flitBuffer()
 {

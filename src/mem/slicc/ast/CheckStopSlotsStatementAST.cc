@@ -32,10 +32,10 @@
  *
  */
 
-#include "CheckStopSlotsStatementAST.hh"
-#include "SymbolTable.hh"
-#include "VarExprAST.hh"
-#include "PairListAST.hh"
+#include "mem/slicc/ast/CheckStopSlotsStatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
 
 CheckStopSlotsStatementAST::CheckStopSlotsStatementAST(VarExprAST* variable, string* condStr, string* bankStr)
   : StatementAST()

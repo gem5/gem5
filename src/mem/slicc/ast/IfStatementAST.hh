@@ -39,10 +39,10 @@
 #ifndef IFSTATEMENTAST_H
 #define IFSTATEMENTAST_H
 
-#include "slicc_global.hh"
-#include "ExprAST.hh"
-#include "StatementAST.hh"
-#include "StatementListAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/ExprAST.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
 
 
 class IfStatementAST : public StatementAST {

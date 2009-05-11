@@ -32,10 +32,10 @@
  *
  */
 
-#include "CopyHeadStatementAST.hh"
-#include "SymbolTable.hh"
-#include "VarExprAST.hh"
-#include "util.hh"
+#include "mem/slicc/ast/CopyHeadStatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
+#include "mem/gems_common/util.hh"
 
 CopyHeadStatementAST::CopyHeadStatementAST(VarExprAST* in_queue_ptr,
                                            VarExprAST* out_queue_ptr,

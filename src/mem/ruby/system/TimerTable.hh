@@ -39,9 +39,9 @@
 #ifndef TIMERTABLE_H
 #define TIMERTABLE_H
 
-#include "Global.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 class Consumer;
 class Chip;
 

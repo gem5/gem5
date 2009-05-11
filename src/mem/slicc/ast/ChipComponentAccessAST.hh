@@ -39,11 +39,11 @@
 #ifndef ChipComponentAccessAST_H
 #define ChipComponentAccessAST_H
 
-#include "slicc_global.hh"
-#include "StatementAST.hh"
-#include "ExprAST.hh"
-#include "VarExprAST.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 class ChipComponentAccessAST : public ExprAST {
 public:

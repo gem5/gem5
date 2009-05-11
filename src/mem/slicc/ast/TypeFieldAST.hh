@@ -39,11 +39,11 @@
 #ifndef TypeFieldAST_H
 #define TypeFieldAST_H
 
-#include "slicc_global.hh"
-#include "StateMachine.hh"
-#include "StatementListAST.hh"
-#include "PairListAST.hh"
-#include "ExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"
 
 class TypeFieldAST : public AST {
 public:

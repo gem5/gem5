@@ -33,16 +33,16 @@
  *
  * */
 
-#include "GarnetNetwork.hh"
-#include "MachineType.hh"
-#include "NetworkInterface.hh"
-#include "MessageBuffer.hh"
-#include "Router.hh"
-#include "Topology.hh"
-#include "SimpleNetwork.hh"
-#include "GarnetNetwork_d.hh"
-#include "NetworkLink.hh"
-#include "NetDest.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkInterface.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/Router.hh"
+#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkLink.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 // calls new to abstract away from the network
 Network* Network::createNetwork(int nodes)

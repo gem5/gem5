@@ -2,7 +2,7 @@
 #ifndef PSEUDOLRUPOLICY_H
 #define PSEUDOLRUPOLICY_H
 
-#include "AbstractReplacementPolicy.hh"
+#include "mem/ruby/system/AbstractReplacementPolicy.hh"
 
 /**
  * Implementation of tree-based pseudo-LRU replacement

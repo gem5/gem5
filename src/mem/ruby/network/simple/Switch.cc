@@ -37,13 +37,13 @@
  */
 
 
-#include "Switch.hh"
-#include "PerfectSwitch.hh"
-#include "MessageBuffer.hh"
-#include "Throttle.hh"
-#include "MessageSizeType.hh"
-#include "Network.hh"
-#include "Protocol.hh"
+#include "mem/ruby/network/simple/Switch.hh"
+#include "mem/ruby/network/simple/PerfectSwitch.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/protocol/Protocol.hh"
 
 Switch::Switch(SwitchID sid, SimpleNetwork* network_ptr)
 {

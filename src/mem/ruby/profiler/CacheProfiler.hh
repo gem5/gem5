@@ -39,12 +39,12 @@
 #ifndef CACHEPROFILER_H
 #define CACHEPROFILER_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "Histogram.hh"
-#include "AccessModeType.hh"
-#include "PrefetchBit.hh"
-#include "GenericRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/PrefetchBit.hh"
+#include "mem/protocol/GenericRequestType.hh"
 
 template <class TYPE> class Vector;
 

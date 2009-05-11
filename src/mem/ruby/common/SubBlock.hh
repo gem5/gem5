@@ -35,11 +35,11 @@
 #ifndef SubBlock_H
 #define SubBlock_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "RubyConfig.hh"
-#include "DataBlock.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/DataBlock.hh"
+#include "mem/gems_common/Vector.hh"
 
 class SubBlock {
 public:

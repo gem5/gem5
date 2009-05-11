@@ -40,12 +40,12 @@
 #ifndef DETERMGETXGENERATOR_H
 #define DETERMGETXGENERATOR_H
 
-#include "Global.hh"
-#include "Consumer.hh"
-#include "DetermGETXGeneratorStatus.hh"
-#include "NodeID.hh"
-#include "Address.hh"
-#include "SpecifiedGenerator.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/protocol/DetermGETXGeneratorStatus.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/tester/SpecifiedGenerator.hh"
 
 class Sequencer;
 class SubBlock;

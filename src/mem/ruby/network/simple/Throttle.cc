@@ -34,12 +34,12 @@
  *
  */
 
-#include "Throttle.hh"
-#include "MessageBuffer.hh"
-#include "Network.hh"
-#include "System.hh"
-#include "NetworkMessage.hh"
-#include "Protocol.hh"
+#include "mem/ruby/network/simple/Throttle.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/protocol/Protocol.hh"
 
 const int HIGH_RANGE = 256;
 const int ADJUST_INTERVAL = 50000;

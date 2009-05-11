@@ -32,7 +32,7 @@
  *
  */
 
-#include "Histogram.hh"
+#include "mem/ruby/common/Histogram.hh"
 
 Histogram::Histogram(int binsize, int bins)
 {

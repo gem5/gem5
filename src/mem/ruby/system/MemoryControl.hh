@@ -39,19 +39,19 @@
 #ifndef MEMORY_CONTROL_H
 #define MEMORY_CONTROL_H
 
-#include "Global.hh"
-#include "Map.hh"
-#include "Address.hh"
-#include "Profiler.hh"
-#include "AbstractChip.hh"
-#include "System.hh"
-#include "Message.hh"
-#include "util.hh"
-#include "MemoryNode.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/ruby/system/MemoryNode.hh"
 // Note that "MemoryMsg" is in the "generated" directory:
-#include "MemoryMsg.hh"
-#include "Consumer.hh"
-#include "AbstractMemOrCache.hh"
+#include "mem/protocol/MemoryMsg.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/AbstractMemOrCache.hh"
 
 #include <list>
 

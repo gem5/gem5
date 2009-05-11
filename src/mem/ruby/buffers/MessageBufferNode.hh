@@ -30,8 +30,8 @@
 #ifndef MESSAGEBUFFERNODE_H
 #define MESSAGEBUFFERNODE_H
 
-#include "Global.hh"
-#include "Message.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 class MessageBufferNode {
 public:

@@ -37,19 +37,19 @@
  */
 
 
-#include "System.hh"
-#include "Profiler.hh"
-#include "Network.hh"
-#include "Tester.hh"
-#include "SyntheticDriver.hh"
-#include "DeterministicDriver.hh"
-#include "Chip.hh"
-//#include "Tracer.hh"
-#include "Protocol.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/tester/Tester.hh"
+#include "mem/ruby/tester/SyntheticDriver.hh"
+#include "mem/ruby/tester/DeterministicDriver.hh"
+#include "mem/protocol/Chip.hh"
+//#include "mem/ruby/recorder/Tracer.hh"
+#include "mem/protocol/Protocol.hh"
 //#include "XactIsolationChecker.hh"  // gem5:Arka for decomissioning of log_tm
 //#include "XactCommitArbiter.hh"
 //#include "XactVisualizer.hh"
-#include "M5Driver.hh"
+#include "mem/ruby/interfaces/M5Driver.hh"
 
 RubySystem::RubySystem()
 {

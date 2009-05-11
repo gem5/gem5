@@ -36,15 +36,15 @@
 #ifndef ROUTER_H
 #define ROUTER_H
 
-#include "NetworkHeader.hh"
-#include "GarnetNetwork.hh"
-#include "FlexibleConsumer.hh"
-#include "PrioHeap.hh"
-#include "NetworkLink.hh"
-#include "NetDest.hh"
-#include "flitBuffer.hh"
-#include "InVcState.hh"
-#include "OutVcState.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/FlexibleConsumer.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkLink.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/flitBuffer.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/InVcState.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/OutVcState.hh"
 
 class VCarbiter;
 

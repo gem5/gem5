@@ -38,9 +38,9 @@
 #ifndef TRACER_H
 #define TRACER_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/CacheRequestType.hh"
 #include "gzstream.hh"
 
 template <class TYPE> class PrioHeap;

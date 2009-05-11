@@ -36,7 +36,7 @@
  *
  */
 
-#include "ExprStatementAST.hh"
+#include "mem/slicc/ast/ExprStatementAST.hh"
 
 ExprStatementAST::ExprStatementAST(ExprAST* expr_ptr)
   : StatementAST()

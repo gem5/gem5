@@ -36,7 +36,7 @@
  *
  */
 
-#include "TypeFieldMemberAST.hh"
+#include "mem/slicc/ast/TypeFieldMemberAST.hh"
 
 TypeFieldMemberAST::TypeFieldMemberAST(TypeAST* type_ast_ptr,
                                        string* field_id_ptr,

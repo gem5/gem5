@@ -36,8 +36,8 @@
 #ifndef NETWORK_HEADER_H
 #define NETWORK_HEADER_H
 
-#include "Global.hh"
-#include "NodeID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 using namespace std;
 using namespace __gnu_cxx;

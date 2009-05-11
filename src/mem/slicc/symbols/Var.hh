@@ -39,9 +39,9 @@
 #ifndef VAR_H
 #define VAR_H
 
-#include "slicc_global.hh"
-#include "Symbol.hh"
-#include "Type.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/symbols/Symbol.hh"
+#include "mem/slicc/symbols/Type.hh"
 
 class StateMachine;
 

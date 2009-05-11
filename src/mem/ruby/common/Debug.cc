@@ -35,9 +35,9 @@
 #include <fstream>
 #include <stdarg.h>
 
-#include "Global.hh"
-#include "Debug.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class Debug;
 extern Debug* g_debug_ptr;

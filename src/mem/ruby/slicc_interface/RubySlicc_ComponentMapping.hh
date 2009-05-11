@@ -34,14 +34,14 @@
 #ifndef COMPONENTMAPPINGFNS_H
 #define COMPONENTMAPPINGFNS_H
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "NodeID.hh"
-#include "MachineID.hh"
-#include "Address.hh"
-#include "Set.hh"
-#include "NetDest.hh"
-#include "GenericMachineType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/protocol/GenericMachineType.hh"
 
 #ifdef MACHINETYPE_L1Cache
 #define MACHINETYPE_L1CACHE_ENUM MachineType_L1Cache

@@ -39,9 +39,9 @@
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "slicc_global.hh"
-#include "DeclListAST.hh"
-#include "Map.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclListAST.hh"
+#include "mem/gems_common/Map.hh"
 
 extern DeclListAST* g_decl_list_ptr;
 

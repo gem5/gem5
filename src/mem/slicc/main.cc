@@ -32,18 +32,18 @@
  *
  * */
 
-#include "main.hh"
-#include "StateMachine.hh"
-#include "mif_gen.hh"
-#include "html_gen.hh"
-#include "fileio.hh"
-#include "DeclListAST.hh"
-#include "Type.hh"
-#include "SymbolTable.hh"
-#include "Event.hh"
-#include "State.hh"
-#include "Action.hh"
-#include "Transition.hh"
+#include "mem/slicc/main.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
+#include "mem/slicc/generator/mif_gen.hh"
+#include "mem/slicc/generator/html_gen.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/slicc/ast/DeclListAST.hh"
+#include "mem/slicc/symbols/Type.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/symbols/Event.hh"
+#include "mem/slicc/symbols/State.hh"
+#include "mem/slicc/symbols/Action.hh"
+#include "mem/slicc/symbols/Transition.hh"
 
 // -- Main conversion functions
 

@@ -35,9 +35,9 @@
  *
  */
 
-#include "LSB_CountingBloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/LSB_CountingBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 LSB_CountingBloomFilter::LSB_CountingBloomFilter(string str)
 {

@@ -36,7 +36,7 @@
  *
  */
 
-#include "TypeFieldAST.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
 
 TypeFieldAST::TypeFieldAST(PairListAST* pairs_ptr)
   : AST(pairs_ptr->getPairs()) {

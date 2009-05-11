@@ -36,4 +36,4 @@
  *
  */
 
-#include "DeclAST.hh"
+#include "mem/slicc/ast/DeclAST.hh"

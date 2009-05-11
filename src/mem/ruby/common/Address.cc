@@ -31,7 +31,7 @@
  * $Id$
  */
 
-#include "Address.hh"
+#include "mem/ruby/common/Address.hh"
 
 void Address::output(ostream& out) const
 {

@@ -37,8 +37,8 @@
 #ifndef HISTOGRAM_H
 #define HISTOGRAM_H
 
-#include "Global.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
 
 class Histogram {
 public:

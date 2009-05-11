@@ -29,17 +29,17 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "power_router_init.hh"
-#include "power_array.hh"
-#include "power_crossbar.hh"
-#include "power_arbiter.hh"
-#include "power_bus.hh"
-#include "NetworkPower.hh"
-#include "Router_d.hh"
-#include "NetworkLink_d.hh"
-#include "GarnetNetwork_d.hh"
-#include "SIM_port.hh"
-#include "parm_technology.hh"
+#include "mem/ruby/network/orion/power_router_init.hh"
+#include "mem/ruby/network/orion/power_array.hh"
+#include "mem/ruby/network/orion/power_crossbar.hh"
+#include "mem/ruby/network/orion/power_arbiter.hh"
+#include "mem/ruby/network/orion/power_bus.hh"
+#include "mem/ruby/network/orion/NetworkPower.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/orion/SIM_port.hh"
+#include "mem/ruby/network/orion/parm_technology.hh"
 
 /* --------- Static energy calculation functions ------------ */
 

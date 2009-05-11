@@ -32,12 +32,12 @@
  *
  * */
 
-#include "Transition.hh"
-#include "State.hh"
-#include "Event.hh"
-#include "Action.hh"
-#include "util.hh"
-#include "Var.hh"
+#include "mem/slicc/symbols/Transition.hh"
+#include "mem/slicc/symbols/State.hh"
+#include "mem/slicc/symbols/Event.hh"
+#include "mem/slicc/symbols/Action.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/slicc/symbols/Var.hh"
 
 Transition::Transition(string state, string event, string nextState,
                        const Vector<string>& actionList,

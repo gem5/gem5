@@ -25,7 +25,7 @@
  *
  */
 
-#include "MemoryNode.hh"
+#include "mem/ruby/system/MemoryNode.hh"
 
 void MemoryNode::print(ostream& out) const
 {

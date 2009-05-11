@@ -2,7 +2,7 @@
 #ifndef ABSTRACTREPLACEMENTPOLICY_H
 #define ABSTRACTREPLACEMENTPOLICY_H
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 
 class AbstractReplacementPolicy {
 

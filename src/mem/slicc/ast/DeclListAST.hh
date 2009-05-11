@@ -39,9 +39,9 @@
 #ifndef DeclListAST_H
 #define DeclListAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
-#include "DeclAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
+#include "mem/slicc/ast/DeclAST.hh"
 
 class DeclListAST : public AST {
 public:

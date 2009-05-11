@@ -36,8 +36,8 @@
  *
  */
 
-#include "ActionDeclAST.hh"
-#include "Action.hh"
+#include "mem/slicc/ast/ActionDeclAST.hh"
+#include "mem/slicc/symbols/Action.hh"
 
 ActionDeclAST::ActionDeclAST(string* ident_ptr,
                              PairListAST* pairs_ptr,

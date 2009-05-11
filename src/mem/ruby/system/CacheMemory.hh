@@ -38,18 +38,18 @@
 #ifndef CACHEMEMORY_H
 #define CACHEMEMORY_H
 
-#include "AbstractChip.hh"
-#include "Global.hh"
-#include "AccessPermission.hh"
-#include "Address.hh"
-#include "CacheRecorder.hh"
-#include "CacheRequestType.hh"
-#include "Vector.hh"
-#include "DataBlock.hh"
-#include "MachineType.hh"
-#include "RubySlicc_ComponentMapping.hh"
-#include "PseudoLRUPolicy.hh"
-#include "LRUPolicy.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/recorder/CacheRecorder.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/DataBlock.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/system/PseudoLRUPolicy.hh"
+#include "mem/ruby/system/LRUPolicy.hh"
 #include <vector>
 
 template<class ENTRY>

@@ -37,8 +37,8 @@
 #ifndef CHECKTABLE_H
 #define CHECKTABLE_H
 
-#include "Global.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
 
 class Address;
 class Check;

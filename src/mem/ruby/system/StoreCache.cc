@@ -32,13 +32,13 @@
  *
  */
 
-#include "StoreCache.hh"
-#include "System.hh"
-#include "Driver.hh"
-#include "Vector.hh"
-#include "DataBlock.hh"
-#include "SubBlock.hh"
-#include "Map.hh"
+#include "mem/ruby/system/StoreCache.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/gems_common/Map.hh"
 
 // Helper class
 struct StoreCacheEntry {

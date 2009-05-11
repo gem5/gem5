@@ -32,10 +32,10 @@
  *
  */
 
-#include "CheckAllocateStatementAST.hh"
-#include "SymbolTable.hh"
-#include "VarExprAST.hh"
-#include "util.hh"
+#include "mem/slicc/ast/CheckAllocateStatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
+#include "mem/gems_common/util.hh"
 
 CheckAllocateStatementAST::CheckAllocateStatementAST(VarExprAST* variable)
   : StatementAST()

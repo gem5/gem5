@@ -32,18 +32,18 @@
  *
  */
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "StoreBuffer.hh"
-#include "AbstractChip.hh"
-#include "System.hh"
-#include "Driver.hh"
-#include "Vector.hh"
-#include "RubyEventQueue.hh"
-#include "AddressProfiler.hh"
-#include "Sequencer.hh"
-#include "SubBlock.hh"
-#include "Profiler.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/StoreBuffer.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/profiler/Profiler.hh"
 
 // *** Begin Helper class ***
 struct StoreBufferEntry {

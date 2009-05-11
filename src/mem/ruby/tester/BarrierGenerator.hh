@@ -37,10 +37,10 @@
 #ifndef BARRIERGENERATOR_H
 #define BARRIERGENERATOR_H
 
-#include "Global.hh"
-#include "Consumer.hh"
-#include "NodeID.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/common/Address.hh"
 
 class Sequencer;
 class SubBlock;

@@ -39,9 +39,9 @@
 #ifndef ASSIGNSTATEMENTAST_H
 #define ASSIGNSTATEMENTAST_H
 
-#include "slicc_global.hh"
-#include "StatementAST.hh"
-#include "ExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"
 
 
 

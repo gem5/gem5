@@ -29,12 +29,12 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "power_array.hh"
-#include "power_ll.hh"
-#include "parm_technology.hh"
-#include "SIM_port.hh"
-#include "power_static.hh"
-#include "power_utils.hh"
+#include "mem/ruby/network/orion/power_array.hh"
+#include "mem/ruby/network/orion/power_ll.hh"
+#include "mem/ruby/network/orion/parm_technology.hh"
+#include "mem/ruby/network/orion/SIM_port.hh"
+#include "mem/ruby/network/orion/power_static.hh"
+#include "mem/ruby/network/orion/power_utils.hh"
 
 /* local macros */
 

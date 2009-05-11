@@ -32,17 +32,17 @@
  *
  */
 
-#include "Global.hh"
-#include "System.hh"
-#include "SyntheticDriver.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/SyntheticDriver.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 //#ifndef XACT_MEM
-#include "RequestGenerator.hh"
+#include "mem/ruby/tester/RequestGenerator.hh"
 //#endif
-//#include "XactAbortRequestGenerator.hh"
-//#include "XactRequestGenerator.hh"
-#include "SubBlock.hh"
-#include "Chip.hh"
+//#include "mem/ruby/tester/XactAbortRequestGenerator.hh"
+//#include "mem/ruby/tester/XactRequestGenerator.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/protocol/Chip.hh"
 
 SyntheticDriver::SyntheticDriver(RubySystem* sys_ptr)
 {

@@ -33,9 +33,9 @@
  *
  * */
 
-#include "NetworkLink.hh"
-#include "NetworkConfig.hh"
-#include "GarnetNetwork.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkLink.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
 
 NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
 {

@@ -39,8 +39,8 @@
 #ifndef VAREXPRAST_H
 #define VAREXPRAST_H
 
-#include "slicc_global.hh"
-#include "ExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/ExprAST.hh"
 class Var;
 
 class VarExprAST : public ExprAST {

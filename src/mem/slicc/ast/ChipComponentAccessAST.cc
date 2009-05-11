@@ -36,7 +36,7 @@
  *
  */
 
-#include "ChipComponentAccessAST.hh"
+#include "mem/slicc/ast/ChipComponentAccessAST.hh"
 
 ChipComponentAccessAST::ChipComponentAccessAST(VarExprAST* machine, ExprAST* mach_version, VarExprAST* component, string* proc_name, Vector<ExprAST*>* expr_vec_ptr)
 

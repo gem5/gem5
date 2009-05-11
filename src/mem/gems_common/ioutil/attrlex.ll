@@ -68,7 +68,7 @@ WHITESPACE      [ \t]
 
 %{
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 
 using namespace std;
 #include <string>
@@ -80,12 +80,12 @@ using namespace std;
 // #include "simics/api.h"
 // };
 
-#include "FakeSimicsDataTypes.hh"
+#include "mem/gems_common/ioutil/FakeSimicsDataTypes.hh"
 
 // CM: simics 1.6.5 API redefines fwrite, much to my chagrin
 #undef   fwrite
 #undef   printf
-#include "attrparse.h"
+#include "mem/gems_common/ioutil/attrparse.hh"
 
 #define MAX_INCLUDE_DEPTH 10
 

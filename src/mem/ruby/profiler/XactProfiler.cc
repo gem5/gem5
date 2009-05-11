@@ -26,13 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "XactProfiler.hh"
-#include "CacheMsg.hh"
-#include "Map.hh"
-#include "Debug.hh"
-#include "MachineType.hh"
+#include "mem/ruby/profiler/XactProfiler.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/protocol/MachineType.hh"
 #include "TransactionInterfaceManager.hh"
-#include "Driver.hh"
+#include "mem/ruby/common/Driver.hh"
 #include "interface.hh"
 
 extern std::ostream * debug_cout_ptr;

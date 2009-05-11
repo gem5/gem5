@@ -33,12 +33,12 @@
  *
  * */
 
-#include "NetworkConfig.hh"
-#include "VCallocator_d.hh"
-#include "Router_d.hh"
-#include "InputUnit_d.hh"
-#include "OutputUnit_d.hh"
-#include "GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/VCallocator_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/InputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/OutputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 
 VCallocator_d::VCallocator_d(Router_d *router)
 {

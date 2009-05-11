@@ -36,8 +36,8 @@
 #ifndef VC_ARBITER_H
 #define VC_ARBITER_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
 
 class Router;
 

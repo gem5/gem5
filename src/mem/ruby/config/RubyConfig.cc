@@ -36,10 +36,10 @@
  *
  */
 
-#include "RubyConfig.hh"
-#include "protocol_name.hh"
-#include "util.hh"
-#include "Protocol.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/protocol_name.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/protocol/Protocol.hh"
 
 #define CHECK_POWER_OF_2(N) { if (!is_power_of_2(N)) { ERROR_MSG(#N " must be a power of 2."); }}
 #define CHECK_ZERO(N) { if (N != 0) { ERROR_MSG(#N " must be zero at initialization."); }}
@@ -163,7 +163,7 @@ static void print_parameters(ostream& out)
   }                                            \
 
 
-#include "config.hh"
+#include "mem/ruby/config/config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

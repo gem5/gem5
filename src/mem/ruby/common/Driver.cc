@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Driver.hh"
+#include "mem/ruby/common/Driver.hh"
 
 Driver::Driver()
 {

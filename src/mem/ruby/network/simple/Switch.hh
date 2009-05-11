@@ -44,8 +44,8 @@
 #ifndef Switch_H
 #define Switch_H
 
-#include "Global.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
 
 class MessageBuffer;
 class PerfectSwitch;

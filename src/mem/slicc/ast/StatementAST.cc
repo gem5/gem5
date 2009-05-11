@@ -36,7 +36,7 @@
  *
  */
 
-#include "StatementAST.hh"
+#include "mem/slicc/ast/StatementAST.hh"
 
 static int indentation_depth = 1;
 

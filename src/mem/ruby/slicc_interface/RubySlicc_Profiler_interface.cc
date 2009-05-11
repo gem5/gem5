@@ -36,13 +36,13 @@
  *
  */
 
-#include "Global.hh"
-#include "System.hh"
-#include "Profiler.hh"
-#include "AddressProfiler.hh"
-#include "Protocol.hh"
-#include "RubySlicc_Profiler_interface.hh"
-#include "RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 // #include "TransactionInterfaceManager.hh"
 
 void profile_request(int cache_state, Directory_State directory_state, GenericRequestType request_type)

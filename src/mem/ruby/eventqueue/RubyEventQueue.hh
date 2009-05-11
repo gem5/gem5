@@ -59,8 +59,8 @@
 #ifndef RUBYEVENTQUEUE_H
 #define RUBYEVENTQUEUE_H
 
-#include "Global.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
 
 class Consumer;
 template <class TYPE> class PrioHeap;

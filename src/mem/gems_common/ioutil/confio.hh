@@ -33,7 +33,7 @@
 /* Includes                                                               */
 /*------------------------------------------------------------------------*/
 
-#include "FakeSimicsDataTypes.hh"
+#include "mem/gems_common/ioutil/FakeSimicsDataTypes.hh"
 
 /*------------------------------------------------------------------------*/
 /* Macro declarations                                                     */

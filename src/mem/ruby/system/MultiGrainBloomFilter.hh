@@ -38,12 +38,12 @@
 #ifndef MULTIGRAIN_BLOOM_FILTER_H
 #define MULTIGRAIN_BLOOM_FILTER_H
 
-#include "Map.hh"
-#include "Global.hh"
-#include "AbstractChip.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
-#include "AbstractBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/AbstractBloomFilter.hh"
 
 class MultiGrainBloomFilter : public AbstractBloomFilter {
 public:

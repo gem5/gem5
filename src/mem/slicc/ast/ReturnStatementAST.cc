@@ -36,7 +36,7 @@
  *
  */
 
-#include "ReturnStatementAST.hh"
+#include "mem/slicc/ast/ReturnStatementAST.hh"
 
 ReturnStatementAST::ReturnStatementAST(ExprAST* expr_ptr)
   : StatementAST()

@@ -30,9 +30,9 @@
 #ifndef DATABLOCK_H
 #define DATABLOCK_H
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/gems_common/Vector.hh"
 
 class DataBlock {
 public:

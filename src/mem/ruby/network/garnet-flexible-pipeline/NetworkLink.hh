@@ -35,11 +35,11 @@
 #ifndef NETWORK_LINK_H
 #define NETWORK_LINK_H
 
-#include "NetworkHeader.hh"
-#include "FlexibleConsumer.hh"
-#include "flitBuffer.hh"
-#include "PrioHeap.hh"
-#include "NetDest.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/FlexibleConsumer.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/flitBuffer.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 class GarnetNetwork;
 

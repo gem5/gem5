@@ -51,19 +51,19 @@
  *
  */
 
-#include "Profiler.hh"
-#include "CacheProfiler.hh"
-#include "AddressProfiler.hh"
-#include "System.hh"
-#include "Network.hh"
-#include "PrioHeap.hh"
-#include "CacheMsg.hh"
-#include "Driver.hh"
-#include "Protocol.hh"
-#include "util.hh"
-#include "Map.hh"
-#include "Debug.hh"
-#include "MachineType.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/profiler/CacheProfiler.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/protocol/Protocol.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/protocol/MachineType.hh"
 
 // Allows use of times() library call, which determines virtual runtime
 #include <sys/times.h>

@@ -39,9 +39,9 @@
 #ifndef TransitionDeclAST_H
 #define TransitionDeclAST_H
 
-#include "slicc_global.hh"
-#include "DeclAST.hh"
-#include "StatementListAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclAST.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
 
 class TransitionDeclAST : public DeclAST {
 public:

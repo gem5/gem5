@@ -39,14 +39,14 @@
 #ifndef RUBYSLICC_PROFILER_INTERFACE_H
 #define RUBYSLICC_PROFILER_INTERFACE_H
 
-#include "Global.hh"
-#include "Profiler.hh"
-#include "Address.hh"
-#include "L1Cache_State.hh"
-#include "AccessType.hh"
-#include "GenericRequestType.hh"
-#include "Directory_State.hh"
-#include "NodeID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/L1Cache_State.hh"
+#include "mem/protocol/AccessType.hh"
+#include "mem/protocol/GenericRequestType.hh"
+#include "mem/protocol/Directory_State.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 class Set;
 

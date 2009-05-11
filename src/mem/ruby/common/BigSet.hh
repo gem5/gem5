@@ -33,10 +33,10 @@
 #ifndef SET_H
 #define SET_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "NodeID.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 enum PresenceBit {NotPresent, Present};
 

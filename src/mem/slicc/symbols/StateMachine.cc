@@ -32,17 +32,17 @@
  *
  * */
 
-#include "StateMachine.hh"
-#include "fileio.hh"
-#include "html_gen.hh"
-#include "Action.hh"
-#include "Event.hh"
-#include "State.hh"
-#include "Transition.hh"
-#include "Var.hh"
-#include "SymbolTable.hh"
-#include "util.hh"
-#include "Vector.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/slicc/generator/html_gen.hh"
+#include "mem/slicc/symbols/Action.hh"
+#include "mem/slicc/symbols/Event.hh"
+#include "mem/slicc/symbols/State.hh"
+#include "mem/slicc/symbols/Transition.hh"
+#include "mem/slicc/symbols/Var.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/gems_common/Vector.hh"
 
 StateMachine::StateMachine(string ident, const Location& location, const Map<string, string>& pairs)
   : Symbol(ident, location, pairs)
@@ -230,11 +230,11 @@ void StateMachine::printControllerH(ostream& out, string component) const
   out << "#ifndef " << component << "_CONTROLLER_H" << endl;
   out << "#define " << component << "_CONTROLLER_H" << endl;
   out << endl;
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"Consumer.hh\"" << endl;
-  out << "#include \"TransitionResult.hh\"" << endl;
-  out << "#include \"Types.hh\"" << endl;
-  out << "#include \"" << component << "_Profiler.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Consumer.hh\"" << endl;
+  out << "#include \"mem/protocol/TransitionResult.hh\"" << endl;
+  out << "#include \"mem/protocol/Types.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Profiler.hh\"" << endl;
   out << endl;
 
   // for adding information to the protocol debug trace
@@ -302,14 +302,14 @@ void StateMachine::printControllerC(ostream& out, string component) const
   out << "  * Created by slicc definition of Module \"" << getShorthand() << "\"" << endl;
   out << "  */" << endl;
   out << endl;
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"RubySlicc_includes.hh\"" << endl;
-  out << "#include \"" << component << "_Controller.hh\"" << endl;
-  out << "#include \"" << component << "_State.hh\"" << endl;
-  out << "#include \"" << component << "_Event.hh\"" << endl;
-  out << "#include \"Types.hh\"" << endl;
-  out << "#include \"System.hh\"" << endl;
-  out << "#include \"Chip.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/ruby/slicc_interface/RubySlicc_includes.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Controller.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_State.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
+  out << "#include \"mem/protocol/Types.hh\"" << endl;
+  out << "#include \"mem/ruby/system/System.hh\"" << endl;
+  out << "#include \"mem/protocol/Chip.hh\"" << endl;
   out << endl;
 
   // for adding information to the protocol debug trace
@@ -399,14 +399,14 @@ void StateMachine::printCWakeup(ostream& out, string component) const
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
   out << endl;
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"RubySlicc_includes.hh\"" << endl;
-  out << "#include \"" << component << "_Controller.hh\"" << endl;
-  out << "#include \"" << component << "_State.hh\"" << endl;
-  out << "#include \"" << component << "_Event.hh\"" << endl;
-  out << "#include \"Types.hh\"" << endl;
-  out << "#include \"System.hh\"" << endl;
-  out << "#include \"Chip.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/ruby/slicc_interface/RubySlicc_includes.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Controller.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_State.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
+  out << "#include \"mem/protocol/Types.hh\"" << endl;
+  out << "#include \"mem/ruby/system/System.hh\"" << endl;
+  out << "#include \"mem/protocol/Chip.hh\"" << endl;
   out << endl;
   out << "void " << component << "_Controller::wakeup()" << endl;
   out << "{" << endl;
@@ -447,13 +447,13 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
   out << endl;
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"" << component << "_Controller.hh\"" << endl;
-  out << "#include \"" << component << "_State.hh\"" << endl;
-  out << "#include \"" << component << "_Event.hh\"" << endl;
-  out << "#include \"Types.hh\"" << endl;
-  out << "#include \"System.hh\"" << endl;
-  out << "#include \"Chip.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Controller.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_State.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
+  out << "#include \"mem/protocol/Types.hh\"" << endl;
+  out << "#include \"mem/ruby/system/System.hh\"" << endl;
+  out << "#include \"mem/protocol/Chip.hh\"" << endl;
   out << endl;
   out << "#define HASH_FUN(state, event)  ((int(state)*" << component
       << "_Event_NUM)+int(event))" << endl;
@@ -650,9 +650,9 @@ void StateMachine::printProfilerH(ostream& out, string component) const
   out << "#ifndef " << component << "_PROFILER_H" << endl;
   out << "#define " << component << "_PROFILER_H" << endl;
   out << endl;
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"" << component << "_State.hh\"" << endl;
-  out << "#include \"" << component << "_Event.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_State.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
   out << endl;
   out << "class " << component << "_Profiler {" << endl;
   out << "public:" << endl;
@@ -674,7 +674,7 @@ void StateMachine::printProfilerC(ostream& out, string component) const
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
   out << endl;
-  out << "#include \"" << component << "_Profiler.hh\"" << endl;
+  out << "#include \"mem/protocol/" << component << "_Profiler.hh\"" << endl;
   out << endl;
 
   // Constructor

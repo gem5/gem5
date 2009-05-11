@@ -39,8 +39,8 @@
 #ifndef TYPEAST_H
 #define TYPEAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
 
 class TypeAST : public AST {
 public:

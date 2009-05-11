@@ -34,7 +34,7 @@
 #ifndef MAP_H
 #define MAP_H
 
-#include "Vector.hh"
+#include "mem/gems_common/Vector.hh"
 
 namespace __gnu_cxx {
   template <> struct hash <std::string>

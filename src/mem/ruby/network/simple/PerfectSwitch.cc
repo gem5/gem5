@@ -37,14 +37,14 @@
  */
 
 
-#include "PerfectSwitch.hh"
-#include "NetworkMessage.hh"
-#include "Profiler.hh"
-#include "System.hh"
-#include "SimpleNetwork.hh"
-#include "util.hh"
-#include "MessageBuffer.hh"
-#include "Protocol.hh"
+#include "mem/ruby/network/simple/PerfectSwitch.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/protocol/Protocol.hh"
 
 const int PRIORITY_SWITCH_LIMIT = 128;
 

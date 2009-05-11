@@ -69,10 +69,10 @@
 #ifndef SIMPLENETWORK_H
 #define SIMPLENETWORK_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "Network.hh"
-#include "NodeID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 class NetDest;
 class MessageBuffer;

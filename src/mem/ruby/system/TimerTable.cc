@@ -31,9 +31,9 @@
  * $Id$
  */
 
-#include "Global.hh"
-#include "TimerTable.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/TimerTable.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 TimerTable::TimerTable(Chip* chip_ptr)
 {

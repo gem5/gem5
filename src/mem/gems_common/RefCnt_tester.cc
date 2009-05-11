@@ -30,8 +30,8 @@
  * Code used to test the RefCnt class
  */
 
-#include "RefCnt.hh"
-#include "RefCountable.hh"
+#include "mem/gems_common/RefCnt.hh"
+#include "mem/gems_common/RefCountable.hh"
 
 class Foo : public RefCountable {
 public:

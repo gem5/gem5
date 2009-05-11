@@ -37,15 +37,15 @@
 #ifndef SEQUENCER_H
 #define SEQUENCER_H
 
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "Consumer.hh"
-#include "CacheRequestType.hh"
-#include "AccessModeType.hh"
-#include "GenericMachineType.hh"
-#include "PrefetchBit.hh"
-#include "Map.hh"
-#include "packet.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/GenericMachineType.hh"
+#include "mem/protocol/PrefetchBit.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/packet.hh"
 
 class DataBlock;
 class AbstractChip;

@@ -36,7 +36,7 @@
 #ifndef OUT_VC_STATE_H
 #define OUT_VC_STATE_H
 
-#include "NetworkHeader.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
 
 class OutVcState {
 public:

@@ -36,7 +36,7 @@
  *
  */
 
-#include "StatementListAST.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
 
 StatementListAST::StatementListAST(Vector<StatementAST*>* vec_ptr)
   : AST()

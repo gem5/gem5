@@ -34,7 +34,7 @@
  *
  */
 
-#include "AbstractChip.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
 
 AbstractChip::AbstractChip(NodeID id, Network* net_ptr) {
   m_id = id;

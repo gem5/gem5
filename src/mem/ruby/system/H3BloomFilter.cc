@@ -35,9 +35,9 @@
  *
  */
 
-#include "H3BloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/H3BloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 H3BloomFilter::H3BloomFilter(string str)
 {

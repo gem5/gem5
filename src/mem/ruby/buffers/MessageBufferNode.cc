@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "MessageBufferNode.hh"
+#include "mem/ruby/buffers/MessageBufferNode.hh"
 
 void MessageBufferNode::print(ostream& out) const
 {

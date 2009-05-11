@@ -34,7 +34,7 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-#include "Symbol.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 class Event : public Symbol {
 public:

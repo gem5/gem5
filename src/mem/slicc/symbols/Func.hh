@@ -39,8 +39,8 @@
 #ifndef FUNC_H
 #define FUNC_H
 
-#include "slicc_global.hh"
-#include "Type.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/symbols/Type.hh"
 class StateMachine;
 
 class Func : public Symbol {

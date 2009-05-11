@@ -30,7 +30,7 @@
 #include <string>
 #include <stdio.h>
 #include <assert.h>
-#include "ASTs.hh"
+#include "mem/slicc/ast/ASTs.hh"
 
 #define YYMAXDEPTH 100000
 #define YYERROR_VERBOSE

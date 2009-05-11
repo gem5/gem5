@@ -32,12 +32,12 @@
  *
  */
 
-#include "NodePersistentTable.hh"
-#include "Set.hh"
-#include "Map.hh"
-#include "Address.hh"
-#include "AbstractChip.hh"
-#include "util.hh"
+#include "mem/ruby/system/NodePersistentTable.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/gems_common/util.hh"
 
 // randomize so that handoffs are not locality-aware
 // int persistent_randomize[] = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15};

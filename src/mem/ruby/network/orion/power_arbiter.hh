@@ -32,7 +32,7 @@
 #ifndef _POWER_ARBITER_H
 #define _POWER_ARBITER_H
 
-#include "power_array.hh"
+#include "mem/ruby/network/orion/power_array.hh"
 
 typedef enum {
         RR_ARBITER =1,

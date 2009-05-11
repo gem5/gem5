@@ -39,10 +39,10 @@
 #ifndef MachineAST_H
 #define MachineAST_H
 
-#include "slicc_global.hh"
-#include "DeclAST.hh"
-#include "DeclListAST.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclAST.hh"
+#include "mem/slicc/ast/DeclListAST.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 class MachineAST : public DeclAST {
 public:

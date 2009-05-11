@@ -35,9 +35,9 @@
  *
  */
 
-#include "MultiBitSelBloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/MultiBitSelBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 MultiBitSelBloomFilter::MultiBitSelBloomFilter(string str)
 {

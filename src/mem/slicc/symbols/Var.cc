@@ -32,8 +32,8 @@
  *
  * */
 
-#include "Var.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/symbols/Var.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 Var::Var(string id, const Location& location,
          Type* type_ptr, string code,

@@ -33,8 +33,8 @@
  *
  * */
 
-#include "InputUnit_d.hh"
-#include "Router_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/InputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
 
 InputUnit_d::InputUnit_d(int id, Router_d *router)
 {

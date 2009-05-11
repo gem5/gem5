@@ -39,7 +39,7 @@
 #ifndef FILEIO_H
 #define FILEIO_H
 
-#include "slicc_global.hh"
+#include "mem/slicc/slicc_global.hh"
 
 void conditionally_write_file(string filename, ostringstream& sstr);
 

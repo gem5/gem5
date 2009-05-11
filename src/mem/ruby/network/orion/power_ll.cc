@@ -70,10 +70,10 @@
 #include <math.h>
 #include <assert.h>
 
-#include "parm_technology.hh"
-#include "SIM_port.hh"
-#include "power_static.hh"
-#include "power_ll.hh"
+#include "mem/ruby/network/orion/parm_technology.hh"
+#include "mem/ruby/network/orion/SIM_port.hh"
+#include "mem/ruby/network/orion/power_static.hh"
+#include "mem/ruby/network/orion/power_ll.hh"
 
 /*----------------------------------------------------------------------*/
 

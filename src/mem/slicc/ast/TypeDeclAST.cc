@@ -36,9 +36,9 @@
  *
  */
 
-#include "TypeDeclAST.hh"
-#include "main.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/ast/TypeDeclAST.hh"
+#include "mem/slicc/main.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 TypeDeclAST::TypeDeclAST(TypeAST* type_ast_ptr,
                          PairListAST* pairs_ptr,

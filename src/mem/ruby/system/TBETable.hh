@@ -39,12 +39,12 @@
 #ifndef TBETABLE_H
 #define TBETABLE_H
 
-#include "Global.hh"
-#include "Map.hh"
-#include "Address.hh"
-#include "Profiler.hh"
-#include "AbstractChip.hh"
-#include "System.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/system/System.hh"
 
 template<class ENTRY>
 class TBETable {

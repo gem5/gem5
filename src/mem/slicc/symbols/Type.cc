@@ -27,10 +27,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Type.hh"
-#include "fileio.hh"
-#include "Map.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/symbols/Type.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 Type::Type(string id, const Location& location,
            const Map<string, string>& pairs,
@@ -198,18 +198,18 @@ void Type::printTypeH(string path) const
   out << endl;
 
   // Include all of the #includes needed
-  out << "#include \"Global.hh\"" << endl;
-  out << "#include \"Allocator.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
+  out << "#include \"mem/gems_common/Allocator.hh\"" << endl;
   for (int i=0; i < size; i++) {
     Type* type = m_data_member_type_vec[i];
     if (!type->isPrimitive()) {
-      out << "#include \"" << type->cIdent() << ".hh" << "\"" << endl;
+      out << "#include \"mem/protocol/" << type->cIdent() << ".hh" << "\"" << endl;
     }
   }
   string interface = "";
   if(existPair("interface")) {
     interface = lookupPair("interface");
-    out << "#include \"" << interface << ".hh\"" << endl;
+    out << "#include \"mem/protocol/" << interface << ".hh\"" << endl;
   }
 
   // Class definition
@@ -445,7 +445,7 @@ void Type::printTypeC(string path) const
   out << "  * Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "  */" << endl;
   out << endl;
-  out << "#include \"" << type_name << ".hh\"" << endl;
+  out << "#include \"mem/protocol/" << type_name << ".hh\"" << endl;
   out << endl;
   if (isMessage()) {
     out << "Allocator<" << type_name << ">* " << type_name << "::s_allocator_ptr = NULL;" << endl;
@@ -490,9 +490,9 @@ void Type::printEnumH(string path) const
   out << "#define " << type_name << "_H" << endl;
   out << endl;
   // Include all of the #includes needed
-  out << "#include \"Global.hh\"" << endl;
+  out << "#include \"mem/ruby/common/Global.hh\"" << endl;
   if (m_isMachineType) {
-    out << "#include \"RubyConfig.hh\"" << endl << endl;
+    out << "#include \"mem/ruby/config/RubyConfig.hh\"" << endl << endl;
   }
   out << endl;
 
@@ -568,7 +568,7 @@ void Type::printEnumC(string path) const
   out << "  */" << endl;
 
   out << endl;
-  out << "#include \"" << type_name << ".hh\"" << endl;
+  out << "#include \"mem/protocol/" << type_name << ".hh\"" << endl;
   out << endl;
 
   // Code for output operator
@@ -629,7 +629,7 @@ void Type::printEnumC(string path) const
     out << "/** \\brief returns the base vector index for each machine type to be used by NetDest " << endl;
     out << "  * " << endl;
     out << "  * \\return the base vector index for each machine type to be used by NetDest" << endl;
-    out << "  * \\see NetDest.hh" << endl;
+    out << "  * \\see mem/ruby/common/NetDest.hh" << endl;
     out << "  */" << endl;
     out << "int " << type_name << "_base_level(const " << type_name << "& obj)" << endl;
     out << "{" << endl;

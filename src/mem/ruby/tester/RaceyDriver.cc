@@ -32,12 +32,12 @@
  *
  */
 
-#include "Global.hh"
-#include "System.hh"
-#include "RaceyDriver.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/RaceyDriver.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "RaceyPseudoThread.hh"
-#include "SubBlock.hh"
+#include "mem/ruby/common/SubBlock.hh"
 
 RaceyDriver::RaceyDriver()
 {

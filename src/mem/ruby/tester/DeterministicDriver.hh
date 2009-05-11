@@ -37,10 +37,10 @@
 #ifndef DETERMINISTICDRIVER_H
 #define DETERMINISTICDRIVER_H
 
-#include "Global.hh"
-#include "Driver.hh"
-#include "Histogram.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/protocol/CacheRequestType.hh"
 
 class RubySystem;
 class SpecifiedGenerator;

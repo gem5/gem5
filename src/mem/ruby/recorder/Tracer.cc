@@ -32,11 +32,11 @@
  *
  */
 
-#include "Tracer.hh"
-#include "TraceRecord.hh"
-#include "RubyEventQueue.hh"
-#include "PrioHeap.hh"
-#include "System.hh"
+#include "mem/ruby/recorder/Tracer.hh"
+#include "mem/ruby/recorder/TraceRecord.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/system/System.hh"
 
 Tracer::Tracer()
 {

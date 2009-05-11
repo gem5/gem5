@@ -39,23 +39,23 @@
 #ifndef SLICC_UTIL_H
 #define SLICC_UTIL_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "NodeID.hh"
-#include "MachineID.hh"
-#include "RubyConfig.hh"
-#include "CacheMsg.hh"
-#include "GenericRequestType.hh"
-#include "CacheRequestType.hh"
-#include "AccessType.hh"
-#include "MachineType.hh"
-#include "Directory_State.hh"
-#include "L1Cache_State.hh"
-#include "MessageSizeType.hh"
-#include "Network.hh"
-#include "PrefetchBit.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/GenericRequestType.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/AccessType.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/protocol/Directory_State.hh"
+#include "mem/protocol/L1Cache_State.hh"
+#include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/protocol/PrefetchBit.hh"
 
-#include "RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 
 class Set;
 class NetDest;

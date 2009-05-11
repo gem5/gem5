@@ -32,7 +32,7 @@
  *
  */
 
-#include "RubyEventQueueNode.hh"
+#include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
 
 void RubyEventQueueNode::print(ostream& out) const
 {

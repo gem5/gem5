@@ -36,12 +36,12 @@
  *
  */
 
-#include "System.hh"
-#include "Driver.hh"
-#include "DirectoryMemory.hh"
-#include "RubySlicc_Util.hh"
-#include "RubyConfig.hh"
-#include "Chip.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/ruby/system/DirectoryMemory.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/Chip.hh"
 
 DirectoryMemory::DirectoryMemory(Chip* chip_ptr, int version)
 {

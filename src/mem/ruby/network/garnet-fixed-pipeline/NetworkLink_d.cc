@@ -33,9 +33,9 @@
  *
  * */
 
-#include "NetworkLink_d.hh"
-#include "NetworkConfig.hh"
-#include "GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 
 NetworkLink_d::NetworkLink_d(int id)
 {

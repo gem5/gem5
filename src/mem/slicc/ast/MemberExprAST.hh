@@ -39,8 +39,8 @@
 #ifndef MemberExprAST_H
 #define MemberExprAST_H
 
-#include "slicc_global.hh"
-#include "ExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/ExprAST.hh"
 
 
 class MemberExprAST : public ExprAST {

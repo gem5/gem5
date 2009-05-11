@@ -31,7 +31,7 @@
  * $Id$
  */
 
-#include "DataBlock.hh"
+#include "mem/ruby/common/DataBlock.hh"
 
 DataBlock::DataBlock()
 {

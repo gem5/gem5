@@ -35,7 +35,7 @@
 #ifndef RUBYEVENTQUEUENODE_H
 #define RUBYEVENTQUEUENODE_H
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 class Consumer;
 
 class RubyEventQueueNode {

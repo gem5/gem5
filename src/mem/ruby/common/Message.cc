@@ -31,4 +31,4 @@
  * $Id$
  */
 
-#include "Message.hh"
+#include "mem/ruby/slicc_interface/Message.hh"

@@ -39,11 +39,11 @@
 #ifndef DECLAST_H
 #define DECLAST_H
 
-#include "slicc_global.hh"
-#include "AST.hh"
-#include "PairListAST.hh"
-#include "StateMachine.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/AST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 class DeclAST : public AST {
 public:

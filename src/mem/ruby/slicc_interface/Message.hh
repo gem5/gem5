@@ -34,10 +34,10 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "Global.hh"
-#include "RefCnt.hh"
-#include "RefCountable.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/RefCnt.hh"
+#include "mem/gems_common/RefCountable.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class Message;
 typedef RefCnt<Message> MsgPtr;

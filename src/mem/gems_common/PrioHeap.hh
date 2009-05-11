@@ -29,7 +29,7 @@
 #ifndef PRIOHEAP_H
 #define PRIOHEAP_H
 
-#include "Vector.hh"
+#include "mem/gems_common/Vector.hh"
 
 typedef unsigned int HeapIndex;
 

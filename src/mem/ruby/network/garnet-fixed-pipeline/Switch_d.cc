@@ -33,9 +33,9 @@
  *
  * */
 
-#include "Switch_d.hh"
-#include "Router_d.hh"
-#include "OutputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Switch_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/OutputUnit_d.hh"
 
 Switch_d::Switch_d(Router_d *router)
 {

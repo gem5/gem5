@@ -33,11 +33,11 @@
  *
  * */
 
-#include "Router.hh"
-#include "NetworkMessage.hh"
-#include "InVcState.hh"
-#include "OutVcState.hh"
-#include "VCarbiter.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/Router.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/InVcState.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/OutVcState.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/VCarbiter.hh"
 
 Router::Router(int id, GarnetNetwork *network_ptr)
 {

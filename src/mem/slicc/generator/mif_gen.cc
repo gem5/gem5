@@ -32,11 +32,11 @@
  *
  */
 
-#include "mif_gen.hh"
-#include "State.hh"
-#include "Event.hh"
-#include "Action.hh"
-#include "Transition.hh"
+#include "mem/slicc/generator/mif_gen.hh"
+#include "mem/slicc/symbols/State.hh"
+#include "mem/slicc/symbols/Event.hh"
+#include "mem/slicc/symbols/Action.hh"
+#include "mem/slicc/symbols/Transition.hh"
 
 // -- Helper functions
 string formatShorthand(const string shorthand);

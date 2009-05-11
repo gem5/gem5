@@ -27,11 +27,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "SymbolTable.hh"
-#include "fileio.hh"
-#include "html_gen.hh"
-#include "mif_gen.hh"
-#include "Action.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/slicc/generator/html_gen.hh"
+#include "mem/slicc/generator/mif_gen.hh"
+#include "mem/slicc/symbols/Action.hh"
 
 SymbolTable g_sym_table;
 
@@ -163,15 +163,15 @@ void SymbolTable::writeCFiles(string path) const
 {
   int size = m_sym_vec.size();
   {
-    // Write the Types.hh include file for the types
+    // Write the mem/protocol/Types.hh include file for the types
     ostringstream sstr;
     sstr << "/** Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< " */" << endl;
     sstr << endl;
-    sstr << "#include \"RubySlicc_includes.hh\"" << endl;
+    sstr << "#include \"mem/ruby/slicc_interface/RubySlicc_includes.hh\"" << endl;
     for(int i=0; i<size; i++) {
       Type* type = dynamic_cast<Type*>(m_sym_vec[i]);
       if (type != NULL && !type->isPrimitive()) {
-        sstr << "#include \"" << type->cIdent() << ".hh" << "\"" << endl;
+        sstr << "#include \"mem/protocol/" << type->cIdent() << ".hh" << "\"" << endl;
       }
     }
     conditionally_write_file(path + "/Types.hh", sstr);
@@ -187,7 +187,7 @@ void SymbolTable::writeCFiles(string path) const
 
 void SymbolTable::writeChipFiles(string path) const
 {
-  // Create Chip.cc and Chip.hh
+  // Create Chip.cc and mem/protocol/Chip.hh
 
   // FIXME - Note: this method is _really_ ugly.  Most of this
   // functionality should be pushed into each type of symbol and use
@@ -208,9 +208,9 @@ void SymbolTable::writeChipFiles(string path) const
     sstr << endl;
 
     // Includes
-    sstr << "#include \"Global.hh\"" << endl;
-    sstr << "#include \"Types.hh\"" << endl;
-    sstr << "#include \"AbstractChip.hh\"" << endl;
+    sstr << "#include \"mem/ruby/common/Global.hh\"" << endl;
+    sstr << "#include \"mem/protocol/Types.hh\"" << endl;
+    sstr << "#include \"mem/ruby/slicc_interface/AbstractChip.hh\"" << endl;
     sstr << "class Network;" << endl;
     sstr << endl;
 
@@ -331,16 +331,16 @@ void SymbolTable::writeChipFiles(string path) const
   {
     ostringstream sstr;
     sstr << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<<endl<<endl;
-    sstr << "#include \"Chip.hh\"" << endl;
-    sstr << "#include \"Network.hh\"" << endl;
-    sstr << "#include \"CacheRecorder.hh\"" << endl;
+    sstr << "#include \"mem/protocol/Chip.hh\"" << endl;
+    sstr << "#include \"mem/ruby/network/Network.hh\"" << endl;
+    sstr << "#include \"mem/ruby/recorder/CacheRecorder.hh\"" << endl;
     sstr << "" << endl;
 
     sstr << "// Includes for controllers" << endl;
     for(int i=0; i<size; i++) {
       StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
       if (machine != NULL) {
-        sstr << "#include \"" << machine->getIdent() << "_Controller.hh\"" << endl;
+        sstr << "#include \"mem/protocol/" << machine->getIdent() << "_Controller.hh\"" << endl;
       }
     }
 

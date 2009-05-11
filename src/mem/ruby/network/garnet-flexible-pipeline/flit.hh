@@ -33,8 +33,8 @@
  *
  * */
 
-#include "NetworkHeader.hh"
-#include "Message.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 #ifndef FLIT_H
 #define FLIT_H

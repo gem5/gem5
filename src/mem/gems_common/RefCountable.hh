@@ -33,7 +33,7 @@
 #ifndef REFCOUNTABLE_H
 #define REFCOUNTABLE_H
 
-#include "RefCnt.hh"
+#include "mem/gems_common/RefCnt.hh"
 
 class RefCountable {
 public:

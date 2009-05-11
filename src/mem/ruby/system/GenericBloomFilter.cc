@@ -35,19 +35,19 @@
  *
  */
 
-#include "Global.hh"
-#include "AbstractChip.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
 
-#include "GenericBloomFilter.hh"
-#include "LSB_CountingBloomFilter.hh"
-#include "NonCountingBloomFilter.hh"
-#include "BulkBloomFilter.hh"
-#include "BlockBloomFilter.hh"
-#include "MultiGrainBloomFilter.hh"
-#include "MultiBitSelBloomFilter.hh"
-#include "H3BloomFilter.hh"
+#include "mem/ruby/system/GenericBloomFilter.hh"
+#include "mem/ruby/system/LSB_CountingBloomFilter.hh"
+#include "mem/ruby/system/NonCountingBloomFilter.hh"
+#include "mem/ruby/system/BulkBloomFilter.hh"
+#include "mem/ruby/system/BlockBloomFilter.hh"
+#include "mem/ruby/system/MultiGrainBloomFilter.hh"
+#include "mem/ruby/system/MultiBitSelBloomFilter.hh"
+#include "mem/ruby/system/H3BloomFilter.hh"
 
 GenericBloomFilter::GenericBloomFilter(AbstractChip* chip_ptr, string config)
 {

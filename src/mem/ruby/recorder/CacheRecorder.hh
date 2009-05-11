@@ -38,9 +38,9 @@
 #ifndef CACHERECORDER_H
 #define CACHERECORDER_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/CacheRequestType.hh"
 
 template <class TYPE> class PrioHeap;
 class Address;

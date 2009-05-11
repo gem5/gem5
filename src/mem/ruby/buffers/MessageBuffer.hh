@@ -38,13 +38,13 @@
 #ifndef MESSAGEBUFFER_H
 #define MESSAGEBUFFER_H
 
-#include "Global.hh"
-#include "MessageBufferNode.hh"
-#include "Consumer.hh"
-#include "RubyEventQueue.hh"
-#include "Message.hh"
-#include "PrioHeap.hh"
-#include "util.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/buffers/MessageBufferNode.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/gems_common/util.hh"
 
 class Chip;
 

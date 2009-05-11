@@ -36,7 +36,7 @@
  *
  */
 
-#include "Location.hh"
+#include "mem/slicc/ast/Location.hh"
 
 int g_line_number = 0;
 string g_file_name("");

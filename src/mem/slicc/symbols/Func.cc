@@ -36,10 +36,10 @@
  *
  */
 
-#include "Func.hh"
-#include "SymbolTable.hh"
-#include "fileio.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/symbols/Func.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/generator/fileio.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 Func::Func(string id, const Location& location,
            Type* type_ptr, const Vector<Type*>& param_type_vec,
@@ -98,8 +98,8 @@ void Func::writeCFiles(string path) const
     // Header
     out << "/** Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< " */" << endl;
     out << endl;
-    out << "#include \"Types.hh\"" << endl;
-    out << "#include \"Chip.hh\"" << endl;
+    out << "#include \"mem/protocol/Types.hh\"" << endl;
+    out << "#include \"mem/protocol/Chip.hh\"" << endl;
     if (m_isInternalMachineFunc) {
       out << "#include \"" << m_machineStr << "_Controller.hh\"" << endl;
     }

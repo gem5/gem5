@@ -39,9 +39,9 @@
 #ifndef TYPEFIELDMETHODAST_H
 #define TYPEFIELDMETHODAST_H
 
-#include "slicc_global.hh"
-#include "TypeFieldAST.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 class TypeFieldMethodAST : public TypeFieldAST {
 public:

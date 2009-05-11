@@ -31,13 +31,13 @@
  * $Id$
  */
 
-#include "RubyEventQueue.hh"
-#include "RubyConfig.hh"
-#include "Consumer.hh"
-#include "Profiler.hh"
-#include "System.hh"
-#include "PrioHeap.hh"
-#include "RubyEventQueueNode.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
 
 // Class public method definitions
 

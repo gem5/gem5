@@ -41,12 +41,12 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "Address.hh"
-#include "RubyConfig.hh"
-#include "MachineType.hh"
-#include "AbstractChip.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
 
 class Profiler;
 class Network;

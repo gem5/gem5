@@ -39,10 +39,10 @@
 #ifndef TypeDeclAST_H
 #define TypeDeclAST_H
 
-#include "slicc_global.hh"
-#include "DeclAST.hh"
-#include "TypeAST.hh"
-#include "TypeFieldAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
 
 class TypeDeclAST : public DeclAST {
 public:

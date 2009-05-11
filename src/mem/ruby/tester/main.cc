@@ -32,10 +32,10 @@
  *
  */
 
-#include "main.hh"
-#include "RubyEventQueue.hh"
-#include "RubyConfig.hh"
-#include "test_framework.hh"
+#include "mem/ruby/tester/main.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/tester/test_framework.hh"
 
 // *******************
 // *** tester main ***

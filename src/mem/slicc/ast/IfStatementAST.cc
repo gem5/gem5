@@ -36,7 +36,7 @@
  *
  */
 
-#include "IfStatementAST.hh"
+#include "mem/slicc/ast/IfStatementAST.hh"
 
 IfStatementAST::IfStatementAST(ExprAST* cond_ptr,
                                StatementListAST* then_ptr,

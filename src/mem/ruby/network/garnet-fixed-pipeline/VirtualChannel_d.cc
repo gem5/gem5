@@ -33,7 +33,7 @@
  *
  * */
 
-#include "VirtualChannel_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/VirtualChannel_d.hh"
 
 VirtualChannel_d::VirtualChannel_d(int id)
 {

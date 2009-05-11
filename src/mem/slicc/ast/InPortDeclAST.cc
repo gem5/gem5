@@ -36,9 +36,9 @@
  *
  */
 
-#include "InPortDeclAST.hh"
-#include "SymbolTable.hh"
-#include "Var.hh"
+#include "mem/slicc/ast/InPortDeclAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/symbols/Var.hh"
 
 InPortDeclAST::InPortDeclAST(string* ident_ptr,
                              TypeAST* msg_type_ptr,

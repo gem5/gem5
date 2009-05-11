@@ -35,9 +35,9 @@
  *
  */
 
-#include "NonCountingBloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/NonCountingBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 NonCountingBloomFilter::NonCountingBloomFilter(string str)
 {

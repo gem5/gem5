@@ -33,7 +33,7 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include "std-includes.hh"
+#include "mem/gems_common/std-includes.hh"
 
 string string_split(string& str, char split_character);
 string bool_to_string(bool value);

@@ -39,10 +39,10 @@
 #ifndef MethodCallExprAST_H
 #define MethodCallExprAST_H
 
-#include "slicc_global.hh"
-#include "StatementAST.hh"
-#include "ExprAST.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/ExprAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 class MethodCallExprAST : public ExprAST {
 public:

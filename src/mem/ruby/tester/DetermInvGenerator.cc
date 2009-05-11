@@ -36,15 +36,15 @@
 // then Invalidates them with a GETX.  The GETS and GETX request are generated one
 // at a time in round-robin fashion 0...1...2...etc.
 
-#include "DetermInvGenerator.hh"
-#include "DetermInvGeneratorStatus.hh"
-#include "LockStatus.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "RubyConfig.hh"
-#include "SubBlock.hh"
-#include "DeterministicDriver.hh"
-#include "Chip.hh"
+#include "mem/ruby/tester/DetermInvGenerator.hh"
+#include "mem/protocol/DetermInvGeneratorStatus.hh"
+#include "mem/protocol/LockStatus.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/tester/DeterministicDriver.hh"
+#include "mem/protocol/Chip.hh"
 
 DetermInvGenerator::DetermInvGenerator(NodeID node, DeterministicDriver& driver) :
   m_driver(driver)

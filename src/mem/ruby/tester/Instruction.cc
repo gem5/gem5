@@ -23,7 +23,7 @@
  *
  */
 
-#include "Instruction.hh"
+#include "mem/ruby/tester/Instruction.hh"
 
 Instruction::Instruction(){
   m_opcode = Opcode_NUM_OPCODES;

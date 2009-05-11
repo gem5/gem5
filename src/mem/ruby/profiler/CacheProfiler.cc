@@ -36,12 +36,12 @@
  *
  */
 
-#include "CacheProfiler.hh"
-#include "AccessTraceForAddress.hh"
-#include "PrioHeap.hh"
-#include "System.hh"
-#include "Profiler.hh"
-#include "Vector.hh"
+#include "mem/ruby/profiler/CacheProfiler.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/gems_common/Vector.hh"
 
 CacheProfiler::CacheProfiler(string description)
   : m_requestSize(-1)

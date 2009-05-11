@@ -36,7 +36,7 @@
  *
  */
 
-#include "MethodCallExprAST.hh"
+#include "mem/slicc/ast/MethodCallExprAST.hh"
 
 MethodCallExprAST::MethodCallExprAST(ExprAST* obj_expr_ptr,
                                      string* proc_name_ptr,

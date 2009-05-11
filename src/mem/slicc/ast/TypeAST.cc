@@ -36,7 +36,7 @@
  *
  */
 
-#include "TypeAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 TypeAST::TypeAST(string* ident_ptr)
   : AST()

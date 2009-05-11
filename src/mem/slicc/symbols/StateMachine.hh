@@ -35,10 +35,10 @@
 #ifndef STATEMACHINE_H
 #define STATEMACHINE_H
 
-#include "slicc_global.hh"
-#include "Vector.hh"
-#include "Map.hh"
-#include "Symbol.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 class Transition;
 class Event;

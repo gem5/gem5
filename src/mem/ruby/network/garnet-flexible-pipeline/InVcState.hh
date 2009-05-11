@@ -37,7 +37,7 @@
 #ifndef IN_VC_STATE_H
 #define IN_VC_STATE_H
 
-#include "NetworkHeader.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
 
 class InVcState {
 public:

@@ -39,9 +39,9 @@
 #ifndef TRANSITION_H
 #define TRANSITION_H
 
-#include "slicc_global.hh"
-#include "Vector.hh"
-#include "Symbol.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 class State;
 class Event;

@@ -36,7 +36,7 @@
  *
  */
 
-#include "PairAST.hh"
+#include "mem/slicc/ast/PairAST.hh"
 
 PairAST::PairAST(string* key_ptr, string* value_ptr)
   : AST()

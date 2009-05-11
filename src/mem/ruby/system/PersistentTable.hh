@@ -37,9 +37,9 @@
 #ifndef PersistentTable_H
 #define PersistentTable_H
 
-#include "Global.hh"
-#include "MachineID.hh"
-#include "AccessType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/protocol/AccessType.hh"
 
 class AbstractChip;
 

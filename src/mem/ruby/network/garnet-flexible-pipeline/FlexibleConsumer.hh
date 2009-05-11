@@ -35,9 +35,9 @@
 #ifndef FLEXIBLE_CONSUMER_H
 #define FLEXIBLE_CONSUMER_H
 
-#include "Consumer.hh"
-#include "NetworkHeader.hh"
-#include "NetDest.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/NetDest.hh"
 
 class FlexibleConsumer : public Consumer {
 public:

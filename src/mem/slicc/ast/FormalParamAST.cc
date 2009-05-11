@@ -36,9 +36,9 @@
  *
  */
 
-#include "FormalParamAST.hh"
-#include "StatementAST.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/ast/FormalParamAST.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 FormalParamAST::~FormalParamAST()
 {

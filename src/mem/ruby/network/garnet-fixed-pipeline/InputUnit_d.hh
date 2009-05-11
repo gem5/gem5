@@ -36,13 +36,13 @@
 #ifndef INPUT_UNIT_D_H
 #define INPUT_UNIT_D_H
 
-#include "NetworkHeader.hh"
-#include "flitBuffer_d.hh"
-#include "Consumer.hh"
-#include "Vector.hh"
-#include "VirtualChannel_d.hh"
-#include "NetworkLink_d.hh"
-#include "CreditLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/VirtualChannel_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/CreditLink_d.hh"
 
 class Router_d;
 

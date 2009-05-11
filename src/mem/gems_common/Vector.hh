@@ -38,7 +38,7 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "std-includes.hh"
+#include "mem/gems_common/std-includes.hh"
 
 template <class TYPE>
 class Vector

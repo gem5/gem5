@@ -21,15 +21,15 @@
  *
  */
 
-#include "XactRequestGenerator.hh"
-#include "LockStatus.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "RubyConfig.hh"
-#include "SubBlock.hh"
-#include "SyntheticDriver.hh"
-#include "Chip.hh"
-#include "Instruction.hh"
+#include "mem/ruby/tester/XactRequestGenerator.hh"
+#include "mem/protocol/LockStatus.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/tester/SyntheticDriver.hh"
+#include "mem/protocol/Chip.hh"
+#include "mem/ruby/tester/Instruction.hh"
 
 XactRequestGenerator::XactRequestGenerator(NodeID node, SyntheticDriver& driver) :
   m_driver(driver), RequestGenerator(node, driver)

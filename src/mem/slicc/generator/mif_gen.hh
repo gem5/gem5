@@ -35,7 +35,7 @@
 #ifndef MIF_GEN_H
 #define MIF_GEN_H
 
-#include "StateMachine.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 void printStateTableMIF(const StateMachine& sm, ostream& out);
 void printEventTableMIF(const StateMachine& sm, ostream& out);

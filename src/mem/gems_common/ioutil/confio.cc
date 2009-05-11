@@ -34,7 +34,7 @@
 /* Includes                                                               */
 /*------------------------------------------------------------------------*/
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 #define SIM_HALT   ASSERT(0)
 
 using namespace std;
@@ -59,7 +59,7 @@ using namespace std;
 // #endif
 // };
 
-#include "confio.hh"
+#include "mem/gems_common/ioutil/confio.hh"
 
 /*------------------------------------------------------------------------*/
 /* Macro declarations                                                     */

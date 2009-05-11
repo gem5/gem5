@@ -35,9 +35,9 @@
  *
  */
 
-#include "BlockBloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/BlockBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 BlockBloomFilter::BlockBloomFilter(string str)
 {

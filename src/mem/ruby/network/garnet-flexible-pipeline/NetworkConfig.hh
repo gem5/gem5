@@ -38,9 +38,9 @@
 #ifndef NETWORKCONFIG_H
 #define NETWORKCONFIG_H
 
-#include "NetworkHeader.hh"
-#include "util.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 class NetworkConfig {
         public:

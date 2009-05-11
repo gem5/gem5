@@ -37,12 +37,12 @@
 #ifndef ABSTRACT_CHIP_H
 #define ABSTRACT_CHIP_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "RubyConfig.hh"
-#include "L1Cache_Entry.hh"
-#include "Address.hh"
-#include "Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/protocol/L1Cache_Entry.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/gems_common/Vector.hh"
 
 class Network;
 class Sequencer;

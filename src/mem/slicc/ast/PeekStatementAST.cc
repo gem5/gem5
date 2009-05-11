@@ -36,11 +36,11 @@
  *
  */
 
-#include "PeekStatementAST.hh"
-#include "SymbolTable.hh"
-#include "StatementListAST.hh"
-#include "TypeAST.hh"
-#include "VarExprAST.hh"
+#include "mem/slicc/ast/PeekStatementAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
 
 PeekStatementAST::PeekStatementAST(VarExprAST* queue_name_ptr,
                                    TypeAST* type_ptr,

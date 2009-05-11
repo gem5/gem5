@@ -32,11 +32,11 @@
  *
  */
 
-#include "SpecifiedGenerator.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "SubBlock.hh"
-#include "SyntheticDriver.hh"
+#include "mem/ruby/tester/SpecifiedGenerator.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/tester/SyntheticDriver.hh"
 
 SpecifiedGenerator::SpecifiedGenerator()
 {

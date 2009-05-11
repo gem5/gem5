@@ -39,10 +39,10 @@
 #ifndef InPortDeclAST_H
 #define InPortDeclAST_H
 
-#include "slicc_global.hh"
-#include "DeclAST.hh"
-#include "StatementListAST.hh"
-#include "VarExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/DeclAST.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
+#include "mem/slicc/ast/VarExprAST.hh"
 
 class InPortDeclAST : public DeclAST {
 public:

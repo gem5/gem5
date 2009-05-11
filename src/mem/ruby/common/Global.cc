@@ -27,7 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Global.hh"
+#include "mem/ruby/common/Global.hh"
 
 RubyEventQueue* g_eventQueue_ptr = NULL;
 RubySystem* g_system_ptr = NULL;

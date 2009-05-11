@@ -27,10 +27,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "PersistentArbiter.hh"
-#include "Address.hh"
-#include "AbstractChip.hh"
-#include "util.hh"
+#include "mem/ruby/system/PersistentArbiter.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/gems_common/util.hh"
 
 PersistentArbiter::PersistentArbiter(AbstractChip* chip_ptr)
 {

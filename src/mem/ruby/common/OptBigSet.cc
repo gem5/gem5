@@ -39,8 +39,8 @@
 // modified (rewritten) 05/20/05 by Dan Gibson to accomimdate FASTER >32 bit
 // set sizes
 
-#include "Set.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 #if __amd64__ || __LP64__
 #define __64BITS__

@@ -37,8 +37,8 @@
 #ifndef FLIT_D_H
 #define FLIT_D_H
 
-#include "NetworkHeader.hh"
-#include "Message.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 class flit_d {
 public:

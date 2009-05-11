@@ -25,10 +25,10 @@
 #define ADDRESS_H
 
 #include <iomanip>
-#include "Global.hh"
-#include "RubyConfig.hh"
-#include "NodeID.hh"
-#include "MachineID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/MachineID.hh"
 
 const int ADDRESS_WIDTH = 64; // address width in bytes
 

@@ -34,7 +34,7 @@
  *
  */
 
-#include "AbstractCacheEntry.hh"
+#include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 
 AbstractCacheEntry::AbstractCacheEntry() {
 }

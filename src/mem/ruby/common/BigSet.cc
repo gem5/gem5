@@ -27,8 +27,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "Set.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 Set::Set()
 {

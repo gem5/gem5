@@ -39,8 +39,8 @@
 #ifndef HTML_GEN_H
 #define HTML_GEN_H
 
-#include "slicc_global.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 string formatHTMLShorthand(const string shorthand);
 void createHTMLindex(string title, ostream& out);

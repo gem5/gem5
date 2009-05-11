@@ -36,7 +36,7 @@
  *
  */
 
-#include "AssignStatementAST.hh"
+#include "mem/slicc/ast/AssignStatementAST.hh"
 
 AssignStatementAST::AssignStatementAST(ExprAST* lvalue_ptr, ExprAST* rvalue_ptr)
   : StatementAST()

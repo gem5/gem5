@@ -39,8 +39,8 @@
 #ifndef PEEKSTATEMENTAST_H
 #define PEEKSTATEMENTAST_H
 
-#include "slicc_global.hh"
-#include "StatementAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/StatementAST.hh"
 
 class StatementListAST;
 class TypeAST;

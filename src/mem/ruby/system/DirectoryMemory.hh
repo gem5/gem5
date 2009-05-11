@@ -39,9 +39,9 @@
 #ifndef DIRECTORYMEMORY_H
 #define DIRECTORYMEMORY_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "Directory_Entry.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/Directory_Entry.hh"
 
 class Chip;
 

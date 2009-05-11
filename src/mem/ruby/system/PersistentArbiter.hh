@@ -39,13 +39,13 @@
 #ifndef PERSISTENTARBITER_H
 #define PERSISTENTARBITER_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "AbstractChip.hh"
-#include "AccessPermission.hh"
-#include "AccessType.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/protocol/AccessPermission.hh"
+#include "mem/protocol/AccessType.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
 
 struct ArbiterEntry {
   bool valid;

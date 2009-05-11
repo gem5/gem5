@@ -35,9 +35,9 @@
  *
  */
 
-#include "BulkBloomFilter.hh"
-#include "Map.hh"
-#include "Address.hh"
+#include "mem/ruby/system/BulkBloomFilter.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 BulkBloomFilter::BulkBloomFilter(string str)
 {

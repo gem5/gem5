@@ -33,7 +33,7 @@
  *
  * */
 
-#include "flit.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/flit.hh"
 
 flit::flit(int id, int  vc, int vnet, int size, MsgPtr msg_ptr)
 {

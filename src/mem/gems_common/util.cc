@@ -31,7 +31,7 @@
  */
 
 #include "assert.h"
-#include "util.hh"
+#include "mem/gems_common/util.hh"
 
 // Split a string into a head and tail strings on the specified
 // character.  Return the head and the string passed in is modified by

@@ -39,8 +39,8 @@
 #ifndef LITERALEXPRAST_H
 #define LITERALEXPRAST_H
 
-#include "slicc_global.hh"
-#include "ExprAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/ExprAST.hh"
 
 
 class LiteralExprAST : public ExprAST {

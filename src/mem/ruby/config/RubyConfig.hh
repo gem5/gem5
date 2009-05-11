@@ -40,9 +40,9 @@
 #ifndef RUBYCONFIG_H
 #define RUBYCONFIG_H
 
-#include "Global.hh"
-#include "vardecl.hh"
-#include "NodeID.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/ioutil/vardecl.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 #define   MEMORY_LATENCY  RubyConfig::memoryResponseLatency()
 #define   ABORT_DELAY  m_chip_ptr->getTransactionManager(m_version)->getAbortDelay()

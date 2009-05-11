@@ -37,8 +37,8 @@
 #ifndef StoreCache_H
 #define StoreCache_H
 
-#include "Global.hh"
-#include "Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
 
 
 class DataBlock;

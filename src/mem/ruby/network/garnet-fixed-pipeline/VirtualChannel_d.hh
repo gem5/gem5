@@ -36,8 +36,8 @@
 #ifndef VIRTUAL_CHANNEL_D_H
 #define VIRTUAL_CHANNEL_D_H
 
-#include "NetworkHeader.hh"
-#include "flitBuffer_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
 
 class VirtualChannel_d {
 public:

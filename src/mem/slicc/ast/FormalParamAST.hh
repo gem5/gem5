@@ -39,8 +39,8 @@
 #ifndef FORMALPARAMAST_H
 #define FORMALPARAMAST_H
 
-#include "slicc_global.hh"
-#include "TypeAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 
 
 class FormalParamAST : public AST {

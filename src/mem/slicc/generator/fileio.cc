@@ -36,7 +36,7 @@
  *
  * */
 
-#include "fileio.hh"
+#include "mem/slicc/generator/fileio.hh"
 
 void conditionally_write_file(string filename, ostringstream& sstr)
 {

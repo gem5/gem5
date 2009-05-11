@@ -39,12 +39,12 @@
 #ifndef PERFECTCACHEMEMORY_H
 #define PERFECTCACHEMEMORY_H
 
-#include "Global.hh"
-#include "Map.hh"
-#include "AccessPermission.hh"
-#include "RubyConfig.hh"
-#include "Address.hh"
-#include "AbstractChip.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
 
 template<class ENTRY>
 class PerfectCacheLineState {

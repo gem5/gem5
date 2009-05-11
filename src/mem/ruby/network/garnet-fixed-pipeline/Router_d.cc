@@ -33,16 +33,16 @@
  *
  * */
 
-#include "Router_d.hh"
-#include "GarnetNetwork_d.hh"
-#include "NetworkLink_d.hh"
-#include "CreditLink_d.hh"
-#include "InputUnit_d.hh"
-#include "OutputUnit_d.hh"
-#include "RoutingUnit_d.hh"
-#include "VCallocator_d.hh"
-#include "SWallocator_d.hh"
-#include "Switch_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/CreditLink_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/InputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/OutputUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/RoutingUnit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/VCallocator_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/SWallocator_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/Switch_d.hh"
 
 Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
 {

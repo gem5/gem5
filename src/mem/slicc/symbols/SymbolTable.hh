@@ -39,15 +39,15 @@
 #ifndef SYMBOLTABLE_H
 #define SYMBOLTABLE_H
 
-#include "slicc_global.hh"
-#include "Map.hh"
-#include "Vector.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/gems_common/Vector.hh"
 
-#include "Symbol.hh"
-#include "Type.hh"
-#include "Var.hh"
-#include "Func.hh"
-#include "StateMachine.hh"
+#include "mem/slicc/symbols/Symbol.hh"
+#include "mem/slicc/symbols/Type.hh"
+#include "mem/slicc/symbols/Var.hh"
+#include "mem/slicc/symbols/Func.hh"
+#include "mem/slicc/symbols/StateMachine.hh"
 
 class SymbolTable;
 

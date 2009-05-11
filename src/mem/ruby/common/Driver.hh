@@ -30,10 +30,10 @@
 #ifndef DRIVER_H
 #define DRIVER_H
 
-#include "Global.hh"
-#include "Consumer.hh"
-#include "NodeID.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/CacheRequestType.hh"
 
 class RubySystem;
 class SubBlock;
@@ -62,15 +62,15 @@ public:
   virtual void notifyTrapStart( int procID, const Address & handlerPC, int threadID, int smtThread ) { assert(0); } //called by Sequencer
   virtual void notifyTrapComplete( int procID, const Address & newPC, int smtThread ) {assert(0);  }  // called by Sequencer
   virtual int getOpalTransactionLevel(int procID, int thread) const {
-    cout << "Driver.hh getOpalTransactionLevel() " << endl;
+    cout << "mem/ruby/common/Driver.hh getOpalTransactionLevel() " << endl;
    return 0; }  //called by Sequencer
   virtual void addThreadDependency(int procID, int requestor_thread, int conflict_thread) const { assert(0);}
   virtual uint64 getOpalTime(int procID) const{ return 0; }  //called by Sequencer
   virtual uint64 getOpalTimestamp(int procID, int thread) const{
-    cout << "Driver.hh getOpalTimestamp " << endl;
+    cout << "mem/ruby/common/Driver.hh getOpalTimestamp " << endl;
  return 0; } // called by Sequencer
   virtual int inTransaction(int procID, int thread ) const{
-    cout << "Driver.hh inTransaction " << endl;
+    cout << "mem/ruby/common/Driver.hh inTransaction " << endl;
 return false; } //called by Sequencer
   virtual void printDebug(){}  //called by Sequencer
 

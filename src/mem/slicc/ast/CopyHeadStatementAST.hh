@@ -35,11 +35,11 @@
 #ifndef COPYHEADSTATEMENTAST_H
 #define COPYHEADTATEMENTAST_H
 
-#include "slicc_global.hh"
-#include "StatementAST.hh"
-#include "StatementListAST.hh"
-#include "TypeAST.hh"
-#include "PairListAST.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/StatementListAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
+#include "mem/slicc/ast/PairListAST.hh"
 
 class VarExprAST;
 class Var;

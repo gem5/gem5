@@ -39,8 +39,8 @@
 #ifndef NODEID_H
 #define NODEID_H
 
-#include "Global.hh"
-#include "util.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/util.hh"
 
 typedef int NodeID;
 

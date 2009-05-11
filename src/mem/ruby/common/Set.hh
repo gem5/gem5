@@ -44,20 +44,20 @@
 #define OPTBIGSET
 
 #ifdef OPTBIGSET
-#include "OptBigSet.hh"
+#include "mem/ruby/common/OptBigSet.hh"
 #else
 
 #ifdef BIGSET
-#include "BigSet.hh" // code to supports sets larger than 32
+#include "mem/ruby/common/BigSet.hh" // code to supports sets larger than 32
 #else
 
 #ifndef SET_H
 #define SET_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "NodeID.hh"
-#include "RubyConfig.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 class Set {
 public:

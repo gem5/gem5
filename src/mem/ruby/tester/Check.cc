@@ -32,11 +32,11 @@
  *
  */
 
-#include "Check.hh"
-#include "Sequencer.hh"
-#include "System.hh"
-#include "SubBlock.hh"
-#include "Chip.hh"
+#include "mem/ruby/tester/Check.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/protocol/Chip.hh"
 
 Check::Check(const Address& address, const Address& pc)
 {

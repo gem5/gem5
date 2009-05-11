@@ -35,13 +35,13 @@
 #ifndef NET_INTERFACE_H
 #define NET_INTERFACE_H
 
-#include "NetworkHeader.hh"
-#include "GarnetNetwork.hh"
-#include "Vector.hh"
-#include "FlexibleConsumer.hh"
-#include "Message.hh"
-#include "NetworkLink.hh"
-#include "OutVcState.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/FlexibleConsumer.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkLink.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/OutVcState.hh"
 
 class NetworkMessage;
 class MessageBuffer;

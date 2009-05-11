@@ -39,8 +39,8 @@
 #ifndef CONSUMER_H
 #define CONSUMER_H
 
-#include "Global.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class MessageBuffer;
 

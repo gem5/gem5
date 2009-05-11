@@ -34,7 +34,7 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#include "Symbol.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 class Action : public Symbol {
 public:

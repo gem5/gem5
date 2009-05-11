@@ -36,9 +36,9 @@
 #ifndef FLIT_BUFFER_D_H
 #define FLIT_BUFFER_D_H
 
-#include "NetworkHeader.hh"
-#include "PrioHeap.hh"
-#include "flit_d.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flit_d.hh"
 
 class flitBuffer_d {
 public:

@@ -37,9 +37,9 @@
 #ifndef AbstractCacheEntry_H
 #define AbstractCacheEntry_H
 
-#include "Global.hh"
-#include "Address.hh"
-#include "AccessPermission.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/protocol/AccessPermission.hh"
 
 class AbstractCacheEntry {
 public:

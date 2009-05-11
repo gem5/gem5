@@ -36,9 +36,9 @@
  *
  */
 
-#include "TypeFieldEnumAST.hh"
-#include "State.hh"
-#include "Event.hh"
+#include "mem/slicc/ast/TypeFieldEnumAST.hh"
+#include "mem/slicc/symbols/State.hh"
+#include "mem/slicc/symbols/Event.hh"
 
 TypeFieldEnumAST::TypeFieldEnumAST(string* field_id_ptr,
                                    PairListAST* pairs_ptr)

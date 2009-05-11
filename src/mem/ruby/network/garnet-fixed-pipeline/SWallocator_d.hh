@@ -36,8 +36,8 @@
 #ifndef SW_ALLOCATOR_D_H
 #define SW_ALLOCATOR_D_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
 
 class Router_d;
 class InputUnit_d;

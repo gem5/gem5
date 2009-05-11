@@ -37,10 +37,10 @@
 #ifndef TESTER_H
 #define TESTER_H
 
-#include "Global.hh"
-#include "Driver.hh"
-#include "CheckTable.hh"
-#include "CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/ruby/tester/CheckTable.hh"
+#include "mem/protocol/CacheRequestType.hh"
 
 class RubySystem;
 

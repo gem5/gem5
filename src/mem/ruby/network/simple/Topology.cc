@@ -36,14 +36,14 @@
  *
  * */
 
-#include "Topology.hh"
-#include "NetDest.hh"
-#include "Network.hh"
-#include "TopologyType.hh"
-#include "RubyConfig.hh"
-#include "util.hh"
-#include "MachineType.hh"
-#include "Protocol.hh"
+#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/protocol/TopologyType.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/protocol/MachineType.hh"
+#include "mem/protocol/Protocol.hh"
 #include <string>
 
 static const int INFINITE_LATENCY = 10000; // Yes, this is a big hack

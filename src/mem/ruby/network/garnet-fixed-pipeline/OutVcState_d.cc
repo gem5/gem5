@@ -33,9 +33,9 @@
  *
  * */
 
-#include "OutVcState_d.hh"
-#include "NetworkConfig.hh"
-#include "RubyEventQueue.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/OutVcState_d.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 OutVcState_d::OutVcState_d(int id)
 {

@@ -32,7 +32,7 @@
  *
  */
 
-#include "Symbol.hh"
+#include "mem/slicc/symbols/Symbol.hh"
 
 Symbol::Symbol(string id, const Location& location, const Map<string, string>& pairs)
 {

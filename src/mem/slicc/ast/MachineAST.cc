@@ -36,8 +36,8 @@
  *
  */
 
-#include "MachineAST.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/ast/MachineAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 MachineAST::MachineAST(string* ident_ptr,
                        PairListAST* pairs_ptr,

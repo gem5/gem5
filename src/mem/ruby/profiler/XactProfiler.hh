@@ -30,20 +30,20 @@
 #ifndef XACTPROFILER_H
 #define XACTPROFILER_H
 
-#include "Global.hh"
-#include "GenericMachineType.hh"
-#include "RubyConfig.hh"
-#include "Histogram.hh"
-#include "Consumer.hh"
-#include "AccessModeType.hh"
-#include "AccessType.hh"
-#include "NodeID.hh"
-#include "MachineID.hh"
-#include "PrefetchBit.hh"
-#include "Address.hh"
-#include "Set.hh"
-#include "CacheRequestType.hh"
-#include "GenericRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/protocol/GenericMachineType.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/AccessType.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/protocol/PrefetchBit.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/GenericRequestType.hh"
 
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 

@@ -38,8 +38,8 @@
 #ifndef RACEYDRIVER_H
 #define RACEYDRIVER_H
 
-#include "Global.hh"
-#include "Driver.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Driver.hh"
 
 class RaceyPseudoThread;
 

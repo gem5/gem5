@@ -110,19 +110,19 @@
  *
  */
 
-#include "Global.hh"
-#include "Map.hh"
-#include "Address.hh"
-#include "Profiler.hh"
-#include "AbstractChip.hh"
-#include "System.hh"
-#include "RubySlicc_ComponentMapping.hh"
-#include "NetworkMessage.hh"
-#include "Network.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/slicc_interface/AbstractChip.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/slicc_interface/NetworkMessage.hh"
+#include "mem/ruby/network/Network.hh"
 
-#include "Consumer.hh"
+#include "mem/ruby/common/Consumer.hh"
 
-#include "MemoryControl.hh"
+#include "mem/ruby/system/MemoryControl.hh"
 
 #include <list>
 

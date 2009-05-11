@@ -36,8 +36,8 @@
  *
  */
 
-#include "FuncCallExprAST.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/ast/FuncCallExprAST.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 FuncCallExprAST::FuncCallExprAST(string* proc_name_ptr,
                                  Vector<ExprAST*>* expr_vec_ptr)

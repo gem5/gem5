@@ -44,13 +44,13 @@
 #ifndef NETDEST_H
 #define NETDEST_H
 
-#include "Global.hh"
-#include "Vector.hh"
-#include "NodeID.hh"
-#include "MachineID.hh"
-#include "RubyConfig.hh"
-#include "Set.hh"
-#include "MachineType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/protocol/MachineType.hh"
 
 class Set;
 

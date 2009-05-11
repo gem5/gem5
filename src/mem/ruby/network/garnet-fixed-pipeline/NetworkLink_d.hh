@@ -36,11 +36,11 @@
 #ifndef NETWORK_LINK_D_H
 #define NETWORK_LINK_D_H
 
-#include "NetworkHeader.hh"
-#include "Consumer.hh"
-#include "flitBuffer_d.hh"
-#include "PrioHeap.hh"
-#include "power_bus.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/flitBuffer_d.hh"
+#include "mem/gems_common/PrioHeap.hh"
+#include "mem/ruby/network/orion/power_bus.hh"
 
 class GarnetNetwork_d;
 

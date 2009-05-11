@@ -33,7 +33,7 @@
  *
  * */
 
-#include "OutVcState.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/OutVcState.hh"
 
 OutVcState::OutVcState(int id)
 {

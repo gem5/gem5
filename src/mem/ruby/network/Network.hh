@@ -46,9 +46,9 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 
-#include "Global.hh"
-#include "NodeID.hh"
-#include "MessageSizeType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/MessageSizeType.hh"
 
 class NetDest;
 class MessageBuffer;

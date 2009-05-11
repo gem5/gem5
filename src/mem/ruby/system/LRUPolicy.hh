@@ -2,7 +2,7 @@
 #ifndef LRUPOLICY_H
 #define LRUPOLICY_H
 
-#include "AbstractReplacementPolicy.hh"
+#include "mem/ruby/system/AbstractReplacementPolicy.hh"
 
 /* Simple true LRU replacement policy */
 

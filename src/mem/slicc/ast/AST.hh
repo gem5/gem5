@@ -39,11 +39,11 @@
 #ifndef AST_H
 #define AST_H
 
-#include "slicc_global.hh"
-#include "Vector.hh"
-#include "Map.hh"
-#include "Location.hh"
-#include "SymbolTable.hh"
+#include "mem/slicc/slicc_global.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/slicc/ast/Location.hh"
+#include "mem/slicc/symbols/SymbolTable.hh"
 
 class AST {
 public:
