@@ -191,9 +191,6 @@ void init_simulator()
   g_eventQueue_ptr = NULL;
 
   cout << "Ruby Timing Mode" << endl;
-#ifndef MULTIFACET_NO_OPT_WARN
-  cerr << "Warning: optimizations not enabled." << endl;
-#endif
 
   if (g_SIMICS) {
     // LUKE - if we don't set the default SMT threads in condor scripts,

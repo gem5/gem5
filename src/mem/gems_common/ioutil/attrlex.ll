@@ -68,9 +68,7 @@ WHITESPACE      [ \t]
 
 %{
 
-#ifdef IS_RUBY
 #include "Global.hh"
-#endif
 
 using namespace std;
 #include <string>

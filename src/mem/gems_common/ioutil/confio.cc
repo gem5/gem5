@@ -34,18 +34,8 @@
 /* Includes                                                               */
 /*------------------------------------------------------------------------*/
 
-#ifdef IS_OPAL
-#include "hfa.hh"
-#endif
-
-#ifdef IS_RUBY
 #include "Global.hh"
 #define SIM_HALT   ASSERT(0)
-#endif
-
-#ifdef IS_TOURMALINE
-#include "Tourmaline_Global.hh"
-#endif
 
 using namespace std;
 #include <string>

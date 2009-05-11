@@ -72,18 +72,7 @@ using namespace std;
 
 #include "FakeSimicsDataTypes.hh"
 
-#ifdef IS_OPAL
-#include "hfatypes.hh"
-#include "debugio.hh"
-#endif
-
-#ifdef IS_RUBY
 #include "Global.hh"
-#endif
-
-#ifdef IS_TOURMALINE
-#include "Tourmaline_Global.hh"
-#endif
 
 #include "confio.hh"
 #include "initvar.hh"
