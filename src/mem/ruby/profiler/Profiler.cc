@@ -819,7 +819,7 @@ void Profiler::printStats(ostream& out, bool short_stats)
   } // XACT_MEMORY
 
   if (!short_stats) {
-    out << "Request vs. System State Profile" << endl;
+    out << "Request vs. RubySystem State Profile" << endl;
     out << "--------------------------------" << endl;
     out << endl;
 

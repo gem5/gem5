@@ -28,7 +28,7 @@
  */
 
 /*
- * System.h
+ * RubySystem.h
  *
  * Description: Contains all of the various parts of the system we are
  * simulating.  Performs allocation, deallocation, and setup of all
@@ -59,13 +59,13 @@ class XactCommitArbiter;
 class XactVisualizer;
 class TransactionInterfaceManager;
 
-class System {
+class RubySystem {
 public:
   // Constructors
-  System();
+  RubySystem();
 
   // Destructor
-  ~System();
+  ~RubySystem();
 
   // Public Methods
   int getNumProcessors() { return RubyConfig::numberOfProcessors(); }
@@ -103,8 +103,8 @@ private:
   // Private Methods
 
   // Private copy constructor and assignment operator
-  System(const System& obj);
-  System& operator=(const System& obj);
+  RubySystem(const RubySystem& obj);
+  RubySystem& operator=(const RubySystem& obj);
 
   // Data Members (m_ prefix)
   Network* m_network_ptr;
@@ -118,13 +118,13 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const System& obj);
+ostream& operator<<(ostream& out, const RubySystem& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 inline
-ostream& operator<<(ostream& out, const System& obj)
+ostream& operator<<(ostream& out, const RubySystem& obj)
 {
 //  obj.print(out);
   out << flush;

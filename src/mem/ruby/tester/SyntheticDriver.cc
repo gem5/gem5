@@ -44,7 +44,7 @@
 #include "SubBlock.hh"
 #include "Chip.hh"
 
-SyntheticDriver::SyntheticDriver(System* sys_ptr)
+SyntheticDriver::SyntheticDriver(RubySystem* sys_ptr)
 {
   cout << "SyntheticDriver::SyntheticDriver" << endl;
   if (g_SIMICS) {

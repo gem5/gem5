@@ -42,12 +42,12 @@
 #include "CheckTable.hh"
 #include "CacheRequestType.hh"
 
-class System;
+class RubySystem;
 
 class Tester : public Driver, public Consumer {
 public:
   // Constructors
-  Tester(System* sys_ptr);
+  Tester(RubySystem* sys_ptr);
 
   // Destructor
   ~Tester();

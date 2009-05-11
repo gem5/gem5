@@ -42,13 +42,13 @@
 #include "Histogram.hh"
 #include "CacheRequestType.hh"
 
-class System;
+class RubySystem;
 class RequestGenerator;
 
 class SyntheticDriver : public Driver, public Consumer {
 public:
   // Constructors
-  SyntheticDriver(System* sys_ptr);
+  SyntheticDriver(RubySystem* sys_ptr);
 
   // Destructor
   ~SyntheticDriver();

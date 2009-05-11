@@ -69,7 +69,7 @@ public:
   TransactionInterfaceManager* getTransactionInterfaceManager(int index) const { return m_L1Cache_xact_mgr_vec[index]; };
   void setTransactionInterfaceManager(TransactionInterfaceManager* manager, int index) { m_L1Cache_xact_mgr_vec[index] = manager; }
 
-  // used when CHECK_COHERENCE is enabled.  See System::checkGlobalCoherence()
+  // used when CHECK_COHERENCE is enabled.  See RubySystem::checkGlobalCoherence()
   virtual bool isBlockExclusive(const Address& addr) const { return false; }
   virtual bool isBlockShared(const Address& addr) const { return false; }
 

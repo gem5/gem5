@@ -92,8 +92,8 @@ typedef int LinkID;
 class EventQueue;
 extern EventQueue* g_eventQueue_ptr;
 
-class System;
-extern System* g_system_ptr;
+class RubySystem;
+extern RubySystem* g_system_ptr;
 
 class Debug;
 extern Debug* g_debug_ptr;

@@ -40,7 +40,7 @@
 #include "Check.hh"
 #include "Chip.hh"
 
-Tester::Tester(System* sys_ptr)
+Tester::Tester(RubySystem* sys_ptr)
 {
   if (g_SIMICS) {
     ERROR_MSG("g_SIMICS should not be defined.");

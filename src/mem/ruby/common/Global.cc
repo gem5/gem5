@@ -30,6 +30,6 @@
 #include "Global.hh"
 
 EventQueue* g_eventQueue_ptr = NULL;
-System* g_system_ptr = NULL;
+RubySystem* g_system_ptr = NULL;
 Debug* g_debug_ptr = NULL;
 

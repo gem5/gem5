@@ -42,13 +42,13 @@
 #include "Histogram.hh"
 #include "CacheRequestType.hh"
 
-class System;
+class RubySystem;
 class SpecifiedGenerator;
 
 class DeterministicDriver : public Driver, public Consumer {
 public:
   // Constructors
-  DeterministicDriver(System* sys_ptr);
+  DeterministicDriver(RubySystem* sys_ptr);
 
   // Destructor
   ~DeterministicDriver();

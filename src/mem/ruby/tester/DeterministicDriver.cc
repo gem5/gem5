@@ -43,7 +43,7 @@
 #include "SubBlock.hh"
 #include "Chip.hh"
 
-DeterministicDriver::DeterministicDriver(System* sys_ptr)
+DeterministicDriver::DeterministicDriver(RubySystem* sys_ptr)
 {
   if (g_SIMICS) {
     ERROR_MSG("g_SIMICS should not be defined.");

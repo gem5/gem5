@@ -219,7 +219,7 @@ void init_simulator()
   cout << "Creating system..." << endl;
   cout << "  Processors: " << RubyConfig::numberOfProcessors() << endl;
 
-  g_system_ptr = new System;
+  g_system_ptr = new RubySystem;
   cout << "Creating system done" << endl;
 
   // if opal is loaded, its static interface object (inst) will be non-null,

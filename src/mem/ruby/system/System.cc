@@ -28,9 +28,9 @@
  */
 
 /*
- * System.C
+ * RubySystem.C
  *
- * Description: See System.h
+ * Description: See RubySystem.h
  *
  * $Id$
  *
@@ -52,7 +52,7 @@
 //#include "XactVisualizer.hh"
 #include "M5Driver.hh"
 
-System::System()
+RubySystem::RubySystem()
 {
   DEBUG_MSG(SYSTEM_COMP, MedPrio,"initializing");
 
@@ -129,7 +129,7 @@ System::System()
 
 }
 
-System::~System()
+RubySystem::~RubySystem()
 {
   for (int i = 0; i < m_chip_vector.size(); i++) {
     delete m_chip_vector[i];
@@ -142,19 +142,19 @@ System::~System()
  */
 }
 
-void System::printConfig(ostream& out) const
+void RubySystem::printConfig(ostream& out) const
 {
-  out << "\n================ Begin System Configuration Print ================\n\n";
+  out << "\n================ Begin RubySystem Configuration Print ================\n\n";
   RubyConfig::printConfiguration(out);
   out << endl;
   getChip(0)->printConfig(out);
   m_network_ptr->printConfig(out);
   m_driver_ptr->printConfig(out);
   m_profiler_ptr->printConfig(out);
-  out << "\n================ End System Configuration Print ================\n\n";
+  out << "\n================ End RubySystem Configuration Print ================\n\n";
 }
 
-void System::printStats(ostream& out)
+void RubySystem::printStats(ostream& out)
 {
   const time_t T = time(NULL);
   tm *localTime = localtime(&T);
@@ -174,7 +174,7 @@ void System::printStats(ostream& out)
   Chip::printStats(out);
 }
 
-void System::clearStats() const
+void RubySystem::clearStats() const
 {
   m_profiler_ptr->clearStats();
   m_network_ptr->clearStats();
@@ -187,7 +187,7 @@ void System::clearStats() const
   }
 }
 
-void System::recordCacheContents(CacheRecorder& tr) const
+void RubySystem::recordCacheContents(CacheRecorder& tr) const
 {
   for (int i = 0; i < m_chip_vector.size(); i++) {
     for (int m_version = 0; m_version < RubyConfig::numberOfProcsPerChip(); m_version++) {
@@ -220,7 +220,7 @@ void System::opalLoadNotify()
 // in setState.  The SLICC spec must also define methods "isBlockShared"
 // and "isBlockExclusive" that are specific to that protocol
 //
-void System::checkGlobalCoherenceInvariant(const Address& addr  )  {
+void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
 
   NodeID exclusive = -1;
   bool sharedDetected = false;

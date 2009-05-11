@@ -35,7 +35,7 @@
 #include "NodeID.hh"
 #include "CacheRequestType.hh"
 
-class System;
+class RubySystem;
 class SubBlock;
 class Address;
 class MachineID;
