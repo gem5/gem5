@@ -47,7 +47,8 @@ class TLBUnit : public InstBuffer {
 
     enum TLBCommand {
         FetchLookup,
-        DataLookup
+        DataReadLookup,
+        DataWriteLookup
     };
 
   public:
@@ -103,7 +104,7 @@ class TLBUnitRequest : public ResourceRequest {
 
         if (_cmd == TLBUnit::FetchLookup) {
             aligned_addr = inst->getMemAddr();
-            req_size = sizeof(MachInst);
+            req_size = sizeof(TheISA::MachInst);
             flags = 0;
         } else {
             aligned_addr = inst->getMemAddr();;

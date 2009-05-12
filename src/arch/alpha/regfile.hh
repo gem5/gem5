@@ -36,6 +36,7 @@
 #include "arch/alpha/intregfile.hh"
 #include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
+#include "arch/alpha/mt.hh"
 #include "sim/faults.hh"
 
 #include <string>

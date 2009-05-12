@@ -419,11 +419,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
 
     /** Print Resource Schedule */
+    /** @NOTE: DEBUG ONLY */
     void printSched()
     {
-        using namespace ThePipeline;
-
-        ResSchedule tempSched;
+        ThePipeline::ResSchedule tempSched;
         std::cerr << "\tInst. Res. Schedule: ";
         while (!resSched.empty()) {
             std::cerr << '\t' << resSched.top()->stageNum << "-"
@@ -835,7 +834,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     IntReg readIntRegOperand(const StaticInst *si, int idx, unsigned tid=0);
     FloatReg readFloatRegOperand(const StaticInst *si, int idx,
                           int width = TheISA::SingleWidth);
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
+    TheISA::FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
                                   int width = TheISA::SingleWidth);
     MiscReg readMiscReg(int misc_reg);
     MiscReg readMiscRegNoEffect(int misc_reg);
@@ -878,7 +877,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val);
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
                      int width = TheISA::SingleWidth);
-    void setFloatRegOperandBits(const StaticInst *si, int idx, FloatRegBits val,
+    void setFloatRegOperandBits(const StaticInst *si, int idx, TheISA::FloatRegBits val,
                          int width = TheISA::SingleWidth);
     void setMiscReg(int misc_reg, const MiscReg &val);
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);

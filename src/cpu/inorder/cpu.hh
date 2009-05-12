@@ -266,8 +266,8 @@ class InOrderCPU : public BaseCPU
     /** Communication structure that sits in between pipeline stages */
     StageQueue *stageQueue[ThePipeline::NumStages-1];
 
-    TheISA::ITB *getITBPtr();
-    TheISA::DTB *getDTBPtr();
+    TheISA::TLB *getITBPtr();
+    TheISA::TLB *getDTBPtr();
 
   public:
 

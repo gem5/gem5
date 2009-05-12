@@ -1264,17 +1264,17 @@ InOrderCPU::write(DynInstPtr inst)
     return mem_res->doDataAccess(inst);
 }
 
-TheISA::ITB*
+TheISA::TLB*
 InOrderCPU::getITBPtr()
 {
     TLBUnit *itb_res = dynamic_cast<TLBUnit*>(resPool->getResource(itbIdx));
-    return dynamic_cast<TheISA::ITB*>(itb_res->tlb());
+    return itb_res->tlb();
 }
 
 
-TheISA::DTB*
+TheISA::TLB*
 InOrderCPU::getDTBPtr()
 {
     TLBUnit *dtb_res = dynamic_cast<TLBUnit*>(resPool->getResource(dtbIdx));
-    return dynamic_cast<TheISA::DTB*>(dtb_res->tlb());
+    return dtb_res->tlb();
 }

@@ -118,7 +118,7 @@ TLBUnit::execute(int slot_idx)
         {
             tlb_req->fault =
                 _tlb->translateAtomic(tlb_req->memReq,
-                        cpu->thread[tid]->getTC(), false, true);
+                                      cpu->thread[tid]->getTC(), TheISA::TLB::Execute);
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
@@ -142,14 +142,19 @@ TLBUnit::execute(int slot_idx)
         }
         break;
 
-      case DataLookup:
+      case DataReadLookup:
+      case DataWriteLookup:
         {
             DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i]: Attempting to translate %08p.\n",
                     tid, seq_num, tlb_req->memReq->getVaddr());
 
+
+            TheISA::TLB::Mode tlb_mode = (tlb_req->cmd == DataReadLookup) ?
+                TheISA::TLB::Read : TheISA::TLB::Write;
+
             tlb_req->fault =
                 _tlb->translateAtomic(tlb_req->memReq,
-                        cpu->thread[tid]->getTC());
+                                      cpu->thread[tid]->getTC(), tlb_mode);
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "

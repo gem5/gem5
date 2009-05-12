@@ -101,7 +101,7 @@ bool createBackEndSchedule(DynInstPtr &inst)
     } else if ( inst->isMemRef() ) {
         if ( inst->isLoad() ) {
             E->needs(AGEN, AGENUnit::GenerateAddr);
-            E->needs(DTLB, TLBUnit::DataLookup);
+            E->needs(DTLB, TLBUnit::DataReadLookup);
             E->needs(DCache, CacheUnit::InitiateReadData);
         }
     } else if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
@@ -122,7 +122,7 @@ bool createBackEndSchedule(DynInstPtr &inst)
     } else if ( inst->isStore() ) {
         M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
         M->needs(AGEN, AGENUnit::GenerateAddr);
-        M->needs(DTLB, TLBUnit::DataLookup);
+        M->needs(DTLB, TLBUnit::DataWriteLookup);
         M->needs(DCache, CacheUnit::InitiateWriteData);
     }
 

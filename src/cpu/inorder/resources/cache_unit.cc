@@ -451,10 +451,12 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
 
     // Get resource request info
-    // @todo: SMT needs to figure out where to get thread # from.
-    unsigned tid = 0;
     unsigned stage_num = cache_req->getStageNum();
     DynInstPtr inst = cache_req->inst;
+    unsigned tid;
+
+
+    tid = cache_req->inst->readTid();
 
     if (!cache_req->isSquashed()) {
         if (inst->resSched.top()->cmd == CompleteFetch) {
