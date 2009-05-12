@@ -80,6 +80,22 @@ InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
     setEvent(e_type, fault, _tid, _vpe);
 }
 
+
+std::string InOrderCPU::eventNames[NumCPUEvents] =
+{
+    "ActivateThread",
+    "DeallocateThread",
+    "SuspendThread",
+    "DisableThreads",
+    "EnableThreads",
+    "DisableVPEs",
+    "EnableVPEs",
+    "Trap",
+    "InstGraduated",
+    "SquashAll",
+    "UpdatePCs"
+};
+
 void
 InOrderCPU::CPUEvent::process()
 {
@@ -486,8 +502,8 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, vpe);
 
     if (delay >= 0) {
-        DPRINTF(InOrderCPU, "Scheduling CPU Event Type #%i for cycle %i.\n",
-                c_event, curTick + delay);
+        DPRINTF(InOrderCPU, "Scheduling CPU Event Type #%s for cycle %i.\n",
+                eventNames[c_event], curTick + delay);
         mainEventQueue.schedule(cpu_event,curTick + delay);
     } else {
         cpu_event->process();

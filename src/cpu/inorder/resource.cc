@@ -304,9 +304,12 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsi
                     req_ptr->getInst()->readTid(),
                     req_ptr->getInst()->seqNum);
 
+            req_ptr->setSquashed();
+
             int req_slot_num = req_ptr->getSlot();
 
-            unscheduleEvent(req_slot_num);
+            if (resourceEvent[req_slot_num].scheduled())
+                unscheduleEvent(req_slot_num);
 
             // Mark request for later removal
             cpu->reqRemoveList.push(req_ptr);

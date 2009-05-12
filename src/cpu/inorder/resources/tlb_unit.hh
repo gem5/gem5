@@ -41,7 +41,8 @@
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
 
-class TLBUnit : public InstBuffer {
+class TLBUnit : public Resource
+{
   public:
     typedef ThePipeline::DynInstPtr DynInstPtr;
 
@@ -65,6 +66,8 @@ class TLBUnit : public InstBuffer {
                                         unsigned cmd);
 
     virtual void execute(int slot_num);
+
+    void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);
 
     bool tlbBlocked[ThePipeline::MaxThreads];
 

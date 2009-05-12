@@ -43,7 +43,7 @@ using namespace ThePipeline;
 
 TLBUnit::TLBUnit(string res_name, int res_id, int res_width,
                  int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
-    : InstBuffer(res_name, res_id, res_width, res_latency, _cpu, params)
+: Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
     // Hard-Code Selection For Now
     if (res_name == "I-TLB")
@@ -124,7 +124,9 @@ TLBUnit::execute(int slot_idx)
                 DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
                         "addr:%08p for [sn:%i].\n", tid, tlb_req->fault->name(),
                         tlb_req->memReq->getVaddr(), seq_num);
-                //insert(inst);
+
+                DPRINTF(InOrderTLB, "slot:%i sn:%i schedule event.\n", slot_idx, seq_num);
+
                 cpu->pipelineStage[stage_num]->setResStall(tlb_req, tid);
                 tlbBlocked[tid] = true;
                 scheduleEvent(slot_idx, 1);
@@ -210,7 +212,7 @@ TLBUnitEvent::process()
 
     tlb_res->tlbBlocked[tid] = false;
 
-    tlb_res->cpu->pipelineStage[stage_num]->unsetResStall(resource->reqMap[slotIdx], tid);
+    tlb_res->cpu->pipelineStage[stage_num]->unsetResStall(tlb_res->reqMap[slotIdx], tid);
 
     // Effectively NOP the instruction but still allow it
     // to commit
@@ -219,3 +221,56 @@ TLBUnitEvent::process()
     //inst->resSched.pop();
     //}
 }
+
+void
+TLBUnit::squash(DynInstPtr inst, int stage_num,
+                   InstSeqNum squash_seq_num, unsigned tid)
+{
+     //@TODO: Figure out a way to consolidate common parts
+     //       of this squash code
+     std::vector<int> slot_remove_list;
+
+     map<int, ResReqPtr>::iterator map_it = reqMap.begin();
+     map<int, ResReqPtr>::iterator map_end = reqMap.end();
+
+     while (map_it != map_end) {
+         ResReqPtr req_ptr = (*map_it).second;
+
+         if (req_ptr &&
+             req_ptr->getInst()->readTid() == tid &&
+             req_ptr->getInst()->seqNum > squash_seq_num) {
+
+             DPRINTF(Resource, "[tid:%i]: Squashing [sn:%i].\n",
+                     req_ptr->getInst()->readTid(),
+                     req_ptr->getInst()->seqNum);
+
+             req_ptr->setSquashed();
+
+             int req_slot_num = req_ptr->getSlot();
+
+             tlbBlocked[tid] = false;
+
+             int stall_stage = reqMap[req_slot_num]->getStageNum();
+
+             cpu->pipelineStage[stall_stage]->unsetResStall(reqMap[req_slot_num], tid);
+
+             if (resourceEvent[req_slot_num].scheduled())
+                 unscheduleEvent(req_slot_num);
+
+             // Mark request for later removal
+             cpu->reqRemoveList.push(req_ptr);
+
+             // Mark slot for removal from resource
+             slot_remove_list.push_back(req_ptr->getSlot());
+         }
+
+         map_it++;
+     }
+
+     // Now Delete Slot Entry from Req. Map
+     for (int i = 0; i < slot_remove_list.size(); i++) {
+         freeSlot(slot_remove_list[i]);
+     }
+}
+
+

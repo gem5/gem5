@@ -175,6 +175,8 @@ class InOrderCPU : public BaseCPU
         NumCPUEvents
     };
 
+    static std::string eventNames[NumCPUEvents];
+
     /** Define CPU Event */
     class CPUEvent : public Event
     {

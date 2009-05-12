@@ -256,7 +256,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         break;
 
       default:
-        DPRINTF(Resource, "Ignoring Unrecognized CPU Event Type #%i.\n", e_type);
+        DPRINTF(Resource, "Ignoring Unrecognized CPU Event Type #%s.\n", InOrderCPU::eventNames[e_type]);
         ; // If Resource Pool doesnt recognize event, we ignore it.
     }
 }
