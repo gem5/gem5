@@ -264,6 +264,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Predicted next PC. */
     Addr predPC;
 
+    /** Predicted next NPC. */
+    Addr predNPC;
+
+    /** Predicted next microPC */
+    Addr predMicroPC;
+
     /** Address to fetch from */
     Addr fetchAddr;
 
@@ -506,7 +512,14 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Returns the next NPC.  This could be the speculative next NPC if it is
      *  called prior to the actual branch target being calculated.
      */
-    Addr readNextNPC() { return nextNPC; }
+    Addr readNextNPC()
+    {
+#if ISA_HAS_DELAY_SLOT
+        return nextNPC;
+#else
+        return nextPC + sizeof(TheISA::MachInst);
+#endif
+    }
 
     /** Set the next PC of this instruction (its actual target). */
     void setNextNPC(uint64_t val) { nextNPC = val; }
@@ -522,19 +535,26 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Returns the predicted target of the branch. */
     Addr readPredTarg() { return predPC; }
 
+    /** Returns the predicted PC immediately after the branch. */
+    Addr readPredPC() { return predPC; }
+
+    /** Returns the predicted PC two instructions after the branch */
+    Addr readPredNPC() { return predNPC; }
+
+    /** Returns the predicted micro PC after the branch */
+    Addr readPredMicroPC() { return predMicroPC; }
+
     /** Returns whether the instruction was predicted taken or not. */
     bool predTaken() { return predictTaken; }
 
     /** Returns whether the instruction mispredicted. */
     bool mispredicted()
     {
-        // Special case since a not-taken, cond. delay slot, effectively
-        // nullifies the delay slot instruction
-        if (isCondDelaySlot() && !predictTaken) {
-            return predPC != nextPC;
-        } else {
-            return predPC != nextNPC;
-        }
+#if ISA_HAS_DELAY_SLOT
+        return predPC != nextNPC;
+#else
+        return predPC != nextPC;
+#endif
     }
 
     /** Returns whether the instruction mispredicted. */

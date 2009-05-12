@@ -196,7 +196,7 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
             predict_record.RASIndex = RAS[tid].topIdx();
             predict_record.RASTarget = target;
 
-	    assert(predict_record.RASIndex < 16);
+            assert(predict_record.RASIndex < 16);
 
             RAS[tid].pop();
 
@@ -219,14 +219,14 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
             }
 
             if (inst->isCall() &&
-		  inst->isUncondCtrl() &&
-		    inst->isDirectCtrl()) {
-		target = inst->branchTarget();
+                inst->isUncondCtrl() &&
+                inst->isDirectCtrl()) {
+                target = inst->branchTarget();
 
                 DPRINTF(Fetch, "BranchPred: [tid:%i]: Setting %#x predicted"
                         " target to %#x.\n",
                         tid, inst->readPC(), target);
-	    } else if (BTB.valid(PC, tid)) {
+            } else if (BTB.valid(PC, tid)) {
                 ++BTBHits;
 
                 // If it's not a return, use the BTB to get the target addr.
@@ -248,7 +248,12 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
         PC = target;
         inst->setPredTarg(target);
     } else {
+#if ISA_HAS_DELAY_SLOT
+        // This value will be inst->PC + 4 (nextPC)
+        // Delay Slot archs need this to be inst->PC + 8 (nextNPC)
+        // so we increment one more time here.
         PC = PC + sizeof(MachInst);
+#endif
         inst->setPredTarg(PC);
     }
 

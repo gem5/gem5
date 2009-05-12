@@ -78,12 +78,12 @@ BranchPredictor::execute(int slot_num)
             Addr pred_PC = inst->readNextPC();
 
             if (inst->isControl()) {
-                // If predicted, the pred_PC will be updated to new target value
                 // If not, the pred_PC be updated to pc+8
+                // If predicted, the pred_PC will be updated to new target value
                 bool predict_taken = branchPred.predict(inst, pred_PC, tid);
 
                 if (predict_taken) {
-                    DPRINTF(Resource, "[tid:%i]: [sn:%i]: Branch predicted true.\n",
+                    DPRINTF(InOrderBPred, "[tid:%i]: [sn:%i]: Branch predicted true.\n",
                             tid, seq_num);
 
                     inst->setPredTarg(pred_PC);

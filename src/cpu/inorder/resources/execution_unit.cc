@@ -76,7 +76,7 @@ ExecutionUnit::execute(int slot_num)
       case ExecuteInst:
         {
             if (inst->isMemRef()) {
-                fatal("%s not configured to handle memory ops.\n", resName);
+                panic("%s not configured to handle memory ops.\n", resName);
             } else if (inst->isControl()) {
                 // Evaluate Branch
                 fault = inst->execute();
@@ -111,23 +111,33 @@ ExecutionUnit::execute(int slot_num)
                                         "[sn:%i] PC %#x mispredicted as not taken.\n", tid,
                                         seq_num, inst->PC);
                             } else {
+#if ISA_HAS_DELAY_SLOT
                                 inst->bdelaySeqNum = seq_num + 1;
-
+                                inst->setPredTarg(inst->nextNPC);
+#else
+                                inst->bdelaySeqNum = seq_num;
+                                inst->setPredTarg(inst->nextPC);
+#endif
                                 DPRINTF(InOrderExecute, "[tid:%i]: Misprediction detected at "
                                         "[sn:%i] PC %#x,\n\t squashing after delay slot "
                                         "instruction [sn:%i].\n",
                                         tid, seq_num, inst->PC, inst->bdelaySeqNum);
                                 DPRINTF(InOrderStall, "STALL: [tid:%i]: Branch "
                                         "misprediction at %#x\n", tid, inst->PC);
-                                inst->setPredTarg(inst->nextNPC);
                             }
 
                             DPRINTF(InOrderExecute, "[tid:%i] Redirecting fetch to %#x.\n", tid,
                                     inst->readPredTarg());
 
                         } else if(inst->isIndirectCtrl()){
+#if ISA_HAS_DELAY_SLOT
                             inst->setPredTarg(inst->nextNPC);
                             inst->bdelaySeqNum = seq_num + 1;
+#else
+                            inst->setPredTarg(inst->nextPC);
+                            inst->bdelaySeqNum = seq_num;
+#endif
+
                             DPRINTF(InOrderExecute, "[tid:%i] Redirecting fetch to %#x.\n", tid,
                                     inst->readPredTarg());
                         } else {
@@ -151,7 +161,13 @@ ExecutionUnit::execute(int slot_num)
                         } else {
                             predictedNotTakenIncorrect++;
                         }
+                    } else {
+                        DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Prediction Correct.\n",
+                                inst->readTid(), seq_num, inst->readIntResult(0));
                     }
+
+                    DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result of execution is 0x%x.\n",
+                            inst->readTid(), seq_num, inst->readIntResult(0));
                     exec_req->done();
                 } else {
                     warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
@@ -164,8 +180,8 @@ ExecutionUnit::execute(int slot_num)
                     inst->setExecuted();
                     exec_req->done();
 
-                    DPRINTF(InOrderExecute, "[tid:%i]: The result of execution is 0x%x.\n",
-                            inst->readTid(), inst->readIntResult(0));
+                    DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result of execution is 0x%x.\n",
+                            inst->readTid(), seq_num, inst->readIntResult(0));
                 } else {
                     warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
                     cpu->trap(fault, tid);

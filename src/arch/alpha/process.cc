@@ -166,11 +166,11 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     tc->setPC(prog_entry);
     tc->setNextPC(prog_entry + sizeof(MachInst));
 
-#if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
+    // MIPS/Sparc need NNPC for delay slot handling, while
+    // Alpha has no delay slots... However, CPU models
+    // cycle PCs by PC=NPC, NPC=NNPC, etc. so setting this
+    // here ensures CPU-Model Compatibility across board
     tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
-#endif
-
-
 }
 
 void

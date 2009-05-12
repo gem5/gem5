@@ -342,13 +342,21 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, unsigned tid)
         toPrevStages->stageInfo[stageNum][tid].doneSeqNum = inst->seqNum;
         toPrevStages->stageInfo[stageNum][tid].squash = true;
         toPrevStages->stageInfo[stageNum][tid].nextPC = inst->readPredTarg();
+
+
+#if ISA_HAS_DELAY_SLOT
         toPrevStages->stageInfo[stageNum][tid].branchTaken = inst->readNextNPC() !=
             (inst->readNextPC() + sizeof(TheISA::MachInst));
         toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->bdelaySeqNum;
+        InstSeqNum squash_seq_num = inst->bdelaySeqNum;
+#else
+        toPrevStages->stageInfo[stageNum][tid].branchTaken = inst->readNextPC() !=
+            (inst->readPC() + sizeof(TheISA::MachInst));
+        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->seqNum;
+        InstSeqNum squash_seq_num = inst->seqNum;
+#endif
 
         DPRINTF(InOrderStage, "Target being re-set to %08p\n", inst->readPredTarg());
-        InstSeqNum squash_seq_num = inst->bdelaySeqNum;
-
         DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], due to [sn:%i] "
                 "branch.\n", tid, squash_seq_num, inst->seqNum);
 

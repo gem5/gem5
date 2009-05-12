@@ -265,9 +265,6 @@ class O3ThreadContext : public ThreadContext
 
     virtual void setNextNPC(uint64_t val)
     {
-#if THE_ISA == ALPHA_ISA
-        panic("Not supported on Alpha!");
-#endif
         this->cpu->setNextNPC(val, this->thread->threadId());
     }
 };
