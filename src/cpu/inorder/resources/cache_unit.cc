@@ -175,7 +175,7 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                 inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
     } else if (sched_entry->cmd == InitiateFetch){
         pkt_cmd = MemCmd::ReadReq;
-        req_size = sizeof(MachInst); //@TODO: mips16e
+        req_size = sizeof(MachInst);
 
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: %i byte Fetch request from [sn:%i] for addr %08p\n",
@@ -356,7 +356,7 @@ CacheUnit::writeHint(DynInstPtr inst)
 }
 
 Fault
-CacheUnit::doDataAccess(DynInstPtr inst)
+CacheUnit::doDataAccess(DynInstPtr inst, uint64_t *write_res)
 {
     Fault fault = NoFault;
     int tid = 0;
@@ -367,6 +367,17 @@ CacheUnit::doDataAccess(DynInstPtr inst)
         = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
     assert(cache_req);
 
+    // Check for LL/SC and if so change command
+    if (cache_req->memReq->isLLSC() && cache_req->pktCmd == MemCmd::ReadReq) {
+        cache_req->pktCmd = MemCmd::LoadLockedReq;
+    }
+
+    if (cache_req->pktCmd == MemCmd::WriteReq) {
+        cache_req->pktCmd =
+            cache_req->memReq->isSwap() ? MemCmd::SwapReq :
+            (cache_req->memReq->isLLSC() ? MemCmd::StoreCondReq : MemCmd::WriteReq);
+    }
+
     cache_req->dataPkt = new CacheReqPacket(cache_req, cache_req->pktCmd,
                                             Packet::Broadcast);
 
@@ -374,6 +385,11 @@ CacheUnit::doDataAccess(DynInstPtr inst)
         cache_req->dataPkt->dataStatic(cache_req->reqData);
     } else if (cache_req->dataPkt->isWrite()) {
         cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);
+
+        if (cache_req->memReq->isCondSwap()) {
+            assert(write_res);
+            cache_req->memReq->setExtraData(*write_res);
+        }
     }
 
     cache_req->dataPkt->time = curTick;
@@ -382,7 +398,7 @@ CacheUnit::doDataAccess(DynInstPtr inst)
 
     Request *memReq = cache_req->dataPkt->req;
 
-    if (cache_req->dataPkt->isWrite() && memReq->isLLSC()) {
+    if (cache_req->dataPkt->isWrite() && cache_req->memReq->isLLSC()) {
         assert(cache_req->inst->isStoreConditional());
         DPRINTF(InOrderCachePort, "Evaluating Store Conditional access\n");
         do_access = TheISA::handleLockedWrite(cpu, memReq);
@@ -392,11 +408,7 @@ CacheUnit::doDataAccess(DynInstPtr inst)
             "[tid:%i] [sn:%i] attempting to access cache\n",
             tid, inst->seqNum);
 
-    //@TODO: If you want to ignore failed store conditional accesses, then
-    //       enable this. However, this might skew memory stats because
-    //       the failed store conditional access will get ignored.
-    // - Remove optionality here ...
-    if (1/*do_access*/) {
+    if (do_access) {
         if (!cachePort->sendTiming(cache_req->dataPkt)) {
             DPRINTF(InOrderCachePort,
                     "[tid:%i] [sn:%i] is waiting to retry request\n",
@@ -431,13 +443,7 @@ CacheUnit::doDataAccess(DynInstPtr inst)
                 "[tid:%i]: T%i Ignoring Failed Store Conditional Access\n",
                 tid, tid);
 
-        cache_req->dataPkt->req->setExtraData(0);
-
         processCacheCompletion(cache_req->dataPkt);
-
-        // Automatically set these since we ignored the memory access
-        //cache_req->setMemAccPending(false);
-        //cache_req->setMemAccCompleted();
     } else {
         // Make cache request again since access due to
         // inability to access
@@ -535,7 +541,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                     TheISA::handleLockedRead(cpu, cache_pkt->req);
                 }
 
-                // @TODO: Hardcoded to for load instructions. Assumes that
+                // @NOTE: Hardcoded to for load instructions. Assumes that
                 // the dest. idx 0 is always where the data is loaded to.
                 DPRINTF(InOrderCachePort,
                         "[tid:%u]: [sn:%i]: Data loaded was: %08p\n",

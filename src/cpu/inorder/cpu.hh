@@ -495,7 +495,7 @@ class InOrderCPU : public BaseCPU
     /** Forwards an instruction write. to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")
      */
-    Fault write(DynInstPtr inst);
+    Fault write(DynInstPtr inst, uint64_t *res = NULL);
 
     /** Forwards an instruction prefetch to the appropriate data
      *  resource (indexes into Resource Pool thru "dataPortIdx")

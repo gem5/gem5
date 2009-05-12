@@ -1258,10 +1258,10 @@ InOrderCPU::read(DynInstPtr inst)
 }
 
 Fault
-InOrderCPU::write(DynInstPtr inst)
+InOrderCPU::write(DynInstPtr inst, uint64_t *res)
 {
     Resource *mem_res = resPool->getResource(dataPortIdx);
-    return mem_res->doDataAccess(inst);
+    return mem_res->doDataAccess(inst, res);
 }
 
 void

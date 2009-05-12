@@ -162,7 +162,7 @@ class CacheUnit : public Resource
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
      */
-    Fault doDataAccess(DynInstPtr inst);
+    Fault doDataAccess(DynInstPtr inst, uint64_t *write_result=NULL);
 
     void prefetch(DynInstPtr inst);
 
@@ -245,6 +245,8 @@ class CacheRequest : public ResourceRequest
             memReq = inst->dataMemReq;
         }
 
+        //@ Only matters for Fetch / Read requests
+        //  Don't allocate for Writes!
         reqData = new uint8_t[req_size];
         retryPkt = NULL;
     }
