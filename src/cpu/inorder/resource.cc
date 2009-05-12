@@ -281,7 +281,7 @@ Resource::deactivateThread(unsigned tid)
 {
     // In the most basic case, deactivation means squashing everything
     // from a particular thread
-    DynInstPtr dummy_inst = new InOrderDynInst(cpu, NULL, 0, tid);
+    DynInstPtr dummy_inst = new InOrderDynInst(cpu, NULL, 0, tid, tid);
     squash(dummy_inst, 0, 0, tid);
 }
 

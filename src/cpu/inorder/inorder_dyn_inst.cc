@@ -64,14 +64,16 @@ InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
 }
 
 InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
-                           InOrderThreadState *state,
-                           InstSeqNum seq_num,
-                           unsigned tid)
+                               InOrderThreadState *state,
+                               InstSeqNum seq_num,
+                               unsigned tid,
+                               unsigned _asid)
     : traceData(NULL), cpu(cpu)
 {
     seqNum = seq_num;
     thread = state;
     threadNumber = tid;
+    asid = _asid;
     initVars();
 }
 

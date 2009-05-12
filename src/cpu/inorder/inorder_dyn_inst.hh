@@ -113,7 +113,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  NOTE: Must set Binary Instrution through Member Function
      */
     InOrderDynInst(InOrderCPU *cpu, InOrderThreadState *state, InstSeqNum seq_num,
-                 unsigned tid);
+                   unsigned tid, unsigned asid = 0);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.

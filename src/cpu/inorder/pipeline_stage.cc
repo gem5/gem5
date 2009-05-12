@@ -111,7 +111,7 @@ PipelineStage::setCPU(InOrderCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 
-    dummyBufferInst = new InOrderDynInst(cpu_ptr, NULL, 0, 0);
+    dummyBufferInst = new InOrderDynInst(cpu_ptr, NULL, 0, 0, 0);
 
     DPRINTF(InOrderStage, "Set CPU pointer.\n");
 

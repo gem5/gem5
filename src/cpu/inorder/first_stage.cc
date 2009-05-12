@@ -135,9 +135,10 @@ FirstStage::processInsts(unsigned tid)
             new_inst = true;
 
             inst = new InOrderDynInst(cpu,
-                                    cpu->thread[tid],
-                                    cpu->nextInstSeqNum(tid),
-                                    tid);
+                                      cpu->thread[tid],
+                                      cpu->nextInstSeqNum(tid),
+                                      tid,
+                                      tid);
 
 #if TRACING_ON
             inst->traceData =
@@ -145,6 +146,8 @@ FirstStage::processInsts(unsigned tid)
                                       cpu->stageTracing,
                                       cpu->thread[tid]->getTC());
 
+#else
+            inst->traceData = NULL;
 #endif      // TRACING_ON
 
             DPRINTF(RefCount, "creation: [tid:%i]: [sn:%i]: Refcount = %i.\n",

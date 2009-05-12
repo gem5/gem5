@@ -34,6 +34,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/locked_mem.hh"
 #include "arch/utility.hh"
+#include "arch/predecoder.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
@@ -81,7 +82,8 @@ CacheUnit::CachePort::recvRetry()
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      retryPkt(NULL), retrySlot(-1), cacheBlocked(false)
+      retryPkt(NULL), retrySlot(-1), cacheBlocked(false),
+      predecoder(NULL)
 {
     cachePort = new CachePort(this);
 }
@@ -259,35 +261,11 @@ CacheUnit::execute(int slot_num)
                     "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
                     tid, inst->seqNum);
 
-            MachInst mach_inst = cache_req->dataPkt->get<MachInst>();
 
-            /**
-             * @TODO: May Need This Function for Endianness-Compatibility
-             *  mach_inst =
-             *    gtoh(*reinterpret_cast<MachInst *>(&cacheData[tid][offset]));
-             */
-
-            DPRINTF(InOrderCachePort,
-                    "[tid:%i]: Fetched instruction is %08p\n",
-                    tid, mach_inst);
-
-            // ExtMachInst ext_inst = makeExtMI(mach_inst, cpu->tcBase(tid));
-
-            inst->setMachInst(mach_inst);
-            inst->setASID(tid);
-            inst->setThreadState(cpu->thread[tid]);
-
-            DPRINTF(InOrderStage, "[tid:%i]: Instruction [sn:%i] is: %s\n",
+            DPRINTF(InOrderCachePort, "[tid:%i]: Instruction [sn:%i] is: %s\n",
                     tid, seq_num, inst->staticInst->disassemble(inst->PC));
 
-            // Set Up More TraceData info
-            if (inst->traceData) {
-                inst->traceData->setStaticInst(inst->staticInst);
-                inst->traceData->setPC(inst->readPC());
-            }
-
             delete cache_req->dataPkt;
-
             cache_req->done();
         } else {
             DPRINTF(InOrderCachePort,
@@ -396,7 +374,6 @@ CacheUnit::doDataAccess(DynInstPtr inst)
         cache_req->dataPkt->dataStatic(cache_req->reqData);
     } else if (cache_req->dataPkt->isWrite()) {
         cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);
-
     }
 
     cache_req->dataPkt->time = curTick;
@@ -514,6 +491,33 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: [sn:%i]: Processing fetch access\n",
                     tid, inst->seqNum);
+
+            // NOTE: This is only allowing a thread to fetch one line
+            //       at a time. Re-examine when/if prefetching
+            //       gets implemented.
+            //memcpy(fetchData[tid], cache_pkt->getPtr<uint8_t>(),
+            //     cache_pkt->getSize());
+
+            // Get the instruction from the array of the cache line.
+            // @todo: update thsi
+            ExtMachInst ext_inst;
+            StaticInstPtr staticInst = NULL;
+            Addr inst_pc = inst->readPC();
+            MachInst mach_inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
+                                (cache_pkt->getPtr<uint8_t>()));
+
+            predecoder.setTC(cpu->thread[tid]->getTC());
+            predecoder.moreBytes(inst_pc, inst_pc, mach_inst);
+            ext_inst = predecoder.getExtMachInst();
+
+            inst->setMachInst(ext_inst);
+
+            // Set Up More TraceData info
+            if (inst->traceData) {
+                inst->traceData->setStaticInst(inst->staticInst);
+                inst->traceData->setPC(inst->readPC());
+            }
+
         } else if (inst->staticInst && inst->isMemRef()) {
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: [sn:%i]: Processing cache access\n",
@@ -546,7 +550,6 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                         "[tid:%u]: [sn:%i]: Data stored was: %08p\n",
                         tid, inst->seqNum,
                         getMemData(cache_pkt));
-
             }
 
             delete cache_pkt;

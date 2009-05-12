@@ -36,8 +36,7 @@
 #include <list>
 #include <string>
 
-//#include "cpu/inorder/params.hh"
-
+#include "arch/predecoder.hh"
 #include "cpu/inorder/resource.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "mem/packet.hh"
@@ -154,18 +153,11 @@ class CacheUnit : public Resource
     /** Align a PC to the start of an I-cache block. */
     Addr cacheBlockAlignPC(Addr addr)
     {
-        //addr = TheISA::realPCToFetchPC(addr);
         return (addr & ~(cacheBlkMask));
     }
 
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
-
-    /** Fetch on behalf of an instruction. Will check to see
-     *  if instruction is actually in resource before
-     *  trying to fetch.
-     */
-    //Fault doFetchAccess(DynInstPtr inst);
 
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
@@ -207,17 +199,16 @@ class CacheUnit : public Resource
         return (addr & ~(cacheBlkMask));
     }
 
-    /** THINGS USED FOR FETCH */
-    // NO LONGER USED BY COMMENT OUT UNTIL FULL VERIFICATION
     /** The mem line being fetched. */
-    //uint8_t *cacheData[ThePipeline::MaxThreads];
+    uint8_t *fetchData[ThePipeline::MaxThreads];
 
+    /** @TODO: Move functionaly of fetching more than
+        one instruction to 'fetch unit'*/
     /** The Addr of the cacheline that has been loaded. */
     //Addr cacheBlockAddr[ThePipeline::MaxThreads];
-
     //unsigned fetchOffset[ThePipeline::MaxThreads];
 
-    /** @todo: Add Resource Stats Here */
+    TheISA::Predecoder predecoder;
 };
 
 struct CacheSchedEntry : public ThePipeline::ScheduleEntry
