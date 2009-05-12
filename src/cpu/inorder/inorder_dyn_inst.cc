@@ -604,7 +604,7 @@ template<class T>
 inline Fault
 InOrderDynInst::read(Addr addr, T &data, unsigned flags)
 {
-    return cpu->read(this);
+    return cpu->read(this, addr, data, flags);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS
@@ -657,7 +657,7 @@ InOrderDynInst::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting store data to %#x.\n",
             threadNumber, seqNum, memData);
-    return cpu->write(this, res);
+    return cpu->write(this, data, addr, flags, res);
 }
 
 #ifndef DOXYGEN_SHOULD_SKIP_THIS

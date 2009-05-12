@@ -204,18 +204,6 @@ InOrderCPU::InOrderCPU(Params *params)
         fatal("Unable to find port for data.\n");
     }
 
-
-    // Hard-Code Bindings to ITB & DTB
-    itbIdx = resPool->getResIdx(name() + "."  + "I-TLB");
-    if (itbIdx == 0) {
-        fatal("Unable to find ITB resource.\n");
-    }
-
-    dtbIdx = resPool->getResIdx(name() + "."  + "D-TLB");
-    if (dtbIdx == 0) {
-        fatal("Unable to find DTB resource.\n");
-    }
-
     for (int i = 0; i < numThreads; ++i) {
         if (i < params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
@@ -486,6 +474,7 @@ InOrderCPU::getPort(const std::string &if_name, int idx)
 void
 InOrderCPU::trap(Fault fault, unsigned tid, int delay)
 {
+    //@ Squash Pipeline during TRAP
     scheduleCpuEvent(Trap, fault, tid, 0/*vpe*/, delay);
 }
 
@@ -502,7 +491,7 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, vpe);
 
     if (delay >= 0) {
-        DPRINTF(InOrderCPU, "Scheduling CPU Event Type #%s for cycle %i.\n",
+        DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i.\n",
                 eventNames[c_event], curTick + delay);
         mainEventQueue.schedule(cpu_event,curTick + delay);
     } else {
@@ -1266,20 +1255,6 @@ InOrderCPU::syscall(int64_t callnum, int tid)
     nonSpecInstActive[tid] = false;
 }
 
-Fault
-InOrderCPU::read(DynInstPtr inst)
-{
-    Resource *mem_res = resPool->getResource(dataPortIdx);
-    return mem_res->doDataAccess(inst);
-}
-
-Fault
-InOrderCPU::write(DynInstPtr inst, uint64_t *res)
-{
-    Resource *mem_res = resPool->getResource(dataPortIdx);
-    return mem_res->doDataAccess(inst, res);
-}
-
 void
 InOrderCPU::prefetch(DynInstPtr inst)
 {
@@ -1298,7 +1273,8 @@ InOrderCPU::writeHint(DynInstPtr inst)
 TheISA::TLB*
 InOrderCPU::getITBPtr()
 {
-    TLBUnit *itb_res = dynamic_cast<TLBUnit*>(resPool->getResource(itbIdx));
+    CacheUnit *itb_res =
+        dynamic_cast<CacheUnit*>(resPool->getResource(fetchPortIdx));
     return itb_res->tlb();
 }
 
@@ -1306,6 +1282,136 @@ InOrderCPU::getITBPtr()
 TheISA::TLB*
 InOrderCPU::getDTBPtr()
 {
-    TLBUnit *dtb_res = dynamic_cast<TLBUnit*>(resPool->getResource(dtbIdx));
+    CacheUnit *dtb_res =
+        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
     return dtb_res->tlb();
+}
+
+template <class T>
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
+{
+    //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
+    //       you want to run w/out caches?
+    CacheUnit *cache_res = dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
+
+    return cache_res->read(inst, addr, data, flags);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, Twin32_t &data, unsigned flags);
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, Twin64_t &data, unsigned flags);
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, uint64_t &data, unsigned flags);
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, uint32_t &data, unsigned flags);
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, uint16_t &data, unsigned flags);
+
+template
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, uint8_t &data, unsigned flags);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, double &data, unsigned flags)
+{
+    return read(inst, addr, *(uint64_t*)&data, flags);
+}
+
+template<>
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, float &data, unsigned flags)
+{
+    return read(inst, addr, *(uint32_t*)&data, flags);
+}
+
+
+template<>
+Fault
+InOrderCPU::read(DynInstPtr inst, Addr addr, int32_t &data, unsigned flags)
+{
+    return read(inst, addr, (uint32_t&)data, flags);
+}
+
+template <class T>
+Fault
+InOrderCPU::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
+                  uint64_t *write_res)
+{
+    //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
+    //       you want to run w/out caches?
+    CacheUnit *cache_res =
+        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
+    return cache_res->write(inst, data, addr, flags, write_res);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, Twin32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, Twin64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, uint64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, uint32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, uint16_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+InOrderCPU::write(DynInstPtr inst, uint8_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+InOrderCPU::write(DynInstPtr inst, double data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, *(uint64_t*)&data, addr, flags, res);
+}
+
+template<>
+Fault
+InOrderCPU::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, *(uint32_t*)&data, addr, flags, res);
+}
+
+
+template<>
+Fault
+InOrderCPU::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, (uint32_t)data, addr, flags, res);
 }

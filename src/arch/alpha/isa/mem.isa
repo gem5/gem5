@@ -53,10 +53,6 @@ output header {{
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-       public:
-
-        Request::Flags memAccFlags() { return memAccessFlags; }
     };
 
     /**
@@ -140,8 +136,6 @@ def template LoadStoreDeclare {{
         %(InitiateAccDeclare)s
 
         %(CompleteAccDeclare)s
-
-        %(MemAccSizeDeclare)s
     };
 }};
 
@@ -159,19 +153,6 @@ def template CompleteAccDeclare {{
     Fault completeAcc(PacketPtr, %(CPU_exec_context)s *,
                       Trace::InstRecord *) const;
 }};
-
-def template MemAccSizeDeclare {{
-    int memAccSize(%(CPU_exec_context)s *xc);
-}};
-
-def template LoadStoreMemAccSize {{
-    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
-    {
-        // Return the memory access size in bytes
-        return (%(mem_acc_size)d / 8);
-    }
-}};
-
 
 def template LoadStoreConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
@@ -462,15 +443,6 @@ def template MiscCompleteAcc {{
     }
 }};
 
-def template MiscMemAccSize {{
-    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
-    {
-        return (%(mem_acc_size)d / 8);
-        panic("memAccSize undefined: Misc instruction does not support split "
-              "access method!");
-        return 0;
-    }
-}};
 
 // load instructions use Ra as dest, so check for
 // Ra == 31 to detect nops
@@ -541,11 +513,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
     completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
 
-    if (exec_template_base == 'Load' or exec_template_base == 'Store'):
-      memAccSizeTemplate = eval('LoadStoreMemAccSize')
-    else:
-      memAccSizeTemplate = eval('MiscMemAccSize')
-
     # (header_output, decoder_output, decode_block, exec_output)
     return (LoadStoreDeclare.subst(iop),
             LoadStoreConstructor.subst(iop),
@@ -553,8 +520,7 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
             fullExecTemplate.subst(iop)
             + EACompExecute.subst(iop)
             + initiateAccTemplate.subst(iop)
-            + completeAccTemplate.subst(iop)
-            + memAccSizeTemplate.subst(memacc_iop))
+            + completeAccTemplate.subst(iop))
 }};
 
 def format LoadOrNop(memacc_code, ea_code = {{ EA = Rb + disp; }},

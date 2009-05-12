@@ -56,8 +56,6 @@ virtual Fault initiateAcc(%(type)s *xc, Trace::InstRecord *traceData) const
 virtual Fault completeAcc(Packet *pkt, %(type)s *xc,
                           Trace::InstRecord *traceData) const
 { panic("completeAcc not defined!"); M5_DUMMY_RETURN };
-virtual int memAccSize(%(type)s *xc)
-{ panic("memAccSize not defined!"); M5_DUMMY_RETURN };
 '''
 
 mem_ini_sig_template = '''

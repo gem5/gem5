@@ -86,6 +86,25 @@ CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
       predecoder(NULL)
 {
     cachePort = new CachePort(this);
+
+    // Hard-Code Selection For Now
+    if (res_name == "icache_port")
+        _tlb = params->itb;
+    else if (res_name == "dcache_port")
+        _tlb = params->dtb;
+    else
+        fatal("Unrecognized TLB name passed by user");
+
+    for (int i=0; i < MaxThreads; i++) {
+        tlbBlocked[i] = false;
+    }
+}
+
+TheISA::TLB*
+CacheUnit::tlb()
+{
+    return _tlb;
+
 }
 
 Port *
@@ -97,9 +116,23 @@ CacheUnit::getPort(const string &if_name, int idx)
         return NULL;
 }
 
+void
+CacheUnit::init()
+{
+    // Currently Used to Model TLB Latency. Eventually
+    // Switch to Timing TLB translations.
+    resourceEvent = new CacheUnitEvent[width];
+
+    initSlots();
+}
+
 int
 CacheUnit::getSlot(DynInstPtr inst)
 {
+    if (tlbBlocked[inst->threadNumber]) {
+        return -1;
+    }
+
     if (!inst->validMemAddr()) {
         panic("Mem. Addr. must be set before requesting cache access\n");
     }
@@ -156,45 +189,47 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
         panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
-    int req_size = 0;
     MemCmd::Command pkt_cmd;
 
-    if (sched_entry->cmd == InitiateReadData) {
+    switch (sched_entry->cmd)
+    {
+      case InitiateReadData:
         pkt_cmd = MemCmd::ReadReq;
-        req_size = inst->getMemAccSize();
 
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: %i byte Read request from [sn:%i] for addr %08p\n",
-                inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
-    } else if (sched_entry->cmd == InitiateWriteData) {
+                "[tid:%i]: Read request from [sn:%i] for addr %08p\n",
+                inst->readTid(), inst->seqNum, inst->getMemAddr());
+        break;
+
+      case InitiateWriteData:
         pkt_cmd = MemCmd::WriteReq;
-        req_size = inst->getMemAccSize();
 
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: %i byte Write request from [sn:%i] for addr %08p\n",
-                inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
-    } else if (sched_entry->cmd == InitiateFetch){
+                "[tid:%i]: Write request from [sn:%i] for addr %08p\n",
+                inst->readTid(), inst->seqNum, inst->getMemAddr());
+        break;
+
+      case InitiateFetch:
         pkt_cmd = MemCmd::ReadReq;
-        req_size = sizeof(MachInst);
 
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: %i byte Fetch request from [sn:%i] for addr %08p\n",
-                inst->readTid(), req_size, inst->seqNum, inst->getMemAddr());
-    } else {
+                "[tid:%i]: Fetch request from [sn:%i] for addr %08p\n",
+                inst->readTid(), inst->seqNum, inst->getMemAddr());
+        break;
+
+      default:
         panic("%i: Unexpected request type (%i) to %s", curTick,
               sched_entry->cmd, name());
     }
 
     return new CacheRequest(this, inst, stage_num, id, slot_num,
-                            sched_entry->cmd, req_size, pkt_cmd,
+                            sched_entry->cmd, 0, pkt_cmd,
                             0/*flags*/, this->cpu->readCpuId());
 }
 
 void
 CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
 {
-    //service_request = false;
-
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
     assert(cache_req);
 
@@ -204,7 +239,7 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
         // If different, then update command in the request
         cache_req->cmd = inst->resSched.top()->cmd;
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: the command for this instruction\n",
+                "[tid:%i]: [sn:%i]: Updating the command for this instruction\n",
                 inst->readTid(), inst->seqNum);
 
         service_request = true;
@@ -218,6 +253,101 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
         service_request = true;
     }
 }
+
+Fault
+CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
+                       int flags, TheISA::TLB::Mode tlb_mode)
+{
+    int tid;
+    int seq_num;
+    Addr aligned_addr;
+    unsigned stage_num;
+    unsigned slot_idx;
+
+    tid = inst->readTid();
+    seq_num = inst->seqNum;
+    aligned_addr = inst->getMemAddr();
+    stage_num = cache_req->getStageNum();
+    slot_idx = cache_req->getSlot();
+
+    if (tlb_mode == TheISA::TLB::Execute) {
+            inst->fetchMemReq = new Request(inst->readTid(), aligned_addr,
+                                            acc_size, flags, inst->readPC(),
+                                            cpu->readCpuId(), inst->readTid());
+            cache_req->memReq = inst->fetchMemReq;
+    } else {
+            inst->dataMemReq = new Request(inst->readTid(), aligned_addr,
+                                           acc_size, flags, inst->readPC(),
+                                           cpu->readCpuId(), inst->readTid());
+            cache_req->memReq = inst->dataMemReq;
+    }
+
+
+    cache_req->fault =
+        _tlb->translateAtomic(cache_req->memReq,
+                              cpu->thread[tid]->getTC(), tlb_mode);
+
+    if (cache_req->fault != NoFault) {
+        DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
+                "addr:%08p for [sn:%i].\n", tid, cache_req->fault->name(),
+                cache_req->memReq->getVaddr(), seq_num);
+
+        cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
+
+        tlbBlocked[tid] = true;
+
+        cache_req->tlbStall = true;
+
+        scheduleEvent(slot_idx, 1);
+
+        cpu->trap(cache_req->fault, tid);
+    } else {
+        DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
+                "to phys. addr:%08p.\n", tid, seq_num,
+                cache_req->memReq->getVaddr(),
+                cache_req->memReq->getPaddr());
+    }
+
+    return cache_req->fault;
+}
+
+template <class T>
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
+{
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
+    assert(cache_req);
+
+    int acc_size =  sizeof(T);
+    doTLBAccess(inst, cache_req, acc_size, flags, TheISA::TLB::Read);
+
+    if (cache_req->fault == NoFault) {
+        cache_req->reqData = new uint8_t[acc_size];
+        doCacheAccess(inst, NULL);
+    }
+
+    return cache_req->fault;
+}
+
+template <class T>
+Fault
+CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
+            uint64_t *write_res)
+{
+    CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
+    assert(cache_req);
+
+    int acc_size =  sizeof(T);
+    doTLBAccess(inst, cache_req, acc_size, flags, TheISA::TLB::Write);
+
+    if (cache_req->fault == NoFault) {
+        cache_req->reqData = new uint8_t[acc_size];
+        doCacheAccess(inst, write_res);
+    }
+
+    return cache_req->fault;
+}
+
 
 void
 CacheUnit::execute(int slot_num)
@@ -241,21 +371,46 @@ CacheUnit::execute(int slot_num)
     switch (cache_req->cmd)
     {
       case InitiateFetch:
+        {
+            //@TODO: Switch to size of full cache block. Store in fetch buffer
+            int acc_size =  sizeof(TheISA::MachInst);
+
+            doTLBAccess(inst, cache_req, acc_size, 0, TheISA::TLB::Execute);
+
+            // Only Do Access if no fault from TLB
+            if (cache_req->fault == NoFault) {
+
+                DPRINTF(InOrderCachePort,
+                        "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
+                        tid, name(), cache_req->inst->getMemAddr());
+
+                cache_req->reqData = new uint8_t[acc_size];
+
+                inst->setCurResSlot(slot_num);
+
+                doCacheAccess(inst);
+            }
+
+            break;
+        }
+
+      case InitiateReadData:
+      case InitiateWriteData:
         DPRINTF(InOrderCachePort,
-                "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
+                "[tid:%u]: Initiating data access to %s for addr. %08p\n",
                 tid, name(), cache_req->inst->getMemAddr());
 
-        DPRINTF(InOrderCachePort,
-                "[tid:%u]: Fetching new cache block from addr: %08p\n",
-                tid, cache_req->memReq->getVaddr());
-
         inst->setCurResSlot(slot_num);
-        doDataAccess(inst);
+
+        if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
+            inst->execute();
+        } else {
+            inst->initiateAcc();
+        }
+
         break;
 
       case CompleteFetch:
-        // @TODO: MOVE Functionality of handling fetched data into 'fetch unit'
-        //        let cache-unit just be responsible for transferring data.
         if (cache_req->isMemAccComplete()) {
             DPRINTF(InOrderCachePort,
                     "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
@@ -276,22 +431,6 @@ CacheUnit::execute(int slot_num)
                     tid, cache_req->inst->readPC());
             cache_req->setCompleted(false);
         }
-        break;
-
-      case InitiateReadData:
-      case InitiateWriteData:
-        DPRINTF(InOrderCachePort,
-                "[tid:%u]: Initiating data access to %s for addr. %08p\n",
-                tid, name(), cache_req->inst->getMemAddr());
-
-        inst->setCurResSlot(slot_num);
-
-        if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
-            inst->execute();
-        } else {
-            inst->initiateAcc();
-        }
-
         break;
 
       case CompleteReadData:
@@ -355,8 +494,9 @@ CacheUnit::writeHint(DynInstPtr inst)
     inst->unsetMemAddr();
 }
 
+// @TODO: Split into doCacheRead() and doCacheWrite()
 Fault
-CacheUnit::doDataAccess(DynInstPtr inst, uint64_t *write_res)
+CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
 {
     Fault fault = NoFault;
     int tid = 0;
@@ -603,6 +743,35 @@ CacheUnit::recvRetry()
     }
 }
 
+CacheUnitEvent::CacheUnitEvent()
+    : ResourceEvent()
+{ }
+
+void
+CacheUnitEvent::process()
+{
+    DynInstPtr inst = resource->reqMap[slotIdx]->inst;
+    int stage_num = resource->reqMap[slotIdx]->getStageNum();
+    int tid = inst->threadNumber;
+    CacheReqPtr req_ptr = dynamic_cast<CacheReqPtr>(resource->reqMap[slotIdx]);
+
+    DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
+            inst->seqNum);
+
+    CacheUnit* tlb_res = dynamic_cast<CacheUnit*>(resource);
+    assert(tlb_res);
+
+    tlb_res->tlbBlocked[tid] = false;
+
+    tlb_res->cpu->pipelineStage[stage_num]->unsetResStall(tlb_res->reqMap[slotIdx], tid);
+
+    req_ptr->tlbStall = false;
+
+    if (req_ptr->isSquashed()) {
+        req_ptr->done();
+    }
+}
+
 void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
                   InstSeqNum squash_seq_num, unsigned tid)
@@ -630,7 +799,17 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
             CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(req_ptr);
             assert(cache_req);
 
-            if (!cache_req->isMemAccPending()) {
+            int req_slot_num = req_ptr->getSlot();
+
+            if (cache_req->tlbStall) {
+                tlbBlocked[tid] = false;
+
+                int stall_stage = reqMap[req_slot_num]->getStageNum();
+
+                cpu->pipelineStage[stall_stage]->unsetResStall(reqMap[req_slot_num], tid);
+            }
+
+            if (!cache_req->tlbStall && !cache_req->isMemAccPending()) {
                 // Mark request for later removal
                 cpu->reqRemoveList.push(req_ptr);
 
@@ -669,3 +848,109 @@ CacheUnit::getMemData(Packet *packet)
     }
 }
 
+// Extra Template Definitions
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, Twin32_t &data, unsigned flags);
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, Twin64_t &data, unsigned flags);
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, uint64_t &data, unsigned flags);
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, uint32_t &data, unsigned flags);
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, uint16_t &data, unsigned flags);
+
+template
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, uint8_t &data, unsigned flags);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, double &data, unsigned flags)
+{
+    return read(inst, addr, *(uint64_t*)&data, flags);
+}
+
+template<>
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, float &data, unsigned flags)
+{
+    return read(inst, addr, *(uint32_t*)&data, flags);
+}
+
+
+template<>
+Fault
+CacheUnit::read(DynInstPtr inst, Addr addr, int32_t &data, unsigned flags)
+{
+    return read(inst, addr, (uint32_t&)data, flags);
+}
+
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, Twin32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, Twin64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, uint64_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, uint32_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, uint16_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+template
+Fault
+CacheUnit::write(DynInstPtr inst, uint8_t data, Addr addr,
+                       unsigned flags, uint64_t *res);
+
+#endif //DOXYGEN_SHOULD_SKIP_THIS
+
+template<>
+Fault
+CacheUnit::write(DynInstPtr inst, double data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, *(uint64_t*)&data, addr, flags, res);
+}
+
+template<>
+Fault
+CacheUnit::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, *(uint32_t*)&data, addr, flags, res);
+}
+
+
+template<>
+Fault
+CacheUnit::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, uint64_t *res)
+{
+    return write(inst, (uint32_t)data, addr, flags, res);
+}

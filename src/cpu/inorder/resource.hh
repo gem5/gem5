@@ -140,15 +140,14 @@ class Resource {
      *  if instruction is actually in resource before
      *  trying to do access.Needs to be defined for derived units.
      */
-    virtual Fault doDataAccess(DynInstPtr inst, uint64_t *res=NULL)
-    { panic("doDataAccess undefined for %s", name()); return NoFault; }
+    virtual Fault doCacheAccess(DynInstPtr inst, uint64_t *res=NULL)
+    { panic("doCacheAccess undefined for %s", name()); return NoFault; }
 
     virtual void prefetch(DynInstPtr inst)
     { panic("prefetch undefined for %s", name()); }
 
     virtual void writeHint(DynInstPtr inst)
-    { panic("doDataAccess undefined for %s", name()); }
-
+    { panic("writeHint undefined for %s", name()); }
 
     /** Squash All Requests After This Seq Num */
     virtual void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);

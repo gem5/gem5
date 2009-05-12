@@ -106,13 +106,6 @@ StaticInst::branchTarget(ThreadContext *tc) const
     M5_DUMMY_RETURN;
 }
 
-Request::Flags
-StaticInst::memAccFlags()
-{
-    panic("StaticInst::memAccFlags called on non-memory instruction");
-    return 0;
-}
-
 const string &
 StaticInst::disassemble(Addr pc, const SymbolTable *symtab) const
 {

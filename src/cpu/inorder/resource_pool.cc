@@ -50,8 +50,6 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     // --------------------------------------------------
     resources.push_back(new FetchSeqUnit("Fetch-Seq-Unit", FetchSeq, StageWidth * 2, 0, _cpu, params));
 
-    resources.push_back(new TLBUnit("I-TLB", ITLB, StageWidth, 0, _cpu, params));
-
     memObjects.push_back(ICache);
     resources.push_back(new CacheUnit("icache_port", ICache, StageWidth * MaxThreads, 0, _cpu, params));
 
@@ -68,8 +66,6 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, StageWidth, 0, _cpu, params));
 
     resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, params));
-
-    resources.push_back(new TLBUnit("D-TLB", DTLB, StageWidth, 0, _cpu, params));
 
     memObjects.push_back(DCache);
     resources.push_back(new CacheUnit("dcache_port", DCache, StageWidth * MaxThreads, 0, _cpu, params));
@@ -205,7 +201,6 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                                      inst->bdelaySeqNum,
                                      inst->readTid());
             mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
-
         }
         break;
 
@@ -256,7 +251,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         break;
 
       default:
-        DPRINTF(Resource, "Ignoring Unrecognized CPU Event Type #%s.\n", InOrderCPU::eventNames[e_type]);
+        DPRINTF(Resource, "Ignoring Unrecognized CPU Event (%s).\n", InOrderCPU::eventNames[e_type]);
         ; // If Resource Pool doesnt recognize event, we ignore it.
     }
 }

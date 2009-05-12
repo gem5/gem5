@@ -69,7 +69,6 @@ void createFrontEndSchedule(DynInstPtr &inst)
     InstStage *E = inst->addStage();
 
     I->needs(FetchSeq, FetchSeqUnit::AssignNextPC);
-    I->needs(ITLB, TLBUnit::FetchLookup);
     I->needs(ICache, CacheUnit::InitiateFetch);
 
     E->needs(ICache, CacheUnit::CompleteFetch);
@@ -101,14 +100,10 @@ bool createBackEndSchedule(DynInstPtr &inst)
     } else if ( inst->isMemRef() ) {
         if ( inst->isLoad() ) {
             E->needs(AGEN, AGENUnit::GenerateAddr);
-            E->needs(DTLB, TLBUnit::DataReadLookup);
             E->needs(DCache, CacheUnit::InitiateReadData);
         }
     } else if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
         E->needs(MDU, MultDivUnit::StartMultDiv);
-
-        // ZERO-LATENCY Multiply:
-        // E->needs(MDU, MultDivUnit::MultDiv);
     } else {
         E->needs(ExecUnit, ExecutionUnit::ExecuteInst);
     }
@@ -122,7 +117,6 @@ bool createBackEndSchedule(DynInstPtr &inst)
     } else if ( inst->isStore() ) {
         M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
         M->needs(AGEN, AGENUnit::GenerateAddr);
-        M->needs(DTLB, TLBUnit::DataWriteLookup);
         M->needs(DCache, CacheUnit::InitiateWriteData);
     }
 

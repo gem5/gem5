@@ -652,10 +652,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     Addr getMemAddr()
     { return memAddr; }
 
-    int getMemAccSize() { return staticInst->memAccSize(this); }
-
-    int getMemFlags() { return staticInst->memAccFlags(); }
-
     /** Sets the effective address. */
     void setEA(Addr &ea) { instEffAddr = ea; eaCalcDone = true; }
 

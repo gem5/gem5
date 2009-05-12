@@ -114,8 +114,8 @@ class TLBUnitRequest : public ResourceRequest {
             memReq = inst->fetchMemReq;
         } else {
             aligned_addr = inst->getMemAddr();;
-            req_size = inst->getMemAccSize();
-            flags = inst->getMemFlags();
+            req_size = 0; //inst->getMemAccSize();
+            flags = 0; //inst->getMemFlags();
 
             if (req_size == 0 && (inst->isDataPrefetch() || inst->isInstPrefetch())) {
                 req_size = 8;

@@ -419,8 +419,6 @@ class StaticInst : public StaticInstBase
      */
     bool hasBranchTarget(Addr pc, ThreadContext *tc, Addr &tgt) const;
 
-    virtual Request::Flags memAccFlags();
-
     /**
      * Return string representation of disassembled instruction.
      * The default version of this function will call the internal

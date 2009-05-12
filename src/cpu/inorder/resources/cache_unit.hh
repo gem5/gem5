@@ -36,6 +36,7 @@
 #include <list>
 #include <string>
 
+#include "arch/tlb.hh"
 #include "arch/predecoder.hh"
 #include "cpu/inorder/resource.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
@@ -124,7 +125,7 @@ class CacheUnit : public Resource
         cacheAccessComplete
     };
 
-    ///virtual void init();
+    void init();
 
     virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
@@ -159,10 +160,20 @@ class CacheUnit : public Resource
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
 
+    template <class T>
+    Fault read(DynInstPtr inst, Addr addr, T &data, unsigned flags);
+
+    template <class T>
+    Fault write(DynInstPtr inst, T data, Addr addr, unsigned flags,
+                        uint64_t *res);
+
+    Fault doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
+                      int flags,  TheISA::TLB::Mode tlb_mode);
+
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
      */
-    Fault doDataAccess(DynInstPtr inst, uint64_t *write_result=NULL);
+    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL);
 
     void prefetch(DynInstPtr inst);
 
@@ -209,23 +220,28 @@ class CacheUnit : public Resource
     //unsigned fetchOffset[ThePipeline::MaxThreads];
 
     TheISA::Predecoder predecoder;
+
+    bool tlbBlocked[ThePipeline::MaxThreads];
+
+    TheISA::TLB* tlb();
+
+    TheISA::TLB *_tlb;
 };
 
-struct CacheSchedEntry : public ThePipeline::ScheduleEntry
-{
-    enum EntryType {
-        FetchAccess,
-        DataAccess
-    };
+class CacheUnitEvent : public ResourceEvent {
+  public:
+    const std::string name() const
+    {
+        return "CacheUnitEvent";
+    }
 
-    CacheSchedEntry(int stage_num, int _priority, int res_num,
-                    MemCmd::Command pkt_cmd, EntryType _type = FetchAccess)
-        : ScheduleEntry(stage_num, _priority, res_num), pktCmd(pkt_cmd),
-          type(_type)
-    { }
 
-    MemCmd::Command pktCmd;
-    EntryType type;
+    /** Constructs a resource event. */
+    CacheUnitEvent();
+    virtual ~CacheUnitEvent() {}
+
+    /** Processes a resource event. */
+    virtual void process();
 };
 
 class CacheRequest : public ResourceRequest
@@ -235,43 +251,17 @@ class CacheRequest : public ResourceRequest
                  int slot_num, unsigned cmd, int req_size,
                  MemCmd::Command pkt_cmd, unsigned flags, int cpu_id)
         : ResourceRequest(cres, inst, stage_num, res_idx, slot_num, cmd),
-          pktCmd(pkt_cmd), memAccComplete(false), memAccPending(false)
-    {
-        if (cmd == CacheUnit::InitiateFetch ||
-            cmd == CacheUnit::CompleteFetch ||
-            cmd == CacheUnit::Fetch) {
-            memReq = inst->fetchMemReq;
-        } else {
-            memReq = inst->dataMemReq;
-        }
+          pktCmd(pkt_cmd), memReq(NULL), reqData(NULL), dataPkt(NULL),
+          retryPkt(NULL), memAccComplete(false), memAccPending(false),
+          tlbStall(false)
+    { }
 
-        //@ Only matters for Fetch / Read requests
-        //  Don't allocate for Writes!
-        reqData = new uint8_t[req_size];
-        retryPkt = NULL;
-    }
 
     virtual ~CacheRequest()
     {
-#if 0
-        delete reqData;
-
-        // Can get rid of packet and packet request now
-        if (*dataPkt) {
-            if (*dataPkt->req) {
-                delete dataPkt->req;
-            }
-            delete dataPkt;
+        if (reqData) {
+            delete [] reqData;
         }
-
-        // Can get rid of packet and packet request now
-        if (retryPkt) {
-            if (retryPkt->req) {
-                delete retryPkt->req;
-            }
-            delete retryPkt;
-        }
-#endif
     }
 
     virtual PacketDataPtr getData()
@@ -297,6 +287,7 @@ class CacheRequest : public ResourceRequest
 
     bool memAccComplete;
     bool memAccPending;
+    bool tlbStall;
 };
 
 class CacheReqPacket : public Packet

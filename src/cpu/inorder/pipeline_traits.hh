@@ -56,7 +56,6 @@ namespace ThePipeline {
     // Enumerated List of Resources The Pipeline Uses
     enum ResourceList {
        FetchSeq = 0,
-       ITLB,
        ICache,
        Decode,
        BPred,
@@ -65,7 +64,6 @@ namespace ThePipeline {
        AGEN,
        ExecUnit,
        MDU,
-       DTLB,
        DCache,
        Grad,
        FetchBuff2
