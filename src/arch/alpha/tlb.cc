@@ -452,7 +452,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
      * Check for alignment faults
      */
     if (req->getVaddr() & (req->getSize() - 1)) {
-        DPRINTF(TLB, "Alignment Fault on %#x, size = %d", req->getVaddr(),
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", req->getVaddr(),
                 req->getSize());
         uint64_t flags = write ? MM_STAT_WR_MASK : 0;
         return new DtbAlignmentFault(req->getVaddr(), req->getFlags(), flags);

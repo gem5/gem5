@@ -143,6 +143,13 @@ class Resource {
     virtual Fault doDataAccess(DynInstPtr inst)
     { panic("doDataAccess undefined for %s", name()); return NoFault; }
 
+    virtual void prefetch(DynInstPtr inst)
+    { panic("prefetch undefined for %s", name()); }
+
+    virtual void writeHint(DynInstPtr inst)
+    { panic("doDataAccess undefined for %s", name()); }
+
+
     /** Squash All Requests After This Seq Num */
     virtual void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);
 

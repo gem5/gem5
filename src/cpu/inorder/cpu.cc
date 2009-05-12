@@ -1264,6 +1264,21 @@ InOrderCPU::write(DynInstPtr inst)
     return mem_res->doDataAccess(inst);
 }
 
+void
+InOrderCPU::prefetch(DynInstPtr inst)
+{
+    Resource *mem_res = resPool->getResource(dataPortIdx);
+    return mem_res->prefetch(inst);
+}
+
+void
+InOrderCPU::writeHint(DynInstPtr inst)
+{
+    Resource *mem_res = resPool->getResource(dataPortIdx);
+    return mem_res->writeHint(inst);
+}
+
+
 TheISA::TLB*
 InOrderCPU::getITBPtr()
 {

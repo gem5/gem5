@@ -158,8 +158,8 @@ TLBUnit::execute(int slot_idx)
 
             if (tlb_req->fault != NoFault) {
                 DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
-                        "addr:%08p for [sn:%i].\n", tid, tlb_req->fault->name(),
-                        tlb_req->memReq->getVaddr(), seq_num);
+                        "addr:%08p for [sn:%i] %s.\n", tid, tlb_req->fault->name(),
+                        tlb_req->memReq->getVaddr(), seq_num, inst->instName());
                 //insert(inst);
                 cpu->pipelineStage[stage_num]->setResStall(tlb_req, tid);
                 tlbBlocked[tid] = true;

@@ -296,13 +296,13 @@ InOrderDynInst::syscall(int64_t callnum)
 void
 InOrderDynInst::prefetch(Addr addr, unsigned flags)
 {
-    panic("Prefetch Unimplemented\n");
+    cpu->prefetch(this);
 }
 
 void
 InOrderDynInst::writeHint(Addr addr, int size, unsigned flags)
 {
-    panic("Write-Hint Unimplemented\n");
+    cpu->writeHint(this);
 }
 
 /**

@@ -55,35 +55,18 @@ AGENUnit::execute(int slot_num)
             // Load/Store Instruction
             if (inst->isMemRef()) {
                 DPRINTF(InOrderAGEN, "[tid:%i] Generating Address for [sn:%i] (%s).\n",
-                    tid, inst->seqNum, inst->staticInst->getName());
+                        tid, inst->seqNum, inst->staticInst->getName());
 
+                fault = inst->calcEA();
+                inst->setMemAddr(inst->getEA());
 
-                // We are not handdling Prefetches quite yet
-                if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
-                    panic("Prefetches arent handled yet.\n");
+                DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
+                        "%#x.\n", tid, inst->seqNum, inst->getEA());
+
+                if (fault == NoFault) {
+                    agen_req->done();
                 } else {
-                    if (inst->isLoad()) {
-                        fault = inst->calcEA();
-                        inst->setMemAddr(inst->getEA());
-                        //inst->setExecuted();
-
-                        DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
-                                "%#x.\n", tid, inst->seqNum, inst->getEA());
-                    } else if (inst->isStore()) {
-                        fault = inst->calcEA();
-                        inst->setMemAddr(inst->getEA());
-
-                        DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
-                                "%#x.\n", tid, inst->seqNum, inst->getEA());
-                    } else {
-                        panic("Unexpected memory type!\n");
-                    }
-
-                    if (fault == NoFault) {
-                        agen_req->done();
-                    } else {
-                        fatal("%s encountered @ [sn:%i]",fault->name(), seq_num);
-                    }
+                    fatal("%s encountered while calculating address for [sn:%i]",fault->name(), seq_num);
                 }
             } else {
                 DPRINTF(InOrderAGEN, "[tid:] Ignoring non-memory instruction [sn:%i].\n", tid, seq_num);

@@ -172,6 +172,10 @@ class CacheUnit : public Resource
      */
     Fault doDataAccess(DynInstPtr inst);
 
+    void prefetch(DynInstPtr inst);
+
+    void writeHint(DynInstPtr inst);
+
     uint64_t getMemData(Packet *packet);
 
   protected:

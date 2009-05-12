@@ -230,11 +230,10 @@ CacheUnit::execute(int slot_num)
 
     DynInstPtr inst = cache_req->inst;
     int tid;
-    tid = inst->readTid();
     int seq_num;
-    seq_num = inst->seqNum;
-    //int stage_num = cache_req->getStageNum();
 
+    tid = inst->readTid();
+    seq_num = inst->seqNum;
     cache_req->fault = NoFault;
 
     switch (cache_req->cmd)
@@ -304,8 +303,13 @@ CacheUnit::execute(int slot_num)
                 tid, name(), cache_req->inst->getMemAddr());
 
         inst->setCurResSlot(slot_num);
-        //inst->memAccess();
-        inst->initiateAcc();
+
+        if (inst->isDataPrefetch() || inst->isInstPrefetch()) {
+            inst->execute();
+        } else {
+            inst->initiateAcc();
+        }
+
         break;
 
       case CompleteReadData:
@@ -313,7 +317,10 @@ CacheUnit::execute(int slot_num)
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Data Access\n",
                 tid, inst->seqNum);
-        if (cache_req->isMemAccComplete()) {
+
+        if (cache_req->isMemAccComplete() ||
+            inst->isDataPrefetch() ||
+            inst->isInstPrefetch()) {
             cache_req->done();
         } else {
             DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
@@ -325,6 +332,45 @@ CacheUnit::execute(int slot_num)
       default:
         fatal("Unrecognized command to %s", resName);
     }
+}
+
+void
+CacheUnit::prefetch(DynInstPtr inst)
+{
+    warn_once("Prefetching currently unimplemented");
+
+    CacheReqPtr cache_req
+        = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
+    assert(cache_req);
+
+    // Clean-Up cache resource request so
+    // other memory insts. can use them
+    cache_req->setCompleted();
+    cacheStatus = cacheAccessComplete;
+    cacheBlocked = false;
+    cache_req->setMemAccPending(false);
+    cache_req->setMemAccCompleted();
+    inst->unsetMemAddr();
+}
+
+
+void
+CacheUnit::writeHint(DynInstPtr inst)
+{
+    warn_once("Write Hints currently unimplemented");
+
+    CacheReqPtr cache_req
+        = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
+    assert(cache_req);
+
+    // Clean-Up cache resource request so
+    // other memory insts. can use them
+    cache_req->setCompleted();
+    cacheStatus = cacheAccessComplete;
+    cacheBlocked = false;
+    cache_req->setMemAccPending(false);
+    cache_req->setMemAccCompleted();
+    inst->unsetMemAddr();
 }
 
 Fault

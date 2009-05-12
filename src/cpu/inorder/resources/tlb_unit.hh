@@ -112,6 +112,10 @@ class TLBUnitRequest : public ResourceRequest {
             flags = inst->getMemFlags();
         }
 
+        if (req_size == 0 && (inst->isDataPrefetch() || inst->isInstPrefetch())) {
+            req_size = 8;
+        }
+
         // @TODO: Add Vaddr & Paddr functions
         inst->memReq = new Request(inst->readTid(), aligned_addr, req_size,
                                    flags, inst->readPC(), res->cpu->readCpuId(), inst->readTid());

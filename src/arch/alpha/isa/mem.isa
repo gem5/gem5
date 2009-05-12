@@ -164,14 +164,6 @@ def template MemAccSizeDeclare {{
     int memAccSize(%(CPU_exec_context)s *xc);
 }};
 
-def template MiscMemAccSize {{
-    int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
-    {
-        panic("Misc instruction does not support split access method!");
-        return 0;
-    }
-}};
-
 def template LoadStoreMemAccSize {{
     int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
     {
@@ -451,7 +443,8 @@ def template MiscInitiateAcc {{
     Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        warn("Misc instruction does not support split access method!");
+        warn("initiateAcc undefined: Misc instruction does not support split "
+             "access method!");
         return NoFault;
     }
 }};
@@ -462,7 +455,8 @@ def template MiscCompleteAcc {{
                                       %(CPU_exec_context)s *xc,
                                       Trace::InstRecord *traceData) const
     {
-        warn("Misc instruction does not support split access method!");
+        warn("completeAcc undefined: Misc instruction does not support split "
+             "access method!");
 
         return NoFault;
     }
@@ -471,7 +465,9 @@ def template MiscCompleteAcc {{
 def template MiscMemAccSize {{
     int %(class_name)s::memAccSize(%(CPU_exec_context)s *xc)
     {
-        panic("Misc instruction does not support split access method!");
+        return (%(mem_acc_size)d / 8);
+        panic("memAccSize undefined: Misc instruction does not support split "
+              "access method!");
         return 0;
     }
 }};
