@@ -243,9 +243,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         ResultType type;
         InstValue val;
         Tick tick;
+        int width;
 
         InstResult()
-            : type(None), tick(0)
+            : type(None), tick(0), width(0)
         {}
     };
 
@@ -856,8 +857,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Depending on type, return Float or Double */
     double readFloatResult(int idx)
     {
-        //assert(instResult[idx].type != Integer && instResult[idx].type != None);
-        //@todo: TypeCast FLOAT onto DOUBLE instead of separate value
+        //Should this function have a parameter for what width of return?x
        return (instResult[idx].type == Float) ?
            (float) instResult[idx].val.dbl : instResult[idx].val.dbl;
     }

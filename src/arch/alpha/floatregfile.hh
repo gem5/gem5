@@ -52,6 +52,8 @@ const int QuadBytes = QuadWidth / 4;
 class FloatRegFile
 {
   public:
+    static const int regWidth = DoubleWidth;
+
     union {
         uint64_t q[NumFloatRegs];   // integer qword view
         double d[NumFloatRegs];     // double-precision floating point view

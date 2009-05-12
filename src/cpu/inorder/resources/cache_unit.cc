@@ -547,9 +547,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 assert(cache_pkt->isWrite());
 
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: [sn:%i]: Data stored was: %08p\n",
-                        tid, inst->seqNum,
-                        getMemData(cache_pkt));
+                        "[tid:%u]: [sn:%i]: Data stored was: FIX ME\n",
+                        tid, inst->seqNum/*,
+                        getMemData(cache_pkt)*/);
             }
 
             delete cache_pkt;

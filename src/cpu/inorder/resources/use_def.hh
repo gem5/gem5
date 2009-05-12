@@ -81,7 +81,7 @@ class UseDefUnit : public Resource {
 
     InstSeqNum *nonSpecSeqNum[ThePipeline::MaxThreads];
 
-    /** @todo: Add Resource Stats Here */
+    InstSeqNum floatRegSize[ThePipeline::MaxThreads];
 
   public:
     class UseDefRequest : public ResourceRequest {

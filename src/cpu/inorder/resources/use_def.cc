@@ -53,7 +53,10 @@ UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
         outWriteSeqNum[tid] = maxSeqNum;
 
         regDepMap[tid] = &cpu->archRegDepMap[tid];
+
+        floatRegSize[tid] = cpu->floatRegFile[tid].regWidth;
     }
+
 }
 
 ResReqPtr
@@ -124,19 +127,23 @@ UseDefUnit::execute(int slot_idx)
 
             // Ask register dependency map if it is OK to read from Arch. Reg. File
             if (regDepMap[tid]->canRead(reg_idx, inst)) {
-                // Read From Register File
                 if (inst->seqNum <= outReadSeqNum[tid]) {
-                    if (reg_idx <= FP_Base_DepTag) {
+                    if (reg_idx < FP_Base_DepTag) {
                         DPRINTF(InOrderUseDef, "[tid:%i]: Reading Int Reg %i from Register File:%i.\n",
                                 tid, reg_idx, cpu->readIntReg(reg_idx,inst->readTid()));
                         inst->setIntSrc(ud_idx,
                                         cpu->readIntReg(reg_idx,inst->readTid()));
-                    } else if (reg_idx <= Ctrl_Base_DepTag) {
+                    } else if (reg_idx < Ctrl_Base_DepTag) {
                         reg_idx -= FP_Base_DepTag;
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File:%x.\n",
-                                tid, reg_idx, cpu->readFloatRegBits(reg_idx, inst->readTid()));
-                        inst->setIntSrc(ud_idx, // Always Read FloatRegBits For Now
-                                        cpu->readFloatRegBits(reg_idx, inst->readTid()));
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File:%x (%08f).\n",
+                                tid,
+                                reg_idx,
+                                cpu->readFloatRegBits(reg_idx, inst->readTid(), floatRegSize[tid]),
+                                cpu->readFloatReg(reg_idx, inst->readTid(),floatRegSize[tid]));
+
+                        inst->setFloatSrc(ud_idx,
+                                          cpu->readFloatReg(reg_idx, inst->readTid(), floatRegSize[tid]),
+                                          floatRegSize[tid]);
                     } else {
                         reg_idx -= Ctrl_Base_DepTag;
                         DPRINTF(InOrderUseDef, "[tid:%i]: Reading Misc Reg %i from Register File:%i.\n",
@@ -156,6 +163,7 @@ UseDefUnit::execute(int slot_idx)
                 }
 
             } else {
+                // Look for forwarding opportunities
                 DynInstPtr forward_inst = regDepMap[tid]->canForward(reg_idx, ud_idx, inst);
 
                 if (forward_inst) {
@@ -163,18 +171,20 @@ UseDefUnit::execute(int slot_idx)
                     if (inst->seqNum <= outReadSeqNum[tid]) {
                         int dest_reg_idx = forward_inst->getDestIdxNum(reg_idx);
 
-                        if (reg_idx <= FP_Base_DepTag) {
+                        if (reg_idx < FP_Base_DepTag) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
                                     tid, forward_inst->readIntResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setIntSrc(ud_idx, forward_inst->readIntResult(dest_reg_idx));
-                        } else if (reg_idx <= Ctrl_Base_DepTag) {
+                        } else if (reg_idx < Ctrl_Base_DepTag) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
                                     tid, forward_inst->readFloatResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
-                            inst->setFloatSrc(ud_idx, forward_inst->readFloatResult(dest_reg_idx));
+                            inst->setFloatSrc(ud_idx,
+                                              forward_inst->readFloatResult(dest_reg_idx),
+                                              floatRegSize[tid]);
                         } else {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
@@ -212,7 +222,7 @@ UseDefUnit::execute(int slot_idx)
                         tid, reg_idx);
 
                 if (inst->seqNum <= outReadSeqNum[tid]) {
-                    if (reg_idx <= FP_Base_DepTag) {
+                    if (reg_idx < FP_Base_DepTag) {
                         DPRINTF(InOrderUseDef, "[tid:%i]: Writing Int. Result 0x%x to register idx %i.\n",
                                 tid, inst->readIntResult(ud_idx), reg_idx);
 
@@ -222,18 +232,40 @@ UseDefUnit::execute(int slot_idx)
                         cpu->setIntReg(reg_idx,
                                        inst->readIntResult(ud_idx),
                                        inst->readTid());
-                    } else if(reg_idx <= Ctrl_Base_DepTag) {
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing FP Result 0x%x (bits:0x%x) to register idx %i.\n",
-                                tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
-
+                    } else if(reg_idx < Ctrl_Base_DepTag) {
                         // Remove Dependencies
                         regDepMap[tid]->removeFront(reg_idx, inst);
 
                         reg_idx -= FP_Base_DepTag;
 
-                        cpu->setFloatReg(reg_idx, // Check for FloatRegBits Here
-                                         inst->readFloatResult(ud_idx),
-                                         inst->readTid());
+                        if (inst->resultType(ud_idx) == InOrderDynInst::Integer) {
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Writing FP-Bits Result 0x%x (bits:0x%x) to register idx %i.\n",
+                                    tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
+
+                            cpu->setFloatRegBits(reg_idx, // Check for FloatRegBits Here
+                                             inst->readIntResult(ud_idx),
+                                             inst->readTid(),
+                                             floatRegSize[tid]);
+                        } else if (inst->resultType(ud_idx) == InOrderDynInst::Float) {
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Writing Float Result 0x%x (bits:0x%x) to register idx %i.\n",
+                                    tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
+
+                            cpu->setFloatReg(reg_idx,
+                                             inst->readFloatResult(ud_idx),
+                                             inst->readTid(),
+                                             floatRegSize[tid]);
+                        } else if (inst->resultType(ud_idx) == InOrderDynInst::Double) {
+                            DPRINTF(InOrderUseDef, "[tid:%i]: Writing Double Result 0x%x (bits:0x%x) to register idx %i.\n",
+                                    tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
+
+                            cpu->setFloatReg(reg_idx, // Check for FloatRegBits Here
+                                             inst->readDoubleResult(ud_idx),
+                                             inst->readTid(),
+                                             floatRegSize[tid]);
+                        } else {
+                            panic("Result Type Not Set For [sn:%i] %s.\n", inst->seqNum, inst->instName());
+                        }
+
                     } else {
                         DPRINTF(InOrderUseDef, "[tid:%i]: Writing Misc. 0x%x to register idx %i.\n",
                                 tid, inst->readIntResult(ud_idx), reg_idx);
