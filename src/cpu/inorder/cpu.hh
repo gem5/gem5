@@ -247,6 +247,7 @@ class InOrderCPU : public BaseCPU
     /** The Pipeline Stages for the CPU */
     PipelineStage *pipelineStage[ThePipeline::NumStages];
 
+    /** Program Counters */
     TheISA::IntReg PC[ThePipeline::MaxThreads];
     TheISA::IntReg nextPC[ThePipeline::MaxThreads];
     TheISA::IntReg nextNPC[ThePipeline::MaxThreads];

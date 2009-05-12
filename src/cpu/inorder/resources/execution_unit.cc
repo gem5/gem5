@@ -68,8 +68,8 @@ ExecutionUnit::execute(int slot_num)
 
     exec_req->fault = NoFault;
 
-    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%#x] .\n",
-            tid, seq_num, inst->readPC());
+    DPRINTF(InOrderExecute, "[tid:%i] Executing [sn:%i] [PC:%#x] %s.\n",
+            tid, seq_num, inst->readPC(), inst->instName());
 
     switch (exec_req->cmd)
     {
@@ -163,11 +163,9 @@ ExecutionUnit::execute(int slot_num)
                         }
                     } else {
                         DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: Prediction Correct.\n",
-                                inst->readTid(), seq_num, inst->readIntResult(0));
+                                inst->readTid(), seq_num);
                     }
 
-                    DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result of execution is 0x%x.\n",
-                            inst->readTid(), seq_num, inst->readIntResult(0));
                     exec_req->done();
                 } else {
                     warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
@@ -178,10 +176,13 @@ ExecutionUnit::execute(int slot_num)
 
                 if (fault == NoFault) {
                     inst->setExecuted();
-                    exec_req->done();
 
                     DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result of execution is 0x%x.\n",
-                            inst->readTid(), seq_num, inst->readIntResult(0));
+                            inst->readTid(), seq_num, (inst->resultType(0) == InOrderDynInst::Float) ?
+                            inst->readFloatResult(0) : (inst->resultType(0) == InOrderDynInst::Double) ?
+                            inst->readDoubleResult(0) : inst->readIntResult(0));
+
+                    exec_req->done();
                 } else {
                     warn("inst [sn:%i] had a %s fault", seq_num, fault->name());
                     cpu->trap(fault, tid);

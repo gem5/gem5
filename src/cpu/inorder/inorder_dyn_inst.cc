@@ -359,7 +359,7 @@ void
 InOrderDynInst::setFloatSrc(int idx, FloatReg val, int width)
 {
     if (width == 32)
-        instSrc[idx].fp = val;
+        instSrc[idx].dbl = val;
     else if (width == 64)
         instSrc[idx].dbl = val;
     else
@@ -386,7 +386,14 @@ InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, unsigned tid)
 FloatReg
 InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx, int width)
 {
-   return instSrc[idx].fp;
+    if (width == 32)
+        return (float)instSrc[idx].dbl;
+    else if (width == 64)
+        return instSrc[idx].dbl;
+    else {
+        panic("Unsupported Floating Point Width!");
+        return 0;
+    }
 }
 
 
@@ -417,8 +424,10 @@ InOrderDynInst::readMiscRegNoEffect(int misc_reg)
 MiscReg
 InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
 {
-    int reg = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
-    return cpu->readMiscRegNoEffect(reg, this->threadNumber);
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Misc. Reg Source Value %i"
+            " read as %#x.\n", threadNumber, seqNum, idx,
+            instSrc[idx].integer);
+    return instSrc[idx].integer;
 }
 
 /** Reads a misc. register, including any side-effects the read
@@ -427,20 +436,23 @@ InOrderDynInst::readMiscRegOperandNoEffect(const StaticInst *si, int idx)
 MiscReg
 InOrderDynInst::readMiscRegOperand(const StaticInst *si, int idx)
 {
-    int reg = si->srcRegIdx(idx) - TheISA::Ctrl_Base_DepTag;
-    return this->cpu->readMiscReg(reg, this->threadNumber);
+    // For In-Order, the side-effect of reading a register happens
+    // when explicitly executing a "ReadSrc" command. This simply returns
+    // a value.
+    return readMiscRegOperandNoEffect(si, idx);
 }
 
 /** Sets a misc. register. */
 void
-InOrderDynInst::setMiscRegOperandNoEffect(const StaticInst * si, int idx, const MiscReg &val)
+InOrderDynInst::setMiscRegOperandNoEffect(const StaticInst * si, int idx,
+                                          const MiscReg &val)
 {
-    instResult[si->destRegIdx(idx)].val.integer = val;
-    instResult[si->destRegIdx(idx)].tick = curTick;
+    instResult[idx].type = Integer;
+    instResult[idx].val.integer = val;
+    instResult[idx].tick = curTick;
 
-    this->cpu->setMiscRegNoEffect(
-        si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-        val, this->threadNumber);
+    DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Setting Misc Reg. Operand %i "
+            "being set to %#x.\n", threadNumber, seqNum, idx, val);
 }
 
 /** Sets a misc. register, including any side-effects the write
@@ -450,12 +462,10 @@ void
 InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
                        const MiscReg &val)
 {
-    instResult[si->destRegIdx(idx)].val.integer = val;
-    instResult[si->destRegIdx(idx)].tick = curTick;
-
-    this->cpu->setMiscReg(
-        si->destRegIdx(idx) - TheISA::Ctrl_Base_DepTag,
-        val, this->threadNumber);
+    // For In-Order, the side-effect of setting a register happens
+    // when explicitly writing back the register value. This
+    // simply maintains the operand value.
+    setMiscRegOperandNoEffect(si, idx, val);
 }
 
 MiscReg
@@ -480,6 +490,7 @@ InOrderDynInst::readRegOtherThread(unsigned reg_idx, int tid)
 void
 InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 {
+    instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
     instResult[idx].tick = curTick;
 }
@@ -488,12 +499,15 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 void
 InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val, int width)
 {
-    if (width == 32)
-        instResult[idx].val.fp = val;
-    else if (width == 64)
+    if (width == 32) {
+        instResult[idx].val.dbl = (float)val;
+        instResult[idx].type = Float;
+    } else if (width == 64) {
         instResult[idx].val.dbl = val;
-    else
+        instResult[idx].type = Double;
+    } else {
         panic("Unsupported Floating Point Width!");
+    }
 
     instResult[idx].tick = curTick;
 }
@@ -503,6 +517,11 @@ void
 InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
                               FloatRegBits val, int width)
 {
+    if (width == 32)
+        instResult[idx].type = Float;
+    else if (width == 64)
+        instResult[idx].type = Double;
+
     instResult[idx].val.integer = val;
     instResult[idx].tick = curTick;
 }

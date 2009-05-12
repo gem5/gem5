@@ -483,6 +483,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 DPRINTF(InOrderCachePort,
                         "[tid:%u]: [sn:%i]: Data loaded was: %08p\n",
                         tid, inst->seqNum, inst->readIntResult(0));
+                DPRINTF(InOrderCachePort,
+                        "[tid:%u]: [sn:%i]: FP Data loaded was: %08p\n",
+                        tid, inst->seqNum, inst->readFloatResult(0));
             } else if(inst->isStore()) {
                 assert(cache_pkt->isWrite());
 
@@ -594,7 +597,7 @@ CacheUnit::getMemData(Packet *packet)
       case 32:
         return packet->get<uint32_t>();
 
-      case 864:
+      case 64:
         return packet->get<uint64_t>();
 
       default:

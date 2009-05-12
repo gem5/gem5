@@ -119,28 +119,28 @@ UseDefUnit::execute(int slot_idx)
         {
             int reg_idx = inst->_srcRegIdx[ud_idx];
 
-            DPRINTF(InOrderUseDef, "[tid:%i]: Attempting to read source register idx %i.\n",
-                    tid, ud_idx);
+            DPRINTF(InOrderUseDef, "[tid:%i]: Attempting to read source register idx %i (reg #%i).\n",
+                    tid, ud_idx, reg_idx);
 
             // Ask register dependency map if it is OK to read from Arch. Reg. File
             if (regDepMap[tid]->canRead(reg_idx, inst)) {
                 // Read From Register File
                 if (inst->seqNum <= outReadSeqNum[tid]) {
                     if (reg_idx <= FP_Base_DepTag) {
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Int Reg %i from Register File.\n",
-                                tid, reg_idx);
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Int Reg %i from Register File:%i.\n",
+                                tid, reg_idx, cpu->readIntReg(reg_idx,inst->readTid()));
                         inst->setIntSrc(ud_idx,
                                         cpu->readIntReg(reg_idx,inst->readTid()));
                     } else if (reg_idx <= Ctrl_Base_DepTag) {
                         reg_idx -= FP_Base_DepTag;
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File.\n",
-                                tid, reg_idx);
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File:%x.\n",
+                                tid, reg_idx, cpu->readFloatRegBits(reg_idx, inst->readTid()));
                         inst->setIntSrc(ud_idx, // Always Read FloatRegBits For Now
                                         cpu->readFloatRegBits(reg_idx, inst->readTid()));
                     } else {
                         reg_idx -= Ctrl_Base_DepTag;
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Misc Reg %i from Register File.\n",
-                                tid, reg_idx);
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Reading Misc Reg %i from Register File:%i.\n",
+                                tid, reg_idx, cpu->readMiscReg(reg_idx, inst->readTid()));
                         inst->setIntSrc(ud_idx,
                                         cpu->readMiscReg(reg_idx, inst->readTid()));
                     }
@@ -208,12 +208,12 @@ UseDefUnit::execute(int slot_idx)
             int reg_idx = inst->_destRegIdx[ud_idx];
 
             if (regDepMap[tid]->canWrite(reg_idx, inst)) {
-                DPRINTF(InOrderUseDef, "[tid:%i]: Attempting to write to Register File.\n",
-                        tid);
+                DPRINTF(InOrderUseDef, "[tid:%i]: Flattening register idx %i & Attempting to write to Register File.\n",
+                        tid, reg_idx);
 
                 if (inst->seqNum <= outReadSeqNum[tid]) {
                     if (reg_idx <= FP_Base_DepTag) {
-                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing 0x%x to register idx %i.\n",
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing Int. Result 0x%x to register idx %i.\n",
                                 tid, inst->readIntResult(ud_idx), reg_idx);
 
                         // Remove Dependencies
@@ -223,6 +223,8 @@ UseDefUnit::execute(int slot_idx)
                                        inst->readIntResult(ud_idx),
                                        inst->readTid());
                     } else if(reg_idx <= Ctrl_Base_DepTag) {
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing FP Result 0x%x (bits:0x%x) to register idx %i.\n",
+                                tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
 
                         // Remove Dependencies
                         regDepMap[tid]->removeFront(reg_idx, inst);
@@ -233,13 +235,17 @@ UseDefUnit::execute(int slot_idx)
                                          inst->readFloatResult(ud_idx),
                                          inst->readTid());
                     } else {
+                        DPRINTF(InOrderUseDef, "[tid:%i]: Writing Misc. 0x%x to register idx %i.\n",
+                                tid, inst->readIntResult(ud_idx), reg_idx);
+
                         // Remove Dependencies
                         regDepMap[tid]->removeFront(reg_idx, inst);
 
                         reg_idx -= Ctrl_Base_DepTag;
+
                         cpu->setMiscReg(reg_idx,
-                                                  inst->readIntResult(ud_idx),
-                                                  inst->readTid());
+                                        inst->readIntResult(ud_idx),
+                                        inst->readTid());
                     }
 
                     outWriteSeqNum[tid] = maxSeqNum;

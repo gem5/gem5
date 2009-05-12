@@ -226,14 +226,27 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** An instruction src/dest has to be one of these types */
     union InstValue {
         uint64_t integer;
-        float fp;
         double dbl;
     };
 
+    //@TODO: Naming Convention for Enums?
+    enum ResultType {
+        None,
+        Integer,
+        Float,
+        Double
+    };
+
+
     /** Result of an instruction execution */
     struct InstResult {
+        ResultType type;
         InstValue val;
         Tick tick;
+
+        InstResult()
+            : type(None), tick(0)
+        {}
     };
 
     /** The source of the instruction; assumes for now that there's only one
@@ -315,6 +328,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     //  BASE INSTRUCTION INFORMATION.
     //
     ////////////////////////////////////////////////////////////
+    std::string instName() { return staticInst->getName(); }
+
+
     void setMachInst(ExtMachInst inst);
 
     /** Sets the StaticInst. */
@@ -827,9 +843,31 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     MiscReg readMiscRegOperandNoEffect(const StaticInst *si, int idx);
 
     /** Returns the result value instruction. */
-    uint64_t readIntResult(int idx) { return instResult[idx].val.integer; }
-    float readFloatResult(int idx) { return instResult[idx].val.fp; }
-    double readDoubleResult(int idx) { return instResult[idx].val.dbl; }
+    ResultType resultType(int idx)
+    {
+        return instResult[idx].type;
+    }
+
+    uint64_t readIntResult(int idx)
+    {
+        return instResult[idx].val.integer;
+    }
+
+    /** Depending on type, return Float or Double */
+    double readFloatResult(int idx)
+    {
+        //assert(instResult[idx].type != Integer && instResult[idx].type != None);
+        //@todo: TypeCast FLOAT onto DOUBLE instead of separate value
+       return (instResult[idx].type == Float) ?
+           (float) instResult[idx].val.dbl : instResult[idx].val.dbl;
+    }
+
+    double readDoubleResult(int idx)
+    {
+        assert(instResult[idx].type == Double);
+        return instResult[idx].val.dbl;
+    }
+
     Tick readResultTime(int idx) { return instResult[idx].tick; }
 
     uint64_t* getIntResultPtr(int idx) { return &instResult[idx].val.integer; }
