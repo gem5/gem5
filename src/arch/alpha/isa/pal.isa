@@ -155,9 +155,7 @@ output header {{
         int16_t disp;
 
         /// Constructor
-        HwLoadStore(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                    StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                    StaticInstPtr _memAccPtr = nullStaticInstPtr);
+        HwLoadStore(const char *mnem, ExtMachInst _machInst, OpClass __opClass);
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
@@ -168,11 +166,8 @@ output header {{
 output decoder {{
     inline
     HwLoadStore::HwLoadStore(const char *mnem, ExtMachInst _machInst,
-                             OpClass __opClass,
-                             StaticInstPtr _eaCompPtr,
-                             StaticInstPtr _memAccPtr)
-        : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
-        disp(HW_LDST_DISP)
+                             OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass), disp(HW_LDST_DISP)
     {
         memAccessFlags.clear();
         if (HW_LDST_PHYS) memAccessFlags.set(Request::PHYSICAL);

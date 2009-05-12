@@ -226,6 +226,13 @@ InOrderDynInst::execute()
 }
 
 Fault
+InOrderDynInst::calcEA()
+{
+    this->fault = this->staticInst->eaComp(this, this->traceData);
+    return this->fault;
+}
+
+Fault
 InOrderDynInst::initiateAcc()
 {
     // @todo: Pretty convoluted way to avoid squashing from happening
@@ -275,16 +282,9 @@ void InOrderDynInst::deleteStages() {
 }
 
 Fault
-InOrderDynInst::calcEA()
-{
-    return staticInst->eaCompInst()->execute(this, this->traceData);
-}
-
-Fault
 InOrderDynInst::memAccess()
 {
-    //return staticInst->memAccInst()->execute(this, this->traceData);
-    return initiateAcc( );
+    return initiateAcc();
 }
 
 void

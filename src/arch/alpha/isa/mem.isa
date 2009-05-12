@@ -44,27 +44,17 @@ output header {{
 
         /// Memory request flags.  See mem_req_base.hh.
         Request::Flags memAccessFlags;
-        /// Pointer to EAComp object.
-        const StaticInstPtr eaCompPtr;
-        /// Pointer to MemAcc object.
-        const StaticInstPtr memAccPtr;
 
         /// Constructor
-        Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-               StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-               StaticInstPtr _memAccPtr = nullStaticInstPtr)
-            : AlphaStaticInst(mnem, _machInst, __opClass),
-              eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr)
+        Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+            : AlphaStaticInst(mnem, _machInst, __opClass)
         {
         }
 
         std::string
         generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
-      public:
-
-        const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
-        const StaticInstPtr &memAccInst() const { return memAccPtr; }
+       public:
 
         Request::Flags memAccFlags() { return memAccessFlags; }
     };
@@ -80,10 +70,8 @@ output header {{
         int32_t disp;
 
         /// Constructor.
-        MemoryDisp32(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
-            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr),
+        MemoryDisp32(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+            : Memory(mnem, _machInst, __opClass),
               disp(MEMDISP)
         {
         }
@@ -99,10 +87,8 @@ output header {{
     {
       protected:
         /// Constructor
-        MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
-            : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+        MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+            : Memory(mnem, _machInst, __opClass)
         {
         }
 
@@ -142,38 +128,14 @@ def template LoadStoreDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-
-        /**
-         * "Fake" effective address computation class for "%(mnemonic)s".
-         */
-        class EAComp : public %(base_class)s
-        {
-          public:
-            /// Constructor
-            EAComp(ExtMachInst machInst);
-
-            %(BasicExecDeclare)s
-        };
-
-        /**
-         * "Fake" memory access instruction class for "%(mnemonic)s".
-         */
-        class MemAcc : public %(base_class)s
-        {
-          public:
-            /// Constructor
-            MemAcc(ExtMachInst machInst);
-
-            %(BasicExecDeclare)s
-        };
-
       public:
 
         /// Constructor.
         %(class_name)s(ExtMachInst machInst);
 
         %(BasicExecDeclare)s
+
+        %(EACompDeclare)s
 
         %(InitiateAccDeclare)s
 
@@ -183,6 +145,10 @@ def template LoadStoreDeclare {{
     };
 }};
 
+
+def template EACompDeclare {{
+    Fault eaComp(%(CPU_exec_context)s *, Trace::InstRecord *) const;
+}};
 
 def template InitiateAccDeclare {{
     Fault initiateAcc(%(CPU_exec_context)s *, Trace::InstRecord *) const;
@@ -214,41 +180,18 @@ def template LoadStoreMemAccSize {{
     }
 }};
 
-def template EACompConstructor {{
-    /** TODO: change op_class to AddrGenOp or something (requires
-     * creating new member of OpClass enum in op_class.hh, updating
-     * config files, etc.). */
-    inline %(class_name)s::EAComp::EAComp(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
-    {
-        %(constructor)s;
-    }
-}};
-
-
-def template MemAccConstructor {{
-    inline %(class_name)s::MemAcc::MemAcc(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
-    {
-        %(constructor)s;
-    }
-}};
-
 
 def template LoadStoreConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          new EAComp(machInst), new MemAcc(machInst))
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
     }
 }};
 
-
 def template EACompExecute {{
-    Fault
-    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
+    Fault %(class_name)s::eaComp(%(CPU_exec_context)s *xc,
+                                  Trace::InstRecord *traceData) const
     {
         Addr EA;
         Fault fault = NoFault;
@@ -261,32 +204,6 @@ def template EACompExecute {{
         if (fault == NoFault) {
             %(op_wb)s;
             xc->setEA(EA);
-        }
-
-        return fault;
-    }
-}};
-
-def template LoadMemAccExecute {{
-    Fault
-    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
         }
 
         return fault;
@@ -355,78 +272,6 @@ def template LoadCompleteAcc {{
 
         if (fault == NoFault) {
             %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
-    }
-}};
-
-
-def template StoreMemAccExecute {{
-    Fault
-    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
-        }
-
-        if (fault == NoFault) {
-            %(postacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            %(op_wb)s;
-        }
-
-        return fault;
-    }
-}};
-
-def template StoreCondMemAccExecute {{
-    Fault
-    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-        uint64_t write_result = 0;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        if (fault == NoFault) {
-            fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                              memAccessFlags, &write_result);
-            if (traceData) { traceData->setData(Mem); }
-        }
-
-        if (fault == NoFault) {
-            %(postacc_code)s;
         }
 
         if (fault == NoFault) {
@@ -582,26 +427,6 @@ def template StoreCondCompleteAcc {{
 }};
 
 
-def template MiscMemAccExecute {{
-    Fault %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                          Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (fault == NoFault) {
-            %(memacc_code)s;
-        }
-
-        return NoFault;
-    }
-}};
-
 def template MiscExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
                                   Trace::InstRecord *traceData) const
@@ -700,9 +525,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     iop = InstObjParams(name, Name, base_class,
                         { 'ea_code':ea_code, 'memacc_code':memacc_code, 'postacc_code':postacc_code },
                         inst_flags)
-    ea_iop = InstObjParams(name, Name, base_class,
-                        { 'ea_code':ea_code },
-                        inst_flags)
     memacc_iop = InstObjParams(name, Name, base_class,
                         { 'memacc_code':memacc_code, 'postacc_code':postacc_code },
                         inst_flags)
@@ -719,7 +541,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # corresponding Store template..
     StoreCondInitiateAcc = StoreInitiateAcc
 
-    memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
     fullExecTemplate = eval(exec_template_base + 'Execute')
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
     completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
@@ -731,13 +552,10 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
 
     # (header_output, decoder_output, decode_block, exec_output)
     return (LoadStoreDeclare.subst(iop),
-            EACompConstructor.subst(ea_iop)
-            + MemAccConstructor.subst(memacc_iop)
-            + LoadStoreConstructor.subst(iop),
+            LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
-            EACompExecute.subst(ea_iop)
-            + memAccExecTemplate.subst(memacc_iop)
-            + fullExecTemplate.subst(iop)
+            fullExecTemplate.subst(iop)
+            + EACompExecute.subst(iop)
             + initiateAccTemplate.subst(iop)
             + completeAccTemplate.subst(iop)
             + memAccSizeTemplate.subst(memacc_iop))

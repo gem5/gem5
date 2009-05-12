@@ -99,8 +99,8 @@ bool createBackEndSchedule(DynInstPtr &inst)
     if ( inst->isNonSpeculative() ) {
         // skip execution of non speculative insts until later
     } else if ( inst->isMemRef() ) {
-        E->needs(AGEN, AGENUnit::GenerateAddr);
         if ( inst->isLoad() ) {
+            E->needs(AGEN, AGENUnit::GenerateAddr);
             E->needs(DTLB, TLBUnit::DataLookup);
             E->needs(DCache, CacheUnit::InitiateReadData);
         }
@@ -121,6 +121,7 @@ bool createBackEndSchedule(DynInstPtr &inst)
         M->needs(DCache, CacheUnit::CompleteReadData);
     } else if ( inst->isStore() ) {
         M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+        M->needs(AGEN, AGENUnit::GenerateAddr);
         M->needs(DTLB, TLBUnit::DataLookup);
         M->needs(DCache, CacheUnit::InitiateWriteData);
     }

@@ -49,6 +49,8 @@ execfile(models_db.srcnode().abspath)
 # Template for execute() signature.
 exec_sig_template = '''
 virtual Fault execute(%(type)s *xc, Trace::InstRecord *traceData) const = 0;
+virtual Fault eaComp(%(type)s *xc, Trace::InstRecord *traceData) const
+{ panic("eaComp not defined!"); M5_DUMMY_RETURN };
 virtual Fault initiateAcc(%(type)s *xc, Trace::InstRecord *traceData) const
 { panic("initiateAcc not defined!"); M5_DUMMY_RETURN };
 virtual Fault completeAcc(Packet *pkt, %(type)s *xc,
@@ -59,6 +61,8 @@ virtual int memAccSize(%(type)s *xc)
 '''
 
 mem_ini_sig_template = '''
+virtual Fault eaComp(%(type)s *xc, Trace::InstRecord *traceData) const
+{ panic("eaComp not defined!"); M5_DUMMY_RETURN };
 virtual Fault initiateAcc(%s *xc, Trace::InstRecord *traceData) const { panic("Not defined!"); M5_DUMMY_RETURN };
 '''
 
