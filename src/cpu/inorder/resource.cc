@@ -44,6 +44,12 @@ Resource::Resource(string res_name, int res_id, int res_width,
     deniedReq = new ResourceRequest(this, NULL, 0, 0, 0, 0);
 }
 
+Resource::~Resource()
+{
+    delete [] resourceEvent;
+}
+
+
 void
 Resource::init()
 {

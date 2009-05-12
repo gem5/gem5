@@ -187,19 +187,18 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 {
     assert(delay >= 0);
 
-    ResPoolEvent *res_pool_event = new ResPoolEvent(this);
-
     switch (e_type)
     {
       case InOrderCPU::ActivateThread:
         {
             DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event for tick %i.\n",
                     curTick + delay);
-            res_pool_event->setEvent(e_type,
-                                     inst,
-                                     inst->squashingStage,
-                                     inst->bdelaySeqNum,
-                                     inst->readTid());
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
+                                                            e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->bdelaySeqNum,
+                                                            inst->readTid());
             mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
         }
         break;
@@ -207,14 +206,15 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       case InOrderCPU::SuspendThread:
       case InOrderCPU::DeallocateThread:
         {
+
             DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool Event for tick %i.\n",
                     curTick + delay);
-
-            res_pool_event->setEvent(e_type,
-                                     inst,
-                                     inst->squashingStage,
-                                     inst->bdelaySeqNum,
-                                     tid);
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
+                                                            e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->bdelaySeqNum,
+                                                            tid);
 
             mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
 
@@ -225,12 +225,11 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool Event for tick %i.\n",
                     curTick + delay);
-
-            res_pool_event->setEvent(e_type,
-                                     inst,
-                                     inst->squashingStage,
-                                     inst->seqNum,
-                                     inst->readTid());
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->seqNum,
+                                                            inst->readTid());
             mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
 
         }
@@ -240,13 +239,12 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         {
             DPRINTF(Resource, "Scheduling Squash Resource Pool Event for tick %i.\n",
                     curTick + delay);
-            res_pool_event->setEvent(e_type,
-                                     inst,
-                                     inst->squashingStage,
-                                     inst->bdelaySeqNum,
-                                     inst->readTid());
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->bdelaySeqNum,
+                                                            inst->readTid());
             mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
-
         }
         break;
 
@@ -315,9 +313,21 @@ ResourcePool::instGraduated(InstSeqNum seq_num,unsigned tid)
 }
 
 ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool)
-    : Event(CPU_Tick_Pri),
-      resPool(_resPool)
-{ eventType = (InOrderCPU::CPUEventType) Default; }
+    : Event(CPU_Tick_Pri), resPool(_resPool),
+      eventType((InOrderCPU::CPUEventType) Default)
+{ }
+
+ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
+                                         InOrderCPU::CPUEventType e_type,
+                                         DynInstPtr _inst,
+                                         int stage_num,
+                                         InstSeqNum seq_num,
+                                         unsigned _tid)
+    : Event(CPU_Tick_Pri), resPool(_resPool),
+      eventType(e_type), inst(_inst), seqNum(seq_num),
+      stageNum(stage_num), tid(_tid)
+{ }
+
 
 void
 ResourcePool::ResPoolEvent::process()

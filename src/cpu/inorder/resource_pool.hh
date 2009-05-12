@@ -87,6 +87,14 @@ class ResourcePool {
         /** Constructs a resource event. */
         ResPoolEvent(ResourcePool *_resPool);
 
+        /** Constructs a resource event. */
+        ResPoolEvent(ResourcePool *_resPool,
+                     InOrderCPU::CPUEventType e_type,
+                     DynInstPtr _inst,
+                     int stage_num,
+                     InstSeqNum seq_num,
+                     unsigned _tid);
+
         /** Set Type of Event To Be Scheduled */
         void setEvent(InOrderCPU::CPUEventType e_type,
                       DynInstPtr _inst,
