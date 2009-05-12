@@ -35,7 +35,6 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	SimObject('InOrderTrace.py')
 
 	TraceFlag('ResReqCount')
-	TraceFlag('FreeList')
 	TraceFlag('InOrderStage')
 	TraceFlag('InOrderStall')
 	TraceFlag('InOrderCPU')
@@ -81,10 +80,6 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	Source('resources/mult_div_unit.cc')
 	Source('resource_pool.cc')
 	Source('reg_dep_map.cc')
-	Source('../o3/btb.cc')
-	Source('../o3/tournament_pred.cc')
-	Source('../o3/2bit_local_pred.cc')
-	Source('../o3/ras.cc')
 	Source('thread_context.cc')
 	Source('cpu.cc')
 

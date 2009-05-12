@@ -33,11 +33,6 @@ import sys
 Import('*')
 
 if 'O3CPU' in env['CPU_MODELS'] or 'OzoneCPU' in env['CPU_MODELS']:
-    Source('2bit_local_pred.cc')
-    Source('btb.cc')
-    Source('ras.cc')
-    Source('tournament_pred.cc')
-
     TraceFlag('CommitRate')
     TraceFlag('IEW')
     TraceFlag('IQ')
@@ -69,7 +64,6 @@ if 'O3CPU' in env['CPU_MODELS']:
     Source('store_set.cc')
     Source('thread_context.cc')
 
-    TraceFlag('FreeList')
     TraceFlag('LSQ')
     TraceFlag('LSQUnit')
     TraceFlag('MemDepUnit')

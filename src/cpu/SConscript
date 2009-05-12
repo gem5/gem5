@@ -128,6 +128,13 @@ Source('simple_thread.cc')
 Source('thread_context.cc')
 Source('thread_state.cc')
 
+if 'InOrderCPU' in env['CPU_MODELS'] or 'O3CPU' in env['CPU_MODELS']:
+    Source('btb.cc')
+    Source('tournament_pred.cc')
+    Source('2bit_local_pred.cc')
+    Source('ras.cc')
+    TraceFlag('FreeList')
+
 if env['FULL_SYSTEM']:
     SimObject('IntrControl.py')
 
