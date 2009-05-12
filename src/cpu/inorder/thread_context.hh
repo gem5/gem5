@@ -57,7 +57,7 @@ class InOrderThreadContext : public ThreadContext
   public:
     InOrderThreadContext() { }
 
-   /** Pointer to the CPU. */
+    /** Pointer to the CPU. */
     InOrderCPU *cpu;
 
     /** Pointer to the thread state that this TC corrseponds to. */
@@ -65,10 +65,12 @@ class InOrderThreadContext : public ThreadContext
 
 
     /** Returns a pointer to the ITB. */
-    TheISA::TLB *getITBPtr() { return cpu->itb; }
+    /** @TODO: PERF: Should we bind this to a pointer in constructor? */
+    TheISA::TLB *getITBPtr() { return cpu->getITBPtr(); }
 
     /** Returns a pointer to the DTB. */
-    TheISA::TLB *getDTBPtr() { return cpu->dtb; }
+    /** @TODO: PERF: Should we bind this to a pointer in constructor? */
+    TheISA::TLB *getDTBPtr() { return cpu->getDTBPtr(); }
 
     System *getSystemPtr() { return cpu->system; }
 

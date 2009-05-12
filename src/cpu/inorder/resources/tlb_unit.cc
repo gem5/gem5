@@ -33,6 +33,7 @@
 #include <list>
 #include "arch/isa_traits.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inorder/first_stage.hh"
 #include "cpu/inorder/resources/tlb_unit.hh"
 #include "cpu/inorder/cpu.hh"
 
@@ -44,9 +45,24 @@ TLBUnit::TLBUnit(string res_name, int res_id, int res_width,
                  int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : InstBuffer(res_name, res_id, res_width, res_latency, _cpu, params)
 {
+    // Hard-Code Selection For Now
+    if (res_name == "I-TLB")
+        _tlb = params->itb;
+    else if (res_name == "D-TLB")
+        _tlb = params->dtb;
+    else
+        fatal("Unrecognized TLB name passed by user");
+
     for (int i=0; i < MaxThreads; i++) {
         tlbBlocked[i] = false;
     }
+}
+
+TheISA::TLB*
+TLBUnit::tlb()
+{
+    return _tlb;
+
 }
 
 void
@@ -82,7 +98,7 @@ TLBUnit::execute(int slot_idx)
     // After this is working, change this to a reinterpret cast
     // for performance considerations
     TLBUnitRequest* tlb_req = dynamic_cast<TLBUnitRequest*>(reqMap[slot_idx]);
-    assert(tlb_req);
+    assert(tlb_req != 0x0);
 
     DynInstPtr inst = tlb_req->inst;
     int tid, seq_num, stage_num;
@@ -93,12 +109,15 @@ TLBUnit::execute(int slot_idx)
 
     tlb_req->fault = NoFault;
 
+    assert(cpu->thread[tid]->getTC() != 0x0);
+    assert(cpu->pipelineStage[stage_num] != 0x0);
+
     switch (tlb_req->cmd)
     {
       case FetchLookup:
         {
             tlb_req->fault =
-                this->cpu->itb->translateAtomic(tlb_req->memReq,
+                _tlb->translateAtomic(tlb_req->memReq,
                         cpu->thread[tid]->getTC(), false, true);
 
             if (tlb_req->fault != NoFault) {
@@ -129,7 +148,7 @@ TLBUnit::execute(int slot_idx)
                     tid, seq_num, tlb_req->memReq->getVaddr());
 
             tlb_req->fault =
-                this->cpu->itb->translateAtomic(tlb_req->memReq,
+                _tlb->translateAtomic(tlb_req->memReq,
                         cpu->thread[tid]->getTC());
 
             if (tlb_req->fault != NoFault) {

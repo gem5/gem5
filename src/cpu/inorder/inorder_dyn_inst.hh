@@ -37,7 +37,10 @@
 #include <list>
 #include <string>
 
+#include "arch/isa_traits.hh"
 #include "arch/faults.hh"
+#include "arch/types.hh"
+#include "arch/mt.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "cpu/inorder/inorder_trace.hh"
@@ -826,6 +829,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     virtual uint64_t readRegOtherThread(unsigned idx, int tid = -1);
     virtual void setRegOtherThread(unsigned idx, const uint64_t &val, int tid = -1);
+
+    /** Sets the number of consecutive store conditional failures. */
+    void setStCondFailures(unsigned sc_failures)
+    { thread->storeCondFailures = sc_failures; }
 
     //////////////////////////////////////////////////////////////
     //

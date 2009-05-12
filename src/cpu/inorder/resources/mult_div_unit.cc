@@ -47,7 +47,7 @@ MultDivUnit::MultDivUnit(string res_name, int res_id, int res_width,
       div16RepeatRate(params->div16RepeatRate), div16Latency(params->div16Latency), 
       div24RepeatRate(params->div24RepeatRate), div24Latency(params->div24Latency), 
       div32RepeatRate(params->div32RepeatRate), div32Latency(params->div32Latency), 
-      lastMDUCycle(0)
+      lastMDUCycle(0), lastOpType(No_OpClass)
 { }
 
 void

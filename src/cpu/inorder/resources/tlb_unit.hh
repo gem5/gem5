@@ -67,14 +67,15 @@ class TLBUnit : public InstBuffer {
 
     bool tlbBlocked[ThePipeline::MaxThreads];
 
+    TheISA::TLB* tlb();
+
   protected:
     /** List of instructions this resource is currently
      *  processing.
      */
     std::list<DynInstPtr> instList;
 
-    /** @todo: Add Resource Stats Here */
-
+    TheISA::TLB *_tlb;
 };
 
 class TLBUnitEvent : public ResourceEvent {

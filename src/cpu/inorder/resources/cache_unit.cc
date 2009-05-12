@@ -32,7 +32,7 @@
 #include <vector>
 #include <list>
 #include "arch/isa_traits.hh"
-#include "arch/mips/locked_mem.hh"
+#include "arch/locked_mem.hh"
 #include "arch/utility.hh"
 #include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/pipeline_traits.hh"

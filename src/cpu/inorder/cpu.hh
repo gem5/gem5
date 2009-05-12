@@ -103,9 +103,6 @@ class InOrderCPU : public BaseCPU
 
     Params *cpu_params;
 
-    TheISA::TLB * itb;
-    TheISA::TLB * dtb;
-
   public:
     enum Status {
         Running,
@@ -236,10 +233,16 @@ class InOrderCPU : public BaseCPU
      */
     unsigned fetchPortIdx;
 
+    /** Identifies the resource id that identifies a ITB       */
+    unsigned itbIdx;
+
     /** Identifies the resource id that identifies a data
      * access unit.
      */
     unsigned dataPortIdx;
+
+    /** Identifies the resource id that identifies a DTB       */
+    unsigned dtbIdx;
 
     /** The Pipeline Stages for the CPU */
     PipelineStage *pipelineStage[ThePipeline::NumStages];
@@ -261,6 +264,9 @@ class InOrderCPU : public BaseCPU
 
     /** Communication structure that sits in between pipeline stages */
     StageQueue *stageQueue[ThePipeline::NumStages-1];
+
+    TheISA::ITB *getITBPtr();
+    TheISA::DTB *getDTBPtr();
 
   public:
 
@@ -307,6 +313,8 @@ class InOrderCPU : public BaseCPU
     void deallocateContext(unsigned tid, int delay = 0);
     void deallocateThread(unsigned tid);
     void deactivateThread(unsigned tid);
+
+    PipelineStage* getPipeStage(int stage_num);
 
     int
     contextId()

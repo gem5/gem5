@@ -143,6 +143,21 @@ ResourcePool::getPortIdx(const std::string &port_name)
     return 0;
 }
 
+unsigned
+ResourcePool::getResIdx(const std::string &res_name)
+{
+    DPRINTF(Resource, "Finding Resource Idx for %s.\n", res_name);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        if (resources[idx]->name() == res_name)
+            return idx;
+    }
+
+    return 0;
+}
+
 ResReqPtr
 ResourcePool::request(int res_idx, DynInstPtr inst)
 {

@@ -131,8 +131,12 @@ class ResourcePool {
     Port* getPort(const std::string &if_name, int idx);
 
     /** Returns a specific port. */
-    unsigned getPortIdx(const std::string &if_name);
+    unsigned getPortIdx(const std::string &port_name);
 
+    /** Returns a specific resource. */
+    unsigned getResIdx(const std::string &res_name);
+
+    /** Returns a pointer to a resource */
     Resource* getResource(int res_idx) { return resources[res_idx]; }
 
     /** Request usage of this resource. Returns -1 if not granted and

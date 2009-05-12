@@ -42,6 +42,13 @@ class Checkpoint;
 
 namespace AlphaISA {
 
+const int SingleWidth = 32;
+const int SingleBytes = SingleWidth / 4;
+const int DoubleWidth = 64;
+const int DoubleBytes = DoubleWidth / 4;
+const int QuadWidth = 128;
+const int QuadBytes = QuadWidth / 4;
+
 class FloatRegFile
 {
   public:
@@ -54,6 +61,55 @@ class FloatRegFile
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+
+    FloatReg
+    readReg(int floatReg)
+    {
+        return d[floatReg];
+    }
+
+    FloatReg
+    readReg(int floatReg, int width)
+    {
+        return readReg(floatReg);
+    }
+
+    FloatRegBits
+    readRegBits(int floatReg)
+    {
+        return q[floatReg];
+    }
+
+    FloatRegBits
+    readRegBits(int floatReg, int width)
+    {
+        return readRegBits(floatReg);
+    }
+
+    void
+    setReg(int floatReg, const FloatReg &val)
+    {
+        d[floatReg] = val;
+    }
+
+    void
+    setReg(int floatReg, const FloatReg &val, int width)
+    {
+        setReg(floatReg, val);
+    }
+
+    void
+    setRegBits(int floatReg, const FloatRegBits &val)
+    {
+        q[floatReg] = val;
+    }
+
+    void
+    setRegBits(int floatReg, const FloatRegBits &val, int width)
+    {
+        setRegBits(floatReg, val);
+    }
+
 };
 
 } // namespace AlphaISA

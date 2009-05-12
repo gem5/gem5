@@ -180,14 +180,25 @@ InOrderCPU::InOrderCPU(Params *params)
     // Bind the fetch & data ports from the resource pool.
     fetchPortIdx = resPool->getPortIdx(params->fetchMemPort);
     if (fetchPortIdx == 0) {
-        warn("Unable to find port to fetch instructions from.\n");
+        fatal("Unable to find port to fetch instructions from.\n");
     }
 
     dataPortIdx = resPool->getPortIdx(params->dataMemPort);
     if (dataPortIdx == 0) {
-        warn("Unable to find port for data.\n");
+        fatal("Unable to find port for data.\n");
     }
 
+
+    // Hard-Code Bindings to ITB & DTB
+    itbIdx = resPool->getResIdx(name() + "."  + "I-TLB");
+    if (itbIdx == 0) {
+        fatal("Unable to find ITB resource.\n");
+    }
+
+    dtbIdx = resPool->getResIdx(name() + "."  + "D-TLB");
+    if (dtbIdx == 0) {
+        fatal("Unable to find DTB resource.\n");
+    }
 
     for (int i = 0; i < numThreads; ++i) {
         if (i < params->workload.size()) {
@@ -814,6 +825,13 @@ InOrderCPU::removeThread(unsigned tid)
     /** Broadcast to CPU resources*/
 }
 
+PipelineStage*
+InOrderCPU::getPipeStage(int stage_num)
+{
+    return pipelineStage[stage_num];
+}
+
+
 void
 InOrderCPU::activateWhenReady(int tid)
 {
@@ -1244,4 +1262,19 @@ InOrderCPU::write(DynInstPtr inst)
 {
     Resource *mem_res = resPool->getResource(dataPortIdx);
     return mem_res->doDataAccess(inst);
+}
+
+TheISA::ITB*
+InOrderCPU::getITBPtr()
+{
+    TLBUnit *itb_res = dynamic_cast<TLBUnit*>(resPool->getResource(itbIdx));
+    return dynamic_cast<TheISA::ITB*>(itb_res->tlb());
+}
+
+
+TheISA::DTB*
+InOrderCPU::getDTBPtr()
+{
+    TLBUnit *dtb_res = dynamic_cast<TLBUnit*>(resPool->getResource(dtbIdx));
+    return dynamic_cast<TheISA::DTB*>(dtb_res->tlb());
 }

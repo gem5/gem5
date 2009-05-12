@@ -57,8 +57,15 @@ MiscRegFile::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
 }
 
+MiscRegFile::MiscRegFile(BaseCPU *_cpu)
+{
+    cpu = _cpu;
+    initializeIprTable();
+}
+
+
 MiscReg
-MiscRegFile::readRegNoEffect(int misc_reg)
+MiscRegFile::readRegNoEffect(int misc_reg, unsigned tid )
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -78,7 +85,7 @@ MiscRegFile::readRegNoEffect(int misc_reg)
 }
 
 MiscReg
-MiscRegFile::readReg(int misc_reg, ThreadContext *tc)
+MiscRegFile::readReg(int misc_reg, ThreadContext *tc, unsigned tid )
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -97,7 +104,7 @@ MiscRegFile::readReg(int misc_reg, ThreadContext *tc)
 }
 
 void
-MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val)
+MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -123,7 +130,8 @@ MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val)
 }
 
 void
-MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
+MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
+                    unsigned tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:

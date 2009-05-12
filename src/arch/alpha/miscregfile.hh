@@ -41,6 +41,7 @@
 
 class Checkpoint;
 class ThreadContext;
+class BaseCPU;
 
 namespace AlphaISA {
 
@@ -68,6 +69,8 @@ class MiscRegFile
 
     InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
 
+    BaseCPU *cpu;
+
   protected:
     InternalProcReg readIpr(int idx, ThreadContext *tc);
     void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
@@ -78,16 +81,18 @@ class MiscRegFile
         initializeIprTable();
     }
 
+    MiscRegFile(BaseCPU *cpu);
+
     // These functions should be removed once the simplescalar cpu
     // model has been replaced.
     int getInstAsid();
     int getDataAsid();
 
-    MiscReg readRegNoEffect(int misc_reg);
-    MiscReg readReg(int misc_reg, ThreadContext *tc);
+    MiscReg readRegNoEffect(int misc_reg, unsigned tid = 0);
+    MiscReg readReg(int misc_reg, ThreadContext *tc, unsigned tid = 0);
 
-    void setRegNoEffect(int misc_reg, const MiscReg &val);
-    void setReg(int misc_reg, const MiscReg &val, ThreadContext *tc);
+    void setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
+    void setReg(int misc_reg, const MiscReg &val, ThreadContext *tc, unsigned tid = 0);
 
     void
     clear()
@@ -101,6 +106,16 @@ class MiscRegFile
 
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
+
+    void reset(std::string core_name, unsigned num_threads,
+               unsigned num_vpes, BaseCPU *_cpu)
+    { }
+
+
+    void expandForMultithreading(unsigned num_threads, unsigned num_vpes)
+    { }
+
+
 };
 
 void copyIprs(ThreadContext *src, ThreadContext *dest);

@@ -69,7 +69,7 @@ namespace MipsISA
 
       public:
         MiscRegFile();
-        MiscRegFile(BaseCPU *cpu);
+        MiscRegFile(BaseCPU *_cpu);
 
         void init();
 
