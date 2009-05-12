@@ -161,13 +161,21 @@ TLBUnit::execute(int slot_idx)
                         "addr:%08p for [sn:%i] %s.\n", tid, tlb_req->fault->name(),
                         tlb_req->memReq->getVaddr(), seq_num, inst->instName());
 
+                if (inst->isDataPrefetch()) {
+                    DPRINTF(InOrderTLB, "Ignoring %s fault for data prefetch\n",
+                            tlb_req->fault->name());
+
+                    tlb_req->fault = NoFault;
+
+                    tlb_req->done();
+                } else {
                     cpu->pipelineStage[stage_num]->setResStall(tlb_req, tid);
                     tlbBlocked[tid] = true;
                     scheduleEvent(slot_idx, 1);
 
                     // Let CPU handle the fault
                     cpu->trap(tlb_req->fault, tid);
-
+                }
             } else {
                 DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
                         "to phys. addr:%08p.\n", tid, seq_num,
