@@ -106,21 +106,22 @@ class TLBUnitRequest : public ResourceRequest {
             aligned_addr = inst->getMemAddr();
             req_size = sizeof(TheISA::MachInst);
             flags = 0;
+            inst->fetchMemReq = new Request(inst->readTid(), aligned_addr, req_size,
+                                            flags, inst->readPC(), res->cpu->readCpuId(), inst->readTid());
+            memReq = inst->fetchMemReq;
         } else {
             aligned_addr = inst->getMemAddr();;
             req_size = inst->getMemAccSize();
             flags = inst->getMemFlags();
-        }
 
-        if (req_size == 0 && (inst->isDataPrefetch() || inst->isInstPrefetch())) {
-            req_size = 8;
-        }
+            if (req_size == 0 && (inst->isDataPrefetch() || inst->isInstPrefetch())) {
+                req_size = 8;
+            }
 
-        // @TODO: Add Vaddr & Paddr functions
-        inst->memReq = new Request(inst->readTid(), aligned_addr, req_size,
+            inst->dataMemReq = new Request(inst->readTid(), aligned_addr, req_size,
                                    flags, inst->readPC(), res->cpu->readCpuId(), inst->readTid());
-
-        memReq = inst->memReq;
+            memReq = inst->dataMemReq;
+        }
     }
 
     RequestPtr memReq;

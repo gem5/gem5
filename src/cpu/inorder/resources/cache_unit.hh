@@ -246,7 +246,13 @@ class CacheRequest : public ResourceRequest
         : ResourceRequest(cres, inst, stage_num, res_idx, slot_num, cmd),
           pktCmd(pkt_cmd), memAccComplete(false), memAccPending(false)
     {
-        memReq = inst->memReq;
+        if (cmd == CacheUnit::InitiateFetch ||
+            cmd == CacheUnit::CompleteFetch ||
+            cmd == CacheUnit::Fetch) {
+            memReq = inst->fetchMemReq;
+        } else {
+            memReq = inst->dataMemReq;
+        }
 
         reqData = new uint8_t[req_size];
         retryPkt = NULL;
@@ -273,9 +279,6 @@ class CacheRequest : public ResourceRequest
             delete retryPkt;
         }
 #endif
-
-        if (memReq)
-            delete memReq;
     }
 
     virtual PacketDataPtr getData()

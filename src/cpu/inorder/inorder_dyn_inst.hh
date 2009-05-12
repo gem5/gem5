@@ -634,7 +634,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Read Effective Address from instruction & do memory access */
     Fault memAccess();
 
-    RequestPtr memReq;
+    RequestPtr fetchMemReq;
+    RequestPtr dataMemReq;
 
     bool memAddrReady;
 

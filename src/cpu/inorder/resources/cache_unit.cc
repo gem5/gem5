@@ -252,6 +252,8 @@ CacheUnit::execute(int slot_num)
         break;
 
       case CompleteFetch:
+        // @TODO: MOVE Functionality of handling fetched data into 'fetch unit'
+        //        let cache-unit just be responsible for transferring data.
         if (cache_req->isMemAccComplete()) {
             DPRINTF(InOrderCachePort,
                     "[tid:%i]: Completing Fetch Access for [sn:%i]\n",
@@ -283,6 +285,8 @@ CacheUnit::execute(int slot_num)
                 inst->traceData->setStaticInst(inst->staticInst);
                 inst->traceData->setPC(inst->readPC());
             }
+
+            delete cache_req->dataPkt;
 
             cache_req->done();
         } else {
@@ -481,6 +485,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 cache_pkt->cacheReq->getInst()->seqNum);
 
         cache_pkt->cacheReq->done();
+        delete cache_pkt;
         return;
     }
 
@@ -543,6 +548,8 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                         getMemData(cache_pkt));
 
             }
+
+            delete cache_pkt;
         }
 
         cache_req->setMemAccPending(false);

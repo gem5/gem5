@@ -108,7 +108,9 @@ InOrderDynInst::setMachInst(ExtMachInst machInst)
 void
 InOrderDynInst::initVars()
 {
-    req = NULL;
+    fetchMemReq = NULL;
+    dataMemReq = NULL;
+
     effAddr = 0;
     physEffAddr = 0;
 
@@ -170,8 +172,14 @@ InOrderDynInst::initVars()
 
 InOrderDynInst::~InOrderDynInst()
 {
-    if (req) {
-        delete req;
+    if (fetchMemReq != 0x0) {
+        delete fetchMemReq;
+        fetchMemReq = NULL;
+    }
+
+    if (dataMemReq != 0x0) {
+        delete dataMemReq;
+        dataMemReq = NULL;
     }
 
     if (traceData) {
