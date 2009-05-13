@@ -541,7 +541,7 @@ void initvar_t::list_param( FILE *fp )
 #define PARAM_UINT( NAME )                              \
   fprintf( fp, "%-44.44s: %26u\n", #NAME, NAME );
 #define PARAM_ULONG( NAME )                             \
-  fprintf( fp, "%-44.44s: %26llu\n", #NAME, NAME );
+  fprintf( fp, "%-44.44s: %26llu\n", #NAME, (unsigned long long)NAME );
 #define PARAM_BOOL( NAME )                              \
   if (NAME == true) {                                 \
     fprintf( fp, "%-44.44s: %26.26s\n", #NAME, "true" ); \

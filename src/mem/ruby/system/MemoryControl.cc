@@ -110,6 +110,9 @@
  *
  */
 
+#include <list>
+
+#include "base/cprintf.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
@@ -119,12 +122,8 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/network/Network.hh"
-
 #include "mem/ruby/common/Consumer.hh"
-
 #include "mem/ruby/system/MemoryControl.hh"
-
-#include <list>
 
 class Consumer;
 
@@ -261,8 +260,8 @@ void MemoryControl::enqueueMemRef (MemoryNode& memRef) {
   physical_address_t addr = memRef.m_addr;
   int bank = getBank(addr);
   if (m_debug) {
-    printf("New memory request%7d: 0x%08llx %c arrived at %10lld  ", m_msg_counter, addr, is_mem_read? 'R':'W', at);
-    printf("bank =%3x\n", bank);
+    cprintf("New memory request%7d: %#08x %c arrived at %10d bank =%3x\n",
+            m_msg_counter, addr, is_mem_read? 'R':'W', at, bank);
   }
   g_system_ptr->getProfiler()->profileMemReq(bank);
   m_input_queue.push_back(memRef);
@@ -296,7 +295,7 @@ MemoryNode MemoryControl::peekNode () {
   MemoryNode req = m_response_queue.front();
   uint64 returnTime = req.m_time;
   if (m_debug) {
-    printf("Old memory request%7d: 0x%08llx %c peeked at  %10lld\n",
+    cprintf("Old memory request%7d: %#08x %c peeked at  %10d\n",
         req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W', returnTime);
   }
   return req;
@@ -392,7 +391,7 @@ int MemoryControl::getRank (int bank) {
 bool MemoryControl::queueReady (int bank) {
   if ((m_bankBusyCounter[bank] > 0) && !m_memFixedDelay) {
     g_system_ptr->getProfiler()->profileMemBankBusy();
-    //if (m_debug) printf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
+    //if (m_debug) cprintf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
     return false;
   }
   if (m_memRandomArbitrate >= 2) {
@@ -454,7 +453,7 @@ bool MemoryControl::issueRefresh (int bank) {
 
   //if (m_debug) {
     //uint64 current_time = g_eventQueue_ptr->getTime();
-    //printf("    Refresh bank %3x at %lld\n", bank, current_time);
+    //cprintf("    Refresh bank %3x at %d\n", bank, current_time);
   //}
   g_system_ptr->getProfiler()->profileMemRefresh();
   m_need_refresh--;
@@ -489,7 +488,7 @@ void MemoryControl::issueRequest (int bank) {
   m_bankQueues[bank].pop_front();
   if (m_debug) {
     uint64 current_time = g_eventQueue_ptr->getTime();
-    printf("    Mem issue request%7d: 0x%08llx %c         at %10lld  bank =%3x\n",
+    cprintf("    Mem issue request%7d: %#08x %c         at %10d  bank =%3x\n",
         req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W', current_time, bank);
   }
   if (req.m_msgptr.ref() != NULL) {  // don't enqueue L3 writebacks
