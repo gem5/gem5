@@ -192,8 +192,19 @@ struct ScalarPrint
     Result pdf;
     Result cdf;
 
+    void update(Result val, Result total);
     void operator()(ostream &stream) const;
 };
+
+void
+ScalarPrint::update(Result val, Result total)
+{
+    value = val;
+    if (total) {
+        pdf = val / total;
+        cdf += pdf;
+    }
+}
 
 void
 ScalarPrint::operator()(ostream &stream) const
@@ -255,8 +266,8 @@ VectorPrint::operator()(std::ostream &stream) const
     print.precision = precision;
     print.descriptions = descriptions;
     print.flags = flags;
-    print.pdf = NAN;
-    print.cdf = NAN;
+    print.pdf = _total ? 0.0 : NAN;
+    print.cdf = _total ? 0.0 : NAN;
 
     bool havesub = !subnames.empty();
 
@@ -272,13 +283,8 @@ VectorPrint::operator()(std::ostream &stream) const
 
         print.name = base + (havesub ? subnames[i] : to_string(i));
         print.desc = subdescs.empty() ? desc : subdescs[i];
-        print.value = vec[i];
 
-        if (_total && flags.isSet(pdf)) {
-            print.pdf = vec[i] / _total;
-            print.cdf += print.pdf;
-        }
-
+        print.update(vec[i], _total);
         print(stream);
     }
 
@@ -351,52 +357,13 @@ DistPrint::init(const Text *text, const Info &info, const DistParams *params)
 void
 DistPrint::operator()(ostream &stream) const
 {
-    Result stdev = NAN;
-    if (data.samples)
-        stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
-                     (data.samples * (data.samples - 1.0)));
-
-    if (fancy) {
-        ScalarPrint print;
-        string base = name + "::";
-
-        print.precision = precision;
-        print.flags = flags;
-        print.descriptions = descriptions;
-        print.desc = desc;
-        print.pdf = NAN;
-        print.cdf = NAN;
-
-        print.name = base + "mean";
-        print.value = data.samples ? data.sum / data.samples : NAN;
-        print(stream);
-
-        print.name = base + "stdev";
-        print.value = stdev;
-        print(stream);
-
-        print.name = "**Ignore: " + base + "TOT";
-        print.value = data.samples;
-        print(stream);
-        return;
-    }
-
-    assert(size == data.cvec.size());
-
-    Result total = 0.0;
-
-    total += data.underflow;
-    for (off_type i = 0; i < size; ++i)
-        total += data.cvec[i];
-    total += data.overflow;
-
     string base = name + "::";
 
     ScalarPrint print;
-    print.desc = desc;
+    print.precision = precision;
     print.flags = flags;
     print.descriptions = descriptions;
-    print.precision = precision;
+    print.desc = desc;
     print.pdf = NAN;
     print.cdf = NAN;
 
@@ -404,17 +371,41 @@ DistPrint::operator()(ostream &stream) const
     print.value = data.samples;
     print(stream);
 
-    print.name = base + "min_value";
-    print.value = data.min_val;
+    print.name = base + "mean";
+    print.value = data.samples ? data.sum / data.samples : NAN;
     print(stream);
 
-    print.name = base + "underflows";
-    print.value = data.underflow;
-    if (total) {
-        print.pdf = data.underflow / total;
-        print.cdf += print.pdf;
-    }
+    Result stdev = NAN;
+    if (data.samples)
+        stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
+                     (data.samples * (data.samples - 1.0)));
+    print.name = base + "stdev";
+    print.value = stdev;
     print(stream);
+
+    if (fancy)
+        return;
+
+    assert(size == data.cvec.size());
+
+    Result total = 0.0;
+    if (data.underflow != NAN)
+        total += data.underflow;
+    for (off_type i = 0; i < size; ++i)
+        total += data.cvec[i];
+    if (data.overflow != NAN)
+        total += data.overflow;
+
+    if (total) {
+        print.pdf = 0.0;
+        print.cdf = 0.0;
+    }
+
+    if (data.underflow != NAN) {
+        print.name = base + "underflows";
+        print.update(data.underflow, total);
+        print(stream);
+    }
 
     for (off_type i = 0; i < size; ++i) {
         stringstream namestr;
@@ -427,42 +418,33 @@ DistPrint::operator()(ostream &stream) const
             namestr << "-" << high;
 
         print.name = namestr.str();
-        print.value = data.cvec[i];
-        if (total) {
-            print.pdf = data.cvec[i] / total;
-            print.cdf += print.pdf;
-        }
+        print.update(data.cvec[i], total);
         print(stream);
     }
 
-    print.name = base + "overflows";
-    print.value = data.overflow;
-    if (total) {
-        print.pdf = data.overflow / total;
-        print.cdf += print.pdf;
-    } else {
-        print.pdf = NAN;
-        print.cdf = NAN;
+    if (data.overflow != NAN) {
+        print.name = base + "overflows";
+        print.update(data.overflow, total);
+        print(stream);
     }
-    print(stream);
 
     print.pdf = NAN;
     print.cdf = NAN;
 
+    if (data.min_val != NAN) {
+        print.name = base + "min_value";
+        print.value = data.min_val;
+        print(stream);
+    }
+
+    if (data.max_val != NAN) {
+        print.name = base + "max_value";
+        print.value = data.max_val;
+        print(stream);
+    }
+
     print.name = base + "total";
     print.value = total;
-    print(stream);
-
-    print.name = base + "max_value";
-    print.value = data.max_val;
-    print(stream);
-
-    print.name = base + "mean";
-    print.value = data.sum / data.samples;
-    print(stream);
-
-    print.name = base + "stdev";
-    print.value = stdev;
     print(stream);
 }
 
