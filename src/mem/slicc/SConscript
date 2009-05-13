@@ -51,8 +51,8 @@ common_dir = Dir('../gems_common')
 slicc_env = env.Clone()
 slicc_env['CPPDEFINES'] = ''
 slicc_env['CPPPATH'] = Dir('../..')
-slicc_env['CCFLAGS'] = ''
-slicc_env['CXXFLAGS'] = '-Wall -W -Wwrite-strings -Woverloaded-virtual -Wno-unused -Wno-deprecated'
+slicc_env.Append(CCFLAGS=['-g', '-O0'])
+slicc_env.Append(CPPDEFINES=['DEBUG', 'TRACING_ON=1'])
 slicc_env['LIBS'] = ''
 slicc_env['LIBPATH'] = ''
 all_slicc_sources = []
