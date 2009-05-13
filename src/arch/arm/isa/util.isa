@@ -242,8 +242,8 @@ output exec {{
             return ((arm_NEG(lhs) && arm_NEG(rhs)) ||
                     (arm_NEG(lhs) && arm_POS(result)) ||
                     (arm_NEG(rhs) && arm_POS(result)));
-        else
-            return 0;
+
+        return 0;
     }
 
     // Generate the appropriate carry bit for a subtraction operation
@@ -254,8 +254,8 @@ output exec {{
             return ((arm_NEG(lhs) && arm_POS(rhs)) ||
                     (arm_NEG(lhs) && arm_POS(result)) ||
                     (arm_POS(rhs) && arm_POS(result)));
-        else
-            return 0;
+
+        return 0;
     }
 
     inline int32_t
@@ -264,8 +264,8 @@ output exec {{
         if ((lhs | rhs) >> 30)
             return ((arm_NEG(lhs) && arm_NEG(rhs) && arm_POS(result)) ||
                     (arm_POS(lhs) && arm_POS(rhs) && arm_NEG(result)));
-        else
-            return 0;
+
+        return 0;
     }
 
     inline int32_t
@@ -274,8 +274,8 @@ output exec {{
         if ((lhs >= rhs) || ((rhs | lhs) >> 31))
             return ((arm_NEG(lhs) && arm_POS(rhs) && arm_POS(result)) ||
                     (arm_POS(lhs) && arm_NEG(rhs) && arm_NEG(result)));
-        else
-            return 0;
+
+        return 0;
     }
 
 }};
