@@ -1,0 +1,17 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled May 13 2009 01:40:41
+M5 revision 4c418376e894 6202 default tip
+M5 started May 13 2009 01:40:42
+M5 executing on zooks
+command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing
+Global frequency set at 1000000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Hello World!
+Exiting @ tick 29437500 because target called exit()
