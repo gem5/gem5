@@ -31,3 +31,4 @@
 Import('*')
 
 all_cpu_list.append('InOrderCPU')
+default_cpus.append('InOrderCPU')
