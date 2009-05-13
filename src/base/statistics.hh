@@ -1388,8 +1388,8 @@ class DistStor
 
         min_val = CounterLimits::max();
         max_val = CounterLimits::min();
-        underflow = 0;
-        overflow = 0;
+        underflow = Counter();
+        overflow = Counter();
 
         size_type size = cvec.size();
         for (off_type i = 0; i < size; ++i)
