@@ -310,7 +310,7 @@ struct DistPrint
     Counter max;
     Counter bucket_size;
     size_type size;
-    bool fancy;
+    DistType type;
 
     const DistData &data;
 
@@ -347,7 +347,7 @@ DistPrint::init(const Text *text, const Info &info, const DistParams *params)
     precision = info.precision;
     descriptions = text->descriptions;
 
-    fancy = params->fancy;
+    type = params->type;
     min = params->min;
     max = params->max;
     bucket_size = params->bucket_size;
@@ -383,7 +383,7 @@ DistPrint::operator()(ostream &stream) const
     print.value = stdev;
     print(stream);
 
-    if (fancy)
+    if (type == Deviation)
         return;
 
     assert(size == data.cvec.size());

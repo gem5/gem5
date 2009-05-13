@@ -180,9 +180,11 @@ struct DistData
     Counter samples;
 };
 
+enum DistType { Deviation, Dist };
+
 struct DistParams : public StorageParams
 {
-    const bool fancy;
+    const DistType type;
 
     /** The minimum value to track. */
     Counter min;
@@ -193,7 +195,7 @@ struct DistParams : public StorageParams
     /** The number of buckets. Equal to (max-min)/bucket_size. */
     size_type buckets;
 
-    explicit DistParams(bool f) : fancy(f) {}
+    explicit DistParams(DistType t) : type(t) {}
 };
 
 class DistInfo : public Info

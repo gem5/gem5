@@ -1271,7 +1271,7 @@ class DistStor
     /** The parameters for a distribution stat. */
     struct Params : public DistParams
     {
-        Params() : DistParams(false) {}
+        Params() : DistParams(Dist) {}
     };
 
   private:
@@ -1405,12 +1405,12 @@ class DistStor
  * Templatized storage and interface for a distribution that calculates mean
  * and variance.
  */
-class FancyStor
+class SampleStor
 {
   public:
     struct Params : public DistParams
     {
-        Params() : DistParams(true) {}
+        Params() : DistParams(Deviation) {}
     };
 
   private:
@@ -1425,7 +1425,7 @@ class FancyStor
     /**
      * Create and initialize this storage.
      */
-    FancyStor(Info *info)
+    SampleStor(Info *info)
         : sum(Counter()), squares(Counter()), samples(Counter())
     { }
 
@@ -1481,12 +1481,12 @@ class FancyStor
  * Templatized storage for distribution that calculates per tick mean and
  * variance.
  */
-class AvgFancy
+class AvgSampleStor
 {
   public:
     struct Params : public DistParams
     {
-        Params() : DistParams(true) {}
+        Params() : DistParams(Deviation) {}
     };
 
   private:
@@ -1499,7 +1499,7 @@ class AvgFancy
     /**
      * Create and initialize this storage.
      */
-    AvgFancy(Info *info)
+    AvgSampleStor(Info *info)
         : sum(Counter()), squares(Counter())
     {}
 
@@ -2273,9 +2273,9 @@ class Distribution : public DistBase<Distribution, DistStor>
 
 /**
  * Calculates the mean and variance of all the samples.
- * @sa Stat, DistBase, FancyStor
+ * @sa DistBase, SampleStor
  */
-class StandardDeviation : public DistBase<StandardDeviation, FancyStor>
+class StandardDeviation : public DistBase<StandardDeviation, SampleStor>
 {
   public:
     /**
@@ -2289,9 +2289,9 @@ class StandardDeviation : public DistBase<StandardDeviation, FancyStor>
 
 /**
  * Calculates the per tick mean and variance of the samples.
- * @sa Stat, DistBase, AvgFancy
+ * @sa DistBase, AvgSampleStor
  */
-class AverageDeviation : public DistBase<AverageDeviation, AvgFancy>
+class AverageDeviation : public DistBase<AverageDeviation, AvgSampleStor>
 {
   public:
     /**
@@ -2305,7 +2305,7 @@ class AverageDeviation : public DistBase<AverageDeviation, AvgFancy>
 
 /**
  * A vector of distributions.
- * @sa Stat, VectorDistBase, DistStor
+ * @sa VectorDistBase, DistStor
  */
 class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
 {
@@ -2334,10 +2334,10 @@ class VectorDistribution : public VectorDistBase<VectorDistribution, DistStor>
 
 /**
  * This is a vector of StandardDeviation stats.
- * @sa Stat, VectorDistBase, FancyStor
+ * @sa VectorDistBase, SampleStor
  */
 class VectorStandardDeviation
-    : public VectorDistBase<VectorStandardDeviation, FancyStor>
+    : public VectorDistBase<VectorStandardDeviation, SampleStor>
 {
   public:
     /**
@@ -2355,10 +2355,10 @@ class VectorStandardDeviation
 
 /**
  * This is a vector of AverageDeviation stats.
- * @sa Stat, VectorDistBase, AvgFancy
+ * @sa VectorDistBase, AvgSampleStor
  */
 class VectorAverageDeviation
-    : public VectorDistBase<VectorAverageDeviation, AvgFancy>
+    : public VectorDistBase<VectorAverageDeviation, AvgSampleStor>
 {
   public:
     /**
