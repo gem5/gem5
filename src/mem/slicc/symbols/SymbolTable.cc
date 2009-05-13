@@ -477,8 +477,8 @@ void SymbolTable::writeChipFiles(string path) const
                 string child_types = var->lookupPair("child_types");
                 string::iterator it = child_types.begin();
 
-                uint num_types = 0;
-                for(uint t=0;t<child_types.size();t++){
+                unsigned num_types = 0;
+                for(unsigned t=0;t<child_types.size();t++){
                   if(child_types.at(t) == '<'){
                     num_types++;
                   }
@@ -488,10 +488,10 @@ void SymbolTable::writeChipFiles(string path) const
                 string* ids = new string[num_types];
                 int type_idx = 0;
                 bool id_done = false;
-                for(uint t=0;t<child_types.size();t++){
+                for(unsigned t=0;t<child_types.size();t++){
                   if(child_types[t] == '<'){
                     id_done = false;
-                    uint r;
+                    unsigned r;
                     for(r=t+1;child_types.at(r)!='>';r++){
                       if(r == child_types.size()){
                         cerr << "Parse error in child_types" << endl;
@@ -509,7 +509,7 @@ void SymbolTable::writeChipFiles(string path) const
                   }
                 }
 
-                for(uint t=0;t<num_types;t++){
+                for(unsigned t=0;t<num_types;t++){
                   if(t==0)
                     sstr << "    if(strcmp(" << child_selector << ", \"" << ids[t] << "\") == 0)" << endl;
                   else

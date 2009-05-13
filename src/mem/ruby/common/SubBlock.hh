@@ -85,7 +85,7 @@ private:
   // Data Members (m_ prefix)
   Address m_address;
   Address m_logicalAddress;
-  Vector<uint> m_data;
+  Vector<unsigned> m_data;
 };
 
 // Output operator declaration

@@ -42,7 +42,7 @@ string string_split(string& str, char split_character)
   string head = "";
   string tail = "";
 
-  uint counter = 0;
+  unsigned counter = 0;
   while(counter < str.size()) {
     if (str[counter] == split_character) {
       counter++;

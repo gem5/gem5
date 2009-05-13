@@ -85,7 +85,6 @@ typedef integer_t simtime_t;
 typedef Time LogicalTime;
 typedef int64 Index;            // what the address bit ripper returns
 typedef int word;               // one word of a cache line
-typedef unsigned int uint;
 typedef int SwitchID;
 typedef int LinkID;
 
