@@ -42,7 +42,7 @@
 #include "mem/slicc/slicc_global.hh"
 
 extern int g_line_number;
-extern string g_file_name;
+extern string &g_file_name();
 
 class Location {
 public:

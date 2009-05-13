@@ -39,11 +39,15 @@
 #include "mem/slicc/ast/Location.hh"
 
 int g_line_number = 0;
-string g_file_name("");
+string &g_file_name()
+{
+    static string the_string;
+    return the_string;
+}
 
 Location::Location()
 {
-  m_file_name = g_file_name;
+  m_file_name = g_file_name();
   m_line_number = g_line_number;
 
   ostringstream sstr;

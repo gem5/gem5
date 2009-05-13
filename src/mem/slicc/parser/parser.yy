@@ -337,7 +337,7 @@ DeclListAST* parse(string filename)
     exit(1);
   }
   g_line_number = 1;
-  g_file_name = filename;
+  g_file_name() = filename;
   yyin = file;
   g_decl_list_ptr = NULL;
   yyparse();
@@ -346,7 +346,7 @@ DeclListAST* parse(string filename)
 
 extern "C" void yyerror(char* s)
 {
-  fprintf(stderr, "%s:%d: %s at %s\n", g_file_name.c_str(), g_line_number, s, yytext);
+  fprintf(stderr, "%s:%d: %s at %s\n", g_file_name().c_str(), g_line_number, s, yytext);
   exit(1);
 }
 
