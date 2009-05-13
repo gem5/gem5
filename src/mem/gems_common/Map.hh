@@ -34,23 +34,8 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include "base/hashmap.hh"
 #include "mem/gems_common/Vector.hh"
-
-namespace __gnu_cxx {
-  template <> struct hash <std::string>
-  {
-    size_t operator()(const string& s) const { return hash<char*>()(s.c_str()); }
-  };
-}
-
-typedef unsigned long long uint64;
-//hack for uint64 hashes...
-namespace __gnu_cxx {
-  template <> struct hash <uint64>
-  {
-    size_t operator()(const uint64 & s) const { return (size_t) s; }
-  };
-}
 
 template <class KEY_TYPE, class VALUE_TYPE>
 class Map
@@ -84,7 +69,7 @@ private:
   // m_map is declared mutable because some methods from the STL "map"
   // class that should be const are not.  Thus we define this as
   // mutable so we can still have conceptually const accessors.
-  mutable __gnu_cxx::hash_map<KEY_TYPE, VALUE_TYPE> m_map;
+  mutable m5::hash_map<KEY_TYPE, VALUE_TYPE> m_map;
 };
 
 template <class KEY_TYPE, class VALUE_TYPE>
