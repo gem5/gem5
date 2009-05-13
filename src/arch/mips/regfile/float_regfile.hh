@@ -85,6 +85,7 @@ namespace MipsISA
         FloatReg32 regs[NumFloatRegs];
 
       public:
+        static const int regWidth = SingleWidth;
 
         void clear();
         double readReg(int floatReg, int width, unsigned tid = 0);
