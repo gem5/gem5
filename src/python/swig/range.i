@@ -31,7 +31,7 @@
 %rename(assign) *::operator=;
 
 %include "base/range.hh"
-%include "sim/host.hh"
+%include "base/types.hh"
 
 %template(AddrRange) Range<Addr>;
 %template(TickRange) Range<Tick>;

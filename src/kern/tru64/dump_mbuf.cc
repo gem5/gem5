@@ -36,7 +36,7 @@
 #include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 #include "kern/tru64/mbuf.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/system.hh"
 #include "sim/arguments.hh"
 #include "arch/isa_traits.hh"

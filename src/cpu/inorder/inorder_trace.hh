@@ -34,7 +34,7 @@
 
 #include "base/trace.hh"
 #include "cpu/static_inst.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/insttracer.hh"
 #include "params/InOrderTrace.hh"
 #include "cpu/exetrace.hh"

@@ -38,7 +38,7 @@ namespace LittleEndianGuest {}
 #include "arch/alpha/max_inst_regs.hh"
 #include "arch/alpha/types.hh"
 #include "config/full_system.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class StaticInstPtr;
 

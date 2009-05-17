@@ -33,7 +33,7 @@
 
 #include <assert.h>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 // Returns the prime number one less than n.
 int prevPrime(int n);

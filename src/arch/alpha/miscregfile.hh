@@ -36,7 +36,7 @@
 
 #include "arch/alpha/ipr.hh"
 #include "arch/alpha/types.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 class Checkpoint;

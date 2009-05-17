@@ -31,7 +31,7 @@
 #ifndef __BASE_CRC_HH__
 #define __BASE_CRC_HH__
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 uint32_t crc32be(const uint8_t *buf, size_t len);
 uint32_t crc32le(const uint8_t *buf, size_t len);

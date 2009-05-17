@@ -60,7 +60,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace X86ISA
 {

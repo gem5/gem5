@@ -34,7 +34,7 @@
 #include "sim/stat_control.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/simulate.hh"

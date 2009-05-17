@@ -37,7 +37,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/misc.hh"
 #include "base/socket.hh"
 

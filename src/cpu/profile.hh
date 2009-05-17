@@ -35,7 +35,7 @@
 
 #include "arch/stacktrace.hh"
 #include "cpu/static_inst.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

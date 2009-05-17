@@ -67,7 +67,7 @@
 #include "base/stats/info.hh"
 #include "base/stats/types.hh"
 #include "base/stats/visit.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class Callback;
 

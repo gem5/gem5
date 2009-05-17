@@ -41,7 +41,7 @@
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 class BaseCPU;

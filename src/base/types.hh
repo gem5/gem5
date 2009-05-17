@@ -30,12 +30,12 @@
 
 /**
  * @file
- * Defines host-dependent types:
+ * Defines global host-dependent types:
  * Counter, Tick, and (indirectly) {int,uint}{8,16,32,64}_t.
  */
 
-#ifndef __HOST_HH__
-#define __HOST_HH__
+#ifndef __BASE_TYPES_HH__
+#define __BASE_TYPES_HH__
 
 #include <inttypes.h>
 
@@ -68,4 +68,4 @@ typedef uint64_t Addr;
 
 const Addr MaxAddr = (Addr)-1;
 
-#endif // __HOST_H__
+#endif // __BASE_TYPES_HH__

@@ -42,7 +42,7 @@
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/op_class.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class DerivO3CPUParams;
 class FUPool;

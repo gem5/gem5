@@ -60,7 +60,7 @@
 
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/pagetable.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 class FunctionalPort;

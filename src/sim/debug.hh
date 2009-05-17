@@ -31,7 +31,7 @@
 #ifndef __SIM_DEBUG_HH__
 #define __SIM_DEBUG_HH__
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 void schedBreakCycle(Tick when);
 

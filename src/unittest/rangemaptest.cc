@@ -30,7 +30,7 @@
 
 #include <iostream>
 #include <cassert>
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/range_map.hh"
 
 using namespace std;

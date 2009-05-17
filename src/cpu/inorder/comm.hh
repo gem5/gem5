@@ -39,7 +39,7 @@
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inst_seq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 /** Struct that defines the information passed from in between stages */
 /** This information mainly goes forward through the pipeline. */

@@ -91,7 +91,7 @@
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 #include <string>
 

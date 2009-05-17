@@ -41,7 +41,7 @@
 #include "base/misc.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/init.hh"
 
 using namespace std;

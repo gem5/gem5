@@ -317,12 +317,12 @@ class CheckedIntType(MetaParamValue):
 
         if not cls.cxx_predecls:
             # most derived types require this, so we just do it here once
-            cls.cxx_predecls = ['#include "sim/host.hh"']
+            cls.cxx_predecls = ['#include "base/types.hh"']
 
         if not cls.swig_predecls:
             # most derived types require this, so we just do it here once
             cls.swig_predecls = ['%import "stdint.i"\n' +
-                                 '%import "sim/host.hh"']
+                                 '%import "base/types.hh"']
 
         if not (hasattr(cls, 'min') and hasattr(cls, 'max')):
             if not (hasattr(cls, 'size') and hasattr(cls, 'unsigned')):
@@ -766,9 +766,9 @@ frequency_tolerance = 0.001  # 0.1%
 
 class TickParamValue(NumericParamValue):
     cxx_type = 'Tick'
-    cxx_predecls = ['#include "sim/host.hh"']
+    cxx_predecls = ['#include "base/types.hh"']
     swig_predecls = ['%import "stdint.i"\n' +
-                     '%import "sim/host.hh"']
+                     '%import "base/types.hh"']
 
     def getValue(self):
         return long(self.value)
@@ -844,9 +844,9 @@ class Frequency(TickParamValue):
 # An explicit conversion to a Latency or Frequency must be made first.
 class Clock(ParamValue):
     cxx_type = 'Tick'
-    cxx_predecls = ['#include "sim/host.hh"']
+    cxx_predecls = ['#include "base/types.hh"']
     swig_predecls = ['%import "stdint.i"\n' +
-                     '%import "sim/host.hh"']
+                     '%import "base/types.hh"']
     def __init__(self, value):
         if isinstance(value, (Latency, Clock)):
             self.ticks = value.ticks

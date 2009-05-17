@@ -37,7 +37,7 @@
 // import these files for SWIG to wrap
 %include "stdint.i"
 %include "std_string.i"
-%include "sim/host.hh"
+%include "base/types.hh"
 
 class BaseCPU;
 

@@ -36,7 +36,7 @@
 #include "arch/vtophys.hh"
 #include "base/refcnt.hh"
 #include "mem/vport.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

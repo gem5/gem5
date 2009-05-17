@@ -60,7 +60,7 @@
 
 #include "params/X86E820Entry.hh"
 #include "params/X86E820Table.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 #include <vector>

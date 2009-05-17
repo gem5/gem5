@@ -39,7 +39,7 @@
 
 #include "base/bigint.hh"
 #include "base/misc.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 // This lets us figure out what the byte order of the host system is
 #if defined(linux)

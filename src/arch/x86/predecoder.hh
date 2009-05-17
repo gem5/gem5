@@ -65,7 +65,7 @@
 #include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

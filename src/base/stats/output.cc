@@ -33,7 +33,7 @@
 #include "base/statistics.hh"
 #include "base/stats/output.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 

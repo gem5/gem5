@@ -42,7 +42,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/stats.hh"
 
 using namespace std;

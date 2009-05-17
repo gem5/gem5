@@ -35,7 +35,7 @@
 #include <limits>
 #include <string>
 
-#include "sim/host.hh"  // for Addr
+#include "base/types.hh"
 
 class Port;
 

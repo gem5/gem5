@@ -33,7 +33,7 @@
 
 #include <string>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 std::string &hostname();
 

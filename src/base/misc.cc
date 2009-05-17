@@ -39,7 +39,7 @@
 #include "base/output.hh"
 #include "base/trace.hh"
 #include "base/varargs.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/core.hh"
 
 using namespace std;

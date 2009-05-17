@@ -36,7 +36,7 @@
 #include <string>
 
 #include "base/range.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class Checkpoint;
 

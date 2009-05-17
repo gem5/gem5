@@ -37,7 +37,7 @@
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

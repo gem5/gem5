@@ -46,7 +46,7 @@
 
 #include "arch/types.hh"
 #include "base/statistics.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 #include "sim/syscallreturn.hh"
 

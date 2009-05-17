@@ -39,7 +39,7 @@
 
 #include "base/range.hh"
 #include "dev/etherpkt.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 #include "dnet/os.h"
 #include "dnet/eth.h"

@@ -60,7 +60,7 @@
 #include "base/misc.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 // Config entry types
 #include "params/X86IntelMPBaseConfigEntry.hh"

@@ -32,7 +32,7 @@
 #define __CPU_O3_TOURNAMENT_PRED_HH__
 
 #include "cpu/o3/sat_counter.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include <vector>
 
 /**

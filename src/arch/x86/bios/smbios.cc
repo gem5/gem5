@@ -92,7 +92,7 @@
 #include "params/X86SMBiosSMBiosStructure.hh"
 #include "params/X86SMBiosSMBiosTable.hh"
 #include "sim/byteswap.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 

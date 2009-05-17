@@ -33,7 +33,7 @@
 
 #include "base/loader/symtab.hh"
 #include "config/cp_annotate.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 #include "sim/system.hh"

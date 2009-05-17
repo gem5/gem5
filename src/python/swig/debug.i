@@ -31,12 +31,12 @@
 %module debug
 
 %{
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/debug.hh"
 %}
 
 %include "stdint.i"
-%include "sim/host.hh"
+%include "base/types.hh"
 %include "sim/debug.hh"
 
 %wrapper %{

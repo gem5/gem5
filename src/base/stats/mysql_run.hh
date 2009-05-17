@@ -34,7 +34,7 @@
 #include <string>
 
 #include "base/mysql.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace Stats {
 

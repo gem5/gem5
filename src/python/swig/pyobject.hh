@@ -31,7 +31,7 @@
 #include <Python.h>
 
 #include "cpu/base.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"

@@ -37,7 +37,7 @@
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/types.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 #include <string>
 

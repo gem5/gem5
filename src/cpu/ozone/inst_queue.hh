@@ -39,7 +39,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "cpu/inst_seq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class FUPool;
 class MemInterface;

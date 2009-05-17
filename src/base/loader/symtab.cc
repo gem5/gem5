@@ -36,7 +36,7 @@
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
 #include "base/str.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 using namespace std;

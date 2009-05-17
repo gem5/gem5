@@ -32,7 +32,7 @@
 #define __CPU_O3_BTB_HH__
 
 #include "base/misc.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class DefaultBTB
 {

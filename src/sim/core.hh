@@ -34,7 +34,7 @@
 
 #include <string>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 /// The universal simulation clock.
 extern Tick curTick;

@@ -35,7 +35,7 @@
 
 #include "sim/faults.hh"
 #include "cpu/inst_seq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 // Typedef for physical register index type. Although the Impl would be the
 // most likely location for this, there are a few classes that need this

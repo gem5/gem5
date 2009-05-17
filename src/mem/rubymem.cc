@@ -32,7 +32,7 @@
 #include "arch/isa_traits.hh"
 #include "mem/rubymem.hh"
 #include "sim/eventq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/output.hh"
 
 // Ruby includes

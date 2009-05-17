@@ -36,7 +36,7 @@
 #include "config/full_system.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 #include "sim/byteswap.hh"
 

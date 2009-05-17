@@ -43,7 +43,7 @@
 #include "base/stats/types.hh"
 #include "base/str.hh"
 #include "base/userinfo.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 

@@ -38,7 +38,7 @@
 #include "base/cprintf.hh"
 #include "base/match.hh"
 #include "base/traceflags.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/core.hh"
 
 namespace Trace {

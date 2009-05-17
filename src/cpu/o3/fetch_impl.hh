@@ -42,7 +42,7 @@
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/core.hh"
 
 #if FULL_SYSTEM

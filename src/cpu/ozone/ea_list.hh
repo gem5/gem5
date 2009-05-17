@@ -36,7 +36,7 @@
 #include <utility>
 
 #include "cpu/inst_seq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 /**
  * Simple class to hold onto a list of pairs, each pair having a memory

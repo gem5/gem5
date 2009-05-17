@@ -44,7 +44,7 @@
 #include "base/fast_alloc.hh"
 #include "base/flags.hh"
 #include "base/misc.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/core.hh"
 
 class Request;

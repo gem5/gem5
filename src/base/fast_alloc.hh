@@ -75,7 +75,7 @@ class FastAlloc
 #else
 
 #if FAST_ALLOC_DEBUG
-#include "sim/host.hh"   // for Tick
+#include "base/types.hh"
 #endif
 
 class FastAlloc

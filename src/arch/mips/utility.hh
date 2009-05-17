@@ -40,7 +40,7 @@
 #include "config/full_system.hh"
 //XXX This is needed for size_t. We should use something other than size_t
 //#include "kern/linux/linux.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 #include "cpu/thread_context.hh"
 

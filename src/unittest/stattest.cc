@@ -37,7 +37,7 @@
 #include "base/statistics.hh"
 #include "base/stats/text.hh"
 #include "base/stats/mysql.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 using namespace Stats;

@@ -58,7 +58,7 @@
 #ifndef __ARCH_X86_BIOS_ACPI_HH__
 #define __ARCH_X86_BIOS_ACPI_HH__
 
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 #include <vector>

@@ -62,7 +62,7 @@
 #include "arch/x86/max_inst_regs.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class StaticInstPtr;
 

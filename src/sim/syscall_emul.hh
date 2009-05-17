@@ -50,7 +50,7 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 
-#include "sim/host.hh"  // for Addr
+#include "base/types.hh"
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"      // for RoundUp
 #include "base/misc.hh"

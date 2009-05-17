@@ -39,7 +39,7 @@
 #include <unistd.h>
 
 #include "sim/async.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
 #include "sim/core.hh"

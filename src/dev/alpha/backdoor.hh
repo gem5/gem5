@@ -39,7 +39,7 @@
 #include "dev/alpha/access.h"
 #include "dev/io_device.hh"
 #include "params/AlphaBackdoor.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 class BaseCPU;

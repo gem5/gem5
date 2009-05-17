@@ -35,7 +35,7 @@
 
 #include "arch/arm/types.hh"
 #include "base/misc.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

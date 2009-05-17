@@ -63,7 +63,7 @@
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/miscregfile.hh"
 #include "arch/x86/types.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 #include <string>
 

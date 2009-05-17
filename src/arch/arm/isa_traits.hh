@@ -34,7 +34,7 @@
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
 #include "arch/arm/types.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace LittleEndianGuest {};
 

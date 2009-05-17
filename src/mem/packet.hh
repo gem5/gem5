@@ -49,7 +49,7 @@
 #include "base/misc.hh"
 #include "base/printable.hh"
 #include "mem/request.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/core.hh"
 
 

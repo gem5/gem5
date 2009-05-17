@@ -35,7 +35,7 @@
 %{
 #include <cstdlib>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 inline void
 seed(uint64_t seed)

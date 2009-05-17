@@ -36,7 +36,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace X86ISA
 {

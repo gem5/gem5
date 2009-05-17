@@ -43,7 +43,7 @@
 #include <iostream>
 #include <map>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class IniFile;
 class Serializable;

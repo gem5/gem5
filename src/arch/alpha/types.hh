@@ -32,7 +32,7 @@
 #ifndef __ARCH_ALPHA_TYPES_HH__
 #define __ARCH_ALPHA_TYPES_HH__
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace AlphaISA {
 

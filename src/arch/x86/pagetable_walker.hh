@@ -65,7 +65,7 @@
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "params/X86PagetableWalker.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 class ThreadContext;
 

@@ -36,7 +36,7 @@
 #include "base/trace.hh"
 #include "cpu/inst_seq.hh"      // for InstSeqNum
 #include "cpu/static_inst.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;

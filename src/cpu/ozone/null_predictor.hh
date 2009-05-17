@@ -32,7 +32,7 @@
 #define __CPU_OZONE_NULL_PREDICTOR_HH__
 
 #include "cpu/inst_seq.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 template <class Impl>
 class NullPredictor

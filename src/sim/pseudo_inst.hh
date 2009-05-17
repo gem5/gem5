@@ -31,7 +31,7 @@
 class ThreadContext;
 
 //We need the "Tick" and "Addr" data types from here
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace PseudoInst {
 

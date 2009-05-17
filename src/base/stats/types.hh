@@ -34,7 +34,7 @@
 #include <limits>
 #include <vector>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace Stats {
 

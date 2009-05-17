@@ -32,7 +32,7 @@
 
 %{
 #include "python/swig/pyevent.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -75,7 +75,7 @@
 
 %include "stdint.i"
 %include "std_string.i"
-%include "sim/host.hh"
+%include "base/types.hh"
 %include "sim/eventq.hh"
 %include "python/swig/pyevent.hh"
 

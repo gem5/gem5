@@ -34,7 +34,7 @@
 #include <string>
 
 #include "base/time.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace Stats {
 

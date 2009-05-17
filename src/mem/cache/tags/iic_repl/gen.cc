@@ -40,7 +40,7 @@
 #include "mem/cache/tags/iic.hh"
 #include "mem/cache/tags/iic_repl/gen.hh"
 #include "params/GenRepl.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 

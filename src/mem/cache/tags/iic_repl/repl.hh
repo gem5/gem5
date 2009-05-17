@@ -42,7 +42,7 @@
 #include <list>
 
 #include "cpu/smt.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 

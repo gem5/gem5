@@ -37,7 +37,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/stats/events.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
 

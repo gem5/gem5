@@ -29,7 +29,7 @@
  *          Steve Reinhardt
  */
 
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_events.hh"
 
 SimLoopExitEvent *simulate(Tick num_cycles = MaxTick);

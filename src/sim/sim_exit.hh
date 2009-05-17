@@ -34,7 +34,7 @@
 
 #include <string>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 // forward declaration
 class Callback;

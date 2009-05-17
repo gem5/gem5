@@ -32,7 +32,7 @@
 
 %{
 #include "base/trace.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 inline void
 output(const char *filename)

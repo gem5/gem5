@@ -43,7 +43,7 @@
 #include "arch/tlb.hh"
 #include "base/hashmap.hh"
 #include "mem/request.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/serialize.hh"
 
 class Process;

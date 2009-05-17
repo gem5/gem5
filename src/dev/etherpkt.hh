@@ -41,7 +41,7 @@
 #include <assert.h>
 
 #include "base/refcnt.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 /*
  * Reference counted class containing ethernet packet data

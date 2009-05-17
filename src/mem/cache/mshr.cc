@@ -41,7 +41,7 @@
 
 #include "mem/cache/mshr.hh"
 #include "sim/core.hh" // for curTick
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/misc.hh"
 #include "mem/cache/cache.hh"
 

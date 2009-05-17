@@ -32,7 +32,7 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/inet.hh"
 
 using namespace std;

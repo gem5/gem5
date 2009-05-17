@@ -39,7 +39,7 @@
 #include <string>
 
 #include "base/misc.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 
 using namespace std;
 

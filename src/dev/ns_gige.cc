@@ -45,7 +45,7 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/system.hh"
 
 const char *NsRxStateStrings[] =

@@ -51,7 +51,7 @@
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"

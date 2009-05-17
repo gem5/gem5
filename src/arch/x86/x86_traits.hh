@@ -60,7 +60,7 @@
 
 #include <assert.h>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 
 namespace X86ISA
 {

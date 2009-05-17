@@ -37,7 +37,7 @@
  * Cache definitions.
  */
 
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/fast_alloc.hh"
 #include "base/misc.hh"
 #include "base/range.hh"

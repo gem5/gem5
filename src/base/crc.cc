@@ -33,7 +33,7 @@
 
 #include <string>
 
-#include "sim/host.hh"
+#include "base/types.hh"
 #include "base/crc.hh"
 
 #define ETHER_CRC_POLY_LE 0xedb88320
