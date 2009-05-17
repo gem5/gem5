@@ -34,7 +34,7 @@
 #include <linux/user.h>
 #include <sys/types.h>
 #include <sys/ptrace.h>
-#include <assert.h>
+#include <cassert>
 #include <string>
 
 #include "tracechild.hh"

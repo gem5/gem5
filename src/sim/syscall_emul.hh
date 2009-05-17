@@ -50,11 +50,11 @@
 #include <fcntl.h>
 #include <sys/uio.h>
 
-#include "base/types.hh"
 #include "base/chunk_generator.hh"
 #include "base/intmath.hh"      // for RoundUp
 #include "base/misc.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "mem/translating_port.hh"

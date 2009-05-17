@@ -31,12 +31,12 @@
 #ifndef __SIM_ARGUMENTS_HH__
 #define __SIM_ARGUMENTS_HH__
 
-#include <assert.h>
+#include <cassert>
 
 #include "arch/vtophys.hh"
 #include "base/refcnt.hh"
-#include "mem/vport.hh"
 #include "base/types.hh"
+#include "mem/vport.hh"
 
 class ThreadContext;
 

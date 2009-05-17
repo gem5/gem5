@@ -31,17 +31,15 @@
 #ifndef __CPU_O3_BPRED_UNIT_HH__
 #define __CPU_O3_BPRED_UNIT_HH__
 
-#include "base/statistics.hh"
-#include "cpu/inst_seq.hh"
+#include <list>
 
+#include "base/statistics.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
 #include "cpu/o3/2bit_local_pred.hh"
 #include "cpu/o3/btb.hh"
 #include "cpu/o3/ras.hh"
 #include "cpu/o3/tournament_pred.hh"
-
-#include "base/types.hh"
-
-#include <list>
 
 class DerivO3CPUParams;
 

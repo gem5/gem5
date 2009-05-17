@@ -33,15 +33,15 @@
  * Declaration of a fully associative LRU tag store.
  */
 
-#ifndef __FA_LRU_HH__
-#define __FA_LRU_HH__
+#ifndef __MEM_CACHE_TAGS_FA_LRU_HH__
+#define __MEM_CACHE_TAGS_FA_LRU_HH__
 
 #include <list>
 
-#include "mem/cache/blk.hh"
-#include "mem/packet.hh"
 #include "base/hashmap.hh"
+#include "mem/cache/blk.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/packet.hh"
 
 /**
  * A fully associative cache block.
@@ -281,4 +281,4 @@ public:
     }
 };
 
-#endif
+#endif // __MEM_CACHE_TAGS_FA_LRU_HH__

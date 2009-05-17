@@ -33,17 +33,17 @@
  * Declaration of a non-full system Page Table.
  */
 
-#ifndef __PAGE_TABLE__
-#define __PAGE_TABLE__
+#ifndef __MEM_PAGE_TABLE_HH__
+#define __MEM_PAGE_TABLE_HH__
 
 #include <string>
 
-#include "sim/faults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/tlb.hh"
 #include "base/hashmap.hh"
-#include "mem/request.hh"
 #include "base/types.hh"
+#include "mem/request.hh"
+#include "sim/faults.hh"
 #include "sim/serialize.hh"
 
 class Process;
@@ -133,4 +133,4 @@ class PageTable
     void unserialize(Checkpoint *cp, const std::string &section);
 };
 
-#endif
+#endif // __MEM_PAGE_TABLE_HH__

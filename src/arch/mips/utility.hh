@@ -37,11 +37,8 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
-//XXX This is needed for size_t. We should use something other than size_t
-//#include "kern/linux/linux.hh"
 #include "base/types.hh"
-
+#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 
 class ThreadContext;

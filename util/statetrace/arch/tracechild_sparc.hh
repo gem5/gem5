@@ -32,7 +32,7 @@
 #define TRACECHILD_SPARC_HH
 
 #include <asm-sparc64/reg.h>
-#include <assert.h>
+#include <cassert>
 #include <ostream>
 #include <stdint.h>
 #include <string>

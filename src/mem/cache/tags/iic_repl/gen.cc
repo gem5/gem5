@@ -37,10 +37,10 @@
 #include <string>
 
 #include "base/misc.hh"
+#include "base/types.hh"
 #include "mem/cache/tags/iic.hh"
 #include "mem/cache/tags/iic_repl/gen.hh"
 #include "params/GenRepl.hh"
-#include "base/types.hh"
 
 using namespace std;
 

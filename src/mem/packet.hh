@@ -48,10 +48,9 @@
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/printable.hh"
-#include "mem/request.hh"
 #include "base/types.hh"
+#include "mem/request.hh"
 #include "sim/core.hh"
-
 
 struct Packet;
 typedef Packet *PacketPtr;

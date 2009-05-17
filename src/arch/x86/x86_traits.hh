@@ -58,7 +58,7 @@
 #ifndef __ARCH_X86_X86TRAITS_HH__
 #define __ARCH_X86_X86TRAITS_HH__
 
-#include <assert.h>
+#include <cassert>
 
 #include "base/types.hh"
 

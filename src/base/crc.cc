@@ -33,8 +33,8 @@
 
 #include <string>
 
-#include "base/types.hh"
 #include "base/crc.hh"
+#include "base/types.hh"
 
 #define ETHER_CRC_POLY_LE 0xedb88320
 #define ETHER_CRC_POLY_BE 0x04c11db6

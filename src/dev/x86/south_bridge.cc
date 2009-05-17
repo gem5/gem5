@@ -28,7 +28,7 @@
  * Authors: Gabe Black
  */
 
-#include <assert.h>
+#include <cassert>
 
 #include "dev/x86/pc.hh"
 #include "dev/x86/south_bridge.hh"

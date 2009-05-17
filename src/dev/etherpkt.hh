@@ -36,9 +36,9 @@
 #ifndef __ETHERPKT_HH__
 #define __ETHERPKT_HH__
 
+#include <cassert>
 #include <iosfwd>
 #include <memory>
-#include <assert.h>
 
 #include "base/refcnt.hh"
 #include "base/types.hh"

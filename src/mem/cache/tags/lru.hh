@@ -33,16 +33,16 @@
  * Declaration of a LRU tag store.
  */
 
-#ifndef __LRU_HH__
-#define __LRU_HH__
+#ifndef __MEM_CACHE_TAGS_LRU_HH__
+#define __MEM_CACHE_TAGS_LRU_HH__
 
+#include <cassert>
 #include <cstring>
 #include <list>
 
-#include "mem/cache/blk.hh" // base class
-#include "mem/packet.hh" // for inlined functions
-#include <assert.h>
+#include "mem/cache/blk.hh"
 #include "mem/cache/tags/base.hh"
+#include "mem/packet.hh"
 
 class BaseCache;
 
@@ -261,4 +261,4 @@ public:
     virtual void cleanupRefs();
 };
 
-#endif
+#endif // __MEM_CACHE_TAGS_LRU_HH__

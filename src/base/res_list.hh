@@ -32,8 +32,9 @@
 #ifndef __RES_LIST_HH__
 #define __RES_LIST_HH__
 
+#include <cassert>
+
 #include "base/cprintf.hh"
-#include <assert.h>
 
 #define DEBUG_REMOVE 0
 

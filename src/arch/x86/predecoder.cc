@@ -59,8 +59,8 @@
 #include "arch/x86/predecoder.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/thread_context.hh"
 #include "base/types.hh"
+#include "cpu/thread_context.hh"
 
 namespace X86ISA
 {

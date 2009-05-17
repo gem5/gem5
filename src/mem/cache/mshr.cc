@@ -34,16 +34,16 @@
  * Miss Status and Handling Register (MSHR) definitions.
  */
 
-#include <assert.h>
+#include <algorithm>
+#include <cassert>
 #include <string>
 #include <vector>
-#include <algorithm>
 
-#include "mem/cache/mshr.hh"
-#include "sim/core.hh" // for curTick
-#include "base/types.hh"
 #include "base/misc.hh"
+#include "base/types.hh"
 #include "mem/cache/cache.hh"
+#include "mem/cache/mshr.hh"
+#include "sim/core.hh"
 
 using namespace std;
 

@@ -31,13 +31,13 @@
 
 #include "base/misc.hh"
 #include "base/pollevent.hh"
-#include "sim/stat_control.hh"
+#include "base/types.hh"
 #include "sim/async.hh"
 #include "sim/eventq.hh"
-#include "base/types.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
 #include "sim/simulate.hh"
+#include "sim/stat_control.hh"
 
 /** Simulate for num_cycles additional cycles.  If num_cycles is -1
  * (the default), do not limit simulation; some other event must

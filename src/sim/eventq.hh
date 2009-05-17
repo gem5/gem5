@@ -47,8 +47,8 @@
 #include "base/flags.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "sim/serialize.hh"
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 class EventQueue;       // forward declaration
 

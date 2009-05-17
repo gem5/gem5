@@ -42,8 +42,8 @@
 #include "base/stats/mysql_run.hh"
 #include "base/stats/types.hh"
 #include "base/str.hh"
-#include "base/userinfo.hh"
 #include "base/types.hh"
+#include "base/userinfo.hh"
 
 using namespace std;
 

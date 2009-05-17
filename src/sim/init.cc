@@ -39,9 +39,9 @@
 
 #include "base/cprintf.hh"
 #include "base/misc.hh"
+#include "base/types.hh"
 #include "sim/async.hh"
 #include "sim/core.hh"
-#include "base/types.hh"
 #include "sim/init.hh"
 
 using namespace std;

@@ -32,14 +32,14 @@
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
+#include <string>
+
 #include "arch/sparc/floatregfile.hh"
 #include "arch/sparc/intregfile.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/types.hh"
 #include "base/types.hh"
-
-#include <string>
 
 class Checkpoint;
 

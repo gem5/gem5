@@ -61,9 +61,9 @@
 #include <iostream>
 #include <string>
 
-#include "base/types.hh"
 #include "base/bitunion.hh"
 #include "base/misc.hh"
+#include "base/types.hh"
 
 class Checkpoint;
 

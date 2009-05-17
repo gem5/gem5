@@ -67,8 +67,8 @@
  * SOFTWARE.
  *------------------------------------------------------------*/
 
-#include <math.h>
-#include <assert.h>
+#include <cassert>
+#include <cmath>
 
 #include "mem/ruby/network/orion/parm_technology.hh"
 #include "mem/ruby/network/orion/SIM_port.hh"

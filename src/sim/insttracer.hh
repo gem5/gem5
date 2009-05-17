@@ -34,9 +34,9 @@
 
 #include "base/bigint.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"      // for InstSeqNum
 #include "cpu/static_inst.hh"
-#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 class ThreadContext;

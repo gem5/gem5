@@ -34,8 +34,8 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 
 class ThreadContext;
 

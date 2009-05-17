@@ -87,12 +87,12 @@
 
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/isa_traits.hh"
+#include "base/types.hh"
 #include "mem/port.hh"
 #include "params/X86SMBiosBiosInformation.hh"
 #include "params/X86SMBiosSMBiosStructure.hh"
 #include "params/X86SMBiosSMBiosTable.hh"
 #include "sim/byteswap.hh"
-#include "base/types.hh"
 
 using namespace std;
 

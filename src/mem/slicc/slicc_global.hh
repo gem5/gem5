@@ -30,9 +30,7 @@
 #ifndef SLICC_GLOBAL_H
 #define SLICC_GLOBAL_H
 
-#include <assert.h> /* slicc needs to include this in order to use classes in
-                     * ../common directory.
-                     */
+#include <cassert>
 
 #include "mem/gems_common/std-includes.hh"
 #include "mem/gems_common/Map.hh"

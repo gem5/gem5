@@ -38,8 +38,8 @@
 #include "base/misc.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
-#include "base/varargs.hh"
 #include "base/types.hh"
+#include "base/varargs.hh"
 #include "sim/core.hh"
 
 using namespace std;

@@ -30,7 +30,8 @@
  * $Id$
  */
 
-#include "assert.h"
+#include <cassert>
+
 #include "mem/gems_common/util.hh"
 
 // Split a string into a head and tail strings on the specified

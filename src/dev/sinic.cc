@@ -35,14 +35,14 @@
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
 #include "base/inet.hh"
-#include "cpu/thread_context.hh"
+#include "base/types.hh"
 #include "cpu/intr_control.hh"
+#include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
 #include "dev/sinic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/eventq.hh"
-#include "base/types.hh"
 #include "sim/stats.hh"
 
 using namespace std;

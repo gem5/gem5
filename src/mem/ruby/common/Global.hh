@@ -32,8 +32,8 @@
  *
  * */
 
-#ifndef GLOBAL_H
-#define GLOBAL_H
+#ifndef __MEM_RUBY_GLOBAL_HH__
+#define __MEM_RUBY_GLOBAL_HH__
 
 #ifdef SINGLE_LEVEL_CACHE
 const bool TWO_LEVEL_CACHE = false;
@@ -105,5 +105,5 @@ extern inline int max_tokens()
 }
 
 
-#endif //GLOBAL_H
+#endif // __MEM_RUBY_GLOBAL_HH__
 

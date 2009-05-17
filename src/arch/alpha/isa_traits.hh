@@ -37,8 +37,8 @@ namespace LittleEndianGuest {}
 #include "arch/alpha/ipr.hh"
 #include "arch/alpha/max_inst_regs.hh"
 #include "arch/alpha/types.hh"
-#include "config/full_system.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 
 class StaticInstPtr;
 

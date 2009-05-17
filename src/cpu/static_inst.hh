@@ -36,14 +36,14 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
-#include "sim/faults.hh"
 #include "base/bitfield.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
 #include "base/refcnt.hh"
+#include "base/types.hh"
 #include "cpu/op_class.hh"
 #include "sim/faults.hh"
-#include "base/types.hh"
+#include "sim/faults.hh"
 
 // forward declarations
 struct AlphaSimpleImpl;

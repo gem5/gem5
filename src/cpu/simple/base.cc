@@ -28,10 +28,10 @@
  * Authors: Steve Reinhardt
  */
 
-#include "arch/utility.hh"
 #include "arch/faults.hh"
-#include "base/cprintf.hh"
+#include "arch/utility.hh"
 #include "base/cp_annotate.hh"
+#include "base/cprintf.hh"
 #include "base/inifile.hh"
 #include "base/loader/symtab.hh"
 #include "base/misc.hh"
@@ -39,6 +39,7 @@
 #include "base/range.hh"
 #include "base/stats/events.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"
@@ -49,9 +50,9 @@
 #include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "params/BaseSimpleCPU.hh"
 #include "sim/byteswap.hh"
 #include "sim/debug.hh"
-#include "base/types.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"
@@ -66,8 +67,6 @@
 #else // !FULL_SYSTEM
 #include "mem/mem_object.hh"
 #endif // FULL_SYSTEM
-
-#include "params/BaseSimpleCPU.hh"
 
 using namespace std;
 using namespace TheISA;

@@ -26,11 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
+#include <cassert>
+#include <cmath>
+#include <cstdio>
+
 #include "mem/ruby/network/orion/parm_technology.hh"
 #include "mem/ruby/network/orion/power_utils.hh"
-#include <assert.h>
-#include <math.h>
 
 /* ----------- from SIM_power_util.c ------------ */
 

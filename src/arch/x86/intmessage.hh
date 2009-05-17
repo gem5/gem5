@@ -33,10 +33,10 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/request.hh"
-#include "base/types.hh"
 
 namespace X86ISA
 {

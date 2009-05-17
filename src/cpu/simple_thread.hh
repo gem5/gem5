@@ -35,13 +35,13 @@
 #include "arch/isa_traits.hh"
 #include "arch/regfile.hh"
 #include "arch/tlb.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "mem/request.hh"
 #include "sim/byteswap.hh"
 #include "sim/eventq.hh"
-#include "base/types.hh"
 #include "sim/serialize.hh"
 
 class BaseCPU;

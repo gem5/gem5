@@ -31,19 +31,20 @@
 #ifndef __BASE__CP_ANNOTATE_HH__
 #define __BASE__CP_ANNOTATE_HH__
 
-#include "base/loader/symtab.hh"
-#include "config/cp_annotate.hh"
-#include "base/types.hh"
-#include "sim/serialize.hh"
-#include "sim/startup.hh"
-#include "sim/system.hh"
-
 #include <string>
 #include <list>
 #include <vector>
 #include <map>
+
 #include "base/hashmap.hh"
+#include "base/loader/symtab.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
+#include "config/cp_annotate.hh"
+#include "sim/serialize.hh"
+#include "sim/startup.hh"
+#include "sim/system.hh"
+
 #if CP_ANNOTATE
 #include "params/CPA.hh"
 #endif

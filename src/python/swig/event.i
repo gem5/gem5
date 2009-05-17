@@ -31,8 +31,8 @@
 %module event
 
 %{
-#include "python/swig/pyevent.hh"
 #include "base/types.hh"
+#include "python/swig/pyevent.hh"
 #include "sim/eventq.hh"
 #include "sim/sim_events.hh"
 #include "sim/sim_exit.hh"
@@ -75,9 +75,10 @@
 
 %include "stdint.i"
 %include "std_string.i"
+
 %include "base/types.hh"
-%include "sim/eventq.hh"
 %include "python/swig/pyevent.hh"
+%include "sim/eventq.hh"
 
 struct CountedDrainEvent : public Event
 {

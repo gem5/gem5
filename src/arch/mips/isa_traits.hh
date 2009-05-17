@@ -36,8 +36,8 @@
 
 #include "arch/mips/types.hh"
 #include "arch/mips/mips_core_specific.hh"
-#include "config/full_system.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 
 namespace LittleEndianGuest {};
 

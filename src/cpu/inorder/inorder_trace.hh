@@ -29,18 +29,17 @@
  * Authors: Korey Sewell
  */
 
-#ifndef __INORDERTRACE_HH__
-#define __INORDERTRACE_HH__
+#ifndef __CPU_INORDER_INORDER_TRACE_HH__
+#define __CPU_INORDER_INORDER_TRACE_HH__
 
 #include "base/trace.hh"
-#include "cpu/static_inst.hh"
 #include "base/types.hh"
-#include "sim/insttracer.hh"
-#include "params/InOrderTrace.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/static_inst.hh"
+#include "params/InOrderTrace.hh"
+#include "sim/insttracer.hh"
 
 class ThreadContext;
-
 
 namespace Trace {
 
@@ -95,4 +94,4 @@ class InOrderTrace : public InstTracer
 
 /* namespace Trace */ }
 
-#endif // __EXETRACE_HH__
+#endif // __CPU_INORDER_INORDER_TRACE_HH__

@@ -42,11 +42,11 @@
 #include "arch/isa_traits.hh"
 #include "base/misc.hh"
 #include "base/random.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/eventq.hh"
-#include "base/types.hh"
 
 using namespace std;
 using namespace TheISA;

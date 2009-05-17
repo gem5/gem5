@@ -58,11 +58,11 @@
 #ifndef __ARCH_X86_BIOS_ACPI_HH__
 #define __ARCH_X86_BIOS_ACPI_HH__
 
+#include <string>
+#include <vector>
+
 #include "base/types.hh"
 #include "sim/sim_object.hh"
-
-#include <vector>
-#include <string>
 
 class Port;
 

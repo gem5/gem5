@@ -35,14 +35,14 @@
 #ifndef __DEV_ETHERLINK_HH__
 #define __DEV_ETHERLINK_HH__
 
-#include "dev/etherobject.hh"
+#include "base/types.hh"
 #include "dev/etherint.hh"
+#include "dev/etherobject.hh"
 #include "dev/etherpkt.hh"
 #include "params/EtherLink.hh"
-#include "sim/eventq.hh"
-#include "base/types.hh"
-#include "sim/sim_object.hh"
 #include "params/EtherLink.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_object.hh"
 
 class EtherDump;
 class Checkpoint;

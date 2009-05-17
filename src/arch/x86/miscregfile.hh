@@ -88,12 +88,12 @@
 #ifndef __ARCH_X86_MISCREGFILE_HH__
 #define __ARCH_X86_MISCREGFILE_HH__
 
+#include <string>
+
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
 #include "base/types.hh"
-
-#include <string>
 
 class Checkpoint;
 

@@ -38,11 +38,11 @@
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dep_graph.hh"
 #include "cpu/op_class.hh"
 #include "sim/eventq.hh"
-#include "base/types.hh"
 
 class DerivO3CPUParams;
 class FUPool;

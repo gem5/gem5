@@ -38,6 +38,7 @@
 
 #include "base/debug.hh"
 #include "base/inet.hh"
+#include "base/types.hh"
 #include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"
 #include "dev/ns_gige.hh"
@@ -45,7 +46,6 @@
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
-#include "base/types.hh"
 #include "sim/system.hh"
 
 const char *NsRxStateStrings[] =

@@ -31,10 +31,10 @@
 #ifndef __CPU_O3_2BIT_LOCAL_PRED_HH__
 #define __CPU_O3_2BIT_LOCAL_PRED_HH__
 
-#include "cpu/o3/sat_counter.hh"
-#include "base/types.hh"
-
 #include <vector>
+
+#include "base/types.hh"
+#include "cpu/o3/sat_counter.hh"
 
 /**
  * Implements a local predictor that uses the PC to index into a table of

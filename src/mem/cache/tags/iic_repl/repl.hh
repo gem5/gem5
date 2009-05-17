@@ -41,10 +41,9 @@
 #include <string>
 #include <list>
 
-#include "cpu/smt.hh"
 #include "base/types.hh"
+#include "cpu/smt.hh"
 #include "sim/sim_object.hh"
-
 
 class IIC;
 

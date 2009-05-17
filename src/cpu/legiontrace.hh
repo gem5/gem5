@@ -29,13 +29,13 @@
  *          Nathan Binkert
  */
 
-#ifndef __LEGIONTRACE_HH__
-#define __LEGIONTRACE_HH__
+#ifndef __CPU_LEGIONTRACE_HH__
+#define __CPU_LEGIONTRACE_HH__
 
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "params/LegionTrace.hh"
-#include "base/types.hh"
 #include "sim/insttracer.hh"
 
 class ThreadContext;
@@ -78,4 +78,4 @@ class LegionTrace : public InstTracer
 
 /* namespace Trace */ }
 
-#endif // __LEGIONTRACE_HH__
+#endif // __CPU_LEGIONTRACE_HH__

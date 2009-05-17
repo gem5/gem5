@@ -38,10 +38,10 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include "sim/async.hh"
-#include "base/types.hh"
 #include "base/misc.hh"
 #include "base/pollevent.hh"
+#include "base/types.hh"
+#include "sim/async.hh"
 #include "sim/core.hh"
 #include "sim/serialize.hh"
 

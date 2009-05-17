@@ -35,8 +35,8 @@
 #include "arch/sparc/types.hh"
 #include "arch/sparc/max_inst_regs.hh"
 #include "arch/sparc/sparc_traits.hh"
-#include "config/full_system.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 
 class StaticInstPtr;
 

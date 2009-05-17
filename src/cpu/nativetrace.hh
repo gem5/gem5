@@ -29,18 +29,17 @@
  *          Nathan Binkert
  */
 
-#ifndef __NATIVETRACE_HH__
-#define __NATIVETRACE_HH__
+#ifndef __CPU_NATIVETRACE_HH__
+#define __CPU_NATIVETRACE_HH__
 
-#include "base/trace.hh"
-#include "cpu/static_inst.hh"
-#include "base/types.hh"
-#include "sim/insttracer.hh"
-#include "arch/x86/intregs.hh"
 #include "arch/x86/floatregs.hh"
+#include "arch/x86/intregs.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/static_inst.hh"
+#include "sim/insttracer.hh"
 
 class ThreadContext;
-
 
 namespace Trace {
 
@@ -213,4 +212,4 @@ class NativeTrace : public InstTracer
 
 /* namespace Trace */ }
 
-#endif // __EXETRACE_HH__
+#endif // __CPU_NATIVETRACE_HH__

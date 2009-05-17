@@ -31,8 +31,9 @@
 #ifndef __CPU_O3_RAS_HH__
 #define __CPU_O3_RAS_HH__
 
-#include "base/types.hh"
 #include <vector>
+
+#include "base/types.hh"
 
 /** Return address stack class, implements a simple RAS. */
 class ReturnAddrStack

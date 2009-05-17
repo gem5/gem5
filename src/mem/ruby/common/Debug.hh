@@ -31,13 +31,14 @@
  * $Id$
  */
 
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef __MEM_RUBY_DEBUG_HH__
+#define __MEM_RUBY_DEBUG_HH__
 
 #include <unistd.h>
 #include <iostream>
 
 #include "config/ruby_debug.hh"
+#include "mem/ruby/common/Global.hh"
 
 extern std::ostream * debug_cout_ptr;
 
@@ -302,5 +303,5 @@ const bool ASSERT_FLAG = true;
   }\
 }
 
-#endif //DEBUG_H
+#endif // __MEM_RUBY_DEBUG_HH__
 

@@ -58,12 +58,12 @@
 #ifndef __ARCH_X86_BIOS_E820_HH__
 #define __ARCH_X86_BIOS_E820_HH__
 
+#include <vector>
+
+#include "base/types.hh"
 #include "params/X86E820Entry.hh"
 #include "params/X86E820Table.hh"
-#include "base/types.hh"
 #include "sim/sim_object.hh"
-
-#include <vector>
 
 class Port;
 

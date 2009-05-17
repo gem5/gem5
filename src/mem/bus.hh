@@ -41,16 +41,16 @@
 #include <set>
 #include <list>
 
-#include "base/range.hh"
 #include "base/hashmap.hh"
+#include "base/range.hh"
 #include "base/range_map.hh"
 #include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
-#include "sim/eventq.hh"
 #include "params/Bus.hh"
+#include "sim/eventq.hh"
 
 class Bus : public MemObject
 {

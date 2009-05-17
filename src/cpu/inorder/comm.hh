@@ -36,10 +36,10 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
+#include "base/types.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inst_seq.hh"
-#include "base/types.hh"
 
 /** Struct that defines the information passed from in between stages */
 /** This information mainly goes forward through the pipeline. */

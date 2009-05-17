@@ -36,10 +36,10 @@
 #define __DEV_MIPS_BACKDOOR_HH__
 
 #include "base/range.hh"
-#include "dev/mips/access.h"
-#include "dev/io_device.hh"
-#include "params/MipsBackdoor.hh"
 #include "base/types.hh"
+#include "dev/io_device.hh"
+#include "dev/mips/access.h"
+#include "params/MipsBackdoor.hh"
 #include "sim/sim_object.hh"
 
 class BaseCPU;

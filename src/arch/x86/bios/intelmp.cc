@@ -58,9 +58,9 @@
 #include "arch/x86/bios/intelmp.hh"
 #include "arch/x86/isa_traits.hh"
 #include "base/misc.hh"
+#include "base/types.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
-#include "base/types.hh"
 
 // Config entry types
 #include "params/X86IntelMPBaseConfigEntry.hh"

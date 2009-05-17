@@ -91,9 +91,9 @@
 #include <string>
 #include <vector>
 
+#include "base/types.hh"
 #include "enums/Characteristic.hh"
 #include "enums/ExtCharacteristic.hh"
-#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 class FunctionalPort;

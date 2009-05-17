@@ -36,10 +36,10 @@
 #define __DEV_ALPHA_BACKDOOR_HH__
 
 #include "base/range.hh"
+#include "base/types.hh"
 #include "dev/alpha/access.h"
 #include "dev/io_device.hh"
 #include "params/AlphaBackdoor.hh"
-#include "base/types.hh"
 #include "sim/sim_object.hh"
 
 class BaseCPU;

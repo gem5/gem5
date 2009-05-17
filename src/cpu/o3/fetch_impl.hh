@@ -32,17 +32,17 @@
 #include <algorithm>
 #include <cstring>
 
-#include "config/use_checker.hh"
-
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
+#include "base/types.hh"
+#include "config/use_checker.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/fetch.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
+#include "params/DerivO3CPU.hh"
 #include "sim/byteswap.hh"
-#include "base/types.hh"
 #include "sim/core.hh"
 
 #if FULL_SYSTEM
@@ -50,8 +50,6 @@
 #include "arch/vtophys.hh"
 #include "sim/system.hh"
 #endif // FULL_SYSTEM
-
-#include "params/DerivO3CPU.hh"
 
 template<class Impl>
 void

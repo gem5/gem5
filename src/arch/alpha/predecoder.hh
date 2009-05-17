@@ -33,8 +33,8 @@
 
 #include "arch/alpha/types.hh"
 #include "base/misc.hh"
-#include "config/full_system.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 
 class ThreadContext;
 

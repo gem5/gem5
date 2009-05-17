@@ -31,16 +31,16 @@
 #include <sys/types.h>
 #include <algorithm>
 
-#include "base/cprintf.hh"
-#include "base/trace.hh"
-#include "base/loader/symtab.hh"
-#include "cpu/thread_context.hh"
-#include "kern/tru64/mbuf.hh"
-#include "base/types.hh"
-#include "sim/system.hh"
-#include "sim/arguments.hh"
 #include "arch/isa_traits.hh"
 #include "arch/vtophys.hh"
+#include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/thread_context.hh"
+#include "kern/tru64/mbuf.hh"
+#include "sim/arguments.hh"
+#include "sim/system.hh"
 
 using namespace TheISA;
 

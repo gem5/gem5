@@ -29,17 +29,16 @@
  *          Nathan Binkert
  */
 
-#ifndef __INTELTRACE_HH__
-#define __INTELTRACE_HH__
+#ifndef __CPU_INTELTRACE_HH__
+#define __CPU_INTELTRACE_HH__
 
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "params/IntelTrace.hh"
-#include "base/types.hh"
 #include "sim/insttracer.hh"
 
 class ThreadContext;
-
 
 namespace Trace {
 
@@ -85,4 +84,4 @@ class IntelTrace : public InstTracer
 
 /* namespace Trace */ }
 
-#endif // __EXETRACE_HH__
+#endif // __CPU_INTELTRACE_HH__

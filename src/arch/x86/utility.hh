@@ -61,9 +61,9 @@
 #include "arch/x86/types.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
-#include "base/types.hh"
 
 class ThreadContext;
 

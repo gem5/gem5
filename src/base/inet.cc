@@ -32,8 +32,8 @@
 #include <string>
 
 #include "base/cprintf.hh"
-#include "base/types.hh"
 #include "base/inet.hh"
+#include "base/types.hh"
 
 using namespace std;
 namespace Net {

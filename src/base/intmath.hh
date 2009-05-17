@@ -28,10 +28,10 @@
  * Authors: Nathan Binkert
  */
 
-#ifndef __INTMATH_HH__
-#define __INTMATH_HH__
+#ifndef __BASE_INTMATH_HH__
+#define __BASE_INTMATH_HH__
 
-#include <assert.h>
+#include <cassert>
 
 #include "base/types.hh"
 
@@ -229,4 +229,4 @@ hex2Int(char c)
   return 0;
 }
 
-#endif // __INTMATH_HH__
+#endif // __BASE_INTMATH_HH__

@@ -31,8 +31,8 @@
 #include <cassert>
 #include <iostream>
 
-#include "base/types.hh"
 #include "base/range_map.hh"
+#include "base/types.hh"
 
 using namespace std;
 

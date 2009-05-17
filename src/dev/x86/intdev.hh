@@ -31,7 +31,7 @@
 #ifndef __DEV_X86_INTDEV_HH__
 #define __DEV_X86_INTDEV_HH__
 
-#include <assert.h>
+#include <cassert>
 #include <string>
 
 #include "arch/x86/x86_traits.hh"

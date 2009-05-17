@@ -58,14 +58,14 @@
 #ifndef __ARCH_X86_REGFILE_HH__
 #define __ARCH_X86_REGFILE_HH__
 
+#include <string>
+
 #include "arch/x86/floatregfile.hh"
 #include "arch/x86/intregfile.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/miscregfile.hh"
 #include "arch/x86/types.hh"
 #include "base/types.hh"
-
-#include <string>
 
 class Checkpoint;
 class EventManager;

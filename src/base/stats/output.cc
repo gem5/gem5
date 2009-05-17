@@ -32,8 +32,8 @@
 
 #include "base/statistics.hh"
 #include "base/stats/output.hh"
-#include "sim/eventq.hh"
 #include "base/types.hh"
+#include "sim/eventq.hh"
 
 using namespace std;
 

@@ -35,8 +35,8 @@
 #include <list>
 #include <utility>
 
-#include "cpu/inst_seq.hh"
 #include "base/types.hh"
+#include "cpu/inst_seq.hh"
 
 /**
  * Simple class to hold onto a list of pairs, each pair having a memory

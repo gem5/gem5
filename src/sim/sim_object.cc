@@ -29,14 +29,14 @@
  *          Nathan Binkert
  */
 
-#include <assert.h>
+#include <cassert>
 
 #include "base/callback.hh"
 #include "base/inifile.hh"
 #include "base/match.hh"
 #include "base/misc.hh"
-#include "base/trace.hh"
 #include "base/stats/events.hh"
+#include "base/trace.hh"
 #include "base/types.hh"
 #include "sim/sim_object.hh"
 #include "sim/stats.hh"

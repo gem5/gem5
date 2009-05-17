@@ -36,8 +36,8 @@
 
 #include "base/misc.hh"
 #include "base/socket.hh"
-#include "sim/core.hh"
 #include "base/types.hh"
+#include "sim/core.hh"
 #include "sim/startup.hh"
 
 extern const char *compileDate;

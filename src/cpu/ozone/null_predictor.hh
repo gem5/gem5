@@ -31,8 +31,8 @@
 #ifndef __CPU_OZONE_NULL_PREDICTOR_HH__
 #define __CPU_OZONE_NULL_PREDICTOR_HH__
 
-#include "cpu/inst_seq.hh"
 #include "base/types.hh"
+#include "cpu/inst_seq.hh"
 
 template <class Impl>
 class NullPredictor

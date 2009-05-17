@@ -37,8 +37,8 @@
 #include <iostream>
 
 #include "base/bitunion.hh"
-#include "sim/eventq.hh"
 #include "base/types.hh"
+#include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
 /** Programmable Interval Timer (Intel 8254) */

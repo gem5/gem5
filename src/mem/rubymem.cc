@@ -28,23 +28,19 @@
  * Authors: Daniel Sanchez
  */
 
-
-#include "arch/isa_traits.hh"
-#include "mem/rubymem.hh"
-#include "sim/eventq.hh"
-#include "base/types.hh"
-#include "base/output.hh"
-
-// Ruby includes
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/init.hh"
-#include "mem/ruby/common/Debug.hh"
-
-#include "sim/sim_exit.hh"
-
 #include <iostream>
 #include <fstream>
+
+#include "arch/isa_traits.hh"
+#include "base/output.hh"
+#include "base/types.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/ruby/init.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/rubymem.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
 
 using namespace std;
 using namespace TheISA;

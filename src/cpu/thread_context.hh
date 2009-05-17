@@ -33,12 +33,12 @@
 
 #include "arch/regfile.hh"
 #include "arch/types.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
 #include "mem/request.hh"
-#include "sim/faults.hh"
-#include "base/types.hh"
-#include "sim/serialize.hh"
 #include "sim/byteswap.hh"
+#include "sim/faults.hh"
+#include "sim/serialize.hh"
 
 // @todo: Figure out a more architecture independent way to obtain the ITB and
 // DTB pointers.
