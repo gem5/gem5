@@ -31,7 +31,7 @@
 #ifndef __SIM_SYSCALLRETURN_HH__
 #define __SIM_SYSCALLRETURN_HH__
 
-#include <inttypes.h>
+#include "base/types.hh"
 
 class SyscallReturn
 {

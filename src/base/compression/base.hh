@@ -37,7 +37,7 @@
  * This file defines a base (abstract virtual) compression algorithm object.
  */
 
-#include <inttypes.h>
+#include "base/types.hh"
 
 /**
  * Abstract virtual compression algorithm object.

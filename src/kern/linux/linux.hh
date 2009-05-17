@@ -30,6 +30,8 @@
 
 #ifndef __LINUX_HH__
 #define __LINUX_HH__
+
+#include "base/types.hh"
 #include "config/full_system.hh"
 
 #if FULL_SYSTEM
@@ -38,7 +40,6 @@ class Linux {};
 
 #else //!FULL_SYSTEM
 
-#include <inttypes.h>
 #include <string>
 
 #include "kern/operatingsystem.hh"

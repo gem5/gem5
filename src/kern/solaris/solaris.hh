@@ -30,6 +30,8 @@
 
 #ifndef __SOLARIS_HH__
 #define __SOLARIS_HH__
+
+#include "base/types.hh"
 #include "config/full_system.hh"
 
 #if FULL_SYSTEM
@@ -37,8 +39,6 @@
 class Solaris {};
 
 #else //!FULL_SYSTEM
-
-#include <inttypes.h>
 
 #include "kern/operatingsystem.hh"
 

@@ -39,10 +39,10 @@
 
 #include <string>
 #include <list>
-#include <inttypes.h>
 #include <queue>
 
 #include "base/fast_alloc.hh"
+#include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"

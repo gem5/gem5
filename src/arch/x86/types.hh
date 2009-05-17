@@ -58,11 +58,11 @@
 #ifndef __ARCH_X86_TYPES_HH__
 #define __ARCH_X86_TYPES_HH__
 
-#include <inttypes.h>
 #include <iostream>
 
 #include "base/bitunion.hh"
 #include "base/cprintf.hh"
+#include "base/types.hh"
 
 namespace X86ISA
 {

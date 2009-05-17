@@ -41,10 +41,10 @@
 #define __MEM_PORT_HH__
 
 #include <list>
-#include <inttypes.h>
 
 #include "base/misc.hh"
 #include "base/range.hh"
+#include "base/types.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "sim/eventq.hh"

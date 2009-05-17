@@ -32,7 +32,7 @@
 #ifndef __BASE_BITFIELD_HH__
 #define __BASE_BITFIELD_HH__
 
-#include <inttypes.h>
+#include "base/types.hh"
 
 /**
  * Generate a 64-bit mask of 'nbits' 1s, right justified.

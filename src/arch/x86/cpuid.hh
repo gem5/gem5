@@ -31,7 +31,7 @@
 #ifndef __ARCH_X86_CPUID_HH__
 #define __ARCH_X86_CPUID_HH__
 
-#include <inttypes.h>
+#include "base/types.hh"
 
 class ThreadContext;
 

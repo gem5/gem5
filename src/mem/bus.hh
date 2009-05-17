@@ -40,11 +40,11 @@
 #include <string>
 #include <set>
 #include <list>
-#include <inttypes.h>
 
 #include "base/range.hh"
 #include "base/hashmap.hh"
 #include "base/range_map.hh"
+#include "base/types.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
 #include "mem/port.hh"

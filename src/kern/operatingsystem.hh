@@ -31,9 +31,8 @@
 #ifndef __KERN_OPERATINGSYSTEM_HH__
 #define __KERN_OPERATINGSYSTEM_HH__
 
+#include "base/types.hh"
 #include "config/full_system.hh"
-
-#include <inttypes.h>
 
 #if FULL_SYSTEM
 
