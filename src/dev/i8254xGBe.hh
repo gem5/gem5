@@ -304,7 +304,7 @@ class IGbE : public EtherDevice
         int descLeft() const
         {
             int left = unusedCache.size();
-            if (cachePnt >= descTail())
+            if (cachePnt > descTail())
                 left += (descLen() - cachePnt + descTail());
             else
                 left += (descTail() - cachePnt);
