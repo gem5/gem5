@@ -1,1 +1,3 @@
+TARGET_ISA = 'alpha'
 FULL_SYSTEM = 1
+CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU,O3CPU'
