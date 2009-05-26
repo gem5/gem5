@@ -87,7 +87,7 @@ class BPredUnit
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(ThePipeline::DynInstPtr &inst, Addr &PC, unsigned tid);
+    bool predict(ThePipeline::DynInstPtr &inst, Addr &PC, ThreadID tid);
 
     // @todo: Rename this function.
     void BPUncond(void * &bp_history);
@@ -98,7 +98,7 @@ class BPredUnit
      * @param done_sn The sequence number to commit any older updates up until.
      * @param tid The thread id.
      */
-    void update(const InstSeqNum &done_sn, unsigned tid);
+    void update(const InstSeqNum &done_sn, ThreadID tid);
 
     /**
      * Squashes all outstanding updates until a given sequence number.
@@ -106,7 +106,7 @@ class BPredUnit
      * until.
      * @param tid The thread id.
      */
-    void squash(const InstSeqNum &squashed_sn, unsigned tid);
+    void squash(const InstSeqNum &squashed_sn, ThreadID tid);
 
     /**
      * Squashes all outstanding updates until a given sequence number, and
@@ -118,7 +118,7 @@ class BPredUnit
      * @param tid The thread id.
      */
     void squash(const InstSeqNum &squashed_sn, const Addr &corr_target,
-                bool actually_taken, unsigned tid);
+                bool actually_taken, ThreadID tid);
 
     /**
      * @param bp_history Pointer to the history object.  The predictor
@@ -178,8 +178,8 @@ class BPredUnit
          * information needed to update the predictor, BTB, and RAS.
          */
         PredictorHistory(const InstSeqNum &seq_num, const Addr &inst_PC,
-                         const bool pred_taken, void *bp_history,
-                         const unsigned _tid)
+                         bool pred_taken, void *bp_history,
+                         ThreadID _tid)
             : seqNum(seq_num), PC(inst_PC), RASTarget(0),
               RASIndex(0), tid(_tid), predTaken(pred_taken), usedRAS(0),
               wasCall(0), bpHistory(bp_history)
@@ -198,7 +198,7 @@ class BPredUnit
         unsigned RASIndex;
 
         /** The thread id. */
-        unsigned tid;
+        ThreadID tid;
 
         /** Whether or not it was predicted taken. */
         bool predTaken;

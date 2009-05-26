@@ -68,4 +68,10 @@ typedef uint64_t Addr;
 
 const Addr MaxAddr = (Addr)-1;
 
+/**
+ * Thread index/ID type
+ */
+typedef int16_t ThreadID;
+const ThreadID InvalidThreadID = (ThreadID)-1;
+
 #endif // __BASE_TYPES_HH__

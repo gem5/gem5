@@ -83,8 +83,8 @@ InstQueue<Impl>::InstQueue(Params *params)
     numThreads = 1;
 
     //Initialize thread IQ counts
-    for (int i = 0; i <numThreads; i++) {
-        count[i] = 0;
+    for (ThreadID tid = 0; tid <numThreads; tid++) {
+        count[tid] = 0;
     }
 
     // Initialize the number of free IQ entries.
@@ -103,9 +103,9 @@ InstQueue<Impl>::InstQueue(Params *params)
 //    regScoreboard.resize(numPhysRegs);
 /*
     //Initialize Mem Dependence Units
-    for (int i = 0; i < numThreads; i++) {
-        memDepUnit[i].init(params,i);
-        memDepUnit[i].setIQ(this);
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        memDepUnit[tid].init(params, tid);
+        memDepUnit[tid].setIQ(this);
     }
 
     // Initialize all the head pointers to point to NULL, and all the
@@ -121,8 +121,8 @@ InstQueue<Impl>::InstQueue(Params *params)
         regScoreboard[i] = false;
     }
 */
-    for (int i = 0; i < numThreads; ++i) {
-        squashedSeqNum[i] = 0;
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        squashedSeqNum[tid] = 0;
     }
 /*
     for (int i = 0; i < Num_OpClasses; ++i) {
@@ -141,8 +141,8 @@ InstQueue<Impl>::InstQueue(Params *params)
         iqPolicy = Dynamic;
 
         //Set Max Entries to Total ROB Capacity
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = numEntries;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = numEntries;
         }
 
     } else if (policy == "partitioned") {
@@ -152,8 +152,8 @@ InstQueue<Impl>::InstQueue(Params *params)
         int part_amt = numEntries / numThreads;
 
         //Divide ROB up evenly
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = part_amt;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = part_amt;
         }
 
         DPRINTF(Fetch, "IQ sharing policy set to Partitioned:"
@@ -167,8 +167,8 @@ InstQueue<Impl>::InstQueue(Params *params)
         int thresholdIQ = (int)((double)threshold * numEntries);
 
         //Divide up by threshold amount
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = thresholdIQ;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = thresholdIQ;
         }
 
         DPRINTF(Fetch, "IQ sharing policy set to Threshold:"
@@ -292,9 +292,9 @@ InstQueue<Impl>::regStats()
         .desc("Number of squashed non-spec instructions that were removed")
         .prereq(iqSquashedNonSpecRemoved);
 /*
-    for ( int i=0; i < numThreads; i++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         // Tell mem dependence unit to reg stats as well.
-        memDepUnit[i].regStats();
+        memDepUnit[tid].regStats();
     }
 */
 }
@@ -327,7 +327,7 @@ InstQueue<Impl>::setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr)
 
 template <class Impl>
 int
-InstQueue<Impl>::entryAmount(int num_threads)
+InstQueue<Impl>::entryAmount(ThreadID num_threads)
 {
     if (iqPolicy == Partitioned) {
         return numEntries / num_threads;
@@ -348,7 +348,7 @@ InstQueue<Impl>::resetEntries()
         std::list<unsigned>::iterator end = activeThreads->end();
 
         while (threads != end) {
-            unsigned tid = *threads++;
+            ThreadID tid = *threads++;
 
             if (iqPolicy == Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
@@ -368,7 +368,7 @@ InstQueue<Impl>::numFreeEntries()
 
 template <class Impl>
 unsigned
-InstQueue<Impl>::numFreeEntries(unsigned tid)
+InstQueue<Impl>::numFreeEntries(ThreadID tid)
 {
     return maxEntries[tid] - count[tid];
 }
@@ -388,7 +388,7 @@ InstQueue<Impl>::isFull()
 
 template <class Impl>
 bool
-InstQueue<Impl>::isFull(unsigned tid)
+InstQueue<Impl>::isFull(ThreadID tid)
 {
     if (numFreeEntries(tid) == 0) {
         return(true);
@@ -735,7 +735,7 @@ InstQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 
     assert(inst_it != nonSpecInsts.end());
 
-//    unsigned tid = (*inst_it).second->threadNumber;
+//    ThreadID tid = (*inst_it).second->threadNumber;
 
     // Mark this instruction as ready to issue.
     (*inst_it).second->setCanIssue();
@@ -752,7 +752,7 @@ InstQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 
 template <class Impl>
 void
-InstQueue<Impl>::commit(const InstSeqNum &inst, unsigned tid)
+InstQueue<Impl>::commit(const InstSeqNum &inst, ThreadID tid)
 {
     /*Need to go through each thread??*/
     DPRINTF(IQ, "[tid:%i]: Committing instructions older than [sn:%i]\n",
@@ -879,7 +879,7 @@ template <class Impl>
 void
 InstQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 {
-    int tid = completed_inst->threadNumber;
+    ThreadID tid = completed_inst->threadNumber;
 
     DPRINTF(IQ, "Completing mem instruction PC:%#x [sn:%lli]\n",
             completed_inst->readPC(), completed_inst->seqNum);
@@ -903,7 +903,7 @@ InstQueue<Impl>::violation(DynInstPtr &store,
 */
 template <class Impl>
 void
-InstQueue<Impl>::squash(unsigned tid)
+InstQueue<Impl>::squash(ThreadID tid)
 {
     DPRINTF(IQ, "[tid:%i]: Starting to squash instructions in "
             "the IQ.\n", tid);
@@ -927,7 +927,7 @@ InstQueue<Impl>::squash(unsigned tid)
 
 template <class Impl>
 void
-InstQueue<Impl>::doSquash(unsigned tid)
+InstQueue<Impl>::doSquash(ThreadID tid)
 {
     // Make sure the squashed sequence number is valid.
     assert(squashedSeqNum[tid] != 0);
@@ -1200,10 +1200,10 @@ InstQueue<Impl>::countInsts()
 #if 0
     int total_insts = 0;
 
-    for (int i = 0; i < numThreads; ++i) {
-        ListIt count_it = instList[i].begin();
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        ListIt count_it = instList[tid].begin();
 
-        while (count_it != instList[i].end()) {
+        while (count_it != instList[tid].end()) {
             if (!(*count_it)->isSquashed() && !(*count_it)->isSquashedInIQ()) {
                 if (!(*count_it)->isIssued()) {
                     ++total_insts;
@@ -1300,13 +1300,13 @@ template <class Impl>
 void
 InstQueue<Impl>::dumpInsts()
 {
-    for (int i = 0; i < numThreads; ++i) {
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
 //        int num = 0;
 //        int valid_num = 0;
 /*
-      ListIt inst_list_it = instList[i].begin();
+      ListIt inst_list_it = instList[tid].begin();
 
-        while (inst_list_it != instList[i].end())
+        while (inst_list_it != instList[tid].end())
         {
             cprintf("Instruction:%i\n",
                     num);

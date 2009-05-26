@@ -399,13 +399,14 @@ class BaseSimpleCPU : public BaseCPU
         thread->setStCondFailures(sc_failures);
     }
 
-     MiscReg readRegOtherThread(int regIdx, int tid = -1)
+     MiscReg readRegOtherThread(int regIdx, ThreadID tid = InvalidThreadID)
      {
         panic("Simple CPU models do not support multithreaded "
               "register access.\n");
      }
 
-     void setRegOtherThread(int regIdx, const MiscReg &val, int tid = -1)
+     void setRegOtherThread(int regIdx, const MiscReg &val,
+                            ThreadID tid = InvalidThreadID)
      {
         panic("Simple CPU models do not support multithreaded "
               "register access.\n");

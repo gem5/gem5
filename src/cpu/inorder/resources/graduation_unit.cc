@@ -39,7 +39,7 @@ GraduationUnit::GraduationUnit(std::string res_name, int res_id, int res_width,
       lastCycleGrad(0), numCycleGrad(0)
       
 {
-    for (int tid = 0; tid < ThePipeline::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];
     }
@@ -51,10 +51,7 @@ GraduationUnit::execute(int slot_num)
     ResourceRequest* grad_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
-    int tid, seq_num;
-
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
+    ThreadID tid = inst->readTid();
     int stage_num = inst->resSched.top()->stageNum;
 
     grad_req->fault = NoFault;
@@ -70,15 +67,17 @@ GraduationUnit::execute(int slot_num)
                 lastCycleGrad = curTick;
                 numCycleGrad = 0;
             } else if (numCycleGrad > width) {
-                DPRINTF(InOrderGraduation, "Graduation bandwidth reached for this cycle.\n");
+                DPRINTF(InOrderGraduation,
+                        "Graduation bandwidth reached for this cycle.\n");
                 return;
             }
 
             // Make sure this is the last thing on the resource schedule
             assert(inst->resSched.size() == 1);
 
-            DPRINTF(InOrderGraduation, "[tid:%i] Graduating instruction [sn:%i].\n",
-                    tid, seq_num);
+            DPRINTF(InOrderGraduation,
+                    "[tid:%i] Graduating instruction [sn:%i].\n",
+                    tid, inst->seqNum);
 
             DPRINTF(RefCount, "Refcount = %i.\n", 0/*inst->curCount()*/);
 
@@ -87,8 +86,9 @@ GraduationUnit::execute(int slot_num)
             // @TODO: Fix this functionality. Probably too conservative.
             if (inst->isNonSpeculative()) {
                 *nonSpecInstActive[tid] = false;
-                DPRINTF(InOrderGraduation, "[tid:%i] Non-speculative instruction [sn:%i] has graduated.\n",
-                        tid, seq_num);
+                DPRINTF(InOrderGraduation,
+                        "[tid:%i] Non-speculative inst [sn:%i] graduated\n",
+                        tid, inst->seqNum);
             }
 
             if (inst->traceData) {

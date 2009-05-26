@@ -157,7 +157,7 @@ class DefaultFetch
     FetchPriority fetchPolicy;
 
     /** List that has the threads organized by priority. */
-    std::list<unsigned> priorityList;
+    std::list<ThreadID> priorityList;
 
   public:
     /** DefaultFetch constructor. */
@@ -176,7 +176,7 @@ class DefaultFetch
     void setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer);
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to time buffer used to communicate to the next stage. */
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
@@ -240,21 +240,21 @@ class DefaultFetch
      * @param tid Thread id.
      * @return Any fault that occured.
      */
-    bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, unsigned tid);
+    bool fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. */
     inline void doSquash(const Addr &new_PC, const Addr &new_NPC,
-                         const Addr &new_MicroPC, unsigned tid);
+                         const Addr &new_MicroPC, ThreadID tid);
 
     /** Squashes a specific thread and resets the PC. Also tells the CPU to
      * remove any instructions between fetch and decode that should be sqaushed.
      */
     void squashFromDecode(const Addr &new_PC, const Addr &new_NPC,
                           const Addr &new_MicroPC,
-                          const InstSeqNum &seq_num, unsigned tid);
+                          const InstSeqNum &seq_num, ThreadID tid);
 
     /** Checks if a thread is stalled. */
-    bool checkStall(unsigned tid) const;
+    bool checkStall(ThreadID tid) const;
 
     /** Updates overall fetch stage status; to be called at the end of each
      * cycle. */
@@ -267,7 +267,7 @@ class DefaultFetch
      */
     void squash(const Addr &new_PC, const Addr &new_NPC,
                 const Addr &new_MicroPC,
-                const InstSeqNum &seq_num, unsigned tid);
+                const InstSeqNum &seq_num, ThreadID tid);
 
     /** Ticks the fetch stage, processing all inputs signals and fetching
      * as many instructions as possible.
@@ -277,7 +277,7 @@ class DefaultFetch
     /** Checks all input signals and updates the status as necessary.
      *  @return: Returns if the status has changed due to input signals.
      */
-    bool checkSignalsAndUpdate(unsigned tid);
+    bool checkSignalsAndUpdate(ThreadID tid);
 
     /** Does the actual fetching of instructions and passing them on to the
      * next stage.
@@ -298,19 +298,20 @@ class DefaultFetch
     void recvRetry();
 
     /** Returns the appropriate thread to fetch, given the fetch policy. */
-    int getFetchingThread(FetchPriority &fetch_priority);
+    ThreadID getFetchingThread(FetchPriority &fetch_priority);
 
     /** Returns the appropriate thread to fetch using a round robin policy. */
-    int roundRobin();
+    ThreadID roundRobin();
 
     /** Returns the appropriate thread to fetch using the IQ count policy. */
-    int iqCount();
+    ThreadID iqCount();
 
     /** Returns the appropriate thread to fetch using the LSQ count policy. */
-    int lsqCount();
+    ThreadID lsqCount();
 
-    /** Returns the appropriate thread to fetch using the branch count policy. */
-    int branchCount();
+    /** Returns the appropriate thread to fetch using the branch count
+     * policy. */
+    ThreadID branchCount();
 
   private:
     /** Pointer to the O3CPU. */
@@ -400,7 +401,7 @@ class DefaultFetch
     PacketPtr retryPkt;
 
     /** The thread that is waiting on the cache to tell fetch to retry. */
-    int retryTid;
+    ThreadID retryTid;
 
     /** Cache block size. */
     int cacheBlkSize;
@@ -424,16 +425,16 @@ class DefaultFetch
     Counter lastIcacheStall[Impl::MaxThreads];
 
     /** List of Active Threads */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Number of threads. */
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** Number of threads that are actively fetching. */
-    unsigned numFetchingThreads;
+    ThreadID numFetchingThreads;
 
     /** Thread ID being fetched. */
-    int threadFetched;
+    ThreadID threadFetched;
 
     /** Checks if there is an interrupt pending.  If there is, fetch
      * must stop once it is not fetching PAL instructions.

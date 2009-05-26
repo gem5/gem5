@@ -43,9 +43,9 @@
 #endif
 
 #if FULL_SYSTEM
-ThreadState::ThreadState(BaseCPU *cpu, int _tid)
+ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, int _tid,
+ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid,
                          Process *_process, short _asid)
 #endif
     : numInst(0), numLoad(0), _status(ThreadContext::Halted),

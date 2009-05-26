@@ -80,7 +80,8 @@ AtomicSimpleCPU::init()
 {
     BaseCPU::init();
 #if FULL_SYSTEM
-    for (int i = 0; i < threadContexts.size(); ++i) {
+    ThreadID size = threadContexts.size();
+    for (ThreadID i = 0; i < size; ++i) {
         ThreadContext *tc = threadContexts[i];
 
         // initialize CPU, including PC
@@ -227,7 +228,8 @@ AtomicSimpleCPU::takeOverFrom(BaseCPU *oldCPU)
 
     // if any of this CPU's ThreadContexts are active, mark the CPU as
     // running and schedule its tick event.
-    for (int i = 0; i < threadContexts.size(); ++i) {
+    ThreadID size = threadContexts.size();
+    for (ThreadID i = 0; i < size; ++i) {
         ThreadContext *tc = threadContexts[i];
         if (tc->status() == ThreadContext::Active && _status != Running) {
             _status = Running;

@@ -82,7 +82,7 @@ DefaultBTB::getTag(const Addr &inst_PC)
 }
 
 bool
-DefaultBTB::valid(const Addr &inst_PC, unsigned tid)
+DefaultBTB::valid(const Addr &inst_PC, ThreadID tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 
@@ -103,7 +103,7 @@ DefaultBTB::valid(const Addr &inst_PC, unsigned tid)
 // address is valid, and also the address.  For now will just use addr = 0 to
 // represent invalid entry.
 Addr
-DefaultBTB::lookup(const Addr &inst_PC, unsigned tid)
+DefaultBTB::lookup(const Addr &inst_PC, ThreadID tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 
@@ -121,7 +121,7 @@ DefaultBTB::lookup(const Addr &inst_PC, unsigned tid)
 }
 
 void
-DefaultBTB::update(const Addr &inst_PC, const Addr &target, unsigned tid)
+DefaultBTB::update(const Addr &inst_PC, const Addr &target, ThreadID tid)
 {
     unsigned btb_idx = getIndex(inst_PC);
 

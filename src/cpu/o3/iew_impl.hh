@@ -39,6 +39,8 @@
 #include "cpu/o3/iew.hh"
 #include "params/DerivO3CPU.hh"
 
+using namespace std;
+
 template<class Impl>
 DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
     : issueToExecQueue(params->backComSize, params->forwardComSize),
@@ -66,10 +68,10 @@ DefaultIEW<Impl>::DefaultIEW(O3CPU *_cpu, DerivO3CPUParams *params)
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
 
-    for (int i=0; i < numThreads; i++) {
-        dispatchStatus[i] = Running;
-        stalls[i].commit = false;
-        fetchRedirect[i] = false;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        dispatchStatus[tid] = Running;
+        stalls[tid].commit = false;
+        fetchRedirect[tid] = false;
     }
 
     wbMax = wbWidth * params->wbDepth;
@@ -164,7 +166,7 @@ DefaultIEW<Impl>::regStats()
         .desc("Number of executed instructions");
 
     iewExecLoadInsts
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".iewExecLoadInsts")
         .desc("Number of load instructions executed")
         .flags(total);
@@ -174,25 +176,25 @@ DefaultIEW<Impl>::regStats()
         .desc("Number of squashed instructions skipped in execute");
 
     iewExecutedSwp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".EXEC:swp")
         .desc("number of swp insts executed")
         .flags(total);
 
     iewExecutedNop
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".EXEC:nop")
         .desc("number of nop insts executed")
         .flags(total);
 
     iewExecutedRefs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".EXEC:refs")
         .desc("number of memory reference insts executed")
         .flags(total);
 
     iewExecutedBranches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".EXEC:branches")
         .desc("Number of branches executed")
         .flags(total);
@@ -211,31 +213,31 @@ DefaultIEW<Impl>::regStats()
     iewExecRate = iewExecutedInsts / cpu->numCycles;
 
     iewInstsToCommit
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:sent")
         .desc("cumulative count of insts sent to commit")
         .flags(total);
 
     writebackCount
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
         .flags(total);
 
     producerInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
         .flags(total);
 
     consumerInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
         .flags(total);
 
     wbPenalized
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
         .flags(total);
@@ -265,7 +267,7 @@ template<class Impl>
 void
 DefaultIEW<Impl>::initStage()
 {
-    for (int tid=0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         toRename->iewInfo[tid].usedIQ = true;
         toRename->iewInfo[tid].freeIQEntries =
             instQueue.numFreeEntries(tid);
@@ -318,7 +320,7 @@ DefaultIEW<Impl>::setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+DefaultIEW<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 
@@ -361,11 +363,11 @@ DefaultIEW<Impl>::switchOut()
     ldstQueue.switchOut();
     fuPool->switchOut();
 
-    for (int i = 0; i < numThreads; i++) {
-        while (!insts[i].empty())
-            insts[i].pop();
-        while (!skidBuffer[i].empty())
-            skidBuffer[i].pop();
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        while (!insts[tid].empty())
+            insts[tid].pop();
+        while (!skidBuffer[tid].empty())
+            skidBuffer[tid].pop();
     }
 }
 
@@ -386,10 +388,10 @@ DefaultIEW<Impl>::takeOverFrom()
     initStage();
     cpu->activityThisCycle();
 
-    for (int i=0; i < numThreads; i++) {
-        dispatchStatus[i] = Running;
-        stalls[i].commit = false;
-        fetchRedirect[i] = false;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        dispatchStatus[tid] = Running;
+        stalls[tid].commit = false;
+        fetchRedirect[tid] = false;
     }
 
     updateLSQNextCycle = false;
@@ -401,10 +403,9 @@ DefaultIEW<Impl>::takeOverFrom()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squash(unsigned tid)
+DefaultIEW<Impl>::squash(ThreadID tid)
 {
-    DPRINTF(IEW, "[tid:%i]: Squashing all instructions.\n",
-            tid);
+    DPRINTF(IEW, "[tid:%i]: Squashing all instructions.\n", tid);
 
     // Tell the IQ to start squashing.
     instQueue.squash(tid);
@@ -433,7 +434,7 @@ DefaultIEW<Impl>::squash(unsigned tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
+DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, PC: %#x "
             "[sn:%i].\n", tid, inst->readPC(), inst->seqNum);
@@ -464,7 +465,7 @@ DefaultIEW<Impl>::squashDueToBranch(DynInstPtr &inst, unsigned tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
+DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Squashing from a specific instruction, "
             "PC: %#x [sn:%i].\n", tid, inst->readPC(), inst->seqNum);
@@ -482,7 +483,7 @@ DefaultIEW<Impl>::squashDueToMemOrder(DynInstPtr &inst, unsigned tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
+DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Memory blocked, squashing load and younger insts, "
             "PC: %#x [sn:%i].\n", tid, inst->readPC(), inst->seqNum);
@@ -503,7 +504,7 @@ DefaultIEW<Impl>::squashDueToMemBlocked(DynInstPtr &inst, unsigned tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::block(unsigned tid)
+DefaultIEW<Impl>::block(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%u]: Blocking.\n", tid);
 
@@ -522,7 +523,7 @@ DefaultIEW<Impl>::block(unsigned tid)
 
 template<class Impl>
 void
-DefaultIEW<Impl>::unblock(unsigned tid)
+DefaultIEW<Impl>::unblock(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Reading instructions out of the skid "
             "buffer %u.\n",tid, tid);
@@ -605,7 +606,7 @@ DefaultIEW<Impl>::validInstsFromRename()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::skidInsert(unsigned tid)
+DefaultIEW<Impl>::skidInsert(ThreadID tid)
 {
     DynInstPtr inst = NULL;
 
@@ -631,11 +632,11 @@ DefaultIEW<Impl>::skidCount()
 {
     int max=0;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
         unsigned thread_count = skidBuffer[tid].size();
         if (max < thread_count)
             max = thread_count;
@@ -648,11 +649,11 @@ template<class Impl>
 bool
 DefaultIEW<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (!skidBuffer[tid].empty())
             return false;
@@ -667,11 +668,11 @@ DefaultIEW<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (dispatchStatus[tid] == Unblocking) {
             any_unblocking = true;
@@ -711,7 +712,7 @@ DefaultIEW<Impl>::resetEntries()
 
 template <class Impl>
 void
-DefaultIEW<Impl>::readStallSignals(unsigned tid)
+DefaultIEW<Impl>::readStallSignals(ThreadID tid)
 {
     if (fromCommit->commitBlock[tid]) {
         stalls[tid].commit = true;
@@ -725,7 +726,7 @@ DefaultIEW<Impl>::readStallSignals(unsigned tid)
 
 template <class Impl>
 bool
-DefaultIEW<Impl>::checkStall(unsigned tid)
+DefaultIEW<Impl>::checkStall(ThreadID tid)
 {
     bool ret_val(false);
 
@@ -761,7 +762,7 @@ DefaultIEW<Impl>::checkStall(unsigned tid)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::checkSignalsAndUpdate(unsigned tid)
+DefaultIEW<Impl>::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is
     // Check stall signals, block if there is.
@@ -834,8 +835,8 @@ DefaultIEW<Impl>::sortInsts()
 {
     int insts_from_rename = fromRename->size;
 #ifdef DEBUG
-    for (int i = 0; i < numThreads; i++)
-        assert(insts[i].empty());
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        assert(insts[tid].empty());
 #endif
     for (int i = 0; i < insts_from_rename; ++i) {
         insts[fromRename->insts[i]->threadNumber].push(fromRename->insts[i]);
@@ -844,7 +845,7 @@ DefaultIEW<Impl>::sortInsts()
 
 template <class Impl>
 void
-DefaultIEW<Impl>::emptyRenameInsts(unsigned tid)
+DefaultIEW<Impl>::emptyRenameInsts(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i]: Removing incoming rename instructions\n", tid);
 
@@ -894,7 +895,7 @@ DefaultIEW<Impl>::deactivateStage()
 
 template<class Impl>
 void
-DefaultIEW<Impl>::dispatch(unsigned tid)
+DefaultIEW<Impl>::dispatch(ThreadID tid)
 {
     // If status is Running or idle,
     //     call dispatchInsts()
@@ -942,7 +943,7 @@ DefaultIEW<Impl>::dispatch(unsigned tid)
 
 template <class Impl>
 void
-DefaultIEW<Impl>::dispatchInsts(unsigned tid)
+DefaultIEW<Impl>::dispatchInsts(ThreadID tid)
 {
     // Obtain instructions from skid buffer if unblocking, or queue from rename
     // otherwise.
@@ -1169,11 +1170,11 @@ DefaultIEW<Impl>::executeInsts()
     wbNumInst = 0;
     wbCycle = 0;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
         fetchRedirect[tid] = false;
     }
 
@@ -1273,7 +1274,7 @@ DefaultIEW<Impl>::executeInsts()
         // This probably needs to prioritize the redirects if a different
         // scheduler is used.  Currently the scheduler schedules the oldest
         // instruction first, so the branch resolution order will be correct.
-        unsigned tid = inst->threadNumber;
+        ThreadID tid = inst->threadNumber;
 
         if (!fetchRedirect[tid] ||
             toCommit->squashedSeqNum[tid] > inst->seqNum) {
@@ -1391,7 +1392,7 @@ DefaultIEW<Impl>::writebackInsts()
     for (int inst_num = 0; inst_num < wbWidth &&
              toCommit->insts[inst_num]; inst_num++) {
         DynInstPtr inst = toCommit->insts[inst_num];
-        int tid = inst->threadNumber;
+        ThreadID tid = inst->threadNumber;
 
         DPRINTF(IEW, "Sending instructions to commit, [sn:%lli] PC %#x.\n",
                 inst->seqNum, inst->readPC());
@@ -1439,12 +1440,12 @@ DefaultIEW<Impl>::tick()
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     // Check stall and squash signals, dispatch any instructions.
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         DPRINTF(IEW,"Issue: Processing [tid:%i]\n",tid);
 
@@ -1486,7 +1487,7 @@ DefaultIEW<Impl>::tick()
 
     threads = activeThreads->begin();
     while (threads != end) {
-        unsigned tid = (*threads++);
+        ThreadID tid = (*threads++);
 
         DPRINTF(IEW,"Processing [tid:%i]\n",tid);
 
@@ -1552,14 +1553,14 @@ template <class Impl>
 void
 DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
-    int thread_number = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     //
     //  Pick off the software prefetches
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        iewExecutedSwp[thread_number]++;
+        iewExecutedSwp[tid]++;
     else
         iewIewExecutedcutedInsts++;
 #else
@@ -1570,16 +1571,16 @@ DefaultIEW<Impl>::updateExeInstStats(DynInstPtr &inst)
     //  Control operations
     //
     if (inst->isControl())
-        iewExecutedBranches[thread_number]++;
+        iewExecutedBranches[tid]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        iewExecutedRefs[thread_number]++;
+        iewExecutedRefs[tid]++;
 
         if (inst->isLoad()) {
-            iewExecLoadInsts[thread_number]++;
+            iewExecLoadInsts[tid]++;
         }
     }
 }

@@ -29,22 +29,24 @@
  *          Korey Sewell
  */
 
+#include <list>
+
 #include "config/full_system.hh"
 #include "cpu/o3/rob.hh"
 
-#include <list>
+using namespace std;
 
 template <class Impl>
 ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
                std::string _smtROBPolicy, unsigned _smtROBThreshold,
-               unsigned _numThreads)
+               ThreadID _numThreads)
     : cpu(_cpu),
       numEntries(_numEntries),
       squashWidth(_squashWidth),
       numInstsInROB(0),
       numThreads(_numThreads)
 {
-    for (int tid=0; tid  < numThreads; tid++) {
+    for (ThreadID tid = 0; tid  < numThreads; tid++) {
         squashedSeqNum[tid] = 0;
         doneSquashing[tid] = true;
         threadEntries[tid] = 0;
@@ -61,8 +63,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
         robPolicy = Dynamic;
 
         //Set Max Entries to Total ROB Capacity
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i]=numEntries;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = numEntries;
         }
 
     } else if (policy == "partitioned") {
@@ -73,8 +75,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
         int part_amt = numEntries / numThreads;
 
         //Divide ROB up evenly
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i]=part_amt;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = part_amt;
         }
 
     } else if (policy == "threshold") {
@@ -84,8 +86,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
         int threshold =  _smtROBThreshold;;
 
         //Divide up by threshold amount
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i]=threshold;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = threshold;
         }
     } else {
         assert(0 && "Invalid ROB Sharing Policy.Options Are:{Dynamic,"
@@ -93,8 +95,8 @@ ROB<Impl>::ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
     }
 
     // Set the per-thread iterators to the end of the instruction list.
-    for (int i=0; i < numThreads;i++) {
-        squashIt[i] = instList[i].end();
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        squashIt[tid] = instList[tid].end();
     }
 
     // Initialize the "universal" ROB head & tail point to invalid
@@ -112,7 +114,7 @@ ROB<Impl>::name() const
 
 template <class Impl>
 void
-ROB<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+ROB<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 {
     DPRINTF(ROB, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -122,7 +124,7 @@ template <class Impl>
 void
 ROB<Impl>::switchOut()
 {
-    for (int tid = 0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         instList[tid].clear();
     }
 }
@@ -131,7 +133,7 @@ template <class Impl>
 void
 ROB<Impl>::takeOverFrom()
 {
-    for (int tid=0; tid  < numThreads; tid++) {
+    for (ThreadID tid = 0; tid  < numThreads; tid++) {
         doneSquashing[tid] = true;
         threadEntries[tid] = 0;
         squashIt[tid] = instList[tid].end();
@@ -151,11 +153,11 @@ ROB<Impl>::resetEntries()
     if (robPolicy != Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
-        std::list<unsigned>::iterator threads = activeThreads->begin();
-        std::list<unsigned>::iterator end = activeThreads->end();
+        list<ThreadID>::iterator threads = activeThreads->begin();
+        list<ThreadID>::iterator end = activeThreads->end();
 
         while (threads != end) {
-            unsigned tid = *threads++;
+            ThreadID tid = *threads++;
 
             if (robPolicy == Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
@@ -168,7 +170,7 @@ ROB<Impl>::resetEntries()
 
 template <class Impl>
 int
-ROB<Impl>::entryAmount(int num_threads)
+ROB<Impl>::entryAmount(ThreadID num_threads)
 {
     if (robPolicy == Partitioned) {
         return numEntries / num_threads;
@@ -181,17 +183,17 @@ template <class Impl>
 int
 ROB<Impl>::countInsts()
 {
-    int total=0;
+    int total = 0;
 
-    for (int i=0;i < numThreads;i++)
-        total += countInsts(i);
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        total += countInsts(tid);
 
     return total;
 }
 
 template <class Impl>
 int
-ROB<Impl>::countInsts(unsigned tid)
+ROB<Impl>::countInsts(ThreadID tid)
 {
     return instList[tid].size();
 }
@@ -207,7 +209,7 @@ ROB<Impl>::insertInst(DynInstPtr &inst)
 
     assert(numInstsInROB != numEntries);
 
-    int tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     instList[tid].push_back(inst);
 
@@ -242,7 +244,7 @@ ROB<Impl>::retireHead()
     //assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
 
-    int tid = (*head)->threadNumber;
+    ThreadID tid = (*head)->threadNumber;
 
     retireHead(tid);
 
@@ -254,7 +256,7 @@ ROB<Impl>::retireHead()
 
 template <class Impl>
 void
-ROB<Impl>::retireHead(unsigned tid)
+ROB<Impl>::retireHead(ThreadID tid)
 {
     //assert(numInstsInROB == countInsts());
     assert(numInstsInROB > 0);
@@ -300,7 +302,7 @@ ROB<Impl>::isHeadReady()
 */
 template <class Impl>
 bool
-ROB<Impl>::isHeadReady(unsigned tid)
+ROB<Impl>::isHeadReady(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {
         return instList[tid].front()->readyToCommit();
@@ -314,11 +316,11 @@ bool
 ROB<Impl>::canCommit()
 {
     //@todo: set ActiveThreads through ROB or CPU
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (isHeadReady(tid)) {
             return true;
@@ -339,14 +341,14 @@ ROB<Impl>::numFreeEntries()
 
 template <class Impl>
 unsigned
-ROB<Impl>::numFreeEntries(unsigned tid)
+ROB<Impl>::numFreeEntries(ThreadID tid)
 {
     return maxEntries[tid] - threadEntries[tid];
 }
 
 template <class Impl>
 void
-ROB<Impl>::doSquash(unsigned tid)
+ROB<Impl>::doSquash(ThreadID tid)
 {
     DPRINTF(ROB, "[tid:%u]: Squashing instructions until [sn:%i].\n",
             tid, squashedSeqNum[tid]);
@@ -429,11 +431,11 @@ ROB<Impl>::updateHead()
     bool first_valid = true;
 
     // @todo: set ActiveThreads through ROB or CPU
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (instList[tid].empty())
             continue;
@@ -470,11 +472,11 @@ ROB<Impl>::updateTail()
     tail = instList[0].end();
     bool first_valid = true;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (instList[tid].empty()) {
             continue;
@@ -503,7 +505,7 @@ ROB<Impl>::updateTail()
 
 template <class Impl>
 void
-ROB<Impl>::squash(InstSeqNum squash_num,unsigned tid)
+ROB<Impl>::squash(InstSeqNum squash_num, ThreadID tid)
 {
     if (isEmpty()) {
         DPRINTF(ROB, "Does not need to squash due to being empty "
@@ -546,7 +548,7 @@ ROB<Impl>::readHeadInst()
 
 template <class Impl>
 typename Impl::DynInstPtr
-ROB<Impl>::readHeadInst(unsigned tid)
+ROB<Impl>::readHeadInst(ThreadID tid)
 {
     if (threadEntries[tid] != 0) {
         InstIt head_thread = instList[tid].begin();
@@ -573,7 +575,7 @@ ROB<Impl>::readHeadPC()
 
 template <class Impl>
 uint64_t
-ROB<Impl>::readHeadPC(unsigned tid)
+ROB<Impl>::readHeadPC(ThreadID tid)
 {
     //assert(numInstsInROB == countInsts());
     InstIt head_thread = instList[tid].begin();
@@ -595,7 +597,7 @@ ROB<Impl>::readHeadNextPC()
 
 template <class Impl>
 uint64_t
-ROB<Impl>::readHeadNextPC(unsigned tid)
+ROB<Impl>::readHeadNextPC(ThreadID tid)
 {
     //assert(numInstsInROB == countInsts());
     InstIt head_thread = instList[tid].begin();
@@ -615,7 +617,7 @@ ROB<Impl>::readHeadSeqNum()
 
 template <class Impl>
 InstSeqNum
-ROB<Impl>::readHeadSeqNum(unsigned tid)
+ROB<Impl>::readHeadSeqNum(ThreadID tid)
 {
     InstIt head_thread = instList[tid].begin();
 
@@ -634,7 +636,7 @@ ROB<Impl>::readTailInst()
 */
 template <class Impl>
 typename Impl::DynInstPtr
-ROB<Impl>::readTailInst(unsigned tid)
+ROB<Impl>::readTailInst(ThreadID tid)
 {
     //assert(tail_thread[tid] != instList[tid].end());
 
@@ -658,7 +660,7 @@ ROB<Impl>::readTailPC()
 
 template <class Impl>
 uint64_t
-ROB<Impl>::readTailPC(unsigned tid)
+ROB<Impl>::readTailPC(ThreadID tid)
 {
     //assert(tail_thread[tid] != instList[tid].end());
 
@@ -680,7 +682,7 @@ ROB<Impl>::readTailSeqNum()
 
 template <class Impl>
 InstSeqNum
-ROB<Impl>::readTailSeqNum(unsigned tid)
+ROB<Impl>::readTailSeqNum(ThreadID tid)
 {
     // Return the last sequence number that has not been squashed.  Other
     // stages can use it to squash any instructions younger than the current

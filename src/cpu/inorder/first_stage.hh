@@ -56,10 +56,10 @@ class FirstStage : public PipelineStage {
     void processStage(bool &status_change);
 
     /** Process All Instructions Available */
-    void processInsts(unsigned tid);
+    void processInsts(ThreadID tid);
 
     /** Squash Instructions Above a Seq. Num */
-    void squash(InstSeqNum squash_seq_num, unsigned tid);
+    void squash(InstSeqNum squash_seq_num, ThreadID tid);
 
     /** There are no insts. coming from previous stages, so there is
      *	no need to sort insts here
@@ -69,7 +69,7 @@ class FirstStage : public PipelineStage {
     /** There are no skidBuffers for the first stage. So
      *  just use an empty function.
      */
-    void skidInsert(unsigned tid) { }
+    void skidInsert(ThreadID tid) { }
 
     /** The number of fetching threads in the CPU */
     int numFetchingThreads;
@@ -85,13 +85,13 @@ class FirstStage : public PipelineStage {
     FetchPriority fetchPolicy;
 
     /** List that has the threads organized by priority. */
-    std::list<unsigned> *fetchPriorityList;
+    std::list<ThreadID> *fetchPriorityList;
 
     /** Return the next fetching thread */
-    int getFetchingThread(FetchPriority &fetch_priority);
+    ThreadID getFetchingThread(FetchPriority &fetch_priority);
 
-    /** Return next thred given Round Robin Policy for Thread Fetching */
-    int roundRobin();
+    /** Return next thread given Round Robin Policy for Thread Fetching */
+    ThreadID roundRobin();
 };
 
 #endif // __CPU_INORDER_FIRST_STAGE_HH__

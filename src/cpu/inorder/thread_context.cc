@@ -175,7 +175,7 @@ InOrderThreadContext::readFloatRegBits(int reg_idx)
 }
 
 uint64_t
-InOrderThreadContext::readRegOtherThread(int reg_idx, unsigned tid)
+InOrderThreadContext::readRegOtherThread(int reg_idx, ThreadID tid)
 {
     return cpu->readRegOtherThread(reg_idx, tid);
 }
@@ -212,7 +212,8 @@ InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val)
 }
 
 void
-InOrderThreadContext::setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid)
+InOrderThreadContext::setRegOtherThread(int misc_reg, const MiscReg &val,
+                                        ThreadID tid)
 {
     cpu->setRegOtherThread(misc_reg, val, tid);
 }

@@ -51,7 +51,7 @@ MSHR::MSHR()
 {
     inService = false;
     ntargets = 0;
-    threadNum = -1;
+    threadNum = InvalidThreadID;
     targets = new TargetList();
     deferredTargets = new TargetList();
 }

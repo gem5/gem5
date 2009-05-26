@@ -89,7 +89,7 @@ class System : public SimObject
     std::vector<ThreadContext *> threadContexts;
     int _numContexts;
 
-    ThreadContext *getThreadContext(int tid)
+    ThreadContext *getThreadContext(ThreadID tid)
     {
         return threadContexts[tid];
     }

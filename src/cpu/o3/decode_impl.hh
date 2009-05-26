@@ -29,8 +29,9 @@
  */
 
 #include "cpu/o3/decode.hh"
-
 #include "params/DerivO3CPU.hh"
+
+using namespace std;
 
 template<class Impl>
 DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
@@ -45,12 +46,12 @@ DefaultDecode<Impl>::DefaultDecode(O3CPU *_cpu, DerivO3CPUParams *params)
     _status = Inactive;
 
     // Setup status, make sure stall signals are clear.
-    for (int i = 0; i < numThreads; ++i) {
-        decodeStatus[i] = Idle;
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        decodeStatus[tid] = Idle;
 
-        stalls[i].rename = false;
-        stalls[i].iew = false;
-        stalls[i].commit = false;
+        stalls[tid].rename = false;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
     }
 
     // @todo: Make into a parameter
@@ -148,7 +149,7 @@ DefaultDecode<Impl>::setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+DefaultDecode<Impl>::setActiveThreads(std::list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -169,24 +170,24 @@ DefaultDecode<Impl>::takeOverFrom()
     _status = Inactive;
 
     // Be sure to reset state and clear out any old instructions.
-    for (int i = 0; i < numThreads; ++i) {
-        decodeStatus[i] = Idle;
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        decodeStatus[tid] = Idle;
 
-        stalls[i].rename = false;
-        stalls[i].iew = false;
-        stalls[i].commit = false;
-        while (!insts[i].empty())
-            insts[i].pop();
-        while (!skidBuffer[i].empty())
-            skidBuffer[i].pop();
-        branchCount[i] = 0;
+        stalls[tid].rename = false;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
+        while (!insts[tid].empty())
+            insts[tid].pop();
+        while (!skidBuffer[tid].empty())
+            skidBuffer[tid].pop();
+        branchCount[tid] = 0;
     }
     wroteToTimeBuffer = false;
 }
 
 template<class Impl>
 bool
-DefaultDecode<Impl>::checkStall(unsigned tid) const
+DefaultDecode<Impl>::checkStall(ThreadID tid) const
 {
     bool ret_val = false;
 
@@ -213,7 +214,7 @@ DefaultDecode<Impl>::fetchInstsValid()
 
 template<class Impl>
 bool
-DefaultDecode<Impl>::block(unsigned tid)
+DefaultDecode<Impl>::block(ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%u]: Blocking.\n", tid);
 
@@ -241,7 +242,7 @@ DefaultDecode<Impl>::block(unsigned tid)
 
 template<class Impl>
 bool
-DefaultDecode<Impl>::unblock(unsigned tid)
+DefaultDecode<Impl>::unblock(ThreadID tid)
 {
     // Decode is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
@@ -260,7 +261,7 @@ DefaultDecode<Impl>::unblock(unsigned tid)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
+DefaultDecode<Impl>::squash(DynInstPtr &inst, ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i]: [sn:%i] Squashing due to incorrect branch prediction "
             "detected at decode.\n", tid, inst->seqNum);
@@ -320,7 +321,7 @@ DefaultDecode<Impl>::squash(DynInstPtr &inst, unsigned tid)
 
 template<class Impl>
 unsigned
-DefaultDecode<Impl>::squash(unsigned tid)
+DefaultDecode<Impl>::squash(ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i]: Squashing.\n",tid);
 
@@ -369,7 +370,7 @@ DefaultDecode<Impl>::squash(unsigned tid)
 
 template<class Impl>
 void
-DefaultDecode<Impl>::skidInsert(unsigned tid)
+DefaultDecode<Impl>::skidInsert(ThreadID tid)
 {
     DynInstPtr inst = NULL;
 
@@ -395,11 +396,11 @@ template<class Impl>
 bool
 DefaultDecode<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -413,11 +414,11 @@ DefaultDecode<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (decodeStatus[tid] == Unblocking) {
             any_unblocking = true;
@@ -452,8 +453,8 @@ DefaultDecode<Impl>::sortInsts()
 {
     int insts_from_fetch = fromFetch->size;
 #ifdef DEBUG
-    for (int i=0; i < numThreads; i++)
-        assert(insts[i].empty());
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        assert(insts[tid].empty());
 #endif
     for (int i = 0; i < insts_from_fetch; ++i) {
         insts[fromFetch->insts[i]->threadNumber].push(fromFetch->insts[i]);
@@ -462,7 +463,7 @@ DefaultDecode<Impl>::sortInsts()
 
 template<class Impl>
 void
-DefaultDecode<Impl>::readStallSignals(unsigned tid)
+DefaultDecode<Impl>::readStallSignals(ThreadID tid)
 {
     if (fromRename->renameBlock[tid]) {
         stalls[tid].rename = true;
@@ -494,7 +495,7 @@ DefaultDecode<Impl>::readStallSignals(unsigned tid)
 
 template <class Impl>
 bool
-DefaultDecode<Impl>::checkSignalsAndUpdate(unsigned tid)
+DefaultDecode<Impl>::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is.
     // Check stall signals, block if necessary.
@@ -569,14 +570,14 @@ DefaultDecode<Impl>::tick()
 
     toRenameIndex = 0;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     sortInsts();
 
     //Check stall and squash signals.
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         DPRINTF(Decode,"Processing [tid:%i]\n",tid);
         status_change =  checkSignalsAndUpdate(tid) || status_change;
@@ -597,7 +598,7 @@ DefaultDecode<Impl>::tick()
 
 template<class Impl>
 void
-DefaultDecode<Impl>::decode(bool &status_change, unsigned tid)
+DefaultDecode<Impl>::decode(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
     //     call decodeInsts()
@@ -642,7 +643,7 @@ DefaultDecode<Impl>::decode(bool &status_change, unsigned tid)
 
 template <class Impl>
 void
-DefaultDecode<Impl>::decodeInsts(unsigned tid)
+DefaultDecode<Impl>::decodeInsts(ThreadID tid)
 {
     // Instructions can come either from the skid buffer or the list of
     // instructions coming from fetch, depending on decode's status.

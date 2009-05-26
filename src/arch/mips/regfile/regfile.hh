@@ -61,19 +61,21 @@ namespace MipsISA
 
       public:
         void clear();
-        void reset(std::string core_name, unsigned num_threads, unsigned num_vpes, BaseCPU *_cpu);
+        void reset(std::string core_name, ThreadID num_threads,
+                   unsigned num_vpes, BaseCPU *_cpu);
         MiscRegFile *getMiscRegFilePtr();
 
         IntReg readIntReg(int intReg);
         Fault setIntReg(int intReg, const IntReg &val);
 
 
-        MiscReg readMiscRegNoEffect(int miscReg, unsigned tid = 0);
+        MiscReg readMiscRegNoEffect(int miscReg, ThreadID tid = 0);
         MiscReg readMiscReg(int miscReg, ThreadContext *tc,
-                            unsigned tid = 0);
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid = 0);
+                            ThreadID tid = 0);
+        void setMiscRegNoEffect(int miscReg, const MiscReg &val,
+                                ThreadID tid = 0);
         void setMiscReg(int miscReg, const MiscReg &val,
-                        ThreadContext * tc, unsigned tid = 0);
+                        ThreadContext *tc, ThreadID tid = 0);
 
         FloatRegVal readFloatReg(int floatReg);
         FloatRegVal readFloatReg(int floatReg, int width);

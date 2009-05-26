@@ -71,7 +71,7 @@ class InstBuffer : public Resource {
 
     virtual DynInstPtr top();
 
-    virtual void squash(InstSeqNum squash_seq_num, unsigned tid);
+    virtual void squash(InstSeqNum squash_seq_num, ThreadID tid);
 
   protected:
     /** List of instructions this resource is currently

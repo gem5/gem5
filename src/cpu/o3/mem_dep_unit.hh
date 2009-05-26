@@ -86,7 +86,7 @@ class MemDepUnit
     std::string name() const { return _name; }
 
     /** Initializes the unit with parameters and a thread id. */
-    void init(DerivO3CPUParams *params, int tid);
+    void init(DerivO3CPUParams *params, ThreadID tid);
 
     /** Registers statistics. */
     void regStats();
@@ -135,7 +135,7 @@ class MemDepUnit
     /** Squashes all instructions up until a given sequence number for a
      *  specific thread.
      */
-    void squash(const InstSeqNum &squashed_num, unsigned tid);
+    void squash(const InstSeqNum &squashed_num, ThreadID tid);
 
     /** Indicates an ordering violation between a store and a younger load. */
     void violation(DynInstPtr &store_inst, DynInstPtr &violating_load);

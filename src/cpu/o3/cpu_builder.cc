@@ -49,11 +49,11 @@ DerivO3CPUParams::create()
 {
 #if FULL_SYSTEM
     // Full-system only supports a single thread for the moment.
-    int actual_num_threads = 1;
+    ThreadID actual_num_threads = 1;
 #else
     // In non-full-system mode, we infer the number of threads from
     // the workload if it's not explicitly specified.
-    int actual_num_threads =
+    ThreadID actual_num_threads =
         (numThreads >= workload.size()) ? numThreads : workload.size();
 
     if (workload.size() == 0) {

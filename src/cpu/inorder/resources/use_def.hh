@@ -65,7 +65,8 @@ class UseDefUnit : public Resource {
 
     virtual void execute(int slot_num);
 
-    virtual void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);
+    virtual void squash(DynInstPtr inst, int stage_num,
+                        InstSeqNum squash_seq_num, ThreadID tid);
 
     const InstSeqNum maxSeqNum;
 

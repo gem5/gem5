@@ -82,8 +82,7 @@ class StoreSet
 
     /** Inserts a store into the store set predictor.  Updates the
      * LFST if the store has a valid SSID. */
-    void insertStore(Addr store_PC, InstSeqNum store_seq_num,
-                     unsigned tid);
+    void insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid);
 
     /** Checks if the instruction with the given PC is dependent upon
      * any store.  @return Returns the sequence number of the store
@@ -95,7 +94,7 @@ class StoreSet
     void issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store);
 
     /** Squashes for a specific thread until the given sequence number. */
-    void squash(InstSeqNum squashed_num, unsigned tid);
+    void squash(InstSeqNum squashed_num, ThreadID tid);
 
     /** Resets all tables. */
     void clear();

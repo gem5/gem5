@@ -67,8 +67,10 @@ class InOrderThreadState : public ThreadState {
     bool trapPending;
 
 
-    InOrderThreadState(InOrderCPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), 0/*_thread_num*/, _process, 0/*_asid*/),
+    InOrderThreadState(InOrderCPU *_cpu, ThreadID _thread_num,
+                       Process *_process, int _asid)
+        : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), 0/*_thread_num*/,
+                      _process, 0/*_asid*/),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 

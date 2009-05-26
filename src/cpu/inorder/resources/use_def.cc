@@ -45,7 +45,7 @@ UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       maxSeqNum((InstSeqNum)-1)
 {
-    for (int tid = 0; tid < ThePipeline::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         nonSpecInstActive[tid] = &cpu->nonSpecInstActive[tid];
         nonSpecSeqNum[tid] = &cpu->nonSpecSeqNum[tid];
 
@@ -99,7 +99,7 @@ UseDefUnit::execute(int slot_idx)
     assert(ud_req);
 
     DynInstPtr inst = ud_req->inst;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
     int ud_idx = ud_req->useDefIdx;
 
@@ -306,7 +306,8 @@ UseDefUnit::execute(int slot_idx)
 }
 
 void
-UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid)
+UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                   ThreadID tid)
 {
     DPRINTF(InOrderUseDef, "[tid:%i]: Updating Due To Squash After [sn:%i].\n",
             tid, squash_seq_num);

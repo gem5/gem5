@@ -213,7 +213,7 @@ class BaseCPU : public MemObject
     virtual void startup();
     virtual void regStats();
 
-    virtual void activateWhenReady(int tid) {};
+    virtual void activateWhenReady(ThreadID tid) {};
 
     void registerThreadContexts();
 
@@ -229,7 +229,7 @@ class BaseCPU : public MemObject
      *  Number of threads we're actually simulating (<= SMT_MAX_THREADS).
      * This is a constant for the duration of the simulation.
      */
-    int number_of_threads;
+    ThreadID numThreads;
 
     TheISA::CoreSpecific coreParams; //ISA-Specific Params That Set Up State in Core
 

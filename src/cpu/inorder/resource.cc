@@ -283,7 +283,7 @@ Resource::execute(int slot_idx)
 }
 
 void
-Resource::deactivateThread(unsigned tid)
+Resource::deactivateThread(ThreadID tid)
 {
     // In the most basic case, deactivation means squashing everything
     // from a particular thread
@@ -292,7 +292,8 @@ Resource::deactivateThread(unsigned tid)
 }
 
 void
-Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid)
+Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                 ThreadID tid)
 {
     std::vector<int> slot_remove_list;
 

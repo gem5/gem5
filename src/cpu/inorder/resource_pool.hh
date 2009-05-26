@@ -81,7 +81,7 @@ class ResourcePool {
 
         int stageNum;
 
-        unsigned tid;
+        ThreadID tid;
 
       public:
         /** Constructs a resource event. */
@@ -93,14 +93,14 @@ class ResourcePool {
                      DynInstPtr _inst,
                      int stage_num,
                      InstSeqNum seq_num,
-                     unsigned _tid);
+                     ThreadID _tid);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(InOrderCPU::CPUEventType e_type,
                       DynInstPtr _inst,
                       int stage_num,
                       InstSeqNum seq_num,
-                      unsigned _tid)
+                      ThreadID _tid)
         {
             eventType = e_type;
             inst = _inst;
@@ -153,20 +153,21 @@ class ResourcePool {
     ResReqPtr request(int res_idx, DynInstPtr inst);
 
     /** Squash The Resource */
-    void squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num, int tid);
+    void squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num,
+                ThreadID tid);
 
     /** Squash All Resources in Pool after Done Seq. Num */
     void squashAll(DynInstPtr inst, int stage_num,
-                   InstSeqNum done_seq_num, unsigned tid);
+                   InstSeqNum done_seq_num, ThreadID tid);
 
     /** Activate Thread in all resources */
-    void activateAll(unsigned tid);
+    void activateAll(ThreadID tid);
 
     /** De-Activate Thread in all resources */
-    void deactivateAll(unsigned tid);
+    void deactivateAll(ThreadID tid);
 
     /** Broadcast graduation to all resources */
-    void instGraduated(InstSeqNum seq_num,unsigned tid);
+    void instGraduated(InstSeqNum seq_num, ThreadID tid);
 
     /** The number of instructions available that a resource can
      *  can still process.
@@ -178,7 +179,7 @@ class ResourcePool {
 
     /** Schedule resource event, regardless of its current state. */
     void scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst = NULL,
-                       int delay = 0, int res_idx = 0, int tid = 0);
+                       int delay = 0, int res_idx = 0, ThreadID tid = 0);
 
    /** UnSchedule resource event, regardless of its current state. */
     void unscheduleEvent(int res_idx, DynInstPtr inst);

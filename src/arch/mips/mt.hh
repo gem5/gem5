@@ -109,7 +109,7 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
     int num_threads = bits(tc->readMiscRegNoEffect(MVPConf0), MVPC0_PTC_HI, MVPC0_PTC_LO) + 1;
 
     int success = 0;
-    for (int tid = 0; tid < num_threads && success == 0; tid++) {
+    for (ThreadID tid = 0; tid < num_threads && success == 0; tid++) {
         unsigned tid_TCBind = tc->readRegOtherThread(MipsISA::TCBind + Ctrl_Base_DepTag,
                                                      tid);
         unsigned tc_bind = tc->readMiscRegNoEffect(MipsISA::TCBind);
@@ -181,7 +181,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
 {
     if (src_reg == 0) {
         unsigned mvpconf0 = tc->readMiscRegNoEffect(MVPConf0);
-        int num_threads = bits(mvpconf0, MVPC0_PTC_HI, MVPC0_PTC_LO) + 1;
+        ThreadID num_threads = bits(mvpconf0, MVPC0_PTC_HI, MVPC0_PTC_LO) + 1;
 
         int ok = 0;
 
@@ -190,7 +190,7 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
         unsigned cur_vpe = bits(tcbind, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO);
         unsigned cur_tc = bits(tcbind, TCB_CUR_TC_HI, TCB_CUR_TC_LO);
 
-        for (int tid = 0; tid < num_threads; tid++) {
+        for (ThreadID tid = 0; tid < num_threads; tid++) {
             unsigned tid_TCStatus = tc->readRegOtherThread(MipsISA::TCStatus + Ctrl_Base_DepTag,
                                                            tid);
             unsigned tid_TCHalt = tc->readRegOtherThread(MipsISA::TCHalt + Ctrl_Base_DepTag,

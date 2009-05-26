@@ -61,9 +61,9 @@ class BranchPredictor : public Resource {
     virtual void execute(int slot_num);
 
     virtual void squash(DynInstPtr inst, int stage_num,
-                        InstSeqNum squash_seq_num, unsigned tid);
+                        InstSeqNum squash_seq_num, ThreadID tid);
 
-    virtual void instGraduated(InstSeqNum seq_num,unsigned tid);
+    virtual void instGraduated(InstSeqNum seq_num, ThreadID tid);
 
   protected:
     /** List of instructions this resource is currently

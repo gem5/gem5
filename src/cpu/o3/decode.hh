@@ -105,7 +105,7 @@ class DefaultDecode
     void setFetchQueue(TimeBuffer<FetchStruct> *fq_ptr);
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Drains the decode stage. */
     bool drain();
@@ -129,20 +129,20 @@ class DefaultDecode
      * change (ie switching from from blocking to unblocking).
      * @param tid Thread id to decode instructions from.
      */
-    void decode(bool &status_change, unsigned tid);
+    void decode(bool &status_change, ThreadID tid);
 
     /** Processes instructions from fetch and passes them on to rename.
      * Decoding of instructions actually happens when they are created in
      * fetch, so this function mostly checks if PC-relative branches are
      * correct.
      */
-    void decodeInsts(unsigned tid);
+    void decodeInsts(ThreadID tid);
 
   private:
     /** Inserts a thread's instructions into the skid buffer, to be decoded
      * once decode unblocks.
      */
-    void skidInsert(unsigned tid);
+    void skidInsert(ThreadID tid);
 
     /** Returns if all of the skid buffers are empty. */
     bool skidsEmpty();
@@ -156,13 +156,13 @@ class DefaultDecode
     void sortInsts();
 
     /** Reads all stall signals from the backwards communication timebuffer. */
-    void readStallSignals(unsigned tid);
+    void readStallSignals(ThreadID tid);
 
     /** Checks all input signals and updates decode's status appropriately. */
-    bool checkSignalsAndUpdate(unsigned tid);
+    bool checkSignalsAndUpdate(ThreadID tid);
 
     /** Checks all stall signals, and returns if any are true. */
-    bool checkStall(unsigned tid) const;
+    bool checkStall(ThreadID tid) const;
 
     /** Returns if there any instructions from fetch on this cycle. */
     inline bool fetchInstsValid();
@@ -171,24 +171,24 @@ class DefaultDecode
      * become blocked.
      * @return Returns true if there is a status change.
      */
-    bool block(unsigned tid);
+    bool block(ThreadID tid);
 
     /** Switches decode to unblocking if the skid buffer is empty, and
      * signals back that decode has unblocked.
      * @return Returns true if there is a status change.
      */
-    bool unblock(unsigned tid);
+    bool unblock(ThreadID tid);
 
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
-    void squash(DynInstPtr &inst, unsigned tid);
+    void squash(DynInstPtr &inst, ThreadID tid);
 
   public:
     /** Squashes due to commit signalling a squash. Changes status to
      * squashing and clears block/unblock signals as needed.
      */
-    unsigned squash(unsigned tid);
+    unsigned squash(ThreadID tid);
 
   private:
     // Interfaces to objects outside of decode.
@@ -263,10 +263,10 @@ class DefaultDecode
     unsigned toRenameIndex;
 
     /** number of Active Threads*/
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** List of active thread ids */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Number of branches in flight. */
     unsigned branchCount[Impl::MaxThreads];

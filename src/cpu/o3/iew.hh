@@ -31,12 +31,11 @@
 #ifndef __CPU_O3_IEW_HH__
 #define __CPU_O3_IEW_HH__
 
-#include "config/full_system.hh"
-
 #include <queue>
 
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
+#include "config/full_system.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/lsq.hh"
@@ -139,7 +138,7 @@ class DefaultIEW
     void setIEWQueue(TimeBuffer<IEWStruct> *iq_ptr);
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
@@ -160,7 +159,7 @@ class DefaultIEW
     bool isSwitchedOut() { return switchedOut; }
 
     /** Squashes instructions in IEW for a specific thread. */
-    void squash(unsigned tid);
+    void squash(ThreadID tid);
 
     /** Wakes all dependents of a completed instruction. */
     void wakeDependents(DynInstPtr &inst);
@@ -177,7 +176,7 @@ class DefaultIEW
     void instToCommit(DynInstPtr &inst);
 
     /** Inserts unused instructions of a thread into the skid buffer. */
-    void skidInsert(unsigned tid);
+    void skidInsert(ThreadID tid);
 
     /** Returns the max of the number of entries in all of the skid buffers. */
     int skidCount();
@@ -209,7 +208,7 @@ class DefaultIEW
     bool hasStoresToWB() { return ldstQueue.hasStoresToWB(); }
 
     /** Returns if the LSQ has any stores to writeback. */
-    bool hasStoresToWB(unsigned tid) { return ldstQueue.hasStoresToWB(tid); }
+    bool hasStoresToWB(ThreadID tid) { return ldstQueue.hasStoresToWB(tid); }
 
     void incrWb(InstSeqNum &sn)
     {
@@ -256,31 +255,31 @@ class DefaultIEW
     /** Sends commit proper information for a squash due to a branch
      * mispredict.
      */
-    void squashDueToBranch(DynInstPtr &inst, unsigned thread_id);
+    void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
 
     /** Sends commit proper information for a squash due to a memory order
      * violation.
      */
-    void squashDueToMemOrder(DynInstPtr &inst, unsigned thread_id);
+    void squashDueToMemOrder(DynInstPtr &inst, ThreadID tid);
 
     /** Sends commit proper information for a squash due to memory becoming
      * blocked (younger issued instructions must be retried).
      */
-    void squashDueToMemBlocked(DynInstPtr &inst, unsigned thread_id);
+    void squashDueToMemBlocked(DynInstPtr &inst, ThreadID tid);
 
     /** Sets Dispatch to blocked, and signals back to other stages to block. */
-    void block(unsigned thread_id);
+    void block(ThreadID tid);
 
     /** Unblocks Dispatch if the skid buffer is empty, and signals back to
      * other stages to unblock.
      */
-    void unblock(unsigned thread_id);
+    void unblock(ThreadID tid);
 
     /** Determines proper actions to take given Dispatch's status. */
-    void dispatch(unsigned tid);
+    void dispatch(ThreadID tid);
 
     /** Dispatches instructions to IQ and LSQ. */
-    void dispatchInsts(unsigned tid);
+    void dispatchInsts(ThreadID tid);
 
     /** Executes instructions. In the case of memory operations, it informs the
      * LSQ to execute the instructions. Also handles any redirects that occur
@@ -301,16 +300,16 @@ class DefaultIEW
     unsigned validInstsFromRename();
 
     /** Reads the stall signals. */
-    void readStallSignals(unsigned tid);
+    void readStallSignals(ThreadID tid);
 
     /** Checks if any of the stall conditions are currently true. */
-    bool checkStall(unsigned tid);
+    bool checkStall(ThreadID tid);
 
     /** Processes inputs and changes state accordingly. */
-    void checkSignalsAndUpdate(unsigned tid);
+    void checkSignalsAndUpdate(ThreadID tid);
 
     /** Removes instructions from rename from a thread's instruction list. */
-    void emptyRenameInsts(unsigned tid);
+    void emptyRenameInsts(ThreadID tid);
 
     /** Sorts instructions coming from rename into lists separated by thread. */
     void sortInsts();
@@ -453,10 +452,10 @@ class DefaultIEW
     unsigned wbMax;
 
     /** Number of active threads. */
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** Pointer to list of active threads. */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;

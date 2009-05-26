@@ -144,7 +144,7 @@ BPredUnit<Impl>::takeOverFrom()
 
 template <class Impl>
 bool
-BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
+BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB or the RAS.
@@ -254,7 +254,7 @@ BPredUnit<Impl>::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
 
 template <class Impl>
 void
-BPredUnit<Impl>::update(const InstSeqNum &done_sn, unsigned tid)
+BPredUnit<Impl>::update(const InstSeqNum &done_sn, ThreadID tid)
 {
     DPRINTF(Fetch, "BranchPred: [tid:%i]: Committing branches until "
             "[sn:%lli].\n", tid, done_sn);
@@ -272,7 +272,7 @@ BPredUnit<Impl>::update(const InstSeqNum &done_sn, unsigned tid)
 
 template <class Impl>
 void
-BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, unsigned tid)
+BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 {
     History &pred_hist = predHist[tid];
 
@@ -311,8 +311,8 @@ template <class Impl>
 void
 BPredUnit<Impl>::squash(const InstSeqNum &squashed_sn,
                         const Addr &corr_target,
-                        const bool actually_taken,
-                        unsigned tid)
+                        bool actually_taken,
+                        ThreadID tid)
 {
     // Now that we know that a branch was mispredicted, we need to undo
     // all the branches that have been seen up until this branch and

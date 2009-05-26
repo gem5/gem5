@@ -226,7 +226,7 @@ O3ThreadContext<Impl>::copyArchRegs(ThreadContext *tc)
 {
     // This function will mess things up unless the ROB is empty and
     // there are no instructions in the pipeline.
-    unsigned tid = thread->threadId();
+    ThreadID tid = thread->threadId();
     PhysRegIndex renamed_reg;
 
     // First loop through the integer registers.

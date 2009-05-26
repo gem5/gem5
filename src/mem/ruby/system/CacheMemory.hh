@@ -200,9 +200,9 @@ CacheMemory<ENTRY>::CacheMemory(AbstractChip* chip_ptr, int numSetBits,
   //  cout << "Before setting trans address list size" << endl;
   //create a trans address for each SMT thread
 //   m_trans_address_list.setSize(numThreads);
-//   for(int i=0; i < numThreads; ++i){
-//     cout << "Setting list size for list " << i << endl;
-//     m_trans_address_list[i].setSize(30);
+//   for(ThreadID tid = 0; tid < numThreads; ++tid){
+//     cout << "Setting list size for list " << tid << endl;
+//     m_trans_address_list[tid].setSize(30);
 //   }
   //cout << "CacheMemory constructor finished" << endl;
 }

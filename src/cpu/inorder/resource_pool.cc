@@ -164,7 +164,8 @@ ResourcePool::request(int res_idx, DynInstPtr inst)
 }
 
 void
-ResourcePool::squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num, int tid)
+ResourcePool::squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num,
+                     ThreadID tid)
 {
     resources[res_idx]->squash(inst, ThePipeline::NumStages-1, done_seq_num, tid);
 }
@@ -183,7 +184,7 @@ ResourcePool::slotsInUse(int res_idx)
 
 void
 ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
-                            int delay,  int res_idx, int tid)
+                            int delay,  int res_idx, ThreadID tid)
 {
     assert(delay >= 0);
 
@@ -261,7 +262,8 @@ ResourcePool::unscheduleEvent(int res_idx, DynInstPtr inst)
 }
 
 void
-ResourcePool::squashAll(DynInstPtr inst, int stage_num, InstSeqNum done_seq_num, unsigned tid)
+ResourcePool::squashAll(DynInstPtr inst, int stage_num,
+                        InstSeqNum done_seq_num, ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Stage %i squashing all instructions above [sn:%i].\n",
             stage_num, tid, done_seq_num);
@@ -274,7 +276,7 @@ ResourcePool::squashAll(DynInstPtr inst, int stage_num, InstSeqNum done_seq_num,
 }
 
 void
-ResourcePool::activateAll(unsigned tid)
+ResourcePool::activateAll(ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting Thread Activation to all resources.\n",
             tid);
@@ -287,7 +289,7 @@ ResourcePool::activateAll(unsigned tid)
 }
 
 void
-ResourcePool::deactivateAll(unsigned tid)
+ResourcePool::deactivateAll(ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting Thread Deactivation to all resources.\n",
             tid);
@@ -300,7 +302,7 @@ ResourcePool::deactivateAll(unsigned tid)
 }
 
 void
-ResourcePool::instGraduated(InstSeqNum seq_num,unsigned tid)
+ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to all resources.\n",
             tid, seq_num);
@@ -322,7 +324,7 @@ ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
                                          DynInstPtr _inst,
                                          int stage_num,
                                          InstSeqNum seq_num,
-                                         unsigned _tid)
+                                         ThreadID _tid)
     : Event(CPU_Tick_Pri), resPool(_resPool),
       eventType(e_type), inst(_inst), seqNum(seq_num),
       stageNum(stage_num), tid(_tid)

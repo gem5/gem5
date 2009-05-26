@@ -325,7 +325,7 @@ class LSQUnit {
 
   private:
     /** The LSQUnit thread id. */
-    unsigned lsqID;
+    ThreadID lsqID;
 
     /** The store queue. */
     std::vector<SQEntry> storeQueue;

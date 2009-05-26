@@ -37,6 +37,8 @@
 #include "cpu/o3/rename.hh"
 #include "params/DerivO3CPU.hh"
 
+using namespace std;
+
 template <class Impl>
 DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
     : cpu(_cpu),
@@ -52,22 +54,22 @@ DefaultRename<Impl>::DefaultRename(O3CPU *_cpu, DerivO3CPUParams *params)
 {
     _status = Inactive;
 
-    for (int i=0; i< numThreads; i++) {
-        renameStatus[i] = Idle;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        renameStatus[tid] = Idle;
 
-        freeEntries[i].iqEntries = 0;
-        freeEntries[i].lsqEntries = 0;
-        freeEntries[i].robEntries = 0;
+        freeEntries[tid].iqEntries = 0;
+        freeEntries[tid].lsqEntries = 0;
+        freeEntries[tid].robEntries = 0;
 
-        stalls[i].iew = false;
-        stalls[i].commit = false;
-        serializeInst[i] = NULL;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
+        serializeInst[tid] = NULL;
 
-        instsInProgress[i] = 0;
+        instsInProgress[tid] = 0;
 
-        emptyROB[i] = true;
+        emptyROB[tid] = true;
 
-        serializeOnNextInst[i] = false;
+        serializeOnNextInst[tid] = false;
     }
 
     // @todo: Make into a parameter.
@@ -207,7 +209,7 @@ void
 DefaultRename<Impl>::initStage()
 {
     // Grab the number of free entries directly from the stages.
-    for (int tid=0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         freeEntries[tid].iqEntries = iew_ptr->instQueue.numFreeEntries(tid);
         freeEntries[tid].lsqEntries = iew_ptr->ldstQueue.numFreeEntries(tid);
         freeEntries[tid].robEntries = commit_ptr->numROBFreeEntries(tid);
@@ -217,7 +219,7 @@ DefaultRename<Impl>::initStage()
 
 template<class Impl>
 void
-DefaultRename<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+DefaultRename<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -227,9 +229,8 @@ template <class Impl>
 void
 DefaultRename<Impl>::setRenameMap(RenameMap rm_ptr[])
 {
-    for (int i=0; i<numThreads; i++) {
-        renameMap[i] = &rm_ptr[i];
-    }
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        renameMap[tid] = &rm_ptr[tid];
 }
 
 template <class Impl>
@@ -260,19 +261,19 @@ void
 DefaultRename<Impl>::switchOut()
 {
     // Clear any state, fix up the rename map.
-    for (int i = 0; i < numThreads; i++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         typename std::list<RenameHistory>::iterator hb_it =
-            historyBuffer[i].begin();
+            historyBuffer[tid].begin();
 
-        while (!historyBuffer[i].empty()) {
-            assert(hb_it != historyBuffer[i].end());
+        while (!historyBuffer[tid].empty()) {
+            assert(hb_it != historyBuffer[tid].end());
 
             DPRINTF(Rename, "[tid:%u]: Removing history entry with sequence "
-                    "number %i.\n", i, (*hb_it).instSeqNum);
+                    "number %i.\n", tid, (*hb_it).instSeqNum);
 
             // Tell the rename map to set the architected register to the
             // previous physical register that it was renamed to.
-            renameMap[i]->setEntry(hb_it->archReg, hb_it->prevPhysReg);
+            renameMap[tid]->setEntry(hb_it->archReg, hb_it->prevPhysReg);
 
             // Put the renamed physical register back on the free list.
             freeList->addReg(hb_it->newPhysReg);
@@ -282,10 +283,10 @@ DefaultRename<Impl>::switchOut()
                 scoreboard->setReg(hb_it->newPhysReg);
             }
 
-            historyBuffer[i].erase(hb_it++);
+            historyBuffer[tid].erase(hb_it++);
         }
-        insts[i].clear();
-        skidBuffer[i].clear();
+        insts[tid].clear();
+        skidBuffer[tid].clear();
     }
 }
 
@@ -297,24 +298,24 @@ DefaultRename<Impl>::takeOverFrom()
     initStage();
 
     // Reset all state prior to taking over from the other CPU.
-    for (int i=0; i< numThreads; i++) {
-        renameStatus[i] = Idle;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        renameStatus[tid] = Idle;
 
-        stalls[i].iew = false;
-        stalls[i].commit = false;
-        serializeInst[i] = NULL;
+        stalls[tid].iew = false;
+        stalls[tid].commit = false;
+        serializeInst[tid] = NULL;
 
-        instsInProgress[i] = 0;
+        instsInProgress[tid] = 0;
 
-        emptyROB[i] = true;
+        emptyROB[tid] = true;
 
-        serializeOnNextInst[i] = false;
+        serializeOnNextInst[tid] = false;
     }
 }
 
 template <class Impl>
 void
-DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, unsigned tid)
+DefaultRename<Impl>::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%u]: Squashing instructions.\n",tid);
 
@@ -380,12 +381,12 @@ DefaultRename<Impl>::tick()
 
     sortInsts();
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     // Check stall and squash signals.
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         DPRINTF(Rename, "Processing [tid:%i]\n", tid);
 
@@ -406,7 +407,7 @@ DefaultRename<Impl>::tick()
     threads = activeThreads->begin();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         // If we committed this cycle then doneSeqNum will be > 0
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
@@ -419,7 +420,7 @@ DefaultRename<Impl>::tick()
     }
 
     // @todo: make into updateProgress function
-    for (int tid=0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         instsInProgress[tid] -= fromIEW->iewInfo[tid].dispatched;
 
         assert(instsInProgress[tid] >=0);
@@ -429,7 +430,7 @@ DefaultRename<Impl>::tick()
 
 template<class Impl>
 void
-DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
+DefaultRename<Impl>::rename(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
     //     call renameInsts()
@@ -483,7 +484,7 @@ DefaultRename<Impl>::rename(bool &status_change, unsigned tid)
 
 template <class Impl>
 void
-DefaultRename<Impl>::renameInsts(unsigned tid)
+DefaultRename<Impl>::renameInsts(ThreadID tid)
 {
     // Instructions can be either in the skid buffer or the queue of
     // instructions coming from decode, depending on the status.
@@ -703,7 +704,7 @@ DefaultRename<Impl>::renameInsts(unsigned tid)
 
 template<class Impl>
 void
-DefaultRename<Impl>::skidInsert(unsigned tid)
+DefaultRename<Impl>::skidInsert(ThreadID tid)
 {
     DynInstPtr inst = NULL;
 
@@ -742,8 +743,8 @@ DefaultRename<Impl>::sortInsts()
 {
     int insts_from_decode = fromDecode->size;
 #ifdef DEBUG
-    for (int i=0; i < numThreads; i++)
-        assert(insts[i].empty());
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        assert(insts[tid].empty());
 #endif
     for (int i = 0; i < insts_from_decode; ++i) {
         DynInstPtr inst = fromDecode->insts[i];
@@ -755,11 +756,11 @@ template<class Impl>
 bool
 DefaultRename<Impl>::skidsEmpty()
 {
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (!skidBuffer[tid].empty())
             return false;
@@ -774,11 +775,11 @@ DefaultRename<Impl>::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (renameStatus[tid] == Unblocking) {
             any_unblocking = true;
@@ -809,7 +810,7 @@ DefaultRename<Impl>::updateStatus()
 
 template <class Impl>
 bool
-DefaultRename<Impl>::block(unsigned tid)
+DefaultRename<Impl>::block(ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%u]: Blocking.\n", tid);
 
@@ -843,7 +844,7 @@ DefaultRename<Impl>::block(unsigned tid)
 
 template <class Impl>
 bool
-DefaultRename<Impl>::unblock(unsigned tid)
+DefaultRename<Impl>::unblock(ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%u]: Trying to unblock.\n", tid);
 
@@ -864,7 +865,7 @@ DefaultRename<Impl>::unblock(unsigned tid)
 
 template <class Impl>
 void
-DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, unsigned tid)
+DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
 {
     typename std::list<RenameHistory>::iterator hb_it =
         historyBuffer[tid].begin();
@@ -904,7 +905,7 @@ DefaultRename<Impl>::doSquash(const InstSeqNum &squashed_seq_num, unsigned tid)
 
 template<class Impl>
 void
-DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, unsigned tid)
+DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%u]: Removing a committed instruction from the "
             "history buffer %u (size=%i), until [sn:%lli].\n",
@@ -945,7 +946,7 @@ DefaultRename<Impl>::removeFromHistory(InstSeqNum inst_seq_num, unsigned tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
+DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
 {
     assert(renameMap[tid] != 0);
 
@@ -996,7 +997,7 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst,unsigned tid)
 
 template <class Impl>
 inline void
-DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
+DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
 {
     typename RenameMap::RenameInfo rename_result;
 
@@ -1057,7 +1058,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst,unsigned tid)
 
 template <class Impl>
 inline int
-DefaultRename<Impl>::calcFreeROBEntries(unsigned tid)
+DefaultRename<Impl>::calcFreeROBEntries(ThreadID tid)
 {
     int num_free = freeEntries[tid].robEntries -
                   (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatched);
@@ -1069,7 +1070,7 @@ DefaultRename<Impl>::calcFreeROBEntries(unsigned tid)
 
 template <class Impl>
 inline int
-DefaultRename<Impl>::calcFreeIQEntries(unsigned tid)
+DefaultRename<Impl>::calcFreeIQEntries(ThreadID tid)
 {
     int num_free = freeEntries[tid].iqEntries -
                   (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatched);
@@ -1081,7 +1082,7 @@ DefaultRename<Impl>::calcFreeIQEntries(unsigned tid)
 
 template <class Impl>
 inline int
-DefaultRename<Impl>::calcFreeLSQEntries(unsigned tid)
+DefaultRename<Impl>::calcFreeLSQEntries(ThreadID tid)
 {
     int num_free = freeEntries[tid].lsqEntries -
                   (instsInProgress[tid] - fromIEW->iewInfo[tid].dispatchedToLSQ);
@@ -1107,7 +1108,7 @@ DefaultRename<Impl>::validInsts()
 
 template <class Impl>
 void
-DefaultRename<Impl>::readStallSignals(unsigned tid)
+DefaultRename<Impl>::readStallSignals(ThreadID tid)
 {
     if (fromIEW->iewBlock[tid]) {
         stalls[tid].iew = true;
@@ -1130,7 +1131,7 @@ DefaultRename<Impl>::readStallSignals(unsigned tid)
 
 template <class Impl>
 bool
-DefaultRename<Impl>::checkStall(unsigned tid)
+DefaultRename<Impl>::checkStall(ThreadID tid)
 {
     bool ret_val = false;
 
@@ -1165,7 +1166,7 @@ DefaultRename<Impl>::checkStall(unsigned tid)
 
 template <class Impl>
 void
-DefaultRename<Impl>::readFreeEntries(unsigned tid)
+DefaultRename<Impl>::readFreeEntries(ThreadID tid)
 {
     bool updated = false;
     if (fromIEW->iewInfo[tid].usedIQ) {
@@ -1199,7 +1200,7 @@ DefaultRename<Impl>::readFreeEntries(unsigned tid)
 
 template <class Impl>
 bool
-DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
+DefaultRename<Impl>::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is
     // Check stall signals, block if necessary.
@@ -1308,8 +1309,7 @@ DefaultRename<Impl>::checkSignalsAndUpdate(unsigned tid)
 
 template<class Impl>
 void
-DefaultRename<Impl>::serializeAfter(InstQueue &inst_list,
-                                   unsigned tid)
+DefaultRename<Impl>::serializeAfter(InstQueue &inst_list, ThreadID tid)
 {
     if (inst_list.empty()) {
         // Mark a bit to say that I must serialize on the next instruction.
@@ -1347,11 +1347,11 @@ DefaultRename<Impl>::dumpHistory()
 {
     typename std::list<RenameHistory>::iterator buf_it;
 
-    for (int i = 0; i < numThreads; i++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
 
-        buf_it = historyBuffer[i].begin();
+        buf_it = historyBuffer[tid].begin();
 
-        while (buf_it != historyBuffer[i].end()) {
+        while (buf_it != historyBuffer[tid].end()) {
             cprintf("Seq num: %i\nArch reg: %i New phys reg: %i Old phys "
                     "reg: %i\n", (*buf_it).instSeqNum, (int)(*buf_it).archReg,
                     (int)(*buf_it).newPhysReg, (int)(*buf_it).prevPhysReg);

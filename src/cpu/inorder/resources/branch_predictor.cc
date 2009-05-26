@@ -65,7 +65,7 @@ BranchPredictor::execute(int slot_num)
     ResourceRequest* bpred_req = reqMap[slot_num];
 
     DynInstPtr inst = bpred_req->inst;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
     //int stage_num = bpred_req->getStageNum();
 
@@ -136,14 +136,14 @@ BranchPredictor::execute(int slot_num)
 
 void
 BranchPredictor::squash(DynInstPtr inst, int squash_stage,
-                        InstSeqNum squash_seq_num, unsigned tid)
+                        InstSeqNum squash_seq_num, ThreadID tid)
 {
     DPRINTF(InOrderBPred, "Squashing...\n");
     branchPred.squash(squash_seq_num, tid);
 }
 
 void
-BranchPredictor::instGraduated(InstSeqNum seq_num,unsigned tid)
+BranchPredictor::instGraduated(InstSeqNum seq_num, ThreadID tid)
 {
     branchPred.update(seq_num, tid);
 }

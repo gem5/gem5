@@ -88,10 +88,12 @@ namespace MipsISA
         static const int regWidth = SingleWidth;
 
         void clear();
-        double readReg(int floatReg, int width, unsigned tid = 0);
-        FloatRegBits readRegBits(int floatReg, int width, unsigned tid = 0);
-        Fault setReg(int floatReg, const FloatRegVal &val, int width, unsigned tid = 0);
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width, unsigned tid = 0);
+        double readReg(int floatReg, int width, ThreadID tid = 0);
+        FloatRegBits readRegBits(int floatReg, int width, ThreadID tid = 0);
+        Fault setReg(int floatReg, const FloatRegVal &val, int width,
+                     ThreadID tid = 0);
+        Fault setRegBits(int floatReg, const FloatRegBits &val, int width,
+                         ThreadID tid = 0);
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

@@ -60,11 +60,9 @@ InstBuffer::execute(int slot_idx)
 {
     ResReqPtr ib_req = reqMap[slot_idx];
     DynInstPtr inst = ib_req->inst;
-    int tid, seq_num, stage_num;
+    ThreadID tid = inst->readTid();
+    int stage_num = ib_req->getStageNum();
 
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
-    stage_num = ib_req->getStageNum();
     ib_req->fault = NoFault;
 
     switch (ib_req->cmd)
@@ -121,12 +119,12 @@ InstBuffer::execute(int slot_idx)
 
             if (instList.size() < width) {
                 DPRINTF(InOrderInstBuffer, "[tid:%i]: Inserting [sn:%i] into buffer.\n",
-                        tid, seq_num);
+                        tid, inst->seqNum);
                 insert(inst);
                 inserted = true;
             } else {
                 DPRINTF(InOrderInstBuffer, "[tid:%i]: Denying [sn:%i] request because "
-                        "buffer is full.\n", tid, seq_num);
+                        "buffer is full.\n", tid, inst->seqNum);
 
 
                 std::list<DynInstPtr>::iterator list_it = instList.begin();
@@ -145,7 +143,7 @@ InstBuffer::execute(int slot_idx)
       case RemoveInst:
         {
             DPRINTF(InOrderInstBuffer, "[tid:%i]: Removing [sn:%i] from buffer.\n",
-                    tid, seq_num);
+                    tid, inst->seqNum);
             remove(inst);
             ib_req->done();
         }
@@ -180,20 +178,20 @@ InstBuffer::remove(DynInstPtr inst)
 }
 
 void
-InstBuffer::pop(unsigned tid)
+InstBuffer::pop(ThreadID tid)
 {
     instList.pop_front();
 }
 
 ThePipeline::DynInstPtr
-InstBuffer::top(unsigned tid)
+InstBuffer::top(ThreadID tid)
 {
     return instList.front();
 }
 
 void
 InstBuffer::squash(DynInstPtr inst, int stage_num,
-                   InstSeqNum squash_seq_num, unsigned tid)
+                   InstSeqNum squash_seq_num, ThreadID tid)
 {
     queue<list<DynInstPtr>::iterator> remove_list;
     list<DynInstPtr>::iterator list_it = instList.begin();

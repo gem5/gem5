@@ -66,9 +66,9 @@ struct ThreadState {
     typedef ThreadContext::Status Status;
 
 #if FULL_SYSTEM
-    ThreadState(BaseCPU *cpu, int _tid);
+    ThreadState(BaseCPU *cpu, ThreadID _tid);
 #else
-    ThreadState(BaseCPU *cpu, int _tid, Process *_process, short _asid);
+    ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process, short _asid);
 #endif
 
     ~ThreadState();
@@ -83,9 +83,9 @@ struct ThreadState {
 
     void setContextId(int id) { _contextId = id; }
 
-    void setThreadId(int id) { _threadId = id; }
+    void setThreadId(ThreadID id) { _threadId = id; }
 
-    int threadId() { return _threadId; }
+    ThreadID threadId() { return _threadId; }
 
     Tick readLastActivate() { return lastActivate; }
 
@@ -176,7 +176,7 @@ struct ThreadState {
     int _contextId;
 
     // Index of hardware thread context on the CPU that this represents.
-    int _threadId;
+    ThreadID _threadId;
 
   public:
     /** Last time activate was called on this thread. */

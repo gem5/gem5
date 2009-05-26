@@ -155,7 +155,7 @@ class FullO3CPU : public BaseO3CPU
     {
       private:
         /** Number of Thread to Activate */
-        int tid;
+        ThreadID tid;
 
         /** Pointer to the CPU. */
         FullO3CPU<Impl> *cpu;
@@ -175,7 +175,8 @@ class FullO3CPU : public BaseO3CPU
     };
 
     /** Schedule thread to activate , regardless of its current state. */
-    void scheduleActivateThreadEvent(int tid, int delay)
+    void
+    scheduleActivateThreadEvent(ThreadID tid, int delay)
     {
         // Schedule thread to activate, regardless of its current state.
         if (activateThreadEvent[tid].squashed())
@@ -187,7 +188,8 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Unschedule actiavte thread event, regardless of its current state. */
-    void unscheduleActivateThreadEvent(int tid)
+    void
+    unscheduleActivateThreadEvent(ThreadID tid)
     {
         if (activateThreadEvent[tid].scheduled())
             activateThreadEvent[tid].squash();
@@ -200,7 +202,7 @@ class FullO3CPU : public BaseO3CPU
     {
       private:
         /** Number of Thread to deactivate */
-        int tid;
+        ThreadID tid;
 
         /** Should the thread be removed from the CPU? */
         bool remove;
@@ -226,7 +228,8 @@ class FullO3CPU : public BaseO3CPU
     };
 
     /** Schedule cpu to deallocate thread context.*/
-    void scheduleDeallocateContextEvent(int tid, bool remove, int delay)
+    void
+    scheduleDeallocateContextEvent(ThreadID tid, bool remove, int delay)
     {
         // Schedule thread to activate, regardless of its current state.
         if (deallocateContextEvent[tid].squashed())
@@ -238,7 +241,8 @@ class FullO3CPU : public BaseO3CPU
     }
 
     /** Unschedule thread deallocation in CPU */
-    void unscheduleDeallocateContextEvent(int tid)
+    void
+    unscheduleDeallocateContextEvent(ThreadID tid)
     {
         if (deallocateContextEvent[tid].scheduled())
             deallocateContextEvent[tid].squash();
@@ -288,46 +292,38 @@ class FullO3CPU : public BaseO3CPU
     { return activeThreads.size(); }
 
     /** Add Thread to Active Threads List */
-    void activateThread(unsigned tid);
+    void activateThread(ThreadID tid);
 
     /** Remove Thread from Active Threads List */
-    void deactivateThread(unsigned tid);
+    void deactivateThread(ThreadID tid);
 
     /** Setup CPU to insert a thread's context */
-    void insertThread(unsigned tid);
+    void insertThread(ThreadID tid);
 
     /** Remove all of a thread's context from CPU */
-    void removeThread(unsigned tid);
+    void removeThread(ThreadID tid);
 
     /** Count the Total Instructions Committed in the CPU. */
-    virtual Counter totalInstructions() const
-    {
-        Counter total(0);
-
-        for (int i=0; i < thread.size(); i++)
-            total += thread[i]->numInst;
-
-        return total;
-    }
+    virtual Counter totalInstructions() const;
 
     /** Add Thread to Active Threads List. */
-    void activateContext(int tid, int delay);
+    void activateContext(ThreadID tid, int delay);
 
     /** Remove Thread from Active Threads List */
-    void suspendContext(int tid);
+    void suspendContext(ThreadID tid);
 
     /** Remove Thread from Active Threads List &&
      *  Possibly Remove Thread Context from CPU.
      */
-    bool deallocateContext(int tid, bool remove, int delay = 1);
+    bool deallocateContext(ThreadID tid, bool remove, int delay = 1);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void haltContext(int tid);
+    void haltContext(ThreadID tid);
 
     /** Activate a Thread When CPU Resources are Available. */
-    void activateWhenReady(int tid);
+    void activateWhenReady(ThreadID tid);
 
     /** Add or Remove a Thread Context in the CPU. */
     void doContextSwitch();
@@ -346,7 +342,7 @@ class FullO3CPU : public BaseO3CPU
     /** Executes a syscall.
      * @todo: Determine if this needs to be virtual.
      */
-    void syscall(int64_t callnum, int tid);
+    void syscall(int64_t callnum, ThreadID tid);
 #endif
 
     /** Starts draining the CPU's pipeline of all instructions in
@@ -370,13 +366,13 @@ class FullO3CPU : public BaseO3CPU
     { return globalSeqNum++; }
 
     /** Traps to handle given fault. */
-    void trap(Fault fault, unsigned tid);
+    void trap(Fault fault, ThreadID tid);
 
 #if FULL_SYSTEM
     /** HW return from error interrupt. */
-    Fault hwrei(unsigned tid);
+    Fault hwrei(ThreadID tid);
 
-    bool simPalCheck(int palFunc, unsigned tid);
+    bool simPalCheck(int palFunc, ThreadID tid);
 
     /** Returns the Fault for any valid interrupt. */
     Fault getInterrupts();
@@ -398,19 +394,19 @@ class FullO3CPU : public BaseO3CPU
     bool validDataAddr(Addr addr) { return true; }
 
     /** Get instruction asid. */
-    int getInstAsid(unsigned tid)
+    int getInstAsid(ThreadID tid)
     { return regFile.miscRegs[tid].getInstAsid(); }
 
     /** Get data asid. */
-    int getDataAsid(unsigned tid)
+    int getDataAsid(ThreadID tid)
     { return regFile.miscRegs[tid].getDataAsid(); }
 #else
     /** Get instruction asid. */
-    int getInstAsid(unsigned tid)
+    int getInstAsid(ThreadID tid)
     { return thread[tid]->getInstAsid(); }
 
     /** Get data asid. */
-    int getDataAsid(unsigned tid)
+    int getDataAsid(ThreadID tid)
     { return thread[tid]->getDataAsid(); }
 
 #endif
@@ -418,21 +414,22 @@ class FullO3CPU : public BaseO3CPU
     /** Register accessors.  Index refers to the physical register index. */
 
     /** Reads a miscellaneous register. */
-    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    TheISA::MiscReg readMiscReg(int misc_reg, unsigned tid);
+    TheISA::MiscReg readMiscReg(int misc_reg, ThreadID tid);
 
     /** Sets a miscellaneous register. */
-    void setMiscRegNoEffect(int misc_reg, const TheISA::MiscReg &val, unsigned tid);
+    void setMiscRegNoEffect(int misc_reg, const TheISA::MiscReg &val,
+            ThreadID tid);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
     void setMiscReg(int misc_reg, const TheISA::MiscReg &val,
-            unsigned tid);
+            ThreadID tid);
 
     uint64_t readIntReg(int reg_idx);
 
@@ -454,62 +451,62 @@ class FullO3CPU : public BaseO3CPU
 
     void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val, int width);
 
-    uint64_t readArchIntReg(int reg_idx, unsigned tid);
+    uint64_t readArchIntReg(int reg_idx, ThreadID tid);
 
-    float readArchFloatRegSingle(int reg_idx, unsigned tid);
+    float readArchFloatRegSingle(int reg_idx, ThreadID tid);
 
-    double readArchFloatRegDouble(int reg_idx, unsigned tid);
+    double readArchFloatRegDouble(int reg_idx, ThreadID tid);
 
-    uint64_t readArchFloatRegInt(int reg_idx, unsigned tid);
+    uint64_t readArchFloatRegInt(int reg_idx, ThreadID tid);
 
     /** Architectural register accessors.  Looks up in the commit
      * rename table to obtain the true physical index of the
      * architected register first, then accesses that physical
      * register.
      */
-    void setArchIntReg(int reg_idx, uint64_t val, unsigned tid);
+    void setArchIntReg(int reg_idx, uint64_t val, ThreadID tid);
 
-    void setArchFloatRegSingle(int reg_idx, float val, unsigned tid);
+    void setArchFloatRegSingle(int reg_idx, float val, ThreadID tid);
 
-    void setArchFloatRegDouble(int reg_idx, double val, unsigned tid);
+    void setArchFloatRegDouble(int reg_idx, double val, ThreadID tid);
 
-    void setArchFloatRegInt(int reg_idx, uint64_t val, unsigned tid);
+    void setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid);
 
     /** Reads the commit PC of a specific thread. */
-    Addr readPC(unsigned tid);
+    Addr readPC(ThreadID tid);
 
     /** Sets the commit PC of a specific thread. */
-    void setPC(Addr new_PC, unsigned tid);
+    void setPC(Addr new_PC, ThreadID tid);
 
     /** Reads the commit micro PC of a specific thread. */
-    Addr readMicroPC(unsigned tid);
+    Addr readMicroPC(ThreadID tid);
 
     /** Sets the commmit micro PC of a specific thread. */
-    void setMicroPC(Addr new_microPC, unsigned tid);
+    void setMicroPC(Addr new_microPC, ThreadID tid);
 
     /** Reads the next PC of a specific thread. */
-    Addr readNextPC(unsigned tid);
+    Addr readNextPC(ThreadID tid);
 
     /** Sets the next PC of a specific thread. */
-    void setNextPC(Addr val, unsigned tid);
+    void setNextPC(Addr val, ThreadID tid);
 
     /** Reads the next NPC of a specific thread. */
-    Addr readNextNPC(unsigned tid);
+    Addr readNextNPC(ThreadID tid);
 
     /** Sets the next NPC of a specific thread. */
-    void setNextNPC(Addr val, unsigned tid);
+    void setNextNPC(Addr val, ThreadID tid);
 
     /** Reads the commit next micro PC of a specific thread. */
-    Addr readNextMicroPC(unsigned tid);
+    Addr readNextMicroPC(ThreadID tid);
 
     /** Sets the commit next micro PC of a specific thread. */
-    void setNextMicroPC(Addr val, unsigned tid);
+    void setNextMicroPC(Addr val, ThreadID tid);
 
     /** Initiates a squash of all in-flight instructions for a given
      * thread.  The source of the squash is an external update of
      * state through the TC.
      */
-    void squashFromTC(unsigned tid);
+    void squashFromTC(ThreadID tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
@@ -517,7 +514,7 @@ class FullO3CPU : public BaseO3CPU
     ListIt addInst(DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(unsigned tid);
+    void instDone(ThreadID tid);
 
     /** Add Instructions to the CPU Remove List*/
     void addToRemoveList(DynInstPtr &inst);
@@ -529,13 +526,13 @@ class FullO3CPU : public BaseO3CPU
 
     /** Remove all instructions that are not currently in the ROB.
      *  There's also an option to not squash delay slot instructions.*/
-    void removeInstsNotInROB(unsigned tid);
+    void removeInstsNotInROB(ThreadID tid);
 
     /** Remove all instructions younger than the given sequence number. */
-    void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);
+    void removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid);
 
     /** Removes the instruction pointed to by the iterator. */
-    inline void squashInstIt(const ListIt &instIt, const unsigned &tid);
+    inline void squashInstIt(const ListIt &instIt, ThreadID tid);
 
     /** Cleans up all instructions on the remove list. */
     void cleanUpRemovedInsts();
@@ -601,7 +598,7 @@ class FullO3CPU : public BaseO3CPU
     typename CPUPolicy::ROB rob;
 
     /** Active Threads List */
-    std::list<unsigned> activeThreads;
+    std::list<ThreadID> activeThreads;
 
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
@@ -674,11 +671,12 @@ class FullO3CPU : public BaseO3CPU
 #endif
 
     /** Gets a free thread id. Use if thread ids change across system. */
-    int getFreeTid();
+    ThreadID getFreeTid();
 
   public:
     /** Returns a pointer to a thread context. */
-    ThreadContext *tcBase(unsigned tid)
+    ThreadContext *
+    tcBase(ThreadID tid)
     {
         return thread[tid]->getTC();
     }
@@ -726,14 +724,11 @@ class FullO3CPU : public BaseO3CPU
     /** The cycle that the CPU was last activated by a new thread*/
     Tick lastActivatedCycle;
 
-    /** Number of Threads CPU can process */
-    unsigned numThreads;
-
     /** Mapping for system thread id to cpu id */
-    std::map<unsigned,unsigned> threadMap;
+    std::map<ThreadID, unsigned> threadMap;
 
     /** Available thread ids in the cpu*/
-    std::vector<unsigned> tids;
+    std::vector<ThreadID> tids;
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>

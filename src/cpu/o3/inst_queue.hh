@@ -126,7 +126,7 @@ class InstructionQueue
     void resetState();
 
     /** Sets active threads list. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets the timer buffer between issue and execute. */
     void setIssueToExecuteQueue(TimeBuffer<IssueStruct> *i2eQueue);
@@ -144,7 +144,7 @@ class InstructionQueue
     bool isSwitchedOut() { return switchedOut; }
 
     /** Number of entries needed for given amount of threads. */
-    int entryAmount(int num_threads);
+    int entryAmount(ThreadID num_threads);
 
     /** Resets max entries for all threads. */
     void resetEntries();
@@ -153,13 +153,13 @@ class InstructionQueue
     unsigned numFreeEntries();
 
     /** Returns number of free entries for a thread. */
-    unsigned numFreeEntries(unsigned tid);
+    unsigned numFreeEntries(ThreadID tid);
 
     /** Returns whether or not the IQ is full. */
     bool isFull();
 
     /** Returns whether or not the IQ is full for a specific thread. */
-    bool isFull(unsigned tid);
+    bool isFull(ThreadID tid);
 
     /** Returns if there are any ready instructions in the IQ. */
     bool hasReadyInsts();
@@ -203,7 +203,7 @@ class InstructionQueue
      * Commits all instructions up to and including the given sequence number,
      * for a specific thread.
      */
-    void commit(const InstSeqNum &inst, unsigned tid = 0);
+    void commit(const InstSeqNum &inst, ThreadID tid = 0);
 
     /** Wakes all dependents of a completed instruction. */
     int wakeDependents(DynInstPtr &completed_inst);
@@ -230,17 +230,17 @@ class InstructionQueue
      * Squashes instructions for a thread. Squashing information is obtained
      * from the time buffer.
      */
-    void squash(unsigned tid);
+    void squash(ThreadID tid);
 
     /** Returns the number of used entries for a thread. */
-    unsigned getCount(unsigned tid) { return count[tid]; };
+    unsigned getCount(ThreadID tid) { return count[tid]; };
 
     /** Debug function to print all instructions. */
     void printInsts();
 
   private:
     /** Does the actual squashing. */
-    void doSquash(unsigned tid);
+    void doSquash(ThreadID tid);
 
     /////////////////////////
     // Various pointers
@@ -368,10 +368,10 @@ class InstructionQueue
     IQPolicy iqPolicy;
 
     /** Number of Total Threads*/
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** Pointer to list of active threads. */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Per Thread IQ count */
     unsigned count[Impl::MaxThreads];

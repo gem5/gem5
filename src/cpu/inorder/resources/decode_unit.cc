@@ -39,7 +39,7 @@ DecodeUnit::DecodeUnit(std::string res_name, int res_id, int res_width,
                        int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu)
 {
-    for (int tid = 0; tid < MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         regDepMap[tid] = &cpu->archRegDepMap[tid];
     }
 }
@@ -50,10 +50,8 @@ DecodeUnit::execute(int slot_num)
     ResourceRequest* decode_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
-    int tid, seq_num;
+    ThreadID tid = inst->readTid();
 
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
     decode_req->fault = NoFault;
 
     switch (decode_req->cmd)
@@ -63,13 +61,17 @@ DecodeUnit::execute(int slot_num)
             bool done_sked = ThePipeline::createBackEndSchedule(inst);
 
             if (done_sked) {
-                DPRINTF(InOrderDecode, "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
-                    tid, seq_num);
+                DPRINTF(InOrderDecode,
+                    "[tid:%i]: Setting Destination Register(s) for [sn:%i].\n",
+                    tid, inst->seqNum);
                 regDepMap[tid]->insert(inst);
                 decode_req->done();
             } else {
-                DPRINTF(Resource,"[tid:%i] Static Inst not available to decode. Unable to create "
-                        "schedule for instruction [sn:%i] \n", tid, inst->seqNum);
+                DPRINTF(Resource,
+                    "[tid:%i] Static Inst not available to decode.\n", tid);
+                DPRINTF(Resource,
+                    "Unable to create schedule for instruction [sn:%i] \n",
+                    inst->seqNum);
                 DPRINTF(InOrderStall, "STALL: \n");
                 decode_req->done(false);
             }
@@ -83,9 +85,11 @@ DecodeUnit::execute(int slot_num)
 
 
 void
-DecodeUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid)
+DecodeUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                   ThreadID tid)
 {
-    DPRINTF(InOrderDecode, "[tid:%i]: Updating due to squash from stage %i after [sn:%i].\n",
+    DPRINTF(InOrderDecode,
+            "[tid:%i]: Updating due to squash from stage %i after [sn:%i].\n",
             tid, stage_num, squash_seq_num);
 
     //cpu->removeInstsUntil(squash_seq_num, tid);

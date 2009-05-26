@@ -168,7 +168,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     std::bitset<NumStatus> status;
 
     /** The thread this instruction is from. */
-    short threadNumber;
+    ThreadID threadNumber;
 
     /** data address space ID, for loads & stores. */
     short asid;
@@ -778,7 +778,7 @@ class BaseDynInst : public FastAlloc, public RefCounted
     void setASID(short addr_space_id) { asid = addr_space_id; }
 
     /** Sets the thread id. */
-    void setTid(unsigned tid) { threadNumber = tid; }
+    void setTid(ThreadID tid) { threadNumber = tid; }
 
     /** Sets the pointer to the thread state. */
     void setThreadState(ImplState *state) { thread = state; }

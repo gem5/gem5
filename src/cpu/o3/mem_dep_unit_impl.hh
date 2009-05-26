@@ -54,7 +54,7 @@ MemDepUnit<MemDepPred, Impl>::MemDepUnit(DerivO3CPUParams *params)
 template <class MemDepPred, class Impl>
 MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 {
-    for (int tid=0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
 
         ListIt inst_list_it = instList[tid].begin();
 
@@ -78,7 +78,7 @@ MemDepUnit<MemDepPred, Impl>::~MemDepUnit()
 
 template <class MemDepPred, class Impl>
 void
-MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, int tid)
+MemDepUnit<MemDepPred, Impl>::init(DerivO3CPUParams *params, ThreadID tid)
 {
     DPRINTF(MemDepUnit, "Creating MemDepUnit %i object.\n",tid);
 
@@ -145,7 +145,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::insert(DynInstPtr &inst)
 {
-    unsigned tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     MemDepEntryPtr inst_entry = new MemDepEntry(inst);
 
@@ -242,7 +242,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::insertNonSpec(DynInstPtr &inst)
 {
-    unsigned tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     MemDepEntryPtr inst_entry = new MemDepEntry(inst);
 
@@ -292,7 +292,7 @@ MemDepUnit<MemDepPred, Impl>::insertBarrier(DynInstPtr &barr_inst)
         DPRINTF(MemDepUnit, "Inserted a write barrier\n");
     }
 
-    unsigned tid = barr_inst->threadNumber;
+    ThreadID tid = barr_inst->threadNumber;
 
     MemDepEntryPtr inst_entry = new MemDepEntry(barr_inst);
 
@@ -382,7 +382,7 @@ MemDepUnit<MemDepPred, Impl>::completed(DynInstPtr &inst)
             "[sn:%lli].\n",
             inst->readPC(), inst->seqNum);
 
-    unsigned tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     // Remove the instruction from the hash and the list.
     MemDepHashIt hash_it = memDepHash.find(inst->seqNum);
@@ -457,7 +457,7 @@ MemDepUnit<MemDepPred, Impl>::wakeDependents(DynInstPtr &inst)
 template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::squash(const InstSeqNum &squashed_num,
-                                     unsigned tid)
+                                     ThreadID tid)
 {
     if (!instsToReplay.empty()) {
         ListIt replay_it = instsToReplay.begin();
@@ -552,7 +552,7 @@ template <class MemDepPred, class Impl>
 void
 MemDepUnit<MemDepPred, Impl>::dumpLists()
 {
-    for (unsigned tid=0; tid < Impl::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < Impl::MaxThreads; tid++) {
         cprintf("Instruction list %i size: %i\n",
                 tid, instList[tid].size());
 

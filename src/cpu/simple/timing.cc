@@ -437,13 +437,13 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
 {
     Fault fault;
     const int asid = 0;
-    const int thread_id = 0;
+    const ThreadID tid = 0;
     const Addr pc = thread->readPC();
     int block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
 
     RequestPtr req  = new Request(asid, addr, data_size,
-                                  flags, pc, _cpuId, thread_id);
+                                  flags, pc, _cpuId, tid);
 
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
@@ -555,13 +555,13 @@ Fault
 TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 {
     const int asid = 0;
-    const int thread_id = 0;
+    const ThreadID tid = 0;
     const Addr pc = thread->readPC();
     int block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
 
     RequestPtr req = new Request(asid, addr, data_size,
-                                 flags, pc, _cpuId, thread_id);
+                                 flags, pc, _cpuId, tid);
 
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);

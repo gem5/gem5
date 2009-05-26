@@ -43,7 +43,7 @@ FirstStage::FirstStage(Params *params, unsigned stage_num)
     : PipelineStage(params, stage_num), numFetchingThreads(1),
       fetchPolicy(FirstStage::RoundRobin)
 {
-    for(int tid=0; tid < this->numThreads; tid++) {
+    for(ThreadID tid = 0; tid < this->numThreads; tid++) {
         stageStatus[tid] = Running;
     }
 }
@@ -60,7 +60,7 @@ FirstStage::setCPU(InOrderCPU *cpu_ptr)
 
 
 void
-FirstStage::squash(InstSeqNum squash_seq_num, unsigned tid)
+FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
 {
     // Set status to squashing.
     //stageStatus[tid] = Squashing;
@@ -96,17 +96,17 @@ FirstStage::squash(InstSeqNum squash_seq_num, unsigned tid)
 void
 FirstStage::processStage(bool &status_change)
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    list<ThreadID>::iterator threads = activeThreads->begin();
 
     //Check stall and squash signals.
-    while (threads != (*activeThreads).end()) {
-        unsigned tid = *threads++;
+    while (threads != activeThreads->end()) {
+        ThreadID tid = *threads++;
         status_change =  checkSignalsAndUpdate(tid) || status_change;
     }
 
     for (int threadFetched = 0; threadFetched < numFetchingThreads;
          threadFetched++) {
-        int tid = getFetchingThread(fetchPolicy);
+        ThreadID tid = getFetchingThread(fetchPolicy);
 
         if (tid >= 0) {
             DPRINTF(InOrderStage, "Processing [tid:%i]\n",tid);
@@ -120,7 +120,7 @@ FirstStage::processStage(bool &status_change)
 //@TODO: Note in documentation, that when you make a pipeline stage change, then
 //make sure you change the first stage too
 void
-FirstStage::processInsts(unsigned tid)
+FirstStage::processInsts(ThreadID tid)
 {
     bool all_reqs_completed = true;
 
@@ -194,7 +194,7 @@ FirstStage::processInsts(unsigned tid)
     }
 }
 
-int
+ThreadID
 FirstStage::getFetchingThread(FetchPriority &fetch_priority)
 {
     if (numThreads > 1) {
@@ -207,28 +207,28 @@ FirstStage::getFetchingThread(FetchPriority &fetch_priority)
             return roundRobin();
 
           default:
-            return -1;
+            return InvalidThreadID;
         }
     } else {
-        int tid = *((*activeThreads).begin());
+        ThreadID tid = *activeThreads->begin();
 
         if (stageStatus[tid] == Running ||
             stageStatus[tid] == Idle) {
             return tid;
         } else {
-            return -1;
+            return InvalidThreadID;
         }
     }
 
 }
 
-int
+ThreadID
 FirstStage::roundRobin()
 {
-    list<unsigned>::iterator pri_iter = (*fetchPriorityList).begin();
-    list<unsigned>::iterator end      = (*fetchPriorityList).end();
+    list<ThreadID>::iterator pri_iter = fetchPriorityList->begin();
+    list<ThreadID>::iterator end      = fetchPriorityList->end();
 
-    int high_pri;
+    ThreadID high_pri;
 
     while (pri_iter != end) {
         high_pri = *pri_iter;
@@ -238,8 +238,8 @@ FirstStage::roundRobin()
         if (stageStatus[high_pri] == Running ||
             stageStatus[high_pri] == Idle) {
 
-            (*fetchPriorityList).erase(pri_iter);
-            (*fetchPriorityList).push_back(high_pri);
+            fetchPriorityList->erase(pri_iter);
+            fetchPriorityList->push_back(high_pri);
 
             return high_pri;
         }
@@ -247,5 +247,5 @@ FirstStage::roundRobin()
         pri_iter++;
     }
 
-    return -1;
+    return InvalidThreadID;
 }

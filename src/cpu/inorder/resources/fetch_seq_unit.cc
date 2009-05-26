@@ -41,7 +41,7 @@ FetchSeqUnit::FetchSeqUnit(std::string res_name, int res_id, int res_width,
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
       instSize(sizeof(MachInst))
 {
-    for (int tid = 0; tid < ThePipeline::MaxThreads; tid++) {
+    for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         delaySlotInfo[tid].numInsts = 0;
         delaySlotInfo[tid].targetReady = false;
 
@@ -68,7 +68,7 @@ FetchSeqUnit::execute(int slot_num)
     // for performance considerations
     ResourceRequest* fs_req = reqMap[slot_num];
     DynInstPtr inst = fs_req->inst;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int stage_num = fs_req->getStageNum();
     int seq_num = inst->seqNum;
 
@@ -202,7 +202,7 @@ FetchSeqUnit::execute(int slot_num)
 }
 
 inline void
-FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, unsigned tid)
+FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid)
 {
     // Squash In Pipeline Stage
     cpu->pipelineStage[stage_num]->squashDueToBranch(inst, tid);
@@ -216,7 +216,7 @@ FetchSeqUnit::squashAfterInst(DynInstPtr inst, int stage_num, unsigned tid)
 }
 void
 FetchSeqUnit::squash(DynInstPtr inst, int squash_stage,
-                     InstSeqNum squash_seq_num, unsigned tid)
+                     InstSeqNum squash_seq_num, ThreadID tid)
 {
     DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating due to squash from stage %i.\n",
             tid, squash_stage);
@@ -302,7 +302,7 @@ FetchSeqUnit::FetchSeqEvent::process()
 
 
 void
-FetchSeqUnit::activateThread(unsigned tid)
+FetchSeqUnit::activateThread(ThreadID tid)
 {
     pcValid[tid] = true;
 
@@ -317,7 +317,7 @@ FetchSeqUnit::activateThread(unsigned tid)
 }
 
 void
-FetchSeqUnit::deactivateThread(unsigned tid)
+FetchSeqUnit::deactivateThread(ThreadID tid)
 {
     delaySlotInfo[tid].numInsts = 0;
     delaySlotInfo[tid].targetReady = false;
@@ -328,7 +328,7 @@ FetchSeqUnit::deactivateThread(unsigned tid)
     squashSeqNum[tid] = (InstSeqNum)-1;
     lastSquashCycle[tid] = 0;
 
-    std::list<unsigned>::iterator thread_it = find(cpu->fetchPriorityList.begin(),
+    list<ThreadID>::iterator thread_it = find(cpu->fetchPriorityList.begin(),
                                               cpu->fetchPriorityList.end(),
                                               tid);
 

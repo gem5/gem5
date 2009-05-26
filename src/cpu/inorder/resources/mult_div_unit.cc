@@ -174,7 +174,7 @@ MultDivUnit::execute(int slot_num)
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
  
-    //int tid = inst->readTid();
+    //ThreadID tid = inst->readTid();
     //int seq_num = inst->seqNum;
 
     switch (mult_div_req->cmd)
@@ -248,7 +248,7 @@ MultDivUnit::exeMulDiv(int slot_num)
     ResourceRequest* mult_div_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
 
     fault = inst->execute();

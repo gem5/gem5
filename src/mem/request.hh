@@ -189,7 +189,7 @@ class Request : public FastAlloc
     }
 
     Request(int asid, Addr vaddr, int size, Flags flags, Addr pc,
-            int cid, int tid)
+            int cid, ThreadID tid)
     {
         setVirt(asid, vaddr, size, flags, pc);
         setThreadContext(cid, tid);
@@ -201,10 +201,10 @@ class Request : public FastAlloc
      * Set up CPU and thread numbers.
      */
     void
-    setThreadContext(int context_id, int thread_id)
+    setThreadContext(int context_id, ThreadID tid)
     {
         _contextId = context_id;
-        _threadId = thread_id;
+        _threadId = tid;
         privateFlags.set(VALID_CONTEXT_ID|VALID_THREAD_ID);
     }
 

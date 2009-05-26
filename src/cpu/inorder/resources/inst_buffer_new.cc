@@ -67,7 +67,7 @@ InstBuffer::execute(int slot_idx)
     assert(ib_req);
 
     DynInstPtr inst = ib_req->inst;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
     ib_req->fault = NoFault;
 
@@ -128,7 +128,7 @@ InstBuffer::top()
 { return instList.front(); }
 
 void
-InstBuffer::squash(InstSeqNum squash_seq_num, unsigned tid)
+InstBuffer::squash(InstSeqNum squash_seq_num, ThreadID tid)
 {
     list<DynInstPtr>::iterator list_it = instList.begin();
     list<DynInstPtr>::iterator list_end = instList.end();

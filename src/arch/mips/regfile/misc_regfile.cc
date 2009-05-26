@@ -131,7 +131,7 @@ MiscRegFile::clear(unsigned tid_or_vpn)
 }
 
 void
-MiscRegFile::expandForMultithreading(unsigned num_threads, unsigned num_vpes)
+MiscRegFile::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
 {
     // Initialize all Per-VPE regs
     uint32_t per_vpe_regs[] = { VPEControl, VPEConf0, VPEConf1, YQMask,
@@ -180,7 +180,7 @@ int MiscRegFile:: getDataAsid()
 }
 //@TODO: Use MIPS STYLE CONSTANTS (e.g. TCHALT_H instead of TCH_H)
 void
-MiscRegFile::reset(std::string core_name, unsigned num_threads,
+MiscRegFile::reset(std::string core_name, ThreadID num_threads,
                    unsigned num_vpes, BaseCPU *_cpu)
 {
     DPRINTF(MipsPRA, "Resetting CP0 State with %i TCs and %i VPEs\n",
@@ -378,7 +378,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
     setRegNoEffect(VPEConf0, vpe_conf0);
 
     // TCBind
-    for (int tid = 0; tid < num_threads; tid++) {
+    for (ThreadID tid = 0; tid < num_threads; tid++) {
         MiscReg tc_bind = readRegNoEffect(TCBind, tid);
         replaceBits(tc_bind, TCB_CUR_TC_HI, TCB_CUR_TC_LO, tid);
         setRegNoEffect(TCBind, tc_bind, tid);
@@ -387,7 +387,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
     MiscReg tc_halt = readRegNoEffect(TCHalt);
     replaceBits(tc_halt, TCH_H, 0);
     setRegNoEffect(TCHalt, tc_halt);
-    /*for (int tid = 1; tid < num_threads; tid++) {
+    /*for (ThreadID tid = 1; tid < num_threads; tid++) {
         // Set TCHalt Halt bit to 1 for all other threads
         tc_halt = readRegNoEffect(TCHalt, tid);
         replaceBits(tc_halt, TCH_H, 1);
@@ -401,7 +401,7 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
     setRegNoEffect(TCStatus, tc_status);
 
     // Set Dynamically Allocatable bit to 1 for all other threads
-    for (int tid = 1; tid < num_threads; tid++) {
+    for (ThreadID tid = 1; tid < num_threads; tid++) {
         tc_status = readRegNoEffect(TCStatus, tid);
         replaceBits(tc_status, TCSTATUS_DA, 1);
         setRegNoEffect(TCStatus, tc_status, tid);
@@ -439,14 +439,14 @@ MiscRegFile::reset(std::string core_name, unsigned num_threads,
 }
 
 inline unsigned
-MiscRegFile::getVPENum(unsigned tid)
+MiscRegFile::getVPENum(ThreadID tid)
 {
     unsigned tc_bind = miscRegFile[TCBind - Ctrl_Base_DepTag][tid];
     return bits(tc_bind, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO);
 }
 
 MiscReg
-MiscRegFile::readRegNoEffect(int reg_idx, unsigned tid)
+MiscRegFile::readRegNoEffect(int reg_idx, ThreadID tid)
 {
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
@@ -461,8 +461,7 @@ MiscRegFile::readRegNoEffect(int reg_idx, unsigned tid)
 //       Status to TCStatus depending on current thread
 //template <class TC>
 MiscReg
-MiscRegFile::readReg(int reg_idx,
-                               ThreadContext *tc,  unsigned tid)
+MiscRegFile::readReg(int reg_idx, ThreadContext *tc,  ThreadID tid)
 {
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
@@ -481,7 +480,7 @@ MiscRegFile::readReg(int reg_idx,
 }
 
 void
-MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, unsigned tid)
+MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, ThreadID tid)
 {
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     unsigned reg_sel = (bankType[misc_reg] == perThreadContext)
@@ -494,7 +493,7 @@ MiscRegFile::setRegNoEffect(int reg_idx, const MiscReg &val, unsigned tid)
     miscRegFile[misc_reg][reg_sel] = val;
 }
 void
-MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, unsigned tid)
+MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, ThreadID tid)
 {
   //  return;
   int misc_reg = reg_idx - Ctrl_Base_DepTag;
@@ -513,7 +512,7 @@ MiscRegFile::setRegMask(int reg_idx, const MiscReg &val, unsigned tid)
 //template <class TC>
 void
 MiscRegFile::setReg(int reg_idx, const MiscReg &val,
-                              ThreadContext *tc, unsigned tid)
+                    ThreadContext *tc, ThreadID tid)
 {
     int misc_reg = reg_idx - Ctrl_Base_DepTag;
     int reg_sel = (bankType[misc_reg] == perThreadContext)
@@ -575,9 +574,9 @@ MiscRegFile::updateCPU()
     //
     ///////////////////////////////////////////////////////////////////
     unsigned mvp_conf0 = readRegNoEffect(MVPConf0);
-    unsigned num_threads = bits(mvp_conf0, MVPC0_PTC_HI, MVPC0_PTC_LO) + 1;
+    ThreadID num_threads = bits(mvp_conf0, MVPC0_PTC_HI, MVPC0_PTC_LO) + 1;
 
-    for (int tid = 0; tid < num_threads; tid++) {
+    for (ThreadID tid = 0; tid < num_threads; tid++) {
         MiscReg tc_status = readRegNoEffect(TCStatus, tid);
         MiscReg tc_halt = readRegNoEffect(TCHalt, tid);
 

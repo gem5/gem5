@@ -32,7 +32,7 @@
 
 #include "cpu/o3/free_list.hh"
 
-SimpleFreeList::SimpleFreeList(unsigned activeThreads,
+SimpleFreeList::SimpleFreeList(ThreadID activeThreads,
                                unsigned _numLogicalIntRegs,
                                unsigned _numPhysicalIntRegs,
                                unsigned _numLogicalFloatRegs,

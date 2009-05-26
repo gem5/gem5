@@ -200,7 +200,7 @@ BaseSimpleCPU::unserialize(Checkpoint *cp, const string &section)
 }
 
 void
-change_thread_state(int thread_number, int activate, int priority)
+change_thread_state(ThreadID tid, int activate, int priority)
 {
 }
 

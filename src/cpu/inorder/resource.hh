@@ -84,17 +84,17 @@ class Resource {
     virtual void regStats();
 
     /** Resources that care about thread activation override this. */
-    virtual void activateThread(unsigned tid) { }
+    virtual void activateThread(ThreadID tid) { }
 
     /** Deactivate Thread. Default action is to squash all instructions
      *  from deactivated thread.
      */
-    virtual void deactivateThread(unsigned tid);
+    virtual void deactivateThread(ThreadID tid);
 
     /** Resources that care when an instruction has been graduated
      *  can override this
      */
-    virtual void instGraduated(InstSeqNum seq_num,unsigned tid) { }
+    virtual void instGraduated(InstSeqNum seq_num, ThreadID tid) { }
 
     /** Request usage of this resource. Returns a ResourceRequest object
      *  with all the necessary resource information
@@ -151,7 +151,8 @@ class Resource {
     { panic("writeHint undefined for %s", name()); }
 
     /** Squash All Requests After This Seq Num */
-    virtual void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);
+    virtual void squash(DynInstPtr inst, int stage_num,
+                        InstSeqNum squash_seq_num, ThreadID tid);
 
     /** The number of instructions available that this resource can
      *  can still process
@@ -347,8 +348,8 @@ class ResourceRequest
     int getStageNum() { return stageNum; }
 
     /** Set/Get Thread Ids */
-    void setTid(unsigned _tid) { tid = _tid; }
-    int getTid() { return tid; }
+    void setTid(ThreadID _tid) { tid = _tid; }
+    ThreadID getTid() { return tid; }
 
     /** Instruction this request is for */
     DynInstPtr getInst() { return inst; }
@@ -393,7 +394,7 @@ class ResourceRequest
 
   protected:
     /** Resource Identification */
-    int tid;
+    ThreadID tid;
     int stageNum;
     int resIdx;
     int slotNum;

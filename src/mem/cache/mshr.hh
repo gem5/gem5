@@ -138,7 +138,7 @@ class MSHR : public Packet::SenderState, public Printable
     bool pendingShared;
 
     /** Thread number of the miss. */
-    short threadNum;
+    ThreadID threadNum;
     /** The number of currently allocated targets. */
     short ntargets;
 

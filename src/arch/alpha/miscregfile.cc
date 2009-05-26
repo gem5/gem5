@@ -65,7 +65,7 @@ MiscRegFile::MiscRegFile(BaseCPU *_cpu)
 
 
 MiscReg
-MiscRegFile::readRegNoEffect(int misc_reg, unsigned tid )
+MiscRegFile::readRegNoEffect(int misc_reg, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -85,7 +85,7 @@ MiscRegFile::readRegNoEffect(int misc_reg, unsigned tid )
 }
 
 MiscReg
-MiscRegFile::readReg(int misc_reg, ThreadContext *tc, unsigned tid )
+MiscRegFile::readReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -104,7 +104,7 @@ MiscRegFile::readReg(int misc_reg, ThreadContext *tc, unsigned tid )
 }
 
 void
-MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
+MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -131,7 +131,7 @@ MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
 
 void
 MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                    unsigned tid)
+                    ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:

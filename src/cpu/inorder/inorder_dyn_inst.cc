@@ -66,7 +66,7 @@ InOrderDynInst::InOrderDynInst(TheISA::ExtMachInst machInst, Addr inst_PC,
 InOrderDynInst::InOrderDynInst(InOrderCPU *cpu,
                                InOrderThreadState *state,
                                InstSeqNum seq_num,
-                               unsigned tid,
+                               ThreadID tid,
                                unsigned _asid)
     : traceData(NULL), cpu(cpu)
 {
@@ -385,7 +385,7 @@ InOrderDynInst::setFloatRegBitsSrc(int idx, uint64_t val)
 
 /** Reads a integer register. */
 IntReg
-InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, unsigned tid)
+InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, ThreadID tid)
 {
     DPRINTF(InOrderDynInst, "[tid:%i]: [sn:%i] Source Value %i read as %#x.\n",
             threadNumber, seqNum, idx, instSrc[idx].integer);
@@ -479,7 +479,7 @@ InOrderDynInst::setMiscRegOperand(const StaticInst *si, int idx,
 }
 
 MiscReg
-InOrderDynInst::readRegOtherThread(unsigned reg_idx, int tid)
+InOrderDynInst::readRegOtherThread(unsigned reg_idx, ThreadID tid)
 {
     if (tid == -1) {
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
@@ -553,9 +553,10 @@ InOrderDynInst::setMiscReg(int misc_reg, const MiscReg &val)
 }
 
 void
-InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val, int tid)
+InOrderDynInst::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
+                                  ThreadID tid)
 {
-    if (tid == -1) {
+    if (tid == InvalidThreadID) {
         tid = TheISA::getTargetThread(this->cpu->tcBase(threadNumber));
     }
 

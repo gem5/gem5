@@ -80,7 +80,7 @@ class PipelineStage
     unsigned stageWidth;
 
     /** Number of Threads*/
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** Stage status. */
     StageStatus _status;
@@ -108,7 +108,7 @@ class PipelineStage
     /** Sets CPU pointer. */
     virtual void setCPU(InOrderCPU *cpu_ptr);
 
-    virtual void scheduleStageStart(int delay, int tid) { }
+    virtual void scheduleStageStart(int delay, ThreadID tid) { }
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -120,11 +120,11 @@ class PipelineStage
     void setNextStageQueue(TimeBuffer<InterStageStruct> *next_stage_ptr);
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     bool nextStageQueueValid(int stage_num);
 
-    bool isBlocked(unsigned tid);
+    bool isBlocked(ThreadID tid);
 
     /** Changes the status of this stage to active, and indicates this
      * to the CPU.
@@ -148,13 +148,13 @@ class PipelineStage
     virtual void tick();
 
     /** Set a resource stall in the pipeline-stage */
-    void setResStall(ResReqPtr res_req, unsigned tid);
+    void setResStall(ResReqPtr res_req, ThreadID tid);
 
     /** Unset a resource stall in the pipeline-stage */
-    void unsetResStall(ResReqPtr res_req, unsigned tid);
+    void unsetResStall(ResReqPtr res_req, ThreadID tid);
 
     /** Remove all stall signals for a particular thread; */
-    virtual void removeStalls(unsigned tid);
+    virtual void removeStalls(ThreadID tid);
 
     /** Is there room in the stage buffer? */
     int stageBufferAvail();
@@ -168,14 +168,14 @@ class PipelineStage
      * change (ie switching from from blocking to unblocking).
      * @param tid Thread id to stage instructions from.
      */
-    virtual void processThread(bool &status_change, unsigned tid);
+    virtual void processThread(bool &status_change, ThreadID tid);
 
     /** Processes instructions from fetch and passes them on to rename.
      * Decoding of instructions actually happens when they are created in
      * fetch, so this function mostly checks if PC-relative branches are
      * correct.
      */
-    virtual void processInsts(unsigned tid);
+    virtual void processInsts(ThreadID tid);
 
     /** Process all resources on an instruction's resource schedule */
     virtual bool processInstSchedule(DynInstPtr inst);
@@ -189,7 +189,7 @@ class PipelineStage
     /** Inserts a thread's instructions into the skid buffer, to be staged
      * once stage unblocks.
      */
-    virtual void skidInsert(unsigned tid);
+    virtual void skidInsert(ThreadID tid);
 
     /** Total size of all skid buffers */
     int skidSize();
@@ -206,13 +206,13 @@ class PipelineStage
     void sortInsts();
 
     /** Reads all stall signals from the backwards communication timebuffer. */
-    virtual void readStallSignals(unsigned tid);
+    virtual void readStallSignals(ThreadID tid);
 
     /** Checks all input signals and updates stage's status appropriately. */
-    virtual bool checkSignalsAndUpdate(unsigned tid);
+    virtual bool checkSignalsAndUpdate(ThreadID tid);
 
     /** Checks all stall signals, and returns if any are true. */
-    virtual bool checkStall(unsigned tid) const;
+    virtual bool checkStall(ThreadID tid) const;
 
     /** Returns if there any instructions from the previous stage
      * on this cycle.
@@ -223,30 +223,30 @@ class PipelineStage
      * become blocked.
      * @return Returns true if there is a status change.
      */
-    virtual bool block(unsigned tid);
+    virtual bool block(ThreadID tid);
 
-    void blockDueToBuffer(unsigned tid);
+    void blockDueToBuffer(ThreadID tid);
 
     /** Switches stage to unblocking if the skid buffer is empty, and
      * signals back that stage has unblocked.
      * @return Returns true if there is a status change.
      */
-    virtual bool unblock(unsigned tid);
+    virtual bool unblock(ThreadID tid);
 
 
   public:
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
-    virtual void squashDueToBranch(DynInstPtr &inst, unsigned tid);
+    virtual void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
 
     /** Squash instructions from stage buffer  */
-    virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, unsigned tid);
+    virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
 
     /** Squashes due to commit signalling a squash. Changes status to
      *  squashing and clears block/unblock signals as needed.
      */
-    virtual void squash(InstSeqNum squash_num, unsigned tid);
+    virtual void squash(InstSeqNum squash_num, ThreadID tid);
 
     void dumpInsts();
 
@@ -257,7 +257,7 @@ class PipelineStage
     Trace::InOrderTrace *tracer;
 
     /** List of active thread ids */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Queue of all instructions coming from previous stage on this cycle. */
     std::queue<DynInstPtr> insts[ThePipeline::MaxThreads];

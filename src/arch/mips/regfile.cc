@@ -54,7 +54,9 @@ void RegFile::clear()
     miscRegFile.clear();
 }
 
-void RegFile::reset(std::string core_name, unsigned num_threads, unsigned num_vpes)
+void
+RegFile::reset(std::string core_name, ThreadID num_threads,
+               unsigned num_vpes)
 {
     bzero(&intRegFile, sizeof(intRegFile));
     bzero(&floatRegFile, sizeof(floatRegFile));
@@ -71,24 +73,27 @@ Fault RegFile::setIntReg(int intReg, const IntReg &val)
     return intRegFile.setReg(intReg, val);
 }
 
-MiscReg RegFile::readMiscRegNoEffect(int miscReg, unsigned tid = 0)
+MiscReg
+RegFile::readMiscRegNoEffect(int miscReg, ThreadID tid = 0)
 {
     return miscRegFile.readRegNoEffect(miscReg, tid);
 }
 
-MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc,
-                             unsigned tid = 0)
+MiscReg
+RegFile::readMiscReg(int miscReg, ThreadContext *tc, ThreadID tid = 0)
 {
     return miscRegFile.readReg(miscReg, tc, tid);
 }
 
-void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val, unsigned tid = 0)
+void
+RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val, ThreadID tid = 0)
 {
     miscRegFile.setRegNoEffect(miscReg, val, tid);
 }
 
-void RegFile::setMiscReg(int miscReg, const MiscReg &val,
-                         ThreadContext * tc, unsigned tid = 0)
+void
+RegFile::setMiscReg(int miscReg, const MiscReg &val,
+                    ThreadContext *tc, ThreadID tid = 0)
 {
     miscRegFile.setReg(miscReg, val, tc, tid);
 }

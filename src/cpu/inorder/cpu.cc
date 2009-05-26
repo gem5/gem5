@@ -29,9 +29,10 @@
  *
  */
 
-#include "config/full_system.hh"
+#include <algorithm>
 
 #include "arch/utility.hh"
+#include "config/full_system.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/activity.hh"
 #include "cpu/simple_thread.hh"
@@ -49,7 +50,6 @@
 #include "mem/translating_port.hh"
 #include "sim/process.hh"
 #include "sim/stat_control.hh"
-#include <algorithm>
 
 using namespace std;
 using namespace TheISA;
@@ -74,7 +74,7 @@ InOrderCPU::TickEvent::description()
 }
 
 InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
-                             Fault fault, unsigned _tid, unsigned _vpe)
+                             Fault fault, ThreadID _tid, unsigned _vpe)
     : Event(CPU_Tick_Pri), cpu(_cpu)
 {
     setEvent(e_type, fault, _tid, _vpe);
@@ -175,7 +175,6 @@ InOrderCPU::InOrderCPU(Params *params)
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
-      numThreads(params->numThreads),
       numVirtProcs(1)
 {
     cpu_params = params;
@@ -204,28 +203,28 @@ InOrderCPU::InOrderCPU(Params *params)
         fatal("Unable to find port for data.\n");
     }
 
-    for (int i = 0; i < numThreads; ++i) {
-        if (i < params->workload.size()) {
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        if (tid < params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
-                    i, this->thread[i]);
-            this->thread[i] = new Thread(this, i, params->workload[i],
-                                         i);
+                    tid, this->thread[tid]);
+            this->thread[tid] =
+                new Thread(this, tid, params->workload[tid], tid);
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
             Process* dummy_proc = params->workload[0];
-            this->thread[i] = new Thread(this, i, dummy_proc, i);
+            this->thread[tid] = new Thread(this, tid, dummy_proc, tid);
         }
 
         // Setup the TC that will serve as the interface to the threads/CPU.
         InOrderThreadContext *tc = new InOrderThreadContext;
         tc->cpu = this;
-        tc->thread = this->thread[i];
+        tc->thread = thread[tid];
 
         // Give the thread the TC.
-        thread[i]->tc = tc;
-        thread[i]->setFuncExeInst(0);
-        globalSeqNum[i] = 1;
+        thread[tid]->tc = tc;
+        thread[tid]->setFuncExeInst(0);
+        globalSeqNum[tid] = 1;
 
         // Add the TC to the CPU's list of TC's.
         this->threadContexts.push_back(tc);
@@ -257,7 +256,7 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     // Initialize thread specific variables
-    for (int tid=0; tid < numThreads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         archRegDepMap[tid].setCPU(this);
 
         nonSpecInstActive[tid] = false;
@@ -434,19 +433,19 @@ InOrderCPU::init()
 
     // Set inSyscall so that the CPU doesn't squash when initially
     // setting up registers.
-    for (int i = 0; i < number_of_threads; ++i)
-        thread[i]->inSyscall = true;
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        thread[tid]->inSyscall = true;
 
 #if FULL_SYSTEM
-    for (int tid=0; tid < number_of_threads; tid++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         ThreadContext *src_tc = threadContexts[tid];
         TheISA::initCPU(src_tc, src_tc->contextId());
     }
 #endif
 
     // Clear inSyscall.
-    for (int i = 0; i < number_of_threads; ++i)
-        thread[i]->inSyscall = false;
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        thread[tid]->inSyscall = false;
 
     // Call Initializiation Routine for Resource Pool
     resPool->init();
@@ -472,21 +471,21 @@ InOrderCPU::getPort(const std::string &if_name, int idx)
 }
 
 void
-InOrderCPU::trap(Fault fault, unsigned tid, int delay)
+InOrderCPU::trap(Fault fault, ThreadID tid, int delay)
 {
     //@ Squash Pipeline during TRAP
     scheduleCpuEvent(Trap, fault, tid, 0/*vpe*/, delay);
 }
 
 void
-InOrderCPU::trapCPU(Fault fault, unsigned tid)
+InOrderCPU::trapCPU(Fault fault, ThreadID tid)
 {
     fault->invoke(tcBase(tid));
 }
 
 void
 InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
-                           unsigned tid, unsigned vpe, unsigned delay)
+                           ThreadID tid, unsigned vpe, unsigned delay)
 {
     CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, vpe);
 
@@ -500,26 +499,27 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     }
 
     // Broadcast event to the Resource Pool
-    DynInstPtr dummy_inst = new InOrderDynInst(this, NULL, getNextEventNum(), tid);
+    DynInstPtr dummy_inst =
+        new InOrderDynInst(this, NULL, getNextEventNum(), tid);
     resPool->scheduleEvent(c_event, dummy_inst, 0, 0, tid);
 }
 
 inline bool
-InOrderCPU::isThreadActive(unsigned tid)
+InOrderCPU::isThreadActive(ThreadID tid)
 {
-  list<unsigned>::iterator isActive = std::find(
-        activeThreads.begin(), activeThreads.end(), tid);
+  list<ThreadID>::iterator isActive =
+      std::find(activeThreads.begin(), activeThreads.end(), tid);
 
     return (isActive != activeThreads.end());
 }
 
 
 void
-InOrderCPU::activateThread(unsigned tid)
+InOrderCPU::activateThread(ThreadID tid)
 {
     if (!isThreadActive(tid)) {
-        DPRINTF(InOrderCPU, "Adding Thread %i to active threads list in CPU.\n",
-                tid);
+        DPRINTF(InOrderCPU,
+                "Adding Thread %i to active threads list in CPU.\n", tid);
         activeThreads.push_back(tid);
 
         wakeCPU();
@@ -527,15 +527,15 @@ InOrderCPU::activateThread(unsigned tid)
 }
 
 void
-InOrderCPU::deactivateThread(unsigned tid)
+InOrderCPU::deactivateThread(ThreadID tid)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Calling deactivate thread.\n", tid);
 
     if (isThreadActive(tid)) {
         DPRINTF(InOrderCPU,"[tid:%i]: Removing from active threads list\n",
                 tid);
-        list<unsigned>::iterator thread_it = std::find(activeThreads.begin(),
-                                                 activeThreads.end(), tid);
+        list<ThreadID>::iterator thread_it =
+            std::find(activeThreads.begin(), activeThreads.end(), tid);
 
         removePipelineStalls(*thread_it);
 
@@ -546,7 +546,7 @@ InOrderCPU::deactivateThread(unsigned tid)
 }
 
 void
-InOrderCPU::removePipelineStalls(unsigned tid)
+InOrderCPU::removePipelineStalls(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Removing all pipeline stalls\n",
             tid);
@@ -557,16 +557,16 @@ InOrderCPU::removePipelineStalls(unsigned tid)
 
 }
 bool
-InOrderCPU::isThreadInCPU(unsigned tid)
+InOrderCPU::isThreadInCPU(ThreadID tid)
 {
-  list<unsigned>::iterator isCurrent = std::find(
-        currentThreads.begin(), currentThreads.end(), tid);
+  list<ThreadID>::iterator isCurrent =
+      std::find(currentThreads.begin(), currentThreads.end(), tid);
 
     return (isCurrent != currentThreads.end());
 }
 
 void
-InOrderCPU::addToCurrentThreads(unsigned tid)
+InOrderCPU::addToCurrentThreads(ThreadID tid)
 {
     if (!isThreadInCPU(tid)) {
         DPRINTF(InOrderCPU, "Adding Thread %i to current threads list in CPU.\n",
@@ -576,22 +576,22 @@ InOrderCPU::addToCurrentThreads(unsigned tid)
 }
 
 void
-InOrderCPU::removeFromCurrentThreads(unsigned tid)
+InOrderCPU::removeFromCurrentThreads(ThreadID tid)
 {
     if (isThreadInCPU(tid)) {
-        DPRINTF(InOrderCPU, "Adding Thread %i to current threads list in CPU.\n",
-                tid);
-        list<unsigned>::iterator isCurrent = std::find(
-            currentThreads.begin(), currentThreads.end(), tid);
+        DPRINTF(InOrderCPU,
+                "Adding Thread %i to current threads list in CPU.\n", tid);
+        list<ThreadID>::iterator isCurrent =
+            std::find(currentThreads.begin(), currentThreads.end(), tid);
         currentThreads.erase(isCurrent);
     }
 }
 
 bool
-InOrderCPU::isThreadSuspended(unsigned tid)
+InOrderCPU::isThreadSuspended(ThreadID tid)
 {
-  list<unsigned>::iterator isSuspended = std::find(
-        suspendedThreads.begin(), suspendedThreads.end(), tid);
+  list<ThreadID>::iterator isSuspended =
+      std::find(suspendedThreads.begin(), suspendedThreads.end(), tid);
 
     return (isSuspended!= suspendedThreads.end());
 }
@@ -612,7 +612,7 @@ InOrderCPU::enableVPEs(unsigned vpe)
     DPRINTF(InOrderCPU, "[vpe:%i]: Enabling Concurrent Execution "
             "virtual processors %i", vpe);
 
-    list<unsigned>::iterator thread_it = currentThreads.begin();
+    list<ThreadID>::iterator thread_it = currentThreads.begin();
 
     while (thread_it != currentThreads.end()) {
         if (!isThreadSuspended(*thread_it)) {
@@ -623,7 +623,7 @@ InOrderCPU::enableVPEs(unsigned vpe)
 }
 
 void
-InOrderCPU::disableVirtProcElement(unsigned tid, unsigned vpe)
+InOrderCPU::disableVirtProcElement(ThreadID tid, unsigned vpe)
 {
     DPRINTF(InOrderCPU, "[vpe:%i]: Scheduling  "
             "Disabling of concurrent virtual processor execution",
@@ -633,16 +633,16 @@ InOrderCPU::disableVirtProcElement(unsigned tid, unsigned vpe)
 }
 
 void
-InOrderCPU::disableVPEs(unsigned tid, unsigned vpe)
+InOrderCPU::disableVPEs(ThreadID tid, unsigned vpe)
 {
     DPRINTF(InOrderCPU, "[vpe:%i]: Disabling Concurrent Execution of "
             "virtual processors %i", vpe);
 
     unsigned base_vpe = TheISA::getVirtProcNum(tcBase(tid));
 
-    list<unsigned>::iterator thread_it = activeThreads.begin();
+    list<ThreadID>::iterator thread_it = activeThreads.begin();
 
-    std::vector<list<unsigned>::iterator> removeList;
+    vector<list<ThreadID>::iterator> removeList;
 
     while (thread_it != activeThreads.end()) {
         if (base_vpe != vpe) {
@@ -672,7 +672,7 @@ InOrderCPU::enableThreads(unsigned vpe)
     DPRINTF(InOrderCPU, "[vpe:%i]: Enabling Multithreading on "
             "virtual processor %i", vpe);
 
-    list<unsigned>::iterator thread_it = currentThreads.begin();
+    list<ThreadID>::iterator thread_it = currentThreads.begin();
 
     while (thread_it != currentThreads.end()) {
         if (TheISA::getVirtProcNum(tcBase(*thread_it)) == vpe) {
@@ -684,7 +684,7 @@ InOrderCPU::enableThreads(unsigned vpe)
     }
 }
 void
-InOrderCPU::disableMultiThreading(unsigned tid, unsigned vpe)
+InOrderCPU::disableMultiThreading(ThreadID tid, unsigned vpe)
 {
     // Schedule event to take place at end of cycle
    DPRINTF(InOrderCPU, "[tid:%i]: Scheduling Disable Multithreading on "
@@ -694,14 +694,14 @@ InOrderCPU::disableMultiThreading(unsigned tid, unsigned vpe)
 }
 
 void
-InOrderCPU::disableThreads(unsigned tid, unsigned vpe)
+InOrderCPU::disableThreads(ThreadID tid, unsigned vpe)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Disabling Multithreading on "
             "virtual processor %i", tid, vpe);
 
-    list<unsigned>::iterator thread_it = activeThreads.begin();
+    list<ThreadID>::iterator thread_it = activeThreads.begin();
 
-    std::vector<list<unsigned>::iterator> removeList;
+    vector<list<ThreadID>::iterator> removeList;
 
     while (thread_it != activeThreads.end()) {
         if (TheISA::getVirtProcNum(tcBase(*thread_it)) == vpe) {
@@ -722,8 +722,8 @@ InOrderCPU::updateThreadPriority()
     {
         //DEFAULT TO ROUND ROBIN SCHEME
         //e.g. Move highest priority to end of thread list
-        list<unsigned>::iterator list_begin = activeThreads.begin();
-        list<unsigned>::iterator list_end   = activeThreads.end();
+        list<ThreadID>::iterator list_begin = activeThreads.begin();
+        list<ThreadID>::iterator list_end   = activeThreads.end();
 
         unsigned high_thread = *list_begin;
 
@@ -737,7 +737,7 @@ inline void
 InOrderCPU::tickThreadStats()
 {
     /** Keep track of cycles that each thread is active */
-    list<unsigned>::iterator thread_it = activeThreads.begin();
+    list<ThreadID>::iterator thread_it = activeThreads.begin();
     while (thread_it != activeThreads.end()) {
         threadCycles[*thread_it]++;
         thread_it++;
@@ -750,7 +750,7 @@ InOrderCPU::tickThreadStats()
 }
 
 void
-InOrderCPU::activateContext(unsigned tid, int delay)
+InOrderCPU::activateContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Activating ...\n", tid);
 
@@ -765,27 +765,27 @@ InOrderCPU::activateContext(unsigned tid, int delay)
 
 
 void
-InOrderCPU::suspendContext(unsigned tid, int delay)
+InOrderCPU::suspendContext(ThreadID tid, int delay)
 {
     scheduleCpuEvent(SuspendThread, NoFault, tid, 0/*vpe*/, delay);
     //_status = Idle;
 }
 
 void
-InOrderCPU::suspendThread(unsigned tid)
+InOrderCPU::suspendThread(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid: %i]: Suspended ...\n", tid);
     deactivateThread(tid);
 }
 
 void
-InOrderCPU::deallocateContext(unsigned tid, int delay)
+InOrderCPU::deallocateContext(ThreadID tid, int delay)
 {
     scheduleCpuEvent(DeallocateThread, NoFault, tid, 0/*vpe*/, delay);
 }
 
 void
-InOrderCPU::deallocateThread(unsigned tid)
+InOrderCPU::deallocateThread(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Deallocating ...", tid);
 
@@ -797,7 +797,7 @@ InOrderCPU::deallocateThread(unsigned tid)
 }
 
 void
-InOrderCPU::squashThreadInPipeline(unsigned tid)
+InOrderCPU::squashThreadInPipeline(ThreadID tid)
 {
     //Squash all instructions in each stage
     for (int stNum=NumStages - 1; stNum >= 0 ; stNum--) {
@@ -806,7 +806,7 @@ InOrderCPU::squashThreadInPipeline(unsigned tid)
 }
 
 void
-InOrderCPU::haltContext(unsigned tid, int delay)
+InOrderCPU::haltContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Halt context called.\n", tid);
 
@@ -817,13 +817,13 @@ InOrderCPU::haltContext(unsigned tid, int delay)
 }
 
 void
-InOrderCPU::insertThread(unsigned tid)
+InOrderCPU::insertThread(ThreadID tid)
 {
     panic("Unimplemented Function\n.");
 }
 
 void
-InOrderCPU::removeThread(unsigned tid)
+InOrderCPU::removeThread(ThreadID tid)
 {
     DPRINTF(InOrderCPU, "Removing Thread %i from CPU.\n", tid);
 
@@ -838,97 +838,98 @@ InOrderCPU::getPipeStage(int stage_num)
 
 
 void
-InOrderCPU::activateWhenReady(int tid)
+InOrderCPU::activateWhenReady(ThreadID tid)
 {
     panic("Unimplemented Function\n.");
 }
 
 
 uint64_t
-InOrderCPU::readPC(unsigned tid)
+InOrderCPU::readPC(ThreadID tid)
 {
     return PC[tid];
 }
 
 
 void
-InOrderCPU::setPC(Addr new_PC, unsigned tid)
+InOrderCPU::setPC(Addr new_PC, ThreadID tid)
 {
     PC[tid] = new_PC;
 }
 
 
 uint64_t
-InOrderCPU::readNextPC(unsigned tid)
+InOrderCPU::readNextPC(ThreadID tid)
 {
     return nextPC[tid];
 }
 
 
 void
-InOrderCPU::setNextPC(uint64_t new_NPC, unsigned tid)
+InOrderCPU::setNextPC(uint64_t new_NPC, ThreadID tid)
 {
     nextPC[tid] = new_NPC;
 }
 
 
 uint64_t
-InOrderCPU::readNextNPC(unsigned tid)
+InOrderCPU::readNextNPC(ThreadID tid)
 {
     return nextNPC[tid];
 }
 
 
 void
-InOrderCPU::setNextNPC(uint64_t new_NNPC, unsigned tid)
+InOrderCPU::setNextNPC(uint64_t new_NNPC, ThreadID tid)
 {
     nextNPC[tid] = new_NNPC;
 }
 
 uint64_t
-InOrderCPU::readIntReg(int reg_idx, unsigned tid)
+InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 {
     return intRegFile[tid].readReg(reg_idx);
 }
 
 FloatReg
-InOrderCPU::readFloatReg(int reg_idx, unsigned tid, int width)
+InOrderCPU::readFloatReg(int reg_idx, ThreadID tid, int width)
 {
 
     return floatRegFile[tid].readReg(reg_idx, width);
 }
 
 FloatRegBits
-InOrderCPU::readFloatRegBits(int reg_idx, unsigned tid, int width)
+InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid, int width)
 {;
     return floatRegFile[tid].readRegBits(reg_idx, width);
 }
 
 void
-InOrderCPU::setIntReg(int reg_idx, uint64_t val, unsigned tid)
+InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
 {
     intRegFile[tid].setReg(reg_idx, val);
 }
 
 
 void
-InOrderCPU::setFloatReg(int reg_idx, FloatReg val, unsigned tid, int width)
+InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid, int width)
 {
     floatRegFile[tid].setReg(reg_idx, val, width);
 }
 
 
 void
-InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, unsigned tid, int width)
+InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid,
+                            int width)
 {
     floatRegFile[tid].setRegBits(reg_idx, val, width);
 }
 
 uint64_t
-InOrderCPU::readRegOtherThread(unsigned reg_idx, unsigned tid)
+InOrderCPU::readRegOtherThread(unsigned reg_idx, ThreadID tid)
 {
     // If Default value is set, then retrieve target thread
-    if (tid == -1) {
+    if (tid == InvalidThreadID) {
         tid = TheISA::getTargetThread(tcBase(tid));
     }
 
@@ -943,10 +944,11 @@ InOrderCPU::readRegOtherThread(unsigned reg_idx, unsigned tid)
     }
 }
 void
-InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val, unsigned tid)
+InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
+                              ThreadID tid)
 {
     // If Default value is set, then retrieve target thread
-    if (tid == -1) {
+    if (tid == InvalidThreadID) {
         tid = TheISA::getTargetThread(tcBase(tid));
     }
 
@@ -962,25 +964,25 @@ InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val, unsigned tid
 }
 
 MiscReg
-InOrderCPU::readMiscRegNoEffect(int misc_reg, unsigned tid)
+InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
     return miscRegFile.readRegNoEffect(misc_reg, tid);
 }
 
 MiscReg
-InOrderCPU::readMiscReg(int misc_reg, unsigned tid)
+InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
     return miscRegFile.readReg(misc_reg, tcBase(tid), tid);
 }
 
 void
-InOrderCPU::setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid)
+InOrderCPU::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
     miscRegFile.setRegNoEffect(misc_reg, val, tid);
 }
 
 void
-InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
+InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
 {
     miscRegFile.setReg(misc_reg, val, tcBase(tid), tid);
 }
@@ -989,7 +991,7 @@ InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, unsigned tid)
 InOrderCPU::ListIt
 InOrderCPU::addInst(DynInstPtr &inst)
 {
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
 
     instList[tid].push_back(inst);
 
@@ -997,7 +999,7 @@ InOrderCPU::addInst(DynInstPtr &inst)
 }
 
 void
-InOrderCPU::instDone(DynInstPtr inst, unsigned tid)
+InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 {
     // Set the CPU's PCs - This contributes to the precise state of the CPU which can be used
     // when restoring a thread to the CPU after a fork or after an exception
@@ -1069,8 +1071,7 @@ InOrderCPU::removeInst(DynInstPtr &inst)
 }
 
 void
-InOrderCPU::removeInstsUntil(const InstSeqNum &seq_num,
-                                  unsigned tid)
+InOrderCPU::removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid)
 {
     //assert(!instList[tid].empty());
 
@@ -1099,7 +1100,7 @@ InOrderCPU::removeInstsUntil(const InstSeqNum &seq_num,
 
 
 inline void
-InOrderCPU::squashInstIt(const ListIt &instIt, const unsigned &tid)
+InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
 {
     if ((*instIt)->threadNumber == tid) {
         DPRINTF(InOrderCPU, "Squashing instruction, "
@@ -1126,7 +1127,7 @@ InOrderCPU::cleanUpRemovedInsts()
                 (*removeList.front())->readPC());
 
         DynInstPtr inst = *removeList.front();
-        int tid = inst->threadNumber;
+        ThreadID tid = inst->threadNumber;
 
         // Make Sure Resource Schedule Is Emptied Out
         ThePipeline::ResSchedule *inst_sched = &inst->resSched;
@@ -1234,7 +1235,7 @@ InOrderCPU::wakeCPU()
 }
 
 void
-InOrderCPU::syscall(int64_t callnum, int tid)
+InOrderCPU::syscall(int64_t callnum, ThreadID tid)
 {
     DPRINTF(InOrderCPU, "[tid:%i] Executing syscall().\n\n", tid);
 

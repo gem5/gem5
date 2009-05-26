@@ -84,14 +84,14 @@ class ROB
      */
     ROB(O3CPU *_cpu, unsigned _numEntries, unsigned _squashWidth,
         std::string smtROBPolicy, unsigned _smtROBThreshold,
-        unsigned _numThreads);
+        ThreadID _numThreads);
 
     std::string name() const;
 
     /** Sets pointer to the list of active threads.
      *  @param at_ptr Pointer to the list of active threads.
      */
-    void setActiveThreads(std::list<unsigned>* at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Switches out the ROB. */
     void switchOut();
@@ -116,7 +116,7 @@ class ROB
      *  the ROB.
      *  @return Pointer to the DynInst that is at the head of the ROB.
      */
-    DynInstPtr readHeadInst(unsigned tid);
+    DynInstPtr readHeadInst(ThreadID tid);
 
     /** Returns pointer to the tail instruction within the ROB.  There is
      *  no guarantee as to the return value if the ROB is empty.
@@ -128,7 +128,7 @@ class ROB
      *  the ROB.
      *  @return Pointer to the DynInst that is at the tail of the ROB.
      */
-    DynInstPtr readTailInst(unsigned tid);
+    DynInstPtr readTailInst(ThreadID tid);
 
     /** Retires the head instruction, removing it from the ROB. */
 //    void retireHead();
@@ -136,13 +136,13 @@ class ROB
     /** Retires the head instruction of a specific thread, removing it from the
      *  ROB.
      */
-    void retireHead(unsigned tid);
+    void retireHead(ThreadID tid);
 
     /** Is the oldest instruction across all threads ready. */
 //    bool isHeadReady();
 
     /** Is the oldest instruction across a particular thread ready. */
-    bool isHeadReady(unsigned tid);
+    bool isHeadReady(ThreadID tid);
 
     /** Is there any commitable head instruction across all threads ready. */
     bool canCommit();
@@ -151,20 +151,20 @@ class ROB
     void resetEntries();
 
     /** Number of entries needed For 'num_threads' amount of threads. */
-    int entryAmount(int num_threads);
+    int entryAmount(ThreadID num_threads);
 
     /** Returns the number of total free entries in the ROB. */
     unsigned numFreeEntries();
 
     /** Returns the number of free entries in a specific ROB paritition. */
-    unsigned numFreeEntries(unsigned tid);
+    unsigned numFreeEntries(ThreadID tid);
 
     /** Returns the maximum number of entries for a specific thread. */
-    unsigned getMaxEntries(unsigned tid)
+    unsigned getMaxEntries(ThreadID tid)
     { return maxEntries[tid]; }
 
     /** Returns the number of entries being used by a specific thread. */
-    unsigned getThreadEntries(unsigned tid)
+    unsigned getThreadEntries(ThreadID tid)
     { return threadEntries[tid]; }
 
     /** Returns if the ROB is full. */
@@ -172,7 +172,7 @@ class ROB
     { return numInstsInROB == numEntries; }
 
     /** Returns if a specific thread's partition is full. */
-    bool isFull(unsigned tid)
+    bool isFull(ThreadID tid)
     { return threadEntries[tid] == numEntries; }
 
     /** Returns if the ROB is empty. */
@@ -180,16 +180,16 @@ class ROB
     { return numInstsInROB == 0; }
 
     /** Returns if a specific thread's partition is empty. */
-    bool isEmpty(unsigned tid)
+    bool isEmpty(ThreadID tid)
     { return threadEntries[tid] == 0; }
 
     /** Executes the squash, marking squashed instructions. */
-    void doSquash(unsigned tid);
+    void doSquash(ThreadID tid);
 
     /** Squashes all instructions younger than the given sequence number for
      *  the specific thread.
      */
-    void squash(InstSeqNum squash_num, unsigned tid);
+    void squash(InstSeqNum squash_num, ThreadID tid);
 
     /** Updates the head instruction with the new oldest instruction. */
     void updateHead();
@@ -201,37 +201,37 @@ class ROB
 //    uint64_t readHeadPC();
 
     /** Reads the PC of the head instruction of a specific thread. */
-//    uint64_t readHeadPC(unsigned tid);
+//    uint64_t readHeadPC(ThreadID tid);
 
     /** Reads the next PC of the oldest head instruction. */
 //    uint64_t readHeadNextPC();
 
     /** Reads the next PC of the head instruction of a specific thread. */
-//    uint64_t readHeadNextPC(unsigned tid);
+//    uint64_t readHeadNextPC(ThreadID tid);
 
     /** Reads the sequence number of the oldest head instruction. */
 //    InstSeqNum readHeadSeqNum();
 
     /** Reads the sequence number of the head instruction of a specific thread.
      */
-//    InstSeqNum readHeadSeqNum(unsigned tid);
+//    InstSeqNum readHeadSeqNum(ThreadID tid);
 
     /** Reads the PC of the youngest tail instruction. */
 //    uint64_t readTailPC();
 
     /** Reads the PC of the tail instruction of a specific thread. */
-//    uint64_t readTailPC(unsigned tid);
+//    uint64_t readTailPC(ThreadID tid);
 
     /** Reads the sequence number of the youngest tail instruction. */
 //    InstSeqNum readTailSeqNum();
 
     /** Reads the sequence number of tail instruction of a specific thread. */
-//    InstSeqNum readTailSeqNum(unsigned tid);
+//    InstSeqNum readTailSeqNum(ThreadID tid);
 
     /** Checks if the ROB is still in the process of squashing instructions.
      *  @retval Whether or not the ROB is done squashing.
      */
-    bool isDoneSquashing(unsigned tid) const
+    bool isDoneSquashing(ThreadID tid) const
     { return doneSquashing[tid]; }
 
     /** Checks if the ROB is still in the process of squashing instructions for
@@ -249,14 +249,14 @@ class ROB
      *  threadEntries to get the instructions in the ROB unless you are
      *  double checking that variable.
      */
-    int countInsts(unsigned tid);
+    int countInsts(ThreadID tid);
 
   private:
     /** Pointer to the CPU. */
     O3CPU *cpu;
 
     /** Active Threads in CPU */
-    std::list<unsigned>* activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Number of instructions in the ROB. */
     unsigned numEntries;
@@ -309,7 +309,7 @@ class ROB
     bool doneSquashing[Impl::MaxThreads];
 
     /** Number of active threads. */
-    unsigned numThreads;
+    ThreadID numThreads;
 };
 
 #endif //__CPU_O3_ROB_HH__

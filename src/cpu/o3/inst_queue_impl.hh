@@ -35,9 +35,10 @@
 #include "cpu/o3/fu_pool.hh"
 #include "cpu/o3/inst_queue.hh"
 #include "enums/OpClass.hh"
+#include "params/DerivO3CPU.hh"
 #include "sim/core.hh"
 
-#include "params/DerivO3CPU.hh"
+using namespace std;
 
 template <class Impl>
 InstructionQueue<Impl>::FUCompletion::FUCompletion(DynInstPtr &_inst,
@@ -93,9 +94,9 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
     regScoreboard.resize(numPhysRegs);
 
     //Initialize Mem Dependence Units
-    for (int i = 0; i < numThreads; i++) {
-        memDepUnit[i].init(params,i);
-        memDepUnit[i].setIQ(this);
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        memDepUnit[tid].init(params, tid);
+        memDepUnit[tid].setIQ(this);
     }
 
     resetState();
@@ -111,8 +112,8 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         iqPolicy = Dynamic;
 
         //Set Max Entries to Total ROB Capacity
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = numEntries;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = numEntries;
         }
 
     } else if (policy == "partitioned") {
@@ -122,8 +123,8 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         int part_amt = numEntries / numThreads;
 
         //Divide ROB up evenly
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = part_amt;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = part_amt;
         }
 
         DPRINTF(IQ, "IQ sharing policy set to Partitioned:"
@@ -136,8 +137,8 @@ InstructionQueue<Impl>::InstructionQueue(O3CPU *cpu_ptr, IEW *iew_ptr,
         int thresholdIQ = (int)((double)threshold * numEntries);
 
         //Divide up by threshold amount
-        for (int i = 0; i < numThreads; i++) {
-            maxEntries[i] = thresholdIQ;
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
+            maxEntries[tid] = thresholdIQ;
         }
 
         DPRINTF(IQ, "IQ sharing policy set to Threshold:"
@@ -315,9 +316,9 @@ InstructionQueue<Impl>::regStats()
         ;
     fuBusyRate = fuBusy / iqInstsIssued;
 
-    for ( int i=0; i < numThreads; i++) {
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
         // Tell mem dependence unit to reg stats as well.
-        memDepUnit[i].regStats();
+        memDepUnit[tid].regStats();
     }
 }
 
@@ -326,9 +327,9 @@ void
 InstructionQueue<Impl>::resetState()
 {
     //Initialize thread IQ counts
-    for (int i = 0; i <numThreads; i++) {
-        count[i] = 0;
-        instList[i].clear();
+    for (ThreadID tid = 0; tid <numThreads; tid++) {
+        count[tid] = 0;
+        instList[tid].clear();
     }
 
     // Initialize the number of free IQ entries.
@@ -343,8 +344,8 @@ InstructionQueue<Impl>::resetState()
         regScoreboard[i] = false;
     }
 
-    for (int i = 0; i < numThreads; ++i) {
-        squashedSeqNum[i] = 0;
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        squashedSeqNum[tid] = 0;
     }
 
     for (int i = 0; i < Num_OpClasses; ++i) {
@@ -359,7 +360,7 @@ InstructionQueue<Impl>::resetState()
 
 template <class Impl>
 void
-InstructionQueue<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+InstructionQueue<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -395,8 +396,8 @@ InstructionQueue<Impl>::switchOut()
     dependGraph.reset();
     instsToExecute.clear();
     switchedOut = true;
-    for (int i = 0; i < numThreads; ++i) {
-        memDepUnit[i].switchOut();
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        memDepUnit[tid].switchOut();
     }
 }
 
@@ -409,7 +410,7 @@ InstructionQueue<Impl>::takeOverFrom()
 
 template <class Impl>
 int
-InstructionQueue<Impl>::entryAmount(int num_threads)
+InstructionQueue<Impl>::entryAmount(ThreadID num_threads)
 {
     if (iqPolicy == Partitioned) {
         return numEntries / num_threads;
@@ -426,11 +427,11 @@ InstructionQueue<Impl>::resetEntries()
     if (iqPolicy != Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
-        std::list<unsigned>::iterator threads = activeThreads->begin();
-        std::list<unsigned>::iterator end = activeThreads->end();
+        list<ThreadID>::iterator threads = activeThreads->begin();
+        list<ThreadID>::iterator end = activeThreads->end();
 
         while (threads != end) {
-            unsigned tid = *threads++;
+            ThreadID tid = *threads++;
 
             if (iqPolicy == Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
@@ -450,7 +451,7 @@ InstructionQueue<Impl>::numFreeEntries()
 
 template <class Impl>
 unsigned
-InstructionQueue<Impl>::numFreeEntries(unsigned tid)
+InstructionQueue<Impl>::numFreeEntries(ThreadID tid)
 {
     return maxEntries[tid] - count[tid];
 }
@@ -470,7 +471,7 @@ InstructionQueue<Impl>::isFull()
 
 template <class Impl>
 bool
-InstructionQueue<Impl>::isFull(unsigned tid)
+InstructionQueue<Impl>::isFull(ThreadID tid)
 {
     if (numFreeEntries(tid) == 0) {
         return(true);
@@ -726,7 +727,7 @@ InstructionQueue<Impl>::scheduleReadyInsts()
 
         int idx = -2;
         int op_latency = 1;
-        int tid = issuing_inst->threadNumber;
+        ThreadID tid = issuing_inst->threadNumber;
 
         if (op_class != No_OpClass) {
             idx = fuPool->getUnit(op_class);
@@ -825,7 +826,7 @@ InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 
     assert(inst_it != nonSpecInsts.end());
 
-    unsigned tid = (*inst_it).second->threadNumber;
+    ThreadID tid = (*inst_it).second->threadNumber;
 
     (*inst_it).second->setAtCommit();
 
@@ -844,7 +845,7 @@ InstructionQueue<Impl>::scheduleNonSpec(const InstSeqNum &inst)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::commit(const InstSeqNum &inst, unsigned tid)
+InstructionQueue<Impl>::commit(const InstSeqNum &inst, ThreadID tid)
 {
     DPRINTF(IQ, "[tid:%i]: Committing instructions older than [sn:%i]\n",
             tid,inst);
@@ -976,7 +977,7 @@ template <class Impl>
 void
 InstructionQueue<Impl>::completeMemInst(DynInstPtr &completed_inst)
 {
-    int tid = completed_inst->threadNumber;
+    ThreadID tid = completed_inst->threadNumber;
 
     DPRINTF(IQ, "Completing mem instruction PC:%#x [sn:%lli]\n",
             completed_inst->readPC(), completed_inst->seqNum);
@@ -999,7 +1000,7 @@ InstructionQueue<Impl>::violation(DynInstPtr &store,
 
 template <class Impl>
 void
-InstructionQueue<Impl>::squash(unsigned tid)
+InstructionQueue<Impl>::squash(ThreadID tid)
 {
     DPRINTF(IQ, "[tid:%i]: Starting to squash instructions in "
             "the IQ.\n", tid);
@@ -1019,7 +1020,7 @@ InstructionQueue<Impl>::squash(unsigned tid)
 
 template <class Impl>
 void
-InstructionQueue<Impl>::doSquash(unsigned tid)
+InstructionQueue<Impl>::doSquash(ThreadID tid)
 {
     // Start at the tail.
     ListIt squash_it = instList[tid].end();
@@ -1253,10 +1254,10 @@ InstructionQueue<Impl>::countInsts()
     // Change the #if if you want to use this method.
     int total_insts = 0;
 
-    for (int i = 0; i < numThreads; ++i) {
-        ListIt count_it = instList[i].begin();
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        ListIt count_it = instList[tid].begin();
 
-        while (count_it != instList[i].end()) {
+        while (count_it != instList[tid].end()) {
             if (!(*count_it)->isSquashed() && !(*count_it)->isSquashedInIQ()) {
                 if (!(*count_it)->isIssued()) {
                     ++total_insts;
@@ -1325,15 +1326,13 @@ template <class Impl>
 void
 InstructionQueue<Impl>::dumpInsts()
 {
-    for (int i = 0; i < numThreads; ++i) {
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
         int num = 0;
         int valid_num = 0;
-        ListIt inst_list_it = instList[i].begin();
+        ListIt inst_list_it = instList[tid].begin();
 
-        while (inst_list_it != instList[i].end())
-        {
-            cprintf("Instruction:%i\n",
-                    num);
+        while (inst_list_it != instList[tid].end()) {
+            cprintf("Instruction:%i\n", num);
             if (!(*inst_list_it)->isSquashed()) {
                 if (!(*inst_list_it)->isIssued()) {
                     ++valid_num;

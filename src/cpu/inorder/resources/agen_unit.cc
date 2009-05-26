@@ -42,10 +42,11 @@ AGENUnit::execute(int slot_num)
     ResourceRequest* agen_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
-    int tid;
+#if TRACING_ON
+    ThreadID tid = inst->readTid();
+#endif
     int seq_num = inst->seqNum;
 
-    tid = inst->readTid();
     agen_req->fault = NoFault;
 
     switch (agen_req->cmd)
@@ -54,22 +55,27 @@ AGENUnit::execute(int slot_num)
         {
             // Load/Store Instruction
             if (inst->isMemRef()) {
-                DPRINTF(InOrderAGEN, "[tid:%i] Generating Address for [sn:%i] (%s).\n",
-                        tid, inst->seqNum, inst->staticInst->getName());
+                DPRINTF(InOrderAGEN,
+                        "[tid:%i] Generating Address for [sn:%i] (%s).\n",
+                        tid, seq_num, inst->staticInst->getName());
 
                 fault = inst->calcEA();
                 inst->setMemAddr(inst->getEA());
 
-                DPRINTF(InOrderAGEN, "[tid:%i] [sn:%i] Effective address calculated to be: "
-                        "%#x.\n", tid, inst->seqNum, inst->getEA());
+                DPRINTF(InOrderAGEN,
+                    "[tid:%i] [sn:%i] Effective address calculated as: %#x\n",
+                    tid, seq_num, inst->getEA());
 
                 if (fault == NoFault) {
                     agen_req->done();
                 } else {
-                    fatal("%s encountered while calculating address for [sn:%i]",fault->name(), seq_num);
+                    fatal("%s encountered while calculating address [sn:%i]",
+                          fault->name(), seq_num);
                 }
             } else {
-                DPRINTF(InOrderAGEN, "[tid:] Ignoring non-memory instruction [sn:%i].\n", tid, seq_num);
+                DPRINTF(InOrderAGEN,
+                        "[tid:] Ignoring non-memory instruction [sn:%i]\n",
+                        tid, seq_num);
                 agen_req->done();
             }
         }

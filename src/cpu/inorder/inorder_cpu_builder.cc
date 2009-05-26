@@ -42,7 +42,7 @@
 InOrderCPU *
 InOrderCPUParams::create()
 {
-    int actual_num_threads =
+    ThreadID actual_num_threads =
         (numThreads >= workload.size()) ? numThreads : workload.size();
 
     if (workload.size() == 0) {

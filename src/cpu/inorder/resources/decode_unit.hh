@@ -57,7 +57,8 @@ class DecodeUnit : public Resource {
 
     virtual void execute(int slot_num);
 
-    void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num, unsigned tid);
+    void squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                ThreadID tid);
 
     RegDepMap *regDepMap[ThePipeline::MaxThreads];
 

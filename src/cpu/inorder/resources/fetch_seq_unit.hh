@@ -56,8 +56,8 @@ class FetchSeqUnit : public Resource {
     virtual ~FetchSeqUnit() {}
 
     virtual void init();
-    virtual void activateThread(unsigned tid);
-    virtual void deactivateThread(unsigned tid);
+    virtual void activateThread(ThreadID tid);
+    virtual void deactivateThread(ThreadID tid);
     virtual void execute(int slot_num);
 
     /** Override default Resource squash sequence. This actually,
@@ -65,10 +65,10 @@ class FetchSeqUnit : public Resource {
      *  info
      */
     virtual void squash(DynInstPtr inst, int squash_stage,
-                        InstSeqNum squash_seq_num, unsigned tid);
+                        InstSeqNum squash_seq_num, ThreadID tid);
 
 
-    inline void squashAfterInst(DynInstPtr inst, int stage_num, unsigned tid);
+    inline void squashAfterInst(DynInstPtr inst, int stage_num, ThreadID tid);
 
   protected:
     unsigned instSize;

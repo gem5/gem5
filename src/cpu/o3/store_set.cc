@@ -186,8 +186,7 @@ StoreSet::insertLoad(Addr load_PC, InstSeqNum load_seq_num)
 }
 
 void
-StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num,
-                      unsigned tid)
+StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
 {
     int index = calcIndex(store_PC);
 
@@ -288,7 +287,7 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
 }
 
 void
-StoreSet::squash(InstSeqNum squashed_num, unsigned tid)
+StoreSet::squash(InstSeqNum squashed_num, ThreadID tid)
 {
     DPRINTF(StoreSet, "StoreSet: Squashing until inum %i\n",
             squashed_num);

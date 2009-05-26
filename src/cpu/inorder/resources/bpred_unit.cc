@@ -142,7 +142,7 @@ BPredUnit::takeOverFrom()
 
 
 bool
-BPredUnit::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
+BPredUnit::predict(DynInstPtr &inst, Addr &PC, ThreadID tid)
 {
     // See if branch predictor predicts taken.
     // If so, get its target addr either from the BTB or the RAS.
@@ -268,7 +268,7 @@ BPredUnit::predict(DynInstPtr &inst, Addr &PC, unsigned tid)
 
 
 void
-BPredUnit::update(const InstSeqNum &done_sn, unsigned tid)
+BPredUnit::update(const InstSeqNum &done_sn, ThreadID tid)
 {
     DPRINTF(Resource, "BranchPred: [tid:%i]: Commiting branches until sequence"
             "number %lli.\n", tid, done_sn);
@@ -286,7 +286,7 @@ BPredUnit::update(const InstSeqNum &done_sn, unsigned tid)
 
 
 void
-BPredUnit::squash(const InstSeqNum &squashed_sn, unsigned tid)
+BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 {
     History &pred_hist = predHist[tid];
 
@@ -321,8 +321,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, unsigned tid)
 void
 BPredUnit::squash(const InstSeqNum &squashed_sn,
                         const Addr &corr_target,
-                        const bool actually_taken,
-                        unsigned tid)
+                        bool actually_taken,
+                        ThreadID tid)
 {
     // Now that we know that a branch was mispredicted, we need to undo
     // all the branches that have been seen up until this branch and

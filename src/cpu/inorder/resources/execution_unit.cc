@@ -63,7 +63,7 @@ ExecutionUnit::execute(int slot_num)
     ResourceRequest* exec_req = reqMap[slot_num];
     DynInstPtr inst = reqMap[slot_num]->inst;
     Fault fault = reqMap[slot_num]->fault;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
 
     exec_req->fault = NoFault;
@@ -89,7 +89,7 @@ ExecutionUnit::execute(int slot_num)
                     // that got squashed.
                     if (inst->mispredicted()) {
                         int stage_num = exec_req->getStageNum();
-                        int tid = inst->readTid();
+                        ThreadID tid = inst->readTid();
 
                         // If it's a branch ...
                         if (inst->isDirectCtrl()) {

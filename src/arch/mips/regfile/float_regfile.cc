@@ -42,7 +42,7 @@ FloatRegFile::clear()
 }
 
 double
-FloatRegFile::readReg(int floatReg, int width, unsigned tid)
+FloatRegFile::readReg(int floatReg, int width, ThreadID tid)
 {
     switch(width)
     {
@@ -65,7 +65,7 @@ FloatRegFile::readReg(int floatReg, int width, unsigned tid)
 }
 
 FloatRegBits
-FloatRegFile::readRegBits(int floatReg, int width, unsigned tid)
+FloatRegFile::readRegBits(int floatReg, int width, ThreadID tid)
 {
     if (floatReg < NumFloatArchRegs - 1) {
         switch(width)
@@ -88,9 +88,9 @@ FloatRegFile::readRegBits(int floatReg, int width, unsigned tid)
 }
 
 Fault
-FloatRegFile::setReg(int floatReg, const FloatRegVal &val, int width, unsigned tid)
+FloatRegFile::setReg(int floatReg, const FloatRegVal &val, int width,
+                     ThreadID tid)
 {
-    using namespace std;
     switch(width)
     {
       case SingleWidth:
@@ -118,10 +118,9 @@ FloatRegFile::setReg(int floatReg, const FloatRegVal &val, int width, unsigned t
 }
 
 Fault
-FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width, unsigned tid)
+FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width,
+                         ThreadID tid)
 {
-    using namespace std;
-
     switch(width)
     {
       case SingleWidth:

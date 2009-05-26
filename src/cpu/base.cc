@@ -100,12 +100,12 @@ CPUProgressEvent::description() const
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p), clock(p->clock), instCnt(0), _cpuId(p->cpu_id),
       interrupts(p->interrupts),
-      number_of_threads(p->numThreads), system(p->system),
+      numThreads(p->numThreads), system(p->system),
       phase(p->phase)
 #else
 BaseCPU::BaseCPU(Params *p)
     : MemObject(p), clock(p->clock), _cpuId(p->cpu_id),
-      number_of_threads(p->numThreads), system(p->system),
+      numThreads(p->numThreads), system(p->system),
       phase(p->phase)
 #endif
 {
@@ -121,22 +121,23 @@ BaseCPU::BaseCPU(Params *p)
 
     DPRINTF(SyscallVerbose, "Constructing CPU with id %d\n", _cpuId);
 
-    if (number_of_threads > maxThreadsPerCPU)
-        maxThreadsPerCPU = number_of_threads;
+    if (numThreads > maxThreadsPerCPU)
+        maxThreadsPerCPU = numThreads;
 
     // allocate per-thread instruction-based event queues
-    comInstEventQueue = new EventQueue *[number_of_threads];
-    for (int i = 0; i < number_of_threads; ++i)
-        comInstEventQueue[i] = new EventQueue("instruction-based event queue");
+    comInstEventQueue = new EventQueue *[numThreads];
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        comInstEventQueue[tid] =
+            new EventQueue("instruction-based event queue");
 
     //
     // set up instruction-count-based termination events, if any
     //
     if (p->max_insts_any_thread != 0) {
         const char *cause = "a thread reached the max instruction count";
-        for (int i = 0; i < number_of_threads; ++i) {
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new SimLoopExitEvent(cause, 0);
-            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+            comInstEventQueue[tid]->schedule(event, p->max_insts_any_thread);
         }
     }
 
@@ -147,26 +148,26 @@ BaseCPU::BaseCPU(Params *p)
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
-        *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i) {
+        *counter = numThreads;
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
-            comInstEventQueue[i]->schedule(event, p->max_insts_any_thread);
+            comInstEventQueue[tid]->schedule(event, p->max_insts_any_thread);
         }
     }
 
     // allocate per-thread load-based event queues
-    comLoadEventQueue = new EventQueue *[number_of_threads];
-    for (int i = 0; i < number_of_threads; ++i)
-        comLoadEventQueue[i] = new EventQueue("load-based event queue");
+    comLoadEventQueue = new EventQueue *[numThreads];
+    for (ThreadID tid = 0; tid < numThreads; ++tid)
+        comLoadEventQueue[tid] = new EventQueue("load-based event queue");
 
     //
     // set up instruction-count-based termination events, if any
     //
     if (p->max_loads_any_thread != 0) {
         const char *cause = "a thread reached the max load count";
-        for (int i = 0; i < number_of_threads; ++i) {
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new SimLoopExitEvent(cause, 0);
-            comLoadEventQueue[i]->schedule(event, p->max_loads_any_thread);
+            comLoadEventQueue[tid]->schedule(event, p->max_loads_any_thread);
         }
     }
 
@@ -176,10 +177,10 @@ BaseCPU::BaseCPU(Params *p)
         // decrement this when triggered; simulation will terminate
         // when counter reaches 0
         int *counter = new int;
-        *counter = number_of_threads;
-        for (int i = 0; i < number_of_threads; ++i) {
+        *counter = numThreads;
+        for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
-            comLoadEventQueue[i]->schedule(event, p->max_loads_all_threads);
+            comLoadEventQueue[tid]->schedule(event, p->max_loads_all_threads);
         }
     }
 
@@ -289,8 +290,9 @@ BaseCPU::nextCycle(Tick begin_tick)
 void
 BaseCPU::registerThreadContexts()
 {
-    for (int i = 0; i < threadContexts.size(); ++i) {
-        ThreadContext *tc = threadContexts[i];
+    ThreadID size = threadContexts.size();
+    for (ThreadID tid = 0; tid < size; ++tid) {
+        ThreadContext *tc = threadContexts[tid];
 
         /** This is so that contextId and cpuId match where there is a
          * 1cpu:1context relationship.  Otherwise, the order of registration
@@ -299,7 +301,7 @@ BaseCPU::registerThreadContexts()
          * cpu 0 has the lowest thread contexts and cpu N has the highest, but
          * I'll just do this for now
          */
-        if (number_of_threads == 1)
+        if (numThreads == 1)
             tc->setContextId(system->registerThreadContext(tc, _cpuId));
         else
             tc->setContextId(system->registerThreadContext(tc));
@@ -313,9 +315,10 @@ BaseCPU::registerThreadContexts()
 int
 BaseCPU::findContext(ThreadContext *tc)
 {
-    for (int i = 0; i < threadContexts.size(); ++i) {
-        if (tc == threadContexts[i])
-            return i;
+    ThreadID size = threadContexts.size();
+    for (ThreadID tid = 0; tid < size; ++tid) {
+        if (tc == threadContexts[tid])
+            return tid;
     }
     return 0;
 }
@@ -337,7 +340,8 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
 
     _cpuId = oldCPU->cpuId();
 
-    for (int i = 0; i < threadContexts.size(); ++i) {
+    ThreadID size = threadContexts.size();
+    for (ThreadID i = 0; i < size; ++i) {
         ThreadContext *newTC = threadContexts[i];
         ThreadContext *oldTC = oldCPU->threadContexts[i];
 
@@ -361,7 +365,7 @@ BaseCPU::takeOverFrom(BaseCPU *oldCPU, Port *ic, Port *dc)
     interrupts = oldCPU->interrupts;
     interrupts->setCPU(this);
 
-    for (int i = 0; i < threadContexts.size(); ++i)
+    for (ThreadID i = 0; i < size; ++i)
         threadContexts[i]->profileClear();
 
     if (profileEvent)
@@ -393,7 +397,8 @@ BaseCPU::ProfileEvent::ProfileEvent(BaseCPU *_cpu, Tick _interval)
 void
 BaseCPU::ProfileEvent::process()
 {
-    for (int i = 0, size = cpu->threadContexts.size(); i < size; ++i) {
+    ThreadID size = cpu->threadContexts.size();
+    for (ThreadID i = 0; i < size; ++i) {
         ThreadContext *tc = cpu->threadContexts[i];
         tc->profileSample();
     }

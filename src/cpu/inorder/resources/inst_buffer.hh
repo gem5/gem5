@@ -67,12 +67,12 @@ class InstBuffer : public Resource {
 
     virtual void remove(DynInstPtr inst);
 
-    virtual void pop(unsigned tid);
+    virtual void pop(ThreadID tid);
 
-    virtual DynInstPtr top(unsigned tid);
+    virtual DynInstPtr top(ThreadID tid);
 
     virtual void squash(DynInstPtr inst, int stage_num,
-                        InstSeqNum squash_seq_num, unsigned tid);
+                        InstSeqNum squash_seq_num, ThreadID tid);
   protected:
     /** List of instructions this resource is currently
      *  processing.

@@ -649,28 +649,28 @@ BackEnd<Impl>::regStats()
 {
     using namespace Stats;
     rob_cap_events
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:cap_events")
         .desc("number of cycles where ROB cap was active")
         .flags(total)
         ;
 
     rob_cap_inst_count
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:cap_inst")
         .desc("number of instructions held up by ROB cap")
         .flags(total)
         ;
 
     iq_cap_events
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +".IQ:cap_events" )
         .desc("number of cycles where IQ cap was active")
         .flags(total)
         ;
 
     iq_cap_inst_count
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".IQ:cap_inst")
         .desc("number of instructions held up by IQ cap")
         .flags(total)
@@ -678,49 +678,49 @@ BackEnd<Impl>::regStats()
 
 
     exe_inst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:count")
         .desc("number of insts issued")
         .flags(total)
         ;
 
     exe_swp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:swp")
         .desc("number of swp insts issued")
         .flags(total)
         ;
 
     exe_nop
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:nop")
         .desc("number of nop insts issued")
         .flags(total)
         ;
 
     exe_refs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:refs")
         .desc("number of memory reference insts issued")
         .flags(total)
         ;
 
     exe_loads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:loads")
         .desc("number of load insts issued")
         .flags(total)
         ;
 
     exe_branches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:branches")
         .desc("Number of branches issued")
         .flags(total)
         ;
 
     issued_ops
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:op_count")
         .desc("number of insts issued")
         .flags(total)
@@ -737,28 +737,28 @@ BackEnd<Impl>::regStats()
     //  Other stats
     //
     lsq_forw_loads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".LSQ:forw_loads")
         .desc("number of loads forwarded via LSQ")
         .flags(total)
         ;
 
     inv_addr_loads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:addr_loads")
         .desc("number of invalid-address loads")
         .flags(total)
         ;
 
     inv_addr_swpfs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:addr_swpfs")
         .desc("number of invalid-address SW prefetches")
         .flags(total)
         ;
 
     lsq_blocked_loads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".LSQ:blocked_loads")
         .desc("number of ready loads not issued due to memory disambiguation")
         .flags(total)
@@ -793,28 +793,28 @@ BackEnd<Impl>::regStats()
     }
 
     writeback_count
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
         .flags(total)
         ;
 
     producer_inst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
         .flags(total)
         ;
 
     consumer_inst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
         .flags(total)
         ;
 
     wb_penalized
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
         .flags(total)
@@ -845,42 +845,42 @@ BackEnd<Impl>::regStats()
     wb_rate = writeback_count / cpu->numCycles;
 
     stat_com_inst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
     stat_com_swp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
     stat_com_refs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
     stat_com_loads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
     stat_com_membars
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
     stat_com_branches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:branches")
         .desc("Number of branches committed")
         .flags(total)
@@ -906,7 +906,7 @@ BackEnd<Impl>::regStats()
     //  we reached the BW limit
     //
     commit_eligible
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
@@ -923,7 +923,7 @@ BackEnd<Impl>::regStats()
         ;
 
     ROB_count
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:occupancy")
         .desc(name() + ".ROB occupancy (cumulative)")
         .flags(total)
@@ -943,7 +943,7 @@ BackEnd<Impl>::regStats()
     ROB_occ_rate = ROB_count / cpu->numCycles;
 
     ROB_occ_dist
-        .init(cpu->number_of_threads,0,numROBEntries,2)
+        .init(cpu->numThreads, 0, numROBEntries, 2)
         .name(name() + ".ROB:occ_dist")
         .desc("ROB Occupancy per cycle")
         .flags(total | cdf)
@@ -1292,7 +1292,7 @@ BackEnd<Impl>::executeInsts()
         // This probably needs to prioritize the redirects if a different
         // scheduler is used.  Currently the scheduler schedules the oldest
         // instruction first, so the branch resolution order will be correct.
-        unsigned tid = inst->threadNumber;
+        ThreadID tid = inst->threadNumber;
 
         if (!fetchRedirect[tid]) {
 
@@ -1735,34 +1735,34 @@ template <class Impl>
 void
 BackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
-    int thread_number = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     //
     //  Pick off the software prefetches
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        exe_swp[thread_number]++;
+        exe_swp[tid]++;
     else
-        exe_inst[thread_number]++;
+        exe_inst[tid]++;
 #else
-    exe_inst[thread_number]++;
+    exe_inst[tid]++;
 #endif
 
     //
     //  Control operations
     //
     if (inst->isControl())
-        exe_branches[thread_number]++;
+        exe_branches[tid]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        exe_refs[thread_number]++;
+        exe_refs[tid]++;
 
         if (inst->isLoad())
-            exe_loads[thread_number]++;
+            exe_loads[tid]++;
     }
 }
 
@@ -1770,40 +1770,40 @@ template <class Impl>
 void
 BackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
 {
-    unsigned thread = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     //
     //  Pick off the software prefetches
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch()) {
-        stat_com_swp[thread]++;
+        stat_com_swp[tid]++;
     } else {
-        stat_com_inst[thread]++;
+        stat_com_inst[tid]++;
     }
 #else
-    stat_com_inst[thread]++;
+    stat_com_inst[tid]++;
 #endif
 
     //
     //  Control Instructions
     //
     if (inst->isControl())
-        stat_com_branches[thread]++;
+        stat_com_branches[tid]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        stat_com_refs[thread]++;
+        stat_com_refs[tid]++;
 
         if (inst->isLoad()) {
-            stat_com_loads[thread]++;
+            stat_com_loads[tid]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        stat_com_membars[thread]++;
+        stat_com_membars[tid]++;
     }
 }
 

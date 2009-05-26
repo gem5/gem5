@@ -101,11 +101,9 @@ TLBUnit::execute(int slot_idx)
     assert(tlb_req != 0x0);
 
     DynInstPtr inst = tlb_req->inst;
-    int tid, seq_num, stage_num;
-
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
-    stage_num = tlb_req->getStageNum();
+    ThreadID tid = inst->readTid();
+    int seq_num = inst->seqNum;
+    int stage_num = tlb_req->getStageNum();
 
     tlb_req->fault = NoFault;
 
@@ -202,7 +200,7 @@ TLBUnitEvent::process()
 {
     DynInstPtr inst = resource->reqMap[slotIdx]->inst;
     int stage_num = resource->reqMap[slotIdx]->getStageNum();
-    int tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
             inst->seqNum);
@@ -224,7 +222,7 @@ TLBUnitEvent::process()
 
 void
 TLBUnit::squash(DynInstPtr inst, int stage_num,
-                   InstSeqNum squash_seq_num, unsigned tid)
+                   InstSeqNum squash_seq_num, ThreadID tid)
 {
      //@TODO: Figure out a way to consolidate common parts
      //       of this squash code

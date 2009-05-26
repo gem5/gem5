@@ -85,7 +85,7 @@ class SimpleFreeList
      *  @param _numLogicalFloatRegs Number of logical fp registers.
      *  @param _numPhysicalFloatRegs Number of physical fp registers.
      */
-    SimpleFreeList(unsigned activeThreads,
+    SimpleFreeList(ThreadID activeThreads,
                    unsigned _numLogicalIntRegs,
                    unsigned _numPhysicalIntRegs,
                    unsigned _numLogicalFloatRegs,

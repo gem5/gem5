@@ -49,7 +49,7 @@ PipelineStage::PipelineStage(Params *params, unsigned stage_num)
 void
 PipelineStage::init(Params *params)
 {
-    for(int tid=0; tid < numThreads; tid++) {
+    for(ThreadID tid = 0; tid < numThreads; tid++) {
         stageStatus[tid] = Idle;
 
         for (int stNum = 0; stNum < NumStages; stNum++) {
@@ -162,7 +162,7 @@ PipelineStage::setNextStageQueue(TimeBuffer<InterStageStruct> *next_stage_ptr)
 
 
 void
-PipelineStage::setActiveThreads(list<unsigned> *at_ptr)
+PipelineStage::setActiveThreads(list<ThreadID> *at_ptr)
 {
     DPRINTF(InOrderStage, "Setting active threads list pointer.\n");
     activeThreads = at_ptr;
@@ -194,20 +194,20 @@ PipelineStage::takeOverFrom()
     _status = Inactive;
 
     // Be sure to reset state and clear out any old instructions.
-    for (int i = 0; i < numThreads; ++i) {
-        stageStatus[i] = Idle;
+    for (ThreadID tid = 0; tid < numThreads; ++tid) {
+        stageStatus[tid] = Idle;
 
         for (int stNum = 0; stNum < NumStages; stNum++) {
-            stalls[i].stage[stNum] = false;
+            stalls[tid].stage[stNum] = false;
         }
 
-        stalls[i].resources.clear();
+        stalls[tid].resources.clear();
 
-        while (!insts[i].empty())
-            insts[i].pop();
+        while (!insts[tid].empty())
+            insts[tid].pop();
 
-        while (!skidBuffer[i].empty())
-            skidBuffer[i].pop();
+        while (!skidBuffer[tid].empty())
+            skidBuffer[tid].pop();
     }
     wroteToTimeBuffer = false;
 }
@@ -215,7 +215,7 @@ PipelineStage::takeOverFrom()
 
 
 bool
-PipelineStage::checkStall(unsigned tid) const
+PipelineStage::checkStall(ThreadID tid) const
 {
     bool ret_val = false;
 
@@ -243,7 +243,7 @@ PipelineStage::checkStall(unsigned tid) const
 
 
 void
-PipelineStage::removeStalls(unsigned tid)
+PipelineStage::removeStalls(ThreadID tid)
 {
     for (int stNum = 0; stNum < NumStages; stNum++) {
         stalls[tid].stage[stNum] = false;
@@ -258,13 +258,13 @@ PipelineStage::prevStageInstsValid()
 }
 
 bool
-PipelineStage::isBlocked(unsigned tid)
+PipelineStage::isBlocked(ThreadID tid)
 {
     return stageStatus[tid] == Blocked;
 }
 
 bool
-PipelineStage::block(unsigned tid)
+PipelineStage::block(ThreadID tid)
 {
     DPRINTF(InOrderStage, "[tid:%d]: Blocking, sending block signal back to previous stages.\n", tid);
 
@@ -293,7 +293,7 @@ PipelineStage::block(unsigned tid)
 }
 
 void
-PipelineStage::blockDueToBuffer(unsigned tid)
+PipelineStage::blockDueToBuffer(ThreadID tid)
 {
     DPRINTF(InOrderStage, "[tid:%d]: Blocking instructions from passing to next stage.\n", tid);
 
@@ -308,7 +308,7 @@ PipelineStage::blockDueToBuffer(unsigned tid)
 }
 
 bool
-PipelineStage::unblock(unsigned tid)
+PipelineStage::unblock(ThreadID tid)
 {
     // Stage is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
@@ -329,7 +329,7 @@ PipelineStage::unblock(unsigned tid)
 }
 
 void
-PipelineStage::squashDueToBranch(DynInstPtr &inst, unsigned tid)
+PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
     if (cpu->squashSeqNum[tid] < inst->seqNum &&
         cpu->lastSquashCycle[tid] == curTick){
@@ -367,8 +367,7 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, unsigned tid)
 }
 
 void
-PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num,
-                                    unsigned tid)
+PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
 {
     DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from "
             "incoming stage queue.\n", tid);
@@ -387,7 +386,7 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num,
 }
 
 void
-PipelineStage::squash(InstSeqNum squash_seq_num, unsigned tid)
+PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
 {
     // Set status to squashing.
     stageStatus[tid] = Squashing;
@@ -450,7 +449,7 @@ PipelineStage::canSendInstToStage(unsigned stage_num)
 }
 
 void
-PipelineStage::skidInsert(unsigned tid)
+PipelineStage::skidInsert(ThreadID tid)
 {
     DynInstPtr inst = NULL;
 
@@ -484,9 +483,9 @@ PipelineStage::skidSize()
 bool
 PipelineStage::skidsEmpty()
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    list<ThreadID>::iterator threads = activeThreads->begin();
 
-    while (threads != (*activeThreads).end()) {
+    while (threads != activeThreads->end()) {
         if (!skidBuffer[*threads++].empty())
             return false;
     }
@@ -501,12 +500,10 @@ PipelineStage::updateStatus()
 {
     bool any_unblocking = false;
 
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    list<ThreadID>::iterator threads = activeThreads->begin();
 
-    threads = (*activeThreads).begin();
-
-    while (threads != (*activeThreads).end()) {
-        unsigned tid = *threads++;
+    while (threads != activeThreads->end()) {
+        ThreadID tid = *threads++;
 
         if (stageStatus[tid] == Unblocking) {
             any_unblocking = true;
@@ -561,7 +558,7 @@ PipelineStage::sortInsts()
                     prevStage->insts[i]->readTid(),
                     prevStage->insts[i]->seqNum);
 
-            int tid = prevStage->insts[i]->threadNumber;
+            ThreadID tid = prevStage->insts[i]->threadNumber;
 
             DynInstPtr inst = prevStage->insts[i];
 
@@ -576,7 +573,7 @@ PipelineStage::sortInsts()
 
 
 void
-PipelineStage::readStallSignals(unsigned tid)
+PipelineStage::readStallSignals(ThreadID tid)
 {
     for (int stage_idx = stageNum+1; stage_idx <= lastStallingStage[tid];
          stage_idx++) {
@@ -597,7 +594,7 @@ PipelineStage::readStallSignals(unsigned tid)
 
 
 bool
-PipelineStage::checkSignalsAndUpdate(unsigned tid)
+PipelineStage::checkSignalsAndUpdate(ThreadID tid)
 {
     // Check if there's a squash signal, squash if there is.
     // Check stall signals, block if necessary.
@@ -691,14 +688,14 @@ PipelineStage::tick()
 }
 
 void
-PipelineStage::setResStall(ResReqPtr res_req, unsigned tid)
+PipelineStage::setResStall(ResReqPtr res_req, ThreadID tid)
 {
     DPRINTF(InOrderStage, "Inserting stall from %s.\n", res_req->res->name());
     stalls[tid].resources.push_back(res_req);
 }
 
 void
-PipelineStage::unsetResStall(ResReqPtr res_req, unsigned tid)
+PipelineStage::unsetResStall(ResReqPtr res_req, ThreadID tid)
 {
     // Search through stalls to find stalling request and then
     // remove it
@@ -731,11 +728,11 @@ PipelineStage::unsetResStall(ResReqPtr res_req, unsigned tid)
 void
 PipelineStage::processStage(bool &status_change)
 {
-    list<unsigned>::iterator threads = (*activeThreads).begin();
+    list<ThreadID>::iterator threads = activeThreads->begin();
 
     //Check stall and squash signals.
-    while (threads != (*activeThreads).end()) {
-        unsigned tid = *threads++;
+    while (threads != activeThreads->end()) {
+        ThreadID tid = *threads++;
 
         DPRINTF(InOrderStage,"Processing [tid:%i]\n",tid);
         status_change =  checkSignalsAndUpdate(tid) || status_change;
@@ -756,7 +753,7 @@ PipelineStage::processStage(bool &status_change)
 }
 
 void
-PipelineStage::processThread(bool &status_change, unsigned tid)
+PipelineStage::processThread(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
     //     call stageInsts()
@@ -801,7 +798,7 @@ PipelineStage::processThread(bool &status_change, unsigned tid)
 
 
 void
-PipelineStage::processInsts(unsigned tid)
+PipelineStage::processInsts(ThreadID tid)
 {
     // Instructions can come either from the skid buffer or the list of
     // instructions coming from fetch, depending on stage's status.
@@ -888,9 +885,9 @@ bool
 PipelineStage::processInstSchedule(DynInstPtr inst)
 {
     bool last_req_completed = true;
-    int tid;
-
-    tid = inst->readTid();
+#if TRACING_ON
+    ThreadID tid = inst->readTid();
+#endif
 
     if (inst->nextResStage() == stageNum) {
         int res_stage_num = inst->nextResStage();
@@ -951,7 +948,7 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
         inst->nextStage++;
 
     bool success = false;
-    int tid = inst->readTid();
+    ThreadID tid = inst->readTid();
     int next_stage = inst->nextStage;
     int prev_stage = next_stage - 1;
 
@@ -1012,8 +1009,7 @@ PipelineStage::dumpInsts()
 {
     cprintf("Insts in Stage %i skidbuffers\n",stageNum);
 
-    for (int tid=0; tid < ThePipeline::MaxThreads; tid++) {
-
+    for (ThreadID tid = 0; tid < ThePipeline::MaxThreads; tid++) {
         std::queue<DynInstPtr> copy_buff(skidBuffer[tid]);
 
         while (!copy_buff.empty()) {

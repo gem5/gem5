@@ -88,11 +88,12 @@ class MiscRegFile
     int getInstAsid();
     int getDataAsid();
 
-    MiscReg readRegNoEffect(int misc_reg, unsigned tid = 0);
-    MiscReg readReg(int misc_reg, ThreadContext *tc, unsigned tid = 0);
+    MiscReg readRegNoEffect(int misc_reg, ThreadID tid = 0);
+    MiscReg readReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
 
-    void setRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
-    void setReg(int misc_reg, const MiscReg &val, ThreadContext *tc, unsigned tid = 0);
+    void setRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid = 0);
+    void setReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
+                ThreadID tid = 0);
 
     void
     clear()
@@ -107,12 +108,12 @@ class MiscRegFile
     void serialize(std::ostream &os);
     void unserialize(Checkpoint *cp, const std::string &section);
 
-    void reset(std::string core_name, unsigned num_threads,
+    void reset(std::string core_name, ThreadID num_threads,
                unsigned num_vpes, BaseCPU *_cpu)
     { }
 
 
-    void expandForMultithreading(unsigned num_threads, unsigned num_vpes)
+    void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
     { }
 
 

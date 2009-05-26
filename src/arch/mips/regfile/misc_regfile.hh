@@ -75,12 +75,12 @@ namespace MipsISA
 
         void clear(unsigned tid_or_vpn = 0);
 
-        void reset(std::string core_name, unsigned num_threads,
+        void reset(std::string core_name, ThreadID num_threads,
                    unsigned num_vpes, BaseCPU *_cpu);
 
-        void expandForMultithreading(unsigned num_threads, unsigned num_vpes);
+        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes);
 
-        inline unsigned getVPENum(unsigned tid);
+        unsigned getVPENum(ThreadID tid);
 
         //////////////////////////////////////////////////////////
         //
@@ -90,21 +90,21 @@ namespace MipsISA
         //////////////////////////////////////////////////////////
         //@TODO: MIPS MT's register view automatically connects
         //       Status to TCStatus depending on current thread
-        void updateCP0ReadView(int misc_reg, unsigned tid) { }
-        MiscReg readRegNoEffect(int misc_reg, unsigned tid = 0);
+        void updateCP0ReadView(int misc_reg, ThreadID tid) { }
+        MiscReg readRegNoEffect(int misc_reg, ThreadID tid = 0);
 
         //template <class TC>
         MiscReg readReg(int misc_reg,
-                        ThreadContext *tc,  unsigned tid = 0);
+                        ThreadContext *tc, ThreadID tid = 0);
 
         MiscReg filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val);
-        void setRegMask(int misc_reg, const MiscReg &val, unsigned tid = 0);
+        void setRegMask(int misc_reg, const MiscReg &val, ThreadID tid = 0);
         void setRegNoEffect(int misc_reg, const MiscReg &val,
-                            unsigned tid = 0);
+                            ThreadID tid = 0);
 
         //template <class TC>
         void setReg(int misc_reg, const MiscReg &val,
-                     ThreadContext *tc, unsigned tid = 0);
+                     ThreadContext *tc, ThreadID tid = 0);
 
         int getInstAsid();
         int getDataAsid();

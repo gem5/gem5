@@ -41,6 +41,7 @@
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
@@ -185,17 +186,18 @@ class InOrderCPU : public BaseCPU
 
       public:
         CPUEventType cpuEventType;
-        unsigned tid;
+        ThreadID tid;
         unsigned vpe;
         Fault fault;
 
       public:
         /** Constructs a CPU event. */
         CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
-                 unsigned _tid, unsigned _vpe);
+                 ThreadID _tid, unsigned _vpe);
 
         /** Set Type of Event To Be Scheduled */
-        void setEvent(CPUEventType e_type, Fault _fault, unsigned _tid, unsigned _vpe)
+        void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
+                      unsigned _vpe)
         {
             fault = _fault;
             cpuEventType = e_type;
@@ -217,7 +219,7 @@ class InOrderCPU : public BaseCPU
     };
 
     /** Schedule a CPU Event */
-    void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, unsigned tid,
+    void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
                           unsigned vpe, unsigned delay = 0);
 
   public:
@@ -293,29 +295,29 @@ class InOrderCPU : public BaseCPU
     /** trap() - sets up a trap event on the cpuTraps to handle given fault.
      *  trapCPU() - Traps to handle given fault
      */
-    void trap(Fault fault, unsigned tid, int delay = 0);
-    void trapCPU(Fault fault, unsigned tid);
+    void trap(Fault fault, ThreadID tid, int delay = 0);
+    void trapCPU(Fault fault, ThreadID tid);
 
     /** Setup CPU to insert a thread's context */
-    void insertThread(unsigned tid);
+    void insertThread(ThreadID tid);
 
     /** Remove all of a thread's context from CPU */
-    void removeThread(unsigned tid);
+    void removeThread(ThreadID tid);
 
     /** Add Thread to Active Threads List. */
-    void activateContext(unsigned tid, int delay = 0);
-    void activateThread(unsigned tid);
+    void activateContext(ThreadID tid, int delay = 0);
+    void activateThread(ThreadID tid);
 
     /** Remove Thread from Active Threads List */
-    void suspendContext(unsigned tid, int delay = 0);
-    void suspendThread(unsigned tid);
+    void suspendContext(ThreadID tid, int delay = 0);
+    void suspendThread(ThreadID tid);
 
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void deallocateContext(unsigned tid, int delay = 0);
-    void deallocateThread(unsigned tid);
-    void deactivateThread(unsigned tid);
+    void deallocateContext(ThreadID tid, int delay = 0);
+    void deallocateThread(ThreadID tid);
+    void deactivateThread(ThreadID tid);
 
     PipelineStage* getPipeStage(int stage_num);
 
@@ -329,30 +331,30 @@ class InOrderCPU : public BaseCPU
     /** Remove Thread from Active Threads List &&
      *  Remove Thread Context from CPU.
      */
-    void haltContext(unsigned tid, int delay = 0);
+    void haltContext(ThreadID tid, int delay = 0);
 
-    void removePipelineStalls(unsigned tid);
+    void removePipelineStalls(ThreadID tid);
 
-    void squashThreadInPipeline(unsigned tid);
+    void squashThreadInPipeline(ThreadID tid);
 
     /// Notify the CPU to enable a virtual processor element.
     virtual void enableVirtProcElement(unsigned vpe);
     void enableVPEs(unsigned vpe);
 
     /// Notify the CPU to disable a virtual processor element.
-    virtual void disableVirtProcElement(unsigned tid, unsigned vpe);
-    void disableVPEs(unsigned tid, unsigned vpe);
+    virtual void disableVirtProcElement(ThreadID tid, unsigned vpe);
+    void disableVPEs(ThreadID tid, unsigned vpe);
 
     /// Notify the CPU that multithreading is enabled.
     virtual void enableMultiThreading(unsigned vpe);
     void enableThreads(unsigned vpe);
 
     /// Notify the CPU that multithreading is disabled.
-    virtual void disableMultiThreading(unsigned tid, unsigned vpe);
-    void disableThreads(unsigned tid, unsigned vpe);
+    virtual void disableMultiThreading(ThreadID tid, unsigned vpe);
+    void disableThreads(ThreadID tid, unsigned vpe);
 
     /** Activate a Thread When CPU Resources are Available. */
-    void activateWhenReady(int tid);
+    void activateWhenReady(ThreadID tid);
 
     /** Add or Remove a Thread Context in the CPU. */
     void doContextSwitch();
@@ -365,19 +367,19 @@ class InOrderCPU : public BaseCPU
     { /*pipelineStage[stage_idx]->switchToActive();*/ }
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum getAndIncrementInstSeq(unsigned tid)
+    InstSeqNum getAndIncrementInstSeq(ThreadID tid)
     { return globalSeqNum[tid]++; }
 
     /** Get the current instruction sequence number, and increment it. */
-    InstSeqNum nextInstSeqNum(unsigned tid)
+    InstSeqNum nextInstSeqNum(ThreadID tid)
     { return globalSeqNum[tid]; }
 
     /** Increment Instruction Sequence Number */
-    void incrInstSeqNum(unsigned tid)
+    void incrInstSeqNum(ThreadID tid)
     { globalSeqNum[tid]++; }
 
     /** Set Instruction Sequence Number */
-    void setInstSeqNum(unsigned tid, InstSeqNum seq_num)
+    void setInstSeqNum(ThreadID tid, InstSeqNum seq_num)
     {
         globalSeqNum[tid] = seq_num;
     }
@@ -389,73 +391,76 @@ class InOrderCPU : public BaseCPU
     }
 
     /** Get instruction asid. */
-    int getInstAsid(unsigned tid)
+    int getInstAsid(ThreadID tid)
     { return thread[tid]->getInstAsid(); }
 
     /** Get data asid. */
-    int getDataAsid(unsigned tid)
+    int getDataAsid(ThreadID tid)
     { return thread[tid]->getDataAsid(); }
 
     /** Register file accessors  */
-    uint64_t readIntReg(int reg_idx, unsigned tid);
+    uint64_t readIntReg(int reg_idx, ThreadID tid);
 
-    FloatReg readFloatReg(int reg_idx, unsigned tid,
+    FloatReg readFloatReg(int reg_idx, ThreadID tid,
                           int width = TheISA::SingleWidth);
 
-    FloatRegBits readFloatRegBits(int reg_idx, unsigned tid,
+    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid,
                                   int width = TheISA::SingleWidth);
 
-    void setIntReg(int reg_idx, uint64_t val, unsigned tid);
+    void setIntReg(int reg_idx, uint64_t val, ThreadID tid);
 
-    void setFloatReg(int reg_idx, FloatReg val,  unsigned tid,
+    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid,
                      int width = TheISA::SingleWidth);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val,  unsigned tid,
+    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid,
                          int width = TheISA::SingleWidth);
 
     /** Reads a miscellaneous register. */
-    MiscReg readMiscRegNoEffect(int misc_reg, unsigned tid = 0);
+    MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
 
     /** Reads a misc. register, including any side effects the read
      * might have as defined by the architecture.
      */
-    MiscReg readMiscReg(int misc_reg, unsigned tid = 0);
+    MiscReg readMiscReg(int misc_reg, ThreadID tid = 0);
 
     /** Sets a miscellaneous register. */
-    void setMiscRegNoEffect(int misc_reg, const MiscReg &val, unsigned tid = 0);
+    void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
+                            ThreadID tid = 0);
 
     /** Sets a misc. register, including any side effects the write
      * might have as defined by the architecture.
      */
-    void setMiscReg(int misc_reg, const MiscReg &val, unsigned tid = 0);
+    void setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid = 0);
 
     /** Reads a int/fp/misc reg. from another thread depending on ISA-defined
      *  target thread
      */
-    uint64_t readRegOtherThread(unsigned misc_reg, unsigned tid = -1);
+    uint64_t readRegOtherThread(unsigned misc_reg,
+                                ThreadID tid = InvalidThreadID);
 
     /** Sets a int/fp/misc reg. from another thread depending on an ISA-defined
      * target thread
      */
-    void setRegOtherThread(unsigned misc_reg, const MiscReg &val, unsigned tid);
+    void setRegOtherThread(unsigned misc_reg, const MiscReg &val,
+                           ThreadID tid);
 
     /** Reads the commit PC of a specific thread. */
-    uint64_t readPC(unsigned tid);
+    uint64_t readPC(ThreadID tid);
 
     /** Sets the commit PC of a specific thread. */
-    void setPC(Addr new_PC, unsigned tid);
+    void setPC(Addr new_PC, ThreadID tid);
 
     /** Reads the next PC of a specific thread. */
-    uint64_t readNextPC(unsigned tid);
+    uint64_t readNextPC(ThreadID tid);
 
     /** Sets the next PC of a specific thread. */
-    void setNextPC(uint64_t val, unsigned tid);
+    void setNextPC(uint64_t val, ThreadID tid);
 
     /** Reads the next NPC of a specific thread. */
-    uint64_t readNextNPC(unsigned tid);
+    uint64_t readNextNPC(ThreadID tid);
 
     /** Sets the next NPC of a specific thread. */
-    void setNextNPC(uint64_t val, unsigned tid);
+    void setNextNPC(uint64_t val, ThreadID tid);
 
     /** Function to add instruction onto the head of the list of the
      *  instructions.  Used when new instructions are fetched.
@@ -463,7 +468,7 @@ class InOrderCPU : public BaseCPU
     ListIt addInst(DynInstPtr &inst);
 
     /** Function to tell the CPU that an instruction has completed. */
-    void instDone(DynInstPtr inst, unsigned tid);
+    void instDone(DynInstPtr inst, ThreadID tid);
 
     /** Add Instructions to the CPU Remove List*/
     void addToRemoveList(DynInstPtr &inst);
@@ -472,10 +477,10 @@ class InOrderCPU : public BaseCPU
     void removeInst(DynInstPtr &inst);
 
     /** Remove all instructions younger than the given sequence number. */
-    void removeInstsUntil(const InstSeqNum &seq_num,unsigned tid);
+    void removeInstsUntil(const InstSeqNum &seq_num,ThreadID tid);
 
     /** Removes the instruction pointed to by the iterator. */
-    inline void squashInstIt(const ListIt &instIt, const unsigned &tid);
+    inline void squashInstIt(const ListIt &instIt, ThreadID tid);
 
     /** Cleans up all instructions on the instruction remove list. */
     void cleanUpRemovedInsts();
@@ -513,7 +518,7 @@ class InOrderCPU : public BaseCPU
     void writeHint(DynInstPtr inst);
 
     /** Executes a syscall.*/
-    void syscall(int64_t callnum, int tid);
+    void syscall(int64_t callnum, ThreadID tid);
 
   public:
     /** Per-Thread List of all the instructions in flight. */
@@ -553,24 +558,24 @@ class InOrderCPU : public BaseCPU
     /** Last Cycle that the CPU squashed instruction end. */
     Tick lastSquashCycle[ThePipeline::MaxThreads];
 
-    std::list<unsigned> fetchPriorityList;
+    std::list<ThreadID> fetchPriorityList;
 
   protected:
     /** Active Threads List */
-    std::list<unsigned> activeThreads;
+    std::list<ThreadID> activeThreads;
 
     /** Current Threads List */
-    std::list<unsigned> currentThreads;
+    std::list<ThreadID> currentThreads;
 
     /** Suspended Threads List */
-    std::list<unsigned> suspendedThreads;
+    std::list<ThreadID> suspendedThreads;
 
     /** Thread Status Functions (Unused Currently) */
-    bool isThreadInCPU(unsigned tid);
-    bool isThreadActive(unsigned tid);
-    bool isThreadSuspended(unsigned tid);
-    void addToCurrentThreads(unsigned tid);
-    void removeFromCurrentThreads(unsigned tid);
+    bool isThreadInCPU(ThreadID tid);
+    bool isThreadActive(ThreadID tid);
+    bool isThreadSuspended(ThreadID tid);
+    void addToCurrentThreads(ThreadID tid);
+    void removeFromCurrentThreads(ThreadID tid);
 
   private:
     /** The activity recorder; used to tell if the CPU has any
@@ -583,7 +588,7 @@ class InOrderCPU : public BaseCPU
     void readFunctional(Addr addr, uint32_t &buffer);
 
     /** Number of Active Threads in the CPU */
-    int numActiveThreads() { return activeThreads.size(); }
+    ThreadID numActiveThreads() { return activeThreads.size(); }
 
     /** Records that there was time buffer activity this cycle. */
     void activityThisCycle() { activityRec.activity(); }
@@ -600,7 +605,7 @@ class InOrderCPU : public BaseCPU
     void wakeCPU();
 
     /** Gets a free thread id. Use if thread ids change across system. */
-    int getFreeTid();
+    ThreadID getFreeTid();
 
     // LL/SC debug functionality
     unsigned stCondFails;
@@ -608,7 +613,7 @@ class InOrderCPU : public BaseCPU
     unsigned setStCondFailures(unsigned st_fails) { return stCondFails = st_fails; }
 
     /** Returns a pointer to a thread context. */
-    ThreadContext *tcBase(unsigned tid = 0)
+    ThreadContext *tcBase(ThreadID tid = 0)
     {
         return thread[tid]->getTC();
     }
@@ -618,8 +623,8 @@ class InOrderCPU : public BaseCPU
     {
         Counter total(0);
 
-        for (int i=0; i < thread.size(); i++)
-            total += thread[i]->numInst;
+        for (ThreadID tid = 0; tid < thread.size(); tid++)
+            total += thread[tid]->numInst;
 
         return total;
     }
@@ -656,9 +661,6 @@ class InOrderCPU : public BaseCPU
 
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
-
-    /** Number of Threads the CPU can process */
-    unsigned numThreads;
 
     /** Number of Virtual Processors the CPU can process */
     unsigned numVirtProcs;

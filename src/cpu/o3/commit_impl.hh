@@ -29,9 +29,6 @@
  *          Korey Sewell
  */
 
-#include "config/full_system.hh"
-#include "config/use_checker.hh"
-
 #include <algorithm>
 #include <string>
 
@@ -39,19 +36,22 @@
 #include "base/cp_annotate.hh"
 #include "base/loader/symtab.hh"
 #include "base/timebuf.hh"
+#include "config/full_system.hh"
+#include "config/use_checker.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/o3/commit.hh"
 #include "cpu/o3/thread_state.hh"
+#include "params/DerivO3CPU.hh"
 
 #if USE_CHECKER
 #include "cpu/checker/cpu.hh"
 #endif
 
-#include "params/DerivO3CPU.hh"
+using namespace std;
 
 template <class Impl>
 DefaultCommit<Impl>::TrapEvent::TrapEvent(DefaultCommit<Impl> *_commit,
-                                          unsigned _tid)
+                                          ThreadID _tid)
     : Event(CPU_Tick_Pri), commit(_commit), tid(_tid)
 {
     this->setFlags(AutoDelete);
@@ -105,7 +105,7 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
         commitPolicy = RoundRobin;
 
         //Set-Up Priority List
-        for (int tid=0; tid < numThreads; tid++) {
+        for (ThreadID tid = 0; tid < numThreads; tid++) {
             priority_list.push_back(tid);
         }
 
@@ -119,15 +119,19 @@ DefaultCommit<Impl>::DefaultCommit(O3CPU *_cpu, DerivO3CPUParams *params)
                "RoundRobin,OldestReady}");
     }
 
-    for (int i=0; i < numThreads; i++) {
-        commitStatus[i] = Idle;
-        changedROBNumEntries[i] = false;
-        checkEmptyROB[i] = false;
-        trapInFlight[i] = false;
-        committedStores[i] = false;
-        trapSquash[i] = false;
-        tcSquash[i] = false;
-        microPC[i] = nextMicroPC[i] = PC[i] = nextPC[i] = nextNPC[i] = 0;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        commitStatus[tid] = Idle;
+        changedROBNumEntries[tid] = false;
+        checkEmptyROB[tid] = false;
+        trapInFlight[tid] = false;
+        committedStores[tid] = false;
+        trapSquash[tid] = false;
+        tcSquash[tid] = false;
+        microPC[tid] = 0;
+        nextMicroPC[tid] = 0;
+        PC[tid] = 0;
+        nextPC[tid] = 0;
+        nextNPC[tid] = 0;
     }
 #if FULL_SYSTEM
     interrupt = NoFault;
@@ -175,49 +179,49 @@ DefaultCommit<Impl>::regStats()
         ;
 
     statComInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
     statComSwp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
     statComRefs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
     statComLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
     statComMembars
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
     statComBranches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:branches")
         .desc("Number of branches committed")
         .flags(total)
         ;
 
     commitEligible
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
@@ -288,7 +292,7 @@ DefaultCommit<Impl>::setIEWStage(IEW *iew_stage)
 
 template<class Impl>
 void
-DefaultCommit<Impl>::setActiveThreads(std::list<unsigned> *at_ptr)
+DefaultCommit<Impl>::setActiveThreads(list<ThreadID> *at_ptr)
 {
     activeThreads = at_ptr;
 }
@@ -297,9 +301,8 @@ template <class Impl>
 void
 DefaultCommit<Impl>::setRenameMap(RenameMap rm_ptr[])
 {
-    for (int i=0; i < numThreads; i++) {
-        renameMap[i] = &rm_ptr[i];
-    }
+    for (ThreadID tid = 0; tid < numThreads; tid++)
+        renameMap[tid] = &rm_ptr[tid];
 }
 
 template <class Impl>
@@ -317,10 +320,10 @@ DefaultCommit<Impl>::initStage()
     rob->resetEntries();
 
     // Broadcast the number of free entries.
-    for (int i=0; i < numThreads; i++) {
-        toIEW->commitInfo[i].usedROB = true;
-        toIEW->commitInfo[i].freeROBEntries = rob->numFreeEntries(i);
-        toIEW->commitInfo[i].emptyROB = true;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        toIEW->commitInfo[tid].usedROB = true;
+        toIEW->commitInfo[tid].freeROBEntries = rob->numFreeEntries(tid);
+        toIEW->commitInfo[tid].emptyROB = true;
     }
 
     // Commit must broadcast the number of free entries it has at the
@@ -363,11 +366,11 @@ DefaultCommit<Impl>::takeOverFrom()
     switchedOut = false;
     _status = Active;
     _nextStatus = Inactive;
-    for (int i=0; i < numThreads; i++) {
-        commitStatus[i] = Idle;
-        changedROBNumEntries[i] = false;
-        trapSquash[i] = false;
-        tcSquash[i] = false;
+    for (ThreadID tid = 0; tid < numThreads; tid++) {
+        commitStatus[tid] = Idle;
+        changedROBNumEntries[tid] = false;
+        trapSquash[tid] = false;
+        tcSquash[tid] = false;
     }
     squashCounter = 0;
     rob->takeOverFrom();
@@ -378,11 +381,11 @@ void
 DefaultCommit<Impl>::updateStatus()
 {
     // reset ROB changed variable
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         changedROBNumEntries[tid] = false;
 
@@ -410,11 +413,11 @@ DefaultCommit<Impl>::setNextStatus()
 {
     int squashes = 0;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (commitStatus[tid] == ROBSquashing) {
             squashes++;
@@ -434,11 +437,11 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::changedROBEntries()
 {
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (changedROBNumEntries[tid]) {
             return true;
@@ -449,15 +452,15 @@ DefaultCommit<Impl>::changedROBEntries()
 }
 
 template <class Impl>
-unsigned
-DefaultCommit<Impl>::numROBFreeEntries(unsigned tid)
+size_t
+DefaultCommit<Impl>::numROBFreeEntries(ThreadID tid)
 {
     return rob->numFreeEntries(tid);
 }
 
 template <class Impl>
 void
-DefaultCommit<Impl>::generateTrapEvent(unsigned tid)
+DefaultCommit<Impl>::generateTrapEvent(ThreadID tid)
 {
     DPRINTF(Commit, "Generating trap event for [tid:%i]\n", tid);
 
@@ -469,7 +472,7 @@ DefaultCommit<Impl>::generateTrapEvent(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::generateTCEvent(unsigned tid)
+DefaultCommit<Impl>::generateTCEvent(ThreadID tid)
 {
     assert(!trapInFlight[tid]);
     DPRINTF(Commit, "Generating TC squash event for [tid:%i]\n", tid);
@@ -479,7 +482,7 @@ DefaultCommit<Impl>::generateTCEvent(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashAll(unsigned tid)
+DefaultCommit<Impl>::squashAll(ThreadID tid)
 {
     // If we want to include the squashing instruction in the squash,
     // then use one older sequence number.
@@ -516,7 +519,7 @@ DefaultCommit<Impl>::squashAll(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashFromTrap(unsigned tid)
+DefaultCommit<Impl>::squashFromTrap(ThreadID tid)
 {
     squashAll(tid);
 
@@ -534,7 +537,7 @@ DefaultCommit<Impl>::squashFromTrap(unsigned tid)
 
 template <class Impl>
 void
-DefaultCommit<Impl>::squashFromTC(unsigned tid)
+DefaultCommit<Impl>::squashFromTC(ThreadID tid)
 {
     squashAll(tid);
 
@@ -565,13 +568,13 @@ DefaultCommit<Impl>::tick()
     if (activeThreads->empty())
         return;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         // Clear the bit saying if the thread has committed stores
         // this cycle.
@@ -598,7 +601,7 @@ DefaultCommit<Impl>::tick()
     threads = activeThreads->begin();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (!rob->isEmpty(tid) && rob->readHeadInst(tid)->readyToCommit()) {
             // The ROB has more instructions it can commit. Its next status
@@ -704,11 +707,11 @@ DefaultCommit<Impl>::commit()
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
@@ -794,7 +797,7 @@ DefaultCommit<Impl>::commit()
     threads = activeThreads->begin();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (changedROBNumEntries[tid]) {
             toIEW->commitInfo[tid].usedROB = true;
@@ -855,7 +858,7 @@ DefaultCommit<Impl>::commitInsts()
 
         head_inst = rob->readHeadInst(commit_thread);
 
-        int tid = head_inst->threadNumber;
+        ThreadID tid = head_inst->threadNumber;
 
         assert(tid == commit_thread);
 
@@ -951,7 +954,7 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
 {
     assert(head_inst);
 
-    int tid = head_inst->threadNumber;
+    ThreadID tid = head_inst->threadNumber;
 
     // If the instruction is not executed yet, then it will need extra
     // handling.  Signal backwards that it should be executed.
@@ -1147,7 +1150,7 @@ DefaultCommit<Impl>::getInsts()
         DynInstPtr inst;
 
         inst = fromRename->insts[inst_num];
-        int tid = inst->threadNumber;
+        ThreadID tid = inst->threadNumber;
 
         if (!inst->isSquashed() &&
             commitStatus[tid] != ROBSquashing &&
@@ -1220,11 +1223,11 @@ template <class Impl>
 bool
 DefaultCommit<Impl>::robDoneSquashing()
 {
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (!rob->isDoneSquashing(tid))
             return false;
@@ -1237,40 +1240,40 @@ template <class Impl>
 void
 DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
 {
-    unsigned thread = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     //
     //  Pick off the software prefetches
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch()) {
-        statComSwp[thread]++;
+        statComSwp[tid]++;
     } else {
-        statComInst[thread]++;
+        statComInst[tid]++;
     }
 #else
-    statComInst[thread]++;
+    statComInst[tid]++;
 #endif
 
     //
     //  Control Instructions
     //
     if (inst->isControl())
-        statComBranches[thread]++;
+        statComBranches[tid]++;
 
     //
     //  Memory references
     //
     if (inst->isMemRef()) {
-        statComRefs[thread]++;
+        statComRefs[tid]++;
 
         if (inst->isLoad()) {
-            statComLoads[thread]++;
+            statComLoads[tid]++;
         }
     }
 
     if (inst->isMemBarrier()) {
-        statComMembars[thread]++;
+        statComMembars[tid]++;
     }
 }
 
@@ -1280,7 +1283,7 @@ DefaultCommit<Impl>::updateComInstStats(DynInstPtr &inst)
 //                                    //
 ////////////////////////////////////////
 template <class Impl>
-int
+ThreadID
 DefaultCommit<Impl>::getCommittingThread()
 {
     if (numThreads > 1) {
@@ -1299,31 +1302,31 @@ DefaultCommit<Impl>::getCommittingThread()
             return oldestReady();
 
           default:
-            return -1;
+            return InvalidThreadID;
         }
     } else {
         assert(!activeThreads->empty());
-        int tid = activeThreads->front();
+        ThreadID tid = activeThreads->front();
 
         if (commitStatus[tid] == Running ||
             commitStatus[tid] == Idle ||
             commitStatus[tid] == FetchTrapPending) {
             return tid;
         } else {
-            return -1;
+            return InvalidThreadID;
         }
     }
 }
 
 template<class Impl>
-int
+ThreadID
 DefaultCommit<Impl>::roundRobin()
 {
-    std::list<unsigned>::iterator pri_iter = priority_list.begin();
-    std::list<unsigned>::iterator end      = priority_list.end();
+    list<ThreadID>::iterator pri_iter = priority_list.begin();
+    list<ThreadID>::iterator end      = priority_list.end();
 
     while (pri_iter != end) {
-        unsigned tid = *pri_iter;
+        ThreadID tid = *pri_iter;
 
         if (commitStatus[tid] == Running ||
             commitStatus[tid] == Idle ||
@@ -1340,21 +1343,21 @@ DefaultCommit<Impl>::roundRobin()
         pri_iter++;
     }
 
-    return -1;
+    return InvalidThreadID;
 }
 
 template<class Impl>
-int
+ThreadID
 DefaultCommit<Impl>::oldestReady()
 {
     unsigned oldest = 0;
     bool first = true;
 
-    std::list<unsigned>::iterator threads = activeThreads->begin();
-    std::list<unsigned>::iterator end = activeThreads->end();
+    list<ThreadID>::iterator threads = activeThreads->begin();
+    list<ThreadID>::iterator end = activeThreads->end();
 
     while (threads != end) {
-        unsigned tid = *threads++;
+        ThreadID tid = *threads++;
 
         if (!rob->isEmpty(tid) &&
             (commitStatus[tid] == Running ||
@@ -1378,6 +1381,6 @@ DefaultCommit<Impl>::oldestReady()
     if (!first) {
         return oldest;
     } else {
-        return -1;
+        return InvalidThreadID;
     }
 }

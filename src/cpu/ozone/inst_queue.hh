@@ -130,7 +130,7 @@ class InstQueue
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
 
     /** Number of entries needed for given amount of threads. */
-    int entryAmount(int num_threads);
+    int entryAmount(ThreadID num_threads);
 
     /** Resets max entries for all threads. */
     void resetEntries();
@@ -139,13 +139,13 @@ class InstQueue
     unsigned numFreeEntries();
 
     /** Returns number of free entries for a thread. */
-    unsigned numFreeEntries(unsigned tid);
+    unsigned numFreeEntries(ThreadID tid);
 
     /** Returns whether or not the IQ is full. */
     bool isFull();
 
     /** Returns whether or not the IQ is full for a specific thread. */
-    bool isFull(unsigned tid);
+    bool isFull(ThreadID tid);
 
     /** Returns if there are any ready instructions in the IQ. */
     bool hasReadyInsts();
@@ -179,7 +179,7 @@ class InstQueue
      * Commits all instructions up to and including the given sequence number,
      * for a specific thread.
      */
-    void commit(const InstSeqNum &inst, unsigned tid = 0);
+    void commit(const InstSeqNum &inst, ThreadID tid = 0);
 
     /** Wakes all dependents of a completed instruction. */
     void wakeDependents(DynInstPtr &completed_inst);
@@ -206,10 +206,10 @@ class InstQueue
      * Squashes instructions for a thread. Squashing information is obtained
      * from the time buffer.
      */
-    void squash(unsigned tid); // Probably want the ISN
+    void squash(ThreadID tid); // Probably want the ISN
 
     /** Returns the number of used entries for a thread. */
-    unsigned getCount(unsigned tid) { return count[tid]; };
+    unsigned getCount(ThreadID tid) { return count[tid]; };
 
     /** Updates the number of free entries. */
     void updateFreeEntries(int num) { freeEntries += num; }
@@ -219,7 +219,7 @@ class InstQueue
 
   private:
     /** Does the actual squashing. */
-    void doSquash(unsigned tid);
+    void doSquash(ThreadID tid);
 
     /////////////////////////
     // Various pointers

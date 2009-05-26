@@ -51,7 +51,7 @@ class DefaultBTB
         Addr target;
 
         /** The entry's thread id. */
-        unsigned tid;
+        ThreadID tid;
 
         /** Whether or not the entry is valid. */
         bool valid;
@@ -74,14 +74,14 @@ class DefaultBTB
      *  @param tid The thread id.
      *  @return Returns the target of the branch.
      */
-    Addr lookup(const Addr &inst_PC, unsigned tid);
+    Addr lookup(const Addr &inst_PC, ThreadID tid);
 
     /** Checks if a branch is in the BTB.
      *  @param inst_PC The address of the branch to look up.
      *  @param tid The thread id.
      *  @return Whether or not the branch exists in the BTB.
      */
-    bool valid(const Addr &inst_PC, unsigned tid);
+    bool valid(const Addr &inst_PC, ThreadID tid);
 
     /** Updates the BTB with the target of a branch.
      *  @param inst_PC The address of the branch being updated.
@@ -89,7 +89,7 @@ class DefaultBTB
      *  @param tid The thread id.
      */
     void update(const Addr &inst_PC, const Addr &target_PC,
-                unsigned tid);
+                ThreadID tid);
 
   private:
     /** Returns the index into the BTB, based on the branch's PC.

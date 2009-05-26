@@ -145,7 +145,7 @@ class DefaultRename
     void initStage();
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to rename maps (per-thread structures). */
     void setRenameMap(RenameMap rm_ptr[Impl::MaxThreads]);
@@ -169,7 +169,7 @@ class DefaultRename
     void takeOverFrom();
 
     /** Squashes all instructions in a thread. */
-    void squash(const InstSeqNum &squash_seq_num, unsigned tid);
+    void squash(const InstSeqNum &squash_seq_num, ThreadID tid);
 
     /** Ticks rename, which processes all input signals and attempts to rename
      * as many instructions as possible.
@@ -185,17 +185,17 @@ class DefaultRename
      * change (ie switching from blocking to unblocking).
      * @param tid Thread id to rename instructions from.
      */
-    void rename(bool &status_change, unsigned tid);
+    void rename(bool &status_change, ThreadID tid);
 
     /** Renames instructions for the given thread. Also handles serializing
      * instructions.
      */
-    void renameInsts(unsigned tid);
+    void renameInsts(ThreadID tid);
 
     /** Inserts unused instructions from a given thread into the skid buffer,
      * to be renamed once rename unblocks.
      */
-    void skidInsert(unsigned tid);
+    void skidInsert(ThreadID tid);
 
     /** Separates instructions from decode into individual lists of instructions
      * sorted by thread.
@@ -212,49 +212,49 @@ class DefaultRename
      * blocked.
      * @return Returns true if there is a status change.
      */
-    bool block(unsigned tid);
+    bool block(ThreadID tid);
 
     /** Switches rename to unblocking if the skid buffer is empty, and signals
      * back that rename has unblocked.
      * @return Returns true if there is a status change.
      */
-    bool unblock(unsigned tid);
+    bool unblock(ThreadID tid);
 
     /** Executes actual squash, removing squashed instructions. */
-    void doSquash(const InstSeqNum &squash_seq_num, unsigned tid);
+    void doSquash(const InstSeqNum &squash_seq_num, ThreadID tid);
 
     /** Removes a committed instruction's rename history. */
-    void removeFromHistory(InstSeqNum inst_seq_num, unsigned tid);
+    void removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid);
 
     /** Renames the source registers of an instruction. */
-    inline void renameSrcRegs(DynInstPtr &inst, unsigned tid);
+    inline void renameSrcRegs(DynInstPtr &inst, ThreadID tid);
 
     /** Renames the destination registers of an instruction. */
-    inline void renameDestRegs(DynInstPtr &inst, unsigned tid);
+    inline void renameDestRegs(DynInstPtr &inst, ThreadID tid);
 
     /** Calculates the number of free ROB entries for a specific thread. */
-    inline int calcFreeROBEntries(unsigned tid);
+    inline int calcFreeROBEntries(ThreadID tid);
 
     /** Calculates the number of free IQ entries for a specific thread. */
-    inline int calcFreeIQEntries(unsigned tid);
+    inline int calcFreeIQEntries(ThreadID tid);
 
     /** Calculates the number of free LSQ entries for a specific thread. */
-    inline int calcFreeLSQEntries(unsigned tid);
+    inline int calcFreeLSQEntries(ThreadID tid);
 
     /** Returns the number of valid instructions coming from decode. */
     unsigned validInsts();
 
     /** Reads signals telling rename to block/unblock. */
-    void readStallSignals(unsigned tid);
+    void readStallSignals(ThreadID tid);
 
     /** Checks if any stages are telling rename to block. */
-    bool checkStall(unsigned tid);
+    bool checkStall(ThreadID tid);
 
     /** Gets the number of free entries for a specific thread. */
-    void readFreeEntries(unsigned tid);
+    void readFreeEntries(ThreadID tid);
 
     /** Checks the signals and updates the status. */
-    bool checkSignalsAndUpdate(unsigned tid);
+    bool checkSignalsAndUpdate(ThreadID tid);
 
     /** Either serializes on the next instruction available in the InstQueue,
      * or records that it must serialize on the next instruction to enter
@@ -263,7 +263,7 @@ class DefaultRename
      * thread that has the serializeAfter instruction.
      * @param tid The thread id.
      */
-    void serializeAfter(InstQueue &inst_list, unsigned tid);
+    void serializeAfter(InstQueue &inst_list, ThreadID tid);
 
     /** Holds the information for each destination register rename. It holds
      * the instruction's sequence number, the arch register, the old physical
@@ -332,7 +332,7 @@ class DefaultRename
     FreeList *freeList;
 
     /** Pointer to the list of active threads. */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Pointer to the scoreboard. */
     Scoreboard *scoreboard;
@@ -418,7 +418,7 @@ class DefaultRename
     bool resumeUnblocking;
 
     /** The number of threads active in rename. */
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** The maximum skid buffer size. */
     unsigned skidBufferMax;

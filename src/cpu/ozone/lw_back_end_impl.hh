@@ -188,77 +188,77 @@ LWBackEnd<Impl>::regStats()
     LSQ.regStats();
 
     robCapEvents
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:cap_events")
         .desc("number of cycles where ROB cap was active")
         .flags(total)
         ;
 
     robCapInstCount
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:cap_inst")
         .desc("number of instructions held up by ROB cap")
         .flags(total)
         ;
 
     iqCapEvents
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +".IQ:cap_events" )
         .desc("number of cycles where IQ cap was active")
         .flags(total)
         ;
 
     iqCapInstCount
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".IQ:cap_inst")
         .desc("number of instructions held up by IQ cap")
         .flags(total)
         ;
 
     exeInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:count")
         .desc("number of insts issued")
         .flags(total)
         ;
 
     exeSwp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:swp")
         .desc("number of swp insts issued")
         .flags(total)
         ;
 
     exeNop
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:nop")
         .desc("number of nop insts issued")
         .flags(total)
         ;
 
     exeRefs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:refs")
         .desc("number of memory reference insts issued")
         .flags(total)
         ;
 
     exeLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:loads")
         .desc("number of load insts issued")
         .flags(total)
         ;
 
     exeBranches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:branches")
         .desc("Number of branches issued")
         .flags(total)
         ;
 
     issuedOps
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:op_count")
         .desc("number of insts issued")
         .flags(total)
@@ -275,28 +275,28 @@ LWBackEnd<Impl>::regStats()
     //  Other stats
     //
     lsqForwLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".LSQ:forw_loads")
         .desc("number of loads forwarded via LSQ")
         .flags(total)
         ;
 
     invAddrLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:addr_loads")
         .desc("number of invalid-address loads")
         .flags(total)
         ;
 
     invAddrSwpfs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ISSUE:addr_swpfs")
         .desc("number of invalid-address SW prefetches")
         .flags(total)
         ;
 
     lsqBlockedLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".LSQ:blocked_loads")
         .desc("number of ready loads not issued due to memory disambiguation")
         .flags(total)
@@ -332,28 +332,28 @@ LWBackEnd<Impl>::regStats()
     }
 */
     writebackCount
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:count")
         .desc("cumulative count of insts written-back")
         .flags(total)
         ;
 
     producerInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:producers")
         .desc("num instructions producing a value")
         .flags(total)
         ;
 
     consumerInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:consumers")
         .desc("num instructions consuming a value")
         .flags(total)
         ;
 
     wbPenalized
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".WB:penalized")
         .desc("number of instrctions required to write to 'other' IQ")
         .flags(total)
@@ -384,42 +384,42 @@ LWBackEnd<Impl>::regStats()
     wbRate = writebackCount / cpu->numCycles;
 
     statComInst
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:count")
         .desc("Number of instructions committed")
         .flags(total)
         ;
 
     statComSwp
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:swp_count")
         .desc("Number of s/w prefetches committed")
         .flags(total)
         ;
 
     statComRefs
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:refs")
         .desc("Number of memory references committed")
         .flags(total)
         ;
 
     statComLoads
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:loads")
         .desc("Number of loads committed")
         .flags(total)
         ;
 
     statComMembars
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() +  ".COM:membars")
         .desc("Number of memory barriers committed")
         .flags(total)
         ;
 
     statComBranches
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:branches")
         .desc("Number of branches committed")
         .flags(total)
@@ -445,7 +445,7 @@ LWBackEnd<Impl>::regStats()
     //  we reached the BW limit
     //
     commitEligible
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:bw_limited")
         .desc("number of insts not committed due to BW limits")
         .flags(total)
@@ -457,13 +457,13 @@ LWBackEnd<Impl>::regStats()
         ;
 
     squashedInsts
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:squashed_insts")
         .desc("Number of instructions removed from inst list")
         ;
 
     ROBSquashedInsts
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".COM:rob_squashed_insts")
         .desc("Number of instructions removed from inst list when they reached the head of the ROB")
         ;
@@ -474,7 +474,7 @@ LWBackEnd<Impl>::regStats()
         ;
 
     ROBCount
-        .init(cpu->number_of_threads)
+        .init(cpu->numThreads)
         .name(name() + ".ROB:occupancy")
         .desc(name() + ".ROB occupancy (cumulative)")
         .flags(total)
@@ -494,7 +494,7 @@ LWBackEnd<Impl>::regStats()
     ROBOccRate = ROBCount / cpu->numCycles;
 /*
     ROBOccDist
-        .init(cpu->number_of_threads,0,numROBEntries,2)
+        .init(cpu->numThreads, 0, numROBEntries, 2)
         .name(name() + ".ROB:occ_dist")
         .desc("ROB Occupancy per cycle")
         .flags(total | cdf)
@@ -1498,34 +1498,34 @@ template <class Impl>
 void
 LWBackEnd<Impl>::updateExeInstStats(DynInstPtr &inst)
 {
-    int thread_number = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     //
     //  Pick off the software prefetches
     //
 #ifdef TARGET_ALPHA
     if (inst->isDataPrefetch())
-        exeSwp[thread_number]++;
+        exeSwp[tid]++;
     else
-        exeInst[thread_number]++;
+        exeInst[tid]++;
 #else
-    exeInst[thread_number]++;
+    exeInst[tid]++;
 #endif
 
     //
     //  Control operations
     //
     if (inst->isControl())
-        exeBranches[thread_number]++;
+        exeBranches[tid]++;
 
     //
     //  Memory operations
     //
     if (inst->isMemRef()) {
-        exeRefs[thread_number]++;
+        exeRefs[tid]++;
 
         if (inst->isLoad())
-            exeLoads[thread_number]++;
+            exeLoads[tid]++;
     }
 }
 
@@ -1533,7 +1533,7 @@ template <class Impl>
 void
 LWBackEnd<Impl>::updateComInstStats(DynInstPtr &inst)
 {
-    unsigned tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
 
     // keep an instruction count
     thread->numInst++;

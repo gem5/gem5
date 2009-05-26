@@ -258,17 +258,10 @@ Fault
 CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                        int flags, TheISA::TLB::Mode tlb_mode)
 {
-    int tid;
-    int seq_num;
-    Addr aligned_addr;
-    unsigned stage_num;
-    unsigned slot_idx;
-
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
-    aligned_addr = inst->getMemAddr();
-    stage_num = cache_req->getStageNum();
-    slot_idx = cache_req->getSlot();
+    ThreadID tid = inst->readTid();
+    Addr aligned_addr = inst->getMemAddr();
+    unsigned stage_num = cache_req->getStageNum();
+    unsigned slot_idx = cache_req->getSlot();
 
     if (tlb_mode == TheISA::TLB::Execute) {
             inst->fetchMemReq = new Request(inst->readTid(), aligned_addr,
@@ -290,7 +283,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
     if (cache_req->fault != NoFault) {
         DPRINTF(InOrderTLB, "[tid:%i]: %s encountered while translating "
                 "addr:%08p for [sn:%i].\n", tid, cache_req->fault->name(),
-                cache_req->memReq->getVaddr(), seq_num);
+                cache_req->memReq->getVaddr(), inst->seqNum);
 
         cpu->pipelineStage[stage_num]->setResStall(cache_req, tid);
 
@@ -303,7 +296,7 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
         cpu->trap(cache_req->fault, tid);
     } else {
         DPRINTF(InOrderTLB, "[tid:%i]: [sn:%i] virt. addr %08p translated "
-                "to phys. addr:%08p.\n", tid, seq_num,
+                "to phys. addr:%08p.\n", tid, inst->seqNum,
                 cache_req->memReq->getVaddr(),
                 cache_req->memReq->getPaddr());
     }
@@ -361,11 +354,11 @@ CacheUnit::execute(int slot_num)
     assert(cache_req);
 
     DynInstPtr inst = cache_req->inst;
-    int tid;
-    int seq_num;
+#if TRACING_ON
+    ThreadID tid = inst->readTid();
+    int seq_num = inst->seqNum;
+#endif
 
-    tid = inst->readTid();
-    seq_num = inst->seqNum;
     cache_req->fault = NoFault;
 
     switch (cache_req->cmd)
@@ -381,8 +374,8 @@ CacheUnit::execute(int slot_num)
             if (cache_req->fault == NoFault) {
 
                 DPRINTF(InOrderCachePort,
-                        "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
-                        tid, name(), cache_req->inst->getMemAddr());
+                    "[tid:%u]: Initiating fetch access to %s for addr. %08p\n",
+                    tid, name(), cache_req->inst->getMemAddr());
 
                 cache_req->reqData = new uint8_t[acc_size];
 
@@ -499,9 +492,9 @@ Fault
 CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
 {
     Fault fault = NoFault;
-    int tid = 0;
-
-    tid = inst->readTid();
+#if TRACING_ON
+    ThreadID tid = inst->readTid();
+#endif
 
     CacheReqPtr cache_req
         = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
@@ -627,10 +620,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
     // Get resource request info
     unsigned stage_num = cache_req->getStageNum();
     DynInstPtr inst = cache_req->inst;
-    unsigned tid;
-
-
-    tid = cache_req->inst->readTid();
+    ThreadID tid = cache_req->inst->readTid();
 
     if (!cache_req->isSquashed()) {
         if (inst->resSched.top()->cmd == CompleteFetch) {
@@ -752,7 +742,7 @@ CacheUnitEvent::process()
 {
     DynInstPtr inst = resource->reqMap[slotIdx]->inst;
     int stage_num = resource->reqMap[slotIdx]->getStageNum();
-    int tid = inst->threadNumber;
+    ThreadID tid = inst->threadNumber;
     CacheReqPtr req_ptr = dynamic_cast<CacheReqPtr>(resource->reqMap[slotIdx]);
 
     DPRINTF(InOrderTLB, "Waking up from TLB Miss caused by [sn:%i].\n",
@@ -774,7 +764,7 @@ CacheUnitEvent::process()
 
 void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
-                  InstSeqNum squash_seq_num, unsigned tid)
+                  InstSeqNum squash_seq_num, ThreadID tid)
 {
     vector<int> slot_remove_list;
 

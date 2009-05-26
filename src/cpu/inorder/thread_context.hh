@@ -160,7 +160,7 @@ class InOrderThreadContext : public ThreadContext
 
     virtual FloatRegBits readFloatRegBits(int reg_idx);
 
-    virtual uint64_t readRegOtherThread(int misc_reg, unsigned tid);
+    virtual uint64_t readRegOtherThread(int misc_reg, ThreadID tid);
 
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val);
@@ -173,7 +173,8 @@ class InOrderThreadContext : public ThreadContext
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
 
-    virtual void setRegOtherThread(int misc_reg, const MiscReg &val, unsigned tid);
+    virtual void setRegOtherThread(int misc_reg, const MiscReg &val,
+                                   ThreadID tid);
 
     /** Reads this thread's PC. */
     virtual uint64_t readPC()

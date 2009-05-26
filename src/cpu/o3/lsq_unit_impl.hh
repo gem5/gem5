@@ -938,7 +938,7 @@ LSQUnit<Impl>::recvRetry()
             storePostSend(retryPkt);
             retryPkt = NULL;
             isStoreBlocked = false;
-            lsq->setRetryTid(-1);
+            lsq->setRetryTid(InvalidThreadID);
         } else {
             // Still blocked!
             ++lsqCacheBlocked;

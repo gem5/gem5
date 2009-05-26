@@ -112,8 +112,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  @param cpu Pointer to the instruction's CPU.
      *  NOTE: Must set Binary Instrution through Member Function
      */
-    InOrderDynInst(InOrderCPU *cpu, InOrderThreadState *state, InstSeqNum seq_num,
-                   unsigned tid, unsigned asid = 0);
+    InOrderDynInst(InOrderCPU *cpu, InOrderThreadState *state,
+                   InstSeqNum seq_num, ThreadID tid, unsigned asid = 0);
 
     /** BaseDynInst constructor given a StaticInst pointer.
      *  @param _staticInst The StaticInst for this BaseDynInst.
@@ -347,7 +347,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     short readTid() { return threadNumber; }
 
     /** Sets the thread id. */
-    void setTid(unsigned tid) { threadNumber = tid; }
+    void setTid(ThreadID tid) { threadNumber = tid; }
 
     void setVpn(int id) { virtProcNumber = id; }
 
@@ -829,7 +829,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  language (which is why the name isnt readIntSrc(...)) Note: That
      *  the source reg. value is set using the setSrcReg() function.
      */
-    IntReg readIntRegOperand(const StaticInst *si, int idx, unsigned tid=0);
+    IntReg readIntRegOperand(const StaticInst *si, int idx, ThreadID tid = 0);
     FloatReg readFloatRegOperand(const StaticInst *si, int idx,
                           int width = TheISA::SingleWidth);
     TheISA::FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
@@ -881,8 +881,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val);
     void setMiscRegOperandNoEffect(const StaticInst *si, int idx, const MiscReg &val);
 
-    virtual uint64_t readRegOtherThread(unsigned idx, int tid = -1);
-    virtual void setRegOtherThread(unsigned idx, const uint64_t &val, int tid = -1);
+    virtual uint64_t readRegOtherThread(unsigned idx,
+                                        ThreadID tid = InvalidThreadID);
+    virtual void setRegOtherThread(unsigned idx, const uint64_t &val,
+                                   ThreadID tid = InvalidThreadID);
 
     /** Sets the number of consecutive store conditional failures. */
     void setStCondFailures(unsigned sc_failures)

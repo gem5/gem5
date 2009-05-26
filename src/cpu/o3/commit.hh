@@ -92,10 +92,10 @@ class DefaultCommit
     class TrapEvent : public Event {
       private:
         DefaultCommit<Impl> *commit;
-        unsigned tid;
+        ThreadID tid;
 
       public:
-        TrapEvent(DefaultCommit<Impl> *_commit, unsigned _tid);
+        TrapEvent(DefaultCommit<Impl> *_commit, ThreadID _tid);
 
         void process();
         const char *description() const;
@@ -172,7 +172,7 @@ class DefaultCommit
     IEW *iewStage;
 
     /** Sets pointer to list of active threads. */
-    void setActiveThreads(std::list<unsigned> *at_ptr);
+    void setActiveThreads(std::list<ThreadID> *at_ptr);
 
     /** Sets pointer to the commited state rename map. */
     void setRenameMap(RenameMap rm_ptr[Impl::MaxThreads]);
@@ -204,15 +204,15 @@ class DefaultCommit
     void commit();
 
     /** Returns the number of free ROB entries for a specific thread. */
-    unsigned numROBFreeEntries(unsigned tid);
+    size_t numROBFreeEntries(ThreadID tid);
 
     /** Generates an event to schedule a squash due to a trap. */
-    void generateTrapEvent(unsigned tid);
+    void generateTrapEvent(ThreadID tid);
 
     /** Records that commit needs to initiate a squash due to an
      * external state update through the TC.
      */
-    void generateTCEvent(unsigned tid);
+    void generateTCEvent(ThreadID tid);
 
   private:
     /** Updates the overall status of commit with the nextStatus, and
@@ -237,13 +237,13 @@ class DefaultCommit
     bool changedROBEntries();
 
     /** Squashes all in flight instructions. */
-    void squashAll(unsigned tid);
+    void squashAll(ThreadID tid);
 
     /** Handles squashing due to a trap. */
-    void squashFromTrap(unsigned tid);
+    void squashFromTrap(ThreadID tid);
 
     /** Handles squashing due to an TC write. */
-    void squashFromTC(unsigned tid);
+    void squashFromTC(ThreadID tid);
 
 #if FULL_SYSTEM
     /** Handles processing an interrupt. */
@@ -268,13 +268,13 @@ class DefaultCommit
     void markCompletedInsts();
 
     /** Gets the thread to commit, based on the SMT policy. */
-    int getCommittingThread();
+    ThreadID getCommittingThread();
 
     /** Returns the thread ID to use based on a round robin policy. */
-    int roundRobin();
+    ThreadID roundRobin();
 
     /** Returns the thread ID to use based on an oldest instruction policy. */
-    int oldestReady();
+    ThreadID oldestReady();
 
   public:
     /** Returns the PC of the head instruction of the ROB.
@@ -283,34 +283,34 @@ class DefaultCommit
     Addr readPC() { return PC[0]; }
 
     /** Returns the PC of a specific thread. */
-    Addr readPC(unsigned tid) { return PC[tid]; }
+    Addr readPC(ThreadID tid) { return PC[tid]; }
 
     /** Sets the PC of a specific thread. */
-    void setPC(Addr val, unsigned tid) { PC[tid] = val; }
+    void setPC(Addr val, ThreadID tid) { PC[tid] = val; }
 
     /** Reads the micro PC of a specific thread. */
-    Addr readMicroPC(unsigned tid) { return microPC[tid]; }
+    Addr readMicroPC(ThreadID tid) { return microPC[tid]; }
 
     /** Sets the micro PC of a specific thread */
-    void setMicroPC(Addr val, unsigned tid) { microPC[tid] = val; }
+    void setMicroPC(Addr val, ThreadID tid) { microPC[tid] = val; }
 
     /** Reads the next PC of a specific thread. */
-    Addr readNextPC(unsigned tid) { return nextPC[tid]; }
+    Addr readNextPC(ThreadID tid) { return nextPC[tid]; }
 
     /** Sets the next PC of a specific thread. */
-    void setNextPC(Addr val, unsigned tid) { nextPC[tid] = val; }
+    void setNextPC(Addr val, ThreadID tid) { nextPC[tid] = val; }
 
     /** Reads the next NPC of a specific thread. */
-    Addr readNextNPC(unsigned tid) { return nextNPC[tid]; }
+    Addr readNextNPC(ThreadID tid) { return nextNPC[tid]; }
 
     /** Sets the next NPC of a specific thread. */
-    void setNextNPC(Addr val, unsigned tid) { nextNPC[tid] = val; }
+    void setNextNPC(Addr val, ThreadID tid) { nextNPC[tid] = val; }
 
     /** Reads the micro PC of a specific thread. */
-    Addr readNextMicroPC(unsigned tid) { return nextMicroPC[tid]; }
+    Addr readNextMicroPC(ThreadID tid) { return nextMicroPC[tid]; }
 
     /** Sets the micro PC of a specific thread */
-    void setNextMicroPC(Addr val, unsigned tid) { nextMicroPC[tid] = val; }
+    void setNextMicroPC(Addr val, ThreadID tid) { nextMicroPC[tid] = val; }
 
   private:
     /** Time buffer interface. */
@@ -360,7 +360,7 @@ class DefaultCommit
     bool changedROBNumEntries[Impl::MaxThreads];
 
     /** A counter of how many threads are currently squashing. */
-    int squashCounter;
+    ThreadID squashCounter;
 
     /** Records if a thread has to squash this cycle due to a trap. */
     bool trapSquash[Impl::MaxThreads];
@@ -369,7 +369,7 @@ class DefaultCommit
     bool tcSquash[Impl::MaxThreads];
 
     /** Priority List used for Commit Policy */
-    std::list<unsigned> priority_list;
+    std::list<ThreadID> priority_list;
 
     /** IEW to Commit delay, in ticks. */
     unsigned iewToCommitDelay;
@@ -394,7 +394,7 @@ class DefaultCommit
     unsigned numRobs;
 
     /** Number of Active Threads */
-    unsigned numThreads;
+    ThreadID numThreads;
 
     /** Is a drain pending. */
     bool drainPending;
@@ -443,7 +443,7 @@ class DefaultCommit
     bool checkEmptyROB[Impl::MaxThreads];
 
     /** Pointer to the list of active threads. */
-    std::list<unsigned> *activeThreads;
+    std::list<ThreadID> *activeThreads;
 
     /** Rename map interface. */
     RenameMap *renameMap[Impl::MaxThreads];

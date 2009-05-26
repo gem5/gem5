@@ -52,10 +52,10 @@ extern int maxThreadsPerCPU;
 
 /**
  * Changes the status and priority of the thread with the given number.
- * @param thread_number The thread to change.
+ * @param tid The thread to change.
  * @param activate The new active status.
  * @param priority The new priority.
  */
-void change_thread_state(int thread_number, int activate, int priority);
+void change_thread_state(ThreadID tid, int activate, int priority);
 
 #endif // __SMT_HH__
