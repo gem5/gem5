@@ -152,7 +152,7 @@ class Request : public FastAlloc
      * latencies. This field is set to curTick any time paddr or vaddr
      * is written.
      */
-    Tick time;
+    Tick _time;
 
     /** The address space ID. */
     int asid;
@@ -188,6 +188,11 @@ class Request : public FastAlloc
         setPhys(paddr, size, flags);
     }
 
+    Request(Addr paddr, int size, Flags flags, Tick time)
+    {
+        setPhys(paddr, size, flags, time);
+    }
+
     Request(int asid, Addr vaddr, int size, Flags flags, Addr pc,
             int cid, ThreadID tid)
     {
@@ -213,17 +218,23 @@ class Request : public FastAlloc
      * allocated Request object.
      */
     void
-    setPhys(Addr _paddr, int _size, Flags _flags)
+    setPhys(Addr _paddr, int _size, Flags _flags, Tick time)
     {
         assert(_size >= 0);
         paddr = _paddr;
         size = _size;
-        time = curTick;
+        _time = time;
 
         flags.clear(~STICKY_FLAGS);
         flags.set(_flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
+    }
+
+    void
+    setPhys(Addr _paddr, int _size, Flags _flags)
+    {
+        setPhys(_paddr, _size, _flags, curTick);
     }
 
     /**
@@ -239,7 +250,7 @@ class Request : public FastAlloc
         size = _size;
         flags = _flags;
         pc = _pc;
-        time = curTick;
+        _time = curTick;
 
         flags.clear(~STICKY_FLAGS);
         flags.set(_flags);
@@ -313,10 +324,17 @@ class Request : public FastAlloc
 
     /** Accessor for time. */
     Tick
-    getTime()
+    time() const
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
-        return time;
+        return _time;
+    }
+
+    void
+    time(Tick time)
+    {
+        assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
+        _time = time;
     }
 
     /** Accessor for flags. */

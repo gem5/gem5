@@ -537,7 +537,7 @@ class Packet : public FastAlloc, public Printable
         flags = 0;
         addr = req->getPaddr();
         size = req->getSize();
-        time = req->getTime();
+        time = req->time();
 
         flags.set(VALID_ADDR|VALID_SIZE);
         deleteData();
