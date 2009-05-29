@@ -76,10 +76,8 @@ def rom
     # Check if we're changing privelege level. At this point we can assume
     # we're going to a DPL that's less than or equal to the CPL. 
     rdattr t10, hs, dataSize=8
-    srli t10, t10, 3, dataSize=8
     andi t10, t10, 3, dataSize=8
     rdattr t5, cs, dataSize=8
-    srli t5, t5, 3, dataSize=8
     andi t5, t5, 0x3, dataSize=8
     sub t0, t5, t10, flags=(EZF,), dataSize=8
     # We're going to change priviledge, so zero out the stack selector. We

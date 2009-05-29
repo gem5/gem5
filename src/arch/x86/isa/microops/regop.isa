@@ -1247,9 +1247,18 @@ let {{
             SegDescriptor desc = SrcReg1;
             SegSelector selector = SrcReg2;
             if (selector.si || selector.ti) {
+                if (!desc.p)
+                    panic("Segment not present.\\n");
                 SegAttr attr = 0;
                 attr.dpl = desc.dpl;
+                attr.unusable = 0;
                 attr.defaultSize = desc.d;
+                attr.longMode = desc.l;
+                attr.avl = desc.avl;
+                attr.granularity = desc.g;
+                attr.present = desc.p;
+                attr.system = desc.s;
+                attr.type = desc.type;
                 if (!desc.s) {
                     // The expand down bit happens to be set for gates.
                     if (desc.type.e) {
@@ -1257,12 +1266,12 @@ let {{
                     }
                     attr.readable = 1;
                     attr.writable = 1;
+                    attr.expandDown = 0;
                 } else {
-                    if (!desc.p)
-                        panic("Segment not present.\\n");
                     if (desc.type.codeOrData) {
+                        attr.expandDown = 0;
                         attr.readable = desc.type.r;
-                        attr.longMode = desc.l;
+                        attr.writable = 0;
                     } else {
                         attr.expandDown = desc.type.e;
                         attr.readable = 1;

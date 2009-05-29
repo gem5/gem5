@@ -93,24 +93,33 @@ installSegDesc(ThreadContext *tc, SegmentRegIndex seg,
     uint64_t limit = desc.limitLow | (desc.limitHigh << 16);
 
     SegAttr attr = 0;
+
+    attr.dpl = desc.dpl;
+    attr.unusable = 0;
+    attr.defaultSize = desc.d;
+    attr.longMode = desc.l;
+    attr.avl = desc.avl;
+    attr.granularity = desc.g;
+    attr.present = desc.p;
+    attr.system = desc.s;
+    attr.type = desc.type;
     if (desc.s) {
         if (desc.type.codeOrData) {
             // Code segment
+            attr.expandDown = 0;
             attr.readable = desc.type.r;
+            attr.writable = 0;
         } else {
             // Data segment
+            attr.expandDown = desc.type.e;
             attr.readable = 1;
             attr.writable = desc.type.w;
-            attr.expandDown = desc.type.e;
         }
     } else {
-        attr.writable = 1;
         attr.readable = 1;
+        attr.writable = 1;
         attr.expandDown = 0;
     }
-    attr.longMode = desc.l;
-    attr.dpl = desc.dpl;
-    attr.defaultSize = desc.d;
 
     tc->setMiscReg(MISCREG_SEG_BASE(seg), base);
     tc->setMiscReg(MISCREG_SEG_EFF_BASE(seg), honorBase ? base : 0);

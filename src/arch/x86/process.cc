@@ -208,12 +208,18 @@ X86_64LiveProcess::startup()
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
 
         SegAttr dataAttr = 0;
+        dataAttr.dpl = 3;
+        dataAttr.unusable = 0;
+        dataAttr.defaultSize = 1;
+        dataAttr.longMode = 1;
+        dataAttr.avl = 0;
+        dataAttr.granularity = 1;
+        dataAttr.present = 1;
+        dataAttr.type = 3;
         dataAttr.writable = 1;
         dataAttr.readable = 1;
         dataAttr.expandDown = 0;
-        dataAttr.dpl = 3;
-        dataAttr.defaultSize = 0;
-        dataAttr.longMode = 1;
+        dataAttr.system = 1;
 
         //Initialize the segment registers.
         for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
@@ -223,12 +229,18 @@ X86_64LiveProcess::startup()
         }
 
         SegAttr csAttr = 0;
+        csAttr.dpl = 3;
+        csAttr.unusable = 0;
+        csAttr.defaultSize = 0;
+        csAttr.longMode = 1;
+        csAttr.avl = 0;
+        csAttr.granularity = 1;
+        csAttr.present = 1;
+        csAttr.type = 10;
         csAttr.writable = 0;
         csAttr.readable = 1;
         csAttr.expandDown = 0;
-        csAttr.dpl = 3;
-        csAttr.defaultSize = 0;
-        csAttr.longMode = 1;
+        csAttr.system = 1;
 
         tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
 
@@ -307,12 +319,18 @@ I386LiveProcess::startup()
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
 
         SegAttr dataAttr = 0;
+        dataAttr.dpl = 3;
+        dataAttr.unusable = 0;
+        dataAttr.defaultSize = 1;
+        dataAttr.longMode = 0;
+        dataAttr.avl = 0;
+        dataAttr.granularity = 1;
+        dataAttr.present = 1;
+        dataAttr.type = 3;
         dataAttr.writable = 1;
         dataAttr.readable = 1;
         dataAttr.expandDown = 0;
-        dataAttr.dpl = 3;
-        dataAttr.defaultSize = 1;
-        dataAttr.longMode = 0;
+        dataAttr.system = 1;
 
         //Initialize the segment registers.
         for(int seg = 0; seg < NUM_SEGMENTREGS; seg++) {
@@ -324,12 +342,18 @@ I386LiveProcess::startup()
         }
 
         SegAttr csAttr = 0;
+        csAttr.dpl = 3;
+        csAttr.unusable = 0;
+        csAttr.defaultSize = 1;
+        csAttr.longMode = 0;
+        csAttr.avl = 0;
+        csAttr.granularity = 1;
+        csAttr.present = 1;
+        csAttr.type = 0xa;
         csAttr.writable = 0;
         csAttr.readable = 1;
         csAttr.expandDown = 0;
-        csAttr.dpl = 3;
-        csAttr.defaultSize = 1;
-        csAttr.longMode = 0;
+        csAttr.system = 1;
 
         tc->setMiscRegNoEffect(MISCREG_CS_ATTR, csAttr);
 

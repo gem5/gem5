@@ -77,8 +77,10 @@ def macroop SYSCALL_64
     wrlimit cs, t1, dataSize=4
     # Not writable, read/execute-able, not expandDown,
     # dpl=0, defaultSize=0, long mode
-    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (1 << 6)), dataSize=8
+    limm t4, ((0 << 0)  | (0  << 2)  | (0 << 3)   | \
+              (1 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (10 << 8)  | (0 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr cs, t4
 
     # Set up SS.
@@ -88,8 +90,10 @@ def macroop SYSCALL_64
     wrlimit ss, t1, dataSize=4
     # Writable, readable, not expandDown,
     # dpl=0, defaultSize=0, not long mode
-    limm t4, ((1 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (0 << 6)), dataSize=8
+    limm t4, ((0 << 0)  | (0  << 2)  | (1 << 3)   | \
+              (0 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (2  << 8)  | (1 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr ss, t4
 
     # Set the new rip.
@@ -126,8 +130,10 @@ def macroop SYSCALL_COMPAT
     wrlimit cs, t1, dataSize=4
     # Not writable, read/execute-able, not expandDown,
     # dpl=0, defaultSize=0, long mode
-    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (1 << 6)), dataSize=8
+    limm t4, ((0 << 0)  | (0  << 2)  | (0 << 3)   | \
+              (1 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (10 << 8)  | (0 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr cs, t4
 
     # Set up SS.
@@ -137,8 +143,10 @@ def macroop SYSCALL_COMPAT
     wrlimit ss, t1, dataSize=4
     # Writable, readable, not expandDown,
     # dpl=0, defaultSize=0, not long mode
-    limm t4, ((1 << 0) | (1 << 1) | (0 << 2) | \
-              (0 << 3) | (0 << 5) | (0 << 6)), dataSize=8
+    limm t4, ((0 << 0)  | (0  << 2)  | (1 << 3)   | \
+              (0 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (2  << 8)  | (1 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr ss, t4
 
     # Set the new rip.
@@ -178,8 +186,10 @@ def macroop SYSRET_TO_64
     wrlimit cs, t1, dataSize=4
     # Not writable, read/execute-able, not expandDown,
     # dpl=3, defaultSize=0, long mode
-    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (3 << 3) | (0 << 5) | (1 << 6)), dataSize=8
+    limm t4, ((3 << 0)  | (0  << 2)  | (0 << 3)   | \
+              (1 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (10 << 8)  | (0 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr cs, t4
 
     # Only the selector is changed for SS.
@@ -210,8 +220,10 @@ def macroop SYSRET_TO_COMPAT
     wrlimit cs, t1, dataSize=4
     # Not writable, read/execute-able, not expandDown,
     # dpl=3, defaultSize=1, not long mode
-    limm t4, ((0 << 0) | (1 << 1) | (0 << 2) | \
-              (3 << 3) | (1 << 5) | (0 << 6)), dataSize=8
+    limm t4, ((3 << 0)  | (0  << 2)  | (0 << 3)   | \
+              (1 << 4)  | (0  << 5)  | (1 << 6)   | \
+              (1 << 7)  | (10 << 8)  | (0 << 12)  | \
+              (1 << 13) | (0  << 14) | (1 << 15)), dataSize=8
     wrattr cs, t4
 
     # Only the selector is changed for SS.

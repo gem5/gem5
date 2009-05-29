@@ -834,12 +834,18 @@ namespace X86ISA
     EndBitUnion(SegDescriptor)
 
     BitUnion64(SegAttr)
-        Bitfield<0> writable;
-        Bitfield<1> readable;
-        Bitfield<2> expandDown;
-        Bitfield<4, 3> dpl;
-        Bitfield<5> defaultSize;
-        Bitfield<6> longMode;
+        Bitfield<1, 0> dpl;
+        Bitfield<2> unusable;
+        Bitfield<3> defaultSize;
+        Bitfield<4> longMode;
+        Bitfield<5> avl;
+        Bitfield<6> granularity;
+        Bitfield<7> present;
+        Bitfield<11, 8> type;
+        Bitfield<12> writable;
+        Bitfield<13> readable;
+        Bitfield<14> expandDown;
+        Bitfield<15> system;
     EndBitUnion(SegAttr)
 
     BitUnion64(GateDescriptor)

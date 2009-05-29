@@ -208,11 +208,18 @@ namespace X86ISA
         tc->setMiscReg(MISCREG_EFER, 0);
 
         SegAttr dataAttr = 0;
+        dataAttr.dpl = 0;
+        dataAttr.unusable = 0;
+        dataAttr.defaultSize = 0;
+        dataAttr.longMode = 0;
+        dataAttr.avl = 0;
+        dataAttr.granularity = 0;
+        dataAttr.present = 1;
+        dataAttr.type = 3;
         dataAttr.writable = 1;
         dataAttr.readable = 1;
         dataAttr.expandDown = 0;
-        dataAttr.dpl = 0;
-        dataAttr.defaultSize = 0;
+        dataAttr.system = 1;
 
         for (int seg = 0; seg != NUM_SEGMENTREGS; seg++) {
             tc->setMiscReg(MISCREG_SEG_SEL(seg), 0);
@@ -223,11 +230,18 @@ namespace X86ISA
         }
 
         SegAttr codeAttr = 0;
+        codeAttr.dpl = 0;
+        codeAttr.unusable = 0;
+        codeAttr.defaultSize = 0;
+        codeAttr.longMode = 0;
+        codeAttr.avl = 0;
+        codeAttr.granularity = 0;
+        codeAttr.present = 1;
+        codeAttr.type = 10;
         codeAttr.writable = 0;
         codeAttr.readable = 1;
         codeAttr.expandDown = 0;
-        codeAttr.dpl = 0;
-        codeAttr.defaultSize = 0;
+        codeAttr.system = 1;
 
         tc->setMiscReg(MISCREG_CS, 0xf000);
         tc->setMiscReg(MISCREG_CS_BASE,
