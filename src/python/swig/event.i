@@ -77,8 +77,8 @@
 %include "std_string.i"
 
 %include "base/types.hh"
-%include "python/swig/pyevent.hh"
 %include "sim/eventq.hh"
+%include "python/swig/pyevent.hh"
 
 struct CountedDrainEvent : public Event
 {
