@@ -30,7 +30,7 @@
 
 #include "base/intmath.hh"
 #include "base/trace.hh"
-#include "cpu/o3/btb.hh"
+#include "cpu/pred/btb.hh"
 
 DefaultBTB::DefaultBTB(unsigned _numEntries,
                        unsigned _tagBits,

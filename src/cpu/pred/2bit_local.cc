@@ -31,7 +31,7 @@
 #include "base/intmath.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
-#include "cpu/o3/2bit_local_pred.hh"
+#include "cpu/pred/2bit_local.hh"
 
 LocalBP::LocalBP(unsigned _localPredictorSize,
                  unsigned _localCtrBits,

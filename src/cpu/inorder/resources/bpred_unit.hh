@@ -32,21 +32,18 @@
 #ifndef __CPU_INORDER_BPRED_UNIT_HH__
 #define __CPU_INORDER_BPRED_UNIT_HH__
 
-// For Addr type.
+#include <list>
+
 #include "arch/isa_traits.hh"
 #include "base/statistics.hh"
 #include "cpu/inst_seq.hh"
-
-//#include "cpu/inorder/params.hh"
-#include "cpu/o3/2bit_local_pred.hh"
-#include "cpu/o3/btb.hh"
-#include "cpu/o3/ras.hh"
-#include "cpu/o3/tournament_pred.hh"
-#include "params/InOrderCPU.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
-
-#include <list>
+#include "cpu/pred/2bit_local.hh"
+#include "cpu/pred/btb.hh"
+#include "cpu/pred/ras.hh"
+#include "cpu/pred/tournament.hh"
+#include "params/InOrderCPU.hh"
 
 /**
  * Basically a wrapper class to hold both the branch predictor

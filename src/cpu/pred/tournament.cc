@@ -29,7 +29,7 @@
  */
 
 #include "base/intmath.hh"
-#include "cpu/o3/tournament_pred.hh"
+#include "cpu/pred/tournament.hh"
 
 TournamentBP::TournamentBP(unsigned _localPredictorSize,
                            unsigned _localCtrBits,

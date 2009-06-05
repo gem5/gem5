@@ -36,10 +36,10 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
-#include "cpu/o3/2bit_local_pred.hh"
-#include "cpu/o3/btb.hh"
-#include "cpu/o3/ras.hh"
-#include "cpu/o3/tournament_pred.hh"
+#include "cpu/pred/2bit_local.hh"
+#include "cpu/pred/btb.hh"
+#include "cpu/pred/ras.hh"
+#include "cpu/pred/tournament.hh"
 
 class DerivO3CPUParams;
 
