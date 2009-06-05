@@ -209,13 +209,6 @@ def CompoundFlag(name, flags, desc=None):
         raise AttributeError, "Flag %s already specified" % name
 
     compound = tuple(flags)
-    for flag in compound:
-        if flag not in trace_flags:
-            raise AttributeError, "Trace flag %s not found" % flag
-        if trace_flags[flag][1]:
-            raise AttributeError, \
-                "Compound flag can't point to another compound flag"
-
     trace_flags[name] = (name, compound, desc)
 
 Export('TraceFlag')
@@ -630,18 +623,34 @@ env.Command('python/swig/init.cc',
             makeSwigInit)
 Source('python/swig/init.cc')
 
+def getFlags(source_flags):
+    flagsMap = {}
+    flagsList = []
+    for s in source_flags:
+        val = eval(s.get_contents())
+        name, compound, desc = val
+        flagsList.append(val)
+        flagsMap[name] = bool(compound)
+    
+    for name, compound, desc in flagsList:
+        for flag in compound:
+            if flag not in flagsMap:
+                raise AttributeError, "Trace flag %s not found" % flag
+            if flagsMap[flag]:
+                raise AttributeError, \
+                    "Compound flag can't point to another compound flag"
+
+    flagsList.sort()
+    return flagsList
+
+
 # Generate traceflags.py
 def traceFlagsPy(target, source, env):
     assert(len(target) == 1)
 
     f = file(str(target[0]), 'w')
-
-    allFlags = []
-    for s in source:
-        val = eval(s.get_contents())
-        allFlags.append(val)
-
-    allFlags.sort()
+   
+    allFlags = getFlags(source)
 
     print >>f, 'basic = ['
     for flag, compound, desc in allFlags:
@@ -683,10 +692,7 @@ def traceFlagsCC(target, source, env):
 
     f = file(str(target[0]), 'w')
 
-    allFlags = []
-    for s in source:
-        val = eval(s.get_contents())
-        allFlags.append(val)
+    allFlags = getFlags(source)
 
     # file header
     print >>f, '''
@@ -759,10 +765,7 @@ def traceFlagsHH(target, source, env):
 
     f = file(str(target[0]), 'w')
 
-    allFlags = []
-    for s in source:
-        val = eval(s.get_contents())
-        allFlags.append(val)
+    allFlags = getFlags(source)
 
     # file header boilerplate
     print >>f, '''
