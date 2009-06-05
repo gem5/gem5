@@ -171,7 +171,7 @@ Serializable::nameOut(ostream &os, const string &_name)
 
 template <class T>
 void
-paramOut(ostream &os, const std::string &name, const T &param)
+paramOut(ostream &os, const string &name, const T &param)
 {
     os << name << "=";
     showParam(os, param);
@@ -180,8 +180,7 @@ paramOut(ostream &os, const std::string &name, const T &param)
 
 template <class T>
 void
-arrayParamOut(ostream &os, const std::string &name,
-              const std::vector<T> &param)
+arrayParamOut(ostream &os, const string &name, const vector<T> &param)
 {
     int size = param.size();
     os << name << "=";
@@ -197,10 +196,9 @@ arrayParamOut(ostream &os, const std::string &name,
 
 template <class T>
 void
-paramIn(Checkpoint *cp, const std::string &section,
-        const std::string &name, T &param)
+paramIn(Checkpoint *cp, const string &section, const string &name, T &param)
 {
-    std::string str;
+    string str;
     if (!cp->find(section, name, str) || !parseParam(str, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
@@ -209,8 +207,7 @@ paramIn(Checkpoint *cp, const std::string &section,
 
 template <class T>
 void
-arrayParamOut(ostream &os, const std::string &name,
-              const T *param, int size)
+arrayParamOut(ostream &os, const string &name, const T *param, int size)
 {
     os << name << "=";
     if (size > 0)
@@ -225,10 +222,10 @@ arrayParamOut(ostream &os, const std::string &name,
 
 template <class T>
 void
-arrayParamIn(Checkpoint *cp, const std::string &section,
-             const std::string &name, T *param, int size)
+arrayParamIn(Checkpoint *cp, const string &section, const string &name,
+             T *param, int size)
 {
-    std::string str;
+    string str;
     if (!cp->find(section, name, str)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
@@ -269,10 +266,10 @@ arrayParamIn(Checkpoint *cp, const std::string &section,
 
 template <class T>
 void
-arrayParamIn(Checkpoint *cp, const std::string &section,
-             const std::string &name, std::vector<T> &param)
+arrayParamIn(Checkpoint *cp, const string &section,
+             const string &name, vector<T> &param)
 {
-    std::string str;
+    string str;
     if (!cp->find(section, name, str)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
     }
@@ -312,8 +309,8 @@ arrayParamIn(Checkpoint *cp, const std::string &section,
 
 
 void
-objParamIn(Checkpoint *cp, const std::string &section,
-           const std::string &name, SimObject * &param)
+objParamIn(Checkpoint *cp, const string &section,
+           const string &name, SimObject * &param)
 {
     if (!cp->findObj(section, name, param)) {
         fatal("Can't unserialize '%s:%s'\n", section, name);
@@ -323,22 +320,22 @@ objParamIn(Checkpoint *cp, const std::string &section,
 
 #define INSTANTIATE_PARAM_TEMPLATES(type)                               \
 template void                                                           \
-paramOut(ostream &os, const std::string &name, type const &param);      \
+paramOut(ostream &os, const string &name, type const &param);           \
 template void                                                           \
-paramIn(Checkpoint *cp, const std::string &section,                     \
-        const std::string &name, type & param);                         \
+paramIn(Checkpoint *cp, const string &section,                          \
+        const string &name, type & param);                              \
 template void                                                           \
-arrayParamOut(ostream &os, const std::string &name,                     \
+arrayParamOut(ostream &os, const string &name,                          \
               type const *param, int size);                             \
 template void                                                           \
-arrayParamIn(Checkpoint *cp, const std::string &section,                \
-             const std::string &name, type *param, int size);           \
+arrayParamIn(Checkpoint *cp, const string &section,                     \
+             const string &name, type *param, int size);                \
 template void                                                           \
-arrayParamOut(ostream &os, const std::string &name,                     \
-              const std::vector<type> &param);                          \
+arrayParamOut(ostream &os, const string &name,                          \
+              const vector<type> &param);                               \
 template void                                                           \
-arrayParamIn(Checkpoint *cp, const std::string &section,                \
-             const std::string &name, std::vector<type> &param);
+arrayParamIn(Checkpoint *cp, const string &section,                     \
+             const string &name, vector<type> &param);
 
 INSTANTIATE_PARAM_TEMPLATES(signed char)
 INSTANTIATE_PARAM_TEMPLATES(unsigned char)
@@ -405,17 +402,17 @@ Serializable::~Serializable()
 }
 
 void
-Serializable::serialize(std::ostream &os)
+Serializable::serialize(ostream &os)
 {
 }
 
 void
-Serializable::unserialize(Checkpoint *cp, const std::string &section)
+Serializable::unserialize(Checkpoint *cp, const string &section)
 {
 }
 
 void
-Serializable::serializeAll(const std::string &cpt_dir)
+Serializable::serializeAll(const string &cpt_dir)
 {
     setCheckpointDir(cpt_dir);
     string dir = Checkpoint::dir();
@@ -434,7 +431,7 @@ Serializable::serializeAll(const std::string &cpt_dir)
 }
 
 void
-Serializable::unserializeAll(const std::string &cpt_dir)
+Serializable::unserializeAll(const string &cpt_dir)
 {
     setCheckpointDir(cpt_dir);
     string dir = Checkpoint::dir();
@@ -459,7 +456,7 @@ const char *Checkpoint::baseFilename = "m5.cpt";
 static string checkpointDirBase;
 
 void
-setCheckpointDir(const std::string &name)
+setCheckpointDir(const string &name)
 {
     checkpointDirBase = name;
     if (checkpointDirBase[checkpointDirBase.size() - 1] != '/')
@@ -476,7 +473,7 @@ Checkpoint::dir()
 }
 
 void
-debug_serialize(const std::string &cpt_dir)
+debug_serialize(const string &cpt_dir)
 {
     Serializable::serializeAll(cpt_dir);
 }
@@ -492,32 +489,26 @@ debug_serialize(const std::string &cpt_dir)
 // Need to make this a pointer so we can force initialization on the
 // first reference; otherwise, some SerializableClass constructors
 // may be invoked before the classMap constructor.
-map<string,SerializableClass::CreateFunc> *SerializableClass::classMap = 0;
+map<string, SerializableClass::CreateFunc> *SerializableClass::classMap = 0;
 
 // SerializableClass constructor: add mapping to classMap
 SerializableClass::SerializableClass(const string &className,
-                                       CreateFunc createFunc)
+                                     CreateFunc createFunc)
 {
     if (classMap == NULL)
-        classMap = new map<string,SerializableClass::CreateFunc>();
+        classMap = new map<string, SerializableClass::CreateFunc>();
 
     if ((*classMap)[className])
-    {
-        cerr << "Error: simulation object class " << className << " redefined"
-             << endl;
-        fatal("");
-    }
+        fatal("Error: simulation object class %s redefined\n", className);
 
     // add className --> createFunc to class map
     (*classMap)[className] = createFunc;
 }
 
-
 //
 //
 Serializable *
-SerializableClass::createObject(Checkpoint *cp,
-                                 const std::string &section)
+SerializableClass::createObject(Checkpoint *cp, const string &section)
 {
     string className;
 
@@ -542,7 +533,7 @@ SerializableClass::createObject(Checkpoint *cp,
 
 
 Serializable *
-Serializable::create(Checkpoint *cp, const std::string &section)
+Serializable::create(Checkpoint *cp, const string &section)
 {
     Serializable *object = SerializableClass::createObject(cp, section);
     object->unserialize(cp, section);
@@ -550,7 +541,7 @@ Serializable::create(Checkpoint *cp, const std::string &section)
 }
 
 
-Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path)
+Checkpoint::Checkpoint(const string &cpt_dir, const string &path)
     : db(new IniFile), basePath(path), cptDir(cpt_dir)
 {
     string filename = cpt_dir + "/" + Checkpoint::baseFilename;
@@ -561,15 +552,14 @@ Checkpoint::Checkpoint(const std::string &cpt_dir, const std::string &path)
 
 
 bool
-Checkpoint::find(const std::string &section, const std::string &entry,
-                 std::string &value)
+Checkpoint::find(const string &section, const string &entry, string &value)
 {
     return db->find(section, entry, value);
 }
 
 
 bool
-Checkpoint::findObj(const std::string &section, const std::string &entry,
+Checkpoint::findObj(const string &section, const string &entry,
                     SimObject *&value)
 {
     string path;
@@ -583,7 +573,7 @@ Checkpoint::findObj(const std::string &section, const std::string &entry,
 
 
 bool
-Checkpoint::sectionExists(const std::string &section)
+Checkpoint::sectionExists(const string &section)
 {
     return db->sectionExists(section);
 }
