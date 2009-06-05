@@ -1095,9 +1095,9 @@ void
 IGbE::DescCache<T>::reset()
 {
     DPRINTF(EthernetDesc, "Reseting descriptor cache\n");
-    for (CacheType::size_type x = 0; x < usedCache.size(); x++)
+    for (typename CacheType::size_type x = 0; x < usedCache.size(); x++)
         delete usedCache[x];
-    for (CacheType::size_type x = 0; x < unusedCache.size(); x++)
+    for (typename CacheType::size_type x = 0; x < unusedCache.size(); x++)
         delete unusedCache[x];
 
     usedCache.clear();
@@ -1117,16 +1117,16 @@ IGbE::DescCache<T>::serialize(std::ostream &os)
     SERIALIZE_SCALAR(moreToWb);
     SERIALIZE_SCALAR(wbAlignment);
 
-    CacheType::size_type usedCacheSize = usedCache.size();
+    typename CacheType::size_type usedCacheSize = usedCache.size();
     SERIALIZE_SCALAR(usedCacheSize);
-    for (CacheType::size_type x = 0; x < usedCacheSize; x++) {
+    for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
         arrayParamOut(os, csprintf("usedCache_%d", x),
                       (uint8_t*)usedCache[x],sizeof(T));
     }
 
-    CacheType::size_type unusedCacheSize = unusedCache.size();
+    typename CacheType::size_type unusedCacheSize = unusedCache.size();
     SERIALIZE_SCALAR(unusedCacheSize);
-    for(CacheType::size_type x = 0; x < unusedCacheSize; x++) {
+    for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         arrayParamOut(os, csprintf("unusedCache_%d", x),
                       (uint8_t*)unusedCache[x],sizeof(T));
     }
@@ -1152,19 +1152,19 @@ IGbE::DescCache<T>::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(moreToWb);
     UNSERIALIZE_SCALAR(wbAlignment);
 
-    CacheType::size_type usedCacheSize;
+    typename CacheType::size_type usedCacheSize;
     UNSERIALIZE_SCALAR(usedCacheSize);
     T *temp;
-    for(CacheType::size_type x = 0; x < usedCacheSize; x++) {
+    for (typename CacheType::size_type x = 0; x < usedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, section, csprintf("usedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
         usedCache.push_back(temp);
     }
 
-    CacheType::size_type unusedCacheSize;
+    typename CacheType::size_type unusedCacheSize;
     UNSERIALIZE_SCALAR(unusedCacheSize);
-    for(CacheType::size_type x = 0; x < unusedCacheSize; x++) {
+    for (typename CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, section, csprintf("unusedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
