@@ -92,15 +92,16 @@ class LRU : public BaseTags
     typedef LRUBlk BlkType;
     /** Typedef for a list of pointers to the local block class. */
     typedef std::list<LRUBlk*> BlkList;
+
   protected:
     /** The number of sets in the cache. */
-    const int numSets;
+    const unsigned numSets;
     /** The number of bytes in a block. */
-    const int blkSize;
+    const unsigned blkSize;
     /** The associativity of the cache. */
-    const int assoc;
+    const unsigned assoc;
     /** The hit latency. */
-    const int hitLatency;
+    const unsigned hitLatency;
 
     /** The cache sets. */
     CacheSet *sets;
@@ -127,7 +128,8 @@ public:
      * @param _assoc The associativity of the cache.
      * @param _hit_latency The latency in cycles for a hit.
      */
-    LRU(int _numSets, int _blkSize,     int _assoc, int _hit_latency);
+    LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
+        unsigned _hit_latency);
 
     /**
      * Destructor
@@ -138,7 +140,8 @@ public:
      * Return the block size.
      * @return the block size.
      */
-    int getBlockSize()
+    unsigned
+    getBlockSize() const
     {
         return blkSize;
     }
@@ -148,7 +151,8 @@ public:
      * size.
      * @return The block size.
      */
-    int getSubBlockSize()
+    unsigned
+    getSubBlockSize() const
     {
         return blkSize;
     }

@@ -61,7 +61,7 @@ AtomicSimpleCPU::TickEvent::description() const
 }
 
 Port *
-AtomicSimpleCPU::getPort(const std::string &if_name, int idx)
+AtomicSimpleCPU::getPort(const string &if_name, int idx)
 {
     if (if_name == "dcache_port")
         return &dcachePort;
@@ -302,7 +302,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
     }
 
     //The block size of our peer.
-    int blockSize = dcachePort.peerBlockSize();
+    unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
     int dataSize = sizeof(T);
 
@@ -444,7 +444,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 
     //The block size of our peer.
-    int blockSize = dcachePort.peerBlockSize();
+    unsigned blockSize = dcachePort.peerBlockSize();
     //The size of the data we're trying to read.
     int dataSize = sizeof(T);
 

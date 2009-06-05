@@ -55,7 +55,7 @@ copyStringArray(std::vector<std::string> &strings,
         TranslatingPort* memPort)
 {
     AddrType data_ptr_swap;
-    for (int i = 0; i < strings.size(); ++i) {
+    for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {
         data_ptr_swap = htog(data_ptr);
         memPort->writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
                 sizeof(AddrType));

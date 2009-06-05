@@ -91,9 +91,11 @@ class StackTrace
   public:
     const std::vector<Addr> &getstack() const { return stack; }
 
-    static const int user = 1;
-    static const int console = 2;
-    static const int unknown = 3;
+    enum {
+        user = 1,
+        console = 2,
+        unknown = 3
+    };
 
 #if TRACING_ON
   private:

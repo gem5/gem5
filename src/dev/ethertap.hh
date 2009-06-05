@@ -65,8 +65,8 @@ class EtherTap : public EtherObject
     int socket;
     char *buffer;
     int buflen;
-    int32_t buffer_offset;
-    int32_t data_len;
+    uint32_t buffer_offset;
+    uint32_t data_len;
 
     EtherDump *dump;
 

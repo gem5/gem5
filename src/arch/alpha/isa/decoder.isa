@@ -114,7 +114,7 @@ decode OPCODE default Unknown::unknown() {
 
             0x00: addl({{ Rc.sl = Ra.sl + Rb_or_imm.sl; }});
             0x40: addlv({{
-                uint32_t tmp  = Ra.sl + Rb_or_imm.sl;
+                int32_t tmp  = Ra.sl + Rb_or_imm.sl;
                 // signed overflow occurs when operands have same sign
                 // and sign of result does not match.
                 if (Ra.sl<31:> == Rb_or_imm.sl<31:> && tmp<31:> != Ra.sl<31:>)
@@ -138,7 +138,7 @@ decode OPCODE default Unknown::unknown() {
 
             0x09: subl({{ Rc.sl = Ra.sl - Rb_or_imm.sl; }});
             0x49: sublv({{
-                uint32_t tmp  = Ra.sl - Rb_or_imm.sl;
+                int32_t tmp  = Ra.sl - Rb_or_imm.sl;
                 // signed overflow detection is same as for add,
                 // except we need to look at the *complemented*
                 // sign bit of the subtrahend (Rb), i.e., if the initial

@@ -43,7 +43,7 @@ Linux::openSpecialFile(std::string path, LiveProcess *process, ThreadContext *tc
         std::string data = Linux::procMeminfo(process, tc);
         FILE *f = tmpfile();
         int fd = fileno(f);
-        int ret M5_VAR_USED = fwrite(data.c_str(), 1, data.size(), f);
+        size_t ret M5_VAR_USED = fwrite(data.c_str(), 1, data.size(), f);
         assert(ret == data.size());
         rewind(f);
         return fd;

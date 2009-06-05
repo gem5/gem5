@@ -37,8 +37,9 @@
  */
 
 #include <algorithm>
+
 #include "base/intmath.hh"
-#include "arch/isa_traits.hh" // for Addr
+#include "base/types.hh"
 
 /**
  * This class takes an arbitrary memory region (address/length pair)
@@ -61,13 +62,13 @@ class ChunkGenerator
     /** The starting address of the next chunk (after the current one). */
     Addr nextAddr;
     /** The size of the current chunk (in bytes). */
-    int  curSize;
+    unsigned  curSize;
     /** The number of bytes remaining in the region after the current chunk. */
-    int  sizeLeft;
+    unsigned  sizeLeft;
     /** The start address so we can calculate offset in writing block. */
     const Addr startAddr;
     /** The maximum chunk size, e.g., the cache block size or page size. */
-    const int chunkSize;
+    const unsigned chunkSize;
 
   public:
     /**
@@ -77,7 +78,7 @@ class ChunkGenerator
      * @param _chunkSize The size/alignment of chunks into which
      *    the region should be decomposed.
      */
-    ChunkGenerator(Addr _startAddr, int totalSize, int _chunkSize)
+    ChunkGenerator(Addr _startAddr, unsigned totalSize, unsigned _chunkSize)
         : startAddr(_startAddr), chunkSize(_chunkSize)
     {
         // chunkSize must be a power of two
@@ -102,31 +103,33 @@ class ChunkGenerator
         }
 
         // how many bytes are left between curAddr and the end of this chunk?
-        int left_in_chunk = nextAddr - curAddr;
+        unsigned left_in_chunk = nextAddr - curAddr;
         curSize = std::min(totalSize, left_in_chunk);
         sizeLeft = totalSize - curSize;
     }
 
     /** Return starting address of current chunk. */
-    Addr addr() { return curAddr; }
+    Addr addr() const { return curAddr; }
     /** Return size in bytes of current chunk. */
-    int  size() { return curSize; }
+    unsigned size() const { return curSize; }
 
     /** Number of bytes we have already chunked up. */
-    int complete() { return curAddr - startAddr; }
+    unsigned complete() const { return curAddr - startAddr; }
+
     /**
      * Are we done?  That is, did the last call to next() advance
      * past the end of the region?
      * @return True if yes, false if more to go.
      */
-    bool done() { return (curSize == 0); }
+    bool done() const { return (curSize == 0); }
 
     /**
      * Advance generator to next chunk.
      * @return True if successful, false if unsuccessful
      * (because we were at the last chunk).
      */
-    bool next()
+    bool
+    next()
     {
         if (sizeLeft == 0) {
             curSize = 0;

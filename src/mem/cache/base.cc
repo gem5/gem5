@@ -85,8 +85,8 @@ BaseCache::CachePort::checkFunctional(PacketPtr pkt)
 }
 
 
-int
-BaseCache::CachePort::deviceBlockSize()
+unsigned
+BaseCache::CachePort::deviceBlockSize() const
 {
     return cache->getBlockSize();
 }

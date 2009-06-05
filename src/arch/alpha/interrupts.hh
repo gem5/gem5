@@ -139,14 +139,14 @@ class Interrupts : public SimObject
     Fault
     getInterrupt(ThreadContext *tc)
     {
-        int ipl = 0;
-        int summary = 0;
+        uint64_t ipl = 0;
+        uint64_t summary = 0;
 
         if (tc->readMiscRegNoEffect(IPR_ASTRR))
             panic("asynchronous traps not implemented\n");
 
         if (tc->readMiscRegNoEffect(IPR_SIRR)) {
-            for (int i = INTLEVEL_SOFTWARE_MIN;
+            for (uint64_t i = INTLEVEL_SOFTWARE_MIN;
                  i < INTLEVEL_SOFTWARE_MAX; i++) {
                 if (tc->readMiscRegNoEffect(IPR_SIRR) & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference
@@ -158,7 +158,7 @@ class Interrupts : public SimObject
 
         uint64_t interrupts = intstatus;
         if (interrupts) {
-            for (int i = INTLEVEL_EXTERNAL_MIN;
+            for (uint64_t i = INTLEVEL_EXTERNAL_MIN;
                  i < INTLEVEL_EXTERNAL_MAX; i++) {
                 if (interrupts & (ULL(1) << i)) {
                     // See table 4-19 of 21164 hardware reference

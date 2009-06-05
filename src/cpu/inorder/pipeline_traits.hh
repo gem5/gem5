@@ -49,7 +49,7 @@ class InOrderDynInst;
 namespace ThePipeline {
     // Pipeline Constants
     const unsigned NumStages = 5;
-    const unsigned MaxThreads = 8;
+    const ThreadID MaxThreads = 8;
     const unsigned StageWidth = 1;
     const unsigned BackEndStartStage = 2;
 

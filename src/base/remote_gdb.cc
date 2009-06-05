@@ -148,7 +148,7 @@ void
 debugger()
 {
     static int current_debugger = -1;
-    if (current_debugger >= 0 && current_debugger < debuggers.size()) {
+    if (current_debugger >= 0 && current_debugger < (int)debuggers.size()) {
         BaseRemoteGDB *gdb = debuggers[current_debugger];
         if (!gdb->isattached())
             gdb->listener->accept();
@@ -632,7 +632,7 @@ BaseRemoteGDB::trap(int type)
     size_t datalen, len;
     char data[GDBPacketBufLen + 1];
     char *buffer;
-    int bufferSize;
+    size_t bufferSize;
     const char *p;
     char command, subcmd;
     string var;
@@ -812,7 +812,7 @@ BaseRemoteGDB::trap(int type)
             goto out;
 
           case GDBCont:
-            if (p - data < datalen) {
+            if (p - data < (ptrdiff_t)datalen) {
                 val = hex2i(&p);
                 context->setPC(val);
                 context->setNextPC(val + sizeof(MachInst));
@@ -831,7 +831,7 @@ BaseRemoteGDB::trap(int type)
             goto out;
 
           case GDBStep:
-            if (p - data < datalen) {
+            if (p - data < (ptrdiff_t)datalen) {
                 val = hex2i(&p);
                 context->setPC(val);
                 context->setNextPC(val + sizeof(MachInst));

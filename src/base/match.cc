@@ -56,7 +56,7 @@ ObjectMatch::setExpression(const vector<string> &expr)
         tokens.resize(0);
     } else {
         tokens.resize(expr.size());
-        for (int i = 0; i < expr.size(); ++i)
+        for (vector<string>::size_type i = 0; i < expr.size(); ++i)
             tokenize(tokens[i], expr[i], '.');
     }
 }

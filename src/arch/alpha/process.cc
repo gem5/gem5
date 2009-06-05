@@ -100,11 +100,11 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     int auxv_array_size = intSize * 2 * (auxv.size() + 1);
 
     int arg_data_size = 0;
-    for (int i = 0; i < argv.size(); ++i) {
+    for (vector<string>::size_type i = 0; i < argv.size(); ++i) {
         arg_data_size += argv[i].size() + 1;
     }
     int env_data_size = 0;
-    for (int i = 0; i < envp.size(); ++i) {
+    for (vector<string>::size_type i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
     }
 
@@ -148,8 +148,7 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
 
     //Copy the aux stuff
-    for(int x = 0; x < auxv.size(); x++)
-    {
+    for (vector<auxv_t>::size_type x = 0; x < auxv.size(); x++) {
         initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
                 (uint8_t*)&(auxv[x].a_type), intSize);
         initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,

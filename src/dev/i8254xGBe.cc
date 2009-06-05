@@ -1095,9 +1095,9 @@ void
 IGbE::DescCache<T>::reset()
 {
     DPRINTF(EthernetDesc, "Reseting descriptor cache\n");
-    for (int x = 0; x < usedCache.size(); x++)
+    for (CacheType::size_type x = 0; x < usedCache.size(); x++)
         delete usedCache[x];
-    for (int x = 0; x < unusedCache.size(); x++)
+    for (CacheType::size_type x = 0; x < unusedCache.size(); x++)
         delete unusedCache[x];
 
     usedCache.clear();
@@ -1117,16 +1117,16 @@ IGbE::DescCache<T>::serialize(std::ostream &os)
     SERIALIZE_SCALAR(moreToWb);
     SERIALIZE_SCALAR(wbAlignment);
 
-    int usedCacheSize = usedCache.size();
+    CacheType::size_type usedCacheSize = usedCache.size();
     SERIALIZE_SCALAR(usedCacheSize);
-    for(int x = 0; x < usedCacheSize; x++) {
+    for (CacheType::size_type x = 0; x < usedCacheSize; x++) {
         arrayParamOut(os, csprintf("usedCache_%d", x),
                       (uint8_t*)usedCache[x],sizeof(T));
     }
 
-    int unusedCacheSize = unusedCache.size();
+    CacheType::size_type unusedCacheSize = unusedCache.size();
     SERIALIZE_SCALAR(unusedCacheSize);
-    for(int x = 0; x < unusedCacheSize; x++) {
+    for(CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         arrayParamOut(os, csprintf("unusedCache_%d", x),
                       (uint8_t*)unusedCache[x],sizeof(T));
     }
@@ -1152,19 +1152,19 @@ IGbE::DescCache<T>::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(moreToWb);
     UNSERIALIZE_SCALAR(wbAlignment);
 
-    int usedCacheSize;
+    CacheType::size_type usedCacheSize;
     UNSERIALIZE_SCALAR(usedCacheSize);
     T *temp;
-    for(int x = 0; x < usedCacheSize; x++) {
+    for(CacheType::size_type x = 0; x < usedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, section, csprintf("usedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
         usedCache.push_back(temp);
     }
 
-    int unusedCacheSize;
+    CacheType::size_type unusedCacheSize;
     UNSERIALIZE_SCALAR(unusedCacheSize);
-    for(int x = 0; x < unusedCacheSize; x++) {
+    for(CacheType::size_type x = 0; x < unusedCacheSize; x++) {
         temp = new T;
         arrayParamIn(cp, section, csprintf("unusedCache_%d", x),
                      (uint8_t*)temp,sizeof(T));
@@ -1221,7 +1221,7 @@ IGbE::RxDescCache::writePacket(EthPacketPtr packet, int pkt_offset)
 
     pktPtr = packet;
     pktDone = false;
-    int buf_len, hdr_len;
+    unsigned buf_len, hdr_len;
 
     RxDesc *desc = unusedCache.front();
     switch (igbe->regs.srrctl.desctype()) {
@@ -1648,20 +1648,16 @@ IGbE::TxDescCache::headerComplete()
     igbe->checkDrain();
 }
 
-int
+unsigned
 IGbE::TxDescCache::getPacketSize(EthPacketPtr p)
 {
-    TxDesc *desc;
-
-
     if (!unusedCache.size())
-        return -1;
+        return 0;
  
     DPRINTF(EthernetDesc, "Starting processing of descriptor\n");
 
     assert(!useTso || tsoLoadedHeader);
-    desc = unusedCache.front();
-
+    TxDesc *desc = unusedCache.front();
 
     if (useTso) {
         DPRINTF(EthernetDesc, "getPacket(): TxDescriptor data "
@@ -1680,7 +1676,8 @@ IGbE::TxDescCache::getPacketSize(EthPacketPtr p)
         else
             tsoCopyBytes =  std::min(tsoMss,
                                      TxdOp::getLen(desc) - tsoDescBytesUsed); 
-        Addr pkt_size = tsoCopyBytes + (tsoPktHasHeader ? 0 : tsoHeaderLen); 
+        unsigned pkt_size =
+            tsoCopyBytes + (tsoPktHasHeader ? 0 : tsoHeaderLen); 
         DPRINTF(EthernetDesc, "TSO: Next packet is %d bytes\n", pkt_size);
         return pkt_size;
     }
@@ -2175,8 +2172,7 @@ IGbE::txStateMachine()
             return;
         }
 
-        int size;
-        size = txDescCache.getPacketSize(txPacket);
+        unsigned size = txDescCache.getPacketSize(txPacket);
         if (size > 0 && txFifo.avail() > size) {
             anRq("TXS", "TX FIFO Q");
             anBegin("TXS", "DMA Packet");
@@ -2184,7 +2180,7 @@ IGbE::txStateMachine()
                     "beginning DMA of next packet\n", size);
             txFifo.reserve(size);
             txDescCache.getPacketData(txPacket);
-        } else if (size <= 0) {
+        } else if (size == 0) {
             DPRINTF(EthernetSM, "TXS: getPacketSize returned: %d\n", size);
             DPRINTF(EthernetSM,
                     "TXS: No packets to get, writing back used descriptors\n");

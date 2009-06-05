@@ -209,7 +209,8 @@ BaseSimpleCPU::copySrcTranslate(Addr src)
 {
 #if 0
     static bool no_warn = true;
-    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    unsigned blk_size =
+        (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     int offset = src & (blk_size - 1);
@@ -247,7 +248,8 @@ BaseSimpleCPU::copy(Addr dest)
 {
 #if 0
     static bool no_warn = true;
-    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    unsigned blk_size =
+        (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     uint8_t data[blk_size];

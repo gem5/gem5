@@ -47,7 +47,7 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
 
     btb.resize(numEntries);
 
-    for (int i = 0; i < numEntries; ++i) {
+    for (unsigned i = 0; i < numEntries; ++i) {
         btb[i].valid = false;
     }
 
@@ -61,7 +61,7 @@ DefaultBTB::DefaultBTB(unsigned _numEntries,
 void
 DefaultBTB::reset()
 {
-    for (int i = 0; i < numEntries; ++i) {
+    for (unsigned i = 0; i < numEntries; ++i) {
         btb[i].valid = false;
     }
 }

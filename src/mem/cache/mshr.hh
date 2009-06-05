@@ -140,7 +140,7 @@ class MSHR : public Packet::SenderState, public Printable
     /** Thread number of the miss. */
     ThreadID threadNum;
     /** The number of currently allocated targets. */
-    short ntargets;
+    unsigned short ntargets;
 
 
     /** Data buffer (if needed).  Currently used only for pending

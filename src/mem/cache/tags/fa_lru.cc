@@ -42,7 +42,7 @@
 
 using namespace std;
 
-FALRU::FALRU(int _blkSize, int _size, int hit_latency)
+FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
     : blkSize(_blkSize), size(_size),
       numBlks(size/blkSize), hitLatency(hit_latency)
 {
@@ -78,10 +78,10 @@ FALRU::FALRU(int _blkSize, int _size, int hit_latency)
     tail->next = NULL;
     tail->inCache = 0;
 
-    int index = (1 << 17) / blkSize;
-    int j = 0;
+    unsigned index = (1 << 17) / blkSize;
+    unsigned j = 0;
     int flags = cacheMask;
-    for (int i = 1; i < numBlks-1; i++) {
+    for (unsigned i = 1; i < numBlks - 1; i++) {
         blks[i].inCache = flags;
         if (i == index - 1){
             cacheBoundaries[j] = &(blks[i]);
@@ -118,7 +118,7 @@ FALRU::regStats(const string &name)
         .desc("The number of accesses to the FA LRU cache.")
         ;
 
-    for (int i = 0; i < numCaches+1; ++i) {
+    for (unsigned i = 0; i <= numCaches; ++i) {
         stringstream size_str;
         if (i < 3){
             size_str << (1<<(i+7)) <<"K";
@@ -164,7 +164,7 @@ FALRU::accessBlock(Addr addr, int &lat, int *inCache)
     if (blk && blk->isValid()) {
         assert(blk->tag == blkAddr);
         tmp_in_cache = blk->inCache;
-        for (int i = 0; i < numCaches; i++) {
+        for (unsigned i = 0; i < numCaches; i++) {
             if (1<<i & blk->inCache) {
                 hits[i]++;
             } else {
@@ -177,7 +177,7 @@ FALRU::accessBlock(Addr addr, int &lat, int *inCache)
         }
     } else {
         blk = NULL;
-        for (int i = 0; i < numCaches+1; ++i) {
+        for (unsigned i = 0; i <= numCaches; ++i) {
             misses[i]++;
         }
     }
@@ -236,7 +236,7 @@ void
 FALRU::moveToHead(FALRUBlk *blk)
 {
     int updateMask = blk->inCache ^ cacheMask;
-    for (int i = 0; i < numCaches; i++){
+    for (unsigned i = 0; i < numCaches; i++){
         if ((1<<i) & updateMask) {
             cacheBoundaries[i]->inCache &= ~(1<<i);
             cacheBoundaries[i] = cacheBoundaries[i]->prev;

@@ -182,11 +182,11 @@ template <class T>
 void
 arrayParamOut(ostream &os, const string &name, const vector<T> &param)
 {
-    int size = param.size();
+    typename vector<T>::size_type size = param.size();
     os << name << "=";
     if (size > 0)
         showParam(os, param[0]);
-    for (int i = 1; i < size; ++i) {
+    for (typename vector<T>::size_type i = 1; i < size; ++i) {
         os << " ";
         showParam(os, param[i]);
     }
@@ -207,12 +207,12 @@ paramIn(Checkpoint *cp, const string &section, const string &name, T &param)
 
 template <class T>
 void
-arrayParamOut(ostream &os, const string &name, const T *param, int size)
+arrayParamOut(ostream &os, const string &name, const T *param, unsigned size)
 {
     os << name << "=";
     if (size > 0)
         showParam(os, param[0]);
-    for (int i = 1; i < size; ++i) {
+    for (unsigned i = 1; i < size; ++i) {
         os << " ";
         showParam(os, param[i]);
     }
@@ -223,7 +223,7 @@ arrayParamOut(ostream &os, const string &name, const T *param, int size)
 template <class T>
 void
 arrayParamIn(Checkpoint *cp, const string &section, const string &name,
-             T *param, int size)
+             T *param, unsigned size)
 {
     string str;
     if (!cp->find(section, name, str)) {
@@ -244,7 +244,7 @@ arrayParamIn(Checkpoint *cp, const string &section, const string &name,
         fatal("Array size mismatch on %s:%s'\n", section, name);
     }
 
-    for (int i = 0; i < tokens.size(); i++) {
+    for (vector<string>::size_type i = 0; i < tokens.size(); i++) {
         // need to parse into local variable to handle vector<bool>,
         // for which operator[] returns a special reference class
         // that's not the same as 'bool&', (since it's a packed
@@ -286,7 +286,7 @@ arrayParamIn(Checkpoint *cp, const string &section,
 
     param.resize(tokens.size());
 
-    for (int i = 0; i < tokens.size(); i++) {
+    for (vector<string>::size_type i = 0; i < tokens.size(); i++) {
         // need to parse into local variable to handle vector<bool>,
         // for which operator[] returns a special reference class
         // that's not the same as 'bool&', (since it's a packed
@@ -306,8 +306,6 @@ arrayParamIn(Checkpoint *cp, const string &section,
     }
 }
 
-
-
 void
 objParamIn(Checkpoint *cp, const string &section,
            const string &name, SimObject * &param)
@@ -326,10 +324,10 @@ paramIn(Checkpoint *cp, const string &section,                          \
         const string &name, type & param);                              \
 template void                                                           \
 arrayParamOut(ostream &os, const string &name,                          \
-              type const *param, int size);                             \
+              type const *param, unsigned size);                        \
 template void                                                           \
 arrayParamIn(Checkpoint *cp, const string &section,                     \
-             const string &name, type *param, int size);                \
+             const string &name, type *param, unsigned size);           \
 template void                                                           \
 arrayParamOut(ostream &os, const string &name,                          \
               const vector<type> &param);                               \

@@ -101,7 +101,7 @@ class FastAlloc
     // this class.  There's no fundamental limit, but this limits the
     // size of the freeLists array.  Let's not make this really huge
     // like in Blizzard.
-    static const int Max_Alloc_Size = 512;
+    static const size_t Max_Alloc_Size = 512;
 
     // Alloc_Quantum is the difference in size between adjacent
     // buckets in the free list array.

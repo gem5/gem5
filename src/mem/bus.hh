@@ -119,7 +119,7 @@ class Bus : public MemObject
         // Ask the bus to ask everyone on the bus what their block size is and
         // take the max of it. This might need to be changed a bit if we ever
         // support multiple block sizes.
-        virtual int deviceBlockSize()
+        virtual unsigned deviceBlockSize() const
         { return bus->findBlockSize(id); }
 
     };
@@ -259,7 +259,7 @@ class Bus : public MemObject
      * @param id id of the busport that made the request
      * @return the max of all the sizes
      */
-    int findBlockSize(int id);
+    unsigned findBlockSize(int id);
 
     BusFreeEvent busIdle;
 
@@ -308,8 +308,8 @@ class Bus : public MemObject
     /** Has the user specified their own default responder? */
     bool responderSet;
 
-    int defaultBlockSize;
-    int cachedBlockSize;
+    unsigned defaultBlockSize;
+    unsigned cachedBlockSize;
     bool cachedBlockSizeValid;
 
    // Cache for the peer port interfaces

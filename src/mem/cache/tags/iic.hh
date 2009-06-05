@@ -167,46 +167,47 @@ class IIC : public BaseTags
     typedef IICTag BlkType;
     /** Typedef for list of pointers to the local block type. */
     typedef std::list<IICTag*> BlkList;
+
   protected:
     /** The number of set in the primary table. */
-    const int hashSets;
+    const unsigned hashSets;
     /** The block size in bytes. */
-    const int blkSize;
+    const unsigned blkSize;
     /** The associativity of the primary table. */
-    const int assoc;
+    const unsigned assoc;
     /** The base hit latency. */
-    const int hitLatency;
+    const unsigned hitLatency;
     /** The subblock size, used for compression. */
-    const int subSize;
+    const unsigned subSize;
 
     /** The number of subblocks */
-    const int numSub;
+    const unsigned numSub;
     /** The number of bytes used by data pointers */
-    const int trivialSize;
+    const unsigned trivialSize;
 
     /** The amount to shift address to get the tag. */
-    const int tagShift;
+    const unsigned tagShift;
     /** The mask to get block offset bits. */
     const unsigned blkMask;
 
     /** The amount to shift to get the subblock number. */
-    const int subShift;
+    const unsigned subShift;
     /** The mask to get the correct subblock number. */
     const unsigned subMask;
 
     /** The latency of a hash lookup. */
-    const int hashDelay;
+    const unsigned hashDelay;
     /** The number of data blocks. */
-    const int numBlocks;
+    const unsigned numBlocks;
     /** The total number of tags in primary and secondary. */
-    const int numTags;
+    const unsigned numTags;
     /** The number of tags in the secondary tag store. */
-    const int numSecondary;
+    const unsigned numSecondary;
 
     /** The Null tag pointer. */
-    const int tagNull;
+    const unsigned tagNull;
     /** The last tag in the primary table. */
-    const int primaryBound;
+    const unsigned primaryBound;
 
     /** All of the tags */
     IICTag *tagStore;
@@ -271,21 +272,21 @@ class IIC : public BaseTags
     class Params {
       public:
         /** The size in bytes of the cache. */
-        int size;
+        unsigned size;
         /** The number of sets in the primary table. */
-        int numSets;
+        unsigned numSets;
         /** The block size in bytes. */
-        int blkSize;
+        unsigned blkSize;
         /** The associativity of the primary table. */
-        int assoc;
+        unsigned assoc;
         /** The number of cycles for each hash lookup. */
-        int hashDelay;
+        unsigned hashDelay;
         /** The number of cycles to read the data. */
-        int hitLatency;
+        unsigned hitLatency;
         /** The replacement policy. */
         Repl *rp;
         /** The subblock size in bytes. */
-        int subblockSize;
+        unsigned subblockSize;
     };
 
     /**
@@ -322,7 +323,8 @@ class IIC : public BaseTags
      * Return the block size.
      * @return The block size.
      */
-    int getBlockSize()
+    unsigned
+    getBlockSize() const
     {
         return blkSize;
     }
@@ -331,7 +333,8 @@ class IIC : public BaseTags
      * Return the subblock size.
      * @return The subblock size.
      */
-    int getSubBlockSize()
+    unsigned
+    getSubBlockSize() const
     {
         return subSize;
     }

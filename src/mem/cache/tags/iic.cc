@@ -66,8 +66,6 @@ IIC::IIC(IIC::Params &params) :
     tagNull(numTags),
     primaryBound(hashSets * assoc)
 {
-    int i;
-
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
         fatal("Block size must be at least 4 and a power of 2");
@@ -104,10 +102,10 @@ IIC::IIC(IIC::Params &params) :
     // Allocate storage for both internal data and block fast access data.
     // We allocate it as one large chunk to reduce overhead and to make
     // deletion easier.
-    int data_index = 0;
+    unsigned data_index = 0;
     dataStore = new uint8_t[(numBlocks + numTags) * blkSize];
     dataBlks = new uint8_t*[numBlocks];
-    for (i = 0; i < numBlocks; ++i) {
+    for (unsigned i = 0; i < numBlocks; ++i) {
         dataBlks[i] = &dataStore[data_index];
         freeDataBlock(i);
         data_index += subSize;
@@ -118,15 +116,15 @@ IIC::IIC(IIC::Params &params) :
     // allocate and init tag store
     tagStore = new IICTag[numTags];
 
-    int blkIndex = 0;
+    unsigned blkIndex = 0;
     // allocate and init sets
     sets = new IICSet[hashSets];
-    for (i = 0; i < hashSets; ++i) {
+    for (unsigned i = 0; i < hashSets; ++i) {
         sets[i].assoc = assoc;
         sets[i].tags = new IICTag*[assoc];
         sets[i].chain_ptr = tagNull;
 
-        for (int j = 0; j < assoc; ++j) {
+        for (unsigned j = 0; j < assoc; ++j) {
             IICTag *tag = &tagStore[blkIndex++];
             tag->chain_ptr = tagNull;
             tag->data_ptr.resize(numSub);
@@ -142,7 +140,7 @@ IIC::IIC(IIC::Params &params) :
 
     assert(blkIndex == primaryBound);
 
-    for (i = primaryBound; i < tagNull; i++) {
+    for (unsigned i = primaryBound; i < tagNull; i++) {
         tagStore[i].chain_ptr = i+1;
         //setup data ptrs to subblocks
         tagStore[i].data_ptr.resize(numSub);
@@ -305,7 +303,7 @@ IIC::findVictim(Addr addr, PacketList &writebacks)
     unsigned long *tmp_data = new unsigned long[numSub];
 
     // Get a enough subblocks for a full cache line
-    for (int i = 0; i < numSub; ++i){
+    for (unsigned i = 0; i < numSub; ++i){
         tmp_data[i] = getFreeDataBlock(writebacks);
         assert(dataReferenceCount[tmp_data[i]]==0);
     }
@@ -313,7 +311,7 @@ IIC::findVictim(Addr addr, PacketList &writebacks)
     tag_ptr = getFreeTag(set, writebacks);
 
     tag_ptr->set = set;
-    for (int i=0; i< numSub; ++i) {
+    for (unsigned i = 0; i < numSub; ++i) {
         tag_ptr->data_ptr[i] = tmp_data[i];
         dataReferenceCount[tag_ptr->data_ptr[i]]++;
     }
@@ -636,7 +634,7 @@ IIC::invalidateBlk(IIC::BlkType *tag_ptr)
 void
 IIC::cleanupRefs()
 {
-    for (int i = 0; i < numTags; ++i) {
+    for (unsigned i = 0; i < numTags; ++i) {
         if (tagStore[i].isValid()) {
             totalRefs += tagStore[i].refCount;
             ++sampledRefs;

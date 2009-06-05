@@ -34,7 +34,7 @@
 using namespace std;
 
 bool
-PacketFifo::copyout(void *dest, int offset, int len)
+PacketFifo::copyout(void *dest, unsigned offset, unsigned len)
 {
     char *data = (char *)dest;
     if (offset + len >= size())
@@ -52,7 +52,7 @@ PacketFifo::copyout(void *dest, int offset, int len)
         if (i == end)
             panic("invalid fifo");
 
-        int size = min(pkt->length - offset, len);
+        unsigned size = min(pkt->length - offset, len);
         memcpy(data, pkt->data, size);
         offset = 0;
         len -= size;

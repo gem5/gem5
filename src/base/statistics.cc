@@ -299,7 +299,7 @@ Formula::zero() const
 {
     VResult vec;
     result(vec);
-    for (off_t i = 0; i < vec.size(); ++i)
+    for (VResult::size_type i = 0; i < vec.size(); ++i)
         if (vec[i] != 0.0)
             return false;
     return true;

@@ -217,7 +217,7 @@ MemTest::completeRequest(PacketPtr pkt)
         numReads++;
         numReadsStat++;
 
-        if (numReads == nextProgressMessage) {
+        if (numReads == (uint64_t)nextProgressMessage) {
             ccprintf(cerr, "%s: completed %d read accesses @%d\n",
                      name(), numReads, curTick);
             nextProgressMessage += progressInterval;

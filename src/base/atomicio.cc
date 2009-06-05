@@ -37,7 +37,7 @@ ssize_t
 atomic_read(int fd, void *s, size_t n)
 {
     char *p = reinterpret_cast<char *>(s);
-    ssize_t pos = 0;
+    size_t pos = 0;
 
     // Keep reading until we've gotten all of the data.
     while (n > pos) {
@@ -66,7 +66,7 @@ ssize_t
 atomic_write(int fd, const void *s, size_t n)
 {
     const char *p = reinterpret_cast<const char *>(s);
-    ssize_t pos = 0;
+    size_t pos = 0;
 
     // Keep writing until we've written all of the data
     while (n > pos) {

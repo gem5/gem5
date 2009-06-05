@@ -58,14 +58,14 @@ class EthPacketData : public RefCounted
     /*
      * Length of the current packet
      */
-    int length;
+    unsigned length;
 
   public:
     EthPacketData()
         : data(NULL), length(0)
     { }
 
-    explicit EthPacketData(size_t size)
+    explicit EthPacketData(unsigned size)
         : data(new uint8_t[size]), length(0)
     { }
 

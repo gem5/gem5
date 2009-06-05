@@ -96,7 +96,7 @@ class System : public SimObject
 
     int numContexts()
     {
-        assert(_numContexts == threadContexts.size());
+        assert(_numContexts == (int)threadContexts.size());
         return _numContexts;
     }
 

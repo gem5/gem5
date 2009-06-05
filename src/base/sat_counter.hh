@@ -119,8 +119,10 @@ class SaturatingCounterPred : public GenericPredictor
                           unsigned _zero_change = 1, unsigned _one_change = 1,
                           unsigned _thresh = 1, unsigned _init_value = 0);
 
-    void clear() {
-        for (int i = 0; i <= max_index; ++i)
+    void
+    clear()
+    {
+        for (unsigned long i = 0; i <= max_index; ++i)
             table[i] = init_value;
     }
 

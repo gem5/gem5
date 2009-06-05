@@ -1365,7 +1365,7 @@ class DistStor
         data.underflow = underflow;
         data.overflow = overflow;
 
-        int buckets = params->buckets;
+        size_type buckets = params->buckets;
         data.cvec.resize(buckets);
         for (off_type i = 0; i < buckets; ++i)
             data.cvec[i] = cvec[i];

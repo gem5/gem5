@@ -48,15 +48,12 @@
 uint32_t
 crc32le(const uint8_t *buf, size_t len)
 {
-    uint32_t c, crc, carry;
-    size_t i, j;
+    uint32_t crc = 0xffffffffU;      /* initial value */
 
-    crc = 0xffffffffU;      /* initial value */
-
-    for (i = 0; i < len; i++) {
-        c = buf[i];
-        for (j = 0; j < 8; j++) {
-            carry = ((crc & 0x01) ? 1 : 0) ^ (c & 0x01);
+    for (size_t i = 0; i < len; i++) {
+        uint32_t c = buf[i];
+        for (size_t j = 0; j < 8; j++) {
+            uint32_t carry = ((crc & 0x01) ? 1 : 0) ^ (c & 0x01);
             crc >>= 1;
             c >>= 1;
             if (carry)
@@ -64,7 +61,7 @@ crc32le(const uint8_t *buf, size_t len)
         }
     }
 
-    return (crc);
+    return crc;
 }
 #else
 uint32_t
@@ -76,33 +73,27 @@ crc32le(const uint8_t *buf, size_t len)
         0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
         0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
     };
-    uint32_t crc;
-    int i;
+    uint32_t crc = 0xffffffffU;      /* initial value */
 
-    crc = 0xffffffffU;      /* initial value */
-
-    for (i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         crc ^= buf[i];
         crc = (crc >> 4) ^ crctab[crc & 0xf];
         crc = (crc >> 4) ^ crctab[crc & 0xf];
     }
 
-    return (crc);
+    return crc;
 }
 #endif
 
 uint32_t
 crc32be(const uint8_t *buf, size_t len)
 {
-    uint32_t c, crc, carry;
-    size_t i, j;
+    uint32_t crc = 0xffffffffU;      /* initial value */
 
-    crc = 0xffffffffU;      /* initial value */
-
-    for (i = 0; i < len; i++) {
-        c = buf[i];
-        for (j = 0; j < 8; j++) {
-            carry = ((crc & 0x80000000U) ? 1 : 0) ^ (c & 0x01);
+    for (size_t i = 0; i < len; i++) {
+        uint32_t c = buf[i];
+        for (size_t j = 0; j < 8; j++) {
+            uint32_t carry = ((crc & 0x80000000U) ? 1 : 0) ^ (c & 0x01);
             crc <<= 1;
             c >>= 1;
             if (carry)

@@ -152,7 +152,7 @@ class DmaPort : public Port
 
     bool dmaPending() { return pendingCount > 0; }
 
-    int cacheBlockSize() { return peerBlockSize(); }
+    unsigned cacheBlockSize() const { return peerBlockSize(); }
     unsigned int drain(Event *de);
 };
 
@@ -284,7 +284,7 @@ class DmaDevice : public PioDevice
 
     virtual unsigned int drain(Event *de);
 
-    int cacheBlockSize() { return dmaPort->cacheBlockSize(); }
+    unsigned cacheBlockSize() const { return dmaPort->cacheBlockSize(); }
 
     virtual Port *getPort(const std::string &if_name, int idx = -1)
     {

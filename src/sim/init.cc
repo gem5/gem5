@@ -118,7 +118,7 @@ getCode(const EmbeddedPyModule *pymod)
         pymod->zlen);
     if (ret != Z_OK)
         panic("Could not uncompress code: %s\n", zError(ret));
-    assert(unzlen == pymod->mlen);
+    assert(unzlen == (uLongf)pymod->mlen);
 
     return PyMarshal_ReadObjectFromString((char *)marshalled, pymod->mlen);
 }

@@ -593,27 +593,27 @@ Bus::addressRanges(AddrRangeList &resp, bool &snoop, int id)
     }
 }
 
-int
+unsigned
 Bus::findBlockSize(int id)
 {
     if (cachedBlockSizeValid)
         return cachedBlockSize;
 
-    int max_bs = -1;
+    unsigned max_bs = 0;
 
     PortIter p_end = portMap.end();
     for (PortIter p_iter = portMap.begin(); p_iter != p_end; p_iter++) {
-        int tmp_bs = interfaces[p_iter->second]->peerBlockSize();
+        unsigned tmp_bs = interfaces[p_iter->second]->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }
     SnoopIter s_end = snoopPorts.end();
     for (SnoopIter s_iter = snoopPorts.begin(); s_iter != s_end; s_iter++) {
-        int tmp_bs = (*s_iter)->peerBlockSize();
+        unsigned tmp_bs = (*s_iter)->peerBlockSize();
         if (tmp_bs > max_bs)
             max_bs = tmp_bs;
     }
-    if (max_bs <= 0)
+    if (max_bs == 0)
         max_bs = defaultBlockSize;
 
     if (max_bs != 64)

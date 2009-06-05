@@ -42,7 +42,7 @@
 class DefaultPeerPort : public Port
 {
   protected:
-    void blowUp()
+    void blowUp() const
     {
         fatal("%s: Unconnected port!", peer->name());
     }
@@ -74,7 +74,8 @@ class DefaultPeerPort : public Port
         blowUp();
     }
 
-    int deviceBlockSize()
+    unsigned
+    deviceBlockSize() const
     {
         blowUp();
         return 0;

@@ -59,7 +59,7 @@ void paramIn(Checkpoint *cp, const std::string &section,
 
 template <class T>
 void arrayParamOut(std::ostream &os, const std::string &name,
-                   const T *param, int size);
+                   const T *param, unsigned size);
 
 template <class T>
 void arrayParamOut(std::ostream &os, const std::string &name,
@@ -67,7 +67,7 @@ void arrayParamOut(std::ostream &os, const std::string &name,
 
 template <class T>
 void arrayParamIn(Checkpoint *cp, const std::string &section,
-                  const std::string &name, T *param, int size);
+                  const std::string &name, T *param, unsigned size);
 
 template <class T>
 void arrayParamIn(Checkpoint *cp, const std::string &section,

@@ -178,7 +178,7 @@ loadsymbol(ThreadContext *tc)
         if (buffer.empty())
             continue;
 
-        int idx = buffer.find(' ');
+        string::size_type idx = buffer.find(' ');
         if (idx == string::npos)
             continue;
 

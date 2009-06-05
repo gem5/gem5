@@ -439,7 +439,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->readPC();
-    int block_size = dcachePort.peerBlockSize();
+    unsigned block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
 
     RequestPtr req  = new Request(asid, addr, data_size,
@@ -557,7 +557,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     const int asid = 0;
     const ThreadID tid = 0;
     const Addr pc = thread->readPC();
-    int block_size = dcachePort.peerBlockSize();
+    unsigned block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
 
     RequestPtr req = new Request(asid, addr, data_size,

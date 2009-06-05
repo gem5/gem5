@@ -127,45 +127,47 @@ enum mode_type
 
 // Constants Related to the number of registers
 
-const int NumIntArchRegs = 32;
-const int NumPALShadowRegs = 8;
-const int NumFloatArchRegs = 32;
-// @todo: Figure out what this number really should be.
-const int NumMiscArchRegs = 77;
+enum {
+    NumIntArchRegs = 32,
+    NumPALShadowRegs = 8,
+    NumFloatArchRegs = 32,
+    // @todo: Figure out what this number really should be.
+    NumMiscArchRegs = 77,
 
-const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
-const int NumFloatRegs = NumFloatArchRegs;
-const int NumMiscRegs = NumMiscArchRegs;
+    NumIntRegs = NumIntArchRegs + NumPALShadowRegs,
+    NumFloatRegs = NumFloatArchRegs,
+    NumMiscRegs = NumMiscArchRegs,
 
-const int TotalNumRegs =
-    NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs;
+    TotalNumRegs =
+        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs,
 
-const int TotalDataRegs = NumIntRegs + NumFloatRegs;
+    TotalDataRegs = NumIntRegs + NumFloatRegs,
 
-// semantically meaningful register indices
-const int ZeroReg = 31;     // architecturally meaningful
-// the rest of these depend on the ABI
-const int StackPointerReg = 30;
-const int GlobalPointerReg = 29;
-const int ProcedureValueReg = 27;
-const int ReturnAddressReg = 26;
-const int ReturnValueReg = 0;
-const int FramePointerReg = 15;
+    // semantically meaningful register indices
+    ZeroReg = 31,     // architecturally meaningful
+    // the rest of these depend on the ABI
+    StackPointerReg = 30,
+    GlobalPointerReg = 29,
+    ProcedureValueReg = 27,
+    ReturnAddressReg = 26,
+    ReturnValueReg = 0,
+    FramePointerReg = 15,
 
-const int SyscallNumReg = 0;
-const int FirstArgumentReg = 16;
-const int SyscallPseudoReturnReg = 20;
-const int SyscallSuccessReg = 19;
+    SyscallNumReg = 0,
+    FirstArgumentReg = 16,
+    SyscallPseudoReturnReg = 20,
+    SyscallSuccessReg = 19,
 
-const int LogVMPageSize = 13;       // 8K bytes
-const int VMPageSize = (1 << LogVMPageSize);
+    LogVMPageSize = 13,       // 8K bytes
+    VMPageSize = (1 << LogVMPageSize),
 
-const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
+    BranchPredAddrShiftAmt = 2, // instructions are 4-byte aligned
 
-const int MachineBytes = 8;
-const int WordBytes = 4;
-const int HalfwordBytes = 2;
-const int ByteBytes = 1;
+    MachineBytes = 8,
+    WordBytes = 4,
+    HalfwordBytes = 2,
+    ByteBytes = 1,
+};
 
 // return a no-op instruction... used for instruction fetch faults
 // Alpha UNOP (ldq_u r31,0(r0))

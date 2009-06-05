@@ -184,7 +184,7 @@ InOrderCPU::InOrderCPU(Params *params)
     // Resize for Multithreading CPUs
     thread.resize(numThreads);
 
-    int active_threads = params->workload.size();
+    ThreadID active_threads = params->workload.size();
 
     if (active_threads > MaxThreads) {
         panic("Workload Size too large. Increase the 'MaxThreads'"
@@ -204,7 +204,7 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        if (tid < params->workload.size()) {
+        if (tid < (ThreadID)params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
                     tid, this->thread[tid]);
             this->thread[tid] =

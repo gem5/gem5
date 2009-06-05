@@ -42,12 +42,12 @@ class TimeBuffer
   protected:
     int past;
     int future;
-    int size;
+    unsigned size;
     int _id;
 
     char *data;
     std::vector<char *> index;
-    int base;
+    unsigned base;
 
     void valid(int idx)
     {
@@ -138,12 +138,12 @@ class TimeBuffer
 
   public:
     TimeBuffer(int p, int f)
-        : past(p), future(f), size(past + future + 1),
+        : past(p), future(f), size(past + future + 1), 
           data(new char[size * sizeof(T)]), index(size), base(0)
     {
         assert(past >= 0 && future >= 0);
         char *ptr = data;
-        for (int i = 0; i < size; i++) {
+        for (unsigned i = 0; i < size; i++) {
             index[i] = ptr;
             std::memset(ptr, 0, sizeof(T));
             new (ptr) T;
@@ -160,7 +160,7 @@ class TimeBuffer
 
     ~TimeBuffer()
     {
-        for (int i = 0; i < size; ++i)
+        for (unsigned i = 0; i < size; ++i)
             (reinterpret_cast<T *>(index[i]))->~T();
         delete [] data;
     }
@@ -182,7 +182,7 @@ class TimeBuffer
             base = 0;
 
         int ptr = base + future;
-        if (ptr >= size)
+        if (ptr >= (int)size)
             ptr -= size;
         (reinterpret_cast<T *>(index[ptr]))->~T();
         std::memset(index[ptr], 0, sizeof(T));
@@ -195,7 +195,7 @@ class TimeBuffer
         valid(idx);
 
         int vector_index = idx + base;
-        if (vector_index >= size) {
+        if (vector_index >= (int)size) {
             vector_index -= size;
         } else if (vector_index < 0) {
             vector_index += size;
@@ -210,7 +210,7 @@ class TimeBuffer
         valid(idx);
 
         int vector_index = idx + base;
-        if (vector_index >= size) {
+        if (vector_index >= (int)size) {
             vector_index -= size;
         } else if (vector_index < 0) {
             vector_index += size;
@@ -231,7 +231,7 @@ class TimeBuffer
         return wire(this, 0);
     }
 
-    int getSize()
+    unsigned getSize()
     {
         return size;
     }

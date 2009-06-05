@@ -44,7 +44,7 @@ struct PacketFifoEntry
 {
     EthPacketPtr packet;
     uint64_t number;
-    int slack;
+    unsigned slack;
     int priv;
 
     PacketFifoEntry()
@@ -85,24 +85,25 @@ class PacketFifo
   protected:
     std::list<PacketFifoEntry> fifo;
     uint64_t _counter;
-    int _maxsize;
-    int _size;
-    int _reserved;
+    unsigned _maxsize;
+    unsigned _size;
+    unsigned _reserved;
 
   public:
     explicit PacketFifo(int max)
         : _counter(0), _maxsize(max), _size(0), _reserved(0) {}
     virtual ~PacketFifo() {}
 
-    int packets() const { return fifo.size(); }
-    int maxsize() const { return _maxsize; }
-    int size() const { return _size; }
-    int reserved() const { return _reserved; }
-    int avail() const { return _maxsize - _size - _reserved; }
+    unsigned packets() const { return fifo.size(); }
+    unsigned maxsize() const { return _maxsize; }
+    unsigned size() const { return _size; }
+    unsigned reserved() const { return _reserved; }
+    unsigned avail() const { return _maxsize - _size - _reserved; }
     bool empty() const { return size() <= 0; }
     bool full() const { return avail() <= 0; }
 
-    int reserve(int len = 0)
+    unsigned
+    reserve(unsigned len = 0)
     {
         _reserved += len;
         assert(avail() >= 0);
@@ -169,7 +170,7 @@ class PacketFifo
         fifo.erase(i);
     }
 
-    bool copyout(void *dest, int offset, int len);
+    bool copyout(void *dest, unsigned offset, unsigned len);
 
     int countPacketsBefore(iterator i)
     {
@@ -188,7 +189,7 @@ class PacketFifo
 
     void check()
     {
-        int total = 0;
+        unsigned total = 0;
         for (iterator i = begin(); i != end(); ++i)
             total += i->packet->length + i->slack;
 

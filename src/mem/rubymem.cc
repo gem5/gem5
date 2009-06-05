@@ -153,7 +153,7 @@ RubyMemory::getPort(const std::string &if_name, int idx)
         panic("RubyMemory::getPort: unknown port %s requested", if_name);
     }
 
-    if (idx >= ports.size()) {
+    if (idx >= (int)ports.size()) {
         ports.resize(idx+1);
     }
 

@@ -58,7 +58,7 @@ LocalBP::LocalBP(unsigned _localPredictorSize,
     // Setup the array of counters for the local predictor.
     localCtrs.resize(localPredictorSets);
 
-    for (int i = 0; i < localPredictorSets; ++i)
+    for (unsigned i = 0; i < localPredictorSets; ++i)
         localCtrs[i].setBits(_localCtrBits);
 
     DPRINTF(Fetch, "Branch predictor: local predictor size: %i\n",
@@ -73,7 +73,7 @@ LocalBP::LocalBP(unsigned _localPredictorSize,
 void
 LocalBP::reset()
 {
-    for (int i = 0; i < localPredictorSets; ++i) {
+    for (unsigned i = 0; i < localPredictorSets; ++i) {
         localCtrs[i].reset();
     }
 }

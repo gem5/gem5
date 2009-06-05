@@ -189,7 +189,7 @@ PageTable::serialize(std::ostream &os)
 {
     paramOut(os, "ptable.size", pTable.size());
 
-    int count = 0;
+    PTable::size_type count = 0;
 
     PTableItr iter = pTable.begin();
     PTableItr end = pTable.end();

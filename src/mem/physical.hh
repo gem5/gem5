@@ -70,7 +70,7 @@ class PhysicalMemory : public MemObject
         virtual void getDeviceAddressRanges(AddrRangeList &resp,
                                             bool &snoop);
 
-        virtual int deviceBlockSize();
+        virtual unsigned deviceBlockSize() const;
     };
 
     int numPorts;
@@ -168,7 +168,7 @@ class PhysicalMemory : public MemObject
     }
 
   public:
-    int deviceBlockSize();
+    unsigned deviceBlockSize() const;
     void getAddressRanges(AddrRangeList &resp, bool &snoop);
     virtual Port *getPort(const std::string &if_name, int idx = -1);
     void virtual init();

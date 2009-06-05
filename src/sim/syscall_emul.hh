@@ -899,8 +899,7 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     uint64_t tiov_base = process->getSyscallArg(tc, 1);
     size_t count = process->getSyscallArg(tc, 2);
     struct iovec hiov[count];
-    for (int i = 0; i < count; ++i)
-    {
+    for (size_t i = 0; i < count; ++i) {
         typename OS::tgt_iovec tiov;
 
         p->readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
@@ -913,10 +912,8 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int result = writev(process->sim_fd(fd), hiov, count);
 
-    for (int i = 0; i < count; ++i)
-    {
+    for (size_t i = 0; i < count; ++i)
         delete [] (char *)hiov[i].iov_base;
-    }
 
     if (result < 0)
         return -errno;

@@ -106,8 +106,8 @@ PhysicalMemory::new_page()
     return return_addr;
 }
 
-int
-PhysicalMemory::deviceBlockSize()
+unsigned
+PhysicalMemory::deviceBlockSize() const
 {
     //Can accept anysize request
     return 0;
@@ -360,8 +360,8 @@ PhysicalMemory::getPort(const std::string &if_name, int idx)
         panic("PhysicalMemory::getPort: unknown port %s requested", if_name);
     }
 
-    if (idx >= ports.size()) {
-        ports.resize(idx+1);
+    if (idx >= (int)ports.size()) {
+        ports.resize(idx + 1);
     }
 
     if (ports[idx] != NULL) {
@@ -407,8 +407,8 @@ PhysicalMemory::getAddressRanges(AddrRangeList &resp, bool &snoop)
     resp.push_back(RangeSize(start(), params()->range.size()));
 }
 
-int
-PhysicalMemory::MemoryPort::deviceBlockSize()
+unsigned
+PhysicalMemory::MemoryPort::deviceBlockSize() const
 {
     return memory->deviceBlockSize();
 }
@@ -474,7 +474,7 @@ PhysicalMemory::serialize(ostream &os)
                 filename);
 
     if (gzwrite(compressedMem, pmemAddr, params()->range.size()) !=
-        params()->range.size()) {
+        (int)params()->range.size()) {
         fatal("Write failed on physical memory checkpoint file '%s'\n",
               filename);
     }
@@ -495,7 +495,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
     long *pmem_current;
     uint64_t curSize;
     uint32_t bytesRead;
-    const int chunkSize = 16384;
+    const uint32_t chunkSize = 16384;
 
     string filename;
 
@@ -545,7 +545,7 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
 
         assert(bytesRead % sizeof(long) == 0);
 
-        for (int x = 0; x < bytesRead/sizeof(long); x++)
+        for (uint32_t x = 0; x < bytesRead / sizeof(long); x++)
         {
              if (*(tempPage+x) != 0) {
                  pmem_current = (long*)(pmemAddr + curSize + x * sizeof(long));

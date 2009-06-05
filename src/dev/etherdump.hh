@@ -47,7 +47,7 @@ class EtherDump : public SimObject
 {
   private:
     std::ostream *stream;
-    const int maxlen;
+    const unsigned maxlen;
     void dumpPacket(EthPacketPtr &packet);
     void init();
 

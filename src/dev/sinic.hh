@@ -142,8 +142,8 @@ class Device : public Base
         uint64_t TxDone;
 
         PacketFifo::iterator rxIndex;
-        int rxPacketOffset;
-        int rxPacketBytes;
+        unsigned rxPacketOffset;
+        unsigned rxPacketBytes;
         uint64_t rxDoneData;
 
         Counter rxUnique;
@@ -155,7 +155,7 @@ class Device : public Base
         { }
     };
     typedef std::vector<VirtualReg> VirtualRegs;
-    typedef std::list<int> VirtualList;
+    typedef std::list<unsigned> VirtualList;
     Counter rxUnique;
     Counter txUnique;
     VirtualRegs virtualRegs;
@@ -180,7 +180,7 @@ class Device : public Base
     bool rxLow;
     Addr rxDmaAddr;
     uint8_t *rxDmaData;
-    int rxDmaLen;
+    unsigned rxDmaLen;
 
     TxState txState;
     PacketFifo txFifo;

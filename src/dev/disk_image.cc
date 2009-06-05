@@ -151,8 +151,8 @@ RawDiskImageParams::create()
 //
 // Copy on Write Disk image
 //
-const int CowDiskImage::VersionMajor = 1;
-const int CowDiskImage::VersionMinor = 0;
+const uint32_t CowDiskImage::VersionMajor = 1;
+const uint32_t CowDiskImage::VersionMinor = 0;
 
 class CowDiskCallback : public Callback
 {

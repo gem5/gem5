@@ -623,7 +623,7 @@ class InOrderCPU : public BaseCPU
     {
         Counter total(0);
 
-        for (ThreadID tid = 0; tid < thread.size(); tid++)
+        for (ThreadID tid = 0; tid < (ThreadID)thread.size(); tid++)
             total += thread[tid]->numInst;
 
         return total;

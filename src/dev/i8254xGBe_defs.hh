@@ -481,7 +481,7 @@ struct Regs {
         ADD_FIELD32(pmcf,23,1);  // pass mac control  frames
         ADD_FIELD32(bsex,25,1);  // buffer size extension
         ADD_FIELD32(secrc,26,1); // strip ethernet crc from incoming packet
-        int descSize()
+        unsigned descSize()
         {
             switch(bsize()) {
                 case 0: return bsex() == 0 ? 2048 : -1;
@@ -559,8 +559,8 @@ struct Regs {
         ADD_FIELD32(hdrlen, 8, 8); // guess based on header, not documented
         ADD_FIELD32(desctype, 25,3); // type of descriptor 000 legacy, 001 adv,
                                      //101 hdr split
-        int bufLen() { return pktlen() << 10; }
-        int hdrLen() { return hdrlen() << 6; }
+        unsigned bufLen() { return pktlen() << 10; }
+        unsigned hdrLen() { return hdrlen() << 6; }
     };
     SRRCTL srrctl;
 

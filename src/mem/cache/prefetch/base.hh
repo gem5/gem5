@@ -54,7 +54,7 @@ class BasePrefetcher
     // PARAMETERS
 
     /** The number of MSHRs in the Prefetch Queue. */
-    const int size;
+    const unsigned size;
 
     /** Pointr to the parent cache. */
     BaseCache* cache;

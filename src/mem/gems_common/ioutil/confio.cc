@@ -156,7 +156,7 @@ void fprintAttr( FILE *fp, attr_value_t attr )
 
   case Sim_Val_List:
     fprintf(fp, "(");
-    for (uint32 i = 0; i < attr.u.list.size; i++) {
+    for (int i = 0; i < attr.u.list.size; i++) {
       fprintAttr(fp, attr.u.list.vector[i]);
       if (i != attr.u.list.size -1) {
         fprintf(fp, ", ");
@@ -188,7 +188,7 @@ void freeAttribute( attr_value_t *attr )
     break;
 
   case Sim_Val_List:
-    for (uint32 i = 0; i < attr->u.list.size; i++) {
+    for (int i = 0; i < attr->u.list.size; i++) {
       freeAttribute( &(attr->u.list.vector[i]) );
     }
     free( attr->u.list.vector );

@@ -257,7 +257,7 @@ class Packet : public FastAlloc, public Printable
     Addr addr;
 
     /// The size of the request or transfer.
-    int size;
+    unsigned size;
 
     /**
      * Device address (e.g., bus ID) of the source of the
@@ -450,7 +450,7 @@ class Packet : public FastAlloc, public Printable
     void setDest(NodeID _dest) { dest = _dest; flags.set(VALID_DST); }
 
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
-    int getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
+    unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }
 
     /**

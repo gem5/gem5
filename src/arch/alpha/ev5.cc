@@ -351,7 +351,7 @@ MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
 
       case IPR_IPLR:
 #ifdef DEBUG
-        if (break_ipl != -1 && break_ipl == (val & 0x1f))
+        if (break_ipl != -1 && break_ipl == (int)(val & 0x1f))
             debug_break();
 #endif
 

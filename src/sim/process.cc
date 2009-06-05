@@ -575,11 +575,11 @@ LiveProcess::argsInit(int intSize, int pageSize)
     int argv_array_size = intSize * (argv.size() + 1);
     int envp_array_size = intSize * (envp.size() + 1);
     int arg_data_size = 0;
-    for (int i = 0; i < argv.size(); ++i) {
+    for (vector<string>::size_type i = 0; i < argv.size(); ++i) {
         arg_data_size += argv[i].size() + 1;
     }
     int env_data_size = 0;
-    for (int i = 0; i < envp.size(); ++i) {
+    for (vector<string>::size_type i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
     }
 

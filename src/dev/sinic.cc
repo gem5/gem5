@@ -1032,8 +1032,8 @@ Device::rxKick()
 
         rxDmaAddr = params()->platform->pciToDma(
                 Regs::get_RxData_Addr(vnic->RxData));
-        rxDmaLen = min<int>(Regs::get_RxData_Len(vnic->RxData),
-                            vnic->rxPacketBytes);
+        rxDmaLen = min<unsigned>(Regs::get_RxData_Len(vnic->RxData),
+                                 vnic->rxPacketBytes);
 
         /*
          * if we're doing zero/delay copy and we're below the fifo

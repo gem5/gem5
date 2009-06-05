@@ -66,7 +66,7 @@ SaturatingCounterPred::SaturatingCounterPred(string p_name,
     table = new unsigned[max_index + 1];
 
     //  Initialize with the right parameters & clear the counter
-    for (int i = 0; i <= max_index; ++i)
+    for (unsigned long i = 0; i <= max_index; ++i)
         table[i] = init_value;
 }
 

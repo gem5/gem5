@@ -157,7 +157,7 @@ class CacheBlk
      */
     bool isWritable() const
     {
-        const int needed_bits = BlkWritable | BlkValid;
+        const State needed_bits = BlkWritable | BlkValid;
         return (status & needed_bits) == needed_bits;
     }
 
@@ -169,7 +169,7 @@ class CacheBlk
      */
     bool isReadable() const
     {
-        const int needed_bits = BlkReadable | BlkValid;
+        const State needed_bits = BlkReadable | BlkValid;
         return (status & needed_bits) == needed_bits;
     }
 

@@ -161,7 +161,7 @@ class Port : public EventManager
         this function to be called, so it just returns 0. Anytthing that is
         concerned with the size should just ignore that.
     */
-    virtual int deviceBlockSize() { return 0; }
+    virtual unsigned deviceBlockSize() const { return 0; }
 
     /** The peer port is requesting us to reply with a list of the ranges we
         are responsible for.
@@ -214,7 +214,7 @@ class Port : public EventManager
     /** Called by the associated device if it wishes to find out the blocksize
         of the device on attached to the peer port.
     */
-    int peerBlockSize() { return peer->deviceBlockSize(); }
+    unsigned peerBlockSize() const { return peer->deviceBlockSize(); }
 
     /** Called by the associated device if it wishes to find out the address
         ranges connected to the peer ports devices.

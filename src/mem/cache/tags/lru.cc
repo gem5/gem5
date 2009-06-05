@@ -80,8 +80,10 @@ CacheSet::moveToHead(LRUBlk *blk)
 
 
 // create and initialize a LRU/MRU cache structure
-LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
-    numSets(_numSets), blkSize(_blkSize), assoc(_assoc), hitLatency(_hit_latency)
+LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
+         unsigned _hit_latency)
+    : numSets(_numSets), blkSize(_blkSize), assoc(_assoc),
+      hitLatency(_hit_latency)
 {
     // Check parameters
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
@@ -97,9 +99,6 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
         fatal("access latency must be greater than zero");
     }
 
-    LRUBlk  *blk;
-    int i, j, blkIndex;
-
     blkMask = blkSize - 1;
     setShift = floorLog2(blkSize);
     setMask = numSets - 1;
@@ -113,16 +112,16 @@ LRU::LRU(int _numSets, int _blkSize, int _assoc, int _hit_latency) :
     // allocate data storage in one big chunk
     dataBlks = new uint8_t[numSets*assoc*blkSize];
 
-    blkIndex = 0;       // index into blks array
-    for (i = 0; i < numSets; ++i) {
+    unsigned blkIndex = 0;       // index into blks array
+    for (unsigned i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
         sets[i].blks = new LRUBlk*[assoc];
 
         // link in the data blocks
-        for (j = 0; j < assoc; ++j) {
+        for (unsigned j = 0; j < assoc; ++j) {
             // locate next cache block
-            blk = &blks[blkIndex];
+            LRUBlk *blk = &blks[blkIndex];
             blk->data = &dataBlks[blkSize*blkIndex];
             ++blkIndex;
 
@@ -233,7 +232,7 @@ LRU::invalidateBlk(LRU::BlkType *blk)
 void
 LRU::cleanupRefs()
 {
-    for (int i = 0; i < numSets*assoc; ++i) {
+    for (unsigned i = 0; i < numSets*assoc; ++i) {
         if (blks[i].isValid()) {
             totalRefs += blks[i].refCount;
             ++sampledRefs;

@@ -488,7 +488,7 @@ OzoneCPU<Impl>::copySrcTranslate(Addr src)
     return NoFault;
 #if 0
     static bool no_warn = true;
-    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    unsigned blk_size = dcacheInterface ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     int offset = src & (blk_size - 1);
@@ -527,7 +527,7 @@ OzoneCPU<Impl>::copy(Addr dest)
     return NoFault;
 #if 0
     static bool no_warn = true;
-    int blk_size = (dcacheInterface) ? dcacheInterface->getBlockSize() : 64;
+    unsigned blk_size = dcacheInterface ? dcacheInterface->getBlockSize() : 64;
     // Only support block sizes of 64 atm.
     assert(blk_size == 64);
     uint8_t data[blk_size];

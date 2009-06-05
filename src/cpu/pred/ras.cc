@@ -39,7 +39,7 @@ ReturnAddrStack::init(unsigned _numEntries)
 
      addrStack.resize(numEntries);
 
-     for (int i = 0; i < numEntries; ++i)
+     for (unsigned i = 0; i < numEntries; ++i)
          addrStack[i] = 0;
 }
 
@@ -48,7 +48,7 @@ ReturnAddrStack::reset()
 {
     usedEntries = 0;
     tos = 0;
-    for (int i = 0; i < numEntries; ++i)
+    for (unsigned i = 0; i < numEntries; ++i)
         addrStack[i] = 0;
 }
 

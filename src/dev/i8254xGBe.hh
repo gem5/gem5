@@ -86,7 +86,7 @@ class IGbE : public EtherDevice
     bool rxDmaPacket;
 
     // Number of bytes copied from current RX packet
-    int pktOffset;
+    unsigned pktOffset;
 
     // Delays in managaging descriptors
     Tick fetchDelay, wbDelay;
@@ -224,8 +224,9 @@ class IGbE : public EtherDevice
         virtual void actionAfterWb() {}
         virtual void fetchAfterWb() = 0;
 
-        std::deque<T*> usedCache;
-        std::deque<T*> unusedCache;
+        typedef std::deque<T *> CacheType;
+        CacheType usedCache;
+        CacheType unusedCache;
 
         T *fetchBuf;
         T *wbBuf;
@@ -301,9 +302,10 @@ class IGbE : public EtherDevice
         /* Return the number of descriptors left in the ring, so the device has
          * a way to figure out if it needs to interrupt.
          */
-        int descLeft() const
+        unsigned
+        descLeft() const
         {
-            int left = unusedCache.size();
+            unsigned left = unusedCache.size();
             if (cachePnt > descTail())
                 left += (descLen() - cachePnt + descTail());
             else
@@ -314,10 +316,10 @@ class IGbE : public EtherDevice
 
         /* Return the number of descriptors used and not written back.
          */
-        int descUsed() const { return usedCache.size(); }
+        unsigned descUsed() const { return usedCache.size(); }
 
         /* Return the number of cache unused descriptors we have. */
-        int descUnused() const {return unusedCache.size(); }
+        unsigned descUnused() const { return unusedCache.size(); }
 
         /* Get into a state where the descriptor address/head/etc colud be
          * changed */
@@ -354,7 +356,7 @@ class IGbE : public EtherDevice
 
         /** Bytes of packet that have been copied, so we know when to
             set EOP */
-        int bytesCopied;
+        unsigned bytesCopied;
 
       public:
         RxDescCache(IGbE *i, std::string n, int s);
@@ -442,15 +444,19 @@ class IGbE : public EtherDevice
          * return the size the of the packet to reserve space in tx fifo.
          * @return size of the packet
          */
-        int getPacketSize(EthPacketPtr p);
+        unsigned getPacketSize(EthPacketPtr p);
         void getPacketData(EthPacketPtr p);
         void processContextDesc();
 
         /** Return the number of dsecriptors in a cache block for threshold
          * operations.
          */
-        int descInBlock(int num_desc) { return num_desc / 
-                igbe->cacheBlockSize() / sizeof(iGbReg::TxDesc); }
+        unsigned
+        descInBlock(unsigned num_desc)
+        {
+            return num_desc / igbe->cacheBlockSize() / sizeof(iGbReg::TxDesc);
+        }
+
         /** Ask if the packet has been transfered so the state machine can give
          * it to the fifo.
          * @return packet available in descriptor cache
@@ -548,9 +554,4 @@ class IGbEInt : public EtherInt
     virtual void sendDone() { dev->ethTxDone(); }
 };
 
-
-
-
-
 #endif //__DEV_I8254XGBE_HH__
-

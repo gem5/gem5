@@ -104,7 +104,7 @@ class BaseCache : public MemObject
 
         virtual void recvStatusChange(Status status);
 
-        virtual int deviceBlockSize();
+        virtual unsigned deviceBlockSize() const;
 
         bool recvRetryCommon();
 
@@ -180,7 +180,7 @@ class BaseCache : public MemObject
     }
 
     /** Block size of this cache */
-    const int blkSize;
+    const unsigned blkSize;
 
     /**
      * The latency of a hit in this device.
@@ -372,7 +372,8 @@ class BaseCache : public MemObject
      * Query block size of a cache.
      * @return  The block size
      */
-    int getBlockSize() const
+    unsigned
+    getBlockSize() const
     {
         return blkSize;
     }

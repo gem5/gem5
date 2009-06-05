@@ -78,22 +78,23 @@ class FALRU : public BaseTags
     typedef FALRUBlk BlkType;
     /** Typedef a list of pointers to the local block type. */
     typedef std::list<FALRUBlk*> BlkList;
+
   protected:
     /** The block size of the cache. */
-    const int blkSize;
+    const unsigned blkSize;
     /** The size of the cache. */
-    const int size;
+    const unsigned size;
     /** The number of blocks in the cache. */
-    const int numBlks; // calculated internally
+    const unsigned numBlks; // calculated internally
     /** The hit latency of the cache. */
-    const int hitLatency;
+    const unsigned hitLatency;
 
     /** Array of pointers to blocks at the cache size  boundaries. */
     FALRUBlk **cacheBoundaries;
     /** A mask for the FALRUBlk::inCache bits. */
     int cacheMask;
     /** The number of different size caches being tracked. */
-    int numCaches;
+    unsigned numCaches;
 
     /** The cache blocks. */
     FALRUBlk *blks;
@@ -156,7 +157,7 @@ public:
      * @param size The size of the cache.
      * @param hit_latency The hit latency of the cache.
      */
-    FALRU(int blkSize, int size, int hit_latency);
+    FALRU(unsigned blkSize, unsigned size, unsigned hit_latency);
 
     /**
      * Register the stats for this object.
@@ -214,7 +215,8 @@ public:
      * Return the block size of this cache.
      * @return The block size.
      */
-    int getBlockSize()
+    unsigned
+    getBlockSize() const
     {
         return blkSize;
     }
@@ -223,7 +225,8 @@ public:
      * Return the subblock size of this cache, always the block size.
      * @return The block size.
      */
-    int getSubBlockSize()
+    unsigned
+    getSubBlockSize() const
     {
         return blkSize;
     }
