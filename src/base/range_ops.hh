@@ -30,6 +30,7 @@
 
 #ifndef __BASE_RANGE_OPS_HH__
 #define __BASE_RANGE_OPS_HH__
+
 #include <list>
 #include <vector>
 
@@ -37,16 +38,19 @@
 
 template <class T>
 inline void
-FilterRangeList(std::vector<Range<T> > filter_list, std::list<Range<T> >
-        &range_list) {
-    typename std::list<Range<T> >::iterator i;
-    for (int x = 0; x < filter_list.size(); x++) {
-        for (i = range_list.begin(); i != range_list.end(); ) {
+FilterRangeList(std::vector<Range<T> > filter_list,
+                std::list<Range<T> > &range_list)
+{
+    typedef typename std::list<Range<T> > RangeList;
+
+    for (typename RangeList::size_type x = 0; x < filter_list.size(); x++) {
+        typename RangeList::iterator i = range_list.begin();
+        while (i != range_list.end()) {
             // Is the range within one of our filter ranges?
             if (filter_list[x] == i->start || filter_list[x] == i->end)
-                range_list.erase(i++);
+                i = range_list.erase(i);
             else
-                i++;
+                ++i;
         }
     }
 }
