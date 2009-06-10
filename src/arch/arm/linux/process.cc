@@ -40,6 +40,7 @@
 
 #include "sim/process.hh"
 #include "sim/syscall_emul.hh"
+#include "sim/system.hh"
 
 using namespace std;
 using namespace ArmISA;
@@ -411,12 +412,25 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 346 */ SyscallDesc("epoll_pwait", unimplementedFunc),
 };
 
+/// Target set_tls() handler.
+static SyscallReturn
+setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+          ThreadContext *tc)
+{
+    uint32_t tlsPtr = process->getSyscallArg(tc, 0);
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+
+    tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
+                                (uint8_t *)&tlsPtr, sizeof(tlsPtr));
+    return 0;
+}
+
 SyscallDesc ArmLinuxProcess::privSyscallDescs[] = {
     /*  1 */ SyscallDesc("breakpoint", unimplementedFunc),
     /*  2 */ SyscallDesc("cacheflush", unimplementedFunc),
     /*  3 */ SyscallDesc("usr26", unimplementedFunc),
     /*  4 */ SyscallDesc("usr32", unimplementedFunc),
-    /*  5 */ SyscallDesc("set_tls", unimplementedFunc)
+    /*  5 */ SyscallDesc("set_tls", setTLSFunc)
 };
 
 ArmLinuxProcess::ArmLinuxProcess(LiveProcessParams * params,
@@ -425,6 +439,8 @@ ArmLinuxProcess::ArmLinuxProcess(LiveProcessParams * params,
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
      Num_Priv_Syscall_Descs(sizeof(privSyscallDescs) / sizeof(SyscallDesc))
 { }
+
+const Addr ArmLinuxProcess::commPage = 0xffff0000;
 
 SyscallDesc*
 ArmLinuxProcess::getDesc(int callnum)
@@ -447,4 +463,29 @@ ArmLinuxProcess::getDesc(int callnum)
         return NULL;
 
     return &syscallDescs[callnum];
+}
+
+void
+ArmLinuxProcess::startup()
+{
+    ArmLiveProcess::startup();
+    pTable->allocate(commPage, PageBytes);
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+
+    uint8_t swiNeg1[] = {
+        0xff, 0xff, 0xff, 0xef  //swi -1
+    };
+
+    // Fill this page with swi -1 so we'll no if we land in it somewhere.
+    for (Addr addr = 0; addr < PageBytes; addr += sizeof(swiNeg1)) {
+        tc->getMemPort()->writeBlob(commPage + addr,
+                                    swiNeg1, sizeof(swiNeg1));
+    }
+
+    uint8_t get_tls[] =
+    {
+        0x08, 0x00, 0x9f, 0xe5, //ldr r0, [pc, #(16 - 8)]
+        0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
+    };
+    tc->getMemPort()->writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
 }

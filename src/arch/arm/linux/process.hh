@@ -42,8 +42,13 @@ class ArmLinuxProcess : public ArmLiveProcess
 
     virtual SyscallDesc* getDesc(int callnum);
 
+    void startup();
+
     /// The target system's hostname.
     static const char *hostname;
+
+    /// A page to hold "kernel" provided functions. The name might be wrong.
+    static const Addr commPage;
 
     /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
