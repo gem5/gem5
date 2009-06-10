@@ -411,20 +411,36 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 346 */ SyscallDesc("epoll_pwait", unimplementedFunc),
 };
 
+SyscallDesc ArmLinuxProcess::privSyscallDescs[] = {
+    /*  1 */ SyscallDesc("breakpoint", unimplementedFunc),
+    /*  2 */ SyscallDesc("cacheflush", unimplementedFunc),
+    /*  3 */ SyscallDesc("usr26", unimplementedFunc),
+    /*  4 */ SyscallDesc("usr32", unimplementedFunc),
+    /*  5 */ SyscallDesc("set_tls", unimplementedFunc)
+};
+
 ArmLinuxProcess::ArmLinuxProcess(LiveProcessParams * params,
         ObjectFile *objFile)
     : ArmLiveProcess(params, objFile),
-     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
+     Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc)),
+     Num_Priv_Syscall_Descs(sizeof(privSyscallDescs) / sizeof(SyscallDesc))
 { }
 
 SyscallDesc*
 ArmLinuxProcess::getDesc(int callnum)
 {
     // Angel SWI syscalls are unsupported in this release
-    if (callnum == 0x123456)
+    if (callnum == 0x123456) {
         panic("Attempt to execute an ANGEL_SWI system call (newlib-related)");
-    else if ((callnum & 0x00f00000) == 0x00900000)
+    } else if ((callnum & 0x00f00000) == 0x00900000) {
         callnum &= 0x000fffff;
+        if ((callnum & 0x0f0000) == 0xf0000) {
+            callnum -= 0x0f0001;
+            if (callnum < 0 || callnum > Num_Priv_Syscall_Descs)
+                return NULL;
+            return &privSyscallDescs[callnum];
+        }
+    }
     // Linux syscalls have to strip off the 0x00900000
 
     if (callnum < 0 || callnum > Num_Syscall_Descs)

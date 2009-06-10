@@ -45,10 +45,15 @@ class ArmLinuxProcess : public ArmLiveProcess
     /// The target system's hostname.
     static const char *hostname;
 
-     /// Array of syscall descriptors, indexed by call number.
+    /// Array of syscall descriptors, indexed by call number.
     static SyscallDesc syscallDescs[];
 
+    /// Array of "arm private" syscall descriptors.
+    static SyscallDesc privSyscallDescs[];
+
     const int Num_Syscall_Descs;
+
+    const int Num_Priv_Syscall_Descs;
 };
 
 #endif // __ARM_LINUX_PROCESS_HH__
