@@ -482,6 +482,18 @@ ArmLinuxProcess::startup()
                                     swiNeg1, sizeof(swiNeg1));
     }
 
+    // This -should- be atomic, but I don't think all the support that we'd
+    // need is implemented. There should also be memory barriers around it.
+    uint8_t cmpxchg[] =
+    {
+        0x00, 0x30, 0x92, 0xe5, //ldr r3, [r2]
+        0x00, 0x30, 0x53, 0xe0, //subs r3, r3, r0
+        0x00, 0x10, 0x92, 0x05, //streq r1, [r2]
+        0x03, 0x00, 0xa0, 0xe1, //mov r0, r3
+        0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
+    };
+    tc->getMemPort()->writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
+
     uint8_t get_tls[] =
     {
         0x08, 0x00, 0x9f, 0xe5, //ldr r0, [pc, #(16 - 8)]
