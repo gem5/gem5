@@ -255,7 +255,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 189 */ SyscallDesc("putpmsg", unimplementedFunc),
     /* 190 */ SyscallDesc("vfork", unimplementedFunc),
     /* 191 */ SyscallDesc("getrlimit", unimplementedFunc),
-    /* 192 */ SyscallDesc("mmap2", unimplementedFunc),
+    /* 192 */ SyscallDesc("mmap2", mmapFunc<ArmLinux>),
     /* 193 */ SyscallDesc("truncate64", unimplementedFunc),
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 195 */ SyscallDesc("stat64", unimplementedFunc),
@@ -508,4 +508,22 @@ ArmLinuxProcess::startup()
         0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
     };
     tc->getMemPort()->writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
+}
+
+ArmISA::IntReg
+ArmLinuxProcess::getSyscallArg(ThreadContext *tc, int i)
+{
+    // Linux apparently allows more parameter than the ABI says it should.
+    // This limit may need to be increased even further.
+    assert(i < 6);
+    return tc->readIntReg(ArgumentReg0 + i);
+}
+
+void
+ArmLinuxProcess::setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val)
+{
+    // Linux apparently allows more parameter than the ABI says it should.
+    // This limit may need to be increased even further.
+    assert(i < 6);
+    tc->setIntReg(ArgumentReg0 + i, val);
 }

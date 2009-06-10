@@ -44,6 +44,9 @@ class ArmLinuxProcess : public ArmLiveProcess
 
     void startup();
 
+    ArmISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    void setSyscallArg(ThreadContext *tc, int i, ArmISA::IntReg val);
+
     /// The target system's hostname.
     static const char *hostname;
 
