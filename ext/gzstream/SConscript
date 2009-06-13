@@ -30,7 +30,7 @@
 
 Import('main')
 
-main.Library('gzstream', [File('gzstream.cc')])
+main.Library('gzstream', [main.SharedObject('gzstream.cc')])
 
 main.Prepend(CPPPATH=Dir('.'))
 main.Append(LIBS=['gzstream'])

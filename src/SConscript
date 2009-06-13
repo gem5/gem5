@@ -984,7 +984,7 @@ def makeEnv(label, objsfx, strip = False, **kwargs):
     static_objs.append(static_date)
     
     shared_date = make_obj(date_source, static=False, extra_deps=shared_objs)
-    shared_objs.append(static_date)
+    shared_objs.append(shared_date)
 
     # First make a library of everything but main() so other programs can
     # link against m5.
