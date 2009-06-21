@@ -34,135 +34,135 @@
 //
 
 // Opcode fields
-def bitfield OPCODE        <27:25>;
-def bitfield OPCODE_27_25  <27:25>;
-def bitfield OPCODE_24_21  <24:21>;
-def bitfield OPCODE_24_23  <24:23>;
-def bitfield OPCODE_24	   <24:24>;
-def bitfield OPCODE_23_20  <23:20>;
-def bitfield OPCODE_23_21  <23:21>;
-def bitfield OPCODE_23     <23:23>;
-def bitfield OPCODE_22_8   <22: 8>;
-def bitfield OPCODE_22_21  <22:21>;
-def bitfield OPCODE_22     <22:22>;
-def bitfield OPCODE_21_20  <21:20>;
-def bitfield OPCODE_20     <20:20>;
-def bitfield OPCODE_19_18  <19:18>;
-def bitfield OPCODE_19	   <19:19>;
-def bitfield OPCODE_15_12  <15:12>;
-def bitfield OPCODE_15	   <15:15>;
-def bitfield OPCODE_9      < 9: 9>;
-def bitfield OPCODE_7_4    < 7: 4>;
-def bitfield OPCODE_7_5	   < 7: 5>;
-def bitfield OPCODE_7_6    < 7: 6>;
-def bitfield OPCODE_7      < 7: 7>;
-def bitfield OPCODE_6_5	   < 6: 5>;
-def bitfield OPCODE_6	   < 6: 6>;
-def bitfield OPCODE_5	   < 5: 5>;
-def bitfield OPCODE_4      < 4: 4>;
+def bitfield OPCODE        opcode;
+def bitfield OPCODE_27_25  opcode27_25;
+def bitfield OPCODE_24_21  opcode24_21;
+def bitfield OPCODE_24_23  opcode24_23;
+def bitfield OPCODE_24	   opcode24;
+def bitfield OPCODE_23_20  opcode23_20;
+def bitfield OPCODE_23_21  opcode23_21;
+def bitfield OPCODE_23     opcode23;
+def bitfield OPCODE_22_8   opcode22_8;
+def bitfield OPCODE_22_21  opcode22_21;
+def bitfield OPCODE_22     opcode22;
+def bitfield OPCODE_21_20  opcode21_20;
+def bitfield OPCODE_20     opcode20;
+def bitfield OPCODE_19_18  opcode19_18;
+def bitfield OPCODE_19	   opcode19;
+def bitfield OPCODE_15_12  opcode15_12;
+def bitfield OPCODE_15	   opcode15;
+def bitfield OPCODE_9      opcode9;
+def bitfield OPCODE_7_4    opcode7_4;
+def bitfield OPCODE_7_5	   opcode7_5;
+def bitfield OPCODE_7_6    opcode7_6;
+def bitfield OPCODE_7      opcode7;
+def bitfield OPCODE_6_5	   opcode6_5;
+def bitfield OPCODE_6	   opcode6;
+def bitfield OPCODE_5	   opcode5;
+def bitfield OPCODE_4      opcode4;
 
 // Other
-def bitfield COND_CODE     <31:28>;
-def bitfield S_FIELD       <20:20>;
-def bitfield RN            <19:16>;
-def bitfield RD            <15:12>;
-def bitfield SHIFT_SIZE    <11: 7>;
-def bitfield SHIFT         < 6: 5>;
-def bitfield RM            < 3: 0>;
+def bitfield COND_CODE     condCode;
+def bitfield S_FIELD       sField;
+def bitfield RN            rn;
+def bitfield RD            rd;
+def bitfield SHIFT_SIZE    shiftSize;
+def bitfield SHIFT         shift;
+def bitfield RM            rm;
 
-def bitfield RS            <11: 8>;
+def bitfield RS            rs;
 
-def bitfield RDUP          <19:16>;
-def bitfield RNDN          <15:12>;
+def bitfield RDUP          rdup;
+def bitfield RNDN          rddn;
 
-def bitfield RDHI          <15:12>;
-def bitfield RDLO          <11: 8>;
+def bitfield RDHI          rdhi;
+def bitfield RDLO          rdlo;
 
-def bitfield U_FIELD       <23:23>;
+def bitfield U_FIELD       uField;
 
-def bitfield PUSWL	   <24:20>;
-def bitfield PREPOST	   <24:24>;
-def bitfield UP		   <23:23>;
-def bitfield PSRUSER	   <22:22>;
-def bitfield WRITEBACK	   <21:21>;
-def bitfield LOADOP        <20:20>;
+def bitfield PUSWL	   puswl;
+def bitfield PREPOST	   puswl.prepost;
+def bitfield UP		   puswl.up;
+def bitfield PSRUSER	   puswl.psruser;
+def bitfield WRITEBACK	   puswl.writeback;
+def bitfield LOADOP        puswl.loadOp;
 
-def bitfield PUBWL	   <24:20>;
-def bitfield PUIWL	   <24:20>;
-def bitfield BYTEACCESS	   <22:22>;
+def bitfield PUBWL	   pubwl;
+def bitfield PUIWL	   puiwl;
+def bitfield BYTEACCESS	   byteAccess;
 
-def bitfield LUAS	   <23:20>;
+def bitfield LUAS	   luas;
 
-def bitfield IMM	   < 7: 0>;
-def bitfield IMMED_7_4     < 7: 4>;
-def bitfield IMMED_3_0     < 3: 0>;
+def bitfield IMM	   imm;
+def bitfield IMMED_7_4     immed7_4;
+def bitfield IMMED_3_0     immed3_0;
 
-def bitfield F_MSR         <19:19>;
-def bitfield S_MSR         <18:18>;
-def bitfield X_MSR         <17:17>;
-def bitfield C_MSR         <16:16>;
+def bitfield F_MSR         msr.f;
+def bitfield S_MSR         msr.s;
+def bitfield X_MSR         msr.x;
+def bitfield C_MSR         msr.c;
 
-def bitfield Y_6           < 6: 6>;
-def bitfield X_5           < 5: 5>;
+def bitfield Y_6           y;
+def bitfield X_5           x;
 
-def bitfield IMMED_15_4    <15: 4>;
+def bitfield IMMED_15_4    immed15_4;
 
-def bitfield W_FIELD       <21:21>;
+def bitfield W_FIELD       wField;
 
-def bitfield ROTATE        <11: 8>;
-def bitfield IMMED_7_0     < 7: 0>;
+def bitfield ROTATE        rotate;
+def bitfield IMMED_7_0     immed7_0;
 
-def bitfield T_FIELD       <21:21>;
-def bitfield IMMED_11_0    <11: 0>;
+def bitfield T_FIELD       tField;
+def bitfield IMMED_11_0    immed11_0;
 
-def bitfield IMMED_20_16   <20:16>;
-def bitfield IMMED_19_16   <19:16>;
+def bitfield IMMED_20_16   immed20_16;
+def bitfield IMMED_19_16   immed19_16;
 
-def bitfield IMMED_HI_11_8 <11: 8>;
-def bitfield IMMED_LO_3_0  < 3: 0>;
+def bitfield IMMED_HI_11_8 immedHi11_8;
+def bitfield IMMED_LO_3_0  immedLo3_0;
 
-def bitfield ROT           <11:10>;
+def bitfield ROT           rot;
 
-def bitfield R_FIELD       < 5: 5>;
+def bitfield R_FIELD       rField;
 
-def bitfield CARET         <22:22>;
-def bitfield REGLIST       <15: 0>;
+def bitfield CARET         caret;
+def bitfield REGLIST       regList;
 
-def bitfield OFFSET        <23: 0>;
-def bitfield COPRO         <11: 8>;
-def bitfield OP1_7_4       < 7: 4>;
-def bitfield CM            < 3: 0>;
+def bitfield OFFSET        offset;
+def bitfield COPRO         copro;
+def bitfield OP1_7_4       op1_7_4;
+def bitfield CM            cm;
 
-def bitfield L_FIELD       <22:22>;
-def bitfield CD            <15:12>;
-def bitfield OPTION        < 7: 0>;
+def bitfield L_FIELD       lField;
+def bitfield CD            cd;
+def bitfield OPTION        option;
 
-def bitfield OP1_23_20     <23:20>;
-def bitfield CN            <19:16>;
-def bitfield OP2_7_5       < 7: 5>;
+def bitfield OP1_23_20     op1_23_20;
+def bitfield CN            cn;
+def bitfield OP2_7_5       op2_7_5;
 
-def bitfield OP1_23_21     <23:21>;
+def bitfield OP1_23_21     op1_23_21;
 
-def bitfield IMMED_23_0    <23: 0>;
-def bitfield M_FIELD       <17:17>;
-def bitfield A_FIELD       < 8: 8>;
-def bitfield I_FIELD       < 7: 7>;
-def bitfield F_FIELD       < 6: 6>;
-def bitfield MODE          < 4: 0>;
+def bitfield IMMED_23_0    immed23_0;
+def bitfield M_FIELD       mField;
+def bitfield A_FIELD       aField;
+def bitfield I_FIELD       iField;
+def bitfield F_FIELD       fField;
+def bitfield MODE          mode;
 
-def bitfield A_BLX         <24:24>;
+def bitfield A_BLX         aBlx;
 
-def bitfield CPNUM	   <11: 8>;
+def bitfield CPNUM	   cpNum;
 // Note that FP Regs are only 3 bits
-def bitfield FN		   <18:16>;
-def bitfield FD		   <14:12>;
-def bitfield FPREGIMM	   < 3: 3>;
+def bitfield FN		   fn;
+def bitfield FD		   fd;
+def bitfield FPREGIMM	   fpRegImm;
 // We can just use 3:0 for FM since the hard-wired FP regs are handled in
 // float_regfile.hh
-def bitfield FM		   < 3: 0>;
-def bitfield FPIMM	   < 2: 0>;
-def bitfield PUNWL	   <24:20>;
+def bitfield FM		   fm;
+def bitfield FPIMM	   fpImm;
+def bitfield PUNWL	   punwl;
 
 // M5 instructions
-def bitfield M5FUNC <7:0>;
+def bitfield M5FUNC        m5Func;
 

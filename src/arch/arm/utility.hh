@@ -35,8 +35,18 @@
 
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
+#include "base/hashmap.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"
+
+namespace __hash_namespace {
+    template<>
+    struct hash<ArmISA::ExtMachInst> : public hash<uint32_t> {
+        size_t operator()(const ArmISA::ExtMachInst &emi) const {
+            return hash<uint32_t>::operator()((uint32_t)emi);
+        };
+    };
+}
 
 namespace ArmISA {
 

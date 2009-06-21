@@ -55,7 +55,7 @@ output header {{
         /// Constructor
         PredOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
                         ArmStaticInst(mnem, _machInst, __opClass),
-                        condCode((ArmISA::ConditionCode)COND_CODE)
+                        condCode((ArmISA::ConditionCode)(unsigned)COND_CODE)
         {
         }
 
