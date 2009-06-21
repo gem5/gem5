@@ -211,7 +211,6 @@ def template EACompExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -236,7 +235,6 @@ def template LoadMemAccExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         EA = xc->getEA();
@@ -265,7 +263,6 @@ def template LoadExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -294,7 +291,6 @@ def template LoadInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_src_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -318,7 +314,6 @@ def template LoadCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -349,7 +344,6 @@ def template StoreMemAccExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -380,7 +374,6 @@ def template StoreExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -413,7 +406,6 @@ def template StoreInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;
@@ -448,7 +440,6 @@ def template StoreCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_dest_decl)s;
 
         if (%(predicate_test)s)
@@ -469,7 +460,6 @@ def template StoreCondCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_dest_decl)s;
 
         if (%(predicate_test)s)
@@ -491,7 +481,6 @@ def template MiscMemAccExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -515,7 +504,6 @@ def template MiscExecute {{
         Addr EA;
         Fault fault = NoFault;
 
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
         %(ea_code)s;

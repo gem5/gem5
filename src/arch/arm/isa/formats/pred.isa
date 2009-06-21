@@ -174,7 +174,6 @@ def template PredOpExecute {{
 
         if (%(predicate_test)s)
         {
-            %(fp_enable_check)s;
             %(code)s;
             if (fault == NoFault)
             {
