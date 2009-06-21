@@ -358,17 +358,9 @@ def template StoreMemAccExecute {{
             EA = xc->getEA();
 
             if (fault == NoFault) {
-                %(postacc_code)s;
-            }
-
-            if (fault == NoFault) {
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
                 if (traceData) { traceData->setData(Mem); }
-            }
-
-            if (fault == NoFault) {
-                %(postacc_code)s;
             }
 
             if (fault == NoFault) {
@@ -403,10 +395,6 @@ def template StoreExecute {{
                 fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                                   memAccessFlags, NULL);
                 if (traceData) { traceData->setData(Mem); }
-            }
-
-            if (fault == NoFault) {
-                %(postacc_code)s;
             }
 
             if (fault == NoFault) {
@@ -466,10 +454,6 @@ def template StoreCompleteAcc {{
         if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
         {
             if (fault == NoFault) {
-                %(postacc_code)s;
-            }
-
-            if (fault == NoFault) {
                 %(op_wb)s;
             }
         }
@@ -490,10 +474,6 @@ def template StoreCondCompleteAcc {{
 
         if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
         {
-            if (fault == NoFault) {
-                %(postacc_code)s;
-            }
-
             if (fault == NoFault) {
                 %(op_wb)s;
             }
