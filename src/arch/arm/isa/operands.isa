@@ -46,7 +46,6 @@ def operands {{
     'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2),
     'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4),
-    'Re': ('IntReg', 'uw', 'RE', 'IsInteger', 5),
 
     'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 5),
     'R0': ('IntReg', 'uw', '0', 'IsInteger', 5),

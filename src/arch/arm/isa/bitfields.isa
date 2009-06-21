@@ -70,8 +70,6 @@ def bitfield SHIFT_SIZE    <11: 7>;
 def bitfield SHIFT         < 6: 5>;
 def bitfield RM            < 3: 0>;
 
-def bitfield RE            <20:16>;
-
 def bitfield RS            <11: 8>;
 
 def bitfield RDUP          <19:16>;
