@@ -33,6 +33,7 @@
 #ifndef __ARCH_ARM_UTILITY_HH__
 #define __ARCH_ARM_UTILITY_HH__
 
+#include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
@@ -42,6 +43,32 @@
 class ThreadContext;
 
 namespace ArmISA {
+
+    inline bool
+    testPredicate(CPSR cpsr, ConditionCode code)
+    {
+        switch (code)
+        {
+            case COND_EQ: return  cpsr.z;
+            case COND_NE: return !cpsr.z;
+            case COND_CS: return  cpsr.c;
+            case COND_CC: return !cpsr.c;
+            case COND_MI: return  cpsr.n;
+            case COND_PL: return !cpsr.n;
+            case COND_VS: return  cpsr.v;
+            case COND_VC: return !cpsr.v;
+            case COND_HI: return  (cpsr.c && !cpsr.z);
+            case COND_LS: return !(cpsr.c && !cpsr.z);
+            case COND_GE: return !(cpsr.n ^ cpsr.v);
+            case COND_LT: return  (cpsr.n ^ cpsr.v);
+            case COND_GT: return !(cpsr.n ^ cpsr.v || cpsr.z);
+            case COND_LE: return  (cpsr.n ^ cpsr.v || cpsr.z);
+            case COND_AL: return true;
+            case COND_NV: return false;
+            default:
+                panic("Unhandled predicate condition: %d\n", code);
+        }
+    }
 
     //Floating Point Utility Functions
     uint64_t fpConvert(ConvertType cvt_type, double fp_val);

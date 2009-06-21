@@ -67,7 +67,7 @@ def template FPAExecute {{
 
                 %(code)s;
 
-                if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode) &&
+                if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode) &&
                         fault == NoFault)
                 {
                     %(op_wb)s;

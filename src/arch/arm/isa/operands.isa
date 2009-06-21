@@ -64,8 +64,8 @@ def operands {{
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
 
-    'Cpsr': ('ControlReg', 'uw', 'CPSR', 'IsInteger', 7),
-    'Fpsr': ('ControlReg', 'uw', 'FPSR', 'IsInteger', 7),
+    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', 'IsInteger', 7),
+    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', 'IsInteger', 7),
     'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 9),
     'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 9),
 

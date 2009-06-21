@@ -830,7 +830,7 @@ decode COND_CODE default Unknown::unknown() {
             }
             format PredOp {
                 // ARM System Call (SoftWare Interrupt)
-                1: swi({{ if (arm_predicate(xc->readMiscReg(ArmISA::CPSR),
+                1: swi({{ if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR),
                               condCode))
                           {
                               //xc->syscall(R7);

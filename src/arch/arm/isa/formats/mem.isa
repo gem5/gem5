@@ -216,7 +216,7 @@ def template EACompExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(op_wb)s;
@@ -241,7 +241,7 @@ def template LoadMemAccExecute {{
         %(op_rd)s;
         EA = xc->getEA();
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
@@ -270,7 +270,7 @@ def template LoadExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
@@ -299,7 +299,7 @@ def template LoadInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 fault = xc->read(EA, (uint%(mem_acc_size)d_t &)Mem, memAccessFlags);
@@ -322,7 +322,7 @@ def template LoadCompleteAcc {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             // ARM instructions will not have a pkt if the predicate is false
             Mem = pkt->get<typeof(Mem)>();
@@ -353,7 +353,7 @@ def template StoreMemAccExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             EA = xc->getEA();
 
@@ -385,7 +385,7 @@ def template StoreExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(memacc_code)s;
@@ -418,7 +418,7 @@ def template StoreInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(memacc_code)s;
@@ -451,7 +451,7 @@ def template StoreCompleteAcc {{
         %(fp_enable_check)s;
         %(op_dest_decl)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(op_wb)s;
@@ -472,7 +472,7 @@ def template StoreCondCompleteAcc {{
         %(fp_enable_check)s;
         %(op_dest_decl)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(op_wb)s;
@@ -495,7 +495,7 @@ def template MiscMemAccExecute {{
         %(op_decl)s;
         %(op_rd)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             EA = xc->getEA();
 
@@ -520,7 +520,7 @@ def template MiscExecute {{
         %(op_rd)s;
         %(ea_code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault) {
                 %(memacc_code)s;

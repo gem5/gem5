@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,60 +25,59 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Gabe Black
  */
+#ifndef __ARCH_ARM_MISCREGS_HH__
+#define __ARCH_ARM_MISCREGS_HH__
 
-#ifndef __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
-#define __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
-
-#include "arch/arm/types.hh"
-#include "sim/faults.hh"
-
-class ThreadContext;
+#include "base/bitunion.hh"
 
 namespace ArmISA
 {
-    static inline std::string getMiscRegName(RegIndex)
-    {
-        return "";
-    }
-
-    class MiscRegFile {
-
-      protected:
-        MiscReg miscRegFile[NumMiscRegs];
-
-      public:
-        void clear()
-        {
-            // Unknown startup state in misc register file currently
-        }
-
-        void copyMiscRegs(ThreadContext *tc);
-
-        MiscReg readRegNoEffect(int misc_reg)
-        {
-            return miscRegFile[misc_reg];
-        }
-
-        MiscReg readReg(int misc_reg, ThreadContext *tc)
-        {
-            return miscRegFile[misc_reg];
-        }
-
-        void setRegNoEffect(int misc_reg, const MiscReg &val)
-        {
-            miscRegFile[misc_reg] = val;
-        }
-
-        void setReg(int misc_reg, const MiscReg &val,
-                               ThreadContext *tc)
-        {
-            miscRegFile[misc_reg] = val;
-        }
-
-        friend class RegFile;
+    enum ConditionCode {
+        COND_EQ  =   0,
+        COND_NE, //  1
+        COND_CS, //  2
+        COND_CC, //  3
+        COND_MI, //  4
+        COND_PL, //  5
+        COND_VS, //  6
+        COND_VC, //  7
+        COND_HI, //  8
+        COND_LS, //  9
+        COND_GE, // 10
+        COND_LT, // 11
+        COND_GT, // 12
+        COND_LE, // 13
+        COND_AL, // 14
+        COND_NV  // 15
     };
-} // namespace ArmISA
 
-#endif
+    enum MiscRegIndex {
+        MISCREG_CPSR = 0,
+        MISCREG_SPSR_FIQ,
+        MISCREG_SPSR_IRQ,
+        MISCREG_SPSR_SVC,
+        MISCREG_SPSR_UND,
+        MISCREG_SPSR_ABT,
+        MISCREG_FPSR
+    };
+
+    BitUnion32(CPSR)
+        Bitfield<31> n;
+        Bitfield<30> z;
+        Bitfield<29> c;
+        Bitfield<28> v;
+        Bitfield<27> q;
+        Bitfield<24> j;
+        Bitfield<19, 16> ge;
+        Bitfield<9> e;
+        Bitfield<8> a;
+        Bitfield<7> i;
+        Bitfield<6> f;
+        Bitfield<5> t;
+        Bitfield<4, 0> mode;
+    EndBitUnion(CPSR)
+};
+
+#endif // __ARCH_ARM_MISCREGS_HH__

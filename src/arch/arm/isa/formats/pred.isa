@@ -36,25 +36,6 @@
 output header {{
 #include <iostream>
 
-    enum ArmPredicateBits {
-        COND_EQ  =   0,
-        COND_NE, //  1
-        COND_CS, //  2
-        COND_CC, //  3
-        COND_MI, //  4
-        COND_PL, //  5
-        COND_VS, //  6
-        COND_VC, //  7
-        COND_HI, //  8
-        COND_LS, //  9
-        COND_GE, // 10
-        COND_LT, // 11
-        COND_GT, // 12
-        COND_LE, // 13
-        COND_AL, // 14
-        COND_NV  // 15
-    };
-
     inline uint32_t
     rotate_imm(uint32_t immValue, uint32_t rotateValue)
     {
@@ -62,76 +43,23 @@ output header {{
                 (immValue << (32 - (int)(rotateValue & 31))));
     }
 
-    inline uint32_t nSet(uint32_t cpsr) { return cpsr & (1<<31); }
-    inline uint32_t zSet(uint32_t cpsr) { return cpsr & (1<<30); }
-    inline uint32_t cSet(uint32_t cpsr) { return cpsr & (1<<29); }
-    inline uint32_t vSet(uint32_t cpsr) { return cpsr & (1<<28); }
-
-    inline bool arm_predicate(uint32_t cpsr, uint32_t predBits)
-    {
-
-        enum ArmPredicateBits armPredBits = (enum ArmPredicateBits) predBits;
-        uint32_t result = 0;
-        switch (armPredBits)
-        {
-            case COND_EQ:
-                result = zSet(cpsr); break;
-            case COND_NE:
-                result = !zSet(cpsr); break;
-            case COND_CS:
-                result = cSet(cpsr); break;
-            case COND_CC:
-                result = !cSet(cpsr); break;
-            case COND_MI:
-                result = nSet(cpsr); break;
-            case COND_PL:
-                result = !nSet(cpsr); break;
-            case COND_VS:
-                result = vSet(cpsr); break;
-            case COND_VC:
-                result = !vSet(cpsr); break;
-            case COND_HI:
-                result = cSet(cpsr) && !zSet(cpsr); break;
-            case COND_LS:
-                result = !cSet(cpsr) || zSet(cpsr); break;
-            case COND_GE:
-                result = (!nSet(cpsr) && !vSet(cpsr)) || (nSet(cpsr) && vSet(cpsr)); break;
-            case COND_LT:
-                result = (nSet(cpsr) && !vSet(cpsr)) || (!nSet(cpsr) && vSet(cpsr)); break;
-            case COND_GT:
-                result = (!nSet(cpsr) && !vSet(cpsr) && !zSet(cpsr)) || (nSet(cpsr) && vSet(cpsr) && !zSet(cpsr)); break;
-            case COND_LE:
-                result = (nSet(cpsr) && !vSet(cpsr)) || (!nSet(cpsr) && vSet(cpsr)) || zSet(cpsr); break;
-            case COND_AL: result = 1; break;
-            case COND_NV: result = 0; break;
-            default:
-                fprintf(stderr, "Unhandled predicate condition: %d\n", armPredBits);
-                exit(1);
-        }
-        if (result)
-            return true;
-        else
-            return false;
-    }
-
-
     /**
      * Base class for predicated integer operations.
      */
     class PredOp : public ArmStaticInst
     {
-            protected:
+      protected:
 
-            uint32_t condCode;
+        ArmISA::ConditionCode condCode;
 
-            /// Constructor
-            PredOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                            ArmStaticInst(mnem, _machInst, __opClass),
-                            condCode(COND_CODE)
-            {
-            }
+        /// Constructor
+        PredOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                        ArmStaticInst(mnem, _machInst, __opClass),
+                        condCode((ArmISA::ConditionCode)COND_CODE)
+        {
+        }
 
-            std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
     };
 
     /**
@@ -243,7 +171,7 @@ def template PredOpExecute {{
         %(op_rd)s;
         %(code)s;
 
-        if (arm_predicate(xc->readMiscReg(ArmISA::CPSR), condCode))
+        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
         {
             if (fault == NoFault)
             {
