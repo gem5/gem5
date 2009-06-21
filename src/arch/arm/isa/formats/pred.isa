@@ -37,10 +37,10 @@ output header {{
 #include <iostream>
 
     inline uint32_t
-    rotate_imm(uint32_t immValue, uint32_t rotateValue)
+    rotate_imm(uint32_t immValue, int rotateValue)
     {
-        return ((immValue >> (int)(rotateValue & 31)) |
-                (immValue << (32 - (int)(rotateValue & 31))));
+        return ((immValue >> (rotateValue & 31)) |
+                (immValue << (32 - (rotateValue & 31))));
     }
 
     /**
