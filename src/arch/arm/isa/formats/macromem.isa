@@ -57,7 +57,7 @@ output header {{
                  writeback,
                  loadop;
 
-        ArmMacroMemoryOp(const char *mnem, MachInst _machInst, OpClass __opClass,
+        ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                      StaticInstPtr _eaCompPtr = nullStaticInstPtr,
                      StaticInstPtr _memAccPtr = nullStaticInstPtr)
             : PredMacroOp(mnem, _machInst, __opClass),
@@ -86,7 +86,7 @@ output header {{
                  loadop;
         int32_t disp8;
 
-        ArmMacroFPAOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        ArmMacroFPAOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : PredMacroOp(mnem, _machInst, __opClass),
             puswl(PUSWL), prepost(PREPOST), up(UP),
             psruser(PSRUSER), writeback(WRITEBACK), loadop(LOADOP),
@@ -113,7 +113,7 @@ output header {{
                  count;
         int32_t disp8;
 
-        ArmMacroFMOp(const char *mnem, MachInst _machInst, OpClass __opClass)
+        ArmMacroFMOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
             : PredMacroOp(mnem, _machInst, __opClass),
             punwl(PUNWL), prepost(PREPOST), up(UP),
             n1bit(OPCODE_22), writeback(WRITEBACK), loadop(LOADOP),
@@ -143,13 +143,13 @@ def template MacroStoreDeclare {{
     {
         public:
             // Constructor
-            %(class_name)s(MachInst machInst);
+            %(class_name)s(ExtMachInst machInst);
             %(BasicExecDeclare)s
     };
 }};
 
 def template MacroStoreConstructor {{
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
@@ -275,7 +275,7 @@ def template MacroStoreExecute {{
 }};
 
 def template MacroFPAConstructor {{
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
@@ -317,7 +317,7 @@ def template MacroFPAConstructor {{
 
 
 def template MacroFMConstructor {{
-    inline %(class_name)s::%(class_name)s(MachInst machInst)
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;

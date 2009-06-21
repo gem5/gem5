@@ -43,7 +43,7 @@ output header {{
     {
       public:
         /// Constructor
-        Unknown(MachInst _machInst)
+        Unknown(ExtMachInst _machInst)
             : ArmStaticInst("unknown", _machInst, No_OpClass)
         {
             // don't call execute() (which panics) if we're on a
