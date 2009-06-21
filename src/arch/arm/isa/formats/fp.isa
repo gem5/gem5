@@ -65,12 +65,11 @@ def template FPAExecute {{
                 %(op_decl)s;
                 %(op_rd)s;
 
-                %(code)s;
-
-                if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode) &&
-                        fault == NoFault)
-                {
-                    %(op_wb)s;
+                if (%(predicate_test)s) {
+                    %(code)s;
+                    if (fault == NoFault) {
+                        %(op_wb)s;
+                    }
                 }
 
                 return fault;
@@ -102,13 +101,19 @@ def format FloatOp(code, *flags) {{
         orig_code = code
 
         cblk = code
-        iop = InstObjParams(name, Name, 'FPAOp', cblk, flags)
+        iop = InstObjParams(name, Name, 'FPAOp',
+                            {"code": cblk,
+                             "predicate_test": predicateTest},
+                            flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         exec_output = FPAExecute.subst(iop)
 
         sng_cblk = code
-        sng_iop = InstObjParams(name, Name+'S', 'FPAOp', sng_cblk, flags)
+        sng_iop = InstObjParams(name, Name+'S', 'FPAOp',
+                                {"code": sng_cblk,
+                                 "predicate_test": predicateTest},
+                                flags)
         header_output += BasicDeclare.subst(sng_iop)
         decoder_output += BasicConstructor.subst(sng_iop)
         exec_output += FPAExecute.subst(sng_iop)
@@ -116,7 +121,10 @@ def format FloatOp(code, *flags) {{
         dbl_code = re.sub(r'\.sf', '.df', orig_code)
 
         dbl_cblk = dbl_code
-        dbl_iop = InstObjParams(name, Name+'D', 'FPAOp', dbl_cblk, flags)
+        dbl_iop = InstObjParams(name, Name+'D', 'FPAOp',
+                                {"code": dbl_cblk,
+                                 "predicate_test": predicateTest},
+                                flags)
         header_output += BasicDeclare.subst(dbl_iop)
         decoder_output += BasicConstructor.subst(dbl_iop)
         exec_output += FPAExecute.subst(dbl_iop)
@@ -140,7 +148,10 @@ let {{
 
 def format FloatCmp(fReg1, fReg2, *flags) {{
         code = calcFPCcCode % vars()
-        iop = InstObjParams(name, Name, 'FPAOp', code, flags)
+        iop = InstObjParams(name, Name, 'FPAOp',
+                            {"code": code,
+                             "predicate_test": predicateTest},
+                             flags)
         header_output = BasicDeclare.subst(iop)
         decoder_output = BasicConstructor.subst(iop)
         decode_block = BasicDecode.subst(iop)

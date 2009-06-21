@@ -58,14 +58,18 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # they differ only in the set of code objects contained (which in
     # turn affects the object's overall operand list).
     iop = InstObjParams(name, Name, base_class,
-                        { 'ea_code':ea_code, 'memacc_code':memacc_code},
+                        {'ea_code': ea_code,
+                         'memacc_code': memacc_code,
+                         'predicate_test': predicateTest},
                         inst_flags)
     ea_iop = InstObjParams(name, Name, base_class,
-                        { 'ea_code':ea_code },
-                        inst_flags)
+                           {'ea_code': ea_code,
+                            'predicate_test': predicateTest},
+                           inst_flags)
     memacc_iop = InstObjParams(name, Name, base_class,
-                        { 'memacc_code':memacc_code},
-                        inst_flags)
+                               {'memacc_code': memacc_code,
+                                'predicate_test': predicateTest},
+                               inst_flags)
 
     if mem_flags:
         s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'

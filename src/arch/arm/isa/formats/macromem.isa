@@ -370,7 +370,10 @@ def format ArmMacroStore(code, mem_flags = [], inst_flag = [], *opt_flags) {{
 }};
 
 def format ArmMacroFPAOp(code, mem_flags = [], inst_flag = [], *opt_flags) {{
-    iop = InstObjParams(name, Name, 'ArmMacroFPAOp', code, opt_flags)
+    iop = InstObjParams(name, Name, 'ArmMacroFPAOp',
+                        {"code": code,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = MacroFPAConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -378,7 +381,10 @@ def format ArmMacroFPAOp(code, mem_flags = [], inst_flag = [], *opt_flags) {{
 }};
 
 def format ArmMacroFMOp(code, mem_flags = [], inst_flag = [], *opt_flags) {{
-    iop = InstObjParams(name, Name, 'ArmMacroFMOp', code, opt_flags)
+    iop = InstObjParams(name, Name, 'ArmMacroFMOp',
+                        {"code": code,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = MacroFMConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

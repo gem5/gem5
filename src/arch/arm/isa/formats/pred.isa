@@ -161,26 +161,26 @@ output header {{
 
 }};
 
+let {{
+    predicateTest = 'testPredicate(Cpsr, condCode)'
+}};
+
 def template PredOpExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-
-        %(fp_enable_check)s;
         %(op_decl)s;
         %(op_rd)s;
-        %(code)s;
 
-        if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode))
+        if (%(predicate_test)s)
         {
+            %(fp_enable_check)s;
+            %(code)s;
             if (fault == NoFault)
             {
                 %(op_wb)s;
             }
         }
-        else
-            return NoFault;
-            // Predicated false instructions should not return faults
 
         return fault;
     }
@@ -281,7 +281,10 @@ let {{
 }};
 
 def format PredOp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'PredOp', code, opt_flags)
+    iop = InstObjParams(name, Name, 'PredOp',
+                        {"code": code,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -289,7 +292,10 @@ def format PredOp(code, *opt_flags) {{
 }};
 
 def format PredImmOp(code, *opt_flags) {{
-    iop = InstObjParams(name, Name, 'PredImmOp', code, opt_flags)
+    iop = InstObjParams(name, Name, 'PredImmOp',
+                        {"code": code,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -300,7 +306,10 @@ def format PredImmOpCc(code, icValue, ivValue, *opt_flags) {{
     ccCode = calcCcCode % vars()
     code += ccCode;
     iop = InstObjParams(name, Name, 'PredImmOp',
-        {"code": code, "cc_code": ccCode}, opt_flags)
+                        {"code": code,
+                         "cc_code": ccCode,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -309,7 +318,10 @@ def format PredImmOpCc(code, icValue, ivValue, *opt_flags) {{
 
 def format PredIntOp(code, *opt_flags) {{
     new_code = ArmGenericCodeSubs(code)
-    iop = InstObjParams(name, Name, 'PredIntOp', new_code, opt_flags)
+    iop = InstObjParams(name, Name, 'PredIntOp',
+                        {"code": new_code,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)
@@ -321,7 +333,10 @@ def format PredIntOpCc(code, icValue, ivValue, *opt_flags) {{
     code += ccCode;
     new_code = ArmGenericCodeSubs(code)
     iop = InstObjParams(name, Name, 'PredIntOp',
-        {"code": new_code, "cc_code": ccCode }, opt_flags)
+                        {"code": new_code,
+                         "cc_code": ccCode,
+                         "predicate_test": predicateTest},
+                        opt_flags)
     header_output = BasicDeclare.subst(iop)
     decoder_output = BasicConstructor.subst(iop)
     decode_block = BasicDecode.subst(iop)

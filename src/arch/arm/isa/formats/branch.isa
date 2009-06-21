@@ -234,7 +234,7 @@ def format Branch(code,*opt_flags) {{
     else:
          inst_flags += ('IsCondControl', )
 
-    icode =  'if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode)) {\n'
+    icode =  'if (testPredicate(Cpsr, condCode)) {\n'
     icode += code
     icode += '  NPC = NPC + 4 + disp;\n'
     icode += '} else {\n'
@@ -268,7 +268,7 @@ def format BranchExchange(code,*opt_flags) {{
 
     #Condition code
 
-    icode =  'if (testPredicate(xc->readMiscReg(ArmISA::MISCREG_CPSR), condCode)) {\n'
+    icode =  'if (testPredicate(Cpsr, condCode)) {\n'
     icode += code
     icode += '  NPC = Rm & 0xfffffffe; // Masks off bottom bit\n'
     icode += '} else {\n'
