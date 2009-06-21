@@ -38,7 +38,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('pagetable.cc')
     Source('regfile/regfile.cc')
     Source('tlb.cc')
-    Source('utility.cc')
     Source('vtophys.cc')
 
     SimObject('ArmTLB.py')

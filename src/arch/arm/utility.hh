@@ -35,12 +35,8 @@
 
 #include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
-#include "base/misc.hh"
 #include "base/types.hh"
-#include "config/full_system.hh"
 #include "cpu/thread_context.hh"
-
-class ThreadContext;
 
 namespace ArmISA {
 
@@ -69,19 +65,6 @@ namespace ArmISA {
                 panic("Unhandled predicate condition: %d\n", code);
         }
     }
-
-    //Floating Point Utility Functions
-    uint64_t fpConvert(ConvertType cvt_type, double fp_val);
-    double roundFP(double val, int digits);
-    double truncFP(double val);
-
-    bool getCondCode(uint32_t fcsr, int cc);
-    uint32_t genCCVector(uint32_t fcsr, int num, uint32_t cc_val);
-    uint32_t genInvalidVector(uint32_t fcsr);
-
-    bool isNan(void *val_ptr, int size);
-    bool isQnan(void *val_ptr, int size);
-    bool isSnan(void *val_ptr, int size);
 
     /**
      * Function to insure ISA semantics about 0 registers.
@@ -112,6 +95,13 @@ namespace ArmISA {
     inline void startupCPU(ThreadContext *tc, int cpuId)
     {
         tc->activate(0);
+    }
+
+    template <class XC>
+    Fault
+    checkFpEnableFault(XC *xc)
+    {
+        return NoFault;
     }
 };
 
