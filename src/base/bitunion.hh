@@ -86,7 +86,7 @@ namespace BitfieldBackend
         class Bitfield : public BitfieldBase<Type>
         {
           public:
-            operator uint64_t () const
+            operator const uint64_t () const
             {
                 return this->getBits(first, last);
             }
@@ -117,7 +117,7 @@ namespace BitfieldBackend
         class BitfieldWO : public Bitfield<first, last>
         {
           private:
-            operator uint64_t () const;
+            operator const uint64_t () const;
 
           public:
             using Bitfield<first, last>::operator=;
@@ -136,7 +136,7 @@ namespace BitfieldBackend
         class SignedBitfield : public BitfieldBase<Type>
         {
           public:
-            operator int64_t () const
+            operator const int64_t () const
             {
                 return sext<first - last + 1>(this->getBits(first, last));
             }
@@ -167,7 +167,7 @@ namespace BitfieldBackend
         class SignedBitfieldWO : public SignedBitfield<first, last>
         {
           private:
-            operator int64_t () const;
+            operator const int64_t () const;
 
           public:
             int64_t operator=(const int64_t _data)
@@ -200,7 +200,7 @@ namespace BitfieldBackend
 
         BitUnionOperators() {}
 
-        operator Type () const
+        operator const Type () const
         {
             return Base::__data;
         }
@@ -280,7 +280,7 @@ namespace BitfieldBackend
 //do so.
 #define EndSubBitUnion(name) \
         }; \
-        inline operator const __DataType () \
+        inline operator const __DataType () const \
         { return __data; } \
         \
         inline const __DataType operator = (const __DataType & _data) \
