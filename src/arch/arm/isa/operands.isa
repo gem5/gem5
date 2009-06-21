@@ -48,12 +48,9 @@ def operands {{
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4),
 
     'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 5),
-    'R0': ('IntReg', 'uw', '0', 'IsInteger', 5),
-    'R7': ('IntReg', 'uw', '7', 'IsInteger', 5),
     'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 5),
     'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 6),
     'LR': ('IntReg', 'uw', '14', 'IsInteger', 6),
-    'Ignore': ('IntReg', 'uw', '16', 'IsInteger', 99),
 
     #General Purpose Floating Point Reg Operands
     'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
