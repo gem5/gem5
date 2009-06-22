@@ -33,28 +33,6 @@
 // Floating Point operate instructions
 //
 
-output header {{
-
-        /**
-         * Base class for FP operations.
-         */
-        class FPAOp : public PredOp
-        {
-                protected:
-
-                /// Constructor
-                FPAOp(const char *mnem, MachInst _machInst, OpClass __opClass) : PredOp(mnem, _machInst, __opClass)
-                {
-                }
-
-            //std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-        };
-
-}};
-
-output exec {{
-}};
-
 def template FPAExecute {{
         Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
         {
@@ -101,7 +79,7 @@ def format FloatOp(code, *flags) {{
         orig_code = code
 
         cblk = code
-        iop = InstObjParams(name, Name, 'FPAOp',
+        iop = InstObjParams(name, Name, 'PredOp',
                             {"code": cblk,
                              "predicate_test": predicateTest},
                             flags)
@@ -110,7 +88,7 @@ def format FloatOp(code, *flags) {{
         exec_output = FPAExecute.subst(iop)
 
         sng_cblk = code
-        sng_iop = InstObjParams(name, Name+'S', 'FPAOp',
+        sng_iop = InstObjParams(name, Name+'S', 'PredOp',
                                 {"code": sng_cblk,
                                  "predicate_test": predicateTest},
                                 flags)
@@ -121,7 +99,7 @@ def format FloatOp(code, *flags) {{
         dbl_code = re.sub(r'\.sf', '.df', orig_code)
 
         dbl_cblk = dbl_code
-        dbl_iop = InstObjParams(name, Name+'D', 'FPAOp',
+        dbl_iop = InstObjParams(name, Name+'D', 'PredOp',
                                 {"code": dbl_cblk,
                                  "predicate_test": predicateTest},
                                 flags)
@@ -148,7 +126,7 @@ let {{
 
 def format FloatCmp(fReg1, fReg2, *flags) {{
         code = calcFPCcCode % vars()
-        iop = InstObjParams(name, Name, 'FPAOp',
+        iop = InstObjParams(name, Name, 'PredOp',
                             {"code": code,
                              "predicate_test": predicateTest},
                              flags)
