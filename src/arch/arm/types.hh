@@ -172,6 +172,14 @@ namespace ArmISA
         Bitfield<7,  0>  m5Func;
     EndBitUnion(ExtMachInst)
 
+    // Shift types for ARM instructions
+    enum ArmShiftType {
+        LSL = 0,
+        LSR,
+        ASR,
+        ROR
+    };
+
     typedef uint8_t  RegIndex;
 
     typedef uint64_t IntReg;

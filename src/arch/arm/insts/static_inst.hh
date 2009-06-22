@@ -34,22 +34,55 @@
 
 namespace ArmISA
 {
-    class ArmStaticInst : public StaticInst
+class ArmStaticInst : public StaticInst
+{
+  protected:
+    // Shift Rm by an immediate value
+    int32_t
+    shift_rm_imm(uint32_t base, uint32_t shamt,
+                 uint32_t type, uint32_t cfval) const;
+
+    // Shift Rm by Rs
+    int32_t
+    shift_rm_rs(uint32_t base, uint32_t shamt,
+                uint32_t type, uint32_t cfval) const;
+
+    // Generate C for a shift by immediate
+    int32_t
+    shift_carry_imm(uint32_t base, uint32_t shamt,
+                    uint32_t type, uint32_t cfval) const;
+
+    // Generate C for a shift by Rs
+    int32_t
+    shift_carry_rs(uint32_t base, uint32_t shamt,
+                   uint32_t type, uint32_t cfval) const;
+
+    // Generate the appropriate carry bit for an addition operation
+    int32_t
+    arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const;
+
+    // Generate the appropriate carry bit for a subtraction operation
+    int32_t
+    arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const;
+
+    int32_t
+    arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
+
+    int32_t
+    arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
+
+    // Constructor
+    ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
+        : StaticInst(mnem, _machInst, __opClass)
     {
-      protected:
+    }
 
-        // Constructor
-        ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
-            : StaticInst(mnem, _machInst, __opClass)
-        {
-        }
+    /// Print a register name for disassembly given the unique
+    /// dependence tag number (FP or int).
+    void printReg(std::ostream &os, int reg) const;
 
-        /// Print a register name for disassembly given the unique
-        /// dependence tag number (FP or int).
-        void printReg(std::ostream &os, int reg) const;
-
-        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-    };
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+};
 }
 
 #endif //__ARCH_ARM_INSTS_STATICINST_HH__

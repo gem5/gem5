@@ -44,9 +44,6 @@
 //
 namespace ArmISA;
 
-//Include the utility functions
-##include "util.isa"
-
 //Include the bitfield definitions
 ##include "bitfields.isa"
 
