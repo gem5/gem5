@@ -33,331 +33,228 @@
 // Macro Memory-format instructions
 //
 
-output header {{
-
-    /**
-     * Arm Macro Memory operations like LDM/STM
-     */
-    class ArmMacroMemoryOp : public PredMacroOp
-    {
-        protected:
-        /// Memory request flags.  See mem_req_base.hh.
-        unsigned memAccessFlags;
-        /// Pointer to EAComp object.
-        const StaticInstPtr eaCompPtr;
-        /// Pointer to MemAcc object.
-        const StaticInstPtr memAccPtr;
-
-        uint32_t reglist;
-        uint32_t ones;
-        uint32_t puswl,
-                 prepost,
-                 up,
-                 psruser,
-                 writeback,
-                 loadop;
-
-        ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
-            : PredMacroOp(mnem, _machInst, __opClass),
-            memAccessFlags(0), eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
-            reglist(REGLIST), ones(0), puswl(PUSWL), prepost(PREPOST), up(UP),
-            psruser(PSRUSER), writeback(WRITEBACK), loadop(LOADOP)
-        {
-            ones = number_of_ones(reglist);
-            numMicroops = ones + writeback + 1;
-            // Remember that writeback adds a uop
-            microOps = new StaticInstPtr[numMicroops];
-        }
-    };
-
-    /**
-     * Arm Macro FPA operations to fix ldfd and stfd instructions
-     */
-    class ArmMacroFPAOp : public PredMacroOp
-    {
-        protected:
-        uint32_t puswl,
-                 prepost,
-                 up,
-                 psruser,
-                 writeback,
-                 loadop;
-        int32_t disp8;
-
-        ArmMacroFPAOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-            : PredMacroOp(mnem, _machInst, __opClass),
-            puswl(PUSWL), prepost(PREPOST), up(UP),
-            psruser(PSRUSER), writeback(WRITEBACK), loadop(LOADOP),
-            disp8(IMMED_7_0 << 2)
-        {
-            numMicroops = 3 + writeback;
-            microOps = new StaticInstPtr[numMicroops];
-        }
-    };
-
-    /**
-     * Arm Macro FM operations to fix lfm and sfm
-     */
-    class ArmMacroFMOp : public PredMacroOp
-    {
-        protected:
-        uint32_t punwl,
-                 prepost,
-                 up,
-                 n1bit,
-                 writeback,
-                 loadop,
-                 n0bit,
-                 count;
-        int32_t disp8;
-
-        ArmMacroFMOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-            : PredMacroOp(mnem, _machInst, __opClass),
-            punwl(PUNWL), prepost(PREPOST), up(UP),
-            n1bit(OPCODE_22), writeback(WRITEBACK), loadop(LOADOP),
-            n0bit(OPCODE_15), disp8(IMMED_7_0 << 2)
-        {
-            // Transfer 1-4 registers based on n1 and n0 bits (with 00 repr. 4)
-            count = (n1bit << 1) | n0bit;
-            if (count == 0)
-                count = 4;
-            numMicroops = (3*count) + writeback;
-            microOps = new StaticInstPtr[numMicroops];
-        }
-    };
-
-
-}};
-
-
-output decoder {{
-}};
-
 def template MacroStoreDeclare {{
-    /**
-     * Static instructions class for a store multiple instruction
-     */
-    class %(class_name)s : public %(base_class)s
-    {
-        public:
-            // Constructor
-            %(class_name)s(ExtMachInst machInst);
-            %(BasicExecDeclare)s
-    };
+/**
+ * Static instructions class for a store multiple instruction
+ */
+class %(class_name)s : public %(base_class)s
+{
+    public:
+        // Constructor
+        %(class_name)s(ExtMachInst machInst);
+        %(BasicExecDeclare)s
+};
 }};
 
 def template MacroStoreConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+{
+    %(constructor)s;
+    uint32_t regs_to_handle = reglist;
+    uint32_t j = 0,
+             start_addr = 0,
+             end_addr = 0;
+
+    switch (puswl)
     {
-        %(constructor)s;
-        uint32_t regs_to_handle = reglist;
-        uint32_t j = 0,
-                 start_addr = 0,
-                 end_addr = 0;
-
-        switch (puswl)
-        {
-            case 0x01: //     L ldmda_l
-                start_addr = (ones << 2) - 4;
-                end_addr = 0;
-                break;
-            case 0x03: //    WL ldmda_wl
-                start_addr = (ones << 2) - 4;
-                end_addr = 0;
-                break;
-            case 0x08: //  U    stmia_u
-                start_addr = 0;
-                end_addr = (ones << 2) - 4;
-                break;
-            case 0x09: //  U  L ldmia_ul
-                start_addr = 0;
-                end_addr = (ones << 2) - 4;
-                break;
-            case 0x0b: //  U WL ldmia
-                start_addr = 0;
-                end_addr = (ones << 2) - 4;
-                break;
-            case 0x11: // P   L ldmdb
-                start_addr = (ones << 2); // U-bit is already 0 for subtract
-                end_addr = 4; // negative 4
-                break;
-            case 0x12: // P  W  stmdb
-                start_addr = (ones << 2); // U-bit is already 0 for subtract
-                end_addr = 4; // negative 4
-                break;
-            case 0x18: // PU    stmib
-                start_addr = 4;
-                end_addr = (ones << 2) + 4;
-                break;
-            case 0x19: // PU  L ldmib
-                start_addr = 4;
-                end_addr = (ones << 2) + 4;
-                break;
-            default:
-                panic("Unhandled Load/Store Multiple Instruction");
-                break;
-        }
-
-        //TODO - Add addi_uop/subi_uop here to create starting addresses
-        //Just using addi with 0 offset makes a "copy" of Rn for our use
-        uint32_t newMachInst = 0;
-        newMachInst = machInst & 0xffff0000;
-        microOps[0] = new Addi_uop(newMachInst);
-
-        for (int i = 1; i < ones+1; i++)
-        {
-            // Get next available bit for transfer
-            while (! ( regs_to_handle & (1<<j)))
-                j++;
-            regs_to_handle &= ~(1<<j);
-
-            microOps[i] = gen_ldrstr_uop(machInst, loadop, j, start_addr);
-
-            if (up)
-                start_addr += 4;
-            else
-                start_addr -= 4;
-        }
-
-        /* TODO: Take a look at how these 2 values should meet together
-        if (start_addr != (end_addr - 4))
-        {
-            fprintf(stderr, "start_addr: %d\n", start_addr);
-            fprintf(stderr, "end_addr:   %d\n", end_addr);
-            panic("start_addr does not meet end_addr");
-        }
-        */
-
-        if (writeback)
-        {
-            uint32_t newMachInst = machInst & 0xf0000000;
-            uint32_t rn = (machInst >> 16) & 0x0f;
-            // 3322 2222 2222 1111 1111 11
-            // 1098 7654 3210 9876 5432 1098 7654 3210
-            // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-            // sub rn, rn, imm
-            newMachInst |= 0x02400000;
-            newMachInst |= ((rn << 16) | (rn << 12));
-            newMachInst |= (ones << 2);
-            if (up)
-            {
-                microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-            }
-            else
-            {
-                microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
-            }
-        }
-        microOps[numMicroops-1]->setLastMicroop();
+        case 0x01: //     L ldmda_l
+            start_addr = (ones << 2) - 4;
+            end_addr = 0;
+            break;
+        case 0x03: //    WL ldmda_wl
+            start_addr = (ones << 2) - 4;
+            end_addr = 0;
+            break;
+        case 0x08: //  U    stmia_u
+            start_addr = 0;
+            end_addr = (ones << 2) - 4;
+            break;
+        case 0x09: //  U  L ldmia_ul
+            start_addr = 0;
+            end_addr = (ones << 2) - 4;
+            break;
+        case 0x0b: //  U WL ldmia
+            start_addr = 0;
+            end_addr = (ones << 2) - 4;
+            break;
+        case 0x11: // P   L ldmdb
+            start_addr = (ones << 2); // U-bit is already 0 for subtract
+            end_addr = 4; // negative 4
+            break;
+        case 0x12: // P  W  stmdb
+            start_addr = (ones << 2); // U-bit is already 0 for subtract
+            end_addr = 4; // negative 4
+            break;
+        case 0x18: // PU    stmib
+            start_addr = 4;
+            end_addr = (ones << 2) + 4;
+            break;
+        case 0x19: // PU  L ldmib
+            start_addr = 4;
+            end_addr = (ones << 2) + 4;
+            break;
+        default:
+            panic("Unhandled Load/Store Multiple Instruction");
+            break;
     }
+
+    //TODO - Add addi_uop/subi_uop here to create starting addresses
+    //Just using addi with 0 offset makes a "copy" of Rn for our use
+    uint32_t newMachInst = 0;
+    newMachInst = machInst & 0xffff0000;
+    microOps[0] = new Addi_uop(newMachInst);
+
+    for (int i = 1; i < ones+1; i++)
+    {
+        // Get next available bit for transfer
+        while (! ( regs_to_handle & (1<<j)))
+            j++;
+        regs_to_handle &= ~(1<<j);
+
+        microOps[i] = gen_ldrstr_uop(machInst, loadop, j, start_addr);
+
+        if (up)
+            start_addr += 4;
+        else
+            start_addr -= 4;
+    }
+
+    /* TODO: Take a look at how these 2 values should meet together
+    if (start_addr != (end_addr - 4))
+    {
+        fprintf(stderr, "start_addr: %d\n", start_addr);
+        fprintf(stderr, "end_addr:   %d\n", end_addr);
+        panic("start_addr does not meet end_addr");
+    }
+    */
+
+    if (writeback)
+    {
+        uint32_t newMachInst = machInst & 0xf0000000;
+        uint32_t rn = (machInst >> 16) & 0x0f;
+        // 3322 2222 2222 1111 1111 11
+        // 1098 7654 3210 9876 5432 1098 7654 3210
+        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
+        // sub rn, rn, imm
+        newMachInst |= 0x02400000;
+        newMachInst |= ((rn << 16) | (rn << 12));
+        newMachInst |= (ones << 2);
+        if (up)
+        {
+            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
+        }
+        else
+        {
+            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+        }
+    }
+    microOps[numMicroops-1]->setLastMicroop();
+}
 
 }};
 
 def template MacroStoreExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
+
+    %(fp_enable_check)s;
+    %(op_decl)s;
+    %(op_rd)s;
+    %(code)s;
+    if (fault == NoFault)
     {
-        Fault fault = NoFault;
-
-        %(fp_enable_check)s;
-        %(op_decl)s;
-        %(op_rd)s;
-        %(code)s;
-        if (fault == NoFault)
-        {
-            %(op_wb)s;
-        }
-
-        return fault;
+        %(op_wb)s;
     }
+
+    return fault;
+}
 }};
 
 def template MacroFPAConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+{
+    %(constructor)s;
+
+    uint32_t start_addr = 0;
+
+    if (prepost)
+        start_addr = disp8;
+    else
+        start_addr = 0;
+
+    emit_ldfstf_uops(microOps, 0, machInst, loadop, up, start_addr);
+
+    if (writeback)
     {
-        %(constructor)s;
-
-        uint32_t start_addr = 0;
-
-        if (prepost)
-            start_addr = disp8;
-        else
-            start_addr = 0;
-
-        emit_ldfstf_uops(microOps, 0, machInst, loadop, up, start_addr);
-
-        if (writeback)
+        uint32_t newMachInst = machInst & 0xf0000000;
+        uint32_t rn = (machInst >> 16) & 0x0f;
+        // 3322 2222 2222 1111 1111 11
+        // 1098 7654 3210 9876 5432 1098 7654 3210
+        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
+        // sub rn, rn, imm
+        newMachInst |= 0x02400000;
+        newMachInst |= ((rn << 16) | (rn << 12));
+        if (up)
         {
-            uint32_t newMachInst = machInst & 0xf0000000;
-            uint32_t rn = (machInst >> 16) & 0x0f;
-            // 3322 2222 2222 1111 1111 11
-            // 1098 7654 3210 9876 5432 1098 7654 3210
-            // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-            // sub rn, rn, imm
-            newMachInst |= 0x02400000;
-            newMachInst |= ((rn << 16) | (rn << 12));
-            if (up)
-            {
-                newMachInst |= disp8;
-                microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-            }
-            else
-            {
-                newMachInst |= disp8;
-                microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
-            }
+            newMachInst |= disp8;
+            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
         }
-        microOps[numMicroops-1]->setLastMicroop();
+        else
+        {
+            newMachInst |= disp8;
+            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+        }
     }
+    microOps[numMicroops-1]->setLastMicroop();
+}
 
 }};
 
 
 def template MacroFMConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
+    : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+{
+    %(constructor)s;
+
+    uint32_t start_addr = 0;
+
+    if (prepost)
+        start_addr = disp8;
+    else
+        start_addr = 0;
+
+    for (int i = 0; i < count; i++)
     {
-        %(constructor)s;
-
-        uint32_t start_addr = 0;
-
-        if (prepost)
-            start_addr = disp8;
-        else
-            start_addr = 0;
-
-        for (int i = 0; i < count; i++)
-        {
-            emit_ldfstf_uops(microOps, 3*i, machInst, loadop, up, start_addr);
-        }
-
-        if (writeback)
-        {
-            uint32_t newMachInst = machInst & 0xf0000000;
-            uint32_t rn = (machInst >> 16) & 0x0f;
-            // 3322 2222 2222 1111 1111 11
-            // 1098 7654 3210 9876 5432 1098 7654 3210
-            // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-            // sub rn, rn, imm
-            newMachInst |= 0x02400000;
-            newMachInst |= ((rn << 16) | (rn << 12));
-            if (up)
-            {
-                newMachInst |= disp8;
-                microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-            }
-            else
-            {
-                newMachInst |= disp8;
-                microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
-            }
-        }
-        microOps[numMicroops-1]->setLastMicroop();
+        emit_ldfstf_uops(microOps, 3*i, machInst, loadop, up, start_addr);
     }
 
+    if (writeback)
+    {
+        uint32_t newMachInst = machInst & 0xf0000000;
+        uint32_t rn = (machInst >> 16) & 0x0f;
+        // 3322 2222 2222 1111 1111 11
+        // 1098 7654 3210 9876 5432 1098 7654 3210
+        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
+        // sub rn, rn, imm
+        newMachInst |= 0x02400000;
+        newMachInst |= ((rn << 16) | (rn << 12));
+        if (up)
+        {
+            newMachInst |= disp8;
+            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
+        }
+        else
+        {
+            newMachInst |= disp8;
+            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+        }
+    }
+    microOps[numMicroops-1]->setLastMicroop();
+}
 }};
 
 
@@ -390,6 +287,3 @@ def format ArmMacroFMOp(code, mem_flags = [], inst_flag = [], *opt_flags) {{
     decode_block = BasicDecode.subst(iop)
     exec_output = PredOpExecute.subst(iop)
 }};
-
-
-

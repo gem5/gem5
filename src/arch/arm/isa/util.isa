@@ -46,17 +46,6 @@ output header {{
     enum ArmShiftMode {
     };
 
-    inline uint32_t number_of_ones(int32_t val)
-    {
-        uint32_t ones = 0;
-        for (int i = 0; i < 32; i++ )
-        {
-            if ( val & (1<<i) )
-                ones++;
-        }
-        return ones;
-    }
-
 }};
 
 output exec {{
