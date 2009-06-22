@@ -28,44 +28,42 @@
  */
 
 #include "arch/arm/insts/static_inst.hh"
+#include "base/condcodes.hh"
 
 namespace ArmISA
 {
-static int32_t arm_NEG(int32_t val) { return (val >> 31); }
-static int32_t arm_POS(int32_t val) { return ((~val) >> 31); }
-
 // Shift Rm by an immediate value
 int32_t
 ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
                             uint32_t type, uint32_t cfval) const
 {
-    enum ArmShiftType shiftType;
-    shiftType = (enum ArmShiftType) type;
+    assert(shamt < 32);
+    ArmShiftType shiftType;
+    shiftType = (ArmShiftType)type;
 
     switch (shiftType)
     {
-        case LSL:
-            return (base << shamt);
-        case LSR:
-            if (shamt == 0)
-                return (0);
-            else
-                return (base >> shamt);
-        case ASR:
-            if (shamt == 0)
-                return ((uint32_t) ((int32_t) base >> 31L));
-            else
-                return ((uint32_t) (((int32_t) base) >> shamt));
-        case ROR:
-            //shamt = shamt & 0x1f;
-            if (shamt == 0)
-                return (cfval << 31) | (base >> 1); // RRX
-            else
-                return (base << (32 - shamt)) | (base >> shamt);
-        default:
-            fprintf(stderr, "Unhandled shift type\n");
-            exit(1);
-            break;
+      case LSL:
+        return base << shamt;
+      case LSR:
+        if (shamt == 0)
+            return 0;
+        else
+            return base >> shamt;
+      case ASR:
+        if (shamt == 0)
+            return (int32_t)base >> 31;
+        else
+            return (int32_t)base >> shamt;
+      case ROR:
+        if (shamt == 0)
+            return (cfval << 31) | (base >> 1); // RRX
+        else
+            return (base << (32 - shamt)) | (base >> shamt);
+      default:
+        fprintf(stderr, "Unhandled shift type\n");
+        exit(1);
+        break;
     }
     return 0;
 }
@@ -80,44 +78,38 @@ ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
 
     switch (shiftType)
     {
-        case LSL:
-            if (shamt == 0)
-                return (base);
-            else if (shamt >= 32)
-                return (0);
-            else
-                return (base << shamt);
-        case LSR:
-            if (shamt == 0)
-                return (base);
-            else if (shamt >= 32)
-                return (0);
-            else
-                return (base >> shamt);
-        case ASR:
-            if (shamt == 0)
-                return base;
-            else if (shamt >= 32)
-                return ((uint32_t) ((int32_t) base >> 31L));
-            else
-                return ((uint32_t) (((int32_t) base) >> (int) shamt));
-        case ROR:
-            shamt = shamt & 0x1f;
-            if (shamt == 0)
-                return (base);
-            else
-                return ((base << (32 - shamt)) | (base >> shamt));
-        default:
-            fprintf(stderr, "Unhandled shift type\n");
-            exit(1);
-            break;
+      case LSL:
+        if (shamt >= 32)
+            return 0;
+        else
+            return base << shamt;
+      case LSR:
+        if (shamt >= 32)
+            return 0;
+        else
+            return base >> shamt;
+      case ASR:
+        if (shamt >= 32)
+            return (int32_t)base >> 31;
+        else
+            return (int32_t)base >> shamt;
+      case ROR:
+        shamt = shamt & 0x1f;
+        if (shamt == 0)
+            return base;
+        else
+            return (base << (32 - shamt)) | (base >> shamt);
+      default:
+        fprintf(stderr, "Unhandled shift type\n");
+        exit(1);
+        break;
     }
     return 0;
 }
 
 
 // Generate C for a shift by immediate
-int32_t
+bool
 ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
                                uint32_t type, uint32_t cfval) const
 {
@@ -126,129 +118,101 @@ ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
 
     switch (shiftType)
     {
-        case LSL:
+      case LSL:
+        if (shamt == 0)
+            return cfval;
+        else
             return (base >> (32 - shamt)) & 1;
-        case LSR:
-            if (shamt == 0)
-                return (base >> 31) & 1;
-            else
-                return (base >> (shamt - 1)) & 1;
-        case ASR:
-            if (shamt == 0)
-                return (base >> 31L);
-            else
-                return ((uint32_t) (((int32_t) base) >> (shamt - 1))) & 1;
-        case ROR:
-            shamt = shamt & 0x1f;
-            if (shamt == 0)
-                return (base & 1); // RRX
-            else
-                return (base >> (shamt - 1)) & 1;
-        default:
-            fprintf(stderr, "Unhandled shift type\n");
-            exit(1);
-            break;
-
+      case LSR:
+        if (shamt == 0)
+            return (base >> 31);
+        else
+            return (base >> (shamt - 1)) & 1;
+      case ASR:
+        if (shamt == 0)
+            return (base >> 31);
+        else
+            return (base >> (shamt - 1)) & 1;
+      case ROR:
+        shamt = shamt & 0x1f;
+        if (shamt == 0)
+            return (base & 1); // RRX
+        else
+            return (base >> (shamt - 1)) & 1;
+      default:
+        fprintf(stderr, "Unhandled shift type\n");
+        exit(1);
+        break;
     }
     return 0;
 }
 
 
 // Generate C for a shift by Rs
-int32_t
+bool
 ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
                               uint32_t type, uint32_t cfval) const
 {
     enum ArmShiftType shiftType;
     shiftType = (enum ArmShiftType) type;
 
+    if (shamt == 0)
+        return cfval;
+
     switch (shiftType)
     {
-        case LSL:
-            if (shamt == 0)
-                return (!!cfval);
-            else if (shamt == 32)
-                return (base & 1);
-            else if (shamt > 32)
-                return (0);
-            else
-                return ((base >> (32 - shamt)) & 1);
-        case LSR:
-            if (shamt == 0)
-                return (!!cfval);
-            else if (shamt == 32)
-                return (base >> 31);
-            else if (shamt > 32)
-                return (0);
-            else
-                return ((base >> (shamt - 1)) & 1);
-        case ASR:
-            if (shamt == 0)
-                return (!!cfval);
-            else if (shamt >= 32)
-                return (base >> 31L);
-            else
-                return (((uint32_t) (((int32_t) base) >> (shamt - 1))) & 1);
-        case ROR:
-            if (shamt == 0)
-                return (!!cfval);
-            shamt = shamt & 0x1f;
-            if (shamt == 0)
-                return (base >> 31); // RRX
-            else
-                return ((base >> (shamt - 1)) & 1);
-        default:
-            fprintf(stderr, "Unhandled shift type\n");
-            exit(1);
-            break;
-
+      case LSL:
+        if (shamt > 32)
+            return 0;
+        else
+            return (base >> (32 - shamt)) & 1;
+      case LSR:
+        if (shamt > 32)
+            return 0;
+        else
+            return (base >> (shamt - 1)) & 1;
+      case ASR:
+        if (shamt > 32)
+            shamt = 32;
+        return (base >> (shamt - 1)) & 1;
+      case ROR:
+        shamt = shamt & 0x1f;
+        if (shamt == 0)
+            shamt = 32;
+        return (base >> (shamt - 1)) & 1;
+      default:
+        fprintf(stderr, "Unhandled shift type\n");
+        exit(1);
+        break;
     }
     return 0;
 }
 
 
 // Generate the appropriate carry bit for an addition operation
-int32_t
+bool
 ArmStaticInst::arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const
 {
-    if ((lhs | rhs) >> 30)
-        return ((arm_NEG(lhs) && arm_NEG(rhs)) ||
-                (arm_NEG(lhs) && arm_POS(result)) ||
-                (arm_NEG(rhs) && arm_POS(result)));
-
-    return 0;
+    return findCarry(32, result, lhs, rhs);
 }
 
 // Generate the appropriate carry bit for a subtraction operation
-int32_t
+bool
 ArmStaticInst::arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const
 {
-    if ((lhs >= rhs) || ((rhs | lhs) >> 31))
-        return ((arm_NEG(lhs) && arm_POS(rhs)) ||
-                (arm_NEG(lhs) && arm_POS(result)) ||
-                (arm_POS(rhs) && arm_POS(result)));
-
-    return 0;
+    return findCarry(32, result, lhs, ~rhs);
 }
 
-int32_t
+bool
 ArmStaticInst::arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const
 {
-    if ((lhs | rhs) >> 30)
-        return ((arm_NEG(lhs) && arm_NEG(rhs) && arm_POS(result)) ||
-                (arm_POS(lhs) && arm_POS(rhs) && arm_NEG(result)));
-
-    return 0;
+    return findOverflow(32, result, lhs, rhs);
 }
 
-int32_t
+bool
 ArmStaticInst::arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const
 {
-    if ((lhs >= rhs) || ((rhs | lhs) >> 31))
-        return ((arm_NEG(lhs) && arm_POS(rhs) && arm_POS(result)) ||
-                (arm_POS(lhs) && arm_NEG(rhs) && arm_NEG(result)));
-
-    return 0;
+    return findOverflow(32, result, lhs, ~rhs);
 }
 
 void

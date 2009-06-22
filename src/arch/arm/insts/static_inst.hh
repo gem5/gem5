@@ -37,39 +37,21 @@ namespace ArmISA
 class ArmStaticInst : public StaticInst
 {
   protected:
-    // Shift Rm by an immediate value
-    int32_t
-    shift_rm_imm(uint32_t base, uint32_t shamt,
-                 uint32_t type, uint32_t cfval) const;
+    int32_t shift_rm_imm(uint32_t base, uint32_t shamt,
+                         uint32_t type, uint32_t cfval) const;
+    int32_t shift_rm_rs(uint32_t base, uint32_t shamt,
+                        uint32_t type, uint32_t cfval) const;
 
-    // Shift Rm by Rs
-    int32_t
-    shift_rm_rs(uint32_t base, uint32_t shamt,
-                uint32_t type, uint32_t cfval) const;
+    bool shift_carry_imm(uint32_t base, uint32_t shamt,
+                         uint32_t type, uint32_t cfval) const;
+    bool shift_carry_rs(uint32_t base, uint32_t shamt,
+                        uint32_t type, uint32_t cfval) const;
 
-    // Generate C for a shift by immediate
-    int32_t
-    shift_carry_imm(uint32_t base, uint32_t shamt,
-                    uint32_t type, uint32_t cfval) const;
+    bool arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const;
+    bool arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const;
 
-    // Generate C for a shift by Rs
-    int32_t
-    shift_carry_rs(uint32_t base, uint32_t shamt,
-                   uint32_t type, uint32_t cfval) const;
-
-    // Generate the appropriate carry bit for an addition operation
-    int32_t
-    arm_add_carry(int32_t result, int32_t lhs, int32_t rhs) const;
-
-    // Generate the appropriate carry bit for a subtraction operation
-    int32_t
-    arm_sub_carry(int32_t result, int32_t lhs, int32_t rhs) const;
-
-    int32_t
-    arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
-
-    int32_t
-    arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
+    bool arm_add_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
+    bool arm_sub_overflow(int32_t result, int32_t lhs, int32_t rhs) const;
 
     // Constructor
     ArmStaticInst(const char *mnem, MachInst _machInst, OpClass __opClass)
