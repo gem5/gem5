@@ -122,7 +122,6 @@ when = int(time.time()) + 120
 # get rid of non-shipping code
 #rmtree(release_dir, 'src/encumbered/dev')
 rmtree(release_dir, 'src/cpu/ozone')
-rmtree(release_dir, 'src/arch/x86')
 #rmtree(release_dir, 'src/mem/cache/tags/split*.cc')
 #rmtree(release_dir, 'src/mem/cache/tags/split*.hh')
 #rmtree(release_dir, 'src/mem/cache/prefetch/ghb_*.cc')
@@ -136,23 +135,13 @@ rmtree(release_dir, 'tests/old')
 rmtree(release_dir, 'tests/quick/00.hello/ref/x86')
 rmtree(release_dir, 'tests/quick/02.insttest')
 rmtree(release_dir, 'tests/test-progs/hello/bin/x86')
-rmtree(release_dir, 'src/dev/x86')
 
 remove(release_dir, 'src/cpu/nativetrace.hh')
 remove(release_dir, 'src/cpu/nativetrace.cc')
-remove(release_dir, 'build_opts/X86_SE')
-remove(release_dir, 'build_opts/X86_FS')
 
 # get rid of some of private scripts
 remove(release_dir, 'util/chgcopyright')
 remove(release_dir, 'util/make_release.py')
-
-#state trace
-remove(release_dir, 'util/statetrace/x86.format')
-remove(release_dir, 'util/statetrace/arch/tracechild_amd64.cc')
-remove(release_dir, 'util/statetrace/arch/tracechild_amd64.hh')
-remove(release_dir, 'util/statetrace/arch/tracechild_i386.cc')
-remove(release_dir, 'util/statetrace/arch/tracechild_i386.hh')
 
 def remove_sources(regex, subdir):
     script = joinpath(release_dir, subdir, 'SConscript')
@@ -205,25 +194,6 @@ def replace_line(s_regex, f, rl):
 #remove_sources(r'.*(ghb|stride)_prefetcher\.cc', 'src/mem/cache/prefetch')
 remove_sources(r'.*nativetrace.*', 'src/cpu')
 
-remove_lines(r'.*X86.*', None,  'src/arch/isa_specific.hh')
-#remove_lines(r'.*X86.*', None,  'src/base/traceflags.py')
-remove_lines(r'.*X86.*', None,  'AUTHORS')
-remove_lines(r'.*X86.*', None,  'src/base/loader/object_file.hh')
-remove_lines(r'.*_X86_.*', '.*else.*', 'src/base/loader/elf_object.cc')
-remove_lines(r'.*X86_ISA.*', r'^.el.*','src/sim/process.cc')
-remove_lines(r".*'x86' and build.*", None, 'src/cpu/BaseCPU.py')
-remove_lines(r".*walker.port.*", None, 'src/cpu/BaseCPU.py')
-remove_lines(r'.*x86.*', r'.*mips.*','src/cpu/BaseCPU.py')
-remove_lines(r'.*X86_ISA.*', r'^.*elif.*','src/cpu/o3/dyn_inst.hh')
-remove_lines(r'.*X86_ISA.*', r'.*stay.*','src/cpu/simple/base.cc')
-remove_lines(r'.*x86.*', r'^if.*','src/cpu/SConscript')
-
-remove_lines(r'.*makeX86System.*', r'.*makeDualRoot.*','configs/common/FSConfig.py')
-remove_lines(r'.*X86.*', None,  'configs/example/fs.py')
-remove_lines(r'.*x86.*', None,  'configs/example/fs.py')
-remove_lines(r'.*x86.*', r'.*makeDualRoot.*',  'configs/common/FSConfig.py')
-
-replace_line(r'.*X86_SE.*', 'util/regress', "                     'SPARC_SE,SPARC_FS',")
 benches = [ 'bzip2', 'eon', 'gzip', 'mcf', 'parser', 'perlbmk',
             'twolf', 'vortex' ]
 for bench in benches:
