@@ -58,44 +58,37 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
 
     switch (puswl)
     {
+        case 0x00: //       stmda
         case 0x01: //     L ldmda_l
-            start_addr = (ones << 2) - 4;
-            end_addr = 0;
-            break;
+        case 0x02: //    W  stmda_w
         case 0x03: //    WL ldmda_wl
             start_addr = (ones << 2) - 4;
             end_addr = 0;
             break;
         case 0x08: //  U    stmia_u
-            start_addr = 0;
-            end_addr = (ones << 2) - 4;
-            break;
         case 0x09: //  U  L ldmia_ul
-            start_addr = 0;
-            end_addr = (ones << 2) - 4;
-            break;
+        case 0x0a: //  U W  stmia
         case 0x0b: //  U WL ldmia
             start_addr = 0;
             end_addr = (ones << 2) - 4;
             break;
+        case 0x10: // P     stmdb
         case 0x11: // P   L ldmdb
-            start_addr = (ones << 2); // U-bit is already 0 for subtract
-            end_addr = 4; // negative 4
-            break;
         case 0x12: // P  W  stmdb
+        case 0x13: // P  WL ldmdb
             start_addr = (ones << 2); // U-bit is already 0 for subtract
             end_addr = 4; // negative 4
             break;
         case 0x18: // PU    stmib
-            start_addr = 4;
-            end_addr = (ones << 2) + 4;
-            break;
         case 0x19: // PU  L ldmib
+        case 0x1a: // PU W  stmib
+        case 0x1b: // PU WL ldmib
             start_addr = 4;
             end_addr = (ones << 2) + 4;
             break;
         default:
-            panic("Unhandled Load/Store Multiple Instruction");
+            panic("Unhandled Load/Store Multiple Instruction, "
+                "puswl = 0x%x", (unsigned) puswl);
             break;
     }
 
