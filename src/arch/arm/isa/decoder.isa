@@ -388,7 +388,7 @@ decode COND_CODE default Unknown::unknown() {
                             }});
                             0xc: smull_lu({{
                                 int64_t resTemp;
-                                resTemp = ((int64_t)Rm)*((int64_t)Rs);
+                                resTemp = ((int64_t)Rm.sw)*((int64_t)Rs.sw);
                                 Rd = (int32_t)(resTemp & 0xffffffff);
                                 Rn = (int32_t)(resTemp >> 32);
                             }});
@@ -396,6 +396,9 @@ decode COND_CODE default Unknown::unknown() {
                         }
                     }
                     0x1: decode PUIWL {
+                        0x01,0x09: ArmLoadMemory::ldrh_l({{ Rd.uh = Mem.uh;
+                                                          Rn = Rn + Rm; }},
+                                                        {{ EA = Rn; }});
                         0x04,0x0c: ArmStoreMemory::strh_i({{ Mem.uh = Rd.uh;
                                                           Rn = Rn + hilo; }},
                                                        {{ EA = Rn; }});
@@ -425,6 +428,9 @@ decode COND_CODE default Unknown::unknown() {
                     }
                     0x2: decode PUIWL {
                         format ArmLoadMemory {
+                            0x05,0x0d: ldrsb_il({{ Rd.sb = Mem.sb; 
+                                                    Rn = Rn + hilo; }},
+                                                {{ EA = Rn; }});
                             0x11,0x19: ldrsb_pl({{ Rd.sb = Mem.sb; }},
                                                 {{ EA = Rn + Rm; }});
                             0x13,0x1b: ldrsb_pwl({{ Rd.sb = Mem.sb;
@@ -439,6 +445,9 @@ decode COND_CODE default Unknown::unknown() {
                     }
                     0x3: decode PUIWL {
                         format ArmLoadMemory {
+                            0x05,0x0d: ldrsh_il({{ Rd.sh = Mem.sh; 
+                                                    Rn = Rn + hilo; }},
+                                                {{ EA = Rn; }});
                             0x11,0x19: ldrsh_pl({{ Rd.sh = Mem.sh; }},
                                                 {{ EA = Rn + Rm; }});
                             0x13,0x1b: ldrsh_pwl({{ Rd.sh = Mem.sh;
@@ -583,28 +592,28 @@ decode COND_CODE default Unknown::unknown() {
             0x00,0x08: ArmStoreMemory::str_({{ Mem = Rd;
                                                Rn = Rn + disp; }},
                                             {{ EA = Rn; }});
-            0x01,0x09: ArmLoadMemory::ldr_l({{ Rd = Mem;
-                                               Rn = Rn + disp; }},
+            0x01,0x09: ArmLoadMemory::ldr_l({{ Rn = Rn + disp; 
+                                               Rd = Mem; }},
                                             {{ EA = Rn; }});
             0x04,0x0c: ArmStoreMemory::strb_b({{ Mem.ub = Rd.ub;
                                                  Rn = Rn + disp; }},
                                               {{ EA = Rn; }});
-            0x05,0x0d: ArmLoadMemory::ldrb_bl({{ Rd.ub = Mem.ub;
-                                                 Rn = Rn + disp; }},
+            0x05,0x0d: ArmLoadMemory::ldrb_bl({{ Rn = Rn + disp; 
+                                                 Rd.ub = Mem.ub; }},
                                               {{ EA = Rn; }});
             // Pre-indexed variants
             0x10,0x18: ArmStoreMemory::str_p({{ Mem = Rd; }});
             0x11,0x19: ArmLoadMemory::ldr_pl({{ Rd = Mem; }});
             0x12,0x1a: ArmStoreMemory::str_pw({{ Mem = Rd;
                                                  Rn = Rn + disp; }});
-            0x13,0x1b: ArmLoadMemory::ldr_pwl({{ Rd = Mem;
-                                                 Rn = Rn + disp; }});
+            0x13,0x1b: ArmLoadMemory::ldr_pwl({{ Rn = Rn + disp; 
+                                                 Rd = Mem; }});
             0x14,0x1c: ArmStoreMemory::strb_pb({{ Mem.ub = Rd.ub; }});
             0x15,0x1d: ArmLoadMemory::ldrb_pbl({{ Rd.ub = Mem.ub; }});
             0x16,0x1e: ArmStoreMemory::strb_pbw({{ Mem.ub = Rd.ub;
                                                    Rn = Rn + disp; }});
-            0x17,0x1f: ArmLoadMemory::ldrb_pbwl({{ Rd.ub = Mem.ub;
-                                                   Rn = Rn + disp; }});
+            0x17,0x1f: ArmLoadMemory::ldrb_pbwl({{ Rn = Rn + disp; 
+                                                   Rd.ub = Mem.ub; }});
         }
         0x3: decode OPCODE_4 {
             0: decode PUBWL {
