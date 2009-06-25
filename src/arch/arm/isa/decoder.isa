@@ -246,7 +246,7 @@ decode COND_CODE default Unknown::unknown() {
                                 }});
                             }
                             0x3: decode OPCODE_24_21 {
-                                0x9: BranchExchange::blx({{ LR = NPC; }});
+                                0x9: BranchExchange::blx({{ }}, Link);
                             }
                         }
                         }
@@ -661,7 +661,7 @@ decode COND_CODE default Unknown::unknown() {
         0x5: decode OPCODE_24 {
             // Branch (and Link) Instructions
             0: Branch::b({{ }});
-            1: Branch::bl({{ LR = NPC; }});
+            1: Branch::bl({{ }}, Link);
         }
         0x6: decode CPNUM {
             0x1: decode PUNWL {

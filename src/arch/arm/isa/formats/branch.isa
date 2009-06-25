@@ -38,8 +38,10 @@ def format Branch(code,*opt_flags) {{
     #Build Instruction Flags
     #Use Link & Likely Flags to Add Link/Condition Code
     inst_flags = ('IsDirectControl', )
+    linking = False
     for x in opt_flags:
         if x == 'Link':
+            linking = True
             code += 'LR = NPC;\n'
         else:
             inst_flags += (x, )
@@ -55,6 +57,8 @@ def format Branch(code,*opt_flags) {{
     icode += '  NPC = NPC + 4 + disp;\n'
     icode += '} else {\n'
     icode += '  NPC = NPC;\n'
+    if linking:
+        icode += '  LR = LR;\n'
     icode += '};\n'
 
     code = icode
@@ -70,8 +74,10 @@ def format BranchExchange(code,*opt_flags) {{
     #Build Instruction Flags
     #Use Link & Likely Flags to Add Link/Condition Code
     inst_flags = ('IsIndirectControl', )
+    linking = False
     for x in opt_flags:
         if x == 'Link':
+            linking = True
             code += 'LR = NPC;\n'
         else:
             inst_flags += (x, )
@@ -89,6 +95,8 @@ def format BranchExchange(code,*opt_flags) {{
     icode += '  NPC = Rm & 0xfffffffe; // Masks off bottom bit\n'
     icode += '} else {\n'
     icode += '  NPC = NPC;\n'
+    if linking:
+        icode += '  LR = LR;\n'
     icode += '};\n'
 
     code = icode
