@@ -82,8 +82,6 @@ class PredImmOp : public PredOp
             if (rotate != 0)
                 rotated_carry = (rotated_imm >> 31) & 1;
         }
-
-        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -102,8 +100,6 @@ class PredIntOp : public PredOp
                   shift_size(machInst.shiftSize), shift(machInst.shift)
         {
         }
-
-        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**

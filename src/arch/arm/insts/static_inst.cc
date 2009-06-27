@@ -327,6 +327,91 @@ ArmStaticInst::printMemSymbol(std::ostream &os,
     }
 }
 
+void
+ArmStaticInst::printShiftOperand(std::ostream &os) const
+{
+    // Shifter operand
+    if (bits((uint32_t)machInst, 25)) {
+        // Immediate form
+        unsigned rotate = machInst.rotate * 2;
+        uint32_t imm = machInst.imm;
+        ccprintf(os, "#%#x", (imm << (32 - rotate)) | (imm >> rotate));
+    } else {
+        // Register form
+        printReg(os, machInst.rm);
+
+        bool immShift = (machInst.opcode4 == 0);
+        bool done = false;
+        unsigned shiftAmt = (machInst.shiftSize);
+        ArmShiftType type = (ArmShiftType)(uint32_t)machInst.shift;
+
+        if ((type == LSR || type == ASR) && immShift && shiftAmt == 0)
+            shiftAmt = 32;
+
+        switch (type) {
+          case LSL:
+            if (immShift && shiftAmt == 0) {
+                done = true;
+                break;
+            }
+            os << ", LSL";
+            break;
+          case LSR:
+            os << ", LSR";
+            break;
+          case ASR:
+            os << ", ASR";
+            break;
+          case ROR:
+            if (immShift && shiftAmt == 0) {
+                os << ", RRX";
+                done = true;
+                break;
+            }
+            os << ", ROR";
+            break;
+          default:
+            panic("Tried to disassemble unrecognized shift type.\n");
+        }
+        if (!done) {
+            os << " ";
+            if (immShift)
+                os << "#" << shiftAmt;
+            else
+                printReg(os, machInst.rs);
+        }
+    }
+}
+
+void
+ArmStaticInst::printDataInst(std::ostream &os) const
+{
+    printMnemonic(os, machInst.sField ? "s" : "");
+    //XXX It would be nice if the decoder figured this all out for us.
+    unsigned opcode = machInst.opcode24_21;
+    bool firstOp = true;
+
+    // Destination
+    // Cmp, cmn, teq, and tst don't have one.
+    if (opcode < 8 || opcode > 0xb) {
+        firstOp = false;
+        printReg(os, machInst.rd);
+    }
+
+    // Source 1.
+    // Mov and Movn don't have one of these.
+    if (opcode != 0xd && opcode != 0xf) {
+        if (!firstOp)
+            os << ", ";
+        firstOp = false;
+        printReg(os, machInst.rn);
+    }
+
+    if (!firstOp)
+        os << ", ";
+    printShiftOperand(os);
+}
+
 std::string
 ArmStaticInst::generateDisassembly(Addr pc,
                                    const SymbolTable *symtab) const

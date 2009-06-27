@@ -35,60 +35,7 @@ std::string
 PredOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printMnemonic(ss);
-    if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
-    }
-
-    ss << ", ";
-
-    if (_numSrcRegs > 0) {
-        printReg(ss, _srcRegIdx[0]);
-        ss << ", ";
-    }
-
-    return ss.str();
-}
-
-std::string
-PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-{
-    std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
-    if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
-    }
-
-    ss << ", ";
-
-    if (_numSrcRegs > 0) {
-        printReg(ss, _srcRegIdx[0]);
-        ss << ", ";
-    }
-
-    return ss.str();
-}
-
-std::string
-PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
-{
-    std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
-    if (_numDestRegs > 0) {
-        printReg(ss, _destRegIdx[0]);
-    }
-
-    ss << ", ";
-
-    if (_numSrcRegs > 0) {
-        printReg(ss, _srcRegIdx[0]);
-        ss << ", ";
-    }
-
+    printDataInst(ss);
     return ss.str();
 }
 
