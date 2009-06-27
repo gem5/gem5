@@ -70,7 +70,7 @@ Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
 
-    ccprintf(ss, "%-10s ", mnemonic);
+    printMnemonic(ss);
 
     Addr target = pc + 8 + disp;
 
@@ -87,13 +87,10 @@ std::string
 BranchExchange::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
+    printMnemonic(ss);
     if (_numSrcRegs > 0) {
         printReg(ss, _srcRegIdx[0]);
     }
-
     return ss.str();
 }
 
@@ -101,9 +98,7 @@ std::string
 Jump::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
+    printMnemonic(ss);
     return ss.str();
 }
 }

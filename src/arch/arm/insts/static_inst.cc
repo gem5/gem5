@@ -245,14 +245,76 @@ ArmStaticInst::printReg(std::ostream &os, int reg) const
     }
 }
 
+void
+ArmStaticInst::printMnemonic(std::ostream &os,
+                             const std::string &suffix,
+                             bool withPred) const
+{
+    os << "  " << mnemonic;
+    if (withPred) {
+        unsigned condCode = machInst.condCode;
+        switch (condCode) {
+          case COND_EQ:
+            os << "eq";
+            break;
+          case COND_NE:
+            os << "ne";
+            break;
+          case COND_CS:
+            os << "cs";
+            break;
+          case COND_CC:
+            os << "cc";
+            break;
+          case COND_MI:
+            os << "mi";
+            break;
+          case COND_PL:
+            os << "pl";
+            break;
+          case COND_VS:
+            os << "vs";
+            break;
+          case COND_VC:
+            os << "vc";
+            break;
+          case COND_HI:
+            os << "hi";
+            break;
+          case COND_LS:
+            os << "ls";
+            break;
+          case COND_GE:
+            os << "ge";
+            break;
+          case COND_LT:
+            os << "lt";
+            break;
+          case COND_GT:
+            os << "gt";
+            break;
+          case COND_LE:
+            os << "le";
+            break;
+          case COND_AL:
+            // This one is implicit.
+            break;
+          case COND_NV:
+            os << "nv";
+            break;
+          default:
+            panic("Unrecognized condition code %d.\n", condCode);
+        }
+        os << suffix << "   ";
+    }
+}
+
 std::string
 ArmStaticInst::generateDisassembly(Addr pc,
                                    const SymbolTable *symtab) const
 {
     std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
+    printMnemonic(ss);
     return ss.str();
 }
 }

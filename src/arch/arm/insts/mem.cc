@@ -35,12 +35,16 @@ namespace ArmISA
 std::string
 Memory::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
-    return csprintf("%-10s", mnemonic);
+    std::stringstream ss;
+    printMnemonic(ss);
+    return ss.str();
 }
 
 std::string
 MemoryNoDisp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
-    return csprintf("%-10s", mnemonic);
+    std::stringstream ss;
+    printMnemonic(ss);
+    return ss.str();
 }
 }

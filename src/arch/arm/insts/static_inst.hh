@@ -62,6 +62,9 @@ class ArmStaticInst : public StaticInst
     /// Print a register name for disassembly given the unique
     /// dependence tag number (FP or int).
     void printReg(std::ostream &os, int reg) const;
+    void printMnemonic(std::ostream &os,
+                       const std::string &suffix = "",
+                       bool withPred = true) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };

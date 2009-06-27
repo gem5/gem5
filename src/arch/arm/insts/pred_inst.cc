@@ -35,9 +35,7 @@ std::string
 PredOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-
-    ccprintf(ss, "%-10s ", mnemonic);
-
+    printMnemonic(ss);
     if (_numDestRegs > 0) {
         printReg(ss, _destRegIdx[0]);
     }
