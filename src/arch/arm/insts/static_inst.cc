@@ -29,6 +29,7 @@
 
 #include "arch/arm/insts/static_inst.hh"
 #include "base/condcodes.hh"
+#include "base/loader/symtab.hh"
 
 namespace ArmISA
 {
@@ -306,6 +307,23 @@ ArmStaticInst::printMnemonic(std::ostream &os,
             panic("Unrecognized condition code %d.\n", condCode);
         }
         os << suffix << "   ";
+    }
+}
+
+void
+ArmStaticInst::printMemSymbol(std::ostream &os,
+                              const SymbolTable *symtab,
+                              const std::string &prefix,
+                              const Addr addr,
+                              const std::string &suffix) const
+{
+    Addr symbolAddr;
+    std::string symbol;
+    if (symtab && symtab->findNearestSymbol(addr, symbol, symbolAddr)) {
+        ccprintf(os, "%s%s", prefix, symbol);
+        if (symbolAddr != addr)
+            ccprintf(os, "+%d", addr - symbolAddr);
+        ccprintf(os, suffix);
     }
 }
 

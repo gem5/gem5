@@ -71,14 +71,11 @@ Branch::generateDisassembly(Addr pc, const SymbolTable *symtab) const
     std::stringstream ss;
 
     printMnemonic(ss);
+    ss << "\t";
 
     Addr target = pc + 8 + disp;
-
-    std::string str;
-    if (symtab && symtab->findSymbol(target, str))
-        ss << str;
-    else
-        ccprintf(ss, "0x%x", target);
+    ccprintf(ss, "%#x", target);
+    printMemSymbol(ss, symtab, " <", target, ">");
 
     return ss.str();
 }

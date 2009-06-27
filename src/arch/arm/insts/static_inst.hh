@@ -65,6 +65,10 @@ class ArmStaticInst : public StaticInst
     void printMnemonic(std::ostream &os,
                        const std::string &suffix = "",
                        bool withPred = true) const;
+    void printMemSymbol(std::ostream &os, const SymbolTable *symtab,
+                        const std::string &prefix, const Addr addr,
+                        const std::string &suffix) const;
+
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
