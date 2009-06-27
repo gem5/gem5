@@ -219,10 +219,29 @@ void
 ArmStaticInst::printReg(std::ostream &os, int reg) const
 {
     if (reg < FP_Base_DepTag) {
-        ccprintf(os, "r%d", reg);
-    }
-    else {
+        switch (reg) {
+          case PCReg:
+            ccprintf(os, "pc");
+            break;
+          case StackPointerReg:
+            ccprintf(os, "sp");
+            break;
+          case FramePointerReg:
+            ccprintf(os, "fp");
+            break;
+          case ReturnAddressReg:
+            ccprintf(os, "lr");
+            break;
+          default:
+            ccprintf(os, "r%d", reg);
+            break;
+        }
+    } else if (reg < Ctrl_Base_DepTag) {
         ccprintf(os, "f%d", reg - FP_Base_DepTag);
+    } else {
+        reg -= Ctrl_Base_DepTag;
+        assert(reg < NUM_MISCREGS);
+        ccprintf(os, "%s", ArmISA::miscRegName[reg]);
     }
 }
 

@@ -55,12 +55,20 @@ namespace ArmISA
 
     enum MiscRegIndex {
         MISCREG_CPSR = 0,
+	MISCREG_SPSR,
         MISCREG_SPSR_FIQ,
         MISCREG_SPSR_IRQ,
         MISCREG_SPSR_SVC,
         MISCREG_SPSR_UND,
         MISCREG_SPSR_ABT,
-        MISCREG_FPSR
+        MISCREG_FPSR,
+	NUM_MISCREGS
+    };
+
+    const char * const miscRegName[NUM_MISCREGS] = {
+    	"cpsr",
+	"spsr", "spsr_fiq", "spsr_irq", "spsr_svc", "spsr_und", "spsr_abt",
+	"fpsr"
     };
 
     BitUnion32(CPSR)
