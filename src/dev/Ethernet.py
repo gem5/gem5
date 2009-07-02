@@ -64,7 +64,7 @@ class EtherDump(SimObject):
 class EtherDevice(PciDevice):
     type = 'EtherDevice'
     abstract = True
-    interface = Port("Ethernet Interrface")
+    interface = Port("Ethernet Interface")
 
 class IGbE(EtherDevice):
     # Base class for two IGbE adapters listed above
