@@ -38,7 +38,11 @@ namespace ArmISA
 {
     typedef uint32_t MachInst;
 
-    BitUnion32(ExtMachInst)
+    BitUnion64(ExtMachInst)
+        // Made up bitfields that make life easier.
+        Bitfield<33>     sevenAndFour;
+        Bitfield<32>     isMisc;
+
         // All the different types of opcode fields.
         Bitfield<27, 25> opcode;
         Bitfield<27, 25> opcode27_25;

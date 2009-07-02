@@ -61,6 +61,9 @@ def bitfield OPCODE_6	   opcode6;
 def bitfield OPCODE_5	   opcode5;
 def bitfield OPCODE_4      opcode4;
 
+def bitfield IS_MISC       isMisc;
+def bitfield SEVEN_AND_FOUR sevenAndFour;
+
 // Other
 def bitfield COND_CODE     condCode;
 def bitfield S_FIELD       sField;

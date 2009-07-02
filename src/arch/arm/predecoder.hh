@@ -73,6 +73,8 @@ namespace ArmISA
         void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
         {
             emi = inst;
+            emi.sevenAndFour = bits(inst, 7) && bits(inst, 4);
+            emi.isMisc = (bits(inst, 24, 23) == 0x2 && bits(inst, 20) == 0);
         }
 
         //Use this to give data to the predecoder. This should be used
