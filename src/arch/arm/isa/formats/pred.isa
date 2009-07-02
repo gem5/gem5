@@ -102,10 +102,12 @@ let {{
 }};
 
 def format DataOp(code, icValue, ivValue) {{
-    regCode = re.sub(r'op2', 'shift_rm_rs(Rm, Rs, \
-                              shift, Cpsr<29:0>)', code)
-    immCode = re.sub(r'op2', 'shift_rm_imm(Rm, shift_size, \
-                              shift, Cpsr<29:0>)', code)
+    regCode = '''uint32_t op2 = shift_rm_rs(Rm, Rs,
+                                            shift, Cpsr<29:0>);
+                 op2 = op2;''' + code
+    immCode = '''uint32_t op2 = shift_rm_imm(Rm, shift_size,
+                                             shift, Cpsr<29:0>);
+                 op2 = op2;''' + code
     regIop = InstObjParams(name, Name, 'PredIntOp',
                            {"code": regCode,
                             "predicate_test": predicateTest})

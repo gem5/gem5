@@ -97,7 +97,8 @@ format DataOp {
                     }}, {{ 1 }}, {{ 1 }});
                     0x5: WarnUnimpl::smlal();
                     0x6: smull({{
-                        resTemp = ((int64_t)Rm.sw)*((int64_t)Rs.sw);
+                        resTemp = ((int64_t)(int32_t)Rm)*
+                                  ((int64_t)(int32_t)Rs);
                         Rd = (int32_t)(resTemp & 0xffffffff);
                         Rn = (int32_t)(resTemp >> 32);
                     }}, {{ 1 }}, {{ 1 }});
@@ -232,46 +233,37 @@ format DataOp {
                 0x1: eor({{ Rd = resTemp = Rn ^ op2; }},
                          {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
                          {{ Cpsr<28:> }});
-                0x2: sub({{ uint32_t val2 = op2;
-                            Rd = resTemp = Rn - val2; }},
-                         {{ arm_sub_carry(resTemp, Rn, val2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                0x3: rsb({{ uint32_t val2 = op2;
-                            Rd = resTemp = val2 - Rn; }},
-                         {{ arm_sub_carry(resTemp, val2, Rn) }},
-                         {{ arm_sub_overflow(resTemp, val2, Rn) }});
-                0x4: add({{ uint32_t val2 = op2;
-                            Rd = resTemp = Rn + val2; }},
-                         {{ arm_add_carry(resTemp, Rn, val2) }},
-                         {{ arm_add_overflow(resTemp, Rn, val2) }});
-                0x5: adc({{ uint32_t val2 = op2;
-                            Rd = resTemp = Rn + val2 + Cpsr<29:>; }},
-                         {{ arm_add_carry(resTemp, Rn, val2) }},
-                         {{ arm_add_overflow(resTemp, Rn, val2) }});
-                0x6: sbc({{ uint32_t val2 = op2;
-                            Rd = resTemp = Rn - val2 - !Cpsr<29:>; }},
-                         {{ arm_sub_carry(resTemp, Rn, val2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                0x7: rsc({{ uint32_t val2 = op2;
-                            Rd = resTemp = val2 - Rn - !Cpsr<29:>; }},
-                         {{ arm_sub_carry(resTemp, val2, Rn) }},
-                         {{ arm_sub_overflow(resTemp, val2, Rn) }});
+                0x2: sub({{ Rd = resTemp = Rn - op2; }},
+                         {{ arm_sub_carry(resTemp, Rn, op2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
+                0x3: rsb({{ Rd = resTemp = op2 - Rn; }},
+                         {{ arm_sub_carry(resTemp, op2, Rn) }},
+                         {{ arm_sub_overflow(resTemp, op2, Rn) }});
+                0x4: add({{ Rd = resTemp = Rn + op2; }},
+                         {{ arm_add_carry(resTemp, Rn, op2) }},
+                         {{ arm_add_overflow(resTemp, Rn, op2) }});
+                0x5: adc({{ Rd = resTemp = Rn + op2 + Cpsr<29:>; }},
+                         {{ arm_add_carry(resTemp, Rn, op2) }},
+                         {{ arm_add_overflow(resTemp, Rn, op2) }});
+                0x6: sbc({{ Rd = resTemp = Rn - op2 - !Cpsr<29:>; }},
+                         {{ arm_sub_carry(resTemp, Rn, op2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
+                0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }},
+                         {{ arm_sub_carry(resTemp, op2, Rn) }},
+                         {{ arm_sub_overflow(resTemp, op2, Rn) }});
                 0x8: tst({{ resTemp = Rn & op2; }},
                          {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
                          {{ Cpsr<28:> }});
                 0x9: teq({{ resTemp = Rn ^ op2; }},
                          {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
                          {{ Cpsr<28:> }});
-                0xa: cmp({{ uint32_t val2 = op2;
-                            resTemp = Rn - val2; }},
-                         {{ arm_sub_carry(resTemp, Rn, val2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                0xb: cmn({{ uint32_t val2 = op2;
-                            resTemp = Rn + val2; }},
-                         {{ arm_add_carry(resTemp, Rn, val2) }},
-                         {{ arm_add_overflow(resTemp, Rn, val2) }});
-                0xc: orr({{ uint32_t val2 = op2;
-                            Rd = resTemp = Rn | val2; }},
+                0xa: cmp({{ resTemp = Rn - op2; }},
+                         {{ arm_sub_carry(resTemp, Rn, op2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
+                0xb: cmn({{ resTemp = Rn + op2; }},
+                         {{ arm_add_carry(resTemp, Rn, op2) }},
+                         {{ arm_add_overflow(resTemp, Rn, op2) }});
+                0xc: orr({{ Rd = resTemp = Rn | op2; }},
                          {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
                          {{ Cpsr<28:> }});
                 0xd: mov({{ Rd = resTemp = op2; }},
