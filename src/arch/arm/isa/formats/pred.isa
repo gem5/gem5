@@ -41,6 +41,8 @@ def template PredOpExecute {{
     Fault %(class_name)s::execute(%(CPU_exec_context)s *xc, Trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
+        uint64_t resTemp = 0;
+        resTemp = resTemp;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -100,7 +102,6 @@ let {{
 }};
 
 def format DataOp(code, icValue, ivValue) {{
-    code += "resTemp = resTemp;"
     regCode = re.sub(r'op2', 'shift_rm_rs(Rm, Rs, \
                               shift, Cpsr<29:0>)', code)
     immCode = re.sub(r'op2', 'shift_rm_imm(Rm, shift_size, \
