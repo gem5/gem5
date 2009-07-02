@@ -28,7 +28,6 @@
 #
 # Authors: Nathan Binkert
 
-from __future__ import division
 import re, sys, math
 
 def usage():
@@ -413,7 +412,6 @@ class Options: pass
 
 if __name__ == '__main__':
     import getpass
-    from jobfile import JobFile
 
     options = Options()
     options.host = None
@@ -426,7 +424,7 @@ if __name__ == '__main__':
     options.graph = False
     options.ticks = False
     options.printmode = 'G'
-    jobfilename = 'Test.py'
+    jobfilename = None
     options.jobfile = None
     options.all = False
 
@@ -463,6 +461,7 @@ if __name__ == '__main__':
             options.ticks = a
 
     if jobfilename:
+        from jobfile import JobFile
         options.jobfile = JobFile(jobfilename)
         if not options.host:
             options.host = options.jobfile.dbhost
