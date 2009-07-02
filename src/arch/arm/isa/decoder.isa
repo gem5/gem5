@@ -270,18 +270,8 @@ format DataOp {
                 0x1: decode OPCODE {
                     0x9: BranchExchange::bx({{ }});
                     0xb: PredOp::clz({{
-                        if (Rm == 0)
-                            Rd = 32;
-                        else
-                        {
-                            int i;
-                            for (i = 0; i < 32; i++)
-                            {
-                                if (Rm & (1<<(31-i)))
-                                break;
-                            }
-                            Rd = i;
-                        }
+                        unsigned lsb = findLsbSet(Rm);
+                        Rd = (lsb > 31) ? 32 : lsb;
                     }});
                 }
                 0x2: decode OPCODE {

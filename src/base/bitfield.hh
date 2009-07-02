@@ -161,4 +161,21 @@ findMsbSet(uint64_t val) {
     return msb;
 }
 
+/**
+ * Returns the bit position of the LSB that is set in the input
+ */
+inline int
+findLsbSet(uint64_t val) {
+    int lsb = 0;
+    if (!val)
+        return sizeof(val) * 8;
+    if (!bits(val, 31,0)) { lsb += 32; val >>= 32; }
+    if (!bits(val, 15,0)) { lsb += 16; val >>= 16; }
+    if (!bits(val, 7,0))  { lsb += 8;  val >>= 8;  }
+    if (!bits(val, 3,0))  { lsb += 4;  val >>= 4;  }
+    if (!bits(val, 1,0))  { lsb += 2;  val >>= 2;  }
+    if (!bits(val, 0,0))  { lsb += 1; }
+    return lsb;
+}
+
 #endif // __BASE_BITFIELD_HH__
