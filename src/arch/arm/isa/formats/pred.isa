@@ -57,6 +57,20 @@ def template PredOpExecute {{
     }
 }};
 
+def template DataDecode {{
+    if (machInst.opcode4 == 0) {
+        if (machInst.sField == 0)
+            return new %(class_name)sImm(machInst);
+        else
+            return new %(class_name)sImmCc(machInst);
+    } else {
+        if (machInst.sField == 0)
+            return new %(class_name)s(machInst);
+        else
+            return new %(class_name)sCc(machInst);
+    }
+}};
+
 let {{
 
     calcCcCode = '''
@@ -76,6 +90,39 @@ let {{
         DPRINTF(Arm, "iv = %%d\\n", _iv);
         '''
 
+}};
+
+def format DataOp(code, icValue, ivValue) {{
+    code += "resTemp = resTemp;"
+    regCode = re.sub(r'op2', 'shift_rm_rs(Rm, Rs, \
+                              shift, Cpsr<29:0>)', code)
+    immCode = re.sub(r'op2', 'shift_rm_imm(Rm, shift_size, \
+                              shift, Cpsr<29:0>)', code)
+    regIop = InstObjParams(name, Name, 'PredIntOp',
+                           {"code": regCode,
+                            "predicate_test": predicateTest})
+    immIop = InstObjParams(name, Name + "Imm", 'PredIntOp',
+                           {"code": immCode,
+                            "predicate_test": predicateTest})
+    regCcIop = InstObjParams(name, Name + "Cc", 'PredIntOp',
+                             {"code": regCode + calcCcCode % vars(),
+                              "predicate_test": predicateTest})
+    immCcIop = InstObjParams(name, Name + "ImmCc", 'PredIntOp',
+                             {"code": immCode + calcCcCode % vars(),
+                              "predicate_test": predicateTest})
+    header_output = BasicDeclare.subst(regIop) + \
+                    BasicDeclare.subst(immIop) + \
+                    BasicDeclare.subst(regCcIop) + \
+                    BasicDeclare.subst(immCcIop)
+    decoder_output = BasicConstructor.subst(regIop) + \
+                     BasicConstructor.subst(immIop) + \
+                     BasicConstructor.subst(regCcIop) + \
+                     BasicConstructor.subst(immCcIop)
+    exec_output = PredOpExecute.subst(regIop) + \
+                  PredOpExecute.subst(immIop) + \
+                  PredOpExecute.subst(regCcIop) + \
+                  PredOpExecute.subst(immCcIop)
+    decode_block = DataDecode.subst(regIop)
 }};
 
 def format PredOp(code, *opt_flags) {{
