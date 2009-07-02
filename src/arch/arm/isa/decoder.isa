@@ -358,126 +358,72 @@ format DataOp {
         }
     }
     0x1: decode IS_MISC {
-        0: decode S_FIELD {
-            0: decode OPCODE {
-                format PredImmOp {
-                    0x0: andi({{ Rd = Rn & rotated_imm; }});
-                    0x1: eori({{ Rd = Rn ^ rotated_imm; }});
-                    0x2: subi({{ Rd = Rn - rotated_imm; }});
-                    0x3: rsbi({{ Rd = rotated_imm - Rn; }});
-                    0x4: addi({{ Rd = Rn + rotated_imm; }});
-                    0x5: adci({{ Rd = Rn + rotated_imm + Cpsr<29:>; }});
-                    0x6: sbci({{ Rd = Rn - rotated_imm + Cpsr<29:> - 1; }});
-                    0x7: rsci({{ Rd = rotated_imm - Rn + Cpsr<29:> - 1; }});
-                    0xc: orri({{ Rd = Rn | rotated_imm; }});
-                    0xd: decode RN {
-                        0: movi({{ Rd = rotated_imm; }});
-                    }
-                    0xe: bici({{ Rd = Rn & ~rotated_imm; }});
-                    0xf: decode RN {
-                        0: mvni({{ Rd = ~rotated_imm; }});
-                    }
-                }
-            }
-            1: decode OPCODE {
-                format PredImmOpCc {
-                    0x0: andsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn & rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x1: eorsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn ^ rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x2: subsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn - rotated_imm;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                    0x3: rsbsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = rotated_imm - Rn;
-                        }},
-                        {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
-                        {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
-                    0x4: addsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn + rotated_imm;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                    0x5: adcsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn + rotated_imm + Cpsr<29:>;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                    0x6: sbcsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn -rotated_imm + Cpsr<29:> - 1;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                    0x7: rscsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = rotated_imm - Rn + Cpsr<29:> - 1;
-                        }},
-                        {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
-                        {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
-                    0x8: tsti({{
-                        uint32_t resTemp;
-                        resTemp = Rn & rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x9: teqi({{
-                        uint32_t resTemp;
-                        resTemp = Rn ^ rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xa: cmpi({{
-                        uint32_t resTemp;
-                        resTemp = Rn - rotated_imm;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                    0xb: cmni({{
-                        uint32_t resTemp;
-                        resTemp = Rn + rotated_imm;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                        {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                    0xc: orrsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn | rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xd: movsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xe: bicsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn & ~rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xf: mvnsi({{
-                        uint32_t resTemp;
-                        Rd = resTemp = ~rotated_imm;
-                        }},
-                        {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                }
+        0: decode OPCODE {
+            format DataImmOp {
+                0x0: andi({{ uint32_t resTemp;
+                             Rd = resTemp = Rn & rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0x1: eori({{ uint32_t resTemp;
+                             Rd = resTemp = Rn ^ rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0x2: subi({{ uint32_t resTemp;
+                             Rd = resTemp = Rn - rotated_imm; }},
+                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
+                0x3: rsbi({{ uint32_t resTemp;
+                             Rd = resTemp = rotated_imm - Rn; }},
+                          {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
+                          {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
+                0x4: addi({{ uint32_t resTemp;
+                             Rd = resTemp = Rn + rotated_imm; }},
+                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
+                0x5: adci({{ uint32_t resTemp;
+                             Rd = resTemp = Rn + rotated_imm + Cpsr<29:>; }},
+                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
+                0x6: sbci({{ uint32_t resTemp;
+                             Rd = resTemp = Rn -rotated_imm - !Cpsr<29:>; }},
+                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
+                0x7: rsci({{ uint32_t resTemp;
+                             Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}},
+                          {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
+                          {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
+                0x8: tsti({{ uint32_t resTemp;
+                             resTemp = Rn & rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0x9: teqi({{ uint32_t resTemp;
+                             resTemp = Rn ^ rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0xa: cmpi({{ uint32_t resTemp;
+                             resTemp = Rn - rotated_imm; }},
+                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
+                0xb: cmni({{ uint32_t resTemp;
+                             resTemp = Rn + rotated_imm; }},
+                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
+                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
+                0xc: orri({{ uint32_t resTemp;
+                             Rd = resTemp = Rn | rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0xd: movi({{ uint32_t resTemp;
+                             Rd = resTemp = rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0xe: bici({{ uint32_t resTemp;
+                             Rd = resTemp = Rn & ~rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
+                0xf: mvni({{ uint32_t resTemp;
+                             Rd = resTemp = ~rotated_imm; }},
+                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                          {{ Cpsr<28:> }});
             }
         }
         1: decode OPCODE {

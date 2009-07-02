@@ -71,6 +71,13 @@ def template DataDecode {{
     }
 }};
 
+def template DataImmDecode {{
+    if (machInst.sField == 0)
+        return new %(class_name)s(machInst);
+    else
+        return new %(class_name)sCc(machInst);
+}};
+
 let {{
 
     calcCcCode = '''
@@ -123,6 +130,23 @@ def format DataOp(code, icValue, ivValue) {{
                   PredOpExecute.subst(regCcIop) + \
                   PredOpExecute.subst(immCcIop)
     decode_block = DataDecode.subst(regIop)
+}};
+
+def format DataImmOp(code, icValue, ivValue) {{
+    code += "resTemp = resTemp;"
+    iop = InstObjParams(name, Name, 'PredImmOp',
+                        {"code": code,
+                         "predicate_test": predicateTest})
+    ccIop = InstObjParams(name, Name + "Cc", 'PredImmOp',
+                          {"code": code + calcCcCode % vars(),
+                           "predicate_test": predicateTest})
+    header_output = BasicDeclare.subst(iop) + \
+                    BasicDeclare.subst(ccIop)
+    decoder_output = BasicConstructor.subst(iop) + \
+                     BasicConstructor.subst(ccIop)
+    exec_output = PredOpExecute.subst(iop) + \
+                  PredOpExecute.subst(ccIop)
+    decode_block = DataImmDecode.subst(iop)
 }};
 
 def format PredOp(code, *opt_flags) {{
