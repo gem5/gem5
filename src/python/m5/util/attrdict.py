@@ -43,7 +43,7 @@ class attrdict(dict):
     def __delattr__(self, attr):
         if attr in self:
             return self.__delitem__(attr)
-        return super(attrdict, self).__delattr__(attr, value)
+        return super(attrdict, self).__delattr__(attr)
 
 class multiattrdict(attrdict):
     """Wrap attrdict so that nested attribute accesses automatically create
