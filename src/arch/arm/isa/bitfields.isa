@@ -34,9 +34,8 @@
 //
 
 // Opcode fields
+def bitfield ENCODING      encoding;
 def bitfield OPCODE        opcode;
-def bitfield OPCODE_27_25  opcode27_25;
-def bitfield OPCODE_24_21  opcode24_21;
 def bitfield OPCODE_24_23  opcode24_23;
 def bitfield OPCODE_24	   opcode24;
 def bitfield OPCODE_23_20  opcode23_20;
@@ -52,7 +51,7 @@ def bitfield OPCODE_19	   opcode19;
 def bitfield OPCODE_15_12  opcode15_12;
 def bitfield OPCODE_15	   opcode15;
 def bitfield OPCODE_9      opcode9;
-def bitfield OPCODE_7_4    opcode7_4;
+def bitfield MISC_OPCODE   miscOpcode;
 def bitfield OPCODE_7_5	   opcode7_5;
 def bitfield OPCODE_7_6    opcode7_6;
 def bitfield OPCODE_7      opcode7;

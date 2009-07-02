@@ -44,9 +44,8 @@ namespace ArmISA
         Bitfield<32>     isMisc;
 
         // All the different types of opcode fields.
-        Bitfield<27, 25> opcode;
-        Bitfield<27, 25> opcode27_25;
-        Bitfield<24, 21> opcode24_21;
+        Bitfield<27, 25> encoding;
+        Bitfield<24, 21> opcode;
         Bitfield<24, 23> opcode24_23;
         Bitfield<24>     opcode24;
         Bitfield<23, 20> opcode23_20;
@@ -62,7 +61,7 @@ namespace ArmISA
         Bitfield<15, 12> opcode15_12;
         Bitfield<15>     opcode15;
         Bitfield<9>      opcode9;
-        Bitfield<7,  4>  opcode7_4;
+        Bitfield<7,  4>  miscOpcode;
         Bitfield<7,  5>  opcode7_5;
         Bitfield<7,  6>  opcode7_6;
         Bitfield<7>      opcode7;

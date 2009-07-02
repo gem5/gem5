@@ -388,7 +388,7 @@ ArmStaticInst::printDataInst(std::ostream &os) const
 {
     printMnemonic(os, machInst.sField ? "s" : "");
     //XXX It would be nice if the decoder figured this all out for us.
-    unsigned opcode = machInst.opcode24_21;
+    unsigned opcode = machInst.opcode;
     bool firstOp = true;
 
     // Destination

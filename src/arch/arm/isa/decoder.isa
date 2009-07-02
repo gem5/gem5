@@ -39,7 +39,7 @@
 //
 decode COND_CODE default Unknown::unknown() {
     0xf: decode COND_CODE {
-        0x0: decode OPCODE_27_25 {
+        0x0: decode OPCODE {
             // Just a simple trick to allow us to specify our new uops here
             0x0: PredImmOp::addi_uop({{ Raddr = Rn + rotated_imm; }},
                                         'IsMicroop');
@@ -56,7 +56,7 @@ decode COND_CODE default Unknown::unknown() {
             0x5: PredImmOp::subi_rd_uop({{ Rd = Rn - rotated_imm; }},
                                            'IsMicroop');
         }
-        0x1: decode OPCODE_27_25 {
+        0x1: decode OPCODE {
             0x0: PredIntOp::mvtd_uop({{ Fd.ud = ((uint64_t) Rhi << 32)|Rlo; }},
                                         'IsMicroop');
             0x1: PredIntOp::mvfd_uop({{ Rhi = (Fd.ud >> 32) & 0xffffffff;
@@ -77,394 +77,289 @@ decode COND_CODE default Unknown::unknown() {
         }
         default: Unknown::unknown(); // TODO: Ignore other NV space for now
     }
-    format BasicOp{
-    default: decode OPCODE_27_25 {
-        0x0: decode OPCODE_4 {
-            0: decode S_FIELD {
-                0: decode OPCODE_24_21 {
-                    format PredIntOp {
-                    0x0: and({{ Rd = Rn & Rm_Imm; }});
-                    0x1: eor({{ Rd = Rn ^ Rm_Imm; }});
-                    0x2: sub({{ Rd = Rn - Rm_Imm; }});
-                    0x3: rsb({{ Rd = Rm_Imm - Rn; }});
-                    0x4: add({{ Rd = Rn + Rm_Imm; }});
-                    0x5: adc({{ Rd = Rn + Rm_Imm + Cpsr<29:>; }});
-                    0x6: sbc({{ Rd = Rn - Rm_Imm + Cpsr<29:> - 1; }});
-                    0x7: rsc({{ Rd = Rm_Imm - Rn + Cpsr<29:> - 1; }});
-                    //0x8:mrs_cpsr -- TODO
-                    //0x9:msr_cpsr -- TODO
-                    //0xa:mrs_spsr -- TODO
-                    //0xb:msr_spsr -- TODO
-                    0xc: orr({{ Rd = Rn | Rm_Imm; }});
-                    0xd: mov({{ Rd = Rm_Imm; }});
-                    0xe: bic({{ Rd = Rn & ~Rm_Imm; }});
-                    0xf: mvn({{ Rd = ~Rm_Imm; }});
-                    }
+default: decode ENCODING {
+format DataOp {
+    0x0: decode SEVEN_AND_FOUR {
+        1: decode MISC_OPCODE {
+            0x9: decode PREPOST {
+                0: decode OPCODE {
+                    0x0: mul({{ uint32_t resTemp;
+                                Rn = resTemp = Rm * Rs; }},
+                             {{ Cpsr<29:> }},
+                             {{ Cpsr<28:> }});
+                    0x1: mla({{ uint32_t resTemp;
+                                Rn = resTemp = Rm * Rs; }},
+                             {{ Cpsr<29:> }},
+                             {{ Cpsr<28:> }});
+                    0x2: WarnUnimpl::umall();
+                    0x4: umull({{
+                        uint64_t resTemp;
+                        resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
+                        Rd = (uint32_t)(resTemp & 0xffffffff);
+                        Rn = (uint32_t)(resTemp >> 32);
+                    }}, {{ 1 }}, {{ 1 }});
+                    0x5: WarnUnimpl::smlal();
+                    0x6: smull({{
+                        int64_t resTemp;
+                        resTemp = ((int64_t)Rm.sw)*((int64_t)Rs.sw);
+                        Rd = (int32_t)(resTemp & 0xffffffff);
+                        Rn = (int32_t)(resTemp >> 32);
+                    }}, {{ 1 }}, {{ 1 }});
+                    0x7: umlal({{
+                        uint64_t resTemp;
+                        resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
+                        resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
+                        Rd = (uint32_t)(resTemp & 0xffffffff);
+                        Rn = (uint32_t)(resTemp >> 32);
+                    }}, {{ 1 }}, {{ 1 }});
                 }
-                1: decode OPCODE_24_21 {
-                    format PredIntOpCc {
-                    0x0: ands({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn & Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x1: eors({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn ^ Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x2: subs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = Rn - val2;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, val2) }},
-                        {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                    0x3: rsbs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = val2 - Rn;
-                        }},
-                        {{ arm_sub_carry(resTemp, val2, Rn) }},
-                        {{ arm_sub_overflow(resTemp, val2, Rn) }});
-                    0x4: adds({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = Rn + val2;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, val2) }},
-                        {{ arm_add_overflow(resTemp, Rn, val2) }});
-                    0x5: adcs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = Rn + val2 + Cpsr<29:>;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, val2) }},
-                        {{ arm_add_overflow(resTemp, Rn, val2) }});
-                    0x6: sbcs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = Rn - val2 + Cpsr<29:> - 1;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, val2) }},
-                        {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                    0x7: rscs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = val2 - Rn + Cpsr<29:> - 1;
-                        }},
-                        {{ arm_sub_carry(resTemp, val2, Rn) }},
-                        {{ arm_sub_overflow(resTemp, val2, Rn) }});
-                    0x8: tst({{
-                        uint32_t resTemp;
-                        resTemp = Rn & Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0x9: teq({{
-                        uint32_t resTemp;
-                        resTemp = Rn ^ Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xa: cmp({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        resTemp = Rn - val2;
-                        }},
-                        {{ arm_sub_carry(resTemp, Rn, val2) }},
-                        {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                    0xb: cmn({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        resTemp = Rn + val2;
-                        }},
-                        {{ arm_add_carry(resTemp, Rn, val2) }},
-                        {{ arm_add_overflow(resTemp, Rn, val2) }});
-                    0xc: orrs({{
-                        uint32_t resTemp,
-                            val2 = Rm_Imm;
-                        Rd = resTemp = Rn | val2;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xd: movs({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xe: bics({{
-                        uint32_t resTemp;
-                        Rd = resTemp = Rn & ~Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    0xf: mvns({{
-                        uint32_t resTemp;
-                        Rd = resTemp = ~Rm_Imm;
-                        }},
-                        {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                        {{ Cpsr<28:> }});
-                    }
+                1: decode PUBWL {
+                    0x10: WarnUnimpl::swp();
+                    0x14: WarnUnimpl::swpb();
+                    0x18: WarnUnimpl::strex();
+                    0x19: WarnUnimpl::ldrex();
                 }
             }
-            1: decode OPCODE_7 {
-                0: decode S_FIELD {
-                    0: decode OPCODE_24_21 {
-                        format PredIntOp {
-                        0x0: and_rs({{ Rd = Rn & Rm_Rs; }});
-                        0x1: eor_rs({{ Rd = Rn ^ Rm_Rs; }});
-                        0x2: sub_rs({{ Rd = Rn - Rm_Rs; }});
-                        0x3: rsb_rs({{ Rd = Rm_Rs - Rn; }});
-                        0x4: add_rs({{ Rd = Rn + Rm_Rs; }});
-                        0x5: adc_rs({{ Rd = Rn + Rm_Rs + Cpsr<29:>; }});
-                        0x6: sbc_rs({{ Rd = Rn - Rm_Rs + Cpsr<29:> - 1; }});
-                        0x7: rsc_rs({{ Rd = Rm_Rs - Rn + Cpsr<29:> - 1; }});
-                        0xc: orr_rs({{ Rd = Rn | Rm_Rs; }});
-                        0xd: mov_rs({{ Rd = Rm_Rs; }});
-                        0xe: bic_rs({{ Rd = Rn & ~Rm_Rs; }});
-                        0xf: mvn_rs({{ Rd = ~Rm_Rs; }});
-                        default: decode OPCODE_7_4 {
-                            0x1: decode OPCODE_24_21 {
-                                0x9: BranchExchange::bx({{ }});
-                                0xb: PredOp::clz({{
-                                    if (Rm == 0)
-                                        Rd = 32;
-                                    else
-                                    {
-                                        int i;
-                                        for (i = 0; i < 32; i++)
-                                        {
-                                            if (Rm & (1<<(31-i)))
-                                            break;
-                                        }
-                                        Rd = i;
-                                    }
-                                }});
-                            }
-                            0x3: decode OPCODE_24_21 {
-                                0x9: BranchExchange::blx({{ }}, Link);
-                            }
-                        }
-                        }
-                    }
-                    1: decode OPCODE_24_21 {
-                        format PredIntOpCc {
-                        0x0: ands_rs({{
-                            uint32_t resTemp;
-                            Rd = resTemp = Rn & Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0x1: eors_rs({{
-                            uint32_t resTemp;
-                            Rd = resTemp = Rn ^ Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0x2: subs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = Rn - val2;
-                            }},
-                            {{ arm_sub_carry(resTemp, Rn, val2) }},
-                            {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                        0x3: rsbs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = val2 - Rn;
-                            }},
-                            {{ arm_sub_carry(resTemp, val2, Rn) }},
-                            {{ arm_sub_overflow(resTemp, val2, Rn) }});
-                        0x4: adds_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = Rn + val2;
-                            }},
-                            {{ arm_add_carry(resTemp, Rn, val2) }},
-                            {{ arm_add_overflow(resTemp, Rn, val2) }});
-                        0x5: adcs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = Rn + val2 + Cpsr<29:>;
-                            }},
-                            {{ arm_add_carry(resTemp, Rn, val2) }},
-                            {{ arm_add_overflow(resTemp, Rn, val2) }});
-                        0x6: sbcs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = Rn - val2 + Cpsr<29:> - 1;
-                            }},
-                            {{ arm_sub_carry(resTemp, Rn, val2) }},
-                            {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                        0x7: rscs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = val2 - Rn + Cpsr<29:> - 1;
-                            }},
-                            {{ arm_sub_carry(resTemp, val2, Rn) }},
-                            {{ arm_sub_overflow(resTemp, val2, Rn) }});
-                        0x8: tst_rs({{
-                            uint32_t resTemp;
-                            resTemp = Rn & Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0x9: teq_rs({{
-                            uint32_t resTemp;
-                            resTemp = Rn ^ Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0xa: cmp_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            resTemp = Rn - val2;
-                            }},
-                            {{ arm_sub_carry(resTemp, Rn, val2) }},
-                            {{ arm_sub_overflow(resTemp, Rn, val2) }});
-                        0xb: cmn_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            resTemp = Rn + val2;
-                            }},
-                            {{ arm_add_carry(resTemp, Rn, val2) }},
-                            {{ arm_add_overflow(resTemp, Rn, val2) }});
-                        0xc: orrs_rs({{
-                            uint32_t resTemp,
-                                val2 = Rm_Rs;
-                            Rd = resTemp = Rn | val2;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0xd: movs_rs({{
-                            uint32_t resTemp;
-                            Rd = resTemp = Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0xe: bics_rs({{
-                            uint32_t resTemp;
-                            Rd = resTemp = Rn & ~Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        0xf: mvns_rs({{
-                            uint32_t resTemp;
-                            Rd = resTemp = ~Rm_Rs;
-                            }},
-                            {{ shift_carry_rs(Rm, Rs, shift, Cpsr<29:>) }},
-                            {{ Cpsr<28:> }});
-                        }
-                    }
+            0xb: decode PUBWL {
+                format ArmStoreMemory {
+                    0x0, 0x8: strh_({{ Mem.uh = Rd.uh;
+                                       Rn = Rn + Rm; }},
+                                    {{ EA = Rn; }});
+                    0x4, 0xc: strh_il({{ Mem.uh = Rd.uh;
+                                         Rn = Rn + hilo; }},
+                                      {{ EA = Rn; }});
+                    0x10, 0x18: strh_p({{ Mem.uh = Rd.uh; }},
+                                       {{ EA = Rn + Rm; }});
+                    0x12, 0x1a: strh_pw({{ Mem.uh = Rd.uh;
+                                           Rn = Rn + Rm; }},
+                                        {{ EA = Rn + Rm; }});
+                    0x14, 0x1c: strh_pil({{ Mem.uh = Rd.uh; }},
+                                         {{ EA = Rn + hilo; }});
+                    0x16, 0x1e: strh_piwl({{ Mem.uh = Rd.uh;
+                                             Rn = Rn + hilo; }},
+                                          {{ EA = Rn + hilo; }});
                 }
-                1: decode OPCODE_6_5 {
-                    0x0: decode OPCODE_24 {
-                        0: decode LUAS {
-                            format PredIntOp {
-                            0x0: mul({{ Rn = Rm * Rs; }});
-                            0x1: PredIntOpCc::muls({{
-                                uint32_t resTemp;
-                                Rn = resTemp = Rm * Rs;
-                                }},
-                                {{ Cpsr<29:> }},
-                                {{ Cpsr<28:> }});
-                            0x2: mla_a({{ Rn = Rm * Rs + Rd; }});
-                            0x8: umull_l({{
-                                uint64_t resTemp;
-                                resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
-                                Rd = (uint32_t)(resTemp & 0xffffffff);
-                                Rn = (uint32_t)(resTemp >> 32);
-                            }});
-                            0xa: umlal_lu({{
-                                uint64_t resTemp;
-                                resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
-                                resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
-                                Rd = (uint32_t)(resTemp & 0xffffffff);
-                                Rn = (uint32_t)(resTemp >> 32);
-                            }});
-                            0xc: smull_lu({{
-                                int64_t resTemp;
-                                resTemp = ((int64_t)Rm.sw)*((int64_t)Rs.sw);
-                                Rd = (int32_t)(resTemp & 0xffffffff);
-                                Rn = (int32_t)(resTemp >> 32);
-                            }});
-                            }
-                        }
-                    }
-                    0x1: decode PUIWL {
-                        0x01,0x09: ArmLoadMemory::ldrh_l({{ Rd.uh = Mem.uh;
-                                                          Rn = Rn + Rm; }},
-                                                        {{ EA = Rn; }});
-                        0x04,0x0c: ArmStoreMemory::strh_i({{ Mem.uh = Rd.uh;
-                                                          Rn = Rn + hilo; }},
-                                                       {{ EA = Rn; }});
-                        0x05,0x0d: ArmLoadMemory::ldrh_il({{ Rd.uh = Mem.uh;
-                                                          Rn = Rn + hilo; }},
-                                                       {{ EA = Rn; }});
-                        0x10,0x18: ArmStoreMemory::strh_p({{ Mem.uh = Rd.uh; }},
-                                                        {{ EA = Rn + Rm; }});
-                        0x11,0x19: ArmLoadMemory::ldrh_pl({{ Rd.uh = Mem.uh; }},
-                                                        {{ EA = Rn + Rm; }});
-                        0x12,0x1a: ArmStoreMemory::strh_pw({{ Mem.uh = Rd.uh;
-                                                          Rn = Rn + Rm; }},
-                                                       {{ EA = Rn + Rm; }});
-                        0x13,0x1b: ArmLoadMemory::ldrh_pwl({{ Rd.uh = Mem.uh;
-                                                          Rn = Rn + Rm; }},
-                                                       {{ EA = Rn + Rm; }});
-                        0x14,0x1c: ArmStoreMemory::strh_pi({{ Mem.uh = Rd.uh; }},
-                                                        {{ EA = Rn + hilo; }});
-                        0x15,0x1d: ArmLoadMemory::ldrh_pil({{ Rd.uh = Mem.uh; }},
-                                                       {{ EA = Rn + hilo; }});
-                        0x16,0x1e: ArmStoreMemory::strh_piw({{ Mem.uh = Rd.uh;
-                                                           Rn = Rn + hilo; }},
-                                                        {{ EA = Rn + hilo; }});
-                        0x17,0x1f: ArmLoadMemory::ldrh_piwl({{ Rd.uh = Mem.uh;
-                                                           Rn = Rn + hilo; }},
-                                                        {{ EA = Rn + hilo; }});
-                    }
-                    0x2: decode PUIWL {
-                        format ArmLoadMemory {
-                            0x05,0x0d: ldrsb_il({{ Rd.sb = Mem.sb; 
-                                                    Rn = Rn + hilo; }},
-                                                {{ EA = Rn; }});
-                            0x11,0x19: ldrsb_pl({{ Rd.sb = Mem.sb; }},
-                                                {{ EA = Rn + Rm; }});
-                            0x13,0x1b: ldrsb_pwl({{ Rd.sb = Mem.sb;
-                                                    Rn = Rn + Rm; }},
-                                                 {{ EA = Rn + Rm; }});
-                            0x15,0x1d: ldrsb_pil({{ Rd.sb = Mem.sb; }},
-                                                 {{ EA = Rn + hilo; }});
-                            0x17,0x1f: ldrsb_piwl({{ Rd.sb = Mem.sb;
-                                                     Rn = Rn + hilo; }},
-                                                  {{ EA = Rn + hilo; }});
-                        }
-                    }
-                    0x3: decode PUIWL {
-                        format ArmLoadMemory {
-                            0x05,0x0d: ldrsh_il({{ Rd.sh = Mem.sh; 
-                                                    Rn = Rn + hilo; }},
-                                                {{ EA = Rn; }});
-                            0x11,0x19: ldrsh_pl({{ Rd.sh = Mem.sh; }},
-                                                {{ EA = Rn + Rm; }});
-                            0x13,0x1b: ldrsh_pwl({{ Rd.sh = Mem.sh;
-                                                    Rn = Rn + Rm; }},
-                                                 {{ EA = Rn + Rm; }});
-                            0x15,0x1d: ldrsh_pil({{ Rd.sh = Mem.sh; }},
-                                                 {{ EA = Rn + hilo; }});
-                            0x17,0x1f: ldrsh_piwl({{ Rd.sh = Mem.sh;
-                                                     Rn = Rn + hilo; }},
-                                                  {{ EA = Rn + hilo; }});
-                        }
-                    }
+                format ArmLoadMemory {
+                    0x1, 0x9: ldrh_l({{ Rd.uh = Mem.uh;
+                                        Rn = Rn + Rm; }},
+                                     {{ EA = Rn; }});
+                    0x5, 0xd: ldrh_il({{ Rd.uh = Mem.uh;
+                                         Rn = Rn + hilo; }},
+                                      {{ EA = Rn; }});
+                    0x11, 0x19: ldrh_pl({{ Rd.uh = Mem.uh; }},
+                                        {{ EA = Rn + Rm; }});
+                    0x13, 0x1b: ldrh_pwl({{ Rd.uh = Mem.uh;
+                                            Rn = Rn + Rm; }},
+                                         {{ EA = Rn + Rm; }});
+                    0x15, 0x1d: ldrh_pil({{ Rd.uh = Mem.uh; }},
+                                         {{ EA = Rn + hilo; }});
+                    0x17, 0x1f: ldrh_piwl({{ Rd.uh = Mem.uh;
+                                             Rn = Rn + hilo; }},
+                                          {{ EA = Rn + hilo; }});
+                }
+            }
+            format ArmLoadMemory {
+                0xd: decode PUBWL {
+                    0x1: ldrsb_l({{ Rd = Mem.sb;
+                                    Rn = Rn + Rm; }},
+                                 {{ EA = Rn; }});
+                    0x5: ldrsb_il({{ Rd = Mem.sb;
+                                     Rn = Rn + hilo; }},
+                                  {{ EA = Rn; }});
+                    0x9: ldrsb_ul({{ Rd = Mem.sb;
+                                     Rn = Rn - Rm; }},
+                                  {{ EA = Rn; }});
+                    0xd: ldrsb_uil({{ Rd = Mem.sb;
+                                      Rn = Rn - hilo; }},
+                                   {{ EA = Rn; }});
+                    0x11: ldrsb_pl({{ Rd = Mem.sb; }},
+                                   {{ EA = Rn + Rm; }});
+                    0x13: ldrsb_pwl({{ Rd = Mem.sb;
+                                       Rn = Rn + Rm; }},
+                                    {{ EA = Rn + Rm; }});
+                    0x15: ldrsb_pil({{ Rd = Mem.sb; }},
+                                    {{ EA = Rn + hilo; }});
+                    0x17: ldrsb_piwl({{ Rd = Mem.sb;
+                                        Rn = Rn + hilo; }},
+                                     {{ EA = Rn + hilo; }});
+                    0x19: ldrsb_pul({{ Rd = Mem.sb; }},
+                                    {{ EA = Rn - Rm; }});
+                    0x1b: ldrsb_puwl({{ Rd = Mem.sb;
+                                        Rn = Rn - Rm; }},
+                                     {{ EA = Rn - Rm; }});
+                    0x1d: ldrsb_puil({{ Rd = Mem.sb; }},
+                                     {{ EA = Rn - hilo; }});
+                    0x1f: ldrsb_puiwl({{ Rd = Mem.sb;
+                                         Rn = Rn - hilo; }},
+                                      {{ EA = Rn - hilo; }});
+                }
+                0xf: decode PUBWL {
+                    0x1: ldrsh_l({{ Rd = Mem.sh;
+                                    Rn = Rn + Rm; }},
+                                 {{ EA = Rn; }});
+                    0x5: ldrsh_il({{ Rd = Mem.sh;
+                                     Rn = Rn + hilo; }},
+                                  {{ EA = Rn; }});
+                    0x9: ldrsh_ul({{ Rd = Mem.sh;
+                                     Rn = Rn - Rm; }},
+                                  {{ EA = Rn; }});
+                    0xd: ldrsh_uil({{ Rd = Mem.sh;
+                                      Rn = Rn - hilo; }},
+                                   {{ EA = Rn; }});
+                    0x11: ldrsh_pl({{ Rd = Mem.sh; }},
+                                   {{ EA = Rn + Rm; }});
+                    0x13: ldrsh_pwl({{ Rd = Mem.sh;
+                                       Rn = Rn + Rm; }},
+                                    {{ EA = Rn + Rm; }});
+                    0x15: ldrsh_pil({{ Rd = Mem.sh; }},
+                                    {{ EA = Rn + hilo; }});
+                    0x17: ldrsh_piwl({{ Rd = Mem.sh;
+                                        Rn = Rn + hilo; }},
+                                     {{ EA = Rn + hilo; }});
+                    0x19: ldrsh_pul({{ Rd = Mem.sh; }},
+                                    {{ EA = Rn - Rm; }});
+                    0x1b: ldrsh_puwl({{ Rd = Mem.sh;
+                                        Rn = Rn - Rm; }},
+                                     {{ EA = Rn - Rm; }});
+                    0x1d: ldrsh_puil({{ Rd = Mem.sh; }},
+                                     {{ EA = Rn - hilo; }});
+                    0x1f: ldrsh_puiwl({{ Rd = Mem.sh;
+                                         Rn = Rn - hilo; }},
+                                      {{ EA = Rn - hilo; }});
                 }
             }
         }
-        0x1: decode S_FIELD {
-            0: decode OPCODE_24_21 {
+        0: decode IS_MISC {
+            0: decode OPCODE {
+                0x0: and({{ uint32_t resTemp;
+                            Rd = resTemp = Rn & op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0x1: eor({{ uint32_t resTemp;
+                            Rd = resTemp = Rn ^ op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0x2: sub({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = Rn - val2; }},
+                         {{ arm_sub_carry(resTemp, Rn, val2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
+                0x3: rsb({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = val2 - Rn; }},
+                         {{ arm_sub_carry(resTemp, val2, Rn) }},
+                         {{ arm_sub_overflow(resTemp, val2, Rn) }});
+                0x4: add({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = Rn + val2; }},
+                         {{ arm_add_carry(resTemp, Rn, val2) }},
+                         {{ arm_add_overflow(resTemp, Rn, val2) }});
+                0x5: adc({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = Rn + val2 + Cpsr<29:>; }},
+                         {{ arm_add_carry(resTemp, Rn, val2) }},
+                         {{ arm_add_overflow(resTemp, Rn, val2) }});
+                0x6: sbc({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = Rn - val2 - !Cpsr<29:>; }},
+                         {{ arm_sub_carry(resTemp, Rn, val2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
+                0x7: rsc({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = val2 - Rn - !Cpsr<29:>; }},
+                         {{ arm_sub_carry(resTemp, val2, Rn) }},
+                         {{ arm_sub_overflow(resTemp, val2, Rn) }});
+                0x8: tst({{ uint32_t resTemp = Rn & op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0x9: teq({{ uint32_t resTemp = Rn ^ op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0xa: cmp({{ uint32_t resTemp, val2 = op2;
+                            resTemp = Rn - val2; }},
+                         {{ arm_sub_carry(resTemp, Rn, val2) }},
+                         {{ arm_sub_overflow(resTemp, Rn, val2) }});
+                0xb: cmn({{ uint32_t resTemp, val2 = op2;
+                            resTemp = Rn + val2; }},
+                         {{ arm_add_carry(resTemp, Rn, val2) }},
+                         {{ arm_add_overflow(resTemp, Rn, val2) }});
+                0xc: orr({{ uint32_t resTemp, val2 = op2;
+                            Rd = resTemp = Rn | val2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0xd: mov({{ uint32_t resTemp;
+                            Rd = resTemp = op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0xe: bic({{ uint32_t resTemp;
+                            Rd = resTemp = Rn & ~op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+                0xf: mvn({{ uint32_t resTemp;
+                            Rd = resTemp = ~op2; }},
+                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
+                         {{ Cpsr<28:> }});
+            }
+            1: decode MISC_OPCODE {
+                0x0: decode OPCODE {
+                    0x8: WarnUnimpl::mrs_cpsr();
+                    0x9: WarnUnimpl::msr_cpsr();
+                    0xa: WarnUnimpl::mrs_spsr();
+                    0xb: WarnUnimpl::msr_spsr();
+                }
+                0x1: decode OPCODE {
+                    0x9: BranchExchange::bx({{ }});
+                    0xb: PredOp::clz({{
+                        if (Rm == 0)
+                            Rd = 32;
+                        else
+                        {
+                            int i;
+                            for (i = 0; i < 32; i++)
+                            {
+                                if (Rm & (1<<(31-i)))
+                                break;
+                            }
+                            Rd = i;
+                        }
+                    }});
+                }
+                0x2: decode OPCODE {
+                    0x9: WarnUnimpl::bxj();
+                }
+                0x3: decode OPCODE {
+                    0x9: BranchExchange::blx({{ }}, Link);
+                }
+                0x5: decode OPCODE {
+                    0x8: WarnUnimpl::qadd();
+                    0x9: WarnUnimpl::qsub();
+                    0xa: WarnUnimpl::qdadd();
+                    0xb: WarnUnimpl::qdsub();
+                }
+                0x8: decode OPCODE {
+                    0x8: WarnUnimpl::smlabb();
+                    0x9: WarnUnimpl::smlalbb();
+                    0xa: WarnUnimpl::smlawb();
+                    0xb: WarnUnimpl::smulbb();
+                }
+                0xa: decode OPCODE {
+                    0x8: WarnUnimpl::smlatb();
+                    0x9: WarnUnimpl::smulwb();
+                    0xa: WarnUnimpl::smlaltb();
+                    0xb: WarnUnimpl::smultb();
+                }
+                0xc: decode OPCODE {
+                    0x8: WarnUnimpl::smlabt();
+                    0x9: WarnUnimpl::smlawt();
+                    0xa: WarnUnimpl::smlalbt();
+                    0xb: WarnUnimpl::smulbt();
+                }
+                0xe: decode OPCODE {
+                    0x8: WarnUnimpl::smlatt();
+                    0x9: WarnUnimpl::smulwt();
+                    0xa: WarnUnimpl::smlaltt();
+                    0xb: WarnUnimpl::smultt();
+                }
+            }
+        }
+    }
+    0x1: decode IS_MISC {
+        0: decode S_FIELD {
+            0: decode OPCODE {
                 format PredImmOp {
                     0x0: andi({{ Rd = Rn & rotated_imm; }});
                     0x1: eori({{ Rd = Rn ^ rotated_imm; }});
@@ -484,7 +379,7 @@ decode COND_CODE default Unknown::unknown() {
                     }
                 }
             }
-            1: decode OPCODE_24_21 {
+            1: decode OPCODE {
                 format PredImmOpCc {
                     0x0: andsi({{
                         uint32_t resTemp;
@@ -585,268 +480,277 @@ decode COND_CODE default Unknown::unknown() {
                 }
             }
         }
-        0x2: decode PUBWL {
-            // CAREFUL:
-            // Can always do EA + disp, since we negate disp using the UP flag
-            // Post-indexed variants
-            0x00,0x08: ArmStoreMemory::str_({{ Mem = Rd;
-                                               Rn = Rn + disp; }},
-                                            {{ EA = Rn; }});
-            0x01,0x09: ArmLoadMemory::ldr_l({{ Rn = Rn + disp; 
-                                               Rd = Mem; }},
-                                            {{ EA = Rn; }});
-            0x04,0x0c: ArmStoreMemory::strb_b({{ Mem.ub = Rd.ub;
-                                                 Rn = Rn + disp; }},
-                                              {{ EA = Rn; }});
-            0x05,0x0d: ArmLoadMemory::ldrb_bl({{ Rn = Rn + disp; 
-                                                 Rd.ub = Mem.ub; }},
-                                              {{ EA = Rn; }});
-            // Pre-indexed variants
-            0x10,0x18: ArmStoreMemory::str_p({{ Mem = Rd; }});
-            0x11,0x19: ArmLoadMemory::ldr_pl({{ Rd = Mem; }});
-            0x12,0x1a: ArmStoreMemory::str_pw({{ Mem = Rd;
-                                                 Rn = Rn + disp; }});
-            0x13,0x1b: ArmLoadMemory::ldr_pwl({{ Rn = Rn + disp; 
-                                                 Rd = Mem; }});
-            0x14,0x1c: ArmStoreMemory::strb_pb({{ Mem.ub = Rd.ub; }});
-            0x15,0x1d: ArmLoadMemory::ldrb_pbl({{ Rd.ub = Mem.ub; }});
-            0x16,0x1e: ArmStoreMemory::strb_pbw({{ Mem.ub = Rd.ub;
-                                                   Rn = Rn + disp; }});
-            0x17,0x1f: ArmLoadMemory::ldrb_pbwl({{ Rn = Rn + disp; 
-                                                   Rd.ub = Mem.ub; }});
+        1: decode OPCODE {
+            // The following two instructions aren't supposed to be defined
+            0x8: WarnUnimpl::undefined_instruction();
+            0x9: WarnUnimpl::undefined_instruction();
+
+            0xa: WarnUnimpl::mrs_i_cpsr();
+            0xb: WarnUnimpl::mrs_i_spsr();
         }
-        0x3: decode OPCODE_4 {
-            0: decode PUBWL {
-                0x00,0x08: ArmStoreMemory::strr_({{
-                        Mem = Rd;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn; }});
-                0x01,0x09: ArmLoadMemory::ldrr_l({{
-                        Rd = Mem;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn; }});
-                0x04,0x0c: ArmStoreMemory::strr_b({{
-                        Mem.ub = Rd.ub;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn; }});
-                0x05,0x0d: ArmLoadMemory::ldrr_bl({{
-                        Rd.ub = Mem.ub;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn; }});
-                0x10,0x18: ArmStoreMemory::strr_p({{
-                        Mem = Rd; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x11,0x19: ArmLoadMemory::ldrr_pl({{
-                        Rd = Mem; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x12,0x1a: ArmStoreMemory::strr_pw({{
-                        Mem = Rd;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x13,0x1b: ArmLoadMemory::ldrr_pwl({{
-                        Rd = Mem;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x14,0x1c: ArmStoreMemory::strr_pb({{
-                        Mem.ub = Rd.ub; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x15,0x1d: ArmLoadMemory::ldrr_pbl({{
-                        Rd.ub = Mem.ub; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x16,0x1e: ArmStoreMemory::strr_pbw({{
-                        Mem.ub = Rd.ub;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn + Rm_Imm; }});
-                0x17,0x1f: ArmLoadMemory::ldrr_pbwl({{
-                        Rd.ub = Mem.ub;
-                        Rn = Rn + Rm_Imm; }},
-                     {{ EA = Rn + Rm_Imm; }});
+    }
+    0x2: decode PUBWL {
+        // CAREFUL:
+        // Can always do EA + disp, since we negate disp using the UP flag
+        // Post-indexed variants
+        0x00,0x08: ArmStoreMemory::str_({{ Mem = Rd;
+                                           Rn = Rn + disp; }},
+                                        {{ EA = Rn; }});
+        0x01,0x09: ArmLoadMemory::ldr_l({{ Rn = Rn + disp; 
+                                           Rd = Mem; }},
+                                        {{ EA = Rn; }});
+        0x04,0x0c: ArmStoreMemory::strb_b({{ Mem.ub = Rd.ub;
+                                             Rn = Rn + disp; }},
+                                          {{ EA = Rn; }});
+        0x05,0x0d: ArmLoadMemory::ldrb_bl({{ Rn = Rn + disp; 
+                                             Rd.ub = Mem.ub; }},
+                                          {{ EA = Rn; }});
+        // Pre-indexed variants
+        0x10,0x18: ArmStoreMemory::str_p({{ Mem = Rd; }});
+        0x11,0x19: ArmLoadMemory::ldr_pl({{ Rd = Mem; }});
+        0x12,0x1a: ArmStoreMemory::str_pw({{ Mem = Rd;
+                                             Rn = Rn + disp; }});
+        0x13,0x1b: ArmLoadMemory::ldr_pwl({{ Rn = Rn + disp; 
+                                             Rd = Mem; }});
+        0x14,0x1c: ArmStoreMemory::strb_pb({{ Mem.ub = Rd.ub; }});
+        0x15,0x1d: ArmLoadMemory::ldrb_pbl({{ Rd.ub = Mem.ub; }});
+        0x16,0x1e: ArmStoreMemory::strb_pbw({{ Mem.ub = Rd.ub;
+                                               Rn = Rn + disp; }});
+        0x17,0x1f: ArmLoadMemory::ldrb_pbwl({{ Rn = Rn + disp; 
+                                               Rd.ub = Mem.ub; }});
+    }
+    0x3: decode OPCODE_4 {
+        0: decode PUBWL {
+            0x00,0x08: ArmStoreMemory::strr_({{
+                    Mem = Rd;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn; }});
+            0x01,0x09: ArmLoadMemory::ldrr_l({{
+                    Rd = Mem;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn; }});
+            0x04,0x0c: ArmStoreMemory::strr_b({{
+                    Mem.ub = Rd.ub;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn; }});
+            0x05,0x0d: ArmLoadMemory::ldrr_bl({{
+                    Rd.ub = Mem.ub;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn; }});
+            0x10,0x18: ArmStoreMemory::strr_p({{
+                    Mem = Rd; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x11,0x19: ArmLoadMemory::ldrr_pl({{
+                    Rd = Mem; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x12,0x1a: ArmStoreMemory::strr_pw({{
+                    Mem = Rd;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x13,0x1b: ArmLoadMemory::ldrr_pwl({{
+                    Rd = Mem;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x14,0x1c: ArmStoreMemory::strr_pb({{
+                    Mem.ub = Rd.ub; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x15,0x1d: ArmLoadMemory::ldrr_pbl({{
+                    Rd.ub = Mem.ub; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x16,0x1e: ArmStoreMemory::strr_pbw({{
+                    Mem.ub = Rd.ub;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn + Rm_Imm; }});
+            0x17,0x1f: ArmLoadMemory::ldrr_pbwl({{
+                    Rd.ub = Mem.ub;
+                    Rn = Rn + Rm_Imm; }},
+                 {{ EA = Rn + Rm_Imm; }});
+        }
+    }
+    0x4: decode PUSWL {
+        // Right now we only handle cases when S (PSRUSER) is not set
+        default: ArmMacroStore::ldmstm({{ }});
+    }
+    0x5: decode OPCODE_24 {
+        // Branch (and Link) Instructions
+        0: Branch::b({{ }});
+        1: Branch::bl({{ }}, Link);
+    }
+    0x6: decode CPNUM {
+        0x1: decode PUNWL {
+            0x02,0x0a: decode OPCODE_15 {
+                0: ArmStoreMemory::stfs_({{ Mem.sf = Fd.sf;
+                                            Rn = Rn + disp8; }},
+                    {{ EA = Rn; }});
+                1: ArmMacroFPAOp::stfd_({{ }});
+            }
+            0x03,0x0b: decode OPCODE_15 {
+                0: ArmLoadMemory::ldfs_({{ Fd.sf = Mem.sf;
+                                           Rn = Rn + disp8; }},
+                    {{ EA = Rn; }});
+                1: ArmMacroFPAOp::ldfd_({{ }});
+            }
+            0x06,0x0e: decode OPCODE_15 {
+                0: ArmMacroFPAOp::stfe_nw({{ }});
+            }
+            0x07,0x0f: decode OPCODE_15 {
+                0: ArmMacroFPAOp::ldfe_nw({{ }});
+            }
+            0x10,0x18: decode OPCODE_15 {
+                0: ArmStoreMemory::stfs_p({{ Mem.sf = Fd.sf; }},
+                    {{ EA = Rn + disp8; }});
+                1: ArmMacroFPAOp::stfd_p({{ }});
+            }
+            0x11,0x19: decode OPCODE_15 {
+                0: ArmLoadMemory::ldfs_p({{ Fd.sf = Mem.sf; }},
+                    {{ EA = Rn + disp8; }});
+                1: ArmMacroFPAOp::ldfd_p({{ }});
+            }
+            0x12,0x1a: decode OPCODE_15 {
+                0: ArmStoreMemory::stfs_pw({{ Mem.sf = Fd.sf;
+                                              Rn = Rn + disp8; }},
+                    {{ EA = Rn + disp8; }});
+                1: ArmMacroFPAOp::stfd_pw({{ }});
+            }
+            0x13,0x1b: decode OPCODE_15 {
+                0: ArmLoadMemory::ldfs_pw({{ Fd.sf = Mem.sf;
+                                             Rn = Rn + disp8; }},
+                    {{ EA = Rn + disp8; }});
+                1: ArmMacroFPAOp::ldfd_pw({{ }});
+            }
+            0x14,0x1c: decode OPCODE_15 {
+                0: ArmMacroFPAOp::stfe_pn({{ }});
+            }
+            0x15,0x1d: decode OPCODE_15 {
+                0: ArmMacroFPAOp::ldfe_pn({{ }});
+            }
+            0x16,0x1e: decode OPCODE_15 {
+                0: ArmMacroFPAOp::stfe_pnw({{ }});
+            }
+            0x17,0x1f: decode OPCODE_15 {
+                0: ArmMacroFPAOp::ldfe_pnw({{ }});
             }
         }
-        0x4: decode PUSWL {
-            // Right now we only handle cases when S (PSRUSER) is not set
-            default: ArmMacroStore::ldmstm({{ }});
+        0x2: decode PUNWL {
+            // could really just decode as a single instruction
+            0x00,0x04,0x08,0x0c: ArmMacroFMOp::sfm_({{ }});
+            0x01,0x05,0x09,0x0d: ArmMacroFMOp::lfm_({{ }});
+            0x02,0x06,0x0a,0x0e: ArmMacroFMOp::sfm_w({{ }});
+            0x03,0x07,0x0b,0x0f: ArmMacroFMOp::lfm_w({{ }});
+            0x10,0x14,0x18,0x1c: ArmMacroFMOp::sfm_p({{ }});
+            0x11,0x15,0x19,0x1d: ArmMacroFMOp::lfm_p({{ }});
+            0x12,0x16,0x1a,0x1e: ArmMacroFMOp::sfm_pw({{ }});
+            0x13,0x17,0x1b,0x1f: ArmMacroFMOp::lfm_pw({{ }});
         }
-        0x5: decode OPCODE_24 {
-            // Branch (and Link) Instructions
-            0: Branch::b({{ }});
-            1: Branch::bl({{ }}, Link);
-        }
-        0x6: decode CPNUM {
-            0x1: decode PUNWL {
-                0x02,0x0a: decode OPCODE_15 {
-                    0: ArmStoreMemory::stfs_({{ Mem.sf = Fd.sf;
-                                                Rn = Rn + disp8; }},
-                        {{ EA = Rn; }});
-                    1: ArmMacroFPAOp::stfd_({{ }});
-                }
-                0x03,0x0b: decode OPCODE_15 {
-                    0: ArmLoadMemory::ldfs_({{ Fd.sf = Mem.sf;
-                                               Rn = Rn + disp8; }},
-                        {{ EA = Rn; }});
-                    1: ArmMacroFPAOp::ldfd_({{ }});
-                }
-                0x06,0x0e: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::stfe_nw({{ }});
-                }
-                0x07,0x0f: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::ldfe_nw({{ }});
-                }
-                0x10,0x18: decode OPCODE_15 {
-                    0: ArmStoreMemory::stfs_p({{ Mem.sf = Fd.sf; }},
-                        {{ EA = Rn + disp8; }});
-                    1: ArmMacroFPAOp::stfd_p({{ }});
-                }
-                0x11,0x19: decode OPCODE_15 {
-                    0: ArmLoadMemory::ldfs_p({{ Fd.sf = Mem.sf; }},
-                        {{ EA = Rn + disp8; }});
-                    1: ArmMacroFPAOp::ldfd_p({{ }});
-                }
-                0x12,0x1a: decode OPCODE_15 {
-                    0: ArmStoreMemory::stfs_pw({{ Mem.sf = Fd.sf;
-                                                  Rn = Rn + disp8; }},
-                        {{ EA = Rn + disp8; }});
-                    1: ArmMacroFPAOp::stfd_pw({{ }});
-                }
-                0x13,0x1b: decode OPCODE_15 {
-                    0: ArmLoadMemory::ldfs_pw({{ Fd.sf = Mem.sf;
-                                                 Rn = Rn + disp8; }},
-                        {{ EA = Rn + disp8; }});
-                    1: ArmMacroFPAOp::ldfd_pw({{ }});
-                }
-                0x14,0x1c: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::stfe_pn({{ }});
-                }
-                0x15,0x1d: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::ldfe_pn({{ }});
-                }
-                0x16,0x1e: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::stfe_pnw({{ }});
-                }
-                0x17,0x1f: decode OPCODE_15 {
-                    0: ArmMacroFPAOp::ldfe_pnw({{ }});
-                }
-            }
-            0x2: decode PUNWL {
-                // could really just decode as a single instruction
-                0x00,0x04,0x08,0x0c: ArmMacroFMOp::sfm_({{ }});
-                0x01,0x05,0x09,0x0d: ArmMacroFMOp::lfm_({{ }});
-                0x02,0x06,0x0a,0x0e: ArmMacroFMOp::sfm_w({{ }});
-                0x03,0x07,0x0b,0x0f: ArmMacroFMOp::lfm_w({{ }});
-                0x10,0x14,0x18,0x1c: ArmMacroFMOp::sfm_p({{ }});
-                0x11,0x15,0x19,0x1d: ArmMacroFMOp::lfm_p({{ }});
-                0x12,0x16,0x1a,0x1e: ArmMacroFMOp::sfm_pw({{ }});
-                0x13,0x17,0x1b,0x1f: ArmMacroFMOp::lfm_pw({{ }});
-            }
-        }
-        0x7: decode OPCODE_24 {
-            0: decode CPNUM {
-                // Coprocessor Instructions
-                0x1: decode OPCODE_4 {
-                    format FloatOp {
-                        // Basic FPA Instructions
-                        0: decode OPCODE_23_20 {
-                            0x0: decode OPCODE_15 {
-                                0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
-                                1: mvf({{ Fd.sf = Fm.sf; }});
-                            }
-                            0x1: decode OPCODE_15 {
-                                0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
-                                1: mnf({{ Fd.sf = -Fm.sf; }});
-                            }
-                            0x2: decode OPCODE_15 {
-                                0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
-                                1: abs({{ Fd.sf = fabs(Fm.sf); }});
-                            }
-                            0x3: decode OPCODE_15 {
-                                0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
-                                1: rnd({{ Fd.sf = rint(Fm.sf); }});
-                            }
-                            0x4: decode OPCODE_15 {
-                                0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
-                                1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
-                            }
-                            0x5: decode OPCODE_15 {
-                                0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
-                                1: log({{ Fd.sf = log10(Fm.sf); }});
-                            }
-                            0x6: decode OPCODE_15 {
-                                0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
-                                1: lgn({{ Fd.sf = log(Fm.sf); }});
-                            }
-                            0x7: decode OPCODE_15 {
-                                0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
-                                1: exp({{ Fd.sf = exp(Fm.sf); }});
-                            }
-                            0x8: decode OPCODE_15 {
-                                0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
-                                1: sin({{ Fd.sf = sin(Fm.sf); }});
-                            }
-                            0x9: decode OPCODE_15 {
-                                0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
-                                1: cos({{ Fd.sf = cos(Fm.sf); }});
-                            }
-                            0xa: decode OPCODE_15 {
-                                0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
-                                1: tan({{ Fd.sf = tan(Fm.sf); }});
-                            }
-                            0xb: decode OPCODE_15 {
-                                0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
-                                1: asn({{ Fd.sf = asin(Fm.sf); }});
-                            }
-                            0xc: decode OPCODE_15 {
-                                0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
-                                1: acs({{ Fd.sf = acos(Fm.sf); }});
-                            }
-                            0xd: decode OPCODE_15 {
-                                1: atn({{ Fd.sf = atan(Fm.sf); }});
-                            }
-                            0xe: decode OPCODE_15 {
-                                // Unnormalised Round
-                                1: FailUnimpl::urd();
-                            }
-                            0xf: decode OPCODE_15 {
-                                // Normalise
-                                1: FailUnimpl::nrm();
+    }
+    0x7: decode OPCODE_24 {
+        0: decode CPNUM {
+            // Coprocessor Instructions
+            0x1: decode OPCODE_4 {
+                format FloatOp {
+                    // Basic FPA Instructions
+                    0: decode OPCODE_23_20 {
+                        0x0: decode OPCODE_15 {
+                            0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
+                            1: mvf({{ Fd.sf = Fm.sf; }});
+                        }
+                        0x1: decode OPCODE_15 {
+                            0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
+                            1: mnf({{ Fd.sf = -Fm.sf; }});
+                        }
+                        0x2: decode OPCODE_15 {
+                            0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
+                            1: abs({{ Fd.sf = fabs(Fm.sf); }});
+                        }
+                        0x3: decode OPCODE_15 {
+                            0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
+                            1: rnd({{ Fd.sf = rint(Fm.sf); }});
+                        }
+                        0x4: decode OPCODE_15 {
+                            0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
+                            1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
+                        }
+                        0x5: decode OPCODE_15 {
+                            0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
+                            1: log({{ Fd.sf = log10(Fm.sf); }});
+                        }
+                        0x6: decode OPCODE_15 {
+                            0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
+                            1: lgn({{ Fd.sf = log(Fm.sf); }});
+                        }
+                        0x7: decode OPCODE_15 {
+                            0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
+                            1: exp({{ Fd.sf = exp(Fm.sf); }});
+                        }
+                        0x8: decode OPCODE_15 {
+                            0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
+                            1: sin({{ Fd.sf = sin(Fm.sf); }});
+                        }
+                        0x9: decode OPCODE_15 {
+                            0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
+                            1: cos({{ Fd.sf = cos(Fm.sf); }});
+                        }
+                        0xa: decode OPCODE_15 {
+                            0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
+                            1: tan({{ Fd.sf = tan(Fm.sf); }});
+                        }
+                        0xb: decode OPCODE_15 {
+                            0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
+                            1: asn({{ Fd.sf = asin(Fm.sf); }});
+                        }
+                        0xc: decode OPCODE_15 {
+                            0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
+                            1: acs({{ Fd.sf = acos(Fm.sf); }});
+                        }
+                        0xd: decode OPCODE_15 {
+                            1: atn({{ Fd.sf = atan(Fm.sf); }});
+                        }
+                        0xe: decode OPCODE_15 {
+                            // Unnormalised Round
+                            1: FailUnimpl::urd();
+                        }
+                        0xf: decode OPCODE_15 {
+                            // Normalise
+                            1: FailUnimpl::nrm();
+                        }
+                    }
+                    1: decode OPCODE_15_12 {
+                        0xf: decode OPCODE_23_21 {
+                            format FloatCmp {
+                                0x4: cmf({{ Fn.df }}, {{ Fm.df }});
+                                0x5: cnf({{ Fn.df }}, {{ -Fm.df }});
+                                0x6: cmfe({{ Fn.df }}, {{ Fm.df}});
+                                0x7: cnfe({{ Fn.df }}, {{ -Fm.df}});
                             }
                         }
-                        1: decode OPCODE_15_12 {
-                            0xf: decode OPCODE_23_21 {
-                                format FloatCmp {
-                                    0x4: cmf({{ Fn.df }}, {{ Fm.df }});
-                                    0x5: cnf({{ Fn.df }}, {{ -Fm.df }});
-                                    0x6: cmfe({{ Fn.df }}, {{ Fm.df}});
-                                    0x7: cnfe({{ Fn.df }}, {{ -Fm.df}});
-                                }
+                        default: decode OPCODE_23_20 {
+                            0x0: decode OPCODE_7 {
+                                0: flts({{ Fn.sf = (float) Rd.sw; }});
+                                1: fltd({{ Fn.df = (double) Rd.sw; }});
                             }
-                            default: decode OPCODE_23_20 {
-                                0x0: decode OPCODE_7 {
-                                    0: flts({{ Fn.sf = (float) Rd.sw; }});
-                                    1: fltd({{ Fn.df = (double) Rd.sw; }});
-                                }
-                                0x1: decode OPCODE_7 {
-                                    0: fixs({{ Rd = (uint32_t) Fm.sf; }});
-                                    1: fixd({{ Rd = (uint32_t) Fm.df; }});
-                                }
-                                0x2: wfs({{ Fpsr = Rd; }});
-                                0x3: rfs({{ Rd = Fpsr; }});
-                                0x4: FailUnimpl::wfc();
-                                0x5: FailUnimpl::rfc();
+                            0x1: decode OPCODE_7 {
+                                0: fixs({{ Rd = (uint32_t) Fm.sf; }});
+                                1: fixd({{ Rd = (uint32_t) Fm.df; }});
                             }
+                            0x2: wfs({{ Fpsr = Rd; }});
+                            0x3: rfs({{ Rd = Fpsr; }});
+                            0x4: FailUnimpl::wfc();
+                            0x5: FailUnimpl::rfc();
                         }
                     }
                 }
             }
-            format PredOp {
-                // ARM System Call (SoftWare Interrupt)
-                1: swi({{ if (testPredicate(Cpsr, condCode))
-                          {
-                              xc->syscall(IMMED_23_0);
-                          }
-                }});
-            }
+        }
+        format PredOp {
+            // ARM System Call (SoftWare Interrupt)
+            1: swi({{ if (testPredicate(Cpsr, condCode))
+                      {
+                          xc->syscall(IMMED_23_0);
+                      }
+            }});
         }
     }
-    }
+}
+}
 }
 
