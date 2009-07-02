@@ -34,6 +34,7 @@
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/types.hh"
 #include "base/misc.hh"
+#include "base/trace.hh"
 #include "sim/faults.hh"
 #include "sim/serialize.hh"
 
@@ -84,6 +85,8 @@ namespace ArmISA
       public:
         IntReg readReg(int intReg)
         {
+            DPRINTF(IntRegs, "Reading int reg %d as %#x.\n",
+                    intReg, regs[intReg]);
             return regs[intReg];
         }
 
@@ -94,6 +97,7 @@ namespace ArmISA
 
         Fault setReg(int intReg, const IntReg &val)
         {
+            DPRINTF(IntRegs, "Setting int reg %d to %#x.\n", intReg, val);
             regs[intReg] = val;
             return NoFault;
         }
