@@ -46,6 +46,7 @@ namespace ArmISA
         // All the different types of opcode fields.
         Bitfield<27, 25> encoding;
         Bitfield<24, 21> opcode;
+        Bitfield<24, 20> mediaOpcode;
         Bitfield<24, 23> opcode24_23;
         Bitfield<24>     opcode24;
         Bitfield<23, 20> opcode23_20;
