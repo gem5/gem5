@@ -83,31 +83,27 @@ format DataOp {
         1: decode MISC_OPCODE {
             0x9: decode PREPOST {
                 0: decode OPCODE {
-                    0x0: mul({{ Rn = resTemp = Rm * Rs; }},
-                             {{ Cpsr<29:> }},
-                             {{ Cpsr<28:> }});
-                    0x1: mla({{ Rn = resTemp = Rm * Rs; }},
-                             {{ Cpsr<29:> }},
-                             {{ Cpsr<28:> }});
+                    0x0: mul({{ Rn = resTemp = Rm * Rs; }}, none);
+                    0x1: mla({{ Rn = resTemp = Rm * Rs; }}, none);
                     0x2: WarnUnimpl::umall();
                     0x4: umull({{
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }}, {{ 1 }}, {{ 1 }});
+                    }});
                     0x5: WarnUnimpl::smlal();
                     0x6: smull({{
                         resTemp = ((int64_t)(int32_t)Rm)*
                                   ((int64_t)(int32_t)Rs);
                         Rd = (int32_t)(resTemp & 0xffffffff);
                         Rn = (int32_t)(resTemp >> 32);
-                    }}, {{ 1 }}, {{ 1 }});
+                    }});
                     0x7: umlal({{
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }}, {{ 1 }}, {{ 1 }});
+                    }});
                 }
                 1: decode PUBWL {
                     0x10: WarnUnimpl::swp();
@@ -229,32 +225,16 @@ format DataOp {
             0: decode OPCODE {
                 0x0: and({{ Rd = resTemp = Rn & op2; }});
                 0x1: eor({{ Rd = resTemp = Rn ^ op2; }});
-                0x2: sub({{ Rd = resTemp = Rn - op2; }},
-                         {{ arm_sub_carry(resTemp, Rn, op2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
-                0x3: rsb({{ Rd = resTemp = op2 - Rn; }},
-                         {{ arm_sub_carry(resTemp, op2, Rn) }},
-                         {{ arm_sub_overflow(resTemp, op2, Rn) }});
-                0x4: add({{ Rd = resTemp = Rn + op2; }},
-                         {{ arm_add_carry(resTemp, Rn, op2) }},
-                         {{ arm_add_overflow(resTemp, Rn, op2) }});
-                0x5: adc({{ Rd = resTemp = Rn + op2 + Cpsr<29:>; }},
-                         {{ arm_add_carry(resTemp, Rn, op2) }},
-                         {{ arm_add_overflow(resTemp, Rn, op2) }});
-                0x6: sbc({{ Rd = resTemp = Rn - op2 - !Cpsr<29:>; }},
-                         {{ arm_sub_carry(resTemp, Rn, op2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
-                0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }},
-                         {{ arm_sub_carry(resTemp, op2, Rn) }},
-                         {{ arm_sub_overflow(resTemp, op2, Rn) }});
+                0x2: sub({{ Rd = resTemp = Rn - op2; }}, sub);
+                0x3: rsb({{ Rd = resTemp = op2 - Rn; }}, rsb);
+                0x4: add({{ Rd = resTemp = Rn + op2; }}, add);
+                0x5: adc({{ Rd = resTemp = Rn + op2 + Cpsr<29:>; }}, add);
+                0x6: sbc({{ Rd = resTemp = Rn - op2 - !Cpsr<29:>; }}, sub);
+                0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }}, rsb);
                 0x8: tst({{ resTemp = Rn & op2; }});
                 0x9: teq({{ resTemp = Rn ^ op2; }});
-                0xa: cmp({{ resTemp = Rn - op2; }},
-                         {{ arm_sub_carry(resTemp, Rn, op2) }},
-                         {{ arm_sub_overflow(resTemp, Rn, op2) }});
-                0xb: cmn({{ resTemp = Rn + op2; }},
-                         {{ arm_add_carry(resTemp, Rn, op2) }},
-                         {{ arm_add_overflow(resTemp, Rn, op2) }});
+                0xa: cmp({{ resTemp = Rn - op2; }}, sub);
+                0xb: cmn({{ resTemp = Rn + op2; }}, add);
                 0xc: orr({{ Rd = resTemp = Rn | op2; }});
                 0xd: mov({{ Rd = resTemp = op2; }});
                 0xe: bic({{ Rd = resTemp = Rn & ~op2; }});
@@ -318,32 +298,16 @@ format DataOp {
             format DataImmOp {
                 0x0: andi({{ Rd = resTemp = Rn & rotated_imm; }});
                 0x1: eori({{ Rd = resTemp = Rn ^ rotated_imm; }});
-                0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }},
-                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                0x3: rsbi({{ Rd = resTemp = rotated_imm - Rn; }},
-                          {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
-                          {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
-                0x4: addi({{ Rd = resTemp = Rn + rotated_imm; }},
-                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                0x5: adci({{ Rd = resTemp = Rn + rotated_imm + Cpsr<29:>; }},
-                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                0x6: sbci({{ Rd = resTemp = Rn -rotated_imm - !Cpsr<29:>; }},
-                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                0x7: rsci({{ Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}},
-                          {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
-                          {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
+                0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }}, sub);
+                0x3: rsbi({{ Rd = resTemp = rotated_imm - Rn; }}, rsb);
+                0x4: addi({{ Rd = resTemp = Rn + rotated_imm; }}, add);
+                0x5: adci({{ Rd = resTemp = Rn + rotated_imm + Cpsr<29:>; }}, add);
+                0x6: sbci({{ Rd = resTemp = Rn -rotated_imm - !Cpsr<29:>; }}, sub);
+                0x7: rsci({{ Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}}, rsb);
                 0x8: tsti({{ resTemp = Rn & rotated_imm; }});
                 0x9: teqi({{ resTemp = Rn ^ rotated_imm; }});
-                0xa: cmpi({{ resTemp = Rn - rotated_imm; }},
-                          {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
-                0xb: cmni({{ resTemp = Rn + rotated_imm; }},
-                          {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
-                          {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
+                0xa: cmpi({{ resTemp = Rn - rotated_imm; }}, sub);
+                0xb: cmni({{ resTemp = Rn + rotated_imm; }}, add);
                 0xc: orri({{ Rd = resTemp = Rn | rotated_imm; }});
                 0xd: movi({{ Rd = resTemp = rotated_imm; }});
                 0xe: bici({{ Rd = resTemp = Rn & ~rotated_imm; }});

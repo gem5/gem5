@@ -69,6 +69,7 @@ output exec {{
 #include "arch/arm/faults.hh"
 #include "arch/arm/isa_traits.hh"
 #include "arch/arm/utility.hh"
+#include "base/condcodes.hh"
 
 #include <cmath>
 #if defined(linux)
