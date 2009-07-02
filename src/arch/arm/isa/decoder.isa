@@ -227,12 +227,8 @@ format DataOp {
         }
         0: decode IS_MISC {
             0: decode OPCODE {
-                0x0: and({{ Rd = resTemp = Rn & op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
-                0x1: eor({{ Rd = resTemp = Rn ^ op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
+                0x0: and({{ Rd = resTemp = Rn & op2; }});
+                0x1: eor({{ Rd = resTemp = Rn ^ op2; }});
                 0x2: sub({{ Rd = resTemp = Rn - op2; }},
                          {{ arm_sub_carry(resTemp, Rn, op2) }},
                          {{ arm_sub_overflow(resTemp, Rn, op2) }});
@@ -251,30 +247,18 @@ format DataOp {
                 0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }},
                          {{ arm_sub_carry(resTemp, op2, Rn) }},
                          {{ arm_sub_overflow(resTemp, op2, Rn) }});
-                0x8: tst({{ resTemp = Rn & op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
-                0x9: teq({{ resTemp = Rn ^ op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
+                0x8: tst({{ resTemp = Rn & op2; }});
+                0x9: teq({{ resTemp = Rn ^ op2; }});
                 0xa: cmp({{ resTemp = Rn - op2; }},
                          {{ arm_sub_carry(resTemp, Rn, op2) }},
                          {{ arm_sub_overflow(resTemp, Rn, op2) }});
                 0xb: cmn({{ resTemp = Rn + op2; }},
                          {{ arm_add_carry(resTemp, Rn, op2) }},
                          {{ arm_add_overflow(resTemp, Rn, op2) }});
-                0xc: orr({{ Rd = resTemp = Rn | op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
-                0xd: mov({{ Rd = resTemp = op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
-                0xe: bic({{ Rd = resTemp = Rn & ~op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
-                0xf: mvn({{ Rd = resTemp = ~op2; }},
-                         {{ shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>) }},
-                         {{ Cpsr<28:> }});
+                0xc: orr({{ Rd = resTemp = Rn | op2; }});
+                0xd: mov({{ Rd = resTemp = op2; }});
+                0xe: bic({{ Rd = resTemp = Rn & ~op2; }});
+                0xf: mvn({{ Rd = resTemp = ~op2; }});
             }
             1: decode MISC_OPCODE {
                 0x0: decode OPCODE {
@@ -342,12 +326,8 @@ format DataOp {
     0x1: decode IS_MISC {
         0: decode OPCODE {
             format DataImmOp {
-                0x0: andi({{ Rd = resTemp = Rn & rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
-                0x1: eori({{ Rd = resTemp = Rn ^ rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
+                0x0: andi({{ Rd = resTemp = Rn & rotated_imm; }});
+                0x1: eori({{ Rd = resTemp = Rn ^ rotated_imm; }});
                 0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }},
                           {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
                           {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
@@ -366,30 +346,18 @@ format DataOp {
                 0x7: rsci({{ Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}},
                           {{ arm_sub_carry(resTemp, rotated_imm, Rn) }},
                           {{ arm_sub_overflow(resTemp, rotated_imm, Rn) }});
-                0x8: tsti({{ resTemp = Rn & rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
-                0x9: teqi({{ resTemp = Rn ^ rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
+                0x8: tsti({{ resTemp = Rn & rotated_imm; }});
+                0x9: teqi({{ resTemp = Rn ^ rotated_imm; }});
                 0xa: cmpi({{ resTemp = Rn - rotated_imm; }},
                           {{ arm_sub_carry(resTemp, Rn, rotated_imm) }},
                           {{ arm_sub_overflow(resTemp, Rn, rotated_imm) }});
                 0xb: cmni({{ resTemp = Rn + rotated_imm; }},
                           {{ arm_add_carry(resTemp, Rn, rotated_imm) }},
                           {{ arm_add_overflow(resTemp, Rn, rotated_imm) }});
-                0xc: orri({{ Rd = resTemp = Rn | rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
-                0xd: movi({{ Rd = resTemp = rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
-                0xe: bici({{ Rd = resTemp = Rn & ~rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
-                0xf: mvni({{ Rd = resTemp = ~rotated_imm; }},
-                          {{ (rotate ? rotated_carry:Cpsr<29:>) }},
-                          {{ Cpsr<28:> }});
+                0xc: orri({{ Rd = resTemp = Rn | rotated_imm; }});
+                0xd: movi({{ Rd = resTemp = rotated_imm; }});
+                0xe: bici({{ Rd = resTemp = Rn & ~rotated_imm; }});
+                0xf: mvni({{ Rd = resTemp = ~rotated_imm; }});
             }
         }
         1: decode OPCODE {

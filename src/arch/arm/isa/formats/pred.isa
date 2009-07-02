@@ -101,13 +101,24 @@ let {{
 
 }};
 
-def format DataOp(code, icValue, ivValue) {{
+def format DataOp(code, icValue = {{ }},
+                        ivValue = {{ Cpsr<28:> }}) {{
     regCode = '''uint32_t op2 = shift_rm_rs(Rm, Rs,
                                             shift, Cpsr<29:0>);
                  op2 = op2;''' + code
     immCode = '''uint32_t op2 = shift_rm_imm(Rm, shift_size,
                                              shift, Cpsr<29:0>);
                  op2 = op2;''' + code
+    if icValue == " ":
+        icValueReg = 'shift_carry_rs(Rm, Rs, shift, Cpsr<29:>)'
+        icValueImm = 'shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>)'
+    else:
+        icValueReg = icValue
+        icValueImm = icValue
+    regCcCode = calcCcCode % {"icValue" : icValueReg,
+                              "ivValue" : ivValue}
+    immCcCode = calcCcCode % {"icValue" : icValueImm,
+                              "ivValue" : ivValue}
     regIop = InstObjParams(name, Name, 'PredIntOp',
                            {"code": regCode,
                             "predicate_test": predicateTest})
@@ -115,10 +126,10 @@ def format DataOp(code, icValue, ivValue) {{
                            {"code": immCode,
                             "predicate_test": predicateTest})
     regCcIop = InstObjParams(name, Name + "Cc", 'PredIntOp',
-                             {"code": regCode + calcCcCode % vars(),
+                             {"code": regCode + regCcCode,
                               "predicate_test": predicateTest})
     immCcIop = InstObjParams(name, Name + "ImmCc", 'PredIntOp',
-                             {"code": immCode + calcCcCode % vars(),
+                             {"code": immCode + immCcCode,
                               "predicate_test": predicateTest})
     header_output = BasicDeclare.subst(regIop) + \
                     BasicDeclare.subst(immIop) + \
@@ -135,7 +146,9 @@ def format DataOp(code, icValue, ivValue) {{
     decode_block = DataDecode.subst(regIop)
 }};
 
-def format DataImmOp(code, icValue, ivValue) {{
+def format DataImmOp(code,
+                     icValue = {{ (rotate ? rotated_carry:Cpsr<29:>) }},
+                     ivValue = {{ Cpsr<28:> }}) {{
     code += "resTemp = resTemp;"
     iop = InstObjParams(name, Name, 'PredImmOp',
                         {"code": code,
