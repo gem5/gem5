@@ -114,110 +114,142 @@ format DataOp {
             }
             0xb: decode PUBWL {
                 format ArmStoreMemory {
-                    0x0, 0x8: strh_({{ Mem.uh = Rd.uh;
-                                       Rn = Rn + Rm; }},
-                                    {{ EA = Rn; }});
-                    0x4, 0xc: strh_il({{ Mem.uh = Rd.uh;
-                                         Rn = Rn + hilo; }},
-                                      {{ EA = Rn; }});
-                    0x10, 0x18: strh_p({{ Mem.uh = Rd.uh; }},
-                                       {{ EA = Rn + Rm; }});
-                    0x12, 0x1a: strh_pw({{ Mem.uh = Rd.uh;
-                                           Rn = Rn + Rm; }},
-                                        {{ EA = Rn + Rm; }});
-                    0x14, 0x1c: strh_pil({{ Mem.uh = Rd.uh; }},
-                                         {{ EA = Rn + hilo; }});
-                    0x16, 0x1e: strh_piwl({{ Mem.uh = Rd.uh;
-                                             Rn = Rn + hilo; }},
-                                          {{ EA = Rn + hilo; }});
+                    0x0: strh_({{ Mem.uh = Rd;
+                                  Rn = Rn - Rm; }},
+                               {{ EA = Rn; }});
+                    0x4: strh_i({{ Mem.uh = Rd;
+                                   Rn = Rn + hilo; }},
+                                {{ EA = Rn; }});
+                    0x8: strh_u({{ Mem.uh = Rd;
+                                   Rn = Rn + Rm; }},
+                                {{ EA = Rn; }});
+                    0xc: strh_ui({{ Mem.uh = Rd;
+                                    Rn = Rn + hilo; }},
+                                 {{ EA = Rn; }});
+                    0x10: strh_p({{ Mem.uh = Rd; }},
+                                 {{ EA = Rn - Rm; }});
+                    0x12: strh_pw({{ Mem.uh = Rd;
+                                     Rn = Rn - Rm; }},
+                                  {{ EA = Rn - Rm; }});
+                    0x14: strh_pi({{ Mem.uh = Rd.uh; }},
+                                  {{ EA = Rn + hilo; }});
+                    0x16: strh_piw({{ Mem.uh = Rd;
+                                      Rn = Rn + hilo; }},
+                                   {{ EA = Rn + hilo; }});
+                    0x18: strh_pu({{ Mem.uh = Rd; }},
+                                  {{ EA = Rn + Rm; }});
+                    0x1a: strh_puw({{ Mem.uh = Rd;
+                                      Rn = Rn + Rm; }},
+                                   {{ EA = Rn + Rm; }});
+                    0x1c: strh_pui({{ Mem.uh = Rd; }},
+                                   {{ EA = Rn + hilo; }});
+                    0x1e: strh_puiw({{ Mem.uh = Rd;
+                                       Rn = Rn + hilo; }},
+                                    {{ EA = Rn + hilo; }});
                 }
                 format ArmLoadMemory {
-                    0x1, 0x9: ldrh_l({{ Rd.uh = Mem.uh;
-                                        Rn = Rn + Rm; }},
-                                     {{ EA = Rn; }});
-                    0x5, 0xd: ldrh_il({{ Rd.uh = Mem.uh;
-                                         Rn = Rn + hilo; }},
-                                      {{ EA = Rn; }});
-                    0x11, 0x19: ldrh_pl({{ Rd.uh = Mem.uh; }},
-                                        {{ EA = Rn + Rm; }});
-                    0x13, 0x1b: ldrh_pwl({{ Rd.uh = Mem.uh;
-                                            Rn = Rn + Rm; }},
-                                         {{ EA = Rn + Rm; }});
-                    0x15, 0x1d: ldrh_pil({{ Rd.uh = Mem.uh; }},
-                                         {{ EA = Rn + hilo; }});
-                    0x17, 0x1f: ldrh_piwl({{ Rd.uh = Mem.uh;
-                                             Rn = Rn + hilo; }},
-                                          {{ EA = Rn + hilo; }});
+                    0x1: ldrh_l({{ Rd = Mem.uh;
+                                   Rn = Rn - Rm; }},
+                                {{ EA = Rn; }});
+                    0x5: ldrh_il({{ Rd = Mem.uh;
+                                    Rn = Rn + hilo; }},
+                                 {{ EA = Rn; }});
+                    0x9: ldrh_ul({{ Rd = Mem.uh;
+                                    Rn = Rn + Rm; }},
+                                 {{ EA = Rn; }});
+                    0xd: ldrh_uil({{ Rd = Mem.uh;
+                                     Rn = Rn + hilo; }},
+                                  {{ EA = Rn; }});
+                    0x11: ldrh_pl({{ Rd = Mem.uh; }},
+                                  {{ EA = Rn - Rm; }});
+                    0x13: ldrh_pwl({{ Rd = Mem.uh;
+                                      Rn = Rn - Rm; }},
+                                   {{ EA = Rn - Rm; }});
+                    0x15: ldrh_pil({{ Rd = Mem.uh; }},
+                                   {{ EA = Rn + hilo; }});
+                    0x17: ldrh_piwl({{ Rd = Mem.uh;
+                                       Rn = Rn + hilo; }},
+                                    {{ EA = Rn + hilo; }});
+                    0x19: ldrh_pul({{ Rd = Mem.uh; }},
+                                   {{ EA = Rn + Rm; }});
+                    0x1b: ldrh_puwl({{ Rd = Mem.uh;
+                                       Rn = Rn + Rm; }},
+                                    {{ EA = Rn + Rm; }});
+                    0x1d: ldrh_puil({{ Rd = Mem.uh; }},
+                                    {{ EA = Rn + hilo; }});
+                    0x1f: ldrh_puiwl({{ Rd = Mem.uh;
+                                        Rn = Rn + hilo; }},
+                                     {{ EA = Rn + hilo; }});
                 }
             }
             format ArmLoadMemory {
                 0xd: decode PUBWL {
                     0x1: ldrsb_l({{ Rd = Mem.sb;
-                                    Rn = Rn + Rm; }},
+                                    Rn = Rn - Rm; }},
                                  {{ EA = Rn; }});
                     0x5: ldrsb_il({{ Rd = Mem.sb;
                                      Rn = Rn + hilo; }},
                                   {{ EA = Rn; }});
                     0x9: ldrsb_ul({{ Rd = Mem.sb;
-                                     Rn = Rn - Rm; }},
+                                     Rn = Rn + Rm; }},
                                   {{ EA = Rn; }});
                     0xd: ldrsb_uil({{ Rd = Mem.sb;
-                                      Rn = Rn - hilo; }},
+                                      Rn = Rn + hilo; }},
                                    {{ EA = Rn; }});
                     0x11: ldrsb_pl({{ Rd = Mem.sb; }},
-                                   {{ EA = Rn + Rm; }});
+                                   {{ EA = Rn - Rm; }});
                     0x13: ldrsb_pwl({{ Rd = Mem.sb;
-                                       Rn = Rn + Rm; }},
-                                    {{ EA = Rn + Rm; }});
+                                       Rn = Rn - Rm; }},
+                                    {{ EA = Rn - Rm; }});
                     0x15: ldrsb_pil({{ Rd = Mem.sb; }},
                                     {{ EA = Rn + hilo; }});
                     0x17: ldrsb_piwl({{ Rd = Mem.sb;
                                         Rn = Rn + hilo; }},
                                      {{ EA = Rn + hilo; }});
                     0x19: ldrsb_pul({{ Rd = Mem.sb; }},
-                                    {{ EA = Rn - Rm; }});
+                                    {{ EA = Rn + Rm; }});
                     0x1b: ldrsb_puwl({{ Rd = Mem.sb;
-                                        Rn = Rn - Rm; }},
-                                     {{ EA = Rn - Rm; }});
+                                        Rn = Rn + Rm; }},
+                                     {{ EA = Rn + Rm; }});
                     0x1d: ldrsb_puil({{ Rd = Mem.sb; }},
-                                     {{ EA = Rn - hilo; }});
+                                     {{ EA = Rn + hilo; }});
                     0x1f: ldrsb_puiwl({{ Rd = Mem.sb;
-                                         Rn = Rn - hilo; }},
-                                      {{ EA = Rn - hilo; }});
+                                         Rn = Rn + hilo; }},
+                                      {{ EA = Rn + hilo; }});
                 }
                 0xf: decode PUBWL {
                     0x1: ldrsh_l({{ Rd = Mem.sh;
-                                    Rn = Rn + Rm; }},
+                                    Rn = Rn - Rm; }},
                                  {{ EA = Rn; }});
                     0x5: ldrsh_il({{ Rd = Mem.sh;
                                      Rn = Rn + hilo; }},
                                   {{ EA = Rn; }});
                     0x9: ldrsh_ul({{ Rd = Mem.sh;
-                                     Rn = Rn - Rm; }},
+                                     Rn = Rn + Rm; }},
                                   {{ EA = Rn; }});
                     0xd: ldrsh_uil({{ Rd = Mem.sh;
-                                      Rn = Rn - hilo; }},
+                                      Rn = Rn + hilo; }},
                                    {{ EA = Rn; }});
                     0x11: ldrsh_pl({{ Rd = Mem.sh; }},
-                                   {{ EA = Rn + Rm; }});
+                                   {{ EA = Rn - Rm; }});
                     0x13: ldrsh_pwl({{ Rd = Mem.sh;
-                                       Rn = Rn + Rm; }},
-                                    {{ EA = Rn + Rm; }});
+                                       Rn = Rn - Rm; }},
+                                    {{ EA = Rn - Rm; }});
                     0x15: ldrsh_pil({{ Rd = Mem.sh; }},
                                     {{ EA = Rn + hilo; }});
                     0x17: ldrsh_piwl({{ Rd = Mem.sh;
                                         Rn = Rn + hilo; }},
                                      {{ EA = Rn + hilo; }});
                     0x19: ldrsh_pul({{ Rd = Mem.sh; }},
-                                    {{ EA = Rn - Rm; }});
+                                    {{ EA = Rn + Rm; }});
                     0x1b: ldrsh_puwl({{ Rd = Mem.sh;
-                                        Rn = Rn - Rm; }},
-                                     {{ EA = Rn - Rm; }});
+                                        Rn = Rn + Rm; }},
+                                     {{ EA = Rn + Rm; }});
                     0x1d: ldrsh_puil({{ Rd = Mem.sh; }},
-                                     {{ EA = Rn - hilo; }});
+                                     {{ EA = Rn + hilo; }});
                     0x1f: ldrsh_puiwl({{ Rd = Mem.sh;
-                                         Rn = Rn - hilo; }},
-                                      {{ EA = Rn - hilo; }});
+                                         Rn = Rn + hilo; }},
+                                      {{ EA = Rn + hilo; }});
                 }
             }
         }
@@ -355,50 +387,74 @@ format DataOp {
     }
     0x3: decode OPCODE_4 {
         0: decode PUBWL {
-            0x00,0x08: ArmStoreMemory::strr_({{
-                    Mem = Rd;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn; }});
-            0x01,0x09: ArmLoadMemory::ldrr_l({{
-                    Rd = Mem;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn; }});
-            0x04,0x0c: ArmStoreMemory::strr_b({{
-                    Mem.ub = Rd.ub;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn; }});
-            0x05,0x0d: ArmLoadMemory::ldrr_bl({{
-                    Rd.ub = Mem.ub;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn; }});
-            0x10,0x18: ArmStoreMemory::strr_p({{
-                    Mem = Rd; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x11,0x19: ArmLoadMemory::ldrr_pl({{
-                    Rd = Mem; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x12,0x1a: ArmStoreMemory::strr_pw({{
-                    Mem = Rd;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x13,0x1b: ArmLoadMemory::ldrr_pwl({{
-                    Rd = Mem;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x14,0x1c: ArmStoreMemory::strr_pb({{
-                    Mem.ub = Rd.ub; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x15,0x1d: ArmLoadMemory::ldrr_pbl({{
-                    Rd.ub = Mem.ub; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x16,0x1e: ArmStoreMemory::strr_pbw({{
-                    Mem.ub = Rd.ub;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn + Rm_Imm; }});
-            0x17,0x1f: ArmLoadMemory::ldrr_pbwl({{
-                    Rd.ub = Mem.ub;
-                    Rn = Rn + Rm_Imm; }},
-                 {{ EA = Rn + Rm_Imm; }});
+            format ArmStoreMemory {
+                0x00, 0x02: strr_({{ Mem = Rd;
+                                     Rn = Rn - Rm_Imm; }},
+                                  {{ EA = Rn; }});
+                0x04, 0x06: strr_b({{ Mem = Rd.ub;
+                                      Rn = Rn - Rm_Imm; }},
+                                   {{ EA = Rn; }});
+                0x08, 0x0a: strr_u({{ Mem = Rd;
+                                      Rn = Rn + Rm_Imm; }},
+                                   {{ EA = Rn; }});
+                0x0c, 0x0e: strr_ub({{ Mem.ub = Rd.ub;
+                                       Rn = Rn + Rm_Imm; }},
+                                    {{ EA = Rn; }});
+                0x10: strr_p({{ Mem = Rd; }},
+                             {{ EA = Rn - Rm_Imm; }});
+                0x12: strr_pw({{ Mem = Rd;
+                                 Rn = Rn - Rm_Imm; }},
+                              {{ EA = Rn - Rm_Imm; }});
+                0x14: strr_pb({{ Mem.ub = Rd.ub; }},
+                              {{ EA = Rn - Rm_Imm; }});
+                0x16: strr_pbw({{ Mem.ub = Rd.ub;
+                                  Rn = Rn - Rm_Imm; }},
+                               {{ EA = Rn - Rm_Imm; }});
+                0x18: strr_pu({{ Mem = Rd; }},
+                              {{ EA = Rn + Rm_Imm; }});
+                0x1a: strr_puw({{ Mem = Rd;
+                                  Rn = Rn + Rm_Imm; }},
+                               {{ EA = Rn + Rm_Imm; }});
+                0x1c: strr_pub({{ Mem.ub = Rd; }},
+                               {{ EA = Rn + Rm_Imm; }});
+                0x1e: strr_pubw({{ Mem.ub = Rd;
+                                   Rn = Rn + Rm_Imm; }},
+                                {{ EA = Rn + Rm_Imm; }});
+            }
+            format ArmLoadMemory {
+                0x01,0x03: ldrr_l({{ Rd = Mem;
+                                     Rn = Rn - Rm_Imm; }},
+                                  {{ EA = Rn; }});
+                0x05,0x07: ldrr_bl({{ Rd = Mem.ub;
+                                      Rn = Rn - Rm_Imm; }},
+                                   {{ EA = Rn; }});
+                0x09,0x0b: ldrr_ul({{ Rd = Mem;
+                                     Rn = Rn + Rm_Imm; }},
+                                   {{ EA = Rn; }});
+                0x0d,0x0f: ldrr_ubl({{ Rd = Mem.ub;
+                                       Rn = Rn + Rm_Imm; }},
+                                    {{ EA = Rn; }});
+                0x11: ldrr_pl({{ Rd = Mem; }},
+                              {{ EA = Rn - Rm_Imm; }});
+                0x13: ldrr_pwl({{ Rd = Mem;
+                                  Rn = Rn - Rm_Imm; }},
+                               {{ EA = Rn - Rm_Imm; }});
+                0x15: ldrr_pbl({{ Rd = Mem.ub; }},
+                               {{ EA = Rn - Rm_Imm; }});
+                0x17: ldrr_pbwl({{ Rd = Mem.ub;
+                                   Rn = Rn - Rm_Imm; }},
+                                {{ EA = Rn - Rm_Imm; }});
+                0x19: ldrr_pul({{ Rd = Mem; }},
+                               {{ EA = Rn + Rm_Imm; }});
+                0x1b: ldrr_puwl({{ Rd = Mem;
+                                   Rn = Rn + Rm_Imm; }},
+                                {{ EA = Rn + Rm_Imm; }});
+                0x1d: ldrr_publ({{ Rd = Mem.ub; }},
+                                {{ EA = Rn + Rm_Imm; }});
+                0x1f: ldrr_pubwl({{ Rd = Mem.ub;
+                                    Rn = Rn + Rm_Imm; }},
+                                 {{ EA = Rn + Rm_Imm; }});
+            }
         }
         1: decode MEDIA_OPCODE {
             0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7: WarnUnimpl::parallel_add_subtract_instructions();
