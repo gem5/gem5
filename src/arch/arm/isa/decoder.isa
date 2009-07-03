@@ -84,7 +84,7 @@ format DataOp {
             0x9: decode PREPOST {
                 0: decode OPCODE {
                     0x0: mul({{ Rn = resTemp = Rm * Rs; }}, none);
-                    0x1: mla({{ Rn = resTemp = Rm * Rs; }}, none);
+                    0x1: mla({{ Rn = resTemp = (Rm * Rs) + Rd; }}, none);
                     0x2: WarnUnimpl::umall();
                     0x4: umull({{
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
