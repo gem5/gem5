@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May 12 2009 10:42:48
-M5 revision 40b296e9f790 6196 default qtip tip inorder-twolf-regress
-M5 started May 12 2009 10:42:49
-M5 executing on zooks
+M5 compiled Jul  4 2009 20:43:52
+M5 revision 20167772fb15 6281 default tip
+M5 started Jul  4 2009 20:43:52
+M5 executing on tater
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing
 Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sav
 Couldn't unlink  build/ALPHA_SE/tests/fast/long/70.twolf/alpha/tru64/inorder-timing/smred.sv2
