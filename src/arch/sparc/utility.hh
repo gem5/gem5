@@ -47,8 +47,8 @@ namespace SparcISA
     static inline bool
     inUserMode(ThreadContext *tc)
     {
-        return !(tc->readMiscRegNoEffect(MISCREG_PSTATE & (1 << 2)) ||
-                tc->readMiscRegNoEffect(MISCREG_HPSTATE & (1 << 2)));
+        return !((tc->readMiscRegNoEffect(MISCREG_PSTATE) & (1 << 2)) ||
+                 (tc->readMiscRegNoEffect(MISCREG_HPSTATE) & (1 << 2)));
     }
 
     inline bool isCallerSaveIntegerRegister(unsigned int reg) {
