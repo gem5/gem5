@@ -822,7 +822,7 @@ void Profiler::profileConflictingRequests(const Address& addr)
   assert(addr == line_address(addr));
   Time last_time = m_ruby_start;
   if (m_conflicting_map_ptr->exist(addr)) {
-    Time last_time = m_conflicting_map_ptr->lookup(addr);
+    last_time = m_conflicting_map_ptr->lookup(addr);
   }
   Time current_time = g_eventQueue_ptr->getTime();
   assert (current_time - last_time > 0);
@@ -1105,7 +1105,7 @@ GenericRequestType Profiler::CacheRequestType_to_GenericRequestType(const CacheR
 }
 
 void Profiler::rubyWatch(int id){
-  int rn_g1 = 0;//SIMICS_get_register_number(id, "g1");
+    //int rn_g1 = 0;//SIMICS_get_register_number(id, "g1");
   uint64 tr = 0;//SIMICS_read_register(id, rn_g1);
     Address watch_address = Address(tr);
     const int ID_SPACES = 3;

@@ -204,8 +204,6 @@ void Throttle::wakeup()
   // Update the predictor
   Time current_time = g_eventQueue_ptr->getTime();
   while ((current_time - m_last_bandwidth_sample) > ADJUST_INTERVAL) {
-    double utilization = m_bandwidth_since_sample/double(ADJUST_INTERVAL * getLinkBandwidth());
-
     // Used less bandwidth
     m_bash_counter--;
 

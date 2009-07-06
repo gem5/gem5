@@ -53,12 +53,14 @@ uint64_t handleLoad(StoreBuffer * storebuffer, const RubyRequest & request) {
   return storebuffer->handleLoad(request);
 }
 
+#if 0
 uint64_t handleAtomic(StoreBuffer * storebuffer, const RubyRequest & request) {
   // flush the store buffer
   storebuffer->flushStoreBuffer();
   // let storebuffer issue atomic
   //return storebuffer->issueAtomic(request);
 }
+#endif
 
 void flushSTB(StoreBuffer * storebuffer) {
   // in in-order can't get a request to flushSTB if already flushing

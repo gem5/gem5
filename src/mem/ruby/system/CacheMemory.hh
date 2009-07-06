@@ -333,7 +333,6 @@ inline
 Index CacheMemory::addressToCacheSet(const Address& address) const
 {
   assert(address == line_address(address));
-  Index temp = -1;
   return address.bitSelect(RubySystem::getBlockSizeBits(), RubySystem::getBlockSizeBits() + m_cache_num_set_bits-1);
 }
 

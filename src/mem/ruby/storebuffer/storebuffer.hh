@@ -31,11 +31,15 @@
 
 #include <map>
 #include <deque>
+
+#include "config/ruby_tso_checker.hh"
 #include "mem/ruby/storebuffer/hfa.hh"
 #include "mem/ruby/libruby.hh"
-#include "TsoCheckerCmd.hh"
 
-#define TSO_CHECK
+#ifdef RUBY_TSO_CHECKER
+#include "TsoCheckerCmd.hh"
+#endif
+
 /**
  *  Status for write buffer accesses. The Write buffer can hit in fastpath, be full, or
  *     successfully enqueue the store request
@@ -49,8 +53,16 @@ enum load_match { NO_MATCH, PARTIAL_MATCH, FULL_MATCH };
 
 struct SBEntry {
   struct RubyRequest m_request;
+#ifdef RUBY_TSO_CHECKER
   Tso::TsoCheckerCmd * m_next_ptr;
-  SBEntry(struct RubyRequest request, void * ptr) { m_request = request; m_next_ptr = (Tso::TsoCheckerCmd*) ptr; }
+#endif
+  SBEntry(struct RubyRequest request, void * ptr)
+      : m_request(request)
+    {
+#ifdef RUBY_TSO_CHECKER
+        m_next_ptr = (Tso::TsoCheckerCmd*) ptr;
+#endif
+    }
 };
 
 class StoreBuffer {
@@ -89,8 +101,10 @@ class StoreBuffer {
   /// prints out the contents of the Write Buffer
   void print();
 
+#ifdef RUBY_TSO_CHECKER
   /// if load completes before store, insert correctly to be issued to TSOChecker
   void insertTsoLL(Tso::TsoCheckerCmd * cmd);
+#endif
 
   /// Returns flag indicating whether we are using the write buffer
   bool useStoreBuffer() { return m_use_storebuffer; }

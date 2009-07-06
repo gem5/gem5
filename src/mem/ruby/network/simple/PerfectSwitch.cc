@@ -134,7 +134,6 @@ void PerfectSwitch::wakeup()
   int highest_prio_vnet = m_virtual_networks-1;
   int lowest_prio_vnet = 0;
   int decrementer = 1;
-  bool schedule_wakeup = false;
   NetworkMessage* net_msg_ptr = NULL;
 
   // invert priorities to avoid starvation seen in the component network

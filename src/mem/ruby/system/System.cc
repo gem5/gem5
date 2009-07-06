@@ -130,7 +130,7 @@ RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
     const string & type = sys_conf[i].type;
     const string & name = sys_conf[i].name;
     const vector<string> & argv = sys_conf[i].argv;
-    if (type == "RubySystem") {
+    if (type == "System") {
       init(argv);  // initialize system-wide variables before doing anything else!
     } else if (type == "Debug") {
       g_debug_ptr = new Debug(name, argv);
@@ -151,8 +151,7 @@ RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
   for (size_t i=0;i<sys_conf.size(); i++) {
     const string & type = sys_conf[i].type;
     const string & name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "RubySystem" || type == "Debug")
+    if (type == "System" || type == "Debug")
       continue;
     else if (type == "SetAssociativeCache")
       m_caches[name] = new CacheMemory(name);
@@ -225,7 +224,7 @@ RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
     string type = sys_conf[i].type;
     string name = sys_conf[i].name;
     const vector<string> & argv = sys_conf[i].argv;
-    if (type == "RubySystem" || type == "Debug")
+    if (type == "System" || type == "Debug")
       continue;
     else if (type == "SetAssociativeCache")
       m_caches[name]->init(argv);

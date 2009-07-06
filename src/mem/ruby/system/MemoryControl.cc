@@ -291,7 +291,6 @@ void MemoryControl::enqueueMemRef (MemoryNode& memRef) {
   Time arrival_time = memRef.m_time;
   uint64 at = arrival_time;
   bool is_mem_read = memRef.m_is_mem_read;
-  bool dirtyWB = memRef.m_is_dirty_wb;
   physical_address_t addr = memRef.m_addr;
   int bank = getBank(addr);
   if (m_debug) {

@@ -97,6 +97,7 @@ void LSB_CountingBloomFilter::unset(const Address& addr)
 bool LSB_CountingBloomFilter::isSet(const Address& addr)
 {
   // TODO
+  return false;
 }
 
 

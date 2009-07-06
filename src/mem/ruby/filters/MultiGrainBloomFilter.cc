@@ -91,9 +91,8 @@ void MultiGrainBloomFilter::merge(AbstractBloomFilter * other_filter)
 void MultiGrainBloomFilter::set(const Address& addr)
 {
   int i = get_block_index(addr);
-  int j = get_page_index(addr);
   assert(i < m_filter_size);
-  assert(j < m_page_filter_size);
+  assert(get_page_index(addr) < m_page_filter_size);
   m_filter[i] = 1;
   m_page_filter[i] = 1;
 
@@ -107,9 +106,8 @@ void MultiGrainBloomFilter::unset(const Address& addr)
 bool MultiGrainBloomFilter::isSet(const Address& addr)
 {
   int i = get_block_index(addr);
-  int j = get_page_index(addr);
   assert(i < m_filter_size);
-  assert(j < m_page_filter_size);
+  assert(get_page_index(addr) < m_page_filter_size);
   // we have to have both indices set
   return (m_filter[i] && m_page_filter[i]);
 }

@@ -277,7 +277,6 @@ void Sequencer::readCallback(const Address& address, DataBlock& data) {
 
 void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
   const RubyRequest & ruby_request = srequest->ruby_request;
-  int size = ruby_request.len;
   Address request_address(ruby_request.paddr);
   Address request_line_address(ruby_request.paddr);
   request_line_address.makeLineAddress();

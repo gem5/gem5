@@ -31,21 +31,39 @@
  * $Id$
  */
 
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef __MEM_RUBY_DEBUG_HH__
+#define __MEM_RUBY_DEBUG_HH__
 
 #include <unistd.h>
 #include <iostream>
+#include <string>
+#include <vector>
+
+#include "config/ruby_debug.hh"
+#include "mem/ruby/common/Global.hh"
 
 extern std::ostream * debug_cout_ptr;
 
 // component enumeration
 enum DebugComponents
 {
-#undef DEFINE_COMP
-#define DEFINE_COMP(component, character, description) component,
-#include "Debug.def"
-  NUMBER_OF_COMPS
+    SYSTEM_COMP,
+    NODE_COMP,
+    QUEUE_COMP,
+    EVENTQUEUE_COMP,
+    NETWORK_COMP,
+    SEQUENCER_COMP,
+    TESTER_COMP,
+    GENERATED_COMP,
+    SLICC_COMP,
+    NETWORKQUEUE_COMP,
+    TIME_COMP,
+    NETWORK_INTERNALS_COMP,
+    STOREBUFFER_COMP,
+    CACHE_COMP,
+    PREDICTOR_COMP,
+    ALLOCATOR_COMP,
+    NUMBER_OF_COMPS
 };
 
 enum PriorityLevel {HighPrio, MedPrio, LowPrio};
@@ -55,7 +73,7 @@ class Debug {
 public:
   // Constructors
   Debug();
-  Debug( const string & name, const vector<string> & argv );
+  Debug(const std::string & name, const std::vector<std::string> & argv);
   Debug( const char *filterString, const char *verboseString,
          Time filterStartTime, const char *filename );
 
@@ -65,7 +83,7 @@ public:
   // Public Methods
   static bool getProtocolTrace() { return m_protocol_trace; }
   bool validDebug(int module, PriorityLevel priority);
-  void printVerbosity(ostream& out) const;
+  void printVerbosity(std::ostream& out) const;
   void setVerbosity(VerbosityLevel vb);
   static bool checkVerbosityString(const char *verb_str);
   bool setVerbosityString(const char *);
@@ -79,7 +97,7 @@ public:
   bool addFilter(char);
   void clearFilter();
   void allFilter();
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
   /* old school debugging "vararg": sends messages to screen and log */
   void debugMsg( const char *fmt, ... );
 
@@ -104,13 +122,13 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Debug& obj);
+std::ostream& operator<<(std::ostream& out, const Debug& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Debug& obj)
+std::ostream& operator<<(std::ostream& out, const Debug& obj)
 {
   obj.print(out);
   out << flush;

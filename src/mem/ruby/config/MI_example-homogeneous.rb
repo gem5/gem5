@@ -13,7 +13,7 @@ require "cfg.rb"
 num_cores = 16
 L1_CACHE_SIZE_KB = 32
 L1_CACHE_ASSOC = 8
-L1_CACHE_LATENCY = "auto"
+L1_CACHE_LATENCY = 2
 num_memories = 2
 memory_size_mb = 1024
 NUM_DMA = 1

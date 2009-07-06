@@ -566,7 +566,7 @@ void Set::print(ostream& out) const
 #ifdef __32BITS__
     sprintf(buff,"%08X ",m_p_nArray[i]);
 #else
-    sprintf(buff,"0x %016llX ",m_p_nArray[i]);
+    sprintf(buff,"0x %016llX ", (long long)m_p_nArray[i]);
 #endif // __32BITS__
     out << buff;
   }

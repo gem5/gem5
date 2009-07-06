@@ -220,7 +220,7 @@ static void print_parameters(ostream& out)
 #define PARAM_ARRAY( NAME, TYPE, DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) { out << #NAME << ": ARRAY" << endl; }
 #define PARAM_ARRAY2D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) { out << #NAME << ": ARRAY2D" << endl; }
 #define PARAM_ARRAY3D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, D3_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) { out << #NAME << ": ARRAY3D" << endl; }
-#include CONFIG_VAR_FILENAME
+#include "mem/ruby/config/config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

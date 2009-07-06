@@ -2,6 +2,7 @@
 #include <sys/wait.h>
 #include <algorithm>
 
+#include "config/gems_root.hh"
 #include "mem/ruby/libruby_internal.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/ruby/system/System.hh"
@@ -98,9 +99,8 @@ void libruby_init(const char* cfg_filename)
       perror("Error redirecting stdout");
       exit(EXIT_FAILURE);
     }
-#define QUOTE_MACRO(x, y) QUOTE_TXT(x,y)
-#define QUOTE_TXT(x, y) #x y
-    if (execlp("ruby", "ruby", "-I", QUOTE_MACRO(GEMS_ROOT, "/ruby/config"), QUOTE_MACRO(GEMS_ROOT, "/ruby/config/print_cfg.rb"), "-r", cfg_filename, NULL)) {
+    if (execlp("ruby", "ruby", "-I", GEMS_ROOT "/ruby/config",
+               GEMS_ROOT "/ruby/config/print_cfg.rb", "-r", cfg_filename, NULL)) {
       perror("execlp");
       exit(EXIT_FAILURE);
     }

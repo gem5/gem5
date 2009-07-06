@@ -30,7 +30,8 @@
  * $Id$
  */
 
-#include "assert.hh"
+#include <cassert>
+
 #include "mem/gems_common/util.hh"
 
 // Split a string into a head and tail strings on the specified
@@ -101,6 +102,8 @@ bool string_to_bool(const string & str)
     return false;
   else
     assert(0);
+
+  return false;
 }
 
 // Log functions

@@ -46,7 +46,6 @@
 #include <assert.h>
 
 #include "mem/ruby/common/TypeDefines.hh"
-#define   CONFIG_VAR_FILENAME "mem/ruby/config/config.hh"
 
 // Set paramterization
 /*
@@ -182,7 +181,7 @@ public:
   array2d_accessor_##CUSTOM_ACCESSOR(TYPE, NAME)
 #define PARAM_ARRAY3D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, D3_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
   array3d_accessor_##CUSTOM_ACCESSOR(TYPE, NAME)
-#include CONFIG_VAR_FILENAME
+#include "mem/ruby/config/config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG
@@ -214,7 +213,7 @@ private:
   static TYPE** m_##NAME;
 #define PARAM_ARRAY3D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, D3_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
   static TYPE*** m_##NAME;
-#include CONFIG_VAR_FILENAME
+#include "mem/ruby/config/config.hh"
 #undef PARAM
 #undef PARAM_UINT
 #undef PARAM_ULONG

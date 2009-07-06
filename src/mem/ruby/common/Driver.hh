@@ -60,7 +60,7 @@ public:
   virtual void get_network_config() {}
   virtual void dmaHitCallback() = 0;
   virtual void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) = 0; // Called by sequencer
-  virtual void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) { assert(0) }; // Called by sequencer
+  virtual void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) { assert(0); }; // Called by sequencer
   virtual integer_t getInstructionCount(int procID) const { return 1; }
   virtual integer_t getCycleCount(int procID) const { return 1; }
   virtual void addThreadDependency(int procID, int requestor_thread, int conflict_thread) const { assert(0);}

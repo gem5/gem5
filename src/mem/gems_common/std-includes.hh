@@ -52,4 +52,6 @@
 using namespace std;
 using namespace __gnu_cxx;
 
+typedef unsigned int uint;
+
 #endif //INCLUDES_H
