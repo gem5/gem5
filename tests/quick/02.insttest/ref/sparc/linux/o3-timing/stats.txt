@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  75091                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 203556                       # Number of bytes of host memory used
-host_seconds                                     0.19                       # Real time elapsed on the host
-host_tick_rate                              144061639                       # Simulator tick rate (ticks/s)
+host_inst_rate                                   1945                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 190344                       # Number of bytes of host memory used
+host_seconds                                     7.43                       # Real time elapsed on the host
+host_tick_rate                                3735278                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                       14449                       # Number of instructions simulated
 sim_seconds                                  0.000028                       # Number of seconds simulated
@@ -20,22 +20,22 @@ system.cpu.commit.COM:branches                   3359                       # Nu
 system.cpu.commit.COM:bw_lim_events               103                       # number cycles where commit BW limit reached
 system.cpu.commit.COM:bw_limited                    0                       # number of insts not committed due to BW limits
 system.cpu.commit.COM:committed_per_cycle::samples        42766                       # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::underflows            0      0.00%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::0-1        34594     80.89%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::1-2         4804     11.23%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::2-3         1741      4.07%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::3-4          720      1.68%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::4-5          413      0.97%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::5-6          144      0.34%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::6-7          196      0.46%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::7-8           51      0.12%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::8          103      0.24%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::overflows            0      0.00%            # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::total        42766                       # Number of insts commited each cycle
-system.cpu.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::mean     0.354838                       # Number of insts commited each cycle
 system.cpu.commit.COM:committed_per_cycle::stdev     0.957636                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::underflows            0      0.00%      0.00% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::0-1        34594     80.89%     80.89% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::1-2         4804     11.23%     92.12% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::2-3         1741      4.07%     96.20% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::3-4          720      1.68%     97.88% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::4-5          413      0.97%     98.84% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::5-6          144      0.34%     99.18% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::6-7          196      0.46%     99.64% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::7-8           51      0.12%     99.76% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::8          103      0.24%    100.00% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::overflows            0      0.00%    100.00% # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
+system.cpu.commit.COM:committed_per_cycle::total        42766                       # Number of insts commited each cycle
 system.cpu.commit.COM:count                     15175                       # Number of instructions committed
 system.cpu.commit.COM:loads                      2226                       # Number of loads committed
 system.cpu.commit.COM:membars                       0                       # Number of memory barriers committed
@@ -133,22 +133,22 @@ system.cpu.fetch.icacheStallCycles               7356                       # Nu
 system.cpu.fetch.predictedBranches               4398                       # Number of branches that fetch has predicted taken
 system.cpu.fetch.rate                        1.049231                       # Number of inst fetches per cycle
 system.cpu.fetch.rateDist::samples              47090                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::underflows               0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::0-1                  30448     64.66%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::1-2                   7532     15.99%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::2-3                   1217      2.58%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::3-4                   1059      2.25%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::4-5                   1060      2.25%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::5-6                   1193      2.53%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::6-7                    711      1.51%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::7-8                    327      0.69%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::8                     3543      7.52%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::overflows                0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::total                47090                       # Number of instructions fetched each cycle (Total)
-system.cpu.fetch.rateDist::max_value                8                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::mean              1.236929                       # Number of instructions fetched each cycle (Total)
 system.cpu.fetch.rateDist::stdev             2.372442                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::underflows               0      0.00%      0.00% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::0-1                  30448     64.66%     64.66% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::1-2                   7532     15.99%     80.65% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::2-3                   1217      2.58%     83.24% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::3-4                   1059      2.25%     85.49% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::4-5                   1060      2.25%     87.74% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::5-6                   1193      2.53%     90.27% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::6-7                    711      1.51%     91.78% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::7-8                    327      0.69%     92.48% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::8                     3543      7.52%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::overflows                0      0.00%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::min_value                0                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::max_value                8                       # Number of instructions fetched each cycle (Total)
+system.cpu.fetch.rateDist::total                47090                       # Number of instructions fetched each cycle (Total)
 system.cpu.icache.ReadReq_accesses               7356                       # number of ReadReq accesses(hits+misses)
 system.cpu.icache.ReadReq_avg_miss_latency 33620.560748                       # average ReadReq miss latency
 system.cpu.icache.ReadReq_avg_mshr_miss_latency 34869.080780                       # average ReadReq mshr miss latency
@@ -248,54 +248,54 @@ system.cpu.iew.predictedNotTakenIncorrect          758                       # N
 system.cpu.iew.predictedTakenIncorrect           2453                       # Number of branches that were predicted taken incorrectly
 system.cpu.ipc                               0.260277                       # IPC: Instructions Per Cycle
 system.cpu.ipc_total                         0.260277                       # IPC: Total IPC of All Threads
-system.cpu.iq.ISSUE:FU_type_0::No_OpClass            0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntAlu           21395     73.22%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntMult              0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IntDiv               0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatAdd             0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatCmp             0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatCvt             0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatMult            0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatDiv             0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::MemRead           4720     16.15%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::MemWrite          3105     10.63%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::IprAccess            0      0.00%            # Type of FU issued
-system.cpu.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%            # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::No_OpClass            0      0.00%      0.00% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntAlu           21395     73.22%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntMult              0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IntDiv               0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatAdd             0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatCmp             0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatCvt             0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatMult            0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatDiv             0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%     73.22% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::MemRead           4720     16.15%     89.37% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::MemWrite          3105     10.63%    100.00% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::IprAccess            0      0.00%    100.00% # Type of FU issued
+system.cpu.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%    100.00% # Type of FU issued
 system.cpu.iq.ISSUE:FU_type_0::total            29220                       # Type of FU issued
 system.cpu.iq.ISSUE:fu_busy_cnt                   173                       # FU busy when requested
 system.cpu.iq.ISSUE:fu_busy_rate             0.005921                       # FU busy rate (busy events/executed inst)
-system.cpu.iq.ISSUE:fu_full::No_OpClass             0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::IntAlu                40     23.12%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::IntMult                0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::IntDiv                 0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatAdd               0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatCmp               0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatCvt               0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatMult              0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatDiv               0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::FloatSqrt              0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::MemRead               20     11.56%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::MemWrite             113     65.32%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::IprAccess              0      0.00%            # attempts to use FU when none available
-system.cpu.iq.ISSUE:fu_full::InstPrefetch            0      0.00%            # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::No_OpClass             0      0.00%      0.00% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::IntAlu                40     23.12%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::IntMult                0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::IntDiv                 0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatAdd               0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatCmp               0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatCvt               0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatMult              0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatDiv               0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::FloatSqrt              0      0.00%     23.12% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::MemRead               20     11.56%     34.68% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::MemWrite             113     65.32%    100.00% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::IprAccess              0      0.00%    100.00% # attempts to use FU when none available
+system.cpu.iq.ISSUE:fu_full::InstPrefetch            0      0.00%    100.00% # attempts to use FU when none available
 system.cpu.iq.ISSUE:issued_per_cycle::samples        47090                       # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::underflows            0      0.00%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::0-1        34112     72.44%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::1-2         5516     11.71%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::2-3         3070      6.52%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::3-4         2146      4.56%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::4-5          997      2.12%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::5-6          653      1.39%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::6-7          342      0.73%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::7-8          211      0.45%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::8            43      0.09%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::overflows            0      0.00%            # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::total        47090                       # Number of insts issued each cycle
-system.cpu.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::mean     0.620514                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:issued_per_cycle::stdev     1.275912                       # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::underflows            0      0.00%      0.00% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::0-1        34112     72.44%     72.44% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::1-2         5516     11.71%     84.15% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::2-3         3070      6.52%     90.67% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::3-4         2146      4.56%     95.23% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::4-5          997      2.12%     97.35% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::5-6          653      1.39%     98.73% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::6-7          342      0.73%     99.46% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::7-8          211      0.45%     99.91% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::8            43      0.09%    100.00% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::overflows            0      0.00%    100.00% # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
+system.cpu.iq.ISSUE:issued_per_cycle::total        47090                       # Number of insts issued each cycle
 system.cpu.iq.ISSUE:rate                     0.526354                       # Inst issue rate
 system.cpu.iq.iqInstsAdded                      32302                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu.iq.iqInstsIssued                     29220                       # Number of instructions issued

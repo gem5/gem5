@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 22 2009 06:58:26
-M5 revision ce26a627c841 6126 default qtip tip stats_no_compat.diff
-M5 started Apr 22 2009 07:09:12
+M5 compiled Jul  6 2009 11:03:45
+M5 revision d3635cac686a 6289 default ruby_refs.diff qtip tip
+M5 started Jul  6 2009 11:55:23
 M5 executing on maize
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/long/50.vortex/alpha/tru64/o3-timing
 Global frequency set at 1000000000000 ticks per second

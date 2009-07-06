@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                 194901                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 296848                       # Number of bytes of host memory used
-host_seconds                                   288.30                       # Real time elapsed on the host
-host_tick_rate                             6617017260                       # Simulator tick rate (ticks/s)
+host_inst_rate                                 195241                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 278896                       # Number of bytes of host memory used
+host_seconds                                   287.80                       # Real time elapsed on the host
+host_tick_rate                             6628539651                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    56190549                       # Number of instructions simulated
 sim_seconds                                  1.907705                       # Number of seconds simulated
@@ -20,22 +20,22 @@ system.cpu0.commit.COM:branches               5979895                       # Nu
 system.cpu0.commit.COM:bw_lim_events           670392                       # number cycles where commit BW limit reached
 system.cpu0.commit.COM:bw_limited                   0                       # number of insts not committed due to BW limits
 system.cpu0.commit.COM:committed_per_cycle::samples     69432713                       # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::underflows            0      0.00%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::0-1     52133999     75.09%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::1-2      7662367     11.04%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::2-3      4443977      6.40%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::3-4      2023862      2.91%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::4-5      1473823      2.12%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::5-6       453845      0.65%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::6-7       276436      0.40%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::7-8       294012      0.42%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::8       670392      0.97%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::overflows            0      0.00%            # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::total     69432713                       # Number of insts commited each cycle
-system.cpu0.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
 system.cpu0.commit.COM:committed_per_cycle::mean     0.574171                       # Number of insts commited each cycle
 system.cpu0.commit.COM:committed_per_cycle::stdev     1.330726                       # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::underflows            0      0.00%      0.00% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::0-1     52133999     75.09%     75.09% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::1-2      7662367     11.04%     86.12% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::2-3      4443977      6.40%     92.52% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::3-4      2023862      2.91%     95.44% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::4-5      1473823      2.12%     97.56% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::5-6       453845      0.65%     98.21% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::6-7       276436      0.40%     98.61% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::7-8       294012      0.42%     99.03% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::8       670392      0.97%    100.00% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::overflows            0      0.00%    100.00% # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
+system.cpu0.commit.COM:committed_per_cycle::total     69432713                       # Number of insts commited each cycle
 system.cpu0.commit.COM:count                 39866260                       # Number of instructions committed
 system.cpu0.commit.COM:loads                  6404474                       # Number of loads committed
 system.cpu0.commit.COM:membars                 151021                       # Number of memory barriers committed
@@ -176,22 +176,22 @@ system.cpu0.fetch.icacheStallCycles           6456937                       # Nu
 system.cpu0.fetch.predictedBranches           5666568                       # Number of branches that fetch has predicted taken
 system.cpu0.fetch.rate                       0.515416                       # Number of inst fetches per cycle
 system.cpu0.fetch.rateDist::samples          70526783                       # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::min_value               0                       # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::underflows              0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::0-1              60303519     85.50%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::1-2                761816      1.08%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::2-3               1433855      2.03%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::3-4                636077      0.90%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::4-5               2329701      3.30%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::5-6                474692      0.67%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::6-7                552515      0.78%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::7-8                815434      1.16%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::8                 3219174      4.56%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::overflows               0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::total            70526783                       # Number of instructions fetched each cycle (Total)
-system.cpu0.fetch.rateDist::max_value               8                       # Number of instructions fetched each cycle (Total)
 system.cpu0.fetch.rateDist::mean             0.737401                       # Number of instructions fetched each cycle (Total)
 system.cpu0.fetch.rateDist::stdev            2.023896                       # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::underflows              0      0.00%      0.00% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::0-1              60303519     85.50%     85.50% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::1-2                761816      1.08%     86.58% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::2-3               1433855      2.03%     88.62% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::3-4                636077      0.90%     89.52% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::4-5               2329701      3.30%     92.82% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::5-6                474692      0.67%     93.50% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::6-7                552515      0.78%     94.28% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::7-8                815434      1.16%     95.44% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::8                 3219174      4.56%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::overflows               0      0.00%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::min_value               0                       # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::max_value               8                       # Number of instructions fetched each cycle (Total)
+system.cpu0.fetch.rateDist::total            70526783                       # Number of instructions fetched each cycle (Total)
 system.cpu0.icache.ReadReq_accesses           6456937                       # number of ReadReq accesses(hits+misses)
 system.cpu0.icache.ReadReq_avg_miss_latency 15194.125887                       # average ReadReq miss latency
 system.cpu0.icache.ReadReq_avg_mshr_miss_latency 12131.650508                       # average ReadReq mshr miss latency
@@ -291,54 +291,54 @@ system.cpu0.iew.predictedNotTakenIncorrect       255799                       # 
 system.cpu0.iew.predictedTakenIncorrect        313044                       # Number of branches that were predicted taken incorrectly
 system.cpu0.ipc                              0.373240                       # IPC: Instructions Per Cycle
 system.cpu0.ipc_total                        0.373240                       # IPC: Total IPC of All Threads
-system.cpu0.iq.ISSUE:FU_type_0::No_OpClass         3326      0.01%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::IntAlu       28267868     68.97%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::IntMult         42211      0.10%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::IntDiv              0      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatAdd        12076      0.03%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatCmp            0      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatCvt            0      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatMult            0      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatDiv         1657      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::MemRead       7398159     18.05%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::MemWrite      4612021     11.25%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::IprAccess       650051      1.59%            # Type of FU issued
-system.cpu0.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%            # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::No_OpClass         3326      0.01%      0.01% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::IntAlu       28267868     68.97%     68.98% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::IntMult         42211      0.10%     69.08% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::IntDiv              0      0.00%     69.08% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatAdd        12076      0.03%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatCmp            0      0.00%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatCvt            0      0.00%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatMult            0      0.00%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatDiv         1657      0.00%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%     69.11% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::MemRead       7398159     18.05%     87.16% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::MemWrite      4612021     11.25%     98.41% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::IprAccess       650051      1.59%    100.00% # Type of FU issued
+system.cpu0.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%    100.00% # Type of FU issued
 system.cpu0.iq.ISSUE:FU_type_0::total        40987369                       # Type of FU issued
 system.cpu0.iq.ISSUE:fu_busy_cnt               290458                       # FU busy when requested
 system.cpu0.iq.ISSUE:fu_busy_rate            0.007087                       # FU busy rate (busy events/executed inst)
-system.cpu0.iq.ISSUE:fu_full::No_OpClass            0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::IntAlu            33502     11.53%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::IntMult               0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::IntDiv                0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatAdd              0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatCmp              0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatCvt              0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatMult             0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatDiv              0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::FloatSqrt             0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::MemRead          185621     63.91%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::MemWrite          71335     24.56%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::IprAccess             0      0.00%            # attempts to use FU when none available
-system.cpu0.iq.ISSUE:fu_full::InstPrefetch            0      0.00%            # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::No_OpClass            0      0.00%      0.00% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::IntAlu            33502     11.53%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::IntMult               0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::IntDiv                0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatAdd              0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatCmp              0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatCvt              0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatMult             0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatDiv              0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::FloatSqrt             0      0.00%     11.53% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::MemRead          185621     63.91%     75.44% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::MemWrite          71335     24.56%    100.00% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::IprAccess             0      0.00%    100.00% # attempts to use FU when none available
+system.cpu0.iq.ISSUE:fu_full::InstPrefetch            0      0.00%    100.00% # attempts to use FU when none available
 system.cpu0.iq.ISSUE:issued_per_cycle::samples     70526783                       # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::underflows            0      0.00%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::0-1     49764700     70.56%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::1-2     10507721     14.90%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::2-3      4625277      6.56%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::3-4      2839073      4.03%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::4-5      1729944      2.45%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::5-6       663617      0.94%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::6-7       315224      0.45%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::7-8        67146      0.10%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::8        14081      0.02%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::overflows            0      0.00%            # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::total     70526783                       # Number of insts issued each cycle
-system.cpu0.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu0.iq.ISSUE:issued_per_cycle::mean     0.581160                       # Number of insts issued each cycle
 system.cpu0.iq.ISSUE:issued_per_cycle::stdev     1.133092                       # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::underflows            0      0.00%      0.00% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::0-1     49764700     70.56%     70.56% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::1-2     10507721     14.90%     85.46% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::2-3      4625277      6.56%     92.02% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::3-4      2839073      4.03%     96.04% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::4-5      1729944      2.45%     98.50% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::5-6       663617      0.94%     99.44% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::6-7       315224      0.45%     99.88% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::7-8        67146      0.10%     99.98% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::8        14081      0.02%    100.00% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::overflows            0      0.00%    100.00% # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
+system.cpu0.iq.ISSUE:issued_per_cycle::total     70526783                       # Number of insts issued each cycle
 system.cpu0.iq.ISSUE:rate                    0.406210                       # Inst issue rate
 system.cpu0.iq.iqInstsAdded                  42280479                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu0.iq.iqInstsIssued                 40987369                       # Number of instructions issued
@@ -363,44 +363,44 @@ system.cpu0.itb.write_accesses                      0                       # DT
 system.cpu0.itb.write_acv                           0                       # DTB write access violations
 system.cpu0.itb.write_hits                          0                       # DTB write hits
 system.cpu0.itb.write_misses                        0                       # DTB write misses
-system.cpu0.kern.callpal::cserve                    1      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::wripir                   96      0.07%            # number of callpals executed
-system.cpu0.kern.callpal::wrmces                    1      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::wrfen                     1      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::wrvptptr                  1      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::swpctx                 2410      1.86%            # number of callpals executed
-system.cpu0.kern.callpal::tbi                      51      0.04%            # number of callpals executed
-system.cpu0.kern.callpal::wrent                     7      0.01%            # number of callpals executed
-system.cpu0.kern.callpal::swpipl               116005     89.53%            # number of callpals executed
-system.cpu0.kern.callpal::rdps                   6357      4.91%            # number of callpals executed
-system.cpu0.kern.callpal::wrkgp                     1      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::wrusp                     3      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::rdusp                     9      0.01%            # number of callpals executed
-system.cpu0.kern.callpal::whami                     2      0.00%            # number of callpals executed
-system.cpu0.kern.callpal::rti                    4116      3.18%            # number of callpals executed
-system.cpu0.kern.callpal::callsys                 381      0.29%            # number of callpals executed
-system.cpu0.kern.callpal::imb                     136      0.10%            # number of callpals executed
+system.cpu0.kern.callpal::cserve                    1      0.00%      0.00% # number of callpals executed
+system.cpu0.kern.callpal::wripir                   96      0.07%      0.07% # number of callpals executed
+system.cpu0.kern.callpal::wrmces                    1      0.00%      0.08% # number of callpals executed
+system.cpu0.kern.callpal::wrfen                     1      0.00%      0.08% # number of callpals executed
+system.cpu0.kern.callpal::wrvptptr                  1      0.00%      0.08% # number of callpals executed
+system.cpu0.kern.callpal::swpctx                 2410      1.86%      1.94% # number of callpals executed
+system.cpu0.kern.callpal::tbi                      51      0.04%      1.98% # number of callpals executed
+system.cpu0.kern.callpal::wrent                     7      0.01%      1.98% # number of callpals executed
+system.cpu0.kern.callpal::swpipl               116005     89.53%     91.51% # number of callpals executed
+system.cpu0.kern.callpal::rdps                   6357      4.91%     96.41% # number of callpals executed
+system.cpu0.kern.callpal::wrkgp                     1      0.00%     96.41% # number of callpals executed
+system.cpu0.kern.callpal::wrusp                     3      0.00%     96.42% # number of callpals executed
+system.cpu0.kern.callpal::rdusp                     9      0.01%     96.42% # number of callpals executed
+system.cpu0.kern.callpal::whami                     2      0.00%     96.42% # number of callpals executed
+system.cpu0.kern.callpal::rti                    4116      3.18%     99.60% # number of callpals executed
+system.cpu0.kern.callpal::callsys                 381      0.29%     99.90% # number of callpals executed
+system.cpu0.kern.callpal::imb                     136      0.10%    100.00% # number of callpals executed
 system.cpu0.kern.callpal::total                129578                       # number of callpals executed
 system.cpu0.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu0.kern.inst.hwrei                    144417                       # number of hwrei instructions executed
 system.cpu0.kern.inst.quiesce                    4856                       # number of quiesce instructions executed
-system.cpu0.kern.ipl_count::0                   47763     39.05%            # number of times we switched to this ipl
-system.cpu0.kern.ipl_count::21                    239      0.20%            # number of times we switched to this ipl
-system.cpu0.kern.ipl_count::22                   1931      1.58%            # number of times we switched to this ipl
-system.cpu0.kern.ipl_count::30                     17      0.01%            # number of times we switched to this ipl
-system.cpu0.kern.ipl_count::31                  72358     59.16%            # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::0                   47763     39.05%     39.05% # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::21                    239      0.20%     39.25% # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::22                   1931      1.58%     40.83% # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::30                     17      0.01%     40.84% # number of times we switched to this ipl
+system.cpu0.kern.ipl_count::31                  72358     59.16%    100.00% # number of times we switched to this ipl
 system.cpu0.kern.ipl_count::total              122308                       # number of times we switched to this ipl
-system.cpu0.kern.ipl_good::0                    47113     48.87%            # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good::21                     239      0.25%            # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good::22                    1931      2.00%            # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good::30                      17      0.02%            # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_good::31                   47097     48.86%            # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::0                    47113     48.87%     48.87% # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::21                     239      0.25%     49.12% # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::22                    1931      2.00%     51.13% # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::30                      17      0.02%     51.14% # number of times we switched to this ipl from a different ipl
+system.cpu0.kern.ipl_good::31                   47097     48.86%    100.00% # number of times we switched to this ipl from a different ipl
 system.cpu0.kern.ipl_good::total                96397                       # number of times we switched to this ipl from a different ipl
-system.cpu0.kern.ipl_ticks::0            1871606920000     98.13%            # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks::21              101495000      0.01%            # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks::22              398001000      0.02%            # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks::30                9331000      0.00%            # number of cycles we spent at this ipl
-system.cpu0.kern.ipl_ticks::31            35173046500      1.84%            # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::0            1871606920000     98.13%     98.13% # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::21              101495000      0.01%     98.13% # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::22              398001000      0.02%     98.16% # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::30                9331000      0.00%     98.16% # number of cycles we spent at this ipl
+system.cpu0.kern.ipl_ticks::31            35173046500      1.84%    100.00% # number of cycles we spent at this ipl
 system.cpu0.kern.ipl_ticks::total        1907288793500                       # number of cycles we spent at this ipl
 system.cpu0.kern.ipl_used::0                 0.986391                       # fraction of swpipl calls that actually changed the ipl
 system.cpu0.kern.ipl_used::21                       1                       # fraction of swpipl calls that actually changed the ipl
@@ -417,39 +417,39 @@ system.cpu0.kern.mode_switch_good::kernel     0.217679                       # f
 system.cpu0.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_switch_good::idle      no_value                       # fraction of useful protection mode switches
 system.cpu0.kern.mode_switch_good::total     no_value                       # fraction of useful protection mode switches
-system.cpu0.kern.mode_ticks::kernel      1905143965500     99.89%            # number of ticks spent at the given mode
-system.cpu0.kern.mode_ticks::user          2121516000      0.11%            # number of ticks spent at the given mode
-system.cpu0.kern.mode_ticks::idle                   0      0.00%            # number of ticks spent at the given mode
+system.cpu0.kern.mode_ticks::kernel      1905143965500     99.89%     99.89% # number of ticks spent at the given mode
+system.cpu0.kern.mode_ticks::user          2121516000      0.11%    100.00% # number of ticks spent at the given mode
+system.cpu0.kern.mode_ticks::idle                   0      0.00%    100.00% # number of ticks spent at the given mode
 system.cpu0.kern.swap_context                    2411                       # number of times the context was actually changed
-system.cpu0.kern.syscall::2                         8      3.60%            # number of syscalls executed
-system.cpu0.kern.syscall::3                        19      8.56%            # number of syscalls executed
-system.cpu0.kern.syscall::4                         4      1.80%            # number of syscalls executed
-system.cpu0.kern.syscall::6                        32     14.41%            # number of syscalls executed
-system.cpu0.kern.syscall::12                        1      0.45%            # number of syscalls executed
-system.cpu0.kern.syscall::17                        9      4.05%            # number of syscalls executed
-system.cpu0.kern.syscall::19                       10      4.50%            # number of syscalls executed
-system.cpu0.kern.syscall::20                        6      2.70%            # number of syscalls executed
-system.cpu0.kern.syscall::23                        1      0.45%            # number of syscalls executed
-system.cpu0.kern.syscall::24                        3      1.35%            # number of syscalls executed
-system.cpu0.kern.syscall::33                        7      3.15%            # number of syscalls executed
-system.cpu0.kern.syscall::41                        2      0.90%            # number of syscalls executed
-system.cpu0.kern.syscall::45                       36     16.22%            # number of syscalls executed
-system.cpu0.kern.syscall::47                        3      1.35%            # number of syscalls executed
-system.cpu0.kern.syscall::48                       10      4.50%            # number of syscalls executed
-system.cpu0.kern.syscall::54                       10      4.50%            # number of syscalls executed
-system.cpu0.kern.syscall::58                        1      0.45%            # number of syscalls executed
-system.cpu0.kern.syscall::59                        6      2.70%            # number of syscalls executed
-system.cpu0.kern.syscall::71                       23     10.36%            # number of syscalls executed
-system.cpu0.kern.syscall::73                        3      1.35%            # number of syscalls executed
-system.cpu0.kern.syscall::74                        6      2.70%            # number of syscalls executed
-system.cpu0.kern.syscall::87                        1      0.45%            # number of syscalls executed
-system.cpu0.kern.syscall::90                        3      1.35%            # number of syscalls executed
-system.cpu0.kern.syscall::92                        9      4.05%            # number of syscalls executed
-system.cpu0.kern.syscall::97                        2      0.90%            # number of syscalls executed
-system.cpu0.kern.syscall::98                        2      0.90%            # number of syscalls executed
-system.cpu0.kern.syscall::132                       1      0.45%            # number of syscalls executed
-system.cpu0.kern.syscall::144                       2      0.90%            # number of syscalls executed
-system.cpu0.kern.syscall::147                       2      0.90%            # number of syscalls executed
+system.cpu0.kern.syscall::2                         8      3.60%      3.60% # number of syscalls executed
+system.cpu0.kern.syscall::3                        19      8.56%     12.16% # number of syscalls executed
+system.cpu0.kern.syscall::4                         4      1.80%     13.96% # number of syscalls executed
+system.cpu0.kern.syscall::6                        32     14.41%     28.38% # number of syscalls executed
+system.cpu0.kern.syscall::12                        1      0.45%     28.83% # number of syscalls executed
+system.cpu0.kern.syscall::17                        9      4.05%     32.88% # number of syscalls executed
+system.cpu0.kern.syscall::19                       10      4.50%     37.39% # number of syscalls executed
+system.cpu0.kern.syscall::20                        6      2.70%     40.09% # number of syscalls executed
+system.cpu0.kern.syscall::23                        1      0.45%     40.54% # number of syscalls executed
+system.cpu0.kern.syscall::24                        3      1.35%     41.89% # number of syscalls executed
+system.cpu0.kern.syscall::33                        7      3.15%     45.05% # number of syscalls executed
+system.cpu0.kern.syscall::41                        2      0.90%     45.95% # number of syscalls executed
+system.cpu0.kern.syscall::45                       36     16.22%     62.16% # number of syscalls executed
+system.cpu0.kern.syscall::47                        3      1.35%     63.51% # number of syscalls executed
+system.cpu0.kern.syscall::48                       10      4.50%     68.02% # number of syscalls executed
+system.cpu0.kern.syscall::54                       10      4.50%     72.52% # number of syscalls executed
+system.cpu0.kern.syscall::58                        1      0.45%     72.97% # number of syscalls executed
+system.cpu0.kern.syscall::59                        6      2.70%     75.68% # number of syscalls executed
+system.cpu0.kern.syscall::71                       23     10.36%     86.04% # number of syscalls executed
+system.cpu0.kern.syscall::73                        3      1.35%     87.39% # number of syscalls executed
+system.cpu0.kern.syscall::74                        6      2.70%     90.09% # number of syscalls executed
+system.cpu0.kern.syscall::87                        1      0.45%     90.54% # number of syscalls executed
+system.cpu0.kern.syscall::90                        3      1.35%     91.89% # number of syscalls executed
+system.cpu0.kern.syscall::92                        9      4.05%     95.95% # number of syscalls executed
+system.cpu0.kern.syscall::97                        2      0.90%     96.85% # number of syscalls executed
+system.cpu0.kern.syscall::98                        2      0.90%     97.75% # number of syscalls executed
+system.cpu0.kern.syscall::132                       1      0.45%     98.20% # number of syscalls executed
+system.cpu0.kern.syscall::144                       2      0.90%     99.10% # number of syscalls executed
+system.cpu0.kern.syscall::147                       2      0.90%    100.00% # number of syscalls executed
 system.cpu0.kern.syscall::total                   222                       # number of syscalls executed
 system.cpu0.memDep0.conflictingLoads          2050556                       # Number of conflicting loads.
 system.cpu0.memDep0.conflictingStores         1832562                       # Number of conflicting stores.
@@ -486,22 +486,22 @@ system.cpu1.commit.COM:branches               2947825                       # Nu
 system.cpu1.commit.COM:bw_lim_events           401526                       # number cycles where commit BW limit reached
 system.cpu1.commit.COM:bw_limited                   0                       # number of insts not committed due to BW limits
 system.cpu1.commit.COM:committed_per_cycle::samples     37477420                       # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::underflows            0      0.00%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::0-1     29419430     78.50%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::1-2      3577485      9.55%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::2-3      1728132      4.61%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::3-4      1049887      2.80%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::4-5       708572      1.89%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::5-6       265966      0.71%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::6-7       180885      0.48%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::7-8       145537      0.39%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::8       401526      1.07%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::overflows            0      0.00%            # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::total     37477420                       # Number of insts commited each cycle
-system.cpu1.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
 system.cpu1.commit.COM:committed_per_cycle::mean     0.524684                       # Number of insts commited each cycle
 system.cpu1.commit.COM:committed_per_cycle::stdev     1.336555                       # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::underflows            0      0.00%      0.00% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::0-1     29419430     78.50%     78.50% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::1-2      3577485      9.55%     88.04% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::2-3      1728132      4.61%     92.66% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::3-4      1049887      2.80%     95.46% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::4-5       708572      1.89%     97.35% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::5-6       265966      0.71%     98.06% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::6-7       180885      0.48%     98.54% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::7-8       145537      0.39%     98.93% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::8       401526      1.07%    100.00% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::overflows            0      0.00%    100.00% # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::min_value            0                       # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::max_value            8                       # Number of insts commited each cycle
+system.cpu1.commit.COM:committed_per_cycle::total     37477420                       # Number of insts commited each cycle
 system.cpu1.commit.COM:count                 19663805                       # Number of instructions committed
 system.cpu1.commit.COM:loads                  3551077                       # Number of loads committed
 system.cpu1.commit.COM:membars                  87378                       # Number of memory barriers committed
@@ -642,22 +642,22 @@ system.cpu1.fetch.icacheStallCycles           3089103                       # Nu
 system.cpu1.fetch.predictedBranches           2688799                       # Number of branches that fetch has predicted taken
 system.cpu1.fetch.rate                       0.626137                       # Number of inst fetches per cycle
 system.cpu1.fetch.rateDist::samples          38118943                       # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::min_value               0                       # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::underflows              0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::0-1              33077920     86.78%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::1-2                338218      0.89%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::2-3                684572      1.80%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::3-4                401329      1.05%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::4-5                792382      2.08%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::5-6                254420      0.67%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::6-7                341251      0.90%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::7-8                404733      1.06%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::8                 1824118      4.79%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::overflows               0      0.00%            # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::total            38118943                       # Number of instructions fetched each cycle (Total)
-system.cpu1.fetch.rateDist::max_value               8                       # Number of instructions fetched each cycle (Total)
 system.cpu1.fetch.rateDist::mean             0.703759                       # Number of instructions fetched each cycle (Total)
 system.cpu1.fetch.rateDist::stdev            2.021088                       # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::underflows              0      0.00%      0.00% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::0-1              33077920     86.78%     86.78% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::1-2                338218      0.89%     87.66% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::2-3                684572      1.80%     89.46% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::3-4                401329      1.05%     90.51% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::4-5                792382      2.08%     92.59% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::5-6                254420      0.67%     93.26% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::6-7                341251      0.90%     94.15% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::7-8                404733      1.06%     95.21% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::8                 1824118      4.79%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::overflows               0      0.00%    100.00% # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::min_value               0                       # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::max_value               8                       # Number of instructions fetched each cycle (Total)
+system.cpu1.fetch.rateDist::total            38118943                       # Number of instructions fetched each cycle (Total)
 system.cpu1.icache.ReadReq_accesses           3089103                       # number of ReadReq accesses(hits+misses)
 system.cpu1.icache.ReadReq_avg_miss_latency 14554.957905                       # average ReadReq miss latency
 system.cpu1.icache.ReadReq_avg_mshr_miss_latency 11604.745633                       # average ReadReq mshr miss latency
@@ -757,54 +757,54 @@ system.cpu1.iew.predictedNotTakenIncorrect       160561                       # 
 system.cpu1.iew.predictedTakenIncorrect        178400                       # Number of branches that were predicted taken incorrectly
 system.cpu1.ipc                              0.432490                       # IPC: Instructions Per Cycle
 system.cpu1.ipc_total                        0.432490                       # IPC: Total IPC of All Threads
-system.cpu1.iq.ISSUE:FU_type_0::No_OpClass         3984      0.02%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::IntAlu       13476075     65.54%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::IntMult         28965      0.14%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::IntDiv              0      0.00%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatAdd        13702      0.07%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatCmp            0      0.00%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatCvt            0      0.00%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatMult            0      0.00%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatDiv         1986      0.01%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::MemRead       4173782     20.30%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::MemWrite      2443072     11.88%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::IprAccess       421241      2.05%            # Type of FU issued
-system.cpu1.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%            # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::No_OpClass         3984      0.02%      0.02% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::IntAlu       13476075     65.54%     65.56% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::IntMult         28965      0.14%     65.70% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::IntDiv              0      0.00%     65.70% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatAdd        13702      0.07%     65.76% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatCmp            0      0.00%     65.76% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatCvt            0      0.00%     65.76% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatMult            0      0.00%     65.76% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatDiv         1986      0.01%     65.77% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::FloatSqrt            0      0.00%     65.77% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::MemRead       4173782     20.30%     86.07% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::MemWrite      2443072     11.88%     97.95% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::IprAccess       421241      2.05%    100.00% # Type of FU issued
+system.cpu1.iq.ISSUE:FU_type_0::InstPrefetch            0      0.00%    100.00% # Type of FU issued
 system.cpu1.iq.ISSUE:FU_type_0::total        20562807                       # Type of FU issued
 system.cpu1.iq.ISSUE:fu_busy_cnt               221150                       # FU busy when requested
 system.cpu1.iq.ISSUE:fu_busy_rate            0.010755                       # FU busy rate (busy events/executed inst)
-system.cpu1.iq.ISSUE:fu_full::No_OpClass            0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::IntAlu            16139      7.30%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::IntMult               0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::IntDiv                0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatAdd              0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatCmp              0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatCvt              0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatMult             0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatDiv              0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::FloatSqrt             0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::MemRead          131899     59.64%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::MemWrite          73112     33.06%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::IprAccess             0      0.00%            # attempts to use FU when none available
-system.cpu1.iq.ISSUE:fu_full::InstPrefetch            0      0.00%            # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::No_OpClass            0      0.00%      0.00% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::IntAlu            16139      7.30%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::IntMult               0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::IntDiv                0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatAdd              0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatCmp              0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatCvt              0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatMult             0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatDiv              0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::FloatSqrt             0      0.00%      7.30% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::MemRead          131899     59.64%     66.94% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::MemWrite          73112     33.06%    100.00% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::IprAccess             0      0.00%    100.00% # attempts to use FU when none available
+system.cpu1.iq.ISSUE:fu_full::InstPrefetch            0      0.00%    100.00% # attempts to use FU when none available
 system.cpu1.iq.ISSUE:issued_per_cycle::samples     38118943                       # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::underflows            0      0.00%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::0-1     28405834     74.52%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::1-2      4664798     12.24%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::2-3      1989487      5.22%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::3-4      1362185      3.57%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::4-5       979454      2.57%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::5-6       465472      1.22%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::6-7       186874      0.49%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::7-8        52652      0.14%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::8        12187      0.03%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::overflows            0      0.00%            # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::total     38118943                       # Number of insts issued each cycle
-system.cpu1.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
 system.cpu1.iq.ISSUE:issued_per_cycle::mean     0.539438                       # Number of insts issued each cycle
 system.cpu1.iq.ISSUE:issued_per_cycle::stdev     1.158785                       # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::underflows            0      0.00%      0.00% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::0-1     28405834     74.52%     74.52% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::1-2      4664798     12.24%     86.76% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::2-3      1989487      5.22%     91.98% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::3-4      1362185      3.57%     95.55% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::4-5       979454      2.57%     98.12% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::5-6       465472      1.22%     99.34% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::6-7       186874      0.49%     99.83% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::7-8        52652      0.14%     99.97% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::8        12187      0.03%    100.00% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::overflows            0      0.00%    100.00% # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::min_value            0                       # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::max_value            8                       # Number of insts issued each cycle
+system.cpu1.iq.ISSUE:issued_per_cycle::total     38118943                       # Number of insts issued each cycle
 system.cpu1.iq.ISSUE:rate                    0.479940                       # Inst issue rate
 system.cpu1.iq.iqInstsAdded                  21283926                       # Number of instructions added to the IQ (excludes non-spec)
 system.cpu1.iq.iqInstsIssued                 20562807                       # Number of instructions issued
@@ -829,40 +829,40 @@ system.cpu1.itb.write_accesses                      0                       # DT
 system.cpu1.itb.write_acv                           0                       # DTB write access violations
 system.cpu1.itb.write_hits                          0                       # DTB write hits
 system.cpu1.itb.write_misses                        0                       # DTB write misses
-system.cpu1.kern.callpal::cserve                    1      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::wripir                   17      0.02%            # number of callpals executed
-system.cpu1.kern.callpal::wrmces                    1      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::wrfen                     1      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::swpctx                 1838      2.10%            # number of callpals executed
-system.cpu1.kern.callpal::tbi                       3      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::wrent                     7      0.01%            # number of callpals executed
-system.cpu1.kern.callpal::swpipl                79684     91.22%            # number of callpals executed
-system.cpu1.kern.callpal::rdps                   2408      2.76%            # number of callpals executed
-system.cpu1.kern.callpal::wrkgp                     1      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::wrusp                     4      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::whami                     3      0.00%            # number of callpals executed
-system.cpu1.kern.callpal::rti                    3206      3.67%            # number of callpals executed
-system.cpu1.kern.callpal::callsys                 136      0.16%            # number of callpals executed
-system.cpu1.kern.callpal::imb                      44      0.05%            # number of callpals executed
-system.cpu1.kern.callpal::rdunique                  1      0.00%            # number of callpals executed
+system.cpu1.kern.callpal::cserve                    1      0.00%      0.00% # number of callpals executed
+system.cpu1.kern.callpal::wripir                   17      0.02%      0.02% # number of callpals executed
+system.cpu1.kern.callpal::wrmces                    1      0.00%      0.02% # number of callpals executed
+system.cpu1.kern.callpal::wrfen                     1      0.00%      0.02% # number of callpals executed
+system.cpu1.kern.callpal::swpctx                 1838      2.10%      2.13% # number of callpals executed
+system.cpu1.kern.callpal::tbi                       3      0.00%      2.13% # number of callpals executed
+system.cpu1.kern.callpal::wrent                     7      0.01%      2.14% # number of callpals executed
+system.cpu1.kern.callpal::swpipl                79684     91.22%     93.36% # number of callpals executed
+system.cpu1.kern.callpal::rdps                   2408      2.76%     96.11% # number of callpals executed
+system.cpu1.kern.callpal::wrkgp                     1      0.00%     96.11% # number of callpals executed
+system.cpu1.kern.callpal::wrusp                     4      0.00%     96.12% # number of callpals executed
+system.cpu1.kern.callpal::whami                     3      0.00%     96.12% # number of callpals executed
+system.cpu1.kern.callpal::rti                    3206      3.67%     99.79% # number of callpals executed
+system.cpu1.kern.callpal::callsys                 136      0.16%     99.95% # number of callpals executed
+system.cpu1.kern.callpal::imb                      44      0.05%    100.00% # number of callpals executed
+system.cpu1.kern.callpal::rdunique                  1      0.00%    100.00% # number of callpals executed
 system.cpu1.kern.callpal::total                 87355                       # number of callpals executed
 system.cpu1.kern.inst.arm                           0                       # number of arm instructions executed
 system.cpu1.kern.inst.hwrei                     93966                       # number of hwrei instructions executed
 system.cpu1.kern.inst.quiesce                    3806                       # number of quiesce instructions executed
-system.cpu1.kern.ipl_count::0                   34143     40.21%            # number of times we switched to this ipl
-system.cpu1.kern.ipl_count::22                   1928      2.27%            # number of times we switched to this ipl
-system.cpu1.kern.ipl_count::30                     96      0.11%            # number of times we switched to this ipl
-system.cpu1.kern.ipl_count::31                  48748     57.41%            # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::0                   34143     40.21%     40.21% # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::22                   1928      2.27%     42.48% # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::30                     96      0.11%     42.59% # number of times we switched to this ipl
+system.cpu1.kern.ipl_count::31                  48748     57.41%    100.00% # number of times we switched to this ipl
 system.cpu1.kern.ipl_count::total               84915                       # number of times we switched to this ipl
-system.cpu1.kern.ipl_good::0                    33416     48.60%            # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good::22                    1928      2.80%            # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good::30                      96      0.14%            # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_good::31                   33320     48.46%            # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::0                    33416     48.60%     48.60% # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::22                    1928      2.80%     51.40% # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::30                      96      0.14%     51.54% # number of times we switched to this ipl from a different ipl
+system.cpu1.kern.ipl_good::31                   33320     48.46%    100.00% # number of times we switched to this ipl from a different ipl
 system.cpu1.kern.ipl_good::total                68760                       # number of times we switched to this ipl from a different ipl
-system.cpu1.kern.ipl_ticks::0            1871986905500     98.13%            # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks::22              352078000      0.02%            # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks::30               40004500      0.00%            # number of cycles we spent at this ipl
-system.cpu1.kern.ipl_ticks::31            35325543000      1.85%            # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::0            1871986905500     98.13%     98.13% # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::22              352078000      0.02%     98.15% # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::30               40004500      0.00%     98.15% # number of cycles we spent at this ipl
+system.cpu1.kern.ipl_ticks::31            35325543000      1.85%    100.00% # number of cycles we spent at this ipl
 system.cpu1.kern.ipl_ticks::total        1907704531000                       # number of cycles we spent at this ipl
 system.cpu1.kern.ipl_used::0                 0.978707                       # fraction of swpipl calls that actually changed the ipl
 system.cpu1.kern.ipl_used::22                       1                       # fraction of swpipl calls that actually changed the ipl
@@ -878,23 +878,23 @@ system.cpu1.kern.mode_switch_good::kernel     0.226030                       # f
 system.cpu1.kern.mode_switch_good::user             1                       # fraction of useful protection mode switches
 system.cpu1.kern.mode_switch_good::idle      0.028501                       # fraction of useful protection mode switches
 system.cpu1.kern.mode_switch_good::total     1.254532                       # fraction of useful protection mode switches
-system.cpu1.kern.mode_ticks::kernel       46750182500      2.45%            # number of ticks spent at the given mode
-system.cpu1.kern.mode_ticks::user          1015923000      0.05%            # number of ticks spent at the given mode
-system.cpu1.kern.mode_ticks::idle        1859938417500     97.50%            # number of ticks spent at the given mode
+system.cpu1.kern.mode_ticks::kernel       46750182500      2.45%      2.45% # number of ticks spent at the given mode
+system.cpu1.kern.mode_ticks::user          1015923000      0.05%      2.50% # number of ticks spent at the given mode
+system.cpu1.kern.mode_ticks::idle        1859938417500     97.50%    100.00% # number of ticks spent at the given mode
 system.cpu1.kern.swap_context                    1839                       # number of times the context was actually changed
-system.cpu1.kern.syscall::3                        11     10.58%            # number of syscalls executed
-system.cpu1.kern.syscall::6                        10      9.62%            # number of syscalls executed
-system.cpu1.kern.syscall::15                        1      0.96%            # number of syscalls executed
-system.cpu1.kern.syscall::17                        6      5.77%            # number of syscalls executed
-system.cpu1.kern.syscall::23                        3      2.88%            # number of syscalls executed
-system.cpu1.kern.syscall::24                        3      2.88%            # number of syscalls executed
-system.cpu1.kern.syscall::33                        4      3.85%            # number of syscalls executed
-system.cpu1.kern.syscall::45                       18     17.31%            # number of syscalls executed
-system.cpu1.kern.syscall::47                        3      2.88%            # number of syscalls executed
-system.cpu1.kern.syscall::59                        1      0.96%            # number of syscalls executed
-system.cpu1.kern.syscall::71                       31     29.81%            # number of syscalls executed
-system.cpu1.kern.syscall::74                       10      9.62%            # number of syscalls executed
-system.cpu1.kern.syscall::132                       3      2.88%            # number of syscalls executed
+system.cpu1.kern.syscall::3                        11     10.58%     10.58% # number of syscalls executed
+system.cpu1.kern.syscall::6                        10      9.62%     20.19% # number of syscalls executed
+system.cpu1.kern.syscall::15                        1      0.96%     21.15% # number of syscalls executed
+system.cpu1.kern.syscall::17                        6      5.77%     26.92% # number of syscalls executed
+system.cpu1.kern.syscall::23                        3      2.88%     29.81% # number of syscalls executed
+system.cpu1.kern.syscall::24                        3      2.88%     32.69% # number of syscalls executed
+system.cpu1.kern.syscall::33                        4      3.85%     36.54% # number of syscalls executed
+system.cpu1.kern.syscall::45                       18     17.31%     53.85% # number of syscalls executed
+system.cpu1.kern.syscall::47                        3      2.88%     56.73% # number of syscalls executed
+system.cpu1.kern.syscall::59                        1      0.96%     57.69% # number of syscalls executed
+system.cpu1.kern.syscall::71                       31     29.81%     87.50% # number of syscalls executed
+system.cpu1.kern.syscall::74                       10      9.62%     97.12% # number of syscalls executed
+system.cpu1.kern.syscall::132                       3      2.88%    100.00% # number of syscalls executed
 system.cpu1.kern.syscall::total                   104                       # number of syscalls executed
 system.cpu1.memDep0.conflictingLoads           906343                       # Number of conflicting loads.
 system.cpu1.memDep0.conflictingStores          817120                       # Number of conflicting stores.
