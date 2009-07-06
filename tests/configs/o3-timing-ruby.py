@@ -31,11 +31,14 @@ from m5.objects import *
 m5.AddToPath('../configs/common')
 
 
+import ruby_config
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", 1)
+
 cpu = DerivO3CPU(cpu_id=0)
 cpu.clock = '2GHz'
 
 system = System(cpu = cpu,
-                physmem = RubyMemory(),
+                physmem = ruby_memory,
                 membus = Bus())
 system.physmem.port = system.membus.port
 cpu.connectMemPorts(system.membus)

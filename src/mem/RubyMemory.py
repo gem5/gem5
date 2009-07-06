@@ -35,12 +35,11 @@ class RubyMemory(PhysicalMemory):
     type = 'RubyMemory'
     clock = Param.Clock('1t', "ruby clock speed")
     phase = Param.Latency('0ns', "ruby clock phase")
-    config_file = Param.String("", "path to the Ruby config file")
-    config_options = Param.String("", "extra Ruby options (one per line)")
+    config_file = Param.String("path to the Ruby config file")
     stats_file = Param.String("ruby.stats",
         "file to which ruby dumps its stats")
     num_cpus = Param.Int(1, "Number of CPUs connected to the Ruby memory")
     debug = Param.Bool(False, "Use ruby debug")
-    debug_file = Param.String("",
+    debug_file = Param.String("ruby.debug",
         "path to the Ruby debug output file (stdout if blank)")
 

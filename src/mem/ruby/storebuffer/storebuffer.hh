@@ -36,7 +36,7 @@
 #include "mem/ruby/storebuffer/hfa.hh"
 #include "mem/ruby/libruby.hh"
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
 #include "TsoCheckerCmd.hh"
 #endif
 
@@ -53,13 +53,13 @@ enum load_match { NO_MATCH, PARTIAL_MATCH, FULL_MATCH };
 
 struct SBEntry {
   struct RubyRequest m_request;
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
   Tso::TsoCheckerCmd * m_next_ptr;
 #endif
   SBEntry(struct RubyRequest request, void * ptr)
       : m_request(request)
     {
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
         m_next_ptr = (Tso::TsoCheckerCmd*) ptr;
 #endif
     }
@@ -101,7 +101,7 @@ class StoreBuffer {
   /// prints out the contents of the Write Buffer
   void print();
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
   /// if load completes before store, insert correctly to be issued to TSOChecker
   void insertTsoLL(Tso::TsoCheckerCmd * cmd);
 #endif

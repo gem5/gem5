@@ -34,9 +34,12 @@ from m5.objects import *
 nb_cores = 8
 cpus = [ MemTest() for i in xrange(nb_cores) ]
 
+import ruby_config
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", nb_cores)
+
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = RubyMemory(num_cpus=nb_cores),
+                physmem = ruby_memory,
                 membus = Bus(clock="500GHz", width=16))
 
 for cpu in cpus:

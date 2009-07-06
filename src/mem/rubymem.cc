@@ -33,9 +33,11 @@
 
 #include "arch/isa_traits.hh"
 #include "base/output.hh"
+#include "base/str.hh"
 #include "base/types.hh"
 #include "mem/ruby/common/Debug.hh"
-#include "mem/ruby/init.hh"
+#include "mem/ruby/libruby.hh"
+#include "mem/ruby/system/RubyPort.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/rubymem.hh"
@@ -45,33 +47,54 @@
 using namespace std;
 using namespace TheISA;
 
+map<int64_t, PacketPtr> RubyMemory::pending_requests;
+
 RubyMemory::RubyMemory(const Params *p)
   : PhysicalMemory(p)
 {
-    config_file = p->config_file;
-    config_options = p->config_options;
-    stats_file = p->stats_file;
-    num_cpus = p->num_cpus;
     ruby_clock = p->clock;
     ruby_phase = p->phase;
 
-    debug = p->debug;
-    debug_file = p->debug_file;
+    ifstream config(p->config_file.c_str());
+
+    vector<RubyObjConf> sys_conf;
+    while (!config.eof()) {
+        char buffer[4096];
+        config.getline(buffer, sizeof(buffer));
+        string line = buffer;
+        if (line.empty())
+            continue;
+        vector<string> tokens;
+        tokenize(tokens, line, ' ');
+        assert(tokens.size() >= 2);
+        vector<string> argv;
+        for (size_t i=2; i<tokens.size(); i++) {
+            std::replace(tokens[i].begin(), tokens[i].end(), '%', ' ');
+            std::replace(tokens[i].begin(), tokens[i].end(), '#', '\n');
+            argv.push_back(tokens[i]);
+        }
+        sys_conf.push_back(RubyObjConf(tokens[0], tokens[1], argv));
+        tokens.clear();
+        argv.clear();
+    }
+
+    RubySystem::create(sys_conf);
+
+    for (int i = 0; i < params()->num_cpus; i++) {
+        RubyPort *p = RubySystem::getPort(csprintf("Sequencer_%d", i),
+                                          ruby_hit_callback);
+        ruby_ports.push_back(p);
+    }
 }
 
 void
 RubyMemory::init()
 {
-    init_variables();
-    g_NUM_PROCESSORS = num_cpus;
-
-    init_simulator(this);
-
-    if (debug) {
+    if (params()->debug) {
         g_debug_ptr->setVerbosityString("high");
         g_debug_ptr->setDebugTime(1);
-        if (debug_file != "") {
-             g_debug_ptr->setDebugOutputFile("ruby.debug");
+        if (!params()->debug_file.empty()) {
+            g_debug_ptr->setDebugOutputFile(params()->debug_file.c_str());
         }
     }
 
@@ -104,23 +127,21 @@ RubyMemory::init()
 }
 
 //called by rubyTickEvent
-void RubyMemory::tick() {
-    g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 1);
-    schedule(rubyTickEvent, curTick + ruby_clock); //dsm: clock_phase was added here. This is wrong, the phase is only added on the first tick
+void
+RubyMemory::tick()
+{
+    RubyEventQueue *eq = RubySystem::getEventQueue();
+    eq->triggerEvents(eq->getTime() + 1);
+    schedule(rubyTickEvent, curTick + ruby_clock);
 }
 
-
-RubyMemory::~RubyMemory() {
-    delete g_system_ptr;
+RubyMemory::~RubyMemory()
+{
 }
 
 void
-RubyMemory::hitCallback(Packet* pkt)
+RubyMemory::hitCallback(PacketPtr pkt, Port *port)
 {
-    RubyMemoryPort* port = m_packet_to_port_map[pkt];
-    assert(port != NULL);
-    m_packet_to_port_map.erase(pkt);
-
     DPRINTF(MemoryAccess, "Hit callback\n");
 
     bool needsResponse = pkt->needsResponse();
@@ -146,7 +167,7 @@ RubyMemory::getPort(const std::string &if_name, int idx)
     // with places where this function is called from C++.  I'd prefer
     // to move all these into Python someday.
     if (if_name == "functional") {
-        return new RubyMemoryPort(csprintf("%s-functional", name()), this);
+        return new Port(csprintf("%s-functional", name()), this);
     }
 
     if (if_name != "port") {
@@ -161,22 +182,20 @@ RubyMemory::getPort(const std::string &if_name, int idx)
         panic("RubyMemory::getPort: port %d already assigned", idx);
     }
 
-    RubyMemoryPort *port =
-        new RubyMemoryPort(csprintf("%s-port%d", name(), idx), this);
+    Port *port = new Port(csprintf("%s-port%d", name(), idx), this);
 
     ports[idx] = port;
     return port;
 }
 
-RubyMemory::RubyMemoryPort::RubyMemoryPort(const std::string &_name,
-                                       RubyMemory *_memory)
+RubyMemory::Port::Port(const std::string &_name, RubyMemory *_memory)
     : PhysicalMemory::MemoryPort::MemoryPort(_name, _memory)
 {
     ruby_mem = _memory;
 }
 
 bool
-RubyMemory::RubyMemoryPort::recvTiming(PacketPtr pkt)
+RubyMemory::Port::recvTiming(PacketPtr pkt)
 {
     DPRINTF(MemoryAccess, "Timing access caught\n");
 
@@ -197,33 +216,83 @@ RubyMemory::RubyMemoryPort::recvTiming(PacketPtr pkt)
         return true;
     }
 
-    ruby_mem->m_packet_to_port_map[pkt] = this;
+    // Save the port in the sender state object
+    pkt->senderState = new SenderState(this, pkt->senderState);
 
-    Sequencer* sequencer = g_system_ptr->getSequencer(pkt->req->contextId());
-
-    if ( ! sequencer->isReady(pkt) ) {
-      DPRINTF(MemoryAccess, "Sequencer isn't ready yet!!\n");
-      return false;
+    RubyRequestType type = RubyRequestType_NULL;
+    Addr pc = 0;
+    if (pkt->isRead()) {
+        if (pkt->req->isInstFetch()) {
+            type = RubyRequestType_IFETCH;
+            pc = pkt->req->getPC();
+        } else {
+            type = RubyRequestType_LD; 
+        }
+    } else if (pkt->isWrite()) {
+        type = RubyRequestType_ST;
+    } else if (pkt->isReadWrite()) {
+        type = RubyRequestType_RMW;
     }
 
-    DPRINTF(MemoryAccess, "Issuing makeRequest\n");
+    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(),
+                             pkt->getSize(), pc, type,
+                             RubyAccessMode_Supervisor);
 
-    sequencer->makeRequest(pkt);
+    // Submit the ruby request
+    RubyPort *ruby_port = ruby_mem->ruby_ports[pkt->req->contextId()];
+    int64_t req_id = ruby_port->makeRequest(ruby_request);
+    if (req_id == -1) {
+        RubyMemory::SenderState *senderState =
+            safe_cast<RubyMemory::SenderState *>(pkt->senderState);
+
+        // pop the sender state from the packet
+        pkt->senderState = senderState->saved;
+        delete senderState;
+        return false;
+    }
+
+    // Save the request for the callback
+    RubyMemory::pending_requests[req_id] = pkt;
+
     return true;
 }
 
 void
-RubyMemory::RubyMemoryPort::sendTiming(PacketPtr pkt)
+ruby_hit_callback(int64_t req_id)
+{
+    typedef map<int64_t, PacketPtr> map_t;
+    map_t &prm = RubyMemory::pending_requests;
+
+    map_t::iterator i = prm.find(req_id);
+    if (i == prm.end())
+        panic("could not find pending request %d\n", req_id);
+
+    PacketPtr pkt = i->second;
+    prm.erase(i);
+
+    RubyMemory::SenderState *senderState =
+        safe_cast<RubyMemory::SenderState *>(pkt->senderState);
+    RubyMemory::Port *port = senderState->port;
+    
+    // pop the sender state from the packet
+    pkt->senderState = senderState->saved;
+    delete senderState;
+
+    port->ruby_mem->hitCallback(pkt, port);
+}
+
+void
+RubyMemory::Port::sendTiming(PacketPtr pkt)
 {
     schedSendTiming(pkt, curTick + 1); //minimum latency, must be > 0
 }
 
 void RubyMemory::printConfigStats()
 {
-    std::ostream *os = simout.create(stats_file);
-    g_system_ptr->printConfig(*os);
+    std::ostream *os = simout.create(params()->stats_file);
+    RubySystem::printConfig(*os);
     *os << endl;
-    g_system_ptr->printStats(*os);
+    RubySystem::printStats(*os);
 }
 
 

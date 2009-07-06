@@ -29,8 +29,11 @@
 import m5
 from m5.objects import *
 
+import ruby_config
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", 1)
+
 system = System(cpu = AtomicSimpleCPU(cpu_id=0),
-                physmem = RubyMemory(),
+                physmem = ruby_memory,
                 membus = Bus())
 system.physmem.port = system.membus.port
 system.cpu.connectMemPorts(system.membus)

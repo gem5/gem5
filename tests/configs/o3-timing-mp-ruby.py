@@ -33,9 +33,11 @@ m5.AddToPath('../configs/common')
 nb_cores = 4
 cpus = [ DerivO3CPU(cpu_id=i) for i in xrange(nb_cores) ]
 
+import ruby_config
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", nb_cores)
+
 # system simulated
-system = System(cpu = cpus, physmem = RubyMemory(num_cpus=nb_cores),
-                membus = Bus())
+system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
 
 for cpu in cpus:
     cpu.connectMemPorts(system.membus)

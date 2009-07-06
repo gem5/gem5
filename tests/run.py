@@ -28,6 +28,9 @@
 
 import os
 import sys
+
+from os.path import join as joinpath
+
 import m5
 
 # Since we're in batch mode, dont allow tcp socket connections
@@ -41,32 +44,33 @@ tests_root = os.path.dirname(__file__)
 if os.path.isdir('/dist/m5/regression/test-progs'):
     test_progs = '/dist/m5/regression/test-progs'
 else:
-    test_progs = os.path.join(tests_root, 'test-progs')
+    test_progs = joinpath(tests_root, 'test-progs')
 
 # generate path to binary file
 def binpath(app, file=None):
     # executable has same name as app unless specified otherwise
     if not file:
         file = app
-    return os.path.join(test_progs, app, 'bin', isa, opsys, file)
+    return joinpath(test_progs, app, 'bin', isa, opsys, file)
 
 # generate path to input file
 def inputpath(app, file=None):
     # input file has same name as app unless specified otherwise
     if not file:
         file = app
-    return os.path.join(test_progs, app, 'input', file)
+    return joinpath(test_progs, app, 'input', file)
 
 # build configuration
-execfile(os.path.join(tests_root, 'configs', config + '.py'))
+sys.path.append(joinpath(tests_root, 'configs'))
+execfile(joinpath(tests_root, 'configs', config + '.py'))
 
 # set default maxtick... script can override
 # -1 means run forever
 maxtick = m5.MaxTick
 
 # tweak configuration for specific test
-
-execfile(os.path.join(tests_root, category, name, 'test.py'))
+sys.path.append(joinpath(tests_root, category, name))
+execfile(joinpath(tests_root, category, name, 'test.py'))
 
 # instantiate configuration
 m5.instantiate(root)

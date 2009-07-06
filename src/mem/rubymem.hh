@@ -32,20 +32,26 @@
 #define __RUBY_MEMORY_HH__
 
 #include <map>
+#include <vector>
 
-#include "mem/physical.hh"
-#include "params/RubyMemory.hh"
 #include "base/callback.hh"
-#include "mem/ruby/common/Driver.hh"
+#include "mem/packet.hh"
+#include "mem/physical.hh"
+#include "mem/ruby/system/RubyPort.hh"
+#include "params/RubyMemory.hh"
 
-class RubyMemory : public PhysicalMemory, public Driver
+class RubyMemory : public PhysicalMemory
 {
-    class RubyMemoryPort : public MemoryPort
+  public:
+    std::vector<RubyPort *> ruby_ports;
+    class Port : public MemoryPort
     {
-        RubyMemory* ruby_mem;
+        friend void ruby_hit_callback(int64_t req_id);
+
+        RubyMemory *ruby_mem;
 
       public:
-        RubyMemoryPort(const std::string &_name, RubyMemory *_memory);
+        Port(const std::string &_name, RubyMemory *_memory);
         void sendTiming(PacketPtr pkt);
 
       protected:
@@ -64,6 +70,15 @@ class RubyMemory : public PhysicalMemory, public Driver
         virtual const char *description() const { return "ruby tick"; }
     };
 
+    struct SenderState : public Packet::SenderState
+    {
+        Port *port;
+        Packet::SenderState *saved;
+
+        SenderState(Port *p, Packet::SenderState *s = NULL)
+            : port(p), saved(s)
+        {}
+    };
 
   private:
     // prevent copying of a RubyMemory object
@@ -77,14 +92,23 @@ class RubyMemory : public PhysicalMemory, public Driver
     RubyMemory(const Params *p);
     virtual ~RubyMemory();
 
+    const Params *
+    params() const
+    {
+        return safe_cast<const Params *>(_params);
+    }
+
   public:
-    virtual Port *getPort(const std::string &if_name, int idx = -1);
+    virtual ::Port *getPort(const std::string &if_name, int idx = -1);
     void virtual init();
 
     //Ruby-related specifics
-    void printConfigStats(); //dsm: Maybe this function should disappear once the configuration options change & M5 determines the stats file to use
+    void printConfigStats(); //dsm: Maybe this function should
+                             //disappear once the configuration
+                             //options change & M5 determines the
+                             //stats file to use
 
-    void hitCallback(Packet* pkt);  // called by the Ruby sequencer
+    void hitCallback(PacketPtr pkt, Port *port);
 
     void printStats(std::ostream & out) const;
     void clearStats();
@@ -93,14 +117,14 @@ class RubyMemory : public PhysicalMemory, public Driver
     void tick();
 
   private:
-    //Parameters passed
-    std::string config_file, config_options, stats_file, debug_file;
-    bool debug;
-    int num_cpus;
-    Tick ruby_clock, ruby_phase;
+    Tick ruby_clock;
+    Tick ruby_phase;
 
-    std::map<Packet*, RubyMemoryPort*> m_packet_to_port_map;
+  public:
+    static std::map<int64_t, PacketPtr> pending_requests;
 };
+
+void ruby_hit_callback(int64_t);
 
 class RubyExitCallback : public Callback
 {

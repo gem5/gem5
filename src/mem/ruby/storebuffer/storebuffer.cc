@@ -36,7 +36,7 @@
 #include "mem/ruby/storebuffer/storebuffer.hh"
 #include "mem/ruby/common/Global.hh"
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
 #include "TsoChecker.hh"
 #endif
 
@@ -46,7 +46,7 @@
 // global map of request id_s to map them back to storebuffer pointers
 map <uint64_t, StoreBuffer *> request_map;
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
 Tso::TsoChecker * g_tsoChecker;
 #endif
 
@@ -65,7 +65,7 @@ void hit(int64_t id) {
 
 //*****************************************************************************************
 StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size) {
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
   if (id == 0) {
     g_tsoChecker = new Tso::TsoChecker();
     g_tsoChecker->init(64);
@@ -99,7 +99,7 @@ StoreBuffer::StoreBuffer(uint32 id, uint32 block_bits, int storebuffer_size) {
 
 //******************************************************************************************
 StoreBuffer::~StoreBuffer(){
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
   if (m_id == 0) {
     delete g_tsoChecker;
   }
@@ -272,7 +272,7 @@ void StoreBuffer::returnMatchedData(struct RubyRequest request) {
     ASSERT(checkForLoadHit(request) != NO_MATCH);
     physical_address_t lineaddr = physical_address & m_block_mask;
     bool found = false;
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
     Tso::TsoCheckerCmd * cmd;
 #endif
     deque<struct SBEntry>::iterator satisfying_store;
@@ -280,7 +280,7 @@ void StoreBuffer::returnMatchedData(struct RubyRequest request) {
       if ((it->m_request.paddr & m_block_mask) == lineaddr) {
         if (!found) {
           found = true;
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
           satisfying_store = it;
           cmd = new Tso::TsoCheckerCmd(m_id, // this thread id
                             iseq, // instruction sequence
@@ -313,7 +313,7 @@ void StoreBuffer::returnMatchedData(struct RubyRequest request) {
       }
     }
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
     uint64_t tso_data = 0;
     memcpy(&tso_data, request.data, request.len);
     cmd->setData(tso_data);
@@ -400,7 +400,7 @@ void StoreBuffer::complete(uint64_t id) {
         m_buffer_size--;
         ASSERT(m_buffer_size >= 0);
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
         int len = outstanding_requests.find(id)->second.len;
         uint64_t data = 0;
         memcpy(&data, from_buffer.m_request.data, 4);
@@ -462,7 +462,7 @@ void StoreBuffer::complete(uint64_t id) {
 #endif
     } // end if (type == ST)
     else if (type == RubyRequestType_LD) {
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
       RubyRequest request = outstanding_requests.find(id)->second;
       uint64_t data = 0;
       memcpy(&data, request.data, request.len);
@@ -511,7 +511,7 @@ void StoreBuffer::complete(uint64_t id) {
   }
 }
 
-#ifdef RUBY_TSO_CHECKER
+#if RUBY_TSO_CHECKER
 void StoreBuffer::insertTsoLL(Tso::TsoCheckerCmd * cmd) {
   uint64_t count = cmd->getIseq();
   Tso::TsoCheckerCmd * current = NULL;
