@@ -31,37 +31,21 @@
  * $Id$
  */
 
-#ifndef __MEM_RUBY_DEBUG_HH__
-#define __MEM_RUBY_DEBUG_HH__
+#ifndef DEBUG_H
+#define DEBUG_H
 
 #include <unistd.h>
 #include <iostream>
-
-#include "config/ruby_debug.hh"
-#include "mem/ruby/common/Global.hh"
 
 extern std::ostream * debug_cout_ptr;
 
 // component enumeration
 enum DebugComponents
 {
-    SYSTEM_COMP,
-    NODE_COMP,
-    QUEUE_COMP,
-    EVENTQUEUE_COMP,
-    NETWORK_COMP,
-    SEQUENCER_COMP,
-    TESTER_COMP,
-    GENERATED_COMP,
-    SLICC_COMP,
-    NETWORKQUEUE_COMP,
-    TIME_COMP,
-    NETWORK_INTERNALS_COMP,
-    STOREBUFFER_COMP,
-    CACHE_COMP,
-    PREDICTOR_COMP,
-    ALLOCATOR_COMP,
-    NUMBER_OF_COMPS
+#undef DEFINE_COMP
+#define DEFINE_COMP(component, character, description) component,
+#include "Debug.def"
+  NUMBER_OF_COMPS
 };
 
 enum PriorityLevel {HighPrio, MedPrio, LowPrio};
@@ -70,6 +54,8 @@ enum VerbosityLevel {No_Verb, Low_Verb, Med_Verb, High_Verb};
 class Debug {
 public:
   // Constructors
+  Debug();
+  Debug( const string & name, const vector<string> & argv );
   Debug( const char *filterString, const char *verboseString,
          Time filterStartTime, const char *filename );
 
@@ -77,6 +63,7 @@ public:
   ~Debug();
 
   // Public Methods
+  static bool getProtocolTrace() { return m_protocol_trace; }
   bool validDebug(int module, PriorityLevel priority);
   void printVerbosity(ostream& out) const;
   void setVerbosity(VerbosityLevel vb);
@@ -108,6 +95,7 @@ private:
   Debug& operator=(const Debug& obj);
 
   // Data Members (m_ prefix)
+  static bool m_protocol_trace;
   VerbosityLevel m_verbosityLevel;
   int m_filter;
   Time m_starting_cycle;
@@ -155,7 +143,7 @@ const bool ASSERT_FLAG = true;
            << __PRETTY_FUNCTION__ << " in "\
            << __FILE__ << ":"\
            << __LINE__ << endl << flush;\
-      if(isatty(STDERR_FILENO)) {\
+      if(isatty(STDIN_FILENO)) {\
         cerr << "At this point you might want to attach a debug to ";\
         cerr << "the running and get to the" << endl;\
         cerr << "crash site; otherwise press enter to continue" << endl;\
@@ -176,7 +164,7 @@ const bool ASSERT_FLAG = true;
          << __PRETTY_FUNCTION__ << " in "\
          << __FILE__ << ":"\
          << __LINE__ << endl << flush;\
-    if(isatty(STDERR_FILENO)) {\
+    if(isatty(STDIN_FILENO)) {\
       cerr << "press enter to continue" << endl;\
       cerr << "PID: " << getpid();\
       cerr << endl << flush; \
@@ -303,5 +291,5 @@ const bool ASSERT_FLAG = true;
   }\
 }
 
-#endif // __MEM_RUBY_DEBUG_HH__
+#endif //DEBUG_H
 

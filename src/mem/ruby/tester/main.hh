@@ -27,9 +27,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * $Id$
+ *
+ * Description:
+ *
+ */
+
 #ifndef MAIN_H
 #define MAIN_H
 
-#include "mem/ruby/common/Global.hh"
+#include "Global_Tester.hh"
 
 #endif //MAIN_H

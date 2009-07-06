@@ -44,26 +44,22 @@
 #include "mem/ruby/network/garnet-flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/common/NetDest.hh"
 
-// calls new to abstract away from the network
-Network* Network::createNetwork(int nodes)
+GarnetNetwork::GarnetNetwork(const string & name)
+  : Network(name)
 {
-        NetworkConfig::readNetConfig();
-        // Instantiate a network depending on what kind of network is requested
-        if(NetworkConfig::isGarnetNetwork())
-        {
-                if(NetworkConfig::isDetailNetwork())
-                        return new GarnetNetwork_d(nodes);
-                else
-                        return new GarnetNetwork(nodes);
-        }
-        else
-                return new SimpleNetwork(nodes);
 }
 
-GarnetNetwork::GarnetNetwork(int nodes)
+void GarnetNetwork::init(const vector<string> & argv)
 {
-        m_nodes = MachineType_base_number(MachineType_NUM); // Total nodes in network
-        m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS; // Number of virtual networks = number of message classes in the coherence protocol
+//        printf("hello\n");
+        Network::init(argv);
+//added by SS
+//        assert (m_topology_ptr!=NULL);
+
+        m_network_config_ptr = new NetworkConfig;
+
+        m_network_config_ptr->init(argv);
+
         m_ruby_start = 0;
 
         // Allocate to and from queues
@@ -91,7 +87,8 @@ GarnetNetwork::GarnetNetwork(int nodes)
         }
 
         // Setup the network switches
-        m_topology_ptr = new Topology(this, m_nodes);
+        assert (m_topology_ptr!=NULL);
+        m_topology_ptr->makeTopology();
 
         int number_of_routers = m_topology_ptr->numSwitches();
         for (int i=0; i<number_of_routers; i++) {
@@ -188,6 +185,7 @@ void GarnetNetwork::makeInternalLink(SwitchID src, SwitchID dest, const NetDest&
 
 void GarnetNetwork::checkNetworkAllocation(NodeID id, bool ordered, int network_num)
 {
+        printf ("id = %i, m_nodes = %i \n", id, m_nodes);
         ASSERT(id < m_nodes);
         ASSERT(network_num < m_virtual_networks);
 
@@ -223,9 +221,9 @@ Time GarnetNetwork::getRubyStartTime()
 void GarnetNetwork::printStats(ostream& out) const
 {       double average_link_utilization = 0;
         Vector<double > average_vc_load;
-        average_vc_load.setSize(m_virtual_networks*NetworkConfig::getVCsPerClass());
+        average_vc_load.setSize(m_virtual_networks*m_network_config_ptr->getVCsPerClass());
 
-        for(int i = 0; i < m_virtual_networks*NetworkConfig::getVCsPerClass(); i++)
+        for(int i = 0; i < m_virtual_networks*m_network_config_ptr->getVCsPerClass(); i++)
         {
                 average_vc_load[i] = 0;
         }
@@ -240,7 +238,7 @@ void GarnetNetwork::printStats(ostream& out) const
                 Vector<int > vc_load = m_link_ptr_vector[i]->getVcLoad();
                 for(int j = 0; j < vc_load.size(); j++)
                 {
-                        assert(vc_load.size() == NetworkConfig::getVCsPerClass()*m_virtual_networks);
+                        assert(vc_load.size() == m_network_config_ptr->getVCsPerClass()*m_virtual_networks);
                         average_vc_load[j] += vc_load[j];
                 }
         }
@@ -248,7 +246,7 @@ void GarnetNetwork::printStats(ostream& out) const
         out << "Average Link Utilization :: " << average_link_utilization << " flits/cycle" <<endl;
         out << "-------------" << endl;
 
-        for(int i = 0; i < NetworkConfig::getVCsPerClass()*m_virtual_networks; i++)
+        for(int i = 0; i < m_network_config_ptr->getVCsPerClass()*m_virtual_networks; i++)
         {
                 average_vc_load[i] = (double(average_vc_load[i]) / (double(g_eventQueue_ptr->getTime()) - m_ruby_start));
                 out << "Average VC Load [" << i << "] = " << average_vc_load[i] << " flits/cycle" << endl;
@@ -262,7 +260,7 @@ void GarnetNetwork::printConfig(ostream& out) const
         out << "Network Configuration" << endl;
         out << "---------------------" << endl;
         out << "network: GARNET_NETWORK" << endl;
-        out << "topology: " << g_NETWORK_TOPOLOGY << endl;
+        out << "topology: " << m_topology_ptr->getName() << endl;
         out << endl;
 
         for (int i = 0; i < m_virtual_networks; i++)
@@ -295,10 +293,7 @@ void GarnetNetwork::printConfig(ostream& out) const
         {
                 m_router_ptr_vector[i]->printConfig(out);
         }
-        if (g_PRINT_TOPOLOGY)
-        {
-                m_topology_ptr->printConfig(out);
-        }
+        m_topology_ptr->printConfig(out);
 }
 
 void GarnetNetwork::print(ostream& out) const

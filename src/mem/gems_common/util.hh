@@ -39,6 +39,7 @@ string string_split(string& str, char split_character);
 string bool_to_string(bool value);
 string int_to_string(int n, bool zero_fill = false, int width = 0);
 float string_to_float(string& str);
+bool string_to_bool(const string & str);
 int log_int(long long n);
 bool is_power_of_2(long long n);
 

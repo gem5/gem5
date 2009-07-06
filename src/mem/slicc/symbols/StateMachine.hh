@@ -39,6 +39,9 @@
 #include "mem/gems_common/Vector.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/slicc/symbols/Symbol.hh"
+#include <list>
+
+using namespace std;
 
 class Transition;
 class Event;
@@ -50,7 +53,7 @@ class Func;
 class StateMachine : public Symbol {
 public:
   // Constructors
-  StateMachine(string ident, const Location& location, const Map<string, string>& pairs);
+  StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  std::vector<std::string*>* latency_vector);
 
   // Destructor
   ~StateMachine();
@@ -65,6 +68,7 @@ public:
   void addTransition(Transition* trans_ptr);
   void addInPort(Var* var) { m_in_ports.insertAtBottom(var); }
   void addFunc(Func* func);
+  void addObj(Var* obj) { m_objs.insertAtBottom(obj); }
 
   // Accessors to vectors
   const State& getState(int index) const { return *m_states[index]; }
@@ -72,21 +76,26 @@ public:
   const Action& getAction(int index) const { return *m_actions[index]; }
   const Transition& getTransition(int index) const { return *m_transitions[index]; }
   const Transition* getTransPtr(int stateIndex, int eventIndex) const;
+  const Var& getObject(int index) const { return *m_objs[index]; }
 
   // Accessors for size of vectors
   int numStates() const { return m_states.size(); }
   int numEvents() const { return m_events.size(); }
   int numActions() const { return m_actions.size(); }
   int numTransitions() const { return m_transitions.size(); }
+  int numObjects() const { return m_objs.size(); }
 
   void buildTable();  // Needs to be called before accessing the table
 
   // Code generator methods
-  void writeCFiles(string path) const;
-  void writeHTMLFiles(string path) const;
+  void writeCFiles(string path) ;
+  void writeHTMLFiles(string path) ;
 
   void print(ostream& out) const { out << "[StateMachine: " << toString() << "]" << endl; }
 private:
+
+  std::vector<std::string*> m_latency_vector;
+
   // Private Methods
   void checkForDuplicate(const Symbol& sym) const;
 
@@ -97,14 +106,14 @@ private:
   //  StateMachine(const StateMachine& obj);
   //  StateMachine& operator=(const StateMachine& obj);
 
-  void printControllerH(ostream& out, string component) const;
-  void printControllerC(ostream& out, string component) const;
-  void printCWakeup(ostream& out, string component) const;
-  void printCSwitch(ostream& out, string component) const;
-  void printProfilerH(ostream& out, string component) const;
-  void printProfilerC(ostream& out, string component) const;
+  void printControllerH(ostream& out, string component) ;
+  void printControllerC(ostream& out, string component) ;
+  void printCWakeup(ostream& out, string component) ;
+  void printCSwitch(ostream& out, string component) ;
+  void printProfilerH(ostream& out, string component) ;
+  void printProfilerC(ostream& out, string component) ;
 
-  void printHTMLTransitions(ostream& out, int active_state) const;
+  void printHTMLTransitions(ostream& out, int active_state) ;
 
   // Data Members (m_ prefix)
   Vector<State*> m_states;
@@ -118,9 +127,14 @@ private:
 
   Vector<Var*> m_in_ports;
 
+  Vector<Var*> m_objs;
+
   // Table variables
   bool m_table_built;
   Vector<Vector<Transition*> > m_table;
+
+  //added by SS
+  std::vector<std::string> m_message_buffer_names;
 
 };
 

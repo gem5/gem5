@@ -244,7 +244,7 @@ void VCallocator_d::arbitrate_outvcs()
 
 int VCallocator_d::get_vnet(int invc)
 {
-        for(int i = 0; i < NUMBER_OF_VIRTUAL_NETWORKS; i++)
+  for(int i = 0; i < RubySystem::getNetwork()->getNumberOfVirtualNetworks(); i++)
         {
                 if(invc >= (i*m_vc_per_vnet) && invc < ((i+1)*m_vc_per_vnet))
                 {

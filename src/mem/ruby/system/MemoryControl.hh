@@ -43,7 +43,6 @@
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/slicc_interface/AbstractChip.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/gems_common/util.hh"
@@ -67,7 +66,8 @@ class MemoryControl : public Consumer, public AbstractMemOrCache {
 public:
 
   // Constructors
-  MemoryControl (AbstractChip* chip_ptr, int version);
+  MemoryControl(const string & name);
+  void init(const vector<string> & argv);
 
   // Destructor
   ~MemoryControl ();
@@ -78,8 +78,8 @@ public:
 
   void setConsumer (Consumer* consumer_ptr);
   Consumer* getConsumer () { return m_consumer_ptr; };
-  void setDescription (const string& name) { m_name = name; };
-  string getDescription () { return m_name; };
+  void setDescription (const string& name) { m_description = name; };
+  string getDescription () { return m_description; };
 
   // Called from the directory:
   void enqueue (const MsgPtr& message, int latency );
@@ -97,6 +97,12 @@ public:
   void print (ostream& out) const;
   void setDebug (int debugFlag);
 
+
+  //added by SS
+  int getBanksPerRank() { return m_banks_per_rank; };
+  int getRanksPerDimm() { return m_ranks_per_dimm; };
+  int getDimmsPerChannel() { return m_dimms_per_channel; }
+
 private:
 
   void enqueueToDirectory (MemoryNode req, int latency);
@@ -113,9 +119,9 @@ private:
   MemoryControl& operator=(const MemoryControl& obj);
 
   // data members
-  AbstractChip* m_chip_ptr;
   Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
   string m_name;
+  string m_description;
   int m_version;
   int m_msg_counter;
   int m_awakened;
@@ -134,9 +140,9 @@ private:
   int m_basic_bus_busy_time;
   int m_mem_ctl_latency;
   int m_refresh_period;
-  int m_memRandomArbitrate;
+  int m_mem_random_arbitrate;
   int m_tFaw;
-  int m_memFixedDelay;
+  int m_mem_fixed_delay;
 
   int m_total_banks;
   int m_total_ranks;

@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,15 +38,25 @@
 #ifndef RACEYDRIVER_H
 #define RACEYDRIVER_H
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Driver.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
+#include "mem/ruby/tester/Driver_Tester.hh"
+#include "mem/ruby/tester/RaceyPseudoThread.hh"
+#include <map>
+#include "mem/ruby/libruby.hh"
 
-class RaceyPseudoThread;
+#define g_DEADLOCK_THRESHOLD 5000
 
-class RaceyDriver : public Driver, public Consumer {
+
+struct address_data {
+  Address address;
+  uint8_t * data;
+};
+
+class RaceyDriver : public Driver_Tester, public Consumer {
 public:
+  friend class RaceyPseudoThread;
   // Constructors
-  RaceyDriver();
+  RaceyDriver(int num_procs, int tester_length);
 
   // Destructor
   ~RaceyDriver();
@@ -59,11 +69,12 @@ public:
     return m_racey_pseudo_threads[0]->getInitializedState();
   };
 
-  void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread);
+  void hitCallback(int64_t request_id);
   void wakeup();
   void printStats(ostream& out) const;
   void clearStats() {}
   void printConfig(ostream& out) const {}
+  void go();
 
   integer_t getInstructionCount(int procID) const;
 
@@ -81,6 +92,7 @@ public:
   }
 
   void print(ostream& out) const;
+
 private:
 
   // Private copy constructor and assignment operator
@@ -91,8 +103,11 @@ private:
   Vector<RaceyPseudoThread*> m_racey_pseudo_threads;
   int m_done_counter;
   bool m_wakeup_thread0;
-
   Time m_finish_time;
+  map <int64_t, pair <int, struct address_data> > requests;
+  RubyEventQueue * eventQueue;
+  int m_num_procs;
+  int m_tester_length;
 };
 
 // Output operator declaration
@@ -110,3 +125,4 @@ ostream& operator<<(ostream& out, const RaceyDriver& obj)
 }
 
 #endif //RACEYDRIVER_H
+

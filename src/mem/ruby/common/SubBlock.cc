@@ -42,16 +42,6 @@ SubBlock::SubBlock(const Address& addr, int size)
   }
 }
 
-SubBlock::SubBlock(const Address& addr, const Address& logicalAddress, int size)
-{
-  m_address = addr;
-  m_logicalAddress = logicalAddress;
-  setSize(size);
-  for(int i=0; i<size; i++) {
-    setByte(i, 0);
-  }
-}
-
 void SubBlock::internalMergeFrom(const DataBlock& data)
 {
   int size = getSize();

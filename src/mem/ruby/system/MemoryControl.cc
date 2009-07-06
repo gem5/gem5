@@ -110,20 +110,20 @@
  *
  */
 
-#include <list>
-
-#include "base/cprintf.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/slicc_interface/AbstractChip.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/slicc_interface/NetworkMessage.hh"
 #include "mem/ruby/network/Network.hh"
+
 #include "mem/ruby/common/Consumer.hh"
+
 #include "mem/ruby/system/MemoryControl.hh"
+
+#include <list>
 
 class Consumer;
 
@@ -151,32 +151,66 @@ ostream& operator<<(ostream& out, const MemoryControl& obj)
 // ****************************************************************
 
 // CONSTRUCTOR
+MemoryControl::MemoryControl(const string & name)
+ : m_name(name)
+{
+  m_name = name;
+//  printf ("MemoryControl name is %s \n", m_name.c_str());
+}
 
-MemoryControl::MemoryControl (AbstractChip* chip_ptr, int version) {
-  m_chip_ptr = chip_ptr;
-  m_version = version;
+void MemoryControl::init(const vector<string> & argv)
+{
+
+  for (vector<string>::const_iterator it = argv.begin(); it != argv.end(); it++) {
+    if ( (*it) == "version" )
+      m_version = atoi( (*(++it)).c_str() );
+    else if ( (*it) == "mem_bus_cycle_multiplier" ) {
+      m_mem_bus_cycle_multiplier = atoi((*(++it)).c_str());
+    } else if ( (*it) == "banks_per_rank" ) {
+      m_banks_per_rank = atoi((*(++it)).c_str());
+    } else if ( (*it) == "ranks_per_dimm" ) {
+      m_ranks_per_dimm = atoi((*(++it)).c_str());
+    } else if ( (*it) == "dimms_per_channel" ) {
+      m_dimms_per_channel = atoi((*(++it)).c_str());
+    } else if ( (*it) == "bank_bit_0" ) {
+      m_bank_bit_0 = atoi((*(++it)).c_str());
+    } else if ( (*it) == "rank_bit_0" ) {
+      m_rank_bit_0 = atoi((*(++it)).c_str());
+    } else if ( (*it) == "dimm_bit_0" ) {
+      m_dimm_bit_0 = atoi((*(++it)).c_str());
+    } else if ( (*it) == "bank_queue_size" ) {
+      m_bank_queue_size = atoi((*(++it)).c_str());
+    } else if ( (*it) == "bank_busy_time" ) {
+      m_bank_busy_time = atoi((*(++it)).c_str());
+    } else if ( (*it) == "rank_rank_delay" ) {
+      m_rank_rank_delay = atoi((*(++it)).c_str());
+    } else if ( (*it) == "read_write_delay" ) {
+      m_read_write_delay = atoi((*(++it)).c_str());
+    } else if ( (*it) == "basic_bus_busy_time" ) {
+      m_basic_bus_busy_time = atoi((*(++it)).c_str());
+    } else if ( (*it) == "mem_ctl_latency" ) {
+      m_mem_ctl_latency = atoi((*(++it)).c_str());
+    } else if ( (*it) == "refresh_period" ) {
+      m_refresh_period = atoi((*(++it)).c_str());
+    } else if ( (*it) == "tFaw" ) {
+      m_tFaw = atoi((*(++it)).c_str());
+    } else if ( (*it) == "mem_random_arbitrate" ) {
+      m_mem_random_arbitrate = atoi((*(++it)).c_str());
+    } else if ( (*it) == "mem_fixed_delay" ) {
+      m_mem_fixed_delay = atoi((*(++it)).c_str());
+    }
+//    } else
+//      assert(0);
+  }
+
+
+///////
+  //m_version = version;
   m_msg_counter = 0;
 
   m_debug = 0;
   //if (m_version == 0) m_debug = 1;
 
-  m_mem_bus_cycle_multiplier = RubyConfig::memBusCycleMultiplier();
-  m_banks_per_rank           = RubyConfig::banksPerRank();
-  m_ranks_per_dimm           = RubyConfig::ranksPerDimm();
-  m_dimms_per_channel        = RubyConfig::dimmsPerChannel();
-  m_bank_bit_0               = RubyConfig::bankBit0();
-  m_rank_bit_0               = RubyConfig::rankBit0();
-  m_dimm_bit_0               = RubyConfig::dimmBit0();
-  m_bank_queue_size          = RubyConfig::bankQueueSize();
-  m_bank_busy_time           = RubyConfig::bankBusyTime();
-  m_rank_rank_delay          = RubyConfig::rankRankDelay();
-  m_read_write_delay         = RubyConfig::readWriteDelay();
-  m_basic_bus_busy_time      = RubyConfig::basicBusBusyTime();
-  m_mem_ctl_latency          = RubyConfig::memCtlLatency();
-  m_refresh_period           = RubyConfig::refreshPeriod();
-  m_memRandomArbitrate       = RubyConfig::memRandomArbitrate();
-  m_tFaw                     = RubyConfig::tFaw();
-  m_memFixedDelay            = RubyConfig::memFixedDelay();
 
   assert(m_tFaw <= 62); // must fit in a uint64 shift register
 
@@ -257,13 +291,15 @@ void MemoryControl::enqueueMemRef (MemoryNode& memRef) {
   Time arrival_time = memRef.m_time;
   uint64 at = arrival_time;
   bool is_mem_read = memRef.m_is_mem_read;
+  bool dirtyWB = memRef.m_is_dirty_wb;
   physical_address_t addr = memRef.m_addr;
   int bank = getBank(addr);
   if (m_debug) {
-    cprintf("New memory request%7d: %#08x %c arrived at %10d bank =%3x\n",
-            m_msg_counter, addr, is_mem_read? 'R':'W', at, bank);
+    printf("New memory request%7d: 0x%08llx %c arrived at %10lld  ", m_msg_counter, addr, is_mem_read? 'R':'W', at);
+    printf("bank =%3x\n", bank);
   }
-  g_system_ptr->getProfiler()->profileMemReq(bank);
+//  printf ("m_name is %s \n", m_name.c_str());
+  g_system_ptr->getProfiler()->profileMemReq(m_name, bank);
   m_input_queue.push_back(memRef);
   if (!m_awakened) {
     g_eventQueue_ptr->scheduleEvent(this, 1);
@@ -295,7 +331,7 @@ MemoryNode MemoryControl::peekNode () {
   MemoryNode req = m_response_queue.front();
   uint64 returnTime = req.m_time;
   if (m_debug) {
-    cprintf("Old memory request%7d: %#08x %c peeked at  %10d\n",
+    printf("Old memory request%7d: 0x%08llx %c peeked at  %10lld\n",
         req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W', returnTime);
   }
   return req;
@@ -319,10 +355,10 @@ void MemoryControl::printConfig (ostream& out) {
   out << "Memory Control " << m_version << ":" << endl;
   out << "  Ruby cycles per memory cycle: " << m_mem_bus_cycle_multiplier << endl;
   out << "  Basic read latency: " << m_mem_ctl_latency << endl;
-  if (m_memFixedDelay) {
-    out << "  Fixed Latency mode:  Added cycles = " << m_memFixedDelay << endl;
+  if (m_mem_fixed_delay) {
+    out << "  Fixed Latency mode:  Added cycles = " << m_mem_fixed_delay << endl;
   } else {
-    out << "  Bank busy time: " << BANK_BUSY_TIME << " memory cycles" << endl;
+    out << "  Bank busy time: " << m_bank_busy_time << " memory cycles" << endl;
     out << "  Memory channel busy time: " << m_basic_bus_busy_time << endl;
     out << "  Dead cycles between reads to different ranks: " << m_rank_rank_delay << endl;
     out << "  Dead cycle between a read and a write: " << m_read_write_delay << endl;
@@ -336,7 +372,7 @@ void MemoryControl::printConfig (ostream& out) {
   out << "  LSB of DIMM field in address: " << m_dimm_bit_0 << endl;
   out << "  Max size of each bank queue: " << m_bank_queue_size << endl;
   out << "  Refresh period (within one bank): " << m_refresh_period << endl;
-  out << "  Arbitration randomness: " << m_memRandomArbitrate << endl;
+  out << "  Arbitration randomness: " << m_mem_random_arbitrate << endl;
 }
 
 
@@ -389,20 +425,20 @@ int MemoryControl::getRank (int bank) {
 // can be issued this cycle
 
 bool MemoryControl::queueReady (int bank) {
-  if ((m_bankBusyCounter[bank] > 0) && !m_memFixedDelay) {
-    g_system_ptr->getProfiler()->profileMemBankBusy();
-    //if (m_debug) cprintf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
+  if ((m_bankBusyCounter[bank] > 0) && !m_mem_fixed_delay) {
+    g_system_ptr->getProfiler()->profileMemBankBusy(m_name);
+    //if (m_debug) printf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
     return false;
   }
-  if (m_memRandomArbitrate >= 2) {
-    if ((random() % 100) < m_memRandomArbitrate) {
-      g_system_ptr->getProfiler()->profileMemRandBusy();
+  if (m_mem_random_arbitrate >= 2) {
+    if ((random() % 100) < m_mem_random_arbitrate) {
+      g_system_ptr->getProfiler()->profileMemRandBusy(m_name);
       return false;
     }
   }
-  if (m_memFixedDelay) return true;
+  if (m_mem_fixed_delay) return true;
   if ((m_ageCounter > (2 * m_bank_busy_time)) && !m_oldRequest[bank]) {
-    g_system_ptr->getProfiler()->profileMemNotOld();
+    g_system_ptr->getProfiler()->profileMemNotOld(m_name);
     return false;
   }
   if (m_busBusyCounter_Basic == m_basic_bus_busy_time) {
@@ -411,26 +447,26 @@ bool MemoryControl::queueReady (int bank) {
     // a bus wait.  This is a little inaccurate since it MIGHT
     // have also been blocked waiting for a read-write or a
     // read-read instead, but it's pretty close.
-    g_system_ptr->getProfiler()->profileMemArbWait(1);
+    g_system_ptr->getProfiler()->profileMemArbWait(m_name, 1);
     return false;
   }
   if (m_busBusyCounter_Basic > 0) {
-    g_system_ptr->getProfiler()->profileMemBusBusy();
+    g_system_ptr->getProfiler()->profileMemBusBusy(m_name);
     return false;
   }
   int rank = getRank(bank);
   if (m_tfaw_count[rank] >= ACTIVATE_PER_TFAW) {
-    g_system_ptr->getProfiler()->profileMemTfawBusy();
+    g_system_ptr->getProfiler()->profileMemTfawBusy(m_name);
     return false;
   }
   bool write = !m_bankQueues[bank].front().m_is_mem_read;
   if (write && (m_busBusyCounter_Write > 0)) {
-    g_system_ptr->getProfiler()->profileMemReadWriteBusy();
+    g_system_ptr->getProfiler()->profileMemReadWriteBusy(m_name);
     return false;
   }
   if (!write && (rank != m_busBusy_WhichRank)
              && (m_busBusyCounter_ReadNewRank > 0)) {
-    g_system_ptr->getProfiler()->profileMemDataBusBusy();
+    g_system_ptr->getProfiler()->profileMemDataBusBusy(m_name);
     return false;
   }
   return true;
@@ -453,9 +489,9 @@ bool MemoryControl::issueRefresh (int bank) {
 
   //if (m_debug) {
     //uint64 current_time = g_eventQueue_ptr->getTime();
-    //cprintf("    Refresh bank %3x at %d\n", bank, current_time);
+    //printf("    Refresh bank %3x at %lld\n", bank, current_time);
   //}
-  g_system_ptr->getProfiler()->profileMemRefresh();
+  g_system_ptr->getProfiler()->profileMemRefresh(m_name);
   m_need_refresh--;
   m_refresh_bank++;
   if (m_refresh_bank >= m_total_banks) m_refresh_bank = 0;
@@ -488,23 +524,23 @@ void MemoryControl::issueRequest (int bank) {
   m_bankQueues[bank].pop_front();
   if (m_debug) {
     uint64 current_time = g_eventQueue_ptr->getTime();
-    cprintf("    Mem issue request%7d: %#08x %c         at %10d  bank =%3x\n",
+    printf("    Mem issue request%7d: 0x%08llx %c         at %10lld  bank =%3x\n",
         req.m_msg_counter, req.m_addr, req.m_is_mem_read? 'R':'W', current_time, bank);
   }
   if (req.m_msgptr.ref() != NULL) {  // don't enqueue L3 writebacks
-    enqueueToDirectory(req, m_mem_ctl_latency + m_memFixedDelay);
+    enqueueToDirectory(req, m_mem_ctl_latency + m_mem_fixed_delay);
   }
   m_oldRequest[bank] = 0;
   markTfaw(rank);
   m_bankBusyCounter[bank] = m_bank_busy_time;
   m_busBusy_WhichRank = rank;
   if (req.m_is_mem_read) {
-    g_system_ptr->getProfiler()->profileMemRead();
+    g_system_ptr->getProfiler()->profileMemRead(m_name);
     m_busBusyCounter_Basic = m_basic_bus_busy_time;
     m_busBusyCounter_Write = m_basic_bus_busy_time + m_read_write_delay;
     m_busBusyCounter_ReadNewRank = m_basic_bus_busy_time + m_rank_rank_delay;
   } else {
-    g_system_ptr->getProfiler()->profileMemWrite();
+    g_system_ptr->getProfiler()->profileMemWrite(m_name);
     m_busBusyCounter_Basic = m_basic_bus_busy_time;
     m_busBusyCounter_Write = m_basic_bus_busy_time;
     m_busBusyCounter_ReadNewRank = m_basic_bus_busy_time;
@@ -531,8 +567,8 @@ void MemoryControl::executeCycle () {
   }
 
   // After time period expires, latch an indication that we need a refresh.
-  // Disable refresh if in memFixedDelay mode.
-  if (!m_memFixedDelay) m_refresh_count--;
+  // Disable refresh if in mem_fixed_delay mode.
+  if (!m_mem_fixed_delay) m_refresh_count--;
   if (m_refresh_count == 0) {
     m_refresh_count = m_refresh_period_system;
     assert (m_need_refresh < 10);  // Are we overrunning our ability to refresh?
@@ -553,7 +589,7 @@ void MemoryControl::executeCycle () {
   }
 
   // If randomness desired, re-randomize round-robin position each cycle
-  if (m_memRandomArbitrate) {
+  if (m_mem_random_arbitrate) {
     m_roundRobin = random() % m_total_banks;
   }
 
@@ -562,7 +598,7 @@ void MemoryControl::executeCycle () {
   // request and issue it.  Treat a refresh request as if it
   // were at the head of its bank queue.  After we issue something,
   // keep scanning the queues just to gather statistics about
-  // how many are waiting.  If in memFixedDelay mode, we can issue
+  // how many are waiting.  If in mem_fixed_delay mode, we can issue
   // more than one request per cycle.
 
   int queueHeads = 0;
@@ -573,7 +609,7 @@ void MemoryControl::executeCycle () {
     issueRefresh(m_roundRobin);
     int qs = m_bankQueues[m_roundRobin].size();
     if (qs > 1) {
-      g_system_ptr->getProfiler()->profileMemBankQ(qs-1);
+      g_system_ptr->getProfiler()->profileMemBankQ(m_name, qs-1);
     }
     if (qs > 0) {
       m_idleCount = IDLECOUNT_MAX_VALUE; // we're not idle if anything is queued
@@ -581,15 +617,15 @@ void MemoryControl::executeCycle () {
       if (queueReady(m_roundRobin)) {
         issueRequest(m_roundRobin);
         banksIssued++;
-        if (m_memFixedDelay) {
-          g_system_ptr->getProfiler()->profileMemWaitCycles(m_memFixedDelay);
+        if (m_mem_fixed_delay) {
+          g_system_ptr->getProfiler()->profileMemWaitCycles(m_name, m_mem_fixed_delay);
         }
       }
     }
   }
 
   // memWaitCycles is a redundant catch-all for the specific counters in queueReady
-  g_system_ptr->getProfiler()->profileMemWaitCycles(queueHeads - banksIssued);
+  g_system_ptr->getProfiler()->profileMemWaitCycles(m_name, queueHeads - banksIssued);
 
   // Check input queue and move anything to bank queues if not full.
   // Since this is done here at the end of the cycle, there will always
@@ -606,7 +642,7 @@ void MemoryControl::executeCycle () {
       m_input_queue.pop_front();
       m_bankQueues[bank].push_back(req);
     }
-    g_system_ptr->getProfiler()->profileMemInputQ(m_input_queue.size());
+    g_system_ptr->getProfiler()->profileMemInputQ(m_name, m_input_queue.size());
   }
 }
 

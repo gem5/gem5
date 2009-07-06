@@ -49,7 +49,7 @@ RubyEventQueue::RubyEventQueue()
 
 RubyEventQueue::~RubyEventQueue()
 {
-  // delete m_prio_heap_ptr;
+  delete m_prio_heap_ptr;
 }
 
 void RubyEventQueue::init()
@@ -91,7 +91,7 @@ void RubyEventQueue::triggerEvents(Time t)
     assert(thisNode.m_consumer_ptr != NULL);
     DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,*(thisNode.m_consumer_ptr));
     DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,thisNode.m_time);
-    thisNode.m_consumer_ptr->triggerWakeup();
+    thisNode.m_consumer_ptr->triggerWakeup(this);
   }
   m_globalTime = t;
 }
@@ -107,7 +107,7 @@ void RubyEventQueue::triggerAllEvents()
     assert(thisNode.m_consumer_ptr != NULL);
     DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,*(thisNode.m_consumer_ptr));
     DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,thisNode.m_time);
-    thisNode.m_consumer_ptr->triggerWakeup();
+    thisNode.m_consumer_ptr->triggerWakeup(this);
   }
 }
 

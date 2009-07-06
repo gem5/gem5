@@ -83,10 +83,13 @@ class Topology;
 class SimpleNetwork : public Network {
 public:
   // Constructors
-  SimpleNetwork(int nodes);
+  //  SimpleNetwork(int nodes);
+  SimpleNetwork(const string & name);
 
   // Destructor
   ~SimpleNetwork();
+
+  void init(const vector<string> & argv);
 
   // Public Methods
   void printStats(ostream& out) const;
@@ -130,14 +133,11 @@ private:
   Vector<Vector<MessageBuffer*> > m_toNetQueues;
   Vector<Vector<MessageBuffer*> > m_fromNetQueues;
 
-  int m_nodes;
-  int m_virtual_networks;
   Vector<bool> m_in_use;
   Vector<bool> m_ordered;
   Vector<Switch*> m_switch_ptr_vector;
   Vector<MessageBuffer*> m_buffers_to_free;
   Vector<Switch*> m_endpoint_switches;
-  Topology* m_topology_ptr;
 };
 
 // Output operator declaration

@@ -37,118 +37,150 @@
  */
 
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/common/Driver.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/config/RubyConfig.hh"
-#include "mem/protocol/Chip.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/gems_common/util.hh"
 
-DirectoryMemory::DirectoryMemory(Chip* chip_ptr, int version)
+int DirectoryMemory::m_num_directories = 0;
+int DirectoryMemory::m_num_directories_bits = 0;
+int DirectoryMemory::m_total_size_bytes = 0;
+
+DirectoryMemory::DirectoryMemory(const string & name)
+ : m_name(name)
 {
-  m_chip_ptr = chip_ptr;
-  m_version = version;
-  // THIS DOESN'T SEEM TO WORK -- MRM
-  // m_size = RubyConfig::memoryModuleBlocks()/RubyConfig::numberOfDirectory();
-  m_size = RubyConfig::memoryModuleBlocks();
-  assert(m_size > 0);
-  /*********************************************************************
-  // allocates an array of directory entry pointers & sets them to NULL
-  m_entries = new Directory_Entry*[m_size];
-  if (m_entries == NULL) {
-    ERROR_MSG("Directory Memory: unable to allocate memory.");
-  }
+}
 
-  for (int i=0; i < m_size; i++) {
-    m_entries[i] = NULL;
+void DirectoryMemory::init(const vector<string> & argv)
+{
+  m_controller = NULL;
+  for (vector<string>::const_iterator it = argv.begin(); it != argv.end(); it++) {
+    if ( (*it) == "version" )
+      m_version = atoi( (*(++it)).c_str() );
+    else if ( (*it) == "size_mb" ) {
+      m_size_bytes = atoi((*(++it)).c_str()) * (1<<20);
+      m_size_bits = log_int(m_size_bytes);
+    } else if ( (*it) == "controller" ) {
+      m_controller = RubySystem::getController((*(++it)));
+    } else
+      assert(0);
   }
-  */////////////////////////////////////////////////////////////////////
+  assert(m_controller != NULL);
+
+  m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
+  m_entries = new Directory_Entry*[m_num_entries];
+  for (int i=0; i < m_num_entries; i++)
+    m_entries[i] = NULL;
+
+  m_ram = g_system_ptr->getMemoryVector();
+
+  m_num_directories++;
+  m_num_directories_bits = log_int(m_num_directories);
+  m_total_size_bytes += m_size_bytes;
 }
 
 DirectoryMemory::~DirectoryMemory()
 {
-  /*********************************************************************
   // free up all the directory entries
-  for (int i=0; i < m_size; i++) {
-    if (m_entries[i] != NULL) {
-      delete m_entries[i];
-      m_entries[i] = NULL;
-    }
-  }
+  for (int i=0;i<m_num_entries;i++)
+    if (m_entries[i] != NULL)
+      delete m_entries;
+  if (m_entries != NULL)
+    delete [] m_entries;
+}
 
-  // free up the array of directory entries
-  delete[] m_entries;
-  *//////////////////////////////////////////////////////////////////////
-  m_entries.clear();
+void DirectoryMemory::printConfig(ostream& out) const
+{
+  out << "DirectoryMemory module config: " << m_name << endl;
+  out << "  controller: " << m_controller->getName() << endl;
+  out << "  version: " << m_version << endl;
+  out << "  memory_bits: " << m_size_bits << endl;
+  out << "  memory_size_bytes: " << m_size_bytes << endl;
+  out << "  memory_size_Kbytes: " << double(m_size_bytes) / (1<<10) << endl;
+  out << "  memory_size_Mbytes: " << double(m_size_bytes) / (1<<20) << endl;
+  out << "  memory_size_Gbytes: " << double(m_size_bytes) / (1<<30) << endl;
 }
 
 // Static method
-void DirectoryMemory::printConfig(ostream& out)
+void DirectoryMemory::printGlobalConfig(ostream & out)
 {
-  out << "Memory config:" << endl;
-  out << "  memory_bits: " << RubyConfig::memorySizeBits() << endl;
-  out << "  memory_size_bytes: " << RubyConfig::memorySizeBytes() << endl;
-  out << "  memory_size_Kbytes: " << double(RubyConfig::memorySizeBytes()) / (1<<10) << endl;
-  out << "  memory_size_Mbytes: " << double(RubyConfig::memorySizeBytes()) / (1<<20) << endl;
-  out << "  memory_size_Gbytes: " << double(RubyConfig::memorySizeBytes()) / (1<<30) << endl;
+  out << "DirectoryMemory Global Config: " << endl;
+  out << "  number of directory memories: " << m_num_directories << endl;
+  if (m_num_directories > 1) {
+    out << "  number of selection bits: " << m_num_directories_bits << endl;
+    out << "  selection bits: " << RubySystem::getBlockSizeBits()+m_num_directories_bits-1
+        << "-" << RubySystem::getBlockSizeBits() << endl;
+  }
+  out << "  total memory size bytes: " << m_total_size_bytes << endl;
+  out << "  total memory size bits: " << log_int(m_total_size_bytes) << endl;
 
-  out << "  module_bits: " << RubyConfig::memoryModuleBits() << endl;
-  out << "  module_size_lines: " << RubyConfig::memoryModuleBlocks() << endl;
-  out << "  module_size_bytes: " << RubyConfig::memoryModuleBlocks() * RubyConfig::dataBlockBytes() << endl;
-  out << "  module_size_Kbytes: " << double(RubyConfig::memoryModuleBlocks() * RubyConfig::dataBlockBytes()) / (1<<10) << endl;
-  out << "  module_size_Mbytes: " << double(RubyConfig::memoryModuleBlocks() * RubyConfig::dataBlockBytes()) / (1<<20) << endl;
+}
+
+int DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
+{
+  if (m_num_directories_bits == 0) return 0;
+  int ret = address.bitSelect(RubySystem::getBlockSizeBits(),
+                              RubySystem::getBlockSizeBits()+m_num_directories_bits-1);
+  return ret;
 }
 
 // Public method
 bool DirectoryMemory::isPresent(PhysAddress address)
 {
-  return (map_Address_to_DirectoryNode(address) == m_chip_ptr->getID()*RubyConfig::numberOfDirectoryPerChip()+m_version);
+  bool ret = (mapAddressToDirectoryVersion(address) == m_version);
+  return ret;
 }
 
-void DirectoryMemory::readPhysMem(uint64 address, int size, void * data)
+int DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
 {
+  int ret = address.getAddress() >> (RubySystem::getBlockSizeBits() + m_num_directories_bits);
+  return ret;
 }
 
+Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
+{
+  assert(isPresent(address));
+  Directory_Entry* entry;
+  int idx = mapAddressToLocalIdx(address);
+  entry = m_entries[idx];
+  if (entry == NULL) {
+    entry = new Directory_Entry;
+    entry->getDataBlk().assign(m_ram->getBlockPtr(address));
+    m_entries[idx] = entry;
+  }
+  return (*entry);
+}
+/*
 Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
 {
   assert(isPresent(address));
   Index index = address.memoryModuleIndex();
 
   if (index < 0 || index > m_size) {
-    WARN_EXPR(m_chip_ptr->getID());
     WARN_EXPR(address.getAddress());
     WARN_EXPR(index);
     WARN_EXPR(m_size);
     ERROR_MSG("Directory Memory Assertion: accessing memory out of range.");
   }
-
-  map<Index, Directory_Entry*>::iterator iter =  m_entries.find(index);
-  Directory_Entry* entry = m_entries.find(index)->second;
+  Directory_Entry* entry = m_entries[index];
 
   // allocate the directory entry on demand.
-  if (iter == m_entries.end()) {
+  if (entry == NULL) {
     entry = new Directory_Entry;
+    entry->getDataBlk().assign(m_ram->getBlockPtr(address));
 
-    //    entry->getProcOwner() = m_chip_ptr->getID(); // FIXME - This should not be hard coded
-    //    entry->getDirOwner() = true;        // FIXME - This should not be hard-coded
-
-    // load the data from physicalMemory when first initalizing
-    physical_address_t physAddr = address.getAddress();
-    int8 * dataArray = (int8 * )malloc(RubyConfig::dataBlockBytes() * sizeof(int8));
-    readPhysMem(physAddr, RubyConfig::dataBlockBytes(), dataArray);
-
-    for(int j=0; j < RubyConfig::dataBlockBytes(); j++) {
-      entry->getDataBlk().setByte(j, dataArray[j]);
-    }
-    DEBUG_EXPR(NODE_COMP, MedPrio,entry->getDataBlk());
     // store entry to the table
-    m_entries.insert(make_pair(index, entry));
+    m_entries[index] = entry;
   }
+
   return (*entry);
 }
+*/
 
-/*
 void DirectoryMemory::invalidateBlock(PhysAddress address)
 {
+  /*
   assert(isPresent(address));
 
   Index index = address.memoryModuleIndex();
@@ -161,16 +193,11 @@ void DirectoryMemory::invalidateBlock(PhysAddress address)
     delete m_entries[index];
     m_entries[index] = NULL;
   }
-
+  */
 }
-*/
 
 void DirectoryMemory::print(ostream& out) const
 {
-  out << "Directory dump: " << endl;
-  for(map<Index, Directory_Entry*>::const_iterator it = m_entries.begin(); it != m_entries.end(); ++it) {
-      out << it->first << ": ";
-      out << *(it->second) << endl;
-  }
+
 }
 

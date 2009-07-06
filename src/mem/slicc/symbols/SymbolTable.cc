@@ -27,6 +27,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * SymbolTable.cc
+ *
+ * Description: See SymbolTable.hh
+ *
+ * $Id$
+ *
+ * */
+
 #include "mem/slicc/symbols/SymbolTable.hh"
 #include "mem/slicc/generator/fileio.hh"
 #include "mem/slicc/generator/html_gen.hh"
@@ -163,7 +172,7 @@ void SymbolTable::writeCFiles(string path) const
 {
   int size = m_sym_vec.size();
   {
-    // Write the mem/protocol/Types.hh include file for the types
+    // Write the Types.hh include file for the types
     ostringstream sstr;
     sstr << "/** Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< " */" << endl;
     sstr << endl;
@@ -182,685 +191,69 @@ void SymbolTable::writeCFiles(string path) const
     m_sym_vec[i]->writeCFiles(path + '/');
   }
 
-  writeChipFiles(path);
+  writeControllerFactory(path);
 }
 
-void SymbolTable::writeChipFiles(string path) const
+void SymbolTable::writeControllerFactory(string path) const
 {
-  // Create Chip.cc and mem/protocol/Chip.hh
-
-  // FIXME - Note: this method is _really_ ugly.  Most of this
-  // functionality should be pushed into each type of symbol and use
-  // virtual methods to get the right behavior for each type of
-  // symbol.  This is also more flexible, and much cleaner.
-
+  ostringstream sstr;
   int size = m_sym_vec.size();
 
-  // Create Chip.h
-  {
-    ostringstream sstr;
-    sstr << "/** \\file Chip.h " << endl;
-    sstr << "  * Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<<endl;
-    sstr << "  */ " <<endl<<endl;
+  sstr << "/** \\file ControllerFactory.hh " << endl;
+  sstr << "  * Auto generatred C++ code started by " << __FILE__ << ":" << __LINE__ << endl;
+  sstr << "  */" << endl << endl;
 
-    sstr << "#ifndef CHIP_H" << endl;
-    sstr << "#define CHIP_H" << endl;
-    sstr << endl;
+  sstr << "#ifndef CONTROLLERFACTORY_H" << endl;
+  sstr << "#define CONTROLLERFACTORY_H" << endl;
+  sstr << endl;
 
-    // Includes
-    sstr << "#include \"mem/ruby/common/Global.hh\"" << endl;
-    sstr << "#include \"mem/protocol/Types.hh\"" << endl;
-    sstr << "#include \"mem/ruby/slicc_interface/AbstractChip.hh\"" << endl;
-    sstr << "class Network;" << endl;
-    sstr << endl;
+  Vector< string > controller_types;
 
-    // Class declarations for all Machines/Controllers
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        sstr << "class " << machine->getIdent() << "_Controller;" << endl;
-      }
+  // includes
+  sstr << "#include <string>" << endl;
+  sstr << "class Network;" << endl;
+  sstr << "class AbstractController;" << endl;
+  sstr << endl;
+
+  sstr << "class ControllerFactory {" << endl;
+  sstr << "public:" << endl;
+  sstr << "  static AbstractController* createController(const std::string & controller_type, const std::string & name);" << endl;
+  sstr << "};" << endl;
+  sstr << endl;
+
+  sstr << "#endif // CONTROLLERFACTORY_H" << endl;
+  conditionally_write_file(path + "/ControllerFactory.hh", sstr);
+
+  // ControllerFactory.cc file
+
+  sstr.str("");
+
+  sstr << "/** \\file ControllerFactory.cc " << endl;
+  sstr << "  * Auto generatred C++ code started by " << __FILE__ << ":" << __LINE__ << endl;
+  sstr << "  */" << endl << endl;
+
+  // includes
+  sstr << "#include \"mem/protocol/ControllerFactory.hh\"" << endl;
+  sstr << "#include \"mem/ruby/slicc_interface/AbstractController.hh\"" << endl;
+  sstr << "#include \"mem/protocol/MachineType.hh\"" << endl;
+  for(int i=0; i<size; i++) {
+    StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
+    if (machine != NULL) {
+      sstr << "#include \"mem/protocol/" << machine->getIdent() << "_Controller.hh\"" << endl;
+      controller_types.insertAtBottom(machine->getIdent());
     }
-
-    sstr << "class Chip : public AbstractChip {" << endl;
-    sstr << "public:" << endl;
-    sstr << endl;
-    sstr << "  // Constructors" << endl;
-    sstr << "  Chip(NodeID chip_number, Network* net_ptr);" << endl;
-    sstr << endl;
-    sstr << "  // Destructor" << endl;
-    sstr << "  ~Chip();" << endl;
-    sstr << endl;
-    sstr << "  // Public Methods" << endl;
-    sstr << "  void recordCacheContents(CacheRecorder& tr) const;" << endl;
-    sstr << "  void dumpCaches(ostream& out) const;" << endl;
-    sstr << "  void dumpCacheData(ostream& out) const;" << endl;
-    sstr << "  static void printStats(ostream& out);" << endl;
-    sstr << "  static void clearStats();" << endl;
-    sstr << "  void printConfig(ostream& out);" << endl;
-    sstr << "  void print(ostream& out) const;" << endl;
-
-    // Used by coherence checker
-    sstr << "#ifdef CHECK_COHERENCE" << endl;
-    sstr << "  bool isBlockShared(const Address& addr) const;" << endl;
-    sstr << "  bool isBlockExclusive(const Address& addr) const;" << endl;
-    sstr << "#endif /* CHECK_COHERENCE */" << endl;
-
-    sstr << endl;
-    sstr << "private:" << endl;
-    sstr << "  // Private copy constructor and assignment operator" << endl;
-    sstr << "  Chip(const Chip& obj);" << endl;
-    sstr << "  Chip& operator=(const Chip& obj);" << endl;
-    sstr << endl;
-    sstr << "public: // FIXME - these should not be public" << endl;
-    sstr << "  // Data Members (m_ prefix)" << endl;
-    sstr << endl;
-    sstr << "  Chip* m_chip_ptr;" << endl;
-    sstr << endl;
-    sstr << "  // SLICC object variables" << endl;
-    sstr << endl;
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->existPair("chip_object")) {
-          if (var->existPair("no_chip_object")) {
-            // Do nothing
-          } else {
-            string template_hack = "";
-            if (var->existPair("template_hack")) {
-              template_hack = var->lookupPair("template_hack");
-            }
-            if (// var->existPair("network") || var->getType()->existPair("cache") ||
-//                 var->getType()->existPair("tbe") || var->getType()->existPair("newtbe") ||
-//                 var->getType()->existPair("dir") || var->getType()->existPair("persistent") ||
-//                 var->getType()->existPair("filter") || var->getType()->existPair("timer") ||
-//                 var->existPair("trigger_queue")
-                var->existPair("no_vector")
-                ) {
-              sstr << "  " << var->getType()->cIdent() << template_hack << "* m_"
-                   << var->cIdent() << "_ptr;" << endl;
-            } else {
-              // create pointer except those created in AbstractChip
-              if (!(var->existPair("abstract_chip_ptr"))) {
-                sstr << "  Vector < " << var->getType()->cIdent() << template_hack
-                     << "* >  m_" << var->cIdent() << "_vec;" << endl;
-              }
-            }
-          }
-        }
-      }
-    }
-
-    sstr << endl;
-    sstr << "  // SLICC machine/controller variables" << endl;
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  Vector < " << ident << "* > m_" << ident << "_vec;\n";
-      }
-    }
-
-    sstr << endl;
-
-    sstr << "  // machine external SLICC function decls\n";
-
-    // Look at all 'Functions'
-    for(int i=0; i<size; i++) {
-      Func* func = dynamic_cast<Func*>(m_sym_vec[i]);
-      if (func != NULL) {
-        string proto;
-        func->funcPrototype(proto);
-        if (proto != "") {
-          sstr << "  " << proto;
-        }
-      }
-    }
-
-    sstr << "};" << endl;
-    sstr << endl;
-    sstr << "#endif // CHIP_H" << endl;
-
-    conditionally_write_file(path + "/Chip.hh", sstr);
   }
-  // Create Chip.cc
-  {
-    ostringstream sstr;
-    sstr << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<<endl<<endl;
-    sstr << "#include \"mem/protocol/Chip.hh\"" << endl;
-    sstr << "#include \"mem/ruby/network/Network.hh\"" << endl;
-    sstr << "#include \"mem/ruby/recorder/CacheRecorder.hh\"" << endl;
-    sstr << "" << endl;
+  sstr << endl;
 
-    sstr << "// Includes for controllers" << endl;
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        sstr << "#include \"mem/protocol/" << machine->getIdent() << "_Controller.hh\"" << endl;
-      }
-    }
-
-    sstr << "" << endl;
-    sstr << "Chip::Chip(NodeID id, Network* net_ptr):AbstractChip(id, net_ptr)" << endl;
-    sstr << "{" << endl;
-    sstr << "  m_chip_ptr = this;" << endl;
-
-    // FIXME - WHY IS THIS LOOP HERE?
-    // WE SEEM TO BE CREATING A SEQUENCER HERE THEN OVERWRITTING THAT INSTANITATION
-    // IN THE NEXT LOOP
-//     // find sequencer's type
-//     for(int i=0; i<size; i++) {
-//       Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-//       if(var && var->cIdent() == "sequencer")
-//         sstr << "  m_sequencer_ptr = new " << var->getType()->cIdent() << "(this);\n";
-//     }
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL && var->existPair("chip_object") && !var->existPair("no_chip_object")) {
-
-        sstr << "  // " << var->cIdent() << endl;
-        if (!var->existPair("network")) {
-          // Not a network port object
-          if (var->getType()->existPair("primitive")) {
-            // Normal non-object
-            // sstr << "  m_" << var->cIdent() << "_ptr = new " << var->getType()->cIdent() << ";\n";
-
-              sstr << "  m_" << var->cIdent();
-              sstr << "_vec.setSize(RubyConfig::numberOf";
-              sstr << var->getMachine()->getIdent() << "PerChip(m_id));" << endl;
-              sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-                   << "PerChip(m_id); i++)  {" << endl;
-              sstr << "    m_" << var->cIdent() << "_vec[i] = new " << var->getType()->cIdent() << ";\n";
-              if (var->existPair("default")) {
-                sstr << "    *(m_" << var->cIdent() << "_vec[i]) = " << var->lookupPair("default") << ";\n";
-              }
-              sstr << "  }\n";
-
-          } else {
-
-            // Normal Object
-            string template_hack = "";
-            if (var->existPair("template_hack")) {
-              template_hack = var->lookupPair("template_hack");
-            }
-            if (// var->getType()->existPair("cache") || var->getType()->existPair("tbe") ||
-//                 var->getType()->existPair("newtbe") || var->getType()->existPair("timer") ||
-//                 var->getType()->existPair("dir") || var->getType()->existPair("persistent") ||
-//                 var->getType()->existPair("filter") || var->existPair("trigger_queue")
-                var->existPair("no_vector")) {
-              sstr << "  m_" << var->cIdent() << "_ptr = new " << var->getType()->cIdent() << template_hack;
-              if (!var->getType()->existPair("non_obj") && (!var->getType()->isEnumeration())) {
-                if (var->existPair("constructor_hack")) {
-                  string constructor_hack = var->lookupPair("constructor_hack");
-                  sstr << "(this, " << constructor_hack << ")";
-                } else {
-                  sstr << "(this)";
-                }
-              }
-              sstr << ";\n";
-              sstr << "  assert(m_" << var->cIdent() << "_ptr != NULL);" << endl;
-
-              if (var->existPair("default")) {
-                sstr << "  (*m_" << var->cIdent() << "_ptr) = " << var->lookupPair("default")
-                     << "; // Object default" << endl;
-              } else if (var->getType()->hasDefault()) {
-                sstr << "  (*m_" << var->cIdent() << "_ptr) = " << var->getType()->getDefault()
-                     << "; // Type " << var->getType()->getIdent() << " default" << endl;
-              }
-
-              // Set ordering
-              if (var->existPair("ordered") && !var->existPair("trigger_queue")) {
-                // A buffer
-                string ordered =  var->lookupPair("ordered");
-                sstr << "  m_" << var->cIdent() << "_ptr->setOrdering(" << ordered << ");\n";
-              }
-
-              // Set randomization
-              if (var->existPair("random")) {
-                // A buffer
-                string value =  var->lookupPair("random");
-                sstr << "  m_" << var->cIdent() << "_ptr->setRandomization(" << value << ");\n";
-              }
-
-              // Set Priority
-              if (var->getType()->isBuffer() && var->existPair("rank") && !var->existPair("trigger_queue")) {
-                string rank =  var->lookupPair("rank");
-                sstr << "  m_" << var->cIdent() << "_ptr->setPriority(" << rank << ");\n";
-              }
-            } else if ((var->getType()->existPair("mover")) && (var->getMachine()->getIdent() == "L2Cache")) {
-              // FIXME - dnuca mover is a special case
-              sstr << "  m_" << var->cIdent() << "_ptr = NULL;" << endl;
-              sstr << "  if (RubyConfig::isL2CacheDNUCAMoverChip(m_id))  {" << endl;
-              sstr << "    m_" << var->cIdent() << "_ptr = new " << var->getType()->cIdent() << template_hack;
-              if (!var->getType()->existPair("non_obj") && (!var->getType()->isEnumeration())) {
-                if (var->existPair("constructor_hack")) {
-                  string constructor_hack = var->lookupPair("constructor_hack");
-                  sstr << "(this, " << constructor_hack << ")";
-                } else {
-                  sstr << "(this)";
-                }
-              }
-              sstr << ";\n";
-              sstr << "  }\n";
-            } else if (var->getType()->existPair("mover") && ((var->getMachine()->getIdent() == "L1Cache") || (var->getMachine()->getIdent() == "Collector"))) {
-              sstr << "  m_" << var->cIdent() << "_ptr = NULL;" << endl;
-              sstr << "  \n";
-            } else {
-              sstr << "  m_" << var->cIdent();
-              sstr << "_vec.setSize(RubyConfig::numberOf";
-              sstr << var->getMachine()->getIdent() << "PerChip(m_id));" << endl;
-              sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-                   << "PerChip(m_id); i++)  {" << endl;
-
-
-              ostringstream tail;
-              tail << template_hack;
-              if (!var->getType()->existPair("non_obj") && (!var->getType()->isEnumeration())) {
-                if (var->existPair("constructor_hack")) {
-                  string constructor_hack = var->lookupPair("constructor_hack");
-                  tail << "(this, " << constructor_hack << ")";
-                } else {
-                  tail << "(this)";
-                }
-              }
-              tail << ";\n";
-
-
-              if(var->existPair("child_selector")){
-                string child_selector = var->lookupPair("child_selector");
-                string child_types = var->lookupPair("child_types");
-                string::iterator it = child_types.begin();
-
-                unsigned num_types = 0;
-                for(unsigned t=0;t<child_types.size();t++){
-                  if(child_types.at(t) == '<'){
-                    num_types++;
-                  }
-                }
-
-                string* types = new string[num_types];
-                string* ids = new string[num_types];
-                int type_idx = 0;
-                bool id_done = false;
-                for(unsigned t=0;t<child_types.size();t++){
-                  if(child_types[t] == '<'){
-                    id_done = false;
-                    unsigned r;
-                    for(r=t+1;child_types.at(r)!='>';r++){
-                      if(r == child_types.size()){
-                        cerr << "Parse error in child_types" << endl;
-                        exit(EXIT_FAILURE);
-                      }
-                      if(child_types.at(r) == ' ') continue;  //ignore whitespace
-                      if(child_types.at(r) == ',') {id_done = true;continue;}
-                      if(id_done == true)
-                        types[type_idx].push_back(child_types.at(r));
-                      else
-                        ids[type_idx].push_back(child_types.at(r));
-                    }
-                    type_idx++;
-                    t = r;
-                  }
-                }
-
-                for(unsigned t=0;t<num_types;t++){
-                  if(t==0)
-                    sstr << "    if(strcmp(" << child_selector << ", \"" << ids[t] << "\") == 0)" << endl;
-                  else
-                    sstr << "    else if(strcmp(" << child_selector << ", \"" << ids[t] << "\") == 0)" << endl;
-                  sstr << "      m_" << var->cIdent() << "_vec[i] = new " << types[t] << tail.str() << endl;
-                }
-              }
-              else {
-                sstr << "    m_" << var->cIdent() << "_vec[i] = new " << var->getType()->cIdent() << tail.str() << endl;
-              }
-
-              sstr << "    assert(m_" << var->cIdent() << "_vec[i] != NULL);" << endl;
-              if (var->existPair("ordered")) {
-                string ordered =  var->lookupPair("ordered");
-                sstr << "    m_" << var->cIdent() << "_vec[i]->setOrdering(" << ordered << ");\n";
-              }
-              if (var->existPair("rank")) {
-                string rank =  var->lookupPair("rank");
-                sstr << "    m_" << var->cIdent() << "_vec[i]->setPriority(" << rank << ");\n";
-              }
-
-              // Set buffer size
-              if (var->getType()->isBuffer() && !var->existPair("infinite")) {
-                sstr << "    if (FINITE_BUFFERING) {\n";
-                sstr << "      m_" << var->cIdent() << "_vec[i]->setSize(PROCESSOR_BUFFER_SIZE);\n";
-                sstr << "    }\n";
-              }
-
-              sstr << "  }\n";
-            }
-          }
-
-          sstr << endl;
-
-        } else {
-          // Network port object
-          string network = var->lookupPair("network");
-          string ordered =  var->lookupPair("ordered");
-          string vnet =  var->lookupPair("virtual_network");
-
-          if (var->getMachine() != NULL) {
-            sstr << "  m_" << var->cIdent() << "_vec.setSize(RubyConfig::numberOf"
-                 << var->getMachine()->getIdent() << "PerChip(m_id));" << endl;
-            sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-                 << "PerChip(m_id); i++)  {" << endl;
-            sstr << "    m_" << var->cIdent() << "_vec[i] = m_net_ptr->get"
-                 << network << "NetQueue(i+m_id*RubyConfig::numberOf" <<var->getMachine()->getIdent()
-                 << "PerChip()+MachineType_base_number(string_to_MachineType(\""
-                 << var->getMachine()->getIdent() << "\")), "
-                 << ordered << ", " << vnet << ");\n";
-            sstr << "    assert(m_" << var->cIdent() << "_vec[i] != NULL);" << endl;
-          } else { // old protocol
-            sstr << "  m_" << var->cIdent() << "_vec.setSize(1);" << endl;
-            sstr << "  for (int i = 0; i < 1; i++)  {" << endl;
-            sstr << "    m_" << var->cIdent() << "_vec[i] = m_net_ptr->get"
-                 << network << "NetQueue(m_id, "
-                 << ordered << ", " << vnet << ");\n";
-            sstr << "    assert(m_" << var->cIdent() << "_vec[i] != NULL);" << endl;
-          }
-
-          // Set ordering
-          if (var->existPair("ordered")) {
-            // A buffer
-            string ordered =  var->lookupPair("ordered");
-            sstr << "    m_" << var->cIdent() << "_vec[i]->setOrdering(" << ordered << ");\n";
-          }
-
-          // Set randomization
-          if (var->existPair("random")) {
-            // A buffer
-            string value =  var->lookupPair("random");
-            sstr << "    m_" << var->cIdent() << "_vec[i]->setRandomization(" << value << ");\n";
-          }
-
-          // Set Priority
-          if (var->existPair("rank")) {
-            string rank =  var->lookupPair("rank");
-            sstr << "    m_" << var->cIdent() << "_vec[i]->setPriority(" << rank << ");\n";
-          }
-
-          // Set buffer size
-          if (var->getType()->isBuffer()) {
-            sstr << "    if (FINITE_BUFFERING) {\n";
-            sstr << "      m_" << var->cIdent() << "_vec[i]->setSize(PROTOCOL_BUFFER_SIZE);\n";
-            sstr << "    }\n";
-          }
-
-          sstr << "  }\n";
-        }
-      }
-    }
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  m_" << ident << "_vec.setSize(RubyConfig::numberOf" << machine->getIdent()
-             << "PerChip(m_id));" << endl;
-        sstr << "  for (int i = 0; i < RubyConfig::numberOf" << machine->getIdent()
-             << "PerChip(m_id); i++)  {" << endl;
-        sstr << "    m_" << ident << "_vec[i] = new " << ident << "(this, i);\n";
-        sstr << "    assert(m_" << ident << "_vec[i] != NULL);" << endl;
-        sstr << "  }\n";
-        sstr << endl;
-      }
-    }
-
-    sstr << "}" << endl;
-    sstr << endl;
-    sstr << "Chip::~Chip()\n";
-    sstr << "{\n";
-
-//     // FIXME: sequencer shouldn' be manually handled
-//     sstr << "  delete m_sequencer_ptr;" << endl;
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->existPair("chip_object")) {
-          if (var->existPair("no_chip_object")) {
-            // Do nothing
-          } else {
-            string template_hack = "";
-            if (var->existPair("template_hack")) {
-              template_hack = var->lookupPair("template_hack");
-            }
-            if (// var->getType()->existPair("cache") || var->getType()->existPair("tbe") ||
-//                 var->getType()->existPair("newtbe") || var->getType()->existPair("timer") ||
-//                 var->getType()->existPair("dir") || var->getType()->existPair("persistent") ||
-//                 var->getType()->existPair("filter") || var->existPair("trigger_queue")
-                var->existPair("no_vector")) {
-              sstr << "  delete m_" << var->cIdent() << "_ptr;\n";
-            } else if ((var->getType()->existPair("mover")) && (var->getMachine()->getIdent() == "L2Cache")) {
-              sstr << "  if (RubyConfig::isL2CacheDNUCAMoverChip(m_id))  {" << endl;
-              sstr << "    delete m_" << var->cIdent() << "_ptr;\n";
-              sstr << "  }\n";
-            } else if (var->getType()->existPair("mover") && ((var->getMachine()->getIdent() == "L1Cache") || (var->getMachine()->getIdent() == "Collector"))) {
-              sstr << "  m_" << var->cIdent() << "_ptr = NULL;" << endl;
-            } else if (!var->existPair("network")) {
-              // Normal Object
-              sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-                   << "PerChip(m_id); i++)  {" << endl;
-              sstr << "    delete m_" << var->cIdent() << "_vec[i];\n";
-              sstr << "  }\n";
-            }
-          }
-        }
-      }
-    }
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  for (int i = 0; i < RubyConfig::numberOf" << machine->getIdent()
-             << "PerChip(m_id); i++)  {" << endl;
-        sstr << "    delete m_" << ident << "_vec[i];\n";
-        sstr << "  }\n";
-      }
-    }
-    sstr << "}\n";
-
-    sstr << "\n";
-    sstr << "void Chip::clearStats()\n";
-    sstr << "{\n";
-
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  " << ident << "::clearStats();\n";
-      }
-    }
-
-    sstr << "}\n";
-
-    sstr << "\n";
-    sstr << "void Chip::printStats(ostream& out)\n";
-    sstr << "{\n";
-    sstr << "  out << endl;\n";
-    sstr << "  out << \"Chip Stats\" << endl;\n";
-    sstr << "  out << \"----------\" << endl << endl;\n";
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  " << ident << "::dumpStats(out);\n";
-      }
-    }
-
-    sstr << "}" << endl;
-    sstr << endl;
-    sstr << "void Chip::printConfig(ostream& out)\n";
-    sstr << "{\n";
-    sstr << "  out << \"Chip Config\" << endl;\n";
-    sstr << "  out << \"-----------\" << endl;\n";
-    sstr << "  out << \"Total_Chips: \" << RubyConfig::numberOfChips() << endl;\n";
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->existPair("chip_object")) {
-          if (var->existPair("no_chip_object")) {
-            // Do nothing
-          } else {
-            string template_hack = "";
-            if (var->existPair("template_hack")) {
-              template_hack = var->lookupPair("template_hack");
-            }
-
-            if (!var->existPair("network") && (!var->getType()->existPair("primitive"))) {
-              // Normal Object
-              if (!var->getType()->existPair("non_obj") && (!var->getType()->isEnumeration())) {
-                if (var->existPair("no_vector")) {
-                  sstr << "  m_" << var->cIdent() << "_ptr->printConfig(out);\n";
-                } else {
-                  sstr << "  out << \"\\n" << var->cIdent() << " numberPerChip: \" << RubyConfig::numberOf" << var->getMachine()->getIdent()
-                       << "PerChip() << endl;\n";
-                  sstr << "  m_" << var->cIdent() << "_vec[0]->printConfig(out);\n";
-//                   sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-//                        << "PerChip(m_id); i++)  {" << endl;
-//                   sstr << "    m_" << var->cIdent() << "_vec[i]->printConfig(out);\n";
-//                   sstr << "  }\n";
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
-    sstr << "  out << endl;\n";
-    sstr << "}" << endl;
-
-    sstr << endl;
-    sstr << "void Chip::print(ostream& out) const\n";
-    sstr << "{\n";
-    sstr << "  out << \"Ruby Chip\" << endl;\n";
-    sstr << "}" << endl;
-
-    sstr << "#ifdef CHECK_COHERENCE" << endl;
-    sstr << endl;
-    sstr << "bool Chip::isBlockShared(const Address& addr) const" << endl;
-    sstr << "{" << endl;
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  for (int i = 0; i < RubyConfig::numberOf" << machine->getIdent()
-             << "PerChip(m_id); i++)  {" << endl;
-        sstr << "    if (m_" << ident << "_vec[i]->" << machine->getIdent() << "_isBlockShared(addr)) {\n";
-        sstr << "      return true; \n";
-        sstr << "    }\n";
-        sstr << "  }\n";
-      }
-    }
-    sstr << "  return false;" << endl;
-    sstr << "}" << endl;
-    sstr << endl;
-
-    sstr << endl;
-    sstr << "bool Chip::isBlockExclusive(const Address& addr) const" << endl;
-    sstr << "{" << endl;
-
-    // Look at all 'Machines'
-    for(int i=0; i<size; i++) {
-      StateMachine* machine = dynamic_cast<StateMachine*>(m_sym_vec[i]);
-      if (machine != NULL) {
-        string ident = machine->getIdent() + "_Controller";
-        sstr << "  for (int i = 0; i < RubyConfig::numberOf" << machine->getIdent()
-             << "PerChip(m_id); i++)  {" << endl;
-        sstr << "    if (m_" << ident << "_vec[i]->" << machine->getIdent() << "_isBlockExclusive(addr)) {\n";
-        sstr << "      return true; \n";
-        sstr << "    }\n";
-        sstr << "  }\n";
-      }
-    }
-
-    sstr << "  return false;" << endl;
-    sstr << "}" << endl;
-    sstr << endl;
-
-    sstr << "#endif /* CHECK_COHERENCE */ " << endl;
-
-
-    sstr << endl;
-    sstr << "void Chip::dumpCaches(ostream& out) const" << endl;
-    sstr << "{" << endl;
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->getType()->existPair("cache")){  // caches are partitioned one per controller instaniation
-          sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-               << "PerChip(m_id); i++)  {" << endl;
-          sstr << "    m_" << var->cIdent() << "_vec[i]->print(out);\n";
-          sstr << "  }\n";
-        }
-      }
-    }
-    sstr << "}" << endl;
-    sstr << endl;
-
-    // Function to dump cache tag and data information
-    sstr << "void Chip::dumpCacheData(ostream& out) const" << endl;
-    sstr << "{" << endl;
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->getType()->existPair("cache")){  // caches are partitioned one per controller instaniation
-          sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-               << "PerChip(m_id); i++)  {" << endl;
-          sstr << "    m_" << var->cIdent() << "_vec[i]->printData(out);\n";
-          sstr << "  }\n";
-        }
-      }
-    }
-    sstr << "}" << endl;
-    sstr << endl;
-
-    sstr << "void Chip::recordCacheContents(CacheRecorder& tr) const" << endl;
-    sstr << "{" << endl;
-
-    // Look at all 'Vars'
-    for(int i=0; i<size; i++) {
-      Var* var = dynamic_cast<Var*>(m_sym_vec[i]);
-      if (var != NULL) {
-        if (var->getType()->existPair("cache")){  // caches are partitioned one per controller instaniation
-          sstr << "  for (int i = 0; i < RubyConfig::numberOf" << var->getMachine()->getIdent()
-               << "PerChip(m_id); i++)  {" << endl;
-          sstr << "    m_" << var->cIdent() << "_vec[i]->recordCacheContents(tr);\n";
-          sstr << "  }\n";
-        }
-      }
-    }
-    sstr << "}" << endl;
-
-    conditionally_write_file(path + "/Chip.cc", sstr);
+  sstr << "AbstractController* ControllerFactory::createController(const std::string & controller_type, const std::string & name) {" << endl;
+  for (int i=0;i<controller_types.size();i++) {
+    sstr << "    if (controller_type == \"" << controller_types[i] << "\")" << endl;
+    sstr << "      return new " << controller_types[i] << "_Controller(name);" << endl;
   }
+  sstr << "  assert(0); // invalid controller type" << endl;
+  sstr << "  return NULL;" << endl;
+  sstr << "}" << endl;
+  conditionally_write_file(path + "/ControllerFactory.cc", sstr);
 }
 
 Vector<StateMachine*> SymbolTable::getStateMachines() const

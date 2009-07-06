@@ -41,13 +41,17 @@
 
 MachineAST::MachineAST(string* ident_ptr,
                        PairListAST* pairs_ptr,
+                       Vector<TypeFieldAST*>* config_params_ptr,
+                       std::vector<std::string*>* latency_vector,
                        DeclListAST* decl_list_ptr)
 
   : DeclAST(pairs_ptr)
 {
   m_ident_ptr = ident_ptr;
   m_pairs_ptr = pairs_ptr;
+  m_config_params_ptr = config_params_ptr;
   m_decl_list_ptr = decl_list_ptr;
+  m_latency_vector = latency_vector;
 }
 
 MachineAST::~MachineAST()
@@ -65,7 +69,7 @@ void MachineAST::generate()
   g_sym_table.pushFrame();
 
   // Create a new machine
-  machine_ptr = new StateMachine(*m_ident_ptr, getLocation(), getPairs());
+  machine_ptr = new StateMachine(*m_ident_ptr, getLocation(), getPairs(), m_latency_vector);
   g_sym_table.newCurrentMachine(machine_ptr);
 
   // Generate code for all the internal decls

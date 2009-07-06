@@ -42,6 +42,7 @@
 #include "mem/slicc/slicc_global.hh"
 #include "mem/slicc/ast/DeclAST.hh"
 #include "mem/slicc/ast/DeclListAST.hh"
+#include "mem/slicc/ast/TypeFieldAST.hh"
 #include "mem/slicc/symbols/StateMachine.hh"
 
 class MachineAST : public DeclAST {
@@ -49,6 +50,8 @@ public:
   // Constructors
   MachineAST(string* ident_ptr,
              PairListAST* pairs_ptr,
+             Vector<TypeFieldAST*>* config_params_ptr,
+             std::vector<std::string*>* latency_vector,
              DeclListAST* decl_list_ptr);
 
   // Destructor
@@ -66,8 +69,10 @@ private:
   MachineAST& operator=(const MachineAST& obj);
 
   // Data Members (m_ prefix)
+  std::vector<std::string*>* m_latency_vector;
   string* m_ident_ptr;
   DeclListAST* m_decl_list_ptr;
+  Vector<TypeFieldAST*>* m_config_params_ptr;
   PairListAST* m_pairs_ptr;
 };
 

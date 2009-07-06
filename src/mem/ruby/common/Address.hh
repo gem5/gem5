@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 1999 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -26,12 +27,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * $Id$
+ */
+
 #ifndef ADDRESS_H
 #define ADDRESS_H
 
 #include <iomanip>
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/MachineID.hh"
 
@@ -63,17 +68,16 @@ public:
   physical_address_t maskHighOrderBits(int number) const;
   physical_address_t shiftLowOrderBits(int number) const;
   physical_address_t getLineAddress() const
-    { return bitSelect(RubyConfig::dataBlockBits(), ADDRESS_WIDTH); }
+    { return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH); }
   physical_address_t getOffset() const
-    { return bitSelect(0, RubyConfig::dataBlockBits()-1); }
+    { return bitSelect(0, RubySystem::getBlockSizeBits()-1); }
 
-  void makeLineAddress() { m_address = maskLowOrderBits(RubyConfig::dataBlockBits()); }
+  void makeLineAddress() { m_address = maskLowOrderBits(RubySystem::getBlockSizeBits()); }
   // returns the next stride address based on line address
   void makeNextStrideAddress( int stride) {
-    m_address = maskLowOrderBits(RubyConfig::dataBlockBits())
-      + RubyConfig::dataBlockBytes()*stride;
+    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
+      + RubySystem::getBlockSizeBytes()*stride;
   }
-  void makePageAddress() { m_address = maskLowOrderBits(RubyConfig::pageSizeBits()); }
   int getBankSetNum() const;
   int getBankSetDist() const;
 
@@ -103,6 +107,7 @@ private:
 inline
 Address line_address(const Address& addr) { Address temp(addr); temp.makeLineAddress(); return temp; }
 
+/*
 inline
 Address next_stride_address(const Address& addr, int stride) {
   Address temp = addr;
@@ -110,9 +115,7 @@ Address next_stride_address(const Address& addr, int stride) {
   temp.setAddress(temp.maskHighOrderBits(ADDRESS_WIDTH-RubyConfig::memorySizeBits()));  // surpress wrap-around problem
   return temp;
 }
-
-inline
-Address page_address(const Address& addr) { Address temp(addr); temp.makePageAddress(); return temp; }
+*/
 
 // Output operator declaration
 ostream& operator<<(ostream& out, const Address& obj);
@@ -202,17 +205,19 @@ physical_address_t Address::shiftLowOrderBits(int number) const
 inline
 integer_t Address::memoryModuleIndex() const
 {
-  integer_t index = bitSelect(RubyConfig::dataBlockBits()+RubyConfig::memoryBits(), ADDRESS_WIDTH);
+  integer_t index = bitSelect(RubySystem::getBlockSizeBits()+RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
   assert (index >= 0);
+  /*
   if (index >= RubyConfig::memoryModuleBlocks()) {
-    cerr << " memoryBits: " << RubyConfig::memoryBits() << " memorySizeBits: " << RubyConfig::memorySizeBits()
-         << " Address: " << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubyConfig::dataBlockBits()) << dec << "]" << flush
+    cerr << " memoryBits: " << RubySystem::getMemorySizeBits() << " memorySizeBits: " << RubySystem::getMemorySizeBits()
+         << " Address: " << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush
          << "error: limit exceeded. " <<
-      " dataBlockBits: " << RubyConfig::dataBlockBits() <<
+      " getDataBlockBits: " << RubySystem::getBlockSizeBits() <<
       " memoryModuleBlocks: " << RubyConfig::memoryModuleBlocks() <<
       " index: " << index << endl;
   }
   assert (index < RubyConfig::memoryModuleBlocks());
+  */
   return index;
 
   //  Index indexHighPortion = address.bitSelect(MEMORY_SIZE_BITS-1, PAGE_SIZE_BITS+NUMBER_OF_MEMORY_MODULE_BITS);
@@ -239,7 +244,7 @@ ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
 inline
 void Address::print(ostream& out) const
 {
-  out << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubyConfig::dataBlockBits()) << dec << "]" << flush;
+  out << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush;
 }
 
 class Address;

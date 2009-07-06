@@ -36,44 +36,40 @@
 #include "mem/ruby/recorder/TraceRecord.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/gems_common/PrioHeap.hh"
+#include "gzstream.hh"
 
 CacheRecorder::CacheRecorder()
 {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
-  // m_records_ptr = new PrioHeap<TraceRecord>;
+  m_records_ptr = new PrioHeap<TraceRecord>;
 }
 
 CacheRecorder::~CacheRecorder()
 {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
-  // delete m_records_ptr;
+  delete m_records_ptr;
 }
 
-void CacheRecorder::addRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
+void CacheRecorder::addRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
 {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
-  // m_records_ptr->insert(TraceRecord(id, data_addr, pc_addr, type, time));
+  m_records_ptr->insert(TraceRecord(sequencer_name, data_addr, pc_addr, type, time));
 }
 
 int CacheRecorder::dumpRecords(string filename)
 {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
-  // ogzstream out(filename.c_str());
-  // if (out.fail()) {
-  //   cout << "Error: error opening file '" << filename << "'" << endl;
-  //   return 0;
-  // }
+  ogzstream out(filename.c_str());
+  if (out.fail()) {
+    cout << "Error: error opening file '" << filename << "'" << endl;
+    return 0;
+  }
 
-  // int counter = 0;
-  // while (m_records_ptr->size() != 0) {
-  //   TraceRecord record = m_records_ptr->extractMin();
-  //   record.output(out);
-  //   counter++;
-  // }
-  // return counter;
+  int counter = 0;
+  while (m_records_ptr->size() != 0) {
+    TraceRecord record = m_records_ptr->extractMin();
+    record.output(out);
+    counter++;
+  }
+  return counter;
 }
 
 void CacheRecorder::print(ostream& out) const
 {
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
 }

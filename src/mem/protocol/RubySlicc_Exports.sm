@@ -131,6 +131,12 @@ enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   IO,          desc="I/O";
   REPLACEMENT, desc="Replacement";
   COMMIT,      desc="Commit version";
+  LD_XACT,     desc="Transactional Load";
+  LDX_XACT,    desc="Transactional Load-Intend-To-Modify";
+  ST_XACT,     desc="Transactional Store";
+  BEGIN_XACT,  desc="Begin Transaction";
+  COMMIT_XACT, desc="Commit Transaction";
+  ABORT_XACT,  desc="Abort Transaction";
   NULL,        desc="Invalid request type";
 }
 
@@ -156,6 +162,12 @@ enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
   WB_ACK,      desc="WriteBack ack";
   EXE_ACK,     desc="Execlusive ack";
   COMMIT,      desc="Commit version";
+  LD_XACT,     desc="Transactional Load";
+  LDX_XACT,     desc="Transactional Load-Intend-Modify";
+  ST_XACT,     desc="Transactional Store";
+  BEGIN_XACT,  desc="Begin Transaction";
+  COMMIT_XACT, desc="Commit Transaction";
+  ABORT_XACT,  desc="Abort Transaction";
   NULL,        desc="null request type";
 }
 
@@ -211,26 +223,14 @@ enumeration(PrefetchBit, default="PrefetchBit_No", desc="...") {
 
 // CacheMsg
 structure(CacheMsg, desc="...", interface="Message") {
-  Address Address,           desc="Line address for this request";
+  Address LineAddress,       desc="Line address for this request";
   Address PhysicalAddress,   desc="Physical address for this request";
   CacheRequestType Type,     desc="Type of request (LD, ST, etc)";
   Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   AccessModeType AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
-  // following field only used for MVC
-  int Version,     desc="Version associated with this request";
-  // trans mem fields
-  //bool Aborted,              desc="This flag is set if the request is from an aborted xact.";
-  Address LogicalAddress,    desc="Virtual address for this request";
-  //int TransactionLevel,         desc="Transaction Level of this request";
-  //uint64 SequenceNumber,   desc="Sequence number of this request";
-  int ThreadID,            desc="The SMT thread that initiated this request";
-  //uint64 RequestTime,      desc="The cycle in which this request was issued";
 }
-
-
-
 
 // MaskPredictorType
 enumeration(MaskPredictorType, "MaskPredictorType_Undefined", desc="...") {

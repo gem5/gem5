@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -26,11 +27,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * $Id$
+ *
+ * */
+
 %{
 #include <string>
 #include <stdio.h>
 #include <assert.h>
 #include "mem/slicc/ast/ASTs.hh"
+#include <vector>
 
 #define YYMAXDEPTH 100000
 #define YYERROR_VERBOSE
@@ -45,6 +52,7 @@ extern "C" int yylex();
 %union {
   string* str_ptr;
   Vector<string>* string_vector_ptr;
+  std::vector<string*>* stdstring_vector_ptr;
 
   // Decls
   DeclAST* decl_ptr;
@@ -103,6 +111,8 @@ extern "C" int yylex();
 %type <expr_ptr> expr literal enumeration
 %type <expr_vector_ptr> expr_list
 
+%type <stdstring_vector_ptr> myrule
+
 %type <pair_ptr> pair
 %type <pair_list_ptr> pair_list pairs
 
@@ -115,7 +125,7 @@ extern "C" int yylex();
 //%token DEQUEUE REMOVE_EARLY SKIP_EARLY PEEK_EARLY
 %token DEBUG_EXPR_TOKEN DEBUG_MSG_TOKEN
 %token ACTION_DECL TRANSITION_DECL TYPE_DECL STRUCT_DECL EXTERN_TYPE_DECL ENUM_DECL
-%token TYPE_FIELD OTHER IF ELSE RETURN
+%token TYPE_FIELD OTHER IF ELSE RETURN NEW
 
 %token <str_ptr> EQ NE '<' '>' LE GE NOT AND OR PLUS DASH STAR SLASH RIGHTSHIFT LEFTSHIFT
 
@@ -138,7 +148,9 @@ decls: decl decls { $2->insertAtTop($1); $$ = $2; }
      | { $$ = new Vector<DeclAST*>; }
      ;
 
-decl:  MACHINE_DECL     '(' ident pair_list ')' '{' decl_list '}' { $$ = new MachineAST($3, $4, $7); }
+decl:  MACHINE_DECL     '(' ident pair_list ')' ':' myrule '{' decl_list '}' { $$ = new MachineAST($3, $4, NULL, $7, $9); }
+//    |  MACHINE_DECL     '(' ident pair_list ')' ':' type_members '{' decl_list '}' { $$ = new MachineAST($3, $4, $7, string_vector, $9); }
+    |  MACHINE_DECL     '(' ident pair_list ')' '{' decl_list '}' { $$ = new MachineAST($3, $4, NULL, new vector<string*>(), $7); }
     |  ACTION_DECL      '(' ident pair_list ')' statement_list { $$ = new ActionDeclAST($3, $4, $6); }
     |  IN_PORT_DECL     '(' ident ',' type ',' var pair_list ')' statement_list { $$ = new InPortDeclAST($3, $5, $7, $8, $10); }
     |  OUT_PORT_DECL    '(' ident ',' type ',' var pair_list ')' SEMICOLON { $$ = new OutPortDeclAST($3, $5, $7, $8); }
@@ -214,7 +226,7 @@ formal_param : type ident { $$ = new FormalParamAST($1, $2); }
              ;
 
 // Idents and lists
-ident: IDENT { $$ = $1; } ;
+ident: IDENT { $$ = $1; };
 
 ident_list: '{' idents '}' { $$ = $2; }
           | ident { $$ = new Vector<string>; $$->insertAtTop(*($1)); delete $1; }
@@ -274,7 +286,7 @@ expr:  var { $$ = $1; }
     |  literal { $$ = $1; }
     |  enumeration { $$ = $1; }
     |  ident '(' expr_list ')' { $$ = new FuncCallExprAST($1, $3); }
-
+    |  NEW type { $$ = new NewExprAST($2); }
 
 // globally access a local chip component and call a method
     |  THIS DOT var '[' expr ']' DOT var DOT ident '(' expr_list ')' { $$ = new ChipComponentAccessAST($3, $5, $8, $10, $12 ); }
@@ -324,6 +336,10 @@ var: ident { $$ = new VarExprAST($1); }
 field: ident { $$ = $1; }
      ;
 
+myrule: myrule IDENT { $1->push_back($2); }
+      | IDENT { $$ = new vector<string*>(1, $1); }
+      ;
+
 %%
 
 extern FILE *yyin;
@@ -337,7 +353,7 @@ DeclListAST* parse(string filename)
     exit(1);
   }
   g_line_number = 1;
-  g_file_name() = filename;
+  g_file_name = filename;
   yyin = file;
   g_decl_list_ptr = NULL;
   yyparse();
@@ -346,7 +362,7 @@ DeclListAST* parse(string filename)
 
 extern "C" void yyerror(char* s)
 {
-  fprintf(stderr, "%s:%d: %s at %s\n", g_file_name().c_str(), g_line_number, s, yytext);
+  fprintf(stderr, "%s:%d: %s at %s\n", g_file_name.c_str(), g_line_number, s, yytext);
   exit(1);
 }
 

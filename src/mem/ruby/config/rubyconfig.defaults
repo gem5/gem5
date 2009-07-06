@@ -43,10 +43,6 @@ g_DEADLOCK_THRESHOLD: 500000
 //  (does not apply when running Opal)
 SIMICS_RUBY_MULTIPLIER: 4
 
-// corresponding parameter when using Opal+Ruby+Simics
-OPAL_RUBY_MULTIPLIER: 1
-
-
 // Ruby cycles between when a sequencer issues a request and it arrives at
 // the L1 cache controller
 //
@@ -107,7 +103,7 @@ L2_CACHE_ASSOC: 4
 L2_CACHE_NUM_SETS_BITS: 16
 
 // 32 bits = 4 GB address space
-g_MEMORY_SIZE_BYTES: 4294967296
+g_MEMORY_SIZE_BYTES: 1073741824 //4294967296
 g_DATA_BLOCK_BYTES: 64
 g_PAGE_SIZE_BYTES: 4096
 g_REPLACEMENT_POLICY: PSEDUO_LRU // currently, only other option is LRU
@@ -176,8 +172,6 @@ L1_REQUEST_LATENCY: 2
 L2_REQUEST_LATENCY: 4
 
 
-
-
 // Number of transitions each controller state machines can complete per cycle
 // i.e. the number of ports to each controller
 // L1cache is the sum of the L1I and L1D cache ports
@@ -186,6 +180,7 @@ L1CACHE_TRANSITIONS_PER_RUBY_CYCLE: 32
 // much greater constraint on the concurrency of a L2 cache bank
 L2CACHE_TRANSITIONS_PER_RUBY_CYCLE: 32
 DIRECTORY_TRANSITIONS_PER_RUBY_CYCLE: 32
+DMA_TRANSITIONS_PER_RUBY_CYCLE: 1
 
 
 // Number of TBEs available for demand misses, ALL prefetches, and replacements
@@ -195,10 +190,6 @@ NUMBER_OF_TBES: 128
 NUMBER_OF_L1_TBES: 32
 NUMBER_OF_L2_TBES: 32
 
-// TSO is deprecated
-TSO: false
-
-
 // ** INTERCONECT PARAMETERS **
 //
 g_PRINT_TOPOLOGY: true
@@ -207,7 +198,7 @@ g_CACHE_DESIGN: NUCA  // specifies file prefix for FILE_SPECIFIED topology
 FAN_OUT_DEGREE: 4  // for HIERARCHICAL SWITCH topology
 
 g_adaptive_routing: true
-NUMBER_OF_VIRTUAL_NETWORKS: 4
+NUMBER_OF_VIRTUAL_NETWORKS: 6
 
 // bandwidth unit is 1/1000 byte per cycle.  the following parameter is multiplied by
 //  topology specific link weights
@@ -240,57 +231,6 @@ PROTOCOL_BUFFER_SIZE: 32
 SINGLE_ACCESS_L2_BANKS: true
 
 
-// constants used by TM protocols
-PROFILE_EXCEPTIONS: false
-PROFILE_XACT: true
-PROFILE_NONXACT: false
-XACT_DEBUG: true
-XACT_DEBUG_LEVEL: 1
-//XACT_MEMORY: true  // set to true for TM protocols. set it HERE for lazy systems to register the proper SIMICS interfaces
-XACT_MEMORY: false
-XACT_ENABLE_TOURMALINE: false // perfect memory system
-XACT_NUM_CURRENT: 0 // must be 0
-XACT_LAST_UPDATE: 0 // must be 0
-XACT_ISOLATION_CHECK: false // Checks whether each memory access preserves transaction isolation
-PERFECT_FILTER: true                // If true, use perfect physical read/write filters
-READ_WRITE_FILTER: Perfect_
-PERFECT_VIRTUAL_FILTER: true        // If true, use perfect virtual read/write filters
-VIRTUAL_READ_WRITE_FILTER: Perfect_
-PERFECT_SUMMARY_FILTER: true        // If true, use perfect summary read/write filters
-SUMMARY_READ_WRITE_FILTER: Perfect_
-XACT_EAGER_CD: true
-XACT_LAZY_VM: false
-XACT_CONFLICT_RES: BASE
-XACT_COMMIT_TOKEN_LATENCY: 0
-XACT_VISUALIZER: false
-XACT_NO_BACKOFF: false
-XACT_LOG_BUFFER_SIZE: 0
-XACT_STORE_PREDICTOR_ENTRIES: 256
-XACT_STORE_PREDICTOR_HISTORY: 256
-XACT_STORE_PREDICTOR_THRESHOLD: 4
-XACT_FIRST_ACCESS_COST: 0
-XACT_FIRST_PAGE_ACCESS_COST: 0
-ENABLE_MAGIC_WAITING: false
-ENABLE_WATCHPOINT: false
-XACT_ENABLE_VIRTUALIZATION_LOGTM_SE: false
-// g_NETWORK_TOPOLOGY: FILE_SPECIFIED
-// NUMBER_OF_VIRTUAL_NETWORKS: 5
-// L2_REQUEST_LATENCY: 15
-// SEQUENCER_TO_CONTROLLER_LATENCY: 3
-// L2_RESPONSE_LATENCY: 20
-// L2_TAG_LATENCY: 6
-// MEMORY_RESPONSE_LATENCY_MINUS_2: 448
-// RECYCLE_LATENCY: 1
-// g_MEMORY_SIZE_BYTES: 268435456
-// REMOVE_SINGLE_CYCLE_DCACHE_FAST_PATH: true
-
-// ATMTP
-ATMTP_ENABLED: false
-ATMTP_ABORT_ON_NON_XACT_INST: false
-ATMTP_ALLOW_SAVE_RESTORE_IN_XACT: false
-ATMTP_XACT_MAX_STORES: 32
-ATMTP_DEBUG_LEVEL: 0
-
 // MOESI_CMP_token parameters (some might be deprecated)
 g_FILTERING_ENABLED: false
 g_DISTRIBUTED_PERSISTENT_ENABLED: true
@@ -321,7 +261,7 @@ g_hold_time:  5
 g_wait_time:  5
 
 // Princeton Network (Garnet)
-g_GARNET_NETWORK: false
+g_GARNET_NETWORK: true
 g_DETAIL_NETWORK: false
 g_NETWORK_TESTING: false
 g_FLIT_SIZE: 16

@@ -88,7 +88,7 @@ void Func::funcPrototype(string& code) const
 }
 
 // This write a function of object Chip
-void Func::writeCFiles(string path) const
+void Func::writeCFiles(string path)
 {
   if (isExternal()) {
     // Do nothing
@@ -99,9 +99,8 @@ void Func::writeCFiles(string path) const
     out << "/** Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< " */" << endl;
     out << endl;
     out << "#include \"mem/protocol/Types.hh\"" << endl;
-    out << "#include \"mem/protocol/Chip.hh\"" << endl;
     if (m_isInternalMachineFunc) {
-      out << "#include \"" << m_machineStr << "_Controller.hh\"" << endl;
+      out << "#include \"mem/protocol/" << m_machineStr << "_Controller.hh\"" << endl;
     }
     out << endl;
 

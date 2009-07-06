@@ -2,4 +2,6 @@ MESI_CMP_directory-msg.sm
 MESI_CMP_directory-L2cache.sm
 MESI_CMP_directory-L1cache.sm
 MESI_CMP_directory-mem.sm
+MESI_CMP_directory-dma.sm
 standard_CMP-protocol.sm
+

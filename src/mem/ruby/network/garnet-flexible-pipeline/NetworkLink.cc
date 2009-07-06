@@ -46,8 +46,8 @@ NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
         m_link_utilized = 0;
         m_net_ptr = net_ptr;
         m_latency = latency;
-        int num_net = NUMBER_OF_VIRTUAL_NETWORKS;
-        int num_vc = NetworkConfig::getVCsPerClass();
+        int num_net = net_ptr->getNumberOfVirtualNetworks();
+        int num_vc = m_net_ptr->getNetworkConfig()->getVCsPerClass();
         m_vc_load.setSize(num_net*num_vc);
 
         for(int i = 0; i < num_net*num_vc; i++)

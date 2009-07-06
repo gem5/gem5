@@ -54,6 +54,7 @@
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/protocol/PrefetchBit.hh"
+#include "mem/ruby/system/System.hh"
 
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 
@@ -67,7 +68,7 @@ extern inline int random(int n)
 
 extern inline bool multicast_retry()
 {
-  if (RANDOMIZATION) {
+  if (RubySystem::getRandomization()) {
     return (random() & 0x1);
   } else {
     return true;
@@ -111,15 +112,18 @@ extern inline int MessageSizeTypeToInt(MessageSizeType size_type)
   return MessageSizeType_to_int(size_type);
 }
 
+/*
 extern inline int numberOfNodes()
 {
   return RubyConfig::numberOfChips();
 }
-
+*/
+/*
 extern inline int numberOfL1CachePerChip()
 {
-  return RubyConfig::numberOfL1CachePerChip();
+  return RubyConfig::getNumberOfCachesPerLevelPerChip(1,0);
 }
+*/
 
 extern inline bool long_enough_ago(Time event)
 {
@@ -149,7 +153,7 @@ extern inline Time getTimeMinusTime(Time t1, Time t2)
 
 extern inline Time getPreviousDelayedCycles(Time t1, Time t2)
 {
-  if (RANDOMIZATION) {  // when randomizing delayed
+  if (RubySystem::getRandomization()) {  // when randomizing delayed
     return 0;
   } else {
     return getTimeMinusTime(t1, t2);
@@ -167,39 +171,40 @@ extern inline Time time_to_int(Time time)
   return time;
 }
 
-
+/*
 extern inline bool getFilteringEnabled()
 {
-  return g_FILTERING_ENABLED;
+  return RubyConfig::getFilteringEnabled();
 }
+
 
 extern inline int getRetryThreshold()
 {
-  return g_RETRY_THRESHOLD;
+  return RubyConfig::getRetryThreshold();
 }
 
 extern inline int getFixedTimeoutLatency()
 {
-  return g_FIXED_TIMEOUT_LATENCY;
+  return RubyConfig::getFixedTimeoutLatency();
 }
 
 extern inline int N_tokens()
 {
   // return N+1 to handle clean writeback
-  return g_PROCS_PER_CHIP + 1;
+  return RubyConfig::getProcsPerChip() + 1;
   // return 1;
 }
 
 extern inline bool distributedPersistentEnabled()
 {
-  return g_DISTRIBUTED_PERSISTENT_ENABLED;
+  return RubyConfig::getDistributedPersistentEnabled();
 }
 
 extern inline bool getDynamicTimeoutEnabled()
 {
-  return g_DYNAMIC_TIMEOUT_ENABLED;
+  return RubyConfig::getDynamicTimeoutEnabled();
 }
-
+*/
 // Appends an offset to an address
 extern inline Address setOffset(Address addr, int offset)
 {

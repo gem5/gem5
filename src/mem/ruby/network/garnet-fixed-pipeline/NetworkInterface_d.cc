@@ -43,7 +43,7 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwo
         m_id = id;
         m_net_ptr = network_ptr;
         m_virtual_networks  = virtual_networks;
-        m_vc_per_vnet = NetworkConfig::getVCsPerClass();
+        m_vc_per_vnet = m_net_ptr->getNetworkConfig()->getVCsPerClass();
         m_num_vcs = m_vc_per_vnet*m_virtual_networks;
 
         m_vc_round_robin = 0;
@@ -66,7 +66,7 @@ NetworkInterface_d::NetworkInterface_d(int id, int virtual_networks, GarnetNetwo
 
          for(int i = 0; i < m_num_vcs; i++)
          {
-                m_out_vc_state.insertAtBottom(new OutVcState_d(i));
+                m_out_vc_state.insertAtBottom(new OutVcState_d(i, m_net_ptr));
                 m_out_vc_state[i]->setState(IDLE_, g_eventQueue_ptr->getTime());
          }
 }
@@ -114,7 +114,7 @@ bool NetworkInterface_d::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
         Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
 
-        int num_flits = (int) ceil((double) MessageSizeType_to_int(net_msg_ptr->getMessageSize())/NetworkConfig::getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
+        int num_flits = (int) ceil((double) MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getNetworkConfig()->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
 
         for(int ctr = 0; ctr < dest_nodes.size(); ctr++) // loop because we will be converting all multicast messages into unicast messages
         {
@@ -221,7 +221,7 @@ void NetworkInterface_d::wakeup()
                 if(t_flit->get_type() == TAIL_ || t_flit->get_type() == HEAD_TAIL_)
                 {
                         free_signal = true;
-                        if(!NetworkConfig::isNetworkTesting()) // When we are doing network only testing, the messages do not have to be buffered into the message buffers
+                        if(!m_net_ptr->getNetworkConfig()->isNetworkTesting()) // When we are doing network only testing, the messages do not have to be buffered into the message buffers
                         {
                                 outNode_ptr[t_flit->get_vnet()]->enqueue(t_flit->get_msg_ptr(), 1); // enqueueing for protocol buffer. This is not required when doing network only testing
                         }
@@ -307,7 +307,7 @@ void NetworkInterface_d::scheduleOutputLink()
 
 int NetworkInterface_d::get_vnet(int vc)
 {
-        for(int i = 0; i < NUMBER_OF_VIRTUAL_NETWORKS; i++)
+        for(int i = 0; i < m_net_ptr->getNumberOfVirtualNetworks(); i++)
         {
                 if(vc >= (i*m_vc_per_vnet) && vc < ((i+1)*m_vc_per_vnet))
                 {

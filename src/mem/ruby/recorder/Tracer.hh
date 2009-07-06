@@ -38,6 +38,8 @@
 #ifndef TRACER_H
 #define TRACER_H
 
+#include "mem/ruby/libruby_internal.hh"
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -50,7 +52,8 @@ class TraceRecord;
 class Tracer {
 public:
   // Constructors
-  Tracer();
+//  Tracer();
+  Tracer(const string & name);
 
   // Destructor
   ~Tracer();
@@ -59,12 +62,13 @@ public:
   void startTrace(string filename);
   void stopTrace();
   bool traceEnabled() { return m_enabled; }
-  void traceRequest(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time);
+  void traceRequest(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
 
   void print(ostream& out) const;
 
   // Public Class Methods
-  static int playbackTrace(string filename);
+  int playbackTrace(string filename);
+  void init(const vector<string> & argv);
 private:
   // Private Methods
 
@@ -75,6 +79,10 @@ private:
   // Data Members (m_ prefix)
   ogzstream m_trace_file;
   bool m_enabled;
+
+  //added by SS
+  int m_warmup_length;
+  string m_name;
 };
 
 // Output operator declaration

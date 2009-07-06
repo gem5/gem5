@@ -52,6 +52,7 @@ class PerfectSwitch;
 class NetDest;
 class SimpleNetwork;
 class Throttle;
+class Network;
 
 class Switch {
 public:
@@ -83,6 +84,7 @@ private:
 
   // Data Members (m_ prefix)
   PerfectSwitch* m_perfect_switch_ptr;
+  Network* m_network_ptr;
   Vector<Throttle*> m_throttles;
   Vector<MessageBuffer*> m_buffers_to_free;
   SwitchID m_switch_id;

@@ -1,5 +1,5 @@
 
-machine(L1Cache, "MI Example") {
+machine(L1Cache, "MI Example L1 Cache"): LATENCY_CACHE_RESPONSE_LATENCY  LATENCY_ISSUE_LATENCY {
 
   // NETWORK BUFFERS
   MessageBuffer requestFromCache, network="To", virtual_network="0", ordered="true";
@@ -15,7 +15,7 @@ machine(L1Cache, "MI Example") {
     M,  desc="Modified";
     MI,  desc="Modified, issued PUT";
 
-    IS,  desc="Issued request for IFETCH/GETX";
+    IS,  desc="Issued request for LOAD/IFETCH";
     IM,  desc="Issued request for STORE/ATOMIC";
   }
 
@@ -30,6 +30,8 @@ machine(L1Cache, "MI Example") {
     Data,       desc="Data from network";
     Fwd_GETX,        desc="Forward from network";
 
+    Inv,        desc="Invalidate request from dir";
+
     Replacement,  desc="Replace a block";
     Writeback_Ack,   desc="Ack from the directory for a writeback";
     Writeback_Nack,   desc="Nack from the directory for a writeback";
@@ -37,21 +39,21 @@ machine(L1Cache, "MI Example") {
 
   // STRUCTURE DEFINITIONS
 
-  MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
-  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+  MessageBuffer mandatoryQueue, ordered="false";
+  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State CacheState,        desc="cache state";
     bool Dirty,              desc="Is the data dirty (different than memory)?";
-    DataBlock DataBlk,       desc="data for the block";
+    DataBlock DataBlk,       desc="Data in the block";
   }
 
 
   external_type(CacheMemory) {
     bool cacheAvail(Address);
     Address cacheProbe(Address);
-    void allocate(Address);
+    void allocate(Address, Entry);
     void deallocate(Address);
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
@@ -62,8 +64,6 @@ machine(L1Cache, "MI Example") {
   structure(TBE, desc="...") {
     State TBEState,          desc="Transient state";
     DataBlock DataBlk,       desc="data for the block, required for concurrent writebacks";
-    bool Trans,              desc="Is this block part of a the current transaction?";
-    bool Logged,             desc="Has this block been logged in the current transaction?";
   }
 
   external_type(TBETable) {
@@ -76,7 +76,7 @@ machine(L1Cache, "MI Example") {
 
   // STRUCTURES
 
-  CacheMemory cacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS, L1_CACHE_ASSOC, MachineType_L1Cache, int_to_string(i)+"_L1"', abstract_chip_ptr="true";
+  CacheMemory cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
 
@@ -117,6 +117,11 @@ machine(L1Cache, "MI Example") {
 
     if (cacheMemory.isTagPresent(addr)) {
       cacheMemory[addr].CacheState := state;
+      if (state == State:M) {
+        cacheMemory.changePermission(addr, AccessPermission:Read_Write);
+      } else {
+        cacheMemory.changePermission(addr, AccessPermission:Invalid);
+      }
     }
   }
 
@@ -137,6 +142,9 @@ machine(L1Cache, "MI Example") {
         }
         else if (in_msg.Type == CoherenceRequestType:WB_NACK) {
           trigger(Event:Writeback_Nack, in_msg.Address);
+        }
+        else if (in_msg.Type == CoherenceRequestType:INV) {
+          trigger(Event:Inv, in_msg.Address);
         }
         else {
           error("Unexpected message");
@@ -164,13 +172,13 @@ machine(L1Cache, "MI Example") {
       peek(mandatoryQueue_in, CacheMsg) {
 
 
-        if (cacheMemory.isTagPresent(in_msg.Address) == false &&
-            cacheMemory.cacheAvail(in_msg.Address) == false ) {
+        if (cacheMemory.isTagPresent(in_msg.LineAddress) == false &&
+            cacheMemory.cacheAvail(in_msg.LineAddress) == false ) {
           // make room for the block
-          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.Address));
+          trigger(Event:Replacement, cacheMemory.cacheProbe(in_msg.LineAddress));
         }
         else {
-          trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+          trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
         }
       }
     }
@@ -229,7 +237,7 @@ machine(L1Cache, "MI Example") {
 
   action(i_allocateL1CacheBlock, "i", desc="Allocate a cache block") {
     if (cacheMemory.isTagPresent(address) == false) {
-      cacheMemory.allocate(address);
+      cacheMemory.allocate(address, new Entry);
     }
   }
 
@@ -244,11 +252,11 @@ machine(L1Cache, "MI Example") {
   }
 
   action(n_popResponseQueue, "n", desc="Pop the response queue") {
-    responseNetwork_in.dequeue();
+    profileMsgDelay(1, responseNetwork_in.dequeue_getDelayCycles());
   }
 
   action(o_popForwardedRequestQueue, "o", desc="Pop the forwarded request queue") {
-    forwardRequestNetwork_in.dequeue();
+    profileMsgDelay(2, forwardRequestNetwork_in.dequeue_getDelayCycles());
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
@@ -292,8 +300,12 @@ machine(L1Cache, "MI Example") {
     z_stall;
   }
 
-  transition({IS, IM}, Fwd_GETX) {
+  transition({IS, IM}, {Fwd_GETX, Inv}) {
     z_stall;
+  }
+
+  transition(MI, Inv) {
+    o_popForwardedRequestQueue;
   }
 
   transition(M, Store) {
@@ -306,6 +318,9 @@ machine(L1Cache, "MI Example") {
     m_popMandatoryQueue;
   }
 
+  transition(I, Inv) {
+    o_popForwardedRequestQueue;
+  }
 
   transition(I, Store, IM) {
     v_allocateTBE;
@@ -344,7 +359,7 @@ machine(L1Cache, "MI Example") {
      h_deallocateL1CacheBlock;
   }
 
-  transition(M, Replacement, MI) {
+  transition(M, {Replacement,Inv},  MI) {
      v_allocateTBE;
      b_issuePUT;
      x_copyDataFromCacheToTBE;

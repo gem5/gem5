@@ -55,7 +55,7 @@ bool operator<(const LinkOrder& l1, const LinkOrder& l2) {
 
 PerfectSwitch::PerfectSwitch(SwitchID sid, SimpleNetwork* network_ptr)
 {
-  m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS;  // FIXME - pass me as a parameter?
+  m_virtual_networks = network_ptr->getNumberOfVirtualNetworks();
   m_switch_id = sid;
   m_round_robin_start = 0;
   m_network_ptr = network_ptr;
@@ -88,9 +88,9 @@ void PerfectSwitch::addOutPort(const Vector<MessageBuffer*>& out, const NetDest&
   m_out.insertAtBottom(out);
   m_routing_table.insertAtBottom(routing_table_entry);
 
-  if (g_PRINT_TOPOLOGY) {
+  //  if (RubyConfig::getPrintTopology()) {
     m_out_link_vec.insertAtBottom(out);
-  }
+    //  }
 }
 
 void PerfectSwitch::clearRoutingTables()
@@ -134,6 +134,7 @@ void PerfectSwitch::wakeup()
   int highest_prio_vnet = m_virtual_networks-1;
   int lowest_prio_vnet = 0;
   int decrementer = 1;
+  bool schedule_wakeup = false;
   NetworkMessage* net_msg_ptr = NULL;
 
   // invert priorities to avoid starvation seen in the component network
@@ -186,8 +187,9 @@ void PerfectSwitch::wakeup()
 
         assert(m_link_order.size() == m_routing_table.size());
         assert(m_link_order.size() == m_out.size());
-
-        if (g_adaptive_routing) {
+//changed by SS
+//        if (RubyConfig::getAdaptiveRouting()) {
+        if (m_network_ptr->getAdaptiveRouting()) {
           if (m_network_ptr->isVNetOrdered(vnet)) {
             // Don't adaptively route
             for (int outlink=0; outlink<m_out.size(); outlink++) {

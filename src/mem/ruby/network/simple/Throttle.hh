@@ -46,7 +46,8 @@
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/network/Network.hh"
 
 class MessageBuffer;
 
@@ -68,7 +69,7 @@ public:
   void clearStats();
   void printConfig(ostream& out) const;
   double getUtilization() const; // The average utilization (a percent) since last clearStats()
-  int getLinkBandwidth() const { return g_endpoint_bandwidth * m_link_bandwidth_multiplier; }
+  int getLinkBandwidth() const { return RubySystem::getNetwork()->getEndpointBandwidth() * m_link_bandwidth_multiplier; }
   int getLatency() const { return m_link_latency; }
 
   const Vector<Vector<int> >& getCounters() const { return m_message_counters; }

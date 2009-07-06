@@ -39,17 +39,18 @@
 #ifndef TRACERECORD_H
 #define TRACERECORD_H
 
+#include "mem/ruby/libruby_internal.hh"
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "mem/protocol/CacheRequestType.hh"
 class CacheMsg;
 
 class TraceRecord {
 public:
   // Constructors
-  TraceRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time);
-  TraceRecord() { m_node_num = 0; m_time = 0; m_type = CacheRequestType_NULL; }
+  TraceRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
+  TraceRecord() { m_sequencer_name = ""; m_time = 0; m_type = RubyRequestType_NULL; }
 
   // Destructor
   //  ~TraceRecord();
@@ -69,11 +70,11 @@ private:
   // Private Methods
 
   // Data Members (m_ prefix)
-  NodeID m_node_num;
+  string m_sequencer_name;
   Time m_time;
   Address m_data_address;
   Address m_pc_address;
-  CacheRequestType m_type;
+  RubyRequestType m_type;
 };
 
 inline extern bool node_less_then_eq(const TraceRecord& n1, const TraceRecord& n2);

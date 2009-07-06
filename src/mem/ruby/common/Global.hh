@@ -32,9 +32,10 @@
  *
  * */
 
-#ifndef __MEM_RUBY_GLOBAL_HH__
-#define __MEM_RUBY_GLOBAL_HH__
+#ifndef GLOBAL_H
+#define GLOBAL_H
 
+/*
 #ifdef SINGLE_LEVEL_CACHE
 const bool TWO_LEVEL_CACHE = false;
 #define L1I_CACHE_MEMBER_VARIABLE m_L1Cache_cacheMemory_vec[m_version] // currently all protocols require L1s == nodes
@@ -60,24 +61,11 @@ const bool TWO_LEVEL_CACHE = true;
 #define DIRECTORY_MEMBER_VARIABLE m_Directory_directory_vec[m_version]
 #define TBE_TABLE_MEMBER_VARIABLE m_L1Cache_TBEs_vec[m_version]
 
-typedef unsigned char uint8;
-typedef unsigned int uint32;
-typedef unsigned long long uint64;
+*/
 
-typedef signed char int8;
-typedef int int32;
-typedef long long int64;
-
-typedef long long integer_t;
-typedef unsigned long long uinteger_t;
-
-typedef int64 Time;
-typedef uint64 physical_address_t;
-typedef uint64 la_t;
-typedef uint64 pa_t;
-typedef integer_t simtime_t;
 
 // external includes for all classes
+#include "mem/ruby/common/TypeDefines.hh"
 #include "mem/gems_common/std-includes.hh"
 #include "mem/ruby/common/Debug.hh"
 
@@ -85,6 +73,7 @@ typedef integer_t simtime_t;
 typedef Time LogicalTime;
 typedef int64 Index;            // what the address bit ripper returns
 typedef int word;               // one word of a cache line
+typedef unsigned int uint;
 typedef int SwitchID;
 typedef int LinkID;
 
@@ -105,5 +94,5 @@ extern inline int max_tokens()
 }
 
 
-#endif // __MEM_RUBY_GLOBAL_HH__
+#endif //GLOBAL_H
 

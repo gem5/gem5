@@ -59,11 +59,55 @@ Network* Network::createNetwork(int nodes)
 }
 */
 
+SimpleNetwork::SimpleNetwork(const string & name)
+  : Network(name)
+{
+  m_virtual_networks = 0;
+  m_topology_ptr = NULL;
+}
+
+void SimpleNetwork::init(const vector<string> & argv)
+{
+
+  Network::init(argv);
+
+  m_endpoint_switches.setSize(m_nodes);
+
+  m_in_use.setSize(m_virtual_networks);
+  m_ordered.setSize(m_virtual_networks);
+  for (int i = 0; i < m_virtual_networks; i++) {
+    m_in_use[i] = false;
+    m_ordered[i] = false;
+  }
+
+  // Allocate to and from queues
+  m_toNetQueues.setSize(m_nodes);
+  m_fromNetQueues.setSize(m_nodes);
+  for (int node = 0; node < m_nodes; node++) {
+    m_toNetQueues[node].setSize(m_virtual_networks);
+    m_fromNetQueues[node].setSize(m_virtual_networks);
+    for (int j = 0; j < m_virtual_networks; j++) {
+      cerr << "Creating new MessageBuffer for " << node << " " << j << endl;
+      m_toNetQueues[node][j] = new MessageBuffer;
+      m_fromNetQueues[node][j] = new MessageBuffer;
+    }
+  }
+
+  // Setup the network switches
+  //  m_topology_ptr = new Topology(this, m_nodes);
+  m_topology_ptr->makeTopology();
+  int number_of_switches = m_topology_ptr->numSwitches();
+  for (int i=0; i<number_of_switches; i++) {
+    m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
+  }
+  m_topology_ptr->createLinks(false);  // false because this isn't a reconfiguration
+}
+/*
 SimpleNetwork::SimpleNetwork(int nodes)
 {
   m_nodes = MachineType_base_number(MachineType_NUM);
 
-  m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS;
+  m_virtual_networks = RubyConfig::getNumberOfVirtualNetworks();
   m_endpoint_switches.setSize(m_nodes);
 
   m_in_use.setSize(m_virtual_networks);
@@ -93,7 +137,7 @@ SimpleNetwork::SimpleNetwork(int nodes)
   }
   m_topology_ptr->createLinks(false);  // false because this isn't a reconfiguration
 }
-
+*/
 void SimpleNetwork::reset()
 {
   for (int node = 0; node < m_nodes; node++) {
@@ -154,8 +198,8 @@ void SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, const NetDest&
       // allocate a buffer
       MessageBuffer* buffer_ptr = new MessageBuffer;
       buffer_ptr->setOrdering(true);
-      if(FINITE_BUFFERING) {
-        buffer_ptr->setSize(FINITE_BUFFER_SIZE);
+      if (m_buffer_size > 0) {
+        buffer_ptr->setSize(m_buffer_size);
       }
       queues.insertAtBottom(buffer_ptr);
       // remember to deallocate it
@@ -225,7 +269,7 @@ void SimpleNetwork::printConfig(ostream& out) const
   out << "Network Configuration" << endl;
   out << "---------------------" << endl;
   out << "network: SIMPLE_NETWORK" << endl;
-  out << "topology: " << g_NETWORK_TOPOLOGY << endl;
+  out << "topology: " << m_topology_ptr->getName() << endl;
   out << endl;
 
   for (int i = 0; i < m_virtual_networks; i++) {
@@ -246,9 +290,7 @@ void SimpleNetwork::printConfig(ostream& out) const
     m_switch_ptr_vector[i]->printConfig(out);
   }
 
-  if (g_PRINT_TOPOLOGY) {
-    m_topology_ptr->printConfig(out);
-  }
+  m_topology_ptr->printConfig(out);
 }
 
 void SimpleNetwork::print(ostream& out) const

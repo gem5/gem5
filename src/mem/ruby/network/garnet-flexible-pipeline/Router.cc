@@ -43,8 +43,8 @@ Router::Router(int id, GarnetNetwork *network_ptr)
 {
         m_id = id;
         m_net_ptr = network_ptr;
-        m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS;
-        m_vc_per_vnet = NetworkConfig::getVCsPerClass();
+        m_virtual_networks = m_net_ptr->getNumberOfVirtualNetworks();
+        m_vc_per_vnet = m_net_ptr->getNetworkConfig()->getVCsPerClass();
         m_round_robin_inport = 0;
         m_round_robin_start = 0;
         m_num_vcs = m_vc_per_vnet*m_virtual_networks;
@@ -103,7 +103,7 @@ void Router::addOutPort(NetworkLink *out_link, const NetDest& routing_table_entr
         Vector<flitBuffer *> intermediateQueues;
         for(int i = 0; i < m_num_vcs; i++)
         {
-                intermediateQueues.insertAtBottom(new flitBuffer(NetworkConfig::getBufferSize()));
+                intermediateQueues.insertAtBottom(new flitBuffer(m_net_ptr->getNetworkConfig()->getBufferSize()));
         }
         m_router_buffers.insertAtBottom(intermediateQueues);
 
@@ -246,17 +246,17 @@ void Router::routeCompute(flit *m_flit, int inport)
         int outport = m_in_vc_state[inport][invc]->get_outport();
         int outvc = m_in_vc_state[inport][invc]->get_outvc();
 
-        assert(NetworkConfig::getNumPipeStages() >= 1);
-        m_flit->set_time(g_eventQueue_ptr->getTime() + (NetworkConfig::getNumPipeStages() - 1)); // Becasuse 1 cycle will be consumed in scheduling the output link
+        assert(m_net_ptr->getNetworkConfig()->getNumPipeStages() >= 1);
+        m_flit->set_time(g_eventQueue_ptr->getTime() + (m_net_ptr->getNetworkConfig()->getNumPipeStages() - 1)); // Becasuse 1 cycle will be consumed in scheduling the output link
         m_flit->set_vc(outvc);
         m_router_buffers[outport][outvc]->insert(m_flit);
 
-        if(NetworkConfig::getNumPipeStages() > 1)
-                g_eventQueue_ptr->scheduleEvent(this, NetworkConfig::getNumPipeStages() -1 );
+        if(m_net_ptr->getNetworkConfig()->getNumPipeStages() > 1)
+                g_eventQueue_ptr->scheduleEvent(this, m_net_ptr->getNetworkConfig()->getNumPipeStages() -1 );
         if((m_flit->get_type() == HEAD_) || (m_flit->get_type() == HEAD_TAIL_))
         {
                 NetDest destination = dynamic_cast<NetworkMessage*>(m_flit->get_msg_ptr().ref())->getInternalDestination();
-                if(NetworkConfig::getNumPipeStages() > 1)
+                if(m_net_ptr->getNetworkConfig()->getNumPipeStages() > 1)
                 {
                         m_out_vc_state[outport][outvc]->setState(VC_AB_, g_eventQueue_ptr->getTime() + 1);
                         m_out_link[outport]->request_vc_link(outvc, destination, g_eventQueue_ptr->getTime() + 1);

@@ -41,15 +41,12 @@
 #ifndef DETERMINVGENERATOR_H
 #define DETERMINVGENERATOR_H
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/DetermInvGeneratorStatus.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/common/Address.hh"
+#include "Address_Tester.hh"
 #include "mem/ruby/tester/SpecifiedGenerator.hh"
 
-class Sequencer;
-class SubBlock;
 class DeterministicDriver;
 
 class DetermInvGenerator : public SpecifiedGenerator {
@@ -62,7 +59,7 @@ public:
 
   // Public Methods
   void wakeup();
-  void performCallback(NodeID proc, SubBlock& data);
+  void performCallback(NodeID proc, Address address);
 
   void print(ostream& out) const;
 private:
@@ -74,8 +71,6 @@ private:
   void initiateStore();
   void pickLoadAddress();
   void pickStoreAddress();
-
-  Sequencer* sequencer() const;
 
   // copy constructor and assignment operator
   DetermInvGenerator(const DetermInvGenerator& obj);

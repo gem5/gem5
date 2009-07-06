@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,36 +32,31 @@
  *
  */
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "RaceyPseudoThread.hh"
-#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/tester/EventQueue_Tester.hh"
+#include "mem/ruby/tester/RaceyPseudoThread.hh"
 
-RaceyDriver::RaceyDriver()
+RaceyDriver::RaceyDriver(int num_procs, int tester_length)
 {
-  // debug transition?
-  if(false) {
-    assert(g_debug_ptr);
-    g_debug_ptr->setDebugTime(1);
-  }
-
   m_finish_time = 0;
   m_done_counter = 0;
   m_wakeup_thread0 = false;
+  m_num_procs = num_procs;
+  m_tester_length = tester_length;
+  eventQueue = new RubyEventQueue;
 
   // racey at least need two processors
-  assert(RubyConfig::numberOfProcessors() >= 2);
+  assert(m_num_procs >= 2);
 
   // init all racey pseudo threads
-  m_racey_pseudo_threads.setSize(RubyConfig::numberOfProcessors());
+  m_racey_pseudo_threads.setSize(m_num_procs);
   for (int i=0; i<m_racey_pseudo_threads.size(); i++) {
     m_racey_pseudo_threads[i] = new RaceyPseudoThread(i, *this);
   }
 
   // add this driver to the global event queue, for deadlock detection
-  g_eventQueue_ptr->scheduleEvent(this, g_DEADLOCK_THRESHOLD);
+  eventQueue->scheduleEvent(this, g_DEADLOCK_THRESHOLD);
 }
 
 RaceyDriver::~RaceyDriver()
@@ -71,20 +66,38 @@ RaceyDriver::~RaceyDriver()
   }
 }
 
-void RaceyDriver::hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread)
+void RaceyDriver::go() {
+  // tick both queues until everyone is done
+  while (m_done_counter != m_num_procs) {
+    libruby_tick(1);
+    eventQueue->triggerEvents(eventQueue->getTime() + 1);
+  }
+}
+
+
+void RaceyDriver::hitCallback(int64_t request_id)
 {
-  DEBUG_EXPR(TESTER_COMP, MedPrio, data);
-  m_racey_pseudo_threads[proc]->performCallback(proc, data);
+  ASSERT(requests.find(request_id) != requests.end());
+  int proc = requests[request_id].first;
+  Address address = requests[request_id].second.address;
+  uint8_t * data = new uint8_t[4];
+  for (int i = 0; i < 4; i++) {
+    data[i] = requests[request_id].second.data[i];
+  }
+  requests[request_id].second.data;
+  m_racey_pseudo_threads[proc]->performCallback(proc, address, data);
+  requests.erase(request_id);
 }
 
 integer_t RaceyDriver::getInstructionCount(int procID) const
 {
-  return m_racey_pseudo_threads[procID]->getInstructionCounter();
+ // return m_racey_pseudo_threads[procID]->getInstructionCounter();
+ assert(0);
 }
 
 int RaceyDriver::runningThreads()
 {
-  return RubyConfig::numberOfProcessors() - m_done_counter;
+  return m_num_procs - m_done_counter;
 }
 
 // used to wake up thread 0 whenever other thread finishes
@@ -96,12 +109,12 @@ void RaceyDriver::registerThread0Wakeup()
 void RaceyDriver::joinThread()
 {
   m_done_counter++;
-  if (m_done_counter == RubyConfig::numberOfProcessors()) {
-    m_finish_time = g_eventQueue_ptr->getTime();
+  if (m_done_counter == m_num_procs) {
+   m_finish_time = eventQueue->getTime();
   }
 
   if(m_wakeup_thread0) {
-    g_eventQueue_ptr->scheduleEvent(m_racey_pseudo_threads[0], 1);
+    eventQueue->scheduleEvent(m_racey_pseudo_threads[0], 1);
     m_wakeup_thread0 = false;
   }
 }
@@ -114,14 +127,14 @@ void RaceyDriver::wakeup()
   }
 
   // schedule next wakeup
-  if (m_done_counter < RubyConfig::numberOfProcessors()) {
-    g_eventQueue_ptr->scheduleEvent(this, g_DEADLOCK_THRESHOLD);
+  if (m_done_counter < m_num_procs) {
+    eventQueue->scheduleEvent(this, g_DEADLOCK_THRESHOLD);
   }
 }
 
 void RaceyDriver::printStats(ostream& out) const
 {
-  assert(m_done_counter == RubyConfig::numberOfProcessors());
+  assert(m_done_counter == m_num_procs);
   out << endl;
   out << "RaceyDriver Stats" << endl;
   out << "---------------------" << endl;

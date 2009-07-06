@@ -35,13 +35,11 @@
 #include "mem/ruby/recorder/TraceRecord.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/slicc_interface/AbstractChip.hh"
 #include "mem/protocol/CacheMsg.hh"
-#include "mem/packet.hh"
 
-TraceRecord::TraceRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
+TraceRecord::TraceRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
 {
-  m_node_num = id;
+  m_sequencer_name = sequencer_name;
   m_data_address = data_addr;
   m_pc_address = pc_addr;
   m_time = time;
@@ -49,8 +47,8 @@ TraceRecord::TraceRecord(NodeID id, const Address& data_addr, const Address& pc_
 
   // Don't differentiate between store misses and atomic requests in
   // the trace
-  if (m_type == CacheRequestType_ATOMIC) {
-    m_type = CacheRequestType_ST;
+  if (m_type == RubyRequestType_RMW) {
+    m_type = RubyRequestType_ST;
   }
 }
 
@@ -62,7 +60,7 @@ TraceRecord::TraceRecord(const TraceRecord& obj)
 
 TraceRecord& TraceRecord::operator=(const TraceRecord& obj)
 {
-  m_node_num = obj.m_node_num;
+  m_sequencer_name = obj.m_sequencer_name;
   m_time = obj.m_time;
   m_data_address = obj.m_data_address;
   m_pc_address = obj.m_pc_address;
@@ -74,32 +72,17 @@ void TraceRecord::issueRequest() const
 {
   // Lookup sequencer pointer from system
   // Note that the chip index also needs to take into account SMT configurations
-  AbstractChip* chip_ptr = g_system_ptr->getChip(m_node_num/RubyConfig::numberOfProcsPerChip()/RubyConfig::numberofSMTThreads());
-  assert(chip_ptr != NULL);
-  Sequencer* sequencer_ptr = chip_ptr->getSequencer((m_node_num/RubyConfig::numberofSMTThreads())%RubyConfig::numberOfProcsPerChip());
+  Sequencer* sequencer_ptr = RubySystem::getSequencer(m_sequencer_name);
   assert(sequencer_ptr != NULL);
 
-  Addr data_addr = m_data_address.getAddress();
-  Addr pc_addr = m_pc_address.getAddress();
-  Request request(0, data_addr, 0, Flags<unsigned int>(Request::PREFETCH), pc_addr, m_node_num, 0);
-  MemCmd::Command command;
-  if (m_type == CacheRequestType_LD || m_type == CacheRequestType_IFETCH)
-    command = MemCmd::ReadReq;
-  else if (m_type == CacheRequestType_ST)
-    command = MemCmd::WriteReq;
-  else if (m_type == CacheRequestType_ATOMIC)
-    command = MemCmd::SwapReq; // TODO -- differentiate between atomic types
-  else
-    assert(false);
-
-  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+  RubyRequest request(m_data_address.getAddress(), NULL, RubySystem::getBlockSizeBytes(), m_pc_address.getAddress(), m_type, RubyAccessMode_User);
 
   // Clear out the sequencer
   while (!sequencer_ptr->empty()) {
     g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
   }
 
-  sequencer_ptr->makeRequest(&pkt);
+  sequencer_ptr->makeRequest(request);
 
   // Clear out the sequencer
   while (!sequencer_ptr->empty()) {
@@ -109,12 +92,12 @@ void TraceRecord::issueRequest() const
 
 void TraceRecord::print(ostream& out) const
 {
-  out << "[TraceRecord: Node, " << m_node_num << ", " << m_data_address << ", " << m_pc_address << ", " << m_type << ", Time: " << m_time << "]";
+  out << "[TraceRecord: Node, " << m_sequencer_name << ", " << m_data_address << ", " << m_pc_address << ", " << m_type << ", Time: " << m_time << "]";
 }
 
 void TraceRecord::output(ostream& out) const
 {
-  out << m_node_num << " ";
+  out << m_sequencer_name << " ";
   m_data_address.output(out);
   out << " ";
   m_pc_address.output(out);
@@ -125,13 +108,13 @@ void TraceRecord::output(ostream& out) const
 
 bool TraceRecord::input(istream& in)
 {
-  in >> m_node_num;
+  in >> m_sequencer_name;
   m_data_address.input(in);
   m_pc_address.input(in);
   string type;
   if (!in.eof()) {
     in >> type;
-    m_type = string_to_CacheRequestType(type);
+    m_type = string_to_RubyRequestType(type);
 
     // Ignore the rest of the line
     char c = '\0';

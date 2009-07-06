@@ -33,7 +33,7 @@
  */
 
 
-machine(L1Cache, "MSI Directory L1 Cache CMP") {
+machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATENCY_L1_RESPONSE_LATENCY LATENCY_TO_L2_LATENCY {
 
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
@@ -136,12 +136,21 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") {
 
   TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
 
-  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
-  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
+//  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
+//  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
 
-  MessageBuffer mandatoryQueue, ordered="false", rank="100", abstract_chip_ptr="true";
+  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["L1Icache"])';
 
-  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["L1Dcache"])';
+
+
+//  MessageBuffer mandatoryQueue, ordered="false", rank="100", abstract_chip_ptr="true";
+
+//  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+
+  MessageBuffer mandatoryQueue, ordered="false";
+  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
+
 
   int cache_state_to_int(State state);
 
@@ -290,40 +299,40 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") {
           // ** INSTRUCTION ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.Address);
+            trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1IcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         } else {
           // *** DATA ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.Address);
+            trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1DcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         }
@@ -517,7 +526,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") {
   }
 
   action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency="1") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency="TO_L2_LATENCY") {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
@@ -527,7 +536,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") {
   }
 
   action(jj_sendExclusiveUnblock, "\j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency="1") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency="TO_L2_LATENCY") {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:EXCLUSIVE_UNBLOCK;
       out_msg.Sender := machineID;

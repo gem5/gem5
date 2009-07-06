@@ -38,36 +38,28 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Debug.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/gems_common/util.hh"
 
 class Debug;
 extern Debug* g_debug_ptr;
 std::ostream * debug_cout_ptr;
 
-struct DebugComponentData
-{
-    const char *desc;
-    const char ch;
-};
+bool Debug::m_protocol_trace = false;
 
 // component character list
-DebugComponentData debugComponents[] =
+const char DEFINE_COMP_CHAR[] =
 {
-    {"System",            's' },
-    {"Node",              'N' },
-    {"Queue",             'q' },
-    {"Event Queue",       'e' },
-    {"Network",           'n' },
-    {"Sequencer",         'S' },
-    {"Tester",            't' },
-    {"Generated",         'g' },
-    {"SLICC",             'l' },
-    {"Network Queues",    'Q' },
-    {"Time",              'T' },
-    {"Network Internals", 'i' },
-    {"Store Buffer",      'b' },
-    {"Cache",             'c' },
-    {"Predictor",         'p' },
-    {"Allocator",         'a' },
+#undef DEFINE_COMP
+#define DEFINE_COMP(component, character, description) character,
+#include "Debug.def"
+};
+
+// component description list
+const char* DEFINE_COMP_DESCRIPTION[] =
+{
+#undef DEFINE_COMP
+#define DEFINE_COMP(component, character, description) description,
+#include "Debug.def"
 };
 
 extern "C" void changeDebugVerbosity(VerbosityLevel vb);
@@ -81,6 +73,32 @@ void changeDebugVerbosity(VerbosityLevel vb)
 void changeDebugFilter(int filter)
 {
   g_debug_ptr->setFilter(filter);
+}
+
+Debug::Debug()
+{
+  m_verbosityLevel = No_Verb;
+  m_starting_cycle = ~0;
+  clearFilter();
+  debug_cout_ptr = &cout;
+}
+
+Debug::Debug( const string & name, const vector<string> & argv )
+{
+  for (size_t i=0;i<argv.size();i+=2){
+    if (argv[i] == "filter_string")
+      setFilterString( argv[i+1].c_str() );
+    else if (argv[i] == "verbosity_string")
+      setVerbosityString( argv[i+1].c_str() );
+    else if (argv[i] == "start_time")
+      m_starting_cycle = atoi( argv[i+1].c_str() );
+    else if (argv[i] == "output_filename")
+      setDebugOutputFile( argv[i+1].c_str() );
+    else if (argv[i] == "protocol_trace")
+      m_protocol_trace = string_to_bool(argv[i+1]);
+    else
+      assert(0);
+  }
 }
 
 Debug::Debug( const char *filterString, const char *verboseString,
@@ -208,7 +226,7 @@ bool Debug::checkFilter(char ch)
 {
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
     // Look at all components to find a character match
-    if (debugComponents[i].ch == ch) {
+    if (DEFINE_COMP_CHAR[i] == ch) {
       // We found a match - return no error
       return false; // no error
     }
@@ -274,9 +292,9 @@ bool Debug::addFilter(char ch)
 {
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
     // Look at all components to find a character match
-    if (debugComponents[i].ch == ch) {
+    if (DEFINE_COMP_CHAR[i] == ch) {
       // We found a match - update the filter bit mask
-      cout << "  Debug: Adding to filter: '" << ch << "' (" << debugComponents[i].desc << ")" << endl;
+      cout << "  Debug: Adding to filter: '" << ch << "' (" << DEFINE_COMP_DESCRIPTION[i] << ")" << endl;
       m_filter |= (1 << i);
       return false; // no error
     }
@@ -302,7 +320,7 @@ void Debug::usageInstructions(void)
 {
   cerr << "Debug components: " << endl;
   for (int i=0; i<NUMBER_OF_COMPS; i++) {
-    cerr << "  " << debugComponents[i].ch << ": " << debugComponents[i].desc << endl;
+    cerr << "  " << DEFINE_COMP_CHAR[i] << ": " << DEFINE_COMP_DESCRIPTION[i] << endl;
   }
 }
 

@@ -72,6 +72,7 @@
 #include "mem/slicc/ast/InfixOperatorExprAST.hh"
 #include "mem/slicc/ast/FuncCallExprAST.hh"
 #include "mem/slicc/ast/MethodCallExprAST.hh"
+#include "mem/slicc/ast/NewExprAST.hh"
 
 #include "mem/slicc/ast/ChipComponentAccessAST.hh"
 

@@ -26,6 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * $Id: std-includes.hh,v 3.7 2003/02/24 21:05:24 xu Exp $
+ */
+
 #ifndef INCLUDES_H
 #define INCLUDES_H
 

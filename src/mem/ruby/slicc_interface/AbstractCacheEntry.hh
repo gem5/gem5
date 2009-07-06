@@ -41,6 +41,8 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/protocol/AccessPermission.hh"
 
+class DataBlock;
+
 class AbstractCacheEntry {
 public:
   // Constructors
@@ -53,6 +55,7 @@ public:
 
   // The methods below are those called by ruby runtime, add when it is
   // absolutely necessary and should all be virtual function.
+  virtual DataBlock& getDataBlk() = 0;
 
 
   virtual void print(ostream& out) const = 0;

@@ -65,8 +65,8 @@ public:
   void addPair(const string& key, const string& value);
 
   //  virtual string getCode() const = 0;
-  virtual void writeCFiles(string path) const {}
-  virtual void writeHTMLFiles(string path) const {}
+  virtual void writeCFiles(string path)  {}
+  virtual void writeHTMLFiles(string path)  {}
   virtual void print(ostream& out) const { out << "[Symbol: " << getIdent() << "]"; }
 
 private:

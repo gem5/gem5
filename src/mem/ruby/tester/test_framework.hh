@@ -37,10 +37,8 @@
 #ifndef TESTFRAMEWORK_H
 #define TESTFRAMEWORK_H
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/interfaces/mf_api.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 
 void tester_main(int argc, char **argv);
-void tester_install_opal( mf_opal_api_t  *opal_api, mf_ruby_api_t *ruby_api );
 
 #endif //TESTFRAMEWORK_H

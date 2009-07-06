@@ -108,32 +108,21 @@ void ObjDeclAST::generate()
     c_code = "m_version";
   } else if (*m_ident_ptr == "machineID") {
     c_code = "m_machineID";
-  } else if (*m_ident_ptr == "sequencer") {
-    c_code = "*(dynamic_cast<"+m_type_ptr->toString()+"*>(m_chip_ptr->getSequencer(m_version)))";
-    machineComponentSym = true;
-  } /*else if (*m_ident_ptr == "xfdr_record_mgr") {
-    c_code = "*(dynamic_cast<"+m_type_ptr->toString()+"*>(m_chip_ptr->getXfdrManager(m_version)))";
-    machineComponentSym = true;
-    } */else if (// getPairs().exist("network") || (m_type_ptr->lookupType()->existPair("cache"))
-//              || (m_type_ptr->lookupType()->existPair("tbe")) ||
-//              (m_type_ptr->lookupType()->existPair("newtbe")) ||
-//              (m_type_ptr->lookupType()->existPair("timer")) ||
-//              (m_type_ptr->lookupType()->existPair("dir")) ||
-//              (m_type_ptr->lookupType()->existPair("persistent")) ||
-//              (m_type_ptr->lookupType()->existPair("filter")) ||
-//              (getPairs().exist("trigger_queue"))
-             getPairs().exist("no_vector")) {
-    c_code = "(*(m_chip_ptr->m_" + machine + *m_ident_ptr + "_ptr))";
-    machineComponentSym = true;
   } else {
-    c_code = "(*(m_chip_ptr->m_" + machine + *m_ident_ptr + "_vec[m_version]))";
-    machineComponentSym = true;
+    c_code = "(*m_" + machine + *m_ident_ptr + "_ptr)";
+    //    c_code = "(*(m_chip_ptr->m_" + machine + *m_ident_ptr + "_ptr))";
+      //    machineComponentSym = true;
   }
 
   Var* v = new Var(*m_ident_ptr, getLocation(), type_ptr, c_code,
                              getPairs(), g_sym_table.getStateMachine());
 
-  g_sym_table.newSym(v);
+  StateMachine* machine_ptr = g_sym_table.getStateMachine();
+  if (machine_ptr != NULL) {
+    machine_ptr->addObj(v);
+  }// else {
+    g_sym_table.newSym(v);
+    //}
 
   // used to cheat-- that is, access components in other machines
   if (machineComponentSym) {

@@ -67,9 +67,16 @@ AddressProfiler::~AddressProfiler()
   delete m_persistentPredictionProfileMap;
 }
 
+void AddressProfiler::setHotLines(bool hot_lines){
+  m_hot_lines = hot_lines;
+}
+void AddressProfiler::setAllInstructions(bool all_instructions){
+  m_all_instructions = all_instructions;
+}
+
 void AddressProfiler::printStats(ostream& out) const
 {
-  if (PROFILE_HOT_LINES) {
+  if (m_hot_lines) {
     out << endl;
     out << "AddressProfiler Stats" << endl;
     out << "---------------------" << endl;
@@ -97,7 +104,7 @@ void AddressProfiler::printStats(ostream& out) const
     printSorted(out, m_programCounterAccessTrace, "pc_address");
   }
 
-  if (PROFILE_ALL_INSTRUCTIONS){
+  if (m_all_instructions){
     out << endl;
     out << "All Instructions Profile:" << endl;
     out << "-------------------------" << endl;
@@ -189,7 +196,7 @@ void AddressProfiler::profileGetS(const Address& datablock, const Address& PC, c
 
 void AddressProfiler::addTraceSample(Address data_addr, Address pc_addr, CacheRequestType type, AccessModeType access_mode, NodeID id, bool sharing_miss)
 {
-  if (PROFILE_HOT_LINES) {
+  if (m_all_instructions) {
     if (sharing_miss) {
       m_sharing_miss_counter++;
     }
@@ -206,7 +213,7 @@ void AddressProfiler::addTraceSample(Address data_addr, Address pc_addr, CacheRe
     lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).update(type, access_mode, id, sharing_miss);
   }
 
-  if (PROFILE_ALL_INSTRUCTIONS) {
+  if (m_all_instructions) {
     // This code is used if the address profiler is an all-instructions profiler
     // record program counter address trace info
     lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).update(type, access_mode, id, sharing_miss);
@@ -248,7 +255,7 @@ static void printSorted(ostream& out, const Map<Address, AccessTraceForAddress>*
   }
 
   out << "Total_entries_" << description << ": " << keys.size() << endl;
-  if (PROFILE_ALL_INSTRUCTIONS)
+  if (g_system_ptr->getProfiler()->getAllInstructions())
     out << "Total_Instructions_" << description << ": " << misses << endl;
   else
     out << "Total_data_misses_" << description << ": " << misses << endl;
@@ -263,8 +270,8 @@ static void printSorted(ostream& out, const Map<Address, AccessTraceForAddress>*
   // Allows us to track how many lines where touched by n processors
   Vector<int64> m_touched_vec;
   Vector<int64> m_touched_weighted_vec;
-  m_touched_vec.setSize(RubyConfig::numberOfProcessors()+1);
-  m_touched_weighted_vec.setSize(RubyConfig::numberOfProcessors()+1);
+  m_touched_vec.setSize(RubySystem::getNumberOfSequencers()+1);
+  m_touched_weighted_vec.setSize(RubySystem::getNumberOfSequencers()+1);
   for (int i=0; i<m_touched_vec.size(); i++) {
     m_touched_vec[i] = 0;
     m_touched_weighted_vec[i] = 0;

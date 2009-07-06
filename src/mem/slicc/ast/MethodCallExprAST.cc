@@ -76,25 +76,38 @@ Type* MethodCallExprAST::generate(string& code) const
 {
   Type* obj_type_ptr = NULL;
 
+  string methodId;
+  Vector <Type*> paramTypes;
+
+  int actual_size = m_expr_vec_ptr->size();
+  for(int i=0; i<actual_size; i++) {
+    string tmp;
+    Type* actual_type_ptr = (*m_expr_vec_ptr)[i]->generate(tmp);
+    paramTypes.insertAtBottom(actual_type_ptr);
+  }
+
   if(m_obj_expr_ptr) {
     // member method call
+    string tmp;
+    obj_type_ptr = m_obj_expr_ptr->generate(tmp);
+    methodId = obj_type_ptr->methodId(*m_proc_name_ptr, paramTypes);
+    if (obj_type_ptr->methodReturnType(methodId)->isInterface())
+      code += "static_cast<" + obj_type_ptr->methodReturnType(methodId)->cIdent() + "&>";
     code += "((";
-    obj_type_ptr = m_obj_expr_ptr->generate(code);
-
+    code += tmp;
     code += ").";
   } else if (m_type_ptr) {
     // class method call
     code += "(" + m_type_ptr->toString() + "::";
     obj_type_ptr = m_type_ptr->lookupType();
+    methodId = obj_type_ptr->methodId(*m_proc_name_ptr, paramTypes);
   } else {
     // impossible
     assert(0);
   }
 
-  Vector <Type*> paramTypes;
-
   // generate code
-  int actual_size = m_expr_vec_ptr->size();
+  actual_size = m_expr_vec_ptr->size();
   code += (*m_proc_name_ptr) + "(";
   for(int i=0; i<actual_size; i++) {
     if (i != 0) {
@@ -102,11 +115,8 @@ Type* MethodCallExprAST::generate(string& code) const
     }
     // Check the types of the parameter
     Type* actual_type_ptr = (*m_expr_vec_ptr)[i]->generate(code);
-    paramTypes.insertAtBottom(actual_type_ptr);
   }
   code += "))";
-
-  string methodId = obj_type_ptr->methodId(*m_proc_name_ptr, paramTypes);
 
   // Verify that this is a method of the object
   if (!obj_type_ptr->methodExist(methodId)) {

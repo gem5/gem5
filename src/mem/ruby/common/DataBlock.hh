@@ -31,29 +31,41 @@
 #define DATABLOCK_H
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/gems_common/Vector.hh"
 
 class DataBlock {
-public:
+ public:
   // Constructors
-  DataBlock();
+  DataBlock() {alloc();}
+  DataBlock(const DataBlock & cp) {
+    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
+    m_alloc = true;
+  }
 
   // Destructor
-  ~DataBlock();
+  ~DataBlock() { if(m_alloc) delete [] m_data;}
+
+  DataBlock& operator=(const DataBlock& obj);
 
   // Public Methods
+  void assign(uint8* data);
+
   void clear();
   uint8 getByte(int whichByte) const;
+  const uint8* getData(int offset, int len) const;
   void setByte(int whichByte, uint8 data);
+  void setData(uint8* data, int offset, int len);
+  void copyPartial(const DataBlock & dblk, int offset, int len);
   bool equal(const DataBlock& obj) const;
   void print(ostream& out) const;
 
 private:
-  // Private Methods
-
+  void alloc();
   // Data Members (m_ prefix)
-  Vector<uint8> m_data;
+  uint8* m_data;
+  bool m_alloc;
 };
 
 // Output operator declaration
@@ -61,6 +73,78 @@ ostream& operator<<(ostream& out, const DataBlock& obj);
 
 bool operator==(const DataBlock& obj1, const DataBlock& obj2);
 
+// inline functions for speed
+
+inline
+void DataBlock::assign(uint8* data)
+{
+  delete [] m_data;
+  m_data = data;
+  m_alloc = false;
+}
+
+inline
+void DataBlock::alloc()
+{
+  m_data = new uint8[RubySystem::getBlockSizeBytes()];
+  m_alloc = true;
+  clear();
+}
+
+inline
+void DataBlock::clear()
+{
+  memset(m_data, 0, RubySystem::getBlockSizeBytes());
+}
+
+inline
+bool DataBlock::equal(const DataBlock& obj) const
+{
+  return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+}
+
+inline
+void DataBlock::print(ostream& out) const
+{
+  int size = RubySystem::getBlockSizeBytes();
+  out << "[ ";
+  for (int i = 0; i < size; i+=4) {
+    out << hex << *((uint32*)(&(m_data[i]))) << " ";
+  }
+  out << dec << "]" << flush;
+}
+
+inline
+uint8 DataBlock::getByte(int whichByte) const
+{
+  return m_data[whichByte];
+}
+
+inline
+const uint8* DataBlock::getData(int offset, int len) const
+{
+  assert(offset + len <= RubySystem::getBlockSizeBytes());
+  return &m_data[offset];
+}
+
+inline
+void DataBlock::setByte(int whichByte, uint8 data)
+{
+    m_data[whichByte] = data;
+}
+
+inline
+void DataBlock::setData(uint8* data, int offset, int len)
+{
+  assert(offset + len <= RubySystem::getBlockSizeBytes());
+  memcpy(&m_data[offset], data, len);
+}
+
+inline
+void DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
+{
+  setData(&dblk.m_data[offset], offset, len);
+}
 
 // ******************* Definitions *******************
 

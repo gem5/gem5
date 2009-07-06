@@ -59,21 +59,26 @@ typedef Vector < Vector <int> > Matrix;
 class Topology {
 public:
   // Constructors
-  Topology(Network* network_ptr, int number_of_nodes);
+  //  Topology(Network* network_ptr, int number_of_nodes);
+  Topology(const string & name);
 
   // Destructor
-  ~Topology() {}
+  virtual ~Topology() {}
+
+  virtual void init(const vector<string> & argv);
 
   // Public Methods
+  void makeTopology();
   int numSwitches() const { return m_number_of_switches; }
   void createLinks(bool isReconfiguration);
 
+  const string getName() { return m_name; }
   void printStats(ostream& out) const {}
   void clearStats() {}
   void printConfig(ostream& out) const;
   void print(ostream& out) const { out << "[Topology]"; }
 
-private:
+protected:
   // Private Methods
   void init();
   SwitchID newSwitchID();
@@ -82,12 +87,7 @@ private:
   void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier, int link_weight);
   void makeLink(SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int weight, int bw_multiplier, bool isReconfiguration);
 
-  void makeHierarchicalSwitch(int fan_out_degree);
-  void make2DTorus();
-  void makePtToPt();
-  void makeFileSpecified();
-
-  void makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
+  //  void makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
 
   string getDesignStr();
   // Private copy constructor and assignment operator
@@ -95,7 +95,10 @@ private:
   Topology& operator=(const Topology& obj);
 
   // Data Members (m_ prefix)
+  string m_name;
+  bool m_print_config;
   Network* m_network_ptr;
+  string m_connections;
   NodeID m_nodes;
   int m_number_of_switches;
 

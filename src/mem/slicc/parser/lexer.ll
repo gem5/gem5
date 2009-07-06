@@ -1,3 +1,4 @@
+
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -26,11 +27,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * $Id$
+ */
+
 %{
 
 #include <assert.h>
 #include "mem/slicc/ast/ASTs.hh"
-#include "mem/slicc/parser/parser.hh"
+#include "parser.hh"
 #include <string>
 
 extern "C" int yylex();
@@ -76,6 +81,7 @@ return     { return RETURN; }
 THIS       { return THIS; }
 CHIP       { return CHIP; }
 void       { yylval.str_ptr = new string(yytext); return VOID; }
+new        { return NEW; }
 
 ==        { yylval.str_ptr = new string(yytext); return EQ; }
 !=        { yylval.str_ptr = new string(yytext); return NE; }
@@ -108,6 +114,7 @@ void       { yylval.str_ptr = new string(yytext); return VOID; }
 
 [0-9]*[.][0-9]*     { yylval.str_ptr = new string(yytext); return FLOATNUMBER; }
 [0-9]*     { yylval.str_ptr = new string(yytext); return NUMBER; }
+
 [a-zA-Z_][a-zA-Z_0-9]{0,50}    { yylval.str_ptr = new string(yytext); return IDENT; }
 \"[^"\n]*\"  { yytext[strlen(yytext)-1] = '\0';  yylval.str_ptr = new string(yytext+1); return STRING; }
 \'[^'\n]*\'  { yytext[strlen(yytext)-1] = '\0';  yylval.str_ptr = new string(yytext+1); return STRING; }

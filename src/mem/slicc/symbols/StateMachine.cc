@@ -44,10 +44,13 @@
 #include "mem/gems_common/util.hh"
 #include "mem/gems_common/Vector.hh"
 
-StateMachine::StateMachine(string ident, const Location& location, const Map<string, string>& pairs)
+#include <set>
+
+StateMachine::StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  std::vector<std::string*>* latency_vector)
   : Symbol(ident, location, pairs)
 {
   m_table_built = false;
+  m_latency_vector = *latency_vector;
 }
 
 StateMachine::~StateMachine()
@@ -167,10 +170,17 @@ const Transition* StateMachine::getTransPtr(int stateIndex, int eventIndex) cons
 // ******* C Files ******* //
 // *********************** //
 
-void StateMachine::writeCFiles(string path) const
+void StateMachine::writeCFiles(string path)
 {
   string comp = getIdent();
   string filename;
+
+  // Output the method declarations for the class declaration
+  {
+    ostringstream sstr;
+    printControllerH(sstr, comp);
+    conditionally_write_file(path + comp + "_Controller.hh", sstr);
+  }
 
   // Output switch statement for transition table
   {
@@ -184,13 +194,6 @@ void StateMachine::writeCFiles(string path) const
     ostringstream sstr;
     printControllerC(sstr, comp);
     conditionally_write_file(path + comp + "_Controller.cc", sstr);
-  }
-
-  // Output the method declarations for the class declaration
-  {
-    ostringstream sstr;
-    printControllerH(sstr, comp);
-    conditionally_write_file(path + comp + "_Controller.hh", sstr);
   }
 
   // Output the wakeup loop for the events
@@ -219,8 +222,11 @@ void StateMachine::writeCFiles(string path) const
 
 }
 
-void StateMachine::printControllerH(ostream& out, string component) const
+void StateMachine::printControllerH(ostream& out, string component)
 {
+
+  m_message_buffer_names.clear();
+
   out << "/** \\file " << getIdent() << ".hh" << endl;
   out << "  * " << endl;
   out << "  * Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
@@ -232,29 +238,59 @@ void StateMachine::printControllerH(ostream& out, string component) const
   out << endl;
   out << "#include \"mem/ruby/common/Global.hh\"" << endl;
   out << "#include \"mem/ruby/common/Consumer.hh\"" << endl;
+  out << "#include \"mem/ruby/slicc_interface/AbstractController.hh\"" << endl;
   out << "#include \"mem/protocol/TransitionResult.hh\"" << endl;
   out << "#include \"mem/protocol/Types.hh\"" << endl;
   out << "#include \"mem/protocol/" << component << "_Profiler.hh\"" << endl;
+
+  // include object classes
+  std::set<string> seen_types;
+  for(int i=0; i<numObjects(); i++) {
+    Var* var = m_objs[i];
+    if (seen_types.count(var->getType()->cIdent()) == 0) {
+      out << "#include \"mem/protocol/" << var->getType()->cIdent() << ".hh\"" << endl;
+      //      out << "class " << var->getType()->cIdent() << ";" << endl;
+      seen_types.insert(var->getType()->cIdent());
+    }
+  }
+
   out << endl;
 
   // for adding information to the protocol debug trace
   out << "extern stringstream " << component << "_" << "transitionComment;" << endl;
 
-  out << "class " << component << "_Controller : public Consumer {" << endl;
+  out << "class " << component << "_Controller : public AbstractController {" << endl;
 
   /* the coherence checker needs to call isBlockExclusive() and isBlockShared()
      making the Chip a friend class is an easy way to do this for now */
   out << "#ifdef CHECK_COHERENCE" << endl;
-  out << "  friend class Chip;" << endl;
   out << "#endif /* CHECK_COHERENCE */" << endl;
 
   out << "public:" << endl;
-  out << "  " << component << "_Controller(Chip* chip_ptr, int version);" << endl;
+  //  out << "  " << component << "_Controller(int version, Network* net_ptr);" << endl;
+  out << "  " << component << "_Controller(const string & name);" << endl;
+  out << "  static int getNumControllers();" << endl;
+  out << "  void init(Network* net_ptr, const vector<string> & argv);" << endl;
+  out << "  MessageBuffer* getMandatoryQueue() const;" << endl;
+  out << "  const int & getVersion() const;" << endl;
+  out << "  const string toString() const;" << endl;
+  out << "  const string getName() const;" << endl;
+  out << "  const MachineType getMachineType() const;" << endl;
   out << "  void print(ostream& out) const;" << endl;
+  out << "  void printConfig(ostream& out) const;" << endl;
   out << "  void wakeup();" << endl;
-  out << "  static void dumpStats(ostream& out) { s_profiler.dumpStats(out); }" << endl;
-  out << "  static void clearStats() { s_profiler.clearStats(); }" << endl;
+  out << "  void printStats(ostream& out) const { s_profiler.dumpStats(out); }" << endl;
+  out << "  void clearStats() { s_profiler.clearStats(); }" << endl;
   out << "private:" << endl;
+
+//added by SS
+//  found_to_mem = 0;
+  std::vector<std::string*>::const_iterator it;
+  for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++){
+        out << "  int m_" << (*it)->c_str() << ";" << endl;
+  }
+  out << "  int m_number_of_TBEs;" << endl;
+
   out << "  TransitionResult doTransition(" << component << "_Event event, " << component
       << "_State state, const Address& addr";
   if(CHECK_INVALID_RESOURCE_STALLS) {
@@ -267,11 +303,16 @@ void StateMachine::printControllerH(ostream& out, string component) const
     out << ", int priority";
   }
   out << ");  // in " << component << "_Transitions.cc" << endl;
-  out << "  Chip* m_chip_ptr;" << endl;
-  out << "  NodeID m_id;" << endl;
+  out << "  string m_name;" << endl;
+  out << "  int m_transitions_per_cycle;" << endl;
+  out << "  int m_buffer_size;" << endl;
+  out << "  int m_recycle_latency;" << endl;
+  out << "  map< string, string > m_cfg;" << endl;
   out << "  NodeID m_version;" << endl;
+  out << "  Network* m_net_ptr;" << endl;
   out << "  MachineID m_machineID;" << endl;
   out << "  static " << component << "_Profiler s_profiler;" << endl;
+  out << "  static int m_num_controllers;" << endl;
 
   // internal function protypes
   out << "  // Internal functions" << endl;
@@ -290,11 +331,30 @@ void StateMachine::printControllerH(ostream& out, string component) const
     out << "/** \\brief " << action.getDescription() << "*/" << endl;
     out << "  void " << action.getIdent() << "(const Address& addr);" << endl;
   }
+
+  // the controller internal variables
+  out << "  // Object" << endl;
+  for(int i=0; i < numObjects(); i++) {
+    const Var* var = m_objs[i];
+    string template_hack = "";
+    if (var->existPair("template_hack")) {
+      template_hack = var->lookupPair("template_hack");
+    }
+    out << "  " << var->getType()->cIdent() << template_hack << "* m_"
+        << var->cIdent() << "_ptr;" << endl;
+
+    string str = "m_"+ var->cIdent() + "_ptr";
+    if (var->getType()->cIdent() == "MessageBuffer")
+        m_message_buffer_names.push_back(str);
+
+  }
+
+
   out << "};" << endl;
   out << "#endif // " << component << "_CONTROLLER_H" << endl;
 }
 
-void StateMachine::printControllerC(ostream& out, string component) const
+void StateMachine::printControllerC(ostream& out, string component)
 {
   out << "/** \\file " << getIdent() << ".cc" << endl;
   out << "  * " << endl;
@@ -309,8 +369,21 @@ void StateMachine::printControllerC(ostream& out, string component) const
   out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
   out << "#include \"mem/protocol/Types.hh\"" << endl;
   out << "#include \"mem/ruby/system/System.hh\"" << endl;
-  out << "#include \"mem/protocol/Chip.hh\"" << endl;
+
+  // include object classes
+  std::set<string> seen_types;
+  for(int i=0; i<numObjects(); i++) {
+    Var* var = m_objs[i];
+    if (seen_types.count(var->getType()->cIdent()) == 0) {
+      out << "#include \"mem/protocol/" << var->getType()->cIdent() << ".hh\"" << endl;
+      seen_types.insert(var->getType()->cIdent());
+    }
+
+  }
+
   out << endl;
+
+  out << "int " << component << "_Controller::m_num_controllers = 0;" << endl;
 
   // for adding information to the protocol debug trace
   out << "stringstream " << component << "_" << "transitionComment;" << endl;
@@ -322,26 +395,220 @@ void StateMachine::printControllerC(ostream& out, string component) const
 
   out << "/** \\brief constructor */" << endl;
   out << component << "_Controller::" << component
-      << "_Controller(Chip* chip_ptr, int version)" << endl;
+    //      << "_Controller(int version, Network* net_ptr)" << endl;
+      << "_Controller(const string & name)" << endl;
+  out << " : m_name(name)" << endl;
+  out << "{ " << endl;
+  out << "   m_num_controllers++; " << endl;
+  for(int i=0; i < numObjects(); i++) {
+    const Var* var = m_objs[i];
+    if ( var->cIdent().find("mandatoryQueue") != string::npos)
+      out << "  m_" << var->cIdent() << "_ptr = new " << var->getType()->cIdent() << "();" << endl;
+  }
+  out << "}" << endl << endl;
+
+  out << "void " << component << "_Controller::init(Network * net_ptr, const vector<string> & argv)" << endl;
   out << "{" << endl;
-  out << "  m_chip_ptr = chip_ptr;" << endl;
-  out << "  m_id = m_chip_ptr->getID();" << endl;
-  out << "  m_version = version;" << endl;
+  out << "  for (size_t i=0; i < argv.size(); i+=2) {" << endl;
+//  out << "    printf (\"ARG: %s = %s \\n \", argv[i].c_str(), argv[i+1].c_str());"<< endl;
+
+  out << "    if (argv[i] == \"version\") " << endl;
+  out << "      m_version = atoi(argv[i+1].c_str());" << endl;
+  out << "    else if (argv[i] == \"transitions_per_cycle\") " << endl;
+  out << "      m_transitions_per_cycle = atoi(argv[i+1].c_str());" << endl;
+  out << "    else if (argv[i] == \"buffer_size\") " << endl;
+  out << "      m_buffer_size = atoi(argv[i+1].c_str());" << endl;
+//added by SS
+  out << "    else if (argv[i] == \"recycle_latency\") " << endl;
+  out << "      m_recycle_latency = atoi(argv[i+1].c_str());" << endl;
+//added by SS --> for latency
+//for loop on latency_vector to check with argv[i] and assign the value to the related m_latency ...
+  out << "    else if (argv[i] == \"number_of_TBEs\") " << endl;
+  out << "      m_number_of_TBEs = atoi(argv[i+1].c_str());" << endl;
+
+  if (m_latency_vector.size()) {
+  out << "    else { " << endl;
+    std::vector<std::string*>::const_iterator it;
+    for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++) {
+      string str = (*it)->c_str();
+      str.erase(0,8);
+//convert to lowercase
+      size_t i;
+      char* strc = (char*) malloc (str.length()+1);
+      strc[str.length()]=0;
+      for(i=0; i < str.length(); i++) {
+        strc[i] = str.at(i);
+        strc[i] = tolower(strc[i]);
+      }
+      str = strc;
+      delete strc;
+      out << "      if (argv[i] == \"" << str << "\"){" << endl;
+      if (str == "to_mem_ctrl_latency")
+        out << "        m_" << (*it)->c_str() << "=" << "atoi(argv[i+1].c_str())+(random() % 5);" << endl;
+      else
+        out << "        m_" << (*it)->c_str() << "=" << "atoi(argv[i+1].c_str());" << endl;
+//      out << "        printf (\"SET m_" << it->c_str() << "= %i \\n \", m_" << it->c_str() << ");" << endl;
+      out << "      }" << endl;
+    }
+  out << "    }" << endl;
+  }
+  out << "  }" << endl;
+
+  out << "  m_net_ptr = net_ptr;" << endl;
   out << "  m_machineID.type = MachineType_" << component << ";" << endl;
-  out << "  m_machineID.num = m_id*RubyConfig::numberOf"<< component << "PerChip()+m_version;" << endl;
+  out << "  m_machineID.num = m_version;" << endl;
+
+//  out << "  printf (\"I set m_LATENCY_ISSUE_LATENCY to %i \\n \", m_LATENCY_ISSUE_LATENCY);" << endl;
+//  out << "  printf (\"I set m_LATENCY_CACHE_RESPONSE_LATENCY to %i \\n \", m_LATENCY_CACHE_RESPONSE_LATENCY);" << endl;
+
+  // make configuration array
+  out << "  for (size_t i=0; i < argv.size(); i+=2) {" << endl;
+  out << "    if (argv[i] != \"version\") " << endl;
+  out << "      m_cfg[argv[i]] = argv[i+1];" << endl;
+  out << "  }" << endl;
+
+  out << endl;
+
+  // initialize objects
+  out << "  // Objects" << endl;
+  for(int i=0; i < numObjects(); i++) {
+    const Var* var = m_objs[i];
+    if (!var->existPair("network")) {
+      // Not a network port object
+      if (var->getType()->existPair("primitive")) {
+        out << "    m_" << var->cIdent() << "_ptr = new " << var->getType()->cIdent() << ";\n";
+        if (var->existPair("default")) {
+          out << "    (*m_" << var->cIdent() << "_ptr) = " << var->lookupPair("default") << ";\n";
+        }
+        out << "  }\n";
+
+      } else {
+        // Normal Object
+        string template_hack = "";
+        if (var->existPair("template_hack")) {
+          template_hack = var->lookupPair("template_hack");
+        }
+//added by SS
+        string str = "";
+        int found = 0;
+        if (var->existPair("factory")) {
+          out << "  m_" << var->cIdent() << "_ptr = " << var->lookupPair("factory");
+        } else {
+          if ( var->cIdent().find("mandatoryQueue") == string::npos) {
+
+            str = "  m_" + var->cIdent() + "_ptr = new " + var->getType()->cIdent() + template_hack;
+            out << str;
+            if (str.find("TBETable")!=string::npos){
+              found = 1;
+            }
+
+            if (!var->getType()->existPair("non_obj") && (!var->getType()->isEnumeration())) {
+              str = "";
+              if (var->existPair("constructor_hack")) {
+                string constructor_hack = var->lookupPair("constructor_hack");
+                str = "(" + constructor_hack + ")";
+              } else {
+                str = "()";
+              }
+              if (found)
+                str = "(m_number_of_TBEs)";
+              out << str;
+            }
+          }
+        }
+
+        out << ";\n";
+        out << "  assert(m_" << var->cIdent() << "_ptr != NULL);" << endl;
+
+        if (var->existPair("default")) {
+          out << "  (*m_" << var->cIdent() << "_ptr) = " << var->lookupPair("default")
+              << "; // Object default" << endl;
+        } else if (var->getType()->hasDefault()) {
+            out << "  (*m_" << var->cIdent() << "_ptr) = " << var->getType()->getDefault()
+                << "; // Type " << var->getType()->getIdent() << " default" << endl;
+        }
+
+        // Set ordering
+        if (var->existPair("ordered") && !var->existPair("trigger_queue")) {
+          // A buffer
+          string ordered =  var->lookupPair("ordered");
+          out << "  m_" << var->cIdent() << "_ptr->setOrdering(" << ordered << ");\n";
+        }
+
+        // Set randomization
+        if (var->existPair("random")) {
+          // A buffer
+          string value =  var->lookupPair("random");
+          out << "  m_" << var->cIdent() << "_ptr->setRandomization(" << value << ");\n";
+        }
+
+        // Set Priority
+        if (var->getType()->isBuffer() && var->existPair("rank") && !var->existPair("trigger_queue")) {
+          string rank =  var->lookupPair("rank");
+          out << "  m_" << var->cIdent() << "_ptr->setPriority(" << rank << ");\n";
+        }
+      }
+    } else {
+      // Network port object
+      string network = var->lookupPair("network");
+      string ordered =  var->lookupPair("ordered");
+      string vnet =  var->lookupPair("virtual_network");
+
+      assert (var->getMachine() != NULL);
+      out << "  m_" << var->cIdent() << "_ptr = m_net_ptr->get"
+          << network << "NetQueue(m_version+MachineType_base_number(string_to_MachineType(\""
+          << var->getMachine()->getIdent() << "\")), "
+          << ordered << ", " << vnet << ");\n";
+      out << "  assert(m_" << var->cIdent() << "_ptr != NULL);" << endl;
+
+      // Set ordering
+      if (var->existPair("ordered")) {
+        // A buffer
+        string ordered =  var->lookupPair("ordered");
+        out << "  m_" << var->cIdent() << "_ptr->setOrdering(" << ordered << ");\n";
+      }
+
+      // Set randomization
+      if (var->existPair("random")) {
+        // A buffer
+        string value =  var->lookupPair("random");
+        out << "  m_" << var->cIdent() << "_ptr->setRandomization(" << value << ");\n";
+      }
+
+      // Set Priority
+      if (var->existPair("rank")) {
+        string rank =  var->lookupPair("rank");
+        out << "  m_" << var->cIdent() << "_ptr->setPriority(" << rank << ");\n";
+      }
+
+      // Set buffer size
+      if (var->getType()->isBuffer()) {
+        out << "  if (m_buffer_size > 0) {\n";
+        out << "    m_" << var->cIdent() << "_ptr->setSize(m_buffer_size);\n";
+        out << "  }\n";
+      }
+
+      // set description (may be overriden later by port def)
+      out << "  m_" << var->cIdent()
+          << "_ptr->setDescription(\"[Version \" + int_to_string(m_version) + \", "
+          << component << ", name=" << var->cIdent() << "]\");" << endl;
+      out << endl;
+    }
+  }
 
   // Set the queue consumers
+  out << endl;
   for(int i=0; i < m_in_ports.size(); i++) {
     const Var* port = m_in_ports[i];
     out << "  " << port->getCode() << ".setConsumer(this);" << endl;
   }
 
-  out << endl;
   // Set the queue descriptions
+  out << endl;
   for(int i=0; i < m_in_ports.size(); i++) {
     const Var* port = m_in_ports[i];
     out << "  " << port->getCode()
-        << ".setDescription(\"[Chip \" + int_to_string(m_chip_ptr->getID()) + \" \" + int_to_string(m_version) + \", "
+        << ".setDescription(\"[Version \" + int_to_string(m_version) + \", "
         << component << ", " << port->toString() << "]\");" << endl;
   }
 
@@ -368,12 +635,72 @@ void StateMachine::printControllerC(ostream& out, string component) const
     }
   }
 
+  //added by SS to initialize recycle_latency of message buffers
+  std::vector<std::string>::const_iterator it;
+  for ( it=m_message_buffer_names.begin() ; it != m_message_buffer_names.end(); it++ ){
+    out << "  "<< (*it).c_str() << "->setRecycleLatency(m_recycle_latency);" << endl;
+  }
+
+
   out << "}" << endl;
 
   out << endl;
 
+  bool has_mandatory_q = false;
+  for(int i=0; i < m_in_ports.size(); i++) {
+    if (m_in_ports[i]->getCode().find("mandatoryQueue_ptr")!= string::npos)
+      has_mandatory_q = true;
+  }
+
+  out << "int " << component << "_Controller::getNumControllers() {" << endl;
+  out << "  return m_num_controllers;" << endl;
+  out << "}" << endl;
+
+  out << endl;
+
+  out << "MessageBuffer* " << component << "_Controller::getMandatoryQueue() const {" << endl;
+  if (has_mandatory_q)
+    out << "  return m_" << component << "_mandatoryQueue_ptr;" << endl;
+  else
+    out << "  return NULL;" << endl;
+  out << "}" << endl;
+
+  out << endl;
+
+  out << "const int & "<<component<<"_Controller::getVersion() const{" << endl;
+  out << "  return m_version;" << endl;
+  out << "}";
+
+  out << endl;
+
+  out << "const string "<<component<<"_Controller::toString() const{" << endl;
+  out << "  return \"" << component<< "_Controller\";" << endl;
+  out << "}";
+
+  out << endl;
+
+  out << "const string "<<component<<"_Controller::getName() const{" << endl;
+  out << "  return m_name;" << endl;
+  out << "}";
+
+  out << endl;
+
+  out << "const MachineType "<<component<<"_Controller::getMachineType() const{" << endl;
+  out << "  return MachineType_" << component<< ";" << endl;
+  out << "}";
+
+  out << endl;
+
   out << "void " << component << "_Controller::print(ostream& out) const { out << \"[" << component
-      << "_Controller \" << m_chip_ptr->getID() << \" \" << m_version << \"]\"; }" << endl;
+      << "_Controller \" << m_version << \"]\"; }" << endl;
+
+  out << "void " << component << "_Controller::printConfig(ostream& out) const {" << endl;
+  out << "  out << \"" << component << "_Controller config: \" << m_name << endl;" << endl;
+  out << "  out << \"  version: \" << m_version << endl;" << endl;
+  out << "  for(map< string, string >::const_iterator it = m_cfg.begin(); it != m_cfg.end(); it++) {" << endl;
+  out << "    out << \"  \" << (*it).first << \": \" << (*it).second << endl;" << endl;
+  out << "  }" << endl;
+  out << "}" << endl;
 
   out << endl;
   out << "// Actions" << endl;
@@ -387,14 +714,39 @@ void StateMachine::printControllerC(ostream& out, string component) const
           << action.getIdent() << "(const Address& addr)" << endl;
       out << "{" << endl;
       out << "  DEBUG_MSG(GENERATED_COMP, HighPrio,\"executing\");" << endl;
-      out << action.lookupPair("c_code");
+//added by SS
+//instead of rubyconfig:: --> it should point to m_latency...
+//so I should change the string output of this lookup
+
+      string c_code_string = action.lookupPair("c_code");
+
+      size_t found = c_code_string.find("RubyConfig::get");
+
+      if (found!=string::npos){ //found --> replace it with local access
+        //if it is related to latency --> replace it
+        std::vector<std::string*>::const_iterator it;
+        for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++){
+          string str = (*it)->c_str();
+          str.erase(0,8);
+          size_t fd = c_code_string.find(str, found);
+          if (fd!=string::npos && (fd == found+15)){
+            string rstr = "m_";
+            rstr += (*it)->c_str();
+            c_code_string.replace(found,15+str.size()+2,rstr);
+            break;
+          }
+        }
+      }
+
+      out << c_code_string;
+
       out << "}" << endl;
     }
     out << endl;
   }
 }
 
-void StateMachine::printCWakeup(ostream& out, string component) const
+void StateMachine::printCWakeup(ostream& out, string component)
 {
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
@@ -406,7 +758,6 @@ void StateMachine::printCWakeup(ostream& out, string component) const
   out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
   out << "#include \"mem/protocol/Types.hh\"" << endl;
   out << "#include \"mem/ruby/system/System.hh\"" << endl;
-  out << "#include \"mem/protocol/Chip.hh\"" << endl;
   out << endl;
   out << "void " << component << "_Controller::wakeup()" << endl;
   out << "{" << endl;
@@ -416,8 +767,8 @@ void StateMachine::printCWakeup(ostream& out, string component) const
   out << "int counter = 0;" << endl;
   out << "  while (true) {" << endl;
   out << "    // Some cases will put us into an infinite loop without this limit" << endl;
-  out << "    assert(counter <= RubyConfig::" << getIdent() << "TransitionsPerCycle());" << endl;
-  out << "    if (counter == RubyConfig::" << getIdent() << "TransitionsPerCycle()) {" << endl;
+  out << "    assert(counter <= m_transitions_per_cycle);" << endl;
+  out << "    if (counter == m_transitions_per_cycle) {" << endl;
   out << "      g_system_ptr->getProfiler()->controllerBusy(m_machineID); // Count how often we're fully utilized" << endl;
   out << "      g_eventQueue_ptr->scheduleEvent(this, 1); // Wakeup in another cycle and try again" << endl;
   out << "      break;" << endl;
@@ -442,7 +793,7 @@ void StateMachine::printCWakeup(ostream& out, string component) const
   out << endl;
 }
 
-void StateMachine::printCSwitch(ostream& out, string component) const
+void StateMachine::printCSwitch(ostream& out, string component)
 {
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
@@ -453,7 +804,6 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "#include \"mem/protocol/" << component << "_Event.hh\"" << endl;
   out << "#include \"mem/protocol/Types.hh\"" << endl;
   out << "#include \"mem/ruby/system/System.hh\"" << endl;
-  out << "#include \"mem/protocol/Chip.hh\"" << endl;
   out << endl;
   out << "#define HASH_FUN(state, event)  ((int(state)*" << component
       << "_Event_NUM)+int(event))" << endl;
@@ -490,9 +840,9 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "    DEBUG_EXPR(GENERATED_COMP, MedPrio, next_state);" << endl;
   out << "    DEBUG_NEWLINE(GENERATED_COMP, MedPrio);" << endl;
   out << "    s_profiler.countTransition(state, event);" << endl;
-  out << "    if (PROTOCOL_DEBUG_TRACE) {" << endl
+  out << "    if (Debug::getProtocolTrace()) {" << endl
       << "      g_system_ptr->getProfiler()->profileTransition(\"" << component
-      << "\", m_chip_ptr->getID(), m_version, addr, " << endl
+      << "\", m_version, addr, " << endl
       << "        " << component << "_State_to_string(state), " << endl
       << "        " << component << "_Event_to_string(event), " << endl
       << "        " << component << "_State_to_string(next_state), GET_TRANSITION_COMMENT());" << endl
@@ -501,9 +851,9 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "    " << component << "_setState(addr, next_state);" << endl;
   out << "    " << endl;
   out << "  } else if (result == TransitionResult_ResourceStall) {" << endl;
-  out << "    if (PROTOCOL_DEBUG_TRACE) {" << endl
+  out << "    if (Debug::getProtocolTrace()) {" << endl
       << "      g_system_ptr->getProfiler()->profileTransition(\"" << component
-      << "\", m_chip_ptr->getID(), m_version, addr, " << endl
+      << "\", m_version, addr, " << endl
       << "        " << component << "_State_to_string(state), " << endl
       << "        " << component << "_Event_to_string(event), " << endl
       << "        " << component << "_State_to_string(next_state), " << endl
@@ -512,9 +862,9 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "  } else if (result == TransitionResult_ProtocolStall) {" << endl;
   out << "    DEBUG_MSG(GENERATED_COMP,HighPrio,\"stalling\");" << endl
       << "    DEBUG_NEWLINE(GENERATED_COMP, MedPrio);" << endl;
-  out << "    if (PROTOCOL_DEBUG_TRACE) {" << endl
+  out << "    if (Debug::getProtocolTrace()) {" << endl
       << "      g_system_ptr->getProfiler()->profileTransition(\"" << component
-      << "\", m_chip_ptr->getID(), m_version, addr, " << endl
+      << "\", m_version, addr, " << endl
       << "        " << component << "_State_to_string(state), " << endl
       << "        " << component << "_Event_to_string(event), " << endl
       << "        " << component << "_State_to_string(next_state), " << endl
@@ -630,7 +980,6 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   }
 
   out << "  default:" << endl;
-  out << "    WARN_EXPR(m_id);" << endl;
   out << "    WARN_EXPR(m_version);" << endl;
   out << "    WARN_EXPR(g_eventQueue_ptr->getTime());" << endl;
   out << "    WARN_EXPR(addr);" << endl;
@@ -642,7 +991,7 @@ void StateMachine::printCSwitch(ostream& out, string component) const
   out << "}" << endl;
 }
 
-void StateMachine::printProfilerH(ostream& out, string component) const
+void StateMachine::printProfilerH(ostream& out, string component)
 {
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
@@ -669,7 +1018,7 @@ void StateMachine::printProfilerH(ostream& out, string component) const
   out << "#endif // " << component << "_PROFILER_H" << endl;
 }
 
-void StateMachine::printProfilerC(ostream& out, string component) const
+void StateMachine::printProfilerC(ostream& out, string component)
 {
   out << "// Auto generated C++ code started by "<<__FILE__<<":"<<__LINE__<< endl;
   out << "// " << getIdent() << ": " << getShorthand() << endl;
@@ -769,7 +1118,7 @@ string frameRef(string href, string target, string target_num, string text)
 }
 
 
-void StateMachine::writeHTMLFiles(string path) const
+void StateMachine::writeHTMLFiles(string path)
 {
   string filename;
   string component = getIdent();
@@ -841,7 +1190,7 @@ void StateMachine::writeHTMLFiles(string path) const
   }
 }
 
-void StateMachine::printHTMLTransitions(ostream& out, int active_state) const
+void StateMachine::printHTMLTransitions(ostream& out, int active_state)
 {
   // -- Prolog
   out << "<HTML><BODY link=\"blue\" vlink=\"blue\">" << endl;

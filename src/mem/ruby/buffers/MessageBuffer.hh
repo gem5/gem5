@@ -60,6 +60,7 @@ public:
   // Public Methods
 
   static void printConfig(ostream& out) {}
+  void setRecycleLatency(int recycle_latency) { m_recycle_latency = recycle_latency; }
 
   // TRUE if head of queue timestamp <= SystemTime
   bool isReady() const {
@@ -105,6 +106,9 @@ public:
   void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
 private:
+  //added by SS
+  int m_recycle_latency;
+
   // Private Methods
   int setAndReturnDelayCycles(MsgPtr& message);
 

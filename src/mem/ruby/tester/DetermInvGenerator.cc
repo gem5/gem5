@@ -38,13 +38,10 @@
 
 #include "mem/ruby/tester/DetermInvGenerator.hh"
 #include "mem/protocol/DetermInvGeneratorStatus.hh"
-#include "mem/protocol/LockStatus.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
-#include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/protocol/Chip.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
+//#include "DMAController.hh"
+#include "mem/ruby/libruby.hh"
 
 DetermInvGenerator::DetermInvGenerator(NodeID node, DeterministicDriver& driver) :
   m_driver(driver)
@@ -54,9 +51,8 @@ DetermInvGenerator::DetermInvGenerator(NodeID node, DeterministicDriver& driver)
   m_node = node;
   m_address = Address(9999);  // initiate to a NULL value
   m_counter = 0;
-
   // don't know exactly when this node needs to request so just guess randomly
-  g_eventQueue_ptr->scheduleEvent(this, 1+(random() % 200));
+  m_driver.eventQueue->scheduleEvent(this, 1+(random() % 200));
 }
 
 DetermInvGenerator::~DetermInvGenerator()
@@ -74,23 +70,23 @@ void DetermInvGenerator::wakeup()
     if (m_driver.isLoadReady(m_node) && m_counter == m_driver.getStoresCompleted()) {
       pickLoadAddress();
       m_status = DetermInvGeneratorStatus_Load_Pending;  // Load Pending
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = m_driver.eventQueue->getTime();
       initiateLoad();  // GETS
     } else { // I'll check again later
-      g_eventQueue_ptr->scheduleEvent(this, thinkTime());
+      m_driver.eventQueue->scheduleEvent(this, thinkTime());
     }
   } else if (m_status == DetermInvGeneratorStatus_Load_Complete) {
     if (m_driver.isStoreReady(m_node, m_address))   {  // do a store in this transaction or start the next one
       if (m_driver.isLoadReady((0), m_address)) {  // everyone is in S for this address i.e. back to node 0
         m_status = DetermInvGeneratorStatus_Store_Pending;
-        m_last_transition = g_eventQueue_ptr->getTime();
+        m_last_transition = m_driver.eventQueue->getTime();
         initiateStore();  // GETX
       } else {  // I'm next, I just have to wait for all loads to complete
-        g_eventQueue_ptr->scheduleEvent(this, thinkTime());
+        m_driver.eventQueue->scheduleEvent(this, thinkTime());
       }
     } else {  // I'm not next to store, go back to thinking
       m_status = DetermInvGeneratorStatus_Thinking;
-      g_eventQueue_ptr->scheduleEvent(this, thinkTime());
+      m_driver.eventQueue->scheduleEvent(this, thinkTime());
     }
   } else {
     WARN_EXPR(m_status);
@@ -99,48 +95,48 @@ void DetermInvGenerator::wakeup()
 
 }
 
-void DetermInvGenerator::performCallback(NodeID proc, SubBlock& data)
+void DetermInvGenerator::performCallback(NodeID proc, Address address)
 {
-  Address address = data.getAddress();
   assert(proc == m_node);
   assert(address == m_address);
 
   DEBUG_EXPR(TESTER_COMP, LowPrio, proc);
   DEBUG_EXPR(TESTER_COMP, LowPrio, m_status);
   DEBUG_EXPR(TESTER_COMP, LowPrio, address);
-  DEBUG_EXPR(TESTER_COMP, LowPrio, data);
 
   if (m_status == DetermInvGeneratorStatus_Load_Pending) {
-    m_driver.recordLoadLatency(g_eventQueue_ptr->getTime() - m_last_transition);
-    m_driver.loadCompleted(m_node, data.getAddress());
+    m_driver.recordLoadLatency(m_driver.eventQueue->getTime() - m_last_transition);
+    //NodeID firstByte = data.readByte();  // dummy read
+
+    m_driver.loadCompleted(m_node, address);
 
     if (!m_driver.isStoreReady(m_node, m_address))  {  // if we don't have to store, we are done for this transaction
       m_counter++;
     }
-    if (m_counter < g_tester_length) {
+    if (m_counter < m_driver.m_tester_length) {
       m_status = DetermInvGeneratorStatus_Load_Complete;
-      m_last_transition = g_eventQueue_ptr->getTime();
-      g_eventQueue_ptr->scheduleEvent(this, waitTime());
+      m_last_transition = m_driver.eventQueue->getTime();
+      m_driver.eventQueue->scheduleEvent(this, waitTime());
     } else {
       m_driver.reportDone();
       m_status = DetermInvGeneratorStatus_Done;
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = m_driver.eventQueue->getTime();
     }
 
   } else if (m_status == DetermInvGeneratorStatus_Store_Pending) {
-    m_driver.recordStoreLatency(g_eventQueue_ptr->getTime() - m_last_transition);
-    data.writeByte(m_node);
-    m_driver.storeCompleted(m_node, data.getAddress());  // advance the store queue
+    m_driver.recordStoreLatency(m_driver.eventQueue->getTime() - m_last_transition);
+    //data.writeByte(m_node);
+    m_driver.storeCompleted(m_node, address);  // advance the store queue
 
     m_counter++;
-    if (m_counter < g_tester_length) {
+    if (m_counter < m_driver.m_tester_length) {
       m_status = DetermInvGeneratorStatus_Thinking;
-      m_last_transition = g_eventQueue_ptr->getTime();
-      g_eventQueue_ptr->scheduleEvent(this, waitTime());
+      m_last_transition = m_driver.eventQueue->getTime();
+      m_driver.eventQueue->scheduleEvent(this, waitTime());
     } else {
       m_driver.reportDone();
       m_status = DetermInvGeneratorStatus_Done;
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = m_driver.eventQueue->getTime();
     }
   } else {
     WARN_EXPR(m_status);
@@ -150,23 +146,22 @@ void DetermInvGenerator::performCallback(NodeID proc, SubBlock& data)
   DEBUG_EXPR(TESTER_COMP, LowPrio, proc);
   DEBUG_EXPR(TESTER_COMP, LowPrio, m_status);
   DEBUG_EXPR(TESTER_COMP, LowPrio, address);
-  DEBUG_EXPR(TESTER_COMP, LowPrio, data);
 
 }
 
 int DetermInvGenerator::thinkTime() const
 {
-  return g_think_time;
+  return m_driver.m_think_time;
 }
 
 int DetermInvGenerator::waitTime() const
 {
-  return g_wait_time;
+  return m_driver.m_wait_time;
 }
 
 int DetermInvGenerator::holdTime() const
 {
-  return g_hold_time;
+  assert(0);
 }
 
 void DetermInvGenerator::pickLoadAddress()
@@ -179,35 +174,42 @@ void DetermInvGenerator::pickLoadAddress()
 void DetermInvGenerator::initiateLoad()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Load");
+  // sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_LD, Address(1), AccessModeType_UserMode, 1, PrefetchBit_No, Address(0), 0 /* only 1 SMT thread */));
+  uint8_t * read_data = new uint8_t[64];
 
-  Addr data_addr = m_address.getAddress();
-  Request request(0, data_addr, 1, Flags<unsigned int>(), 1, 0, 0);
-  MemCmd::Command command;
-  command = MemCmd::ReadReq;
+  char name [] = "Sequencer_";
+  char port_name [13];
+  sprintf(port_name, "%s%d", name, m_node);
 
-  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+  int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m_address.getAddress(), read_data, 64, 0, RubyRequestType_LD, RubyAccessMode_Supervisor));
 
-  sequencer()->makeRequest(&pkt);
+  //delete [] read_data;
+
+  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  m_driver.requests.insert(make_pair(request_id, make_pair(m_node, m_address)));
 
 }
 
 void DetermInvGenerator::initiateStore()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Store");
+  // sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_ST, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, Address(0), 0 /* only 1 SMT thread */));
+  uint8_t *write_data = new uint8_t[64];
+  for(int i=0; i < 64; i++) {
+      write_data[i] = m_node;
+  }
 
-  Addr data_addr = m_address.getAddress();
-  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
-  MemCmd::Command command;
-  command = MemCmd::WriteReq;
+  char name [] = "Sequencer_";
+  char port_name [13];
+  sprintf(port_name, "%s%d", name, m_node);
 
-  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+  int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m_address.getAddress(), write_data, 64, 0, RubyRequestType_ST, RubyAccessMode_Supervisor));
 
-  sequencer()->makeRequest(&pkt);
-}
+  //delete [] write_data;
 
-Sequencer* DetermInvGenerator::sequencer() const
-{
-  return g_system_ptr->getChip(m_node/RubyConfig::numberOfProcsPerChip())->getSequencer(m_node%RubyConfig::numberOfProcsPerChip());
+  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  m_driver.requests.insert(make_pair(request_id, make_pair(m_node, m_address)));
+
 }
 
 void DetermInvGenerator::print(ostream& out) const

@@ -61,7 +61,7 @@ public:
 
   // Public Methods
   string cIdent() const { return m_c_id; }
-  void writeCFiles(string path) const {}
+  void writeCFiles(string path)  {}
   string getCode() const { return m_code; }
   Type* getType() const { return m_type_ptr; }
   StateMachine* getMachine() const { return m_machine_ptr; }

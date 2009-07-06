@@ -85,7 +85,7 @@ void profile_miss(const CacheMsg& msg, NodeID id)
   ASSERT (!Protocol::m_CMP);
   g_system_ptr->getProfiler()->addAddressTraceSample(msg, id);
 
-  g_system_ptr->getProfiler()->profileConflictingRequests(msg.getAddress());
+  g_system_ptr->getProfiler()->profileConflictingRequests(msg.getLineAddress());
 
   g_system_ptr->getProfiler()->addSecondaryStatSample(msg.getType(),
                                                       msg.getAccessMode(), msg.getSize(), msg.getPrefetch(), id);
@@ -93,9 +93,6 @@ void profile_miss(const CacheMsg& msg, NodeID id)
 
 void profile_L1Cache_miss(const CacheMsg& msg, NodeID id)
 {
-  // only called by protocols assuming non-zero cycle hits
-  ASSERT (REMOVE_SINGLE_CYCLE_DCACHE_FAST_PATH);
-
   g_system_ptr->getProfiler()->addPrimaryStatSample(msg, id);
 }
 
@@ -139,25 +136,5 @@ void profileGetS(const Address& datablock, const Address& PC, const Set& owner, 
   g_system_ptr->getProfiler()->getAddressProfiler()->profileGetS(datablock, PC, owner, sharers, requestor);
 }
 
-void profileOverflow(const Address & addr, MachineID mach)
-{
-#if 0
-  if(mach.type == MACHINETYPE_L1CACHE_ENUM){
-    // for L1 overflows
-    int proc_num = L1CacheMachIDToProcessorNum(mach);
-    int chip_num = proc_num/RubyConfig::numberOfProcsPerChip();
-    assert(0);
-    // g_system_ptr->getChip(chip_num)->m_L1Cache_xact_mgr_vec[proc_num]->profileOverflow(addr, true);
-  }
-  else if(mach.type == MACHINETYPE_L2CACHE_ENUM){
-    // for L2 overflows
-    int chip_num = L2CacheMachIDToChipID(mach);
-    for(int p=0; p < RubyConfig::numberOfProcessors(); ++p){
-      assert(0);
-      // g_system_ptr->getChip(chip_num)->m_L1Cache_xact_mgr_vec[p]->profileOverflow(addr, false);
-    }
-  }
-#endif
-}
 
 

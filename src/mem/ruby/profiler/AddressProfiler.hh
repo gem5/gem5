@@ -69,6 +69,10 @@ public:
   void profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
 
   void print(ostream& out) const;
+
+  //added by SS
+  void setHotLines(bool hot_lines);
+  void setAllInstructions(bool all_instructions);
 private:
   // Private Methods
 
@@ -90,6 +94,10 @@ private:
   Histogram m_retryProfileHistoRead;
   Histogram m_getx_sharing_histogram;
   Histogram m_gets_sharing_histogram;
+//added by SS
+  bool m_hot_lines;
+  bool m_all_instructions;
+
 };
 
 // Output operator declaration

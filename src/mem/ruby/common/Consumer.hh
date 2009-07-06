@@ -53,7 +53,8 @@ public:
   virtual ~Consumer() { }
 
   // Public Methods - pure virtual methods
-  void triggerWakeup() { Time time = g_eventQueue_ptr->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
+  // void triggerWakeup() { Time time = g_eventQueue_ptr->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
+  void triggerWakeup(RubyEventQueue * eventQueue) { Time time = eventQueue->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
   virtual void wakeup() = 0;
   virtual void print(ostream& out) const = 0;
   const Time& getLastScheduledWakeup() const { return m_last_scheduled_wakeup; }

@@ -50,9 +50,14 @@ class NetworkLink;
 
 class GarnetNetwork : public Network{
 public:
-        GarnetNetwork(int nodes);
+        GarnetNetwork(const string & name);
 
         ~GarnetNetwork();
+
+        void init(const vector<string> & argv);
+
+        //added by SS
+        NetworkConfig* getNetworkConfig() { return m_network_config_ptr; }
 
         // returns the queue requested for the given component
         MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
@@ -83,9 +88,10 @@ private:
         GarnetNetwork(const GarnetNetwork& obj);
         GarnetNetwork& operator=(const GarnetNetwork& obj);
 
+
 /***********Data Members*************/
-        int m_virtual_networks;
-        int m_nodes;
+//      int m_virtual_networks;
+//      int m_nodes;
 
         Vector<bool> m_in_use;
         Vector<bool> m_ordered;
@@ -97,8 +103,10 @@ private:
         Vector<NetworkLink *> m_link_ptr_vector; // All links in the network
         Vector<NetworkInterface *> m_ni_ptr_vector;     // All NI's in Network
 
-        Topology* m_topology_ptr;
+//      Topology* m_topology_ptr;
         Time m_ruby_start;
+
+        NetworkConfig* m_network_config_ptr;
 };
 
 // Output operator declaration

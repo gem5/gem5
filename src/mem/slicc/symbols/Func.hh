@@ -57,7 +57,7 @@ public:
   string cIdent() const { return m_c_ident; }
   const Vector<Type*>& getParamTypes() const { return m_param_type_vec; }
   Type* getReturnType() const { return m_type_ptr; }
-  void writeCFiles(string path) const;
+  void writeCFiles(string path) ;
   void funcPrototype(string& code) const;
   bool isExternal() const { return existPair("external"); }
   bool isInternalMachineFunc() const { return m_isInternalMachineFunc; }

@@ -103,9 +103,9 @@ void Throttle::addLinks(const Vector<MessageBuffer*>& in_vec, const Vector<Messa
     }
   }
 
-  if (g_PRINT_TOPOLOGY) {
+  //  if (RubyConfig::getPrintTopology()) {
     m_out_link_vec.insertAtBottom(out_vec);
-  }
+    //  }
 }
 
 void Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)
@@ -206,13 +206,8 @@ void Throttle::wakeup()
   while ((current_time - m_last_bandwidth_sample) > ADJUST_INTERVAL) {
     double utilization = m_bandwidth_since_sample/double(ADJUST_INTERVAL * getLinkBandwidth());
 
-    if (utilization > g_bash_bandwidth_adaptive_threshold) {
-      // Used more bandwidth
-      m_bash_counter++;
-    } else {
-      // Used less bandwidth
-      m_bash_counter--;
-    }
+    // Used less bandwidth
+    m_bash_counter--;
 
     // Make sure we don't overflow
     m_bash_counter = min(HIGH_RANGE, m_bash_counter);

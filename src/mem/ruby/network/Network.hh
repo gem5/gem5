@@ -49,22 +49,29 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/system/System.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
+class Topology;
 
 class Network {
 public:
   // Constructors
-  Network() {}
+  Network(const string & name);
+  virtual void init(const vector<string> & argv);
 
   // Destructor
   virtual ~Network() {}
 
   // Public Methods
-
-  static Network* createNetwork(int nodes);
+  int getBufferSize() { return m_buffer_size; }
+  int getNumberOfVirtualNetworks() { return m_virtual_networks; }
+  int getEndpointBandwidth() { return m_endpoint_bandwidth; }
+  bool getAdaptiveRouting() {return m_adaptive_routing; }
+  int getLinkLatency() { return m_link_latency; }
 
   // returns the queue requested for the given component
   virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered, int netNumber) = 0;
@@ -84,7 +91,7 @@ public:
   virtual void printConfig(ostream& out) const = 0;
   virtual void print(ostream& out) const = 0;
 
-private:
+protected:
 
   // Private Methods
   // Private copy constructor and assignment operator
@@ -92,6 +99,15 @@ private:
   Network& operator=(const Network& obj);
 
   // Data Members (m_ prefix)
+protected:
+  const string m_name;
+  int m_nodes;
+  int m_virtual_networks;
+  int m_buffer_size;
+  int m_endpoint_bandwidth;
+  Topology* m_topology_ptr;
+  bool m_adaptive_routing;
+  int m_link_latency;
 };
 
 // Output operator declaration
@@ -110,7 +126,7 @@ ostream& operator<<(ostream& out, const Network& obj)
 
 // Code to map network message size types to an integer number of bytes
 const int CONTROL_MESSAGE_SIZE = 8;
-const int DATA_MESSAGE_SIZE = (64+8);
+const int DATA_MESSAGE_SIZE = (RubySystem::getBlockSizeBytes()+8);
 
 extern inline
 int MessageSizeType_to_int(MessageSizeType size_type)

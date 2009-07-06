@@ -40,12 +40,13 @@
 #ifndef RUBYCONFIG_H
 #define RUBYCONFIG_H
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/gems_common/ioutil/vardecl.hh"
-#include "mem/ruby/system/NodeID.hh"
+#include <cstdlib>
+#include <string>
+#include <ostream>
+#include <assert.h>
 
-#define   MEMORY_LATENCY  RubyConfig::memoryResponseLatency()
-#define   ABORT_DELAY  m_chip_ptr->getTransactionManager(m_version)->getAbortDelay()
+#include "mem/ruby/common/TypeDefines.hh"
+#define   CONFIG_VAR_FILENAME "mem/ruby/config/config.hh"
 
 // Set paramterization
 /*
@@ -61,96 +62,169 @@
  */
 const int NUMBER_WORDS_PER_SET = 4;
 
+using namespace std;
+
 class RubyConfig {
 public:
 
   // CACHE BLOCK CONFIG VARIBLES
-  static int dataBlockBits() { return g_DATA_BLOCK_BITS; }
-  static int dataBlockBytes() { return g_DATA_BLOCK_BYTES; }
+  static uint32 dataBlockMask() { return m_data_block_mask; }
+
+  static int numberOfDMA() { return 1; }
+  static int numberOfDMAPerChip() { return 1; }
+  static int DMATransitionsPerCycle() { return 1; }
 
   // SUPPORTED PHYSICAL MEMORY CONFIG VARIABLES
-  static int pageSizeBits() { return g_PAGE_SIZE_BITS; }
-  static int pageSizeBytes() { return g_PAGE_SIZE_BYTES; }
-  static int memorySizeBits() { return g_MEMORY_SIZE_BITS; }
-  static int64 memorySizeBytes() { return g_MEMORY_SIZE_BYTES; }
-  static int memoryModuleBits() { return g_MEMORY_MODULE_BITS; }
-  static int64 memoryModuleBlocks() { return g_MEMORY_MODULE_BLOCKS; }
+  //  static int memoryModuleBits() { return m_MEMORY_MODULE_BITS; }
+  //  static int64 memoryModuleBlocks() { return m_MEMORY_MODULE_BLOCKS; }
 
-  // returns number of SMT threads per physical processor
-  static int numberofSMTThreads() { return g_NUM_SMT_THREADS; }
   // defines the number of simics processors (power of 2)
-  static int numberOfProcessors() { return g_NUM_PROCESSORS; }
-  static int procsPerChipBits() { return g_PROCS_PER_CHIP_BITS; }
-  static int numberOfProcsPerChip() { return g_PROCS_PER_CHIP; }
-  static int numberOfChips() { return g_NUM_CHIPS; }
+  //  static int numberOfProcessors() { return m_NUM_PROCESSORS; }
+  //  static int procsPerChipBits() { return m_PROCS_PER_CHIP_BITS; }
+  //  static int numberOfProcsPerChip() { return m_ProcsPerChip; }
+  //  static int numberOfChips() { return m_NUM_CHIPS; }
 
   // MACHINE INSTANIATION CONFIG VARIABLES
   // -------------------------------------
   // L1 CACHE MACHINES
   // defines the number of L1banks - idependent of ruby chips (power of 2)
   // NOTE - no protocols currently supports L1s != processors, just a placeholder
-  static int L1CacheBits() { return g_NUM_PROCESSORS_BITS; }
-  static int numberOfL1Cache() { return g_NUM_PROCESSORS; }
-  static int L1CachePerChipBits() { return procsPerChipBits() ; } // L1s != processors not currently supported
-  static int numberOfL1CachePerChip() { return numberOfProcsPerChip(); } // L1s != processors not currently supported
-  static int numberOfL1CachePerChip(NodeID myNodeID) { return numberOfL1CachePerChip(); }
-  static int L1CacheTransitionsPerCycle() { return L1CACHE_TRANSITIONS_PER_RUBY_CYCLE; }
-
-  // L2 CACHE MACHINES
-  // defines the number of L2banks/L2Caches - idependent of ruby chips (power of 2)
-  static int L2CacheBits() { return g_NUM_L2_BANKS_BITS; }
-  static int numberOfL2Cache() { return g_NUM_L2_BANKS; }
-  static int L1CacheNumToL2Base(NodeID L1RubyNodeID);
-  static int L2CachePerChipBits() { return g_NUM_L2_BANKS_PER_CHIP_BITS; }
-  static int numberOfL2CachePerChip() { return g_NUM_L2_BANKS_PER_CHIP; }
-  static int numberOfL2CachePerChip(NodeID myNodeID) { return numberOfL2CachePerChip(); }
-  static int L2CacheTransitionsPerCycle() { return L2CACHE_TRANSITIONS_PER_RUBY_CYCLE; }
 
   // DIRECTORY/MEMORY MACHINES
   // defines the number of ruby memories - idependent of ruby chips (power of 2)
-  static int memoryBits() { return g_NUM_MEMORIES_BITS; }
-  static int numberOfDirectory() { return numberOfMemories(); }
-  static int numberOfMemories() { return g_NUM_MEMORIES; }
-  static int numberOfDirectoryPerChip() { return g_NUM_MEMORIES_PER_CHIP; }
-  static int numberOfDirectoryPerChip(NodeID myNodeID) { return g_NUM_MEMORIES_PER_CHIP; }
-  static int DirectoryTransitionsPerCycle() { return DIRECTORY_TRANSITIONS_PER_RUBY_CYCLE; }
-
-  // PERSISTENT ARBITER MACHINES
-  static int numberOfPersistentArbiter() { return numberOfMemories(); }
-  static int numberOfPersistentArbiterPerChip() {return numberOfDirectoryPerChip(); }
-  static int numberOfPersistentArbiterPerChip(NodeID myNodeID) {return numberOfDirectoryPerChip(myNodeID); }
-  static int PersistentArbiterTransitionsPerCycle() { return L2CACHE_TRANSITIONS_PER_RUBY_CYCLE; }
+  //  static int memoryBits() { return m_NUM_MEMORIES_BITS; }
+  //  static int numberOfDirectory() { return numberOfMemories(); }
+  //  static int numberOfMemories() { return m_NUM_MEMORIES; }
+  //  static int numberOfDirectoryPerChip() { return m_NUM_MEMORIES_PER_CHIP; }
+  //  static int DirectoryTransitionsPerCycle() { return m_DIRECTORY_TRANSITIONS_PER_RUBY_CYCLE; }
 
   // ---- END MACHINE SPECIFIC VARIABLES ----
 
   // VARIABLE MEMORY RESPONSE LATENCY
   // *** NOTE *** This is where variation is added to the simulation
   // see Alameldeen et al. HPCA 2003 for further details
-  static int memoryResponseLatency() { return MEMORY_RESPONSE_LATENCY_MINUS_2+(random() % 5); }
+//  static int getMemoryLatency() { return m_MEMORY_RESPONSE_LATENCY_MINUS_2+(random() % 5); }
 
+  static void reset();
   static void init();
-  static void printConfiguration(ostream& out);
+  static void printConfiguration(std::ostream& out);
 
   // Memory Controller
-  static int memBusCycleMultiplier () { return MEM_BUS_CYCLE_MULTIPLIER; }
-  static int banksPerRank () { return BANKS_PER_RANK; }
-  static int ranksPerDimm () { return RANKS_PER_DIMM; }
-  static int dimmsPerChannel () { return DIMMS_PER_CHANNEL; }
-  static int bankBit0 () { return BANK_BIT_0; }
-  static int rankBit0 () { return RANK_BIT_0; }
-  static int dimmBit0 () { return DIMM_BIT_0; }
-  static int bankQueueSize () { return BANK_QUEUE_SIZE; }
-  static int bankBusyTime () { return BANK_BUSY_TIME; }
-  static int rankRankDelay () { return RANK_RANK_DELAY; }
-  static int readWriteDelay () { return READ_WRITE_DELAY; }
-  static int basicBusBusyTime () { return BASIC_BUS_BUSY_TIME; }
-  static int memCtlLatency () { return MEM_CTL_LATENCY; }
-  static int refreshPeriod () { return REFRESH_PERIOD; }
-  static int tFaw () { return TFAW; }
-  static int memRandomArbitrate () { return MEM_RANDOM_ARBITRATE; }
-  static int memFixedDelay () { return MEM_FIXED_DELAY; }
+
+//  static int memBusCycleMultiplier () { return m_MEM_BUS_CYCLE_MULTIPLIER; }
+/*  static int banksPerRank () { return m_BANKS_PER_RANK; }
+  static int ranksPerDimm () { return m_RANKS_PER_DIMM; }
+  static int dimmsPerChannel () { return m_DIMMS_PER_CHANNEL; }
+  static int bankBit0 () { return m_BANK_BIT_0; }
+  static int rankBit0 () { return m_RANK_BIT_0; }
+  static int dimmBit0 () { return m_DIMM_BIT_0; }
+  static int bankQueueSize () { return m_BANK_QUEUE_SIZE; }
+  static int bankBusyTime () { return m_BankBusyTime; }
+  static int rankRankDelay () { return m_RANK_RANK_DELAY; }
+  static int readWriteDelay () { return m_READ_WRITE_DELAY; }
+  static int basicBusBusyTime () { return m_BASIC_BUS_BUSY_TIME; }
+  static int memCtlLatency () { return m_MEM_CTL_LATENCY; }
+  static int refreshPeriod () { return m_REFRESH_PERIOD; }
+  static int tFaw () { return m_TFAW; }
+  static int memRandomArbitrate () { return m_MEM_RANDOM_ARBITRATE; }
+  static int memFixedDelay () { return m_MEM_FIXED_DELAY; }
+*/
+  /* cache accessors */
+  static int getCacheIDFromParams(int level, int num, string split_type) {
+    // TODO:  this function
+    return 0;
+  }
+
+#define accessor_true( TYPE, NAME )
+#define accessor_false( TYPE, NAME )                    \
+  static TYPE get##NAME() { return m_##NAME; }          \
+  static void set##NAME(TYPE val) { m_##NAME = val; }
+
+#define array_accessor_true( TYPE, NAME, DEFAULT_ARRAY_SIZE )
+#define array_accessor_false( TYPE, NAME, DEFAULT_ARRAY_SIZE )          \
+  static TYPE get##NAME(int idx) {                                      \
+    assert(m_##NAME != NULL);                                           \
+    return m_##NAME[idx];                                               \
+  }                                                                     \
+  static void set##NAME(int idx, TYPE val) {                            \
+    if(m_##NAME == NULL) {                                              \
+      assert(DEFAULT_ARRAY_SIZE > 0);                                   \
+      m_##NAME = new TYPE[DEFAULT_ARRAY_SIZE];                          \
+    }                                                                   \
+    m_##NAME[idx] = val;                                                \
+  }
+
+#define array2d_accessor_true( TYPE, NAME )
+#define array2d_accessor_false( TYPE, NAME )                            \
+  static TYPE get##NAME(int idx1, int idx2) { return m_##NAME[idx1][idx2]; } \
+  static void set##NAME(int idx1, int idx2, TYPE val) { m_##NAME[idx1][idx2] = val; }
+
+#define array3d_accessor_true( TYPE, NAME )
+#define array3d_accessor_false( TYPE, NAME )                            \
+  static TYPE get##NAME(int idx1, int idx2, int idx3) { return m_##NAME[idx1][idx2][idx3]; } \
+  static void set##NAME(int idx1, int idx2, int idx3, TYPE val) { m_##NAME[idx1][idx2][idx3] = val; }
+
+#define PARAM( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )   \
+  accessor_##CUSTOM_ACCESSOR(int32,NAME)
+#define PARAM_UINT( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )      \
+  accessor_##CUSTOM_ACCESSOR(uint32,NAME)
+#define PARAM_ULONG( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )     \
+  accessor_##CUSTOM_ACCESSOR(uint64,NAME)
+#define PARAM_BOOL( NAME, DEFAULT_VALUE,CUSTOM_ACCESSOR )       \
+  accessor_##CUSTOM_ACCESSOR(bool,NAME)
+#define PARAM_DOUBLE( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )    \
+  accessor_##CUSTOM_ACCESSOR(double,NAME)
+#define PARAM_STRING( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )    \
+  accessor_##CUSTOM_ACCESSOR(const char*,NAME)
+#define PARAM_ARRAY( NAME, TYPE, DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  array_accessor_##CUSTOM_ACCESSOR(TYPE, NAME, DEFAULT_ARRAY_SIZE)
+#define PARAM_ARRAY2D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  array2d_accessor_##CUSTOM_ACCESSOR(TYPE, NAME)
+#define PARAM_ARRAY3D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, D3_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  array3d_accessor_##CUSTOM_ACCESSOR(TYPE, NAME)
+#include CONFIG_VAR_FILENAME
+#undef PARAM
+#undef PARAM_UINT
+#undef PARAM_ULONG
+#undef PARAM_BOOL
+#undef PARAM_DOUBLE
+#undef PARAM_STRING
+#undef PARAM_ARRAY
+#undef PARAM_ARRAY2D
+#undef PARAM_ARRAY3D
 
 private:
+  static uint32 m_data_block_mask;
+
+#define PARAM( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )   \
+  static int32  m_##NAME;
+#define PARAM_UINT( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )      \
+  static uint32 m_##NAME;
+#define PARAM_ULONG( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )     \
+  static uint64 m_##NAME;
+#define PARAM_BOOL( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )      \
+  static bool   m_##NAME;
+#define PARAM_DOUBLE( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )    \
+  static double m_##NAME;
+#define PARAM_STRING( NAME, DEFAULT_VALUE, CUSTOM_ACCESSOR )    \
+  static const char  *m_##NAME;
+#define PARAM_ARRAY( NAME, TYPE, DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  static TYPE* m_##NAME;
+#define PARAM_ARRAY2D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  static TYPE** m_##NAME;
+#define PARAM_ARRAY3D( NAME, TYPE, D1_DEFAULT_ARRAY_SIZE, D2_DEFAULT_ARRAY_SIZE, D3_DEFAULT_ARRAY_SIZE, DEFAULT_VALUE, CUSTOM_ACCESSOR ) \
+  static TYPE*** m_##NAME;
+#include CONFIG_VAR_FILENAME
+#undef PARAM
+#undef PARAM_UINT
+#undef PARAM_ULONG
+#undef PARAM_BOOL
+#undef PARAM_DOUBLE
+#undef PARAM_STRING
+#undef PARAM_ARRAY
+#undef PARAM_ARRAY2D
+#undef PARAM_ARRAY3D
+
 };
 
 #endif //RUBYCONFIG_H

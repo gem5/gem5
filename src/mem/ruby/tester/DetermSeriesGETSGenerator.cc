@@ -34,13 +34,7 @@
 
 #include "mem/ruby/tester/DetermSeriesGETSGenerator.hh"
 #include "mem/protocol/DetermSeriesGETSGeneratorStatus.hh"
-#include "mem/protocol/LockStatus.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
-#include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/protocol/Chip.hh"
 
 DetermSeriesGETSGenerator::DetermSeriesGETSGenerator(NodeID node, DeterministicDriver& driver) :
   m_driver(driver)
@@ -51,8 +45,9 @@ DetermSeriesGETSGenerator::DetermSeriesGETSGenerator(NodeID node, DeterministicD
   m_address = Address(9999);  // initialize to null value
   m_counter = 0;
 
+
   // don't know exactly when this node needs to request so just guess randomly
-  g_eventQueue_ptr->scheduleEvent(this, 1+(random() % 200));
+  m_driver.eventQueue->scheduleEvent(this, 1+(random() % 200));
 }
 
 DetermSeriesGETSGenerator::~DetermSeriesGETSGenerator()
@@ -69,10 +64,10 @@ void DetermSeriesGETSGenerator::wakeup()
     if (m_driver.isLoadReady(m_node)) {
       pickAddress();
       m_status = DetermSeriesGETSGeneratorStatus_Load_Pending;  // Load Pending
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = m_driver.eventQueue->getTime();
       initiateLoad();  // SeriesGETS
     } else { // I'll check again later
-      g_eventQueue_ptr->scheduleEvent(this, thinkTime());
+      m_driver.eventQueue->scheduleEvent(this, thinkTime());
     }
   } else {
     WARN_EXPR(m_status);
@@ -81,32 +76,30 @@ void DetermSeriesGETSGenerator::wakeup()
 
 }
 
-void DetermSeriesGETSGenerator::performCallback(NodeID proc, SubBlock& data)
+void DetermSeriesGETSGenerator::performCallback(NodeID proc, Address address)
 {
-  Address address = data.getAddress();
   assert(proc == m_node);
   assert(address == m_address);
 
   DEBUG_EXPR(TESTER_COMP, LowPrio, proc);
   DEBUG_EXPR(TESTER_COMP, LowPrio, m_status);
   DEBUG_EXPR(TESTER_COMP, LowPrio, address);
-  DEBUG_EXPR(TESTER_COMP, LowPrio, data);
 
   if (m_status == DetermSeriesGETSGeneratorStatus_Load_Pending) {
-    m_driver.recordLoadLatency(g_eventQueue_ptr->getTime() - m_last_transition);
-    data.writeByte(m_node);
-    m_driver.loadCompleted(m_node, data.getAddress());  // advance the load queue
+    m_driver.recordLoadLatency(m_driver.eventQueue->getTime() - m_last_transition);
+    //data.writeByte(m_node);
+    m_driver.loadCompleted(m_node, address);  // advance the load queue
 
     m_counter++;
     // do we still have more requests to complete before the next proc starts?
-    if (m_counter < g_tester_length*g_NUM_COMPLETIONS_BEFORE_PASS) {
+    if (m_counter < m_driver.m_tester_length*m_driver.m_numCompletionsPerNode) {
       m_status = DetermSeriesGETSGeneratorStatus_Thinking;
-      m_last_transition = g_eventQueue_ptr->getTime();
-      g_eventQueue_ptr->scheduleEvent(this, waitTime());
+      m_last_transition = m_driver.eventQueue->getTime();
+      m_driver.eventQueue->scheduleEvent(this, waitTime());
     } else {
       m_driver.reportDone();
       m_status = DetermSeriesGETSGeneratorStatus_Done;
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = m_driver.eventQueue->getTime();
     }
 
   } else {
@@ -117,12 +110,12 @@ void DetermSeriesGETSGenerator::performCallback(NodeID proc, SubBlock& data)
 
 int DetermSeriesGETSGenerator::thinkTime() const
 {
-  return g_think_time;
+  return m_driver.m_think_time;
 }
 
 int DetermSeriesGETSGenerator::waitTime() const
 {
-  return g_wait_time;
+  return m_driver.m_wait_time;
 }
 
 void DetermSeriesGETSGenerator::pickAddress()
@@ -135,21 +128,20 @@ void DetermSeriesGETSGenerator::pickAddress()
 void DetermSeriesGETSGenerator::initiateLoad()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Load");
+  //sequencer()->makeRequest(CacheMsg(m_address, m_address, CacheRequestType_IFETCH, Address(3), AccessModeType_UserMode, 1, PrefetchBit_No, Address(0), 0 /* only 1 SMT thread */));
 
-  Addr data_addr = m_address.getAddress();
-  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
-  MemCmd::Command command;
-  command = MemCmd::ReadReq;
-  request.setFlags(Request::INST_FETCH);
+  uint8_t *read_data = new uint8_t[64];
 
-  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+  char name [] = "Sequencer_";
+  char port_name [13];
+  sprintf(port_name, "%s%d", name, m_node);
 
-  sequencer()->makeRequest(&pkt);
-}
+  int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m_address.getAddress(), read_data, 64, 0, RubyRequestType_LD, RubyAccessMode_Supervisor));
 
-Sequencer* DetermSeriesGETSGenerator::sequencer() const
-{
-  return g_system_ptr->getChip(m_node/RubyConfig::numberOfProcsPerChip())->getSequencer(m_node%RubyConfig::numberOfProcsPerChip());
+  //delete [] read_data;
+
+  ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
+  m_driver.requests.insert(make_pair(request_id, make_pair(m_node, m_address)));
 }
 
 void DetermSeriesGETSGenerator::print(ostream& out) const

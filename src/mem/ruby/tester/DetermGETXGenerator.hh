@@ -40,28 +40,26 @@
 #ifndef DETERMGETXGENERATOR_H
 #define DETERMGETXGENERATOR_H
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/DetermGETXGeneratorStatus.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/common/Address.hh"
+#include "Address_Tester.hh"
 #include "mem/ruby/tester/SpecifiedGenerator.hh"
 
-class Sequencer;
-class SubBlock;
 class DeterministicDriver;
+class DMAController;
 
 class DetermGETXGenerator : public SpecifiedGenerator {
 public:
   // Constructors
-  DetermGETXGenerator(NodeID node, DeterministicDriver& driver);
+  DetermGETXGenerator(NodeID node, DeterministicDriver * driver);
 
   // Destructor
   ~DetermGETXGenerator();
 
   // Public Methods
   void wakeup();
-  void performCallback(NodeID proc, SubBlock& data);
+  void performCallback(NodeID proc, Address address);
 
   void print(ostream& out) const;
 private:
@@ -69,20 +67,21 @@ private:
   int thinkTime() const;
   int waitTime() const;
   void initiateStore();
+  void initiateDMA();
   void pickAddress();
 
-  Sequencer* sequencer() const;
+  DMAController* dma() const;
 
   // copy constructor and assignment operator
   DetermGETXGenerator(const DetermGETXGenerator& obj);
   DetermGETXGenerator& operator=(const DetermGETXGenerator& obj);
 
+  DeterministicDriver * parent_driver;
   // Data Members (m_ prefix)
   DetermGETXGeneratorStatus m_status;
   int m_counter;
   Address m_address;
   NodeID m_node;
-  DeterministicDriver& m_driver;
   Time m_last_transition;
 };
 

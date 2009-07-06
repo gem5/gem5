@@ -37,10 +37,11 @@
 #define OUT_VC_STATE_D_H
 
 #include "mem/ruby/network/garnet-fixed-pipeline/NetworkHeader.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 
 class OutVcState_d {
 public:
-        OutVcState_d(int id);
+        OutVcState_d(int id, GarnetNetwork_d *network_ptr);
 
         int get_inport() {return m_in_port; }
         int get_invc() { return m_in_vc; }
@@ -75,6 +76,7 @@ public:
         }
 
 private:
+        GarnetNetwork_d *m_network_ptr;
         int m_id ;
         Time m_time;
         VC_state_type m_vc_state;

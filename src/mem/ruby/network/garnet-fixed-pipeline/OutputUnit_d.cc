@@ -27,7 +27,7 @@
  */
 
 /*
- * OutputUnit_d.C
+ * OutputUnit_d.cc
  *
  * Niket Agarwal, Princeton University
  *
@@ -46,7 +46,7 @@ OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 
         for(int i = 0; i < m_num_vcs; i++)
         {
-                m_outvc_state.insertAtBottom(new OutVcState_d(i));
+                m_outvc_state.insertAtBottom(new OutVcState_d(i, m_router->get_net_ptr()));
         }
 }
 

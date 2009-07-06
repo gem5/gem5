@@ -37,26 +37,23 @@
 
 #include "mem/ruby/tester/DetermGETXGenerator.hh"
 #include "mem/protocol/DetermGETXGeneratorStatus.hh"
-#include "mem/protocol/LockStatus.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
-#include "mem/ruby/common/SubBlock.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/protocol/Chip.hh"
-#include "mem/packet.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
+#include "mem/ruby/tester/SpecifiedGenerator.hh"
+//#include "DMAController.hh"
+#include "mem/ruby/libruby.hh"
 
-DetermGETXGenerator::DetermGETXGenerator(NodeID node, DeterministicDriver& driver) :
-  m_driver(driver)
+
+DetermGETXGenerator::DetermGETXGenerator(NodeID node, DeterministicDriver * driver)
 {
   m_status = DetermGETXGeneratorStatus_Thinking;
   m_last_transition = 0;
   m_node = node;
   m_address = Address(9999);  // initialize to null value
   m_counter = 0;
-
+  parent_driver = driver;
   // don't know exactly when this node needs to request so just guess randomly
-  g_eventQueue_ptr->scheduleEvent(this, 1+(random() % 200));
+  parent_driver->eventQueue->scheduleEvent(this, 1+(random() % 200));
 }
 
 DetermGETXGenerator::~DetermGETXGenerator()
@@ -70,13 +67,13 @@ void DetermGETXGenerator::wakeup()
 
   // determine if this node is next for the GETX round robin request
   if (m_status == DetermGETXGeneratorStatus_Thinking) {
-    if (m_driver.isStoreReady(m_node)) {
+    if (parent_driver->isStoreReady(m_node)) {
       pickAddress();
       m_status = DetermGETXGeneratorStatus_Store_Pending;  // Store Pending
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = parent_driver->eventQueue->getTime();
       initiateStore();  // GETX
     } else { // I'll check again later
-      g_eventQueue_ptr->scheduleEvent(this, thinkTime());
+      parent_driver->eventQueue->scheduleEvent(this, thinkTime());
     }
   } else {
     WARN_EXPR(m_status);
@@ -85,31 +82,28 @@ void DetermGETXGenerator::wakeup()
 
 }
 
-void DetermGETXGenerator::performCallback(NodeID proc, SubBlock& data)
+void DetermGETXGenerator::performCallback(NodeID proc, Address address)
 {
-  Address address = data.getAddress();
   assert(proc == m_node);
   assert(address == m_address);
 
   DEBUG_EXPR(TESTER_COMP, LowPrio, proc);
   DEBUG_EXPR(TESTER_COMP, LowPrio, m_status);
   DEBUG_EXPR(TESTER_COMP, LowPrio, address);
-  DEBUG_EXPR(TESTER_COMP, LowPrio, data);
 
   if (m_status == DetermGETXGeneratorStatus_Store_Pending) {
-    m_driver.recordStoreLatency(g_eventQueue_ptr->getTime() - m_last_transition);
-    data.writeByte(m_node);
-    m_driver.storeCompleted(m_node, data.getAddress());  // advance the store queue
+    parent_driver->recordStoreLatency(parent_driver->eventQueue->getTime() - m_last_transition);
+    parent_driver->storeCompleted(m_node, address);  // advance the store queue
 
     m_counter++;
-    if (m_counter < g_tester_length) {
+    if (m_counter < parent_driver->m_tester_length) {
       m_status = DetermGETXGeneratorStatus_Thinking;
-      m_last_transition = g_eventQueue_ptr->getTime();
-      g_eventQueue_ptr->scheduleEvent(this, waitTime());
+      m_last_transition = parent_driver->eventQueue->getTime();
+      parent_driver->eventQueue->scheduleEvent(this, waitTime());
     } else {
-      m_driver.reportDone();
+      parent_driver->reportDone();
       m_status = DetermGETXGeneratorStatus_Done;
-      m_last_transition = g_eventQueue_ptr->getTime();
+      m_last_transition = parent_driver->eventQueue->getTime();
     }
 
   } else {
@@ -120,38 +114,40 @@ void DetermGETXGenerator::performCallback(NodeID proc, SubBlock& data)
 
 int DetermGETXGenerator::thinkTime() const
 {
-  return g_think_time;
+  return parent_driver->m_think_time;
 }
 
 int DetermGETXGenerator::waitTime() const
 {
-  return g_wait_time;
+  return parent_driver->m_wait_time;
 }
 
 void DetermGETXGenerator::pickAddress()
 {
   assert(m_status == DetermGETXGeneratorStatus_Thinking);
 
-  m_address = m_driver.getNextStoreAddr(m_node);
+  m_address = parent_driver->getNextStoreAddr(m_node);
 }
 
 void DetermGETXGenerator::initiateStore()
 {
   DEBUG_MSG(TESTER_COMP, MedPrio, "initiating Store");
 
-  Addr data_addr = m_address.getAddress();
-  Request request(0, data_addr, 1, Flags<unsigned int>(), 3, 0, 0);
-  MemCmd::Command command;
-  command = MemCmd::WriteReq;
+  uint8_t *write_data = new uint8_t[64];
+  for(int i=0; i < 64; i++) {
+      write_data[i] = m_node;
+  }
 
-  Packet pkt(&request, command, 0); // TODO -- make dest a real NodeID
+  char name [] = "Sequencer_";
+  char port_name [13];
+  sprintf(port_name, "%s%d", name, m_node);
 
-  sequencer()->makeRequest(&pkt);
-}
+  int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m_address.getAddress(), write_data, 64, 0, RubyRequestType_ST, RubyAccessMode_Supervisor));
 
-Sequencer* DetermGETXGenerator::sequencer() const
-{
-  return g_system_ptr->getChip(m_node/RubyConfig::numberOfProcsPerChip())->getSequencer(m_node%RubyConfig::numberOfProcsPerChip());
+  // delete [] write_data;
+
+  ASSERT(parent_driver->requests.find(request_id) == parent_driver->requests.end());
+  parent_driver->requests.insert(make_pair(request_id, make_pair(m_node, m_address)));
 }
 
 void DetermGETXGenerator::print(ostream& out) const

@@ -32,180 +32,232 @@
  *
  */
 
-#include "mem/protocol/protocol_name.hh"
-#include "mem/ruby/tester/test_framework.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/init.hh"
-#include "mem/ruby/tester/Tester.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "getopt.hh"
-#include "mem/ruby/network/Network.hh"
-#include "mem/ruby/recorder/CacheRecorder.hh"
-#include "mem/ruby/recorder/Tracer.hh"
-
 using namespace std;
+
+#include "mem/ruby/tester/test_framework.hh"
+#include "mem/protocol/protocol_name.hh"
+#include "getopt.hh"
+#include "mem/ruby/tester/DeterministicDriver.hh"
+#include "mem/ruby/tester/RaceyDriver.hh"
+#include "mem/ruby/tester/Driver_Tester.hh"
+
 #include <string>
 #include <map>
+#include <iostream>
+#include <assert.h>
+#include <vector>
+#include <string>
+#include <sstream>
+#include <sys/wait.h>
 
-// Maurice
-// extern "C" {
-// #include "simics/api.hh"
-// };
+#include "mem/ruby/libruby.hh"
 
-#include "mem/gems_common/ioutil/confio.hh"
-#include "mem/gems_common/ioutil/initvar.hh"
+// FIXME: should really make this a class if can't figure out how to make a function to get the ruby parameter
 
-// A generated file containing the default tester parameters in string form
-// The defaults are stored in the variables
-// global_default_param and global_default_tester_param
-#include "mem/ruby/default_param.hh"
-#include "mem/ruby/tester_param.hh"
 
+static void set_defaults();
 static void parseOptions(int argc, char **argv);
 static void usageInstructions();
 static void checkArg(char ch);
-static void tester_record_cache();
-static void tester_playback_trace();
 static void tester_initialize(int argc, char **argv);
 static void tester_destroy();
+static void hit_callback(int64_t request_id);
 
-static string trace_filename;
-char * my_default_param;
-initvar_t * my_initvar;
+// Tester variables
+string driver_type;
+string generator_type;
+Driver_Tester * m_driver_ptr;
+int g_tester_length;
+int num_completions;
+Time g_think_time;
+Time g_wait_time;
+int num_procs;
+
+// Debugger variables
+Debug * debug_ptr;
+string g_debug_verbosity_string;
+string g_debug_filter_string;
+string g_debug_output_filename;
+Time g_debug_start_time;
+
 
 void tester_main(int argc, char **argv)
 {
   tester_initialize(argc, argv);
 
-  if (trace_filename != "") {
-    // playback a trace (for multicast-mask prediction)
-    tester_playback_trace();
-  } else {
-    // test code to create a trace
-    if (!(g_SYNTHETIC_DRIVER || g_DETERMINISTIC_DRIVER) && trace_filename == "") {
-      g_system_ptr->getTracer()->startTrace("ruby.trace.gz");
-      g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 10000);
-      g_system_ptr->getTracer()->stopTrace();
-    }
-
-    g_eventQueue_ptr->triggerAllEvents();
-
-    // This call is placed here to make sure the cache dump code doesn't fall victim to code rot
-    if (!(g_SYNTHETIC_DRIVER || g_DETERMINISTIC_DRIVER)) {
-      tester_record_cache();
-    }
-  }
   tester_destroy();
 }
 
-static void tester_allocate( void )
+vector<string> tokenizeMyString(string str, string delims)
 {
-  init_simulator();
+  vector<string> tokens;
+  char* pch;
+  char* tmp;
+  const char* c_delims = delims.c_str();
+  tmp = new char[str.length()+1];
+  strcpy(tmp, str.c_str());
+  pch = strtok(tmp, c_delims);
+  while (pch != NULL) {
+    tokens.push_back(string(pch));
+    pch = strtok(NULL, c_delims);
+  }
+  delete [] tmp;
+  return tokens;
 }
 
-static void tester_generate_values( void )
+
+vector<string> getPorts(const char* cfg_script, int cfg_script_argc, char* cfg_script_argv[])
 {
+  stringstream cfg_output;
+
+  // first we execute the Ruby-lang configuration script
+  int fd[2];
+  int pid;
+  if (pipe(fd) == -1) {
+    perror("Error Creating Pipe");
+    exit(EXIT_FAILURE);
+  }
+
+  pid = fork();
+  if (pid == -1){
+    perror("Error forking");
+    exit(EXIT_FAILURE);
+  }
+
+  if (!pid) {
+    // child
+    close(fd[0]); // close the read end of the pipe
+    // replace stdout with the write pipe
+    if (dup2(fd[1], STDOUT_FILENO) == -1) {
+      perror("Error redirecting stdout");
+      exit(EXIT_FAILURE);
+    }
+#define QUOTE_MACRO(x, y) QUOTE_TXT(x,y)
+#define QUOTE_TXT(x, y) #x y
+    if (execlp("ruby", "ruby", "-I", QUOTE_MACRO(GEMS_ROOT, "/ruby/config"), QUOTE_MACRO(GEMS_ROOT, "/tests/list_ports.rb"), cfg_script, NULL)) {
+      perror("execlp");
+      exit(EXIT_FAILURE);
+    }
+  } else {
+    close(fd[1]);
+
+    int child_status;
+    if (wait(&child_status) == -1) {
+      perror("wait");
+      exit(EXIT_FAILURE);
+    }
+    if (child_status != EXIT_SUCCESS) {
+      exit(EXIT_FAILURE);
+    }
+
+    char buf[100];
+    int bytes_read;
+    while( (bytes_read = read(fd[0], buf, 100)) > 0 ) {
+      for (int i=0;i<bytes_read;i++) {
+        cfg_output << buf[i];
+      }
+    }
+    assert(bytes_read == 0);
+    close(fd[0]);
+  }
+  string line;
+  getline(cfg_output, line);
+
+  return tokenizeMyString(line, " ");
 }
+
+
 
 void tester_initialize(int argc, char **argv)
 {
-  int   param_len = strlen( global_default_param ) + strlen( global_default_tester_param ) + 1;
-  char *default_param = (char *) malloc( sizeof(char) * param_len );
-  my_default_param = default_param;
-  strcpy( default_param, global_default_param );
-  strcat( default_param, global_default_tester_param );
+  const char* cfg_file = argv[1];
 
-  // when the initvar object is created, it reads the configuration default
-  //   -for the tester, the configuration defaults in config/tester.defaults
-
-  /** note: default_param is included twice in the tester:
-   *       -once in init.C
-   *       -again in this file
-   */
-  initvar_t *ruby_initvar = new initvar_t( "ruby", "../../../ruby/",
-                                           default_param,
-                                           &tester_allocate,
-                                           &tester_generate_values,
-                                           NULL,
-                                           NULL );
-  my_initvar = ruby_initvar;
-  ruby_initvar->checkInitialization();
+  set_defaults();
   parseOptions(argc, argv);
 
-  ruby_initvar->allocate();
+  libruby_init(cfg_file);
+  libruby_print_config(std::cout);
 
-  g_system_ptr->printConfig(cout);
-  cout << "Testing clear stats...";
-  g_system_ptr->clearStats();
-  cout << "Done." << endl;
-  //free( default_param );
-  //delete ruby_initvar;
+  vector<string> port_names = getPorts(cfg_file, 0, NULL);
+  vector<RubyPortHandle> ports;
+
+  for (vector<string>::const_iterator it = port_names.begin(); it != port_names.end(); it++)
+    ports.push_back(libruby_get_port((*it).c_str(), hit_callback));
+
+  debug_ptr = new Debug(   g_debug_filter_string.c_str(),
+                           g_debug_verbosity_string.c_str(),
+                           g_debug_start_time,
+                           g_debug_output_filename.c_str() );
+
+  if (driver_type == "Deterministic") {
+    m_driver_ptr = new DeterministicDriver(generator_type, num_completions, num_procs, g_think_time, g_wait_time, g_tester_length);
+  }
+  else if (driver_type == "Racey") {
+    m_driver_ptr = new RaceyDriver(num_procs, g_tester_length);
+  }
+ /* else if (driver_type == "Synthetic") {
+    m_driver_ptr = new SyntheticDriver();
+  }
+  }*/
+
+  m_driver_ptr->go();
 }
 
 void tester_destroy()
 {
-  g_system_ptr->printStats(cout);
-  g_debug_ptr->closeDebugOutputFile();
-
-  free(my_default_param);
-  delete my_initvar;
-  // Clean up
-  destroy_simulator();
+  m_driver_ptr->printStats(cout);
+  libruby_destroy();
   cerr << "Success: " << CURRENT_PROTOCOL << endl;
 }
 
-void tester_install_opal(mf_opal_api_t* opal_api, mf_ruby_api_t* ruby_api)
-{
-  std::cout << __FILE__ << "(" << __LINE__ << "): Not implemented" << std::endl;
-}
 
-void tester_record_cache()
+void hit_callback(int64_t request_id)
 {
-  cout << "Testing recording of cache contents" << endl;
-  CacheRecorder recorder;
-  g_system_ptr->recordCacheContents(recorder);
-  int written = recorder.dumpRecords("ruby.caches.gz");
-  int read = Tracer::playbackTrace("ruby.caches.gz");
-  assert(read == written);
-  cout << "Testing recording of cache contents completed" << endl;
-}
-
-void tester_playback_trace()
-{
-  assert(trace_filename != "");
-  cout << "Reading trace from file '" << trace_filename << "'..." << endl;
-  int read = Tracer::playbackTrace(trace_filename);
-  cout << "(" << read << " requests read)" << endl;
-  if (read == 0) {
-    ERROR_MSG("Zero items read from tracefile.");
-  }
+  m_driver_ptr->hitCallback(request_id);
 }
 
 // ************************************************************************
 // *** Functions for parsing the command line parameters for the tester ***
 // ************************************************************************
 
+
+
 static struct option const long_options[] =
 {
   {"help", no_argument, NULL, 'h'},
-  {"processors", required_argument, NULL, 'p'},
-  {"length", required_argument, NULL, 'l'},
-  {"random", required_argument, NULL, 'r'},
-  {"trace_input", required_argument, NULL, 'z'},
-  {"component", required_argument, NULL, 'c'},
-  {"verbosity", required_argument, NULL, 'v'},
-  {"debug_output_file", required_argument, NULL, 'o'},
-  {"start", required_argument, NULL, 's'},
-  {"bandwidth", required_argument, NULL, 'b'},
-  {"threshold", required_argument, NULL, 't'},
-  {"think_time", required_argument, NULL, 'k'},
-  {"locks", required_argument, NULL, 'q'},
-  {"network", required_argument, NULL, 'n'},
-  {"procs_per_chip", required_argument, NULL, 'a'},
-  {"l2_caches", required_argument, NULL, 'e'},
-  {"memories", required_argument, NULL, 'm'},
+  {"number of processors", required_argument, NULL, 'p'},
+  {"test run length", required_argument, NULL, 'l'},
+  {"debugger verbosity", required_argument, NULL, 'v'},
+  {"debugger filter component", required_argument, NULL, 'c'},
+  {"debugger output file", required_argument, NULL, 'o'},
+  {"debugger start time", required_argument, NULL, 's'},
+  {"generator think time", required_argument, NULL, 'k'},
+  {"generator wait time", required_argument, NULL, 'w'},
+  {"driver type", required_argument, NULL, 'd'},
+  {"generator type", required_argument, NULL, 'g'},
+  {"num completions before pass", required_argument, NULL, 'n'},
   {NULL, 0, NULL, 0}
 };
+
+
+// This is awkward and temporary, need the defaults config, and also need functions to
+// just lookup a parameter in the configuration file
+// Ideally the default values are set by libruby_init and then a function is provided to
+// set values at run-time
+static void set_defaults() {
+  g_tester_length = 0;
+  g_think_time = 5;
+  g_wait_time = 20;
+
+  num_procs = 1;
+  num_completions = 1;
+  driver_type = "Deterministic";
+  generator_type = "DetermInvGenerator";
+  g_debug_verbosity_string = "none";
+  g_debug_filter_string = "none";
+  g_debug_output_filename = "none";
+  g_debug_start_time = 0;
+}
 
 static void parseOptions(int argc, char **argv)
 {
@@ -229,21 +281,14 @@ static void parseOptions(int argc, char **argv)
     switch (c) {
     case 0:
       break;
-
-    case 'c':
-      checkArg(c);
-      cout << "  component filter string = " << optarg << endl;
-      error = Debug::checkFilterString( optarg );
-      if (error) {
-        usageInstructions();
-      }
-      DEBUG_FILTER_STRING = strdup( optarg );
-      break;
-
     case 'h':
       usageInstructions();
       break;
-
+    case 'p':
+      checkArg(c);
+      cout << "  number of processors = " << optarg << endl;
+      num_procs = atoi( optarg );
+      break;
     case 'v':
       checkArg(c);
       cout << "  verbosity string = " << optarg << endl;
@@ -251,22 +296,8 @@ static void parseOptions(int argc, char **argv)
       if (error) {
         usageInstructions();
       }
-      DEBUG_VERBOSITY_STRING = strdup( optarg );
+      g_debug_verbosity_string = strdup( optarg );
       break;
-
-    case 'r': {
-      checkArg(c);
-      if (string(optarg) == "random") {
-        g_RANDOM_SEED = time(NULL);
-      } else {
-        g_RANDOM_SEED = atoi(optarg);
-        if (g_RANDOM_SEED == 0) {
-          usageInstructions();
-        }
-      }
-      break;
-    }
-
     case 'l': {
       checkArg(c);
       g_tester_length = atoi(optarg);
@@ -276,44 +307,15 @@ static void parseOptions(int argc, char **argv)
       }
       break;
     }
-
-    case 'q': {
+      case 'c':
       checkArg(c);
-      g_synthetic_locks = atoi(optarg);
-      cout << "  locks in synthetic workload = " << g_synthetic_locks << endl;
-      if (g_synthetic_locks == 0) {
+      cout << "  component filter string = " << optarg << endl;
+      error = Debug::checkFilterString( optarg );
+      if (error) {
         usageInstructions();
       }
+      g_debug_filter_string = strdup( optarg );
       break;
-    }
-
-    case 'p': {
-      checkArg(c);
-      g_NUM_PROCESSORS = atoi(optarg);
-      break;
-    }
-
-    case 'a': {
-      checkArg(c);
-      g_PROCS_PER_CHIP = atoi(optarg);
-      cout << "  g_PROCS_PER_CHIP: " << g_PROCS_PER_CHIP << endl;
-      break;
-    }
-
-    case 'e': {
-      checkArg(c);
-      g_NUM_L2_BANKS = atoi(optarg);
-      cout << "  g_NUM_L2_BANKS: " << g_NUM_L2_BANKS << endl;
-      break;
-    }
-
-    case 'm': {
-      checkArg(c);
-      g_NUM_MEMORIES = atoi(optarg);
-      cout << "  g_NUM_MEMORIES: " << g_NUM_MEMORIES << endl;
-      break;
-    }
-
     case 's': {
       checkArg(c);
       long long start_time = atoll(optarg);
@@ -321,70 +323,43 @@ static void parseOptions(int argc, char **argv)
       if (start_time == 0) {
         usageInstructions();
       }
-      DEBUG_START_TIME = start_time;
+      g_debug_start_time = start_time;
       break;
     }
-
-    case 'b': {
-      checkArg(c);
-      int bandwidth = atoi(optarg);
-      cout << "  bandwidth per link (MB/sec) = " << bandwidth << endl;
-      g_endpoint_bandwidth = bandwidth;
-      if (bandwidth == 0) {
-        usageInstructions();
-      }
-      break;
-    }
-
-    case 't': {
-      checkArg(c);
-      g_bash_bandwidth_adaptive_threshold = atof(optarg);
-      if ((g_bash_bandwidth_adaptive_threshold > 1.1) || (g_bash_bandwidth_adaptive_threshold < -0.1)) {
-        cerr << "Error: Bandwidth adaptive threshold must be between 0.0 and 1.0" << endl;
-        usageInstructions();
-      }
-
-      break;
-    }
-
     case 'k': {
       checkArg(c);
       g_think_time = atoi(optarg);
       break;
     }
-
+    case 'w': {
+      checkArg(c);
+      g_wait_time = atoi(optarg);
+      break;
+    }
     case 'o':
       checkArg(c);
       cout << "  output file = " << optarg << endl;
-      DEBUG_OUTPUT_FILENAME = strdup( optarg );
+      g_debug_output_filename = strdup( optarg );
       break;
-
-    case 'z':
+    case 'd':
       checkArg(c);
-      trace_filename = string(optarg);
-      cout << "  tracefile = " << trace_filename << endl;
+      cout << "  driver type = " << optarg << endl;
+      driver_type = strdup( optarg );
       break;
-
-      case 'n':
-        checkArg(c);
-        cout << "  topology = " << string(optarg) << endl;
-        g_NETWORK_TOPOLOGY = strdup(optarg);
-        break;
-
+    case 'g':
+      checkArg(c);
+      cout << "  generator type = " << optarg << endl;
+      generator_type = strdup( optarg );
+      break;
+    case 'n':
+      checkArg(c);
+      cout << "  num completions before pass = " << optarg << endl;
+      num_completions = atoi( optarg );
+      break;
     default:
       cerr << "parameter '" << c << "' unknown" << endl;
       usageInstructions();
     }
-  }
-
-  if ((trace_filename != "") || (g_tester_length != 0)) {
-    if ((trace_filename != "") && (g_tester_length != 0)) {
-      cerr << "Error: both a run length (-l) and a trace file (-z) have been specified." << endl;
-      usageInstructions();
-    }
-  } else {
-    cerr << "Error: either run length (-l) must be > 0 or a trace file (-z) must be specified." << endl;
-    usageInstructions();
   }
 }
 
@@ -408,10 +383,8 @@ static void usageInstructions()
     counter++;
   }
 
-  cerr << "Option --processors (-p) is required." << endl;
-  cerr << "Either option --length (-l) or --trace_input (-z) must be specified." << endl;
   cerr << endl;
-  g_debug_ptr->usageInstructions();
+  debug_ptr->usageInstructions();
   cerr << endl;
 
   exit(1);

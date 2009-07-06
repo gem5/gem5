@@ -32,66 +32,78 @@
  *
  */
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/tester/SpecifiedGenerator.hh"
+#include "mem/ruby/tester/EventQueue_Tester.hh"
+//#include "DMAGenerator.hh"
 #include "mem/ruby/tester/DetermGETXGenerator.hh"
-#include "mem/ruby/tester/DetermInvGenerator.hh"
-#include "mem/ruby/tester/DetermSeriesGETSGenerator.hh"
-#include "mem/ruby/common/SubBlock.hh"
-#include "mem/protocol/Chip.hh"
-#include "mem/packet.hh"
 
-DeterministicDriver::DeterministicDriver(RubySystem* sys_ptr)
+#define DATA_BLOCK_BYTES 64
+
+DeterministicDriver::DeterministicDriver(string generator_type, int num_completions, int num_procs, Time g_think_time, Time g_wait_time, int g_tester_length)
 {
+  eventQueue = new RubyEventQueue;
   m_finish_time = 0;
   m_last_issue = -11;
   m_done_counter = 0;
   m_loads_completed = 0;
   m_stores_completed = 0;
 
-  m_numCompletionsPerNode = g_NUM_COMPLETIONS_BEFORE_PASS;
+  m_numCompletionsPerNode = num_completions;
+  m_num_procs = num_procs;
+  m_think_time = g_think_time;
+  m_wait_time = g_wait_time;
+  m_tester_length = g_tester_length;
 
-  m_last_progress_vector.setSize(RubyConfig::numberOfProcessors());
+
+  m_last_progress_vector.setSize(num_procs);
   for (int i=0; i<m_last_progress_vector.size(); i++) {
     m_last_progress_vector[i] = 0;
   }
 
-  m_load_vector.setSize(g_deterministic_addrs);
+  m_load_vector.setSize(10);
   for (int i=0; i<m_load_vector.size(); i++) {
     m_load_vector[i] = -1;  // No processor last held it
   }
 
-  m_store_vector.setSize(g_deterministic_addrs);
+  m_store_vector.setSize(10);
   for (int i=0; i<m_store_vector.size(); i++) {
     m_store_vector[i] = -1;  // No processor last held it
   }
 
-  m_generator_vector.setSize(RubyConfig::numberOfProcessors());
+  m_generator_vector.setSize(num_procs);
 
-  SpecifiedGeneratorType generator = string_to_SpecifiedGeneratorType(g_SpecifiedGenerator);
+  int generator = string_to_SpecifiedGeneratorType(generator_type);
 
   for (int i=0; i<m_generator_vector.size(); i++) {
     switch (generator) {
     case SpecifiedGeneratorType_DetermGETXGenerator:
-      m_generator_vector[i] = new DetermGETXGenerator(i, *this);
-      break;
-    case SpecifiedGeneratorType_DetermSeriesGETSGenerator:
-      m_generator_vector[i] = new DetermSeriesGETSGenerator(i, *this);
+      m_generator_vector[i] = new DetermGETXGenerator(i, this);
       break;
     case SpecifiedGeneratorType_DetermInvGenerator:
       m_generator_vector[i] = new DetermInvGenerator(i, *this);
+      break;
+    case SpecifiedGeneratorType_DetermSeriesGETSGenerator:
+      m_generator_vector[i] = new DetermSeriesGETSGenerator(i, *this);
       break;
     default:
       ERROR_MSG("Unexpected specified generator type");
     }
   }
 
-  // add the tester consumer to the global event queue
-  g_eventQueue_ptr->scheduleEvent(this, 1);
+  //m_dma_generator = new DMAGenerator(0, this);
 }
+
+
+void DeterministicDriver::go()
+{
+  // tick both queues until everyone is done
+  while (m_done_counter != m_num_procs) {
+    libruby_tick(1);
+    eventQueue->triggerEvents(eventQueue->getTime() + 1);
+  }
+}
+
 
 DeterministicDriver::~DeterministicDriver()
 {
@@ -100,18 +112,27 @@ DeterministicDriver::~DeterministicDriver()
   }
 }
 
-void
-DeterministicDriver::hitCallback(Packet * pkt)
+//void DeterministicDriver::dmaHitCallback()
+//{
+//  m_dma_generator->performCallback();
+//}
+
+void DeterministicDriver::wakeup() {
+  assert(0);
+  // this shouldn't be called as we are not scheduling the driver ever
+}
+
+void DeterministicDriver::hitCallback(int64_t request_id)
 {
-  NodeID proc = pkt->req->contextId();
-  SubBlock data(Address(pkt->getAddr()), pkt->req->getSize());
-  if (pkt->hasData()) {
-    for (int i = 0; i < pkt->req->getSize(); i++) {
-      data.setByte(i, *(pkt->getPtr<uint8>()+i));
-    }
-  }
-  m_generator_vector[proc]->performCallback(proc, data);
-  m_last_progress_vector[proc] = g_eventQueue_ptr->getTime();
+  ASSERT(requests.find(request_id) != requests.end());
+  int proc = requests[request_id].first;
+  Address address = requests[request_id].second;
+
+  m_generator_vector[proc]->performCallback(proc, address);
+
+  m_last_progress_vector[proc] = eventQueue->getTime();
+
+  requests.erase(request_id);
 }
 
 bool DeterministicDriver::isStoreReady(NodeID node)
@@ -121,6 +142,8 @@ bool DeterministicDriver::isStoreReady(NodeID node)
 
 bool DeterministicDriver::isStoreReady(NodeID node, Address addr)
 {
+  int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
+
   return isAddrReady(node, m_store_vector, addr);
 }
 
@@ -138,25 +161,26 @@ bool DeterministicDriver::isLoadReady(NodeID node, Address addr)
 bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector)
 {
   for (int i=0; i<addr_vector.size(); i++) {
-    if (((addr_vector[i]+1)%RubyConfig::numberOfProcessors() == node) &&
+    if (((addr_vector[i]+1)%m_num_procs == node) &&
         (m_loads_completed+m_stores_completed >= m_numCompletionsPerNode*node) && // is this node next
-        (g_eventQueue_ptr->getTime() >= m_last_issue + 10)) { // controll rate of requests
+        (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests
       return true;
     }
   }
+
   return false;
 }
 
 // test for a particular addr
 bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector, Address addr)
 {
-  int addr_number = addr.getAddress()/RubyConfig::dataBlockBytes();
+  int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
 
   ASSERT ((addr_number >= 0) && (addr_number < addr_vector.size()));
 
-  if (((addr_vector[addr_number]+1)%RubyConfig::numberOfProcessors() == node) &&
+  if (((addr_vector[addr_number]+1)%m_num_procs == node) &&
       (m_loads_completed+m_stores_completed >= m_numCompletionsPerNode*node) && // is this node next
-      (g_eventQueue_ptr->getTime() >= m_last_issue + 10)) { // controll rate of requests
+      (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests
     return true;
   } else {
     return false;
@@ -178,7 +202,7 @@ void DeterministicDriver::storeCompleted(NodeID node, Address addr)
 void DeterministicDriver::setNextAddr(NodeID node, Address addr, Vector<NodeID>& addr_vector)
 {
   // mark the addr vector that this proc was the last to use the particular address
-  int addr_number = addr.getAddress()/RubyConfig::dataBlockBytes();
+  int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
   addr_vector[addr_number] = node;
 }
 
@@ -204,17 +228,16 @@ Address DeterministicDriver::getNextAddr(NodeID node, Vector<NodeID> addr_vector
   ASSERT(isAddrReady(node, addr_vector));
 
   for (int addr_number=0; addr_number<addr_vector.size(); addr_number++) {
-  //for (int addr_number=addr_vector.size()-1; addr_number>0; addr_number--) {
 
     // is this node next in line for the addr
-    if (((addr_vector[addr_number]+1)%RubyConfig::numberOfProcessors()) == node) {
+    if ((addr_vector[addr_number] != 1) && ((addr_vector[addr_number]+1)%m_num_procs) == node) {
 
       // One addr per cache line
-      addr.setAddress(addr_number * RubyConfig::dataBlockBytes());
+      addr.setAddress(addr_number * DATA_BLOCK_BYTES);
     }
   }
 
-  m_last_issue = g_eventQueue_ptr->getTime();
+  m_last_issue = eventQueue->getTime();
 
   return addr;
 }
@@ -223,9 +246,9 @@ Address DeterministicDriver::getNextAddr(NodeID node, Vector<NodeID> addr_vector
 void DeterministicDriver::reportDone()
 {
   m_done_counter++;
-  if ((m_done_counter == RubyConfig::numberOfProcessors())) {
-      //|| (m_done_counter == g_tester_length)) {
-    m_finish_time = g_eventQueue_ptr->getTime();
+  if ((m_done_counter == m_num_procs)) {
+    m_finish_time = eventQueue->getTime();
+    //m_dma_generator->stop();
   }
 }
 
@@ -237,36 +260,6 @@ void DeterministicDriver::recordLoadLatency(Time time)
 void DeterministicDriver::recordStoreLatency(Time time)
 {
   m_store_latency.add(time);
-}
-
-void DeterministicDriver::wakeup()
-{
-  //  checkForDeadlock();
-  if (m_done_counter < RubyConfig::numberOfProcessors()) {
-    g_eventQueue_ptr->scheduleEvent(this, g_DEADLOCK_THRESHOLD);
-  }
-}
-
-void DeterministicDriver::checkForDeadlock()
-{
-  int size = m_last_progress_vector.size();
-  Time current_time = g_eventQueue_ptr->getTime();
-  for (int processor=0; processor<size; processor++) {
-    if ((current_time - m_last_progress_vector[processor]) > g_DEADLOCK_THRESHOLD) {
-      WARN_EXPR(processor);
-#ifndef NDEBUG
-      Sequencer* seq_ptr = g_system_ptr->getChip(processor/RubyConfig::numberOfProcsPerChip())->getSequencer(processor%RubyConfig::numberOfProcsPerChip());
-#endif
-      assert(seq_ptr != NULL);
-      //     if (seq_ptr->isRequestPending()) {
-      //       WARN_EXPR(seq_ptr->pendingAddress());
-      //      }
-      WARN_EXPR(current_time);
-      WARN_EXPR(m_last_progress_vector[processor]);
-      WARN_EXPR(current_time - m_last_progress_vector[processor]);
-      ERROR_MSG("Deadlock detected.");
-    }
-  }
 }
 
 void DeterministicDriver::printStats(ostream& out) const

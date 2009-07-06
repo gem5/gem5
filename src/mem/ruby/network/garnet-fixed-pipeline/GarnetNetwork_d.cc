@@ -43,10 +43,19 @@
 #include "mem/ruby/network/garnet-fixed-pipeline/CreditLink_d.hh"
 #include "mem/ruby/common/NetDest.hh"
 
-GarnetNetwork_d::GarnetNetwork_d(int nodes)
+GarnetNetwork_d::GarnetNetwork_d(const string & name)
+  : Network(name)
 {
-        m_nodes = MachineType_base_number(MachineType_NUM); // Total nodes in network
-        m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS; // Number of virtual networks = number of message classes in the coherence protocol
+}
+
+void GarnetNetwork_d::init(const vector<string> & argv)
+{
+        Network::init(argv);
+
+        //added by SS
+        m_network_config_ptr = new NetworkConfig;
+        m_network_config_ptr->init(argv);
+
         m_ruby_start = 0;
         m_flits_recieved = 0;
         m_flits_injected = 0;
@@ -80,7 +89,7 @@ GarnetNetwork_d::GarnetNetwork_d(int nodes)
         }
 
         // Setup the network switches
-        m_topology_ptr = new Topology(this, m_nodes);
+        m_topology_ptr->makeTopology();
 
         int number_of_routers = m_topology_ptr->numSwitches();
         for (int i=0; i<number_of_routers; i++) {
@@ -138,7 +147,7 @@ void GarnetNetwork_d::makeInLink(NodeID src, SwitchID dest, const NetDest& routi
         if(!isReconfiguration)
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
-                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size());
+                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
                 m_link_ptr_vector.insertAtBottom(net_link);
                 m_creditlink_ptr_vector.insertAtBottom(credit_link);
 
@@ -167,7 +176,7 @@ void GarnetNetwork_d::makeOutLink(SwitchID src, NodeID dest, const NetDest& rout
         if(!isReconfiguration)
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
-                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size());
+                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
                 m_link_ptr_vector.insertAtBottom(net_link);
                 m_creditlink_ptr_vector.insertAtBottom(credit_link);
 
@@ -190,7 +199,7 @@ void GarnetNetwork_d::makeInternalLink(SwitchID src, SwitchID dest, const NetDes
         if(!isReconfiguration)
         {
                 NetworkLink_d *net_link = new NetworkLink_d(m_link_ptr_vector.size(), link_latency, this);
-                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size());
+                CreditLink_d *credit_link = new CreditLink_d(m_creditlink_ptr_vector.size(), link_latency, this);
                 m_link_ptr_vector.insertAtBottom(net_link);
                 m_creditlink_ptr_vector.insertAtBottom(credit_link);
 
@@ -241,9 +250,9 @@ Time GarnetNetwork_d::getRubyStartTime()
 void GarnetNetwork_d::printStats(ostream& out) const
 {       double average_link_utilization = 0;
         Vector<double > average_vc_load;
-        average_vc_load.setSize(m_virtual_networks*NetworkConfig::getVCsPerClass());
+        average_vc_load.setSize(m_virtual_networks*m_network_config_ptr->getVCsPerClass());
 
-        for(int i = 0; i < m_virtual_networks*NetworkConfig::getVCsPerClass(); i++)
+        for(int i = 0; i < m_virtual_networks*m_network_config_ptr->getVCsPerClass(); i++)
         {
                 average_vc_load[i] = 0;
         }
@@ -259,7 +268,7 @@ void GarnetNetwork_d::printStats(ostream& out) const
                 Vector<int > vc_load = m_link_ptr_vector[i]->getVcLoad();
                 for(int j = 0; j < vc_load.size(); j++)
                 {
-                        assert(vc_load.size() == NetworkConfig::getVCsPerClass()*m_virtual_networks);
+                        assert(vc_load.size() == m_network_config_ptr->getVCsPerClass()*m_virtual_networks);
                         average_vc_load[j] += vc_load[j];
                 }
         }
@@ -267,7 +276,7 @@ void GarnetNetwork_d::printStats(ostream& out) const
         out << "Average Link Utilization :: " << average_link_utilization << " flits/cycle" << endl;
         out << "-------------" << endl;
 
-        for(int i = 0; i < NetworkConfig::getVCsPerClass()*NUMBER_OF_VIRTUAL_NETWORKS; i++)
+        for(int i = 0; i < m_network_config_ptr->getVCsPerClass()*m_virtual_networks; i++)
         {
                 average_vc_load[i] = (double(average_vc_load[i]) / (double(g_eventQueue_ptr->getTime()) - m_ruby_start));
                 out << "Average VC Load [" << i << "] = " << average_vc_load[i] << " flits/cycle " << endl;
@@ -304,7 +313,7 @@ void GarnetNetwork_d::printConfig(ostream& out) const
         out << "Network Configuration" << endl;
         out << "---------------------" << endl;
         out << "network: GarnetNetwork_d" << endl;
-        out << "topology: " << g_NETWORK_TOPOLOGY << endl;
+        out << "topology: " << m_topology_ptr->getName() << endl;
         out << endl;
 
         for (int i = 0; i < m_virtual_networks; i++)
@@ -337,10 +346,7 @@ void GarnetNetwork_d::printConfig(ostream& out) const
         {
                 m_router_ptr_vector[i]->printConfig(out);
         }
-        if (g_PRINT_TOPOLOGY)
-        {
-                m_topology_ptr->printConfig(out);
-        }
+        m_topology_ptr->printConfig(out);
 }
 
 void GarnetNetwork_d::print(ostream& out) const

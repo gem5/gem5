@@ -30,6 +30,7 @@
 // Mapping functions
 
 // NodeID map_address_to_node(Address addr);
+MachineID map_Address_to_DMA(Address addr);
 MachineID map_Address_to_Directory(Address addr);
 NodeID map_Address_to_DirectoryNode(Address addr);
 MachineID map_Address_to_CentralArbiterNode(Address addr);

@@ -68,6 +68,7 @@ public:
   bool isEnumeration() const { return existPair("enumeration"); }
   bool isExternal() const { return existPair("external"); }
   bool isGlobal() const { return existPair("global"); }
+  bool isInterface() const { return existPair("interface"); }
 
   // The data members of this type - only valid for messages and SLICC
   // declared structures
@@ -92,7 +93,7 @@ public:
   bool enumExist(string id) const { return m_enum_map.exist(id); }
 
   // Write the C output files
-  void writeCFiles(string path) const;
+  void writeCFiles(string path) ;
 
   bool hasDefault() const { return existPair("default"); }
   string getDefault() const { return lookupPair("default"); }

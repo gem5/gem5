@@ -156,9 +156,12 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     bool isPresent(Address);
   }
 
-  TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
+  TBETable L2_TBEs, template_hack="<L2Cache_TBE>", no_vector="true";
 
-  CacheMemory L2cacheMemory, template_hack="<L2Cache_Entry>", constructor_hack='L2_CACHE_NUM_SETS_BITS,L2_CACHE_ASSOC,MachineType_L2Cache,int_to_string(i)';
+//  CacheMemory L2cacheMemory, template_hack="<L2Cache_Entry>", constructor_hack='L2_CACHE_NUM_SETS_BITS,L2_CACHE_ASSOC,MachineType_L2Cache,int_to_string(i)';
+
+
+  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])', no_vector="true";
 
   // inclusive cache, returns L2 entries only
   Entry getL2CacheEntry(Address addr), return_by_ref="yes" {

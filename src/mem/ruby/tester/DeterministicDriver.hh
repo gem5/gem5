@@ -36,25 +36,35 @@
 
 #ifndef DETERMINISTICDRIVER_H
 #define DETERMINISTICDRIVER_H
+#include <map>
+#include "mem/ruby/tester/Global_Tester.hh"
+#include "mem/ruby/common/Histogram.hh"            // includes global, but doesn't use anything, so it should be fine
+#include "mem/protocol/CacheRequestType.hh"     // includes global, but doesn't use anything, so it should be fine
+#include "Address_Tester.hh"       // we redefined the address
+#include "mem/ruby/tester/DetermGETXGenerator.hh"  // this is our file
+#include "mem/ruby/tester/DetermSeriesGETSGenerator.hh"  // this is our file
+#include "mem/ruby/tester/DetermInvGenerator.hh"  // this is our file
+#include "mem/ruby/libruby.hh"
+#include "mem/ruby/tester/Driver_Tester.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/tester/EventQueue_Tester.hh"
+#include "mem/protocol/SpecifiedGeneratorType.hh"
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Driver.hh"
-#include "mem/ruby/common/Histogram.hh"
-#include "mem/protocol/CacheRequestType.hh"
+//class DMAGenerator;
 
-class RubySystem;
-class SpecifiedGenerator;
-class Packet;
-
-class DeterministicDriver : public Driver, public Consumer {
+class DeterministicDriver : public Driver_Tester, public Consumer {
 public:
+  friend class DetermGETXGenerator;
+  friend class DetermSeriesGETSGenerator;
+  friend class DetermInvGenerator;
   // Constructors
-  DeterministicDriver(RubySystem* sys_ptr);
+  DeterministicDriver(string generator_type, int num_completions, int num_procs, Time g_think_time, Time g_wait_time, int g_tester_length);
 
   // Destructor
   ~DeterministicDriver();
 
   // Public Methods
+  void go();
   bool isStoreReady(NodeID node);
   bool isLoadReady(NodeID node);
   bool isStoreReady(NodeID node, Address addr);
@@ -70,37 +80,47 @@ public:
   void recordLoadLatency(Time time);
   void recordStoreLatency(Time time);
 
-  void hitCallback(Packet* pkt);
+//  void dmaHitCallback();
+  void hitCallback(int64_t request_id);
   void wakeup();
   void printStats(ostream& out) const;
   void clearStats() {}
   void printConfig(ostream& out) const {}
 
   void print(ostream& out) const;
+  // Public copy constructor and assignment operator
+  DeterministicDriver(const DeterministicDriver& obj);
+  DeterministicDriver& operator=(const DeterministicDriver& obj);
+
 private:
   // Private Methods
-  void checkForDeadlock();
 
   Address getNextAddr(NodeID node, Vector<NodeID> addr_vector);
   bool isAddrReady(NodeID node, Vector<NodeID> addr_vector);
   bool isAddrReady(NodeID node, Vector<NodeID> addr_vector, Address addr);
   void setNextAddr(NodeID node, Address addr, Vector<NodeID>& addr_vector);
 
-  // Private copy constructor and assignment operator
-  DeterministicDriver(const DeterministicDriver& obj);
-  DeterministicDriver& operator=(const DeterministicDriver& obj);
 
   // Data Members (m_ prefix)
   Vector<Time> m_last_progress_vector;
   Vector<SpecifiedGenerator*> m_generator_vector;
+  //DMAGenerator* m_dma_generator;
   Vector<NodeID> m_load_vector;  // Processor last to load the addr
   Vector<NodeID> m_store_vector;  // Processor last to store the addr
 
+  int last_proc;
   int m_done_counter;
   int m_loads_completed;
   int m_stores_completed;
   // enforces the previous node to have a certain # of completions
   // before next node starts
+
+  map <int64_t, pair <int, Address> > requests;
+  Time m_think_time;
+  Time m_wait_time;
+  int m_tester_length;
+  int m_num_procs;
+  RubyEventQueue * eventQueue;
   int m_numCompletionsPerNode;
 
   Histogram m_load_latency;

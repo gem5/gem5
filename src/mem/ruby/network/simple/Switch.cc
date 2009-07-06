@@ -82,8 +82,9 @@ void Switch::addOutPort(const Vector<MessageBuffer*>& out, const NetDest& routin
     MessageBuffer* buffer_ptr = new MessageBuffer;
     // Make these queues ordered
     buffer_ptr->setOrdering(true);
-    if(FINITE_BUFFERING) {
-      buffer_ptr->setSize(FINITE_BUFFER_SIZE);
+    Network* net_ptr = RubySystem::getNetwork();
+    if(net_ptr->getBufferSize() > 0) {
+      buffer_ptr->setSize(net_ptr->getBufferSize());
     }
     intermediateBuffers.insertAtBottom(buffer_ptr);
     m_buffers_to_free.insertAtBottom(buffer_ptr);

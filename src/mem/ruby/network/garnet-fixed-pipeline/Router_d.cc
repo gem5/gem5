@@ -48,10 +48,10 @@ Router_d::Router_d(int id, GarnetNetwork_d *network_ptr)
 {
         m_id = id;
         m_network_ptr = network_ptr;
-        m_virtual_networks = NUMBER_OF_VIRTUAL_NETWORKS;
-        m_vc_per_vnet = NetworkConfig::getVCsPerClass();
+        m_virtual_networks = network_ptr->getNumberOfVirtualNetworks();
+        m_vc_per_vnet = m_network_ptr->getNetworkConfig()->getVCsPerClass();
         m_num_vcs = m_virtual_networks*m_vc_per_vnet;
-        m_flit_width = NetworkConfig::getFlitSize();
+        m_flit_width = m_network_ptr->getNetworkConfig()->getFlitSize();
 
         m_routing_unit = new RoutingUnit_d(this);
         m_vc_alloc = new VCallocator_d(this);

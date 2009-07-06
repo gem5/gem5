@@ -51,9 +51,14 @@ class CreditLink_d;
 
 class GarnetNetwork_d : public Network{
 public:
-        GarnetNetwork_d(int nodes);
+        GarnetNetwork_d(const string & name);
 
         ~GarnetNetwork_d();
+
+        void init(const vector<string> & argv);
+
+        //added by SS
+        NetworkConfig* getNetworkConfig() { return m_network_config_ptr; }
 
         int getNumNodes(){ return m_nodes;}
 
@@ -99,6 +104,8 @@ public:
         void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
 
 private:
+        NetworkConfig* m_network_config_ptr;
+
         void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
 
 // Private copy constructor and assignment operator
@@ -106,8 +113,8 @@ private:
         GarnetNetwork_d& operator=(const GarnetNetwork_d& obj);
 
 /***********Data Members*************/
-        int m_virtual_networks;
-        int m_nodes;
+//      int m_virtual_networks;
+//      int m_nodes;
         int m_flits_recieved, m_flits_injected;
         double m_network_latency, m_queueing_latency;
 
@@ -122,7 +129,7 @@ private:
         Vector<CreditLink_d *> m_creditlink_ptr_vector; // All links in the network
         Vector<NetworkInterface_d *> m_ni_ptr_vector;   // All NI's in Network
 
-        Topology* m_topology_ptr;
+//      Topology* m_topology_ptr;
         Time m_ruby_start;
 };
 

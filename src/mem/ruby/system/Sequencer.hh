@@ -44,19 +44,31 @@
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
+#include "mem/ruby/system/RubyPort.hh"
 #include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
 
 class DataBlock;
-class AbstractChip;
 class CacheMsg;
-class Address;
 class MachineID;
-class Packet;
+class CacheMemory;
+class AbstractController;
 
-class Sequencer : public Consumer {
+struct SequencerRequest {
+  RubyRequest ruby_request;
+  int64_t id;
+  Time issue_time;
+
+  SequencerRequest(const RubyRequest & _ruby_request, int64_t _id, Time _issue_time)
+    : ruby_request(_ruby_request), id(_id), issue_time(_issue_time)
+  {}
+};
+
+class Sequencer : public Consumer, public RubyPort {
 public:
   // Constructors
-  Sequencer(AbstractChip* chip_ptr, int version);
+  Sequencer(const string & name);
+  void init(const vector<string> & argv);
 
   // Destructor
   ~Sequencer();
@@ -64,87 +76,53 @@ public:
   // Public Methods
   void wakeup(); // Used only for deadlock detection
 
-  static void printConfig(ostream& out);
-
-  // returns total number of outstanding request (includes prefetches)
-  int getNumberOutstanding();
-  // return only total number of outstanding demand requests
-  int getNumberOutstandingDemand();
-  // return only total number of outstanding prefetch requests
-  int getNumberOutstandingPrefetch();
-
-  // remove load/store request from queue
-  void removeLoadRequest(const Address & addr, int thread);
-  void removeStoreRequest(const Address & addr, int thread);
+  void printConfig(ostream& out) const;
 
   void printProgress(ostream& out) const;
 
-  // returns a pointer to the request in the request tables
-  CacheMsg & getReadRequest( const Address & addr, int thread );
-  CacheMsg & getWriteRequest( const Address & addr, int thread );
-
   void writeCallback(const Address& address, DataBlock& data);
   void readCallback(const Address& address, DataBlock& data);
-  void writeCallback(const Address& address);
-  void readCallback(const Address& address);
-  void writeCallback(const Address& address, DataBlock& data, GenericMachineType respondingMach, PrefetchBit pf, int thread);
-  void readCallback(const Address& address, DataBlock& data, GenericMachineType respondingMach, PrefetchBit pf, int thread);
-  void writeCallback(const Address& address, DataBlock& data, GenericMachineType respondingMach, int thread);
-  void readCallback(const Address& address, DataBlock& data, GenericMachineType respondingMach, int thread);
-
-  // returns the thread ID of the request
-  int getRequestThreadID(const Address & addr);
-  // returns the physical address of the request
-  Address getRequestPhysicalAddress(const Address & lineaddr);
-  // returns whether a request is a prefetch request
-  bool isPrefetchRequest(const Address & lineaddr);
-
-  //notifies driver of debug print
-  void printDebug();
 
   // called by Tester or Simics
-  void makeRequest(Packet* pkt);
-  bool doRequest(const CacheMsg& request);
-  void issueRequest(const CacheMsg& request);
-  bool isReady(const Packet* pkt) const;
-  bool isReady(const CacheMsg& request) const; // depricate this function
+  int64_t makeRequest(const RubyRequest & request);
+  bool isReady(const RubyRequest& request) const;
   bool empty() const;
-  void resetRequestTime(const Address& addr, int thread);
-  Address getLogicalAddressOfRequest(Address address, int thread);
-  AccessModeType getAccessModeOfRequest(Address address, int thread);
-  //uint64 getSequenceNumberOfRequest(Address addr, int thread);
 
   void print(ostream& out) const;
   void checkCoherence(const Address& address);
 
-  bool getRubyMemoryValue(const Address& addr, char* value, unsigned int size_in_bytes);
-  bool setRubyMemoryValue(const Address& addr, char *value, unsigned int size_in_bytes);
+  //  bool getRubyMemoryValue(const Address& addr, char* value, unsigned int size_in_bytes);
+  //  bool setRubyMemoryValue(const Address& addr, char *value, unsigned int size_in_bytes);
 
-  void removeRequest(const CacheMsg& request);
+  void removeRequest(SequencerRequest* request);
 private:
   // Private Methods
   bool tryCacheAccess(const Address& addr, CacheRequestType type, const Address& pc, AccessModeType access_mode, int size, DataBlock*& data_ptr);
-  //  void conflictCallback(const CacheMsg& request, GenericMachineType respondingMach, int thread);
-  void hitCallback(const CacheMsg& request, DataBlock& data, GenericMachineType respondingMach, int thread);
-  bool insertRequest(const CacheMsg& request);
+  void issueRequest(const RubyRequest& request);
+
+  void hitCallback(SequencerRequest* request, DataBlock& data);
+  bool insertRequest(SequencerRequest* request);
 
 
   // Private copy constructor and assignment operator
   Sequencer(const Sequencer& obj);
   Sequencer& operator=(const Sequencer& obj);
 
-  // Data Members (m_ prefix)
-  AbstractChip* m_chip_ptr;
+private:
+  int m_max_outstanding_requests;
+  int m_deadlock_threshold;
+
+  AbstractController* m_controller;
+  MessageBuffer* m_mandatory_q_ptr;
+  CacheMemory* m_dataCache_ptr;
+  CacheMemory* m_instCache_ptr;
 
   // indicates what processor on the chip this sequencer is associated with
   int m_version;
+  int m_controller_type;
 
-  // One request table per SMT thread
-  Map<Address, CacheMsg>** m_writeRequestTable_ptr;
-  Map<Address, CacheMsg>** m_readRequestTable_ptr;
-
-  Map<Address, Packet*>* m_packetTable_ptr;
-
+  Map<Address, SequencerRequest*> m_writeRequestTable;
+  Map<Address, SequencerRequest*> m_readRequestTable;
   // Global outstanding request count, across all request tables
   int m_outstanding_count;
   bool m_deadlock_check_scheduled;

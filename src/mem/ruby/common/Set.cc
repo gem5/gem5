@@ -40,6 +40,7 @@
 // set sizes
 
 #include "mem/ruby/common/Set.hh"
+#include "mem/ruby/system/System.hh"
 #include "mem/ruby/config/RubyConfig.hh"
 
 #if __amd64__ || __LP64__
@@ -51,7 +52,7 @@
 Set::Set()
 {
   m_p_nArray = NULL;
-  setSize(RubyConfig::numberOfProcessors());
+  setSize(RubySystem::getNumberOfSequencers());
 }
 
 // copy constructor
@@ -511,7 +512,7 @@ void Set::setSize(int size)
 #endif // __32BITS__
 
   // decide whether to use dynamic or static alloction
-  if(m_nArrayLen<=NUMBER_WORDS_PER_SET) { // constant defined in RubyConfig.h
+  if(m_nArrayLen<=NUMBER_WORDS_PER_SET) { // constant defined in RubyConfig.hh
     // its OK to use the static allocation, and it will
     // probably be faster (as m_nArrayLen is already in the
     // cache and they will probably share the same cache line)
@@ -560,7 +561,7 @@ void Set::print(ostream& out) const
     return;
   }
   char buff[24];
-  out << "[Set 0x ";
+  out << "[Set (" << m_nSize << ") 0x ";
   for (int i=m_nArrayLen-1; i>=0; i--) {
 #ifdef __32BITS__
     sprintf(buff,"%08X ",m_p_nArray[i]);

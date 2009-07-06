@@ -37,12 +37,10 @@
 #ifndef SPECIFIEDGENERATOR_H
 #define SPECIFIEDGENERATOR_H
 
-#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/tester/Global_Tester.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/NodeID.hh"
-
-class Sequencer;
-class SubBlock;
+#include "Address_Tester.hh"
 
 class SpecifiedGenerator : public Consumer {
 public:
@@ -54,7 +52,7 @@ public:
 
   // Public Methods
   virtual void wakeup() = 0;
-  virtual void performCallback(NodeID proc, SubBlock& data) = 0;
+  virtual void performCallback(NodeID proc, Address address) = 0;
 
   virtual void print(ostream& out) const = 0;
 protected:

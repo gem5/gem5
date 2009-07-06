@@ -11,7 +11,7 @@
 
 class CreditLink_d : public NetworkLink_d {
 public:
-        CreditLink_d(int id):NetworkLink_d(id) {}
+        CreditLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr):NetworkLink_d(id, link_latency, net_ptr) {}
 };
 
 #endif

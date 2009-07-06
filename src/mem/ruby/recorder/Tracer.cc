@@ -37,14 +37,39 @@
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/system/System.hh"
+#include "mem/ruby/config/RubyConfig.hh"
 
-Tracer::Tracer()
+//added by SS
+Tracer::Tracer(const string & name)
 {
+  m_name = name;
   m_enabled = false;
 }
 
+//commented by SS
+//Tracer::Tracer()
+//{
+//  m_enabled = false;
+//}
+
 Tracer::~Tracer()
 {
+}
+
+void Tracer::init(const vector<string> & argv)
+{
+  m_warmup_length = 0;
+
+  for (size_t i=0; i<argv.size(); i+=2) {
+    if ( argv[i] == "warmup_length") {
+      m_warmup_length = atoi(argv[i+1].c_str());
+    }
+    else {
+      cerr << "WARNING: Tracer: Unkown configuration parameter: " << argv[i] << endl;
+      assert(false);
+    }
+  }
+  assert(m_warmup_length  > 0);
 }
 
 void Tracer::startTrace(string filename)
@@ -73,10 +98,10 @@ void Tracer::stopTrace()
   m_enabled = false;
 }
 
-void Tracer::traceRequest(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time)
+void Tracer::traceRequest(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
 {
   assert(m_enabled == true);
-  TraceRecord tr(id, data_addr, pc_addr, type, time);
+  TraceRecord tr(sequencer_name, data_addr, pc_addr, type, time);
   tr.output(m_trace_file);
 }
 
@@ -104,10 +129,16 @@ int Tracer::playbackTrace(string filename)
     ok = record.input(in);
 
     // Clear the statistics after warmup
-    if (counter == g_trace_warmup_length) {
-      cout << "Clearing stats after warmup of length " << g_trace_warmup_length << endl;
+/*    if (counter == RubyConfig::getTraceWarmupLength()) {
+      cout << "Clearing stats after warmup of length " << RubyConfig::getTraceWarmupLength() << endl;
       g_system_ptr->clearStats();
     }
+*/
+    if (counter == m_warmup_length) {
+      cout << "Clearing stats after warmup of length " << m_warmup_length << endl;
+      g_system_ptr->clearStats();
+    }
+
   }
 
   // Flush the prefetches through the system

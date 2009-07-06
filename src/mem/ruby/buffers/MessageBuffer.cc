@@ -33,6 +33,7 @@
 
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/config/RubyConfig.hh"
+#include "mem/ruby/system/System.hh"
 
 MessageBuffer::MessageBuffer()
 {
@@ -180,17 +181,18 @@ void MessageBuffer::enqueue(const MsgPtr& message, Time delta)
   // the plus one is a kluge because of a SLICC issue
 
   if (!m_ordering_set) {
-    WARN_EXPR(*this);
+    //    WARN_EXPR(*this);
     WARN_EXPR(m_name);
     ERROR_MSG("Ordering property of this queue has not been set");
   }
 
   // Calculate the arrival time of the message, that is, the first
   // cycle the message can be dequeued.
+//  printf ("delta %i \n", delta);
   assert(delta>0);
   Time current_time = g_eventQueue_ptr->getTime();
   Time arrival_time = 0;
-  if (!RANDOMIZATION || (m_randomization == false)) {
+  if (!RubySystem::getRandomization() || (m_randomization == false)) {
     // No randomization
     arrival_time = current_time + delta;
 
@@ -294,7 +296,7 @@ void MessageBuffer::pop()
 {
   DEBUG_MSG(QUEUE_COMP,MedPrio,"pop from " + m_name);
   assert(isReady());
-  m_prio_heap.extractMin();
+  Time ready_time = m_prio_heap.extractMin().m_time;
   // record previous size and time so the current buffer size isn't adjusted until next cycle
   if (m_time_last_time_pop < g_eventQueue_ptr->getTime()) {
     m_size_at_cycle_start = m_size;
@@ -321,13 +323,13 @@ void MessageBuffer::clear()
 
 void MessageBuffer::recycle()
 {
-  //  const int RECYCLE_LATENCY = 3;
+  //  const int RubyConfig::getRecycleLatency() = 3;
   DEBUG_MSG(QUEUE_COMP,MedPrio,"recycling " + m_name);
   assert(isReady());
   MessageBufferNode node = m_prio_heap.extractMin();
-  node.m_time = g_eventQueue_ptr->getTime() + RECYCLE_LATENCY;
+  node.m_time = g_eventQueue_ptr->getTime() + m_recycle_latency;
   m_prio_heap.insert(node);
-  g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, g_eventQueue_ptr->getTime() + RECYCLE_LATENCY);
+  g_eventQueue_ptr->scheduleEventAbsolute(m_consumer_ptr, g_eventQueue_ptr->getTime() + m_recycle_latency);
 }
 
 int MessageBuffer::setAndReturnDelayCycles(MsgPtr& message)

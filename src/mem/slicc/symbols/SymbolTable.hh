@@ -91,7 +91,7 @@ public:
 private:
   // Private Methods
   void registerGlobalSym(string id, Symbol* sym_ptr);
-  void writeChipFiles(string path) const;
+  void writeControllerFactory(string path) const;
 
   // Private copy constructor and assignment operator
   SymbolTable(const SymbolTable& obj);

@@ -41,25 +41,33 @@
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/MemoryVector.hh"
 #include "mem/protocol/Directory_Entry.hh"
-#include <map>
 
-class Chip;
+class AbstractController;
 
 class DirectoryMemory {
 public:
   // Constructors
-  DirectoryMemory(Chip* chip_ptr, int version);
+  DirectoryMemory(const string & name);
+  void init(const vector<string> & argv);
+  //  DirectoryMemory(int version);
 
   // Destructor
   ~DirectoryMemory();
 
+  int mapAddressToLocalIdx(PhysAddress address);
+  static int mapAddressToDirectoryVersion(PhysAddress address);
+
+  int getSize() { return m_size_bytes; }
+
   // Public Methods
-  static void printConfig(ostream& out);
+  void printConfig(ostream& out) const;
+  static void printGlobalConfig(ostream & out);
   bool isPresent(PhysAddress address);
-  // dummy function
-  void readPhysMem(uint64 address, int size, void * data);
   Directory_Entry& lookup(PhysAddress address);
+
+  void invalidateBlock(PhysAddress address);
 
   void print(ostream& out) const;
 
@@ -70,11 +78,22 @@ private:
   DirectoryMemory(const DirectoryMemory& obj);
   DirectoryMemory& operator=(const DirectoryMemory& obj);
 
+private:
+  const string m_name;
+  AbstractController* m_controller;
   // Data Members (m_ prefix)
-  map<Index, Directory_Entry*> m_entries;
-  Chip* m_chip_ptr;
-  int m_size;  // # of memory module blocks for this directory
+  Directory_Entry **m_entries;
+  //  int m_size;  // # of memory module blocks this directory is responsible for
+  uint32 m_size_bytes;
+  uint32 m_size_bits;
+  int m_num_entries;
   int m_version;
+
+  static int m_num_directories;
+  static int m_num_directories_bits;
+  static int m_total_size_bytes;
+
+  MemoryVector* m_ram;
 };
 
 // Output operator declaration

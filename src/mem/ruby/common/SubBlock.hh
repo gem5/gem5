@@ -46,16 +46,13 @@ public:
   // Constructors
   SubBlock() { }
   SubBlock(const Address& addr, int size);
-  SubBlock(const Address& addr, const Address& logicalAddress, int size);
 
   // Destructor
   ~SubBlock() { }
 
   // Public Methods
   const Address& getAddress() const { return m_address; }
-  const Address& getLogicalAddress() const { return m_logicalAddress; }
   void setAddress(const Address& addr) { m_address = addr; }
-  void setLogicalAddress(const Address& addr) { m_logicalAddress = addr; }
 
   int getSize() const { return m_data.size(); }
   void setSize(int size) {  m_data.setSize(size); }
@@ -68,24 +65,18 @@ public:
 
   // Merging to and from DataBlocks - We only need to worry about
   // updates when we are using DataBlocks
-  void mergeTo(DataBlock& data) const { if (DATA_BLOCK) { internalMergeTo(data); } }
-  void mergeFrom(const DataBlock& data) { if (DATA_BLOCK) { internalMergeFrom(data); } }
+  void mergeTo(DataBlock& data) const { internalMergeTo(data); }
+  void mergeFrom(const DataBlock& data) { internalMergeFrom(data); }
 
   void print(ostream& out) const;
 private:
-  // Private Methods
-  //  SubBlock(const SubBlock& obj);
-  //  SubBlock& operator=(const SubBlock& obj);
-  //  bool bytePresent(const Address& addr) { return ((addr.getAddress() >= m_address.getAddress()) && (addr.getAddress() < (m_address.getAddress()+getSize()))); }
-  //  uint8 getByte(const Address& addr) { return m_data[addr.getAddress() - m_address.getAddress()]; }
 
   void internalMergeTo(DataBlock& data) const;
   void internalMergeFrom(const DataBlock& data);
 
   // Data Members (m_ prefix)
   Address m_address;
-  Address m_logicalAddress;
-  Vector<unsigned> m_data;
+  Vector<uint> m_data;
 };
 
 // Output operator declaration

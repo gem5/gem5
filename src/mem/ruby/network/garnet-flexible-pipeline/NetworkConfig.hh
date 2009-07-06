@@ -43,14 +43,35 @@
 #include "mem/ruby/config/RubyConfig.hh"
 
 class NetworkConfig {
+        private:
+                int m_flit_size;
+                int m_number_of_pipe_stages;
+                int m_vcs_per_class;
+                int m_buffer_size;
+                bool m_using_network_testing;
         public:
-                static bool isGarnetNetwork() {return g_GARNET_NETWORK; }
-                static bool isDetailNetwork() {return g_DETAIL_NETWORK; }
-                static int isNetworkTesting() {return g_NETWORK_TESTING; }
-                static int getFlitSize() {return g_FLIT_SIZE; }
-                static int getNumPipeStages() {return g_NUM_PIPE_STAGES; }
-                static int getVCsPerClass() {return g_VCS_PER_CLASS; }
-                static int getBufferSize() {return g_BUFFER_SIZE; }
+                NetworkConfig(){}
+                void init(const vector<string> & argv) {
+                  for (size_t i=0; i<argv.size(); i+=2) {
+                   if (argv[i] == "flit_size")
+                     m_flit_size = atoi(argv[i+1].c_str());
+                   else if (argv[i] == "number_of_pipe_stages")
+                     m_number_of_pipe_stages = atoi(argv[i+1].c_str());
+                   else if (argv[i] == "vcs_per_class")
+                     m_vcs_per_class = atoi(argv[i+1].c_str());
+                   else if (argv[i] == "buffer_size")
+                     m_buffer_size = atoi(argv[i+1].c_str());
+                   else if (argv[i] == "using_network_testing")
+                     m_using_network_testing = atoi(argv[i+1].c_str());
+                  }
+                }
+//              static bool isGarnetNetwork() {return RubyConfig::getUsingGarnetNetwork(); }
+//              static bool isDetailNetwork() {return RubyConfig::getUsingDetailNetwork(); }
+                bool isNetworkTesting() {return m_using_network_testing; }
+                int getFlitSize() {return m_flit_size; }
+                int getNumPipeStages() {return m_number_of_pipe_stages; }
+                int getVCsPerClass() {return m_vcs_per_class; }
+                int getBufferSize() {return m_buffer_size; }
   // This is no longer used. See config/rubyconfig.defaults to set Garnet parameters.
                 static void readNetConfig()
                 {
@@ -58,6 +79,9 @@ class NetworkConfig {
                         string filename = "network/garnet-flexible-pipeline/";
                         filename += NETCONFIG_DEFAULTS;
 
+                if (g_SIMICS) {
+                        filename = "../../../ruby/"+filename;
+                }
                         ifstream NetconfigFile( filename.c_str(), ios::in);
                         if(!NetconfigFile.is_open())
                         {
@@ -73,19 +97,19 @@ class NetworkConfig {
                                 getline(NetconfigFile, line, '\n');
                                 string var = string_split(line, ':');
 
-                                if(!var.compare("g_GARNET_NETWORK"))
+                                if(!var.compare("RubyConfig::getUsingGarnetNetwork()"))
                                 {
                                         if(!line.compare("true"))
-                                                g_GARNET_NETWORK = true;
+                                                RubyConfig::getUsingGarnetNetwork() = true;
                                         else
-                                                g_GARNET_NETWORK = false;
+                                                RubyConfig::getUsingGarnetNetwork() = false;
                                 }
-                                if(!var.compare("g_DETAIL_NETWORK"))
+                                if(!var.compare("RubyConfig::getUsingDetailNetwork()"))
                                 {
                                         if(!line.compare("true"))
-                                                g_DETAIL_NETWORK = true;
+                                                RubyConfig::getUsingDetailNetwork() = true;
                                         else
-                                                g_DETAIL_NETWORK = false;
+                                                RubyConfig::getUsingDetailNetwork() = false;
                                 }
                                 if(!var.compare("g_NETWORK_TESTING"))
                                 {
@@ -94,27 +118,28 @@ class NetworkConfig {
                                         else
                                                 g_NETWORK_TESTING = false;
                                 }
-                                if(!var.compare("g_FLIT_SIZE"))
-                                        g_FLIT_SIZE = atoi(line.c_str());
-                                if(!var.compare("g_NUM_PIPE_STAGES"))
-                                        g_NUM_PIPE_STAGES = atoi(line.c_str());
-                                if(!var.compare("g_VCS_PER_CLASS"))
-                                        g_VCS_PER_CLASS = atoi(line.c_str());
-                                if(!var.compare("g_BUFFER_SIZE"))
-                                        g_BUFFER_SIZE = atoi(line.c_str());
+                                if(!var.compare("RubyConfig::getFlitSize()"))
+                                        RubyConfig::getFlitSize() = atoi(line.c_str());
+                                if(!var.compare("RubyConfig::getNumberOfPipeStages()"))
+                                        RubyConfig::getNumberOfPipeStages() = atoi(line.c_str());
+                                if(!var.compare("RubyConfig::getVCSPerClass()"))
+                                        RubyConfig::getVCSPerClass() = atoi(line.c_str());
+                                if(!var.compare("RubyConfig::getBufferSize()"))
+                                        RubyConfig::getBufferSize() = atoi(line.c_str());
                         }
                         NetconfigFile.close();
       */
       /*
-      cout << "g_GARNET_NETWORK = " << g_GARNET_NETWORK << endl;
-      cout << "g_DETAIL_NETWORK = " << g_DETAIL_NETWORK << endl;
+      cout << "RubyConfig::getUsingGarnetNetwork() = " << RubyConfig::getUsingGarnetNetwork() << endl;
+      cout << "RubyConfig::getUsingDetailNetwork() = " << RubyConfig::getUsingDetailNetwork() << endl;
       cout << "g_NETWORK_TESTING = " << g_NETWORK_TESTING << endl;
-      cout << "g_FLIT_SIZE = " << g_FLIT_SIZE << endl;
-      cout << "g_NUM_PIPE_STAGES = " << g_NUM_PIPE_STAGES << endl;
-      cout << "g_VCS_PER_CLASS= " << g_VCS_PER_CLASS << endl;
-      cout << "g_BUFFER_SIZE = " << g_BUFFER_SIZE << endl;
+      cout << "RubyConfig::getFlitSize() = " << RubyConfig::getFlitSize() << endl;
+      cout << "RubyConfig::getNumberOfPipeStages() = " << RubyConfig::getNumberOfPipeStages() << endl;
+      cout << "RubyConfig::getVCSPerClass()= " << RubyConfig::getVCSPerClass() << endl;
+      cout << "RubyConfig::getBufferSize() = " << RubyConfig::getBufferSize() << endl;
       */
                 }
 };
+
 
 #endif

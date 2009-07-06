@@ -46,7 +46,7 @@ class GarnetNetwork_d;
 
 class NetworkLink_d : public Consumer {
 public:
-        NetworkLink_d(int id);
+        //NetworkLink_d(int id);
         ~NetworkLink_d();
 
         NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr);

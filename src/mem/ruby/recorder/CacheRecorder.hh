@@ -38,6 +38,8 @@
 #ifndef CACHERECORDER_H
 #define CACHERECORDER_H
 
+#include "mem/ruby/libruby_internal.hh"
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -55,7 +57,7 @@ public:
   ~CacheRecorder();
 
   // Public Methods
-  void addRecord(NodeID id, const Address& data_addr, const Address& pc_addr, CacheRequestType type, Time time);
+  void addRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
   int dumpRecords(string filename);
 
   void print(ostream& out) const;

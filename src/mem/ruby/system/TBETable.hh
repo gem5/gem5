@@ -43,7 +43,6 @@
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/slicc_interface/AbstractChip.hh"
 #include "mem/ruby/system/System.hh"
 
 template<class ENTRY>
@@ -51,19 +50,20 @@ class TBETable {
 public:
 
   // Constructors
-  TBETable(AbstractChip* chip_ptr);
+  TBETable(int number_of_TBEs);
+
 
   // Destructor
   //~TBETable();
 
   // Public Methods
 
-  static void printConfig(ostream& out) { out << "TBEs_per_TBETable: " << NUMBER_OF_TBES << endl; }
+  void printConfig(ostream& out) { out << "TBEs_per_TBETable: " << m_number_of_TBEs << endl; }
 
   bool isPresent(const Address& address) const;
   void allocate(const Address& address);
   void deallocate(const Address& address);
-  bool areNSlotsAvailable(int n) const { return (NUMBER_OF_TBES - m_map.size()) >= n; }
+  bool areNSlotsAvailable(int n) const { return (m_number_of_TBEs - m_map.size()) >= n; }
 
   ENTRY& lookup(const Address& address);
   const ENTRY& lookup(const Address& address) const;
@@ -79,7 +79,9 @@ private:
 
   // Data Members (m_prefix)
   Map<Address, ENTRY> m_map;
-  AbstractChip* m_chip_ptr;
+
+private:
+  int m_number_of_TBEs;
 };
 
 // Output operator declaration
@@ -100,11 +102,12 @@ ostream& operator<<(ostream& out, const TBETable<ENTRY>& obj)
 
 // ****************************************************************
 
+
 template<class ENTRY>
 extern inline
-TBETable<ENTRY>::TBETable(AbstractChip* chip_ptr)
+TBETable<ENTRY>::TBETable(int number_of_TBEs)
 {
-  m_chip_ptr = chip_ptr;
+  m_number_of_TBEs = number_of_TBEs;
 }
 
 // PUBLIC METHODS
@@ -115,7 +118,7 @@ extern inline
 bool TBETable<ENTRY>::isPresent(const Address& address) const
 {
   assert(address == line_address(address));
-  assert(m_map.size() <= NUMBER_OF_TBES);
+  assert(m_map.size() <= m_number_of_TBEs);
   return m_map.exist(address);
 }
 
@@ -124,7 +127,7 @@ extern inline
 void TBETable<ENTRY>::allocate(const Address& address)
 {
   assert(isPresent(address) == false);
-  assert(m_map.size() < NUMBER_OF_TBES);
+  assert(m_map.size() < m_number_of_TBEs);
   g_system_ptr->getProfiler()->L2tbeUsageSample(m_map.size());
   m_map.add(address, ENTRY());
 }

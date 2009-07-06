@@ -38,134 +38,306 @@
 
 
 #include "mem/ruby/system/System.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/tester/Tester.hh"
-#include "mem/ruby/tester/SyntheticDriver.hh"
-#include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/protocol/Chip.hh"
-//#include "mem/ruby/recorder/Tracer.hh"
+#include "mem/ruby/recorder/Tracer.hh"
 #include "mem/protocol/Protocol.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/system/Sequencer.hh"
+#include "mem/ruby/system/DMASequencer.hh"
+#include "mem/ruby/system/MemoryVector.hh"
+#include "mem/protocol/ControllerFactory.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/CacheMemory.hh"
+#include "mem/ruby/system/DirectoryMemory.hh"
+#include "mem/ruby/network/simple/Topology.hh"
+#include "mem/ruby/network/simple/SimpleNetwork.hh"
+#include "mem/ruby/system/RubyPort.hh"
+#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
+#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/system/MemoryControl.hh"
 
-RubySystem::RubySystem()
+int RubySystem::m_random_seed;
+bool RubySystem::m_randomization;
+int RubySystem::m_tech_nm;
+int RubySystem::m_freq_mhz;
+int RubySystem::m_block_size_bytes;
+int RubySystem::m_block_size_bits;
+uint64 RubySystem::m_memory_size_bytes;
+int RubySystem::m_memory_size_bits;
+
+map< string, RubyPort* > RubySystem::m_ports;
+map< string, CacheMemory* > RubySystem::m_caches;
+map< string, DirectoryMemory* > RubySystem::m_directories;
+map< string, Sequencer* > RubySystem::m_sequencers;
+map< string, DMASequencer* > RubySystem::m_dma_sequencers;
+map< string, AbstractController* > RubySystem::m_controllers;
+map< string, MemoryControl* > RubySystem::m_memorycontrols;
+
+
+Network* RubySystem::m_network_ptr;
+map< string, Topology*> RubySystem::m_topologies;
+Profiler* RubySystem::m_profiler_ptr;
+Tracer* RubySystem::m_tracer_ptr;
+
+MemoryVector* RubySystem::m_mem_vec_ptr;
+
+
+RubySystem* RubySystem::create(const vector <RubyObjConf> & sys_conf)
 {
-  init();
-  m_preinitialized_driver = false;
-  createDriver();
-
- /*  gem5:Binkert for decomissiong of tracer
-     m_tracer_ptr = new Tracer;
- */
-
- /*  gem5:Arka for decomissiong of log_tm
-  if (XACT_MEMORY) {
-    m_xact_isolation_checker = new XactIsolationChecker;
-    m_xact_commit_arbiter    = new XactCommitArbiter;
-    m_xact_visualizer        = new XactVisualizer;
-  }
-*/
+  if (g_system_ptr == NULL)
+    return new RubySystem(sys_conf);
+  return g_system_ptr;
 }
 
-RubySystem::RubySystem(Driver* _driver)
+void RubySystem::init(const vector<string> & argv)
 {
-  init();
-  m_preinitialized_driver = true;
-  m_driver_ptr = _driver;
-}
+  for (size_t i=0; i < argv.size(); i+=2) {
+    if (argv[i] == "random_seed") {
+      m_random_seed = atoi(argv[i+1].c_str());
+      srandom(m_random_seed);
+    } else if (argv[i] == "randomization") {
+      m_randomization = string_to_bool(argv[i+1]);
+    } else if (argv[i] == "tech_nm") {
+      m_tech_nm = atoi(argv[i+1].c_str());
+    } else if (argv[i] == "freq_mhz") {
+      m_freq_mhz = atoi(argv[i+1].c_str());
+    } else if (argv[i] == "block_size_bytes") {
+      m_block_size_bytes = atoi(argv[i+1].c_str());
+      assert(is_power_of_2(m_block_size_bytes));
+      m_block_size_bits = log_int(m_block_size_bytes);
+    } else if (argv[i] == "debug") {
 
-RubySystem::~RubySystem()
-{
-  for (int i = 0; i < m_chip_vector.size(); i++) {
-    delete m_chip_vector[i];
-  }
-  if (!m_preinitialized_driver)
-    delete m_driver_ptr;
-  delete m_network_ptr;
-  delete m_profiler_ptr;
- /*  gem5:Binkert for decomissiong of tracer
-     delete m_tracer_ptr;
- */
-}
+    } else if (argv[i] == "tracer") {
 
-void RubySystem::init()
-{
-  DEBUG_MSG(SYSTEM_COMP, MedPrio,"initializing");
+    } else if (argv[i] == "profiler") {
 
-  m_driver_ptr = NULL;
-  m_profiler_ptr = new Profiler;
+  //  } else if (argv[i] == "MI_example") {
 
-  // NETWORK INITIALIZATION
-  // create the network by calling a function that calls new
-  m_network_ptr = Network::createNetwork(RubyConfig::numberOfChips());
-
-  DEBUG_MSG(SYSTEM_COMP, MedPrio,"Constructed network");
-
-  // CHIP INITIALIZATION
-  m_chip_vector.setSize(RubyConfig::numberOfChips());// create the vector of pointers to processors
-  for(int i=0; i<RubyConfig::numberOfChips(); i++) { // for each chip
-    // create the chip
-    m_chip_vector[i] = new Chip(i, m_network_ptr);
-    DEBUG_MSG(SYSTEM_COMP, MedPrio,"Constructed a chip");
-  }
-
-  // These must be after the chips are constructed
-
-#if 0
-  if (!g_SIMICS) {
-    if (g_SYNTHETIC_DRIVER && !g_DETERMINISTIC_DRIVER) {
-      m_driver_ptr = new SyntheticDriver(this);
-    } else if (!g_SYNTHETIC_DRIVER && g_DETERMINISTIC_DRIVER) {
-      m_driver_ptr = new DeterministicDriver(this);
-    } else if (g_SYNTHETIC_DRIVER && g_DETERMINISTIC_DRIVER) {
-      ERROR_MSG("SYNTHETIC and DETERMINISTIC DRIVERS are exclusive and cannot be both enabled");
     } else {
-      // normally make tester object, otherwise make an opal interface object.
-      if (!OpalInterface::isOpalLoaded()) {
-        m_driver_ptr = new Tester(this);
-      } else {
-        m_driver_ptr = new OpalInterface(this);
-      }
+      cerr << "Error: Unknown RubySystem config parameter -- " << argv[i] << endl;
+     assert(0);
     }
-  } else {
-    // detect if opal is loaded or not
-    if (OpalInterface::isOpalLoaded()) {
-      m_driver_ptr = new OpalInterface(this);
+  }
+}
+
+RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
+{
+  //  DEBUG_MSG(SYSTEM_COMP, MedPrio,"initializing");
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    const string & type = sys_conf[i].type;
+    const string & name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "RubySystem") {
+      init(argv);  // initialize system-wide variables before doing anything else!
+    } else if (type == "Debug") {
+      g_debug_ptr = new Debug(name, argv);
+    }
+  }
+
+  assert( g_debug_ptr != NULL);
+  g_eventQueue_ptr = new RubyEventQueue;
+  g_system_ptr = this;
+  m_mem_vec_ptr = new MemoryVector;
+
+  /* object contruction is broken into two steps (Constructor and init) to avoid cyclic dependencies
+   *  e.g. a sequencer needs a pointer to a controller and a controller needs a pointer to a sequencer
+   */
+
+  vector<string> memory_control_names;
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    const string & type = sys_conf[i].type;
+    const string & name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "RubySystem" || type == "Debug")
+      continue;
+    else if (type == "SetAssociativeCache")
+      m_caches[name] = new CacheMemory(name);
+    else if (type == "DirectoryMemory")
+      m_directories[name] = new DirectoryMemory(name);
+    else if (type == "Sequencer") {
+      m_sequencers[name] = new Sequencer(name);
+      m_ports[name] = m_sequencers[name];
+    } else if (type == "DMASequencer") {
+      m_dma_sequencers[name] = new DMASequencer(name);
+      m_ports[name] = m_dma_sequencers[name];
+    } else if (type == "Topology") {
+      assert(m_topologies.size() == 0); // only one toplogy at a time is supported right now
+      m_topologies[name] = new Topology(name);
+    } else if (type == "SimpleNetwork") {
+      assert(m_network_ptr == NULL); // only one network at a time is supported right now
+      m_network_ptr = new SimpleNetwork(name);
+    } else if (type.find("generated") == 0) {
+      string controller_type = type.substr(10);
+      m_controllers[name] = ControllerFactory::createController(controller_type, name);
+//      printf ("ss: generated %s \n", controller_type);
+//added by SS
+    } else if (type == "Tracer") {
+      //m_tracers[name] = new Tracer(name);
+      m_tracer_ptr = new Tracer(name);
+    } else if (type == "Profiler") {
+      m_profiler_ptr = new Profiler(name);
+    } else if (type == "GarnetNetwork") {
+      assert(m_network_ptr == NULL); // only one network at a time is supported right now
+      m_network_ptr = new GarnetNetwork(name);
+    } else if (type == "GarnetNetwork_d") {
+      assert(m_network_ptr == NULL); // only one network at a time is supported right now
+      m_network_ptr = new GarnetNetwork_d(name);
+    } else if (type == "MemoryControl") {
+      m_memorycontrols[name] = new MemoryControl(name);
+      memory_control_names.push_back (name);
     } else {
+      cerr << "Error: Unknown object type -- " << type << endl;
       assert(0);
-      /* Need to allocate a driver here */
-      // m_driver_ptr = new SimicsDriver(this);
     }
   }
-#endif
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    string type = sys_conf[i].type;
+    string name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "Topology")
+      m_topologies[name]->init(argv);
+  }
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    string type = sys_conf[i].type;
+    string name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "SimpleNetwork" || type == "GarnetNetwork" || type == "GarnetNetwork_d"){
+      m_network_ptr->init(argv);
+    }
+  }
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    string type = sys_conf[i].type;
+    string name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "MemoryControl" ){
+      m_memorycontrols[name]->init(argv);
+    }
+  }
+
+  for (size_t i=0;i<sys_conf.size(); i++) {
+    string type = sys_conf[i].type;
+    string name = sys_conf[i].name;
+    const vector<string> & argv = sys_conf[i].argv;
+    if (type == "RubySystem" || type == "Debug")
+      continue;
+    else if (type == "SetAssociativeCache")
+      m_caches[name]->init(argv);
+    else if (type == "DirectoryMemory")
+      m_directories[name]->init(argv);
+    else if (type == "MemoryControl")
+      continue;
+    else if (type == "Sequencer")
+      m_sequencers[name]->init(argv);
+    else if (type == "DMASequencer")
+      m_dma_sequencers[name]->init(argv);
+    else if (type == "Topology")
+      continue;
+    else if (type == "SimpleNetwork" || type == "GarnetNetwork" || type == "GarnetNetwork_d")
+      continue;
+    else if (type.find("generated") == 0) {
+      string controller_type = type.substr(11);
+      m_controllers[name]->init(m_network_ptr, argv);
+    }
+//added by SS
+    else if (type == "Tracer")
+      //m_tracers[name]->init(argv);
+      m_tracer_ptr->init(argv);
+    else if (type == "Profiler")
+      m_profiler_ptr->init(argv, memory_control_names);
+//    else if (type == "MI_example"){
+//    }
+    else
+      assert(0);
+  }
+
+//  m_profiler_ptr = new Profiler;
+
+  // calculate system-wide parameters
+  m_memory_size_bytes = 0;
+  DirectoryMemory* prev = NULL;
+  for (map< string, DirectoryMemory*>::const_iterator it = m_directories.begin();
+       it != m_directories.end(); it++) {
+    if (prev != NULL)
+      assert((*it).second->getSize() == prev->getSize()); // must be equal for proper address mapping
+    m_memory_size_bytes += (*it).second->getSize();
+    prev = (*it).second;
+  }
+  m_mem_vec_ptr->setSize(m_memory_size_bytes);
+  m_memory_size_bits = log_int(m_memory_size_bytes);
+
+//  m_tracer_ptr = new Tracer;
   DEBUG_MSG(SYSTEM_COMP, MedPrio,"finished initializing");
   DEBUG_NEWLINE(SYSTEM_COMP, MedPrio);
 }
 
-void RubySystem::createDriver()
+RubySystem::~RubySystem()
 {
-    if (g_SYNTHETIC_DRIVER && !g_DETERMINISTIC_DRIVER) {
-      cerr << "Creating Synthetic Driver" << endl;
-      m_driver_ptr = new SyntheticDriver(this);
-    } else if (!g_SYNTHETIC_DRIVER && g_DETERMINISTIC_DRIVER) {
-      cerr << "Creating Deterministic Driver" << endl;
-      m_driver_ptr = new DeterministicDriver(this);
+  /*
+  for (int i=0; i < MachineType_base_level(MachineType_NUM); i++) {
+    for (int j=0; j < RubyConfig::getNumberOfControllersPerType(i); j++ ) {
+      delete m_controllers[i][j];
     }
+  }
+  delete m_network_ptr;
+  delete m_profiler_ptr;
+  delete m_tracer_ptr;
+  */
 }
 
-void RubySystem::printConfig(ostream& out) const
+void RubySystem::printSystemConfig(ostream & out)
+{
+  out << "RubySystem config:" << endl;
+  out << "  random_seed: " << m_random_seed << endl;
+  out << "  randomization: " << m_randomization << endl;
+  out << "  tech_nm: " << m_tech_nm << endl;
+  out << "  freq_mhz: " << m_freq_mhz << endl;
+  out << "  block_size_bytes: " << m_block_size_bytes << endl;
+  out << "  block_size_bits: " << m_block_size_bits << endl;
+  out << "  memory_size_bytes: " << m_memory_size_bytes << endl;
+  out << "  memory_size_bits: " << m_memory_size_bits << endl;
+
+}
+
+void RubySystem::printConfig(ostream& out)
 {
   out << "\n================ Begin RubySystem Configuration Print ================\n\n";
-  RubyConfig::printConfiguration(out);
-  out << endl;
-  getChip(0)->printConfig(out);
+  //  RubyConfig::printConfiguration(out);
+  //  out << endl;
+  printSystemConfig(out);
+  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
+       it != m_controllers.end(); it++) {
+    (*it).second->printConfig(out);
+  }
+  for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
+       it != m_caches.end(); it++) {
+    (*it).second->printConfig(out);
+  }
+  DirectoryMemory::printGlobalConfig(out);
+  for (map<string, DirectoryMemory*>::const_iterator it = m_directories.begin();
+       it != m_directories.end(); it++) {
+    (*it).second->printConfig(out);
+  }
+  for (map<string, Sequencer*>::const_iterator it = m_sequencers.begin();
+       it != m_sequencers.end(); it++) {
+    (*it).second->printConfig(out);
+  }
+
   m_network_ptr->printConfig(out);
-  m_driver_ptr->printConfig(out);
   m_profiler_ptr->printConfig(out);
+
   out << "\n================ End RubySystem Configuration Print ================\n\n";
 }
 
 void RubySystem::printStats(ostream& out)
 {
+
   const time_t T = time(NULL);
   tm *localTime = localtime(&T);
   char buf[100];
@@ -174,32 +346,30 @@ void RubySystem::printStats(ostream& out)
   out << "Real time: " << buf << endl;
 
   m_profiler_ptr->printStats(out);
-  for(int i=0; i<RubyConfig::numberOfChips(); i++) { // for each chip
-    for(int p=0; p<RubyConfig::numberOfProcsPerChip(); p++) {
-      m_chip_vector[i]->m_L1Cache_mandatoryQueue_vec[p]->printStats(out);
-    }
-  }
   m_network_ptr->printStats(out);
-  m_driver_ptr->printStats(out);
-  Chip::printStats(out);
+  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
+       it != m_controllers.end(); it++) {
+    (*it).second->printStats(out);
+  }
 }
 
 void RubySystem::clearStats() const
 {
+  /*
   m_profiler_ptr->clearStats();
+  for (int i=0; i<m_rubyRequestQueues.size(); i++)
+    for (int j=0;j<m_rubyRequestQueues[i].size(); j++)
+      m_rubyRequestQueues[i][j]->clearStats();
   m_network_ptr->clearStats();
-  m_driver_ptr->clearStats();
-  Chip::clearStats();
-  for(int i=0; i<RubyConfig::numberOfChips(); i++) { // for each chip
-    for(int p=0; p<RubyConfig::numberOfProcsPerChip(); p++) {
-      m_chip_vector[i]->m_L1Cache_mandatoryQueue_vec[p]->clearStats();
-    }
-  }
+  for (int i=0; i < MachineType_base_level(MachineType_NUM); i++)
+    m_controllers[i][0]->clearStats();
+  */
 }
 
 void RubySystem::recordCacheContents(CacheRecorder& tr) const
 {
-  for (int i = 0; i < m_chip_vector.size(); i++) {
+  /*
+    for (int i = 0; i < m_chip_vector.size(); i++) {
     for (int m_version = 0; m_version < RubyConfig::numberOfProcsPerChip(); m_version++) {
       if (Protocol::m_TwoLevelCache) {
         m_chip_vector[i]->m_L1Cache_L1IcacheMemory_vec[m_version]->setAsInstructionCache(true);
@@ -210,6 +380,7 @@ void RubySystem::recordCacheContents(CacheRecorder& tr) const
     }
     m_chip_vector[i]->recordCacheContents(tr);
   }
+  */
 }
 
 #ifdef CHECK_COHERENCE
@@ -222,7 +393,7 @@ void RubySystem::recordCacheContents(CacheRecorder& tr) const
 // and "isBlockExclusive" that are specific to that protocol
 //
 void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
-
+  /*
   NodeID exclusive = -1;
   bool sharedDetected = false;
   NodeID lastShared = -1;
@@ -262,6 +433,7 @@ void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
       }
     }
   }
+  */
 }
 #endif
 
