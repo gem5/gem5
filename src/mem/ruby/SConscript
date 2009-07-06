@@ -40,7 +40,7 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-Source('init.cc')
+Source('libruby.cc')
 
 def do_embed_text(target, source, env):
     """convert a text file into a file that can be embedded in C
@@ -95,24 +95,25 @@ def MakeInclude(source):
     target = generated_dir.File(basename(source))
     env.Command(target, source, MakeIncludeAction)
 
+MakeInclude('slicc_interface/AbstractCacheEntry.hh')
+MakeInclude('slicc_interface/AbstractProtocol.hh')
+MakeInclude('slicc_interface/Message.hh')
+MakeInclude('slicc_interface/NetworkMessage.hh')
+
+# External types
 MakeInclude('buffers/MessageBuffer.hh')
 MakeInclude('common/Address.hh')
 MakeInclude('common/DataBlock.hh')
 MakeInclude('common/NetDest.hh')
 MakeInclude('common/Set.hh')
-MakeInclude('slicc_interface/AbstractCacheEntry.hh')
-MakeInclude('slicc_interface/AbstractProtocol.hh')
-MakeInclude('slicc_interface/Message.hh')
-MakeInclude('slicc_interface/NetworkMessage.hh')
+MakeInclude('filters/GenericBloomFilter.hh')
 MakeInclude('system/CacheMemory.hh')
+MakeInclude('system/DMASequencer.hh')
 MakeInclude('system/DirectoryMemory.hh')
 MakeInclude('system/MachineID.hh')
 MakeInclude('system/MemoryControl.hh')
 MakeInclude('system/NodeID.hh')
-MakeInclude('system/NodePersistentTable.hh')
 MakeInclude('system/PerfectCacheMemory.hh')
-MakeInclude('system/PersistentTable.hh')
 MakeInclude('system/Sequencer.hh')
-MakeInclude('system/StoreBuffer.hh')
 MakeInclude('system/TBETable.hh')
 MakeInclude('system/TimerTable.hh')

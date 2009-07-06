@@ -34,4 +34,3 @@ if not env['RUBY']:
     Return()
 
 Source('confio.cc')
-Source('initvar.cc')

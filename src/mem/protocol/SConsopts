@@ -49,7 +49,7 @@ all_protocols = [
     'MSI_MOSI_CMP_directory',
     ]
 
-opt = EnumVariable('PROTOCOL', 'Coherence Protocol for Ruby', 'MOSI_SMP_bcast',
+opt = EnumVariable('PROTOCOL', 'Coherence Protocol for Ruby', 'MI_example',
                    all_protocols)
 
 sticky_vars.AddVariables(opt)

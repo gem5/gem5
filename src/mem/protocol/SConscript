@@ -50,7 +50,7 @@ html_dir = Dir('html')
 #
 # Use SLICC
 #
-def slicc_action(target, source, env):
+def slicc_generator(target, source, env, for_signature):
     slicc_bin = str(source[0])
     protocol = source[1].get_contents()
     pdir = str(protocol_dir)
@@ -65,7 +65,9 @@ def slicc_action(target, source, env):
     cmdline = [ slicc_bin, pdir, hdir, protocol, do_html ]
     cmdline += [ str(s) for s in source[2:] ]
     cmdline = ' '.join(cmdline)
-    os.system(cmdline)
+    return cmdline
+
+slicc_builder = Builder(generator=slicc_generator)
 
 protocol = env['PROTOCOL']
 sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),
@@ -91,7 +93,9 @@ hh = [ protocol_dir.File(f) for f in hh ]
 cc = [ protocol_dir.File(f) for f in cc ]
 
 slicc_bin = slicc_dir.File("slicc")
-env.Command(hh + cc, [ slicc_bin, Value(protocol) ] + sm_files, slicc_action)
+
+env.Append(BUILDERS={'SLICC' : slicc_builder})
+env.SLICC(hh + cc, [ slicc_bin, Value(protocol) ] + sm_files)
 
 for f in cc:
     Source(f)
