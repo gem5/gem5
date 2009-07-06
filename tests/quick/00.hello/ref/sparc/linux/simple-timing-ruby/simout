@@ -5,18 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled May  5 2009 07:34:00
-M5 revision 8bea207e2193 6172 default qtip tip ruby_tests_refs.diff
-M5 started May  5 2009 07:34:02
-M5 executing on piton
-command line: /n/piton/z/nate/build/xgem5/build/SPARC_SE/m5.fast -d /n/piton/z/nate/build/xgem5/build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby -re tests/run.py /n/piton/z/nate/build/xgem5/build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby
+M5 compiled Jul  6 2009 11:07:18
+M5 revision d3635cac686a 6289 default ruby_refs.diff qtip tip
+M5 started Jul  6 2009 11:11:35
+M5 executing on maize
+command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby -re tests/run.py build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby
 Global frequency set at 1000000000000 ticks per second
-Ruby Timing Mode
-Creating event queue...
-Creating event queue done
-Creating system...
-  Processors: 1
-Creating system done
-Ruby initialization complete
+  Debug: Adding to filter: 'q' (Queue)
 info: Entering event queue @ 0.  Starting simulation...
 Hello World!Exiting @ tick 20314000 because target called exit()
