@@ -66,6 +66,7 @@ reserved = {
     'THIS' : 'THIS',
     'CHIP' : 'CHIP',
     'void' : 'VOID',
+    'new' : 'NEW',
 }
 
 literals = ':[]{}(),='
@@ -75,7 +76,7 @@ tokens = [ 'EQ', 'NE', 'LT', 'GT', 'LE', 'GE',
            'NOT', 'AND', 'OR',
            'PLUS', 'DASH', 'STAR', 'SLASH',
            'DOUBLE_COLON', 'SEMICOLON',
-           'ASSIGN', 'DOT',
+           'ASSIGN', 'DOT', 'LATENCY',
            'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING' ]
 tokens += reserved.values()
 
@@ -115,6 +116,10 @@ def t_IDENT(t):
     if t.value == 'false':
         t.type = 'LIT_BOOL'
         t.value = False
+        return t
+
+    if t.value.startswith('LATENCY_'):
+        t.type = 'LATENCY'
         return t
 
     t.type = reserved.get(t.value, 'IDENT')    # Check for reserved words
@@ -185,9 +190,25 @@ def p_decl(p):
             | d_func_def"""
     p[0] = p[1]
 
+def p_latency(p):
+    """latency : LATENCY"""
+    pass
+
+def p_latencies(p):
+    """latencies : latency latencies
+                 | empty"""
+    return []
+
 def p_d_machine(p):
-    "d_machine : MACHINE '(' ident pair_l ')' '{' decl_l '}'"
-    decls = [ x for x in p[7] if x is not None ]
+    """d_machine : MACHINE '(' ident pair_l ')' '{' decl_l '}'
+           | MACHINE '(' ident pair_l ')' ':' type_members '{' decl_l '}'
+           | MACHINE '(' ident pair_l ')' ':' latencies '{' decl_l '}'"""
+
+    if len(p) == 9:
+        decl_l = p[7]
+    elif len(p) == 11:
+        decl_l = p[9]
+    decls = [ x for x in decl_l if x is not None ]
     p[0] = Machine(p[3], decls)
 
 def p_d_action(p):
@@ -391,6 +412,7 @@ def p_expr(p):
             | literal
             | enumeration
             | ident '(' expr_l ')'
+            | NEW type
             | THIS DOT var '[' expr ']' DOT var DOT ident '(' expr_l ')'
             | THIS DOT var '[' expr ']' DOT var DOT ident
             | CHIP '[' expr ']' DOT var '[' expr ']' DOT var DOT ident '(' expr_l ')'
@@ -436,72 +458,12 @@ lex.lex()
 yacc.yacc(write_tables=0)
 
 slicc_generated_cc = set([
-    'AccessModeType.cc',
-    'AccessPermission.cc',
-    'AccessType.cc',
-    'AllocationStrategy.cc',
-    'CacheMsg.cc',
-    'CacheRequestType.cc',
-    'Chip.cc',
-    'CoherenceRequestType.cc',
-    'DetermGETXGeneratorStatus.cc',
-    'DetermInvGeneratorStatus.cc',
-    'DetermSeriesGETSGeneratorStatus.cc',
-    'GenericMachineType.cc',
-    'GenericRequestType.cc',
-    'LinkType.cc',
-    'LockStatus.cc',
-    'MachineType.cc',
-    'MaskPredictorIndex.cc',
-    'MaskPredictorTraining.cc',
-    'MaskPredictorType.cc',
-    'MemoryMsg.cc',
-    'MemoryRequestType.cc',
-    'MessageSizeType.cc',
-    'PrefetchBit.cc',
-    'Protocol.cc',
-    'RequestGeneratorStatus.cc',
-    'SearchMechanism.cc',
-    'SequencerStatus.cc',
-    'SpecifiedGeneratorType.cc',
-    'TesterStatus.cc',
-    'TopologyType.cc',
-    'TransientRequestType.cc',
-    'TransitionResult.cc'])
+    'ControllerFactory.cc',
+    'MachineType.cc'])
 
 slicc_generated_hh = set([
-    'AccessType.hh',
-    'AccessModeType.hh',
-    'AccessPermission.hh',
-    'AllocationStrategy.hh',
-    'CacheMsg.hh',
-    'CacheRequestType.hh',
-    'Chip.hh',
-    'CoherenceRequestType.hh',
-    'DetermGETXGeneratorStatus.hh',
-    'DetermInvGeneratorStatus.hh',
-    'DetermSeriesGETSGeneratorStatus.hh',
-    'GenericMachineType.hh',
-    'GenericRequestType.hh',
-    'LinkType.hh',
-    'LockStatus.hh',
+    'ControllerFactory.hh',
     'MachineType.hh',
-    'MaskPredictorIndex.hh',
-    'MaskPredictorTraining.hh',
-    'MaskPredictorType.hh',
-    'MemoryMsg.hh',
-    'MemoryRequestType.hh',
-    'MessageSizeType.hh',
-    'PrefetchBit.hh',
-    'Protocol.hh',
-    'RequestGeneratorStatus.hh',
-    'SearchMechanism.hh',
-    'SequencerStatus.hh',
-    'SpecifiedGeneratorType.hh',
-    'TesterStatus.hh',
-    'TopologyType.hh',
-    'TransientRequestType.hh',
-    'TransitionResult.hh',
     'Types.hh',
     'protocol_name.hh' ])
 
@@ -544,7 +506,9 @@ class InPort(Declaration): pass
 class OutPort(Declaration): pass
 class Transition(Declaration): pass
 class Extern(Declaration): pass
-class Global(Declaration): pass
+class Global(Declaration):
+    hh = True
+    cc = True
 class Struct(Declaration):
     hh = True
     cc = True
@@ -554,6 +518,22 @@ class Enum(Declaration):
 class Object(Declaration): pass
 class Function(Declaration):
     cc = True
+
+def read_slicc(sources):
+    if not isinstance(sources, (list,tuple)):
+        sources = [ sources ]
+
+    sm_files = []
+    for source in sources:
+        for sm_file in file(source, "r"):
+            sm_file = sm_file.strip()
+            if not sm_file:
+                continue
+            if sm_file.startswith("#"):
+                continue
+            sm_files.append(sm_file)
+
+    return sm_files
 
 def scan(filenames):
     hh = slicc_generated_hh.copy()
@@ -570,3 +550,17 @@ def scan(filenames):
             result.add(hh, cc)
 
     return list(hh), list(cc)
+
+if __name__ == '__main__':
+    import sys
+
+    hh, cc = scan(read_slicc(sys.argv[1:]))
+    hh.sort()
+    cc.sort()
+    print 'Headers:'
+    for i in hh:
+        print '    %s' % i
+
+    print 'Sources:'
+    for i in cc:
+        print '    %s' % i
