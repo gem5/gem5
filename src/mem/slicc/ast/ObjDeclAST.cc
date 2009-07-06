@@ -28,11 +28,11 @@
  */
 
 /*
- * ObjDeclAST.C
+ * ObjDeclAST.cc
  *
- * Description: See ObjDeclAST.h
+ * Description: See ObjDeclAST.hh
  *
- * $Id: ObjDeclAST.C,v 3.13 2004/06/24 15:56:14 beckmann Exp $
+ * $Id: ObjDeclAST.cc,v 3.13 2004/06/24 15:56:14 beckmann Exp $
  *
  */
 

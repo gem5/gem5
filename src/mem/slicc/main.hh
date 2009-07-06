@@ -28,11 +28,11 @@
  */
 
 /*
- * main.h
+ * main.hh
  *
  * Description:
  *
- * $Id: main.h,v 3.2 2003/03/17 01:50:01 xu Exp $
+ * $Id: main.hh,v 3.2 2003/03/17 01:50:01 xu Exp $
  *
  * */
 

@@ -28,7 +28,7 @@
  */
 
 /*
- * ReturnStatementAST.h
+ * ReturnStatementAST.hh
  *
  * Description:
  *

@@ -30,7 +30,7 @@
 /*
  * AssignStatementAST.C
  *
- * Description: See AssignStatementAST.h
+ * Description: See AssignStatementAST.hh
  *
  * $Id: AssignStatementAST.C,v 3.2 2003/08/01 18:38:19 beckmann Exp $
  *

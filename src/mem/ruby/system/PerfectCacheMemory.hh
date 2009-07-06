@@ -28,7 +28,7 @@
  */
 
 /*
- * PerfectCacheMemory.h
+ * PerfectCacheMemory.hh
  *
  * Description:
  *

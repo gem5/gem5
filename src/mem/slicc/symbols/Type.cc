@@ -27,6 +27,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Type.cc
+ *
+ * Description: See Type.hh
+ *
+ * $Id$
+ * */
+
 #include "mem/slicc/symbols/Type.hh"
 #include "mem/slicc/generator/fileio.hh"
 #include "mem/gems_common/Map.hh"

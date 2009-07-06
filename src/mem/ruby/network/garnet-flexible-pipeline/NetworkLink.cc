@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkLink.C
+ * NetworkLink.cc
  *
  * Niket Agarwal, Princeton University
  *

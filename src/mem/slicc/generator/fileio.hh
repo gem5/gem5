@@ -28,11 +28,11 @@
  */
 
 /*
- * fileio.h
+ * fileio.hh
  *
  * Description:
  *
- * $Id: fileio.h,v 3.2 2003/02/24 20:54:25 xu Exp $
+ * $Id: fileio.hh,v 3.2 2003/02/24 20:54:25 xu Exp $
  *
  * */
 

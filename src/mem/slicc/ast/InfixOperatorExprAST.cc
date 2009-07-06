@@ -30,7 +30,7 @@
 /*
  * InfixOperatorExprAST.C
  *
- * Description: See InfixOperatorExprAST.h
+ * Description: See InfixOperatorExprAST.hh
  *
  * $Id: InfixOperatorExprAST.C,v 3.2 2004/01/31 20:46:15 milo Exp $
  *

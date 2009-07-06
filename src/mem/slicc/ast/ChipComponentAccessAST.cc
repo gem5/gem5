@@ -30,7 +30,7 @@
 /*
  * ChipComponentAccessAST.C
  *
- * Description: See ChipComponentAccessAST.h
+ * Description: See ChipComponentAccessAST.hh
  *
  * $Id: ChipComponentAccessAST.C 1.9 04/06/18 21:00:08-00:00 beckmann@cottons.cs.wisc.edu $
  *

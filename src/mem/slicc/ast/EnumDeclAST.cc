@@ -30,7 +30,7 @@
 /*
  * EnumDeclAST.C
  *
- * Description: See EnumDeclAST.h
+ * Description: See EnumDeclAST.hh
  *
  * $Id$
  *

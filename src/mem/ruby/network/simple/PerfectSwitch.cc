@@ -28,9 +28,9 @@
  */
 
 /*
- * PerfectSwitch.C
+ * PerfectSwitch.cc
  *
- * Description: See PerfectSwitch.h
+ * Description: See PerfectSwitch.hh
  *
  * $Id$
  *

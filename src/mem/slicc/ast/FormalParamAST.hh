@@ -28,11 +28,11 @@
  */
 
 /*
- * FormalParamAST.h
+ * FormalParamAST.hh
  *
  * Description:
  *
- * $Id: FormalParamAST.h,v 3.1 2001/12/12 01:00:15 milo Exp $
+ * $Id: FormalParamAST.hh,v 3.1 2001/12/12 01:00:15 milo Exp $
  *
  */
 

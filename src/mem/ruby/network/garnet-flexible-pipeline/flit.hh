@@ -27,7 +27,7 @@
  */
 
 /*
- * flit.h
+ * flit.hh
  *
  * Niket Agarwal, Princeton University
  *

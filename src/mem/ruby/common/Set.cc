@@ -28,11 +28,11 @@
  */
 
 /*
- * Set.C
+ * Set.cc
  *
- * Description: See Set.h
+ * Description: See Set.hh
  *
- * $Id: BigSet.C 1.9 05/01/19 13:12:25-06:00 mikem@maya.cs.wisc.edu $
+ * $Id: BigSet.cc 1.9 05/01/19 13:12:25-06:00 mikem@maya.cs.wisc.edu $
  *
  */
 
@@ -475,7 +475,7 @@ bool Set::isSuperset(const Set& test) const
 /*
  * "Supposed" to return the node id of the (n+1)th set
  * bit, IE n=0 => returns nodeid of first set bit, BUT
- * since BigSet.C behaves strangely, this implementation
+ * since BigSet.cc behaves strangely, this implementation
  * will behave strangely just for reverse compatability.
  *
  * Was originally implemented for the flight data recorder

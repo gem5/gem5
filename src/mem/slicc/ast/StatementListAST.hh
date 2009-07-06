@@ -28,7 +28,7 @@
  */
 
 /*
- * StatementListAST.h
+ * StatementListAST.hh
  *
  * Description:
  *

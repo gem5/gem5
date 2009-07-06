@@ -28,7 +28,7 @@
  */
 
 /*
- * AST.h
+ * AST.hh
  *
  * Description:
  *

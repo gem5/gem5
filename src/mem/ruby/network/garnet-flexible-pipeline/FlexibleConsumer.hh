@@ -27,7 +27,7 @@
  */
 
 /*
- * FlexibleConsumer.h
+ * FlexibleConsumer.hh
  *
  * Niket Agarwal, Princeton University
  *

@@ -30,7 +30,7 @@
 /*
  * fileio.C
  *
- * Description: See fileio.h
+ * Description: See fileio.hh
  *
  * $Id: fileio.C,v 3.3 2003/07/10 18:08:08 milo Exp $
  *

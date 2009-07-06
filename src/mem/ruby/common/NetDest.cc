@@ -30,7 +30,7 @@
 /*
  * NetDest.C
  *
- * Description: See NetDest.h
+ * Description: See NetDest.hh
  *
  * $Id$
  *

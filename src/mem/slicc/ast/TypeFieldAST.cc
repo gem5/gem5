@@ -30,7 +30,7 @@
 /*
  * TypeFieldAST.C
  *
- * Description: See TypeFieldAST.h
+ * Description: See TypeFieldAST.hh
  *
  * $Id$
  *

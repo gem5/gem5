@@ -28,11 +28,11 @@
  */
 
 /*
- * AssignStatementAST.h
+ * AssignStatementAST.hh
  *
  * Description:
  *
- * $Id: AssignStatementAST.h,v 3.2 2001/12/12 01:00:09 milo Exp $
+ * $Id: AssignStatementAST.hh,v 3.2 2001/12/12 01:00:09 milo Exp $
  *
  */
 

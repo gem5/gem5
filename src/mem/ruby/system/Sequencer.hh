@@ -28,7 +28,7 @@
  */
 
 /*
- * $Id: Sequencer.h 1.70 2006/09/27 14:56:41-05:00 bobba@s1-01.cs.wisc.edu $
+ * $Id: Sequencer.hh 1.70 2006/09/27 14:56:41-05:00 bobba@s1-01.cs.wisc.edu $
  *
  * Description:
  *

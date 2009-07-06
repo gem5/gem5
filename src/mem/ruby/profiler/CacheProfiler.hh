@@ -28,7 +28,7 @@
  */
 
 /*
- * CacheProfiler.h
+ * CacheProfiler.hh
  *
  * Description:
  *

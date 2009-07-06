@@ -30,7 +30,7 @@
 /*
  * ExprAST.C
  *
- * Description: See ExprAST.h
+ * Description: See ExprAST.hh
  *
  * $Id$
  *

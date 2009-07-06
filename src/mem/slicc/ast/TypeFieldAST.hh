@@ -28,7 +28,7 @@
  */
 
 /*
- * TypeFieldAST.h
+ * TypeFieldAST.hh
  *
  * Description:
  *

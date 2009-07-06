@@ -30,7 +30,7 @@
 /*
  * PeekStatementAST.C
  *
- * Description: See PeekStatementAST.h
+ * Description: See PeekStatementAST.hh
  *
  * $Id$
  *

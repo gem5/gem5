@@ -30,7 +30,7 @@
 /*
  * TransitionDeclAST.C
  *
- * Description: See TransitionDeclAST.h
+ * Description: See TransitionDeclAST.hh
  *
  * $Id$
  *

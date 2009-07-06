@@ -28,9 +28,9 @@
  */
 
 /*
- * AddressProfiler.C
+ * AddressProfiler.cc
  *
- * Description: See AddressProfiler.h
+ * Description: See AddressProfiler.hh
  *
  * $Id$
  *

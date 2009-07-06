@@ -28,11 +28,11 @@
  */
 
 /*
- * MachineAST.C
+ * MachineAST.cc
  *
- * Description: See MachineAST.h
+ * Description: See MachineAST.hh
  *
- * $Id: MachineAST.C,v 3.1 2003/03/17 01:54:25 xu Exp $
+ * $Id: MachineAST.cc,v 3.1 2003/03/17 01:54:25 xu Exp $
  *
  */
 

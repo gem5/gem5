@@ -28,7 +28,7 @@
  */
 
 /*
- * $Id: mif_gen.h,v 3.1 2001/12/12 01:00:35 milo Exp $
+ * $Id: mif_gen.hh,v 3.1 2001/12/12 01:00:35 milo Exp $
  *
  */
 

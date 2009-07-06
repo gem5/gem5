@@ -28,11 +28,11 @@
  */
 
 /*
- * ObjDeclAST.h
+ * ObjDeclAST.hh
  *
  * Description:
  *
- * $Id: ObjDeclAST.h,v 3.2 2003/07/10 18:08:06 milo Exp $
+ * $Id: ObjDeclAST.hh,v 3.2 2003/07/10 18:08:06 milo Exp $
  *
  */
 

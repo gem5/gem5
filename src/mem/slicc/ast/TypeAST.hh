@@ -28,11 +28,11 @@
  */
 
 /*
- * TypeAST.h
+ * TypeAST.hh
  *
  * Description:
  *
- * $Id: TypeAST.h,v 3.2 2003/03/22 15:15:17 xu Exp $
+ * $Id: TypeAST.hh,v 3.2 2003/03/22 15:15:17 xu Exp $
  *
  */
 

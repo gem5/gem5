@@ -28,11 +28,11 @@
  */
 
 /*
- * Set.h
+ * Set.hh
  *
  * Description:
  *
- * $Id: BigSet.h 1.6 05/01/19 13:12:25-06:00 mikem@maya.cs.wisc.edu $
+ * $Id: BigSet.hh 1.6 05/01/19 13:12:25-06:00 mikem@maya.cs.wisc.edu $
  *
  */
 
@@ -40,7 +40,7 @@
 // >32 set lengths, using an array of ints w/ 32 bits/int
 
 // NOTE: Never include this file directly, this should only be
-// included from Set.h
+// included from Set.hh
 
 #ifndef SET_H
 #define SET_H

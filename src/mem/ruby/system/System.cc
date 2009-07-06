@@ -28,9 +28,9 @@
  */
 
 /*
- * RubySystem.C
+ * RubySystem.cc
  *
- * Description: See RubySystem.h
+ * Description: See System.hh
  *
  * $Id$
  *

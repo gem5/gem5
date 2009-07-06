@@ -30,7 +30,7 @@
 /*
  * FuncCallExprAST.C
  *
- * Description: See FuncCallExprAST.h
+ * Description: See FuncCallExprAST.hh
  *
  * $Id$
  *

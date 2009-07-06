@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkInterface_d.C
+ * NetworkInterface_d.cc
  *
  * Niket Agarwal, Princeton University
  *

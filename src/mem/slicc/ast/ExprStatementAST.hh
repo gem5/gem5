@@ -28,7 +28,7 @@
  */
 
 /*
- * ExprStatementAST.h
+ * ExprStatementAST.hh
  *
  * Description:
  *

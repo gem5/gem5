@@ -27,7 +27,7 @@
  */
 
 /*
- * OutputUnit_d.h
+ * OutputUnit_d.hh
  *
  * Niket Agarwal, Princeton University
  *

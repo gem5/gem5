@@ -28,7 +28,7 @@
  */
 
 /*
- * Set.h
+ * Set.hh
  *
  * Description:
  *

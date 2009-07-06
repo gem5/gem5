@@ -28,7 +28,7 @@
  */
 
 /*
- * Network.h
+ * Network.hh
  *
  * Description: The Network class is the base class for classes that
  * implement the interconnection network between components

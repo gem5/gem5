@@ -28,7 +28,7 @@
 
 /*
  *
- * InVCState.h
+ * InVCState.hh
  *
  * Niket Agarwal, Princeton University
  *

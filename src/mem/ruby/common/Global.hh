@@ -97,8 +97,8 @@ extern RubySystem* g_system_ptr;
 class Debug;
 extern Debug* g_debug_ptr;
 
-// FIXME:  this is required by the contructor of Directory_Entry.h.  It can't go
-// into slicc_util.h because it opens a can of ugly worms
+// FIXME:  this is required by the contructor of Directory_Entry.hh.  It can't go
+// into slicc_util.hh because it opens a can of ugly worms
 extern inline int max_tokens()
 {
   return 1024;

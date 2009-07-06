@@ -30,7 +30,7 @@
 /*
  * StatementListAST.C
  *
- * Description: See StatementListAST.h
+ * Description: See StatementListAST.hh
  *
  * $Id$
  *

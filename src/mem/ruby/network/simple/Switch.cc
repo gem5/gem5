@@ -28,9 +28,9 @@
  */
 
 /*
- * Switch.C
+ * Switch.cc
  *
- * Description: See Switch.h
+ * Description: See Switch.hh
  *
  * $Id$
  *

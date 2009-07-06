@@ -28,11 +28,11 @@
  */
 
 /*
- * NodeID.h
+ * NodeID.hh
  *
  * Description:
  *
- * $Id: NodeID.h,v 3.3 2003/12/04 15:01:39 xu Exp $
+ * $Id: NodeID.hh,v 3.3 2003/12/04 15:01:39 xu Exp $
  *
  */
 

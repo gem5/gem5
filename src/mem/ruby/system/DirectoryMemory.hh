@@ -28,7 +28,7 @@
  */
 
 /*
- * DirectoryMemory.h
+ * DirectoryMemory.hh
  *
  * Description:
  *

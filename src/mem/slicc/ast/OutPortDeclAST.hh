@@ -28,11 +28,11 @@
  */
 
 /*
- * OutPortDeclAST.h
+ * OutPortDeclAST.hh
  *
  * Description:
  *
- * $Id: OutPortDeclAST.h,v 3.2 2003/07/10 18:08:06 milo Exp $
+ * $Id: OutPortDeclAST.hh,v 3.2 2003/07/10 18:08:06 milo Exp $
  *
  */
 

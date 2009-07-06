@@ -28,7 +28,7 @@
  */
 
 /*
- * IfStatementAST.h
+ * IfStatementAST.hh
  *
  * Description:
  *

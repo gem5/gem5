@@ -30,7 +30,7 @@
 /*
  * TypeAST.C
  *
- * Description: See TypeAST.h
+ * Description: See TypeAST.hh
  *
  * $Id: TypeAST.C,v 3.1 2003/03/22 15:15:16 xu Exp $
  *

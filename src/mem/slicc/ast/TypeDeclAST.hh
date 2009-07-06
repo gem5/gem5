@@ -28,11 +28,11 @@
  */
 
 /*
- * TypeDeclAST.h
+ * TypeDeclAST.hh
  *
  * Description:
  *
- * $Id: TypeDeclAST.h,v 3.2 2003/03/17 01:55:28 xu Exp $
+ * $Id: TypeDeclAST.hh,v 3.2 2003/03/17 01:55:28 xu Exp $
  *
  */
 

@@ -28,7 +28,7 @@
  */
 
 /*
- * Topology.h
+ * Topology.hh
  *
  * Description: The topology here is configurable; it can be a hierachical
  *              (default one) or a 2D torus or a 2D torus with half switches

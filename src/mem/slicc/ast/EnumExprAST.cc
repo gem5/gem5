@@ -30,7 +30,7 @@
 /*
  * EnumExprAST.C
  *
- * Description: See EnumExprAST.h
+ * Description: See EnumExprAST.hh
  *
  * $Id: EnumExprAST.C,v 3.1 2003/07/10 18:08:06 milo Exp $
  *

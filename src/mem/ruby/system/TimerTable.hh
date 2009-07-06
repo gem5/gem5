@@ -28,7 +28,7 @@
  */
 
 /*
- * TimerTable.h
+ * TimerTable.hh
  *
  * Description:
  *

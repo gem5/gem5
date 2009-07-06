@@ -28,7 +28,7 @@
  */
 
 /*
- * VarExprAST.h
+ * VarExprAST.hh
  *
  * Description:
  *

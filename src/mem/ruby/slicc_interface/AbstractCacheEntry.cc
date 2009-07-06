@@ -30,7 +30,7 @@
 /*
  * $Id$
  *
- * Description: See AbstractCacheEntry.h
+ * Description: See AbstractCacheEntry.hh
  *
  */
 

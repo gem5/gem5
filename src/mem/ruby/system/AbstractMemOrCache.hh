@@ -1,6 +1,6 @@
 
 /*
- * AbstractMemOrCache.h
+ * AbstractMemOrCache.hh
  *
  * Description:
  *

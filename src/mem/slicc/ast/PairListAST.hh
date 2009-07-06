@@ -28,7 +28,7 @@
  */
 
 /*
- * PairListAST.h
+ * PairListAST.hh
  *
  * Description:
  *

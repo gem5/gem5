@@ -27,11 +27,11 @@
  */
 
 /*
- * CacheMemory.h
+ * CacheMemory.hh
  *
  * Description:
  *
- * $Id: CacheMemory.h,v 3.7 2004/06/18 20:15:15 beckmann Exp $
+ * $Id: CacheMemory.hh,v 3.7 2004/06/18 20:15:15 beckmann Exp $
  *
  */
 

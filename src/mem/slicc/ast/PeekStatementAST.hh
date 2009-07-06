@@ -28,7 +28,7 @@
  */
 
 /*
- * PeekStatementAST.h
+ * PeekStatementAST.hh
  *
  * Description:
  *

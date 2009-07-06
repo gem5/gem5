@@ -30,7 +30,7 @@
 /*
  * DeclListAST.C
  *
- * Description: See DeclListAST.h
+ * Description: See DeclListAST.hh
  *
  * $Id$
  *

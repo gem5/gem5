@@ -28,9 +28,9 @@
  */
 
 /*
- * MemoryControl.h
+ * MemoryControl.hh
  *
- * Description:  See MemoryControl.C
+ * Description:  See MemoryControl.cc
  *
  * $Id: $
  *
@@ -56,7 +56,7 @@
 #include <list>
 
 // This constant is part of the definition of tFAW; see
-// the comments in header to MemoryControl.C
+// the comments in header to MemoryControl.cc
 #define ACTIVATE_PER_TFAW 4
 
 //////////////////////////////////////////////////////////////////////////////

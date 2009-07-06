@@ -28,7 +28,7 @@
  */
 
 /*
- * AddressProfiler.h
+ * AddressProfiler.hh
  *
  * Description:
  *

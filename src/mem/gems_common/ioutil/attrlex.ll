@@ -44,7 +44,7 @@ using namespace std;
 
 // Maurice
 // extern "C" {
-// #include "simics/api.h"
+// #include "simics/api.hh"
 // };
 
 #include "mem/gems_common/ioutil/FakeSimicsDataTypes.hh"

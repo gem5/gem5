@@ -30,7 +30,7 @@
 /*
  * Location.C
  *
- * Description: See Location.h
+ * Description: See Location.hh
  *
  * $Id: Location.C,v 3.3 2004/05/30 22:19:02 kmoore Exp $
  *

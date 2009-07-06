@@ -28,9 +28,9 @@
  */
 
 /*
- * Func.C
+ * Func.cc
  *
- * Description: See Func.h
+ * Description: See Func.hh
  *
  * $Id$
  *

@@ -27,7 +27,7 @@
  */
 
 /*
- * flit_d.h
+ * flit_d.hh
  *
  * Niket Agarwal, Princeton University
  *

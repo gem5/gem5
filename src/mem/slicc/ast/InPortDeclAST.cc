@@ -30,7 +30,7 @@
 /*
  * InPortDeclAST.C
  *
- * Description: See InPortDeclAST.h
+ * Description: See InPortDeclAST.hh
  *
  * $Id$
  *

@@ -28,9 +28,9 @@
  */
 
 /*
- * RubyConfig.C
+ * RubyConfig.cc
  *
- * Description: See RubyConfig.h
+ * Description: See RubyConfig.hh
  *
  * $Id$
  *

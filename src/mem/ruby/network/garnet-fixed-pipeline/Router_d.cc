@@ -27,7 +27,7 @@
  */
 
 /*
- * Router_d.C
+ * Router_d.cc
  *
  * Niket Agarwal, Princeton University
  *

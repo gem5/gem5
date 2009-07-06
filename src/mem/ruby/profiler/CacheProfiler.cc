@@ -30,7 +30,7 @@
 /*
  * CacheProfiler.C
  *
- * Description: See CacheProfiler.h
+ * Description: See CacheProfiler.hh
  *
  * $Id$
  *

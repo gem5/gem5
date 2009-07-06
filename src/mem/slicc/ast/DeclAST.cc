@@ -30,7 +30,7 @@
 /*
  * DeclAST.C
  *
- * Description: See DeclAST.h
+ * Description: See DeclAST.hh
  *
  * $Id$
  *

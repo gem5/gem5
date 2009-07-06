@@ -30,7 +30,7 @@
 /*
  * ReturnStatementAST.C
  *
- * Description: See ReturnStatementAST.h
+ * Description: See ReturnStatementAST.hh
  *
  * $Id$
  *

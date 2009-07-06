@@ -27,7 +27,7 @@
  */
 
 /*
- * Switch_d.h
+ * Switch_d.hh
  *
  * Niket Agarwal, Princeton University
  *

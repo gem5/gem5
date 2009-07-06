@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkConfig.h
+ * NetworkConfig.hh
  *
  * Description: This header file is used to define all configuration parameters required by the interconnection network.
  *

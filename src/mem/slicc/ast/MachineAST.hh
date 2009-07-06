@@ -28,11 +28,11 @@
  */
 
 /*
- * ActionDeclAST.h
+ * ActionDeclAST.hh
  *
  * Description:
  *
- * $Id: MachineAST.h,v 3.2 2003/07/10 18:08:06 milo Exp $
+ * $Id: MachineAST.hh,v 3.2 2003/07/10 18:08:06 milo Exp $
  *
  */
 

@@ -30,7 +30,7 @@
 /*
  * $Id$
  *
- * Description: See AbstractChip.h
+ * Description: See AbstractChip.hh
  *
  */
 

@@ -30,7 +30,7 @@
 /*
  * FuncDeclAST.C
  *
- * Description: See FuncDeclAST.h
+ * Description: See FuncDeclAST.hh
  *
  * $Id: FuncDeclAST.C,v 3.4 2003/08/22 18:19:34 beckmann Exp $
  *

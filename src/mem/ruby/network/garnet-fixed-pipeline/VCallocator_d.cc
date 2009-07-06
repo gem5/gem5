@@ -27,7 +27,7 @@
  */
 
 /*
- * VCallocator_d.C
+ * VCallocator_d.cc
  *
  * Niket Agarwal, Princeton University
  *

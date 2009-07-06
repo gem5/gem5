@@ -28,9 +28,9 @@
  */
 
 /*
- * DirectoryMemory.C
+ * DirectoryMemory.cc
  *
- * Description: See DirectoryMemory.h
+ * Description: See DirectoryMemory.hh
  *
  * $Id$
  *

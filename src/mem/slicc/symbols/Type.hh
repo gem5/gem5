@@ -28,7 +28,7 @@
  */
 
 /*
- * Type.h
+ * Type.hh
  *
  * Description:
  *

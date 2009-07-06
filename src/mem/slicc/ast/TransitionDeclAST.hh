@@ -28,11 +28,11 @@
  */
 
 /*
- * TransistionDeclAST.h
+ * TransistionDeclAST.hh
  *
  * Description:
  *
- * $Id: TransitionDeclAST.h,v 3.2 2003/07/10 18:08:07 milo Exp $
+ * $Id: TransitionDeclAST.hh,v 3.2 2003/07/10 18:08:07 milo Exp $
  *
  */
 

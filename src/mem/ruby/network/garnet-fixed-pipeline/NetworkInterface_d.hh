@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkInterface_d.h
+ * NetworkInterface_d.hh
  *
  * Niket Agarwal, Princeton University
  *

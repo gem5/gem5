@@ -30,7 +30,7 @@
 /*
  * FieldExprAST.C
  *
- * Description: See FieldExprAST.h
+ * Description: See FieldExprAST.hh
  *
  * $Id$
  *

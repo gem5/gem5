@@ -28,11 +28,11 @@
  */
 
 /*
- * DeclListAST.h
+ * DeclListAST.hh
  *
  * Description:
  *
- * $Id: DeclListAST.h,v 3.1 2001/12/12 01:00:12 milo Exp $
+ * $Id: DeclListAST.hh,v 3.1 2001/12/12 01:00:12 milo Exp $
  *
  */
 

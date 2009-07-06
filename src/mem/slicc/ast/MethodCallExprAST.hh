@@ -28,7 +28,7 @@
  */
 
 /*
- * MethodCallExprAST.h
+ * MethodCallExprAST.hh
  *
  * Description:
  *

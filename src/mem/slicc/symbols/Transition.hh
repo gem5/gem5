@@ -28,7 +28,7 @@
  */
 
 /*
- * Transition.h
+ * Transition.hh
  *
  * Description:
  *

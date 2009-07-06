@@ -30,7 +30,7 @@
 /*
  * LiteralExprAST.C
  *
- * Description: See LiteralExprAST.h
+ * Description: See LiteralExprAST.hh
  *
  * $Id: LiteralExprAST.C,v 3.1 2002/10/22 21:27:52 milo Exp $
  *

@@ -28,7 +28,7 @@
  */
 
 /*
- * NodeID.h
+ * NodeID.hh
  *
  * Description:
  *

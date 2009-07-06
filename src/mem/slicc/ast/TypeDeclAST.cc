@@ -30,7 +30,7 @@
 /*
  * TypeDeclAST.C
  *
- * Description: See TypeDeclAST.h
+ * Description: See TypeDeclAST.hh
  *
  * $Id: TypeDeclAST.C,v 3.1 2003/03/22 15:15:17 xu Exp $
  *

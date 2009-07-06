@@ -43,9 +43,9 @@
 */
 
 /*
- * Profiler.C
+ * Profiler.cc
  *
- * Description: See Profiler.h
+ * Description: See Profiler.hh
  *
  * $Id$
  *

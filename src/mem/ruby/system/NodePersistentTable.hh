@@ -28,7 +28,7 @@
  */
 
 /*
- * $Id: NodePersistentTable.h 1.3 04/08/16 14:12:33-05:00 beckmann@c2-143.cs.wisc.edu $
+ * $Id: NodePersistentTable.hh 1.3 04/08/16 14:12:33-05:00 beckmann@c2-143.cs.wisc.edu $
  *
  * Description:
  *

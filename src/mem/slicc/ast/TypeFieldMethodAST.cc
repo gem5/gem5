@@ -30,7 +30,7 @@
 /*
  * TypeFieldMethodAST.C
  *
- * Description: See TypeFieldMethodAST.h
+ * Description: See TypeFieldMethodAST.hh
  *
  * $Id: TypeFieldMethodAST.C,v 3.1 2003/07/10 18:08:07 milo Exp $
  *

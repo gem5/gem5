@@ -28,7 +28,7 @@
  */
 
 /*
- * NetworkMessage.h
+ * NetworkMessage.hh
  *
  * Description:
  *

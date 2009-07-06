@@ -27,23 +27,23 @@
  */
 
 /*
-     This file has been modified by Kevin Moore and Dan Nussbaum of the
-     Scalable Systems Research Group at Sun Microsystems Laboratories
-     (http://research.sun.com/scalable/) to support the Adaptive
-     Transactional Memory Test Platform (ATMTP).
+   This file has been modified by Kevin Moore and Dan Nussbaum of the
+   Scalable Systems Research Group at Sun Microsystems Laboratories
+   (http://research.sun.com/scalable/) to support the Adaptive
+   Transactional Memory Test Platform (ATMTP).
 
-     Please send email to atmtp-interest@sun.com with feedback, questions, or
-     to request future announcements about ATMTP.
+   Please send email to atmtp-interest@sun.com with feedback, questions, or
+   to request future announcements about ATMTP.
 
-     ----------------------------------------------------------------------
+   ----------------------------------------------------------------------
 
-     File modification date: 2008-02-23
+   File modification date: 2008-02-23
 
-     ----------------------------------------------------------------------
+   ----------------------------------------------------------------------
 */
 
 /*
- * Profiler.h
+ * Profiler.hh
  *
  * Description:
  *

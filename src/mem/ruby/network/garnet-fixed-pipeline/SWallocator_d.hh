@@ -27,7 +27,7 @@
  */
 
 /*
- * SWallocator_d.h
+ * SWallocator_d.hh
  *
  * Niket Agarwal, Princeton University
  *

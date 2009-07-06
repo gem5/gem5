@@ -30,7 +30,7 @@
 /*
  * VarExprAST.C
  *
- * Description: See VarExprAST.h
+ * Description: See VarExprAST.hh
  *
  * $Id$
  *

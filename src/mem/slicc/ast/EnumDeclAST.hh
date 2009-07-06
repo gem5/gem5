@@ -28,7 +28,7 @@
  */
 
 /*
- * EnummDeclAST.h
+ * EnummDeclAST.hh
  *
  * Description:
  *

@@ -30,7 +30,7 @@
 /*
  * $Id$
  *
- * Description: The EventQueue class implements an event queue which
+ * Description: The RubyEventQueue class implements an event queue which
  * can be trigger events, allowing our simulation to be event driven.
  *
  * Currently, the only event we support is a Consumer being signaled
@@ -48,7 +48,7 @@
  * and a consumer pointer.  The event queue will call the wakeup()
  * method of the consumer at the appropriate time.
  *
- * This implementation of EventQueue uses a dynamically sized array
+ * This implementation of RubyEventQueue uses a dynamically sized array
  * managed as a heap.  The algorithms used has O(lg n) for insert and
  * O(lg n) for extract minimum element. (Based on chapter 7 of Cormen,
  * Leiserson, and Rivest.)  The array is dynamically sized and is

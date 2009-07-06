@@ -30,7 +30,7 @@
 /*
  * OutPortDeclAST.C
  *
- * Description: See OutPortDeclAST.h
+ * Description: See OutPortDeclAST.hh
  *
  * $Id: OutPortDeclAST.C,v 3.3 2004/02/02 22:37:51 milo Exp $
  *

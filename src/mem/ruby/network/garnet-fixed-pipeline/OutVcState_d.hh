@@ -27,7 +27,7 @@
  */
 
 /*
- * OutVCState_d.h
+ * OutVCState_d.hh
  *
  * Niket Agarwal, Princeton University
  *

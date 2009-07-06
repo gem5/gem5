@@ -28,9 +28,9 @@
  */
 
 /*
- * SimpleNetwork.C
+ * SimpleNetwork.cc
  *
- * Description: See SimpleNetwork.h
+ * Description: See SimpleNetwork.hh
  *
  * $Id$
  *
@@ -48,7 +48,7 @@
 #include "mem/protocol/Protocol.hh"
 #include "mem/gems_common/Map.hh"
 
-// ***BIG HACK*** - This is actually code that _should_ be in Network.C
+// ***BIG HACK*** - This is actually code that _should_ be in Network.cc
 
 // Note: Moved to Princeton Network
 // calls new to abstract away from the network

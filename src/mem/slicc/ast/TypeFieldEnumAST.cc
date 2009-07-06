@@ -30,7 +30,7 @@
 /*
  * TypeFieldEnumAST.C
  *
- * Description: See TypeFieldEnumAST.h
+ * Description: See TypeFieldEnumAST.hh
  *
  * $Id$
  *

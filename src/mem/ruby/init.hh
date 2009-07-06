@@ -28,7 +28,7 @@
  */
 
 /*
- * init.h
+ * init.hh
  *
  * Description:
  *

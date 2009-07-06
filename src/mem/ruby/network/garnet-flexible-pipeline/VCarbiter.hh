@@ -27,7 +27,7 @@
  */
 
 /*
- * VCarbiter.h
+ * VCarbiter.hh
  *
  * Niket Agarwal, Princeton University
  *

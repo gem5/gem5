@@ -17,7 +17,7 @@
  * */
 
 /*
- * $Id: Instruction.h 1.2 05/05/24 12:15:47-05:00 kmoore@balder.cs.wisc.edu $
+ * $Id: Instruction.hh 1.2 05/05/24 12:15:47-05:00 kmoore@balder.cs.wisc.edu $
  *
  * Description:
  *

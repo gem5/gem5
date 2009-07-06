@@ -1,5 +1,5 @@
 /*
- * CreditLink_d.h
+ * CreditLink_d.hh
  *
  * Niket Agarwal, Princeton University
  *

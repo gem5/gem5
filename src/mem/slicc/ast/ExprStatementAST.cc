@@ -30,7 +30,7 @@
 /*
  * ExprStatementAST.C
  *
- * Description: See ExprStatementAST.h
+ * Description: See ExprStatementAST.hh
  *
  * $Id$
  *

@@ -28,7 +28,7 @@
  */
 
 /*
- * PersistentArbiter.h
+ * PersistentArbiter.hh
  *
  * Description:
  *

@@ -30,7 +30,7 @@
 /*
  * IfStatementAST.C
  *
- * Description: See IfStatementAST.h
+ * Description: See IfStatementAST.hh
  *
  * $Id$
  *

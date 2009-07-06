@@ -30,7 +30,7 @@
 /*
  * ActionDeclAST.C
  *
- * Description: See ActionDeclAST.h
+ * Description: See ActionDeclAST.hh
  *
  * $Id$
  *

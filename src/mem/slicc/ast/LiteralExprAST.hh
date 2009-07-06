@@ -28,11 +28,11 @@
  */
 
 /*
- * LiteralExprAST.h
+ * LiteralExprAST.hh
  *
  * Description:
  *
- * $Id: LiteralExprAST.h,v 3.1 2001/12/12 01:00:20 milo Exp $
+ * $Id: LiteralExprAST.hh,v 3.1 2001/12/12 01:00:20 milo Exp $
  *
  */
 

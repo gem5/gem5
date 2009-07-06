@@ -30,7 +30,7 @@
 /*
  * AST.C
  *
- * Description: See AST.h
+ * Description: See AST.hh
  *
  * $Id$
  *

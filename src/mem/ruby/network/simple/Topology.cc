@@ -28,9 +28,9 @@
  */
 
 /*
- * Topology.C
+ * Topology.cc
  *
- * Description: See Topology.h
+ * Description: See Topology.hh
  *
  * $Id$
  *

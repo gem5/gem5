@@ -28,11 +28,11 @@
  */
 
 /*
- * Location.h
+ * Location.hh
  *
  * Description:
  *
- * $Id: Location.h,v 3.1 2001/12/12 01:00:20 milo Exp $
+ * $Id: Location.hh,v 3.1 2001/12/12 01:00:20 milo Exp $
  *
  */
 

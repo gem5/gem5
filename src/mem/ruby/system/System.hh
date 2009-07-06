@@ -28,7 +28,7 @@
  */
 
 /*
- * RubySystem.h
+ * System.hh
  *
  * Description: Contains all of the various parts of the system we are
  * simulating.  Performs allocation, deallocation, and setup of all

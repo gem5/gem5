@@ -28,7 +28,7 @@
  */
 
 /*
- * slicc_util.h
+ * slicc_util.hh
  *
  * Description: These are the functions that exported to slicc from ruby.
  *

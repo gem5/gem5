@@ -28,7 +28,7 @@
  */
 
 /*
- * DeclAST.h
+ * DeclAST.hh
  *
  * Description:
  *

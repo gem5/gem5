@@ -28,11 +28,11 @@
  */
 
 /*
- * html_gen.h
+ * html_gen.hh
  *
  * Description:
  *
- * $Id: html_gen.h,v 3.1 2001/12/12 01:00:35 milo Exp $
+ * $Id: html_gen.hh,v 3.1 2001/12/12 01:00:35 milo Exp $
  *
  * */
 

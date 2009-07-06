@@ -28,9 +28,9 @@
  */
 
 /*
- * slicc_util.C
+ * slicc_util.cc
  *
- * Description: See slicc_util.h
+ * Description: See slicc_util.hh
  *
  * $Id$
  *

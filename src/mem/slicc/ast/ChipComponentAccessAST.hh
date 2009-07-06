@@ -32,7 +32,7 @@
  *
  * Description:
  *
- * $Id: ChipComponentAccessAST.h 1.8 04/06/18 21:00:08-00:00 beckmann@cottons.cs.wisc.edu $
+ * $Id: ChipComponentAccessAST.hh 1.8 04/06/18 21:00:08-00:00 beckmann@cottons.cs.wisc.edu $
  *
  */
 

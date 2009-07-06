@@ -27,7 +27,7 @@
  */
 
 /*
- * Router.C
+ * Router.cc
  *
  * Niket Agarwal, Princeton University
  *

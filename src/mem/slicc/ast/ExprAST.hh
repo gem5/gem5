@@ -28,7 +28,7 @@
  */
 
 /*
- * ExprAST.h
+ * ExprAST.hh
  *
  * Description:
  *

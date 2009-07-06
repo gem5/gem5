@@ -28,9 +28,9 @@
  */
 
 /*
- * MethodCallExprAST.C
+ * MethodCallExprAST.cc
  *
- * Description: See MethodCallExprAST.h
+ * Description: See MethodCallExprAST.hh
  *
  * $Id$
  *

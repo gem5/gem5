@@ -28,7 +28,7 @@
  */
 
 /*
- * RubyConfig.h
+ * RubyConfig.hh
  *
  * Description: This class has only static members and class methods,
  * and thus should never need to be instantiated.

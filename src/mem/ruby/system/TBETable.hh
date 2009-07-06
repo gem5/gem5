@@ -28,7 +28,7 @@
  */
 
 /*
- * TBETable.h
+ * TBETable.hh
  *
  * Description:
  *

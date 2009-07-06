@@ -30,7 +30,7 @@
 /*
  * PairAST.C
  *
- * Description: See PairAST.h
+ * Description: See PairAST.hh
  *
  * $Id$
  *

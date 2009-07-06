@@ -28,7 +28,7 @@
  */
 
 /*
- * SimpleNetwork.h
+ * SimpleNetwork.hh
  *
  * Description: The SimpleNetwork class implements the interconnection
  * SimpleNetwork between components (processor/cache components and
@@ -55,7 +55,7 @@
  *
  * FIXME: Various flavor of networks are provided as a compiler time
  *        configurable. We currently include this SimpleNetwork in the
- *        makefile's vpath, so that SimpleNetwork.C can provide an alternative
+ *        makefile's vpath, so that SimpleNetwork.cc can provide an alternative
  *        version constructor for the abstract Network class. It is easy to
  *        modify this to make network a runtime configuable. Just make the
  *        abstract Network class take a enumeration parameter, and based on

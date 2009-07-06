@@ -27,7 +27,7 @@
  */
 
 /*
- * VirtualChannel_d.h
+ * VirtualChannel_d.hh
  *
  * Niket Agarwal, Princeton University
  *

@@ -28,7 +28,7 @@
  */
 
 /*
- * MemoryControl.C
+ * MemoryControl.cc
  *
  * Description:  This module simulates a basic DDR-style memory controller
  * (and can easily be extended to do FB-DIMM as well).

@@ -28,7 +28,7 @@
  */
 
 /*
- * StatementAST.h
+ * StatementAST.hh
  *
  * Description:
  *

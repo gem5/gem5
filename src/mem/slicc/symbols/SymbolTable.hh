@@ -28,7 +28,7 @@
  */
 
 /*
- * SymbolTable.h
+ * SymbolTable.hh
  *
  * Description:
  *

@@ -28,11 +28,11 @@
  */
 
 /*
- * InfixOperatorExprAST.h
+ * InfixOperatorExprAST.hh
  *
  * Description:
  *
- * $Id: InfixOperatorExprAST.h,v 3.1 2001/12/12 01:00:19 milo Exp $
+ * $Id: InfixOperatorExprAST.hh,v 3.1 2001/12/12 01:00:19 milo Exp $
  *
  */
 

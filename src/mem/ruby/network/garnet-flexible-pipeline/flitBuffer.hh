@@ -27,7 +27,7 @@
  */
 
 /*
- * flitBuffer.h
+ * flitBuffer.hh
  *
  * Niket Agarwal, Princeton University
  *

@@ -28,11 +28,11 @@
  */
 
 /*
- * PairAST.h
+ * PairAST.hh
  *
  * Description:
  *
- * $Id: PairAST.h,v 3.1 2001/12/12 01:00:24 milo Exp $
+ * $Id: PairAST.hh,v 3.1 2001/12/12 01:00:24 milo Exp $
  *
  */
 

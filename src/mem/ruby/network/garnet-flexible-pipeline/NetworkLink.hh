@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkLink.h
+ * NetworkLink.hh
  *
  * Niket Agarwal, Princeton University
  *

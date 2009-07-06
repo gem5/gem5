@@ -27,7 +27,7 @@
  */
 
 /*
- * NetworkHeader.h
+ * NetworkHeader.hh
  *
  * Niket Agarwal, Princeton University
  *

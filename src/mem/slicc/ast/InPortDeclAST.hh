@@ -28,11 +28,11 @@
  */
 
 /*
- * InPortDeclAST.h
+ * InPortDeclAST.hh
  *
  * Description:
  *
- * $Id: InPortDeclAST.h,v 3.2 2003/07/10 18:08:06 milo Exp $
+ * $Id: InPortDeclAST.hh,v 3.2 2003/07/10 18:08:06 milo Exp $
  *
  */
 

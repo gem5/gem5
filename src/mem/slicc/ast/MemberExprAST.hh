@@ -28,11 +28,11 @@
  */
 
 /*
- * MemberExprAST.h
+ * MemberExprAST.hh
  *
  * Description:
  *
- * $Id: MemberExprAST.h,v 3.1 2001/12/12 01:00:21 milo Exp $
+ * $Id: MemberExprAST.hh,v 3.1 2001/12/12 01:00:21 milo Exp $
  *
  */
 

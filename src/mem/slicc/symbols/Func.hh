@@ -28,7 +28,7 @@
  */
 
 /*
- * Func.h
+ * Func.hh
  *
  * Description:
  *

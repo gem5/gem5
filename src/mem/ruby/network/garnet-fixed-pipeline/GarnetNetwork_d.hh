@@ -27,7 +27,7 @@
  */
 
 /*
- * GarnetNetwork_d.h
+ * GarnetNetwork_d.hh
  *
  * Niket Agarwal, Princeton University
  *

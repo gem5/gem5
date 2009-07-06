@@ -30,7 +30,7 @@
 /*
  * init.C
  *
- * Description: See init.h
+ * Description: See init.hh
  *
  * $Id$
  *

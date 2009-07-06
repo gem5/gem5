@@ -30,7 +30,7 @@
 /*
  * FormalParamAST.C
  *
- * Description: See FormalParamAST.h
+ * Description: See FormalParamAST.hh
  *
  * $Id: FormalParamAST.C,v 3.1 2000/10/05 21:22:20 milo Exp $
  *

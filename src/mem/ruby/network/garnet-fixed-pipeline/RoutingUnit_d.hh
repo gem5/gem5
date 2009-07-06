@@ -27,7 +27,7 @@
  */
 
 /*
- * Routerunit_d.h
+ * Routerunit_d.hh
  *
  * Niket Agarwal, Princeton University
  *

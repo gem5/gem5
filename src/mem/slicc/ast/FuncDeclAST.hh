@@ -28,11 +28,11 @@
  */
 
 /*
- * FuncDeclAST.h
+ * FuncDeclAST.hh
  *
  * Description:
  *
- * $Id: FuncDeclAST.h,v 3.2 2003/07/10 18:08:06 milo Exp $
+ * $Id: FuncDeclAST.hh,v 3.2 2003/07/10 18:08:06 milo Exp $
  *
  */
 

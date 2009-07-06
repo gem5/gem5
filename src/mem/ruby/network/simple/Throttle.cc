@@ -30,7 +30,7 @@
 /*
  * $Id$
  *
- * Description: see Throttle.h
+ * Description: see Throttle.hh
  *
  */
 

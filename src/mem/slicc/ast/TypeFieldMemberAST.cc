@@ -30,7 +30,7 @@
 /*
  * TypeFieldMemberAST.C
  *
- * Description: See TypeFieldMemberAST.h
+ * Description: See TypeFieldMemberAST.hh
  *
  * $Id: TypeFieldMemberAST.C,v 3.1 2003/03/27 22:58:54 xu Exp $
  *

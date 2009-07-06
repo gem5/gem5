@@ -30,7 +30,7 @@
 /*
  * html_gen.C
  *
- * Description: See html_gen.h
+ * Description: See html_gen.hh
  *
  * $Id: html_gen.C,v 3.4 2004/01/31 20:46:50 milo Exp $
  *
