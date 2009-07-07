@@ -275,5 +275,6 @@ os.chdir(str(Dir('.').srcdir))
 for config in configs:
     dirs = glob.glob('*/*/ref/%s/*/%s' % (env['TARGET_ISA'], config))
     for d in dirs:
-        test_builder(env, d)
+        if not os.path.exists(os.path.join(d, 'skip')):
+            test_builder(env, d)
 os.chdir(cwd)
