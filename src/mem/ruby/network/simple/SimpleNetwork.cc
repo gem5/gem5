@@ -87,7 +87,6 @@ void SimpleNetwork::init(const vector<string> & argv)
     m_toNetQueues[node].setSize(m_virtual_networks);
     m_fromNetQueues[node].setSize(m_virtual_networks);
     for (int j = 0; j < m_virtual_networks; j++) {
-      cerr << "Creating new MessageBuffer for " << node << " " << j << endl;
       m_toNetQueues[node][j] = new MessageBuffer;
       m_fromNetQueues[node][j] = new MessageBuffer;
     }
