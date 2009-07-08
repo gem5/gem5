@@ -374,6 +374,13 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     }
   }
 
+  action(v_allocateTBEFromRequestNet, "\v", desc="Allocate TBE") {
+    peek(requestQueue_in, RequestMsg) {
+      TBEs.allocate(address);
+      TBEs[address].DataBlk := in_msg.DataBlk;
+    }
+  }
+
   action(w_deallocateTBE, "w", desc="Deallocate TBE") {
     TBEs.deallocate(address);
   }
@@ -478,6 +485,10 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     memQueue_in.dequeue();
   }
 
+  action(w_writeDataToMemoryFromTBE, "\w", desc="Write date to directory memory from TBE") {
+    directory[address].DataBlk := TBEs[address].DataBlk;
+  }
+
   // TRANSITIONS
 
   transition({M_DRD, M_DWR}, GETX) {
@@ -548,26 +559,19 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
   }
 
   transition(M_DWR, PUTX, M_DWRI) {
-    dwt_writeDMADataFromTBE;
     qw_queueMemoryWBRequest_partialTBE;
-    //a_sendWriteBackAck;
     c_clearOwner;
-    //da_sendDMAAck;
     w_deallocateTBE;
     i_popIncomingRequestQueue;
   }
 
   transition(M_DWRI, Memory_Ack, I) {
-    //dwt_writeDMADataFromTBE;
+    w_writeDataToMemoryFromTBE;
     l_sendWriteBackAck;
-    //c_clearOwner;
     da_sendDMAAck;
-    //w_deallocateTBE;
+    w_deallocateTBE;
     l_popMemQueue;
   }
-
-
-
 
   transition(M, GETX, M) {
     f_forwardRequest;
@@ -577,15 +581,16 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   transition(M, PUTX, MI) {
     c_clearOwner;
-//    l_writeDataToMemory;
+    v_allocateTBEFromRequestNet;
     l_queueMemoryWBRequest;
-//    a_sendWriteBackAck;
     d_deallocateDirectory;
     i_popIncomingRequestQueue;
   }
 
   transition(MI, Memory_Ack, I) {
+    w_writeDataToMemoryFromTBE;
     l_sendWriteBackAck;
+    w_deallocateTBE;
     l_popMemQueue;
   }
 
