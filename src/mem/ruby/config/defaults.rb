@@ -12,7 +12,7 @@ class NetPort < LibRubyObject
   default_param :buffer_size, Integer, 32
 
   # added by SS for TBE
-  default_param :number_of_TBEs, Integer, 128
+  default_param :number_of_TBEs, Integer, 256
 
   default_param :recycle_latency, Integer, 10
 end

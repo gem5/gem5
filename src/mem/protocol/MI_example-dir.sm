@@ -528,14 +528,15 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
 
   transition(I, DMA_WRITE, ID_W) {
-    dw_writeDMAData;
-//    da_sendDMAAck;
+    v_allocateTBE;
     qw_queueMemoryWBRequest_partial;
     p_popIncomingDMARequestQueue;
   }
 
   transition(ID_W, Memory_Ack, I) {
+    dwt_writeDMADataFromTBE;
     da_sendDMAAck;
+    w_deallocateTBE;
     l_popMemQueue;
   }
 
@@ -548,7 +549,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     drp_sendDMAData;
     c_clearOwner;
     a_sendWriteBackAck;
-    //    d_deallocateDirectory;
+    d_deallocateDirectory;
     i_popIncomingRequestQueue;
   }
 
@@ -561,7 +562,6 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
   transition(M_DWR, PUTX, M_DWRI) {
     qw_queueMemoryWBRequest_partialTBE;
     c_clearOwner;
-    w_deallocateTBE;
     i_popIncomingRequestQueue;
   }
 
@@ -570,6 +570,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     l_sendWriteBackAck;
     da_sendDMAAck;
     w_deallocateTBE;
+    d_deallocateDirectory;
     l_popMemQueue;
   }
 
@@ -583,7 +584,6 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     c_clearOwner;
     v_allocateTBEFromRequestNet;
     l_queueMemoryWBRequest;
-    d_deallocateDirectory;
     i_popIncomingRequestQueue;
   }
 
@@ -591,6 +591,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     w_writeDataToMemoryFromTBE;
     l_sendWriteBackAck;
     w_deallocateTBE;
+    d_deallocateDirectory;
     l_popMemQueue;
   }
 
@@ -601,7 +602,6 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   transition(I, PUTX_NotOwner, I) {
     b_sendWriteBackNack;
-    d_deallocateDirectory;
     i_popIncomingRequestQueue;
   }
 
