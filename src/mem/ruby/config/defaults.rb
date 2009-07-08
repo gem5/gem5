@@ -39,7 +39,7 @@ class Debug < LibRubyObject
   default_param :protocol_trace, Boolean, false
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
-  default_param :filter_string, String, "q"
+  default_param :filter_string, String, ""
 
   # filters debugging messages based on priority (low, med, high)
   default_param :verbosity_string, String, "none"
@@ -48,7 +48,7 @@ class Debug < LibRubyObject
   default_param :start_time, Integer, 1
 
   # sends debugging messages to a output filename
-  default_param :output_filename, String, ""
+  default_param :output_filename, String, "none"
 end
 
 class Topology < LibRubyObject
