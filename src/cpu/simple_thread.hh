@@ -90,7 +90,6 @@ class TranslatingPort;
 class SimpleThread : public ThreadState
 {
   protected:
-    typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
@@ -99,7 +98,6 @@ class SimpleThread : public ThreadState
     typedef ThreadContext::Status Status;
 
   protected:
-    RegFile regs;       // correct-path register context
     union {
         FloatReg f[TheISA::NumFloatRegs];
         FloatRegBits i[TheISA::NumFloatRegs];
@@ -253,7 +251,6 @@ class SimpleThread : public ThreadState
 
     void clearArchRegs()
     {
-        regs.clear();
         microPC = 0;
         nextMicroPC = 1;
         PC = nextPC = nextNPC = 0;

@@ -57,7 +57,6 @@ enum MiscRegIndex
 class MiscRegFile
 {
   public:
-    friend class RegFile;
     typedef uint64_t InternalProcReg;
 
   protected:

@@ -77,7 +77,6 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::RegFile RegFile;
     typedef TheISA::MiscReg MiscReg;
 
     //DynInstPtr TypeDefs

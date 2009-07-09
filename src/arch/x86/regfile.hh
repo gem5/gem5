@@ -84,19 +84,6 @@ namespace X86ISA
         NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs;
     const int NumFloatArchRegs = NumFloatRegs + 8;
 
-    class RegFile
-    {
-      public:
-        void clear()
-        {}
-
-        void serialize(EventManager *em, std::ostream &os)
-        {}
-        void unserialize(EventManager *em, Checkpoint *cp,
-                const std::string &section)
-        {}
-    };
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

@@ -92,27 +92,6 @@ namespace MipsISA
     //TotalArchRegs = NumIntArchRegs * ShadowSets
     const int TotalArchRegs = NumIntArchRegs;
 
-
-    class RegFile {
-      public:
-        void clear()
-        {}
-        void reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *_cpu)
-        {}
-
-        void setShadowSet(int css)
-        {}
-
-      public:
-        void serialize(EventManager *em, std::ostream &os)
-        {}
-        void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section)
-        {}
-
-    };
-
 } // namespace MipsISA
 
 #endif

@@ -47,20 +47,6 @@ namespace SparcISA
     const int NumIntArchRegs = 32;
     const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
 
-    class RegFile
-    {
-      public:
-
-        void clear()
-        {}
-
-        void serialize(EventManager *em, std::ostream &os)
-        {}
-        void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section)
-        {}
-    };
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

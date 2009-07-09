@@ -496,7 +496,6 @@ class Tru64 : public OperatingSystem
     {
         using namespace TheISA;
 
-        using TheISA::RegFile;
         TypedBufferArg<Tru64::sigcontext> sc(process->getSyscallArg(tc, 0));
 
         sc.copyIn(tc->getMemPort());

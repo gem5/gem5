@@ -110,7 +110,6 @@ SimpleThread::SimpleThread()
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
-    regs.clear();
 }
 
 SimpleThread::~SimpleThread()
@@ -191,7 +190,6 @@ void
 SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
-    regs.serialize(cpu, os);
     SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     SERIALIZE_SCALAR(microPC);
@@ -207,7 +205,6 @@ void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
-    regs.unserialize(cpu, cp, section);
     UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     UNSERIALIZE_SCALAR(microPC);

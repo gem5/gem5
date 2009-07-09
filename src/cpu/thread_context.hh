@@ -79,7 +79,6 @@ namespace TheISA {
 class ThreadContext
 {
   protected:
-    typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;

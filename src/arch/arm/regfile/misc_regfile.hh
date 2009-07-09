@@ -84,8 +84,6 @@ namespace ArmISA
             assert(misc_reg < NumMiscRegs);
             miscRegFile[misc_reg] = val;
         }
-
-        friend class RegFile;
     };
 } // namespace ArmISA
 

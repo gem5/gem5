@@ -433,7 +433,6 @@ void InterruptFault::invoke(ThreadContext *tc)
 {
 #if  FULL_SYSTEM
   DPRINTF(Arm,"%s encountered.\n", name());
-  //RegFile *Reg = tc->getRegFilePtr(); // Get pointer to the register fil
   setExceptionState(tc,0x0A);
   Addr HandlerBase;
 
@@ -469,7 +468,6 @@ void ReservedInstructionFault::invoke(ThreadContext *tc)
 {
 #if  FULL_SYSTEM
   DPRINTF(Arm,"%s encountered.\n", name());
-  //RegFile *Reg = tc->getRegFilePtr(); // Get pointer to the register fil
   setExceptionState(tc,0x0A);
   Addr HandlerBase;
   HandlerBase= vect() + tc->readMiscRegNoEffect(ArmISA::EBase); // Offset 0x180 - General Exception Vector

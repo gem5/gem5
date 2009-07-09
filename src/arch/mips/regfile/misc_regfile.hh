@@ -48,9 +48,6 @@ namespace MipsISA
 {
     class MiscRegFile {
       public:
-        // Give RegFile object, private access
-        friend class RegFile;
-
         // The MIPS name for this file is CP0 or Coprocessor 0
         typedef MiscRegFile CP0;
 

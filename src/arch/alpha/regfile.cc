@@ -53,22 +53,6 @@ const int reg_redir[NumIntRegs] = {
 #endif
 
 void
-RegFile::serialize(EventManager *em, ostream &os)
-{
-#if FULL_SYSTEM
-    SERIALIZE_SCALAR(intrflag);
-#endif
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-#if FULL_SYSTEM
-    UNSERIALIZE_SCALAR(intrflag);
-#endif
-}
-
-void
 copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     // First loop through the integer registers.

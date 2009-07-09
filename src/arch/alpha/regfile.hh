@@ -46,22 +46,6 @@ namespace AlphaISA {
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
 
-class RegFile {
-  public:
-#if FULL_SYSTEM
-    int intrflag;                   // interrupt flag
-#endif // FULL_SYSTEM
-
-    void
-    clear()
-    {
-    }
-
-    void serialize(EventManager *em, std::ostream &os);
-    void unserialize(EventManager *em, Checkpoint *cp,
-        const std::string &section);
-};
-
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 
 void copyMiscRegs(ThreadContext *src, ThreadContext *dest);

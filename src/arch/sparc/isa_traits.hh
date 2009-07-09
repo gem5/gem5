@@ -44,8 +44,6 @@ namespace BigEndianGuest {}
 
 namespace SparcISA
 {
-    class RegFile;
-
     const int MachineBytes = 8;
 
     //This makes sure the big endian versions of certain functions are used.

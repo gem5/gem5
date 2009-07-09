@@ -93,20 +93,6 @@ namespace ArmISA
         r14_abt
     };
 
-    class RegFile
-    {
-      public:
-
-        void clear()
-        {}
-
-        void serialize(EventManager *em, std::ostream &os)
-        {}
-        void unserialize(EventManager *em, Checkpoint *cp,
-                         const std::string &section)
-        {}
-    };
-
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 
     void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
