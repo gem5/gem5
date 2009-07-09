@@ -32,10 +32,6 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/miscregfile.hh"
-#include "arch/alpha/types.hh"
-#include "arch/alpha/mt.hh"
-#include "sim/faults.hh"
 
 #include <string>
 
@@ -51,46 +47,6 @@ namespace AlphaISA {
 extern const int reg_redir[NumIntRegs];
 
 class RegFile {
-  protected:
-    Addr pc;   // program counter
-    Addr npc;  // next-cycle program counter
-    Addr nnpc; // next next-cycle program counter
-
-  public:
-    Addr
-    readPC()
-    {
-        return pc;
-    }
-
-    void
-    setPC(Addr val)
-    {
-        pc = val;
-    }
-
-    Addr
-    readNextPC()
-    {
-        return npc;
-    }
-
-    void
-    setNextPC(Addr val)
-    {
-        npc = val;
-    }
-
-    Addr
-    readNextNPC()
-    {
-        return npc + sizeof(MachInst);
-    }
-
-    void
-    setNextNPC(Addr val)
-    { }
-
   public:
 #if FULL_SYSTEM
     int intrflag;                   // interrupt flag

@@ -58,14 +58,12 @@
 #ifndef __ARCH_X86_REGFILE_HH__
 #define __ARCH_X86_REGFILE_HH__
 
+#include <iostream>
 #include <string>
 
 #include "arch/x86/intregs.hh"
 #include "arch/x86/miscregs.hh"
-#include "arch/x86/isa_traits.hh"
 #include "arch/x86/x86_traits.hh"
-#include "arch/x86/types.hh"
-#include "base/types.hh"
 
 class Checkpoint;
 class EventManager;
@@ -88,28 +86,12 @@ namespace X86ISA
 
     class RegFile
     {
-      protected:
-        Addr rip; //Program Counter
-        Addr nextRip; //Next Program Counter
-
       public:
-        Addr readPC();
-        void setPC(Addr val);
-
-        Addr readNextPC();
-        void setNextPC(Addr val);
-
-        Addr readNextNPC();
-        void setNextNPC(Addr val);
-
-      public:
-
         void clear()
         {}
 
         void serialize(EventManager *em, std::ostream &os)
         {}
-
         void unserialize(EventManager *em, Checkpoint *cp,
                 const std::string &section)
         {}

@@ -32,12 +32,11 @@
 #ifndef __ARCH_SPARC_REGFILE_HH__
 #define __ARCH_SPARC_REGFILE_HH__
 
+#include <iostream>
 #include <string>
 
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/sparc_traits.hh"
-#include "base/types.hh"
-#include "sim/serialize.hh"
 
 class Checkpoint;
 class EventManager;
@@ -50,31 +49,16 @@ namespace SparcISA
 
     class RegFile
     {
-      protected:
-        Addr pc;                // Program Counter
-        Addr npc;               // Next Program Counter
-        Addr nnpc;
-
-      public:
-        Addr readPC();
-        void setPC(Addr val);
-
-        Addr readNextPC();
-        void setNextPC(Addr val);
-
-        Addr readNextNPC();
-        void setNextNPC(Addr val);
-
       public:
 
         void clear()
         {}
 
-        void serialize(EventManager *em, std::ostream &os);
+        void serialize(EventManager *em, std::ostream &os)
+        {}
         void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section);
-
-      public:
+            const std::string &section)
+        {}
     };
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);

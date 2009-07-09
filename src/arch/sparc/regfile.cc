@@ -33,57 +33,7 @@
 #include "arch/sparc/miscregfile.hh"
 #include "cpu/thread_context.hh"
 
-class Checkpoint;
-
 using namespace SparcISA;
-using namespace std;
-
-//RegFile class methods
-Addr RegFile::readPC()
-{
-    return pc;
-}
-
-void RegFile::setPC(Addr val)
-{
-    pc = val;
-}
-
-Addr RegFile::readNextPC()
-{
-    return npc;
-}
-
-void RegFile::setNextPC(Addr val)
-{
-    npc = val;
-}
-
-Addr RegFile::readNextNPC()
-{
-    return nnpc;
-}
-
-void RegFile::setNextNPC(Addr val)
-{
-    nnpc = val;
-}
-
-void
-RegFile::serialize(EventManager *em, ostream &os)
-{
-    SERIALIZE_SCALAR(pc);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-    UNSERIALIZE_SCALAR(pc);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
-}
 
 void SparcISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {

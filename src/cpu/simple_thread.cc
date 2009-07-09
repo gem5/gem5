@@ -63,8 +63,8 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(_cpu, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
-      dtb(_dtb)
+    : ThreadState(_cpu, _thread_num),
+      cpu(_cpu), system(_sys), itb(_itb), dtb(_dtb)
 
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
@@ -194,6 +194,11 @@ SimpleThread::serialize(ostream &os)
     regs.serialize(cpu, os);
     SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
+    SERIALIZE_SCALAR(microPC);
+    SERIALIZE_SCALAR(nextMicroPC);
+    SERIALIZE_SCALAR(PC);
+    SERIALIZE_SCALAR(nextPC);
+    SERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -205,6 +210,11 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     regs.unserialize(cpu, cp, section);
     UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
+    UNSERIALIZE_SCALAR(microPC);
+    UNSERIALIZE_SCALAR(nextMicroPC);
+    UNSERIALIZE_SCALAR(PC);
+    UNSERIALIZE_SCALAR(nextPC);
+    UNSERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
 }
 

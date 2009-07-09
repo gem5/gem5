@@ -55,8 +55,6 @@ const int reg_redir[NumIntRegs] = {
 void
 RegFile::serialize(EventManager *em, ostream &os)
 {
-    SERIALIZE_SCALAR(pc);
-    SERIALIZE_SCALAR(npc);
 #if FULL_SYSTEM
     SERIALIZE_SCALAR(intrflag);
 #endif
@@ -65,8 +63,6 @@ RegFile::serialize(EventManager *em, ostream &os)
 void
 RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
-    UNSERIALIZE_SCALAR(pc);
-    UNSERIALIZE_SCALAR(npc);
 #if FULL_SYSTEM
     UNSERIALIZE_SCALAR(intrflag);
 #endif

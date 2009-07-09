@@ -107,6 +107,28 @@ class SimpleThread : public ThreadState
     TheISA::IntReg intRegs[TheISA::NumIntRegs];
     TheISA::ISA isa;    // one "instance" of the current ISA.
 
+    /** The current microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC microPC;
+
+    /** The next microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC nextMicroPC;
+
+    /** The current pc.
+     */
+    Addr PC;
+
+    /** The next pc.
+     */
+    Addr nextPC;
+
+    /** The next next pc.
+     */
+    Addr nextNPC;
+
   public:
     // pointer to CPU associated with this SimpleThread
     BaseCPU *cpu;
@@ -232,6 +254,9 @@ class SimpleThread : public ThreadState
     void clearArchRegs()
     {
         regs.clear();
+        microPC = 0;
+        nextMicroPC = 1;
+        PC = nextPC = nextNPC = 0;
         memset(intRegs, 0, sizeof(intRegs));
         memset(floatRegs.i, 0, sizeof(floatRegs.i));
     }
@@ -283,12 +308,12 @@ class SimpleThread : public ThreadState
 
     uint64_t readPC()
     {
-        return regs.readPC();
+        return PC;
     }
 
     void setPC(uint64_t val)
     {
-        regs.setPC(val);
+        PC = val;
     }
 
     uint64_t readMicroPC()
@@ -303,12 +328,12 @@ class SimpleThread : public ThreadState
 
     uint64_t readNextPC()
     {
-        return regs.readNextPC();
+        return nextPC;
     }
 
     void setNextPC(uint64_t val)
     {
-        regs.setNextPC(val);
+        nextPC = val;
     }
 
     uint64_t readNextMicroPC()
@@ -323,12 +348,18 @@ class SimpleThread : public ThreadState
 
     uint64_t readNextNPC()
     {
-        return regs.readNextNPC();
+#if ISA_HAS_DELAY_SLOT
+        return nextNPC;
+#else
+        return nextPC + sizeof(TheISA::MachInst);
+#endif
     }
 
     void setNextNPC(uint64_t val)
     {
-        regs.setNextNPC(val);
+#if ISA_HAS_DELAY_SLOT
+        nextNPC = val;
+#endif
     }
 
     MiscReg

@@ -55,18 +55,4 @@ MiscRegFile::copyMiscRegs(ThreadContext *tc)
     panic("Copy Misc. Regs Not Implemented Yet\n");
 }
 
-void
-RegFile::serialize(EventManager *em, ostream &os)
-{
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
-}
-
 } // namespace ArmISA

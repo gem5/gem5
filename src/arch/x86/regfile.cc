@@ -85,47 +85,10 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/floatregs.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/regfile.hh"
 #include "base/trace.hh"
-#include "sim/serialize.hh"
 #include "cpu/thread_context.hh"
-
-class Checkpoint;
-
-using namespace X86ISA;
-using namespace std;
-
-//RegFile class methods
-Addr RegFile::readPC()
-{
-    return rip;
-}
-
-void RegFile::setPC(Addr val)
-{
-    rip = val;
-}
-
-Addr RegFile::readNextPC()
-{
-    return nextRip;
-}
-
-void RegFile::setNextPC(Addr val)
-{
-    nextRip = val;
-}
-
-Addr RegFile::readNextNPC()
-{
-    //There's no way to know how big the -next- instruction will be.
-    return nextRip + 1;
-}
-
-void RegFile::setNextNPC(Addr val)
-{ }
 
 void
 X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)

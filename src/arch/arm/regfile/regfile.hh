@@ -99,46 +99,12 @@ namespace ArmISA
 
         void clear()
         {}
-      protected:
 
-        Addr pc;			// program counter
-        Addr npc;			// next-cycle program counter
-        Addr nnpc;			// next-next-cycle program counter
-
-      public:
-        Addr readPC()
-        {
-            return pc;
-        }
-
-        void setPC(Addr val)
-        {
-            pc = val;
-        }
-
-        Addr readNextPC()
-        {
-            return npc;
-        }
-
-        void setNextPC(Addr val)
-        {
-            npc = val;
-        }
-
-        Addr readNextNPC()
-        {
-            return npc + sizeof(MachInst);
-        }
-
-        void setNextNPC(Addr val)
-        {
-            //nnpc = val;
-        }
-
-        void serialize(EventManager *em, std::ostream &os);
+        void serialize(EventManager *em, std::ostream &os)
+        {}
         void unserialize(EventManager *em, Checkpoint *cp,
-                         const std::string &section);
+                         const std::string &section)
+        {}
     };
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);

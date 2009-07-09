@@ -32,11 +32,10 @@
 #ifndef __ARCH_MIPS_REGFILE_REGFILE_HH__
 #define __ARCH_MIPS_REGFILE_REGFILE_HH__
 
-#include "arch/mips/types.hh"
+#include <iostream>
+#include <string>
+
 #include "arch/mips/isa_traits.hh"
-//#include "arch/mips/mt.hh"
-//#include "cpu/base.hh"
-#include "sim/faults.hh"
 
 class BaseCPU;
 class Checkpoint;
@@ -95,33 +94,22 @@ namespace MipsISA
 
 
     class RegFile {
-      protected:
-        Addr pc;                        // program counter
-        Addr npc;                       // next-cycle program counter
-        Addr nnpc;                      // next-next-cycle program counter
-                                        // used to implement branch delay slot
-                                        // not real register
-
       public:
-        void clear();
+        void clear()
+        {}
         void reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *_cpu);
+                   unsigned num_vpes, BaseCPU *_cpu)
+        {}
 
-        void setShadowSet(int css);
+        void setShadowSet(int css)
+        {}
 
       public:
-        Addr readPC();
-        void setPC(Addr val);
-
-        Addr readNextPC();
-        void setNextPC(Addr val);
-
-        Addr readNextNPC();
-        void setNextNPC(Addr val);
-
-        void serialize(EventManager *em, std::ostream &os);
+        void serialize(EventManager *em, std::ostream &os)
+        {}
         void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section);
+            const std::string &section)
+        {}
 
     };
 
