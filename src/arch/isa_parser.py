@@ -344,7 +344,7 @@ def p_def_operands(t):
         error(t.lexer.lineno,
               'error: operand types must be defined before operands')
     try:
-        userDict = eval('{' + t[3] + '}')
+        userDict = eval('{' + t[3] + '}', exportContext)
     except Exception, exc:
         error(t.lexer.lineno,
               'error: %s in def operands block "%s".' % (exc, t[3]))
@@ -1173,6 +1173,41 @@ def buildOperandTypeMap(userDict, lineno):
 # (e.g., "32-bit integer register").
 #
 class Operand(object):
+    def buildReadCode(self, func = None, width = None):
+        code = self.read_code % {"name": self.base_name,
+                                 "func": func,
+                                 "width": width,
+                                 "op_idx": self.src_reg_idx,
+                                 "reg_idx": self.reg_spec,
+                                 "size": self.size,
+                                 "ctype": self.ctype}
+        if self.size != self.dflt_size:
+            return '%s = bits(%s, %d, 0);\n' % \
+                   (self.base_name, code, self.size-1)
+        else:
+            return '%s = %s;\n' % \
+                   (self.base_name, code)
+
+    def buildWriteCode(self, func = None, width = None):
+        if (self.size != self.dflt_size and self.is_signed):
+            final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
+        else:
+            final_val = self.base_name
+        code = self.write_code % {"name": self.base_name,
+                                  "func": func,
+                                  "width": width,
+                                  "op_idx": self.dest_reg_idx,
+                                  "reg_idx": self.reg_spec,
+                                  "size": self.size,
+                                  "ctype": self.ctype,
+                                  "final_val": final_val}
+        return '''
+        {
+            %s final_val = %s;
+            %s;
+            if (traceData) { traceData->setData(final_val); }
+        }''' % (self.dflt_ctype, final_val, code)
+
     def __init__(self, full_name, ext, is_src, is_dest):
         self.full_name = full_name
         self.ext = ext
@@ -1272,6 +1307,8 @@ class IntRegOperand(Operand):
     def makeRead(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read integer register as FP')
+        if self.read_code != None:
+            return self.buildReadCode('readIntRegOperand')
         if (self.size == self.dflt_size):
             return '%s = xc->readIntRegOperand(this, %d);\n' % \
                    (self.base_name, self.src_reg_idx)
@@ -1288,6 +1325,8 @@ class IntRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write integer register as FP')
+        if self.write_code != None:
+            return self.buildWriteCode('setIntRegOperand')
         if (self.size != self.dflt_size and self.is_signed):
             final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
         else:
@@ -1340,6 +1379,8 @@ class FloatRegOperand(Operand):
         else:
             base = 'xc->%s(this, %d)' % \
                    (func, self.src_reg_idx)
+        if self.read_code != None:
+            return self.buildReadCode(func, width)
         if bit_select:
             return '%s = bits(%s, %d, 0);\n' % \
                    (self.base_name, base, self.size-1)
@@ -1368,6 +1409,8 @@ class FloatRegOperand(Operand):
             final_ctype = 'uint%d_t' % self.dflt_size
             if (self.size != self.dflt_size and self.is_signed):
                 final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
+        if self.write_code != None:
+            return self.buildWriteCode(func, width)
         if width:
             widthSpecifier = ', %d' % width
         wb = '''
@@ -1400,6 +1443,8 @@ class ControlRegOperand(Operand):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read control register as FP')
+        if self.read_code != None:
+            return self.buildReadCode('readMiscRegOperand')
         base = 'xc->readMiscRegOperand(this, %s)' % self.src_reg_idx
         if self.size == self.dflt_size:
             return '%s = %s;\n' % (self.base_name, base)
@@ -1410,6 +1455,8 @@ class ControlRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
+        if self.write_code != None:
+            return self.buildWriteCode('setMiscRegOperand')
         wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
              (self.dest_reg_idx, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
@@ -1437,6 +1484,8 @@ class IControlRegOperand(Operand):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read control register as FP')
+        if self.read_code != None:
+            return self.buildReadCode('readMiscReg')
         base = 'xc->readMiscReg(%s)' % self.reg_spec
         if self.size == self.dflt_size:
             return '%s = %s;\n' % (self.base_name, base)
@@ -1447,6 +1496,8 @@ class IControlRegOperand(Operand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
+        if self.write_code != None:
+            return self.buildWriteCode('setMiscReg')
         wb = 'xc->setMiscReg(%s, %s);\n' % \
              (self.reg_spec, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
@@ -1458,6 +1509,8 @@ class ControlBitfieldOperand(ControlRegOperand):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to read control register as FP')
+        if self.read_code != None:
+            return self.buildReadCode('readMiscReg')
         base = 'xc->readMiscReg(%s)' % self.reg_spec
         name = self.base_name
         return '%s = bits(%s, %s_HI, %s_LO);' % \
@@ -1466,6 +1519,8 @@ class ControlBitfieldOperand(ControlRegOperand):
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
             error(0, 'Attempt to write control register as FP')
+        if self.write_code != None:
+            return self.buildWriteCode('setMiscReg')
         base = 'xc->readMiscReg(%s)' % self.reg_spec
         name = self.base_name
         wb_val = 'insertBits(%s, %s_HI, %s_LO, %s)' % \
@@ -1493,9 +1548,13 @@ class MemOperand(Operand):
         return c
 
     def makeRead(self):
+        if self.read_code != None:
+            return self.buildReadCode()
         return ''
 
     def makeWrite(self):
+        if self.write_code != None:
+            return self.buildWriteCode()
         return ''
 
     # Return the memory access size *in bits*, suitable for
@@ -1508,9 +1567,13 @@ class UPCOperand(Operand):
         return ''
 
     def makeRead(self):
+        if self.read_code != None:
+            return self.buildReadCode('readMicroPC')
         return '%s = xc->readMicroPC();\n' % self.base_name
 
     def makeWrite(self):
+        if self.write_code != None:
+            return self.buildWriteCode('setMicroPC')
         return 'xc->setMicroPC(%s);\n' % self.base_name
 
 class NUPCOperand(Operand):
@@ -1518,9 +1581,13 @@ class NUPCOperand(Operand):
         return ''
 
     def makeRead(self):
+        if self.read_code != None:
+            return self.buildReadCode('readNextMicroPC')
         return '%s = xc->readNextMicroPC();\n' % self.base_name
 
     def makeWrite(self):
+        if self.write_code != None:
+            return self.buildWriteCode('setNextMicroPC')
         return 'xc->setNextMicroPC(%s);\n' % self.base_name
 
 class NPCOperand(Operand):
@@ -1528,9 +1595,13 @@ class NPCOperand(Operand):
         return ''
 
     def makeRead(self):
+        if self.read_code != None:
+            return self.buildReadCode('readNextPC')
         return '%s = xc->readNextPC();\n' % self.base_name
 
     def makeWrite(self):
+        if self.write_code != None:
+            return self.buildWriteCode('setNextPC')
         return 'xc->setNextPC(%s);\n' % self.base_name
 
 class NNPCOperand(Operand):
@@ -1538,16 +1609,33 @@ class NNPCOperand(Operand):
         return ''
 
     def makeRead(self):
+        if self.read_code != None:
+            return self.buildReadCode('readNextNPC')
         return '%s = xc->readNextNPC();\n' % self.base_name
 
     def makeWrite(self):
+        if self.write_code != None:
+            return self.buildWriteCode('setNextNPC')
         return 'xc->setNextNPC(%s);\n' % self.base_name
 
 def buildOperandNameMap(userDict, lineno):
     global operandNameMap
     operandNameMap = {}
     for (op_name, val) in userDict.iteritems():
-        (base_cls_name, dflt_ext, reg_spec, flags, sort_pri) = val
+        (base_cls_name, dflt_ext, reg_spec, flags, sort_pri) = val[:5]
+        if len(val) > 5:
+            read_code = val[5]
+        else:
+            read_code = None
+        if len(val) > 6:
+            write_code = val[6]
+        else:
+            write_code = None
+        if len(val) > 7:
+            error(lineno,
+                  'error: too many attributes for operand "%s"' %
+                  base_cls_name)
+            
         (dflt_size, dflt_ctype, dflt_is_signed) = operandTypeMap[dflt_ext]
         # Canonical flag structure is a triple of lists, where each list
         # indicates the set of flags implied by this operand always, when
@@ -1572,7 +1660,8 @@ def buildOperandNameMap(userDict, lineno):
         # Accumulate attributes of new operand class in tmp_dict
         tmp_dict = {}
         for attr in ('dflt_ext', 'reg_spec', 'flags', 'sort_pri',
-                     'dflt_size', 'dflt_ctype', 'dflt_is_signed'):
+                     'dflt_size', 'dflt_ctype', 'dflt_is_signed',
+                     'read_code', 'write_code'):
             tmp_dict[attr] = eval(attr)
         tmp_dict['base_name'] = op_name
         # New class name will be e.g. "IntReg_Ra"
