@@ -32,6 +32,7 @@
 #define __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
 
 #include "arch/arm/isa_traits.hh"
+#include "arch/arm/miscregs.hh"
 #include "arch/arm/types.hh"
 #include "sim/faults.hh"
 
@@ -39,6 +40,8 @@ class ThreadContext;
 
 namespace ArmISA
 {
+    const int NumMiscRegs = NUM_MISCREGS;
+
     static inline std::string getMiscRegName(RegIndex)
     {
         return "";
@@ -59,22 +62,26 @@ namespace ArmISA
 
         MiscReg readRegNoEffect(int misc_reg)
         {
+            assert(misc_reg < NumMiscRegs);
             return miscRegFile[misc_reg];
         }
 
         MiscReg readReg(int misc_reg, ThreadContext *tc)
         {
+            assert(misc_reg < NumMiscRegs);
             return miscRegFile[misc_reg];
         }
 
         void setRegNoEffect(int misc_reg, const MiscReg &val)
         {
+            assert(misc_reg < NumMiscRegs);
             miscRegFile[misc_reg] = val;
         }
 
         void setReg(int misc_reg, const MiscReg &val,
                                ThreadContext *tc)
         {
+            assert(misc_reg < NumMiscRegs);
             miscRegFile[misc_reg] = val;
         }
 

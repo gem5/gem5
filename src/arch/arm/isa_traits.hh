@@ -33,6 +33,7 @@
 #ifndef __ARCH_ARM_ISA_TRAITS_HH__
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
+#include "arch/arm/max_inst_regs.hh"
 #include "arch/arm/types.hh"
 #include "base/types.hh"
 
@@ -45,6 +46,8 @@ class StaticInstPtr;
 namespace ArmISA
 {
     using namespace LittleEndianGuest;
+    using ArmISAInst::MaxInstSrcRegs;
+    using ArmISAInst::MaxInstDestRegs;
 
     StaticInstPtr decodeInst(ExtMachInst);
 
@@ -100,20 +103,10 @@ namespace ArmISA
     const int NumIntSpecialRegs = 19;
     const int NumFloatArchRegs = 16;
     const int NumFloatSpecialRegs = 5;
-    const int NumControlRegs = 7;
     const int NumInternalProcRegs = 0;
 
     const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
     const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
-    const int NumMiscRegs = NumControlRegs;
-
-    const int TotalNumRegs = NumIntRegs + NumFloatRegs + NumMiscRegs;
-
-    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
-
-    // Static instruction parameters
-    const int MaxInstSrcRegs = 5;
-    const int MaxInstDestRegs = 3;
 
     // semantically meaningful register indices
     const int ReturnValueReg = 0;

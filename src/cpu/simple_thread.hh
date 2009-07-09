@@ -242,36 +242,42 @@ class SimpleThread : public ThreadState
     uint64_t readIntReg(int reg_idx)
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
+        assert(flatIndex < TheISA::NumIntRegs);
         return intRegs[flatIndex];
     }
 
     FloatReg readFloatReg(int reg_idx)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
         return floatRegs.f[flatIndex];
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
         return floatRegs.i[flatIndex];
     }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
+        assert(flatIndex < TheISA::NumIntRegs);
         intRegs[flatIndex] = val;
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
         floatRegs.f[flatIndex] = val;
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
         floatRegs.i[flatIndex] = val;
     }
 
