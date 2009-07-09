@@ -29,6 +29,7 @@
  */
 
 #include "arch/arm/regfile/regfile.hh"
+#include "base/misc.hh"
 #include "sim/serialize.hh"
 
 using namespace std;
