@@ -158,7 +158,7 @@ processCSDescriptor:
 
 doPopStackStuffAndCheckRIP:
     # Check if the RIP is canonical.
-    sra t7, t1, 47, flags=(EZF,), dataSize=ssz
+    srai t7, t1, 47, flags=(EZF,), dataSize=ssz
     # if t7 isn't 0 or -1, it wasn't canonical.
     br label("doPopStackStuff"), flags=(CEZF,)
     addi t0, t7, 1, flags=(EZF,), dataSize=ssz
