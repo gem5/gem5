@@ -56,8 +56,6 @@ class PredOp : public ArmStaticInst
            condCode((ConditionCode)(unsigned)machInst.condCode)
     {
     }
-
-    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -65,23 +63,25 @@ class PredOp : public ArmStaticInst
  */
 class PredImmOp : public PredOp
 {
-        protected:
+    protected:
 
-        uint32_t imm;
-        uint32_t rotate;
-        uint32_t rotated_imm;
-        uint32_t rotated_carry;
+    uint32_t imm;
+    uint32_t rotate;
+    uint32_t rotated_imm;
+    uint32_t rotated_carry;
 
-        /// Constructor
-        PredImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                  PredOp(mnem, _machInst, __opClass),
-                  imm(machInst.imm), rotate(machInst.rotate << 1),
-                  rotated_imm(0), rotated_carry(0)
-        {
-            rotated_imm = rotate_imm(imm, rotate);
-            if (rotate != 0)
-                rotated_carry = (rotated_imm >> 31) & 1;
-        }
+    /// Constructor
+    PredImmOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+              PredOp(mnem, _machInst, __opClass),
+              imm(machInst.imm), rotate(machInst.rotate << 1),
+              rotated_imm(0), rotated_carry(0)
+    {
+        rotated_imm = rotate_imm(imm, rotate);
+        if (rotate != 0)
+            rotated_carry = (rotated_imm >> 31) & 1;
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -89,17 +89,19 @@ class PredImmOp : public PredOp
  */
 class PredIntOp : public PredOp
 {
-        protected:
+    protected:
 
-        uint32_t shift_size;
-        uint32_t shift;
+    uint32_t shift_size;
+    uint32_t shift;
 
-        /// Constructor
-        PredIntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                  PredOp(mnem, _machInst, __opClass),
-                  shift_size(machInst.shiftSize), shift(machInst.shift)
-        {
-        }
+    /// Constructor
+    PredIntOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+              PredOp(mnem, _machInst, __opClass),
+              shift_size(machInst.shiftSize), shift(machInst.shift)
+    {
+    }
+
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -107,36 +109,36 @@ class PredIntOp : public PredOp
  */
 class PredMacroOp : public PredOp
 {
-        protected:
+    protected:
 
-        uint32_t numMicroops;
-        StaticInstPtr * microOps;
+    uint32_t numMicroops;
+    StaticInstPtr * microOps;
 
-        /// Constructor
-        PredMacroOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    PredOp(mnem, _machInst, __opClass),
-                    numMicroops(0)
-        {
-            // We rely on the subclasses of this object to handle the
-            // initialization of the micro-operations, since they are
-            // all of variable length
-            flags[IsMacroop] = true;
-        }
+    /// Constructor
+    PredMacroOp(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                PredOp(mnem, _machInst, __opClass),
+                numMicroops(0)
+    {
+        // We rely on the subclasses of this object to handle the
+        // initialization of the micro-operations, since they are
+        // all of variable length
+        flags[IsMacroop] = true;
+    }
 
-        ~PredMacroOp()
-        {
-            if (numMicroops)
-                delete [] microOps;
-        }
+    ~PredMacroOp()
+    {
+        if (numMicroops)
+            delete [] microOps;
+    }
 
-        StaticInstPtr
-        fetchMicroop(MicroPC microPC)
-        {
-            assert(microPC < numMicroops);
-            return microOps[microPC];
-        }
+    StaticInstPtr
+    fetchMicroop(MicroPC microPC)
+    {
+        assert(microPC < numMicroops);
+        return microOps[microPC];
+    }
 
-        std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
 
 /**
@@ -144,12 +146,12 @@ class PredMacroOp : public PredOp
  */
 class PredMicroop : public PredOp
 {
-        /// Constructor
-        PredMicroop(const char *mnem, MachInst _machInst, OpClass __opClass) :
-                    PredOp(mnem, _machInst, __opClass)
-        {
-            flags[IsMicroop] = true;
-        }
+    /// Constructor
+    PredMicroop(const char *mnem, MachInst _machInst, OpClass __opClass) :
+                PredOp(mnem, _machInst, __opClass)
+    {
+        flags[IsMicroop] = true;
+    }
 };
 }
 

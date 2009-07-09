@@ -71,7 +71,7 @@ class ArmStaticInst : public StaticInst
     void printShiftOperand(std::ostream &os) const;
 
 
-    void printDataInst(std::ostream &os) const;
+    void printDataInst(std::ostream &os, bool withImm) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 };
