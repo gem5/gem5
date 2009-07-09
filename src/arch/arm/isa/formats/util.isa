@@ -106,18 +106,16 @@ output decoder {{
     emit_ldfstf_uops(StaticInstPtr* microOps, int index, ExtMachInst machInst,
                      bool loadop, bool up, int32_t disp)
     {
-        MachInst newMachInst = machInst & 0xf000f000;
-
         if (loadop)
         {
             microOps[index++] = new MicroLdrUop(machInst, 19, RN, disp);
             microOps[index++] =
                 new MicroLdrUop(machInst, 18, RN, disp + (up ? 4 : -4));
-            microOps[index++] = new Mvtd_uop(newMachInst);
+            microOps[index++] = new MicroMvtdUop(machInst);
         }
         else
         {
-            microOps[index++] = new Mvfd_uop(newMachInst);
+            microOps[index++] = new MicroMvfdUop(machInst);
             microOps[index++] = new MicroStrUop(machInst, 19, RN, disp);
             microOps[index++] =
                 new MicroStrUop(machInst, 18, RN, disp + (up ? 4 : -4));

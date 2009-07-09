@@ -37,19 +37,8 @@
 // in the ARM ISA specification document starting with Table B.1 or 3-1
 //
 //
-decode COND_CODE default Unknown::unknown() {
-    0xf: decode COND_CODE {
-        0x1: decode OPCODE {
-            // Just a simple trick to allow us to specify our new uops here
-            0x0: PredIntOp::mvtd_uop({{ Fd.ud = ((uint64_t) Rhi << 32)|Rlo; }},
-                                        'IsMicroop');
-            0x1: PredIntOp::mvfd_uop({{ Rhi = (Fd.ud >> 32) & 0xffffffff;
-                                        Rlo = Fd.ud & 0xffffffff; }},
-                                        'IsMicroop');
-        }
-        default: Unknown::unknown(); // TODO: Ignore other NV space for now
-    }
-default: decode ENCODING {
+
+decode ENCODING default Unknown::unknown() {
 format DataOp {
     0x0: decode SEVEN_AND_FOUR {
         1: decode MISC_OPCODE {
@@ -438,7 +427,6 @@ format DataOp {
             }});
         }
     }
-}
 }
 }
 

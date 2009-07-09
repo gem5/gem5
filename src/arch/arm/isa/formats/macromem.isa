@@ -130,6 +130,33 @@ let {{
 
 ////////////////////////////////////////////////////////////////////
 //
+// Moving to/from double floating point registers
+//
+
+let {{
+    microMvtdUopIop = InstObjParams('mvtd_uop', 'MicroMvtdUop',
+                                    'PredOp',
+                                    {'code': 'Fd.ud = (Rhi.ud << 32) | Rlo;',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    microMvfdUopIop = InstObjParams('mvfd_uop', 'MicroMvfdUop',
+                                    'PredOp',
+                                    {'code': '''Rhi = bits(Fd.ud, 63, 32);
+                                                Rlo = bits(Fd.ud, 31, 0);''',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    header_output = BasicDeclare.subst(microMvtdUopIop) + \
+                    BasicDeclare.subst(microMvfdUopIop)
+    decoder_output = BasicConstructor.subst(microMvtdUopIop) + \
+                     BasicConstructor.subst(microMvfdUopIop)
+    exec_output = PredOpExecute.subst(microMvtdUopIop) + \
+                  PredOpExecute.subst(microMvfdUopIop)
+}};
+
+////////////////////////////////////////////////////////////////////
+//
 // Macro Memory-format instructions
 //
 
