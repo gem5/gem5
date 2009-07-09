@@ -454,6 +454,62 @@ def template MiscCompleteAcc {{
     }
 }};
 
+let {{
+    def buildPUBWLCase(p, u, b, w, l):
+        return (p << 4) + (u << 3) + (b << 2) + (w << 1) + (l << 0)
+
+    def buildMode3Inst(p, u, i, w, type, code, mnem):
+        op = ("-", "+")[u]
+        offset = ("%s Rm", "%s hilo")[i] % op
+        ea_code = "EA = Rn %s;" % ("", offset)[p]
+        if p == 0 or w == 1:
+            code += "Rn = Rn %s;" % offset
+        suffix = "_P%dU%dI%dW%d" % (p, u, i, w)
+        return LoadStoreBase(mnem, mnem.capitalize() + suffix,
+                ea_code, code, mem_flags = [], inst_flags = [],
+                exec_template_base = type.capitalize())
+}};
+
+def format AddrMode3(l0Type, l0Code, l1Type, l1Code) {{
+    l0Code = ArmGenericCodeSubs(l0Code);
+    l1Code = ArmGenericCodeSubs(l1Code);
+
+    header_output = decoder_output = exec_output = ""
+    decode_block = "switch(PUBWL) {\n"
+    (l0Mnem, l1Mnem) = name.split("_");
+
+    # Loop over all the values of p, u, i, w and l and build instructions and
+    # a decode block for them.
+    for (l, type, code, mnem) in ((0, l0Type, l0Code, l0Mnem),
+                                  (1, l1Type, l1Code, l1Mnem)):
+        for p in (0, 1):
+            wset = (0, 1)
+            if (p == 0):
+                wset = (0,)
+            for u in (0, 1):
+                for i in (0, 1):
+                    for w in wset:
+                        (new_header_output,
+                         new_decoder_output,
+                         new_decode_block,
+                         new_exec_output) = buildMode3Inst(p, u, i, w,
+                                                           type, code, mnem)
+                        header_output += new_header_output
+                        decoder_output += new_decoder_output
+                        exec_output += new_exec_output
+                        decode_block += '''
+                            case %#x:
+                              {%s}
+                              break;
+                        ''' % (buildPUBWLCase(p,u,i,w,l), new_decode_block)
+
+    decode_block += '''
+        default:
+          return new Unknown(machInst);
+        break;
+    }'''
+}};
+
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},
                      mem_flags = [], inst_flags = []) {{
     ea_code = ArmGenericCodeSubs(ea_code)

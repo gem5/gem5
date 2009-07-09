@@ -73,7 +73,6 @@ class Memory : public PredOp
         {
             disp = -disp;
             disp8 = -disp8;
-            hilo = -hilo;
         }
     }
 
