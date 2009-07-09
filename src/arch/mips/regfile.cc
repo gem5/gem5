@@ -37,7 +37,6 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/mt.hh"
-#include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
 #include "sim/faults.hh"
 

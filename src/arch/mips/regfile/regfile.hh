@@ -35,7 +35,6 @@
 #include "arch/mips/types.hh"
 #include "arch/mips/isa_traits.hh"
 //#include "arch/mips/mt.hh"
-#include "arch/mips/regfile/int_regfile.hh"
 //#include "cpu/base.hh"
 #include "sim/faults.hh"
 
@@ -70,6 +69,30 @@ namespace MipsISA
         Enable_Field = 6,
         Cause_Field = 11
     };
+
+    enum MiscIntRegNums {
+       LO = NumIntArchRegs,
+       HI,
+       DSPACX0,
+       DSPLo1,
+       DSPHi1,
+       DSPACX1,
+       DSPLo2,
+       DSPHi2,
+       DSPACX2,
+       DSPLo3,
+       DSPHi3,
+       DSPACX3,
+       DSPControl,
+       DSPLo0 = LO,
+       DSPHi0 = HI
+    };
+
+    //@TODO: Implementing ShadowSets needs to
+    //edit this value such that:
+    //TotalArchRegs = NumIntArchRegs * ShadowSets
+    const int TotalArchRegs = NumIntArchRegs;
+
 
     class RegFile {
       protected:
