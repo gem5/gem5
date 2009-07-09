@@ -111,10 +111,6 @@ makeRegisterCopy(int dest, int src)
     return 0;
 }
 
-// Machine operations
-void saveMachineReg(AnyReg &savereg, const RegFile &reg_file, int regnum);
-void restoreMachineReg(RegFile &regs, const AnyReg &reg, int regnum);
-
 /**
  * Function to insure ISA semantics about 0 registers.
  * @param tc The thread context.
