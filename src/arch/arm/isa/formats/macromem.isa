@@ -52,9 +52,7 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
 {
     %(constructor)s;
     uint32_t regs_to_handle = reglist;
-    uint32_t j = 0,
-             start_addr = 0,
-             end_addr = 0;
+    uint32_t start_addr = 0;
 
     switch (puswl)
     {
@@ -63,28 +61,24 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         case 0x02: //    W  stmda_w
         case 0x03: //    WL ldmda_wl
             start_addr = (ones << 2) - 4;
-            end_addr = 0;
             break;
         case 0x08: //  U    stmia_u
         case 0x09: //  U  L ldmia_ul
         case 0x0a: //  U W  stmia
         case 0x0b: //  U WL ldmia
             start_addr = 0;
-            end_addr = (ones << 2) - 4;
             break;
         case 0x10: // P     stmdb
         case 0x11: // P   L ldmdb
         case 0x12: // P  W  stmdb
         case 0x13: // P  WL ldmdb
             start_addr = (ones << 2); // U-bit is already 0 for subtract
-            end_addr = 4; // negative 4
             break;
         case 0x18: // PU    stmib
         case 0x19: // PU  L ldmib
         case 0x1a: // PU W  stmib
         case 0x1b: // PU WL ldmib
             start_addr = 4;
-            end_addr = (ones << 2) + 4;
             break;
         default:
             panic("Unhandled Load/Store Multiple Instruction, "
@@ -92,12 +86,11 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             break;
     }
 
-    //TODO - Add addi_uop/subi_uop here to create starting addresses
-    //Just using addi with 0 offset makes a "copy" of Rn for our use
     uint32_t newMachInst = 0;
     newMachInst = machInst & 0xffff0000;
     microOps[0] = new Addi_uop(newMachInst);
 
+    unsigned j = 0;
     for (int i = 1; i < ones+1; i++)
     {
         // Get next available bit for transfer
@@ -112,15 +105,6 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         else
             start_addr -= 4;
     }
-
-    /* TODO: Take a look at how these 2 values should meet together
-    if (start_addr != (end_addr - 4))
-    {
-        fprintf(stderr, "start_addr: %d\n", start_addr);
-        fprintf(stderr, "end_addr:   %d\n", end_addr);
-        panic("start_addr does not meet end_addr");
-    }
-    */
 
     if (writeback)
     {
