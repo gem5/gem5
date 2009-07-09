@@ -101,67 +101,27 @@ output decoder {{
         return str;
     }
 
-    // Generate the bit pattern for an Ldr_uop or Str_uop;
-    StaticInstPtr
-    gen_ldrstr_uop(uint32_t baseinst, int loadop, uint32_t rd, int32_t disp)
-    {
-        StaticInstPtr newInst;
-        uint32_t newMachInst = baseinst & 0xffff0000;
-        newMachInst |= (rd << 12);
-        newMachInst |= disp;
-        if (loadop)
-            newInst = new Ldr_uop(newMachInst);
-        else
-            newInst = new Str_uop(newMachInst);
-        return newInst;
-    }
-
     // Emits uops for a double fp move
-    int
-    emit_ldfstf_uops(StaticInstPtr* microOps, int index, uint32_t baseinst, int loadop, int up, int32_t disp)
+    void
+    emit_ldfstf_uops(StaticInstPtr* microOps, int index, ExtMachInst machInst,
+                     bool loadop, bool up, int32_t disp)
     {
-        StaticInstPtr newInst;
-        uint32_t newMachInst;
+        MachInst newMachInst = machInst & 0xf000f000;
 
         if (loadop)
         {
-            newMachInst = baseinst & 0xfffff000;
-            newMachInst |= (disp & 0x0fff);
-            newInst = new Ldlo_uop(newMachInst);
-            microOps[index++] = newInst;
-
-            newMachInst = baseinst & 0xfffff000;
-            if (up)
-                newMachInst |= ((disp + 4) & 0x0fff);
-            else
-                newMachInst |= ((disp - 4) & 0x0fff);
-            newInst = new Ldhi_uop(newMachInst);
-            microOps[index++] = newInst;
-
-            newMachInst = baseinst & 0xf000f000;
-            newInst = new Mvtd_uop(newMachInst);
-            microOps[index++] = newInst;
+            microOps[index++] = new MicroLdrUop(machInst, 19, RN, disp);
+            microOps[index++] =
+                new MicroLdrUop(machInst, 18, RN, disp + (up ? 4 : -4));
+            microOps[index++] = new Mvtd_uop(newMachInst);
         }
         else
         {
-            newMachInst = baseinst & 0xf000f000;
-            newInst = new Mvfd_uop(newMachInst);
-            microOps[index++] = newInst;
-
-            newMachInst = baseinst & 0xfffff000;
-            newMachInst |= (disp & 0x0fff);
-            newInst = new Stlo_uop(newMachInst);
-            microOps[index++] = newInst;
-
-            newMachInst = baseinst & 0xfffff000;
-            if (up)
-                newMachInst |= ((disp + 4) & 0x0fff);
-            else
-                newMachInst |= ((disp - 4) & 0x0fff);
-            newInst = new Sthi_uop(newMachInst);
-            microOps[index++] = newInst;
+            microOps[index++] = new Mvfd_uop(newMachInst);
+            microOps[index++] = new MicroStrUop(machInst, 19, RN, disp);
+            microOps[index++] =
+                new MicroStrUop(machInst, 18, RN, disp + (up ? 4 : -4));
         }
-        return 3;
     }
 
 }};

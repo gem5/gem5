@@ -64,6 +64,22 @@ class MicroIntOp : public PredOp
 };
 
 /**
+ * Memory microops which use IntReg + Imm addressing
+ */
+class MicroMemOp : public MicroIntOp
+{
+  protected:
+    unsigned memAccessFlags;
+
+    MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+            : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
+              memAccessFlags(0)
+    {
+    }
+};
+
+/**
  * Arm Macro Memory operations like LDM/STM
  */
 class ArmMacroMemoryOp : public PredMacroOp

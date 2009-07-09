@@ -29,6 +29,67 @@
 // Authors: Stephen Hines
 //          Gabe Black
 
+////////////////////////////////////////////////////////////////////
+//
+// Common microop templates
+//
+
+def template MicroConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          RegIndex _ura,
+                                          RegIndex _urb,
+                                          uint8_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _ura, _urb, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Load/store microops
+//
+
+def template MicroMemDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb,
+                       uint8_t _imm);
+        %(BasicExecDeclare)s
+        %(InitiateAccDeclare)s
+        %(CompleteAccDeclare)s
+    };
+}};
+
+let {{
+    microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
+                                   'MicroMemOp',
+                                   {'memacc_code': 'Ra = Mem;',
+                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
+    microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
+                                   'MicroMemOp',
+                                   {'memacc_code': 'Mem = Ra;',
+                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
+    header_output = MicroMemDeclare.subst(microLdrUopIop) + \
+                    MicroMemDeclare.subst(microStrUopIop)
+    decoder_output = MicroConstructor.subst(microLdrUopIop) + \
+                     MicroConstructor.subst(microStrUopIop)
+    exec_output = LoadExecute.subst(microLdrUopIop) + \
+                  StoreExecute.subst(microStrUopIop) + \
+                  LoadInitiateAcc.subst(microLdrUopIop) + \
+                  StoreInitiateAcc.subst(microStrUopIop) + \
+                  LoadCompleteAcc.subst(microLdrUopIop) + \
+                  StoreCompleteAcc.subst(microStrUopIop)
+}};
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -46,18 +107,6 @@ def template MicroIntDeclare {{
     };
 }};
 
-def template MicroIntConstructor {{
-    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
-                                          RegIndex _ura,
-                                          RegIndex _urb,
-                                          uint8_t _imm)
-        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                         _ura, _urb, _imm)
-    {
-        %(constructor)s;
-    }
-}};
-
 let {{
     microAddiUopIop = InstObjParams('addi_uop', 'MicroAddiUop',
                                     'MicroIntOp',
@@ -73,8 +122,8 @@ let {{
 
     header_output = MicroIntDeclare.subst(microAddiUopIop) + \
                     MicroIntDeclare.subst(microSubiUopIop)
-    decoder_output = MicroIntConstructor.subst(microAddiUopIop) + \
-                     MicroIntConstructor.subst(microSubiUopIop)
+    decoder_output = MicroConstructor.subst(microAddiUopIop) + \
+                     MicroConstructor.subst(microSubiUopIop)
     exec_output = PredOpExecute.subst(microAddiUopIop) + \
                   PredOpExecute.subst(microSubiUopIop)
 }};
@@ -148,7 +197,10 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             j++;
         regs_to_handle &= ~(1<<j);
 
-        microOps[i] = gen_ldrstr_uop(machInst, loadop, j, start_addr);
+        if (loadop)
+            microOps[i] = new MicroLdrUop(machInst, j, 17, start_addr);
+        else
+            microOps[i] = new MicroStrUop(machInst, j, 17, start_addr);
 
         if (up)
             start_addr += 4;
