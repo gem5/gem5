@@ -38,24 +38,8 @@ namespace AlphaISA {
 
 typedef uint32_t MachInst;
 typedef uint64_t ExtMachInst;
-typedef uint8_t  RegIndex;
 
-typedef uint64_t IntReg;
 typedef uint64_t LargestRead;
-
-// floating point register file entry type
-typedef double FloatReg;
-typedef uint64_t FloatRegBits;
-
-// control register file contents
-typedef uint64_t MiscReg;
-
-union AnyReg
-{
-    IntReg  intreg;
-    FloatReg   fpreg;
-    MiscReg ctrlreg;
-};
 
 enum annotes
 {

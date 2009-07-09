@@ -113,24 +113,8 @@ namespace ArmISA
         ROR
     };
 
-    typedef uint8_t  RegIndex;
-
-    typedef uint64_t IntReg;
     typedef uint64_t LargestRead;
     // Need to use 64 bits to make sure that read requests get handled properly
-
-    // floating point register file entry type
-    typedef uint32_t FloatRegBits;
-    typedef float FloatReg;
-
-    // cop-0/cop-1 system control register
-    typedef uint64_t MiscReg;
-
-    typedef union {
-        IntReg   intreg;
-        FloatReg fpreg;
-        MiscReg  ctrlreg;
-    } AnyReg;
 
     typedef int RegContextParam;
     typedef int RegContextVal;

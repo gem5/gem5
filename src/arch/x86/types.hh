@@ -230,24 +230,6 @@ namespace X86ISA
         return true;
     }
 
-    typedef uint64_t IntReg;
-    //XXX Should this be a 128 bit structure for XMM memory ops?
-    typedef uint64_t LargestRead;
-    typedef uint64_t MiscReg;
-
-    //These floating point types are correct for mmx, but not
-    //technically for x87 (80 bits) or at all for xmm (128 bits)
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
-    typedef union
-    {
-        IntReg intReg;
-        FloatReg fpReg;
-        MiscReg ctrlReg;
-    } AnyReg;
-
-    typedef uint16_t RegIndex;
-
     struct CoreSpecific {
         int core_type;
     };

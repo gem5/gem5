@@ -29,7 +29,7 @@
  *          Korey Sewell
  */
 
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 

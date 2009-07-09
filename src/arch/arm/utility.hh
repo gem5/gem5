@@ -113,6 +113,18 @@ namespace ArmISA {
     {
         return NoFault;
     }
+
+    static inline void
+    copyRegs(ThreadContext *src, ThreadContext *dest)
+    {
+        panic("Copy Regs Not Implemented Yet\n");
+    }
+
+    static inline void
+    copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+    {
+        panic("Copy Misc. Regs Not Implemented Yet\n");
+    }
 };
 
 

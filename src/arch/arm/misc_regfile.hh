@@ -31,8 +31,7 @@
 #ifndef __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
 #define __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
 
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/miscregs.hh"
+#include "arch/arm/registers.hh"
 #include "arch/arm/types.hh"
 #include "sim/faults.hh"
 
@@ -40,9 +39,8 @@ class ThreadContext;
 
 namespace ArmISA
 {
-    const int NumMiscRegs = NUM_MISCREGS;
-
-    static inline std::string getMiscRegName(RegIndex)
+    static inline std::string
+    getMiscRegName(RegIndex)
     {
         return "";
     }

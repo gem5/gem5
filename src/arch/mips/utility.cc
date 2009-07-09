@@ -233,18 +233,6 @@ isSnan(void *val_ptr, int size)
     }
 }
 
-void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Regs Not Implemented Yet\n");
-}
-
-void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
 template <class CPU>
 void
 zeroRegisters(CPU *cpu)
@@ -260,6 +248,18 @@ void
 startupCPU(ThreadContext *tc, int cpuId)
 {
     tc->activate(0/*tc->threadId()*/);
+}
+
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Regs Not Implemented Yet\n");
+}
+
+void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("Copy Misc. Regs Not Implemented Yet\n");
 }
 
 } // namespace MipsISA

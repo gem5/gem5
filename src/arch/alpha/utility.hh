@@ -159,6 +159,10 @@ template <class TC>
 void processInterrupts(TC *tc);
 #endif
 
+void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
 } // namespace AlphaISA
 
 #endif // __ARCH_ALPHA_UTILITY_HH__

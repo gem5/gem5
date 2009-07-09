@@ -57,7 +57,7 @@
 
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/linux/process.hh"
-#include "arch/x86/regfile.hh"
+#include "arch/x86/registers.hh"
 
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"

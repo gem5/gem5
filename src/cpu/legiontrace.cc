@@ -46,7 +46,7 @@
 #include <sys/shm.h>
 
 #include "arch/sparc/predecoder.hh"
-#include "arch/sparc/regfile.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/utility.hh"
 #include "base/socket.hh"
 #include "cpu/base.hh"

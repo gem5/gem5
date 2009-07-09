@@ -99,7 +99,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('pagetable.cc')
     Source('predecoder.cc')
     Source('predecoder_tables.cc')
-    Source('regfile.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
     Source('utility.cc')

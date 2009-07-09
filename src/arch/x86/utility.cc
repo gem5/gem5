@@ -225,4 +225,30 @@ void startupCPU(ThreadContext *tc, int cpuId)
 #endif
 }
 
+void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    warn("copyMiscRegs is naively implemented for x86\n");
+    for (int i = 0; i < NUM_MISCREGS; ++i) {
+        if ( ( i != MISCREG_CR1 &&
+             !(i > MISCREG_CR4 && i < MISCREG_CR8) &&
+             !(i > MISCREG_CR8 && i <= MISCREG_CR15) ) == false) {
+             continue;
+        }
+        dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
+    }
+}
+
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    panic("copyRegs not implemented for x86!\n");
+    //copy int regs
+    //copy float regs
+    copyMiscRegs(src, dest);
+
+    dest->setPC(src->readPC());
+    dest->setNextPC(src->readNextPC());
+}
+
 } //namespace X86_ISA

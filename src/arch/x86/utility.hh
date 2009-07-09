@@ -154,6 +154,10 @@ namespace X86ISA
 #endif
 
     void startupCPU(ThreadContext *tc, int cpuId);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 };
 
 #endif // __ARCH_X86_UTILITY_HH__

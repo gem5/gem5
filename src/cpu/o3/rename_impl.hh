@@ -32,7 +32,7 @@
 #include <list>
 
 #include "arch/isa_traits.hh"
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "config/full_system.hh"
 #include "cpu/o3/rename.hh"
 #include "params/DerivO3CPU.hh"

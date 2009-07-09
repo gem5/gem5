@@ -92,7 +92,7 @@
 
 #include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
-#include "arch/x86/types.hh"
+#include "arch/x86/registers.hh"
 #include "base/types.hh"
 
 class Checkpoint;

@@ -34,7 +34,7 @@
 
 #include <iosfwd>
 
-#include "arch/alpha/ipr.hh"
+#include "arch/alpha/registers.hh"
 #include "arch/alpha/types.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
@@ -44,15 +44,6 @@ class ThreadContext;
 class BaseCPU;
 
 namespace AlphaISA {
-
-enum MiscRegIndex
-{
-    MISCREG_FPCR = NumInternalProcRegs,
-    MISCREG_UNIQ,
-    MISCREG_LOCKFLAG,
-    MISCREG_LOCKADDR,
-    MISCREG_INTR
-};
 
 class MiscRegFile
 {

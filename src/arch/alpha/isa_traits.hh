@@ -34,8 +34,6 @@
 
 namespace LittleEndianGuest {}
 
-#include "arch/alpha/ipr.hh"
-#include "arch/alpha/max_inst_regs.hh"
 #include "arch/alpha/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
@@ -45,16 +43,6 @@ class StaticInstPtr;
 namespace AlphaISA {
 
 using namespace LittleEndianGuest;
-using AlphaISAInst::MaxInstSrcRegs;
-using AlphaISAInst::MaxInstDestRegs;
-
-// These enumerate all the registers for dependence tracking.
-enum DependenceTags {
-    // 0..31 are the integer regs 0..31
-    // 32..63 are the FP regs 0..31, i.e. use (reg + FP_Base_DepTag)
-    FP_Base_DepTag = 40,
-    Ctrl_Base_DepTag = 72
-};
 
 StaticInstPtr decodeInst(ExtMachInst);
 
@@ -128,21 +116,6 @@ enum mode_type
 // Constants Related to the number of registers
 
 enum {
-    // semantically meaningful register indices
-    ZeroReg = 31,     // architecturally meaningful
-    // the rest of these depend on the ABI
-    StackPointerReg = 30,
-    GlobalPointerReg = 29,
-    ProcedureValueReg = 27,
-    ReturnAddressReg = 26,
-    ReturnValueReg = 0,
-    FramePointerReg = 15,
-
-    SyscallNumReg = 0,
-    FirstArgumentReg = 16,
-    SyscallPseudoReturnReg = 20,
-    SyscallSuccessReg = 19,
-
     LogVMPageSize = 13,       // 8K bytes
     VMPageSize = (1 << LogVMPageSize),
 

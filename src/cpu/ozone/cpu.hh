@@ -33,7 +33,6 @@
 
 #include <set>
 
-#include "arch/regfile.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"

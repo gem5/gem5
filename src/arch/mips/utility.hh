@@ -103,11 +103,6 @@ namespace MipsISA {
         return 0;
     }
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
-
-
     template <class CPU>
     void zeroRegisters(CPU *cpu);
 
@@ -128,6 +123,9 @@ namespace MipsISA {
     // CPU Utility
     //
     void startupCPU(ThreadContext *tc, int cpuId);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 };
 
 

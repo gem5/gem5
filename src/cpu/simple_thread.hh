@@ -34,7 +34,7 @@
 
 #include "arch/isa.hh"
 #include "arch/isa_traits.hh"
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "arch/tlb.hh"
 #include "arch/types.hh"
 #include "base/types.hh"

@@ -37,24 +37,8 @@ namespace MipsISA
 {
     typedef uint32_t MachInst;
     typedef uint64_t ExtMachInst;
-    typedef uint16_t  RegIndex;
 
-    typedef uint32_t IntReg;
     typedef uint64_t LargestRead;
-
-
-    // floating point register file entry type
-    typedef uint32_t FloatRegBits;
-    typedef float FloatReg;
-
-    // cop-0/cop-1 system control register
-    typedef uint64_t MiscReg;
-
-    typedef union {
-        IntReg   intreg;
-        FloatReg fpreg;
-        MiscReg  ctrlreg;
-    } AnyReg;
 
     //used in FP convert & round function
     enum ConvertType{

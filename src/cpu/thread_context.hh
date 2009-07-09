@@ -31,7 +31,7 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"

@@ -39,7 +39,7 @@
 #include <iostream>
 #include <string>
 
-#include "arch/isa_traits.hh"
+#include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/random.hh"
 #include "base/types.hh"

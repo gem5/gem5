@@ -33,7 +33,6 @@
 #ifndef __ARCH_ARM_ISA_TRAITS_HH__
 #define __ARCH_ARM_ISA_TRAITS_HH__
 
-#include "arch/arm/max_inst_regs.hh"
 #include "arch/arm/types.hh"
 #include "base/types.hh"
 
@@ -46,8 +45,6 @@ class StaticInstPtr;
 namespace ArmISA
 {
     using namespace LittleEndianGuest;
-    using ArmISAInst::MaxInstSrcRegs;
-    using ArmISAInst::MaxInstDestRegs;
 
     StaticInstPtr decodeInst(ExtMachInst);
 
@@ -98,36 +95,6 @@ namespace ArmISA
     // return a no-op instruction... used for instruction fetch faults
     const ExtMachInst NoopMachInst = 0x00000000;
 
-    // Constants Related to the number of registers
-    const int NumIntArchRegs = 16;
-    const int NumIntSpecialRegs = 19;
-    const int NumFloatArchRegs = 16;
-    const int NumFloatSpecialRegs = 5;
-    const int NumInternalProcRegs = 0;
-
-    const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
-    const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
-
-    // semantically meaningful register indices
-    const int ReturnValueReg = 0;
-    const int ReturnValueReg1 = 1;
-    const int ReturnValueReg2 = 2;
-    const int ArgumentReg0 = 0;
-    const int ArgumentReg1 = 1;
-    const int ArgumentReg2 = 2;
-    const int ArgumentReg3 = 3;
-    const int FramePointerReg = 11;
-    const int StackPointerReg = 13;
-    const int ReturnAddressReg = 14;
-    const int PCReg = 15;
-
-    const int ZeroReg = NumIntArchRegs;
-    const int AddrReg = ZeroReg + 1; // Used to generate address for uops
-
-    const int SyscallNumReg = ReturnValueReg;
-    const int SyscallPseudoReturnReg = ReturnValueReg;
-    const int SyscallSuccessReg = ReturnValueReg;
-
     const int LogVMPageSize = 12;	// 4K bytes
     const int VMPageSize = (1 << LogVMPageSize);
 
@@ -137,10 +104,6 @@ namespace ArmISA
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;
-
-    // These help enumerate all the registers for dependence tracking.
-    const int FP_Base_DepTag = NumIntRegs;
-    const int Ctrl_Base_DepTag = FP_Base_DepTag + NumFloatRegs;
 };
 
 using namespace ArmISA;

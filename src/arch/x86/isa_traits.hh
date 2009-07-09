@@ -58,8 +58,6 @@
 #ifndef __ARCH_X86_ISATRAITS_HH__
 #define __ARCH_X86_ISATRAITS_HH__
 
-#include "arch/x86/intregs.hh"
-#include "arch/x86/max_inst_regs.hh"
 #include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
 #include "base/types.hh"
@@ -73,8 +71,6 @@ namespace X86ISA
     //This makes sure the little endian version of certain functions
     //are used.
     using namespace LittleEndianGuest;
-    using X86ISAInst::MaxInstSrcRegs;
-    using X86ISAInst::MaxInstDestRegs;
 
     // X86 does not have a delay slot
 #define ISA_HAS_DELAY_SLOT 0
@@ -82,36 +78,6 @@ namespace X86ISA
     // X86 NOP (XCHG rAX, rAX)
     //XXX This needs to be set to an intermediate instruction struct
     //which encodes this instruction
-
-    // These enumerate all the registers for dependence tracking.
-    enum DependenceTags {
-        //There are 16 microcode registers at the moment. This is an
-        //unusually large constant to make sure there isn't overflow.
-        FP_Base_DepTag = 128,
-        Ctrl_Base_DepTag =
-            FP_Base_DepTag +
-            //mmx/x87 registers
-            8 +
-            //xmm registers
-            16 * 2 +
-            //The microcode fp registers
-            8 +
-            //The indices that are mapped over the fp stack
-            8
-    };
-
-    // semantically meaningful register indices
-    //There is no such register in X86
-    const int ZeroReg = NUM_INTREGS;
-    const int StackPointerReg = INTREG_RSP;
-    //X86 doesn't seem to have a link register
-    const int ReturnAddressReg = 0;
-    const int ReturnValueReg = INTREG_RAX;
-    const int FramePointerReg = INTREG_RBP;
-
-    // Some OS syscalls use a second register (rdx) to return a second
-    // value
-    const int SyscallPseudoReturnReg = INTREG_RDX;
 
     //4k. This value is not constant on x86.
     const int LogVMPageSize = 12;

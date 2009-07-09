@@ -33,7 +33,7 @@
 
 #include <errno.h>
 
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "arch/utility.hh"
 #include "base/loader/symtab.hh"
 #include "base/socket.hh"

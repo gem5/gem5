@@ -37,7 +37,7 @@
  * ISA-specific helper functions for locked memory accesses.
  */
 
-#include "arch/isa_traits.hh"
+#include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "mem/request.hh"

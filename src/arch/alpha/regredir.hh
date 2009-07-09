@@ -31,7 +31,7 @@
 #ifndef __ARCH_ALPHA_REGREDIR_HH__
 #define __ARCH_ALPHA_REGREDIR_HH__
 
-#include "arch/alpha/regfile.hh"
+#include "arch/alpha/registers.hh"
 
 namespace AlphaISA {
 

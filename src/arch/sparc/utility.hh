@@ -116,6 +116,10 @@ namespace SparcISA
 #endif
     }
 
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
 } // namespace SparcISA
 
 #endif
