@@ -395,14 +395,6 @@ class InOrderCPU : public BaseCPU
         return cpuEventNum++;
     }
 
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return thread[tid]->getInstAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return thread[tid]->getDataAsid(); }
-
     /** Register file accessors  */
     uint64_t readIntReg(int reg_idx, ThreadID tid);
 

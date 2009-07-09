@@ -86,9 +86,8 @@ struct OzoneThreadState : public ThreadState {
         miscRegFile.clear();
     }
 #else
-    OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process,
-                     int _asid)
-        : ThreadState(_cpu, -1, _thread_num, _process, _asid),
+    OzoneThreadState(CPUType *_cpu, int _thread_num, Process *_process)
+        : ThreadState(_cpu, -1, _thread_num, _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     {
         miscRegFile.clear();

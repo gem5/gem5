@@ -45,8 +45,7 @@
 #if FULL_SYSTEM
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid,
-                         Process *_process, short _asid)
+ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
 #endif
     : numInst(0), numLoad(0), _status(ThreadContext::Halted),
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
@@ -54,7 +53,7 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid,
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), physPort(NULL), virtPort(NULL),
 #else
-      port(NULL), process(_process), asid(_asid),
+      port(NULL), process(_process),
 #endif
       funcExeInst(0), storeCondFailures(0)
 {

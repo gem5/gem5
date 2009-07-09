@@ -109,19 +109,4 @@ MipsISA::processInterrupts(CPU *cpu)
   */
 }
 
-
-/*int
-MipsISA::MiscRegFile::getInstAsid()
-{
-    return AlphaISA::ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
-}
-
-int
-MipsISA::MiscRegFile::getDataAsid()
-{
-    return AlphaISA::DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
-    }*/
-
-
-
 #endif // FULL_SYSTEM || BARE_IRON

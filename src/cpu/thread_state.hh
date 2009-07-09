@@ -68,7 +68,7 @@ struct ThreadState {
 #if FULL_SYSTEM
     ThreadState(BaseCPU *cpu, ThreadID _tid);
 #else
-    ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process, short _asid);
+    ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process);
 #endif
 
     ~ThreadState();
@@ -119,9 +119,6 @@ struct ThreadState {
     TranslatingPort *getMemPort();
 
     void setMemPort(TranslatingPort *_port) { port = _port; }
-
-    int getInstAsid() { return asid; }
-    int getDataAsid() { return asid; }
 #endif
 
     /** Sets the current instruction being committed. */
@@ -205,12 +202,6 @@ struct ThreadState {
     TranslatingPort *port;
 
     Process *process;
-
-    // Address space ID.  Note that this is used for TIMING cache
-    // simulation only; all functional memory accesses should use
-    // one of the FunctionalMemory pointers above.
-    short asid;
-
 #endif
 
     /** Current instruction the thread is committing.  Only set and

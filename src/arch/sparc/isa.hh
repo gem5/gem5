@@ -45,17 +45,6 @@ namespace SparcISA
         MiscRegFile miscRegFile;
 
       public:
-
-        int instAsid()
-        {
-            return miscRegFile.getInstAsid();
-        }
-
-        int dataAsid()
-        {
-            return miscRegFile.getDataAsid();
-        }
-
         void clear();
 
         MiscReg readMiscRegNoEffect(int miscReg);

@@ -392,23 +392,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Check if this address is a valid data address. */
     bool validDataAddr(Addr addr) { return true; }
-
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return isa[tid].instAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return isa[tid].dataAsid(); }
-#else
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return thread[tid]->getInstAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return thread[tid]->getDataAsid(); }
-
 #endif
 
     /** Register accessors.  Index refers to the physical register index. */

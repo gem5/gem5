@@ -167,17 +167,6 @@ MiscRegFile::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
     }
 
 }
-int MiscRegFile::getInstAsid()
-{
-  MiscReg Entry_Hi = readRegNoEffect(EntryHi);
-  return bits(Entry_Hi,EntryHi_ASID_HI,EntryHi_ASID_LO);
-}
-
-int MiscRegFile:: getDataAsid()
-{
-  MiscReg EHi = readRegNoEffect(EntryHi);
-  return bits(EHi,EntryHi_ASID_HI,EntryHi_ASID_LO);
-}
 //@TODO: Use MIPS STYLE CONSTANTS (e.g. TCHALT_H instead of TCH_H)
 void
 MiscRegFile::reset(std::string core_name, ThreadID num_threads,

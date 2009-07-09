@@ -127,18 +127,6 @@ zeroRegisters(CPU *cpu)
     cpu->thread->setFloatReg(ZeroReg, 0.0);
 }
 
-int
-ISA::getInstAsid()
-{
-    return ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
-}
-
-int
-ISA::getDataAsid()
-{
-    return DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
-}
-
 #endif
 
 ////////////////////////////////////////////////////////////////////////

@@ -103,9 +103,6 @@ namespace MipsISA
         void setReg(int misc_reg, const MiscReg &val,
                      ThreadContext *tc, ThreadID tid = 0);
 
-        int getInstAsid();
-        int getDataAsid();
-
         //////////////////////////////////////////////////////////
         //
         // DECLARE INTERFACE THAT WILL ALLOW A MiscRegFile (Cop0)

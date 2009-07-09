@@ -145,7 +145,7 @@ class SimpleThread : public ThreadState
                  bool use_kernel_stats = true);
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                 TheISA::TLB *_itb, TheISA::TLB *_dtb, int _asid);
+                 TheISA::TLB *_itb, TheISA::TLB *_dtb);
 #endif
 
     SimpleThread();
@@ -191,9 +191,6 @@ class SimpleThread : public ThreadState
     }
 
 #if FULL_SYSTEM
-    int getInstAsid() { return isa.instAsid(); }
-    int getDataAsid() { return isa.dataAsid(); }
-
     void dumpFuncProfile();
 
     Fault hwrei();

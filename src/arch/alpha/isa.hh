@@ -65,11 +65,6 @@ namespace AlphaISA
 
       public:
 
-        // These functions should be removed once the simplescalar cpu
-        // model has been replaced.
-        int getInstAsid();
-        int getDataAsid();
-
         MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
         MiscReg readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
 

@@ -207,12 +207,12 @@ InOrderCPU::InOrderCPU(Params *params)
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
                     tid, this->thread[tid]);
             this->thread[tid] =
-                new Thread(this, tid, params->workload[tid], tid);
+                new Thread(this, tid, params->workload[tid]);
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
             Process* dummy_proc = params->workload[0];
-            this->thread[tid] = new Thread(this, tid, dummy_proc, tid);
+            this->thread[tid] = new Thread(this, tid, dummy_proc);
         }
 
         // Setup the TC that will serve as the interface to the threads/CPU.

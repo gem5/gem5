@@ -45,18 +45,6 @@ namespace X86ISA
         MiscRegFile miscRegFile;
 
       public:
-        int instAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
-
-        int dataAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
-
         void clear();
 
         MiscReg readMiscRegNoEffect(int miscReg);

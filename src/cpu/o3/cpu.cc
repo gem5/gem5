@@ -361,7 +361,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
                     tid, this->thread[tid]);
             this->thread[tid] = new typename FullO3CPU<Impl>::Thread(
                     (typename Impl::O3CPU *)(this),
-                    tid, params->workload[tid], tid);
+                    tid, params->workload[tid]);
 
             //usedTids[tid] = true;
             //threadMap[tid] = tid;
@@ -372,7 +372,7 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
 
             this->thread[tid] = new typename FullO3CPU<Impl>::Thread(
                     (typename Impl::O3CPU *)(this),
-                    tid, dummy_proc, tid);
+                    tid, dummy_proc);
             //usedTids[tid] = false;
         }
 #endif // !FULL_SYSTEM

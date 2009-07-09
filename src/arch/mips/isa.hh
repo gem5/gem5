@@ -57,16 +57,6 @@ namespace MipsISA
             miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
         }
 
-        int instAsid()
-        {
-            return miscRegFile.getInstAsid();
-        }
-
-        int dataAsid()
-        {
-            return miscRegFile.getDataAsid();
-        }
-
         void clear();
 
         MiscReg readMiscRegNoEffect(int miscReg);

@@ -95,8 +95,8 @@ struct O3ThreadState : public ThreadState {
         profilePC = 3;
     }
 #else
-    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process, int _asid)
-        : ThreadState(_cpu, _thread_num, _process, _asid),
+    O3ThreadState(O3CPU *_cpu, int _thread_num, Process *_process)
+        : ThreadState(_cpu, _thread_num, _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
 #endif

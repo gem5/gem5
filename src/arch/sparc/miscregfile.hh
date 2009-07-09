@@ -158,16 +158,6 @@ namespace SparcISA
         void setReg(int miscReg,
                 const MiscReg &val, ThreadContext * tc);
 
-        int getInstAsid()
-        {
-            return priContext | (uint32_t)partId << 13;
-        }
-
-        int getDataAsid()
-        {
-            return priContext | (uint32_t)partId << 13;
-        }
-
         void serialize(EventManager *em, std::ostream & os);
 
         void unserialize(EventManager *em, Checkpoint *cp,

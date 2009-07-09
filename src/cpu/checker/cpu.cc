@@ -72,8 +72,7 @@ CheckerCPU::CheckerCPU(Params *p)
     systemPtr = NULL;
 #else
     process = p->process;
-    thread = new SimpleThread(this, /* thread_num */ 0, process,
-                              /* asid */ 0);
+    thread = new SimpleThread(this, /* thread_num */ 0, process);
 
     tc = thread->getTC();
     threadContexts.push_back(tc);
