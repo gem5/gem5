@@ -53,8 +53,6 @@ UseDefUnit::UseDefUnit(string res_name, int res_id, int res_width,
         outWriteSeqNum[tid] = maxSeqNum;
 
         regDepMap[tid] = &cpu->archRegDepMap[tid];
-
-        floatRegSize[tid] = cpu->floatRegFile[tid].regWidth;
     }
 
 }
@@ -138,12 +136,11 @@ UseDefUnit::execute(int slot_idx)
                         DPRINTF(InOrderUseDef, "[tid:%i]: Reading Float Reg %i from Register File:%x (%08f).\n",
                                 tid,
                                 reg_idx,
-                                cpu->readFloatRegBits(reg_idx, inst->readTid(), floatRegSize[tid]),
-                                cpu->readFloatReg(reg_idx, inst->readTid(),floatRegSize[tid]));
+                                cpu->readFloatRegBits(reg_idx, inst->readTid()),
+                                cpu->readFloatReg(reg_idx, inst->readTid()));
 
                         inst->setFloatSrc(ud_idx,
-                                          cpu->readFloatReg(reg_idx, inst->readTid(), floatRegSize[tid]),
-                                          floatRegSize[tid]);
+                                          cpu->readFloatReg(reg_idx, inst->readTid()));
                     } else {
                         reg_idx -= Ctrl_Base_DepTag;
                         DPRINTF(InOrderUseDef, "[tid:%i]: Reading Misc Reg %i from Register File:%i.\n",
@@ -183,8 +180,7 @@ UseDefUnit::execute(int slot_idx)
                                     tid, forward_inst->readFloatResult(dest_reg_idx) ,
                                     forward_inst->seqNum, inst->seqNum, ud_idx);
                             inst->setFloatSrc(ud_idx,
-                                              forward_inst->readFloatResult(dest_reg_idx),
-                                              floatRegSize[tid]);
+                                              forward_inst->readFloatResult(dest_reg_idx));
                         } else {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Forwarding dest. reg value 0x%x from "
                                     "[sn:%i] to [sn:%i] source #%i.\n",
@@ -244,24 +240,21 @@ UseDefUnit::execute(int slot_idx)
 
                             cpu->setFloatRegBits(reg_idx, // Check for FloatRegBits Here
                                              inst->readIntResult(ud_idx),
-                                             inst->readTid(),
-                                             floatRegSize[tid]);
+                                             inst->readTid());
                         } else if (inst->resultType(ud_idx) == InOrderDynInst::Float) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Writing Float Result 0x%x (bits:0x%x) to register idx %i.\n",
                                     tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
 
                             cpu->setFloatReg(reg_idx,
                                              inst->readFloatResult(ud_idx),
-                                             inst->readTid(),
-                                             floatRegSize[tid]);
+                                             inst->readTid());
                         } else if (inst->resultType(ud_idx) == InOrderDynInst::Double) {
                             DPRINTF(InOrderUseDef, "[tid:%i]: Writing Double Result 0x%x (bits:0x%x) to register idx %i.\n",
                                     tid, inst->readFloatResult(ud_idx), inst->readIntResult(ud_idx), reg_idx);
 
                             cpu->setFloatReg(reg_idx, // Check for FloatRegBits Here
-                                             inst->readDoubleResult(ud_idx),
-                                             inst->readTid(),
-                                             floatRegSize[tid]);
+                                             inst->readFloatResult(ud_idx),
+                                             inst->readTid());
                         } else {
                             panic("Result Type Not Set For [sn:%i] %s.\n", inst->seqNum, inst->instName());
                         }

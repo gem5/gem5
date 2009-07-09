@@ -45,37 +45,25 @@ namespace SparcISA
     const int NumFloatArchRegs = 64;
     const int NumFloatRegs = 64;
 
-    typedef float float32_t;
-    typedef double float64_t;
-    //FIXME long double refers to a 10 byte float, rather than a
-    //16 byte float as required. This data type may have to be emulated.
-    typedef double float128_t;
-
     class FloatRegFile
     {
-      public:
-        static const int SingleWidth = 32;
-        static const int DoubleWidth = 64;
-        static const int QuadWidth = 128;
-
       protected:
-
-        //Since the floating point registers overlap each other,
-        //A generic storage space is used. The float to be returned is
-        //pulled from the appropriate section of this region.
-        char regSpace[(SingleWidth / 8) * NumFloatRegs];
+        union {
+            uint32_t q[NumFloatRegs];
+            float s[NumFloatRegs];
+        } regs;
 
       public:
 
         void clear();
 
-        FloatReg readReg(int floatReg, int width);
+        FloatReg readReg(int floatReg);
 
-        FloatRegBits readRegBits(int floatReg, int width);
+        FloatRegBits readRegBits(int floatReg);
 
-        Fault setReg(int floatReg, const FloatReg &val, int width);
+        Fault setReg(int floatReg, const FloatReg &val);
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width);
+        Fault setRegBits(int floatReg, const FloatRegBits &val);
 
         void serialize(std::ostream &os);
 

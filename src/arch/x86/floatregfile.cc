@@ -101,28 +101,28 @@ void FloatRegFile::clear()
     memset(q, 0, sizeof(FloatReg) * NumFloatRegs);
 }
 
-FloatReg FloatRegFile::readReg(int floatReg, int width)
+FloatReg FloatRegFile::readReg(int floatReg)
 {
     FloatReg reg = d[floatReg];
     DPRINTF(FloatRegs, "Reading %f from register %d.\n", reg, floatReg);
     return reg;
 }
 
-FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
+FloatRegBits FloatRegFile::readRegBits(int floatReg)
 {
     FloatRegBits reg = q[floatReg];
     DPRINTF(FloatRegs, "Reading %#x from register %d.\n", reg, floatReg);
     return reg;
 }
 
-Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
+Fault FloatRegFile::setReg(int floatReg, const FloatReg &val)
 {
     DPRINTF(FloatRegs, "Writing %f to register %d.\n", val, floatReg);
     d[floatReg] = val;
     return NoFault;
 }
 
-Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
+Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val)
 {
     DPRINTF(FloatRegs, "Writing bits %#x to register %d.\n", val, floatReg);
     q[floatReg] = val;

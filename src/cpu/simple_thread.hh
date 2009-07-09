@@ -234,22 +234,10 @@ class SimpleThread : public ThreadState
         return regs.readIntReg(flatIndex);
     }
 
-    FloatReg readFloatReg(int reg_idx, int width)
-    {
-        int flatIndex = isa.flattenFloatIndex(reg_idx);
-        return regs.readFloatReg(flatIndex, width);
-    }
-
     FloatReg readFloatReg(int reg_idx)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
         return regs.readFloatReg(flatIndex);
-    }
-
-    FloatRegBits readFloatRegBits(int reg_idx, int width)
-    {
-        int flatIndex = isa.flattenFloatIndex(reg_idx);
-        return regs.readFloatRegBits(flatIndex, width);
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
@@ -264,22 +252,10 @@ class SimpleThread : public ThreadState
         regs.setIntReg(flatIndex, val);
     }
 
-    void setFloatReg(int reg_idx, FloatReg val, int width)
-    {
-        int flatIndex = isa.flattenFloatIndex(reg_idx);
-        regs.setFloatReg(flatIndex, val, width);
-    }
-
     void setFloatReg(int reg_idx, FloatReg val)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
         regs.setFloatReg(flatIndex, val);
-    }
-
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    {
-        int flatIndex = isa.flattenFloatIndex(reg_idx);
-        regs.setFloatRegBits(flatIndex, val, width);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)

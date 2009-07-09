@@ -38,114 +38,43 @@ using namespace std;
 void
 FloatRegFile::clear()
 {
-    bzero(&regs, sizeof(regs));
+    bzero(regs.q, sizeof(regs.q));
 }
 
-double
-FloatRegFile::readReg(int floatReg, int width, ThreadID tid)
+FloatReg
+FloatRegFile::readReg(int floatReg)
 {
-    switch(width)
-    {
-      case SingleWidth:
-        {
-            void *float_ptr = &regs[floatReg];
-            return *(float *) float_ptr;
-        }
-
-      case DoubleWidth:
-        {
-            uint64_t double_val = (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
-            void *double_ptr = &double_val;
-            return *(double *) double_ptr;
-        }
-
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
+    return regs.s[floatReg];
 }
 
 FloatRegBits
-FloatRegFile::readRegBits(int floatReg, int width, ThreadID tid)
+FloatRegFile::readRegBits(int floatReg)
 {
-    if (floatReg < NumFloatArchRegs - 1) {
-        switch(width)
-        {
-          case SingleWidth:
-            return regs[floatReg];
-
-          case DoubleWidth:
-            return (FloatReg64)regs[floatReg + 1] << 32 | regs[floatReg];
-
-          default:
-            panic("Attempted to read a %d bit floating point register!", width);
-        }
-    } else {
-        if (width > SingleWidth)
-            assert("Control Regs are only 32 bits wide");
-
-        return regs[floatReg];
-    }
+    return regs.q[floatReg];
 }
 
 Fault
-FloatRegFile::setReg(int floatReg, const FloatRegVal &val, int width,
-                     ThreadID tid)
+FloatRegFile::setReg(int floatReg, const FloatReg &val)
 {
-    switch(width)
-    {
-      case SingleWidth:
-        {
-            float temp = val;
-            void *float_ptr = &temp;
-            regs[floatReg] = *(FloatReg32 *) float_ptr;
-            break;
-        }
-
-      case DoubleWidth:
-        {
-            const void *double_ptr = &val;
-            FloatReg64 temp_double = *(FloatReg64 *) double_ptr;
-            regs[floatReg + 1] = bits(temp_double, 63, 32);
-            regs[floatReg] = bits(temp_double, 31, 0);
-            break;
-        }
-
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
-
+    regs.s[floatReg] = val;
     return NoFault;
 }
 
 Fault
-FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width,
-                         ThreadID tid)
+FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val)
 {
-    switch(width)
-    {
-      case SingleWidth:
-        regs[floatReg] = val;
-        break;
-
-      case DoubleWidth:
-        regs[floatReg + 1] = bits(val, 63, 32);
-        regs[floatReg] = bits(val, 31, 0);
-        break;
-
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
+    regs.q[floatReg] = val;
     return NoFault;
 }
 
 void
 FloatRegFile::serialize(std::ostream &os)
 {
-    SERIALIZE_ARRAY(regs, NumFloatRegs);
+    SERIALIZE_ARRAY(regs.q, NumFloatRegs);
 }
 
 void
 FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
-    UNSERIALIZE_ARRAY(regs, NumFloatRegs);
+    UNSERIALIZE_ARRAY(regs.q, NumFloatRegs);
 }

@@ -64,52 +64,28 @@ RegFile::setIntReg(int intReg, const IntReg &val)
     return intRegFile.setReg(intReg, val);
 }
 
-FloatRegVal
+FloatReg
 RegFile::readFloatReg(int floatReg)
 {
-    return floatRegFile.readReg(floatReg,SingleWidth);
-}
-
-FloatRegVal
-RegFile::readFloatReg(int floatReg, int width)
-{
-    return floatRegFile.readReg(floatReg,width);
+    return floatRegFile.readReg(floatReg);
 }
 
 FloatRegBits
 RegFile::readFloatRegBits(int floatReg)
 {
-    return floatRegFile.readRegBits(floatReg,SingleWidth);
-}
-
-FloatRegBits
-RegFile::readFloatRegBits(int floatReg, int width)
-{
-    return floatRegFile.readRegBits(floatReg,width);
+    return floatRegFile.readRegBits(floatReg);
 }
 
 Fault
-RegFile::setFloatReg(int floatReg, const FloatRegVal &val)
+RegFile::setFloatReg(int floatReg, const FloatReg &val)
 {
-    return floatRegFile.setReg(floatReg, val, SingleWidth);
-}
-
-Fault
-RegFile::setFloatReg(int floatReg, const FloatRegVal &val, int width)
-{
-    return floatRegFile.setReg(floatReg, val, width);
+    return floatRegFile.setReg(floatReg, val);
 }
 
 Fault
 RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
 {
-    return floatRegFile.setRegBits(floatReg, val, SingleWidth);
-}
-
-Fault
-RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-{
-    return floatRegFile.setRegBits(floatReg, val, width);
+    return floatRegFile.setRegBits(floatReg, val);
 }
 
 void

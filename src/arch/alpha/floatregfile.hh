@@ -42,18 +42,9 @@ class Checkpoint;
 
 namespace AlphaISA {
 
-const int SingleWidth = 32;
-const int SingleBytes = SingleWidth / 4;
-const int DoubleWidth = 64;
-const int DoubleBytes = DoubleWidth / 4;
-const int QuadWidth = 128;
-const int QuadBytes = QuadWidth / 4;
-
 class FloatRegFile
 {
   public:
-    static const int regWidth = DoubleWidth;
-
     union {
         uint64_t q[NumFloatRegs];   // integer qword view
         double d[NumFloatRegs];     // double-precision floating point view
@@ -70,22 +61,10 @@ class FloatRegFile
         return d[floatReg];
     }
 
-    FloatReg
-    readReg(int floatReg, int width)
-    {
-        return readReg(floatReg);
-    }
-
     FloatRegBits
     readRegBits(int floatReg)
     {
         return q[floatReg];
-    }
-
-    FloatRegBits
-    readRegBits(int floatReg, int width)
-    {
-        return readRegBits(floatReg);
     }
 
     void
@@ -95,21 +74,9 @@ class FloatRegFile
     }
 
     void
-    setReg(int floatReg, const FloatReg &val, int width)
-    {
-        setReg(floatReg, val);
-    }
-
-    void
     setRegBits(int floatReg, const FloatRegBits &val)
     {
         q[floatReg] = val;
-    }
-
-    void
-    setRegBits(int floatReg, const FloatRegBits &val, int width)
-    {
-        setRegBits(floatReg, val);
     }
 
 };

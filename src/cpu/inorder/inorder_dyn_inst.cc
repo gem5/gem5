@@ -366,14 +366,9 @@ InOrderDynInst::setIntSrc(int idx, uint64_t val)
 
 /** Records an fp register being set to a value. */
 void
-InOrderDynInst::setFloatSrc(int idx, FloatReg val, int width)
+InOrderDynInst::setFloatSrc(int idx, FloatReg val)
 {
-    if (width == 32)
-        instSrc[idx].dbl = val;
-    else if (width == 64)
-        instSrc[idx].dbl = val;
-    else
-        panic("Unsupported width!");
+    instSrc[idx].dbl = val;
 }
 
 /** Records an fp register being set to an integer value. */
@@ -394,22 +389,15 @@ InOrderDynInst::readIntRegOperand(const StaticInst *si, int idx, ThreadID tid)
 
 /** Reads a FP register. */
 FloatReg
-InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx, int width)
+InOrderDynInst::readFloatRegOperand(const StaticInst *si, int idx)
 {
-    if (width == 32)
-        return (float)instSrc[idx].dbl;
-    else if (width == 64)
-        return instSrc[idx].dbl;
-    else {
-        panic("Unsupported Floating Point Width!");
-        return 0;
-    }
+    return instSrc[idx].dbl;
 }
 
 
 /** Reads a FP register as a integer. */
 FloatRegBits
-InOrderDynInst::readFloatRegOperandBits(const StaticInst *si, int idx, int width)
+InOrderDynInst::readFloatRegOperandBits(const StaticInst *si, int idx)
 {
     return instSrc[idx].integer;
 }
@@ -507,31 +495,22 @@ InOrderDynInst::setIntRegOperand(const StaticInst *si, int idx, IntReg val)
 
 /** Sets a FP register. */
 void
-InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val, int width)
+InOrderDynInst::setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
 {
-    if (width == 32) {
-        instResult[idx].val.dbl = (float)val;
-        instResult[idx].type = Float;
-    } else if (width == 64) {
-        instResult[idx].val.dbl = val;
-        instResult[idx].type = Double;
-    } else {
-        panic("Unsupported Floating Point Width!");
-    }
+    instResult[idx].val.dbl = val;
+    instResult[idx].type = Float;
 
     instResult[idx].tick = curTick;
-    instResult[idx].width = width;
 }
 
 /** Sets a FP register as a integer. */
 void
 InOrderDynInst::setFloatRegOperandBits(const StaticInst *si, int idx,
-                              FloatRegBits val, int width)
+                              FloatRegBits val)
 {
     instResult[idx].type = Integer;
     instResult[idx].val.integer = val;
     instResult[idx].tick = curTick;
-    instResult[idx].width = width;
 }
 
 /** Sets a misc. register. */

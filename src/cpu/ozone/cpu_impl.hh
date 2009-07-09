@@ -918,35 +918,11 @@ OzoneCPU<Impl>::OzoneTC::readIntReg(int reg_idx)
 }
 
 template <class Impl>
-TheISA::FloatReg
-OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx, int width)
-{
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
-    switch(width) {
-      case 32:
-        return thread->renameTable[idx]->readFloatResult();
-      case 64:
-        return thread->renameTable[idx]->readDoubleResult();
-      default:
-        panic("Unsupported width!");
-        return 0;
-    }
-}
-
-template <class Impl>
 double
 OzoneCPU<Impl>::OzoneTC::readFloatReg(int reg_idx)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
     return thread->renameTable[idx]->readFloatResult();
-}
-
-template <class Impl>
-uint64_t
-OzoneCPU<Impl>::OzoneTC::readFloatRegBits(int reg_idx, int width)
-{
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
-    return thread->renameTable[idx]->readIntResult();
 }
 
 template <class Impl>
@@ -970,27 +946,6 @@ OzoneCPU<Impl>::OzoneTC::setIntReg(int reg_idx, uint64_t val)
 
 template <class Impl>
 void
-OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val, int width)
-{
-    int idx = reg_idx + TheISA::FP_Base_DepTag;
-    switch(width) {
-      case 32:
-        panic("Unimplemented!");
-        break;
-      case 64:
-        thread->renameTable[idx]->setDoubleResult(val);
-        break;
-      default:
-        panic("Unsupported width!");
-    }
-
-    if (!thread->inSyscall) {
-        cpu->squashFromTC();
-    }
-}
-
-template <class Impl>
-void
 OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val)
 {
     int idx = reg_idx + TheISA::FP_Base_DepTag;
@@ -1000,14 +955,6 @@ OzoneCPU<Impl>::OzoneTC::setFloatReg(int reg_idx, FloatReg val)
     if (!thread->inSyscall) {
         cpu->squashFromTC();
     }
-}
-
-template <class Impl>
-void
-OzoneCPU<Impl>::OzoneTC::setFloatRegBits(int reg_idx, FloatRegBits val,
-                                         int width)
-{
-    panic("Unimplemented!");
 }
 
 template <class Impl>

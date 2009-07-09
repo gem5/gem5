@@ -42,8 +42,8 @@ namespace SparcISA
     typedef uint64_t IntReg;
     typedef Twin64_t LargestRead;
     typedef uint64_t MiscReg;
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
+    typedef float FloatReg;
+    typedef uint32_t FloatRegBits;
     typedef union
     {
         IntReg intReg;

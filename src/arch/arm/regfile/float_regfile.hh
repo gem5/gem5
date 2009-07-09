@@ -75,21 +75,12 @@ namespace ArmISA
         Cause_Field = 11
     };
 
-    const int SingleWidth = 32;
-    const int SingleBytes = SingleWidth / 4;
-
-    const int DoubleWidth = 64;
-    const int DoubleBytes = DoubleWidth / 4;
-
-    const int QuadWidth = 128;
-    const int QuadBytes = QuadWidth / 4;
-
     class FloatRegFile
     {
       protected:
           union {
             FloatRegBits qregs[NumFloatRegs];
-            FloatRegVal regs[NumFloatRegs];
+            FloatReg regs[NumFloatRegs];
           };
 
       public:
@@ -107,38 +98,17 @@ namespace ArmISA
             regs[15] = 10.0;
         }
 
-        FloatRegVal readReg(int floatReg, int width)
+        FloatReg readReg(int floatReg)
         {
             return regs[floatReg];
         }
 
-        FloatRegBits readRegBits(int floatReg, int width)
+        FloatRegBits readRegBits(int floatReg)
         {
-            //return qregs[floatReg];
-            switch(width)
-            {
-                case SingleWidth:
-                {
-                    union {
-                        float f;
-                        uint32_t i;
-                    } s;
-                    s.f = (float) regs[floatReg];
-                    return s.i;
-                }
-                case DoubleWidth:
-                {
-                    uint64_t tmp = (qregs[floatReg]<<32|qregs[floatReg]>>32);
-                    return tmp;
-                }
-                default:
-                    panic("Attempted to read a %d bit floating point "
-                        "register!", width);
-
-            }
+            return qregs[floatReg];
         }
 
-        Fault setReg(int floatReg, const FloatRegVal &val, int width)
+        Fault setReg(int floatReg, const FloatReg &val)
         {
             if (floatReg > 7)
                 panic("Writing to a hard-wired FP register");
@@ -146,23 +116,12 @@ namespace ArmISA
             return NoFault;
         }
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width)
+        Fault setRegBits(int floatReg, const FloatRegBits &val)
         {
             if (floatReg > 7)
                 panic("Writing to a hard-wired FP register");
-            switch(width)
-            {
-                case DoubleWidth:
-                {
-                    uint64_t tmp = (val << 32 | val >> 32);
-                    qregs[floatReg] = tmp;
-                    return NoFault;
-                }
-                case SingleWidth:
-                default:
-                    panic("Attempted to write a %d bit floating point "
-                        "register!", width);
-            }
+            qregs[floatReg] = val;
+            return NoFault;
         }
 
         void serialize(std::ostream &os)

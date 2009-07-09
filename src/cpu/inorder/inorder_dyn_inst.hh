@@ -243,10 +243,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         ResultType type;
         InstValue val;
         Tick tick;
-        int width;
 
         InstResult()
-            : type(None), tick(0), width(0)
+            : type(None), tick(0)
         {}
     };
 
@@ -817,7 +816,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Functions that sets an integer or floating point
      *  source register to a value. */
     void setIntSrc(int idx, uint64_t val);
-    void setFloatSrc(int idx, FloatReg val, int width = 32);
+    void setFloatSrc(int idx, FloatReg val);
     void setFloatRegBitsSrc(int idx, uint64_t val);
 
     uint64_t* getIntSrcPtr(int idx) { return &instSrc[idx].integer; }
@@ -830,10 +829,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  the source reg. value is set using the setSrcReg() function.
      */
     IntReg readIntRegOperand(const StaticInst *si, int idx, ThreadID tid = 0);
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx,
-                          int width = TheISA::SingleWidth);
-    TheISA::FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
-                                  int width = TheISA::SingleWidth);
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx);
+    TheISA::FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx);
     MiscReg readMiscReg(int misc_reg);
     MiscReg readMiscRegNoEffect(int misc_reg);
     MiscReg readMiscRegOperand(const StaticInst *si, int idx);
@@ -853,15 +850,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Depending on type, return Float or Double */
     double readFloatResult(int idx)
     {
-        //Should this function have a parameter for what width of return?x
-       return (instResult[idx].type == Float) ?
-           (float) instResult[idx].val.dbl : instResult[idx].val.dbl;
-    }
-
-    double readDoubleResult(int idx)
-    {
-        assert(instResult[idx].type == Double);
-        return instResult[idx].val.dbl;
+       return instResult[idx].val.dbl;
     }
 
     Tick readResultTime(int idx) { return instResult[idx].tick; }
@@ -872,10 +861,9 @@ class InOrderDynInst : public FastAlloc, public RefCounted
      *  it's destination register.
      */
     void setIntRegOperand(const StaticInst *si, int idx, IntReg val);
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                     int width = TheISA::SingleWidth);
-    void setFloatRegOperandBits(const StaticInst *si, int idx, TheISA::FloatRegBits val,
-                         int width = TheISA::SingleWidth);
+    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
+    void setFloatRegOperandBits(const StaticInst *si, int idx,
+            TheISA::FloatRegBits val);
     void setMiscReg(int misc_reg, const MiscReg &val);
     void setMiscRegNoEffect(int misc_reg, const MiscReg &val);
     void setMiscRegOperand(const StaticInst *si, int idx, const MiscReg &val);

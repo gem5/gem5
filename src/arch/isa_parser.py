@@ -1173,10 +1173,9 @@ def buildOperandTypeMap(userDict, lineno):
 # (e.g., "32-bit integer register").
 #
 class Operand(object):
-    def buildReadCode(self, func = None, width = None):
+    def buildReadCode(self, func = None):
         code = self.read_code % {"name": self.base_name,
                                  "func": func,
-                                 "width": width,
                                  "op_idx": self.src_reg_idx,
                                  "reg_idx": self.reg_spec,
                                  "size": self.size,
@@ -1188,14 +1187,13 @@ class Operand(object):
             return '%s = %s;\n' % \
                    (self.base_name, code)
 
-    def buildWriteCode(self, func = None, width = None):
+    def buildWriteCode(self, func = None):
         if (self.size != self.dflt_size and self.is_signed):
             final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
         else:
             final_val = self.base_name
         code = self.write_code % {"name": self.base_name,
                                   "func": func,
-                                  "width": width,
                                   "op_idx": self.dest_reg_idx,
                                   "reg_idx": self.reg_spec,
                                   "size": self.size,
@@ -1358,29 +1356,15 @@ class FloatRegOperand(Operand):
 
     def makeRead(self):
         bit_select = 0
-        width = 0;
-        if (self.ctype == 'float'):
+        if (self.ctype == 'float' or self.ctype == 'double'):
             func = 'readFloatRegOperand'
-            width = 32;
-        elif (self.ctype == 'double'):
-            func = 'readFloatRegOperand'
-            width = 64;
         else:
             func = 'readFloatRegOperandBits'
-            if (self.ctype == 'uint32_t'):
-                width = 32;
-            elif (self.ctype == 'uint64_t'):
-                width = 64;
             if (self.size != self.dflt_size):
                 bit_select = 1
-        if width:
-            base = 'xc->%s(this, %d, %d)' % \
-                   (func, self.src_reg_idx, width)
-        else:
-            base = 'xc->%s(this, %d)' % \
-                   (func, self.src_reg_idx)
+        base = 'xc->%s(this, %d)' % (func, self.src_reg_idx)
         if self.read_code != None:
-            return self.buildReadCode(func, width)
+            return self.buildReadCode(func)
         if bit_select:
             return '%s = bits(%s, %d, 0);\n' % \
                    (self.base_name, base, self.size-1)
@@ -1390,36 +1374,23 @@ class FloatRegOperand(Operand):
     def makeWrite(self):
         final_val = self.base_name
         final_ctype = self.ctype
-        widthSpecifier = ''
-        width = 0
-        if (self.ctype == 'float'):
-            width = 32
+        if (self.ctype == 'float' or self.ctype == 'double'):
             func = 'setFloatRegOperand'
-        elif (self.ctype == 'double'):
-            width = 64
-            func = 'setFloatRegOperand'
-        elif (self.ctype == 'uint32_t'):
+        elif (self.ctype == 'uint32_t' or self.ctype == 'uint64_t'):
             func = 'setFloatRegOperandBits'
-            width = 32
-        elif (self.ctype == 'uint64_t'):
-            func = 'setFloatRegOperandBits'
-            width = 64
         else:
             func = 'setFloatRegOperandBits'
             final_ctype = 'uint%d_t' % self.dflt_size
             if (self.size != self.dflt_size and self.is_signed):
                 final_val = 'sext<%d>(%s)' % (self.size, self.base_name)
         if self.write_code != None:
-            return self.buildWriteCode(func, width)
-        if width:
-            widthSpecifier = ', %d' % width
+            return self.buildWriteCode(func)
         wb = '''
         {
             %s final_val = %s;
-            xc->%s(this, %d, final_val%s);\n
+            xc->%s(this, %d, final_val);\n
             if (traceData) { traceData->setData(final_val); }
-        }''' % (final_ctype, final_val, func, self.dest_reg_idx,
-                widthSpecifier)
+        }''' % (final_ctype, final_val, func, self.dest_reg_idx)
         return wb
 
 class ControlRegOperand(Operand):

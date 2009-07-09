@@ -151,21 +151,9 @@ InOrderThreadContext::readIntReg(int reg_idx)
 }
 
 FloatReg
-InOrderThreadContext::readFloatReg(int reg_idx, int width)
-{
-    return cpu->readFloatReg(reg_idx, thread->readTid(), width);
-}
-
-FloatReg
 InOrderThreadContext::readFloatReg(int reg_idx)
 {
     return cpu->readFloatReg(reg_idx, thread->readTid());
-}
-
-FloatRegBits
-InOrderThreadContext::readFloatRegBits(int reg_idx, int width)
-{
-    return cpu->readFloatRegBits(reg_idx, thread->readTid(), width);
 }
 
 FloatRegBits
@@ -187,22 +175,9 @@ InOrderThreadContext::setIntReg(int reg_idx, uint64_t val)
 }
 
 void
-InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val, int width)
-{
-    cpu->setFloatReg(reg_idx, val, thread->readTid(), width);
-}
-
-void
 InOrderThreadContext::setFloatReg(int reg_idx, FloatReg val)
 {
     cpu->setFloatReg(reg_idx, val, thread->readTid());
-}
-
-void
-InOrderThreadContext::setFloatRegBits(int reg_idx, FloatRegBits val,
-                                    int width)
-{
-    cpu->setFloatRegBits(reg_idx, val, thread->readTid(), width);
 }
 
 void

@@ -174,14 +174,8 @@ class CheckerThreadContext : public ThreadContext
     uint64_t readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    FloatReg readFloatReg(int reg_idx, int width)
-    { return actualTC->readFloatReg(reg_idx, width); }
-
     FloatReg readFloatReg(int reg_idx)
     { return actualTC->readFloatReg(reg_idx); }
-
-    FloatRegBits readFloatRegBits(int reg_idx, int width)
-    { return actualTC->readFloatRegBits(reg_idx, width); }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
@@ -192,22 +186,10 @@ class CheckerThreadContext : public ThreadContext
         checkerTC->setIntReg(reg_idx, val);
     }
 
-    void setFloatReg(int reg_idx, FloatReg val, int width)
-    {
-        actualTC->setFloatReg(reg_idx, val, width);
-        checkerTC->setFloatReg(reg_idx, val, width);
-    }
-
     void setFloatReg(int reg_idx, FloatReg val)
     {
         actualTC->setFloatReg(reg_idx, val);
         checkerTC->setFloatReg(reg_idx, val);
-    }
-
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    {
-        actualTC->setFloatRegBits(reg_idx, val, width);
-        checkerTC->setFloatRegBits(reg_idx, val, width);
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)

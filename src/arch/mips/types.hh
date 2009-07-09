@@ -44,12 +44,8 @@ namespace MipsISA
 
 
     // floating point register file entry type
-    typedef uint32_t FloatReg32;
-    typedef uint64_t FloatReg64;
-    typedef uint64_t FloatRegBits;
-
-    typedef double FloatRegVal;
-    typedef double FloatReg;
+    typedef uint32_t FloatRegBits;
+    typedef float FloatReg;
 
     // cop-0/cop-1 system control register
     typedef uint64_t MiscReg;

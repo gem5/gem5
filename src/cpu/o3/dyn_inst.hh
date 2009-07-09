@@ -196,20 +196,9 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         return this->cpu->readIntReg(this->_srcRegIdx[idx]);
     }
 
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
-    {
-        return this->cpu->readFloatReg(this->_srcRegIdx[idx], width);
-    }
-
     FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         return this->cpu->readFloatReg(this->_srcRegIdx[idx]);
-    }
-
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
-                                         int width)
-    {
-        return this->cpu->readFloatRegBits(this->_srcRegIdx[idx], width);
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
@@ -226,24 +215,10 @@ class BaseO3DynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setIntRegOperand(si, idx, val);
     }
 
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                            int width)
-    {
-        this->cpu->setFloatReg(this->_destRegIdx[idx], val, width);
-        BaseDynInst<Impl>::setFloatRegOperand(si, idx, val, width);
-    }
-
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         this->cpu->setFloatReg(this->_destRegIdx[idx], val);
         BaseDynInst<Impl>::setFloatRegOperand(si, idx, val);
-    }
-
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val, int width)
-    {
-        this->cpu->setFloatRegBits(this->_destRegIdx[idx], val, width);
-        BaseDynInst<Impl>::setFloatRegOperandBits(si, idx, val);
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,

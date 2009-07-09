@@ -183,21 +183,13 @@ class OzoneCPU : public BaseCPU
 
         uint64_t readIntReg(int reg_idx);
 
-        FloatReg readFloatReg(int reg_idx, int width);
-
         FloatReg readFloatReg(int reg_idx);
-
-        FloatRegBits readFloatRegBits(int reg_idx, int width);
 
         FloatRegBits readFloatRegBits(int reg_idx);
 
         void setIntReg(int reg_idx, uint64_t val);
 
-        void setFloatReg(int reg_idx, FloatReg val, int width);
-
         void setFloatReg(int reg_idx, FloatReg val);
-
-        void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
 
         void setFloatRegBits(int reg_idx, FloatRegBits val);
 

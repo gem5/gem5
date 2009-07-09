@@ -404,19 +404,15 @@ class InOrderCPU : public BaseCPU
     /** Register file accessors  */
     uint64_t readIntReg(int reg_idx, ThreadID tid);
 
-    FloatReg readFloatReg(int reg_idx, ThreadID tid,
-                          int width = TheISA::SingleWidth);
+    FloatReg readFloatReg(int reg_idx, ThreadID tid);
 
-    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid,
-                                  int width = TheISA::SingleWidth);
+    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid);
 
     void setIntReg(int reg_idx, uint64_t val, ThreadID tid);
 
-    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid,
-                     int width = TheISA::SingleWidth);
+    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid,
-                         int width = TheISA::SingleWidth);
+    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid);
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);

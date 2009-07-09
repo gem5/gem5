@@ -57,44 +57,24 @@ namespace ArmISA
             floatRegFile.clear();
         }
 
-        FloatRegVal readFloatReg(int floatReg)
+        FloatReg readFloatReg(int floatReg)
         {
-            return floatRegFile.readReg(floatReg,SingleWidth);
-        }
-
-        FloatRegVal readFloatReg(int floatReg, int width)
-        {
-            return floatRegFile.readReg(floatReg,width);
+            return floatRegFile.readReg(floatReg);
         }
 
         FloatRegBits readFloatRegBits(int floatReg)
         {
-            return floatRegFile.readRegBits(floatReg,SingleWidth);
+            return floatRegFile.readRegBits(floatReg);
         }
 
-        FloatRegBits readFloatRegBits(int floatReg, int width)
+        void setFloatReg(int floatReg, const FloatReg &val)
         {
-            return floatRegFile.readRegBits(floatReg,width);
-        }
-
-        void setFloatReg(int floatReg, const FloatRegVal &val)
-        {
-            floatRegFile.setReg(floatReg, val, SingleWidth);
-        }
-
-        void setFloatReg(int floatReg, const FloatRegVal &val, int width)
-        {
-            floatRegFile.setReg(floatReg, val, width);
+            floatRegFile.setReg(floatReg, val);
         }
 
         void setFloatRegBits(int floatReg, const FloatRegBits &val)
         {
-            floatRegFile.setRegBits(floatReg, val, SingleWidth);
-        }
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-        {
-            floatRegFile.setRegBits(floatReg, val, width);
+            floatRegFile.setRegBits(floatReg, val);
         }
 
         IntReg readIntReg(int intReg)

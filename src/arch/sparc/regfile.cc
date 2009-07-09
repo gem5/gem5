@@ -74,49 +74,24 @@ void RegFile::clear()
     intRegFile.clear();
 }
 
-FloatReg RegFile::readFloatReg(int floatReg, int width)
-{
-    return floatRegFile.readReg(floatReg, width);
-}
-
 FloatReg RegFile::readFloatReg(int floatReg)
 {
-    //Use the "natural" width of a single float
-    return floatRegFile.readReg(floatReg, FloatRegFile::SingleWidth);
-}
-
-FloatRegBits RegFile::readFloatRegBits(int floatReg, int width)
-{
-    return floatRegFile.readRegBits(floatReg, width);
+    return floatRegFile.readReg(floatReg);
 }
 
 FloatRegBits RegFile::readFloatRegBits(int floatReg)
 {
-    //Use the "natural" width of a single float
-    return floatRegFile.readRegBits(floatReg,
-            FloatRegFile::SingleWidth);
-}
-
-void RegFile::setFloatReg(int floatReg, const FloatReg &val, int width)
-{
-    floatRegFile.setReg(floatReg, val, width);
+    return floatRegFile.readRegBits(floatReg);
 }
 
 void RegFile::setFloatReg(int floatReg, const FloatReg &val)
 {
-    //Use the "natural" width of a single float
-    setFloatReg(floatReg, val, FloatRegFile::SingleWidth);
-}
-
-void RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-{
-    floatRegFile.setRegBits(floatReg, val, width);
+    floatRegFile.setReg(floatReg, val);
 }
 
 void RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
 {
-    //Use the "natural" width of a single float
-    floatRegFile.setRegBits(floatReg, val, FloatRegFile::SingleWidth);
+    floatRegFile.setRegBits(floatReg, val);
 }
 
 IntReg RegFile::readIntReg(int intReg)

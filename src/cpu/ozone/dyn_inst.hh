@@ -151,28 +151,14 @@ class OzoneDynInst : public BaseDynInst<Impl>
         return srcInsts[idx]->readIntResult();
     }
 
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
-    {
-        switch(width) {
-          case 32:
-            return srcInsts[idx]->readFloatResult();
-          case 64:
-            return srcInsts[idx]->readDoubleResult();
-          default:
-            panic("Width not supported");
-            return 0;
-        }
-    }
-
     FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         return srcInsts[idx]->readFloatResult();
     }
 
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
-                                         int width)
+    FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
-        return srcInsts[idx]->readIntResult();
+        return srcInsts[idx]->readFloatResult();
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
@@ -188,21 +174,9 @@ class OzoneDynInst : public BaseDynInst<Impl>
         BaseDynInst<Impl>::setIntReg(si, idx, val);
     }
 
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                            int width)
-    {
-        BaseDynInst<Impl>::setFloatReg(si, idx, val, width);
-    }
-
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         BaseDynInst<Impl>::setFloatReg(si, idx, val);
-    }
-
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val, int width)
-    {
-        BaseDynInst<Impl>::setFloatRegBits(si, idx, val);
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,

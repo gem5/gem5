@@ -105,29 +105,23 @@ namespace X86ISA
 
     class FloatRegFile
     {
-      public:
-        static const int SingleWidth = 32;
-        static const int DoubleWidth = 64;
-        static const int QuadWidth = 128;
-
       protected:
         union
         {
             uint64_t q[NumFloatRegs];
             double d[NumFloatRegs];
-            float f[NumFloatRegs][2];
         };
 
       public:
         void clear();
 
-        FloatReg readReg(int floatReg, int width);
+        FloatReg readReg(int floatReg);
 
-        FloatRegBits readRegBits(int floatReg, int width);
+        FloatRegBits readRegBits(int floatReg);
 
-        Fault setReg(int floatReg, const FloatReg &val, int width);
+        Fault setReg(int floatReg, const FloatReg &val);
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width);
+        Fault setRegBits(int floatReg, const FloatRegBits &val);
 
         void serialize(std::ostream &os);
 

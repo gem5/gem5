@@ -70,30 +70,20 @@ namespace MipsISA
         Cause_Field = 11
     };
 
-    const int SingleWidth = 32;
-    const int SingleBytes = SingleWidth / 4;
-
-    const int DoubleWidth = 64;
-    const int DoubleBytes = DoubleWidth / 4;
-
-    const int QuadWidth = 128;
-    const int QuadBytes = QuadWidth / 4;
-
     class FloatRegFile
     {
       protected:
-        FloatReg32 regs[NumFloatRegs];
+        union {
+            FloatReg s[NumFloatRegs];
+            FloatRegBits q[NumFloatRegs];
+        } regs;
 
       public:
-        static const int regWidth = SingleWidth;
-
         void clear();
-        double readReg(int floatReg, int width, ThreadID tid = 0);
-        FloatRegBits readRegBits(int floatReg, int width, ThreadID tid = 0);
-        Fault setReg(int floatReg, const FloatRegVal &val, int width,
-                     ThreadID tid = 0);
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width,
-                         ThreadID tid = 0);
+        FloatReg readReg(int floatReg);
+        FloatRegBits readRegBits(int floatReg);
+        Fault setReg(int floatReg, const FloatReg &val);
+        Fault setRegBits(int floatReg, const FloatRegBits &val);
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);

@@ -93,21 +93,6 @@ class PhysRegFile
         return intRegFile[reg_idx];
     }
 
-    FloatReg readFloatReg(PhysRegIndex reg_idx, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
-
-        FloatReg floatReg = floatRegFile[reg_idx].d;
-
-        DPRINTF(IEW, "RegFile: Access to %d byte float register %i, has "
-                "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
-
-        return floatReg;
-    }
-
     /** Reads a floating point register (double precision). */
     FloatReg readFloatReg(PhysRegIndex reg_idx)
     {
@@ -122,22 +107,6 @@ class PhysRegFile
                 "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
 
         return floatReg;
-    }
-
-    /** Reads a floating point register as an integer. */
-    FloatRegBits readFloatRegBits(PhysRegIndex reg_idx, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
-
-        FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
-
-        DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
-
-        return floatRegBits;
     }
 
     FloatRegBits readFloatRegBits(PhysRegIndex reg_idx)
@@ -167,23 +136,6 @@ class PhysRegFile
             intRegFile[reg_idx] = val;
     }
 
-    /** Sets a single precision floating point register to the given value. */
-    void setFloatReg(PhysRegIndex reg_idx, FloatReg val, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs);
-
-        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
-
-#if THE_ISA == ALPHA_ISA
-        if (reg_idx != TheISA::ZeroReg)
-#endif
-            floatRegFile[reg_idx].d = val;
-    }
-
     /** Sets a double precision floating point register to the given value. */
     void setFloatReg(PhysRegIndex reg_idx, FloatReg val)
     {
@@ -199,20 +151,6 @@ class PhysRegFile
         if (reg_idx != TheISA::ZeroReg)
 #endif
             floatRegFile[reg_idx].d = val;
-    }
-
-    /** Sets a floating point register to the given integer value. */
-    void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs);
-
-        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
-
-        floatRegFile[reg_idx].q = val;
     }
 
     void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val)

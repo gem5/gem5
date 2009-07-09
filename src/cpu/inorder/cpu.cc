@@ -890,16 +890,15 @@ InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 }
 
 FloatReg
-InOrderCPU::readFloatReg(int reg_idx, ThreadID tid, int width)
+InOrderCPU::readFloatReg(int reg_idx, ThreadID tid)
 {
-
-    return floatRegFile[tid].readReg(reg_idx, width);
+    return floatRegFile[tid].readReg(reg_idx);
 }
 
 FloatRegBits
-InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid, int width)
+InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid)
 {;
-    return floatRegFile[tid].readRegBits(reg_idx, width);
+    return floatRegFile[tid].readRegBits(reg_idx);
 }
 
 void
@@ -910,17 +909,16 @@ InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
 
 
 void
-InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid, int width)
+InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid)
 {
-    floatRegFile[tid].setReg(reg_idx, val, width);
+    floatRegFile[tid].setReg(reg_idx, val);
 }
 
 
 void
-InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid,
-                            int width)
+InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid)
 {
-    floatRegFile[tid].setRegBits(reg_idx, val, width);
+    floatRegFile[tid].setRegBits(reg_idx, val);
 }
 
 uint64_t

@@ -112,22 +112,10 @@ class RegFile {
         return floatRegFile.d[floatReg];
     }
 
-    FloatReg
-    readFloatReg(int floatReg, int width)
-    {
-        return readFloatReg(floatReg);
-    }
-
     FloatRegBits
     readFloatRegBits(int floatReg)
     {
         return floatRegFile.q[floatReg];
-    }
-
-    FloatRegBits
-    readFloatRegBits(int floatReg, int width)
-    {
-        return readFloatRegBits(floatReg);
     }
 
     void
@@ -137,21 +125,9 @@ class RegFile {
     }
 
     void
-    setFloatReg(int floatReg, const FloatReg &val, int width)
-    {
-        setFloatReg(floatReg, val);
-    }
-
-    void
     setFloatRegBits(int floatReg, const FloatRegBits &val)
     {
         floatRegFile.q[floatReg] = val;
-    }
-
-    void
-    setFloatRegBits(int floatReg, const FloatRegBits &val, int width)
-    {
-        setFloatRegBits(floatReg, val);
     }
 
     IntReg

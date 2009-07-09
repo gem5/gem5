@@ -187,23 +187,15 @@ class ThreadContext
     //
     virtual uint64_t readIntReg(int reg_idx) = 0;
 
-    virtual FloatReg readFloatReg(int reg_idx, int width) = 0;
-
     virtual FloatReg readFloatReg(int reg_idx) = 0;
-
-    virtual FloatRegBits readFloatRegBits(int reg_idx, int width) = 0;
 
     virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
 
-    virtual void setFloatReg(int reg_idx, FloatReg val, int width) = 0;
-
     virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
-
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val, int width) = 0;
 
     virtual uint64_t readPC() = 0;
 
@@ -377,14 +369,8 @@ class ProxyThreadContext : public ThreadContext
     uint64_t readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    FloatReg readFloatReg(int reg_idx, int width)
-    { return actualTC->readFloatReg(reg_idx, width); }
-
     FloatReg readFloatReg(int reg_idx)
     { return actualTC->readFloatReg(reg_idx); }
-
-    FloatRegBits readFloatRegBits(int reg_idx, int width)
-    { return actualTC->readFloatRegBits(reg_idx, width); }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
@@ -392,14 +378,8 @@ class ProxyThreadContext : public ThreadContext
     void setIntReg(int reg_idx, uint64_t val)
     { actualTC->setIntReg(reg_idx, val); }
 
-    void setFloatReg(int reg_idx, FloatReg val, int width)
-    { actualTC->setFloatReg(reg_idx, val, width); }
-
     void setFloatReg(int reg_idx, FloatReg val)
     { actualTC->setFloatReg(reg_idx, val); }
-
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    { actualTC->setFloatRegBits(reg_idx, val, width); }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }

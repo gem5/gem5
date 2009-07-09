@@ -99,19 +99,11 @@ namespace X86ISA
 
         void clear();
 
-        FloatReg readFloatReg(int floatReg, int width);
-
         FloatReg readFloatReg(int floatReg);
-
-        FloatRegBits readFloatRegBits(int floatReg, int width);
 
         FloatRegBits readFloatRegBits(int floatReg);
 
-        void setFloatReg(int floatReg, const FloatReg &val, int width);
-
         void setFloatReg(int floatReg, const FloatReg &val);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
 
         void setFloatRegBits(int floatReg, const FloatRegBits &val);
 

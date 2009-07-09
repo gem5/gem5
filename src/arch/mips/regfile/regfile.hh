@@ -66,14 +66,10 @@ namespace MipsISA
         Fault setIntReg(int intReg, const IntReg &val);
 
 
-        FloatRegVal readFloatReg(int floatReg);
-        FloatRegVal readFloatReg(int floatReg, int width);
+        FloatReg readFloatReg(int floatReg);
         FloatRegBits readFloatRegBits(int floatReg);
-        FloatRegBits readFloatRegBits(int floatReg, int width);
-        Fault setFloatReg(int floatReg, const FloatRegVal &val);
-        Fault setFloatReg(int floatReg, const FloatRegVal &val, int width);
+        Fault setFloatReg(int floatReg, const FloatReg &val);
         Fault setFloatRegBits(int floatReg, const FloatRegBits &val);
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
 
 
         void setShadowSet(int css);

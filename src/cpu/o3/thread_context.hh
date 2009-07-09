@@ -167,22 +167,14 @@ class O3ThreadContext : public ThreadContext
     /** Reads an integer register. */
     virtual uint64_t readIntReg(int reg_idx);
 
-    virtual FloatReg readFloatReg(int reg_idx, int width);
-
     virtual FloatReg readFloatReg(int reg_idx);
-
-    virtual FloatRegBits readFloatRegBits(int reg_idx, int width);
 
     virtual FloatRegBits readFloatRegBits(int reg_idx);
 
     /** Sets an integer register to a value. */
     virtual void setIntReg(int reg_idx, uint64_t val);
 
-    virtual void setFloatReg(int reg_idx, FloatReg val, int width);
-
     virtual void setFloatReg(int reg_idx, FloatReg val);
-
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val, int width);
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val);
 

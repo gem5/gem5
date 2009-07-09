@@ -43,155 +43,38 @@ class Checkpoint;
 
 void FloatRegFile::clear()
 {
-    memset(regSpace, 0, sizeof(regSpace));
+    memset(regs.q, 0, sizeof(regs.q));
 }
 
-FloatReg FloatRegFile::readReg(int floatReg, int width)
+FloatReg FloatRegFile::readReg(int floatReg)
 {
-    //In each of these cases, we have to copy the value into a temporary
-    //variable. This is because we may otherwise try to access an
-    //unaligned portion of memory.
-    FloatReg result;
-    switch(width)
-    {
-      case SingleWidth:
-        uint32_t result32;
-        float32_t fresult32;
-        memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
-        result32 = htog(result32);
-        memcpy(&fresult32, &result32, sizeof(result32));
-        result = fresult32;
-        DPRINTF(FloatRegs, "Read FP32 register %d = [%f]0x%x\n",
-                floatReg, result, result32);
-        break;
-      case DoubleWidth:
-        uint64_t result64;
-        float64_t fresult64;
-        memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
-        result64 = htog(result64);
-        memcpy(&fresult64, &result64, sizeof(result64));
-        result = fresult64;
-        DPRINTF(FloatRegs, "Read FP64 register %d = [%f]0x%x\n",
-                floatReg, result, result64);
-        break;
-      case QuadWidth:
-        panic("Quad width FP not implemented.");
-        break;
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
-    return result;
+    return regs.s[floatReg];
 }
 
-FloatRegBits FloatRegFile::readRegBits(int floatReg, int width)
+FloatRegBits FloatRegFile::readRegBits(int floatReg)
 {
-    //In each of these cases, we have to copy the value into a temporary
-    //variable. This is because we may otherwise try to access an
-    //unaligned portion of memory.
-    FloatRegBits result;
-    switch(width)
-    {
-      case SingleWidth:
-        uint32_t result32;
-        memcpy(&result32, regSpace + 4 * floatReg, sizeof(result32));
-        result = htog(result32);
-        DPRINTF(FloatRegs, "Read FP32 bits register %d = 0x%x\n",
-                floatReg, result);
-        break;
-      case DoubleWidth:
-        uint64_t result64;
-        memcpy(&result64, regSpace + 4 * floatReg, sizeof(result64));
-        result = htog(result64);
-        DPRINTF(FloatRegs, "Read FP64 bits register %d = 0x%x\n",
-                floatReg, result);
-        break;
-      case QuadWidth:
-        panic("Quad width FP not implemented.");
-        break;
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
-    return result;
+    return regs.q[floatReg];
 }
 
-Fault FloatRegFile::setReg(int floatReg, const FloatReg &val, int width)
+Fault FloatRegFile::setReg(int floatReg, const FloatReg &val)
 {
-    //In each of these cases, we have to copy the value into a temporary
-    //variable. This is because we may otherwise try to access an
-    //unaligned portion of memory.
-
-    uint32_t result32;
-    uint64_t result64;
-    float32_t fresult32;
-    float64_t fresult64;
-    switch(width)
-    {
-      case SingleWidth:
-        fresult32 = val;
-        memcpy(&result32, &fresult32, sizeof(result32));
-        result32 = gtoh(result32);
-        memcpy(regSpace + 4 * floatReg, &result32, sizeof(result32));
-        DPRINTF(FloatRegs, "Write FP64 register %d = 0x%x\n",
-                floatReg, result32);
-        break;
-      case DoubleWidth:
-        fresult64 = val;
-        memcpy(&result64, &fresult64, sizeof(result64));
-        result64 = gtoh(result64);
-        memcpy(regSpace + 4 * floatReg, &result64, sizeof(result64));
-        DPRINTF(FloatRegs, "Write FP64 register %d = 0x%x\n",
-                floatReg, result64);
-        break;
-      case QuadWidth:
-        panic("Quad width FP not implemented.");
-        break;
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
+    regs.s[floatReg] = val;
     return NoFault;
 }
 
-Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val, int width)
+Fault FloatRegFile::setRegBits(int floatReg, const FloatRegBits &val)
 {
-    //In each of these cases, we have to copy the value into a temporary
-    //variable. This is because we may otherwise try to access an
-    //unaligned portion of memory.
-    uint32_t result32;
-    uint64_t result64;
-    switch(width)
-    {
-      case SingleWidth:
-        result32 = gtoh((uint32_t)val);
-        memcpy(regSpace + 4 * floatReg, &result32, sizeof(result32));
-        DPRINTF(FloatRegs, "Write FP64 bits register %d = 0x%x\n",
-                floatReg, result32);
-        break;
-      case DoubleWidth:
-        result64 = gtoh((uint64_t)val);
-        memcpy(regSpace + 4 * floatReg, &result64, sizeof(result64));
-        DPRINTF(FloatRegs, "Write FP64 bits register %d = 0x%x\n",
-                floatReg, result64);
-        break;
-      case QuadWidth:
-        panic("Quad width FP not implemented.");
-        break;
-      default:
-        panic("Attempted to read a %d bit floating point register!", width);
-    }
+    regs.q[floatReg] = val;
     return NoFault;
 }
 
 void FloatRegFile::serialize(std::ostream &os)
 {
-    uint8_t *float_reg = (uint8_t*)regSpace;
-    SERIALIZE_ARRAY(float_reg,
-            SingleWidth / 8 * NumFloatRegs);
+    SERIALIZE_ARRAY(regs.q, NumFloatRegs);
 }
 
 void FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
-    uint8_t *float_reg = (uint8_t*)regSpace;
-    UNSERIALIZE_ARRAY(float_reg,
-            SingleWidth / 8 * NumFloatRegs);
+    UNSERIALIZE_ARRAY(regs.q, NumFloatRegs);
 }
 
