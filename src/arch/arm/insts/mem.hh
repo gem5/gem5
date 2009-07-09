@@ -42,10 +42,6 @@ class Memory : public PredOp
 
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
-    /// Pointer to EAComp object.
-    const StaticInstPtr eaCompPtr;
-    /// Pointer to MemAcc object.
-    const StaticInstPtr memAccPtr;
 
     /// Displacement for EA calculation (signed).
     int32_t disp;
@@ -56,12 +52,9 @@ class Memory : public PredOp
             shift;
 
     /// Constructor
-    Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-           StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-           StaticInstPtr _memAccPtr = nullStaticInstPtr)
+    Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : PredOp(mnem, _machInst, __opClass),
                  memAccessFlags(0),
-                 eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
                  disp(machInst.immed11_0),
                  disp8(machInst.immed7_0 << 2),
                  up(machInst.puswl.up),
@@ -72,11 +65,6 @@ class Memory : public PredOp
 
     std::string
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
-
-  public:
-
-    const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
-    const StaticInstPtr &memAccInst() const { return memAccPtr; }
 };
 
  /**
@@ -87,10 +75,8 @@ class MemoryNoDisp : public Memory
 {
   protected:
     /// Constructor
-    MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                 StaticInstPtr _memAccPtr = nullStaticInstPtr)
-        : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+    MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
     {
     }
 

@@ -54,10 +54,6 @@ class ArmMacroMemoryOp : public PredMacroOp
     protected:
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
-    /// Pointer to EAComp object.
-    const StaticInstPtr eaCompPtr;
-    /// Pointer to MemAcc object.
-    const StaticInstPtr memAccPtr;
 
     uint32_t reglist;
     uint32_t ones;
@@ -69,12 +65,9 @@ class ArmMacroMemoryOp : public PredMacroOp
              loadop;
 
     ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass,
-                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
+                     OpClass __opClass)
             : PredMacroOp(mnem, _machInst, __opClass),
                           memAccessFlags(0),
-                          eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
                           reglist(machInst.regList), ones(0),
                           puswl(machInst.puswl),
                           prepost(machInst.puswl.prepost),

@@ -44,31 +44,11 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
 
-    # add hook to get effective addresses into execution trace output.
-    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
-
-    # Some CPU models execute the memory operation as an atomic unit,
-    # while others want to separate them into an effective address
-    # computation and a memory access operation.  As a result, we need
-    # to generate three StaticInst objects.  Note that the latter two
-    # are nested inside the larger "atomic" one.
-
-    # Generate InstObjParams for each of the three objects.  Note that
-    # they differ only in the set of code objects contained (which in
-    # turn affects the object's overall operand list).
     iop = InstObjParams(name, Name, base_class,
                         {'ea_code': ea_code,
                          'memacc_code': memacc_code,
                          'predicate_test': predicateTest},
                         inst_flags)
-    ea_iop = InstObjParams(name, Name, base_class,
-                           {'ea_code': ea_code,
-                            'predicate_test': predicateTest},
-                           inst_flags)
-    memacc_iop = InstObjParams(name, Name, base_class,
-                               {'memacc_code': memacc_code,
-                                'predicate_test': predicateTest},
-                               inst_flags)
 
     if mem_flags:
         s = '\n\tmemAccessFlags = ' + string.join(mem_flags, '|') + ';'
@@ -81,20 +61,15 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # corresponding Store template..
     StoreCondInitiateAcc = StoreInitiateAcc
 
-    memAccExecTemplate = eval(exec_template_base + 'MemAccExecute')
     fullExecTemplate = eval(exec_template_base + 'Execute')
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
     completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
 
     # (header_output, decoder_output, decode_block, exec_output)
     return (LoadStoreDeclare.subst(iop),
-            EACompConstructor.subst(ea_iop)
-            + MemAccConstructor.subst(memacc_iop)
-            + LoadStoreConstructor.subst(iop),
+            LoadStoreConstructor.subst(iop),
             decode_template.subst(iop),
-            EACompExecute.subst(ea_iop)
-            + memAccExecTemplate.subst(memacc_iop)
-            + fullExecTemplate.subst(iop)
+            fullExecTemplate.subst(iop)
             + initiateAccTemplate.subst(iop)
             + completeAccTemplate.subst(iop))
 }};
