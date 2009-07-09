@@ -34,16 +34,20 @@
 
 #include <string>
 
-#include "arch/sparc/intregfile.hh"
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregfile.hh"
-#include "arch/sparc/types.hh"
+#include "arch/sparc/sparc_traits.hh"
 #include "base/types.hh"
+#include "sim/serialize.hh"
 
 class Checkpoint;
+class EventManager;
+class ThreadContext;
 
 namespace SparcISA
 {
+    const int NumIntArchRegs = 32;
+    const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
+
     class RegFile
     {
       protected:

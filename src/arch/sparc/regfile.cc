@@ -30,6 +30,7 @@
  */
 
 #include "arch/sparc/regfile.hh"
+#include "arch/sparc/miscregfile.hh"
 #include "cpu/thread_context.hh"
 
 class Checkpoint;
