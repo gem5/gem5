@@ -60,7 +60,7 @@
 
 #include <string>
 
-#include "arch/x86/intregfile.hh"
+#include "arch/x86/intregs.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/isa_traits.hh"
 #include "arch/x86/x86_traits.hh"
@@ -75,6 +75,11 @@ namespace X86ISA
 {
     const int NumMiscArchRegs = NUM_MISCREGS;
     const int NumMiscRegs = NUM_MISCREGS;
+
+    const int NumIntArchRegs = NUM_INTREGS;
+    const int NumIntRegs =
+        NumIntArchRegs + NumMicroIntRegs +
+        NumPseudoIntRegs + NumImplicitIntRegs;
 
     //Each 128 bit xmm register is broken into two effective 64 bit registers.
     const int NumFloatRegs =
