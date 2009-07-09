@@ -31,7 +31,7 @@
 #ifndef __ARCH_MIPS_ISA_HH__
 #define __ARCH_MIPS_ISA_HH__
 
-#include "arch/mips/regfile/misc_regfile.hh"
+#include "arch/mips/misc_regfile.hh"
 #include "arch/mips/types.hh"
 
 class Checkpoint;

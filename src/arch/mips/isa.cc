@@ -29,7 +29,7 @@
  */
 
 #include "arch/mips/isa.hh"
-#include "arch/mips/regfile/misc_regfile.hh"
+#include "arch/mips/misc_regfile.hh"
 #include "cpu/thread_context.hh"
 
 namespace MipsISA

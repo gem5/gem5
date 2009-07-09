@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
+ * Copyright (c) 2007 MIPS Technologies, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,12 +26,72 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Korey Sewell
  */
 
 #ifndef __ARCH_MIPS_REGFILE_HH__
 #define __ARCH_MIPS_REGFILE_HH__
 
-#include "arch/mips/regfile/regfile.hh"
+#include <iostream>
+#include <string>
+
+#include "arch/mips/isa_traits.hh"
+
+class BaseCPU;
+class Checkpoint;
+class EventManager;
+
+namespace MipsISA
+{
+    const uint32_t MIPS32_QNAN = 0x7fbfffff;
+    const uint64_t MIPS64_QNAN = ULL(0x7fbfffffffffffff);
+
+    enum FPControlRegNums {
+       FIR = NumFloatArchRegs,
+       FCCR,
+       FEXR,
+       FENR,
+       FCSR
+    };
+
+    enum FCSRBits {
+        Inexact = 1,
+        Underflow,
+        Overflow,
+        DivideByZero,
+        Invalid,
+        Unimplemented
+    };
+
+    enum FCSRFields {
+        Flag_Field = 1,
+        Enable_Field = 6,
+        Cause_Field = 11
+    };
+
+    enum MiscIntRegNums {
+       LO = NumIntArchRegs,
+       HI,
+       DSPACX0,
+       DSPLo1,
+       DSPHi1,
+       DSPACX1,
+       DSPLo2,
+       DSPHi2,
+       DSPACX2,
+       DSPLo3,
+       DSPHi3,
+       DSPACX3,
+       DSPControl,
+       DSPLo0 = LO,
+       DSPHi0 = HI
+    };
+
+    //@TODO: Implementing ShadowSets needs to
+    //edit this value such that:
+    //TotalArchRegs = NumIntArchRegs * ShadowSets
+    const int TotalArchRegs = NumIntArchRegs;
+
+} // namespace MipsISA
 
 #endif

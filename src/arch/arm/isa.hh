@@ -31,7 +31,7 @@
 #ifndef __ARCH_ARM_ISA_HH__
 #define __ARCH_MRM_ISA_HH__
 
-#include "arch/arm/regfile/misc_regfile.hh"
+#include "arch/arm/misc_regfile.hh"
 #include "arch/arm/types.hh"
 
 class Checkpoint;

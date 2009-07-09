@@ -28,7 +28,7 @@
  * Authors: Stephen Hines
  */
 
-#include "arch/arm/regfile/regfile.hh"
+#include "arch/arm/regfile.hh"
 #include "base/misc.hh"
 #include "sim/serialize.hh"
 

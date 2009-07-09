@@ -32,7 +32,7 @@
 
 #include "base/bitfield.hh"
 
-#include "arch/mips/regfile/misc_regfile.hh"
+#include "arch/mips/misc_regfile.hh"
 #include "arch/mips/mt_constants.hh"
 #include "arch/mips/pra_constants.hh"
 
