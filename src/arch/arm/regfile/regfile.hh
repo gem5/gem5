@@ -67,25 +67,10 @@ namespace ArmISA
 
     class RegFile
     {
-      protected:
-        IntRegFile intRegFile;		// (signed) integer register file
-
       public:
 
         void clear()
-        {
-            intRegFile.clear();
-        }
-
-        IntReg readIntReg(int intReg)
-        {
-            return intRegFile.readReg(intReg);
-        }
-
-        void setIntReg(int intReg, const IntReg &val)
-        {
-            intRegFile.setReg(intReg, val);
-        }
+        {}
       protected:
 
         Addr pc;			// program counter
@@ -95,14 +80,12 @@ namespace ArmISA
       public:
         Addr readPC()
         {
-            return intRegFile.readReg(PCReg);
-            //return pc;
+            return pc;
         }
 
         void setPC(Addr val)
         {
-            intRegFile.setReg(PCReg, val);
-            //pc = val;
+            pc = val;
         }
 
         Addr readNextPC()

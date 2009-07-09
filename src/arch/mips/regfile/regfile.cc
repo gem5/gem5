@@ -40,31 +40,16 @@ namespace MipsISA
 void
 RegFile::clear()
 {
-    intRegFile.clear();
 }
 
 void
 RegFile::reset(std::string core_name, ThreadID num_threads, unsigned num_vpes,
                BaseCPU *_cpu)
 {
-    bzero(&intRegFile, sizeof(intRegFile));
-}
-
-IntReg
-RegFile::readIntReg(int intReg)
-{
-    return intRegFile.readReg(intReg);
-}
-
-Fault
-RegFile::setIntReg(int intReg, const IntReg &val)
-{
-    return intRegFile.setReg(intReg, val);
 }
 
 void
 RegFile::setShadowSet(int css){
-    intRegFile.setShadowSet(css);
 }
 
 
@@ -107,7 +92,6 @@ RegFile::setNextNPC(Addr val)
 void
 RegFile::serialize(EventManager *em, std::ostream &os)
 {
-    intRegFile.serialize(os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -117,7 +101,6 @@ void
 RegFile::unserialize(EventManager *em, Checkpoint *cp,
     const std::string &section)
 {
-    intRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

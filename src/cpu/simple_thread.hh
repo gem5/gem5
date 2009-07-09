@@ -36,6 +36,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/regfile.hh"
 #include "arch/tlb.hh"
+#include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -103,6 +104,7 @@ class SimpleThread : public ThreadState
         FloatReg f[TheISA::NumFloatRegs];
         FloatRegBits i[TheISA::NumFloatRegs];
     } floatRegs;
+    TheISA::IntReg intRegs[TheISA::NumIntRegs];
     TheISA::ISA isa;    // one "instance" of the current ISA.
 
   public:
@@ -230,6 +232,7 @@ class SimpleThread : public ThreadState
     void clearArchRegs()
     {
         regs.clear();
+        memset(intRegs, 0, sizeof(intRegs));
         memset(floatRegs.i, 0, sizeof(floatRegs.i));
     }
 
@@ -239,7 +242,7 @@ class SimpleThread : public ThreadState
     uint64_t readIntReg(int reg_idx)
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
-        return regs.readIntReg(flatIndex);
+        return intRegs[flatIndex];
     }
 
     FloatReg readFloatReg(int reg_idx)
@@ -257,7 +260,7 @@ class SimpleThread : public ThreadState
     void setIntReg(int reg_idx, uint64_t val)
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
-        regs.setIntReg(flatIndex, val);
+        intRegs[flatIndex] = val;
     }
 
     void setFloatReg(int reg_idx, FloatReg val)

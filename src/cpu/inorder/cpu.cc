@@ -264,7 +264,7 @@ InOrderCPU::InOrderCPU(Params *params)
         squashSeqNum[tid] = MaxAddr;
         lastSquashCycle[tid] = 0;
 
-        intRegFile[tid].clear();
+        memset(intRegs[tid], 0, sizeof(intRegs[tid]));
         memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
         isa[tid].clear();
 
@@ -886,7 +886,7 @@ InOrderCPU::setNextNPC(uint64_t new_NNPC, ThreadID tid)
 uint64_t
 InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 {
-    return intRegFile[tid].readReg(reg_idx);
+    return intRegs[tid][reg_idx];
 }
 
 FloatReg
@@ -904,7 +904,7 @@ InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid)
 void
 InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
 {
-    intRegFile[tid].setReg(reg_idx, val);
+    intRegs[tid][reg_idx] = val;
 }
 
 

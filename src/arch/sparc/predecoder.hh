@@ -32,6 +32,7 @@
 #define __ARCH_SPARC_PREDECODER_HH__
 
 #include "arch/sparc/types.hh"
+#include "base/bitfield.hh"
 #include "base/misc.hh"
 #include "base/types.hh"
 #include "cpu/thread_context.hh"

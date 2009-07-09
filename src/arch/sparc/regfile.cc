@@ -68,25 +68,9 @@ void RegFile::setNextNPC(Addr val)
     nnpc = val;
 }
 
-void RegFile::clear()
-{
-    intRegFile.clear();
-}
-
-IntReg RegFile::readIntReg(int intReg)
-{
-    return intRegFile.readReg(intReg);
-}
-
-void RegFile::setIntReg(int intReg, const IntReg &val)
-{
-    intRegFile.setReg(intReg, val);
-}
-
 void
 RegFile::serialize(EventManager *em, ostream &os)
 {
-    intRegFile.serialize(os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -95,7 +79,6 @@ RegFile::serialize(EventManager *em, ostream &os)
 void
 RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
-    intRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

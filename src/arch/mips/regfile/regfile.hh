@@ -79,15 +79,10 @@ namespace MipsISA
                                         // used to implement branch delay slot
                                         // not real register
 
-        IntRegFile intRegFile;          // (signed) integer register file
-
       public:
         void clear();
         void reset(std::string core_name, ThreadID num_threads,
                    unsigned num_vpes, BaseCPU *_cpu);
-
-        IntReg readIntReg(int intReg);
-        Fault setIntReg(int intReg, const IntReg &val);
 
         void setShadowSet(int css);
 

@@ -32,41 +32,12 @@
 #ifndef __ARCH_ALPHA_INTREGFILE_HH__
 #define __ARCH_ALPHA_INTREGFILE_HH__
 
-#include <iosfwd>
-#include <string>
-
-#include "arch/alpha/types.hh"
-
-class Checkpoint;
+#include "arch/alpha/isa_traits.hh"
 
 namespace AlphaISA {
 
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
-
-class IntRegFile
-{
-  protected:
-    IntReg regs[NumIntRegs];
-
-  public:
-    IntReg
-    readReg(int intReg)
-    {
-        return regs[intReg];
-    }
-
-    void
-    setReg(int intReg, const IntReg &val)
-    {
-        regs[intReg] = val;
-    }
-
-    void clear();
-
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-};
 
 } // namespace AlphaISA
 

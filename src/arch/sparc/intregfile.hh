@@ -32,39 +32,12 @@
 #ifndef __ARCH_SPARC_INTREGFILE_HH__
 #define __ARCH_SPARC_INTREGFILE_HH__
 
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/types.hh"
-#include "base/bitfield.hh"
-
-#include <string>
-
-class Checkpoint;
+#include "arch/sparc/sparc_traits.hh"
 
 namespace SparcISA
 {
     const int NumIntArchRegs = 32;
     const int NumIntRegs = (MaxGL + 1) * 8 + NWindows * 16 + NumMicroIntRegs;
-
-    class IntRegFile
-    {
-      protected:
-        IntReg microRegs[NumMicroIntRegs];
-        IntReg regs[NumIntRegs];
-
-      public:
-
-        void clear();
-
-        IntRegFile();
-
-        IntReg readReg(int intReg);
-
-        void setReg(int intReg, const IntReg &val);
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-    };
 }
 
 #endif

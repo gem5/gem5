@@ -71,7 +71,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 
     quiesceEvent = new EndQuiesceEvent(tc);
 
-    regs.clear();
+    clearArchRegs();
 
     if (cpu->params()->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
@@ -96,7 +96,7 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
     : ThreadState(_cpu, _thread_num, _process, _asid),
       cpu(_cpu), itb(_itb), dtb(_dtb)
 {
-    regs.clear();
+    clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
 
@@ -193,6 +193,7 @@ SimpleThread::serialize(ostream &os)
     ThreadState::serialize(os);
     regs.serialize(cpu, os);
     SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
+    SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -203,6 +204,7 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     ThreadState::unserialize(cp, section);
     regs.unserialize(cpu, cp, section);
     UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
+    UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
     // thread_num and cpu_id are deterministic from the config
 }
 

@@ -127,21 +127,6 @@ Addr RegFile::readNextNPC()
 void RegFile::setNextNPC(Addr val)
 { }
 
-void RegFile::clear()
-{
-    intRegFile.clear();
-}
-
-IntReg RegFile::readIntReg(int intReg)
-{
-    return intRegFile.readReg(intReg);
-}
-
-void RegFile::setIntReg(int intReg, const IntReg &val)
-{
-    intRegFile.setReg(intReg, val);
-}
-
 void
 X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
@@ -166,16 +151,4 @@ X86ISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 
     dest->setPC(src->readPC());
     dest->setNextPC(src->readNextPC());
-}
-
-void
-RegFile::serialize(EventManager *em, std::ostream &os)
-{
-    intRegFile.serialize(os);
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-    intRegFile.unserialize(cp, section);
 }

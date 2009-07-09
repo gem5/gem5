@@ -61,16 +61,10 @@ namespace SparcISA
         Addr readNextNPC();
         void setNextNPC(Addr val);
 
-      protected:
-        IntRegFile intRegFile;          // integer register file
-
       public:
 
-        void clear();
-
-        IntReg readIntReg(int intReg);
-
-        void setIntReg(int intReg, const IntReg &val);
+        void clear()
+        {}
 
         void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,

@@ -97,20 +97,17 @@ namespace X86ISA
         Addr readNextNPC();
         void setNextNPC(Addr val);
 
-      protected:
-        IntRegFile intRegFile; // integer register file
-
       public:
 
-        void clear();
+        void clear()
+        {}
 
-        IntReg readIntReg(int intReg);
+        void serialize(EventManager *em, std::ostream &os)
+        {}
 
-        void setIntReg(int intReg, const IntReg &val);
-
-        void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section);
+                const std::string &section)
+        {}
     };
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);

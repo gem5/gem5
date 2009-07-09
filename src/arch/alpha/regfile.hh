@@ -89,9 +89,6 @@ class RegFile {
     setNextNPC(Addr val)
     { }
 
-  protected:
-    IntRegFile intRegFile;          // (signed) integer register file
-
   public:
 #if FULL_SYSTEM
     int intrflag;                   // interrupt flag
@@ -100,19 +97,6 @@ class RegFile {
     void
     clear()
     {
-        intRegFile.clear();
-    }
-
-    IntReg
-    readIntReg(int intReg)
-    {
-        return intRegFile.readReg(intReg);
-    }
-
-    void
-    setIntReg(int intReg, const IntReg &val)
-    {
-        intRegFile.setReg(intReg, val);
     }
 
     void serialize(EventManager *em, std::ostream &os);

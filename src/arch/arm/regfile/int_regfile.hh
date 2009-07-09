@@ -43,11 +43,6 @@ class ThreadContext;
 
 namespace ArmISA
 {
-    static inline std::string getIntRegName(RegIndex)
-    {
-        return "";
-    }
-
     enum MiscIntRegNums {
         zero_reg = NumIntArchRegs,
         addr_reg,
@@ -75,42 +70,6 @@ namespace ArmISA
 
         r13_abt,   /* ABT mode SP and LR */
         r14_abt
-    };
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-
-      public:
-        IntReg readReg(int intReg)
-        {
-            DPRINTF(IntRegs, "Reading int reg %d as %#x.\n",
-                    intReg, regs[intReg]);
-            return regs[intReg];
-        }
-
-        void clear()
-        {
-            bzero(regs, sizeof(regs));
-        }
-
-        Fault setReg(int intReg, const IntReg &val)
-        {
-            DPRINTF(IntRegs, "Setting int reg %d to %#x.\n", intReg, val);
-            regs[intReg] = val;
-            return NoFault;
-        }
-
-        void serialize(std::ostream &os)
-        {
-            SERIALIZE_ARRAY(regs, NumIntRegs);
-        }
-
-        void unserialize(Checkpoint *cp, const std::string &section)
-        {
-            UNSERIALIZE_ARRAY(regs, NumIntRegs);
-        }
     };
 
 } // namespace ArmISA

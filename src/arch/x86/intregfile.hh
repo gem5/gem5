@@ -89,41 +89,14 @@
 #define __ARCH_X86_INTREGFILE_HH__
 
 #include "arch/x86/intregs.hh"
-#include "arch/x86/types.hh"
 #include "arch/x86/x86_traits.hh"
-
-#include <string>
-
-class Checkpoint;
 
 namespace X86ISA
 {
-    class Regfile;
-
     const int NumIntArchRegs = NUM_INTREGS;
     const int NumIntRegs =
         NumIntArchRegs + NumMicroIntRegs +
         NumPseudoIntRegs + NumImplicitIntRegs;
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-
-      public:
-
-        int flattenIndex(int reg);
-
-        void clear();
-
-        IntReg readReg(int intReg);
-
-        void setReg(int intReg, const IntReg &val);
-
-        void serialize(std::ostream &os);
-
-        void unserialize(Checkpoint *cp, const std::string &section);
-    };
 }
 
 #endif //__ARCH_X86_INTREGFILE__

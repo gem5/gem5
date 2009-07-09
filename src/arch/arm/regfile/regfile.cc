@@ -57,7 +57,6 @@ MiscRegFile::copyMiscRegs(ThreadContext *tc)
 void
 RegFile::serialize(EventManager *em, ostream &os)
 {
-    intRegFile.serialize(os);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
 }
@@ -65,7 +64,6 @@ RegFile::serialize(EventManager *em, ostream &os)
 void
 RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
-    intRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);
 }

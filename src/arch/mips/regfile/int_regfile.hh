@@ -65,23 +65,6 @@ namespace MipsISA
     //TotalArchRegs = NumIntArchRegs * ShadowSets
     const int TotalArchRegs = NumIntArchRegs;
 
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-        int currShadowSet;
-      public:
-        void clear();
-        int readShadowSet();
-        void setShadowSet(int css);
-        IntReg readReg(int intReg);
-        Fault setReg(int intReg, const IntReg &val);
-
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-    };
-
 } // namespace MipsISA
 
 #endif

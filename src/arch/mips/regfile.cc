@@ -48,7 +48,6 @@ using namespace MipsISA;
 
 void RegFile::clear()
 {
-    intRegFile.clear();
     miscRegFile.clear();
 }
 
@@ -56,18 +55,7 @@ void
 RegFile::reset(std::string core_name, ThreadID num_threads,
                unsigned num_vpes)
 {
-    bzero(&intRegFile, sizeof(intRegFile));
     miscRegFile.reset(core_name, num_threads, num_vpes);
-}
-
-IntReg RegFile::readIntReg(int intReg)
-{
-    return intRegFile.readReg(intReg);
-}
-
-Fault RegFile::setIntReg(int intReg, const IntReg &val)
-{
-    return intRegFile.setReg(intReg, val);
 }
 
 MiscReg
@@ -128,7 +116,6 @@ void RegFile::setNextNPC(Addr val)
 void
 RegFile::serialize(std::ostream &os)
 {
-    intRegFile.serialize(os);
     miscRegFile.serialize(os);
 
     SERIALIZE_SCALAR(pc);
@@ -140,7 +127,6 @@ RegFile::serialize(std::ostream &os)
 void
 RegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
-    intRegFile.unserialize(cp, section);
     miscRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);

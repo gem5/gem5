@@ -30,11 +30,7 @@
  *          Kevin Lim
  */
 
-#include <cstring>
-
-#include "arch/alpha/isa_traits.hh"
 #include "arch/alpha/intregfile.hh"
-#include "sim/serialize.hh"
 
 namespace AlphaISA {
 
@@ -51,24 +47,6 @@ const int reg_redir[NumIntRegs] = {
     /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
     /* 24 */ 24, 25, 26, 27, 28, 29, 30, 31 };
 #endif
-
-void
-IntRegFile::clear()
-{
-    std::memset(regs, 0, sizeof(regs));
-}
-
-void
-IntRegFile::serialize(std::ostream &os)
-{
-    SERIALIZE_ARRAY(regs, NumIntRegs);
-}
-
-void
-IntRegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_ARRAY(regs, NumIntRegs);
-}
 
 } // namespace AlphaISA
 
