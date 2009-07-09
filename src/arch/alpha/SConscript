@@ -34,7 +34,6 @@ Import('*')
 if env['TARGET_ISA'] == 'alpha':
     Source('ev5.cc')
     Source('faults.cc')
-    Source('intregfile.cc')
     Source('ipr.cc')
     Source('isa.cc')
     Source('miscregfile.cc')

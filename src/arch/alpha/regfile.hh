@@ -32,7 +32,6 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/intregfile.hh"
 #include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
 #include "arch/alpha/mt.hh"
@@ -47,6 +46,9 @@ class EventManager;
 class ThreadContext;
 
 namespace AlphaISA {
+
+// redirected register map, really only used for the full system case.
+extern const int reg_redir[NumIntRegs];
 
 class RegFile {
   protected:
