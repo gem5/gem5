@@ -34,7 +34,6 @@
 
 #include <string>
 
-#include "arch/sparc/floatregfile.hh"
 #include "arch/sparc/intregfile.hh"
 #include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregfile.hh"
@@ -64,19 +63,10 @@ namespace SparcISA
 
       protected:
         IntRegFile intRegFile;          // integer register file
-        FloatRegFile floatRegFile;      // floating point register file
 
       public:
 
         void clear();
-
-        FloatReg readFloatReg(int floatReg);
-
-        FloatRegBits readFloatRegBits(int floatReg);
-
-        void setFloatReg(int floatReg, const FloatReg &val);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val);
 
         IntReg readIntReg(int intReg);
 

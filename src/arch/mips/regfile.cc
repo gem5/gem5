@@ -38,7 +38,6 @@
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
-#include "arch/mips/regfile/float_regfile.hh"
 #include "arch/mips/regfile/misc_regfile.hh"
 #include "sim/faults.hh"
 
@@ -50,7 +49,6 @@ using namespace MipsISA;
 void RegFile::clear()
 {
     intRegFile.clear();
-    floatRegFile.clear();
     miscRegFile.clear();
 }
 
@@ -59,7 +57,6 @@ RegFile::reset(std::string core_name, ThreadID num_threads,
                unsigned num_vpes)
 {
     bzero(&intRegFile, sizeof(intRegFile));
-    bzero(&floatRegFile, sizeof(floatRegFile));
     miscRegFile.reset(core_name, num_threads, num_vpes);
 }
 
@@ -98,26 +95,6 @@ RegFile::setMiscReg(int miscReg, const MiscReg &val,
     miscRegFile.setReg(miscReg, val, tc, tid);
 }
 
-FloatRegVal RegFile::readFloatReg(int floatReg)
-{
-    return floatRegFile.readReg(floatReg);
-}
-
-FloatRegBits RegFile::readFloatRegBits(int floatReg)
-{
-    return floatRegFile.readRegBits(floatReg);
-}
-
-Fault RegFile::setFloatReg(int floatReg, const FloatRegVal &val)
-{
-    return floatRegFile.setReg(floatReg, val);
-}
-
-Fault RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
-{
-    return floatRegFile.setRegBits(floatReg, val);
-}
-
 Addr RegFile::readPC()
 {
     return pc;
@@ -152,7 +129,6 @@ void
 RegFile::serialize(std::ostream &os)
 {
     intRegFile.serialize(os);
-    floatRegFile.serialize(os);
     miscRegFile.serialize(os);
 
     SERIALIZE_SCALAR(pc);
@@ -165,7 +141,6 @@ void
 RegFile::unserialize(Checkpoint *cp, const std::string &section)
 {
     intRegFile.unserialize(cp, section);
-    floatRegFile.unserialize(cp, section);
     miscRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);

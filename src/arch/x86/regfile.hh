@@ -60,20 +60,26 @@
 
 #include <string>
 
-#include "arch/x86/floatregfile.hh"
 #include "arch/x86/intregfile.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/isa_traits.hh"
+#include "arch/x86/x86_traits.hh"
 #include "arch/x86/types.hh"
 #include "base/types.hh"
 
 class Checkpoint;
 class EventManager;
+class ThreadContext;
 
 namespace X86ISA
 {
     const int NumMiscArchRegs = NUM_MISCREGS;
     const int NumMiscRegs = NUM_MISCREGS;
+
+    //Each 128 bit xmm register is broken into two effective 64 bit registers.
+    const int NumFloatRegs =
+        NumMMXRegs + 2 * NumXMMRegs + NumMicroFpRegs;
+    const int NumFloatArchRegs = NumFloatRegs + 8;
 
     class RegFile
     {
@@ -93,19 +99,10 @@ namespace X86ISA
 
       protected:
         IntRegFile intRegFile; // integer register file
-        FloatRegFile floatRegFile; // floating point register file
 
       public:
 
         void clear();
-
-        FloatReg readFloatReg(int floatReg);
-
-        FloatRegBits readFloatRegBits(int floatReg);
-
-        void setFloatReg(int floatReg, const FloatReg &val);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val);
 
         IntReg readIntReg(int intReg);
 

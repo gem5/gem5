@@ -41,7 +41,6 @@ void
 RegFile::clear()
 {
     intRegFile.clear();
-    floatRegFile.clear();
 }
 
 void
@@ -49,7 +48,6 @@ RegFile::reset(std::string core_name, ThreadID num_threads, unsigned num_vpes,
                BaseCPU *_cpu)
 {
     bzero(&intRegFile, sizeof(intRegFile));
-    bzero(&floatRegFile, sizeof(floatRegFile));
 }
 
 IntReg
@@ -62,30 +60,6 @@ Fault
 RegFile::setIntReg(int intReg, const IntReg &val)
 {
     return intRegFile.setReg(intReg, val);
-}
-
-FloatReg
-RegFile::readFloatReg(int floatReg)
-{
-    return floatRegFile.readReg(floatReg);
-}
-
-FloatRegBits
-RegFile::readFloatRegBits(int floatReg)
-{
-    return floatRegFile.readRegBits(floatReg);
-}
-
-Fault
-RegFile::setFloatReg(int floatReg, const FloatReg &val)
-{
-    return floatRegFile.setReg(floatReg, val);
-}
-
-Fault
-RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
-{
-    return floatRegFile.setRegBits(floatReg, val);
 }
 
 void
@@ -134,7 +108,6 @@ void
 RegFile::serialize(EventManager *em, std::ostream &os)
 {
     intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -145,7 +118,6 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp,
     const std::string &section)
 {
     intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

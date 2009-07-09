@@ -70,28 +70,7 @@ void RegFile::setNextNPC(Addr val)
 
 void RegFile::clear()
 {
-    floatRegFile.clear();
     intRegFile.clear();
-}
-
-FloatReg RegFile::readFloatReg(int floatReg)
-{
-    return floatRegFile.readReg(floatReg);
-}
-
-FloatRegBits RegFile::readFloatRegBits(int floatReg)
-{
-    return floatRegFile.readRegBits(floatReg);
-}
-
-void RegFile::setFloatReg(int floatReg, const FloatReg &val)
-{
-    floatRegFile.setReg(floatReg, val);
-}
-
-void RegFile::setFloatRegBits(int floatReg, const FloatRegBits &val)
-{
-    floatRegFile.setRegBits(floatReg, val);
 }
 
 IntReg RegFile::readIntReg(int intReg)
@@ -108,7 +87,6 @@ void
 RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
-    floatRegFile.serialize(os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -118,7 +96,6 @@ void
 RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
-    floatRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

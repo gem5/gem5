@@ -88,7 +88,6 @@ Import('*')
 if env['TARGET_ISA'] == 'x86':
     Source('cpuid.cc')
     Source('emulenv.cc')
-    Source('floatregfile.cc')
     Source('faults.cc')
     Source('insts/microfpop.cc')
     Source('insts/microldstop.cc')

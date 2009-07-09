@@ -265,7 +265,7 @@ InOrderCPU::InOrderCPU(Params *params)
         lastSquashCycle[tid] = 0;
 
         intRegFile[tid].clear();
-        floatRegFile[tid].clear();
+        memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
         isa[tid].clear();
 
         isa[tid].expandForMultithreading(numThreads, numVirtProcs);
@@ -892,13 +892,13 @@ InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 FloatReg
 InOrderCPU::readFloatReg(int reg_idx, ThreadID tid)
 {
-    return floatRegFile[tid].readReg(reg_idx);
+    return floatRegs.f[tid][reg_idx];
 }
 
 FloatRegBits
 InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid)
 {;
-    return floatRegFile[tid].readRegBits(reg_idx);
+    return floatRegs.i[tid][reg_idx];
 }
 
 void
@@ -911,14 +911,14 @@ InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
 void
 InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid)
 {
-    floatRegFile[tid].setReg(reg_idx, val);
+    floatRegs.f[tid][reg_idx] = val;
 }
 
 
 void
 InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid)
 {
-    floatRegFile[tid].setRegBits(reg_idx, val);
+    floatRegs.i[tid][reg_idx] = val;
 }
 
 uint64_t

@@ -59,6 +59,7 @@
 
 #include "config/full_system.hh"
 
+#include "arch/x86/faults.hh"
 #include "arch/x86/insts/microldstop.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/pagetable.hh"

@@ -99,6 +99,10 @@ class SimpleThread : public ThreadState
 
   protected:
     RegFile regs;       // correct-path register context
+    union {
+        FloatReg f[TheISA::NumFloatRegs];
+        FloatRegBits i[TheISA::NumFloatRegs];
+    } floatRegs;
     TheISA::ISA isa;    // one "instance" of the current ISA.
 
   public:
@@ -223,7 +227,11 @@ class SimpleThread : public ThreadState
 
     void copyArchRegs(ThreadContext *tc);
 
-    void clearArchRegs() { regs.clear(); }
+    void clearArchRegs()
+    {
+        regs.clear();
+        memset(floatRegs.i, 0, sizeof(floatRegs.i));
+    }
 
     //
     // New accessors for new decoder.
@@ -237,13 +245,13 @@ class SimpleThread : public ThreadState
     FloatReg readFloatReg(int reg_idx)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
-        return regs.readFloatReg(flatIndex);
+        return floatRegs.f[flatIndex];
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
-        return regs.readFloatRegBits(flatIndex);
+        return floatRegs.i[flatIndex];
     }
 
     void setIntReg(int reg_idx, uint64_t val)
@@ -255,13 +263,13 @@ class SimpleThread : public ThreadState
     void setFloatReg(int reg_idx, FloatReg val)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
-        regs.setFloatReg(flatIndex, val);
+        floatRegs.f[flatIndex] = val;
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
         int flatIndex = isa.flattenFloatIndex(reg_idx);
-        regs.setFloatRegBits(flatIndex, val);
+        floatRegs.i[flatIndex] = val;
     }
 
     uint64_t readPC()

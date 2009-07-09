@@ -192,6 +192,7 @@ SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
     regs.serialize(cpu, os);
+    SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -201,6 +202,7 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
     regs.unserialize(cpu, cp, section);
+    UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
     // thread_num and cpu_id are deterministic from the config
 }
 

@@ -33,7 +33,6 @@
 
 #include "arch/arm/types.hh"
 #include "arch/arm/regfile/int_regfile.hh"
-#include "arch/arm/regfile/float_regfile.hh"
 #include "arch/arm/regfile/misc_regfile.hh"
 #include "sim/faults.hh"
 
@@ -43,38 +42,39 @@ class ThreadContext;
 
 namespace ArmISA
 {
+    enum FPControlRegNums {
+       FIR = NumFloatArchRegs,
+       FCCR,
+       FEXR,
+       FENR,
+       FCSR
+    };
+
+    enum FCSRBits {
+        Inexact = 1,
+        Underflow,
+        Overflow,
+        DivideByZero,
+        Invalid,
+        Unimplemented
+    };
+
+    enum FCSRFields {
+        Flag_Field = 1,
+        Enable_Field = 6,
+        Cause_Field = 11
+    };
+
     class RegFile
     {
       protected:
         IntRegFile intRegFile;		// (signed) integer register file
-        FloatRegFile floatRegFile;	// floating point register file
 
       public:
 
         void clear()
         {
             intRegFile.clear();
-            floatRegFile.clear();
-        }
-
-        FloatReg readFloatReg(int floatReg)
-        {
-            return floatRegFile.readReg(floatReg);
-        }
-
-        FloatRegBits readFloatRegBits(int floatReg)
-        {
-            return floatRegFile.readRegBits(floatReg);
-        }
-
-        void setFloatReg(int floatReg, const FloatReg &val)
-        {
-            floatRegFile.setReg(floatReg, val);
-        }
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val)
-        {
-            floatRegFile.setRegBits(floatReg, val);
         }
 
         IntReg readIntReg(int intReg)

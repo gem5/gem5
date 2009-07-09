@@ -32,7 +32,6 @@
 #define __ARCH_ALPHA_REGFILE_HH__
 
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/floatregfile.hh"
 #include "arch/alpha/intregfile.hh"
 #include "arch/alpha/miscregfile.hh"
 #include "arch/alpha/types.hh"
@@ -92,7 +91,6 @@ class RegFile {
 
   protected:
     IntRegFile intRegFile;          // (signed) integer register file
-    FloatRegFile floatRegFile;      // floating point register file
 
   public:
 #if FULL_SYSTEM
@@ -103,31 +101,6 @@ class RegFile {
     clear()
     {
         intRegFile.clear();
-        floatRegFile.clear();
-    }
-
-    FloatReg
-    readFloatReg(int floatReg)
-    {
-        return floatRegFile.d[floatReg];
-    }
-
-    FloatRegBits
-    readFloatRegBits(int floatReg)
-    {
-        return floatRegFile.q[floatReg];
-    }
-
-    void
-    setFloatReg(int floatReg, const FloatReg &val)
-    {
-        floatRegFile.d[floatReg] = val;
-    }
-
-    void
-    setFloatRegBits(int floatReg, const FloatRegBits &val)
-    {
-        floatRegFile.q[floatReg] = val;
     }
 
     IntReg

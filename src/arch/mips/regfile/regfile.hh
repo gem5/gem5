@@ -36,7 +36,6 @@
 #include "arch/mips/isa_traits.hh"
 //#include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
-#include "arch/mips/regfile/float_regfile.hh"
 //#include "cpu/base.hh"
 #include "sim/faults.hh"
 
@@ -46,6 +45,32 @@ class EventManager;
 
 namespace MipsISA
 {
+    const uint32_t MIPS32_QNAN = 0x7fbfffff;
+    const uint64_t MIPS64_QNAN = ULL(0x7fbfffffffffffff);
+
+    enum FPControlRegNums {
+       FIR = NumFloatArchRegs,
+       FCCR,
+       FEXR,
+       FENR,
+       FCSR
+    };
+
+    enum FCSRBits {
+        Inexact = 1,
+        Underflow,
+        Overflow,
+        DivideByZero,
+        Invalid,
+        Unimplemented
+    };
+
+    enum FCSRFields {
+        Flag_Field = 1,
+        Enable_Field = 6,
+        Cause_Field = 11
+    };
+
     class RegFile {
       protected:
         Addr pc;                        // program counter
@@ -55,7 +80,6 @@ namespace MipsISA
                                         // not real register
 
         IntRegFile intRegFile;          // (signed) integer register file
-        FloatRegFile floatRegFile;      // floating point register file
 
       public:
         void clear();
@@ -64,13 +88,6 @@ namespace MipsISA
 
         IntReg readIntReg(int intReg);
         Fault setIntReg(int intReg, const IntReg &val);
-
-
-        FloatReg readFloatReg(int floatReg);
-        FloatRegBits readFloatRegBits(int floatReg);
-        Fault setFloatReg(int floatReg, const FloatReg &val);
-        Fault setFloatRegBits(int floatReg, const FloatRegBits &val);
-
 
         void setShadowSet(int css);
 

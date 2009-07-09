@@ -259,7 +259,10 @@ class InOrderCPU : public BaseCPU
 
     /** The Register File for the CPU */
     TheISA::IntRegFile intRegFile[ThePipeline::MaxThreads];;
-    TheISA::FloatRegFile floatRegFile[ThePipeline::MaxThreads];;
+    union {
+        FloatReg f[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
+        FloatRegBits i[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
+    } floatRegs;
 
     /** ISA state */
     TheISA::ISA isa[ThePipeline::MaxThreads];

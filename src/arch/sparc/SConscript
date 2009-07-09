@@ -34,7 +34,6 @@ Import('*')
 if env['TARGET_ISA'] == 'sparc':
     Source('asi.cc')
     Source('faults.cc')
-    Source('floatregfile.cc')
     Source('intregfile.cc')
     Source('isa.cc')
     Source('miscregfile.cc')

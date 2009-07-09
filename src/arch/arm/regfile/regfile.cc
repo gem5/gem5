@@ -58,7 +58,6 @@ void
 RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
 }
@@ -67,7 +66,6 @@ void
 RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);
 }
