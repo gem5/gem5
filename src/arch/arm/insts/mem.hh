@@ -65,23 +65,75 @@ class Memory : public PredOp
 
     std::string
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+    virtual void
+    printOffset(std::ostream &os) const
+    {}
 };
 
- /**
- * Base class for a few miscellaneous memory-format insts
- * that don't interpret the disp field
- */
-class MemoryNoDisp : public Memory
+class MemoryDisp : public Memory
 {
   protected:
     /// Constructor
-    MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+    MemoryDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : Memory(mnem, _machInst, __opClass)
     {
     }
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    void
+    printOffset(std::ostream &os) const
+    {
+        ccprintf(os, "#%#x", (machInst.puswl.up ? disp : -disp));
+    }
+};
+
+class MemoryHilo : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryHilo(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        ccprintf(os, "#%#x", (machInst.puswl.up ? hilo : -hilo));
+    }
+};
+
+class MemoryShift : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryShift(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        printShiftOperand(os);
+    }
+};
+
+class MemoryReg : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        os << (machInst.puswl.up ? "+ " : "- ");
+        printReg(os, machInst.rm);
+    }
 };
 }
 

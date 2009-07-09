@@ -276,11 +276,12 @@ let {{
             # Here's where we'll tack on a flag to make this a usermode access.
             mnem += "t"
         type = ("Store", "Load")[l]
-        suffix = "_%s_P%dU%dB%dW%d" % (suffix, p, u, b, w)
+        newSuffix = "_%s_P%dU%dB%dW%d" % (suffix, p, u, b, w)
         if b == 1:
             mnem += "b"
-        return LoadStoreBase(mnem, mnem.capitalize() + suffix,
+        return LoadStoreBase(mnem, mnem.capitalize() + newSuffix,
                 ea_code, code, mem_flags = [], inst_flags = [],
+                base_class = 'Memory' + suffix,
                 exec_template_base = type.capitalize())
 
     def buildMode3Inst(p, u, i, w, type, code, mnem):
@@ -289,9 +290,11 @@ let {{
         ea_code = "EA = Rn %s;" % ("", offset)[p]
         if p == 0 or w == 1:
             code += "Rn = Rn %s;" % offset
-        suffix = "_P%dU%dI%dW%d" % (p, u, i, w)
-        return LoadStoreBase(mnem, mnem.capitalize() + suffix,
+        newSuffix = "_P%dU%dI%dW%d" % (p, u, i, w)
+        suffix = ("Reg", "Hilo")[i]
+        return LoadStoreBase(mnem, mnem.capitalize() + newSuffix,
                 ea_code, code, mem_flags = [], inst_flags = [],
+                base_class = 'Memory' + suffix,
                 exec_template_base = type.capitalize())
 }};
 
