@@ -47,6 +47,23 @@ number_of_ones(int32_t val)
 }
 
 /**
+ * Microops of the form IntRegA = IntRegB op Imm
+ */
+class MicroIntOp : public PredOp
+{
+  protected:
+    RegIndex ura, urb;
+    uint8_t imm;
+
+    MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+            : PredOp(mnem, machInst, __opClass),
+              ura(_ura), urb(_urb), imm(_imm)
+    {
+    }
+};
+
+/**
  * Arm Macro Memory operations like LDM/STM
  */
 class ArmMacroMemoryOp : public PredMacroOp

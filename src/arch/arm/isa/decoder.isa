@@ -41,20 +41,12 @@ decode COND_CODE default Unknown::unknown() {
     0xf: decode COND_CODE {
         0x0: decode OPCODE {
             // Just a simple trick to allow us to specify our new uops here
-            0x0: PredImmOp::addi_uop({{ Raddr = Rn + rotated_imm; }},
-                                        'IsMicroop');
-            0x1: PredImmOp::subi_uop({{ Raddr = Rn - rotated_imm; }},
-                                        'IsMicroop');
             0x2: ArmLoadMemory::ldr_uop({{ Rd = Mem; }},
                                         {{ EA = Raddr + (up ? disp : -disp); }},
                                            inst_flags = [IsMicroop]);
             0x3: ArmStoreMemory::str_uop({{ Mem = Rd; }},
                                          {{ EA = Raddr + (up ? disp : -disp); }},
                                             inst_flags = [IsMicroop]);
-            0x4: PredImmOp::addi_rd_uop({{ Rd = Rn + rotated_imm; }},
-                                           'IsMicroop');
-            0x5: PredImmOp::subi_rd_uop({{ Rd = Rn - rotated_imm; }},
-                                           'IsMicroop');
         }
         0x1: decode OPCODE {
             0x0: PredIntOp::mvtd_uop({{ Fd.ud = ((uint64_t) Rhi << 32)|Rlo; }},

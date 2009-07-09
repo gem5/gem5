@@ -56,6 +56,10 @@ def operands {{
     'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 8),
     'LR': ('IntReg', 'uw', '14', 'IsInteger', 9),
 
+    #Register fields for microops
+    'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11),
+    'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 12),
+
     #General Purpose Floating Point Reg Operands
     'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 20),
     'Fn': ('FloatReg', 'df', 'FN', 'IsFloating', 21),
