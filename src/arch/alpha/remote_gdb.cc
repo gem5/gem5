@@ -128,6 +128,7 @@
 
 #include "arch/alpha/kgdb.h"
 #include "arch/alpha/utility.hh"
+#include "arch/alpha/regredir.hh"
 #include "arch/alpha/remote_gdb.hh"
 #include "base/intmath.hh"
 #include "base/remote_gdb.hh"

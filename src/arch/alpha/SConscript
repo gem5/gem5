@@ -39,6 +39,7 @@ if env['TARGET_ISA'] == 'alpha':
     Source('miscregfile.cc')
     Source('pagetable.cc')
     Source('regfile.cc')
+    Source('regredir.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
     Source('utility.cc')

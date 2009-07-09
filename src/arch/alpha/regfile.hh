@@ -31,20 +31,27 @@
 #ifndef __ARCH_ALPHA_REGFILE_HH__
 #define __ARCH_ALPHA_REGFILE_HH__
 
-#include "arch/alpha/isa_traits.hh"
+#include "arch/alpha/ipr.hh"
 
-#include <string>
-
-//XXX These should be implemented by someone who knows the alpha stuff better
-
-class Checkpoint;
-class EventManager;
 class ThreadContext;
 
 namespace AlphaISA {
 
-// redirected register map, really only used for the full system case.
-extern const int reg_redir[NumIntRegs];
+    const int NumIntArchRegs = 32;
+    const int NumPALShadowRegs = 8;
+    const int NumFloatArchRegs = 32;
+    // @todo: Figure out what this number really should be.
+    const int NumMiscArchRegs = 77;
+
+    const int NumIntRegs = NumIntArchRegs + NumPALShadowRegs;
+    const int NumFloatRegs = NumFloatArchRegs;
+    const int NumMiscRegs = NumMiscArchRegs;
+
+    const int TotalNumRegs =
+        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs;
+
+    const int TotalDataRegs = NumIntRegs + NumFloatRegs;
+
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 

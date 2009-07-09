@@ -128,21 +128,6 @@ enum mode_type
 // Constants Related to the number of registers
 
 enum {
-    NumIntArchRegs = 32,
-    NumPALShadowRegs = 8,
-    NumFloatArchRegs = 32,
-    // @todo: Figure out what this number really should be.
-    NumMiscArchRegs = 77,
-
-    NumIntRegs = NumIntArchRegs + NumPALShadowRegs,
-    NumFloatRegs = NumFloatArchRegs,
-    NumMiscRegs = NumMiscArchRegs,
-
-    TotalNumRegs =
-        NumIntRegs + NumFloatRegs + NumMiscRegs + NumInternalProcRegs,
-
-    TotalDataRegs = NumIntRegs + NumFloatRegs,
-
     // semantically meaningful register indices
     ZeroReg = 31,     // architecturally meaningful
     // the rest of these depend on the ABI

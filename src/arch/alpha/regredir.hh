@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,52 +25,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Gabe Black
- *          Kevin Lim
+ * Authors: Gabe Black
  */
 
-#include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/regfile.hh"
-#include "arch/alpha/miscregfile.hh"
-#include "cpu/thread_context.hh"
+#ifndef __ARCH_ALPHA_REGREDIR_HH__
+#define __ARCH_ALPHA_REGREDIR_HH__
 
-using namespace std;
+#include "arch/alpha/regfile.hh"
 
 namespace AlphaISA {
 
-void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    // First loop through the integer registers.
-    for (int i = 0; i < NumIntRegs; ++i)
-        dest->setIntReg(i, src->readIntReg(i));
-
-    // Then loop through the floating point registers.
-    for (int i = 0; i < NumFloatRegs; ++i)
-        dest->setFloatRegBits(i, src->readFloatRegBits(i));
-
-    // Copy misc. registers
-    copyMiscRegs(src, dest);
-
-    // Lastly copy PC/NPC
-    dest->setPC(src->readPC());
-    dest->setNextPC(src->readNextPC());
-}
-
-void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    dest->setMiscRegNoEffect(MISCREG_FPCR,
-        src->readMiscRegNoEffect(MISCREG_FPCR));
-    dest->setMiscRegNoEffect(MISCREG_UNIQ,
-        src->readMiscRegNoEffect(MISCREG_UNIQ));
-    dest->setMiscRegNoEffect(MISCREG_LOCKFLAG,
-        src->readMiscRegNoEffect(MISCREG_LOCKFLAG));
-    dest->setMiscRegNoEffect(MISCREG_LOCKADDR,
-        src->readMiscRegNoEffect(MISCREG_LOCKADDR));
-
-    copyIprs(src, dest);
-}
+// redirected register map, really only used for the full system case.
+extern const int reg_redir[NumIntRegs];
 
 } // namespace AlphaISA
+
+#endif // __ARCH_ALPHA_REGREDIR_HH__
