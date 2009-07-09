@@ -122,22 +122,12 @@ namespace ArmISA
 
         IntReg readIntReg(int intReg)
         {
-            // In the Arm, reading from the PC for a generic instruction yields
-            // the current PC + 8, due to previous pipeline implementations
-            if (intReg == PCReg)
-                return intRegFile.readReg(intReg) + 8;
-                //return pc + 8;
-            else
-                return intRegFile.readReg(intReg);
+            return intRegFile.readReg(intReg);
         }
 
         void setIntReg(int intReg, const IntReg &val)
         {
-            // Have to trap writes to PC so that they update NPC instead
-            if (intReg == PCReg)
-                setNextPC(val);
-            else
-                intRegFile.setReg(intReg, val);
+            intRegFile.setReg(intReg, val);
         }
       protected:
 

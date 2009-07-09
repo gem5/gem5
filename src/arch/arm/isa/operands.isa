@@ -40,16 +40,27 @@ def operand_types {{
     'df' : ('float', 64)
 }};
 
+let {{
+    maybePCRead = '''
+        ((%(reg_idx)s == PCReg) ? (xc->readPC() + 8) :
+         xc->%(func)s(this, %(op_idx)s))
+    '''
+    maybePCWrite = '''
+        ((%(reg_idx)s == PCReg) ? xc->setNextPC(%(final_val)s) :
+         xc->%(func)s(this, %(op_idx)s, %(final_val)s))
+    '''
+}};
+
 def operands {{
     #General Purpose Integer Reg Operands
-    'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1),
-    'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2),
-    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
-    'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4),
+    'Rd': ('IntReg', 'uw', 'RD', 'IsInteger', 1, maybePCRead, maybePCWrite),
+    'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2, maybePCRead, maybePCWrite),
+    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3, maybePCRead, maybePCWrite),
+    'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4, maybePCRead, maybePCWrite),
 
     #Destination register for load/store double instructions
-    'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4),
-    'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5),
+    'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),
+    'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5, maybePCRead, maybePCWrite),
 
     'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 6),
     'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 7),
@@ -57,8 +68,8 @@ def operands {{
     'LR': ('IntReg', 'uw', '14', 'IsInteger', 9),
 
     #Register fields for microops
-    'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11),
-    'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 12),
+    'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11, maybePCRead, maybePCWrite),
+    'Rb' : ('IntReg', 'uw', 'urb', 'IsInteger', 12, maybePCRead, maybePCWrite),
 
     #General Purpose Floating Point Reg Operands
     'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 20),
