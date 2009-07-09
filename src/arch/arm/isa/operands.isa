@@ -47,22 +47,26 @@ def operands {{
     'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4),
 
-    'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 5),
-    'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 5),
-    'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 6),
-    'LR': ('IntReg', 'uw', '14', 'IsInteger', 6),
+    #Destination register for load/store double instructions
+    'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4),
+    'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5),
+
+    'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 6),
+    'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 7),
+    'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 8),
+    'LR': ('IntReg', 'uw', '14', 'IsInteger', 9),
 
     #General Purpose Floating Point Reg Operands
-    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 1),
-    'Fn': ('FloatReg', 'df', 'FN', 'IsFloating', 2),
-    'Fm': ('FloatReg', 'df', 'FM', 'IsFloating', 3),
+    'Fd': ('FloatReg', 'df', 'FD', 'IsFloating', 20),
+    'Fn': ('FloatReg', 'df', 'FN', 'IsFloating', 21),
+    'Fm': ('FloatReg', 'df', 'FM', 'IsFloating', 22),
 
     #Memory Operand
-    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
+    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 30),
 
-    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', 'IsInteger', 7),
-    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', 'IsInteger', 7),
-    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 9),
-    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 9),
+    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', 'IsInteger', 40),
+    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', 'IsInteger', 41),
+    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 42),
+    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 43),
 
 }};
