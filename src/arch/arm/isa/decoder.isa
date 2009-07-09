@@ -46,10 +46,10 @@ decode COND_CODE default Unknown::unknown() {
             0x1: PredImmOp::subi_uop({{ Raddr = Rn - rotated_imm; }},
                                         'IsMicroop');
             0x2: ArmLoadMemory::ldr_uop({{ Rd = Mem; }},
-                                        {{ EA = Raddr + disp; }},
+                                        {{ EA = Raddr + (up ? disp : -disp); }},
                                            inst_flags = [IsMicroop]);
             0x3: ArmStoreMemory::str_uop({{ Mem = Rd; }},
-                                         {{ EA = Raddr + disp; }},
+                                         {{ EA = Raddr + (up ? disp : -disp); }},
                                             inst_flags = [IsMicroop]);
             0x4: PredImmOp::addi_rd_uop({{ Rd = Rn + rotated_imm; }},
                                            'IsMicroop');
@@ -63,16 +63,16 @@ decode COND_CODE default Unknown::unknown() {
                                         Rlo = Fd.ud & 0xffffffff; }},
                                         'IsMicroop');
             0x2: ArmLoadMemory::ldhi_uop({{ Rhi = Mem; }},
-                                         {{ EA = Rn + disp; }},
+                                         {{ EA = Rn + (up ? disp : -disp); }},
                                             inst_flags = [IsMicroop]);
             0x3: ArmLoadMemory::ldlo_uop({{ Rlo = Mem; }},
-                                         {{ EA = Rn + disp; }},
+                                         {{ EA = Rn + (up ? disp : -disp); }},
                                             inst_flags = [IsMicroop]);
             0x4: ArmStoreMemory::sthi_uop({{ Mem = Rhi; }},
-                                          {{ EA = Rn + disp; }},
+                                          {{ EA = Rn + (up ? disp : -disp); }},
                                              inst_flags = [IsMicroop]);
             0x5: ArmStoreMemory::stlo_uop({{ Mem = Rlo; }},
-                                          {{ EA = Rn + disp; }},
+                                          {{ EA = Rn + (up ? disp : -disp); }},
                                              inst_flags = [IsMicroop]);
         }
         default: Unknown::unknown(); // TODO: Ignore other NV space for now
@@ -225,107 +225,9 @@ format DataOp {
             0xb: WarnUnimpl::mrs_i_spsr();
         }
     }
-    0x2: decode PUBWL {
-        // CAREFUL:
-        // Can always do EA + disp, since we negate disp using the UP flag
-        // Post-indexed variants
-        0x00,0x08: ArmStoreMemory::str_({{ Mem = Rd;
-                                           Rn = Rn + disp; }},
-                                        {{ EA = Rn; }});
-        0x01,0x09: ArmLoadMemory::ldr_l({{ Rn = Rn + disp; 
-                                           Rd = Mem; }},
-                                        {{ EA = Rn; }});
-        0x04,0x0c: ArmStoreMemory::strb_b({{ Mem.ub = Rd.ub;
-                                             Rn = Rn + disp; }},
-                                          {{ EA = Rn; }});
-        0x05,0x0d: ArmLoadMemory::ldrb_bl({{ Rn = Rn + disp; 
-                                             Rd.ub = Mem.ub; }},
-                                          {{ EA = Rn; }});
-        // Pre-indexed variants
-        0x10,0x18: ArmStoreMemory::str_p({{ Mem = Rd; }});
-        0x11,0x19: ArmLoadMemory::ldr_pl({{ Rd = Mem; }});
-        0x12,0x1a: ArmStoreMemory::str_pw({{ Mem = Rd;
-                                             Rn = Rn + disp; }});
-        0x13,0x1b: ArmLoadMemory::ldr_pwl({{ Rn = Rn + disp; 
-                                             Rd = Mem; }});
-        0x14,0x1c: ArmStoreMemory::strb_pb({{ Mem.ub = Rd.ub; }});
-        0x15,0x1d: ArmLoadMemory::ldrb_pbl({{ Rd.ub = Mem.ub; }});
-        0x16,0x1e: ArmStoreMemory::strb_pbw({{ Mem.ub = Rd.ub;
-                                               Rn = Rn + disp; }});
-        0x17,0x1f: ArmLoadMemory::ldrb_pbwl({{ Rn = Rn + disp; 
-                                               Rd.ub = Mem.ub; }});
-    }
+    0x2: AddrMode2::addrMode2(Disp, disp);
     0x3: decode OPCODE_4 {
-        0: decode PUBWL {
-            format ArmStoreMemory {
-                0x00, 0x02: strr_({{ Mem = Rd;
-                                     Rn = Rn - Rm_Imm; }},
-                                  {{ EA = Rn; }});
-                0x04, 0x06: strr_b({{ Mem = Rd.ub;
-                                      Rn = Rn - Rm_Imm; }},
-                                   {{ EA = Rn; }});
-                0x08, 0x0a: strr_u({{ Mem = Rd;
-                                      Rn = Rn + Rm_Imm; }},
-                                   {{ EA = Rn; }});
-                0x0c, 0x0e: strr_ub({{ Mem.ub = Rd.ub;
-                                       Rn = Rn + Rm_Imm; }},
-                                    {{ EA = Rn; }});
-                0x10: strr_p({{ Mem = Rd; }},
-                             {{ EA = Rn - Rm_Imm; }});
-                0x12: strr_pw({{ Mem = Rd;
-                                 Rn = Rn - Rm_Imm; }},
-                              {{ EA = Rn - Rm_Imm; }});
-                0x14: strr_pb({{ Mem.ub = Rd.ub; }},
-                              {{ EA = Rn - Rm_Imm; }});
-                0x16: strr_pbw({{ Mem.ub = Rd.ub;
-                                  Rn = Rn - Rm_Imm; }},
-                               {{ EA = Rn - Rm_Imm; }});
-                0x18: strr_pu({{ Mem = Rd; }},
-                              {{ EA = Rn + Rm_Imm; }});
-                0x1a: strr_puw({{ Mem = Rd;
-                                  Rn = Rn + Rm_Imm; }},
-                               {{ EA = Rn + Rm_Imm; }});
-                0x1c: strr_pub({{ Mem.ub = Rd; }},
-                               {{ EA = Rn + Rm_Imm; }});
-                0x1e: strr_pubw({{ Mem.ub = Rd;
-                                   Rn = Rn + Rm_Imm; }},
-                                {{ EA = Rn + Rm_Imm; }});
-            }
-            format ArmLoadMemory {
-                0x01,0x03: ldrr_l({{ Rd = Mem;
-                                     Rn = Rn - Rm_Imm; }},
-                                  {{ EA = Rn; }});
-                0x05,0x07: ldrr_bl({{ Rd = Mem.ub;
-                                      Rn = Rn - Rm_Imm; }},
-                                   {{ EA = Rn; }});
-                0x09,0x0b: ldrr_ul({{ Rd = Mem;
-                                     Rn = Rn + Rm_Imm; }},
-                                   {{ EA = Rn; }});
-                0x0d,0x0f: ldrr_ubl({{ Rd = Mem.ub;
-                                       Rn = Rn + Rm_Imm; }},
-                                    {{ EA = Rn; }});
-                0x11: ldrr_pl({{ Rd = Mem; }},
-                              {{ EA = Rn - Rm_Imm; }});
-                0x13: ldrr_pwl({{ Rd = Mem;
-                                  Rn = Rn - Rm_Imm; }},
-                               {{ EA = Rn - Rm_Imm; }});
-                0x15: ldrr_pbl({{ Rd = Mem.ub; }},
-                               {{ EA = Rn - Rm_Imm; }});
-                0x17: ldrr_pbwl({{ Rd = Mem.ub;
-                                   Rn = Rn - Rm_Imm; }},
-                                {{ EA = Rn - Rm_Imm; }});
-                0x19: ldrr_pul({{ Rd = Mem; }},
-                               {{ EA = Rn + Rm_Imm; }});
-                0x1b: ldrr_puwl({{ Rd = Mem;
-                                   Rn = Rn + Rm_Imm; }},
-                                {{ EA = Rn + Rm_Imm; }});
-                0x1d: ldrr_publ({{ Rd = Mem.ub; }},
-                                {{ EA = Rn + Rm_Imm; }});
-                0x1f: ldrr_pubwl({{ Rd = Mem.ub;
-                                    Rn = Rn + Rm_Imm; }},
-                                 {{ EA = Rn + Rm_Imm; }});
-            }
-        }
+        0: AddrMode2::addrMode2(Shift, Rm_Imm);
         1: decode MEDIA_OPCODE {
             0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7: WarnUnimpl::parallel_add_subtract_instructions();
             0x8: decode MISC_OPCODE {

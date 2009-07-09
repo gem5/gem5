@@ -68,12 +68,6 @@ class Memory : public PredOp
                  hilo((machInst.immedHi11_8 << 4) | machInst.immedLo3_0),
                  shift_size(machInst.shiftSize), shift(machInst.shift)
     {
-        // When Up is not set, then we must subtract by the displacement
-        if (!up)
-        {
-            disp = -disp;
-            disp8 = -disp8;
-        }
     }
 
     std::string
