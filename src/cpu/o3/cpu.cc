@@ -1180,14 +1180,14 @@ template <class Impl>
 TheISA::MiscReg
 FullO3CPU<Impl>::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
-    return this->regFile.readMiscRegNoEffect(misc_reg, tid);
+    return this->isa[tid].readMiscRegNoEffect(misc_reg);
 }
 
 template <class Impl>
 TheISA::MiscReg
 FullO3CPU<Impl>::readMiscReg(int misc_reg, ThreadID tid)
 {
-    return this->regFile.readMiscReg(misc_reg, tid);
+    return this->isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 
 template <class Impl>
@@ -1195,7 +1195,7 @@ void
 FullO3CPU<Impl>::setMiscRegNoEffect(int misc_reg,
         const TheISA::MiscReg &val, ThreadID tid)
 {
-    this->regFile.setMiscRegNoEffect(misc_reg, val, tid);
+    this->isa[tid].setMiscRegNoEffect(misc_reg, val);
 }
 
 template <class Impl>
@@ -1203,7 +1203,7 @@ void
 FullO3CPU<Impl>::setMiscReg(int misc_reg,
         const TheISA::MiscReg &val, ThreadID tid)
 {
-    this->regFile.setMiscReg(misc_reg, val, tid);
+    this->isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
 }
 
 template <class Impl>

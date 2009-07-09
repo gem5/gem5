@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,55 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Gabe Black
  */
 
-#include "arch/arm/regfile/regfile.hh"
-#include "sim/serialize.hh"
+#include "arch/alpha/isa.hh"
+#include "cpu/thread_context.hh"
 
-using namespace std;
-
-namespace ArmISA
+namespace AlphaISA
 {
 
 void
-copyRegs(ThreadContext *src, ThreadContext *dest)
+ISA::clear()
 {
-    panic("Copy Regs Not Implemented Yet\n");
+    miscRegFile.clear();
+}
+
+MiscReg
+ISA::readMiscRegNoEffect(int miscReg)
+{
+    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
+}
+
+MiscReg
+ISA::readMiscReg(int miscReg, ThreadContext *tc)
+{
+    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
 }
 
 void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+ISA::setMiscRegNoEffect(int miscReg, const MiscReg val)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
 }
 
 void
-MiscRegFile::copyMiscRegs(ThreadContext *tc)
+ISA::setMiscReg(int miscReg, const MiscReg val, ThreadContext *tc)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
 }
 
 void
-RegFile::serialize(EventManager *em, ostream &os)
+ISA::serialize(std::ostream &os)
 {
-    intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
+    miscRegFile.serialize(os);
 }
 
 void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
+ISA::unserialize(Checkpoint *cp, const std::string &section)
 {
-    intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
+    miscRegFile.unserialize(cp, section);
 }
 
-} // namespace ArmISA
+}

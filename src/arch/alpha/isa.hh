@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,61 +25,77 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Gabe Black
  */
 
-#ifndef __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
-#define __ARCH_ARM_REGFILE_MISC_REGFILE_HH__
+#ifndef __ARCH_ALPHA_ISA_HH__
+#define __ARCH_ALPHA_ISA_HH__
 
-#include "arch/arm/isa_traits.hh"
-#include "arch/arm/types.hh"
-#include "sim/faults.hh"
+#include "arch/alpha/miscregfile.hh"
+#include "arch/alpha/types.hh"
 
-class ThreadContext;
+class Checkpoint;
+class EventManager;
 
-namespace ArmISA
+namespace AlphaISA
 {
-    static inline std::string getMiscRegName(RegIndex)
+    class ISA
     {
-        return "";
-    }
-
-    class MiscRegFile {
-
       protected:
-        MiscReg miscRegFile[NumMiscRegs];
+        MiscRegFile miscRegFile;
 
       public:
-        void clear()
+
+        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
         {
-            // Unknown startup state in misc register file currently
+            miscRegFile.expandForMultithreading(num_threads, num_vpes);
         }
 
-        void copyMiscRegs(ThreadContext *tc);
-
-        MiscReg readRegNoEffect(int misc_reg)
+        void reset(std::string core_name, ThreadID num_threads,
+                unsigned num_vpes, BaseCPU *_cpu)
         {
-            return miscRegFile[misc_reg];
+            miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
         }
 
-        MiscReg readReg(int misc_reg, ThreadContext *tc)
+        int instAsid()
         {
-            return miscRegFile[misc_reg];
+            return miscRegFile.getInstAsid();
         }
 
-        void setRegNoEffect(int misc_reg, const MiscReg &val)
+        int dataAsid()
         {
-            miscRegFile[misc_reg] = val;
+            return miscRegFile.getDataAsid();
         }
 
-        void setReg(int misc_reg, const MiscReg &val,
-                               ThreadContext *tc)
+        void clear();
+
+        MiscReg readMiscRegNoEffect(int miscReg);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+
+        void setMiscRegNoEffect(int miscReg, const MiscReg val);
+        void setMiscReg(int miscReg, const MiscReg val,
+                ThreadContext *tc);
+
+        int
+        flattenIntIndex(int reg)
         {
-            miscRegFile[misc_reg] = val;
+            return reg;
         }
 
-        friend class RegFile;
+        int
+        flattenFloatIndex(int reg)
+        {
+            return reg;
+        }
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+        ISA()
+        {
+            clear();
+        }
     };
-} // namespace ArmISA
+}
 
 #endif

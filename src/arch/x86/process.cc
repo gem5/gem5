@@ -87,6 +87,7 @@
  */
 
 #include "arch/x86/isa_traits.hh"
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/process.hh"
 #include "arch/x86/segmentregs.hh"
 #include "arch/x86/types.hh"

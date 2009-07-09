@@ -72,28 +72,6 @@ void RegFile::clear()
 {
     floatRegFile.clear();
     intRegFile.clear();
-    miscRegFile.clear();
-}
-
-MiscReg RegFile::readMiscRegNoEffect(int miscReg)
-{
-    return miscRegFile.readRegNoEffect(miscReg);
-}
-
-MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc)
-{
-    return miscRegFile.readReg(miscReg, tc);
-}
-
-void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val)
-{
-    miscRegFile.setRegNoEffect(miscReg, val);
-}
-
-void RegFile::setMiscReg(int miscReg, const MiscReg &val,
-        ThreadContext * tc)
-{
-    miscRegFile.setReg(miscReg, val, tc);
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
@@ -151,80 +129,11 @@ void RegFile::setIntReg(int intReg, const IntReg &val)
     intRegFile.setReg(intReg, val);
 }
 
-int SparcISA::flattenIntIndex(ThreadContext * tc, int reg)
-{
-    int gl = tc->readMiscRegNoEffect(MISCREG_GL);
-    int cwp = tc->readMiscRegNoEffect(MISCREG_CWP);
-    //DPRINTF(RegisterWindows, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
-    int newReg;
-    //The total number of global registers
-    int numGlobals = (MaxGL + 1) * 8;
-    if(reg < 8)
-    {
-        //Global register
-        //Put it in the appropriate set of globals
-        newReg = reg + gl * 8;
-    }
-    else if(reg < NumIntArchRegs)
-    {
-        //Regular windowed register
-        //Put it in the window pointed to by cwp
-        newReg = numGlobals +
-            ((reg - 8 - cwp * 16 + NWindows * 16) % (NWindows * 16));
-    }
-    else if(reg < NumIntArchRegs + NumMicroIntRegs)
-    {
-        //Microcode register
-        //Displace from the end of the regular registers
-        newReg = reg - NumIntArchRegs + numGlobals + NWindows * 16;
-    }
-    else if(reg < 2 * NumIntArchRegs + NumMicroIntRegs)
-    {
-        reg -= (NumIntArchRegs + NumMicroIntRegs);
-        if(reg < 8)
-        {
-            //Global register from the next window
-            //Put it in the appropriate set of globals
-            newReg = reg + gl * 8;
-        }
-        else
-        {
-            //Windowed register from the previous window
-            //Put it in the window before the one pointed to by cwp
-            newReg = numGlobals +
-                ((reg - 8 - (cwp - 1) * 16 + NWindows * 16) % (NWindows * 16));
-        }
-    }
-    else if(reg < 3 * NumIntArchRegs + NumMicroIntRegs)
-    {
-        reg -= (2 * NumIntArchRegs + NumMicroIntRegs);
-        if(reg < 8)
-        {
-            //Global register from the previous window
-            //Put it in the appropriate set of globals
-            newReg = reg + gl * 8;
-        }
-        else
-        {
-            //Windowed register from the next window
-            //Put it in the window after the one pointed to by cwp
-            newReg = numGlobals +
-                ((reg - 8 - (cwp + 1) * 16 + NWindows * 16) % (NWindows * 16));
-        }
-    }
-    else
-        panic("Tried to flatten invalid register index %d!\n", reg);
-    DPRINTF(RegisterWindows, "Flattened register %d to %d.\n", reg, newReg);
-    return newReg;
-    //return intRegFile.flattenIndex(reg);
-}
-
 void
 RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
-    miscRegFile.serialize(em, os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -235,7 +144,6 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);
-    miscRegFile.unserialize(em, cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);

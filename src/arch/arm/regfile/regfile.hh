@@ -48,7 +48,6 @@ namespace ArmISA
       protected:
         IntRegFile intRegFile;		// (signed) integer register file
         FloatRegFile floatRegFile;	// floating point register file
-        MiscRegFile miscRegFile;	// control register file
 
       public:
 
@@ -56,28 +55,6 @@ namespace ArmISA
         {
             intRegFile.clear();
             floatRegFile.clear();
-            miscRegFile.clear();
-        }
-
-        MiscReg readMiscRegNoEffect(int miscReg)
-        {
-            return miscRegFile.readRegNoEffect(miscReg);
-        }
-
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc)
-        {
-            return miscRegFile.readReg(miscReg, tc);
-        }
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val)
-        {
-            miscRegFile.setRegNoEffect(miscReg, val);
-        }
-
-        void setMiscReg(int miscReg, const MiscReg &val,
-                ThreadContext * tc)
-        {
-            miscRegFile.setReg(miscReg, val, tc);
         }
 
         FloatRegVal readFloatReg(int floatReg)
@@ -171,21 +148,7 @@ namespace ArmISA
         void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,
                          const std::string &section);
-
-        void changeContext(RegContextParam param, RegContextVal val)
-        {
-        }
     };
-
-    static inline int flattenIntIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
-
-    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 

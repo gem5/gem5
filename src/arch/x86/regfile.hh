@@ -62,8 +62,8 @@
 
 #include "arch/x86/floatregfile.hh"
 #include "arch/x86/intregfile.hh"
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/isa_traits.hh"
-#include "arch/x86/miscregfile.hh"
 #include "arch/x86/types.hh"
 #include "base/types.hh"
 
@@ -72,6 +72,9 @@ class EventManager;
 
 namespace X86ISA
 {
+    const int NumMiscArchRegs = NUM_MISCREGS;
+    const int NumMiscRegs = NUM_MISCREGS;
+
     class RegFile
     {
       protected:
@@ -91,32 +94,10 @@ namespace X86ISA
       protected:
         IntRegFile intRegFile; // integer register file
         FloatRegFile floatRegFile; // floating point register file
-        MiscRegFile miscRegFile; // control register file
 
       public:
 
         void clear();
-
-        MiscReg readMiscRegNoEffect(int miscReg);
-
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val);
-
-        void setMiscReg(int miscReg, const MiscReg &val,
-                ThreadContext * tc);
-
-        int instAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
-
-        int dataAsid()
-        {
-            //XXX This doesn't make sense in x86
-            return 0;
-        }
 
         FloatReg readFloatReg(int floatReg, int width);
 
@@ -141,13 +122,7 @@ namespace X86ISA
         void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,
             const std::string &section);
-
-      public:
     };
-
-    int flattenIntIndex(ThreadContext * tc, int reg);
-
-    int flattenFloatIndex(ThreadContext * tc, int reg);
 
     void copyRegs(ThreadContext *src, ThreadContext *dest);
 

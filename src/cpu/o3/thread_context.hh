@@ -226,6 +226,9 @@ class O3ThreadContext : public ThreadContext
      * write might have as defined by the architecture. */
     virtual void setMiscReg(int misc_reg, const MiscReg &val);
 
+    virtual int flattenIntIndex(int reg);
+    virtual int flattenFloatIndex(int reg);
+
     /** Returns the number of consecutive store conditional failures. */
     // @todo: Figure out where these store cond failures should go.
     virtual unsigned readStCondFailures()

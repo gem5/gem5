@@ -168,7 +168,6 @@ InOrderCPU::InOrderCPU(Params *params)
       coreType("default"),
       _status(Idle),
       tickEvent(this),
-      miscRegFile(this),
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
@@ -267,14 +266,10 @@ InOrderCPU::InOrderCPU(Params *params)
 
         intRegFile[tid].clear();
         floatRegFile[tid].clear();
-    }
+        isa[tid].clear();
 
-    // Update miscRegFile if necessary
-    if (numThreads > 1) {
-        miscRegFile.expandForMultithreading(numThreads, numVirtProcs);
+        isa[tid].expandForMultithreading(numThreads, numVirtProcs);
     }
-
-    miscRegFile.clear();
 
     lastRunningCycle = curTick;
     contextSwitch = false;
@@ -461,7 +456,10 @@ InOrderCPU::readFunctional(Addr addr, uint32_t &buffer)
 void
 InOrderCPU::reset()
 {
-  miscRegFile.reset(coreType, numThreads, numVirtProcs, dynamic_cast<BaseCPU*>(this));
+    for (int i = 0; i < numThreads; i++) {
+        isa[i].reset(coreType, numThreads,
+                numVirtProcs, dynamic_cast<BaseCPU*>(this));
+    }
 }
 
 Port*
@@ -966,25 +964,25 @@ InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
 MiscReg
 InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
-    return miscRegFile.readRegNoEffect(misc_reg, tid);
+    return isa[tid].readMiscRegNoEffect(misc_reg);
 }
 
 MiscReg
 InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
-    return miscRegFile.readReg(misc_reg, tcBase(tid), tid);
+    return isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 
 void
 InOrderCPU::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    miscRegFile.setRegNoEffect(misc_reg, val, tid);
+    isa[tid].setMiscRegNoEffect(misc_reg, val);
 }
 
 void
 InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    miscRegFile.setReg(misc_reg, val, tcBase(tid), tid);
+    isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
 }
 
 

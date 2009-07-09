@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,55 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Gabe Black
  */
 
-#include "arch/arm/regfile/regfile.hh"
-#include "sim/serialize.hh"
+#ifndef __ARCH_ARM_ISA_HH__
+#define __ARCH_MRM_ISA_HH__
 
-using namespace std;
+#include "arch/arm/regfile/misc_regfile.hh"
+#include "arch/arm/types.hh"
+
+class Checkpoint;
+class EventManager;
 
 namespace ArmISA
 {
+    class ISA
+    {
+      protected:
+        MiscRegFile miscRegFile;
 
-void
-copyRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Regs Not Implemented Yet\n");
+      public:
+        void clear();
+
+        MiscReg readMiscRegNoEffect(int miscReg);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+
+        void setMiscRegNoEffect(int miscReg, const MiscReg val);
+        void setMiscReg(int miscReg, const MiscReg val,
+                ThreadContext *tc);
+
+        int
+        flattenIntIndex(int reg)
+        {
+            return reg;
+        }
+
+        int
+        flattenFloatIndex(int reg)
+        {
+            return reg;
+        }
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
+
+        ISA()
+        {
+            clear();
+        }
+    };
 }
 
-void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
-void
-MiscRegFile::copyMiscRegs(ThreadContext *tc)
-{
-    panic("Copy Misc. Regs Not Implemented Yet\n");
-}
-
-void
-RegFile::serialize(EventManager *em, ostream &os)
-{
-    intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-    intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
-}
-
-} // namespace ArmISA
+#endif

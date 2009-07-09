@@ -46,6 +46,7 @@ isa_switch_hdrs = Split('''
         arguments.hh
         faults.hh
         interrupts.hh
+	isa.hh
         isa_traits.hh
         kernel_stats.hh
         locked_mem.hh

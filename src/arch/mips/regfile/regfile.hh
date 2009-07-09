@@ -37,7 +37,6 @@
 //#include "arch/mips/mt.hh"
 #include "arch/mips/regfile/int_regfile.hh"
 #include "arch/mips/regfile/float_regfile.hh"
-#include "arch/mips/regfile/misc_regfile.hh"
 //#include "cpu/base.hh"
 #include "sim/faults.hh"
 
@@ -57,25 +56,15 @@ namespace MipsISA
 
         IntRegFile intRegFile;          // (signed) integer register file
         FloatRegFile floatRegFile;      // floating point register file
-        MiscRegFile miscRegFile;        // control register file
 
       public:
         void clear();
         void reset(std::string core_name, ThreadID num_threads,
                    unsigned num_vpes, BaseCPU *_cpu);
-        MiscRegFile *getMiscRegFilePtr();
 
         IntReg readIntReg(int intReg);
         Fault setIntReg(int intReg, const IntReg &val);
 
-
-        MiscReg readMiscRegNoEffect(int miscReg, ThreadID tid = 0);
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc,
-                            ThreadID tid = 0);
-        void setMiscRegNoEffect(int miscReg, const MiscReg &val,
-                                ThreadID tid = 0);
-        void setMiscReg(int miscReg, const MiscReg &val,
-                        ThreadContext *tc, ThreadID tid = 0);
 
         FloatRegVal readFloatReg(int floatReg);
         FloatRegVal readFloatReg(int floatReg, int width);
@@ -88,9 +77,6 @@ namespace MipsISA
 
 
         void setShadowSet(int css);
-
-        int instAsid();
-        int dataAsid();
 
       public:
         Addr readPC();

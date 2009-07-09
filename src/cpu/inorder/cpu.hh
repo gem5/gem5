@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "base/types.hh"
@@ -76,8 +77,8 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscReg MiscReg;
     typedef TheISA::RegFile RegFile;
+    typedef TheISA::MiscReg MiscReg;
 
     //DynInstPtr TypeDefs
     typedef ThePipeline::DynInstPtr DynInstPtr;
@@ -259,7 +260,9 @@ class InOrderCPU : public BaseCPU
     /** The Register File for the CPU */
     TheISA::IntRegFile intRegFile[ThePipeline::MaxThreads];;
     TheISA::FloatRegFile floatRegFile[ThePipeline::MaxThreads];;
-    TheISA::MiscRegFile miscRegFile;
+
+    /** ISA state */
+    TheISA::ISA isa[ThePipeline::MaxThreads];
 
     /** Dependency Tracker for Integer & Floating Point Regs */
     RegDepMap archRegDepMap[ThePipeline::MaxThreads];

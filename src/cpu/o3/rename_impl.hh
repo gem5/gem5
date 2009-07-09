@@ -959,11 +959,11 @@ DefaultRename<Impl>::renameSrcRegs(DynInstPtr &inst, ThreadID tid)
         RegIndex src_reg = inst->srcRegIdx(src_idx);
         RegIndex flat_src_reg = src_reg;
         if (src_reg < TheISA::FP_Base_DepTag) {
-            flat_src_reg = TheISA::flattenIntIndex(inst->tcBase(), src_reg);
+            flat_src_reg = inst->tcBase()->flattenIntIndex(src_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)src_reg, (int)flat_src_reg);
         } else if (src_reg < TheISA::Ctrl_Base_DepTag) {
             src_reg = src_reg - TheISA::FP_Base_DepTag;
-            flat_src_reg = TheISA::flattenFloatIndex(inst->tcBase(), src_reg);
+            flat_src_reg = inst->tcBase()->flattenFloatIndex(src_reg);
             flat_src_reg += TheISA::NumIntRegs;
         } else {
             flat_src_reg = src_reg - TheISA::FP_Base_DepTag + TheISA::NumIntRegs;
@@ -1009,7 +1009,7 @@ DefaultRename<Impl>::renameDestRegs(DynInstPtr &inst, ThreadID tid)
         RegIndex flat_dest_reg = dest_reg;
         if (dest_reg < TheISA::FP_Base_DepTag) {
             // Integer registers are flattened.
-            flat_dest_reg = TheISA::flattenIntIndex(inst->tcBase(), dest_reg);
+            flat_dest_reg = inst->tcBase()->flattenIntIndex(dest_reg);
             DPRINTF(Rename, "Flattening index %d to %d.\n", (int)dest_reg, (int)flat_dest_reg);
         } else {
             // Floating point and Miscellaneous registers need their indexes

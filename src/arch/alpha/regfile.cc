@@ -31,6 +31,7 @@
  */
 
 #include "arch/alpha/regfile.hh"
+#include "arch/alpha/miscregfile.hh"
 #include "cpu/thread_context.hh"
 
 using namespace std;
@@ -42,7 +43,6 @@ RegFile::serialize(EventManager *em, ostream &os)
 {
     intRegFile.serialize(os);
     floatRegFile.serialize(os);
-    miscRegFile.serialize(os);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
 #if FULL_SYSTEM
@@ -55,7 +55,6 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
 {
     intRegFile.unserialize(cp, section);
     floatRegFile.unserialize(cp, section);
-    miscRegFile.unserialize(cp, section);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
 #if FULL_SYSTEM

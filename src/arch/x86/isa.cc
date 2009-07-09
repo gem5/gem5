@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2008 The Florida State University
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,77 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Stephen Hines
+ * Authors: Gabe Black
  */
 
-#include "arch/arm/regfile/regfile.hh"
-#include "sim/serialize.hh"
+#include "arch/x86/isa.hh"
+#include "arch/x86/floatregs.hh"
+#include "cpu/thread_context.hh"
 
-using namespace std;
-
-namespace ArmISA
+namespace X86ISA
 {
 
 void
-copyRegs(ThreadContext *src, ThreadContext *dest)
+ISA::clear()
 {
-    panic("Copy Regs Not Implemented Yet\n");
+    miscRegFile.clear();
+}
+
+MiscReg
+ISA::readMiscRegNoEffect(int miscReg)
+{
+    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
+}
+
+MiscReg
+ISA::readMiscReg(int miscReg, ThreadContext *tc)
+{
+    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
 }
 
 void
-copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+ISA::setMiscRegNoEffect(int miscReg, const MiscReg val)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
 }
 
 void
-MiscRegFile::copyMiscRegs(ThreadContext *tc)
+ISA::setMiscReg(int miscReg, const MiscReg val, ThreadContext *tc)
 {
-    panic("Copy Misc. Regs Not Implemented Yet\n");
+    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
+}
+
+int
+ISA::flattenIntIndex(int reg)
+{
+    //If we need to fold over the index to match byte semantics, do that.
+    //Otherwise, just strip off any extra bits and pass it through.
+    if (reg & (1 << 6))
+        return (reg & (~(1 << 6) - 0x4));
+    else
+        return (reg & ~(1 << 6));
+}
+
+int
+ISA::flattenFloatIndex(int reg)
+{
+    if (reg >= NUM_FLOATREGS) {
+        int top = miscRegFile.readRegNoEffect(MISCREG_X87_TOP);
+        reg = FLOATREG_STACK(reg - NUM_FLOATREGS, top);
+    }
+    return reg;
 }
 
 void
-RegFile::serialize(EventManager *em, ostream &os)
+ISA::serialize(EventManager *em, std::ostream &os)
 {
-    intRegFile.serialize(os);
-    //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    SERIALIZE_SCALAR(npc);
-    SERIALIZE_SCALAR(nnpc);
+    miscRegFile.serialize(os);
 }
 
 void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
+ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
 {
-    intRegFile.unserialize(cp, section);
-    //UNSERIALIZE_ARRAY(floatRegFile);
-    UNSERIALIZE_SCALAR(npc);
-    UNSERIALIZE_SCALAR(nnpc);
+    miscRegFile.unserialize(cp, section);
 }
 
-} // namespace ArmISA
+}

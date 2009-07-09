@@ -211,6 +211,12 @@ class InOrderThreadContext : public ThreadContext
      * write might have as defined by the architecture. */
     virtual void setMiscReg(int misc_reg, const MiscReg &val);
 
+    virtual int flattenIntIndex(int reg)
+    { return cpu->isa[thread->readTid()].flattenIntIndex(reg); }
+
+    virtual int flattenFloatIndex(int reg)
+    { return cpu->isa[thread->readTid()].flattenFloatIndex(reg); }
+
     virtual void activateContext(int delay)
     { cpu->activateContext(thread->readTid(), delay); }
 

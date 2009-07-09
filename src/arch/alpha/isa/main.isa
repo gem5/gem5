@@ -55,6 +55,7 @@ output header {{
 output decoder {{
 #include <cmath>
 
+#include "arch/alpha/miscregfile.hh"
 #include "base/cprintf.hh"
 #include "base/fenv.hh"
 #include "base/loader/symtab.hh"
@@ -71,6 +72,7 @@ output exec {{
 #include "base/cp_annotate.hh"
 #include "sim/pseudo_inst.hh"
 #include "arch/alpha/ipr.hh"
+#include "arch/alpha/miscregfile.hh"
 #include "base/fenv.hh"
 #include "config/ss_compatible_fp.hh"
 #include "cpu/base.hh"

@@ -57,8 +57,6 @@ class PhysRegFile
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscRegFile MiscRegFile;
-    typedef TheISA::MiscReg MiscReg;
 
     typedef union {
         FloatReg d;
@@ -230,39 +228,12 @@ class PhysRegFile
         floatRegFile[reg_idx].q = val;
     }
 
-    MiscReg
-    readMiscRegNoEffect(int misc_reg, ThreadID tid)
-    {
-        return miscRegs[tid].readRegNoEffect(misc_reg);
-    }
-
-    MiscReg
-    readMiscReg(int misc_reg, ThreadID tid)
-    {
-        return miscRegs[tid].readReg(misc_reg, cpu->tcBase(tid));
-    }
-
-    void
-    setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
-    {
-        miscRegs[tid].setRegNoEffect(misc_reg, val);
-    }
-
-    void
-    setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
-    {
-        miscRegs[tid].setReg(misc_reg, val, cpu->tcBase(tid));
-    }
-
   public:
     /** (signed) integer register file. */
     IntReg *intRegFile;
 
     /** Floating point register file. */
     PhysFloatReg *floatRegFile;
-
-    /** Miscellaneous register file. */
-    MiscRegFile miscRegs[Impl::MaxThreads];
 
 #if FULL_SYSTEM
   private:
@@ -288,10 +259,6 @@ PhysRegFile<Impl>::PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
 {
     intRegFile = new IntReg[numPhysicalIntRegs];
     floatRegFile = new PhysFloatReg[numPhysicalFloatRegs];
-
-    for (int i = 0; i < Impl::MaxThreads; ++i) {
-        miscRegs[i].clear();
-    }
 
     memset(intRegFile, 0, sizeof(IntReg) * numPhysicalIntRegs);
     memset(floatRegFile, 0, sizeof(PhysFloatReg) * numPhysicalFloatRegs);

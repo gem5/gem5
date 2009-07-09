@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_UTILITY_HH__
 #define __ARCH_X86_UTILITY_HH__
 
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"

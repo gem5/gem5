@@ -99,14 +99,10 @@ class Checkpoint;
 
 namespace X86ISA
 {
-    //These will have to be updated in the future.
-    const int NumMiscArchRegs = NUM_MISCREGS;
-    const int NumMiscRegs = NUM_MISCREGS;
-
     class MiscRegFile
     {
       protected:
-        MiscReg regVal[NumMiscRegs];
+        MiscReg regVal[NUM_MISCREGS];
         void updateHandyM5Reg(Efer efer, CR0 cr0,
                 SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
 

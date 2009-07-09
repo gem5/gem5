@@ -84,7 +84,6 @@ class ThreadContext
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
   public:
 
@@ -233,6 +232,9 @@ class ThreadContext
     virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val) = 0;
 
     virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
+
+    virtual int flattenIntIndex(int reg) = 0;
+    virtual int flattenFloatIndex(int reg) = 0;
 
     virtual uint64_t
     readRegOtherThread(int misc_reg, ThreadID tid)
@@ -433,6 +435,12 @@ class ProxyThreadContext : public ThreadContext
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscReg(misc_reg, val); }
+
+    int flattenIntIndex(int reg)
+    { return actualTC->flattenIntIndex(reg); }
+
+    int flattenFloatIndex(int reg)
+    { return actualTC->flattenFloatIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

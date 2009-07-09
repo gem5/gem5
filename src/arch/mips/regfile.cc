@@ -193,11 +193,6 @@ RegFile::unserialize(Checkpoint *cp, const std::string &section)
 
 }
 
-static inline int flattenIntIndex(ThreadContext * tc, int reg)
-{
-    return reg;
-}
-
 void
 MipsISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {

@@ -42,7 +42,6 @@ RegFile::clear()
 {
     intRegFile.clear();
     floatRegFile.clear();
-    miscRegFile.clear();
 }
 
 void
@@ -51,7 +50,6 @@ RegFile::reset(std::string core_name, ThreadID num_threads, unsigned num_vpes,
 {
     bzero(&intRegFile, sizeof(intRegFile));
     bzero(&floatRegFile, sizeof(floatRegFile));
-    miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
 }
 
 IntReg
@@ -64,31 +62,6 @@ Fault
 RegFile::setIntReg(int intReg, const IntReg &val)
 {
     return intRegFile.setReg(intReg, val);
-}
-
-MiscReg
-RegFile::readMiscRegNoEffect(int miscReg, ThreadID tid)
-{
-    return miscRegFile.readRegNoEffect(miscReg, tid);
-}
-
-MiscReg
-RegFile::readMiscReg(int miscReg, ThreadContext *tc, ThreadID tid)
-{
-    return miscRegFile.readReg(miscReg, tc, tid);
-}
-
-void
-RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val, ThreadID tid)
-{
-    miscRegFile.setRegNoEffect(miscReg, val, tid);
-}
-
-void
-RegFile::setMiscReg(int miscReg, const MiscReg &val,
-                    ThreadContext *tc, ThreadID tid)
-{
-    miscRegFile.setReg(miscReg, val, tc, tid);
 }
 
 FloatRegVal
@@ -144,17 +117,6 @@ RegFile::setShadowSet(int css){
     intRegFile.setShadowSet(css);
 }
 
-int
-RegFile::instAsid()
-{
-    return miscRegFile.getInstAsid();
-}
-
-int
-RegFile::dataAsid()
-{
-    return miscRegFile.getDataAsid();
-}
 
 Addr
 RegFile::readPC()
@@ -197,10 +159,6 @@ RegFile::serialize(EventManager *em, std::ostream &os)
 {
     intRegFile.serialize(os);
     //SERIALIZE_ARRAY(floatRegFile, NumFloatRegs);
-    //SERIALZE_ARRAY(miscRegFile);
-    //SERIALIZE_SCALAR(miscRegs.fpcr);
-    //SERIALIZE_SCALAR(miscRegs.lock_flag);
-    //SERIALIZE_SCALAR(miscRegs.lock_addr);
     SERIALIZE_SCALAR(pc);
     SERIALIZE_SCALAR(npc);
     SERIALIZE_SCALAR(nnpc);
@@ -212,14 +170,9 @@ RegFile::unserialize(EventManager *em, Checkpoint *cp,
 {
     intRegFile.unserialize(cp, section);
     //UNSERIALIZE_ARRAY(floatRegFile);
-    //UNSERIALZE_ARRAY(miscRegFile);
-    //UNSERIALIZE_SCALAR(miscRegs.fpcr);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_flag);
-    //UNSERIALIZE_SCALAR(miscRegs.lock_addr);
     UNSERIALIZE_SCALAR(pc);
     UNSERIALIZE_SCALAR(npc);
     UNSERIALIZE_SCALAR(nnpc);
-
 }
 
 } // namespace MipsISA

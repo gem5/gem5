@@ -86,6 +86,7 @@
  */
 
 #include "arch/x86/floatregs.hh"
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/regfile.hh"
 #include "base/trace.hh"
 #include "sim/serialize.hh"
@@ -130,28 +131,6 @@ void RegFile::clear()
 {
     floatRegFile.clear();
     intRegFile.clear();
-    miscRegFile.clear();
-}
-
-MiscReg RegFile::readMiscRegNoEffect(int miscReg)
-{
-    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
-}
-
-MiscReg RegFile::readMiscReg(int miscReg, ThreadContext *tc)
-{
-    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
-}
-
-void RegFile::setMiscRegNoEffect(int miscReg, const MiscReg &val)
-{
-    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
-}
-
-void RegFile::setMiscReg(int miscReg, const MiscReg &val,
-        ThreadContext * tc)
-{
-    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
 }
 
 FloatReg RegFile::readFloatReg(int floatReg, int width)
@@ -209,50 +188,11 @@ void RegFile::setIntReg(int intReg, const IntReg &val)
     intRegFile.setReg(intReg, val);
 }
 
-int X86ISA::flattenIntIndex(ThreadContext * tc, int reg)
-{
-    //If we need to fold over the index to match byte semantics, do that.
-    //Otherwise, just strip off any extra bits and pass it through.
-    if (reg & (1 << 6))
-        return (reg & (~(1 << 6) - 0x4));
-    else
-        return (reg & ~(1 << 6));
-}
-
-int X86ISA::flattenFloatIndex(ThreadContext * tc, int reg)
-{
-    if (reg >= NUM_FLOATREGS) {
-        int top = tc->readMiscRegNoEffect(MISCREG_X87_TOP);
-        reg = FLOATREG_STACK(reg - NUM_FLOATREGS, top);
-    }
-    return reg;
-}
-
 void
-RegFile::serialize(EventManager *em, std::ostream &os)
+X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
 {
-    intRegFile.serialize(os);
-    floatRegFile.serialize(os);
-    miscRegFile.serialize(os);
-    SERIALIZE_SCALAR(rip);
-    SERIALIZE_SCALAR(nextRip);
-}
-
-void
-RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
-{
-    intRegFile.unserialize(cp, section);
-    floatRegFile.unserialize(cp, section);
-    miscRegFile.unserialize(cp, section);
-    UNSERIALIZE_SCALAR(rip);
-    UNSERIALIZE_SCALAR(nextRip);
-}
-
-void X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
-{
-    //panic("copyMiscRegs not implemented for x86!\n");
     warn("copyMiscRegs is naively implemented for x86\n");
-    for (int i = 0; i < X86ISA::NumMiscRegs; ++i) {
+    for (int i = 0; i < NUM_MISCREGS; ++i) {
         if ( ( i != MISCREG_CR1 &&
              !(i > MISCREG_CR4 && i < MISCREG_CR8) &&
              !(i > MISCREG_CR8 && i <= MISCREG_CR15) ) == false) {
@@ -260,10 +200,10 @@ void X86ISA::copyMiscRegs(ThreadContext *src, ThreadContext *dest)
         }
         dest->setMiscRegNoEffect(i, src->readMiscRegNoEffect(i));
     }
-
 }
 
-void X86ISA::copyRegs(ThreadContext *src, ThreadContext *dest)
+void
+X86ISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 {
     panic("copyRegs not implemented for x86!\n");
     //copy int regs
@@ -272,4 +212,18 @@ void X86ISA::copyRegs(ThreadContext *src, ThreadContext *dest)
 
     dest->setPC(src->readPC());
     dest->setNextPC(src->readNextPC());
+}
+
+void
+RegFile::serialize(EventManager *em, std::ostream &os)
+{
+    intRegFile.serialize(os);
+    floatRegFile.serialize(os);
+}
+
+void
+RegFile::unserialize(EventManager *em, Checkpoint *cp, const string &section)
+{
+    intRegFile.unserialize(cp, section);
+    floatRegFile.unserialize(cp, section);
 }

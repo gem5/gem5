@@ -36,6 +36,7 @@ if env['TARGET_ISA'] == 'sparc':
     Source('faults.cc')
     Source('floatregfile.cc')
     Source('intregfile.cc')
+    Source('isa.cc')
     Source('miscregfile.cc')
     Source('pagetable.cc')
     Source('regfile.cc')

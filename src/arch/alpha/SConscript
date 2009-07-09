@@ -37,6 +37,7 @@ if env['TARGET_ISA'] == 'alpha':
     Source('floatregfile.cc')
     Source('intregfile.cc')
     Source('ipr.cc')
+    Source('isa.cc')
     Source('miscregfile.cc')
     Source('pagetable.cc')
     Source('regfile.cc')

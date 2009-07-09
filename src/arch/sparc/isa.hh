@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,81 +26,62 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
- *          Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_REGFILE_HH__
-#define __ARCH_SPARC_REGFILE_HH__
+#ifndef __ARCH_SPARC_ISA_HH__
+#define __ARCH_SPARC_ISA_HH__
 
-#include <string>
-
-#include "arch/sparc/floatregfile.hh"
-#include "arch/sparc/intregfile.hh"
-#include "arch/sparc/isa_traits.hh"
 #include "arch/sparc/miscregfile.hh"
 #include "arch/sparc/types.hh"
-#include "base/types.hh"
 
 class Checkpoint;
+class EventManager;
 
 namespace SparcISA
 {
-    class RegFile
+    class ISA
     {
       protected:
-        Addr pc;                // Program Counter
-        Addr npc;               // Next Program Counter
-        Addr nnpc;
+        MiscRegFile miscRegFile;
 
       public:
-        Addr readPC();
-        void setPC(Addr val);
 
-        Addr readNextPC();
-        void setNextPC(Addr val);
+        int instAsid()
+        {
+            return miscRegFile.getInstAsid();
+        }
 
-        Addr readNextNPC();
-        void setNextNPC(Addr val);
-
-      protected:
-        IntRegFile intRegFile;          // integer register file
-        FloatRegFile floatRegFile;      // floating point register file
-
-      public:
+        int dataAsid()
+        {
+            return miscRegFile.getDataAsid();
+        }
 
         void clear();
 
-        FloatReg readFloatReg(int floatReg, int width);
+        MiscReg readMiscRegNoEffect(int miscReg);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
 
-        FloatReg readFloatReg(int floatReg);
+        void setMiscRegNoEffect(int miscReg, const MiscReg val);
+        void setMiscReg(int miscReg, const MiscReg val,
+                ThreadContext *tc);
 
-        FloatRegBits readFloatRegBits(int floatReg, int width);
+        int flattenIntIndex(int reg);
 
-        FloatRegBits readFloatRegBits(int floatReg);
-
-        void setFloatReg(int floatReg, const FloatReg &val, int width);
-
-        void setFloatReg(int floatReg, const FloatReg &val);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val, int width);
-
-        void setFloatRegBits(int floatReg, const FloatRegBits &val);
-
-        IntReg readIntReg(int intReg);
-
-        void setIntReg(int intReg, const IntReg &val);
+        int
+        flattenFloatIndex(int reg)
+        {
+            return reg;
+        }
 
         void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,
-            const std::string &section);
+                const std::string &section);
 
-      public:
+        ISA()
+        {
+            clear();
+        }
     };
-
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
-
-} // namespace SparcISA
+}
 
 #endif

@@ -93,23 +93,10 @@ class RegFile {
   protected:
     IntRegFile intRegFile;          // (signed) integer register file
     FloatRegFile floatRegFile;      // floating point register file
-    MiscRegFile miscRegFile;        // control register file
 
   public:
 #if FULL_SYSTEM
     int intrflag;                   // interrupt flag
-
-    int
-    instAsid()
-    {
-        return miscRegFile.getInstAsid();
-    }
-
-    int
-    dataAsid()
-    {
-        return miscRegFile.getDataAsid();
-    }
 #endif // FULL_SYSTEM
 
     void
@@ -117,31 +104,6 @@ class RegFile {
     {
         intRegFile.clear();
         floatRegFile.clear();
-        miscRegFile.clear();
-    }
-
-    MiscReg
-    readMiscRegNoEffect(int miscReg)
-    {
-        return miscRegFile.readRegNoEffect(miscReg);
-    }
-
-    MiscReg
-    readMiscReg(int miscReg, ThreadContext *tc)
-    {
-        return miscRegFile.readReg(miscReg, tc);
-    }
-
-    void
-    setMiscRegNoEffect(int miscReg, const MiscReg &val)
-    {
-        miscRegFile.setRegNoEffect(miscReg, val);
-    }
-
-    void
-    setMiscReg(int miscReg, const MiscReg &val, ThreadContext *tc)
-    {
-        miscRegFile.setReg(miscReg, val, tc);
     }
 
     FloatReg
@@ -208,18 +170,6 @@ class RegFile {
     void unserialize(EventManager *em, Checkpoint *cp,
         const std::string &section);
 };
-
-static inline int
-flattenIntIndex(ThreadContext * tc, int reg)
-{
-    return reg;
-}
-
-static inline int
-flattenFloatIndex(ThreadContext * tc, int reg)
-{
-    return reg;
-}
 
 void copyRegs(ThreadContext *src, ThreadContext *dest);
 

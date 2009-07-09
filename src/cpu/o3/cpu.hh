@@ -395,11 +395,11 @@ class FullO3CPU : public BaseO3CPU
 
     /** Get instruction asid. */
     int getInstAsid(ThreadID tid)
-    { return regFile.miscRegs[tid].getInstAsid(); }
+    { return isa[tid].instAsid(); }
 
     /** Get data asid. */
     int getDataAsid(ThreadID tid)
-    { return regFile.miscRegs[tid].getDataAsid(); }
+    { return isa[tid].dataAsid(); }
 #else
     /** Get instruction asid. */
     int getInstAsid(ThreadID tid)
@@ -602,6 +602,8 @@ class FullO3CPU : public BaseO3CPU
 
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
+
+    TheISA::ISA isa[Impl::MaxThreads];
 
   public:
     /** Enum to give each stage a specific index, so when calling

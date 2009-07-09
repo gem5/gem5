@@ -98,17 +98,6 @@ namespace MipsISA {
     //
     //  Register File Utility Functions
     //
-    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
-
-    static inline int flattenIntIndex(ThreadContext * tc, int reg)
-    {
-        // Implement Shadow Sets Stuff Here;
-        return reg;
-    }
-
     static inline MachInst makeRegisterCopy(int dest, int src) {
         panic("makeRegisterCopy not implemented");
         return 0;
