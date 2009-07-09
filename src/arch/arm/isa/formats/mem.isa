@@ -354,7 +354,8 @@ def template StoreCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(op_dest_decl)s;
+        %(op_decl)s;
+        %(op_rd)s;
 
         if (%(predicate_test)s)
         {

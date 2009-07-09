@@ -35,7 +35,6 @@ def ArmGenericCodeSubs(code):
     # Substitute in the shifted portion of operations
     new_code = re.sub(r'Rm_Imm', 'shift_rm_imm(Rm, shift_size, shift, Cpsr<29:>)', code)
     new_code = re.sub(r'Rm_Rs', 'shift_rm_rs(Rm, Rs, shift, Cpsr<29:>)', new_code)
-    new_code = re.sub(r'^', 'Cpsr = Cpsr;', new_code)
     return new_code
 
 def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
