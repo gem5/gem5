@@ -55,7 +55,7 @@ class Tru64 {};
 #include <string.h>     // for memset()
 #include <unistd.h>
 
-#include "arch/alpha/miscregfile.hh"
+#include "arch/alpha/registers.hh"
 #include "cpu/base.hh"
 #include "sim/core.hh"
 #include "sim/syscall_emul.hh"

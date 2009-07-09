@@ -29,51 +29,122 @@
  */
 
 #include "arch/alpha/isa.hh"
+#include "base/misc.hh"
 #include "cpu/thread_context.hh"
 
 namespace AlphaISA
 {
 
 void
-ISA::clear()
-{
-    miscRegFile.clear();
-}
-
-MiscReg
-ISA::readMiscRegNoEffect(int miscReg)
-{
-    return miscRegFile.readRegNoEffect((MiscRegIndex)miscReg);
-}
-
-MiscReg
-ISA::readMiscReg(int miscReg, ThreadContext *tc)
-{
-    return miscRegFile.readReg((MiscRegIndex)miscReg, tc);
-}
-
-void
-ISA::setMiscRegNoEffect(int miscReg, const MiscReg val)
-{
-    miscRegFile.setRegNoEffect((MiscRegIndex)miscReg, val);
-}
-
-void
-ISA::setMiscReg(int miscReg, const MiscReg val, ThreadContext *tc)
-{
-    miscRegFile.setReg((MiscRegIndex)miscReg, val, tc);
-}
-
-void
 ISA::serialize(std::ostream &os)
 {
-    miscRegFile.serialize(os);
+    SERIALIZE_SCALAR(fpcr);
+    SERIALIZE_SCALAR(uniq);
+    SERIALIZE_SCALAR(lock_flag);
+    SERIALIZE_SCALAR(lock_addr);
+    SERIALIZE_ARRAY(ipr, NumInternalProcRegs);
 }
 
 void
 ISA::unserialize(Checkpoint *cp, const std::string &section)
 {
-    miscRegFile.unserialize(cp, section);
+    UNSERIALIZE_SCALAR(fpcr);
+    UNSERIALIZE_SCALAR(uniq);
+    UNSERIALIZE_SCALAR(lock_flag);
+    UNSERIALIZE_SCALAR(lock_addr);
+    UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
+}
+
+
+MiscReg
+ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        return fpcr;
+      case MISCREG_UNIQ:
+        return uniq;
+      case MISCREG_LOCKFLAG:
+        return lock_flag;
+      case MISCREG_LOCKADDR:
+        return lock_addr;
+      case MISCREG_INTR:
+        return intr_flag;
+      default:
+        assert(misc_reg < NumInternalProcRegs);
+        return ipr[misc_reg];
+    }
+}
+
+MiscReg
+ISA::readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        return fpcr;
+      case MISCREG_UNIQ:
+        return uniq;
+      case MISCREG_LOCKFLAG:
+        return lock_flag;
+      case MISCREG_LOCKADDR:
+        return lock_addr;
+      case MISCREG_INTR:
+        return intr_flag;
+      default:
+        return readIpr(misc_reg, tc);
+    }
+}
+
+void
+ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        fpcr = val;
+        return;
+      case MISCREG_UNIQ:
+        uniq = val;
+        return;
+      case MISCREG_LOCKFLAG:
+        lock_flag = val;
+        return;
+      case MISCREG_LOCKADDR:
+        lock_addr = val;
+        return;
+      case MISCREG_INTR:
+        intr_flag = val;
+        return;
+      default:
+        assert(misc_reg < NumInternalProcRegs);
+        ipr[misc_reg] = val;
+        return;
+    }
+}
+
+void
+ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
+                ThreadID tid)
+{
+    switch (misc_reg) {
+      case MISCREG_FPCR:
+        fpcr = val;
+        return;
+      case MISCREG_UNIQ:
+        uniq = val;
+        return;
+      case MISCREG_LOCKFLAG:
+        lock_flag = val;
+        return;
+      case MISCREG_LOCKADDR:
+        lock_addr = val;
+        return;
+      case MISCREG_INTR:
+        intr_flag = val;
+        return;
+      default:
+        setIpr(misc_reg, val, tc);
+        return;
+    }
 }
 
 }

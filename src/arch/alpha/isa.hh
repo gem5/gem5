@@ -31,50 +31,73 @@
 #ifndef __ARCH_ALPHA_ISA_HH__
 #define __ARCH_ALPHA_ISA_HH__
 
-#include "arch/alpha/miscregfile.hh"
-#include "arch/alpha/types.hh"
+#include <string>
+#include <iostream>
 
+#include "arch/alpha/registers.hh"
+#include "arch/alpha/types.hh"
+#include "base/types.hh"
+
+class BaseCPU;
 class Checkpoint;
 class EventManager;
+class ThreadContext;
 
 namespace AlphaISA
 {
     class ISA
     {
+      public:
+        typedef uint64_t InternalProcReg;
+
       protected:
-        MiscRegFile miscRegFile;
+        uint64_t fpcr;       // floating point condition codes
+        uint64_t uniq;       // process-unique register
+        bool lock_flag;      // lock flag for LL/SC
+        Addr lock_addr;      // lock address for LL/SC
+        int intr_flag;
+
+        InternalProcReg ipr[NumInternalProcRegs]; // Internal processor regs
+
+      protected:
+        InternalProcReg readIpr(int idx, ThreadContext *tc);
+        void setIpr(int idx, InternalProcReg val, ThreadContext *tc);
 
       public:
 
-        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
+        // These functions should be removed once the simplescalar cpu
+        // model has been replaced.
+        int getInstAsid();
+        int getDataAsid();
+
+        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
+        MiscReg readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid = 0);
+
+        void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
+                                ThreadID tid = 0);
+        void setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
+                        ThreadID tid = 0);
+
+        void
+        clear()
         {
-            miscRegFile.expandForMultithreading(num_threads, num_vpes);
+            fpcr = 0;
+            uniq = 0;
+            lock_flag = 0;
+            lock_addr = 0;
+            intr_flag = 0;
         }
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
 
         void reset(std::string core_name, ThreadID num_threads,
-                unsigned num_vpes, BaseCPU *_cpu)
-        {
-            miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
-        }
+                   unsigned num_vpes, BaseCPU *_cpu)
+        { }
 
-        int instAsid()
-        {
-            return miscRegFile.getInstAsid();
-        }
 
-        int dataAsid()
-        {
-            return miscRegFile.getDataAsid();
-        }
-
-        void clear();
-
-        MiscReg readMiscRegNoEffect(int miscReg);
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
-
-        void setMiscRegNoEffect(int miscReg, const MiscReg val);
-        void setMiscReg(int miscReg, const MiscReg val,
-                ThreadContext *tc);
+        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
+        { }
 
         int
         flattenIntIndex(int reg)
@@ -88,12 +111,10 @@ namespace AlphaISA
             return reg;
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
         ISA()
         {
             clear();
+            initializeIprTable();
         }
     };
 }
