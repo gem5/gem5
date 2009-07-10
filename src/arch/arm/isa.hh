@@ -31,9 +31,10 @@
 #ifndef __ARCH_ARM_ISA_HH__
 #define __ARCH_MRM_ISA_HH__
 
-#include "arch/arm/misc_regfile.hh"
+#include "arch/arm/registers.hh"
 #include "arch/arm/types.hh"
 
+class ThreadContext;
 class Checkpoint;
 class EventManager;
 
@@ -42,17 +43,41 @@ namespace ArmISA
     class ISA
     {
       protected:
-        MiscRegFile miscRegFile;
+        MiscReg miscRegs[NumMiscRegs];
 
       public:
-        void clear();
+        void clear()
+        {
+            // Unknown startup state currently
+        }
 
-        MiscReg readMiscRegNoEffect(int miscReg);
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+        MiscReg
+        readMiscRegNoEffect(int misc_reg)
+        {
+            assert(misc_reg < NumMiscRegs);
+            return miscRegs[misc_reg];
+        }
 
-        void setMiscRegNoEffect(int miscReg, const MiscReg val);
-        void setMiscReg(int miscReg, const MiscReg val,
-                ThreadContext *tc);
+        MiscReg
+        readMiscReg(int misc_reg, ThreadContext *tc)
+        {
+            assert(misc_reg < NumMiscRegs);
+            return miscRegs[misc_reg];
+        }
+
+        void
+        setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+        {
+            assert(misc_reg < NumMiscRegs);
+            miscRegs[misc_reg] = val;
+        }
+
+        void
+        setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
+        {
+            assert(misc_reg < NumMiscRegs);
+            miscRegs[misc_reg] = val;
+        }
 
         int
         flattenIntIndex(int reg)
@@ -66,8 +91,10 @@ namespace ArmISA
             return reg;
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(std::ostream &os)
+        {}
+        void unserialize(Checkpoint *cp, const std::string &section)
+        {}
 
         ISA()
         {

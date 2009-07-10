@@ -39,7 +39,6 @@ if env['TARGET_ISA'] == 'arm':
     Source('insts/mem.cc')
     Source('insts/pred_inst.cc')
     Source('insts/static_inst.cc')
-    Source('isa.cc')
     Source('pagetable.cc')
     Source('tlb.cc')
     Source('vtophys.cc')
