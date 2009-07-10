@@ -1267,9 +1267,6 @@ class Operand(object):
     def isControlReg(self):
         return 0
 
-    def isIControlReg(self):
-        return 0
-
     def getFlags(self):
         # note the empty slice '[:]' gives us a copy of self.flags[0]
         # instead of a reference to it
@@ -1430,47 +1427,6 @@ class ControlRegOperand(Operand):
             return self.buildWriteCode('setMiscRegOperand')
         wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
              (self.dest_reg_idx, self.base_name)
-        wb += 'if (traceData) { traceData->setData(%s); }' % \
-              self.base_name
-        return wb
-
-class IControlRegOperand(Operand):
-    def isReg(self):
-        return 1
-
-    def isIControlReg(self):
-        return 1
-
-    def makeConstructor(self):
-        c = ''
-        if self.is_src:
-            c += '\n\t_srcRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
-                 (self.src_reg_idx, self.reg_spec)
-        if self.is_dest:
-            c += '\n\t_destRegIdx[%d] = %s + Ctrl_Base_DepTag;' % \
-                 (self.dest_reg_idx, self.reg_spec)
-        return c
-
-    def makeRead(self):
-        bit_select = 0
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to read control register as FP')
-        if self.read_code != None:
-            return self.buildReadCode('readMiscReg')
-        base = 'xc->readMiscReg(%s)' % self.reg_spec
-        if self.size == self.dflt_size:
-            return '%s = %s;\n' % (self.base_name, base)
-        else:
-            return '%s = bits(%s, %d, 0);\n' % \
-                   (self.base_name, base, self.size-1)
-
-    def makeWrite(self):
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to write control register as FP')
-        if self.write_code != None:
-            return self.buildWriteCode('setMiscReg')
-        wb = 'xc->setMiscReg(%s, %s);\n' % \
-             (self.reg_spec, self.base_name)
         wb += 'if (traceData) { traceData->setData(%s); }' % \
               self.base_name
         return wb
