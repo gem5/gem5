@@ -95,7 +95,6 @@ if env['TARGET_ISA'] == 'x86':
     Source('insts/microregop.cc')
     Source('insts/static_inst.cc')
     Source('isa.cc')
-    Source('miscregfile.cc')
     Source('pagetable.cc')
     Source('predecoder.cc')
     Source('predecoder_tables.cc')

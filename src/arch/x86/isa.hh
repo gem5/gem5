@@ -31,28 +31,39 @@
 #ifndef __ARCH_X86_ISA_HH__
 #define __ARCH_X86_ISA_HH__
 
-#include "arch/x86/miscregfile.hh"
-#include "arch/x86/types.hh"
+#include "arch/x86/miscregs.hh"
+#include "arch/x86/registers.hh"
+#include "base/types.hh"
+
+#include <string>
+#include <iostream>
 
 class Checkpoint;
 class EventManager;
+class ThreadContext;
 
 namespace X86ISA
 {
     class ISA
     {
       protected:
-        MiscRegFile miscRegFile;
+        MiscReg regVal[NUM_MISCREGS];
+        void updateHandyM5Reg(Efer efer, CR0 cr0,
+                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
 
       public:
         void clear();
 
+        ISA()
+        {
+            clear();
+        }
+
         MiscReg readMiscRegNoEffect(int miscReg);
         MiscReg readMiscReg(int miscReg, ThreadContext *tc);
 
-        void setMiscRegNoEffect(int miscReg, const MiscReg val);
-        void setMiscReg(int miscReg, const MiscReg val,
-                ThreadContext *tc);
+        void setMiscRegNoEffect(int miscReg, MiscReg val);
+        void setMiscReg(int miscReg, MiscReg val, ThreadContext *tc);
 
         int flattenIntIndex(int reg);
         int flattenFloatIndex(int reg);
