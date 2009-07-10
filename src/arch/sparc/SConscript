@@ -35,7 +35,6 @@ if env['TARGET_ISA'] == 'sparc':
     Source('asi.cc')
     Source('faults.cc')
     Source('isa.cc')
-    Source('miscregfile.cc')
     Source('pagetable.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')

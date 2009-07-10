@@ -31,7 +31,7 @@
 #ifndef __ARCH_SPARC_PREDECODER_HH__
 #define __ARCH_SPARC_PREDECODER_HH__
 
-#include "arch/sparc/miscregfile.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/types.hh"
 #include "base/bitfield.hh"
 #include "base/misc.hh"
