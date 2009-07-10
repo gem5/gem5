@@ -31,40 +31,134 @@
 #ifndef __ARCH_MIPS_ISA_HH__
 #define __ARCH_MIPS_ISA_HH__
 
-#include "arch/mips/misc_regfile.hh"
-#include "arch/mips/types.hh"
+#include <string>
+#include <queue>
+#include <vector>
 
+#include "arch/mips/registers.hh"
+#include "arch/mips/types.hh"
+#include "sim/eventq.hh"
+#include "sim/faults.hh"
+
+class BaseCPU;
 class Checkpoint;
 class EventManager;
+class ThreadContext;
 
 namespace MipsISA
 {
     class ISA
     {
+      public:
+        // The MIPS name for this file is CP0 or Coprocessor 0
+        typedef ISA CP0;
+
       protected:
-        MiscRegFile miscRegFile;
+        enum BankType {
+            perProcessor,
+            perThreadContext,
+            perVirtProcessor
+        };
+
+        std::vector<std::vector<MiscReg> > miscRegFile;
+        std::vector<std::vector<MiscReg> > miscRegFile_WriteMask;
+        std::vector<BankType> bankType;
+
+        BaseCPU *cpu;
 
       public:
+        ISA();
+        ISA(BaseCPU *_cpu);
 
-        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
-        {
-            miscRegFile.expandForMultithreading(num_threads, num_vpes);
-        }
+        void init();
+
+        void clear(unsigned tid_or_vpn = 0);
 
         void reset(std::string core_name, ThreadID num_threads,
-                unsigned num_vpes, BaseCPU *_cpu)
+                   unsigned num_vpes, BaseCPU *_cpu);
+
+        void expandForMultithreading(ThreadID num_threads, unsigned num_vpes);
+
+        unsigned getVPENum(ThreadID tid);
+
+        //////////////////////////////////////////////////////////
+        //
+        // READ/WRITE CP0 STATE
+        //
+        //
+        //////////////////////////////////////////////////////////
+        //@TODO: MIPS MT's register view automatically connects
+        //       Status to TCStatus depending on current thread
+        void updateCP0ReadView(int misc_reg, ThreadID tid) { }
+        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
+
+        //template <class TC>
+        MiscReg readMiscReg(int misc_reg,
+                            ThreadContext *tc, ThreadID tid = 0);
+
+        MiscReg filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val);
+        void setRegMask(int misc_reg, const MiscReg &val, ThreadID tid = 0);
+        void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
+                                ThreadID tid = 0);
+
+        //template <class TC>
+        void setMiscReg(int misc_reg, const MiscReg &val,
+                        ThreadContext *tc, ThreadID tid = 0);
+
+        //////////////////////////////////////////////////////////
+        //
+        // DECLARE INTERFACE THAT WILL ALLOW A MiscRegFile (Cop0)
+        // TO SCHEDULE EVENTS
+        //
+        //////////////////////////////////////////////////////////
+
+        // Flag that is set when CP0 state has been written to.
+        bool cp0Updated;
+
+        // Enumerated List of CP0 Event Types
+        enum CP0EventType {
+            UpdateCP0
+        };
+
+        // Declare A CP0Event Class for scheduling
+        class CP0Event : public Event
         {
-            miscRegFile.reset(core_name, num_threads, num_vpes, _cpu);
-        }
+          protected:
+            ISA::CP0 *cp0;
+            BaseCPU *cpu;
+            CP0EventType cp0EventType;
+            Fault fault;
 
-        void clear();
+          public:
+            /** Constructs a CP0 event. */
+            CP0Event(CP0 *_cp0, BaseCPU *_cpu, CP0EventType e_type);
 
-        MiscReg readMiscRegNoEffect(int miscReg);
-        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+            /** Process this event. */
+            virtual void process();
 
-        void setMiscRegNoEffect(int miscReg, const MiscReg val);
-        void setMiscReg(int miscReg, const MiscReg val,
-                ThreadContext *tc);
+            /** Returns the description of this event. */
+            const char *description() const;
+
+            /** Schedule This Event */
+            void scheduleEvent(int delay);
+
+            /** Unschedule This Event */
+            void unscheduleEvent();
+        };
+
+        // Schedule a CP0 Update Event
+        void scheduleCP0Update(int delay = 0);
+
+        // If any changes have been made, then check the state for changes
+        // and if necessary alert the CPU
+        void updateCPU();
+
+        // Keep a List of CPU Events that need to be deallocated
+        std::queue<CP0Event*> cp0EventRemoveList;
+
+        static std::string miscRegNames[NumMiscRegs];
+
+      public:
 
         int
         flattenIntIndex(int reg)
@@ -80,11 +174,6 @@ namespace MipsISA
 
         void serialize(std::ostream &os);
         void unserialize(Checkpoint *cp, const std::string &section);
-
-        ISA()
-        {
-            clear();
-        }
     };
 }
 
