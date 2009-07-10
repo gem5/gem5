@@ -139,6 +139,31 @@ namespace SparcISA
                 &ISA::processHSTickCompare> HSTickCompareEvent;
         HSTickCompareEvent *hSTickCompare;
 #endif
+
+        static const int NumGlobalRegs = 8;
+        static const int NumWindowedRegs = 24;
+        static const int WindowOverlap = 8;
+
+        static const int TotalGlobals = (MaxGL + 1) * NumGlobalRegs;
+        static const int RegsPerWindow = NumWindowedRegs - WindowOverlap;
+        static const int TotalWindowed = NWindows * RegsPerWindow;
+
+        enum InstIntRegOffsets {
+            CurrentGlobalsOffset = 0,
+            CurrentWindowOffset = CurrentGlobalsOffset + NumGlobalRegs,
+            MicroIntOffset = CurrentWindowOffset + NumWindowedRegs,
+            NextGlobalsOffset = MicroIntOffset + NumMicroIntRegs,
+            NextWindowOffset = NextGlobalsOffset + NumGlobalRegs,
+            PreviousGlobalsOffset = NextWindowOffset + NumWindowedRegs,
+            PreviousWindowOffset = PreviousGlobalsOffset + NumGlobalRegs,
+            TotalInstIntRegs = PreviousWindowOffset + NumWindowedRegs
+        };
+
+        RegIndex intRegMap[TotalInstIntRegs];
+        void installWindow(int cwp, int offset);
+        void installGlobals(int gl, int offset);
+        void reloadRegMap();
+
       public:
 
         void clear();
@@ -163,7 +188,14 @@ namespace SparcISA
         void setMiscReg(int miscReg, const MiscReg val,
                 ThreadContext *tc);
 
-        int flattenIntIndex(int reg);
+        int
+        flattenIntIndex(int reg)
+        {
+            assert(reg < TotalInstIntRegs);
+            RegIndex flatIndex = intRegMap[reg];
+            assert(flatIndex < NumIntRegs);
+            return flatIndex;
+        }
 
         int
         flattenFloatIndex(int reg)

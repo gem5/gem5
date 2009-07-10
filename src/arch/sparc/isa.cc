@@ -45,8 +45,46 @@ enum RegMask
 };
 
 void
+ISA::reloadRegMap()
+{
+    installGlobals(gl, CurrentGlobalsOffset);
+    installWindow(cwp, CurrentWindowOffset);
+    // Microcode registers.
+    for (int i = 0; i < NumMicroIntRegs; i++)
+        intRegMap[MicroIntOffset + i] = i + TotalGlobals + NWindows * 16;
+    installGlobals(gl, NextGlobalsOffset);
+    installWindow(cwp - 1, NextWindowOffset);
+    installGlobals(gl, PreviousGlobalsOffset);
+    installWindow(cwp + 1, PreviousWindowOffset);
+}
+
+void
+ISA::installWindow(int cwp, int offset)
+{
+    assert(offset >= 0 && offset + NumWindowedRegs <= NumIntRegs);
+    RegIndex *mapChunk = intRegMap + offset;
+    for (int i = 0; i < NumWindowedRegs; i++)
+        mapChunk[i] = TotalGlobals +
+            ((i - cwp * RegsPerWindow + TotalWindowed) % (TotalWindowed));
+}
+
+void
+ISA::installGlobals(int gl, int offset)
+{
+    assert(offset >= 0 && offset + NumGlobalRegs <= NumIntRegs);
+    RegIndex *mapChunk = intRegMap + offset;
+    mapChunk[0] = 0;
+    for (int i = 1; i < NumGlobalRegs; i++)
+        mapChunk[i] = i + gl * NumGlobalRegs;
+}
+
+void
 ISA::clear()
 {
+    cwp = 0;
+    gl = 0;
+    reloadRegMap();
+
     //y = 0;
     //ccr = 0;
     asi = 0;
@@ -64,13 +102,11 @@ ISA::clear()
     pstate = 0;
     tl = 0;
     pil = 0;
-    cwp = 0;
     //cansave = 0;
     //canrestore = 0;
     //cleanwin = 0;
     //otherwin = 0;
     //wstate = 0;
-    gl = 0;
     //In a T1, bit 11 is apparently always 1
     hpstate = (1 << 11);
     memset(htstate, 0, sizeof(htstate));
@@ -530,8 +566,15 @@ ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
         new_val = val >= NWindows ? NWindows - 1 : val;
         if (val >= NWindows)
             new_val = NWindows - 1;
+
+        installWindow(new_val, CurrentWindowOffset);
+        installWindow(new_val - 1, NextWindowOffset);
+        installWindow(new_val + 1, PreviousWindowOffset);
         break;
       case MISCREG_GL:
+        installGlobals(val, CurrentGlobalsOffset);
+        installGlobals(val, NextGlobalsOffset);
+        installGlobals(val, PreviousGlobalsOffset);
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:
@@ -668,6 +711,7 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(pil);
     UNSERIALIZE_SCALAR(cwp);
     UNSERIALIZE_SCALAR(gl);
+    reloadRegMap();
     UNSERIALIZE_SCALAR(hpstate);
     UNSERIALIZE_ARRAY(htstate,MaxTL);
     UNSERIALIZE_SCALAR(hintp);
@@ -721,74 +765,6 @@ ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
     }
 
  #endif
-}
-
-int
-ISA::flattenIntIndex(int reg)
-{
-    int gl = readMiscRegNoEffect(MISCREG_GL);
-    int cwp = readMiscRegNoEffect(MISCREG_CWP);
-    //DPRINTF(RegisterWindows, "Global Level = %d, Current Window Pointer = %d\n", gl, cwp);
-    int newReg;
-    //The total number of global registers
-    int numGlobals = (MaxGL + 1) * 8;
-    if(reg < 8)
-    {
-        //Global register
-        //Put it in the appropriate set of globals
-        newReg = reg + gl * 8;
-    }
-    else if(reg < NumIntArchRegs)
-    {
-        //Regular windowed register
-        //Put it in the window pointed to by cwp
-        newReg = numGlobals +
-            ((reg - 8 - cwp * 16 + NWindows * 16) % (NWindows * 16));
-    }
-    else if(reg < NumIntArchRegs + NumMicroIntRegs)
-    {
-        //Microcode register
-        //Displace from the end of the regular registers
-        newReg = reg - NumIntArchRegs + numGlobals + NWindows * 16;
-    }
-    else if(reg < 2 * NumIntArchRegs + NumMicroIntRegs)
-    {
-        reg -= (NumIntArchRegs + NumMicroIntRegs);
-        if(reg < 8)
-        {
-            //Global register from the next window
-            //Put it in the appropriate set of globals
-            newReg = reg + gl * 8;
-        }
-        else
-        {
-            //Windowed register from the previous window
-            //Put it in the window before the one pointed to by cwp
-            newReg = numGlobals +
-                ((reg - 8 - (cwp - 1) * 16 + NWindows * 16) % (NWindows * 16));
-        }
-    }
-    else if(reg < 3 * NumIntArchRegs + NumMicroIntRegs)
-    {
-        reg -= (2 * NumIntArchRegs + NumMicroIntRegs);
-        if(reg < 8)
-        {
-            //Global register from the previous window
-            //Put it in the appropriate set of globals
-            newReg = reg + gl * 8;
-        }
-        else
-        {
-            //Windowed register from the next window
-            //Put it in the window after the one pointed to by cwp
-            newReg = numGlobals +
-                ((reg - 8 - (cwp + 1) * 16 + NWindows * 16) % (NWindows * 16));
-        }
-    }
-    else
-        panic("Tried to flatten invalid register index %d!\n", reg);
-    DPRINTF(RegisterWindows, "Flattened register %d to %d.\n", reg, newReg);
-    return newReg;
 }
 
 }

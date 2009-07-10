@@ -692,7 +692,7 @@ cloneFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ctc->setIntReg(NumIntArchRegs + 4, 0);
             ctc->setIntReg(NumIntArchRegs + 3, NWindows - 2);
             ctc->setIntReg(NumIntArchRegs + 5, NWindows);
-            ctc->setMiscRegNoEffect(MISCREG_CWP, 0);
+            ctc->setMiscReg(MISCREG_CWP, 0);
             ctc->setIntReg(NumIntArchRegs + 7, 0);
             ctc->setMiscRegNoEffect(MISCREG_TL, 0);
             ctc->setMiscRegNoEffect(MISCREG_ASI, ASI_PRIMARY);
