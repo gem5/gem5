@@ -92,10 +92,11 @@ void Tracer::startTrace(string filename)
 
 void Tracer::stopTrace()
 {
-  assert(m_enabled == true);
-  m_trace_file.close();
-  cout << "Request trace file closed." << endl;
-  m_enabled = false;
+  if (m_enabled == true) {
+    m_trace_file.close();
+    cout << "Request trace file closed." << endl;
+    m_enabled = false;
+  }
 }
 
 void Tracer::traceRequest(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)

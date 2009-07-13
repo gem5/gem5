@@ -9,6 +9,7 @@
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/recorder/Tracer.hh"
 
 string RubyRequestType_to_string(const RubyRequestType& obj)
 {
@@ -203,6 +204,20 @@ void libruby_print_config(std::ostream & out)
 void libruby_print_stats(std::ostream & out)
 {
   RubySystem::printStats(out);
+}
+void libruby_playback_trace(char * trace_filename) 
+{
+  RubySystem::getTracer()->playbackTrace(trace_filename);
+}
+
+void libruby_start_tracing(char * record_filename) {
+  // start the trace
+  RubySystem::getTracer()->startTrace(record_filename);
+}
+
+void libruby_stop_tracing() {
+  // start the trace
+  RubySystem::getTracer()->stopTrace();
 }
 
 uint64_t libruby_get_time() {

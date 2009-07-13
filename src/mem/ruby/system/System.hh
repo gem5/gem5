@@ -106,7 +106,7 @@ public:
   static int getNumberOfSequencers() { return m_sequencers.size(); }
 
   Profiler* getProfiler() {assert(m_profiler_ptr != NULL); return m_profiler_ptr; }
-  Tracer* getTracer() { assert(m_tracer_ptr != NULL); return m_tracer_ptr; }
+  static Tracer* getTracer() { assert(m_tracer_ptr != NULL); return m_tracer_ptr; }
   static MemoryVector* getMemoryVector() { assert(m_mem_vec_ptr != NULL); return m_mem_vec_ptr;}
 
   void recordCacheContents(CacheRecorder& tr) const;
