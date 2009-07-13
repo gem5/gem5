@@ -230,8 +230,8 @@ RubyMemory::Port::recvTiming(PacketPtr pkt)
         }
     } else if (pkt->isWrite()) {
         type = RubyRequestType_ST;
-    } else if (pkt->isReadWrite()) {
-        type = RubyRequestType_RMW;
+//    } else if (pkt->isReadWrite()) {
+//        type = RubyRequestType_RMW;
     }
 
     RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(),

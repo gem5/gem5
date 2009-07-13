@@ -551,6 +551,8 @@ void CacheMemory::changePermission(const Address& address, AccessPermission new_
 {
   assert(address == line_address(address));
   lookup(address).m_Permission = new_perm;
+  Index cacheSet = addressToCacheSet(address);
+  int loc = findTagInSet(cacheSet, address);
   m_locked[cacheSet][loc] = -1; 
   assert(getPermission(address) == new_perm);
 }
