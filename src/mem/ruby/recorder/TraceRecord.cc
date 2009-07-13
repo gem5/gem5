@@ -47,7 +47,10 @@ TraceRecord::TraceRecord(const string & sequencer_name, const Address& data_addr
 
   // Don't differentiate between store misses and atomic requests in
   // the trace
-  if (m_type == RubyRequestType_RMW) {
+  if (m_type == RubyRequestType_Locked_Read) {
+    m_type = RubyRequestType_ST;
+  }
+  if (m_type == RubyRequestType_Locked_Write) {
     m_type = RubyRequestType_ST;
   }
 }

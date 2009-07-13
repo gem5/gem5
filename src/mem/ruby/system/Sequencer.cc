@@ -201,8 +201,8 @@ bool Sequencer::insertRequest(SequencerRequest* request) {
   Address line_addr(request->ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((request->ruby_request.type == RubyRequestType_ST) ||
-      (request->ruby_request.type == RubyRequestType_RMW_Read) ||  
-      (request->ruby_request.type == RubyRequestType_RMW_Write)) {
+      (request->ruby_request.type == RubyRequestType_Locked_Read) ||  
+      (request->ruby_request.type == RubyRequestType_Locked_Write)) {
     if (m_writeRequestTable.exist(line_addr)) {
       m_writeRequestTable.lookup(line_addr) = request;
       //      return true;
@@ -238,8 +238,8 @@ void Sequencer::removeRequest(SequencerRequest* srequest) {
   Address line_addr(ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((ruby_request.type == RubyRequestType_ST) ||
-      (ruby_request.type == RubyRequestType_RMW_Read) ||
-      (ruby_request.type == RubyRequestType_RMW_Write)) {
+      (ruby_request.type == RubyRequestType_Locked_Read) ||
+      (ruby_request.type == RubyRequestType_Locked_Write)) {
     m_writeRequestTable.deallocate(line_addr);
   } else {
     m_readRequestTable.deallocate(line_addr);
@@ -258,10 +258,10 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   removeRequest(request);
 
   assert((request->ruby_request.type == RubyRequestType_ST) ||
-         (request->ruby_request.type == RubyRequestType_RMW_Read) ||
-         (request->ruby_request.type == RubyRequestType_RMW_Write));
+         (request->ruby_request.type == RubyRequestType_Locked_Read) ||
+         (request->ruby_request.type == RubyRequestType_Locked_Write));
   // POLINA: the assumption is that atomics are only on data cache and not instruction cache
-  if (request->ruby_request.type == RubyRequestType_RMW_Read) {
+  if (request->ruby_request.type == RubyRequestType_Locked_Read) {
     m_dataCache_ptr->setLocked(address, m_version);
   }
 
@@ -364,7 +364,7 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
     SequencerRequest *srequest = new SequencerRequest(request, id, g_eventQueue_ptr->getTime());
     bool found = insertRequest(srequest);
     if (!found)
-      if (request.type == RubyRequestType_RMW_Write) {
+      if (request.type == RubyRequestType_Locked_Write) {
         if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), m_version)) {
           return -2;
         }
@@ -396,10 +396,10 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   case RubyRequestType_ST:
     ctype = CacheRequestType_ST;
     break;
-  case RubyRequestType_RMW_Read:
+  case RubyRequestType_Locked_Read:
     ctype = CacheRequestType_ATOMIC;
     break;
-  case RubyRequestType_RMW_Write:
+  case RubyRequestType_Locked_Write:
     ctype = CacheRequestType_ATOMIC;
     break;
   default:

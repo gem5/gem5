@@ -11,8 +11,8 @@ enum RubyRequestType {
   RubyRequestType_IFETCH,
   RubyRequestType_LD,
   RubyRequestType_ST,
-  RubyRequestType_RMW_Read,
-  RubyRequestType_RMW_Write
+  RubyRequestType_Locked_Read,
+  RubyRequestType_Locked_Write
 };
 
 enum RubyAccessMode {
