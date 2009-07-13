@@ -201,7 +201,8 @@ bool Sequencer::insertRequest(SequencerRequest* request) {
   Address line_addr(request->ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((request->ruby_request.type == RubyRequestType_ST) ||
-      (request->ruby_request.type == RubyRequestType_RMW)) {
+      (request->ruby_request.type == RubyRequestType_RMW_Read) ||  
+      (request->ruby_request.type == RubyRequestType_RMW_Write)) {
     if (m_writeRequestTable.exist(line_addr)) {
       m_writeRequestTable.lookup(line_addr) = request;
       //      return true;
