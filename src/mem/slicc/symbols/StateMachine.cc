@@ -759,6 +759,17 @@ void StateMachine::printCWakeup(ostream& out, string component)
   out << "#include \"mem/protocol/Types.hh\"" << endl;
   out << "#include \"mem/ruby/system/System.hh\"" << endl;
   out << endl;
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    out << "NodeID servicing_atomic = -1;" << endl;
+    out << endl;
+    out << "Address locked_read_request = Address(-1);" << endl;
+    out << endl;
+    out << "NodeID servicing_locked_read = -1;" << endl;
+    out << endl;
+  }
+  else {
+    cout << component << endl << flush;
+  }
   out << "void " << component << "_Controller::wakeup()" << endl;
   out << "{" << endl;
   //  out << "  DEBUG_EXPR(GENERATED_COMP, MedPrio,*this);" << endl;
@@ -775,14 +786,103 @@ void StateMachine::printCWakeup(ostream& out, string component)
   out << "    }" << endl;
 
   // InPorts
+  //
+  // Find the position of the mandatory queue in the vector so that we can print it out first
+  int j = -1;
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    for(int i=0; i < m_in_ports.size(); i++) {
+        const Var* port = m_in_ports[i];
+        assert(port->existPair("c_code_in_port"));
+        if (port->toString().find("mandatoryQueue_in") != string::npos) {
+          assert (j == -1);
+          j = i;
+        }
+        else {
+          cout << port->toString() << endl << flush;
+        }
+    }
+    
+    assert(j != -1);
+
+    // print out the mandatory queue here
+    const Var* port = m_in_ports[j];
+    assert(port->existPair("c_code_in_port"));
+    out << "    // " 
+        << component << "InPort " << port->toString() 
+        << endl;
+    string output = port->lookupPair("c_code_in_port");
+    string::size_type pos = output.find("TransitionResult result = doTransition((L1Cache_mandatory_request_type_to_event(((*in_msg_ptr)).m_Type)), L1Cache_getState(addr), addr);");
+    assert(pos != string::npos);
+    string atomics_string = "\n \
+                           bool postpone = false; \n \
+                           if ((((*in_msg_ptr)).m_Type) == CacheRequestType_ATOMIC) { \n \
+                             if (servicing_atomic == -1) { \n \
+                                if (locked_read_request == Address(-1) && (servicing_locked_read == -1)) { \n \
+                                  assert(addr != Address(-1)); \n \
+                                  locked_read_request = addr;  \n \
+                                  servicing_locked_read = m_version; \n \
+                                } \n \
+                                else if ((addr == locked_read_request) && (servicing_locked_read == m_version)) { \n \
+                                  assert (servicing_atomic == -1); \n \
+                                  servicing_atomic = m_version; \n \
+                                } \n \
+                                else { \n \ 
+                                  postpone = true; \n \
+                                  g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+                                } \n \
+                             } \n \
+                             else { \n \
+                               postpone = true; \n \
+                                g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+                             } \n \
+                           } \n \
+                           if (servicing_atomic == m_version) { \n \
+                                servicing_atomic = -1; \n \
+                                locked_read_request = Address(-1); \n \
+                                servicing_locked_read = -1; \n \
+                           } \n \
+                           if (!postpone) { \n \
+                             ";
+
+
+
+    output.insert(pos, atomics_string);
+    string::size_type next_pos = output.find("// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)", pos);
+    assert(next_pos != string::npos);
+    string complete = "\n}";
+    output.insert(next_pos, complete);
+    //out << port->lookupPair("c_code_in_port");
+    out << output;
+    out << endl;
+  }
   for(int i=0; i < m_in_ports.size(); i++) {
     const Var* port = m_in_ports[i];
-    assert(port->existPair("c_code_in_port"));
-    out << "    // "
-        << component << "InPort " << port->toString()
-        << endl;
-    out << port->lookupPair("c_code_in_port");
-    out << endl;
+    // don't print out mandatory queue twice
+    if (i != j) {
+      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+        if (port->toString().find("forwardRequestNetwork_in") != string::npos) {
+         out << "if (servicing_atomic != m_version && servicing_locked_read != m_version) {" << endl;
+        }
+        else if (port->toString().find("responseNetwork_in") != string::npos) {
+         out << "// NOTE: this will only work if the WB_ACK always comes before issuing a request for which this line was replaced" << endl;
+         out << "if (servicing_atomic == -1 || servicing_atomic == m_version) {" << endl;
+        }
+      }
+      assert(port->existPair("c_code_in_port"));
+      out << "    // " 
+          << component << "InPort " << port->toString() 
+          << endl;
+      out << port->lookupPair("c_code_in_port");
+      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+        if (port->toString().find("forwardRequestNetwork_in") != string::npos) {
+          out << "}" << endl;
+        }
+        else if (port->toString().find("responseNetwork_in") != string::npos) {
+          out << "}" << endl;
+        }
+      }
+      out << endl;
+    }
   }
 
   out << "    break;  // If we got this far, we have nothing left todo" << endl;
