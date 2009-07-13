@@ -264,19 +264,6 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   if (request->ruby_request.type == RubyRequestType_RMW_Read) {
     m_dataCache_ptr->setLocked(address, m_version);
   }
-  else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
-    if (m_dataCache_ptr->isLocked(address, m_version)) {
-      // if we are holding the lock for this
-      request->ruby_request.atomic_success = true; 
-      m_dataCache_ptr->clearLocked(address);
-    }
-    else {
-      // if we are not holding the lock for this
-      request->ruby_request.atomic_success = false; 
-    }
-
-    // can have livelock
-  }
 
   hitCallback(request, data);
 }
@@ -367,6 +354,8 @@ bool Sequencer::empty() const {
   return (m_writeRequestTable.size() == 0) && (m_readRequestTable.size() == 0);
 }
 
+
+// -2 means that the LLSC failed
 int64_t Sequencer::makeRequest(const RubyRequest & request)
 {
   assert(Address(request.paddr).getOffset() + request.len <= RubySystem::getBlockSizeBytes());
@@ -375,6 +364,14 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
     SequencerRequest *srequest = new SequencerRequest(request, id, g_eventQueue_ptr->getTime());
     bool found = insertRequest(srequest);
     if (!found)
+      if (request.type == RubyRequestType_RMW_Write) {
+        if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), m_version)) {
+          return -2;
+        }
+        else {
+          m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
+        }
+      }
       issueRequest(request);
 
     // TODO: issue hardware prefetches here
