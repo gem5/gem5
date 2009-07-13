@@ -33,7 +33,6 @@
 #define __ARCH_SPARC_ISA_TRAITS_HH__
 
 #include "arch/sparc/types.hh"
-#include "arch/sparc/max_inst_regs.hh"
 #include "arch/sparc/sparc_traits.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
@@ -44,37 +43,16 @@ namespace BigEndianGuest {}
 
 namespace SparcISA
 {
-    class RegFile;
-
     const int MachineBytes = 8;
 
     //This makes sure the big endian versions of certain functions are used.
     using namespace BigEndianGuest;
-    using SparcISAInst::MaxInstSrcRegs;
-    using SparcISAInst::MaxInstDestRegs;
 
     // SPARC has a delay slot
     #define ISA_HAS_DELAY_SLOT 1
 
     // SPARC NOP (sethi %(hi(0), g0)
     const MachInst NoopMachInst = 0x01000000;
-
-    // These enumerate all the registers for dependence tracking.
-    enum DependenceTags {
-        FP_Base_DepTag = 32*3+9,
-        Ctrl_Base_DepTag = FP_Base_DepTag + 64
-    };
-
-    // semantically meaningful register indices
-    const int ZeroReg = 0;      // architecturally meaningful
-    // the rest of these depend on the ABI
-    const int ReturnAddressReg = 31; // post call, precall is 15
-    const int ReturnValueReg = 8;  // Post return, 24 is pre-return.
-    const int StackPointerReg = 14;
-    const int FramePointerReg = 30;
-
-    // Some OS syscall use a second register (o1) to return a second value
-    const int SyscallPseudoReturnReg = 9;
 
     //8K. This value is implmentation specific; and should probably
     //be somewhere else.

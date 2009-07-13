@@ -58,6 +58,7 @@
 #ifndef __ARCH_X86_UTILITY_HH__
 #define __ARCH_X86_UTILITY_HH__
 
+#include "arch/x86/miscregs.hh"
 #include "arch/x86/types.hh"
 #include "base/hashmap.hh"
 #include "base/misc.hh"
@@ -153,6 +154,10 @@ namespace X86ISA
 #endif
 
     void startupCPU(ThreadContext *tc, int cpuId);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 };
 
 #endif // __ARCH_X86_UTILITY_HH__

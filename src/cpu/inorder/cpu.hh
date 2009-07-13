@@ -39,6 +39,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "arch/types.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "base/types.hh"
@@ -77,7 +78,6 @@ class InOrderCPU : public BaseCPU
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
     typedef TheISA::MiscReg MiscReg;
-    typedef TheISA::RegFile RegFile;
 
     //DynInstPtr TypeDefs
     typedef ThePipeline::DynInstPtr DynInstPtr;
@@ -257,9 +257,14 @@ class InOrderCPU : public BaseCPU
     TheISA::IntReg nextNPC[ThePipeline::MaxThreads];
 
     /** The Register File for the CPU */
-    TheISA::IntRegFile intRegFile[ThePipeline::MaxThreads];;
-    TheISA::FloatRegFile floatRegFile[ThePipeline::MaxThreads];;
-    TheISA::MiscRegFile miscRegFile;
+    union {
+        FloatReg f[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
+        FloatRegBits i[ThePipeline::MaxThreads][TheISA::NumFloatRegs];
+    } floatRegs;
+    TheISA::IntReg intRegs[ThePipeline::MaxThreads][TheISA::NumIntRegs];
+
+    /** ISA state */
+    TheISA::ISA isa[ThePipeline::MaxThreads];
 
     /** Dependency Tracker for Integer & Floating Point Regs */
     RegDepMap archRegDepMap[ThePipeline::MaxThreads];
@@ -390,30 +395,18 @@ class InOrderCPU : public BaseCPU
         return cpuEventNum++;
     }
 
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return thread[tid]->getInstAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return thread[tid]->getDataAsid(); }
-
     /** Register file accessors  */
     uint64_t readIntReg(int reg_idx, ThreadID tid);
 
-    FloatReg readFloatReg(int reg_idx, ThreadID tid,
-                          int width = TheISA::SingleWidth);
+    FloatReg readFloatReg(int reg_idx, ThreadID tid);
 
-    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid,
-                                  int width = TheISA::SingleWidth);
+    FloatRegBits readFloatRegBits(int reg_idx, ThreadID tid);
 
     void setIntReg(int reg_idx, uint64_t val, ThreadID tid);
 
-    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid,
-                     int width = TheISA::SingleWidth);
+    void setFloatReg(int reg_idx, FloatReg val, ThreadID tid);
 
-    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid,
-                         int width = TheISA::SingleWidth);
+    void setFloatRegBits(int reg_idx, FloatRegBits val,  ThreadID tid);
 
     /** Reads a miscellaneous register. */
     MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);

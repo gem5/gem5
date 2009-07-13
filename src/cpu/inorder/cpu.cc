@@ -168,7 +168,6 @@ InOrderCPU::InOrderCPU(Params *params)
       coreType("default"),
       _status(Idle),
       tickEvent(this),
-      miscRegFile(this),
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
@@ -208,12 +207,12 @@ InOrderCPU::InOrderCPU(Params *params)
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
                     tid, this->thread[tid]);
             this->thread[tid] =
-                new Thread(this, tid, params->workload[tid], tid);
+                new Thread(this, tid, params->workload[tid]);
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
             Process* dummy_proc = params->workload[0];
-            this->thread[tid] = new Thread(this, tid, dummy_proc, tid);
+            this->thread[tid] = new Thread(this, tid, dummy_proc);
         }
 
         // Setup the TC that will serve as the interface to the threads/CPU.
@@ -265,16 +264,12 @@ InOrderCPU::InOrderCPU(Params *params)
         squashSeqNum[tid] = MaxAddr;
         lastSquashCycle[tid] = 0;
 
-        intRegFile[tid].clear();
-        floatRegFile[tid].clear();
-    }
+        memset(intRegs[tid], 0, sizeof(intRegs[tid]));
+        memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
+        isa[tid].clear();
 
-    // Update miscRegFile if necessary
-    if (numThreads > 1) {
-        miscRegFile.expandForMultithreading(numThreads, numVirtProcs);
+        isa[tid].expandForMultithreading(numThreads, numVirtProcs);
     }
-
-    miscRegFile.clear();
 
     lastRunningCycle = curTick;
     contextSwitch = false;
@@ -461,7 +456,10 @@ InOrderCPU::readFunctional(Addr addr, uint32_t &buffer)
 void
 InOrderCPU::reset()
 {
-  miscRegFile.reset(coreType, numThreads, numVirtProcs, dynamic_cast<BaseCPU*>(this));
+    for (int i = 0; i < numThreads; i++) {
+        isa[i].reset(coreType, numThreads,
+                numVirtProcs, dynamic_cast<BaseCPU*>(this));
+    }
 }
 
 Port*
@@ -888,41 +886,39 @@ InOrderCPU::setNextNPC(uint64_t new_NNPC, ThreadID tid)
 uint64_t
 InOrderCPU::readIntReg(int reg_idx, ThreadID tid)
 {
-    return intRegFile[tid].readReg(reg_idx);
+    return intRegs[tid][reg_idx];
 }
 
 FloatReg
-InOrderCPU::readFloatReg(int reg_idx, ThreadID tid, int width)
+InOrderCPU::readFloatReg(int reg_idx, ThreadID tid)
 {
-
-    return floatRegFile[tid].readReg(reg_idx, width);
+    return floatRegs.f[tid][reg_idx];
 }
 
 FloatRegBits
-InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid, int width)
+InOrderCPU::readFloatRegBits(int reg_idx, ThreadID tid)
 {;
-    return floatRegFile[tid].readRegBits(reg_idx, width);
+    return floatRegs.i[tid][reg_idx];
 }
 
 void
 InOrderCPU::setIntReg(int reg_idx, uint64_t val, ThreadID tid)
 {
-    intRegFile[tid].setReg(reg_idx, val);
+    intRegs[tid][reg_idx] = val;
 }
 
 
 void
-InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid, int width)
+InOrderCPU::setFloatReg(int reg_idx, FloatReg val, ThreadID tid)
 {
-    floatRegFile[tid].setReg(reg_idx, val, width);
+    floatRegs.f[tid][reg_idx] = val;
 }
 
 
 void
-InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid,
-                            int width)
+InOrderCPU::setFloatRegBits(int reg_idx, FloatRegBits val, ThreadID tid)
 {
-    floatRegFile[tid].setRegBits(reg_idx, val, width);
+    floatRegs.i[tid][reg_idx] = val;
 }
 
 uint64_t
@@ -966,25 +962,25 @@ InOrderCPU::setRegOtherThread(unsigned reg_idx, const MiscReg &val,
 MiscReg
 InOrderCPU::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
-    return miscRegFile.readRegNoEffect(misc_reg, tid);
+    return isa[tid].readMiscRegNoEffect(misc_reg);
 }
 
 MiscReg
 InOrderCPU::readMiscReg(int misc_reg, ThreadID tid)
 {
-    return miscRegFile.readReg(misc_reg, tcBase(tid), tid);
+    return isa[tid].readMiscReg(misc_reg, tcBase(tid));
 }
 
 void
 InOrderCPU::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    miscRegFile.setRegNoEffect(misc_reg, val, tid);
+    isa[tid].setMiscRegNoEffect(misc_reg, val);
 }
 
 void
 InOrderCPU::setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
 {
-    miscRegFile.setReg(misc_reg, val, tcBase(tid), tid);
+    isa[tid].setMiscReg(misc_reg, val, tcBase(tid));
 }
 
 

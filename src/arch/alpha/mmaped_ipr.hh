@@ -37,7 +37,10 @@
  * ISA-specific helper functions for memory mapped IPR accesses.
  */
 
+#include "base/types.hh"
 #include "mem/packet.hh"
+
+class ThreadContext;
 
 namespace AlphaISA {
 

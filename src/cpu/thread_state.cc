@@ -45,8 +45,7 @@
 #if FULL_SYSTEM
 ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid)
 #else
-ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid,
-                         Process *_process, short _asid)
+ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid, Process *_process)
 #endif
     : numInst(0), numLoad(0), _status(ThreadContext::Halted),
       baseCpu(cpu), _threadId(_tid), lastActivate(0), lastSuspend(0),
@@ -54,9 +53,9 @@ ThreadState::ThreadState(BaseCPU *cpu, ThreadID _tid,
       profile(NULL), profileNode(NULL), profilePC(0), quiesceEvent(NULL),
       kernelStats(NULL), physPort(NULL), virtPort(NULL),
 #else
-      port(NULL), process(_process), asid(_asid),
+      port(NULL), process(_process),
 #endif
-      microPC(0), nextMicroPC(1), funcExeInst(0), storeCondFailures(0)
+      funcExeInst(0), storeCondFailures(0)
 {
 }
 
@@ -77,8 +76,6 @@ ThreadState::serialize(std::ostream &os)
     // thread_num and cpu_id are deterministic from the config
     SERIALIZE_SCALAR(funcExeInst);
     SERIALIZE_SCALAR(inst);
-    SERIALIZE_SCALAR(microPC);
-    SERIALIZE_SCALAR(nextMicroPC);
 
 #if FULL_SYSTEM
     Tick quiesceEndTick = 0;
@@ -98,8 +95,6 @@ ThreadState::unserialize(Checkpoint *cp, const std::string &section)
     // thread_num and cpu_id are deterministic from the config
     UNSERIALIZE_SCALAR(funcExeInst);
     UNSERIALIZE_SCALAR(inst);
-    UNSERIALIZE_SCALAR(microPC);
-    UNSERIALIZE_SCALAR(nextMicroPC);
 
 #if FULL_SYSTEM
     Tick quiesceEndTick;

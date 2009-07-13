@@ -32,10 +32,18 @@
 namespace ArmISA
 {
 std::string
-PredOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+PredIntOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printDataInst(ss);
+    printDataInst(ss, false);
+    return ss.str();
+}
+
+std::string
+PredImmOp::generateDisassembly(Addr pc, const SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printDataInst(ss, true);
     return ss.str();
 }
 

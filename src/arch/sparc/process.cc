@@ -32,6 +32,7 @@
 #include "arch/sparc/asi.hh"
 #include "arch/sparc/handlers.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/process.hh"
 #include "arch/sparc/types.hh"
 #include "base/loader/object_file.hh"
@@ -139,7 +140,7 @@ SparcLiveProcess::startup()
     //tc->setMiscRegNoEffect(MISCREG_CLEANWIN, NWindows);
     tc->setIntReg(NumIntArchRegs + 5, NWindows);
     //Start with register window 0
-    tc->setMiscRegNoEffect(MISCREG_CWP, 0);
+    tc->setMiscReg(MISCREG_CWP, 0);
     //Always use spill and fill traps 0
     //tc->setMiscRegNoEffect(MISCREG_WSTATE, 0);
     tc->setIntReg(NumIntArchRegs + 7, 0);

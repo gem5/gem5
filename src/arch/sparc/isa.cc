@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
- *          Ali Saidi
  */
 
 #include "arch/sparc/asi.hh"
-#include "arch/sparc/miscregfile.hh"
+#include "arch/sparc/isa.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 
-using namespace SparcISA;
-using namespace std;
-
-class Checkpoint;
+namespace SparcISA
+{
 
 enum RegMask
 {
         PSTATE_MASK = (((1 << 4) - 1) << 1) | (((1 << 4) - 1) << 6) | (1 << 12)
 };
 
-void MiscRegFile::clear()
+void
+ISA::reloadRegMap()
 {
+    installGlobals(gl, CurrentGlobalsOffset);
+    installWindow(cwp, CurrentWindowOffset);
+    // Microcode registers.
+    for (int i = 0; i < NumMicroIntRegs; i++)
+        intRegMap[MicroIntOffset + i] = i + TotalGlobals + NWindows * 16;
+    installGlobals(gl, NextGlobalsOffset);
+    installWindow(cwp - 1, NextWindowOffset);
+    installGlobals(gl, PreviousGlobalsOffset);
+    installWindow(cwp + 1, PreviousWindowOffset);
+}
+
+void
+ISA::installWindow(int cwp, int offset)
+{
+    assert(offset >= 0 && offset + NumWindowedRegs <= NumIntRegs);
+    RegIndex *mapChunk = intRegMap + offset;
+    for (int i = 0; i < NumWindowedRegs; i++)
+        mapChunk[i] = TotalGlobals +
+            ((i - cwp * RegsPerWindow + TotalWindowed) % (TotalWindowed));
+}
+
+void
+ISA::installGlobals(int gl, int offset)
+{
+    assert(offset >= 0 && offset + NumGlobalRegs <= NumIntRegs);
+    RegIndex *mapChunk = intRegMap + offset;
+    mapChunk[0] = 0;
+    for (int i = 1; i < NumGlobalRegs; i++)
+        mapChunk[i] = i + gl * NumGlobalRegs;
+}
+
+void
+ISA::clear()
+{
+    cwp = 0;
+    gl = 0;
+    reloadRegMap();
+
     //y = 0;
     //ccr = 0;
     asi = 0;
@@ -66,13 +102,11 @@ void MiscRegFile::clear()
     pstate = 0;
     tl = 0;
     pil = 0;
-    cwp = 0;
     //cansave = 0;
     //canrestore = 0;
     //cleanwin = 0;
     //otherwin = 0;
     //wstate = 0;
-    gl = 0;
     //In a T1, bit 11 is apparently always 1
     hpstate = (1 << 11);
     memset(htstate, 0, sizeof(htstate));
@@ -96,7 +130,8 @@ void MiscRegFile::clear()
 #endif
 }
 
-MiscReg MiscRegFile::readRegNoEffect(int miscReg)
+MiscReg
+ISA::readMiscRegNoEffect(int miscReg)
 {
 
   // The three miscRegs are moved up from the switch statement
@@ -255,7 +290,8 @@ MiscReg MiscRegFile::readRegNoEffect(int miscReg)
     }
 }
 
-MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
+MiscReg
+ISA::readMiscReg(int miscReg, ThreadContext * tc)
 {
     switch (miscReg) {
         // tick and stick are aliased to each other in niagra
@@ -311,10 +347,11 @@ MiscReg MiscRegFile::readReg(int miscReg, ThreadContext * tc)
 #endif
 
     }
-    return readRegNoEffect(miscReg);
+    return readMiscRegNoEffect(miscReg);
 }
 
-void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
+void
+ISA::setMiscRegNoEffect(int miscReg, MiscReg val)
 {
     switch (miscReg) {
 //      case MISCREG_Y:
@@ -493,8 +530,8 @@ void MiscRegFile::setRegNoEffect(int miscReg, const MiscReg &val)
     }
 }
 
-void MiscRegFile::setReg(int miscReg,
-        const MiscReg &val, ThreadContext * tc)
+void
+ISA::setMiscReg(int miscReg, MiscReg val, ThreadContext * tc)
 {
     MiscReg new_val = val;
 
@@ -529,8 +566,15 @@ void MiscRegFile::setReg(int miscReg,
         new_val = val >= NWindows ? NWindows - 1 : val;
         if (val >= NWindows)
             new_val = NWindows - 1;
+
+        installWindow(new_val, CurrentWindowOffset);
+        installWindow(new_val - 1, NextWindowOffset);
+        installWindow(new_val + 1, PreviousWindowOffset);
         break;
       case MISCREG_GL:
+        installGlobals(val, CurrentGlobalsOffset);
+        installGlobals(val, NextGlobalsOffset);
+        installGlobals(val, PreviousGlobalsOffset);
         break;
       case MISCREG_PIL:
       case MISCREG_SOFTINT:
@@ -565,11 +609,11 @@ void MiscRegFile::setReg(int miscReg,
               miscReg, val);
 #endif
     }
-    setRegNoEffect(miscReg, new_val);
+    setMiscRegNoEffect(miscReg, new_val);
 }
 
 void
-MiscRegFile::serialize(EventManager *em, std::ostream &os)
+ISA::serialize(EventManager *em, std::ostream &os)
 {
     SERIALIZE_SCALAR(asi);
     SERIALIZE_SCALAR(tick);
@@ -647,8 +691,7 @@ MiscRegFile::serialize(EventManager *em, std::ostream &os)
 }
 
 void
-MiscRegFile::unserialize(EventManager *em, Checkpoint *cp,
-    const string &section)
+ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(asi);
     UNSERIALIZE_SCALAR(tick);
@@ -668,6 +711,7 @@ MiscRegFile::unserialize(EventManager *em, Checkpoint *cp,
     UNSERIALIZE_SCALAR(pil);
     UNSERIALIZE_SCALAR(cwp);
     UNSERIALIZE_SCALAR(gl);
+    reloadRegMap();
     UNSERIALIZE_SCALAR(hpstate);
     UNSERIALIZE_ARRAY(htstate,MaxTL);
     UNSERIALIZE_SCALAR(hintp);
@@ -721,4 +765,6 @@ MiscRegFile::unserialize(EventManager *em, Checkpoint *cp,
     }
 
  #endif
+}
+
 }

@@ -39,32 +39,6 @@ def template LoadStoreDeclare {{
      */
     class %(class_name)s : public %(base_class)s
     {
-      protected:
-
-        /**
-         * "Fake" effective address computation class for "%(mnemonic)s".
-         */
-        class EAComp : public %(base_class)s
-        {
-          public:
-            /// Constructor
-            EAComp(ExtMachInst machInst);
-
-            %(BasicExecDeclare)s
-        };
-
-        /**
-         * "Fake" memory access instruction class for "%(mnemonic)s".
-         */
-        class MemAcc : public %(base_class)s
-        {
-          public:
-            /// Constructor
-            MemAcc(ExtMachInst machInst);
-
-            %(BasicExecDeclare)s
-        };
-
       public:
 
         /// Constructor.
@@ -89,83 +63,11 @@ def template CompleteAccDeclare {{
 }};
 
 
-def template EACompConstructor {{
-    inline %(class_name)s::EAComp::EAComp(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s (EAComp)", machInst, IntAluOp)
-    {
-        %(constructor)s;
-    }
-}};
-
-
-def template MemAccConstructor {{
-    inline %(class_name)s::MemAcc::MemAcc(ExtMachInst machInst)
-        : %(base_class)s("%(mnemonic)s (MemAcc)", machInst, %(op_class)s)
-    {
-        %(constructor)s;
-    }
-}};
-
-
 def template LoadStoreConstructor {{
     inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
-         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
-                          new EAComp(machInst), new MemAcc(machInst))
+         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
     {
         %(constructor)s;
-    }
-}};
-
-
-def template EACompExecute {{
-    Fault
-    %(class_name)s::EAComp::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (%(predicate_test)s)
-        {
-            if (fault == NoFault) {
-                %(op_wb)s;
-                xc->setEA(EA);
-            }
-        }
-
-        return fault;
-    }
-}};
-
-def template LoadMemAccExecute {{
-    Fault
-    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-        EA = xc->getEA();
-
-        if (%(predicate_test)s)
-        {
-            if (fault == NoFault) {
-                fault = xc->read(EA, (uint%(mem_acc_size)d_t&)Mem, memAccessFlags);
-                %(memacc_code)s;
-            }
-
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-
-        return fault;
     }
 }};
 
@@ -238,37 +140,6 @@ def template LoadCompleteAcc {{
 
             if (fault == NoFault) {
                 %(memacc_code)s;
-            }
-
-            if (fault == NoFault) {
-                %(op_wb)s;
-            }
-        }
-
-        return fault;
-    }
-}};
-
-
-def template StoreMemAccExecute {{
-    Fault
-    %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                   Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
-
-        %(op_decl)s;
-        %(op_rd)s;
-
-        if (%(predicate_test)s)
-        {
-            EA = xc->getEA();
-
-            if (fault == NoFault) {
-                fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
-                                  memAccessFlags, NULL);
-                if (traceData) { traceData->setData(Mem); }
             }
 
             if (fault == NoFault) {
@@ -354,7 +225,8 @@ def template StoreCompleteAcc {{
     {
         Fault fault = NoFault;
 
-        %(op_dest_decl)s;
+        %(op_decl)s;
+        %(op_rd)s;
 
         if (%(predicate_test)s)
         {
@@ -387,71 +259,114 @@ def template StoreCondCompleteAcc {{
     }
 }};
 
+let {{
+    def buildPUBWLCase(p, u, b, w, l):
+        return (p << 4) + (u << 3) + (b << 2) + (w << 1) + (l << 0)
 
-def template MiscMemAccExecute {{
-    Fault %(class_name)s::MemAcc::execute(%(CPU_exec_context)s *xc,
-                                          Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
+    def buildMode2Inst(p, u, b, w, l, suffix, offset):
+        mnem = ("str", "ldr")[l]
+        op = ("-", "+")[u]
+        offset = op + ArmGenericCodeSubs(offset);
+        mem = ("Mem", "Mem.ub")[b]
+        code = ("%s = Rd;", "Rd = %s;")[l] % mem
+        ea_code = "EA = Rn %s;" % ("", offset)[p]
+        if p == 0 or w == 1:
+            code += "Rn = Rn %s;" % offset
+        if p == 0 and w == 0:
+            # Here's where we'll tack on a flag to make this a usermode access.
+            mnem += "t"
+        type = ("Store", "Load")[l]
+        newSuffix = "_%s_P%dU%dB%dW%d" % (suffix, p, u, b, w)
+        if b == 1:
+            mnem += "b"
+        return LoadStoreBase(mnem, mnem.capitalize() + newSuffix,
+                ea_code, code, mem_flags = [], inst_flags = [],
+                base_class = 'Memory' + suffix,
+                exec_template_base = type.capitalize())
 
-        %(op_decl)s;
-        %(op_rd)s;
-
-        if (%(predicate_test)s)
-        {
-            EA = xc->getEA();
-
-            if (fault == NoFault) {
-                %(memacc_code)s;
-            }
-        }
-
-        return NoFault;
-    }
+    def buildMode3Inst(p, u, i, w, type, code, mnem):
+        op = ("-", "+")[u]
+        offset = ("%s Rm", "%s hilo")[i] % op
+        ea_code = "EA = Rn %s;" % ("", offset)[p]
+        if p == 0 or w == 1:
+            code += "Rn = Rn %s;" % offset
+        newSuffix = "_P%dU%dI%dW%d" % (p, u, i, w)
+        suffix = ("Reg", "Hilo")[i]
+        return LoadStoreBase(mnem, mnem.capitalize() + newSuffix,
+                ea_code, code, mem_flags = [], inst_flags = [],
+                base_class = 'Memory' + suffix,
+                exec_template_base = type.capitalize())
 }};
 
-def template MiscExecute {{
-    Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
-                                  Trace::InstRecord *traceData) const
-    {
-        Addr EA;
-        Fault fault = NoFault;
+def format AddrMode2(suffix, offset) {{
+    header_output = decoder_output = exec_output = ""
+    decode_block = "switch(PUBWL) {\n"
 
-        %(op_decl)s;
-        %(op_rd)s;
-        %(ea_code)s;
-
-        if (%(predicate_test)s)
-        {
-            if (fault == NoFault) {
-                %(memacc_code)s;
-            }
-        }
-
-        return NoFault;
-    }
+    # Loop over all the values of p, u, b, w and l and build instructions and
+    # a decode block for them.
+    for p in (0, 1):
+        for u in (0, 1):
+            for b in (0, 1):
+                for w in (0, 1):
+                    for l in (0, 1):
+                        (new_header_output,
+                         new_decoder_output,
+                         new_decode_block,
+                         new_exec_output) = buildMode2Inst(p, u, b, w, l,
+                                                           suffix, offset)
+                        header_output += new_header_output
+                        decoder_output += new_decoder_output
+                        exec_output += new_exec_output
+                        decode_block += '''
+                            case %#x:
+                              {%s}
+                              break;
+                        ''' % (buildPUBWLCase(p,u,b,w,l), new_decode_block)
+    decode_block += '''
+        default:
+          return new Unknown(machInst);
+        break;
+    }'''
 }};
 
-def template MiscInitiateAcc {{
-    Fault %(class_name)s::initiateAcc(%(CPU_exec_context)s *xc,
-                                      Trace::InstRecord *traceData) const
-    {
-        panic("Misc instruction does not support split access method!");
-        return NoFault;
-    }
-}};
+def format AddrMode3(l0Type, l0Code, l1Type, l1Code) {{
+    l0Code = ArmGenericCodeSubs(l0Code);
+    l1Code = ArmGenericCodeSubs(l1Code);
 
+    header_output = decoder_output = exec_output = ""
+    decode_block = "switch(PUBWL) {\n"
+    (l0Mnem, l1Mnem) = name.split("_");
 
-def template MiscCompleteAcc {{
-    Fault %(class_name)s::completeAcc(PacketPtr pkt,
-                                      %(CPU_exec_context)s *xc,
-                                      Trace::InstRecord *traceData) const
-    {
-        panic("Misc instruction does not support split access method!");
+    # Loop over all the values of p, u, i, w and l and build instructions and
+    # a decode block for them.
+    for (l, type, code, mnem) in ((0, l0Type, l0Code, l0Mnem),
+                                  (1, l1Type, l1Code, l1Mnem)):
+        for p in (0, 1):
+            wset = (0, 1)
+            if (p == 0):
+                wset = (0,)
+            for u in (0, 1):
+                for i in (0, 1):
+                    for w in wset:
+                        (new_header_output,
+                         new_decoder_output,
+                         new_decode_block,
+                         new_exec_output) = buildMode3Inst(p, u, i, w,
+                                                           type, code, mnem)
+                        header_output += new_header_output
+                        decoder_output += new_decoder_output
+                        exec_output += new_exec_output
+                        decode_block += '''
+                            case %#x:
+                              {%s}
+                              break;
+                        ''' % (buildPUBWLCase(p,u,i,w,l), new_decode_block)
 
-        return NoFault;
-    }
+    decode_block += '''
+        default:
+          return new Unknown(machInst);
+        break;
+    }'''
 }};
 
 def format ArmLoadMemory(memacc_code, ea_code = {{ EA = Rn + disp; }},

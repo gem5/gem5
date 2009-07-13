@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,33 +25,53 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Gabe Black
- *          Kevin Lim
+ * Authors: Gabe Black
  */
 
-#include <cstring>
+#ifndef __ARCH_X86_ISA_HH__
+#define __ARCH_X86_ISA_HH__
 
-#include "arch/alpha/floatregfile.hh"
-#include "sim/serialize.hh"
+#include "arch/x86/miscregs.hh"
+#include "arch/x86/registers.hh"
+#include "base/types.hh"
 
-namespace AlphaISA {
-void
-FloatRegFile::clear()
+#include <string>
+#include <iostream>
+
+class Checkpoint;
+class EventManager;
+class ThreadContext;
+
+namespace X86ISA
 {
-    std::memset(d, 0, sizeof(d));
+    class ISA
+    {
+      protected:
+        MiscReg regVal[NUM_MISCREGS];
+        void updateHandyM5Reg(Efer efer, CR0 cr0,
+                SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags);
+
+      public:
+        void clear();
+
+        ISA()
+        {
+            clear();
+        }
+
+        MiscReg readMiscRegNoEffect(int miscReg);
+        MiscReg readMiscReg(int miscReg, ThreadContext *tc);
+
+        void setMiscRegNoEffect(int miscReg, MiscReg val);
+        void setMiscReg(int miscReg, MiscReg val, ThreadContext *tc);
+
+        int flattenIntIndex(int reg);
+        int flattenFloatIndex(int reg);
+
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+                const std::string &section);
+    };
 }
 
-void
-FloatRegFile::serialize(std::ostream &os)
-{
-    SERIALIZE_ARRAY(q, NumFloatRegs);
-}
-
-void
-FloatRegFile::unserialize(Checkpoint *cp, const std::string &section)
-{
-    UNSERIALIZE_ARRAY(q, NumFloatRegs);
-}
-
-} // namespace AlphaISA
+#endif

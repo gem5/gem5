@@ -34,7 +34,7 @@
 #include <iostream>
 #include <queue>
 
-#include "arch/isa_traits.hh"
+#include "arch/registers.hh"
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"

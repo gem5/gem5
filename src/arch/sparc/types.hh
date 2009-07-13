@@ -39,19 +39,7 @@ namespace SparcISA
     typedef uint32_t MachInst;
     typedef uint64_t ExtMachInst;
 
-    typedef uint64_t IntReg;
     typedef Twin64_t LargestRead;
-    typedef uint64_t MiscReg;
-    typedef double FloatReg;
-    typedef uint64_t FloatRegBits;
-    typedef union
-    {
-        IntReg intReg;
-        FloatReg fpreg;
-        MiscReg ctrlreg;
-    } AnyReg;
-
-    typedef uint16_t RegIndex;
 
     struct CoreSpecific {
         int core_type;

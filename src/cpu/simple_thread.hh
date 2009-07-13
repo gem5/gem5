@@ -32,9 +32,11 @@
 #ifndef __CPU_SIMPLE_THREAD_HH__
 #define __CPU_SIMPLE_THREAD_HH__
 
+#include "arch/isa.hh"
 #include "arch/isa_traits.hh"
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "arch/tlb.hh"
+#include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -88,9 +90,7 @@ class TranslatingPort;
 class SimpleThread : public ThreadState
 {
   protected:
-    typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
-    typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
@@ -98,7 +98,34 @@ class SimpleThread : public ThreadState
     typedef ThreadContext::Status Status;
 
   protected:
-    RegFile regs;       // correct-path register context
+    union {
+        FloatReg f[TheISA::NumFloatRegs];
+        FloatRegBits i[TheISA::NumFloatRegs];
+    } floatRegs;
+    TheISA::IntReg intRegs[TheISA::NumIntRegs];
+    TheISA::ISA isa;    // one "instance" of the current ISA.
+
+    /** The current microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC microPC;
+
+    /** The next microcode pc for the currently executing macro
+     * operation.
+     */
+    MicroPC nextMicroPC;
+
+    /** The current pc.
+     */
+    Addr PC;
+
+    /** The next pc.
+     */
+    Addr nextPC;
+
+    /** The next next pc.
+     */
+    Addr nextNPC;
 
   public:
     // pointer to CPU associated with this SimpleThread
@@ -118,7 +145,7 @@ class SimpleThread : public ThreadState
                  bool use_kernel_stats = true);
 #else
     SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                 TheISA::TLB *_itb, TheISA::TLB *_dtb, int _asid);
+                 TheISA::TLB *_itb, TheISA::TLB *_dtb);
 #endif
 
     SimpleThread();
@@ -164,9 +191,6 @@ class SimpleThread : public ThreadState
     }
 
 #if FULL_SYSTEM
-    int getInstAsid() { return regs.instAsid(); }
-    int getDataAsid() { return regs.dataAsid(); }
-
     void dumpFuncProfile();
 
     Fault hwrei();
@@ -222,79 +246,68 @@ class SimpleThread : public ThreadState
 
     void copyArchRegs(ThreadContext *tc);
 
-    void clearArchRegs() { regs.clear(); }
+    void clearArchRegs()
+    {
+        microPC = 0;
+        nextMicroPC = 1;
+        PC = nextPC = nextNPC = 0;
+        memset(intRegs, 0, sizeof(intRegs));
+        memset(floatRegs.i, 0, sizeof(floatRegs.i));
+    }
 
     //
     // New accessors for new decoder.
     //
     uint64_t readIntReg(int reg_idx)
     {
-        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
-        return regs.readIntReg(flatIndex);
-    }
-
-    FloatReg readFloatReg(int reg_idx, int width)
-    {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        return regs.readFloatReg(flatIndex, width);
+        int flatIndex = isa.flattenIntIndex(reg_idx);
+        assert(flatIndex < TheISA::NumIntRegs);
+        return intRegs[flatIndex];
     }
 
     FloatReg readFloatReg(int reg_idx)
     {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        return regs.readFloatReg(flatIndex);
-    }
-
-    FloatRegBits readFloatRegBits(int reg_idx, int width)
-    {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        return regs.readFloatRegBits(flatIndex, width);
+        int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
+        return floatRegs.f[flatIndex];
     }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        return regs.readFloatRegBits(flatIndex);
+        int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
+        return floatRegs.i[flatIndex];
     }
 
     void setIntReg(int reg_idx, uint64_t val)
     {
-        int flatIndex = TheISA::flattenIntIndex(getTC(), reg_idx);
-        regs.setIntReg(flatIndex, val);
-    }
-
-    void setFloatReg(int reg_idx, FloatReg val, int width)
-    {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        regs.setFloatReg(flatIndex, val, width);
+        int flatIndex = isa.flattenIntIndex(reg_idx);
+        assert(flatIndex < TheISA::NumIntRegs);
+        intRegs[flatIndex] = val;
     }
 
     void setFloatReg(int reg_idx, FloatReg val)
     {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        regs.setFloatReg(flatIndex, val);
-    }
-
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        regs.setFloatRegBits(flatIndex, val, width);
+        int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
+        floatRegs.f[flatIndex] = val;
     }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     {
-        int flatIndex = TheISA::flattenFloatIndex(getTC(), reg_idx);
-        regs.setFloatRegBits(flatIndex, val);
+        int flatIndex = isa.flattenFloatIndex(reg_idx);
+        assert(flatIndex < TheISA::NumFloatRegs);
+        floatRegs.i[flatIndex] = val;
     }
 
     uint64_t readPC()
     {
-        return regs.readPC();
+        return PC;
     }
 
     void setPC(uint64_t val)
     {
-        regs.setPC(val);
+        PC = val;
     }
 
     uint64_t readMicroPC()
@@ -309,12 +322,12 @@ class SimpleThread : public ThreadState
 
     uint64_t readNextPC()
     {
-        return regs.readNextPC();
+        return nextPC;
     }
 
     void setNextPC(uint64_t val)
     {
-        regs.setNextPC(val);
+        nextPC = val;
     }
 
     uint64_t readNextMicroPC()
@@ -329,36 +342,54 @@ class SimpleThread : public ThreadState
 
     uint64_t readNextNPC()
     {
-        return regs.readNextNPC();
+#if ISA_HAS_DELAY_SLOT
+        return nextNPC;
+#else
+        return nextPC + sizeof(TheISA::MachInst);
+#endif
     }
 
     void setNextNPC(uint64_t val)
     {
-        regs.setNextNPC(val);
+#if ISA_HAS_DELAY_SLOT
+        nextNPC = val;
+#endif
     }
 
     MiscReg
     readMiscRegNoEffect(int misc_reg, ThreadID tid = 0)
     {
-        return regs.readMiscRegNoEffect(misc_reg);
+        return isa.readMiscRegNoEffect(misc_reg);
     }
 
     MiscReg
     readMiscReg(int misc_reg, ThreadID tid = 0)
     {
-        return regs.readMiscReg(misc_reg, tc);
+        return isa.readMiscReg(misc_reg, tc);
     }
 
     void
     setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid = 0)
     {
-        return regs.setMiscRegNoEffect(misc_reg, val);
+        return isa.setMiscRegNoEffect(misc_reg, val);
     }
 
     void
     setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid = 0)
     {
-        return regs.setMiscReg(misc_reg, val, tc);
+        return isa.setMiscReg(misc_reg, val, tc);
+    }
+
+    int
+    flattenIntIndex(int reg)
+    {
+        return isa.flattenIntIndex(reg);
+    }
+
+    int
+    flattenFloatIndex(int reg)
+    {
+        return isa.flattenFloatIndex(reg);
     }
 
     unsigned readStCondFailures() { return storeCondFailures; }

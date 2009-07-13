@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,20 +25,18 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Gabe Black
- *          Kevin Lim
+ * Authors: Gabe Black
  */
 
-#include <cassert>
-
-#include "arch/alpha/miscregfile.hh"
+#include "arch/alpha/isa.hh"
 #include "base/misc.hh"
+#include "cpu/thread_context.hh"
 
-namespace AlphaISA {
+namespace AlphaISA
+{
 
 void
-MiscRegFile::serialize(std::ostream &os)
+ISA::serialize(std::ostream &os)
 {
     SERIALIZE_SCALAR(fpcr);
     SERIALIZE_SCALAR(uniq);
@@ -48,7 +46,7 @@ MiscRegFile::serialize(std::ostream &os)
 }
 
 void
-MiscRegFile::unserialize(Checkpoint *cp, const std::string &section)
+ISA::unserialize(Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(fpcr);
     UNSERIALIZE_SCALAR(uniq);
@@ -57,15 +55,9 @@ MiscRegFile::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_ARRAY(ipr, NumInternalProcRegs);
 }
 
-MiscRegFile::MiscRegFile(BaseCPU *_cpu)
-{
-    cpu = _cpu;
-    initializeIprTable();
-}
-
 
 MiscReg
-MiscRegFile::readRegNoEffect(int misc_reg, ThreadID tid)
+ISA::readMiscRegNoEffect(int misc_reg, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -85,7 +77,7 @@ MiscRegFile::readRegNoEffect(int misc_reg, ThreadID tid)
 }
 
 MiscReg
-MiscRegFile::readReg(int misc_reg, ThreadContext *tc, ThreadID tid)
+ISA::readMiscReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -104,7 +96,7 @@ MiscRegFile::readReg(int misc_reg, ThreadContext *tc, ThreadID tid)
 }
 
 void
-MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
+ISA::setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -130,8 +122,8 @@ MiscRegFile::setRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
 }
 
 void
-MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
-                    ThreadID tid)
+ISA::setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
+                ThreadID tid)
 {
     switch (misc_reg) {
       case MISCREG_FPCR:
@@ -155,4 +147,4 @@ MiscRegFile::setReg(int misc_reg, const MiscReg &val, ThreadContext *tc,
     }
 }
 
-} // namespace AlphaISA
+}

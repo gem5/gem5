@@ -46,7 +46,7 @@
 #include <sys/shm.h>
 
 #include "arch/sparc/predecoder.hh"
-#include "arch/sparc/regfile.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/utility.hh"
 #include "base/socket.hh"
 #include "cpu/base.hh"
@@ -232,8 +232,7 @@ Trace::LegionTraceRecord::dump()
                     }
                 }
                 for (int i = 0; i < TheISA::NumFloatRegs/2; i++) {
-                    if (thread->readFloatRegBits(i*2,
-                                FloatRegFile::DoubleWidth) !=
+                    if (thread->readFloatRegBits(i*2) !=
                             shared_data->fpregs[i]) {
                         diffFpRegs = true;
                     }
@@ -539,8 +538,7 @@ Trace::LegionTraceRecord::dump()
                             char label[8];
                             sprintf(label, "%%f%d", x);
                             printRegPair(outs, label,
-                                thread->readFloatRegBits(x*2,
-                                    FloatRegFile::DoubleWidth),
+                                thread->readFloatRegBits(x*2),
                                 shared_data->fpregs[x]);
                         }
                     }

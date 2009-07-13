@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2003-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,62 +25,28 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Korey Sewell
+ * Authors: Steve Reinhardt
+ *          Gabe Black
+ *          Kevin Lim
  */
 
-#ifndef __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
-#define __ARCH_MIPS_REGFILE_INT_REGFILE_HH__
+#include "arch/alpha/regredir.hh"
+#include "config/full_system.hh"
 
-#include "arch/mips/types.hh"
-#include "arch/mips/isa_traits.hh"
-#include "base/misc.hh"
-#include "base/trace.hh"
-#include "sim/faults.hh"
+namespace AlphaISA {
 
-class Checkpoint;
-
-namespace MipsISA
-{
-    enum MiscIntRegNums {
-       LO = NumIntArchRegs,
-       HI,
-       DSPACX0,
-       DSPLo1,
-       DSPHi1,
-       DSPACX1,
-       DSPLo2,
-       DSPHi2,
-       DSPACX2,
-       DSPLo3,
-       DSPHi3,
-       DSPACX3,
-       DSPControl,
-       DSPLo0 = LO,
-       DSPHi0 = HI
-    };
-
-    //@TODO: Implementing ShadowSets needs to
-    //edit this value such that:
-    //TotalArchRegs = NumIntArchRegs * ShadowSets
-    const int TotalArchRegs = NumIntArchRegs;
-
-    class IntRegFile
-    {
-      protected:
-        IntReg regs[NumIntRegs];
-        int currShadowSet;
-      public:
-        void clear();
-        int readShadowSet();
-        void setShadowSet(int css);
-        IntReg readReg(int intReg);
-        Fault setReg(int intReg, const IntReg &val);
-
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
-
-    };
-
-} // namespace MipsISA
-
+#if FULL_SYSTEM
+const int reg_redir[NumIntRegs] = {
+    /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
+    /*  8 */ 32, 33, 34, 35, 36, 37, 38, 15,
+    /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
+    /* 24 */ 24, 39, 26, 27, 28, 29, 30, 31 };
+#else
+const int reg_redir[NumIntRegs] = {
+    /*  0 */ 0, 1, 2, 3, 4, 5, 6, 7,
+    /*  8 */ 8, 9, 10, 11, 12, 13, 14, 15,
+    /* 16 */ 16, 17, 18, 19, 20, 21, 22, 23,
+    /* 24 */ 24, 25, 26, 27, 28, 29, 30, 31 };
 #endif
+
+} // namespace AlphaISA

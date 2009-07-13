@@ -31,7 +31,7 @@
 #ifndef __CPU_THREAD_CONTEXT_HH__
 #define __CPU_THREAD_CONTEXT_HH__
 
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
@@ -79,12 +79,10 @@ namespace TheISA {
 class ThreadContext
 {
   protected:
-    typedef TheISA::RegFile RegFile;
     typedef TheISA::MachInst MachInst;
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscRegFile MiscRegFile;
     typedef TheISA::MiscReg MiscReg;
   public:
 
@@ -188,23 +186,15 @@ class ThreadContext
     //
     virtual uint64_t readIntReg(int reg_idx) = 0;
 
-    virtual FloatReg readFloatReg(int reg_idx, int width) = 0;
-
     virtual FloatReg readFloatReg(int reg_idx) = 0;
-
-    virtual FloatRegBits readFloatRegBits(int reg_idx, int width) = 0;
 
     virtual FloatRegBits readFloatRegBits(int reg_idx) = 0;
 
     virtual void setIntReg(int reg_idx, uint64_t val) = 0;
 
-    virtual void setFloatReg(int reg_idx, FloatReg val, int width) = 0;
-
     virtual void setFloatReg(int reg_idx, FloatReg val) = 0;
 
     virtual void setFloatRegBits(int reg_idx, FloatRegBits val) = 0;
-
-    virtual void setFloatRegBits(int reg_idx, FloatRegBits val, int width) = 0;
 
     virtual uint64_t readPC() = 0;
 
@@ -233,6 +223,9 @@ class ThreadContext
     virtual void setMiscRegNoEffect(int misc_reg, const MiscReg &val) = 0;
 
     virtual void setMiscReg(int misc_reg, const MiscReg &val) = 0;
+
+    virtual int flattenIntIndex(int reg) = 0;
+    virtual int flattenFloatIndex(int reg) = 0;
 
     virtual uint64_t
     readRegOtherThread(int misc_reg, ThreadID tid)
@@ -375,14 +368,8 @@ class ProxyThreadContext : public ThreadContext
     uint64_t readIntReg(int reg_idx)
     { return actualTC->readIntReg(reg_idx); }
 
-    FloatReg readFloatReg(int reg_idx, int width)
-    { return actualTC->readFloatReg(reg_idx, width); }
-
     FloatReg readFloatReg(int reg_idx)
     { return actualTC->readFloatReg(reg_idx); }
-
-    FloatRegBits readFloatRegBits(int reg_idx, int width)
-    { return actualTC->readFloatRegBits(reg_idx, width); }
 
     FloatRegBits readFloatRegBits(int reg_idx)
     { return actualTC->readFloatRegBits(reg_idx); }
@@ -390,14 +377,8 @@ class ProxyThreadContext : public ThreadContext
     void setIntReg(int reg_idx, uint64_t val)
     { actualTC->setIntReg(reg_idx, val); }
 
-    void setFloatReg(int reg_idx, FloatReg val, int width)
-    { actualTC->setFloatReg(reg_idx, val, width); }
-
     void setFloatReg(int reg_idx, FloatReg val)
     { actualTC->setFloatReg(reg_idx, val); }
-
-    void setFloatRegBits(int reg_idx, FloatRegBits val, int width)
-    { actualTC->setFloatRegBits(reg_idx, val, width); }
 
     void setFloatRegBits(int reg_idx, FloatRegBits val)
     { actualTC->setFloatRegBits(reg_idx, val); }
@@ -433,6 +414,12 @@ class ProxyThreadContext : public ThreadContext
 
     void setMiscReg(int misc_reg, const MiscReg &val)
     { return actualTC->setMiscReg(misc_reg, val); }
+
+    int flattenIntIndex(int reg)
+    { return actualTC->flattenIntIndex(reg); }
+
+    int flattenFloatIndex(int reg)
+    { return actualTC->flattenFloatIndex(reg); }
 
     unsigned readStCondFailures()
     { return actualTC->readStCondFailures(); }

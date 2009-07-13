@@ -29,6 +29,7 @@
  *          Ali Saidi
  */
 
+#include "arch/alpha/ev5.hh"
 #include "arch/alpha/utility.hh"
 
 #if FULL_SYSTEM
@@ -59,6 +60,40 @@ getArgument(ThreadContext *tc, int number, bool fp)
     panic("getArgument() is Full system only\n");
     M5_DUMMY_RETURN;
 #endif
+}
+
+void
+copyRegs(ThreadContext *src, ThreadContext *dest)
+{
+    // First loop through the integer registers.
+    for (int i = 0; i < NumIntRegs; ++i)
+        dest->setIntReg(i, src->readIntReg(i));
+
+    // Then loop through the floating point registers.
+    for (int i = 0; i < NumFloatRegs; ++i)
+        dest->setFloatRegBits(i, src->readFloatRegBits(i));
+
+    // Copy misc. registers
+    copyMiscRegs(src, dest);
+
+    // Lastly copy PC/NPC
+    dest->setPC(src->readPC());
+    dest->setNextPC(src->readNextPC());
+}
+
+void
+copyMiscRegs(ThreadContext *src, ThreadContext *dest)
+{
+    dest->setMiscRegNoEffect(MISCREG_FPCR,
+        src->readMiscRegNoEffect(MISCREG_FPCR));
+    dest->setMiscRegNoEffect(MISCREG_UNIQ,
+        src->readMiscRegNoEffect(MISCREG_UNIQ));
+    dest->setMiscRegNoEffect(MISCREG_LOCKFLAG,
+        src->readMiscRegNoEffect(MISCREG_LOCKFLAG));
+    dest->setMiscRegNoEffect(MISCREG_LOCKADDR,
+        src->readMiscRegNoEffect(MISCREG_LOCKADDR));
+
+    copyIprs(src, dest);
 }
 
 } // namespace AlphaISA

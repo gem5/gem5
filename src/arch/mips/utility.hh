@@ -98,26 +98,10 @@ namespace MipsISA {
     //
     //  Register File Utility Functions
     //
-    static inline int flattenFloatIndex(ThreadContext * tc, int reg)
-    {
-        return reg;
-    }
-
-    static inline int flattenIntIndex(ThreadContext * tc, int reg)
-    {
-        // Implement Shadow Sets Stuff Here;
-        return reg;
-    }
-
     static inline MachInst makeRegisterCopy(int dest, int src) {
         panic("makeRegisterCopy not implemented");
         return 0;
     }
-
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
-
 
     template <class CPU>
     void zeroRegisters(CPU *cpu);
@@ -139,6 +123,9 @@ namespace MipsISA {
     // CPU Utility
     //
     void startupCPU(ThreadContext *tc, int cpuId);
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 };
 
 

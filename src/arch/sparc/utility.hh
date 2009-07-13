@@ -33,6 +33,7 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/misc.hh"
 #include "base/bitfield.hh"
@@ -114,6 +115,10 @@ namespace SparcISA
         tc->activate(0);
 #endif
     }
+
+    void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 } // namespace SparcISA
 

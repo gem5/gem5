@@ -113,10 +113,7 @@ def operands {{
     'Index':('ControlReg','uw','MipsISA::Index',None,1),
 
 
-    #Special cases for when a Control Register Access is dependent on
-    #a combination of bitfield indices (handles MTCO & MFCO)
-    # Fixed to allow CP0 Register Offset
-    'CP0_RD_SEL': ('IControlReg', 'uw', '(RD << 3 | SEL) + Ctrl_Base_DepTag', None, 1),
+    'CP0_RD_SEL': ('ControlReg', 'uw', '(RD << 3 | SEL)', None, 1),
 
     #MT Control Regs
     'MVPConf0': ('ControlReg', 'uw', 'MipsISA::MVPConf0', None, 1),

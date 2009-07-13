@@ -78,7 +78,7 @@ BaseSimpleCPU::BaseSimpleCPU(BaseSimpleCPUParams *p)
     thread = new SimpleThread(this, 0, p->system, p->itb, p->dtb);
 #else
     thread = new SimpleThread(this, /* thread_num */ 0, p->workload[0],
-            p->itb, p->dtb, /* asid */ 0);
+            p->itb, p->dtb);
 #endif // !FULL_SYSTEM
 
     thread->setStatus(ThreadContext::Halted);

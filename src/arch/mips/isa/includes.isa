@@ -70,6 +70,7 @@ output exec {{
 #include "arch/mips/isa_traits.hh"
 #include "arch/mips/utility.hh"
 #include "arch/mips/dsp.hh"
+#include "arch/mips/mt.hh"
 #include "arch/mips/pra_constants.hh"
 #include "arch/mips/dt_constants.hh"
 #include "arch/mips/mt_constants.hh"

@@ -34,7 +34,7 @@
 
 #include "arch/alpha/types.hh"
 #include "arch/alpha/isa_traits.hh"
-#include "arch/alpha/regfile.hh"
+#include "arch/alpha/registers.hh"
 #include "base/misc.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -111,10 +111,6 @@ makeRegisterCopy(int dest, int src)
     return 0;
 }
 
-// Machine operations
-void saveMachineReg(AnyReg &savereg, const RegFile &reg_file, int regnum);
-void restoreMachineReg(RegFile &regs, const AnyReg &reg, int regnum);
-
 /**
  * Function to insure ISA semantics about 0 registers.
  * @param tc The thread context.
@@ -162,6 +158,10 @@ void initCPU(ThreadContext *tc, int cpuId);
 template <class TC>
 void processInterrupts(TC *tc);
 #endif
+
+void copyRegs(ThreadContext *src, ThreadContext *dest);
+
+void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
 
 } // namespace AlphaISA
 

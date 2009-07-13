@@ -392,23 +392,6 @@ class FullO3CPU : public BaseO3CPU
 
     /** Check if this address is a valid data address. */
     bool validDataAddr(Addr addr) { return true; }
-
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return regFile.miscRegs[tid].getInstAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return regFile.miscRegs[tid].getDataAsid(); }
-#else
-    /** Get instruction asid. */
-    int getInstAsid(ThreadID tid)
-    { return thread[tid]->getInstAsid(); }
-
-    /** Get data asid. */
-    int getDataAsid(ThreadID tid)
-    { return thread[tid]->getDataAsid(); }
-
 #endif
 
     /** Register accessors.  Index refers to the physical register index. */
@@ -435,27 +418,17 @@ class FullO3CPU : public BaseO3CPU
 
     TheISA::FloatReg readFloatReg(int reg_idx);
 
-    TheISA::FloatReg readFloatReg(int reg_idx, int width);
-
     TheISA::FloatRegBits readFloatRegBits(int reg_idx);
-
-    TheISA::FloatRegBits readFloatRegBits(int reg_idx, int width);
 
     void setIntReg(int reg_idx, uint64_t val);
 
     void setFloatReg(int reg_idx, TheISA::FloatReg val);
 
-    void setFloatReg(int reg_idx, TheISA::FloatReg val, int width);
-
     void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val);
-
-    void setFloatRegBits(int reg_idx, TheISA::FloatRegBits val, int width);
 
     uint64_t readArchIntReg(int reg_idx, ThreadID tid);
 
-    float readArchFloatRegSingle(int reg_idx, ThreadID tid);
-
-    double readArchFloatRegDouble(int reg_idx, ThreadID tid);
+    float readArchFloatReg(int reg_idx, ThreadID tid);
 
     uint64_t readArchFloatRegInt(int reg_idx, ThreadID tid);
 
@@ -466,9 +439,7 @@ class FullO3CPU : public BaseO3CPU
      */
     void setArchIntReg(int reg_idx, uint64_t val, ThreadID tid);
 
-    void setArchFloatRegSingle(int reg_idx, float val, ThreadID tid);
-
-    void setArchFloatRegDouble(int reg_idx, double val, ThreadID tid);
+    void setArchFloatReg(int reg_idx, float val, ThreadID tid);
 
     void setArchFloatRegInt(int reg_idx, uint64_t val, ThreadID tid);
 
@@ -602,6 +573,8 @@ class FullO3CPU : public BaseO3CPU
 
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
+
+    TheISA::ISA isa[Impl::MaxThreads];
 
   public:
     /** Enum to give each stage a specific index, so when calling

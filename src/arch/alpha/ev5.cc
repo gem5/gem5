@@ -127,18 +127,6 @@ zeroRegisters(CPU *cpu)
     cpu->thread->setFloatReg(ZeroReg, 0.0);
 }
 
-int
-MiscRegFile::getInstAsid()
-{
-    return ITB_ASN_ASN(ipr[IPR_ITB_ASN]);
-}
-
-int
-MiscRegFile::getDataAsid()
-{
-    return DTB_ASN_ASN(ipr[IPR_DTB_ASN]);
-}
-
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -158,7 +146,7 @@ initIPRs(ThreadContext *tc, int cpuId)
 }
 
 MiscReg
-MiscRegFile::readIpr(int idx, ThreadContext *tc)
+ISA::readIpr(int idx, ThreadContext *tc)
 {
     uint64_t retval = 0;        // return value, default 0
 
@@ -270,7 +258,7 @@ int break_ipl = -1;
 #endif
 
 void
-MiscRegFile::setIpr(int idx, uint64_t val, ThreadContext *tc)
+ISA::setIpr(int idx, uint64_t val, ThreadContext *tc)
 {
     uint64_t old;
 

@@ -29,7 +29,7 @@
  *          Korey Sewell
  */
 
-#include "arch/regfile.hh"
+#include "arch/registers.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 
@@ -272,48 +272,23 @@ template <class Impl>
 uint64_t
 O3ThreadContext<Impl>::readIntReg(int reg_idx)
 {
-    reg_idx = TheISA::flattenIntIndex(this, reg_idx);
+    reg_idx = cpu->isa[thread->threadId()].flattenIntIndex(reg_idx);
     return cpu->readArchIntReg(reg_idx, thread->threadId());
-}
-
-template <class Impl>
-TheISA::FloatReg
-O3ThreadContext<Impl>::readFloatReg(int reg_idx, int width)
-{
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    switch(width) {
-      case 32:
-        return cpu->readArchFloatRegSingle(reg_idx, thread->threadId());
-      case 64:
-        return cpu->readArchFloatRegDouble(reg_idx, thread->threadId());
-      default:
-        panic("Unsupported width!");
-        return 0;
-    }
 }
 
 template <class Impl>
 TheISA::FloatReg
 O3ThreadContext<Impl>::readFloatReg(int reg_idx)
 {
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    return cpu->readArchFloatRegSingle(reg_idx, thread->threadId());
-}
-
-template <class Impl>
-TheISA::FloatRegBits
-O3ThreadContext<Impl>::readFloatRegBits(int reg_idx, int width)
-{
-    DPRINTF(Fault, "Reading floatint register through the TC!\n");
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
+    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    return cpu->readArchFloatReg(reg_idx, thread->threadId());
 }
 
 template <class Impl>
 TheISA::FloatRegBits
 O3ThreadContext<Impl>::readFloatRegBits(int reg_idx)
 {
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
+    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
     return cpu->readArchFloatRegInt(reg_idx, thread->threadId());
 }
 
@@ -321,28 +296,8 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setIntReg(int reg_idx, uint64_t val)
 {
-    reg_idx = TheISA::flattenIntIndex(this, reg_idx);
+    reg_idx = cpu->isa[thread->threadId()].flattenIntIndex(reg_idx);
     cpu->setArchIntReg(reg_idx, val, thread->threadId());
-
-    // Squash if we're not already in a state update mode.
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val, int width)
-{
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    switch(width) {
-      case 32:
-        cpu->setArchFloatRegSingle(reg_idx, val, thread->threadId());
-        break;
-      case 64:
-        cpu->setArchFloatRegDouble(reg_idx, val, thread->threadId());
-        break;
-    }
 
     // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
@@ -354,24 +309,9 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatReg(int reg_idx, FloatReg val)
 {
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    cpu->setArchFloatRegSingle(reg_idx, val, thread->threadId());
+    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
+    cpu->setArchFloatReg(reg_idx, val, thread->threadId());
 
-    if (!thread->trapPending && !thread->inSyscall) {
-        cpu->squashFromTC(thread->threadId());
-    }
-}
-
-template <class Impl>
-void
-O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val,
-                                             int width)
-{
-    DPRINTF(Fault, "Setting floatint register through the TC!\n");
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
-    cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
-
-    // Squash if we're not already in a state update mode.
     if (!thread->trapPending && !thread->inSyscall) {
         cpu->squashFromTC(thread->threadId());
     }
@@ -381,7 +321,7 @@ template <class Impl>
 void
 O3ThreadContext<Impl>::setFloatRegBits(int reg_idx, FloatRegBits val)
 {
-    reg_idx = TheISA::flattenFloatIndex(this, reg_idx);
+    reg_idx = cpu->isa[thread->threadId()].flattenFloatIndex(reg_idx);
     cpu->setArchFloatRegInt(reg_idx, val, thread->threadId());
 
     // Squash if we're not already in a state update mode.
@@ -436,6 +376,20 @@ O3ThreadContext<Impl>::setNextMicroPC(uint64_t val)
     if (!thread->trapPending && !thread->inSyscall) {
         cpu->squashFromTC(thread->threadId());
     }
+}
+
+template <class Impl>
+int
+O3ThreadContext<Impl>::flattenIntIndex(int reg)
+{
+    return cpu->isa[thread->threadId()].flattenIntIndex(reg);
+}
+
+template <class Impl>
+int
+O3ThreadContext<Impl>::flattenFloatIndex(int reg)
+{
+    return cpu->isa[thread->threadId()].flattenFloatIndex(reg);
 }
 
 template <class Impl>

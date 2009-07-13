@@ -27,6 +27,133 @@
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 // Authors: Stephen Hines
+//          Gabe Black
+
+////////////////////////////////////////////////////////////////////
+//
+// Common microop templates
+//
+
+def template MicroConstructor {{
+    inline %(class_name)s::%(class_name)s(ExtMachInst machInst,
+                                          RegIndex _ura,
+                                          RegIndex _urb,
+                                          uint8_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _ura, _urb, _imm)
+    {
+        %(constructor)s;
+    }
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Load/store microops
+//
+
+def template MicroMemDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb,
+                       uint8_t _imm);
+        %(BasicExecDeclare)s
+        %(InitiateAccDeclare)s
+        %(CompleteAccDeclare)s
+    };
+}};
+
+let {{
+    microLdrUopIop = InstObjParams('ldr_uop', 'MicroLdrUop',
+                                   'MicroMemOp',
+                                   {'memacc_code': 'Ra = Mem;',
+                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
+    microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
+                                   'MicroMemOp',
+                                   {'memacc_code': 'Mem = Ra;',
+                                    'ea_code': 'EA = Rb + (UP ? imm : -imm);',
+                                    'predicate_test': predicateTest},
+                                   ['IsMicroop'])
+
+    header_output = MicroMemDeclare.subst(microLdrUopIop) + \
+                    MicroMemDeclare.subst(microStrUopIop)
+    decoder_output = MicroConstructor.subst(microLdrUopIop) + \
+                     MicroConstructor.subst(microStrUopIop)
+    exec_output = LoadExecute.subst(microLdrUopIop) + \
+                  StoreExecute.subst(microStrUopIop) + \
+                  LoadInitiateAcc.subst(microLdrUopIop) + \
+                  StoreInitiateAcc.subst(microStrUopIop) + \
+                  LoadCompleteAcc.subst(microLdrUopIop) + \
+                  StoreCompleteAcc.subst(microStrUopIop)
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer = Integer op Immediate microops
+//
+
+def template MicroIntDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      public:
+        %(class_name)s(ExtMachInst machInst,
+                       RegIndex _ura, RegIndex _urb,
+                       uint8_t _imm);
+        %(BasicExecDeclare)s
+    };
+}};
+
+let {{
+    microAddiUopIop = InstObjParams('addi_uop', 'MicroAddiUop',
+                                    'MicroIntOp',
+                                    {'code': 'Ra = Rb + imm;',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    microSubiUopIop = InstObjParams('subi_uop', 'MicroSubiUop',
+                                    'MicroIntOp',
+                                    {'code': 'Ra = Rb - imm;',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    header_output = MicroIntDeclare.subst(microAddiUopIop) + \
+                    MicroIntDeclare.subst(microSubiUopIop)
+    decoder_output = MicroConstructor.subst(microAddiUopIop) + \
+                     MicroConstructor.subst(microSubiUopIop)
+    exec_output = PredOpExecute.subst(microAddiUopIop) + \
+                  PredOpExecute.subst(microSubiUopIop)
+}};
+
+////////////////////////////////////////////////////////////////////
+//
+// Moving to/from double floating point registers
+//
+
+let {{
+    microMvtdUopIop = InstObjParams('mvtd_uop', 'MicroMvtdUop',
+                                    'PredOp',
+                                    {'code': 'Fd.ud = (Rhi.ud << 32) | Rlo;',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    microMvfdUopIop = InstObjParams('mvfd_uop', 'MicroMvfdUop',
+                                    'PredOp',
+                                    {'code': '''Rhi = bits(Fd.ud, 63, 32);
+                                                Rlo = bits(Fd.ud, 31, 0);''',
+                                     'predicate_test': predicateTest},
+                                    ['IsMicroop'])
+
+    header_output = BasicDeclare.subst(microMvtdUopIop) + \
+                    BasicDeclare.subst(microMvfdUopIop)
+    decoder_output = BasicConstructor.subst(microMvtdUopIop) + \
+                     BasicConstructor.subst(microMvfdUopIop)
+    exec_output = PredOpExecute.subst(microMvtdUopIop) + \
+                  PredOpExecute.subst(microMvfdUopIop)
+}};
 
 ////////////////////////////////////////////////////////////////////
 //
@@ -52,9 +179,7 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
 {
     %(constructor)s;
     uint32_t regs_to_handle = reglist;
-    uint32_t j = 0,
-             start_addr = 0,
-             end_addr = 0;
+    uint32_t start_addr = 0;
 
     switch (puswl)
     {
@@ -63,28 +188,24 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         case 0x02: //    W  stmda_w
         case 0x03: //    WL ldmda_wl
             start_addr = (ones << 2) - 4;
-            end_addr = 0;
             break;
         case 0x08: //  U    stmia_u
         case 0x09: //  U  L ldmia_ul
         case 0x0a: //  U W  stmia
         case 0x0b: //  U WL ldmia
             start_addr = 0;
-            end_addr = (ones << 2) - 4;
             break;
         case 0x10: // P     stmdb
         case 0x11: // P   L ldmdb
         case 0x12: // P  W  stmdb
         case 0x13: // P  WL ldmdb
             start_addr = (ones << 2); // U-bit is already 0 for subtract
-            end_addr = 4; // negative 4
             break;
         case 0x18: // PU    stmib
         case 0x19: // PU  L ldmib
         case 0x1a: // PU W  stmib
         case 0x1b: // PU WL ldmib
             start_addr = 4;
-            end_addr = (ones << 2) + 4;
             break;
         default:
             panic("Unhandled Load/Store Multiple Instruction, "
@@ -92,20 +213,21 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             break;
     }
 
-    //TODO - Add addi_uop/subi_uop here to create starting addresses
-    //Just using addi with 0 offset makes a "copy" of Rn for our use
-    uint32_t newMachInst = 0;
-    newMachInst = machInst & 0xffff0000;
-    microOps[0] = new Addi_uop(newMachInst);
+    // Add 0 to Rn and stick it in Raddr (register 17).
+    // This is equivalent to a move.
+    microOps[0] = new MicroAddiUop(machInst, 17, RN, 0);
 
-    for (int i = 1; i < ones+1; i++)
-    {
+    unsigned j = 0;
+    for (int i = 1; i < ones+1; i++) {
         // Get next available bit for transfer
         while (! ( regs_to_handle & (1<<j)))
             j++;
         regs_to_handle &= ~(1<<j);
 
-        microOps[i] = gen_ldrstr_uop(machInst, loadop, j, start_addr);
+        if (loadop)
+            microOps[i] = new MicroLdrUop(machInst, j, 17, start_addr);
+        else
+            microOps[i] = new MicroStrUop(machInst, j, 17, start_addr);
 
         if (up)
             start_addr += 4;
@@ -113,33 +235,13 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             start_addr -= 4;
     }
 
-    /* TODO: Take a look at how these 2 values should meet together
-    if (start_addr != (end_addr - 4))
-    {
-        fprintf(stderr, "start_addr: %d\n", start_addr);
-        fprintf(stderr, "end_addr:   %d\n", end_addr);
-        panic("start_addr does not meet end_addr");
-    }
-    */
-
-    if (writeback)
-    {
-        uint32_t newMachInst = machInst & 0xf0000000;
-        uint32_t rn = (machInst >> 16) & 0x0f;
-        // 3322 2222 2222 1111 1111 11
-        // 1098 7654 3210 9876 5432 1098 7654 3210
-        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-        // sub rn, rn, imm
-        newMachInst |= 0x02400000;
-        newMachInst |= ((rn << 16) | (rn << 12));
-        newMachInst |= (ones << 2);
-        if (up)
-        {
-            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-        }
-        else
-        {
-            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+    if (writeback) {
+        if (up) {
+            microOps[numMicroops-1] =
+                new MicroAddiUop(machInst, RN, RN, ones * 4);
+        } else {
+            microOps[numMicroops-1] =
+                new MicroSubiUop(machInst, RN, RN, ones * 4);
         }
     }
     microOps[numMicroops-1]->setLastMicroop();
@@ -182,23 +284,12 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
 
     if (writeback)
     {
-        uint32_t newMachInst = machInst & 0xf0000000;
-        uint32_t rn = (machInst >> 16) & 0x0f;
-        // 3322 2222 2222 1111 1111 11
-        // 1098 7654 3210 9876 5432 1098 7654 3210
-        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-        // sub rn, rn, imm
-        newMachInst |= 0x02400000;
-        newMachInst |= ((rn << 16) | (rn << 12));
-        if (up)
-        {
-            newMachInst |= disp8;
-            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-        }
-        else
-        {
-            newMachInst |= disp8;
-            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+        if (up) {
+            microOps[numMicroops-1] =
+                new MicroAddiUop(machInst, RN, RN, disp8);
+        } else {
+            microOps[numMicroops-1] =
+                new MicroSubiUop(machInst, RN, RN, disp8);
         }
     }
     microOps[numMicroops-1]->setLastMicroop();
@@ -221,29 +312,15 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         start_addr = 0;
 
     for (int i = 0; i < count; i++)
-    {
         emit_ldfstf_uops(microOps, 3*i, machInst, loadop, up, start_addr);
-    }
 
-    if (writeback)
-    {
-        uint32_t newMachInst = machInst & 0xf0000000;
-        uint32_t rn = (machInst >> 16) & 0x0f;
-        // 3322 2222 2222 1111 1111 11
-        // 1098 7654 3210 9876 5432 1098 7654 3210
-        // COND 0010 0100 [RN] [RD] 0000 [  IMM  ]
-        // sub rn, rn, imm
-        newMachInst |= 0x02400000;
-        newMachInst |= ((rn << 16) | (rn << 12));
-        if (up)
-        {
-            newMachInst |= disp8;
-            microOps[numMicroops-1] = new Addi_rd_uop(newMachInst);
-        }
-        else
-        {
-            newMachInst |= disp8;
-            microOps[numMicroops-1] = new Subi_rd_uop(newMachInst);
+    if (writeback) {
+        if (up) {
+            microOps[numMicroops-1] =
+                new MicroAddiUop(machInst, RN, RN, disp8);
+        } else {
+            microOps[numMicroops-1] =
+                new MicroSubiUop(machInst, RN, RN, disp8);
         }
     }
     microOps[numMicroops-1]->setLastMicroop();

@@ -47,6 +47,39 @@ number_of_ones(int32_t val)
 }
 
 /**
+ * Microops of the form IntRegA = IntRegB op Imm
+ */
+class MicroIntOp : public PredOp
+{
+  protected:
+    RegIndex ura, urb;
+    uint8_t imm;
+
+    MicroIntOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+            : PredOp(mnem, machInst, __opClass),
+              ura(_ura), urb(_urb), imm(_imm)
+    {
+    }
+};
+
+/**
+ * Memory microops which use IntReg + Imm addressing
+ */
+class MicroMemOp : public MicroIntOp
+{
+  protected:
+    unsigned memAccessFlags;
+
+    MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
+               RegIndex _ura, RegIndex _urb, uint8_t _imm)
+            : MicroIntOp(mnem, machInst, __opClass, _ura, _urb, _imm),
+              memAccessFlags(0)
+    {
+    }
+};
+
+/**
  * Arm Macro Memory operations like LDM/STM
  */
 class ArmMacroMemoryOp : public PredMacroOp
@@ -54,10 +87,6 @@ class ArmMacroMemoryOp : public PredMacroOp
     protected:
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
-    /// Pointer to EAComp object.
-    const StaticInstPtr eaCompPtr;
-    /// Pointer to MemAcc object.
-    const StaticInstPtr memAccPtr;
 
     uint32_t reglist;
     uint32_t ones;
@@ -69,12 +98,9 @@ class ArmMacroMemoryOp : public PredMacroOp
              loadop;
 
     ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst,
-                     OpClass __opClass,
-                     StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                     StaticInstPtr _memAccPtr = nullStaticInstPtr)
+                     OpClass __opClass)
             : PredMacroOp(mnem, _machInst, __opClass),
                           memAccessFlags(0),
-                          eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
                           reglist(machInst.regList), ones(0),
                           puswl(machInst.puswl),
                           prepost(machInst.puswl.prepost),

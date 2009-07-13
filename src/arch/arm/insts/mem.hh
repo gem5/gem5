@@ -42,10 +42,6 @@ class Memory : public PredOp
 
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
-    /// Pointer to EAComp object.
-    const StaticInstPtr eaCompPtr;
-    /// Pointer to MemAcc object.
-    const StaticInstPtr memAccPtr;
 
     /// Displacement for EA calculation (signed).
     int32_t disp;
@@ -56,53 +52,88 @@ class Memory : public PredOp
             shift;
 
     /// Constructor
-    Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-           StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-           StaticInstPtr _memAccPtr = nullStaticInstPtr)
+    Memory(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
         : PredOp(mnem, _machInst, __opClass),
                  memAccessFlags(0),
-                 eaCompPtr(_eaCompPtr), memAccPtr(_memAccPtr),
                  disp(machInst.immed11_0),
                  disp8(machInst.immed7_0 << 2),
                  up(machInst.puswl.up),
                  hilo((machInst.immedHi11_8 << 4) | machInst.immedLo3_0),
                  shift_size(machInst.shiftSize), shift(machInst.shift)
     {
-        // When Up is not set, then we must subtract by the displacement
-        if (!up)
-        {
-            disp = -disp;
-            disp8 = -disp8;
-            hilo = -hilo;
-        }
     }
 
     std::string
     generateDisassembly(Addr pc, const SymbolTable *symtab) const;
 
-  public:
-
-    const StaticInstPtr &eaCompInst() const { return eaCompPtr; }
-    const StaticInstPtr &memAccInst() const { return memAccPtr; }
+    virtual void
+    printOffset(std::ostream &os) const
+    {}
 };
 
- /**
- * Base class for a few miscellaneous memory-format insts
- * that don't interpret the disp field
- */
-class MemoryNoDisp : public Memory
+class MemoryDisp : public Memory
 {
   protected:
     /// Constructor
-    MemoryNoDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-                 StaticInstPtr _eaCompPtr = nullStaticInstPtr,
-                 StaticInstPtr _memAccPtr = nullStaticInstPtr)
-        : Memory(mnem, _machInst, __opClass, _eaCompPtr, _memAccPtr)
+    MemoryDisp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
     {
     }
 
-    std::string
-    generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+    void
+    printOffset(std::ostream &os) const
+    {
+        ccprintf(os, "#%#x", (machInst.puswl.up ? disp : -disp));
+    }
+};
+
+class MemoryHilo : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryHilo(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        ccprintf(os, "#%#x", (machInst.puswl.up ? hilo : -hilo));
+    }
+};
+
+class MemoryShift : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryShift(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        printShiftOperand(os);
+    }
+};
+
+class MemoryReg : public Memory
+{
+  protected:
+    /// Constructor
+    MemoryReg(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
+        : Memory(mnem, _machInst, __opClass)
+    {
+    }
+
+    void
+    printOffset(std::ostream &os) const
+    {
+        os << (machInst.puswl.up ? "+ " : "- ");
+        printReg(os, machInst.rm);
+    }
 };
 }
 

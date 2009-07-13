@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,60 +26,80 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Gabe Black
- *          Ali Saidi
  */
 
-#ifndef __ARCH_SPARC_FLOATREGFILE_HH__
-#define __ARCH_SPARC_FLOATREGFILE_HH__
+#ifndef __ARCH_ARM_ISA_HH__
+#define __ARCH_MRM_ISA_HH__
 
-#include "arch/sparc/faults.hh"
-#include "arch/sparc/isa_traits.hh"
-#include "arch/sparc/types.hh"
+#include "arch/arm/registers.hh"
+#include "arch/arm/types.hh"
 
-#include <string>
-
+class ThreadContext;
 class Checkpoint;
+class EventManager;
 
-namespace SparcISA
+namespace ArmISA
 {
-    const int NumFloatArchRegs = 64;
-    const int NumFloatRegs = 64;
-
-    typedef float float32_t;
-    typedef double float64_t;
-    //FIXME long double refers to a 10 byte float, rather than a
-    //16 byte float as required. This data type may have to be emulated.
-    typedef double float128_t;
-
-    class FloatRegFile
+    class ISA
     {
-      public:
-        static const int SingleWidth = 32;
-        static const int DoubleWidth = 64;
-        static const int QuadWidth = 128;
-
       protected:
-
-        //Since the floating point registers overlap each other,
-        //A generic storage space is used. The float to be returned is
-        //pulled from the appropriate section of this region.
-        char regSpace[(SingleWidth / 8) * NumFloatRegs];
+        MiscReg miscRegs[NumMiscRegs];
 
       public:
+        void clear()
+        {
+            // Unknown startup state currently
+        }
 
-        void clear();
+        MiscReg
+        readMiscRegNoEffect(int misc_reg)
+        {
+            assert(misc_reg < NumMiscRegs);
+            return miscRegs[misc_reg];
+        }
 
-        FloatReg readReg(int floatReg, int width);
+        MiscReg
+        readMiscReg(int misc_reg, ThreadContext *tc)
+        {
+            assert(misc_reg < NumMiscRegs);
+            return miscRegs[misc_reg];
+        }
 
-        FloatRegBits readRegBits(int floatReg, int width);
+        void
+        setMiscRegNoEffect(int misc_reg, const MiscReg &val)
+        {
+            assert(misc_reg < NumMiscRegs);
+            miscRegs[misc_reg] = val;
+        }
 
-        Fault setReg(int floatReg, const FloatReg &val, int width);
+        void
+        setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
+        {
+            assert(misc_reg < NumMiscRegs);
+            miscRegs[misc_reg] = val;
+        }
 
-        Fault setRegBits(int floatReg, const FloatRegBits &val, int width);
+        int
+        flattenIntIndex(int reg)
+        {
+            return reg;
+        }
 
-        void serialize(std::ostream &os);
+        int
+        flattenFloatIndex(int reg)
+        {
+            return reg;
+        }
 
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(std::ostream &os)
+        {}
+        void unserialize(Checkpoint *cp, const std::string &section)
+        {}
+
+        ISA()
+        {
+            clear();
+        }
     };
 }
 

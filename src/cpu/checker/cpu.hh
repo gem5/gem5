@@ -211,23 +211,10 @@ class CheckerCPU : public BaseCPU
         return thread->readIntReg(si->srcRegIdx(idx));
     }
 
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width)
-    {
-        int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return thread->readFloatReg(reg_idx, width);
-    }
-
     FloatReg readFloatRegOperand(const StaticInst *si, int idx)
     {
         int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
         return thread->readFloatReg(reg_idx);
-    }
-
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
-                                         int width)
-    {
-        int reg_idx = si->srcRegIdx(idx) - TheISA::FP_Base_DepTag;
-        return thread->readFloatRegBits(reg_idx, width);
     }
 
     FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx)
@@ -242,34 +229,11 @@ class CheckerCPU : public BaseCPU
         result.integer = val;
     }
 
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                            int width)
-    {
-        int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        thread->setFloatReg(reg_idx, val, width);
-        switch(width) {
-          case 32:
-            result.dbl = (double)val;
-            break;
-          case 64:
-            result.dbl = val;
-            break;
-        };
-    }
-
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val)
     {
         int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
         thread->setFloatReg(reg_idx, val);
         result.dbl = (double)val;
-    }
-
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val, int width)
-    {
-        int reg_idx = si->destRegIdx(idx) - TheISA::FP_Base_DepTag;
-        thread->setFloatRegBits(reg_idx, val, width);
-        result.integer = val;
     }
 
     void setFloatRegOperandBits(const StaticInst *si, int idx,

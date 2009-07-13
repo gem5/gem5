@@ -50,16 +50,8 @@ class ExecContext {
     /** Reads an integer register. */
     uint64_t readIntRegOperand(const StaticInst *si, int idx);
 
-    /** Reads a floating point register of a specific width. */
-    FloatReg readFloatRegOperand(const StaticInst *si, int idx, int width);
-
     /** Reads a floating point register of single register width. */
     FloatReg readFloatRegOperand(const StaticInst *si, int idx);
-
-    /** Reads a floating point register of a specific width in its
-     * binary format, instead of by value. */
-    FloatRegBits readFloatRegOperandBits(const StaticInst *si, int idx,
-                                         int width);
 
     /** Reads a floating point register in its binary format, instead
      * of by value. */
@@ -68,17 +60,8 @@ class ExecContext {
     /** Sets an integer register to a value. */
     void setIntRegOperand(const StaticInst *si, int idx, uint64_t val);
 
-    /** Sets a floating point register of a specific width to a value. */
-    void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val,
-                            int width);
-
     /** Sets a floating point register of single width to a value. */
     void setFloatRegOperand(const StaticInst *si, int idx, FloatReg val);
-
-    /** Sets the bits of a floating point register of a specific width
-     * to a binary value. */
-    void setFloatRegOperandBits(const StaticInst *si, int idx,
-                                FloatRegBits val, int width);
 
     /** Sets the bits of a floating point register of single width
      * to a binary value. */

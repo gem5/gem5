@@ -63,15 +63,15 @@ using namespace std;
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
                            TheISA::TLB *_itb, TheISA::TLB *_dtb,
                            bool use_kernel_stats)
-    : ThreadState(_cpu, _thread_num), cpu(_cpu), system(_sys), itb(_itb),
-      dtb(_dtb)
+    : ThreadState(_cpu, _thread_num),
+      cpu(_cpu), system(_sys), itb(_itb), dtb(_dtb)
 
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
 
     quiesceEvent = new EndQuiesceEvent(tc);
 
-    regs.clear();
+    clearArchRegs();
 
     if (cpu->params()->profile) {
         profile = new FunctionProfile(system->kernelSymtab);
@@ -92,11 +92,11 @@ SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, System *_sys,
 }
 #else
 SimpleThread::SimpleThread(BaseCPU *_cpu, int _thread_num, Process *_process,
-                           TheISA::TLB *_itb, TheISA::TLB *_dtb, int _asid)
-    : ThreadState(_cpu, _thread_num, _process, _asid),
+                           TheISA::TLB *_itb, TheISA::TLB *_dtb)
+    : ThreadState(_cpu, _thread_num, _process),
       cpu(_cpu), itb(_itb), dtb(_dtb)
 {
-    regs.clear();
+    clearArchRegs();
     tc = new ProxyThreadContext<SimpleThread>(this);
 }
 
@@ -106,11 +106,10 @@ SimpleThread::SimpleThread()
 #if FULL_SYSTEM
     : ThreadState(NULL, -1)
 #else
-    : ThreadState(NULL, -1, NULL, -1)
+    : ThreadState(NULL, -1, NULL)
 #endif
 {
     tc = new ProxyThreadContext<SimpleThread>(this);
-    regs.clear();
 }
 
 SimpleThread::~SimpleThread()
@@ -191,7 +190,13 @@ void
 SimpleThread::serialize(ostream &os)
 {
     ThreadState::serialize(os);
-    regs.serialize(cpu, os);
+    SERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
+    SERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
+    SERIALIZE_SCALAR(microPC);
+    SERIALIZE_SCALAR(nextMicroPC);
+    SERIALIZE_SCALAR(PC);
+    SERIALIZE_SCALAR(nextPC);
+    SERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
 }
 
@@ -200,7 +205,13 @@ void
 SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
 {
     ThreadState::unserialize(cp, section);
-    regs.unserialize(cpu, cp, section);
+    UNSERIALIZE_ARRAY(floatRegs.i, TheISA::NumFloatRegs);
+    UNSERIALIZE_ARRAY(intRegs, TheISA::NumIntRegs);
+    UNSERIALIZE_SCALAR(microPC);
+    UNSERIALIZE_SCALAR(nextMicroPC);
+    UNSERIALIZE_SCALAR(PC);
+    UNSERIALIZE_SCALAR(nextPC);
+    UNSERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
 }
 

@@ -34,6 +34,7 @@
 
 #include "arch/sparc/faults.hh"
 #include "arch/sparc/isa_traits.hh"
+#include "arch/sparc/registers.hh"
 #include "cpu/thread_context.hh"
 #include "params/SparcInterrupts.hh"
 #include "sim/sim_object.hh"

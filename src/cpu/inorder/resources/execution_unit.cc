@@ -179,8 +179,7 @@ ExecutionUnit::execute(int slot_num)
 
                     DPRINTF(InOrderExecute, "[tid:%i]: [sn:%i]: The result of execution is 0x%x.\n",
                             inst->readTid(), seq_num, (inst->resultType(0) == InOrderDynInst::Float) ?
-                            inst->readFloatResult(0) : (inst->resultType(0) == InOrderDynInst::Double) ?
-                            inst->readDoubleResult(0) : inst->readIntResult(0));
+                            inst->readFloatResult(0) : inst->readIntResult(0));
 
                     exec_req->done();
                 } else {

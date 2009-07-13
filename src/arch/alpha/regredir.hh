@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
+ * Copyright (c) 2003-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,49 +25,19 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Steve Reinhardt
- *          Gabe Black
+ * Authors: Gabe Black
  */
 
-#ifndef __ARCH_ALPHA_INTREGFILE_HH__
-#define __ARCH_ALPHA_INTREGFILE_HH__
+#ifndef __ARCH_ALPHA_REGREDIR_HH__
+#define __ARCH_ALPHA_REGREDIR_HH__
 
-#include <iosfwd>
-#include <string>
-
-#include "arch/alpha/types.hh"
-
-class Checkpoint;
+#include "arch/alpha/registers.hh"
 
 namespace AlphaISA {
 
 // redirected register map, really only used for the full system case.
 extern const int reg_redir[NumIntRegs];
 
-class IntRegFile
-{
-  protected:
-    IntReg regs[NumIntRegs];
-
-  public:
-    IntReg
-    readReg(int intReg)
-    {
-        return regs[intReg];
-    }
-
-    void
-    setReg(int intReg, const IntReg &val)
-    {
-        regs[intReg] = val;
-    }
-
-    void clear();
-
-    void serialize(std::ostream &os);
-    void unserialize(Checkpoint *cp, const std::string &section);
-};
-
 } // namespace AlphaISA
 
-#endif // __ARCH_ALPHA_INTREGFILE_HH__
+#endif // __ARCH_ALPHA_REGREDIR_HH__

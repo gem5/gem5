@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2006 The Regents of The University of Michigan
- * Copyright (c) 2007 MIPS Technologies, Inc.
+ * Copyright (c) 2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,33 +25,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Korey Sewell
- *          Jaidev Patwardhan
+ * Authors: Gabe Black
  */
 
-#ifndef __ARCH_MIPS_REGFILE_MISC_REGFILE_HH__
-#define __ARCH_MIPS_REGFILE_MISC_REGFILE_HH__
+#ifndef __ARCH_MIPS_ISA_HH__
+#define __ARCH_MIPS_ISA_HH__
 
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/types.hh"
-#include "arch/mips/mt.hh"
-#include "arch/mips/mt_constants.hh"
-#include "base/bitfield.hh"
-#include "sim/eventq.hh"
+#include <string>
 #include <queue>
+#include <vector>
 
-class Params;
+#include "arch/mips/registers.hh"
+#include "arch/mips/types.hh"
+#include "sim/eventq.hh"
+#include "sim/faults.hh"
+
 class BaseCPU;
+class Checkpoint;
+class EventManager;
+class ThreadContext;
 
 namespace MipsISA
 {
-    class MiscRegFile {
+    class ISA
+    {
       public:
-        // Give RegFile object, private access
-        friend class RegFile;
-
         // The MIPS name for this file is CP0 or Coprocessor 0
-        typedef MiscRegFile CP0;
+        typedef ISA CP0;
 
       protected:
         enum BankType {
@@ -68,8 +67,8 @@ namespace MipsISA
         BaseCPU *cpu;
 
       public:
-        MiscRegFile();
-        MiscRegFile(BaseCPU *_cpu);
+        ISA();
+        ISA(BaseCPU *_cpu);
 
         void init();
 
@@ -91,23 +90,20 @@ namespace MipsISA
         //@TODO: MIPS MT's register view automatically connects
         //       Status to TCStatus depending on current thread
         void updateCP0ReadView(int misc_reg, ThreadID tid) { }
-        MiscReg readRegNoEffect(int misc_reg, ThreadID tid = 0);
+        MiscReg readMiscRegNoEffect(int misc_reg, ThreadID tid = 0);
 
         //template <class TC>
-        MiscReg readReg(int misc_reg,
-                        ThreadContext *tc, ThreadID tid = 0);
+        MiscReg readMiscReg(int misc_reg,
+                            ThreadContext *tc, ThreadID tid = 0);
 
         MiscReg filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val);
         void setRegMask(int misc_reg, const MiscReg &val, ThreadID tid = 0);
-        void setRegNoEffect(int misc_reg, const MiscReg &val,
-                            ThreadID tid = 0);
+        void setMiscRegNoEffect(int misc_reg, const MiscReg &val,
+                                ThreadID tid = 0);
 
         //template <class TC>
-        void setReg(int misc_reg, const MiscReg &val,
-                     ThreadContext *tc, ThreadID tid = 0);
-
-        int getInstAsid();
-        int getDataAsid();
+        void setMiscReg(int misc_reg, const MiscReg &val,
+                        ThreadContext *tc, ThreadID tid = 0);
 
         //////////////////////////////////////////////////////////
         //
@@ -128,7 +124,7 @@ namespace MipsISA
         class CP0Event : public Event
         {
           protected:
-            MiscRegFile::CP0 *cp0;
+            ISA::CP0 *cp0;
             BaseCPU *cpu;
             CP0EventType cp0EventType;
             Fault fault;
@@ -161,7 +157,24 @@ namespace MipsISA
         std::queue<CP0Event*> cp0EventRemoveList;
 
         static std::string miscRegNames[NumMiscRegs];
+
+      public:
+
+        int
+        flattenIntIndex(int reg)
+        {
+            return reg;
+        }
+
+        int
+        flattenFloatIndex(int reg)
+        {
+            return reg;
+        }
+
+        void serialize(std::ostream &os);
+        void unserialize(Checkpoint *cp, const std::string &section);
     };
-} // namespace MipsISA
+}
 
 #endif

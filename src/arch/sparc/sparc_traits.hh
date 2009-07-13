@@ -49,7 +49,8 @@ namespace SparcISA
 //    const int NumIntRegs =
 //      NumRegularIntRegs +
 //      NumMicroIntRegs;
-//    const int NumFloatRegs = 64;
+    const int NumFloatRegs = 64;
+    const int NumFloatArchRegs = NumFloatRegs;
 //    const int NumMiscRegs = 40;
 }
 

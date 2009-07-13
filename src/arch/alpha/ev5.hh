@@ -35,6 +35,8 @@
 
 #include "arch/alpha/isa_traits.hh"
 
+class ThreadContext;
+
 namespace AlphaISA {
 
 const uint64_t AsnMask = ULL(0xff);
@@ -105,6 +107,8 @@ inline int Ra(MachInst inst) { return inst >> 21 & 0x1f; }
 
 const Addr PalBase = 0x4000;
 const Addr PalMax = 0x10000;
+
+void copyIprs(ThreadContext *src, ThreadContext *dest);
 
 } // namespace AlphaISA
 

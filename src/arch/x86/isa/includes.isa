@@ -103,7 +103,7 @@ output header {{
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/isa_traits.hh"
-#include "arch/x86/regfile.hh"
+#include "arch/x86/registers.hh"
 #include "arch/x86/types.hh"
 #include "base/misc.hh"
 #include "cpu/static_inst.hh"
@@ -149,6 +149,7 @@ output exec {{
 
 #include <cmath>
 #include "arch/x86/cpuid.hh"
+#include "arch/x86/faults.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"

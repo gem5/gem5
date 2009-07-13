@@ -31,7 +31,7 @@
 #include <cstring>
 
 #include "arch/sparc/asi.hh"
-#include "arch/sparc/miscregfile.hh"
+#include "arch/sparc/registers.hh"
 #include "arch/sparc/tlb.hh"
 #include "base/bitfield.hh"
 #include "base/trace.hh"

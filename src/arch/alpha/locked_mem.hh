@@ -45,7 +45,7 @@
  * to do these manipulations based on the physical address.
  */
 
-#include "arch/alpha/miscregfile.hh"
+#include "arch/alpha/registers.hh"
 #include "base/misc.hh"
 #include "mem/request.hh"
 

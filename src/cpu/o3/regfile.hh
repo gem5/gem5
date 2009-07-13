@@ -33,7 +33,6 @@
 #define __CPU_O3_REGFILE_HH__
 
 #include "arch/isa_traits.hh"
-#include "arch/regfile.hh"
 #include "arch/types.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
@@ -57,8 +56,6 @@ class PhysRegFile
     typedef TheISA::IntReg IntReg;
     typedef TheISA::FloatReg FloatReg;
     typedef TheISA::FloatRegBits FloatRegBits;
-    typedef TheISA::MiscRegFile MiscRegFile;
-    typedef TheISA::MiscReg MiscReg;
 
     typedef union {
         FloatReg d;
@@ -95,21 +92,6 @@ class PhysRegFile
         return intRegFile[reg_idx];
     }
 
-    FloatReg readFloatReg(PhysRegIndex reg_idx, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
-
-        FloatReg floatReg = floatRegFile[reg_idx].d;
-
-        DPRINTF(IEW, "RegFile: Access to %d byte float register %i, has "
-                "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
-
-        return floatReg;
-    }
-
     /** Reads a floating point register (double precision). */
     FloatReg readFloatReg(PhysRegIndex reg_idx)
     {
@@ -124,22 +106,6 @@ class PhysRegFile
                 "data %#x\n", int(reg_idx), floatRegFile[reg_idx].q);
 
         return floatReg;
-    }
-
-    /** Reads a floating point register as an integer. */
-    FloatRegBits readFloatRegBits(PhysRegIndex reg_idx, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs + numPhysicalIntRegs);
-
-        FloatRegBits floatRegBits = floatRegFile[reg_idx].q;
-
-        DPRINTF(IEW, "RegFile: Access to float register %i as int, "
-                "has data %#x\n", int(reg_idx), (uint64_t)floatRegBits);
-
-        return floatRegBits;
     }
 
     FloatRegBits readFloatRegBits(PhysRegIndex reg_idx)
@@ -169,23 +135,6 @@ class PhysRegFile
             intRegFile[reg_idx] = val;
     }
 
-    /** Sets a single precision floating point register to the given value. */
-    void setFloatReg(PhysRegIndex reg_idx, FloatReg val, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs);
-
-        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
-
-#if THE_ISA == ALPHA_ISA
-        if (reg_idx != TheISA::ZeroReg)
-#endif
-            floatRegFile[reg_idx].d = val;
-    }
-
     /** Sets a double precision floating point register to the given value. */
     void setFloatReg(PhysRegIndex reg_idx, FloatReg val)
     {
@@ -203,20 +152,6 @@ class PhysRegFile
             floatRegFile[reg_idx].d = val;
     }
 
-    /** Sets a floating point register to the given integer value. */
-    void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val, int width)
-    {
-        // Remove the base Float reg dependency.
-        reg_idx = reg_idx - numPhysicalIntRegs;
-
-        assert(reg_idx < numPhysicalFloatRegs);
-
-        DPRINTF(IEW, "RegFile: Setting float register %i to %#x\n",
-                int(reg_idx), (uint64_t)val);
-
-        floatRegFile[reg_idx].q = val;
-    }
-
     void setFloatRegBits(PhysRegIndex reg_idx, FloatRegBits val)
     {
         // Remove the base Float reg dependency.
@@ -230,39 +165,12 @@ class PhysRegFile
         floatRegFile[reg_idx].q = val;
     }
 
-    MiscReg
-    readMiscRegNoEffect(int misc_reg, ThreadID tid)
-    {
-        return miscRegs[tid].readRegNoEffect(misc_reg);
-    }
-
-    MiscReg
-    readMiscReg(int misc_reg, ThreadID tid)
-    {
-        return miscRegs[tid].readReg(misc_reg, cpu->tcBase(tid));
-    }
-
-    void
-    setMiscRegNoEffect(int misc_reg, const MiscReg &val, ThreadID tid)
-    {
-        miscRegs[tid].setRegNoEffect(misc_reg, val);
-    }
-
-    void
-    setMiscReg(int misc_reg, const MiscReg &val, ThreadID tid)
-    {
-        miscRegs[tid].setReg(misc_reg, val, cpu->tcBase(tid));
-    }
-
   public:
     /** (signed) integer register file. */
     IntReg *intRegFile;
 
     /** Floating point register file. */
     PhysFloatReg *floatRegFile;
-
-    /** Miscellaneous register file. */
-    MiscRegFile miscRegs[Impl::MaxThreads];
 
 #if FULL_SYSTEM
   private:
@@ -288,10 +196,6 @@ PhysRegFile<Impl>::PhysRegFile(O3CPU *_cpu, unsigned _numPhysicalIntRegs,
 {
     intRegFile = new IntReg[numPhysicalIntRegs];
     floatRegFile = new PhysFloatReg[numPhysicalFloatRegs];
-
-    for (int i = 0; i < Impl::MaxThreads; ++i) {
-        miscRegs[i].clear();
-    }
 
     memset(intRegFile, 0, sizeof(IntReg) * numPhysicalIntRegs);
     memset(floatRegFile, 0, sizeof(PhysFloatReg) * numPhysicalFloatRegs);
