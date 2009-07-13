@@ -116,6 +116,9 @@ public:
   void setMemoryValue(const Address& addr, char* value,
                       unsigned int size_in_bytes );
 
+  void setLocked (const Address& addr, int context);
+  void clearLocked (const Address& addr);
+  bool isLocked (const Address& addr, int context);
   // Print cache contents
   void print(ostream& out) const;
   void printData(ostream& out) const;
@@ -147,6 +150,7 @@ private:
   // The first index is the # of cache lines.
   // The second index is the the amount associativity.
   Vector<Vector<AbstractCacheEntry*> > m_cache;
+  Vector<Vector<int> > m_locked;
 
   AbstractReplacementPolicy *m_replacementPolicy_ptr;
 
@@ -252,10 +256,13 @@ void CacheMemory::init(const vector<string> & argv)
     assert(false);
 
   m_cache.setSize(m_cache_num_sets);
+  m_locked.setSize(m_cache_num_sets);
   for (int i = 0; i < m_cache_num_sets; i++) {
     m_cache[i].setSize(m_cache_assoc);
+    m_locked[i].setSize(m_cache_assoc);
     for (int j = 0; j < m_cache_assoc; j++) {
       m_cache[i][j] = NULL;
+      m_locked[i][j] = -1;
     }
   }
 }
@@ -474,6 +481,7 @@ void CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
       m_cache[cacheSet][i] = entry;  // Init entry
       m_cache[cacheSet][i]->m_Address = address;
       m_cache[cacheSet][i]->m_Permission = AccessPermission_Invalid;
+      m_locked[cacheSet][i] = -1;
 
       m_replacementPolicy_ptr->touch(cacheSet, i, g_eventQueue_ptr->getTime());
 
@@ -494,6 +502,7 @@ void CacheMemory::deallocate(const Address& address)
   if (location != -1){
     delete m_cache[cacheSet][location];
     m_cache[cacheSet][location] = NULL;
+    m_locked[cacheSet][location] = -1;
   }
 }
 
@@ -542,6 +551,7 @@ void CacheMemory::changePermission(const Address& address, AccessPermission new_
 {
   assert(address == line_address(address));
   lookup(address).m_Permission = new_perm;
+  m_locked[cacheSet][loc] = -1; 
   assert(getPermission(address) == new_perm);
 }
 
@@ -628,6 +638,39 @@ void CacheMemory::setMemoryValue(const Address& addr, char* value,
   }
 
   //  entry = lookup(line_address(addr));
+}
+
+inline
+void 
+CacheMemory::setLocked(const Address& address, int context) 
+{  
+  assert(address == line_address(address));
+  Index cacheSet = addressToCacheSet(address);
+  int loc = findTagInSet(cacheSet, address);
+  assert(loc != -1);
+  m_locked[cacheSet][loc] = context;
+}
+
+inline
+void 
+CacheMemory::clearLocked(const Address& address) 
+{
+  assert(address == line_address(address));
+  Index cacheSet = addressToCacheSet(address);
+  int loc = findTagInSet(cacheSet, address);
+  assert(loc != -1);
+  m_locked[cacheSet][loc] = -1;
+}
+
+inline
+bool
+CacheMemory::isLocked(const Address& address, int context)
+{
+  assert(address == line_address(address));
+  Index cacheSet = addressToCacheSet(address);
+  int loc = findTagInSet(cacheSet, address);
+  assert(loc != -1);
+  return m_locked[cacheSet][loc] == context; 
 }
 
 #endif //CACHEMEMORY_H

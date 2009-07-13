@@ -19,8 +19,10 @@ string RubyRequestType_to_string(const RubyRequestType& obj)
     return "LD";
   case RubyRequestType_ST:
     return "ST";
-  case RubyRequestType_RMW:
-    return "RMW";
+  case RubyRequestType_RMW_Read:
+    return "RMW_Read";
+  case RubyRequestType_RMW_Write:
+    return "RMW_Write";
   case RubyRequestType_NULL:
   default:
     assert(0);
@@ -36,8 +38,10 @@ RubyRequestType string_to_RubyRequestType(std::string str)
     return RubyRequestType_LD;
   else if (str == "ST")
     return RubyRequestType_ST;
-  else if (str == "RMW")
-    return RubyRequestType_RMW;
+  else if (str == "RMW_Read")
+    return RubyRequestType_RMW_Read;
+  else if (str == "RMW_Write")
+    return RubyRequestType_RMW_Write;
   else
     assert(0);
   return RubyRequestType_NULL;

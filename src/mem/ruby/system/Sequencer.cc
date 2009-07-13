@@ -237,7 +237,8 @@ void Sequencer::removeRequest(SequencerRequest* srequest) {
   Address line_addr(ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((ruby_request.type == RubyRequestType_ST) ||
-      (ruby_request.type == RubyRequestType_RMW)) {
+      (ruby_request.type == RubyRequestType_RMW_Read) ||
+      (ruby_request.type == RubyRequestType_RMW_Write)) {
     m_writeRequestTable.deallocate(line_addr);
   } else {
     m_readRequestTable.deallocate(line_addr);
@@ -256,7 +257,25 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   removeRequest(request);
 
   assert((request->ruby_request.type == RubyRequestType_ST) ||
-         (request->ruby_request.type == RubyRequestType_RMW));
+         (request->ruby_request.type == RubyRequestType_RMW_Read) ||
+         (request->ruby_request.type == RubyRequestType_RMW_Write));
+  // POLINA: the assumption is that atomics are only on data cache and not instruction cache
+  if (request->ruby_request.type == RubyRequestType_RMW_Read) {
+    m_dataCache_ptr->setLocked(address, m_version);
+  }
+  else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
+    if (m_dataCache_ptr->isLocked(address, m_version)) {
+      // if we are holding the lock for this
+      request->ruby_request.atomic_success = true; 
+      m_dataCache_ptr->clearLocked(address);
+    }
+    else {
+      // if we are not holding the lock for this
+      request->ruby_request.atomic_success = false; 
+    }
+
+    // can have livelock
+  }
 
   hitCallback(request, data);
 }
@@ -379,7 +398,10 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   case RubyRequestType_ST:
     ctype = CacheRequestType_ST;
     break;
-  case RubyRequestType_RMW:
+  case RubyRequestType_RMW_Read:
+    ctype = CacheRequestType_ATOMIC;
+    break;
+  case RubyRequestType_RMW_Write:
     ctype = CacheRequestType_ATOMIC;
     break;
   default:
