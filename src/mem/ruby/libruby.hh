@@ -12,7 +12,9 @@ enum RubyRequestType {
   RubyRequestType_LD,
   RubyRequestType_ST,
   RubyRequestType_Locked_Read,
-  RubyRequestType_Locked_Write
+  RubyRequestType_Locked_Write,
+  RubyRequestType_RMW_Read,
+  RubyRequestType_RMW_Write
 };
 
 enum RubyAccessMode {

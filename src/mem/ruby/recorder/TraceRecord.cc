@@ -50,7 +50,7 @@ TraceRecord::TraceRecord(const string & sequencer_name, const Address& data_addr
   if (m_type == RubyRequestType_Locked_Read) {
     m_type = RubyRequestType_ST;
   }
-  if (m_type == RubyRequestType_Locked_Write) {
+  else if (m_type == RubyRequestType_Locked_Write) {
     m_type = RubyRequestType_ST;
   }
 }

@@ -43,6 +43,8 @@
 
 //Sequencer::Sequencer(int core_id, MessageBuffer* mandatory_q)
 
+#define LLSC_FAIL -2
+
 Sequencer::Sequencer(const string & name)
   :RubyPort(name)
 {
@@ -201,6 +203,8 @@ bool Sequencer::insertRequest(SequencerRequest* request) {
   Address line_addr(request->ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((request->ruby_request.type == RubyRequestType_ST) ||
+      (request->ruby_request.type == RubyRequestType_RMW_Read) ||  
+      (request->ruby_request.type == RubyRequestType_RMW_Write) ||  
       (request->ruby_request.type == RubyRequestType_Locked_Read) ||  
       (request->ruby_request.type == RubyRequestType_Locked_Write)) {
     if (m_writeRequestTable.exist(line_addr)) {
@@ -238,6 +242,8 @@ void Sequencer::removeRequest(SequencerRequest* srequest) {
   Address line_addr(ruby_request.paddr);
   line_addr.makeLineAddress();
   if ((ruby_request.type == RubyRequestType_ST) ||
+      (ruby_request.type == RubyRequestType_RMW_Read) ||  
+      (ruby_request.type == RubyRequestType_RMW_Write) ||  
       (ruby_request.type == RubyRequestType_Locked_Read) ||
       (ruby_request.type == RubyRequestType_Locked_Write)) {
     m_writeRequestTable.deallocate(line_addr);
@@ -258,6 +264,8 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   removeRequest(request);
 
   assert((request->ruby_request.type == RubyRequestType_ST) ||
+         (request->ruby_request.type == RubyRequestType_RMW_Read) ||  
+         (request->ruby_request.type == RubyRequestType_RMW_Write) ||  
          (request->ruby_request.type == RubyRequestType_Locked_Read) ||
          (request->ruby_request.type == RubyRequestType_Locked_Write));
   // POLINA: the assumption is that atomics are only on data cache and not instruction cache
@@ -355,7 +363,6 @@ bool Sequencer::empty() const {
 }
 
 
-// -2 means that the LLSC failed
 int64_t Sequencer::makeRequest(const RubyRequest & request)
 {
   assert(Address(request.paddr).getOffset() + request.len <= RubySystem::getBlockSizeBytes());
@@ -365,8 +372,10 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
     bool found = insertRequest(srequest);
     if (!found)
       if (request.type == RubyRequestType_Locked_Write) {
+        // NOTE: it is OK to check the locked flag here as the mandatory queue will be checked first
+        // ensuring that nothing comes between checking the flag and servicing the store
         if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), m_version)) {
-          return -2;
+          return LLSC_FAIL;
         }
         else {
           m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
@@ -401,6 +410,12 @@ void Sequencer::issueRequest(const RubyRequest& request) {
     break;
   case RubyRequestType_Locked_Write:
     ctype = CacheRequestType_ST;
+    break;
+  case RubyRequestType_RMW_Read:
+    ctype = CacheRequestType_ATOMIC;
+    break;
+  case RubyRequestType_RMW_Write:
+    ctype = CacheRequestType_ATOMIC;
     break;
   default:
     assert(0);

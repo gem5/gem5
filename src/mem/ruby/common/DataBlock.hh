@@ -56,9 +56,6 @@ class DataBlock {
   uint8 getByte(int whichByte) const;
   const uint8* getData(int offset, int len) const;
   void setByte(int whichByte, uint8 data);
-  const uint8* getBlock() const;
-  uint8* copyData(uint8* dest, int offset, int size) const;
-  void setBlock(uint8* data) { setData(data, 0, RubySystem::getBlockSizeBytes()); } 
   void setData(uint8* data, int offset, int len);
   void copyPartial(const DataBlock & dblk, int offset, int len);
   bool equal(const DataBlock& obj) const;
@@ -148,21 +145,6 @@ void DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
 {
   setData(&dblk.m_data[offset], offset, len);
 }
-
-inline
-const uint8* DataBlock::getBlock() const 
-{
-  return m_data;
-}
-
-inline
-uint8* DataBlock::copyData(uint8* dest, int offset, int size) const 
-{
-  assert(offset + size <= RubySystem::getBlockSizeBytes());
-  memcpy(dest, m_data + offset, size);
-  return dest;
-}
-
 
 // ******************* Definitions *******************
 
