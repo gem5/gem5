@@ -1,40 +1,68 @@
 
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+    Copyright (C) 1999-2008 by Mark D. Hill and David A. Wood for the
+    Wisconsin Multifacet Project.  Contact: gems@cs.wisc.edu
+    http://www.cs.wisc.edu/gems/
+
+    --------------------------------------------------------------------
+
+    This file is part of the Ruby Multiprocessor Memory System Simulator, 
+    a component of the Multifacet GEMS (General Execution-driven 
+    Multiprocessor Simulator) software toolset originally developed at 
+    the University of Wisconsin-Madison.
+
+    Ruby was originally developed primarily by Milo Martin and Daniel
+    Sorin with contributions from Ross Dickson, Carl Mauer, and Manoj
+    Plakal.
+
+    Substantial further development of Multifacet GEMS at the
+    University of Wisconsin was performed by Alaa Alameldeen, Brad
+    Beckmann, Jayaram Bobba, Ross Dickson, Dan Gibson, Pacia Harper,
+    Derek Hower, Milo Martin, Michael Marty, Carl Mauer, Michelle Moravan,
+    Kevin Moore, Andrew Phelps, Manoj Plakal, Daniel Sorin, Haris Volos, 
+    Min Xu, and Luke Yen.
+    --------------------------------------------------------------------
+
+    If your use of this software contributes to a published paper, we
+    request that you (1) cite our summary paper that appears on our
+    website (http://www.cs.wisc.edu/gems/) and (2) e-mail a citation
+    for your published paper to gems@cs.wisc.edu.
+
+    If you redistribute derivatives of this software, we request that
+    you notify us and either (1) ask people to register with us at our
+    website (http://www.cs.wisc.edu/gems/) or (2) collect registration
+    information and periodically send it to us.
+
+    --------------------------------------------------------------------
+
+    Multifacet GEMS is free software; you can redistribute it and/or
+    modify it under the terms of version 2 of the GNU General Public
+    License as published by the Free Software Foundation.
+
+    Multifacet GEMS is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the Multifacet GEMS; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+    02111-1307, USA
+
+    The GNU General Public License is contained in the file LICENSE.
+
+### END HEADER ###
+*/
 
 /*
  * $Id$
  *
  */
 
-#include "mem/ruby/tester/Global_Tester.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
-#include "mem/ruby/tester/EventQueue_Tester.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 //#include "DMAGenerator.hh"
 #include "mem/ruby/tester/DetermGETXGenerator.hh"
 
@@ -42,20 +70,19 @@
 
 DeterministicDriver::DeterministicDriver(string generator_type, int num_completions, int num_procs, Time g_think_time, Time g_wait_time, int g_tester_length)
 {
-  eventQueue = new RubyEventQueue;
+  eventQueue = new RubyEventQueue; 
   m_finish_time = 0;
   m_last_issue = -11;
   m_done_counter = 0;
   m_loads_completed = 0;
   m_stores_completed = 0;
-
+  
   m_numCompletionsPerNode = num_completions;
   m_num_procs = num_procs;
   m_think_time = g_think_time;
   m_wait_time = g_wait_time;
   m_tester_length = g_tester_length;
-
-
+  
   m_last_progress_vector.setSize(num_procs);
   for (int i=0; i<m_last_progress_vector.size(); i++) {
     m_last_progress_vector[i] = 0;
@@ -129,7 +156,7 @@ void DeterministicDriver::hitCallback(int64_t request_id)
   Address address = requests[request_id].second;
 
   m_generator_vector[proc]->performCallback(proc, address);
-
+  
   m_last_progress_vector[proc] = eventQueue->getTime();
 
   requests.erase(request_id);
@@ -153,7 +180,7 @@ bool DeterministicDriver::isLoadReady(NodeID node)
 }
 
 bool DeterministicDriver::isLoadReady(NodeID node, Address addr)
-{
+{ 
   return isAddrReady(node, m_load_vector, addr);
 }
 
@@ -163,7 +190,7 @@ bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector)
   for (int i=0; i<addr_vector.size(); i++) {
     if (((addr_vector[i]+1)%m_num_procs == node) &&
         (m_loads_completed+m_stores_completed >= m_numCompletionsPerNode*node) && // is this node next
-        (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests
+        (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests 
       return true;
     }
   }
@@ -180,7 +207,7 @@ bool DeterministicDriver::isAddrReady(NodeID node, Vector<NodeID> addr_vector, A
 
   if (((addr_vector[addr_number]+1)%m_num_procs == node) &&
       (m_loads_completed+m_stores_completed >= m_numCompletionsPerNode*node) && // is this node next
-      (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests
+      (eventQueue->getTime() >= m_last_issue + 10)) { // controll rate of requests                   
     return true;
   } else {
     return false;
@@ -203,7 +230,7 @@ void DeterministicDriver::setNextAddr(NodeID node, Address addr, Vector<NodeID>&
 {
   // mark the addr vector that this proc was the last to use the particular address
   int addr_number = addr.getAddress()/DATA_BLOCK_BYTES;
-  addr_vector[addr_number] = node;
+  addr_vector[addr_number] = node;  
 }
 
 Address DeterministicDriver::getNextLoadAddr(NodeID node)
@@ -221,16 +248,18 @@ Address DeterministicDriver::getNextAddr(NodeID node, Vector<NodeID> addr_vector
 
   // This method deterministically picks the next addr the node should acquirer
   // The addrs cycle through according to NodeID 0->1->...->lastID->0...
-
+  
   Address addr;
-
+  
   // should only be called if we know a addr is ready for the node
   ASSERT(isAddrReady(node, addr_vector));
 
   for (int addr_number=0; addr_number<addr_vector.size(); addr_number++) {
 
     // is this node next in line for the addr
-    if ((addr_vector[addr_number] != 1) && ((addr_vector[addr_number]+1)%m_num_procs) == node) {
+    // POLINA: LOOK HERE!
+    // if ((addr_vector[addr_number] != 1) && ((addr_vector[addr_number]+1)%m_num_procs) == node) {
+    if (((addr_vector[addr_number]+1)%m_num_procs) == node) {
 
       // One addr per cache line
       addr.setAddress(addr_number * DATA_BLOCK_BYTES);

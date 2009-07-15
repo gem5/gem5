@@ -1,6 +1,6 @@
 
 /*
-    Copyright (C) 1999-2005 by Mark D. Hill and David A. Wood for the
+    Copyright (C) 1999-2008 by Mark D. Hill and David A. Wood for the
     Wisconsin Multifacet Project.  Contact: gems@cs.wisc.edu
     http://www.cs.wisc.edu/gems/
 
@@ -17,10 +17,10 @@
 
     Substantial further development of Multifacet GEMS at the
     University of Wisconsin was performed by Alaa Alameldeen, Brad
-    Beckmann, Ross Dickson, Pacia Harper, Milo Martin, Michael Marty,
-    Carl Mauer, Kevin Moore, Manoj Plakal, Daniel Sorin, Min Xu, and
-    Luke Yen.
-
+    Beckmann, Jayaram Bobba, Ross Dickson, Dan Gibson, Pacia Harper,
+    Derek Hower, Milo Martin, Michael Marty, Carl Mauer, Michelle Moravan,
+    Kevin Moore, Andrew Phelps, Manoj Plakal, Daniel Sorin, Haris Volos, 
+    Min Xu, and Luke Yen.
     --------------------------------------------------------------------
 
     If your use of this software contributes to a published paper, we
@@ -57,15 +57,10 @@
 /*
  * $Id$
  *
- */
+ * */
 
-#include "mem/ruby/tester/SpecifiedGenerator.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
-SpecifiedGenerator::SpecifiedGenerator()
-{
-}
-
-SpecifiedGenerator::~SpecifiedGenerator()
-{
-}
+class RubyEventQueue;
+extern RubyEventQueue * eventQueue;
 

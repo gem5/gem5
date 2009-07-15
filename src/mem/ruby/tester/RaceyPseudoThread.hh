@@ -1,30 +1,20 @@
 /*
- * Copyright (c) 1999 Mark D. Hill and David A. Wood
- * All rights reserved.
+ * Copyright (c) 1999 by Mark Hill and David Wood for the Wisconsin
+ * Multifacet Project.  ALL RIGHTS RESERVED.  
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ * ##HEADER##
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * This software is furnished under a license and may be used and
+ * copied only in accordance with the terms of such license and the
+ * inclusion of the above copyright notice.  This software or any
+ * other copies thereof or any derivative works may not be provided or
+ * otherwise made available to any other persons.  Title to and
+ * ownership of the software is retained by Mark Hill and David Wood.
+ * Any use of this software must include the above copyright notice.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS".  THE LICENSOR MAKES NO
+ * WARRANTIES ABOUT ITS CORRECTNESS OR PERFORMANCE.
+ * */
 
 /*
  * Description: This implements a pseudo racey thread which drives ruby timing
@@ -35,10 +25,11 @@
 #ifndef RACEYPSEUDOTHREAD_H
 #define RACEYPSEUDOTHREAD_H
 
-#include "mem/ruby/tester/Global_Tester.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/tester/Tester_Globals.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "Address_Tester.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/libruby.hh"
 
 class RaceyDriver;
@@ -69,7 +60,7 @@ public:
 
   // Destructor
   ~RaceyPseudoThread();
-
+  
   // Public Methods
   void performCallback(int proc, Address address, uint8_t * data);
 
@@ -106,7 +97,7 @@ private:
   // Private copy constructor and assignment operator
   RaceyPseudoThread(const RaceyPseudoThread& obj);
   RaceyPseudoThread& operator=(const RaceyPseudoThread& obj);
-
+  
   // Data Members (m_ prefix)
   RaceyDriver& m_driver;
   NodeID m_proc_id;
@@ -139,7 +130,7 @@ ostream& operator<<(ostream& out, const RaceyPseudoThread& obj);
 // ******************* Definitions *******************
 
 // Output operator definition
-extern inline
+extern inline 
 ostream& operator<<(ostream& out, const RaceyPseudoThread& obj)
 {
   obj.print(out);

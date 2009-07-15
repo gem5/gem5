@@ -1,33 +1,23 @@
 /*
- * Copyright (c) 1999 Mark D. Hill and David A. Wood
- * All rights reserved.
+ * Copyright (c) 1999 by Mark Hill and David Wood for the Wisconsin
+ * Multifacet Project.  ALL RIGHTS RESERVED.  
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
+ * ##HEADER##
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+ * This software is furnished under a license and may be used and
+ * copied only in accordance with the terms of such license and the
+ * inclusion of the above copyright notice.  This software or any
+ * other copies thereof or any derivative works may not be provided or
+ * otherwise made available to any other persons.  Title to and
+ * ownership of the software is retained by Mark Hill and David Wood.
+ * Any use of this software must include the above copyright notice.
+ * 
+ * THIS SOFTWARE IS PROVIDED "AS IS".  THE LICENSOR MAKES NO
+ * WARRANTIES ABOUT ITS CORRECTNESS OR PERFORMANCE.
+ * */
 
 /*
- * Description: see RaceyPseudoThread.hh
+ * Description: see RaceyPseudoThread.h
  */
 
 #include "mem/ruby/tester/RaceyPseudoThread.hh"
@@ -225,18 +215,18 @@ void RaceyPseudoThread::load_sig(unsigned index) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), read_data, 4, 0, RubyRequestType_LD, RubyAccessMode_User));
-
+  
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(sig(index));
   request_data.data = read_data;
   m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));
-
+  
   /*sequencer()->makeRequest(CacheMsg(Address(sig(index)), Address(sig(index)), CacheRequestType_LD,
                                     Address(physical_address_t(1)),
                                     AccessModeType_UserMode, 4,
-                                    PrefetchBit_No, 0, Address(0),
+                                    PrefetchBit_No, 0, Address(0), 
                                     0, 0 , false)); */
 }
 
@@ -252,18 +242,18 @@ void RaceyPseudoThread::load_m(unsigned index) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), read_data, 4, 0, RubyRequestType_LD, RubyAccessMode_User));
-
+  
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(m(index));
   request_data.data = read_data;
   m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));
-
+  
   /*sequencer()->makeRequest(CacheMsg(Address(m(index)), Address(m(index)), CacheRequestType_LD,
                                     Address(physical_address_t(1)),
                                     AccessModeType_UserMode, 4,
-                                    PrefetchBit_No, 0, Address(0),
+                                    PrefetchBit_No, 0, Address(0), 
                                     0, 0, false)); */
 }
 
@@ -273,6 +263,8 @@ void RaceyPseudoThread::store_sig(unsigned index, unsigned value) {
   m_read = false;
   m_value = value;
   uint8_t * write_data = new uint8_t[4];
+  uint8_t * read_data = new uint8_t[4];
+
 
   memcpy(write_data, &value, 4);
 
@@ -282,13 +274,15 @@ void RaceyPseudoThread::store_sig(unsigned index, unsigned value) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
-
+  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), read_data, 4, 0, RubyRequestType_RMW_Read, RubyAccessMode_User));
+  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), write_data, 4, 0, RubyRequestType_RMW_Write, RubyAccessMode_User));
+  
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(sig(index));
   request_data.data = write_data;
-  m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));
+  m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));  
 
   /*sequencer()->makeRequest(CacheMsg(Address(sig(index)), Address(sig(index)), CacheRequestType_ST,
                                     Address(physical_address_t(1)),
@@ -303,6 +297,7 @@ void RaceyPseudoThread::store_m(unsigned index, unsigned value) {
   m_read = false;
   m_value = value;
   uint8_t * write_data = new uint8_t[4];
+  uint8_t * read_data = new uint8_t[4];
   memcpy(write_data, &value, 4);
 
   char name [] = "Sequencer_";
@@ -311,13 +306,15 @@ void RaceyPseudoThread::store_m(unsigned index, unsigned value) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
-
+  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), read_data, 4, 0, RubyRequestType_RMW_Read, RubyAccessMode_User));
+  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), write_data, 4, 0, RubyRequestType_RMW_Write, RubyAccessMode_User));
+  
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
   struct address_data request_data;
   request_data.address = Address(m(index));
   request_data.data = write_data;
-  m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));
+  m_driver.requests.insert(make_pair(request_id, make_pair(m_proc_id, request_data)));  
 
   /*sequencer()->makeRequest(CacheMsg(Address(m(index)), Address(m(index)), CacheRequestType_ST,
                                     Address(physical_address_t(1)),

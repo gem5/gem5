@@ -40,13 +40,8 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/NodeID.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/ruby/common/Address.hh"
 
-class RubySystem;
-class SubBlock;
-class Address;
-class MachineID;
-class SimicsHypervisor;
 
 class Driver {
 public:
@@ -58,15 +53,12 @@ public:
 
   // Public Methods
   virtual void get_network_config() {}
-  virtual void dmaHitCallback() = 0;
-  virtual void hitCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) = 0; // Called by sequencer
-  virtual void conflictCallback(NodeID proc, SubBlock& data, CacheRequestType type, int thread) { assert(0); }; // Called by sequencer
+  virtual void dmaHitCallback() {};
+  virtual void hitCallback(int64_t id) = 0; // Called by sequencer
+  virtual void go() = 0;
   virtual integer_t getInstructionCount(int procID) const { return 1; }
   virtual integer_t getCycleCount(int procID) const { return 1; }
   virtual void addThreadDependency(int procID, int requestor_thread, int conflict_thread) const { assert(0);}
-  virtual int inTransaction(int procID, int thread ) const{
-    cout << "Driver.hh inTransaction " << endl;
-return false; } //called by Sequencer
   virtual void printDebug(){}  //called by Sequencer
 
   virtual void printStats(ostream& out) const = 0;
@@ -74,7 +66,6 @@ return false; } //called by Sequencer
 
   virtual void printConfig(ostream& out) const = 0;
 
-  //virtual void abortCallback(NodeID proc){}
 
   virtual integer_t readPhysicalMemory(int procID, physical_address_t address,
                                        int len ){ ASSERT(0); return 0; }
