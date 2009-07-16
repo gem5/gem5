@@ -165,8 +165,9 @@ namespace X86ISA
         MISCREG_MTRR_PHYS_BASE_5,
         MISCREG_MTRR_PHYS_BASE_6,
         MISCREG_MTRR_PHYS_BASE_7,
+        MISCREG_MTRR_PHYS_BASE_END,
 
-        MISCREG_MTRR_PHYS_MASK_BASE,
+        MISCREG_MTRR_PHYS_MASK_BASE = MISCREG_MTRR_PHYS_BASE_END,
         MISCREG_MTRR_PHYS_MASK_0 = MISCREG_MTRR_PHYS_MASK_BASE,
         MISCREG_MTRR_PHYS_MASK_1,
         MISCREG_MTRR_PHYS_MASK_2,
@@ -175,8 +176,9 @@ namespace X86ISA
         MISCREG_MTRR_PHYS_MASK_5,
         MISCREG_MTRR_PHYS_MASK_6,
         MISCREG_MTRR_PHYS_MASK_7,
+        MISCREG_MTRR_PHYS_MASK_END,
 
-        MISCREG_MTRR_FIX_64K_00000,
+        MISCREG_MTRR_FIX_64K_00000 = MISCREG_MTRR_PHYS_MASK_END,
         MISCREG_MTRR_FIX_16K_80000,
         MISCREG_MTRR_FIX_16K_A0000,
         MISCREG_MTRR_FIX_4K_C0000,
@@ -201,8 +203,9 @@ namespace X86ISA
         MISCREG_MC5_CTL,
         MISCREG_MC6_CTL,
         MISCREG_MC7_CTL,
+        MISCREG_MC_CTL_END,
 
-        MISCREG_MC_STATUS_BASE,
+        MISCREG_MC_STATUS_BASE = MISCREG_MC_CTL_END,
         MISCREG_MC0_STATUS = MISCREG_MC_STATUS_BASE,
         MISCREG_MC1_STATUS,
         MISCREG_MC2_STATUS,
@@ -211,8 +214,9 @@ namespace X86ISA
         MISCREG_MC5_STATUS,
         MISCREG_MC6_STATUS,
         MISCREG_MC7_STATUS,
+        MISCREG_MC_STATUS_END,
 
-        MISCREG_MC_ADDR_BASE,
+        MISCREG_MC_ADDR_BASE = MISCREG_MC_STATUS_END,
         MISCREG_MC0_ADDR = MISCREG_MC_ADDR_BASE,
         MISCREG_MC1_ADDR,
         MISCREG_MC2_ADDR,
@@ -221,8 +225,9 @@ namespace X86ISA
         MISCREG_MC5_ADDR,
         MISCREG_MC6_ADDR,
         MISCREG_MC7_ADDR,
+        MISCREG_MC_ADDR_END,
 
-        MISCREG_MC_MISC_BASE,
+        MISCREG_MC_MISC_BASE = MISCREG_MC_ADDR_END,
         MISCREG_MC0_MISC = MISCREG_MC_MISC_BASE,
         MISCREG_MC1_MISC,
         MISCREG_MC2_MISC,
@@ -231,9 +236,10 @@ namespace X86ISA
         MISCREG_MC5_MISC,
         MISCREG_MC6_MISC,
         MISCREG_MC7_MISC,
+        MISCREG_MC_MISC_END,
 
         // Extended feature enable register
-        MISCREG_EFER,
+        MISCREG_EFER = MISCREG_MC_MISC_END,
 
         MISCREG_STAR,
         MISCREG_LSTAR,
@@ -250,24 +256,28 @@ namespace X86ISA
         MISCREG_PERF_EVT_SEL1,
         MISCREG_PERF_EVT_SEL2,
         MISCREG_PERF_EVT_SEL3,
+        MISCREG_PERF_EVT_SEL_END,
 
-        MISCREG_PERF_EVT_CTR_BASE,
+        MISCREG_PERF_EVT_CTR_BASE = MISCREG_PERF_EVT_SEL_END,
         MISCREG_PERF_EVT_CTR0 = MISCREG_PERF_EVT_CTR_BASE,
         MISCREG_PERF_EVT_CTR1,
         MISCREG_PERF_EVT_CTR2,
         MISCREG_PERF_EVT_CTR3,
+        MISCREG_PERF_EVT_CTR_END,
 
-        MISCREG_SYSCFG,
+        MISCREG_SYSCFG = MISCREG_PERF_EVT_CTR_END,
 
         MISCREG_IORR_BASE_BASE,
         MISCREG_IORR_BASE0 = MISCREG_IORR_BASE_BASE,
         MISCREG_IORR_BASE1,
+        MISCREG_IORR_BASE_END,
 
-        MISCREG_IORR_MASK_BASE,
+        MISCREG_IORR_MASK_BASE = MISCREG_IORR_BASE_END,
         MISCREG_IORR_MASK0 = MISCREG_IORR_MASK_BASE,
         MISCREG_IORR_MASK1,
+        MISCREG_IORR_MASK_END,
 
-        MISCREG_TOP_MEM,
+        MISCREG_TOP_MEM = MISCREG_IORR_MASK_END,
         MISCREG_TOP_MEM2,
 
         MISCREG_VM_CR,
@@ -377,102 +387,129 @@ namespace X86ISA
     static inline MiscRegIndex
     MISCREG_CR(int index)
     {
+        assert(index >= 0 && index < NumCRegs);
         return (MiscRegIndex)(MISCREG_CR_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_DR(int index)
     {
+        assert(index >= 0 && index < NumDRegs);
         return (MiscRegIndex)(MISCREG_DR_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MTRR_PHYS_BASE(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MTRR_PHYS_BASE_END -
+                                      MISCREG_MTRR_PHYS_BASE_BASE));
         return (MiscRegIndex)(MISCREG_MTRR_PHYS_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MTRR_PHYS_MASK(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MTRR_PHYS_MASK_END -
+                                      MISCREG_MTRR_PHYS_MASK_BASE));
         return (MiscRegIndex)(MISCREG_MTRR_PHYS_MASK_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MC_CTL(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MC_CTL_END -
+                                      MISCREG_MC_CTL_BASE));
         return (MiscRegIndex)(MISCREG_MC_CTL_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MC_STATUS(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MC_STATUS_END -
+                                      MISCREG_MC_STATUS_BASE));
         return (MiscRegIndex)(MISCREG_MC_STATUS_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MC_ADDR(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MC_ADDR_END -
+                                      MISCREG_MC_ADDR_BASE));
         return (MiscRegIndex)(MISCREG_MC_ADDR_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_MC_MISC(int index)
     {
+        assert(index >= 0 && index < (MISCREG_MC_MISC_END -
+                                      MISCREG_MC_MISC_BASE));
         return (MiscRegIndex)(MISCREG_MC_MISC_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_PERF_EVT_SEL(int index)
     {
+        assert(index >= 0 && index < (MISCREG_PERF_EVT_SEL_END -
+                                      MISCREG_PERF_EVT_SEL_BASE));
         return (MiscRegIndex)(MISCREG_PERF_EVT_SEL_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_PERF_EVT_CTR(int index)
     {
+        assert(index >= 0 && index < (MISCREG_PERF_EVT_CTR_END -
+                                      MISCREG_PERF_EVT_CTR_BASE));
         return (MiscRegIndex)(MISCREG_PERF_EVT_CTR_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_IORR_BASE(int index)
     {
+        assert(index >= 0 && index < (MISCREG_IORR_BASE_END -
+                                      MISCREG_IORR_BASE_BASE));
         return (MiscRegIndex)(MISCREG_IORR_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_IORR_MASK(int index)
     {
+        assert(index >= 0 && index < (MISCREG_IORR_MASK_END -
+                                      MISCREG_IORR_MASK_BASE));
         return (MiscRegIndex)(MISCREG_IORR_MASK_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_SEL(int index)
     {
+        assert(index >= 0 && index < NUM_SEGMENTREGS);
         return (MiscRegIndex)(MISCREG_SEG_SEL_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_BASE(int index)
     {
+        assert(index >= 0 && index < NUM_SEGMENTREGS);
         return (MiscRegIndex)(MISCREG_SEG_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_EFF_BASE(int index)
     {
+        assert(index >= 0 && index < NUM_SEGMENTREGS);
         return (MiscRegIndex)(MISCREG_SEG_EFF_BASE_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_LIMIT(int index)
     {
+        assert(index >= 0 && index < NUM_SEGMENTREGS);
         return (MiscRegIndex)(MISCREG_SEG_LIMIT_BASE + index);
     }
 
     static inline MiscRegIndex
     MISCREG_SEG_ATTR(int index)
     {
+        assert(index >= 0 && index < NUM_SEGMENTREGS);
         return (MiscRegIndex)(MISCREG_SEG_ATTR_BASE + index);
     }
 
