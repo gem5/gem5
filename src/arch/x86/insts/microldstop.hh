@@ -93,20 +93,21 @@ namespace X86ISA
         LdStOp(ExtMachInst _machInst,
                 const char * mnem, const char * _instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags,
                 OpClass __opClass) :
         X86MicroopBase(machInst, mnem, _instMnem,
                 isMicro, isDelayed, isFirst, isLast, __opClass),
-                scale(_scale), index(_index), base(_base),
-                disp(_disp), segment(_segment),
-                data(_data),
+                scale(_scale), index(_index.idx), base(_base.idx),
+                disp(_disp), segment(_segment.idx),
+                data(_data.idx),
                 dataSize(_dataSize), addressSize(_addressSize),
-                memFlags(_memFlags | _segment)
+                memFlags(_memFlags | _segment.idx)
         {
+            assert(_segment.idx < NUM_SEGMENTREGS);
             foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
             foldABit =
                 (addressSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;

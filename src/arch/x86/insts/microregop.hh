@@ -79,13 +79,13 @@ namespace X86ISA
                 const char *mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
                     __opClass),
-            src1(_src1), dest(_dest),
+            src1(_src1.idx), dest(_dest.idx),
             dataSize(_dataSize), ext(_ext)
         {
             foldOBit = (dataSize == 1 && !_machInst.rex.present) ? 1 << 6 : 0;
@@ -107,14 +107,14 @@ namespace X86ISA
                 const char *mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
             RegOpBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
                     _src1, _dest, _dataSize, _ext,
                     __opClass),
-            src2(_src2)
+            src2(_src2.idx)
         {
         }
 
@@ -132,7 +132,7 @@ namespace X86ISA
                 const char * mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
-                RegIndex _src1, uint8_t _imm8, RegIndex _dest,
+                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext,
                 OpClass __opClass) :
             RegOpBase(_machInst, mnem, _instMnem,

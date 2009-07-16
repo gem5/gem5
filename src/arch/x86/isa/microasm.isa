@@ -75,14 +75,22 @@ let {{
     from micro_asm import MicroAssembler, Rom_Macroop
     mainRom = X86MicrocodeRom('main ROM')
     assembler = MicroAssembler(X86Macroop, microopClasses, mainRom, Rom_Macroop)
+
+    def regIdx(idx):
+        return "InstRegIndex(%s)" % idx
+
+    assembler.symbols["regIdx"] = regIdx
+
     # Add in symbols for the microcode registers
     for num in range(16):
-        assembler.symbols["t%d" % num] = "NUM_INTREGS+%d" % num
+        assembler.symbols["t%d" % num] = regIdx("NUM_INTREGS+%d" % num)
     for num in range(8):
-        assembler.symbols["ufp%d" % num] = "FLOATREG_MICROFP(%d)" % num
+        assembler.symbols["ufp%d" % num] = \
+            regIdx("FLOATREG_MICROFP(%d)" % num)
     # Add in symbols for the segment descriptor registers
     for letter in ("C", "D", "E", "F", "G", "H", "S"):
-        assembler.symbols["%ss" % letter.lower()] = "SEGMENT_REG_%sS" % letter
+        assembler.symbols["%ss" % letter.lower()] = \
+            regIdx("SEGMENT_REG_%sS" % letter)
 
     # Add in symbols for the various checks of segment selectors.
     for check in ("NoCheck", "CSCheck", "CallGateCheck", "IntGateCheck",
@@ -91,25 +99,25 @@ let {{
         assembler.symbols[check] = "Seg%s" % check
 
     for reg in ("TR", "IDTR"):
-        assembler.symbols[reg.lower()] = "SYS_SEGMENT_REG_%s" % reg
+        assembler.symbols[reg.lower()] = regIdx("SYS_SEGMENT_REG_%s" % reg)
 
     for reg in ("TSL", "TSG"):
-        assembler.symbols[reg.lower()] = "SEGMENT_REG_%s" % reg
+        assembler.symbols[reg.lower()] = regIdx("SEGMENT_REG_%s" % reg)
 
     # Miscellaneous symbols
     symbols = {
-        "reg" : "env.reg",
-        "xmml" : "FLOATREG_XMM_LOW(env.reg)",
-        "xmmh" : "FLOATREG_XMM_HIGH(env.reg)",
-        "regm" : "env.regm",
-        "xmmlm" : "FLOATREG_XMM_LOW(env.regm)",
-        "xmmhm" : "FLOATREG_XMM_HIGH(env.regm)",
+        "reg" : regIdx("env.reg"),
+        "xmml" : regIdx("FLOATREG_XMM_LOW(env.reg)"),
+        "xmmh" : regIdx("FLOATREG_XMM_HIGH(env.reg)"),
+        "regm" : regIdx("env.regm"),
+        "xmmlm" : regIdx("FLOATREG_XMM_LOW(env.regm)"),
+        "xmmhm" : regIdx("FLOATREG_XMM_HIGH(env.regm)"),
         "imm" : "adjustedImm",
         "disp" : "adjustedDisp",
-        "seg" : "env.seg",
+        "seg" : regIdx("env.seg"),
         "scale" : "env.scale",
-        "index" : "env.index",
-        "base" : "env.base",
+        "index" : regIdx("env.index"),
+        "base" : regIdx("env.base"),
         "dsz" : "env.dataSize",
         "asz" : "env.addressSize",
         "ssz" : "env.stackSize"
@@ -133,17 +141,18 @@ let {{
 
     # This segment selects an internal address space mapped to MSRs,
     # CPUID info, etc.
-    assembler.symbols["intseg"] = "SEGMENT_REG_MS"
+    assembler.symbols["intseg"] = regIdx("SEGMENT_REG_MS")
     # This segment always has base 0, and doesn't imply any special handling
     # like the internal segment above
-    assembler.symbols["flatseg"] = "SEGMENT_REG_LS"
+    assembler.symbols["flatseg"] = regIdx("SEGMENT_REG_LS")
 
     for reg in ('ax', 'bx', 'cx', 'dx', 'sp', 'bp', 'si', 'di', \
                 '8',  '9',  '10', '11', '12', '13', '14', '15'):
-        assembler.symbols["r%s" % reg] = "INTREG_R%s" % reg.upper()
+        assembler.symbols["r%s" % reg] = \
+            regIdx("INTREG_R%s" % reg.upper())
 
     for reg in range(16):
-        assembler.symbols["cr%d" % reg] = "MISCREG_CR%d" % reg
+        assembler.symbols["cr%d" % reg] = regIdx("MISCREG_CR%d" % reg)
 
     for flag in ('CF', 'PF', 'ECF', 'AF', 'EZF', 'ZF', 'SF', 'OF', \
                  'TF', 'IF', 'NT', 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID'):
@@ -164,7 +173,7 @@ let {{
     for reg in ('sysenter_cs', 'sysenter_esp', 'sysenter_eip',
                 'star', 'lstar', 'cstar', 'sf_mask',
                 'kernel_gs_base'):
-        assembler.symbols[reg] = "MISCREG_%s" % reg.upper()
+        assembler.symbols[reg] = regIdx("MISCREG_%s" % reg.upper())
 
     # Code literal which forces a default 64 bit operand size in 64 bit mode.
     assembler.symbols["oszIn64Override"] = '''
@@ -201,7 +210,7 @@ let {{
     assembler.symbols["rom_local_label"] = rom_local_labeler
 
     def stack_index(index):
-        return "(NUM_FLOATREGS + (((%s) + 8) %% 8))" % index
+        return regIdx("NUM_FLOATREGS + (((%s) + 8) %% 8)" % index)
 
     assembler.symbols["st"] = stack_index
 
