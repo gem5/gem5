@@ -126,12 +126,12 @@ def template MicroRegOpDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
@@ -149,12 +149,12 @@ def template MicroRegOpImmDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _src1, uint16_t _imm8, RegIndex _dest,
+                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                RegIndex _src1, uint16_t _imm8, RegIndex _dest,
+                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
@@ -170,7 +170,7 @@ def template MicroRegOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
@@ -183,7 +183,7 @@ def template MicroRegOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
@@ -203,7 +203,7 @@ def template MicroRegOpImmConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            RegIndex _src1, uint16_t _imm8, RegIndex _dest,
+            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
@@ -216,7 +216,7 @@ def template MicroRegOpImmConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _src1, uint16_t _imm8, RegIndex _dest,
+            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
@@ -481,12 +481,14 @@ let {{
         def __init__(self, dest, src1=None, dataSize="env.dataSize"):
             if not src1:
                 src1 = dest
-            super(RdRegOp, self).__init__(dest, src1, "NUM_INTREGS", None, dataSize)
+            super(RdRegOp, self).__init__(dest, src1, \
+                    "InstRegIndex(NUM_INTREGS)", None, dataSize)
 
     class WrRegOp(RegOp):
         abstract = True
         def __init__(self, src1, src2, flags=None, dataSize="env.dataSize"):
-            super(WrRegOp, self).__init__("NUM_INTREGS", src1, src2, flags, dataSize)
+            super(WrRegOp, self).__init__("InstRegIndex(NUM_INTREGS)", \
+                    src1, src2, flags, dataSize)
 
     class Add(FlagRegOp):
         code = 'DestReg = merge(DestReg, psrc1 + op2, dataSize);'
@@ -553,7 +555,8 @@ let {{
         def __init__(self, dest, src1=None, flags=None, dataSize="env.dataSize"):
             if not src1:
                 src1 = dest
-            super(RdRegOp, self).__init__(dest, src1, "NUM_INTREGS", flags, dataSize)
+            super(RdRegOp, self).__init__(dest, src1, \
+                    "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = 'DestReg = merge(SrcReg1, ProdHi, dataSize);'
         flag_code = '''
             if (ProdHi)
@@ -885,7 +888,7 @@ let {{
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Ruflag, self).__init__(dest, \
-                    "NUM_INTREGS", imm, flags, dataSize)
+                    "InstRegIndex(NUM_INTREGS)", imm, flags, dataSize)
 
     class Rflag(RegOp):
         code = '''
@@ -899,7 +902,7 @@ let {{
         def __init__(self, dest, imm, flags=None, \
                 dataSize="env.dataSize"):
             super(Rflag, self).__init__(dest, \
-                    "NUM_INTREGS", imm, flags, dataSize)
+                    "InstRegIndex(NUM_INTREGS)", imm, flags, dataSize)
 
     class Sext(RegOp):
         code = '''
@@ -926,7 +929,7 @@ let {{
     class Rddr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rddr, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+                    src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             CR4 cr4 = CR4Op;
             DR7 dr7 = DR7Op;
@@ -942,14 +945,13 @@ let {{
     class Wrdr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrdr, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+                    src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             CR4 cr4 = CR4Op;
             DR7 dr7 = DR7Op;
             if ((cr4.de == 1 && (dest == 4 || dest == 5)) || dest >= 8) {
                 fault = new InvalidOpcode();
-            } else if ((dest == 6 || dest == 7) &&
-                    bits(psrc1, 63, 32) &&
+            } else if ((dest == 6 || dest == 7) && bits(psrc1, 63, 32) &&
                     machInst.mode.mode == LongMode) {
                 fault = new GeneralProtection(0);
             } else if (dr7.gd) {
@@ -962,7 +964,7 @@ let {{
     class Rdcr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Rdcr, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+                    src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             if (src1 == 1 || (src1 > 4 && src1 < 8) || (src1 > 8)) {
                 fault = new InvalidOpcode();
@@ -974,7 +976,7 @@ let {{
     class Wrcr(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(Wrcr, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+                    src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             if (dest == 1 || (dest > 4 && dest < 8) || (dest > 8)) {
                 fault = new InvalidOpcode();
@@ -1028,7 +1030,7 @@ let {{
         abstract = True
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
             super(SegOp, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+                    src1, "InstRegIndex(NUM_INTREGS)", flags, dataSize)
 
     class Wrbase(SegOp):
         code = '''
@@ -1072,16 +1074,16 @@ let {{
 
     class Rdval(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
-            super(Rdval, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+            super(Rdval, self).__init__(dest, src1, \
+                    "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             DestReg = MiscRegSrc1;
         '''
 
     class Wrval(RegOp):
         def __init__(self, dest, src1, flags=None, dataSize="env.dataSize"):
-            super(Wrval, self).__init__(dest, \
-                    src1, "NUM_INTREGS", flags, dataSize)
+            super(Wrval, self).__init__(dest, src1, \
+                    "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = '''
             MiscRegDest = SrcReg1;
         '''

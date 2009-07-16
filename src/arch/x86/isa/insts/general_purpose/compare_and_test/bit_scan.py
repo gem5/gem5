@@ -84,7 +84,7 @@
 microcode = '''
 def macroop BSR_R_R {
     # Determine if the input was zero, and also move it to a temp reg.
-    movi t1, t1, t0, dataSize=8
+    mov t1, t1, t0, dataSize=8
     and t1, regm, regm, flags=(ZF,)
     br label("end"), flags=(CZF,)
 
@@ -132,7 +132,7 @@ end:
 
 def macroop BSR_R_M {
 
-    movi t1, t1, t0, dataSize=8
+    mov t1, t1, t0, dataSize=8
     ld t1, seg, sib, disp
 
     # Determine if the input was zero, and also move it to a temp reg.
@@ -184,7 +184,7 @@ end:
 def macroop BSR_R_P {
 
     rdip t7
-    movi t1, t1, t0, dataSize=8
+    mov t1, t1, t0, dataSize=8
     ld t1, seg, riprel, disp
 
     # Determine if the input was zero, and also move it to a temp reg.

@@ -88,11 +88,11 @@ def template MicroLimmOpDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _dest, uint64_t _imm, uint8_t _dataSize);
+                InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                RegIndex _dest, uint64_t _imm, uint8_t _dataSize);
+                InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize);
 
         %(BasicExecDeclare)s
     };
@@ -122,10 +122,10 @@ def template MicroLimmOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            RegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
+            InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false, %(op_class)s),
-                dest(_dest), imm(_imm), dataSize(_dataSize)
+                dest(_dest.idx), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
     }
@@ -133,10 +133,10 @@ def template MicroLimmOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
+            InstRegIndex _dest, uint64_t _imm, uint8_t _dataSize) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast, %(op_class)s),
-                dest(_dest), imm(_imm), dataSize(_dataSize)
+                dest(_dest.idx), imm(_imm), dataSize(_dataSize)
     {
         buildMe();
     }

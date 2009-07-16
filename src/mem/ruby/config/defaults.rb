@@ -146,7 +146,7 @@ class RubySystem
   # Random seed used by the simulation. If set to "rand", the seed
   # will be set to the current wall clock at libruby
   # initialization. Otherwise, set this to an integer.
-  default_param :random_seed, Object, "rand"
+  default_param :random_seed, Object, 1234 #"rand"
 
   # When set to true, the simulation will insert random delays on
   # message enqueue times.  Note that even if this is set to false,

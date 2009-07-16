@@ -99,12 +99,12 @@ def template MicroFpOpDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm);
 
         %(BasicExecDeclare)s
@@ -120,7 +120,7 @@ def template MicroFpOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, int8_t _spm) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
@@ -133,7 +133,7 @@ def template MicroFpOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            RegIndex _src1, RegIndex _src2, RegIndex _dest,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
             uint8_t _dataSize, int8_t _spm) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
@@ -256,9 +256,9 @@ let {{
                 "spm" : self.spm}
 
     class Movfp(FpOp):
-        def __init__(self, dest, src1, flags=0, spm=0, \
+        def __init__(self, dest, src1, spm=0, \
                 SetStatus=False, dataSize="env.dataSize"):
-            super(Movfp, self).__init__(dest, src1, flags, \
+            super(Movfp, self).__init__(dest, src1, "InstRegIndex(0)", \
                     spm, SetStatus, dataSize)
         code = 'FpDestReg.uqw = FpSrcReg1.uqw;'
         else_code = 'FpDestReg.uqw = FpDestReg.uqw;'
@@ -274,7 +274,8 @@ let {{
     class ConvOp(FpOp):
         abstract = True
         def __init__(self, dest, src1):
-            super(ConvOp, self).__init__(dest, src1, "(int)FLOATREG_MICROFP0")
+            super(ConvOp, self).__init__(dest, src1, \
+                    "InstRegIndex(FLOATREG_MICROFP0)")
 
     # These probably shouldn't look at the ExtMachInst directly to figure
     # out what size to use and should instead delegate that to the macroop's
@@ -318,7 +319,7 @@ let {{
     class Compfp(FpOp):
         def __init__(self, src1, src2, spm=0, setStatus=False, \
                 dataSize="env.dataSize"):
-            super(Compfp, self).__init__("(int)FLOATREG_MICROFP0", \
+            super(Compfp, self).__init__("InstRegIndex(FLOATREG_MICROFP0)", \
                     src1, src2, spm, setStatus, dataSize)
         # This class sets the condition codes in rflags according to the
         # rules for comparing floating point.

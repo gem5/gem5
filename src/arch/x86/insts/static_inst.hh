@@ -64,6 +64,18 @@
 namespace X86ISA
 {
     /**
+     * Class for register indices passed to instruction constructors. Using a
+     * wrapper struct for these lets take advantage of the compiler's type
+     * checking.
+     */
+    struct InstRegIndex
+    {
+        RegIndex idx;
+        explicit InstRegIndex(RegIndex _idx) : idx(_idx)
+        {}
+    };
+
+    /**
      * Base class for all X86 static instructions.
      */
 

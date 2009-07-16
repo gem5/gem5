@@ -47,22 +47,22 @@ class ArmLinux : public Linux
 
     //@{
     /// open(2) flag values.
-    static const int TGT_O_RDONLY	= 0x00000000;	//!< O_RDONLY
-    static const int TGT_O_WRONLY	= 0x00000001;	//!< O_WRONLY
-    static const int TGT_O_RDWR	        = 0x00000002;	//!< O_RDWR
-    static const int TGT_O_CREAT	= 0x00000100;	//!< O_CREAT
-    static const int TGT_O_EXCL	        = 0x00000200;	//!< O_EXCL
-    static const int TGT_O_NOCTTY	= 0x00000400;	//!< O_NOCTTY
-    static const int TGT_O_TRUNC	= 0x00001000;	//!< O_TRUNC
-    static const int TGT_O_APPEND	= 0x00002000;	//!< O_APPEND
-    static const int TGT_O_NONBLOCK     = 0x00004000;	//!< O_NONBLOCK
-    static const int TGT_O_SYNC	        = 0x00010000;	//!< O_SYNC
-    static const int TGT_FASYNC		= 0x00020000;	//!< FASYNC
-    static const int TGT_O_DIRECT	= 0x00040000;	//!< O_DIRECT
-    static const int TGT_O_LARGEFILE	= 0x00100000;	//!< O_LARGEFILE
-    static const int TGT_O_DIRECTORY	= 0x00200000;	//!< O_DIRECTORY
-    static const int TGT_O_NOFOLLOW	= 0x00400000;	//!< O_NOFOLLOW
-    static const int TGT_O_NOATIME	= 0x01000000;	//!< O_NOATIME
+    static const int TGT_O_RDONLY    = 00000000; //!< O_RDONLY
+    static const int TGT_O_WRONLY    = 00000001; //!< O_WRONLY
+    static const int TGT_O_RDWR      = 00000002; //!< O_RDWR
+    static const int TGT_O_CREAT     = 00000100; //!< O_CREAT
+    static const int TGT_O_EXCL      = 00000200; //!< O_EXCL
+    static const int TGT_O_NOCTTY    = 00000400; //!< O_NOCTTY
+    static const int TGT_O_TRUNC     = 00001000; //!< O_TRUNC
+    static const int TGT_O_APPEND    = 00002000; //!< O_APPEND
+    static const int TGT_O_NONBLOCK  = 00004000; //!< O_NONBLOCK
+    static const int TGT_O_SYNC      = 00010000; //!< O_SYNC
+    static const int TGT_FASYNC      = 00020000; //!< FASYNC
+    static const int TGT_O_DIRECTORY = 00040000; //!< O_DIRECTORY
+    static const int TGT_O_NOFOLLOW  = 00100000; //!< O_NOFOLLOW
+    static const int TGT_O_DIRECT    = 00200000; //!< O_DIRECT
+    static const int TGT_O_LARGEFILE = 00400000; //!< O_LARGEFILE
+    static const int TGT_O_NOATIME   = 01000000; //!< O_NOATIME
     //@}
 
     /// For mmap().
@@ -70,13 +70,13 @@ class ArmLinux : public Linux
 
     //@{
     /// For getsysinfo().
-    static const unsigned GSI_PLATFORM_NAME = 103;  //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;	//!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;	//!< get proc_type
-    static const unsigned GSI_MAX_CPU = 30;         //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55;	//!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;	        //!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;	        //!< clock freq in Hz
+    static const unsigned GSI_PLATFORM_NAME = 103; //!< platform name as string
+    static const unsigned GSI_CPU_INFO = 59;       //!< CPU information
+    static const unsigned GSI_PROC_TYPE = 60;      //!< get proc_type
+    static const unsigned GSI_MAX_CPU = 30;        //!< max # cpu's on this machine
+    static const unsigned GSI_CPUS_IN_BOX = 55;    //!< number of CPUs in system
+    static const unsigned GSI_PHYSMEM = 19;        //!< Physical memory in KB
+    static const unsigned GSI_CLK_TCK = 42;        //!< clock freq in Hz
     //@}
 
     //@{
