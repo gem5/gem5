@@ -153,10 +153,7 @@ namespace X86ISA
             reg &= ~(1 << 6);
 
             if(fold)
-            {
                 suffix = "h";
-                reg -= 4;
-            }
             else if(reg < 8 && size == 1)
                 suffix = "l";
 

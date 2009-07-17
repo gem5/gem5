@@ -31,6 +31,7 @@
 #ifndef __ARCH_X86_ISA_HH__
 #define __ARCH_X86_ISA_HH__
 
+#include "arch/x86/floatregs.hh"
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/registers.hh"
 #include "base/types.hh"
@@ -65,8 +66,21 @@ namespace X86ISA
         void setMiscRegNoEffect(int miscReg, MiscReg val);
         void setMiscReg(int miscReg, MiscReg val, ThreadContext *tc);
 
-        int flattenIntIndex(int reg);
-        int flattenFloatIndex(int reg);
+        int
+        flattenIntIndex(int reg)
+        {
+            return reg & ~(1 << 6);
+        }
+
+        int
+        flattenFloatIndex(int reg)
+        {
+            if (reg >= NUM_FLOATREGS) {
+                reg = FLOATREG_STACK(reg - NUM_FLOATREGS,
+                                     regVal[MISCREG_X87_TOP]);
+            }
+            return reg;
+        }
 
         void serialize(EventManager *em, std::ostream &os);
         void unserialize(EventManager *em, Checkpoint *cp,
