@@ -94,75 +94,94 @@ def operand_types {{
     'df' : ('float', 64),
 }};
 
+let {{
+    def foldInt(idx, foldBit, id):
+        return ('IntReg', 'uqw', 'INTREG_FOLDED(%s, %s)' % (idx, foldBit),
+                'IsInteger', id)
+    def intReg(idx, id):
+        return ('IntReg', 'uqw', idx, 'IsInteger', id)
+    def impIntReg(idx, id):
+        return ('IntReg', 'uqw', 'INTREG_IMPLICIT(%s)' % idx, 'IsInteger', id)
+    def floatReg(idx, id):
+        return ('FloatReg', 'df', idx, 'IsFloating', id)
+    def controlReg(idx, id, ctype = 'uqw'):
+        return ('ControlReg', ctype, idx,
+                (None, None, ['IsSerializeAfter',
+                              'IsSerializing',
+                              'IsNonSpeculative']),
+                id)
+}};
+
 def operands {{
-        'SrcReg1':       ('IntReg', 'uqw', 'INTREG_FOLDED(src1, foldOBit)', 'IsInteger', 1),
-        'SSrcReg1':      ('IntReg', 'uqw', 'src1', 'IsInteger', 1),
-        'SrcReg2':       ('IntReg', 'uqw', 'INTREG_FOLDED(src2, foldOBit)', 'IsInteger', 2),
-        'SSrcReg2':      ('IntReg', 'uqw', 'src2', 'IsInteger', 1),
-        'Index':         ('IntReg', 'uqw', 'INTREG_FOLDED(index, foldABit)', 'IsInteger', 3),
-        'Base':          ('IntReg', 'uqw', 'INTREG_FOLDED(base, foldABit)', 'IsInteger', 4),
-        'DestReg':       ('IntReg', 'uqw', 'INTREG_FOLDED(dest, foldOBit)', 'IsInteger', 5),
-        'SDestReg':      ('IntReg', 'uqw', 'dest', 'IsInteger', 5),
-        'Data':          ('IntReg', 'uqw', 'INTREG_FOLDED(data, foldOBit)', 'IsInteger', 6),
-        'ProdLow':       ('IntReg', 'uqw', 'INTREG_IMPLICIT(0)', 'IsInteger', 7),
-        'ProdHi':        ('IntReg', 'uqw', 'INTREG_IMPLICIT(1)', 'IsInteger', 8),
-        'Quotient':      ('IntReg', 'uqw', 'INTREG_IMPLICIT(2)', 'IsInteger', 9),
-        'Remainder':     ('IntReg', 'uqw', 'INTREG_IMPLICIT(3)', 'IsInteger', 10),
-        'Divisor':       ('IntReg', 'uqw', 'INTREG_IMPLICIT(4)', 'IsInteger', 11),
-        'Rax':           ('IntReg', 'uqw', '(INTREG_RAX)', 'IsInteger', 12),
-        'Rbx':           ('IntReg', 'uqw', '(INTREG_RBX)', 'IsInteger', 13),
-        'Rcx':           ('IntReg', 'uqw', '(INTREG_RCX)', 'IsInteger', 14),
-        'Rdx':           ('IntReg', 'uqw', '(INTREG_RDX)', 'IsInteger', 15),
-        'Rsp':           ('IntReg', 'uqw', '(INTREG_RSP)', 'IsInteger', 16),
-        'Rbp':           ('IntReg', 'uqw', '(INTREG_RBP)', 'IsInteger', 17),
-        'Rsi':           ('IntReg', 'uqw', '(INTREG_RSI)', 'IsInteger', 18),
-        'Rdi':           ('IntReg', 'uqw', '(INTREG_RDI)', 'IsInteger', 19),
-        'FpSrcReg1':     ('FloatReg', 'df', 'src1', 'IsFloating', 20),
-        'FpSrcReg2':     ('FloatReg', 'df', 'src2', 'IsFloating', 21),
-        'FpDestReg':     ('FloatReg', 'df', 'dest', 'IsFloating', 22),
-        'FpData':        ('FloatReg', 'df', 'data', 'IsFloating', 23),
+        'SrcReg1':       foldInt('src1', 'foldOBit', 1),
+        'SSrcReg1':      intReg('src1', 1),
+        'SrcReg2':       foldInt('src2', 'foldOBit', 2),
+        'SSrcReg2':      intReg('src2', 1),
+        'Index':         foldInt('index', 'foldABit', 3),
+        'Base':          foldInt('base', 'foldABit', 4),
+        'DestReg':       foldInt('dest', 'foldOBit', 5),
+        'SDestReg':      intReg('dest', 5),
+        'Data':          foldInt('data', 'foldOBit', 6),
+        'ProdLow':       impIntReg(0, 7),
+        'ProdHi':        impIntReg(1, 8),
+        'Quotient':      impIntReg(2, 9),
+        'Remainder':     impIntReg(3, 10),
+        'Divisor':       impIntReg(4, 11),
+        'Rax':           intReg('(INTREG_RAX)', 12),
+        'Rbx':           intReg('(INTREG_RBX)', 13),
+        'Rcx':           intReg('(INTREG_RCX)', 14),
+        'Rdx':           intReg('(INTREG_RDX)', 15),
+        'Rsp':           intReg('(INTREG_RSP)', 16),
+        'Rbp':           intReg('(INTREG_RBP)', 17),
+        'Rsi':           intReg('(INTREG_RSI)', 18),
+        'Rdi':           intReg('(INTREG_RDI)', 19),
+        'FpSrcReg1':     floatReg('src1', 20),
+        'FpSrcReg2':     floatReg('src2', 21),
+        'FpDestReg':     floatReg('dest', 22),
+        'FpData':        floatReg('data', 23),
         'RIP':           ('NPC', 'uqw', None, (None, None, 'IsControl'), 50),
         'uIP':           ('UPC', 'uqw', None, (None, None, 'IsControl'), 51),
         'nuIP':          ('NUPC', 'uqw', None, (None, None, 'IsControl'), 52),
         # This holds the condition code portion of the flag register. The
         # nccFlagBits version holds the rest.
-        'ccFlagBits':    ('IntReg', 'uqw', 'INTREG_PSEUDO(0)', None, 60),
+        'ccFlagBits':    intReg('INTREG_PSEUDO(0)', 60),
         # These register should needs to be more protected so that later
         # instructions don't map their indexes with an old value.
-        'nccFlagBits':   ('ControlReg', 'uqw', 'MISCREG_RFLAGS', None, 61),
-        'TOP':           ('ControlReg', 'ub', 'MISCREG_X87_TOP', None, 62),
+        'nccFlagBits':   controlReg('MISCREG_RFLAGS', 61),
+        'TOP':           controlReg('MISCREG_X87_TOP', 62, ctype='ub'),
         # The segment base as used by memory instructions.
-        'SegBase':       ('ControlReg', 'uqw', 'MISCREG_SEG_EFF_BASE(segment)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 70),
+        'SegBase':       controlReg('MISCREG_SEG_EFF_BASE(segment)', 70),
 
         # Operands to get and set registers indexed by the operands of the
         # original instruction.
-        'ControlDest':   ('ControlReg', 'uqw', 'MISCREG_CR(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 100),
-        'ControlSrc1':   ('ControlReg', 'uqw', 'MISCREG_CR(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 101),
-        'DebugDest':   ('ControlReg', 'uqw', 'MISCREG_DR(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 102),
-        'DebugSrc1':   ('ControlReg', 'uqw', 'MISCREG_DR(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 103),
-        'SegBaseDest':  ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 104),
-        'SegBaseSrc1':  ('ControlReg', 'uqw', 'MISCREG_SEG_BASE(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 105),
-        'SegLimitDest': ('ControlReg', 'uqw', 'MISCREG_SEG_LIMIT(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 106),
-        'SegLimitSrc1': ('ControlReg', 'uqw', 'MISCREG_SEG_LIMIT(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 107),
-        'SegSelDest': ('ControlReg', 'uqw', 'MISCREG_SEG_SEL(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 108),
-        'SegSelSrc1': ('ControlReg', 'uqw', 'MISCREG_SEG_SEL(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 109),
-        'SegAttrDest': ('ControlReg', 'uqw', 'MISCREG_SEG_ATTR(dest)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 110),
-        'SegAttrSrc1': ('ControlReg', 'uqw', 'MISCREG_SEG_ATTR(src1)', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 111),
+        'ControlDest':   controlReg('MISCREG_CR(dest)', 100),
+        'ControlSrc1':   controlReg('MISCREG_CR(src1)', 101),
+        'DebugDest':     controlReg('MISCREG_DR(dest)', 102),
+        'DebugSrc1':     controlReg('MISCREG_DR(src1)', 103),
+        'SegBaseDest':   controlReg('MISCREG_SEG_BASE(dest)', 104),
+        'SegBaseSrc1':   controlReg('MISCREG_SEG_BASE(src1)', 105),
+        'SegLimitDest':  controlReg('MISCREG_SEG_LIMIT(dest)', 106),
+        'SegLimitSrc1':  controlReg('MISCREG_SEG_LIMIT(src1)', 107),
+        'SegSelDest':    controlReg('MISCREG_SEG_SEL(dest)', 108),
+        'SegSelSrc1':    controlReg('MISCREG_SEG_SEL(src1)', 109),
+        'SegAttrDest':   controlReg('MISCREG_SEG_ATTR(dest)', 110),
+        'SegAttrSrc1':   controlReg('MISCREG_SEG_ATTR(src1)', 111),
 
         # Operands to access specific control registers directly.
-        'EferOp':        ('ControlReg', 'uqw', 'MISCREG_EFER', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 200),
-        'CR4Op':         ('ControlReg', 'uqw', 'MISCREG_CR4', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 201),
-        'DR7Op':         ('ControlReg', 'uqw', 'MISCREG_DR7', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 202),
-        'LDTRBase':      ('ControlReg', 'uqw', 'MISCREG_TSL_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 203),
-        'LDTRLimit':     ('ControlReg', 'uqw', 'MISCREG_TSL_LIMIT', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 204),
-        'LDTRSel':       ('ControlReg', 'uqw', 'MISCREG_TSL', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 205),
-        'GDTRBase':      ('ControlReg', 'uqw', 'MISCREG_TSG_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 206),
-        'GDTRLimit':     ('ControlReg', 'uqw', 'MISCREG_TSG_LIMIT', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 207),
-        'CSBase':        ('ControlReg', 'udw', 'MISCREG_CS_EFF_BASE', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 208),
-        'CSAttr':        ('ControlReg', 'udw', 'MISCREG_CS_ATTR', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 209),
-        'MiscRegDest':   ('ControlReg', 'uqw', 'dest', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 210),
-        'MiscRegSrc1':   ('ControlReg', 'uqw', 'src1', (None, None, ['IsSerializeAfter','IsSerializing','IsNonSpeculative']), 211),
-        'TscOp':         ('ControlReg', 'uqw', 'MISCREG_TSC', (None, None, ['IsSerializeAfter', 'IsSerializing', 'IsNonSpeculative']), 212),
-        'M5Reg':         ('ControlReg', 'uqw', 'MISCREG_M5_REG', (None, None, None), 213),
-        'Mem':           ('Mem', 'uqw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 300)
+        'EferOp':        controlReg('MISCREG_EFER', 200),
+        'CR4Op':         controlReg('MISCREG_CR4', 201),
+        'DR7Op':         controlReg('MISCREG_DR7', 202),
+        'LDTRBase':      controlReg('MISCREG_TSL_BASE', 203),
+        'LDTRLimit':     controlReg('MISCREG_TSL_LIMIT', 204),
+        'LDTRSel':       controlReg('MISCREG_TSL', 205),
+        'GDTRBase':      controlReg('MISCREG_TSG_BASE', 206),
+        'GDTRLimit':     controlReg('MISCREG_TSG_LIMIT', 207),
+        'CSBase':        controlReg('MISCREG_CS_EFF_BASE', 208),
+        'CSAttr':        controlReg('MISCREG_CS_ATTR', 209),
+        'MiscRegDest':   controlReg('dest', 210),
+        'MiscRegSrc1':   controlReg('src1', 211),
+        'TscOp':         controlReg('MISCREG_TSC', 212),
+        'M5Reg':         controlReg('MISCREG_M5_REG', 213),
+        'Mem':           ('Mem', 'uqw', None, \
+                          ('IsMemRef', 'IsLoad', 'IsStore'), 300)
 }};
