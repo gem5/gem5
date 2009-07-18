@@ -41,6 +41,7 @@ private:
   int m_version;
   AbstractController* m_controller;
   bool m_is_busy;
+  uint64_t m_data_block_mask;
   DMARequest active_request;
   int num_active_requests;
   MessageBuffer* m_mandatory_q_ptr;

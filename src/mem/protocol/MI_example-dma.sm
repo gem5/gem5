@@ -39,9 +39,9 @@ machine(DMA, "DMA Controller") {
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
         if (in_msg.Type == DMARequestType:READ ) {
-          trigger(Event:ReadRequest, in_msg.PhysicalAddress);
+          trigger(Event:ReadRequest, in_msg.LineAddress);
         } else if (in_msg.Type == DMARequestType:WRITE) {
-          trigger(Event:WriteRequest, in_msg.PhysicalAddress);
+          trigger(Event:WriteRequest, in_msg.LineAddress);
         } else {
           error("Invalid request type");
         }
@@ -53,9 +53,9 @@ machine(DMA, "DMA Controller") {
     if (dmaResponseQueue_in.isReady()) {
       peek( dmaResponseQueue_in, DMAResponseMsg) {
         if (in_msg.Type == DMAResponseType:ACK) {
-          trigger(Event:Ack, in_msg.PhysicalAddress);
+          trigger(Event:Ack, in_msg.LineAddress);
         } else if (in_msg.Type == DMAResponseType:DATA) {
-          trigger(Event:Data, in_msg.PhysicalAddress);
+          trigger(Event:Data, in_msg.LineAddress);
         } else {
           error("Invalid response type");
         }
@@ -67,6 +67,7 @@ machine(DMA, "DMA Controller") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(reqToDirectory_out, DMARequestMsg) {
         out_msg.PhysicalAddress := address;
+        out_msg.LineAddress := in_msg.LineAddress; 
         out_msg.Type := DMARequestType:READ;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
@@ -80,6 +81,7 @@ machine(DMA, "DMA Controller") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
         enqueue(reqToDirectory_out, DMARequestMsg) {
           out_msg.PhysicalAddress := address;
+          out_msg.LineAddress := in_msg.LineAddress; 
           out_msg.Type := DMARequestType:WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;

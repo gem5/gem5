@@ -29,6 +29,7 @@ void DMASequencer::init(const vector<string> & argv)
 
   m_mandatory_q_ptr = m_controller->getMandatoryQueue();
   m_is_busy = false;
+  m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
 }
 
 int64_t DMASequencer::makeRequest(const RubyRequest & request)
@@ -50,7 +51,7 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
     assert(0);
   }
 
-  assert(!m_is_busy);
+  assert(!m_is_busy);  // only support one outstanding DMA request
   m_is_busy = true;
 
   active_request.start_paddr = paddr;
@@ -63,14 +64,15 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
 
   DMARequestMsg msg;
   msg.getPhysicalAddress() = Address(paddr);
+  msg.getLineAddress() = line_address(msg.getPhysicalAddress());
   msg.getType() = write ? DMARequestType_WRITE : DMARequestType_READ;
-  msg.getOffset() = paddr & RubyConfig::dataBlockMask();
-  msg.getLen() = (msg.getOffset() + len) < RubySystem::getBlockSizeBytes() ?
-    (msg.getOffset() + len) :
+  msg.getOffset() = paddr & m_data_block_mask;
+  msg.getLen() = (msg.getOffset() + len) <= RubySystem::getBlockSizeBytes() ?
+    len : 
     RubySystem::getBlockSizeBytes() - msg.getOffset();
   if (write) {
     msg.getType() = DMARequestType_WRITE;
-    msg.getDataBlk().setData(data, 0, msg.getLen());
+    msg.getDataBlk().setData(data, msg.getOffset(), msg.getLen());
   } else {
     msg.getType() = DMARequestType_READ;
   }
@@ -91,15 +93,20 @@ void DMASequencer::issueNext()
   }
 
   DMARequestMsg msg;
-  msg.getPhysicalAddress() = Address(active_request.start_paddr + active_request.bytes_completed);
-  assert((msg.getPhysicalAddress().getAddress() & RubyConfig::dataBlockMask()) == 0);
+  msg.getPhysicalAddress() = Address(active_request.start_paddr + 
+				     active_request.bytes_completed);
+  assert((msg.getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
+  msg.getLineAddress() = line_address(msg.getPhysicalAddress());
   msg.getOffset() = 0;
-  msg.getType() = active_request.write ? DMARequestType_WRITE : DMARequestType_READ;
-  msg.getLen() = active_request.len - active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
-    active_request.len - active_request.bytes_completed :
-    RubySystem::getBlockSizeBytes();
+  msg.getType() = (active_request.write ? DMARequestType_WRITE : 
+		   DMARequestType_READ);
+  msg.getLen() = (active_request.len - 
+		  active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
+		  active_request.len - active_request.bytes_completed :
+		  RubySystem::getBlockSizeBytes());
   if (active_request.write) {
-    msg.getDataBlk().setData(&active_request.data[active_request.bytes_completed], 0, msg.getLen());
+    msg.getDataBlk().setData(&active_request.data[active_request.bytes_completed], 
+			     0, msg.getLen());
     msg.getType() = DMARequestType_WRITE;
   } else {
     msg.getType() = DMARequestType_READ;
@@ -114,8 +121,10 @@ void DMASequencer::dataCallback(const DataBlock & dblk)
   int len = active_request.bytes_issued - active_request.bytes_completed;
   int offset = 0;
   if (active_request.bytes_completed == 0)
-    offset = active_request.start_paddr & RubyConfig::dataBlockMask();
-  memcpy(&active_request.data[active_request.bytes_completed], dblk.getData(offset, len), len);
+    offset = active_request.start_paddr & m_data_block_mask;
+  assert( active_request.write == false );
+  memcpy(&active_request.data[active_request.bytes_completed], 
+	 dblk.getData(offset, len), len);
   issueNext();
 }
 
