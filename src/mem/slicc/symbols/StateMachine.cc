@@ -311,7 +311,7 @@ void StateMachine::printControllerH(ostream& out, string component)
   out << "  NodeID m_version;" << endl;
   out << "  Network* m_net_ptr;" << endl;
   out << "  MachineID m_machineID;" << endl;
-  out << "  static " << component << "_Profiler s_profiler;" << endl;
+  out << "  " << component << "_Profiler s_profiler;" << endl;
   out << "  static int m_num_controllers;" << endl;
 
   // internal function protypes
@@ -388,10 +388,6 @@ void StateMachine::printControllerC(ostream& out, string component)
   // for adding information to the protocol debug trace
   out << "stringstream " << component << "_" << "transitionComment;" << endl;
   out << "#define APPEND_TRANSITION_COMMENT(str) (" << component << "_" << "transitionComment << str)" << endl;
-
-  out << "/** \\brief static profiler defn */" << endl;
-  out << component << "_Profiler " << component << "_Controller::s_profiler;" << endl;
-  out << endl;
 
   out << "/** \\brief constructor */" << endl;
   out << component << "_Controller::" << component
@@ -471,6 +467,7 @@ void StateMachine::printControllerC(ostream& out, string component)
 
   // initialize objects
   out << "  // Objects" << endl;
+  out << "  s_profiler.setVersion(m_version);" << endl;
   for(int i=0; i < numObjects(); i++) {
     const Var* var = m_objs[i];
     if (!var->existPair("network")) {
@@ -1006,6 +1003,7 @@ void StateMachine::printProfilerH(ostream& out, string component)
   out << "class " << component << "_Profiler {" << endl;
   out << "public:" << endl;
   out << "  " << component << "_Profiler();" << endl;
+  out << "  void setVersion(int version);" << endl;
   out << "  void countTransition(" << component << "_State state, " << component << "_Event event);" << endl;
   out << "  void possibleTransition(" << component << "_State state, " << component << "_Event event);" << endl;
   out << "  void dumpStats(ostream& out) const;" << endl;
@@ -1014,6 +1012,7 @@ void StateMachine::printProfilerH(ostream& out, string component)
   out << "  int m_counters[" << component << "_State_NUM][" << component << "_Event_NUM];" << endl;
   out << "  int m_event_counters[" << component << "_Event_NUM];" << endl;
   out << "  bool m_possible[" << component << "_State_NUM][" << component << "_Event_NUM];" << endl;
+  out << "  int m_version;" << endl;
   out << "};" << endl;
   out << "#endif // " << component << "_PROFILER_H" << endl;
 }
@@ -1038,6 +1037,12 @@ void StateMachine::printProfilerC(ostream& out, string component)
   out << "  for (int event = 0; event < " << component << "_Event_NUM; event++) {" << endl;
   out << "    m_event_counters[event] = 0;" << endl;
   out << "  }" << endl;
+  out << "}" << endl;
+
+  // setVersion
+  out << "void " << component << "_Profiler::setVersion(int version)" << endl;
+  out << "{" << endl;
+  out << "  m_version = version;" << endl;
   out << "}" << endl;
 
   // Clearstats
@@ -1070,7 +1075,7 @@ void StateMachine::printProfilerC(ostream& out, string component)
   // dumpStats
   out << "void " << component << "_Profiler::dumpStats(ostream& out) const" << endl;
   out << "{" << endl;
-  out << "  out << \" --- " << component << " ---\" << endl;" << endl;
+  out << "  out << \" --- " << component << " \" << m_version << \" ---\" << endl;" << endl;
   out << "  out << \" - Event Counts -\" << endl;" << endl;
   out << "  for (int event = 0; event < " << component << "_Event_NUM; event++) {" << endl;
   out << "    int count = m_event_counters[event];" << endl;
