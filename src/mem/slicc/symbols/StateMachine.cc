@@ -282,12 +282,15 @@ void StateMachine::printControllerH(ostream& out, string component)
   out << "  void printStats(ostream& out) const { s_profiler.dumpStats(out); }" << endl;
   out << "  void clearStats() { s_profiler.clearStats(); }" << endl;
   out << "private:" << endl;
-
 //added by SS
 //  found_to_mem = 0;
   std::vector<std::string*>::const_iterator it;
   for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++){
         out << "  int m_" << (*it)->c_str() << ";" << endl;
+  }
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    out << "  bool servicing_atomic;" << endl;
+    out << "  Address locked_read_request;" << endl;
   }
   out << "  int m_number_of_TBEs;" << endl;
 
@@ -395,7 +398,11 @@ void StateMachine::printControllerC(ostream& out, string component)
       << "_Controller(const string & name)" << endl;
   out << " : m_name(name)" << endl;
   out << "{ " << endl;
-  out << "   m_num_controllers++; " << endl;
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    out << "  servicing_atomic = false;" << endl;
+    out << "  locked_read_request = Address(-1);" << endl;
+  }
+  out << "  m_num_controllers++; " << endl;
   for(int i=0; i < numObjects(); i++) {
     const Var* var = m_objs[i];
     if ( var->cIdent().find("mandatoryQueue") != string::npos)
@@ -735,6 +742,23 @@ void StateMachine::printControllerC(ostream& out, string component)
         }
       }
 
+      // add here:
+      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+        if (c_code_string.find("writeCallback") != string::npos) {
+          string::size_type pos = c_code_string.find("(((*m_L1Cache_sequencer_ptr)).writeCallback");
+          assert(pos != string::npos);
+          string atomics_string = "\n  if (servicing_atomic) { \n \
+   servicing_atomic = false; \n \
+   locked_read_request = Address(-1); \n \
+ } \n \
+ else if (!servicing_atomic) { \n \
+   if (addr == locked_read_request) { \n \
+     servicing_atomic = true; \n \
+   } \n \
+ } \n  ";
+          c_code_string.insert(pos, atomics_string);
+        }
+      }
       out << c_code_string;
 
       out << "}" << endl;
@@ -772,14 +796,100 @@ void StateMachine::printCWakeup(ostream& out, string component)
   out << "    }" << endl;
 
   // InPorts
+  //
+  // Find the position of the mandatory queue in the vector so that we can print it out first
+  int j = -1;
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    for(int i=0; i < m_in_ports.size(); i++) {
+        const Var* port = m_in_ports[i];
+        assert(port->existPair("c_code_in_port"));
+        if (port->toString().find("mandatoryQueue_in") != string::npos) {
+          assert (j == -1);
+          j = i;
+        }
+        else {
+          cout << port->toString() << endl << flush;
+        }
+    }
+    
+    assert(j != -1);
+
+    // print out the mandatory queue here
+    const Var* port = m_in_ports[j];
+    assert(port->existPair("c_code_in_port"));
+    out << "    // " 
+        << component << "InPort " << port->toString() 
+        << endl;
+    string output = port->lookupPair("c_code_in_port");
+    string::size_type pos = output.find("TransitionResult result = doTransition((L1Cache_mandatory_request_type_to_event(((*in_msg_ptr)).m_Type)), L1Cache_getState(addr), addr);");
+    assert(pos != string::npos);
+    string atomics_string = "\n \
+             bool postpone = false; \n \
+             if ((((*in_msg_ptr)).m_Type) == CacheRequestType_ATOMIC) { \n \
+               if (!servicing_atomic) { \n \
+                  if (locked_read_request == Address(-1)) { \n \
+                    locked_read_request = addr;  \n \
+                  } \n \
+                  else if (addr == locked_read_request) { \n \
+                    assert (servicing_atomic); \n \
+                    //servicing_atomic = m_version; \n \
+                  } \n \
+                  else { \n \ 
+                    postpone = true; \n \
+                    g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+                  } \n \
+               } \n \
+               else if (addr != locked_read_request) { \n \
+                 postpone = true; \n \
+                 g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+               } \n \
+             } \n \
+           if (!postpone) { \n \
+               ";
+
+
+
+    output.insert(pos, atomics_string);
+    string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
+    string::size_type next_pos = output.find(foo, pos);
+    next_pos = next_pos + foo.length();
+
+    assert(next_pos != string::npos);
+    string complete = "              }\n";
+    output.insert(next_pos, complete);
+    //out << port->lookupPair("c_code_in_port");
+    out << output;
+    out << endl;
+  }
   for(int i=0; i < m_in_ports.size(); i++) {
     const Var* port = m_in_ports[i];
-    assert(port->existPair("c_code_in_port"));
-    out << "    // "
-        << component << "InPort " << port->toString()
-        << endl;
-    out << port->lookupPair("c_code_in_port");
-    out << endl;
+    // don't print out mandatory queue twice
+    if (i != j) {
+      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+        if (port->toString().find("forwardRequestNetwork_in") != string::npos) {
+          out << "    bool postpone = false;" << endl;
+          out << "    if ((((*m_L1Cache_forwardToCache_ptr)).isReady())) {" << endl;
+          out << "      const RequestMsg* in_msg_ptr;" << endl;
+          out << "      in_msg_ptr = dynamic_cast<const RequestMsg*>(((*m_L1Cache_forwardToCache_ptr)).peek());" << endl;
+          out << "      if ((servicing_atomic && locked_read_request == ((*in_msg_ptr)).m_Address)) {" << endl;
+          out << "        postpone = true;" << endl;
+          out << "      }" << endl;
+          out << "    }" << endl;
+          out << "    if (!postpone) {" << endl;
+        }
+      }
+      assert(port->existPair("c_code_in_port"));
+      out << "    // " 
+          << component << "InPort " << port->toString() 
+          << endl;
+      out << port->lookupPair("c_code_in_port");
+      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+        if (port->toString().find("forwardRequestNetwork_in") != string::npos) {
+          out << "}" << endl;
+        }
+      }
+      out << endl;
+    }
   }
 
   out << "    break;  // If we got this far, we have nothing left todo" << endl;

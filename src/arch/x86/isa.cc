@@ -28,7 +28,6 @@
  * Authors: Gabe Black
  */
 
-#include "arch/x86/floatregs.hh"
 #include "arch/x86/isa.hh"
 #include "arch/x86/tlb.hh"
 #include "cpu/base.hh"
@@ -353,27 +352,6 @@ ISA::unserialize(EventManager *em, Checkpoint * cp,
                  const std::string & section)
 {
     UNSERIALIZE_ARRAY(regVal, NumMiscRegs);
-}
-
-int
-ISA::flattenIntIndex(int reg)
-{
-    //If we need to fold over the index to match byte semantics, do that.
-    //Otherwise, just strip off any extra bits and pass it through.
-    if (reg & (1 << 6))
-        return (reg & (~(1 << 6) - 0x4));
-    else
-        return (reg & ~(1 << 6));
-}
-
-int
-ISA::flattenFloatIndex(int reg)
-{
-    if (reg >= NUM_FLOATREGS) {
-        int top = readMiscRegNoEffect(MISCREG_X87_TOP);
-        reg = FLOATREG_STACK(reg - NUM_FLOATREGS, top);
-    }
-    return reg;
 }
 
 }

@@ -86,7 +86,7 @@ let {{
                 const EmulEnv &env =
                     macroop ? macroop->getEmulEnv() : dummyEmulEnv;
                 // env may not be used in the microop's constructor.
-                RegIndex reg = env.reg;
+                InstRegIndex reg(env.reg);
                 reg = reg;
                 using namespace RomLabels;
                 return %s;

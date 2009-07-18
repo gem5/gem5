@@ -65,7 +65,7 @@ def macroop SYSCALL_64
     # Stick rflags with RF masked into r11.
     rflags t2
     limm t3, "~RFBit", dataSize=8
-    andi r11, t2, t3, dataSize=8
+    and r11, t2, t3, dataSize=8
 
     rdval t3, star
     srli t3, t3, 32, dataSize=8
@@ -118,7 +118,7 @@ def macroop SYSCALL_COMPAT
     # Stick rflags with RF masked into r11.
     rflags t2
     limm t3, "~RFBit", dataSize=8
-    andi r11, t2, t3, dataSize=8
+    and r11, t2, t3, dataSize=8
 
     rdval t3, star
     srli t3, t3, 32, dataSize=8

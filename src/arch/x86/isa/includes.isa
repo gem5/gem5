@@ -109,6 +109,8 @@ output header {{
 #include "cpu/static_inst.hh"
 #include "mem/packet.hh"
 #include "sim/faults.hh"
+
+using X86ISA::InstRegIndex;
 }};
 
 output decoder {{

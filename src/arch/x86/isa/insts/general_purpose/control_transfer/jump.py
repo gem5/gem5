@@ -118,7 +118,7 @@ def macroop JMP_FAR_I
     limm t2, imm, dataSize=8
     # Figure out the width of the offset.
     limm t3, dsz, dataSize=8
-    sll t3, t3, 3, dataSize=8
+    slli t3, t3, 3, dataSize=8
     # Get the selector into t1.
     sll t1, t2, t3, dataSize=8
     mov t1, t0, t1, dataSize=2
@@ -178,7 +178,7 @@ def macroop JMP_FAR_REAL_I
     limm t2, imm, dataSize=8
     # Figure out the width of the offset.
     limm t3, dsz, dataSize=8
-    sll t3, t3, 3, dataSize=8
+    slli t3, t3, 3, dataSize=8
     # Get the selector into t1.
     sll t1, t2, t3, dataSize=8
     mov t1, t0, t1, dataSize=2

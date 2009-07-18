@@ -1,31 +1,58 @@
 
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are
- * met: redistributions of source code must retain the above copyright
- * notice, this list of conditions and the following disclaimer;
- * redistributions in binary form must reproduce the above copyright
- * notice, this list of conditions and the following disclaimer in the
- * documentation and/or other materials provided with the distribution;
- * neither the name of the copyright holders nor the names of its
- * contributors may be used to endorse or promote products derived from
- * this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
- * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
- * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
- * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
- * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
- * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
- * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
+    Copyright (C) 1999-2008 by Mark D. Hill and David A. Wood for the
+    Wisconsin Multifacet Project.  Contact: gems@cs.wisc.edu
+    http://www.cs.wisc.edu/gems/
+
+    --------------------------------------------------------------------
+
+    This file is part of the Ruby Multiprocessor Memory System Simulator, 
+    a component of the Multifacet GEMS (General Execution-driven 
+    Multiprocessor Simulator) software toolset originally developed at 
+    the University of Wisconsin-Madison.
+
+    Ruby was originally developed primarily by Milo Martin and Daniel
+    Sorin with contributions from Ross Dickson, Carl Mauer, and Manoj
+    Plakal.
+
+    Substantial further development of Multifacet GEMS at the
+    University of Wisconsin was performed by Alaa Alameldeen, Brad
+    Beckmann, Jayaram Bobba, Ross Dickson, Dan Gibson, Pacia Harper,
+    Derek Hower, Milo Martin, Michael Marty, Carl Mauer, Michelle Moravan,
+    Kevin Moore, Andrew Phelps, Manoj Plakal, Daniel Sorin, Haris Volos, 
+    Min Xu, and Luke Yen.
+    --------------------------------------------------------------------
+
+    If your use of this software contributes to a published paper, we
+    request that you (1) cite our summary paper that appears on our
+    website (http://www.cs.wisc.edu/gems/) and (2) e-mail a citation
+    for your published paper to gems@cs.wisc.edu.
+
+    If you redistribute derivatives of this software, we request that
+    you notify us and either (1) ask people to register with us at our
+    website (http://www.cs.wisc.edu/gems/) or (2) collect registration
+    information and periodically send it to us.
+
+    --------------------------------------------------------------------
+
+    Multifacet GEMS is free software; you can redistribute it and/or
+    modify it under the terms of version 2 of the GNU General Public
+    License as published by the Free Software Foundation.
+
+    Multifacet GEMS is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+    General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with the Multifacet GEMS; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+    02111-1307, USA
+
+    The GNU General Public License is contained in the file LICENSE.
+
+### END HEADER ###
+*/
 
 /*
  * $Id$
@@ -39,7 +66,9 @@ using namespace std;
 #include "getopt.hh"
 #include "mem/ruby/tester/DeterministicDriver.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
-#include "mem/ruby/tester/Driver_Tester.hh"
+#include "mem/ruby/common/Driver.hh"
+#include "mem/ruby/recorder/Tracer.hh"
+
 
 #include <string>
 #include <map>
@@ -53,37 +82,37 @@ using namespace std;
 #include "mem/ruby/libruby.hh"
 
 // FIXME: should really make this a class if can't figure out how to make a function to get the ruby parameter
-
-
 static void set_defaults();
 static void parseOptions(int argc, char **argv);
 static void usageInstructions();
 static void checkArg(char ch);
 static void tester_initialize(int argc, char **argv);
+static void tester_playback_trace();
 static void tester_destroy();
 static void hit_callback(int64_t request_id);
 
 // Tester variables
 string driver_type;
 string generator_type;
-Driver_Tester * m_driver_ptr;
+Driver * m_driver_ptr;
 int g_tester_length;
 int num_completions;
 Time g_think_time;
 Time g_wait_time;
 int num_procs;
-
-// Debugger variables
-Debug * debug_ptr;
-string g_debug_verbosity_string;
-string g_debug_filter_string;
-string g_debug_output_filename;
-Time g_debug_start_time;
-
+static string trace_filename;
+bool replaying;
 
 void tester_main(int argc, char **argv)
 {
   tester_initialize(argc, argv);
+  
+  if (trace_filename != "") {
+    // playback a trace (for multicast-mask prediction)
+    replaying = true;
+    tester_playback_trace();
+  }
+
 
   tester_destroy();
 }
@@ -117,7 +146,7 @@ vector<string> getPorts(const char* cfg_script, int cfg_script_argc, char* cfg_s
     perror("Error Creating Pipe");
     exit(EXIT_FAILURE);
   }
-
+  
   pid = fork();
   if (pid == -1){
     perror("Error forking");
@@ -139,7 +168,7 @@ vector<string> getPorts(const char* cfg_script, int cfg_script_argc, char* cfg_s
       exit(EXIT_FAILURE);
     }
   } else {
-    close(fd[1]);
+    close(fd[1]);   
 
     int child_status;
     if (wait(&child_status) == -1) {
@@ -149,12 +178,12 @@ vector<string> getPorts(const char* cfg_script, int cfg_script_argc, char* cfg_s
     if (child_status != EXIT_SUCCESS) {
       exit(EXIT_FAILURE);
     }
-
+    
     char buf[100];
     int bytes_read;
     while( (bytes_read = read(fd[0], buf, 100)) > 0 ) {
       for (int i=0;i<bytes_read;i++) {
-        cfg_output << buf[i];
+	cfg_output << buf[i];
       }
     }
     assert(bytes_read == 0);
@@ -183,12 +212,7 @@ void tester_initialize(int argc, char **argv)
 
   for (vector<string>::const_iterator it = port_names.begin(); it != port_names.end(); it++)
     ports.push_back(libruby_get_port((*it).c_str(), hit_callback));
-
-  debug_ptr = new Debug(   g_debug_filter_string.c_str(),
-                           g_debug_verbosity_string.c_str(),
-                           g_debug_start_time,
-                           g_debug_output_filename.c_str() );
-
+  
   if (driver_type == "Deterministic") {
     m_driver_ptr = new DeterministicDriver(generator_type, num_completions, num_procs, g_think_time, g_wait_time, g_tester_length);
   }
@@ -200,7 +224,22 @@ void tester_initialize(int argc, char **argv)
   }
   }*/
 
-  m_driver_ptr->go();
+  if (trace_filename == "") {
+    m_driver_ptr->go();
+  }
+}
+
+void tester_playback_trace()
+{
+  replaying = true;
+  assert(trace_filename != "");
+  cout << "Reading trace from file '" << trace_filename << "'..." << endl;
+  Tracer * replayer = new Tracer("noname");
+  int read = replayer->playbackTrace(trace_filename);
+  cout << "(" << read << " requests read)" << endl;
+  if (read == 0) {
+    ERROR_MSG("Zero items read from tracefile.");
+  }
 }
 
 void tester_destroy()
@@ -213,7 +252,9 @@ void tester_destroy()
 
 void hit_callback(int64_t request_id)
 {
-  m_driver_ptr->hitCallback(request_id);
+  if (!replaying) {
+    m_driver_ptr->hitCallback(request_id); 
+  }
 }
 
 // ************************************************************************
@@ -227,36 +268,31 @@ static struct option const long_options[] =
   {"help", no_argument, NULL, 'h'},
   {"number of processors", required_argument, NULL, 'p'},
   {"test run length", required_argument, NULL, 'l'},
-  {"debugger verbosity", required_argument, NULL, 'v'},
-  {"debugger filter component", required_argument, NULL, 'c'},
-  {"debugger output file", required_argument, NULL, 'o'},
-  {"debugger start time", required_argument, NULL, 's'},
   {"generator think time", required_argument, NULL, 'k'},
   {"generator wait time", required_argument, NULL, 'w'},
   {"driver type", required_argument, NULL, 'd'},
   {"generator type", required_argument, NULL, 'g'},
   {"num completions before pass", required_argument, NULL, 'n'},
+  {"test tracer", required_argument, NULL, 'z'},
   {NULL, 0, NULL, 0}
 };
 
 
 // This is awkward and temporary, need the defaults config, and also need functions to
 // just lookup a parameter in the configuration file
-// Ideally the default values are set by libruby_init and then a function is provided to
+// Ideally the default values are set by libruby_init and then a function is provided to 
 // set values at run-time
 static void set_defaults() {
+  replaying = false;
   g_tester_length = 0;
-  g_think_time = 5;
-  g_wait_time = 20;
-
+  g_think_time = 10;
+  g_wait_time = 10;
+  
   num_procs = 1;
+  trace_filename = "";
   num_completions = 1;
   driver_type = "Deterministic";
-  generator_type = "DetermInvGenerator";
-  g_debug_verbosity_string = "none";
-  g_debug_filter_string = "none";
-  g_debug_output_filename = "none";
-  g_debug_start_time = 0;
+  generator_type = "DetermSeriesGETSGenerator";
 }
 
 static void parseOptions(int argc, char **argv)
@@ -289,15 +325,6 @@ static void parseOptions(int argc, char **argv)
       cout << "  number of processors = " << optarg << endl;
       num_procs = atoi( optarg );
       break;
-    case 'v':
-      checkArg(c);
-      cout << "  verbosity string = " << optarg << endl;
-      error = Debug::checkVerbosityString(optarg);
-      if (error) {
-        usageInstructions();
-      }
-      g_debug_verbosity_string = strdup( optarg );
-      break;
     case 'l': {
       checkArg(c);
       g_tester_length = atoi(optarg);
@@ -305,25 +332,6 @@ static void parseOptions(int argc, char **argv)
       if (g_tester_length == 0) {
         usageInstructions();
       }
-      break;
-    }
-      case 'c':
-      checkArg(c);
-      cout << "  component filter string = " << optarg << endl;
-      error = Debug::checkFilterString( optarg );
-      if (error) {
-        usageInstructions();
-      }
-      g_debug_filter_string = strdup( optarg );
-      break;
-    case 's': {
-      checkArg(c);
-      long long start_time = atoll(optarg);
-      cout << "  debug start cycle = " << start_time << endl;
-      if (start_time == 0) {
-        usageInstructions();
-      }
-      g_debug_start_time = start_time;
       break;
     }
     case 'k': {
@@ -336,11 +344,6 @@ static void parseOptions(int argc, char **argv)
       g_wait_time = atoi(optarg);
       break;
     }
-    case 'o':
-      checkArg(c);
-      cout << "  output file = " << optarg << endl;
-      g_debug_output_filename = strdup( optarg );
-      break;
     case 'd':
       checkArg(c);
       cout << "  driver type = " << optarg << endl;
@@ -356,6 +359,12 @@ static void parseOptions(int argc, char **argv)
       cout << "  num completions before pass = " << optarg << endl;
       num_completions = atoi( optarg );
       break;
+   case 'z': 
+      checkArg(c);
+      trace_filename = string(optarg);
+      cout << "  tracefile = " << trace_filename << endl;
+      break;
+     
     default:
       cerr << "parameter '" << c << "' unknown" << endl;
       usageInstructions();
@@ -384,7 +393,7 @@ static void usageInstructions()
   }
 
   cerr << endl;
-  debug_ptr->usageInstructions();
+  g_debug_ptr->usageInstructions();
   cerr << endl;
 
   exit(1);

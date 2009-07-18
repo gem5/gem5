@@ -60,6 +60,8 @@
 
 #include "arch/x86/x86_traits.hh"
 #include "base/bitunion.hh"
+#include "base/misc.hh"
+#include "sim/core.hh"
 
 namespace X86ISA
 {
@@ -165,6 +167,9 @@ namespace X86ISA
         NUM_INTREGS
     };
 
+    // This needs to be large enough to miss all the other bits of an index.
+    static const IntRegIndex IntFoldBit = (IntRegIndex)(1 << 6);
+
     inline static IntRegIndex
     INTREG_MICRO(int index)
     {
@@ -187,7 +192,9 @@ namespace X86ISA
     inline static IntRegIndex
     INTREG_FOLDED(int index, int foldBit)
     {
-        return (IntRegIndex)(((index & 0x1C) == 4 ? foldBit : 0) | index);
+        if ((index & 0x1C) == 4 && foldBit)
+            index = (index - 4) | foldBit;
+        return (IntRegIndex)index;
     }
 };
 

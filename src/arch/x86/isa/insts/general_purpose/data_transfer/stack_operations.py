@@ -163,7 +163,7 @@ def macroop ENTER_I_I {
     # Pull the different components out of the immediate
     limm t1, imm
     zexti t2, t1, 15, dataSize=8
-    srl t1, t1, 16
+    srli t1, t1, 16
     zexti t1, t1, 5, dataSize=8
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
@@ -174,7 +174,7 @@ def macroop ENTER_I_I {
     mov t6, t6, rsp, dataSize=asz
 
     # If the nesting level is zero, skip all this stuff.
-    subi t0, t1, t0, flags=(EZF,), dataSize=2
+    sub t0, t1, t0, flags=(EZF,), dataSize=2
     br label("skipLoop"), flags=(CEZF,)
 
     # If the level was 1, only push the saved rbp

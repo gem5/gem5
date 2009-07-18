@@ -80,13 +80,13 @@ namespace X86ISA
                 const char *mnem, const char *_instMnem,
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
-                RegIndex _src1, RegIndex _src2, RegIndex _dest,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
                 uint8_t _dataSize, int8_t _spm,
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
                     __opClass),
-            src1(_src1), src2(_src2), dest(_dest),
+            src1(_src1.idx), src2(_src2.idx), dest(_dest.idx),
             dataSize(_dataSize), spm(_spm)
         {}
 /*

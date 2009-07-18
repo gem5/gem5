@@ -11,7 +11,10 @@ enum RubyRequestType {
   RubyRequestType_IFETCH,
   RubyRequestType_LD,
   RubyRequestType_ST,
-  RubyRequestType_RMW
+  RubyRequestType_Locked_Read,
+  RubyRequestType_Locked_Write,
+  RubyRequestType_RMW_Read,
+  RubyRequestType_RMW_Write
 };
 
 enum RubyAccessMode {
@@ -101,6 +104,20 @@ void libruby_print_config(std::ostream & out);
  */
 void libruby_print_stats(std::ostream & out);
 
+/**
+ * does not return until done
+ */  
+void libruby_playback_trace(char * trace_filename);
+
+/*
+ * enables the tracer and opens the trace file
+ */ 
+void libruby_start_tracing(char * record_filename);
+
+/*
+ * closes the trace file
+ */ 
+void libruby_stop_tracing();
 
 /**
  * get time

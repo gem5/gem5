@@ -121,17 +121,17 @@ def template MicroLeaDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
@@ -297,17 +297,17 @@ def template MicroLdStOpDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                uint8_t _scale, RegIndex _index, RegIndex _base,
-                uint64_t _disp, uint8_t _segment,
-                RegIndex _data,
+                uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+                uint64_t _disp, InstRegIndex _segment,
+                InstRegIndex _data,
                 uint8_t _dataSize, uint8_t _addressSize,
                 Request::FlagsType _memFlags);
 
@@ -328,9 +328,9 @@ def template MicroLdStOpConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            uint8_t _scale, RegIndex _index, RegIndex _base,
-            uint64_t _disp, uint8_t _segment,
-            RegIndex _data,
+            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+            uint64_t _disp, InstRegIndex _segment,
+            InstRegIndex _data,
             uint8_t _dataSize, uint8_t _addressSize,
             Request::FlagsType _memFlags) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
@@ -345,9 +345,9 @@ def template MicroLdStOpConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            uint8_t _scale, RegIndex _index, RegIndex _base,
-            uint64_t _disp, uint8_t _segment,
-            RegIndex _data,
+            uint8_t _scale, InstRegIndex _index, InstRegIndex _base,
+            uint64_t _disp, InstRegIndex _segment,
+            InstRegIndex _data,
             uint8_t _dataSize, uint8_t _addressSize,
             Request::FlagsType _memFlags) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
@@ -517,7 +517,7 @@ let {{
         def __init__(self, segment, addr, disp = 0,
                 dataSize="env.dataSize",
                 addressSize="env.addressSize"):
-            super(TiaOp, self).__init__("NUM_INTREGS", segment,
+            super(TiaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
                     addr, disp, dataSize, addressSize, "0", False, False)
             self.className = "Tia"
             self.mnemonic = "tia"
@@ -528,7 +528,7 @@ let {{
         def __init__(self, segment, addr, disp = 0,
                 dataSize="env.dataSize",
                 addressSize="env.addressSize", atCPL0=False):
-            super(CdaOp, self).__init__("NUM_INTREGS", segment,
+            super(CdaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
                     addr, disp, dataSize, addressSize, "0", atCPL0, False)
             self.className = "Cda"
             self.mnemonic = "cda"

@@ -64,6 +64,18 @@
 namespace X86ISA
 {
     /**
+     * Class for register indices passed to instruction constructors. Using a
+     * wrapper struct for these lets take advantage of the compiler's type
+     * checking.
+     */
+    struct InstRegIndex
+    {
+        RegIndex idx;
+        explicit InstRegIndex(RegIndex _idx) : idx(_idx)
+        {}
+    };
+
+    /**
      * Base class for all X86 static instructions.
      */
 
@@ -96,7 +108,7 @@ namespace X86ISA
         inline uint64_t merge(uint64_t into, uint64_t val, int size) const
         {
             X86IntReg reg = into;
-            if(_destRegIdx[0] & (1 << 6))
+            if(_destRegIdx[0] & IntFoldBit)
             {
                 reg.H = val;
                 return reg;
@@ -127,7 +139,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if(_srcRegIdx[idx] & (1 << 6))
+            if(_srcRegIdx[idx] & IntFoldBit)
                 return reg.H;
             switch(size)
             {
@@ -148,7 +160,7 @@ namespace X86ISA
         {
             X86IntReg reg = from;
             DPRINTF(X86, "Picking with size %d\n", size);
-            if(_srcRegIdx[idx] & (1 << 6))
+            if(_srcRegIdx[idx] & IntFoldBit)
                 return reg.SH;
             switch(size)
             {
