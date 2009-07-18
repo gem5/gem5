@@ -167,6 +167,9 @@ namespace X86ISA
         NUM_INTREGS
     };
 
+    // This needs to be large enough to miss all the other bits of an index.
+    static const IntRegIndex IntFoldBit = (IntRegIndex)(1 << 6);
+
     inline static IntRegIndex
     INTREG_MICRO(int index)
     {

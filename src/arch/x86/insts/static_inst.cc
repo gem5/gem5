@@ -149,8 +149,8 @@ namespace X86ISA
 
         if (reg < FP_Base_DepTag) {
             const char * suffix = "";
-            bool fold = reg & (1 << 6);
-            reg &= ~(1 << 6);
+            bool fold = reg & IntFoldBit;
+            reg &= ~IntFoldBit;
 
             if(fold)
                 suffix = "h";

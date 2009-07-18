@@ -69,7 +69,7 @@ namespace X86ISA
         int
         flattenIntIndex(int reg)
         {
-            return reg & ~(1 << 6);
+            return reg & ~IntFoldBit;
         }
 
         int
