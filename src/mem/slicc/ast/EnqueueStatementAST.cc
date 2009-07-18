@@ -77,7 +77,7 @@ void EnqueueStatementAST::generate(string& code, Type* return_type_ptr) const
   code += ".enqueue(out_msg";
 
   if (getPairs().exist("latency")) {
-    code += ", RubyConfig::get" + getPairs().lookup("latency") + "()";
+    code += ", m_LATENCY_" + getPairs().lookup("latency");
   }
 
   code += ");\n";

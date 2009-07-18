@@ -40,7 +40,6 @@
 
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 

@@ -48,7 +48,6 @@
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Set.hh"
 #include "mem/protocol/MachineType.hh"
 

@@ -583,7 +583,6 @@ void Type::printEnumC(string path) const
   out << endl;
   out << "#include \"mem/protocol/" << type_name << ".hh\"" << endl;
   if (m_isMachineType) {
-    out << "#include \"mem/ruby/config/RubyConfig.hh\"" << endl;
     out << "#include \"mem/protocol/ControllerFactory.hh\"" << endl;
     for( int i = 0; i<size; i++ ) {
       out << "#include \"mem/protocol/" << m_enum_vec[i] << "_Controller.hh\"" << endl;
@@ -675,7 +674,7 @@ void Type::printEnumC(string path) const
     out << "  }" << endl;
     out << "}" << endl;
 
-    out << "/** \\brief returns the machine type for each base vector index used by NetDest and RubyConfig" << endl;
+    out << "/** \\brief returns the machine type for each base vector index used by NetDest" << endl;
     out << "  * " << endl;
     out << "  * \\return the MachineTYpe" << endl;
     out << "  */" << endl;
@@ -761,29 +760,6 @@ void Type::printEnumC(string path) const
     out << "}" << endl;
 
     out << endl;
-
-//     out << "/** \\brief returns the total number of components for each machine" << endl;
-//     out << "  * \\return the total number of components for each machine" << endl;
-//     out << "  */" << endl;
-//     out << "int " << type_name << "_chip_count(const " << type_name << "& obj, int chip_id)" << endl;
-//     out << "{" << endl;
-//     out << "  switch(obj) {" << endl;
-
-//     // For each field
-//     for( int i = 0; i<size; i++ ) {
-//       out << "  case " << type_name << "_" << m_enum_vec[i] << ":" << endl;
-//       out << "    return RubyConfig::getNumberOfControllersPerTypePerChip(MachineType_base_level(MachineType_" << m_enum_vec[i] << "), chip_id);" << endl;
-//     }
-
-//     // total num
-//     out << "  case " << type_name << "_NUM:" << endl;
-//     // Trailer
-//     out << "  default:" << endl;
-//     out << "    ERROR_MSG(\"Invalid range for type " << type_name << "\");" << endl;
-//     out << "    return -1;" << endl;
-//     out << "  }" << endl;
-//     out << "}" << endl;
-
 
   }
 

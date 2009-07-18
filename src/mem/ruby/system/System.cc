@@ -278,16 +278,7 @@ RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
 
 RubySystem::~RubySystem()
 {
-  /*
-  for (int i=0; i < MachineType_base_level(MachineType_NUM); i++) {
-    for (int j=0; j < RubyConfig::getNumberOfControllersPerType(i); j++ ) {
-      delete m_controllers[i][j];
-    }
-  }
-  delete m_network_ptr;
-  delete m_profiler_ptr;
-  delete m_tracer_ptr;
-  */
+
 }
 
 void RubySystem::printSystemConfig(ostream & out)
@@ -307,8 +298,6 @@ void RubySystem::printSystemConfig(ostream & out)
 void RubySystem::printConfig(ostream& out)
 {
   out << "\n================ Begin RubySystem Configuration Print ================\n\n";
-  //  RubyConfig::printConfiguration(out);
-  //  out << endl;
   printSystemConfig(out);
   for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
        it != m_controllers.end(); it++) {
@@ -367,19 +356,7 @@ void RubySystem::clearStats() const
 
 void RubySystem::recordCacheContents(CacheRecorder& tr) const
 {
-  /*
-    for (int i = 0; i < m_chip_vector.size(); i++) {
-    for (int m_version = 0; m_version < RubyConfig::numberOfProcsPerChip(); m_version++) {
-      if (Protocol::m_TwoLevelCache) {
-        m_chip_vector[i]->m_L1Cache_L1IcacheMemory_vec[m_version]->setAsInstructionCache(true);
-        m_chip_vector[i]->m_L1Cache_L1DcacheMemory_vec[m_version]->setAsInstructionCache(false);
-      } else {
-        m_chip_vector[i]->m_L1Cache_cacheMemory_vec[m_version]->setAsInstructionCache(false);
-      }
-    }
-    m_chip_vector[i]->recordCacheContents(tr);
-  }
-  */
+
 }
 
 #ifdef CHECK_COHERENCE

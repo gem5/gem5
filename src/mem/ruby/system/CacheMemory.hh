@@ -160,45 +160,7 @@ private:
 
   static Vector< CacheMemory* > m_all_caches;
 };
-/*
-inline
-CacheMemory* CacheMemory::getCache(int cache_id)
-{
-  assert(cache_id < RubyConfig::getNumberOfCaches());
-  if (m_all_caches[cache_id] == NULL) {
-    cerr << "ERROR: Tried to obtain CacheMemory that hasn't been created yet." << endl;
-    assert(0);
-  }
-  return m_all_caches[cache_id];
-}
 
-inline
-CacheMemory* CacheMemory::createCache(int level, int num, char split_type_c, AbstractCacheEntry* (*entry_factory)())
-{
-  string split_type;
-  switch(split_type_c) {
-  case 'i':
-    split_type = "instruction"; break;
-  case 'd':
-    split_type = "data"; break;
-  default:
-    split_type = "unified"; break;
-  }
-  int cache_id = RubyConfig::getCacheIDFromParams(level, num, split_type);
-  assert(cache_id < RubyConfig::getNumberOfCaches());
-  if (m_all_caches.size() == 0) {
-    m_all_caches.setSize(RubyConfig::getNumberOfCaches());
-    for (int i=0; i<m_all_caches.size(); i++)
-      m_all_caches[i] = NULL;
-  }
-
-  string type = RubyConfig::getCacheType(cache_id);
-  if ( type == "SetAssociativeCache" ) {
-    m_all_caches[cache_id] = new CacheMemory(cache_id, entry_factory);
-  }
-  return m_all_caches[cache_id];
-}
-*/
 // Output operator declaration
 //ostream& operator<<(ostream& out, const CacheMemory<ENTRY>& obj);
 
@@ -266,43 +228,7 @@ void CacheMemory::init(const vector<string> & argv)
     }
   }
 }
-/*
-inline
-CacheMemory::CacheMemory(int cache_id, AbstractCacheEntry* (*entry_factory)())
-{
-  string split_type;
 
-  m_cache_id = cache_id;
-  m_entry_factory = entry_factory;
-
-  m_cache_num_set_bits = RubyConfig::getNumberOfCacheSetBits(cache_id);
-  m_cache_num_sets = RubyConfig::getNumberOfCacheSets(cache_id);
-  m_cache_assoc = RubyConfig::getCacheAssoc(cache_id);
-  split_type = RubyConfig::getCacheSplitType(cache_id);
-  m_is_instruction_only_cache = m_is_data_only_cache = false;
-  if (split_type == "instruction")
-    m_is_instruction_only_cache = true;
-  else if (split_type == "data")
-    m_is_data_only_cache = true;
-  else
-    assert(split_type == "unified");
-
-  if(RubyConfig::getCacheReplacementPolicy(cache_id) == "PSEUDO_LRU")
-    m_replacementPolicy_ptr = new PseudoLRUPolicy(m_cache_num_sets, m_cache_assoc);
-  else if(RubyConfig::getCacheReplacementPolicy(cache_id) == "LRU")
-    m_replacementPolicy_ptr = new LRUPolicy(m_cache_num_sets, m_cache_assoc);
-  else
-    assert(false);
-
-  m_cache.setSize(m_cache_num_sets);
-  for (int i = 0; i < m_cache_num_sets; i++) {
-    m_cache[i].setSize(m_cache_assoc);
-    for (int j = 0; j < m_cache_assoc; j++) {
-      m_cache[i][j] = m_entry_factory();
-    }
-  }
-}
-*/
 inline
 CacheMemory::~CacheMemory()
 {

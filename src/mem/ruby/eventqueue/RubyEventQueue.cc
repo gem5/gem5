@@ -32,7 +32,6 @@
  */
 
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"

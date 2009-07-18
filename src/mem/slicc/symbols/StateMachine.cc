@@ -719,11 +719,12 @@ void StateMachine::printControllerC(ostream& out, string component)
       out << "{" << endl;
       out << "  DEBUG_MSG(GENERATED_COMP, HighPrio,\"executing\");" << endl;
 //added by SS
-//instead of rubyconfig:: --> it should point to m_latency...
+//it should point to m_latency...
 //so I should change the string output of this lookup
 
-      string c_code_string = action.lookupPair("c_code");
 
+      string c_code_string = action.lookupPair("c_code");
+/*
       size_t found = c_code_string.find("RubyConfig::get");
 
       if (found!=string::npos){ //found --> replace it with local access
@@ -741,7 +742,7 @@ void StateMachine::printControllerC(ostream& out, string component)
           }
         }
       }
-
+*/
       // add here:
       if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
         if (c_code_string.find("writeCallback") != string::npos) {

@@ -98,31 +98,6 @@ Profiler::Profiler(const string & name)
   m_stats_period = 1000000; // Default
   m_periodic_output_file_ptr = &cerr;
 
-//changed by SS
-/*
-  // for MemoryControl:
-  m_memReq = 0;
-  m_memBankBusy = 0;
-  m_memBusBusy = 0;
-  m_memReadWriteBusy = 0;
-  m_memDataBusBusy = 0;
-  m_memTfawBusy = 0;
-  m_memRefresh = 0;
-  m_memRead = 0;
-  m_memWrite = 0;
-  m_memWaitCycles = 0;
-  m_memInputQ = 0;
-  m_memBankQ = 0;
-  m_memArbWait = 0;
-  m_memRandBusy = 0;
-  m_memNotOld = 0;
-
-
-  int totalBanks = RubyConfig::banksPerRank()
-                 * RubyConfig::ranksPerDimm()
-                 * RubyConfig::dimmsPerChannel();
-  m_memBankCount.setSize(totalBanks);
-*/
 }
 
 Profiler::~Profiler()
@@ -870,7 +845,7 @@ void Profiler::addAddressTraceSample(const CacheMsg& msg, NodeID id)
     // Note: The following line should be commented out if you want to
     // use the special profiling that is part of the GS320 protocol
 
-    // NOTE: Unless PROFILE_HOT_LINES or RubyConfig::getProfileAllInstructions() are enabled, nothing will be profiled by the AddressProfiler
+    // NOTE: Unless PROFILE_HOT_LINES is enabled, nothing will be profiled by the AddressProfiler
     m_address_profiler_ptr->addTraceSample(msg.getLineAddress(), msg.getProgramCounter(), msg.getType(), msg.getAccessMode(), id, false);
   }
 }

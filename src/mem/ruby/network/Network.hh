@@ -50,7 +50,6 @@
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 
 class NetDest;
 class MessageBuffer;

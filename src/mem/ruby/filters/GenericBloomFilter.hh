@@ -39,7 +39,6 @@
 #define GENERIC_BLOOM_FILTER_H
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 

@@ -58,7 +58,6 @@
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/GenericMachineType.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/AccessModeType.hh"

@@ -39,7 +39,6 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/gems_common/util.hh"
 

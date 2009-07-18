@@ -41,7 +41,6 @@
 
 #include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 
 #if __amd64__ || __LP64__
 #define __64BITS__
@@ -512,7 +511,7 @@ void Set::setSize(int size)
 #endif // __32BITS__
 
   // decide whether to use dynamic or static alloction
-  if(m_nArrayLen<=NUMBER_WORDS_PER_SET) { // constant defined in RubyConfig.hh
+  if(m_nArrayLen<=NUMBER_WORDS_PER_SET) { // constant defined in RubySystem.hh
     // its OK to use the static allocation, and it will
     // probably be faster (as m_nArrayLen is already in the
     // cache and they will probably share the same cache line)

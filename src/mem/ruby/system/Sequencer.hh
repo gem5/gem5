@@ -38,7 +38,6 @@
 #define SEQUENCER_H
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/AccessModeType.hh"

@@ -37,7 +37,6 @@
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 
 //added by SS
 Tracer::Tracer(const string & name)
@@ -130,8 +129,8 @@ int Tracer::playbackTrace(string filename)
     ok = record.input(in);
 
     // Clear the statistics after warmup
-/*    if (counter == RubyConfig::getTraceWarmupLength()) {
-      cout << "Clearing stats after warmup of length " << RubyConfig::getTraceWarmupLength() << endl;
+/*    if (counter == m_warmup_length) {
+      cout << "Clearing stats after warmup of length " << m_warmup_length << endl;
       g_system_ptr->clearStats();
     }
 */

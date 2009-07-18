@@ -107,16 +107,6 @@ private:
 inline
 Address line_address(const Address& addr) { Address temp(addr); temp.makeLineAddress(); return temp; }
 
-/*
-inline
-Address next_stride_address(const Address& addr, int stride) {
-  Address temp = addr;
-  temp.makeNextStrideAddress(stride);
-  temp.setAddress(temp.maskHighOrderBits(ADDRESS_WIDTH-RubyConfig::memorySizeBits()));  // surpress wrap-around problem
-  return temp;
-}
-*/
-
 // Output operator declaration
 ostream& operator<<(ostream& out, const Address& obj);
 // comparison operator declaration
@@ -207,17 +197,6 @@ integer_t Address::memoryModuleIndex() const
 {
   integer_t index = bitSelect(RubySystem::getBlockSizeBits()+RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
   assert (index >= 0);
-  /*
-  if (index >= RubyConfig::memoryModuleBlocks()) {
-    cerr << " memoryBits: " << RubySystem::getMemorySizeBits() << " memorySizeBits: " << RubySystem::getMemorySizeBits()
-         << " Address: " << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush
-         << "error: limit exceeded. " <<
-      " getDataBlockBits: " << RubySystem::getBlockSizeBits() <<
-      " memoryModuleBlocks: " << RubyConfig::memoryModuleBlocks() <<
-      " index: " << index << endl;
-  }
-  assert (index < RubyConfig::memoryModuleBlocks());
-  */
   return index;
 
   //  Index indexHighPortion = address.bitSelect(MEMORY_SIZE_BITS-1, PAGE_SIZE_BITS+NUMBER_OF_MEMORY_MODULE_BITS);

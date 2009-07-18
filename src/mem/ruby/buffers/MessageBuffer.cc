@@ -32,7 +32,6 @@
  */
 
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/system/System.hh"
 
 MessageBuffer::MessageBuffer()
@@ -323,7 +322,6 @@ void MessageBuffer::clear()
 
 void MessageBuffer::recycle()
 {
-  //  const int RubyConfig::getRecycleLatency() = 3;
   DEBUG_MSG(QUEUE_COMP,MedPrio,"recycling " + m_name);
   assert(isReady());
   MessageBufferNode node = m_prio_heap.extractMin();

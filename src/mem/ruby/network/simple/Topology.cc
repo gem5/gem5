@@ -40,7 +40,6 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/protocol/TopologyType.hh"
-//#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/gems_common/util.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
@@ -294,82 +293,6 @@ void Topology::createLinks(bool isReconfiguration)
     }
   }
 }
-/*
-void Topology::makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChipSwitches)
-{
-
-  Vector < SwitchID > nodes;  // temporary buffer
-  nodes.setSize(2);
-
-  Vector<bool> endpointConnectionExist;  // used to ensure all endpoints are connected to the network
-  endpointConnectionExist.setSize(m_nodes);
-  // initialize endpoint check vector
-  for (int k = 0; k < endpointConnectionExist.size(); k++) {
-    endpointConnectionExist[k] = false;
-  }
-
-  Vector<int> componentCount;
-  componentCount.setSize(MachineType_NUM);
-  for (MachineType mType = MachineType_FIRST; mType < MachineType_NUM; ++mType) {
-    componentCount[mType] = 0;
-  }
-
-  // components to/from network links
-  // TODO: drh5: bring back chips!!!
-  for (int chip = 0; chip < RubyConfig::getNumberOfChips(); chip++) {
-    for (MachineType mType = MachineType_FIRST; mType < MachineType_NUM; ++mType) {
-      for (int component = 0; component < MachineType_base_count(mType); component++) {
-
-        int latency = -1;
-        int bw_multiplier = -1;  // internal link bw multiplier of the global bandwidth
-        if (mType != MachineType_Directory) {
-          latency = RubyConfig::getOnChipLinkLatency();  // internal link latency
-          bw_multiplier = 10;  // internal link bw multiplier of the global bandwidth
-        } else {
-          latency = RubyConfig::getNetworkLinkLatency();  // local memory latency
-          bw_multiplier = 1;  // local memory link bw multiplier of the global bandwidth
-        }
-        nodes[0] = MachineType_base_number(mType)+componentCount[mType];
-        nodes[1] = chip+m_nodes*2; // this is the chip's internal switch id #
-
-        // insert link
-        nodePairs.insertAtBottom(nodes);
-        latencies.insertAtBottom(latency);
-        bw_multis.insertAtBottom(bw_multiplier);
-        //bw_multis.insertAtBottom(componentCount[mType]+MachineType_base_number((MachineType)mType));
-
-        // opposite direction link
-        Vector < SwitchID > otherDirectionNodes;
-        otherDirectionNodes.setSize(2);
-        otherDirectionNodes[0] = nodes[1];
-        otherDirectionNodes[1] = nodes[0]+m_nodes;
-        nodePairs.insertAtBottom(otherDirectionNodes);
-        latencies.insertAtBottom(latency);
-        bw_multis.insertAtBottom(bw_multiplier);
-
-        assert(!endpointConnectionExist[nodes[0]]);
-        endpointConnectionExist[nodes[0]] = true;
-        componentCount[mType]++;
-      }
-    }
-  }
-
-  // make sure all enpoints are connected in the soon to be created network
-  for (int k = 0; k < endpointConnectionExist.size(); k++) {
-    if (endpointConnectionExist[k] == false) {
-      cerr << "Error: Unconnected Endpoint: " << k << endl;
-      exit(1);
-    }
-  }
-
-  // secondary check to ensure we saw the correct machine counts
-  for (MachineType mType = MachineType_FIRST; mType < MachineType_NUM; ++mType) {
-    assert(componentCount[mType] == MachineType_base_count((MachineType)mType));
-  }
-
-}
-*/
-
 
 SwitchID Topology::newSwitchID()
 {

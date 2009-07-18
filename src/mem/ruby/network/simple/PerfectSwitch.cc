@@ -88,9 +88,7 @@ void PerfectSwitch::addOutPort(const Vector<MessageBuffer*>& out, const NetDest&
   m_out.insertAtBottom(out);
   m_routing_table.insertAtBottom(routing_table_entry);
 
-  //  if (RubyConfig::getPrintTopology()) {
-    m_out_link_vec.insertAtBottom(out);
-    //  }
+  m_out_link_vec.insertAtBottom(out);
 }
 
 void PerfectSwitch::clearRoutingTables()
@@ -187,7 +185,6 @@ void PerfectSwitch::wakeup()
         assert(m_link_order.size() == m_routing_table.size());
         assert(m_link_order.size() == m_out.size());
 //changed by SS
-//        if (RubyConfig::getAdaptiveRouting()) {
         if (m_network_ptr->getAdaptiveRouting()) {
           if (m_network_ptr->isVNetOrdered(vnet)) {
             // Don't adaptively route

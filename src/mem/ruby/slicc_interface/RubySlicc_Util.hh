@@ -43,7 +43,6 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/CacheRequestType.hh"
@@ -112,19 +111,6 @@ extern inline int MessageSizeTypeToInt(MessageSizeType size_type)
   return MessageSizeType_to_int(size_type);
 }
 
-/*
-extern inline int numberOfNodes()
-{
-  return RubyConfig::numberOfChips();
-}
-*/
-/*
-extern inline int numberOfL1CachePerChip()
-{
-  return RubyConfig::getNumberOfCachesPerLevelPerChip(1,0);
-}
-*/
-
 extern inline bool long_enough_ago(Time event)
 {
   return ((get_time() - event) > 200);
@@ -171,40 +157,6 @@ extern inline Time time_to_int(Time time)
   return time;
 }
 
-/*
-extern inline bool getFilteringEnabled()
-{
-  return RubyConfig::getFilteringEnabled();
-}
-
-
-extern inline int getRetryThreshold()
-{
-  return RubyConfig::getRetryThreshold();
-}
-
-extern inline int getFixedTimeoutLatency()
-{
-  return RubyConfig::getFixedTimeoutLatency();
-}
-
-extern inline int N_tokens()
-{
-  // return N+1 to handle clean writeback
-  return RubyConfig::getProcsPerChip() + 1;
-  // return 1;
-}
-
-extern inline bool distributedPersistentEnabled()
-{
-  return RubyConfig::getDistributedPersistentEnabled();
-}
-
-extern inline bool getDynamicTimeoutEnabled()
-{
-  return RubyConfig::getDynamicTimeoutEnabled();
-}
-*/
 // Appends an offset to an address
 extern inline Address setOffset(Address addr, int offset)
 {

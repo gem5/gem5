@@ -21,7 +21,6 @@
  */
 
 #include "mem/ruby/tester/RaceyPseudoThread.hh"
-#include "mem/ruby/config/RubyConfig.hh"
 #include "mem/ruby/tester/RaceyDriver.hh"
 #include "gzstream.hh"
 
