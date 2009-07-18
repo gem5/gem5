@@ -108,8 +108,8 @@ void DataBlock::print(ostream& out) const
 {
   int size = RubySystem::getBlockSizeBytes();
   out << "[ ";
-  for (int i = 0; i < size; i+=4) {
-    out << hex << *((uint32*)(&(m_data[i]))) << " ";
+  for (int i = 0; i < size; i++) {
+    out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
   }
   out << dec << "]" << flush;
 }
