@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009 The Regents of The University of Michigan
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,38 +28,25 @@
  * Authors: Gabe Black
  */
 
-#include "base/socket.hh"
-#include "cpu/nativetrace.hh"
-#include "cpu/static_inst.hh"
-#include "params/NativeTrace.hh"
+#ifndef __ARCH_SPARC_NATIVETRACE_HH__
+#define __ARCH_SPARC_NATIVETRACE_HH__
 
-using namespace std;
+#include "base/types.hh"
+#include "cpu/nativetrace.hh"
+
+class ThreadContext;
 
 namespace Trace {
 
-NativeTrace::NativeTrace(const Params *p)
-    : InstTracer(p)
+class SparcNativeTrace : public NativeTrace
 {
-    if (ListenSocket::allDisabled())
-        fatal("All listeners are disabled!");
+  public:
+    SparcNativeTrace(const Params *p) : NativeTrace(p)
+    {}
 
-    int port = 8000;
-    while(!native_listener.listen(port, true))
-    {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", port);
-        port++;
-    }
-    ccprintf(cerr, "Listening for native process on port %d\n", port);
-    fd = native_listener.accept();
-}
-
-void
-Trace::NativeTraceRecord::dump()
-{
-    //Don't print what happens for each micro-op, just print out
-    //once at the last op, and for regular instructions.
-    if (!staticInst->isMicroop() || staticInst->isLastMicroop())
-        parent->check(this);
-}
+    void check(NativeTraceRecord *record);
+};
 
 } /* namespace Trace */
+
+#endif // __CPU_NATIVETRACE_HH__

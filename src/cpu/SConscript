@@ -112,6 +112,7 @@ SimObject('BaseCPU.py')
 SimObject('FuncUnit.py')
 SimObject('ExeTracer.py')
 SimObject('IntelTrace.py')
+SimObject('NativeTrace.py')
 
 Source('activity.cc')
 Source('base.cc')
@@ -119,6 +120,7 @@ Source('cpuevent.cc')
 Source('exetrace.cc')
 Source('func_unit.cc')
 Source('inteltrace.cc')
+Source('nativetrace.cc')
 Source('pc_event.cc')
 Source('quiesce_event.cc')
 Source('static_inst.cc')
@@ -135,10 +137,6 @@ if env['FULL_SYSTEM']:
     if env['TARGET_ISA'] == 'sparc':
         SimObject('LegionTrace.py')
         Source('legiontrace.cc')
-
-if env['TARGET_ISA'] == 'x86':
-    SimObject('NativeTrace.py')
-    Source('nativetrace.cc')
 
 if env['USE_CHECKER']:
     Source('checker/cpu.cc')

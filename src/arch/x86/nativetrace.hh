@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2009 The Regents of The University of Michigan
+ * Copyright (c) 2007-2009 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,38 +28,63 @@
  * Authors: Gabe Black
  */
 
-#include "base/socket.hh"
-#include "cpu/nativetrace.hh"
-#include "cpu/static_inst.hh"
-#include "params/NativeTrace.hh"
+#ifndef __ARCH_X86_NATIVETRACE_HH__
+#define __ARCH_X86_NATIVETRACE_HH__
 
-using namespace std;
+#include "base/types.hh"
+#include "cpu/nativetrace.hh"
+
+class ThreadContext;
 
 namespace Trace {
 
-NativeTrace::NativeTrace(const Params *p)
-    : InstTracer(p)
+class X86NativeTrace : public NativeTrace
 {
-    if (ListenSocket::allDisabled())
-        fatal("All listeners are disabled!");
+  protected:
+    bool checkRcx;
+    bool checkR11;
+    uint64_t oldRcxVal, oldR11Val;
+    uint64_t oldRealRcxVal, oldRealR11Val;
 
-    int port = 8000;
-    while(!native_listener.listen(port, true))
-    {
-        DPRINTF(GDBMisc, "Can't bind port %d\n", port);
-        port++;
-    }
-    ccprintf(cerr, "Listening for native process on port %d\n", port);
-    fd = native_listener.accept();
-}
+    struct ThreadState {
+        uint64_t rax;
+        uint64_t rcx;
+        uint64_t rdx;
+        uint64_t rbx;
+        uint64_t rsp;
+        uint64_t rbp;
+        uint64_t rsi;
+        uint64_t rdi;
+        uint64_t r8;
+        uint64_t r9;
+        uint64_t r10;
+        uint64_t r11;
+        uint64_t r12;
+        uint64_t r13;
+        uint64_t r14;
+        uint64_t r15;
+        uint64_t rip;
+        //This should be expanded to 16 if x87 registers are considered
+        uint64_t mmx[8];
+        uint64_t xmm[32];
 
-void
-Trace::NativeTraceRecord::dump()
-{
-    //Don't print what happens for each micro-op, just print out
-    //once at the last op, and for regular instructions.
-    if (!staticInst->isMicroop() || staticInst->isLastMicroop())
-        parent->check(this);
-}
+        void update(NativeTrace *parent);
+        void update(ThreadContext *tc);
+    };
+
+    ThreadState nState;
+    ThreadState mState;
+
+    bool checkRcxReg(const char * regName, uint64_t &, uint64_t &);
+    bool checkR11Reg(const char * regName, uint64_t &, uint64_t &);
+    bool checkXMM(int num, uint64_t mXmmBuf[], uint64_t nXmmBuf[]);
+
+  public:
+    X86NativeTrace(const Params *p);
+
+    void check(NativeTraceRecord *record);
+};
 
 } /* namespace Trace */
+
+#endif // __ARCH_X86_NATIVETRACE_HH__

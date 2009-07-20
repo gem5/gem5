@@ -35,10 +35,13 @@ if env['TARGET_ISA'] == 'sparc':
     Source('asi.cc')
     Source('faults.cc')
     Source('isa.cc')
+    Source('nativetrace.cc')
     Source('pagetable.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
     Source('utility.cc')
+
+    SimObject('SparcNativeTrace.py')
 
     SimObject('SparcTLB.py')
     TraceFlag('Sparc', "Generic SPARC ISA stuff")
