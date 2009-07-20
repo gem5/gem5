@@ -58,6 +58,7 @@ machine(L1Cache, "MI Example L1 Cache"): LATENCY_CACHE_RESPONSE_LATENCY  LATENCY
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
     bool isTagPresent(Address);
+    void profileMiss(CacheMsg);
   }
 
   // TBE fields
@@ -259,6 +260,12 @@ machine(L1Cache, "MI Example L1 Cache"): LATENCY_CACHE_RESPONSE_LATENCY  LATENCY
     profileMsgDelay(2, forwardRequestNetwork_in.dequeue_getDelayCycles());
   }
 
+  action(p_profileMiss, "p", desc="Profile cache miss") {
+    peek(mandatoryQueue_in, CacheMsg) {
+      cacheMemory.profileMiss(in_msg);
+    }
+  }
+
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
     DEBUG_EXPR(cacheMemory[address].DataBlk);
     sequencer.readCallback(address, cacheMemory[address].DataBlk);
@@ -326,6 +333,7 @@ machine(L1Cache, "MI Example L1 Cache"): LATENCY_CACHE_RESPONSE_LATENCY  LATENCY
     v_allocateTBE;
     i_allocateL1CacheBlock;
     a_issueRequest;
+    p_profileMiss;
     m_popMandatoryQueue;
   }
 
@@ -333,6 +341,7 @@ machine(L1Cache, "MI Example L1 Cache"): LATENCY_CACHE_RESPONSE_LATENCY  LATENCY
     v_allocateTBE;
     i_allocateL1CacheBlock;
     a_issueRequest;
+    p_profileMiss;
     m_popMandatoryQueue;
   }
 

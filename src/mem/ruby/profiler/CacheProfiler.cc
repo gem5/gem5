@@ -48,7 +48,7 @@ CacheProfiler::CacheProfiler(string description)
 {
   m_description = description;
   m_requestTypeVec_ptr = new Vector<int>;
-  m_requestTypeVec_ptr->setSize(int(GenericRequestType_NUM));
+  m_requestTypeVec_ptr->setSize(int(CacheRequestType_NUM));
 
   clearStats();
 }
@@ -70,30 +70,22 @@ void CacheProfiler::printStats(ostream& out) const
   out << description << "_total_hw_prefetches: " << m_hw_prefetches << endl;
 
   double trans_executed = double(g_system_ptr->getProfiler()->getTotalTransactionsExecuted());
-  double inst_executed = double(g_system_ptr->getProfiler()->getTotalInstructionsExecuted());
 
   out << description << "_misses_per_transaction: " << double(m_misses) / trans_executed << endl;
-  out << description << "_misses_per_instruction: " << double(m_misses) / inst_executed << endl;
-  out << description << "_instructions_per_misses: ";
-  if (m_misses > 0) {
-    out << inst_executed / double(m_misses) << endl;
-  } else {
-    out << "NaN" << endl;
-  }
   out << endl;
 
   int requests = 0;
 
-  for(int i=0; i<int(GenericRequestType_NUM); i++) {
+  for(int i=0; i<int(CacheRequestType_NUM); i++) {
     requests += m_requestTypeVec_ptr->ref(i);
   }
 
   assert(m_misses == requests);
 
   if (requests > 0) {
-    for(int i=0; i<int(GenericRequestType_NUM); i++){
+    for(int i=0; i<int(CacheRequestType_NUM); i++){
       if (m_requestTypeVec_ptr->ref(i) > 0) {
-        out << description << "_request_type_" << GenericRequestType_to_string(GenericRequestType(i)) << ":   "
+        out << description << "_request_type_" << CacheRequestType_to_string(CacheRequestType(i)) << ":   "
             << (100.0 * double((m_requestTypeVec_ptr->ref(i)))) / double(requests)
             << "%" << endl;
       }
@@ -116,7 +108,7 @@ void CacheProfiler::printStats(ostream& out) const
 
 void CacheProfiler::clearStats()
 {
-  for(int i=0; i<int(GenericRequestType_NUM); i++) {
+  for(int i=0; i<int(CacheRequestType_NUM); i++) {
     m_requestTypeVec_ptr->ref(i) = 0;
   }
   m_requestSize.clear();
@@ -130,7 +122,7 @@ void CacheProfiler::clearStats()
   }
 }
 
-void CacheProfiler::addStatSample(GenericRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit)
+void CacheProfiler::addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit)
 {
   m_misses++;
 

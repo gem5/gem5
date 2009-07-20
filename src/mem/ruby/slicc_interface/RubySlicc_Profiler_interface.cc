@@ -79,31 +79,9 @@ void profile_sharing(const Address& addr, AccessType type, NodeID requestor, con
   g_system_ptr->getProfiler()->profileSharing(addr, type, requestor, sharers, owner);
 }
 
-void profile_miss(const CacheMsg& msg, NodeID id)
-{
-  // CMP profile address after L1 misses, not L2
-  ASSERT (!Protocol::m_CMP);
-  g_system_ptr->getProfiler()->addAddressTraceSample(msg, id);
-
-  g_system_ptr->getProfiler()->profileConflictingRequests(msg.getLineAddress());
-
-  g_system_ptr->getProfiler()->addSecondaryStatSample(msg.getType(),
-                                                      msg.getAccessMode(), msg.getSize(), msg.getPrefetch(), id);
-}
-
-void profile_L1Cache_miss(const CacheMsg& msg, NodeID id)
-{
-  g_system_ptr->getProfiler()->addPrimaryStatSample(msg, id);
-}
-
 void profileMsgDelay(int virtualNetwork, int delayCycles)
 {
   g_system_ptr->getProfiler()->profileMsgDelay(virtualNetwork, delayCycles);
-}
-
-void profile_L2Cache_miss(GenericRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit, NodeID nodeID)
-{
-  g_system_ptr->getProfiler()->addSecondaryStatSample(requestType, type, msgSize, pfBit, nodeID);
 }
 
 void profile_token_retry(const Address& addr, AccessType type, int count)

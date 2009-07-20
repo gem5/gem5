@@ -52,6 +52,8 @@
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/profiler/CacheProfiler.hh"
+#include "mem/protocol/CacheMsg.hh"
 #include <vector>
 
 class CacheMemory {
@@ -111,6 +113,8 @@ public:
   // Set this address to most recently used
   void setMRU(const Address& address);
 
+  void profileMiss(const CacheMsg & msg);
+
   void getMemoryValue(const Address& addr, char* value,
                       unsigned int size_in_bytes );
   void setMemoryValue(const Address& addr, char* value,
@@ -122,6 +126,8 @@ public:
   // Print cache contents
   void print(ostream& out) const;
   void printData(ostream& out) const;
+
+  void printStats(ostream& out) const;
 
 private:
   // Private Methods
@@ -154,6 +160,8 @@ private:
 
   AbstractReplacementPolicy *m_replacementPolicy_ptr;
 
+  CacheProfiler* m_profiler_ptr;
+
   int m_cache_num_sets;
   int m_cache_num_set_bits;
   int m_cache_assoc;
@@ -182,6 +190,7 @@ inline
 CacheMemory::CacheMemory(const string & name)
   : m_cache_name(name)
 {
+  m_profiler_ptr = new CacheProfiler(name);
 }
 
 inline
@@ -496,6 +505,13 @@ void CacheMemory::setMRU(const Address& address)
 }
 
 inline
+void CacheMemory::profileMiss(const CacheMsg & msg) 
+{
+  m_profiler_ptr->addStatSample(msg.getType(), msg.getAccessMode(), 
+				msg.getSize(), msg.getPrefetch());
+}
+
+inline
 void CacheMemory::recordCacheContents(CacheRecorder& tr) const
 {
   for (int i = 0; i < m_cache_num_sets; i++) {
@@ -543,6 +559,12 @@ inline
 void CacheMemory::printData(ostream& out) const
 {
   out << "printData() not supported" << endl;
+}
+
+inline
+void CacheMemory::printStats(ostream& out) const
+{
+  m_profiler_ptr->printStats(out);
 }
 
 inline

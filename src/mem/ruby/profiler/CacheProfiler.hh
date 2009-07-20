@@ -44,7 +44,7 @@
 #include "mem/ruby/common/Histogram.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/GenericRequestType.hh"
+#include "mem/protocol/CacheRequestType.hh"
 
 template <class TYPE> class Vector;
 
@@ -60,7 +60,7 @@ public:
   void printStats(ostream& out) const;
   void clearStats();
 
-  void addStatSample(GenericRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit);
+  void addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit);
 
   void print(ostream& out) const;
 private:
