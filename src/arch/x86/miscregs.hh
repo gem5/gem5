@@ -374,6 +374,17 @@ namespace X86ISA
         MISCREG_X87_TOP =
             MISCREG_SEG_ATTR_BASE + NUM_SEGMENTREGS,
 
+        MISCREG_MXCSR,
+        MISCREG_FCW,
+        MISCREG_FSW,
+        MISCREG_FTW,
+        MISCREG_FTAG,
+        MISCREG_FISEG,
+        MISCREG_FIOFF,
+        MISCREG_FOSEG,
+        MISCREG_FOOFF,
+        MISCREG_FOP,
+
         //XXX Add "Model-Specific Registers"
 
         MISCREG_APIC_BASE,

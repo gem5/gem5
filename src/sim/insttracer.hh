@@ -129,6 +129,28 @@ class InstRecord
     { cp_seq = seq; cp_seq_valid = true; }
 
     virtual void dump() = 0;
+    
+  public:
+    Tick getWhen() { return when; }
+    ThreadContext *getThread() { return thread; }
+    StaticInstPtr getStaticInst() { return staticInst; }
+    Addr getPC() { return PC; }
+    StaticInstPtr getMacroStaticInst() { return macroStaticInst; }
+    MicroPC getUPC() { return upc; } 
+    bool getMisspeculating() { return misspeculating; }
+
+    Addr getAddr() { return addr; }
+    bool getAddrValid() { return addr_valid; }
+
+    uint64_t getIntData() { return data.as_int; }
+    double getFloatData() { return data.as_double; }
+    int getDataStatus() { return data_status; }
+
+    InstSeqNum getFetchSeq() { return fetch_seq; }
+    bool getFetchSeqValid() { return fetch_seq_valid; }
+
+    InstSeqNum getCpSeq() { return cp_seq; }
+    bool getCpSeqValid() { return cp_seq_valid; }
 };
 
 class InstTracer : public SimObject

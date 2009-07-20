@@ -1,4 +1,4 @@
-# Copyright (c) 2007 The Regents of The University of Michigan
+# Copyright (c) 2009 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,9 +28,8 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from InstTracer import InstTracer
+from NativeTrace import NativeTrace
 
-class NativeTrace(InstTracer):
-    abstract = True
-    type = 'NativeTrace'
-    cxx_class = 'Trace::NativeTrace'
+class SparcNativeTrace(NativeTrace):
+    type = 'SparcNativeTrace'
+    cxx_class = 'Trace::SparcNativeTrace'

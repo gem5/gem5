@@ -497,6 +497,7 @@ X86LiveProcess::argsInit(int pageSize,
         //The system page size
         auxv.push_back(auxv_t(M5_AT_PAGESZ, X86ISA::VMPageSize));
         //Frequency at which times() increments
+        //Defined to be 100 in the kernel source.
         auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
         // For statically linked executables, this is the virtual address of the
         // program header tables if they appear in the executable image
@@ -505,7 +506,6 @@ X86LiveProcess::argsInit(int pageSize,
         auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
         // This is the number of program headers from the original elf file.
         auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
-        //Defined to be 100 in the kernel source.
         //This is the address of the elf "interpreter", It should be set
         //to 0 for regular executables. It should be something else
         //(not sure what) for dynamic libraries.

@@ -95,12 +95,15 @@ if env['TARGET_ISA'] == 'x86':
     Source('insts/microregop.cc')
     Source('insts/static_inst.cc')
     Source('isa.cc')
+    Source('nativetrace.cc')
     Source('pagetable.cc')
     Source('predecoder.cc')
     Source('predecoder_tables.cc')
     Source('remote_gdb.cc')
     Source('tlb.cc')
     Source('utility.cc')
+
+    SimObject('X86NativeTrace.py')
 
     SimObject('X86TLB.py')
     TraceFlag('Predecoder', "Predecoder debug output")
