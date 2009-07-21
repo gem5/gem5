@@ -45,87 +45,88 @@ class ThreadContext;
 
 namespace MipsISA {
 
-    uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+uint64_t getArgument(ThreadContext *tc, int number, bool fp);
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    // Floating Point Utility Functions
-    //
-    uint64_t fpConvert(ConvertType cvt_type, double fp_val);
-    double roundFP(double val, int digits);
-    double truncFP(double val);
+////////////////////////////////////////////////////////////////////////
+//
+// Floating Point Utility Functions
+//
+uint64_t fpConvert(ConvertType cvt_type, double fp_val);
+double roundFP(double val, int digits);
+double truncFP(double val);
 
-    bool getCondCode(uint32_t fcsr, int cc);
-    uint32_t genCCVector(uint32_t fcsr, int num, uint32_t cc_val);
-    uint32_t genInvalidVector(uint32_t fcsr);
+bool getCondCode(uint32_t fcsr, int cc);
+uint32_t genCCVector(uint32_t fcsr, int num, uint32_t cc_val);
+uint32_t genInvalidVector(uint32_t fcsr);
 
-    bool isNan(void *val_ptr, int size);
-    bool isQnan(void *val_ptr, int size);
-    bool isSnan(void *val_ptr, int size);
+bool isNan(void *val_ptr, int size);
+bool isQnan(void *val_ptr, int size);
+bool isSnan(void *val_ptr, int size);
 
-    static inline bool
-    inUserMode(ThreadContext *tc)
-    {
-        MiscReg Stat = tc->readMiscReg(MipsISA::Status);
-        MiscReg Dbg = tc->readMiscReg(MipsISA::Debug);
+static inline bool
+inUserMode(ThreadContext *tc)
+{
+    MiscReg Stat = tc->readMiscReg(MipsISA::Status);
+    MiscReg Dbg = tc->readMiscReg(MipsISA::Debug);
 
-        if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
-           && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
-           && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
-            // Unable to use Status_CU0, etc directly, using bitfields & masks
-            return true;
-        } else {
-            return false;
-        }
+    if ((Stat & 0x10000006) == 0 &&  // EXL, ERL or CU0 set, CP0 accessible
+        (Dbg & 0x40000000) == 0 &&   // DM bit set, CP0 accessible
+        (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
+        // Unable to use Status_CU0, etc directly, using bitfields & masks
+        return true;
+    } else {
+        return false;
     }
+}
 
-    // Instruction address compression hooks
-    static inline Addr realPCToFetchPC(const Addr &addr) {
-        return addr;
-    }
+// Instruction address compression hooks
+static inline Addr realPCToFetchPC(const Addr &addr) {
+    return addr;
+}
 
-    static inline Addr fetchPCToRealPC(const Addr &addr) {
-        return addr;
-    }
+static inline Addr fetchPCToRealPC(const Addr &addr) {
+    return addr;
+}
 
-    // the size of "fetched" instructions (not necessarily the size
-    // of real instructions for PISA)
-    static inline size_t fetchInstSize() {
-        return sizeof(MachInst);
-    }
+// the size of "fetched" instructions (not necessarily the size
+// of real instructions for PISA)
+static inline size_t fetchInstSize() {
+    return sizeof(MachInst);
+}
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Register File Utility Functions
-    //
-    static inline MachInst makeRegisterCopy(int dest, int src) {
-        panic("makeRegisterCopy not implemented");
-        return 0;
-    }
+////////////////////////////////////////////////////////////////////////
+//
+//  Register File Utility Functions
+//
+static inline MachInst makeRegisterCopy(int dest, int src) {
+    panic("makeRegisterCopy not implemented");
+    return 0;
+}
 
-    template <class CPU>
-    void zeroRegisters(CPU *cpu);
+template <class CPU>
+void zeroRegisters(CPU *cpu);
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Translation stuff
-    //
-    inline Addr
-    TruncPage(Addr addr)
-    { return addr & ~(PageBytes - 1); }
+////////////////////////////////////////////////////////////////////////
+//
+//  Translation stuff
+//
+inline Addr
+TruncPage(Addr addr)
+{ return addr & ~(PageBytes - 1); }
 
-    inline Addr
-    RoundPage(Addr addr)
-    { return (addr + PageBytes - 1) & ~(PageBytes - 1); }
+inline Addr
+RoundPage(Addr addr)
+{ return (addr + PageBytes - 1) & ~(PageBytes - 1); }
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    // CPU Utility
-    //
-    void startupCPU(ThreadContext *tc, int cpuId);
+////////////////////////////////////////////////////////////////////////
+//
+// CPU Utility
+//
+void startupCPU(ThreadContext *tc, int cpuId);
 
-    void copyRegs(ThreadContext *src, ThreadContext *dest);
-    void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+void copyRegs(ThreadContext *src, ThreadContext *dest);
+void copyMiscRegs(ThreadContext *src, ThreadContext *dest);
+
 };
 
 

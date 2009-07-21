@@ -56,16 +56,14 @@ using namespace MipsISA;
 //  MIPS TLB
 //
 
-#define MODE2MASK(X)                    (1 << (X))
-
 static inline mode_type
 getOperatingMode(MiscReg Stat)
 {
-    if((Stat & 0x10000006) != 0 || (Stat & 0x18) ==0) {
+    if ((Stat & 0x10000006) != 0 || (Stat & 0x18) ==0) {
         return mode_kernel;
-    } else if((Stat & 0x18) == 0x8) {
+    } else if ((Stat & 0x18) == 0x8) {
         return mode_supervisor;
-    } else if((Stat & 0x18) == 0x10) {
+    } else if ((Stat & 0x18) == 0x10) {
         return mode_user;
     } else {
         return mode_number;
@@ -76,9 +74,9 @@ getOperatingMode(MiscReg Stat)
 TLB::TLB(const Params *p)
     : BaseTLB(p), size(p->size), nlu(0)
 {
-    table = new MipsISA::PTE[size];
-    memset(table, 0, sizeof(MipsISA::PTE[size]));
-    smallPages=0;
+    table = new PTE[size];
+    memset(table, 0, sizeof(PTE[size]));
+    smallPages = 0;
 }
 
 TLB::~TLB()
@@ -92,23 +90,23 @@ MipsISA::PTE *
 TLB::lookup(Addr vpn, uint8_t asn) const
 {
     // assume not found...
-    MipsISA::PTE *retval = NULL;
+    PTE *retval = NULL;
     PageTable::const_iterator i = lookupTable.find(vpn);
     if (i != lookupTable.end()) {
         while (i->first == vpn) {
             int index = i->second;
-            MipsISA::PTE *pte = &table[index];
+            PTE *pte = &table[index];
 
             /* 1KB TLB Lookup code - from MIPS ARM Volume III - Rev. 2.50 */
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
             Addr VPN  = pte->VPN;
-            //      warn("Valid: %d - %d\n",pte->V0,pte->V1);
-            if(((vpn & InvMask) == (VPN & InvMask)) && (pte->G  || (asn == pte->asid)))
-              { // We have a VPN + ASID Match
+            if (((vpn & InvMask) == (VPN & InvMask)) &&
+                    (pte->G  || (asn == pte->asid))) {
+                // We have a VPN + ASID Match
                 retval = pte;
                 break;
-              }
+            }
             ++i;
         }
     }
@@ -118,119 +116,96 @@ TLB::lookup(Addr vpn, uint8_t asn) const
     return retval;
 }
 
-MipsISA::PTE* TLB::getEntry(unsigned Index) const
+MipsISA::PTE*
+TLB::getEntry(unsigned Index) const
 {
     // Make sure that Index is valid
     assert(Index<size);
     return &table[Index];
 }
 
-int TLB::probeEntry(Addr vpn,uint8_t asn) const
+int
+TLB::probeEntry(Addr vpn, uint8_t asn) const
 {
     // assume not found...
-    MipsISA::PTE *retval = NULL;
-    int Ind=-1;
+    PTE *retval = NULL;
+    int Ind = -1;
     PageTable::const_iterator i = lookupTable.find(vpn);
     if (i != lookupTable.end()) {
         while (i->first == vpn) {
             int index = i->second;
-            MipsISA::PTE *pte = &table[index];
+            PTE *pte = &table[index];
 
             /* 1KB TLB Lookup code - from MIPS ARM Volume III - Rev. 2.50 */
             Addr Mask = pte->Mask;
             Addr InvMask = ~Mask;
-            Addr VPN  = pte->VPN;
-            if(((vpn & InvMask) == (VPN & InvMask)) && (pte->G  || (asn == pte->asid)))
-              { // We have a VPN + ASID Match
+            Addr VPN = pte->VPN;
+            if (((vpn & InvMask) == (VPN & InvMask)) &&
+                    (pte->G  || (asn == pte->asid))) {
+                // We have a VPN + ASID Match
                 retval = pte;
                 Ind = index;
                 break;
-              }
-
+            }
             ++i;
         }
     }
     DPRINTF(MipsPRA,"VPN: %x, asid: %d, Result of TLBP: %d\n",vpn,asn,Ind);
     return Ind;
 }
-Fault inline
+
+inline Fault
 TLB::checkCacheability(RequestPtr &req)
 {
-  Addr VAddrUncacheable = 0xA0000000;
-  // In MIPS, cacheability is controlled by certain bits of the virtual address
-  // or by the TLB entry
-  if((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
-    // mark request as uncacheable
-      req->setFlags(Request::UNCACHEABLE);
-  }
-  return NoFault;
-}
-void TLB::insertAt(MipsISA::PTE &pte, unsigned Index, int _smallPages)
-{
-  smallPages=_smallPages;
-  if(Index > size){
-    warn("Attempted to write at index (%d) beyond TLB size (%d)",Index,size);
-  } else {
-    // Update TLB
-    DPRINTF(TLB,"TLB[%d]: %x %x %x %x\n",Index,pte.Mask<<11,((pte.VPN << 11) | pte.asid),((pte.PFN0 <<6) | (pte.C0 << 3) | (pte.D0 << 2) | (pte.V0 <<1) | pte.G),
-            ((pte.PFN1 <<6) | (pte.C1 << 3) | (pte.D1 << 2) | (pte.V1 <<1) | pte.G));
-    if(table[Index].V0 == true || table[Index].V1 == true){ // Previous entry is valid
-      PageTable::iterator i = lookupTable.find(table[Index].VPN);
-      lookupTable.erase(i);
+    Addr VAddrUncacheable = 0xA0000000;
+    // In MIPS, cacheability is controlled by certain bits of the virtual
+    // address or by the TLB entry
+    if ((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
+        // mark request as uncacheable
+        req->setFlags(Request::UNCACHEABLE);
     }
-    table[Index]=pte;
-    // Update fast lookup table
-    lookupTable.insert(make_pair(table[Index].VPN, Index));
-    //    int TestIndex=probeEntry(pte.VPN,pte.asid);
-    //    warn("Inserted at: %d, Found at: %d (%x)\n",Index,TestIndex,pte.Mask);
-  }
+    return NoFault;
+}
 
+void
+TLB::insertAt(PTE &pte, unsigned Index, int _smallPages)
+{
+    smallPages = _smallPages;
+    if (Index > size) {
+        warn("Attempted to write at index (%d) beyond TLB size (%d)",
+                Index, size);
+    } else {
+        // Update TLB
+        DPRINTF(TLB, "TLB[%d]: %x %x %x %x\n",
+                Index, pte.Mask << 11,
+                ((pte.VPN << 11) | pte.asid),
+                ((pte.PFN0 << 6) | (pte.C0 << 3) |
+                 (pte.D0 << 2) | (pte.V0 <<1) | pte.G),
+                ((pte.PFN1 <<6) | (pte.C1 << 3) |
+                 (pte.D1 << 2) | (pte.V1 <<1) | pte.G));
+        if (table[Index].V0 == true || table[Index].V1 == true) {
+            // Previous entry is valid
+            PageTable::iterator i = lookupTable.find(table[Index].VPN);
+            lookupTable.erase(i);
+        }
+        table[Index]=pte;
+        // Update fast lookup table
+        lookupTable.insert(make_pair(table[Index].VPN, Index));
+    }
 }
 
 // insert a new TLB entry
 void
-TLB::insert(Addr addr, MipsISA::PTE &pte)
+TLB::insert(Addr addr, PTE &pte)
 {
-  fatal("TLB Insert not yet implemented\n");
-
-
-  /*    MipsISA::VAddr vaddr = addr;
-    if (table[nlu].valid) {
-        Addr oldvpn = table[nlu].tag;
-        PageTable::iterator i = lookupTable.find(oldvpn);
-
-        if (i == lookupTable.end())
-            panic("TLB entry not found in lookupTable");
-
-        int index;
-        while ((index = i->second) != nlu) {
-            if (table[index].tag != oldvpn)
-                panic("TLB entry not found in lookupTable");
-
-            ++i;
-        }
-
-        DPRINTF(TLB, "remove @%d: %#x -> %#x\n", nlu, oldvpn, table[nlu].ppn);
-
-        lookupTable.erase(i);
-    }
-
-    DPRINTF(TLB, "insert @%d: %#x -> %#x\n", nlu, vaddr.vpn(), pte.ppn);
-
-    table[nlu] = pte;
-    table[nlu].tag = vaddr.vpn();
-    table[nlu].valid = true;
-
-    lookupTable.insert(make_pair(vaddr.vpn(), nlu));
-    nextnlu();
-  */
+    fatal("TLB Insert not yet implemented\n");
 }
 
 void
 TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
-    memset(table, 0, sizeof(MipsISA::PTE[size]));
+    memset(table, 0, sizeof(PTE[size]));
     lookupTable.clear();
     nlu = 0;
 }
@@ -328,68 +303,66 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
-    if(fault != NoFault)
+    if (fault != NoFault)
         return fault;
 
     return NoFault;
 #else
-  if(MipsISA::IsKSeg0(req->getVaddr()))
-    {
-      // Address will not be translated through TLB, set response, and go!
-      req->setPaddr(MipsISA::KSeg02Phys(req->getVaddr()));
-      if(MipsISA::getOperatingMode(tc->readMiscReg(MipsISA::Status)) != mode_kernel || req->isMisaligned())
-        {
+    if (IsKSeg0(req->getVaddr())) {
+        // Address will not be translated through TLB, set response, and go!
+        req->setPaddr(KSeg02Phys(req->getVaddr()));
+        if (getOperatingMode(tc->readMiscReg(Status)) != mode_kernel ||
+                req->isMisaligned()) {
+            AddressErrorFault *Flt = new AddressErrorFault();
+            /* BadVAddr must be set */
+            Flt->BadVAddr = req->getVaddr();
+            return Flt;
+        }
+    } else if(IsKSeg1(req->getVaddr())) {
+        // Address will not be translated through TLB, set response, and go!
+        req->setPaddr(KSeg02Phys(req->getVaddr()));
+    } else {
+      /* 
+       * This is an optimization - smallPages is updated every time a TLB
+       * operation is performed. That way, we don't need to look at
+       * Config3 _ SP and PageGrain _ ESP every time we do a TLB lookup
+       */
+      Addr VPN;
+      if (smallPages == 1) {
+        VPN = ((req->getVaddr() >> 11));
+      } else {
+        VPN = ((req->getVaddr() >> 11) & 0xFFFFFFFC);
+      }
+      uint8_t Asid = req->getAsid();
+      if (req->isMisaligned()) {
+          // Unaligned address!
           AddressErrorFault *Flt = new AddressErrorFault();
           /* BadVAddr must be set */
           Flt->BadVAddr = req->getVaddr();
           return Flt;
-        }
-    }
-  else if(MipsISA::IsKSeg1(req->getVaddr()))
-    {
-      // Address will not be translated through TLB, set response, and go!
-      req->setPaddr(MipsISA::KSeg02Phys(req->getVaddr()));
-    }
-  else
-    {
-      /* This is an optimization - smallPages is updated every time a TLB operation is performed
-         That way, we don't need to look at Config3 _ SP and PageGrain _ ESP every time we
-         do a TLB lookup */
-      Addr VPN;
-      if(smallPages==1){
-        VPN=((req->getVaddr() >> 11));
-      } else {
-        VPN=((req->getVaddr() >> 11) & 0xFFFFFFFC);
       }
-      uint8_t Asid = req->getAsid();
-      if(req->isMisaligned()){ // Unaligned address!
-        AddressErrorFault *Flt = new AddressErrorFault();
-        /* BadVAddr must be set */
-        Flt->BadVAddr = req->getVaddr();
-        return Flt;
-      }
-      MipsISA::PTE *pte = lookup(VPN,Asid);
-      if(pte != NULL)
-        {// Ok, found something
+      PTE *pte = lookup(VPN,Asid);
+      if (pte != NULL) {
+          // Ok, found something
           /* Check for valid bits */
           int EvenOdd;
           bool Valid;
-          if((((req->getVaddr()) >> pte->AddrShiftAmount) & 1) ==0){
-            // Check even bits
-            Valid = pte->V0;
-            EvenOdd = 0;
+          if ((((req->getVaddr()) >> pte->AddrShiftAmount) & 1) == 0) {
+              // Check even bits
+              Valid = pte->V0;
+              EvenOdd = 0;
           } else {
-            // Check odd bits
-            Valid = pte->V1;
-            EvenOdd = 1;
+              // Check odd bits
+              Valid = pte->V1;
+              EvenOdd = 1;
           }
 
-          if(Valid == false)
-            {//Invalid entry
+          if (Valid == false) {
+              //Invalid entry
               ItbInvalidFault *Flt = new ItbInvalidFault();
               /* EntryHi VPN, ASID fields must be set */
               Flt->EntryHi_Asid = Asid;
-              Flt->EntryHi_VPN2 = (VPN>>2);
+              Flt->EntryHi_VPN2 = (VPN >> 2);
               Flt->EntryHi_VPN2X = (VPN & 0x3);
 
               /* BadVAddr must be set */
@@ -398,43 +371,36 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
               /* Context must be set */
               Flt->Context_BadVPN2 = (VPN >> 2);
               return Flt;
-            }
-          else
-            {// Ok, this is really a match, set paddr
-              //              hits++;
+          } else {
+              // Ok, this is really a match, set paddr
               Addr PAddr;
-              if(EvenOdd == 0){
+              if (EvenOdd == 0) {
                 PAddr = pte->PFN0;
-              }else{
+              } else {
                 PAddr = pte->PFN1;
               }
-              PAddr >>= (pte->AddrShiftAmount-12);
+              PAddr >>= (pte->AddrShiftAmount - 12);
               PAddr <<= pte->AddrShiftAmount;
               PAddr |= ((req->getVaddr()) & pte->OffsetMask);
               req->setPaddr(PAddr);
-
-
             }
-        }
-      else
-        { // Didn't find any match, return a TLB Refill Exception
-          //      misses++;
-          ItbRefillFault *Flt=new ItbRefillFault();
-          /* EntryHi VPN, ASID fields must be set */
-          Flt->EntryHi_Asid = Asid;
-          Flt->EntryHi_VPN2 = (VPN>>2);
-          Flt->EntryHi_VPN2X = (VPN & 0x3);
+        } else {
+            // Didn't find any match, return a TLB Refill Exception
+            ItbRefillFault *Flt=new ItbRefillFault();
+            /* EntryHi VPN, ASID fields must be set */
+            Flt->EntryHi_Asid = Asid;
+            Flt->EntryHi_VPN2 = (VPN >> 2);
+            Flt->EntryHi_VPN2X = (VPN & 0x3);
 
+            /* BadVAddr must be set */
+            Flt->BadVAddr = req->getVaddr();
 
-          /* BadVAddr must be set */
-          Flt->BadVAddr = req->getVaddr();
-
-          /* Context must be set */
-          Flt->Context_BadVPN2 = (VPN >> 2);
-          return Flt;
+            /* Context must be set */
+            Flt->Context_BadVPN2 = (VPN >> 2);
+            return Flt;
         }
     }
-  return checkCacheability(req);
+    return checkCacheability(req);
 #endif
 }
 
@@ -457,131 +423,118 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
-    if(fault != NoFault)
+    if (fault != NoFault)
         return fault;
 
     return NoFault;
 #else
-  if(MipsISA::IsKSeg0(req->getVaddr()))
-    {
-      // Address will not be translated through TLB, set response, and go!
-      req->setPaddr(MipsISA::KSeg02Phys(req->getVaddr()));
-      if(MipsISA::getOperatingMode(tc->readMiscReg(MipsISA::Status)) != mode_kernel || req->isMisaligned())
-        {
-          StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
-          /* BadVAddr must be set */
-          Flt->BadVAddr = req->getVaddr();
+    if (IsKSeg0(req->getVaddr())) {
+        // Address will not be translated through TLB, set response, and go!
+        req->setPaddr(KSeg02Phys(req->getVaddr()));
+        if (getOperatingMode(tc->readMiscReg(Status)) != mode_kernel ||
+                req->isMisaligned()) {
+            StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
+            /* BadVAddr must be set */
+            Flt->BadVAddr = req->getVaddr();
 
-          return Flt;
+            return Flt;
         }
-    }
-  else if(MipsISA::IsKSeg1(req->getVaddr()))
-    {
+    } else if(IsKSeg1(req->getVaddr())) {
       // Address will not be translated through TLB, set response, and go!
-      req->setPaddr(MipsISA::KSeg02Phys(req->getVaddr()));
-    }
-  else
-    {
-      /* This is an optimization - smallPages is updated every time a TLB operation is performed
-         That way, we don't need to look at Config3 _ SP and PageGrain _ ESP every time we
-         do a TLB lookup */
-      Addr VPN=((req->getVaddr() >> 11) & 0xFFFFFFFC);
-      if(smallPages==1){
-        VPN=((req->getVaddr() >> 11));
-      }
-      uint8_t Asid = req->getAsid();
-      MipsISA::PTE *pte = lookup(VPN,Asid);
-      if(req->isMisaligned()){ // Unaligned address!
-        StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
-        /* BadVAddr must be set */
-        Flt->BadVAddr = req->getVaddr();
-        return Flt;
-      }
-      if(pte != NULL)
-        {// Ok, found something
-          /* Check for valid bits */
-          int EvenOdd;
-          bool Valid;
-          bool Dirty;
-          if(((((req->getVaddr()) >> pte->AddrShiftAmount) & 1)) ==0){
-            // Check even bits
-            Valid = pte->V0;
-            Dirty = pte->D0;
-            EvenOdd = 0;
-
-          } else {
-            // Check odd bits
-            Valid = pte->V1;
-            Dirty = pte->D1;
-            EvenOdd = 1;
-          }
-
-          if(Valid == false)
-            {//Invalid entry
-              //              invalids++;
-              DtbInvalidFault *Flt = new DtbInvalidFault();
-              /* EntryHi VPN, ASID fields must be set */
-              Flt->EntryHi_Asid = Asid;
-              Flt->EntryHi_VPN2 = (VPN>>2);
-              Flt->EntryHi_VPN2X = (VPN & 0x3);
-
-
-              /* BadVAddr must be set */
-              Flt->BadVAddr = req->getVaddr();
-
-              /* Context must be set */
-              Flt->Context_BadVPN2 = (VPN >> 2);
-
-              return Flt;
+      req->setPaddr(KSeg02Phys(req->getVaddr()));
+    } else {
+        /* 
+         * This is an optimization - smallPages is updated every time a TLB
+         * operation is performed. That way, we don't need to look at
+         * Config3 _ SP and PageGrain _ ESP every time we do a TLB lookup
+         */
+        Addr VPN = ((req->getVaddr() >> 11) & 0xFFFFFFFC);
+        if (smallPages == 1) {
+            VPN = ((req->getVaddr() >> 11));
+        }
+        uint8_t Asid = req->getAsid();
+        PTE *pte = lookup(VPN, Asid);
+        if (req->isMisaligned()) {
+            // Unaligned address!
+            StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
+            /* BadVAddr must be set */
+            Flt->BadVAddr = req->getVaddr();
+            return Flt;
+        }
+        if (pte != NULL) {
+            // Ok, found something
+            /* Check for valid bits */
+            int EvenOdd;
+            bool Valid;
+            bool Dirty;
+            if (((((req->getVaddr()) >> pte->AddrShiftAmount) & 1)) == 0) {
+                // Check even bits
+                Valid = pte->V0;
+                Dirty = pte->D0;
+                EvenOdd = 0;
+            } else {
+                // Check odd bits
+                Valid = pte->V1;
+                Dirty = pte->D1;
+                EvenOdd = 1;
             }
-          else
-            {// Ok, this is really a match, set paddr
-              //              hits++;
-              if(!Dirty)
-                {
-                  TLBModifiedFault *Flt = new TLBModifiedFault();
-                  /* EntryHi VPN, ASID fields must be set */
-                  Flt->EntryHi_Asid = Asid;
-                  Flt->EntryHi_VPN2 = (VPN>>2);
-                  Flt->EntryHi_VPN2X = (VPN & 0x3);
 
+            if (Valid == false) {
+                //Invalid entry
+                DtbInvalidFault *Flt = new DtbInvalidFault();
+                /* EntryHi VPN, ASID fields must be set */
+                Flt->EntryHi_Asid = Asid;
+                Flt->EntryHi_VPN2 = (VPN>>2);
+                Flt->EntryHi_VPN2X = (VPN & 0x3);
 
-                  /* BadVAddr must be set */
-                  Flt->BadVAddr = req->getVaddr();
+                /* BadVAddr must be set */
+                Flt->BadVAddr = req->getVaddr();
 
-                  /* Context must be set */
-                  Flt->Context_BadVPN2 = (VPN >> 2);
-                  return Flt;
+                /* Context must be set */
+                Flt->Context_BadVPN2 = (VPN >> 2);
 
+                return Flt;
+            } else {
+                // Ok, this is really a match, set paddr
+                if (!Dirty) {
+                    TLBModifiedFault *Flt = new TLBModifiedFault();
+                    /* EntryHi VPN, ASID fields must be set */
+                    Flt->EntryHi_Asid = Asid;
+                    Flt->EntryHi_VPN2 = (VPN >> 2);
+                    Flt->EntryHi_VPN2X = (VPN & 0x3);
+
+                    /* BadVAddr must be set */
+                    Flt->BadVAddr = req->getVaddr();
+
+                    /* Context must be set */
+                    Flt->Context_BadVPN2 = (VPN >> 2);
+                    return Flt;
                 }
-              Addr PAddr;
-              if(EvenOdd == 0){
-                PAddr = pte->PFN0;
-              }else{
-                PAddr = pte->PFN1;
-              }
-              PAddr >>= (pte->AddrShiftAmount-12);
-              PAddr <<= pte->AddrShiftAmount;
-              PAddr |= ((req->getVaddr()) & pte->OffsetMask);
-              req->setPaddr(PAddr);
+                Addr PAddr;
+                if (EvenOdd == 0) {
+                    PAddr = pte->PFN0;
+                } else {
+                    PAddr = pte->PFN1;
+                }
+                PAddr >>= (pte->AddrShiftAmount - 12);
+                PAddr <<= pte->AddrShiftAmount;
+                PAddr |= ((req->getVaddr()) & pte->OffsetMask);
+                req->setPaddr(PAddr);
             }
-        }
-      else
-        { // Didn't find any match, return a TLB Refill Exception
-          //      misses++;
-          DtbRefillFault *Flt=new DtbRefillFault();
-          /* EntryHi VPN, ASID fields must be set */
-          Flt->EntryHi_Asid = Asid;
-          Flt->EntryHi_VPN2 = (VPN>>2);
-          Flt->EntryHi_VPN2X = (VPN & 0x3);
+        } else {
+            // Didn't find any match, return a TLB Refill Exception
+            DtbRefillFault *Flt = new DtbRefillFault();
+            /* EntryHi VPN, ASID fields must be set */
+            Flt->EntryHi_Asid = Asid;
+            Flt->EntryHi_VPN2 = (VPN >> 2);
+            Flt->EntryHi_VPN2X = (VPN & 0x3);
 
+            /* BadVAddr must be set */
+            Flt->BadVAddr = req->getVaddr();
 
-          /* BadVAddr must be set */
-          Flt->BadVAddr = req->getVaddr();
-
-          /* Context must be set */
-          Flt->Context_BadVPN2 = (VPN >> 2);
-          return Flt;
+            /* Context must be set */
+            Flt->Context_BadVPN2 = (VPN >> 2);
+            return Flt;
         }
     }
     return checkCacheability(req);
@@ -609,7 +562,7 @@ TLB::translateTiming(RequestPtr req, ThreadContext *tc,
 MipsISA::PTE &
 TLB::index(bool advance)
 {
-    MipsISA::PTE *pte = &table[nlu];
+    PTE *pte = &table[nlu];
 
     if (advance)
         nextnlu();
@@ -620,5 +573,5 @@ TLB::index(bool advance)
 MipsISA::TLB *
 MipsTLBParams::create()
 {
-    return new MipsISA::TLB(this);
+    return new TLB(this);
 }

@@ -69,7 +69,3 @@ OpenFlagTransTable MipsLinux::openFlagTable[] = {
 
 const int MipsLinux::NUM_OPEN_FLAGS =
         (sizeof(MipsLinux::openFlagTable)/sizeof(MipsLinux::openFlagTable[0]));
-
-
-
-

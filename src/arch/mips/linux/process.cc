@@ -74,15 +74,15 @@ sys_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
-
-      case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
-          // I don't think this exactly matches the HW FPCR
-          *fpcr = 0;
-          fpcr.copyOut(tc->getMemPort());
-          return 0;
-      }
-
+      case 45:
+        { 
+            // GSI_IEEE_FP_CONTROL
+            TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
+            // I don't think this exactly matches the HW FPCR
+            *fpcr = 0;
+            fpcr.copyOut(tc->getMemPort());
+            return 0;
+        }
       default:
         cerr << "sys_getsysinfo: unknown op " << op << endl;
         abort();
@@ -102,15 +102,16 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     switch (op) {
 
-      case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
-          // I don't think this exactly matches the HW FPCR
-          fpcr.copyIn(tc->getMemPort());
-          DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
+      case 14:
+        {
+            // SSI_IEEE_FP_CONTROL
+            TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
+            // I don't think this exactly matches the HW FPCR
+            fpcr.copyIn(tc->getMemPort());
+            DPRINTFR(SyscallVerbose, "sys_setsysinfo(SSI_IEEE_FP_CONTROL): "
                    " setting FPCR to 0x%x\n", gtoh(*(uint64_t*)fpcr));
-          return 0;
-      }
-
+            return 0;
+        }
       default:
         cerr << "sys_setsysinfo: unknown op " << op << endl;
         abort();
@@ -196,8 +197,8 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 72 */ SyscallDesc("sigsuspend", unimplementedFunc),
     /* 73 */ SyscallDesc("sigpending", unimplementedFunc),
     /* 74 */ SyscallDesc("sethostname", ignoreFunc),
-    /* 75 */ SyscallDesc("setrlimit", unimplementedFunc/*setrlimitFunc<MipsLinux>*/),
-    /* 76 */ SyscallDesc("getrlimit", unimplementedFunc/*getrlimitFunc<MipsLinux>*/),
+    /* 75 */ SyscallDesc("setrlimit", unimplementedFunc),
+    /* 76 */ SyscallDesc("getrlimit", unimplementedFunc),
     /* 77 */ SyscallDesc("getrusage", getrusageFunc<MipsLinux>),
     /* 78 */ SyscallDesc("gettimeofday", unimplementedFunc),
     /* 79 */ SyscallDesc("settimeofday", unimplementedFunc),
@@ -241,7 +242,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
-    /* 120 */ SyscallDesc("clone", unimplementedFunc/*cloneFunc<MipsLinux>*/),
+    /* 120 */ SyscallDesc("clone", unimplementedFunc),
     /* 121 */ SyscallDesc("setdomainname", unimplementedFunc),
     /* 122 */ SyscallDesc("uname", unameFunc),
     /* 123 */ SyscallDesc("modify_ldt", unimplementedFunc),
@@ -315,12 +316,12 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 191 */ SyscallDesc("getresgid", unimplementedFunc),
     /* 192 */ SyscallDesc("prctl", unimplementedFunc),
     /* 193 */ SyscallDesc("rt_sigreturn", unimplementedFunc),
-    /* 194 */ SyscallDesc("rt_sigaction", unimplementedFunc/*rt_sigactionFunc<MipsLinux>*/),
-    /* 195 */ SyscallDesc("rt_sigprocmask", unimplementedFunc/*rt_sigprocmaskFunc<MipsLinux>*/),
+    /* 194 */ SyscallDesc("rt_sigaction", unimplementedFunc),
+    /* 195 */ SyscallDesc("rt_sigprocmask", unimplementedFunc),
     /* 196 */ SyscallDesc("rt_sigpending", unimplementedFunc),
     /* 197 */ SyscallDesc("rt_sigtimedwait", unimplementedFunc),
     /* 198 */ SyscallDesc("rt_sigqueueinfo", ignoreFunc),
-    /* 199 */ SyscallDesc("rt_sigsuspend", unimplementedFunc/*rt_sigsuspendFunc<MipsLinux>*/),
+    /* 199 */ SyscallDesc("rt_sigsuspend", unimplementedFunc),
     /* 200 */ SyscallDesc("pread64", unimplementedFunc),
     /* 201 */ SyscallDesc("pwrite64", unimplementedFunc),
     /* 202 */ SyscallDesc("chown", unimplementedFunc),
@@ -405,7 +406,6 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 281 */ SyscallDesc("request_key", unimplementedFunc),
     /* 282 */ SyscallDesc("keyctl", unimplementedFunc)
 };
-
 
 MipsLinuxProcess::MipsLinuxProcess(LiveProcessParams * params,
                                      ObjectFile *objFile)

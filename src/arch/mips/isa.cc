@@ -447,12 +447,7 @@ ISA::readMiscReg(int reg_idx, ThreadContext *tc,  ThreadID tid)
             misc_reg / 8, misc_reg % 8, miscRegNames[misc_reg],
             miscRegFile[misc_reg][reg_sel]);
 
-
-    switch (misc_reg)
-    {
-      default:
-        return miscRegFile[misc_reg][reg_sel];
-    }
+    return miscRegFile[misc_reg][reg_sel];
 }
 
 void
@@ -486,7 +481,6 @@ ISA::setRegMask(int reg_idx, const MiscReg &val, ThreadID tid)
 // (1) Some CP0 Registers have fields that cannot
 // be overwritten. Make sure to handle those particular registers
 // with care!
-//template <class TC>
 void
 ISA::setMiscReg(int reg_idx, const MiscReg &val,
                     ThreadContext *tc, ThreadID tid)
@@ -515,21 +509,21 @@ ISA::setMiscReg(int reg_idx, const MiscReg &val,
 MiscReg
 ISA::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
 {
-  MiscReg retVal = val;
+    MiscReg retVal = val;
 
-  // Mask off read-only regions
-  retVal &= miscRegFile_WriteMask[misc_reg][reg_sel];
-  MiscReg curVal = miscRegFile[misc_reg][reg_sel];
-  // Mask off current alue with inverse mask (clear writeable bits)
-  curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]);
-  retVal |= curVal; // Combine the two
-  DPRINTF(MipsPRA,
-          "filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, "
-          "current val: %lx, written val: %x\n",
-          miscRegFile_WriteMask[misc_reg][reg_sel],
-          ~miscRegFile_WriteMask[misc_reg][reg_sel],
-          val, miscRegFile[misc_reg][reg_sel], retVal);
-  return retVal;
+    // Mask off read-only regions
+    retVal &= miscRegFile_WriteMask[misc_reg][reg_sel];
+    MiscReg curVal = miscRegFile[misc_reg][reg_sel];
+    // Mask off current alue with inverse mask (clear writeable bits)
+    curVal &= (~miscRegFile_WriteMask[misc_reg][reg_sel]);
+    retVal |= curVal; // Combine the two
+    DPRINTF(MipsPRA,
+            "filterCP0Write: Mask: %lx, Inverse Mask: %lx, write Val: %x, "
+            "current val: %lx, written val: %x\n",
+            miscRegFile_WriteMask[misc_reg][reg_sel],
+            ~miscRegFile_WriteMask[misc_reg][reg_sel],
+            val, miscRegFile[misc_reg][reg_sel], retVal);
+    return retVal;
 }
 
 void
@@ -586,8 +580,6 @@ ISA::CP0Event::process()
         cp0->updateCPU();
         break;
     }
-
-    //cp0EventRemoveList.push(this);
 }
 
 const char *

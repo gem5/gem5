@@ -40,57 +40,66 @@ class ThreadContext;
 
 namespace MipsISA
 {
-    class Predecoder
+
+class Predecoder
+{
+  protected:
+    ThreadContext * tc;
+    //The extended machine instruction being generated
+    ExtMachInst emi;
+
+  public:
+    Predecoder(ThreadContext * _tc) : tc(_tc)
+    {}
+
+    ThreadContext *getTC()
     {
-      protected:
-        ThreadContext * tc;
-        //The extended machine instruction being generated
-        ExtMachInst emi;
+        return tc;
+    }
 
-      public:
-        Predecoder(ThreadContext * _tc) : tc(_tc)
-        {}
+    void
+    setTC(ThreadContext *_tc)
+    {
+        tc = _tc;
+    }
 
-        ThreadContext * getTC()
-        {
-            return tc;
-        }
+    void
+    process()
+    {
+    }
 
-        void setTC(ThreadContext * _tc)
-        {
-            tc = _tc;
-        }
+    void
+    reset()
+    {}
 
-        void process()
-        {
-        }
+    //Use this to give data to the predecoder. This should be used
+    //when there is control flow.
+    void
+    moreBytes(Addr pc, Addr fetchPC, MachInst inst)
+    {
+        emi = inst;
+    }
 
-        void reset()
-        {}
+    bool
+    needMoreBytes()
+    {
+        return true;
+    }
 
-        //Use this to give data to the predecoder. This should be used
-        //when there is control flow.
-        void moreBytes(Addr pc, Addr fetchPC, MachInst inst)
-        {
-            emi = inst;
-        }
+    bool
+    extMachInstReady()
+    {
+        return true;
+    }
 
-        bool needMoreBytes()
-        {
-            return true;
-        }
+    //This returns a constant reference to the ExtMachInst to avoid a copy
+    const ExtMachInst &
+    getExtMachInst()
+    {
+        return emi;
+    }
+};
 
-        bool extMachInstReady()
-        {
-            return true;
-        }
-
-        //This returns a constant reference to the ExtMachInst to avoid a copy
-        const ExtMachInst & getExtMachInst()
-        {
-            return emi;
-        }
-    };
 };
 
 #endif // __ARCH_MIPS_PREDECODER_HH__

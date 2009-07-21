@@ -54,10 +54,10 @@ class MipsSystem : public System
 
     virtual bool breakpoint();
 
-/**
- * Serialization stuff
- */
   public:
+    /**
+     * Serialization stuff
+     */
     virtual void serialize(std::ostream &os);
     virtual void unserialize(Checkpoint *cp, const std::string &section);
 
@@ -89,7 +89,8 @@ class MipsSystem : public System
 #if FULL_SYSTEM
   /** Add a function-based event to the console code. */
     template <class T>
-    T *addConsoleFuncEvent(const char *lbl)
+    T *
+    addConsoleFuncEvent(const char *lbl)
     {
         return addFuncEvent<T>(consoleSymtab, lbl);
     }

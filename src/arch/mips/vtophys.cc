@@ -53,7 +53,8 @@ MipsISA::vtophys(Addr vaddr)
     else if(MipsISA::IsKSeg1(vaddr))
         paddr = MipsISA::KSeg12Phys(vaddr);
     else
-        panic("vtophys: ptbr is not set on virtual lookup for vaddr %#x", vaddr);
+        panic("vtophys: ptbr is not set on "
+                "virtual lookup for vaddr %#x", vaddr);
 
     DPRINTF(VtoPhys, "vtophys(%#x) -> %#x\n", vaddr, paddr);
 
@@ -63,7 +64,6 @@ MipsISA::vtophys(Addr vaddr)
 Addr
 MipsISA::vtophys(ThreadContext *tc, Addr addr)
 {
-
   fatal("VTOPHYS: Unimplemented on MIPS\n");
 }
 

@@ -28,20 +28,8 @@
  * Authors: Jaidev Patwardhan
  */
 
-#include "arch/vtophys.hh"
 #include "arch/mips/bare_iron/system.hh"
-#include "arch/mips/system.hh"
-#include "cpu/thread_context.hh"
-#include "cpu/base.hh"
-#include "dev/platform.hh"
-#include "mem/physical.hh"
-#include "mem/port.hh"
 #include "params/BareIronMipsSystem.hh"
-#include "sim/byteswap.hh"
-
-using namespace std;
-using namespace MipsISA;
-
 
 BareIronMipsSystem::BareIronMipsSystem(Params *p)
     : MipsSystem(p)

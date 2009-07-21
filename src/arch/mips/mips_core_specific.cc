@@ -29,20 +29,9 @@
  *          Steve Reinhardt
  */
 
-#include "arch/mips/faults.hh"
-#include "arch/mips/isa_traits.hh"
-#include "arch/mips/tlb.hh"
-//#include "base/kgdb.h"
-#include "base/remote_gdb.hh"
-#include "base/stats/events.hh"
 #include "config/full_system.hh"
 #include "cpu/base.hh"
-#include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
-#include "kern/kernel_stats.hh"
-#include "sim/debug.hh"
-#include "sim/sim_exit.hh"
-#include "arch/mips/mips_core_specific.hh"
 
 #if FULL_SYSTEM
 
@@ -52,61 +41,11 @@
 //
 void
 MipsISA::initCPU(ThreadContext *tc, int cpuId)
-{
-
- //    MipsFault *reset = new ResetFault;
-//     tc->setPC(reset->vect());
-//     tc->setNextPC(tc->readPC() + sizeof(MachInst));
-
-//     delete reset;
-}
+{}
 
 template <class CPU>
 void
 MipsISA::processInterrupts(CPU *cpu)
-{
-    //Check if there are any outstanding interrupts
-    //Handle the interrupts
-  /*    int ipl = 0;
-    int summary = 0;
-
-    cpu->checkInterrupts = false;
-
-    if (cpu->readMiscReg(IPR_ASTRR))
-        panic("asynchronous traps not implemented\n");
-
-    if (cpu->readMiscReg(IPR_SIRR)) {
-        for (int i = INTLEVEL_SOFTWARE_MIN;
-             i < INTLEVEL_SOFTWARE_MAX; i++) {
-            if (cpu->readMiscReg(IPR_SIRR) & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = (i - INTLEVEL_SOFTWARE_MIN) + 1;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    uint64_t interrupts = cpu->intr_status();
-
-    if (interrupts) {
-        for (int i = INTLEVEL_EXTERNAL_MIN;
-             i < INTLEVEL_EXTERNAL_MAX; i++) {
-            if (interrupts & (ULL(1) << i)) {
-                // See table 4-19 of the 21164 hardware reference
-                ipl = i;
-                summary |= (ULL(1) << i);
-            }
-        }
-    }
-
-    if (ipl && ipl > cpu->readMiscReg(IPR_IPLR)) {
-        cpu->setMiscReg(IPR_ISR, summary);
-        cpu->setMiscReg(IPR_INTID, ipl);
-        cpu->trap(new InterruptFault);
-        DPRINTF(Flow, "Interrupt! IPLR=%d ipl=%d summary=%x\n",
-                cpu->readMiscReg(IPR_IPLR), ipl, summary);
-    }
-  */
-}
+{}
 
 #endif // FULL_SYSTEM || BARE_IRON

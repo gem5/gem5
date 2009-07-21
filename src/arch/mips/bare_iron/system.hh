@@ -31,11 +31,6 @@
 #ifndef __ARCH_MIPS_BARE_IRON_SYSTEM_HH__
 #define __ARCH_MIPS_BARE_IRON_SYSTEM_HH__
 
-class ThreadContext;
-
-class BreakPCEvent;
-class IdleStartEvent;
-
 #include "arch/mips/system.hh"
 #include "params/BareIronMipsSystem.hh"
 
@@ -46,15 +41,9 @@ class IdleStartEvent;
  */
 class BareIronMipsSystem : public MipsSystem
 {
-  private:
-
-
   public:
     static const int CommandLineSize = 256;
 
-  private:
-
-  public:
     BareIronMipsSystem(Params *p);
     ~BareIronMipsSystem();
 };

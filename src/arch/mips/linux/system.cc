@@ -88,7 +88,6 @@ LinuxMipsSystem::LinuxMipsSystem(Params *p)
         virtPort.write(addr, (uint64_t)(Clock::Frequency /
                     p->boot_cpu_frequency));
 
-
     /**
      * EV5 only supports 127 ASNs so we are going to tell the kernel that the
      * paritiuclar EV6 we have only supports 127 asns.
@@ -104,12 +103,6 @@ LinuxMipsSystem::LinuxMipsSystem(Params *p)
     kernelPanicEvent = addKernelFuncEvent<BreakPCEvent>("panic");
     if (!kernelPanicEvent)
         panic("could not find kernel symbol \'panic\'");
-
-#if 0
-    kernelDieEvent = addKernelFuncEvent<BreakPCEvent>("die_if_kernel");
-    if (!kernelDieEvent)
-        panic("could not find kernel symbol \'die_if_kernel\'");
-#endif
 
 #endif
 

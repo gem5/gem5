@@ -35,42 +35,43 @@
 
 namespace MipsISA
 {
-    typedef uint32_t MachInst;
-    typedef uint64_t ExtMachInst;
 
-    typedef uint64_t LargestRead;
+typedef uint32_t MachInst;
+typedef uint64_t ExtMachInst;
 
-    //used in FP convert & round function
-    enum ConvertType{
-        SINGLE_TO_DOUBLE,
-        SINGLE_TO_WORD,
-        SINGLE_TO_LONG,
+typedef uint64_t LargestRead;
 
-        DOUBLE_TO_SINGLE,
-        DOUBLE_TO_WORD,
-        DOUBLE_TO_LONG,
+//used in FP convert & round function
+enum ConvertType{
+    SINGLE_TO_DOUBLE,
+    SINGLE_TO_WORD,
+    SINGLE_TO_LONG,
 
-        LONG_TO_SINGLE,
-        LONG_TO_DOUBLE,
-        LONG_TO_WORD,
-        LONG_TO_PS,
+    DOUBLE_TO_SINGLE,
+    DOUBLE_TO_WORD,
+    DOUBLE_TO_LONG,
 
-        WORD_TO_SINGLE,
-        WORD_TO_DOUBLE,
-        WORD_TO_LONG,
-        WORD_TO_PS,
+    LONG_TO_SINGLE,
+    LONG_TO_DOUBLE,
+    LONG_TO_WORD,
+    LONG_TO_PS,
 
-        PL_TO_SINGLE,
-        PU_TO_SINGLE
-    };
+    WORD_TO_SINGLE,
+    WORD_TO_DOUBLE,
+    WORD_TO_LONG,
+    WORD_TO_PS,
 
-    //used in FP convert & round function
-    enum RoundMode{
-        RND_ZERO,
-        RND_DOWN,
-        RND_UP,
-        RND_NEAREST
-   };
+    PL_TO_SINGLE,
+    PU_TO_SINGLE
+};
+
+//used in FP convert & round function
+enum RoundMode{
+    RND_ZERO,
+    RND_DOWN,
+    RND_UP,
+    RND_NEAREST
+};
 
 struct CoreSpecific {
       /* Note: It looks like it will be better to allow simulator users
@@ -81,7 +82,8 @@ struct CoreSpecific {
                                                -jpp
       */
       // MIPS CP0 State - First individual variables
-      // Page numbers refer to revision 2.50 (July 2005) of the MIPS32 ARM, Volume III (PRA)
+      // Page numbers refer to revision 2.50 (July 2005) of the MIPS32 ARM,
+      // Volume III (PRA)
       unsigned CP0_IntCtl_IPTI; // Page 93, IP Timer Interrupt
       unsigned CP0_IntCtl_IPPCI; // Page 94, IP Performance Counter Interrupt
       unsigned CP0_SrsCtl_HSS; // Page 95, Highest Implemented Shadow Set
@@ -89,7 +91,8 @@ struct CoreSpecific {
       unsigned CP0_PRId_CompanyID; // Page 105, Company ID - (0-255, 1=>MIPS)
       unsigned CP0_PRId_ProcessorID; // Page 105
       unsigned CP0_PRId_Revision; // Page 105
-      unsigned CP0_EBase_CPUNum; // Page 106, CPU Number in a multiprocessor system
+      unsigned CP0_EBase_CPUNum; // Page 106, CPU Number in a multiprocessor
+                                 //system
       unsigned CP0_Config_BE; // Page 108, Big/Little Endian mode
       unsigned CP0_Config_AT; //Page 109
       unsigned CP0_Config_AR; //Page 109

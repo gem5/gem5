@@ -40,9 +40,4 @@ void
 IdleStartEvent::process(ThreadContext *tc)
 {
     fatal("Idle Start Event Not Defined for MIPS ISA ");
-
-    //    if (tc->getKernelStats())
-    //      tc->getKernelStats()->setIdleProcess(
-    //      tc->readMiscRegNoEffect(MipsISA::IPR_PALtemp23), tc);
-    //remove();
 }

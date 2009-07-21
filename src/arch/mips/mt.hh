@@ -51,7 +51,6 @@
 namespace MipsISA
 {
 
-
 template <class TC>
 inline unsigned
 getVirtProcNum(TC *tc)
@@ -76,11 +75,13 @@ haltThread(TC *tc)
         tc->halt();
 
         // Save last known PC in TCRestart
-        // @TODO: Needs to check if this is a branch and if so, take previous instruction
+        // @TODO: Needs to check if this is a branch and if so,
+        // take previous instruction
         tc->setMiscReg(TCRestart, tc->readNextPC());
 
-        warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x", curTick, tc->threadId(), tc->getCpuPtr()->name(),
-             tc->readPC(), tc->readNextPC());
+        warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
+                curTick, tc->threadId(), tc->getCpuPtr()->name(),
+                tc->readPC(), tc->readNextPC());
     }
 }
 
@@ -93,14 +94,14 @@ restoreThread(TC *tc)
         IntReg pc = tc->readMiscRegNoEffect(TCRestart);
 
         // TODO: SET PC WITH AN EVENT INSTEAD OF INSTANTANEOUSLY
-        // tc->setPCEvent(pc, pc + 4, pc + 8);
         tc->setPC(pc);
         tc->setNextPC(pc + 4);
         tc->setNextNPC(pc + 8);
         tc->activate(0);
 
-        warn("%i: Restoring thread %i in %s @ PC %x", curTick, tc->threadId(), tc->getCpuPtr()->name(),
-             tc->readPC());
+        warn("%i: Restoring thread %i in %s @ PC %x",
+                curTick, tc->threadId(), tc->getCpuPtr()->name(),
+                tc->readPC());
     }
 }
 

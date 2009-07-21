@@ -36,10 +36,9 @@
 
 #include "sim/faults.hh"
 
-// The design of the "name" and "vect" functions is in sim/faults.hh
-
 namespace MipsISA
 {
+
 typedef const Addr FaultVect;
 
 class MipsFault : public FaultBase
@@ -54,9 +53,9 @@ class MipsFault : public FaultBase
     Addr EntryHi_VPN2X;
     Addr Context_BadVPN2;
 #if FULL_SYSTEM
-  void invoke(ThreadContext * tc) {};
-  void setExceptionState(ThreadContext *,uint8_t);
-  void setHandlerPC(Addr,ThreadContext *);
+    void invoke(ThreadContext * tc) {};
+    void setExceptionState(ThreadContext *, uint8_t);
+    void setHandlerPC(Addr, ThreadContext *);
 #endif
     virtual FaultVect vect() = 0;
     virtual FaultStat & countStat() = 0;
@@ -116,6 +115,7 @@ class AddressErrorFault : public MipsFault
 #endif
 
 };
+
 class StoreAddressErrorFault : public MipsFault
 {
   private:
@@ -129,8 +129,8 @@ class StoreAddressErrorFault : public MipsFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-
 };
+
 class UnimplementedOpcodeFault : public MipsFault
 {
   private:
@@ -157,6 +157,7 @@ class TLBRefillIFetchFault : public MipsFault
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
 };
+
 class TLBInvalidIFetchFault : public MipsFault
 {
   private:
@@ -259,6 +260,7 @@ class ResetFault : public MipsFault
     void invoke(ThreadContext * tc);
 
 };
+
 class SystemCallFault : public MipsFault
 {
   private:
@@ -284,6 +286,7 @@ class SoftResetFault : public MipsFault
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
 };
+
 class DebugSingleStep : public MipsFault
 {
   private:
@@ -296,6 +299,7 @@ class DebugSingleStep : public MipsFault
     FaultStat & countStat() {return _count;}
     void invoke(ThreadContext * tc);
 };
+
 class DebugInterrupt : public MipsFault
 {
   private:
@@ -350,7 +354,6 @@ class ThreadFault : public MipsFault
     void invoke(ThreadContext * tc);
 };
 
-
 class ArithmeticFault : public MipsFault
 {
   protected:
@@ -384,8 +387,6 @@ class InterruptFault : public MipsFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-
-    //void invoke(ThreadContext * tc);
 };
 
 class TrapFault : public MipsFault
@@ -432,6 +433,7 @@ class ItbRefillFault : public MipsFault
     void invoke(ThreadContext * tc);
 #endif
 };
+
 class DtbRefillFault : public MipsFault
 {
   private:
@@ -475,8 +477,8 @@ class ItbInvalidFault : public MipsFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-
 };
+
 class TLBModifiedFault : public MipsFault
 {
   private:
@@ -490,7 +492,6 @@ class TLBModifiedFault : public MipsFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-
 };
 
 class DtbInvalidFault : public MipsFault
@@ -506,7 +507,6 @@ class DtbInvalidFault : public MipsFault
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc);
 #endif
-
 };
 
 class FloatEnableFault : public MipsFault

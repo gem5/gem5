@@ -45,22 +45,17 @@
 
 using namespace LittleEndianGuest;
 
-MipsSystem::MipsSystem(Params *p)
-    : System(p)
+MipsSystem::MipsSystem(Params *p) : System(p)
 {
 
 #if FULL_SYSTEM
     if (p->bare_iron == true) {
         hexFile = new HexFile(params()->hex_file_name);
-        if(!hexFile->loadSections(&functionalPort,MipsISA::LoadAddrMask))
+        if (!hexFile->loadSections(&functionalPort, MipsISA::LoadAddrMask))
             panic("Could not load hex file\n");
     }
 
     Addr addr = 0;
-    /* Comment out old Alpha Based Code
-
-     Don't need the console before we start looking at booting linux */
-
 
     consoleSymtab = new SymbolTable;
 
@@ -76,7 +71,7 @@ MipsSystem::MipsSystem(Params *p)
     if (console == NULL)
         fatal("Could not load console file %s", params()->console);
     //Load program sections into memory
-     console->loadSections(&functionalPort, MipsISA::LoadAddrMask);
+    console->loadSections(&functionalPort, MipsISA::LoadAddrMask);
 
     //load symbols
     if (!console->loadGlobalSymbols(consoleSymtab))
@@ -110,100 +105,42 @@ MipsSystem::MipsSystem(Params *p)
     if (consoleSymtab->findAddress("m5_rpb", addr)) {
         uint64_t data;
         data = htog(params()->system_type);
-        virtPort.write(addr+0x50, data);
+        virtPort.write(addr + 0x50, data);
         data = htog(params()->system_rev);
-        virtPort.write(addr+0x58, data);
-    } else
+        virtPort.write(addr + 0x58, data);
+    } else {
         panic("could not find hwrpb\n");
+    }
 #endif
 }
 
 MipsSystem::~MipsSystem()
 {
 }
-#if FULL_SYSTEM
-/**
- * This function fixes up addresses that are used to match PCs for
- * hooking simulator events on to target function executions.
- *
- * Mips binaries may have multiple global offset table (GOT)
- * sections.  A function that uses the GOT starts with a
- * two-instruction prolog which sets the global pointer (gp == r29) to
- * the appropriate GOT section.  The proper gp value is calculated
- * based on the function address, which must be passed by the caller
- * in the procedure value register (pv aka t12 == r27).  This sequence
- * looks like the following:
- *
- *                      opcode Ra Rb offset
- *      ldah gp,X(pv)     09   29 27   X
- *      lda  gp,Y(gp)     08   29 29   Y
- *
- * for some constant offsets X and Y.  The catch is that the linker
- * (or maybe even the compiler, I'm not sure) may recognize that the
- * caller and callee are using the same GOT section, making this
- * prolog redundant, and modify the call target to skip these
- * instructions.  If we check for execution of the first instruction
- * of a function (the one the symbol points to) to detect when to skip
- * it, we'll miss all these modified calls.  It might work to
- * unconditionally check for the third instruction, but not all
- * functions have this prolog, and there's some chance that those
- * first two instructions could have undesired consequences.  So we do
- * the Right Thing and pattern-match the first two instructions of the
- * function to decide where to patch.
- *
- * Eventually this code should be moved into an ISA-specific file.
- */
 
+#if FULL_SYSTEM
 Addr
 MipsSystem::fixFuncEventAddr(Addr addr)
 {
-  /*
-    // mask for just the opcode, Ra, and Rb fields (not the offset)
-    const uint32_t inst_mask = 0xffff0000;
-    // ldah gp,X(pv): opcode 9, Ra = 29, Rb = 27
-    const uint32_t gp_ldah_pattern = (9 << 26) | (29 << 21) | (27 << 16);
-    // lda  gp,Y(gp): opcode 8, Ra = 29, rb = 29
-    const uint32_t gp_lda_pattern  = (8 << 26) | (29 << 21) | (29 << 16);
-
-    uint32_t i1 = virtPort.read<uint32_t>(addr);
-    uint32_t i2 = virtPort.read<uint32_t>(addr + sizeof(MipsISA::MachInst));
-
-    if ((i1 & inst_mask) == gp_ldah_pattern &&
-        (i2 & inst_mask) == gp_lda_pattern) {
-        Addr new_addr = addr + 2* sizeof(MipsISA::MachInst);
-        DPRINTF(Loader, "fixFuncEventAddr: %p -> %p", addr, new_addr);
-        return new_addr;
-    } else {
-        return addr;
-        }*/
-  return addr;
+    return addr;
 }
-
 
 void
 MipsSystem::setMipsAccess(Addr access)
-{
-    Addr addr = 0;
-    if (consoleSymtab->findAddress("m5MipsAccess", addr)) {
-      //        virtPort.write(addr, htog(AlphaISA::Phys2K0Seg(access)));
-    } else
-    panic("could not find m5MipsAccess\n");
-    }
+{}
 
 #endif
 
 bool
 MipsSystem::breakpoint()
 {
-  return 0;
-  //    return remoteGDB[0]->trap(MIPS_KENTRY_INT);
+    return 0;
 }
 
 void
 MipsSystem::serialize(std::ostream &os)
 {
     System::serialize(os);
-    //    consoleSymtab->serialize("console_symtab", os);
 }
 
 
@@ -211,7 +148,6 @@ void
 MipsSystem::unserialize(Checkpoint *cp, const std::string &section)
 {
     System::unserialize(cp,section);
-    //    consoleSymtab->unserialize("console_symtab", cp, section);
 }
 
 MipsSystem *

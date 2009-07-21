@@ -32,11 +32,6 @@
 #ifndef __ARCH_MIPS_KERNEL_STATS_HH__
 #define __ARCH_MIPS_KERNEL_STATS_HH__
 
-#include <map>
-#include <stack>
-#include <string>
-#include <vector>
-
 #include "kern/kernel_stats.hh"
 
 namespace MipsISA {

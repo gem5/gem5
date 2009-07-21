@@ -37,42 +37,42 @@
 namespace MipsISA
 {
 
+void
+PTE::serialize(std::ostream &os)
+{
+    SERIALIZE_SCALAR(Mask);
+    SERIALIZE_SCALAR(VPN);
+    SERIALIZE_SCALAR(asid);
+    SERIALIZE_SCALAR(G);
+    SERIALIZE_SCALAR(PFN0);
+    SERIALIZE_SCALAR(D0);
+    SERIALIZE_SCALAR(V0);
+    SERIALIZE_SCALAR(C0);
+    SERIALIZE_SCALAR(PFN1);
+    SERIALIZE_SCALAR(D1);
+    SERIALIZE_SCALAR(V1);
+    SERIALIZE_SCALAR(C1);
+    SERIALIZE_SCALAR(AddrShiftAmount);
+    SERIALIZE_SCALAR(OffsetMask);
+}
 
-    void
-    PTE::serialize(std::ostream &os)
-    {
-        SERIALIZE_SCALAR(Mask);
-        SERIALIZE_SCALAR(VPN);
-        SERIALIZE_SCALAR(asid);
-        SERIALIZE_SCALAR(G);
-        SERIALIZE_SCALAR(PFN0);
-        SERIALIZE_SCALAR(D0);
-        SERIALIZE_SCALAR(V0);
-        SERIALIZE_SCALAR(C0);
-        SERIALIZE_SCALAR(PFN1);
-        SERIALIZE_SCALAR(D1);
-        SERIALIZE_SCALAR(V1);
-        SERIALIZE_SCALAR(C1);
-        SERIALIZE_SCALAR(AddrShiftAmount);
-        SERIALIZE_SCALAR(OffsetMask);
-    }
+void
+PTE::unserialize(Checkpoint *cp, const std::string &section)
+{
+    UNSERIALIZE_SCALAR(Mask);
+    UNSERIALIZE_SCALAR(VPN);
+    UNSERIALIZE_SCALAR(asid);
+    UNSERIALIZE_SCALAR(G);
+    UNSERIALIZE_SCALAR(PFN0);
+    UNSERIALIZE_SCALAR(D0);
+    UNSERIALIZE_SCALAR(V0);
+    UNSERIALIZE_SCALAR(C0);
+    UNSERIALIZE_SCALAR(PFN1);
+    UNSERIALIZE_SCALAR(D1);
+    UNSERIALIZE_SCALAR(V1);
+    UNSERIALIZE_SCALAR(C1);
+    UNSERIALIZE_SCALAR(AddrShiftAmount);
+    UNSERIALIZE_SCALAR(OffsetMask);
+}
 
-    void
-    PTE::unserialize(Checkpoint *cp, const std::string &section)
-    {
-        UNSERIALIZE_SCALAR(Mask);
-        UNSERIALIZE_SCALAR(VPN);
-        UNSERIALIZE_SCALAR(asid);
-        UNSERIALIZE_SCALAR(G);
-        UNSERIALIZE_SCALAR(PFN0);
-        UNSERIALIZE_SCALAR(D0);
-        UNSERIALIZE_SCALAR(V0);
-        UNSERIALIZE_SCALAR(C0);
-        UNSERIALIZE_SCALAR(PFN1);
-        UNSERIALIZE_SCALAR(D1);
-        UNSERIALIZE_SCALAR(V1);
-        UNSERIALIZE_SCALAR(C1);
-        UNSERIALIZE_SCALAR(AddrShiftAmount);
-        UNSERIALIZE_SCALAR(OffsetMask);
-    }
 }

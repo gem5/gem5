@@ -31,97 +31,27 @@
 #ifndef __ARCH_MIPS_INTERRUPT_HH__
 #define __ARCH_MIPS_INTERRUPT_HH__
 
-
 #include "arch/mips/faults.hh"
 #include "base/compiler.hh"
 
-
-
 namespace MipsISA
 {
+
 class Interrupts
 {
-    /*
-      protected:
-      uint8_t intstatus;
-      bool oncputimerintr;
-      public:
-      Interrupts()
-      {
-      intstatus = 0;
-      newInfoSet = false;
-      oncputimerintr = false;
-
-      }
-      //  post(int int_num, int index) is responsible
-      //  for posting an interrupt. It sets a bit
-      //  in intstatus corresponding to Cause IP*. The
-      //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by checkInterrupts
-      //
-      void post(int int_num, int index);
-      // clear(int int_num, int index) is responsible
-      //  for clearing an interrupt. It clear a bit
-      //  in intstatus corresponding to Cause IP*. The
-      //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by checkInterrupts
-      //
-      void clear(int int_num, int index);
-      //  clearAll() is responsible
-      //  for clearing all interrupts. It clears all bits
-      //  in intstatus corresponding to Cause IP*. The
-      //  MIPS register Cause is updated by updateIntrInfo
-      //  which is called by checkInterrupts
-      //
-      void clearAll();
-
-      // getInterrupt(ThreadContext * tc) checks if an interrupt
-      //  should be returned. It ands the interrupt mask and
-      //  and interrupt pending bits to see if one exists. It
-      //  also makes sure interrupts are enabled (IE) and
-      //  that ERL and ERX are not set
-      //
-      Fault getInterrupt(ThreadContext * tc);
-
-      // updateIntrInfo(ThreadContext *tc) const syncs the
-      //  MIPS cause register with the instatus variable. instatus
-      //  is essentially a copy of the MIPS cause[IP7:IP0]
-      //
-      void updateIntrInfo(ThreadContext *tc) const;
-      void updateIntrInfoCpuTimerIntr(ThreadContext *tc) const;
-      bool onCpuTimerInterrupt(ThreadContext *tc) const;
-
-      bool checkInterrupts(ThreadContext *tc) const {
-      //return (intstatus != 0) && !(tc->readPC() & 0x3);
-      if (oncputimerintr == false){
-      updateIntrInfo(tc);
-      return ((intstatus != 0) || onCpuTimerInterrupt(tc));
-      }
-      else
-      return true;
-
-      }
-    */
-
-
-  protected:
-    //uint8_t intstatus;
-    //bool oncputimerintr;
   public:
     Interrupts()
     {
-        //intstatus = 0;
         newInfoSet = false;
-        //oncputimerintr = false;
-
     }
+
     //  post(int int_num, int index) is responsible
     //  for posting an interrupt. It sets a bit
     //  in intstatus corresponding to Cause IP*. The
     //  MIPS register Cause is updated by updateIntrInfo
     //  which is called by checkInterrupts
     //
-    void post(int int_num, ThreadContext* tc);
+    void post(int int_num, ThreadContext *tc);
     void post(int int_num, int index);
 
     // clear(int int_num, int index) is responsible
@@ -139,7 +69,7 @@ class Interrupts
     //  MIPS register Cause is updated by updateIntrInfo
     //  which is called by checkInterrupts
     //
-    void clearAll(ThreadContext* tc);
+    void clearAll(ThreadContext *tc);
     void clearAll();
 
     // getInterrupt(ThreadContext * tc) checks if an interrupt
@@ -148,7 +78,7 @@ class Interrupts
     //  also makes sure interrupts are enabled (IE) and
     //  that ERL and ERX are not set
     //
-    Fault getInterrupt(ThreadContext * tc);
+    Fault getInterrupt(ThreadContext *tc);
 
     // updateIntrInfo(ThreadContext *tc) const syncs the
     //  MIPS cause register with the instatus variable. instatus
@@ -165,27 +95,22 @@ class Interrupts
     }
 
 
-    void serialize(std::ostream &os)
+    void
+    serialize(std::ostream &os)
     {
         fatal("Serialization of Interrupts Unimplemented for MIPS");
-        //SERIALIZE_ARRAY(interrupts, NumInterruptLevels);
-        //SERIALIZE_SCALAR(intstatus);
     }
 
-    void unserialize(Checkpoint *cp, const std::string &section)
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
     {
         fatal("Unserialization of Interrupts Unimplemented for MIPS");
-        //UNSERIALIZE_ARRAY(interrupts, NumInterruptLevels);
-        //UNSERIALIZE_SCALAR(intstatus);
     }
-
-
 
   private:
     bool newInfoSet;
     int newIpl;
     int newSummary;
-
 };
 
 }

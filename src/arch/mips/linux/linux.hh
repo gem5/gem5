@@ -68,13 +68,13 @@ class MipsLinux : public Linux
 
     //@{
     /// For getsysinfo().
-    static const unsigned GSI_PLATFORM_NAME = 103;  //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;    //!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;   //!< get proc_type
-    static const unsigned GSI_MAX_CPU = 30;         //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55; //!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;             //!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;             //!< clock freq in Hz
+    static const unsigned GSI_PLATFORM_NAME = 103; //!< platform name as string
+    static const unsigned GSI_CPU_INFO = 59;       //!< CPU information
+    static const unsigned GSI_PROC_TYPE = 60;      //!< get proc_type
+    static const unsigned GSI_MAX_CPU = 30;        //!< max # cpu's on this machine
+    static const unsigned GSI_CPUS_IN_BOX = 55;    //!< number of CPUs in system
+    static const unsigned GSI_PHYSMEM = 19;        //!< Physical memory in KB
+    static const unsigned GSI_CLK_TCK = 42;        //!< clock freq in Hz
     //@}
 
     //@{

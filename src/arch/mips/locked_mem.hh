@@ -45,16 +45,17 @@
 
 namespace MipsISA
 {
+
 template <class XC>
 inline void
 handleLockedRead(XC *xc, Request *req)
 {
     xc->setMiscRegNoEffect(LLAddr, req->getPaddr() & ~0xf);
     xc->setMiscRegNoEffect(LLFlag, true);
-    DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link Address set to %x.\n",
+    DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link"
+                  " Address set to %x.\n",
             req->threadId(), req->getPaddr() & ~0xf);
 }
-
 
 template <class XC>
 inline bool
@@ -89,14 +90,17 @@ handleLockedWrite(XC *xc, Request *req)
             }
 
             if (stCondFailures == 5000) {
-                panic("Max (5000) Store Conditional Fails Reached. Check Code For Deadlock.\n");
+                panic("Max (5000) Store Conditional Fails Reached. "
+                        "Check Code For Deadlock.\n");
             }
 
             if (!lock_flag){
-                DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, Store Conditional Failed.\n",
+                DPRINTF(LLSC, "[tid:%i]: Lock Flag Set, "
+                              "Store Conditional Failed.\n",
                         req->threadId());
             } else if ((req->getPaddr() & ~0xf) != lock_addr) {
-                DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, Store Conditional Failed.\n",
+                DPRINTF(LLSC, "[tid:%i]: Load-Link Address Mismatch, "
+                              "Store Conditional Failed.\n",
                         req->threadId());
             }
             // store conditional failed already, so don't issue it to mem
@@ -106,7 +110,6 @@ handleLockedWrite(XC *xc, Request *req)
 
     return true;
 }
-
 
 } // namespace MipsISA
 

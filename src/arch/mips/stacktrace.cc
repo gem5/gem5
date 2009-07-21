@@ -42,35 +42,8 @@
 using namespace std;
 using namespace MipsISA;
 
-ProcessInfo::ProcessInfo(ThreadContext *_tc)
-    : tc(_tc)
-{
-//     Addr addr = 0;
-
-    VirtualPort *vp;
-
-    vp = tc->getVirtPort();
-
-//     if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
-//         panic("thread info not compiled into kernel\n");
-//     thread_info_size = vp->readGtoH<int32_t>(addr);
-
-//     if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
-//         panic("thread info not compiled into kernel\n");
-//     task_struct_size = vp->readGtoH<int32_t>(addr);
-
-//     if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
-//         panic("thread info not compiled into kernel\n");
-//     task_off = vp->readGtoH<int32_t>(addr);
-
-//     if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
-//         panic("thread info not compiled into kernel\n");
-//     pid_off = vp->readGtoH<int32_t>(addr);
-
-//     if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
-//         panic("thread info not compiled into kernel\n");
-//     name_off = vp->readGtoH<int32_t>(addr);
-}
+ProcessInfo::ProcessInfo(ThreadContext *_tc) : tc(_tc)
+{}
 
 Addr
 ProcessInfo::task(Addr ksp) const
@@ -140,84 +113,17 @@ void
 StackTrace::trace(ThreadContext *_tc, bool is_call)
 {
     tc = _tc;
-    /* FIXME - Jaidev - What is IPR_DTB_CM in Alpha? */
     bool usermode = 0;
-      //(tc->readMiscReg(MipsISA::IPR_DTB_CM) & 0x18) != 0;
-
-//     Addr pc = tc->readNextPC();
-//     bool kernel = tc->getSystemPtr()->kernelStart <= pc &&
-//         pc <= tc->getSystemPtr()->kernelEnd;
 
     if (usermode) {
         stack.push_back(user);
         return;
     }
-
-//     if (!kernel) {
-//         stack.push_back(console);
-//         return;
-//     }
-
-//     SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
-//     Addr ksp = tc->readIntReg(MipsISA::StackPointerReg);
-//     Addr bottom = ksp & ~0x3fff;
-//     Addr addr;
-
-//     if (is_call) {
-//         if (!symtab->findNearestAddr(pc, addr))
-//             panic("could not find address %#x", pc);
-
-//         stack.push_back(addr);
-//         pc = tc->readPC();
-//     }
-
-//     Addr ra;
-//     int size;
-
-//     while (ksp > bottom) {
-//         if (!symtab->findNearestAddr(pc, addr))
-//             panic("could not find symbol for pc=%#x", pc);
-//         assert(pc >= addr && "symbol botch: callpc < func");
-
-//         stack.push_back(addr);
-
-//         if (isEntry(addr))
-//             return;
-
-//         if (decodePrologue(ksp, pc, addr, size, ra)) {
-//             if (!ra)
-//                 return;
-
-//             if (size <= 0) {
-//                 stack.push_back(unknown);
-//                 return;
-//             }
-
-//             pc = ra;
-//             ksp += size;
-//         } else {
-//             stack.push_back(unknown);
-//             return;
-//         }
-
-//         bool kernel = tc->getSystemPtr()->kernelStart <= pc &&
-//             pc <= tc->getSystemPtr()->kernelEnd;
-//         if (!kernel)
-//             return;
-
-//         if (stack.size() >= 1000)
-//             panic("unwinding too far");
-//     }
-
-//     panic("unwinding too far");
 }
 
 bool
 StackTrace::isEntry(Addr addr)
 {
-  /*    if (addr == tc->readMiscReg(MipsISA::IPR_PALtemp2))
-        return true;*/
-
     return false;
 }
 
@@ -305,7 +211,6 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
         int reg, disp;
         if (decodeStack(inst, disp)) {
             if (size) {
-                // panic("decoding frame size again");
                 return true;
             }
             size += disp;
@@ -313,7 +218,6 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
             if (!ra && reg == ReturnAddressReg) {
                 CopyOut(tc, (uint8_t *)&ra, sp + disp, sizeof(Addr));
                 if (!ra) {
-                    // panic("no return address value pc=%#x\n", pc);
                     return false;
                 }
             }
@@ -327,24 +231,6 @@ StackTrace::decodePrologue(Addr sp, Addr callpc, Addr func,
 void
 StackTrace::dump()
 {
-    StringWrap name(tc->getCpuPtr()->name());
-//     SymbolTable *symtab = tc->getSystemPtr()->kernelSymtab;
-
-    DPRINTFN("------ Stack ------\n");
-
-//     string symbol;
-//     for (int i = 0, size = stack.size(); i < size; ++i) {
-//         Addr addr = stack[size - i - 1];
-//         if (addr == user)
-//             symbol = "user";
-//         else if (addr == console)
-//             symbol = "console";
-//         else if (addr == unknown)
-//             symbol = "unknown";
-//         else
-//             symtab->findSymbol(addr, symbol);
-
-//         DPRINTFN("%#x: %s\n", addr, symbol);
-//     }
+    panic("Stack trace dump not implemented.\n");
 }
 #endif

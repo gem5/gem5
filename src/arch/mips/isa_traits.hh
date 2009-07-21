@@ -41,133 +41,129 @@
 
 namespace LittleEndianGuest {};
 
-#define TARGET_MIPS
-
 class StaticInstPtr;
 
 namespace MipsISA
 {
-    using namespace LittleEndianGuest;
 
-    StaticInstPtr decodeInst(ExtMachInst);
+using namespace LittleEndianGuest;
 
-    // MIPS DOES have a delay slot
-    #define ISA_HAS_DELAY_SLOT 1
+StaticInstPtr decodeInst(ExtMachInst);
 
-    const Addr PageShift = 13;
-    const Addr PageBytes = ULL(1) << PageShift;
-    const Addr Page_Mask = ~(PageBytes - 1);
-    const Addr PageOffset = PageBytes - 1;
+// MIPS DOES have a delay slot
+#define ISA_HAS_DELAY_SLOT 1
 
-
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Translation stuff
-    //
-
-    const Addr PteShift = 3;
-    const Addr NPtePageShift = PageShift - PteShift;
-    const Addr NPtePage = ULL(1) << NPtePageShift;
-    const Addr PteMask = NPtePage - 1;
-
-    //// All 'Mapped' segments go through the TLB
-    //// All other segments are translated by dropping the MSB, to give
-    //// the corresponding physical address
-    // User Segment - Mapped
-    const Addr USegBase = ULL(0x0);
-    const Addr USegEnd = ULL(0x7FFFFFFF);
-
-    // Kernel Segment 0 - Unmapped
-    const Addr KSeg0End = ULL(0x9FFFFFFF);
-    const Addr KSeg0Base =  ULL(0x80000000);
-    const Addr KSeg0Mask = ULL(0x1FFFFFFF);
-
-    // Kernel Segment 1 - Unmapped, Uncached
-    const Addr KSeg1End = ULL(0xBFFFFFFF);
-    const Addr KSeg1Base = ULL(0xA0000000);
-    const Addr KSeg1Mask = ULL(0x1FFFFFFF);
-
-    // Kernel/Supervisor Segment - Mapped
-    const Addr KSSegEnd = ULL(0xDFFFFFFF);
-    const Addr KSSegBase = ULL(0xC0000000);
-
-    // Kernel Segment 3 - Mapped
-    const Addr KSeg3End = ULL(0xFFFFFFFF);
-    const Addr KSeg3Base = ULL(0xE0000000);
+const Addr PageShift = 13;
+const Addr PageBytes = ULL(1) << PageShift;
+const Addr Page_Mask = ~(PageBytes - 1);
+const Addr PageOffset = PageBytes - 1;
 
 
-    // For loading... XXX This maybe could be USegEnd?? --ali
-    const Addr LoadAddrMask = ULL(0xffffffffff);
+////////////////////////////////////////////////////////////////////////
+//
+//  Translation stuff
+//
 
-    inline Addr Phys2K0Seg(Addr addr)
-    {
-   //  if (addr & PAddrUncachedBit43) {
-//         addr &= PAddrUncachedMask;
-//         addr |= PAddrUncachedBit40;
-//     }
-        return addr | KSeg0Base;
-    }
+const Addr PteShift = 3;
+const Addr NPtePageShift = PageShift - PteShift;
+const Addr NPtePage = ULL(1) << NPtePageShift;
+const Addr PteMask = NPtePage - 1;
+
+//// All 'Mapped' segments go through the TLB
+//// All other segments are translated by dropping the MSB, to give
+//// the corresponding physical address
+// User Segment - Mapped
+const Addr USegBase = ULL(0x0);
+const Addr USegEnd = ULL(0x7FFFFFFF);
+
+// Kernel Segment 0 - Unmapped
+const Addr KSeg0End = ULL(0x9FFFFFFF);
+const Addr KSeg0Base =  ULL(0x80000000);
+const Addr KSeg0Mask = ULL(0x1FFFFFFF);
+
+// Kernel Segment 1 - Unmapped, Uncached
+const Addr KSeg1End = ULL(0xBFFFFFFF);
+const Addr KSeg1Base = ULL(0xA0000000);
+const Addr KSeg1Mask = ULL(0x1FFFFFFF);
+
+// Kernel/Supervisor Segment - Mapped
+const Addr KSSegEnd = ULL(0xDFFFFFFF);
+const Addr KSSegBase = ULL(0xC0000000);
+
+// Kernel Segment 3 - Mapped
+const Addr KSeg3End = ULL(0xFFFFFFFF);
+const Addr KSeg3Base = ULL(0xE0000000);
 
 
-    const unsigned VABits = 32;
-    const unsigned PABits = 32; // Is this correct?
-    const Addr VAddrImplMask = (ULL(1) << VABits) - 1;
-    const Addr VAddrUnImplMask = ~VAddrImplMask;
-    inline Addr VAddrImpl(Addr a) { return a & VAddrImplMask; }
-    inline Addr VAddrVPN(Addr a) { return a >> MipsISA::PageShift; }
-    inline Addr VAddrOffset(Addr a) { return a & MipsISA::PageOffset; }
+// For loading... XXX This maybe could be USegEnd?? --ali
+const Addr LoadAddrMask = ULL(0xffffffffff);
 
-    const Addr PAddrImplMask = (ULL(1) << PABits) - 1;
+inline Addr Phys2K0Seg(Addr addr)
+{
+    return addr | KSeg0Base;
+}
 
-    ////////////////////////////////////////////////////////////////////////
-    //
-    //  Interrupt levels
-    //
-    enum InterruptLevels
-    {
-        INTLEVEL_SOFTWARE_MIN = 4,
-        INTLEVEL_SOFTWARE_MAX = 19,
 
-        INTLEVEL_EXTERNAL_MIN = 20,
-        INTLEVEL_EXTERNAL_MAX = 34,
+const unsigned VABits = 32;
+const unsigned PABits = 32; // Is this correct?
+const Addr VAddrImplMask = (ULL(1) << VABits) - 1;
+const Addr VAddrUnImplMask = ~VAddrImplMask;
+inline Addr VAddrImpl(Addr a) { return a & VAddrImplMask; }
+inline Addr VAddrVPN(Addr a) { return a >> MipsISA::PageShift; }
+inline Addr VAddrOffset(Addr a) { return a & MipsISA::PageOffset; }
 
-        INTLEVEL_IRQ0 = 20,
-        INTLEVEL_IRQ1 = 21,
-        INTINDEX_ETHERNET = 0,
-        INTINDEX_SCSI = 1,
-        INTLEVEL_IRQ2 = 22,
-        INTLEVEL_IRQ3 = 23,
+const Addr PAddrImplMask = (ULL(1) << PABits) - 1;
 
-        INTLEVEL_SERIAL = 33,
+////////////////////////////////////////////////////////////////////////
+//
+//  Interrupt levels
+//
+enum InterruptLevels
+{
+    INTLEVEL_SOFTWARE_MIN = 4,
+    INTLEVEL_SOFTWARE_MAX = 19,
 
-        NumInterruptLevels = INTLEVEL_EXTERNAL_MAX
-    };
+    INTLEVEL_EXTERNAL_MIN = 20,
+    INTLEVEL_EXTERNAL_MAX = 34,
 
-    // MIPS modes
-    enum mode_type
-    {
-        mode_kernel = 0,        // kernel
-        mode_supervisor = 1,    // supervisor
-        mode_user = 2,          // user mode
-        mode_debug = 3,         // debug mode
-        mode_number             // number of modes
-    };
+    INTLEVEL_IRQ0 = 20,
+    INTLEVEL_IRQ1 = 21,
+    INTINDEX_ETHERNET = 0,
+    INTINDEX_SCSI = 1,
+    INTLEVEL_IRQ2 = 22,
+    INTLEVEL_IRQ3 = 23,
 
-    // return a no-op instruction... used for instruction fetch faults
-    const ExtMachInst NoopMachInst = 0x00000000;
+    INTLEVEL_SERIAL = 33,
 
-    const int LogVMPageSize = 13;       // 8K bytes
-    const int VMPageSize = (1 << LogVMPageSize);
+    NumInterruptLevels = INTLEVEL_EXTERNAL_MAX
+};
 
-    const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
+// MIPS modes
+enum mode_type
+{
+    mode_kernel = 0,        // kernel
+    mode_supervisor = 1,    // supervisor
+    mode_user = 2,          // user mode
+    mode_debug = 3,         // debug mode
+    mode_number             // number of modes
+};
 
-    const int MachineBytes = 4;
-    const int WordBytes = 4;
-    const int HalfwordBytes = 2;
-    const int ByteBytes = 1;
+// return a no-op instruction... used for instruction fetch faults
+const ExtMachInst NoopMachInst = 0x00000000;
 
-    const int ANNOTE_NONE = 0;
-    const uint32_t ITOUCH_ANNOTE = 0xffffffff;
+const int LogVMPageSize = 13;       // 8K bytes
+const int VMPageSize = (1 << LogVMPageSize);
+
+const int BranchPredAddrShiftAmt = 2; // instructions are 4-byte aligned
+
+const int MachineBytes = 4;
+const int WordBytes = 4;
+const int HalfwordBytes = 2;
+const int ByteBytes = 1;
+
+const int ANNOTE_NONE = 0;
+const uint32_t ITOUCH_ANNOTE = 0xffffffff;
+
 };
 
 #endif // __ARCH_MIPS_ISA_TRAITS_HH__
