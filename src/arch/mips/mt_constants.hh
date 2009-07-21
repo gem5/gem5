@@ -33,89 +33,71 @@
 #define __ARCH_MIPS_MT_CONSTANTS_HH__
 
 #include "arch/mips/types.hh"
+#include "base/bitunion.hh"
 
 namespace MipsISA
 {
-// MVPControl
-const unsigned MVPC_EVP = 0;
-const unsigned MVPC_CUR_VPE_HI = 3;
-const unsigned MVPC_CUR_VPE_LO = 0;
 
-// MVPConf0
-const unsigned MVPC0_TCA = 15;
-const unsigned MVPC0_PVPE_HI = 13;
-const unsigned MVPC0_PVPE_LO = 10;
-const unsigned MVPC0_PTC_HI = 7;
-const unsigned MVPC0_PTC_LO = 0;
+BitUnion32(MVPControlReg)
+    Bitfield<3> cpa;
+    Bitfield<2> stlb;
+    Bitfield<1> vpc;
+    Bitfield<0> evp;
+EndBitUnion(MVPControlReg)
 
-//VPEControl
-const unsigned VPEC_YSI = 21;
-const unsigned VPEC_EXCPT_HI = 18;
-const unsigned VPEC_EXCPT_LO = 16;
-const unsigned VPEC_TE = 15;
-const unsigned VPEC_TARG_TC_HI = 7;
-const unsigned VPEC_TARG_TC_LO = 0;
+BitUnion32(MVPConf0Reg)
+    Bitfield<31>     m;
+    Bitfield<29>     tlbs;
+    Bitfield<28>     gs;
+    Bitfield<27>     pcp;
+    Bitfield<25, 16> ptlbe;
+    Bitfield<15>     tca;
+    Bitfield<13, 10> pvpe;
+    Bitfield<7,  0>  ptc;
+EndBitUnion(MVPConf0Reg)
 
-//VPEConf0
-const unsigned VPEC0_MVP = 1;
+BitUnion32(VPEControlReg)
+    Bitfield<21>     ysi;
+    Bitfield<18, 16> excpt;
+    Bitfield<15>     te;
+    Bitfield<7,  0>  targTC;
+EndBitUnion(VPEControlReg)
 
-//TCBind
-const unsigned TCB_CUR_VPE_HI = 3;
-const unsigned TCB_CUR_VPE_LO = 0;
-const unsigned TCB_CUR_TC_HI = 28;
-const unsigned TCB_CUR_TC_LO = 21;
+BitUnion32(VPEConf0Reg)
+    Bitfield<31>     m;
+    Bitfield<28, 21> xtc;
+    Bitfield<19>     tcs;
+    Bitfield<18>     scs;
+    Bitfield<17>     dcs;
+    Bitfield<16>     ics;
+    Bitfield<1>      mvp;
+    Bitfield<0>      vpa;
+EndBitUnion(VPEConf0Reg)
 
+BitUnion32(TCBindReg)
+    Bitfield<28, 21> curTC;
+    Bitfield<20, 18> a0;
+    Bitfield<17>     tbe;
+    Bitfield<3,  0>  curVPE;
+EndBitUnion(TCBindReg)
 
-//TCStatus
-const unsigned TCS_TCU_HI = 31;
-const unsigned TCS_TCU_LO = 28;
-const unsigned TCS_TMX = 27;
-const unsigned TCS_DT = 20;
-const unsigned TCS_DA = 15;
-const unsigned TCS_A = 13;
-const unsigned TCS_TKSU_HI = 12;
-const unsigned TCS_TKSU_LO = 11;
-const unsigned TCS_IXMT = 7;
-const unsigned TCS_ASID_HI = 7;
-const unsigned TCS_ASID_LO = 7;
+BitUnion32(TCStatusReg)
+    Bitfield<31, 28> tcu;
+    Bitfield<27>     tmx;
+    Bitfield<24, 23> rnst;
+    Bitfield<21>     tds;
+    Bitfield<20>     dt;
+    Bitfield<19, 16> impl;
+    Bitfield<15>     da;
+    Bitfield<13>     a;
+    Bitfield<12, 11> tksu;
+    Bitfield<10>     ixmt;
+    Bitfield<7,  0>  asid;
+EndBitUnion(TCStatusReg)
 
-const unsigned TCSTATUS_TCU_HI = 31;
-const unsigned TCSTATUS_TCU_LO = 28;
-const unsigned TCSTATUS_TMX = 27;
-const unsigned TCSTATUS_RNST_HI = 24;
-const unsigned TCSTATUS_RNST_LO = 23;
-const unsigned TCSTATUS_TDS = 21;
-const unsigned TCSTATUS_DT = 20;
-const unsigned TCSTATUS_DA = 15;
-const unsigned TCSTATUS_A = 13;
-const unsigned TCSTATUS_TKSU_HI = 12;
-const unsigned TCSTATUS_TKSU_LO = 11;
-const unsigned TCSTATUS_IXMT = 7;
-const unsigned TCSTATUS_ASID_HI = 7;
-const unsigned TCSTATUS_ASID_LO = 7;
-
-//TCHalt
-const unsigned TCH_H = 0;
-
-//Status
-const unsigned S_CU_HI = 31;
-const unsigned S_CU_LO = 28;
-const unsigned S_MX = 24;
-const unsigned S_KSU_HI = 4;
-const unsigned S_KSU_LO = 3;
-
-// Config0
-const unsigned CFG_M = 31;
-
-// Config1
-const unsigned CFG1_M = 31;
-
-// Config2
-const unsigned CFG2_M = 31;
-
-// Config3
-const unsigned CFG3_M = 31;
-const unsigned CFG3_MT = 2;
+BitUnion32(TCHaltReg)
+    Bitfield<0> h;
+EndBitUnion(TCHaltReg)
 
 } // namespace MipsISA
 

@@ -32,184 +32,105 @@
 #define __ARCH_MIPS_DT_CONSTANTS_HH__
 
 #include "arch/mips/types.hh"
+#include "base/bitunion.hh"
 
 namespace MipsISA
 {
-  // See the EJTAG Specification - Revision 4.10
-  // Also see PDTrace Specification - Revision 4.30
 
-  // Debug Register - CP0 Reg 23, Sel 0
-  const unsigned Debug_DBD = 31;
-  const unsigned Debug_DM_HI = 30;
-  const unsigned Debug_DM_LO = 30;
-  const unsigned Debug_NODCR = 29;
-  const unsigned Debug_LSNM = 28;
-  const unsigned Debug_DOZE = 27;
-  const unsigned Debug_HALT = 26;
-  const unsigned Debug_COUNTDM = 25;
-  const unsigned Debug_IBUSEP = 24;
-  const unsigned Debug_MCHECKEP = 23;
-  const unsigned Debug_CACHEEP = 22;
-  const unsigned Debug_DBUSEP = 21;
-  const unsigned Debug_IEXI_HI = 20;
-  const unsigned Debug_IEXI_LO = 20;
-  const unsigned Debug_DDBS_IMPR = 19;
-  const unsigned Debug_DDBL_IMPR = 18;
-  const unsigned Debug_EJTAGVER_2 =17;
-  const unsigned Debug_EJTAGVER_1 =16;
-  const unsigned Debug_EJTAGVER_0 =15;
-  const unsigned Debug_EJTAGVER_HI = 17;
-  const unsigned Debug_EJTAGVER_LO = 15;
-  const unsigned Debug_DEXC_CODE_HI = 14;
-  const unsigned Debug_DEXC_CODE_LO = 10;
-  const unsigned Debug_NOSST = 9;
-  const unsigned Debug_SST = 8;
-  const unsigned Debug_OFFLINE = 7;
-  const unsigned Debug_DIBIMPR = 6;
-  const unsigned Debug_DINT = 5;
-  const unsigned Debug_DIB = 4;
-  const unsigned Debug_DDBS = 3;
-  const unsigned Debug_DDBL = 2;
-  const unsigned Debug_DBp = 1;
-  const unsigned Debug_DSS = 0;
+BitUnion32(DebugReg)
+    Bitfield<31>     dbd;
+    Bitfield<30>     dm;
+    Bitfield<29>     nodcr;
+    Bitfield<28>     lsnm;
+    Bitfield<27>     doze;
+    Bitfield<26>     halt;
+    Bitfield<25>     conutdm;
+    Bitfield<24>     ibusep;
+    Bitfield<23>     mcheckep;
+    Bitfield<22>     cacheep;
+    Bitfield<21>     dbusep;
+    Bitfield<20, 19> iexi;
+    Bitfield<19>     ddbsImpr;
+    Bitfield<18>     ddblImpr;
+    SubBitUnion(ejtagVer, 17, 15)
+        Bitfield<17> ejtagVer2;
+        Bitfield<16> ejtagVer1;
+        Bitfield<15> ejtagVer0;
+    EndSubBitUnion(ejtagVer)
+    Bitfield<14, 10> dexcCode;
+    Bitfield<9>      nosst;
+    Bitfield<8>      sst;
+    Bitfield<7>      offline;
+    Bitfield<6>      dibimpr;
+    Bitfield<5>      dint;
+    Bitfield<4>      dib;
+    Bitfield<3>      ddbs;
+    Bitfield<2>      ddbl;
+    Bitfield<1>      dbp;
+    Bitfield<0>      dss;
+EndBitUnion(DebugReg)
 
+BitUnion32(TraceControlReg)
+    Bitfield<31>     ts;
+    Bitfield<30>     ut;
+    Bitfield<27>     tb;
+    Bitfield<26>     io;
+    Bitfield<25>     d;
+    Bitfield<24>     e;
+    Bitfield<23>     k;
+    Bitfield<22>     s;
+    Bitfield<21>     u;
+    Bitfield<20, 13> asidM;
+    Bitfield<12, 5>  asid;
+    Bitfield<4>      g;
+    Bitfield<3>      tfcr;
+    Bitfield<2>      tlsm;
+    Bitfield<1>      tim;
+    Bitfield<0>      on;
+EndBitUnion(TraceControlReg)
 
-  // TraceControl Register - CP0 Reg 23, Sel 1
-  const unsigned TraceControl_TS = 31;
-  const unsigned TraceControl_UT = 30;
-  const unsigned TraceControl_TB = 27;
-  const unsigned TraceControl_IO = 26;
-  const unsigned TraceControl_D = 25;
-  const unsigned TraceControl_E = 24;
-  const unsigned TraceControl_K = 23;
-  const unsigned TraceControl_S = 22;
-  const unsigned TraceControl_U = 21;
-  const unsigned TraceControl_ASID_M_HI = 20;
-  const unsigned TraceControl_ASID_M_LO = 13;
-  const unsigned TraceControl_ASID_HI = 12;
-  const unsigned TraceControl_ASID_LO = 5;
-  const unsigned TraceControl_G = 4;
-  const unsigned TraceControl_TFCR = 3;
-  const unsigned TraceControl_TLSM = 2;
-  const unsigned TraceControl_TIM = 1;
-  const unsigned TraceControl_ON = 0;
+BitUnion32(TraceControl2Reg)
+    Bitfield<29>     cpuidv;
+    Bitfield<28, 21> cpuid;
+    Bitfield<20>     tcv;
+    Bitfield<19, 12> tcnum;
+    Bitfield<11, 7>  mode;
+    Bitfield<6,  5>  validModes;
+    Bitfield<4>      tbi;
+    Bitfield<3>      tbu;
+    Bitfield<2,  0>  syp;
+EndBitUnion(TraceControl2Reg)
 
-  // TraceControl2 Register - CP0 Reg 23, Sel 2
-  const unsigned TraceControl2_CPUIDV = 29;
-  const unsigned TraceControl2_CPUID_HI = 28;
-  const unsigned TraceControl2_CPUID_LO = 21;
-  const unsigned TraceControl2_TCV = 20;
-  const unsigned TraceControl2_TCNUM_HI = 19;
-  const unsigned TraceControl2_TCNUM_LO = 12;
-  const unsigned TraceControl2_MODE_HI = 11;
-  const unsigned TraceControl2_MODE_LO = 7;
-  const unsigned TraceControl2_VALIDMODES_HI = 6;
-  const unsigned TraceControl2_VALIDMODES_LO = 5;
-  const unsigned TraceControl2_TBI = 4;
-  const unsigned TraceControl2_TBU = 3;
-  const unsigned TraceControl2_SYP_HI = 2;
-  const unsigned TraceControl2_SYP_LO = 0;
+BitUnion32(TraceBPCReg)
+    Bitfield<31>     mb;
+    Bitfield<28>     e;
+    Bitfield<27>     ate;
+    Bitfield<26, 24> bpc8;
+    Bitfield<23, 21> bpc7;
+    Bitfield<20, 18> bpc6;
+    Bitfield<17, 15> bpc5;
+    Bitfield<14, 12> bpc4;
+    Bitfield<11, 9>  bpc3;
+    Bitfield<8,  6>  bpc2;
+    Bitfield<5,  3>  bpc1;
+    Bitfield<2,  0>  bpc0;
+EndBitUnion(TraceBPCReg)
 
-  // UserTraceData Register - CP0 Reg 23, Sel 3
-  // Just holds 32-bits (or 64-bits) of data
+BitUnion32(TraceBPC2Reg)
+    Bitfield<17, 15> bpc14;
+    Bitfield<14, 12> bpc13;
+    Bitfield<11, 9>  bpc12;
+    Bitfield<8,  6>  bpc11;
+    Bitfield<5,  3>  bpc10;
+    Bitfield<2,  0>  bpc9;
+EndBitUnion(TraceBPC2Reg)
 
-  // TraceIBPC Register - CP0 Reg 23, Sel 4
-  const unsigned TraceIBPC_MB = 31;
-  const unsigned TraceIBPC_IE = 28;
-  const unsigned TraceIBPC_ATE = 27;
-  const unsigned TraceIBPC_IBPC8_HI = 26;
-  const unsigned TraceIBPC_IBPC8_LO = 24;
-  const unsigned TraceIBPC_IBPC7_HI = 23;
-  const unsigned TraceIBPC_IBPC7_LO = 21;
-  const unsigned TraceIBPC_IBPC6_HI = 20;
-  const unsigned TraceIBPC_IBPC6_LO = 18;
-  const unsigned TraceIBPC_IBPC5_HI = 17;
-  const unsigned TraceIBPC_IBPC5_LO = 15;
-  const unsigned TraceIBPC_IBPC4_HI = 14;
-  const unsigned TraceIBPC_IBPC4_LO = 12;
-  const unsigned TraceIBPC_IBPC3_HI = 11;
-  const unsigned TraceIBPC_IBPC3_LO = 9;
-  const unsigned TraceIBPC_IBPC2_HI = 8;
-  const unsigned TraceIBPC_IBPC2_LO = 6;
-  const unsigned TraceIBPC_IBPC1_HI = 5;
-  const unsigned TraceIBPC_IBPC1_LO = 3;
-  const unsigned TraceIBPC_IBPC0_HI = 2;
-  const unsigned TraceIBPC_IBPC0_LO = 0;
-
-
-  // TraceDBPC Register - CP0 Reg 23, Sel 5
-  const unsigned TRACEDBPC_MB = 31;
-  const unsigned TRACEDBPC_DE = 28;
-  const unsigned TRACEDBPC_ATE = 27;
-  const unsigned TRACEDBPC_DBPC8_HI = 26;
-  const unsigned TRACEDBPC_DBPC8_LO = 24;
-  const unsigned TRACEDBPC_DBPC7_HI = 23;
-  const unsigned TRACEDBPC_DBPC7_LO = 21;
-  const unsigned TRACEDBPC_DBPC6_HI = 20;
-  const unsigned TRACEDBPC_DBPC6_LO = 18;
-  const unsigned TRACEDBPC_DBPC5_HI = 17;
-  const unsigned TRACEDBPC_DBPC5_LO = 15;
-  const unsigned TRACEDBPC_DBPC4_HI = 14;
-  const unsigned TRACEDBPC_DBPC4_LO = 12;
-  const unsigned TRACEDBPC_DBPC3_HI = 11;
-  const unsigned TRACEDBPC_DBPC3_LO = 9;
-  const unsigned TRACEDBPC_DBPC2_HI = 8;
-  const unsigned TRACEDBPC_DBPC2_LO = 6;
-  const unsigned TRACEDBPC_DBPC1_HI = 5;
-  const unsigned TRACEDBPC_DBPC1_LO = 3;
-  const unsigned TRACEDBPC_DBPC0_HI = 2;
-  const unsigned TRACEDBPC_DBPC0_LO = 0;
-
-  // TraceIBPC2 - Not part of CP0, but part of TRACE
-  const unsigned TraceIBPC_IBPC14_HI = 17;
-  const unsigned TraceIBPC_IBPC14_LO = 15;
-  const unsigned TraceIBPC_IBPC13_HI = 14;
-  const unsigned TraceIBPC_IBPC13_LO = 12;
-  const unsigned TraceIBPC_IBPC12_HI = 11;
-  const unsigned TraceIBPC_IBPC12_LO = 9;
-  const unsigned TraceIBPC_IBPC11_HI = 8;
-  const unsigned TraceIBPC_IBPC11_LO = 6;
-  const unsigned TraceIBPC_IBPC10_HI = 5;
-  const unsigned TraceIBPC_IBPC10_LO = 3;
-  const unsigned TraceIBPC_IBPC9_HI = 2;
-  const unsigned TraceIBPC_IBPC9_LO = 0;
-
-
-  // TraceDBPC2 - Not part of CP0, but part of TRACE
-  const unsigned TRACEDBPC_DBPC14_HI = 17;
-  const unsigned TRACEDBPC_DBPC14_LO = 15;
-  const unsigned TRACEDBPC_DBPC13_HI = 14;
-  const unsigned TRACEDBPC_DBPC13_LO = 12;
-  const unsigned TRACEDBPC_DBPC12_HI = 11;
-  const unsigned TRACEDBPC_DBPC12_LO = 9;
-  const unsigned TRACEDBPC_DBPC11_HI = 8;
-  const unsigned TRACEDBPC_DBPC11_LO = 6;
-  const unsigned TRACEDBPC_DBPC10_HI = 5;
-  const unsigned TRACEDBPC_DBPC10_LO = 3;
-  const unsigned TRACEDBPC_DBPC9_HI = 2;
-  const unsigned TRACEDBPC_DBPC9_LO = 0;
-
-
-  // Debug Register 2 - CP0 Reg 23, Sel 6
-  const unsigned DEBUG2_PRM = 3;
-  const unsigned DEBUG2_DQ = 2;
-  const unsigned DEBUG2_TUP = 1;
-  const unsigned DEBUG2_PACO = 0;
-
-  // DEPC Register - CP0 Reg 24, Sel 0
-  // Debug Exception Program Counter
-  const unsigned DEPC_HI = 31;
-  const unsigned DEPC_LO = 0;
-
-
-
-  // DESAVE - CP0 Reg 31, Sel 0
-  // Debug Exception Save Register
-  const unsigned DESAVE_HI = 31;
-  const unsigned DESAVE_LO = 0;
-
-
-
+BitUnion32(Debug2Reg)
+    Bitfield<3> prm;
+    Bitfield<2> dq;
+    Bitfield<1> tup;
+    Bitfield<0> paco;
+EndBitUnion(Debug2Reg)
 } // namespace MipsISA
 
 #endif

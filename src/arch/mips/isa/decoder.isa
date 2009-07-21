@@ -120,8 +120,22 @@ decode OPCODE_HI default Unknown::unknown() {
                 //used to distinguish JR from JR.HB and JALR from JALR.HB"
                 format Jump {
                     0x0: decode HINT {
-                        0x1: jr_hb({{ if(Config1_CA == 0){NNPC = Rs;}else{panic("MIPS16e not supported\n");}; }}, IsReturn, ClearHazards);
-                        default: jr({{ if(Config1_CA == 0){NNPC = Rs;}else{panic("MIPS16e not supported\n");};}}, IsReturn);
+                        0x1: jr_hb({{
+                            Config1Reg config1 = Config1;
+                            if (config1.ca == 0) {
+                                NNPC = Rs;
+                            } else {
+                                panic("MIPS16e not supported\n");
+                            }
+                        }}, IsReturn, ClearHazards);
+                        default: jr({{
+                            Config1Reg config1 = Config1;
+                            if (config1.ca == 0) {
+                                NNPC = Rs;
+                            } else {
+                                panic("MIPS16e not supported\n");
+                            }
+                        }}, IsReturn);
                     }
 
                     0x1: decode HINT {
@@ -351,25 +365,32 @@ decode OPCODE_HI default Unknown::unknown() {
         0x0: decode RS_MSB {
             0x0: decode RS {
                  format CP0Control {
-                  0x0: mfc0({{  Rt = CP0_RD_SEL;
-                                /* Hack for PageMask */
-                                if(RD == 5) // PageMask
-                                  if(Config3_SP == 0 || PageGrain_ESP == 0)
-                                    Rt &= 0xFFFFE7FF;
-                              }});
-                  0x4: mtc0({{  CP0_RD_SEL = Rt;
-
-                                if(RD == 11) // Compare{
-                                  if(Cause_TI == 1){
-                                    Cause_TI = 0;
-                                    MiscReg cause = xc->readMiscRegNoEffect(MipsISA::Cause);
-                                    int Offset = 10; // corresponding to Cause_IP0
-                                    Offset += ((IntCtl_IPTI) - 2);
-                                    replaceBits(cause,Offset,Offset,0);
-                                    xc->setMiscRegNoEffect(MipsISA::Cause,cause);
-                                  }
-
-                              }});
+                  0x0: mfc0({{
+                      Config3Reg config3 = Config3;
+                      PageGrainReg pageGrain = PageGrain;
+                      Rt = CP0_RD_SEL;
+                      /* Hack for PageMask */
+                      if (RD == 5) {
+                          // PageMask
+                          if(config3.sp == 0 || pageGrain.esp == 0)
+                              Rt &= 0xFFFFE7FF;
+                      }
+                  }});
+                  0x4: mtc0({{ 
+                      CP0_RD_SEL = Rt;
+                      CauseReg cause = Cause;
+                      IntCtlReg intCtl = IntCtl;
+                      if (RD == 11) {
+                          // Compare
+                          if (cause.ti == 1) {
+                              cause.ti = 0;
+                              int offset = 10; // corresponding to cause.ip0
+                              offset += intCtl.ipti - 2;
+                              replaceBits(cause, offset, offset, 0);
+                          }
+                      }
+                      Cause = cause;
+                  }});
                  }
                  format CP0Unimpl {
                    0x1: dmfc0();
@@ -378,9 +399,10 @@ decode OPCODE_HI default Unknown::unknown() {
                  }
                 format MT_MFTR { // Decode MIPS MT MFTR instruction into sub-instructions
                     0x8: decode MT_U {
-                        0x0: mftc0({{ data = xc->readRegOtherThread((RT << 3 | SEL) +
-                                                                    Ctrl_Base_DepTag);
-                                   }});
+                        0x0: mftc0({{
+                            data = xc->readRegOtherThread((RT << 3 | SEL) +
+                                                          Ctrl_Base_DepTag);
+                        }});
                         0x1: decode SEL {
                             0x0: mftgpr({{ data = xc->readRegOtherThread(RT); }});
                             0x1: decode RT {
@@ -537,16 +559,22 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x0: decode POS {
                             0x0: decode SEL {
                                 0x1: decode SC {
-                                    0x0: dvpe({{ Rt = MVPControl;
-                                                 if (VPEConf0<VPEC0_MVP:> == 1) {
-                                                     MVPControl = insertBits(MVPControl, MVPC_EVP, 0);
-                                                 }
-                                              }});
-                                    0x1: evpe({{ Rt = MVPControl;
-                                                 if (VPEConf0<VPEC0_MVP:> == 1) {
-                                                     MVPControl = insertBits(MVPControl, MVPC_EVP, 1);
-                                                 }
-                                              }});
+                                    0x0: dvpe({{
+                                        MVPControlReg mvpControl = MVPControl;
+                                        VPEConf0Reg vpeConf0 = VPEConf0;
+                                        Rt = MVPControl;
+                                        if (vpeConf0.mvp == 1)
+                                            mvpControl.evp = 0;
+                                        MVPControl = mvpControl;
+                                    }});
+                                    0x1: evpe({{
+                                        MVPControlReg mvpControl = MVPControl;
+                                        VPEConf0Reg vpeConf0 = VPEConf0;
+                                        Rt = MVPControl;
+                                        if (vpeConf0.mvp == 1)
+                                            mvpControl.evp = 1;
+                                        MVPControl = mvpControl;
+                                    }});
                                    default:CP0Unimpl::unknown();
                                 }
                                default:CP0Unimpl::unknown();
@@ -557,12 +585,18 @@ decode OPCODE_HI default Unknown::unknown() {
                         0x1: decode POS {
                             0xF: decode SEL {
                                 0x1: decode SC {
-                                    0x0: dmt({{ Rt = VPEControl;
-                                                VPEControl = insertBits(VPEControl, VPEC_TE, 0);
-                                         }});
-                                    0x1: emt({{ Rt = VPEControl;
-                                                VPEControl = insertBits(VPEControl, VPEC_TE, 1);
-                                         }});
+                                    0x0: dmt({{
+                                        VPEControlReg vpeControl = VPEControl;
+                                        Rt = vpeControl;
+                                        vpeControl.te = 0;
+                                        VPEControl = vpeControl;
+                                    }});
+                                    0x1: emt({{
+                                        VPEControlReg vpeControl = VPEControl;
+                                        Rt = vpeControl;
+                                        vpeControl.te = 1;
+                                        VPEControl = vpeControl;
+                                    }});
                                    default:CP0Unimpl::unknown();
                                 }
                                default:CP0Unimpl::unknown();
@@ -573,27 +607,29 @@ decode OPCODE_HI default Unknown::unknown() {
                     0xC: decode POS {
                       0x0: decode SC {
                         0x0: CP0Control::di({{
-                            if(Config_AR >= 1) // Rev 2.0 or beyond?
-                                {
-                                  Rt = Status;
-                                  Status_IE = 0;
-                                }
-                            else // Enable this else branch once we actually set values for Config on init
-                              {
+                            StatusReg status = Status;
+                            ConfigReg config = Config;
+                            // Rev 2.0 or beyond?
+                            if (config.ar >= 1) {
+                                Rt = status;
+                                status.ie = 0;
+                            } else {
+                                   // Enable this else branch once we
+                                   // actually set values for Config on init
                                 fault = new ReservedInstructionFault();
-                              }
-                          }});
+                            }
+                            Status = status;
+                        }});
                         0x1: CP0Control::ei({{
-                            if(Config_AR >= 1)
-                              {
-                                Rt = Status;
-                                Status_IE = 1;
-                              }
-                            else
-                              {
+                            StatusReg status = Status;
+                            ConfigReg config = Config;
+                            if (config.ar >= 1) {
+                                Rt = status;
+                                status.ie = 1;
+                            } else {
                                 fault = new ReservedInstructionFault();
-                              }
-                          }});
+                            }
+                        }});
                         default:CP0Unimpl::unknown();
                       }
                     }
@@ -601,29 +637,23 @@ decode OPCODE_HI default Unknown::unknown() {
                 }
                 format CP0Control {
                     0xA: rdpgpr({{
-                      if(Config_AR >= 1)
-                        { // Rev 2 of the architecture
-                          panic("Shadow Sets Not Fully Implemented.\n");
-                          //Rd = xc->tcBase()->readIntReg(RT + NumIntRegs * SRSCtl_PSS);
-                        }
-                      else
-                        {
+                        ConfigReg config = Config;
+                        if (config.ar >= 1) {
+                            // Rev 2 of the architecture
+                            panic("Shadow Sets Not Fully Implemented.\n");
+                        } else {
                           fault = new ReservedInstructionFault();
                         }
-                         }});
+                    }});
                     0xE: wrpgpr({{
-                      if(Config_AR >= 1)
-                        { // Rev 2 of the architecture
-                          panic("Shadow Sets Not Fully Implemented.\n");
-                          //xc->tcBase()->setIntReg(RD + NumIntRegs * SRSCtl_PSS,Rt);
-                          //			  warn("Writing %d to %d, PSS: %d, SRS: %x\n",Rt,RD + NumIntRegs * SRSCtl_PSS, SRSCtl_PSS,SRSCtl);
+                        ConfigReg config = Config;
+                        if (config.ar >= 1) {
+                            // Rev 2 of the architecture
+                            panic("Shadow Sets Not Fully Implemented.\n");
+                        } else {
+                            fault = new ReservedInstructionFault();
                         }
-                      else
-                        {
-                          fault = new ReservedInstructionFault();
-                        }
-
-                         }});
+                    }});
                 }
 
                }
@@ -632,44 +662,43 @@ decode OPCODE_HI default Unknown::unknown() {
             0x1: decode FUNCTION {
               format CP0Control {
                 0x18: eret({{
-                               DPRINTF(MipsPRA,"Restoring PC - %x\n",EPC);
-                               // Ugly hack to get the value of Status_EXL
-                               if(Status_EXL == 1){
-                                 DPRINTF(MipsPRA,"ERET EXL Hack\n");
-                               }
-                  if(Status_ERL == 1){
-                    Status_ERL = 0;
-                    NPC = ErrorEPC;
-                    NNPC = ErrorEPC + sizeof(MachInst); // Need to adjust NNPC, otherwise things break
-                  }
-                  else {
-                    NPC = EPC;
-                    NNPC = EPC + sizeof(MachInst); // Need to adjust NNPC, otherwise things break
-                    Status_EXL = 0;
-                    if(Config_AR >=1 && SRSCtl_HSS > 0 && Status_BEV == 0){
-                      SRSCtl_CSS = SRSCtl_PSS;
-                      //xc->setShadowSet(SRSCtl_PSS);
+                    StatusReg status = Status;
+                    ConfigReg config = Config;
+                    SRSCtlReg srsCtl = SRSCtl;
+                    DPRINTF(MipsPRA,"Restoring PC - %x\n",EPC);
+                    if (status.erl == 1) {
+                        status.erl = 0;
+                        NPC = ErrorEPC;
+                        // Need to adjust NNPC, otherwise things break
+                        NNPC = ErrorEPC + sizeof(MachInst);
+                    } else {
+                        NPC = EPC;
+                        // Need to adjust NNPC, otherwise things break
+                        NNPC = EPC + sizeof(MachInst);
+                        status.exl = 0;
+                        if (config.ar >=1 &&
+                                srsCtl.hss > 0 &&
+                                status.bev == 0) {
+                            srsCtl.css = srsCtl.pss;
+                            //xc->setShadowSet(srsCtl.pss);
+                        }
                     }
-                  }
-                  LLFlag = 0;
-                 }},IsReturn,IsSerializing,IsERET);
+                    LLFlag = 0;
+                    Status = status;
+                    SRSCtl = srsCtl;
+                }},IsReturn,IsSerializing,IsERET);
 
                 0x1F: deret({{
-                  // if(EJTagImplemented()) {
-                  if(Debug_DM == 1){
-                    Debug_DM = 1;
-                    Debug_IEXI = 0;
-                    NPC = DEPC;
-                  }
-                  else
-                    {
-                      // Undefined;
+                    DebugReg debug = Debug;
+                    if (debug.dm == 1) {
+                        debug.dm = 1;
+                        debug.iexi = 0;
+                        NPC = DEPC;
+                    } else {
+                        // Undefined;
                     }
-                  //} // EJTag Implemented
-                  //else {
-                  // Reserved Instruction Exception
-                  //}
-                 }},IsReturn,IsSerializing,IsERET);
+                    Debug = debug;
+                }}, IsReturn, IsSerializing, IsERET);
               }
               format CP0TLB {
                 0x01: tlbr({{
@@ -689,140 +718,157 @@ decode OPCODE_HI default Unknown::unknown() {
                 }}); // Need to hook up to TLB
 
                 0x02: tlbwi({{
-                                //Create PTE
-                                MipsISA::PTE NewEntry;
-                                //Write PTE
-                                NewEntry.Mask = (Addr)(PageMask >> 11);
-                                NewEntry.VPN = (Addr)(EntryHi >> 11);
-                                /*  PageGrain _ ESP                    Config3 _ SP */
-                                if(((PageGrain>>28) & 1) == 0 || ((Config3>>4)&1) ==0) {
-                                  NewEntry.Mask |= 0x3; // If 1KB pages are *NOT* enabled, lowest bits of the mask are 0b11 for TLB writes
-                                  NewEntry.VPN &= 0xFFFFFFFC; // Reset bits 0 and 1 if 1KB pages are not enabled
-                                }
-                                NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
+                    //Create PTE
+                    MipsISA::PTE NewEntry;
+                    //Write PTE
+                    NewEntry.Mask = (Addr)(PageMask >> 11);
+                    NewEntry.VPN = (Addr)(EntryHi >> 11);
+                    /*  PageGrain _ ESP                    Config3 _ SP */
+                    if(((PageGrain>>28) & 1) == 0 || ((Config3>>4)&1) ==0) {
+                        // If 1KB pages are *NOT* enabled, lowest bits of the
+                        // mask are 0b11 for TLB writes
+                        NewEntry.Mask |= 0x3;
+                        // Reset bits 0 and 1 if 1KB pages are not enabled
+                        NewEntry.VPN &= 0xFFFFFFFC;
+                    }
+                    NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
 
-                                NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
-                                NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
-                                NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
-                                NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
-                                NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
-                                NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
-                                NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
-                                NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
-                                NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
-                                /* Now, compute the AddrShiftAmount and OffsetMask - TLB optimizations */
-                                /* Addr Shift Amount for 1KB or larger pages */
-                                //	    warn("PTE->Mask: %x\n",pte->Mask);
-                                if((NewEntry.Mask & 0xFFFF) == 3){
-                                  NewEntry.AddrShiftAmount = 12;
-                                } else if((NewEntry.Mask & 0xFFFF) == 0x0000){
-                                  NewEntry.AddrShiftAmount = 10;
-                                } else if((NewEntry.Mask & 0xFFFC) == 0x000C){
-                                  NewEntry.AddrShiftAmount = 14;
-                                } else if((NewEntry.Mask & 0xFFF0) == 0x0030){
-                                  NewEntry.AddrShiftAmount = 16;
-                                } else if((NewEntry.Mask & 0xFFC0) == 0x00C0){
-                                  NewEntry.AddrShiftAmount = 18;
-                                } else if((NewEntry.Mask & 0xFF00) == 0x0300){
-                                  NewEntry.AddrShiftAmount = 20;
-                                } else if((NewEntry.Mask & 0xFC00) == 0x0C00){
-                                  NewEntry.AddrShiftAmount = 22;
-                                } else if((NewEntry.Mask & 0xF000) == 0x3000){
-                                  NewEntry.AddrShiftAmount = 24;
-                                } else if((NewEntry.Mask & 0xC000) == 0xC000){
-                                  NewEntry.AddrShiftAmount = 26;
-                                } else if((NewEntry.Mask & 0x30000) == 0x30000){
-                                  NewEntry.AddrShiftAmount = 28;
-                                } else {
-                                  fatal("Invalid Mask Pattern Detected!\n");
-                                }
-                                NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
+                    NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
+                    NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
+                    NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
+                    NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
+                    NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
+                    NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
+                    NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
+                    NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
+                    NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
+                    /* Now, compute the AddrShiftAmount and OffsetMask - TLB
+                       optimizations */
+                    /* Addr Shift Amount for 1KB or larger pages */
+                    if ((NewEntry.Mask & 0xFFFF) == 3) {
+                        NewEntry.AddrShiftAmount = 12;
+                    } else if ((NewEntry.Mask & 0xFFFF) == 0x0000) {
+                        NewEntry.AddrShiftAmount = 10;
+                    } else if ((NewEntry.Mask & 0xFFFC) == 0x000C) {
+                        NewEntry.AddrShiftAmount = 14;
+                    } else if ((NewEntry.Mask & 0xFFF0) == 0x0030) {
+                        NewEntry.AddrShiftAmount = 16;
+                    } else if ((NewEntry.Mask & 0xFFC0) == 0x00C0) {
+                        NewEntry.AddrShiftAmount = 18;
+                    } else if ((NewEntry.Mask & 0xFF00) == 0x0300) {
+                        NewEntry.AddrShiftAmount = 20;
+                    } else if ((NewEntry.Mask & 0xFC00) == 0x0C00) {
+                        NewEntry.AddrShiftAmount = 22;
+                    } else if ((NewEntry.Mask & 0xF000) == 0x3000) {
+                        NewEntry.AddrShiftAmount = 24;
+                    } else if ((NewEntry.Mask & 0xC000) == 0xC000) {
+                        NewEntry.AddrShiftAmount = 26;
+                    } else if ((NewEntry.Mask & 0x30000) == 0x30000) {
+                        NewEntry.AddrShiftAmount = 28;
+                    } else {
+                        fatal("Invalid Mask Pattern Detected!\n");
+                    }
+                    NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
 
-                                MipsISA::TLB *Ptr=xc->tcBase()->getITBPtr();
-                                MiscReg c3=xc->readMiscReg(MipsISA::Config3);
-                                MiscReg pg=xc->readMiscReg(MipsISA::PageGrain);
-                                int SP=0;
-                                if(bits(c3,Config3_SP)==1 && bits(pg,PageGrain_ESP)==1){
-                                  SP=1;
-                                }
-                                Ptr->insertAt(NewEntry,Index & 0x7FFFFFFF,SP);
+                    MipsISA::TLB *Ptr = xc->tcBase()->getITBPtr();
+                    Config3Reg config3 = Config3
+                    PageGrainReg pageGrain = PageGrain;
+                    int SP = 0;
+                    if (bits(config3, config3.sp) == 1 &&
+                        bits(pageGrain, pageGrain.esp) == 1) {
+                        SP = 1;
+                    }
+                    IndexReg index = Index;
+                    Ptr->insertAt(NewEntry, Index & 0x7FFFFFFF, SP);
               }});
                 0x06: tlbwr({{
-                                //Create PTE
-                                MipsISA::PTE NewEntry;
-                                //Write PTE
-                                NewEntry.Mask = (Addr)(PageMask >> 11);
-                                NewEntry.VPN = (Addr)(EntryHi >> 11);
-                                /*  PageGrain _ ESP                    Config3 _ SP */
-                                if(((PageGrain>>28) & 1) == 0 || ((Config3>>4)&1) ==0) {
-                                  NewEntry.Mask |= 0x3; // If 1KB pages are *NOT* enabled, lowest bits of the mask are 0b11 for TLB writes
-                                  NewEntry.VPN &= 0xFFFFFFFC; // Reset bits 0 and 1 if 1KB pages are not enabled
-                                }
-                                NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
+                    //Create PTE
+                    MipsISA::PTE NewEntry;
+                    //Write PTE
+                    NewEntry.Mask = (Addr)(PageMask >> 11);
+                    NewEntry.VPN = (Addr)(EntryHi >> 11);
+                    /*  PageGrain _ ESP                    Config3 _ SP */
+                    if (((PageGrain >> 28) & 1) == 0 ||
+                        (( Config3 >> 4) & 1) ==0) {
+                        // If 1KB pages are *NOT* enabled, lowest bits of
+                        // the mask are 0b11 for TLB writes
+                        NewEntry.Mask |= 0x3;
+                        // Reset bits 0 and 1 if 1KB pages are not enabled
+                        NewEntry.VPN &= 0xFFFFFFFC;
+                    }
+                    NewEntry.asid = (uint8_t)(EntryHi & 0xFF);
 
-                                NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
-                                NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
-                                NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
-                                NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
-                                NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
-                                NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
-                                NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
-                                NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
-                                NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
-                                /* Now, compute the AddrShiftAmount and OffsetMask - TLB optimizations */
-                                /* Addr Shift Amount for 1KB or larger pages */
-                                //	    warn("PTE->Mask: %x\n",pte->Mask);
-                                if((NewEntry.Mask & 0xFFFF) == 3){
-                                  NewEntry.AddrShiftAmount = 12;
-                                } else if((NewEntry.Mask & 0xFFFF) == 0x0000){
-                                  NewEntry.AddrShiftAmount = 10;
-                                } else if((NewEntry.Mask & 0xFFFC) == 0x000C){
-                                  NewEntry.AddrShiftAmount = 14;
-                                } else if((NewEntry.Mask & 0xFFF0) == 0x0030){
-                                  NewEntry.AddrShiftAmount = 16;
-                                } else if((NewEntry.Mask & 0xFFC0) == 0x00C0){
-                                  NewEntry.AddrShiftAmount = 18;
-                                } else if((NewEntry.Mask & 0xFF00) == 0x0300){
-                                  NewEntry.AddrShiftAmount = 20;
-                                } else if((NewEntry.Mask & 0xFC00) == 0x0C00){
-                                  NewEntry.AddrShiftAmount = 22;
-                                } else if((NewEntry.Mask & 0xF000) == 0x3000){
-                                  NewEntry.AddrShiftAmount = 24;
-                                } else if((NewEntry.Mask & 0xC000) == 0xC000){
-                                  NewEntry.AddrShiftAmount = 26;
-                                } else if((NewEntry.Mask & 0x30000) == 0x30000){
-                                  NewEntry.AddrShiftAmount = 28;
-                                } else {
-                                  fatal("Invalid Mask Pattern Detected!\n");
-                                }
-                                NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
+                    NewEntry.PFN0 = (Addr)(EntryLo0 >> 6);
+                    NewEntry.PFN1 = (Addr)(EntryLo1 >> 6);
+                    NewEntry.D0 = (bool)((EntryLo0 >> 2) & 1);
+                    NewEntry.D1 = (bool)((EntryLo1 >> 2) & 1);
+                    NewEntry.V1 = (bool)((EntryLo1 >> 1) & 1);
+                    NewEntry.V0 = (bool)((EntryLo0 >> 1) & 1);
+                    NewEntry.G = (bool)((EntryLo0 & EntryLo1) & 1);
+                    NewEntry.C0 = (uint8_t)((EntryLo0 >> 3) & 0x7);
+                    NewEntry.C1 = (uint8_t)((EntryLo1 >> 3) & 0x7);
+                    /* Now, compute the AddrShiftAmount and OffsetMask -
+                       TLB optimizations */
+                    /* Addr Shift Amount for 1KB or larger pages */
+                    if ((NewEntry.Mask & 0xFFFF) == 3){
+                        NewEntry.AddrShiftAmount = 12;
+                    } else if ((NewEntry.Mask & 0xFFFF) == 0x0000) {
+                        NewEntry.AddrShiftAmount = 10;
+                    } else if ((NewEntry.Mask & 0xFFFC) == 0x000C) {
+                        NewEntry.AddrShiftAmount = 14;
+                    } else if ((NewEntry.Mask & 0xFFF0) == 0x0030) {
+                        NewEntry.AddrShiftAmount = 16;
+                    }   else if ((NewEntry.Mask & 0xFFC0) == 0x00C0) {
+                        NewEntry.AddrShiftAmount = 18;
+                    } else if ((NewEntry.Mask & 0xFF00) == 0x0300) {
+                        NewEntry.AddrShiftAmount = 20;
+                    } else if ((NewEntry.Mask & 0xFC00) == 0x0C00) {
+                        NewEntry.AddrShiftAmount = 22;
+                    } else if ((NewEntry.Mask & 0xF000) == 0x3000) {
+                        NewEntry.AddrShiftAmount = 24;
+                    } else if ((NewEntry.Mask & 0xC000) == 0xC000) {
+                        NewEntry.AddrShiftAmount = 26;
+                    } else if ((NewEntry.Mask & 0x30000) == 0x30000) {
+                        NewEntry.AddrShiftAmount = 28;
+                    } else {
+                        fatal("Invalid Mask Pattern Detected!\n");
+                    }
+                    NewEntry.OffsetMask = ((1 << NewEntry.AddrShiftAmount) - 1);
 
-                                MipsISA::TLB *Ptr=xc->tcBase()->getITBPtr();
-                                MiscReg c3=xc->readMiscReg(MipsISA::Config3);
-                                MiscReg pg=xc->readMiscReg(MipsISA::PageGrain);
-                                int SP=0;
-                                if(bits(c3,Config3_SP)==1 && bits(pg,PageGrain_ESP)==1){
-                                  SP=1;
-                                }
-                                Ptr->insertAt(NewEntry,Random,SP);
+                    MipsISA::TLB *Ptr = xc->tcBase()->getITBPtr();
+                    Config3Reg config3 = Config3
+                    PageGrainReg pageGrain = PageGrain;
+                    int SP = 0;
+                    if (bits(config3, config3.sp) == 1 &&
+                        bits(pageGrain, pageGrain.esp) == 1) {
+                        SP = 1;
+                    }
+                    IndexReg index = Index;
+                    Ptr->insertAt(NewEntry, Random, SP);
                 }});
 
                 0x08: tlbp({{
-                               int TLB_Index;
-                               Addr VPN;
-                               if(PageGrain_ESP == 1 && Config3_SP ==1){
-                                 VPN = EntryHi >> 11;
-                               } else {
-                                 VPN = ((EntryHi >> 11) & 0xFFFFFFFC); // Mask off lower 2 bits
-                               }
-                               TLB_Index = xc->tcBase()->getITBPtr()->probeEntry(VPN,EntryHi_ASID);
-                               if(TLB_Index != -1){  // Check TLB for entry matching EntryHi
-                                 Index=TLB_Index;
-                                 //			    warn("\ntlbp: Match Found!\n");
-                               } else {// else, set Index = 1<<31
-                                 Index = (1<<31);
-                               }
-                        }});
+                    Config3Reg config3 = Config3;
+                    PageGrainReg pageGrain = PageGrain;
+                    EntryHiReg entryHi = EntryHi;
+                    int TLB_Index;
+                    Addr VPN;
+                    if (pageGrain.esp == 1 && config3.sp ==1) {
+                        VPN = EntryHi >> 11;
+                    } else {
+                        // Mask off lower 2 bits
+                        VPN = ((EntryHi >> 11) & 0xFFFFFFFC);
+                    }
+                    TLB_Index = xc->tcBase()->getITBPtr()->
+                                 probeEntry(VPN, entryHi.asid);
+                    // Check TLB for entry matching EntryHi
+                    if (TLB_Index != -1) {
+                        Index = TLB_Index;
+                    } else {
+                        // else, set Index = 1 << 31
+                        Index = (1 << 31);
+                    }
+                }});
               }
               format CP0Unimpl {
                 0x20: wait();

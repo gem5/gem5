@@ -85,7 +85,10 @@ output decoder {{
 }};
 
 output exec {{
-    void getThrRegExValues(%(CPU_exec_context)s *xc, unsigned &vpe_conf0, unsigned &tc_bind_mt, unsigned &tc_bind, unsigned &vpe_control, unsigned &mvp_conf0)
+    void getThrRegExValues(%(CPU_exec_context)s *xc,
+            VPEConf0Reg &vpe_conf0, TCBindReg &tc_bind_mt,
+            TCBindReg &tc_bind, VPEControlReg &vpe_control,
+            MVPConf0Reg &mvp_conf0)
     {
         vpe_conf0 = xc->readMiscReg(VPEConf0);
         tc_bind_mt = xc->readRegOtherThread(TCBind + Ctrl_Base_DepTag);
@@ -94,7 +97,7 @@ output exec {{
         mvp_conf0 = xc->readMiscReg(MVPConf0);
     }
 
-    void getMTExValues(%(CPU_exec_context)s *xc, unsigned &config3)
+    void getMTExValues(%(CPU_exec_context)s *xc, Config3Reg &config3)
     {
         config3 = xc->readMiscReg(Config3);
     }
@@ -108,17 +111,19 @@ def template ThreadRegisterExecute {{
             %(op_decl)s;
             %(op_rd)s;
 
-            unsigned vpe_conf0, tc_bind_mt, tc_bind, vpe_control, mvp_conf0;
+            VPEConf0Reg vpeConf0;
+            TCBindReg tcBindMT;
+            TCBindReg tcBind;
+            VPEControlReg vpeControl;
+            MVPConf0Reg mvpConf0;
 
-            getThrRegExValues(xc, vpe_conf0, tc_bind_mt, tc_bind, vpe_control, mvp_conf0);
+            getThrRegExValues(xc, vpeConf0, tcBindMT,
+                                  tcBind, vpeControl, mvpConf0);
 
             if (isCoprocessorEnabled(xc, 0)) {
-                if (bits(vpe_conf0, VPEC0_MVP) == 0 &&
-                    bits(tc_bind_mt, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO) !=
-                    bits(tc_bind, TCB_CUR_VPE_HI, TCB_CUR_VPE_LO)) {
+                if (vpeConf0.mvp == 0 && tcBindMT.curVPE != tcBind.curVPE) {
                     data = -1;
-                } else if (bits(vpe_control, VPEC_TARG_TC_HI, VPEC_TARG_TC_LO) >
-                           bits(mvp_conf0, MVPC0_PTC_HI, MVPC0_PTC_LO)) {
+                } else if (vpeControl.targTC > mvpConf0.ptc) {
                     data = -1;
                 } else {
                     int top_bit = 0;
@@ -154,12 +159,12 @@ def template MTExecute{{
                 %(op_decl)s;
                 %(op_rd)s;
 
-                unsigned config3;
+                Config3Reg config3;
 
                 getMTExValues(xc, config3);
 
                 if (isCoprocessorEnabled(xc, 0)) {
-                    if (bits(config3, CFG3_MT) == 1) {
+                    if (config3.mt == 1) {
                         %(code)s;
                     } else {
                         fault = new ReservedInstructionFault();
