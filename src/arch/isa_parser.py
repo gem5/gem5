@@ -1431,32 +1431,6 @@ class ControlRegOperand(Operand):
               self.base_name
         return wb
 
-class ControlBitfieldOperand(ControlRegOperand):
-    def makeRead(self):
-        bit_select = 0
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to read control register as FP')
-        if self.read_code != None:
-            return self.buildReadCode('readMiscReg')
-        base = 'xc->readMiscReg(%s)' % self.reg_spec
-        name = self.base_name
-        return '%s = bits(%s, %s_HI, %s_LO);' % \
-               (name, base, name, name)
-
-    def makeWrite(self):
-        if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to write control register as FP')
-        if self.write_code != None:
-            return self.buildWriteCode('setMiscReg')
-        base = 'xc->readMiscReg(%s)' % self.reg_spec
-        name = self.base_name
-        wb_val = 'insertBits(%s, %s_HI, %s_LO, %s)' % \
-                    (base, name, name, self.base_name)
-        wb = 'xc->setMiscRegOperand(this, %s, %s );\n' % (self.dest_reg_idx, wb_val)
-        wb += 'if (traceData) { traceData->setData(%s); }' % \
-              self.base_name
-        return wb
-
 class MemOperand(Operand):
     def isMem(self):
         return 1
