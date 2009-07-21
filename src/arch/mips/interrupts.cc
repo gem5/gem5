@@ -31,25 +31,26 @@
  *          Korey Sewell
  */
 
-#include "arch/mips/pra_constants.hh"
-#include "arch/mips/isa_traits.hh"
-#include "cpu/thread_context.hh"
 #include "arch/mips/interrupts.hh"
+#include "arch/mips/isa_traits.hh"
+#include "arch/mips/pra_constants.hh"
+#include "base/trace.hh"
+#include "cpu/thread_context.hh"
 
 namespace MipsISA
 {
 
 static inline uint8_t
 getCauseIP(ThreadContext *tc) {
-    MiscReg cause = tc->readMiscRegNoEffect(MipsISA::Cause);
-    return bits(cause, Cause_IP7, Cause_IP0);
+    CauseReg cause = tc->readMiscRegNoEffect(Cause);
+    return cause.ip;
 }
 
 static inline void
-setCauseIP_(ThreadContext *tc, uint8_t val) {
-    MiscReg cause = tc->readMiscRegNoEffect(MipsISA::Cause);
-    replaceBits(cause, Cause_IP7, Cause_IP0, val);
-    tc->setMiscRegNoEffect(MipsISA::Cause, cause);
+setCauseIP(ThreadContext *tc, uint8_t val) {
+    CauseReg cause = tc->readMiscRegNoEffect(Cause);
+    cause.ip = val;
+    tc->setMiscRegNoEffect(Cause, cause);
 }
 
 void
@@ -110,21 +111,17 @@ Interrupts::getInterrupt(ThreadContext * tc)
     DPRINTF(Interrupt, "Interrupts getInterrupt\n");
 
     //Check if there are any outstanding interrupts
-    MiscReg status = tc->readMiscRegNoEffect(MipsISA::Status);
+    StatusReg status = tc->readMiscRegNoEffect(Status);
     // Interrupts must be enabled, error level must be 0 or interrupts
     // inhibited, and exception level must be 0 or interrupts inhibited
-    if (bits(status, Status_IE_LO) == 1 &&
-        bits(status, Status_ERL_HI, Status_ERL_LO) == 0 &&
-        bits(status, Status_EXL_HI, Status_EXL_LO) == 0) {
+    if ((status.ie == 1) && (status.erl == 0) && (status.exl == 0)) {
         // Software interrupts & hardware interrupts are handled in software.
         // So if any interrupt that isn't masked is detected, jump to interrupt
         // handler
-        uint8_t InterruptMask = bits(status, Status_IM7, Status_IM0);
-        uint8_t InterruptPending = getCauseIP(tc);
-        // InterruptMask and InterruptPending are already correctly aligned
-        if (InterruptMask && InterruptPending){
+        CauseReg cause = tc->readMiscRegNoEffect(Cause);
+        if (status.im && cause.ip) {
             DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
-                    InterruptMask, InterruptPending);
+                    (unsigned)status.im, (unsigned)cause.ip);
             return new InterruptFault;
         }
     }
@@ -135,8 +132,8 @@ Interrupts::getInterrupt(ThreadContext * tc)
 bool
 Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
 {
-    MiscReg compare = tc->readMiscRegNoEffect(MipsISA::Compare);
-    MiscReg count = tc->readMiscRegNoEffect(MipsISA::Count);
+    MiscReg compare = tc->readMiscRegNoEffect(Compare);
+    MiscReg count = tc->readMiscRegNoEffect(Count);
     if (compare == count && count != 0)
         return true;
     return false;
@@ -156,17 +153,20 @@ Interrupts::interruptsPending(ThreadContext *tc) const
     if (onCpuTimerInterrupt(tc)) {
         DPRINTF(Interrupt, "Interrupts OnCpuTimerINterrupt(tc) == true\n");
         //determine timer interrupt IP #
-        MiscReg intctl = tc->readMiscRegNoEffect(MipsISA::IntCtl);
-        uint8_t IPTI = bits(intctl, IntCtl_IPTI_HI, IntCtl_IPTI_LO);
-        //set intstatus to correspond
-        //post(IPTI, tc);
-        uint8_t intstatus = getCauseIP(tc);
-        intstatus |= 1 << IPTI;
-        setCauseIP(tc, intstatus);
+        IntCtlReg intCtl = tc->readMiscRegNoEffect(IntCtl);
+        uint8_t intStatus = getCauseIP(tc);
+        intStatus |= 1 << intCtl.ipti;
+        setCauseIP(tc, intStatus);
     }
 
     return (getCauseIP(tc) != 0);
 
 }
 
+}
+
+MipsISA::Interrupts *
+MipsInterruptsParams::create()
+{
+    return new MipsISA::Interrupts(this);
 }

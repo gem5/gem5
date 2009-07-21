@@ -315,7 +315,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
                 req->isMisaligned()) {
             AddressErrorFault *Flt = new AddressErrorFault();
             /* BadVAddr must be set */
-            Flt->BadVAddr = req->getVaddr();
+            Flt->badVAddr = req->getVaddr();
             return Flt;
         }
     } else if(IsKSeg1(req->getVaddr())) {
@@ -338,7 +338,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
           // Unaligned address!
           AddressErrorFault *Flt = new AddressErrorFault();
           /* BadVAddr must be set */
-          Flt->BadVAddr = req->getVaddr();
+          Flt->badVAddr = req->getVaddr();
           return Flt;
       }
       PTE *pte = lookup(VPN,Asid);
@@ -361,15 +361,15 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
               //Invalid entry
               ItbInvalidFault *Flt = new ItbInvalidFault();
               /* EntryHi VPN, ASID fields must be set */
-              Flt->EntryHi_Asid = Asid;
-              Flt->EntryHi_VPN2 = (VPN >> 2);
-              Flt->EntryHi_VPN2X = (VPN & 0x3);
+              Flt->entryHiAsid = Asid;
+              Flt->entryHiVPN2 = (VPN >> 2);
+              Flt->entryHiVPN2X = (VPN & 0x3);
 
               /* BadVAddr must be set */
-              Flt->BadVAddr = req->getVaddr();
+              Flt->badVAddr = req->getVaddr();
 
               /* Context must be set */
-              Flt->Context_BadVPN2 = (VPN >> 2);
+              Flt->contextBadVPN2 = (VPN >> 2);
               return Flt;
           } else {
               // Ok, this is really a match, set paddr
@@ -388,15 +388,15 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             // Didn't find any match, return a TLB Refill Exception
             ItbRefillFault *Flt=new ItbRefillFault();
             /* EntryHi VPN, ASID fields must be set */
-            Flt->EntryHi_Asid = Asid;
-            Flt->EntryHi_VPN2 = (VPN >> 2);
-            Flt->EntryHi_VPN2X = (VPN & 0x3);
+            Flt->entryHiAsid = Asid;
+            Flt->entryHiVPN2 = (VPN >> 2);
+            Flt->entryHiVPN2X = (VPN & 0x3);
 
             /* BadVAddr must be set */
-            Flt->BadVAddr = req->getVaddr();
+            Flt->badVAddr = req->getVaddr();
 
             /* Context must be set */
-            Flt->Context_BadVPN2 = (VPN >> 2);
+            Flt->contextBadVPN2 = (VPN >> 2);
             return Flt;
         }
     }
@@ -435,7 +435,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 req->isMisaligned()) {
             StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
             /* BadVAddr must be set */
-            Flt->BadVAddr = req->getVaddr();
+            Flt->badVAddr = req->getVaddr();
 
             return Flt;
         }
@@ -458,7 +458,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             // Unaligned address!
             StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
             /* BadVAddr must be set */
-            Flt->BadVAddr = req->getVaddr();
+            Flt->badVAddr = req->getVaddr();
             return Flt;
         }
         if (pte != NULL) {
@@ -483,15 +483,15 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 //Invalid entry
                 DtbInvalidFault *Flt = new DtbInvalidFault();
                 /* EntryHi VPN, ASID fields must be set */
-                Flt->EntryHi_Asid = Asid;
-                Flt->EntryHi_VPN2 = (VPN>>2);
-                Flt->EntryHi_VPN2X = (VPN & 0x3);
+                Flt->entryHiAsid = Asid;
+                Flt->entryHiVPN2 = (VPN>>2);
+                Flt->entryHiVPN2X = (VPN & 0x3);
 
                 /* BadVAddr must be set */
-                Flt->BadVAddr = req->getVaddr();
+                Flt->badVAddr = req->getVaddr();
 
                 /* Context must be set */
-                Flt->Context_BadVPN2 = (VPN >> 2);
+                Flt->contextBadVPN2 = (VPN >> 2);
 
                 return Flt;
             } else {
@@ -499,15 +499,15 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
                 if (!Dirty) {
                     TLBModifiedFault *Flt = new TLBModifiedFault();
                     /* EntryHi VPN, ASID fields must be set */
-                    Flt->EntryHi_Asid = Asid;
-                    Flt->EntryHi_VPN2 = (VPN >> 2);
-                    Flt->EntryHi_VPN2X = (VPN & 0x3);
+                    Flt->entryHiAsid = Asid;
+                    Flt->entryHiVPN2 = (VPN >> 2);
+                    Flt->entryHiVPN2X = (VPN & 0x3);
 
                     /* BadVAddr must be set */
-                    Flt->BadVAddr = req->getVaddr();
+                    Flt->badVAddr = req->getVaddr();
 
                     /* Context must be set */
-                    Flt->Context_BadVPN2 = (VPN >> 2);
+                    Flt->contextBadVPN2 = (VPN >> 2);
                     return Flt;
                 }
                 Addr PAddr;
@@ -525,15 +525,15 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
             // Didn't find any match, return a TLB Refill Exception
             DtbRefillFault *Flt = new DtbRefillFault();
             /* EntryHi VPN, ASID fields must be set */
-            Flt->EntryHi_Asid = Asid;
-            Flt->EntryHi_VPN2 = (VPN >> 2);
-            Flt->EntryHi_VPN2X = (VPN & 0x3);
+            Flt->entryHiAsid = Asid;
+            Flt->entryHiVPN2 = (VPN >> 2);
+            Flt->entryHiVPN2X = (VPN & 0x3);
 
             /* BadVAddr must be set */
-            Flt->BadVAddr = req->getVaddr();
+            Flt->badVAddr = req->getVaddr();
 
             /* Context must be set */
-            Flt->Context_BadVPN2 = (VPN >> 2);
+            Flt->contextBadVPN2 = (VPN >> 2);
             return Flt;
         }
     }

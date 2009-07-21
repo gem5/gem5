@@ -42,10 +42,12 @@ class MaltaCChip(BasicPioDevice):
 
 class MaltaIO(BasicPioDevice):
     type = 'MaltaIO'
-    time = Param.UInt64(1136073600,
+    time = Param.Time('01/01/2009',
         "System time to use (0 for actual time, default is 1/1/06)")
+    year_is_bcd = Param.Bool(False,
+            "The RTC should interpret the year as a BCD value")
     malta = Param.Malta(Parent.any, "Malta")
-    frequency = Param.Frequency('1050Hz', "frequency of interrupts")
+    frequency = Param.Frequency('1024Hz', "frequency of interrupts")
 
 class MaltaPChip(BasicPioDevice):
     type = 'MaltaPChip'

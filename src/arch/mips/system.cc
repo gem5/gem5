@@ -51,7 +51,7 @@ MipsSystem::MipsSystem(Params *p) : System(p)
 #if FULL_SYSTEM
     if (p->bare_iron == true) {
         hexFile = new HexFile(params()->hex_file_name);
-        if (!hexFile->loadSections(&functionalPort, MipsISA::LoadAddrMask))
+        if (!hexFile->loadSections(&functionalPort))
             panic("Could not load hex file\n");
     }
 
@@ -93,7 +93,6 @@ MipsSystem::MipsSystem(Params *p) : System(p)
      */
     if (consoleSymtab->findAddress("env_booted_osflags", addr)) {
         warn("writing addr starting from %#x", addr);
-        cout << "-" << endl;
         virtPort.writeBlob(addr, (uint8_t*)params()->boot_osflags.c_str(),
                 strlen(params()->boot_osflags.c_str()));
     }

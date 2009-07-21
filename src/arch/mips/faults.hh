@@ -47,11 +47,11 @@ class MipsFault : public FaultBase
     virtual bool skipFaultingInstruction() {return false;}
     virtual bool setRestartAddress() {return true;}
   public:
-    Addr BadVAddr;
-    Addr EntryHi_Asid;
-    Addr EntryHi_VPN2;
-    Addr EntryHi_VPN2X;
-    Addr Context_BadVPN2;
+    Addr badVAddr;
+    Addr entryHiAsid;
+    Addr entryHiVPN2;
+    Addr entryHiVPN2X;
+    Addr contextBadVPN2;
 #if FULL_SYSTEM
     void invoke(ThreadContext * tc) {};
     void setExceptionState(ThreadContext *, uint8_t);

@@ -38,6 +38,7 @@
 #include "base/misc.hh"
 
 #if FULL_SYSTEM
+#include "arch/mips/registers.hh"
 #include "arch/mips/vtophys.hh"
 #include "mem/vport.hh"
 #endif
@@ -52,16 +53,16 @@ uint64_t
 getArgument(ThreadContext *tc, int number, bool fp)
 {
 #if FULL_SYSTEM
-    if (number < NumArgumentRegs) {
+    if (number < 4) {
         if (fp)
-            return tc->readFloatRegBits(ArgumentReg[number]);
+            return tc->readFloatRegBits(FirstArgumentReg + number);
         else
-            return tc->readIntReg(ArgumentReg[number]);
+            return tc->readIntReg(FirstArgumentReg + number);
     } else {
         Addr sp = tc->readIntReg(StackPointerReg);
         VirtualPort *vp = tc->getVirtPort();
         uint64_t arg = vp->read<uint64_t>(sp +
-                           (number-NumArgumentRegs) * sizeof(uint64_t));
+                (number - 4) * sizeof(uint64_t));
         return arg;
     }
 #else

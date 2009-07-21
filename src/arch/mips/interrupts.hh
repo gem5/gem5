@@ -31,19 +31,40 @@
 #ifndef __ARCH_MIPS_INTERRUPT_HH__
 #define __ARCH_MIPS_INTERRUPT_HH__
 
+#include <string>
+
 #include "arch/mips/faults.hh"
 #include "base/compiler.hh"
+#include "base/misc.hh"
+#include "params/MipsInterrupts.hh"
+#include "sim/serialize.hh"
+#include "sim/sim_object.hh"
+
+class BaseCPU;
+class Checkpoint;
 
 namespace MipsISA
 {
 
-class Interrupts
+class Interrupts : public SimObject
 {
   public:
-    Interrupts()
+    typedef MipsInterruptsParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    Interrupts(Params * p) : SimObject(p)
     {
         newInfoSet = false;
     }
+
+    void
+    setCPU(BaseCPU *_cpu)
+    {}
 
     //  post(int int_num, int index) is responsible
     //  for posting an interrupt. It sets a bit

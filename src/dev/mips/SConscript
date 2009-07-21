@@ -36,7 +36,6 @@ if env['FULL_SYSTEM'] and env['TARGET_ISA'] == 'mips':
     SimObject('Malta.py')
 
     TraceFlag('Malta')
-    TraceFlag('MC146818')
 
     Source('backdoor.cc')
     Source('malta.cc')

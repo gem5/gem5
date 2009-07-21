@@ -771,7 +771,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     NewEntry.OffsetMask = ((1<<NewEntry.AddrShiftAmount)-1);
 
                     MipsISA::TLB *Ptr = xc->tcBase()->getITBPtr();
-                    Config3Reg config3 = Config3
+                    Config3Reg config3 = Config3;
                     PageGrainReg pageGrain = PageGrain;
                     int SP = 0;
                     if (bits(config3, config3.sp) == 1 &&
@@ -836,7 +836,7 @@ decode OPCODE_HI default Unknown::unknown() {
                     NewEntry.OffsetMask = ((1 << NewEntry.AddrShiftAmount) - 1);
 
                     MipsISA::TLB *Ptr = xc->tcBase()->getITBPtr();
-                    Config3Reg config3 = Config3
+                    Config3Reg config3 = Config3;
                     PageGrainReg pageGrain = PageGrain;
                     int SP = 0;
                     if (bits(config3, config3.sp) == 1 &&

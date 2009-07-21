@@ -84,7 +84,7 @@ void
 MipsBackdoor::startup()
 {
     system->setMipsAccess(pioAddr);
-    mipsAccess->numCPUs = system->getNumCPUs();
+    mipsAccess->numCPUs = system->numContexts();
     mipsAccess->kernStart = MipsISA::Phys2K0Seg(system->getKernelStart());
     mipsAccess->kernEnd = MipsISA::Phys2K0Seg(system->getKernelEnd());
     mipsAccess->entryPoint = MipsISA::Phys2K0Seg(system->getKernelEntry());

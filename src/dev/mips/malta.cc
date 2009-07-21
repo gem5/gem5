@@ -69,51 +69,38 @@ Malta::intrFrequency()
 void
 Malta::postConsoleInt()
 {
-     //panic("Malta::postConsoleInt() has not been implemented.");
-    io->postIntr(0x10/*HW4*/);//see {Linux-src}/arch/mips/mips-boards/sim/sim_setup.c
+    //see {Linux-src}/arch/mips/mips-boards/sim/sim_setup.c
+    io->postIntr(0x10/*HW4*/);
 }
 
 void
 Malta::clearConsoleInt()
 {
-        //FIXME: implement clearConsoleInt()
-        //warn("Malta::clearConsoleInt() has not been implemented.");
+    //FIXME: implement clearConsoleInt()
     io->clearIntr(0x10/*HW4*/);
 }
 
 void
 Malta::postPciInt(int line)
 {
-                panic("Malta::postPciInt() has not been implemented.");
-    //cchip->postDRIR(line);
+    panic("Malta::postPciInt() has not been implemented.");
 }
 
 void
 Malta::clearPciInt(int line)
 {
-                panic("Malta::clearPciInt() has not been implemented.");
-    //cchip->clearDRIR(line);
+    panic("Malta::clearPciInt() has not been implemented.");
 }
 
 Addr
 Malta::pciToDma(Addr pciAddr) const
 {
-                panic("Malta::pciToDma() has not been implemented.");
-    return pchip->translatePciToDma(pciAddr);
-}
-
-
-Addr
-Malta::calcConfigAddr(int bus, int dev, int func)
-{
-        panic("Malta::calcConfigAddr() has not been implemented.");
-   return pchip->calcConfigAddr(bus, dev, func);
+    panic("Malta::pciToDma() has not been implemented.");
 }
 
 void
 Malta::serialize(std::ostream &os)
 {
-
     SERIALIZE_ARRAY(intr_sum_type, Malta::Max_CPUs);
 }
 

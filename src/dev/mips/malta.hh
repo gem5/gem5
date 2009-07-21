@@ -120,10 +120,26 @@ class Malta : public Platform
 
     virtual Addr pciToDma(Addr pciAddr) const;
 
-    /**
-     * Calculate the configuration address given a bus/dev/func.
-     */
-    virtual Addr calcConfigAddr(int bus, int dev, int func);
+    Addr
+    calcPciConfigAddr(int bus, int dev, int func)
+    {
+        panic("Need implementation\n");
+        M5_DUMMY_RETURN
+    }
+
+    Addr
+    calcPciIOAddr(Addr addr)
+    {
+        panic("Need implementation\n");
+        M5_DUMMY_RETURN
+    }
+
+    Addr
+    calcPciMemAddr(Addr addr)
+    {
+        panic("Need implementation\n");
+        M5_DUMMY_RETURN
+    }
 
     /**
      * Serialize this object to the given output stream.

@@ -120,14 +120,16 @@ BitUnion32(StatusReg)
     // Bit 18 is zero
     Bitfield<17, 16> impl;
     Bitfield<15, 10> ipl;
-    Bitfield<15>     im7;
-    Bitfield<14>     im6;
-    Bitfield<13>     im5;
-    Bitfield<12>     im4;
-    Bitfield<11>     im3;
-    Bitfield<10>     im2;
-    Bitfield<9>      im1;
-    Bitfield<8>      im0;
+    SubBitUnion(im, 15, 8)
+        Bitfield<15> im7;
+        Bitfield<14> im6;
+        Bitfield<13> im5;
+        Bitfield<12> im4;
+        Bitfield<11> im3;
+        Bitfield<10> im2;
+        Bitfield<9>  im1;
+        Bitfield<8>  im0;
+    EndSubBitUnion(im)
     Bitfield<7>      kx;
     Bitfield<6>      sx;
     Bitfield<5>      ux;
@@ -182,14 +184,16 @@ BitUnion32(CauseReg)
     Bitfield<22>     wp;
     // Bits 21-16 are zeros
     Bitfield<15, 10> ripl;
-    Bitfield<15>     ip7;
-    Bitfield<14>     ip6;
-    Bitfield<13>     ip5;
-    Bitfield<12>     ip4;
-    Bitfield<11>     ip3;
-    Bitfield<10>     ip2;
-    Bitfield<9>      ip1;
-    Bitfield<8>      ip0;
+    SubBitUnion(ip, 15, 8)
+        Bitfield<15> ip7;
+        Bitfield<14> ip6;
+        Bitfield<13> ip5;
+        Bitfield<12> ip4;
+        Bitfield<11> ip3;
+        Bitfield<10> ip2;
+        Bitfield<9>  ip1;
+        Bitfield<8>  ip0;
+    EndSubBitUnion(ip);
     // Bit 7 is zero
     Bitfield<6,  2>  excCode;
     // Bits 1-0 are zeros

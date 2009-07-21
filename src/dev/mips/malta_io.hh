@@ -37,11 +37,13 @@
 #ifndef __DEV_MALTA_IO_HH__
 #define __DEV_MALTA_IO_HH__
 
-#include "dev/io_device.hh"
 #include "base/range.hh"
 #include "dev/mips/malta.hh"
-#include "sim/eventq.hh"
+#include "dev/intel_8254_timer.hh"
+#include "dev/io_device.hh"
+#include "dev/mc146818.hh"
 #include "params/MaltaIO.hh"
+#include "sim/eventq.hh"
 
 /**
  * Malta I/O device is a catch all for all the south bridge stuff we care
@@ -51,235 +53,21 @@ class MaltaIO : public BasicPioDevice
 {
   private:
     struct tm tm;
-  public:
-        /** Post an Interrupt to the CPU */
-    void postIntr(uint8_t interrupt);
-
-    /** Clear an Interrupt to the CPU */
-    void clearIntr(uint8_t interrupt);
 
   protected:
-    /** Real-Time Clock (MC146818) */
-    class RTC
+
+    class RTC : public MC146818
     {
-      private:
-        /** Event for RTC periodic interrupt */
-        struct RTCEvent : public Event
-        {
-            /** A pointer back to malta to create interrupt the processor. */
-            Malta* malta;
-            Tick interval;
-
-            RTCEvent(Malta* t, Tick i);
-
-            /** Schedule the RTC periodic interrupt */
-            void scheduleIntr();
-
-            /** Event process to occur at interrupt*/
-            virtual void process();
-
-            /** Event description */
-            virtual const char *description() const;
-        };
-
-      private:
-        std::string _name;
-        const std::string &name() const { return _name; }
-
-        /** RTC periodic interrupt event */
-        RTCEvent event;
-
-        /** Current RTC register address/index */
-        int addr;
-
-        /** Data for real-time clock function */
-        union {
-            uint8_t clock_data[10];
-
-            struct {
-                uint8_t sec;
-                uint8_t sec_alrm;
-                uint8_t min;
-                uint8_t min_alrm;
-                uint8_t hour;
-                uint8_t hour_alrm;
-                uint8_t wday;
-                uint8_t mday;
-                uint8_t mon;
-                uint8_t year;
-            };
-        };
-
-        /** RTC status register A */
-        uint8_t stat_regA;
-
-        /** RTC status register B */
-        uint8_t stat_regB;
-
       public:
-        RTC(const std::string &name, Malta* t, Tick i);
+        Malta *malta;
+        RTC(const std::string &name, const MaltaIOParams *p);
 
-        /** Set the initial RTC time/date */
-        void set_time(time_t t);
-
-        /** RTC address port: write address of RTC RAM data to access */
-        void writeAddr(const uint8_t data);
-
-        /** RTC write data */
-        void writeData(const uint8_t data);
-
-
-
-        /** RTC read data */
-        uint8_t readData();
-
-        /**
-          * Serialize this object to the given output stream.
-          * @param base The base name of the counter object.
-          * @param os The stream to serialize to.
-          */
-        void serialize(const std::string &base, std::ostream &os);
-
-        /**
-         * Reconstruct the state of this object from a checkpoint.
-          * @param base The base name of the counter object.
-         * @param cp The checkpoint use.
-         * @param section The section name of this object
-         */
-        void unserialize(const std::string &base, Checkpoint *cp,
-                         const std::string &section);
-    };
-
-    /** Programmable Interval Timer (Intel 8254) */
-    class PITimer
-    {
-        /** Counter element for PIT */
-        class Counter
+      protected:
+        void handleEvent()
         {
-            /** Event for counter interrupt */
-            class CounterEvent : public Event
-            {
-              private:
-                /** Pointer back to Counter */
-                Counter* counter;
-                Tick interval;
-
-              public:
-                CounterEvent(Counter*);
-
-                /** Event process */
-                virtual void process();
-
-                /** Event description */
-                virtual const char *description() const;
-
-                friend class Counter;
-            };
-
-          private:
-            std::string _name;
-            const std::string &name() const { return _name; }
-
-            CounterEvent event;
-
-            /** Current count value */
-            uint16_t count;
-
-            /** Latched count */
-            uint16_t latched_count;
-
-            /** Interrupt period */
-            uint16_t period;
-
-            /** Current mode of operation */
-            uint8_t mode;
-
-            /** Output goes high when the counter reaches zero */
-            bool output_high;
-
-            /** State of the count latch */
-            bool latch_on;
-
-            /** Set of values for read_byte and write_byte */
-            enum {LSB, MSB};
-
-            /** Determine which byte of a 16-bit count value to read/write */
-            uint8_t read_byte, write_byte;
-
-          public:
-            Counter(const std::string &name);
-
-            /** Latch the current count (if one is not already latched) */
-            void latchCount();
-
-            /** Set the read/write mode */
-            void setRW(int rw_val);
-
-            /** Set operational mode */
-            void setMode(int mode_val);
-
-            /** Set count encoding */
-            void setBCD(int bcd_val);
-
-            /** Read a count byte */
-            uint8_t read();
-
-            /** Write a count byte */
-            void write(const uint8_t data);
-
-            /** Is the output high? */
-            bool outputHigh();
-
-            /**
-             * Serialize this object to the given output stream.
-             * @param base The base name of the counter object.
-             * @param os   The stream to serialize to.
-             */
-            void serialize(const std::string &base, std::ostream &os);
-
-            /**
-             * Reconstruct the state of this object from a checkpoint.
-             * @param base The base name of the counter object.
-             * @param cp The checkpoint use.
-             * @param section The section name of this object
-             */
-            void unserialize(const std::string &base, Checkpoint *cp,
-                             const std::string &section);
-        };
-
-      private:
-        std::string _name;
-        const std::string &name() const { return _name; }
-
-        /** PIT has three seperate counters */
-        Counter *counter[3];
-
-      public:
-        /** Public way to access individual counters (avoid array accesses) */
-        Counter counter0;
-        Counter counter1;
-        Counter counter2;
-
-        PITimer(const std::string &name);
-
-        /** Write control word */
-        void writeControl(const uint8_t data);
-
-        /**
-         * Serialize this object to the given output stream.
-         * @param base The base name of the counter object.
-         * @param os The stream to serialize to.
-         */
-        void serialize(const std::string &base, std::ostream &os);
-
-        /**
-         * Reconstruct the state of this object from a checkpoint.
-         * @param base The base name of the counter object.
-         * @param cp The checkpoint use.
-         * @param section The section name of this object
-         */
-        void unserialize(const std::string &base, Checkpoint *cp,
-                         const std::string &section);
+            //Actually interrupt the processor here
+            malta->cchip->postRTC();
+        }
     };
 
     /** Mask of the PIC1 */
@@ -304,7 +92,7 @@ class MaltaIO : public BasicPioDevice
     Malta *malta;
 
     /** Intel 8253 Periodic Interval Timer */
-    PITimer pitimer;
+    Intel8254Timer pitimer;
 
     RTC rtc;
 
@@ -329,17 +117,21 @@ class MaltaIO : public BasicPioDevice
         return dynamic_cast<const Params *>(_params);
     }
 
-  public:
     /**
      * Initialize all the data for devices supported by Malta I/O.
      * @param p pointer to Params struct
      */
-    MaltaIO(Params *p);
+    MaltaIO(const Params *p);
 
     virtual Tick read(PacketPtr pkt);
     virtual Tick write(PacketPtr pkt);
 
 
+    /** Post an Interrupt to the CPU */
+    void postIntr(uint8_t interrupt);
+
+    /** Clear an Interrupt to the CPU */
+    void clearIntr(uint8_t interrupt);
 
     /**
      * Serialize this object to the given output stream.
