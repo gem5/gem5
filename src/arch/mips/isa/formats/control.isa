@@ -180,12 +180,12 @@ output exec {{
 #if !FULL_SYSTEM
             return true;
 #else
-          MiscReg Stat = xc->readMiscReg(MipsISA::Status);
+          MiscReg Stat = xc->readMiscReg(MISCREG_STATUS);
           switch(cop_num)
             {
             case 0:
               {
-                  MiscReg Dbg = xc->readMiscReg(MipsISA::Debug);
+                  MiscReg Dbg = xc->readMiscReg(MISCREG_DEBUG);
                   if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
                      && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
                      && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
@@ -216,8 +216,8 @@ output exec {{
         bool inline isCoprocessor0Enabled(%(CPU_exec_context)s *xc)
         {
 #if FULL_SYSTEM
-          MiscReg Stat = xc->readMiscRegNoEffect(MipsISA::Status);
-          MiscReg Dbg = xc->readMiscRegNoEffect(MipsISA::Debug);
+          MiscReg Stat = xc->readMiscRegNoEffect(MISCREG_STATUS);
+          MiscReg Dbg = xc->readMiscRegNoEffect(MISCREG_DEBUG);
           if((Stat & 0x10000006) == 0  // EXL, ERL or CU0 set, CP0 accessible
                  && (Dbg & 0x40000000) == 0 // DM bit set, CP0 accessible
                  && (Stat & 0x00000018) != 0) {  // KSU = 0, kernel mode is base mode
@@ -232,7 +232,7 @@ output exec {{
         bool isMMUTLB(%(CPU_exec_context)s *xc)
         {
 #if FULL_SYSTEM
-          if((xc->readMiscRegNoEffect(MipsISA::Config) & 0x00000380)==0x80)
+          if((xc->readMiscRegNoEffect(MISCREG_CONFIG) & 0x00000380)==0x80)
             return true;
 #endif
           return false;

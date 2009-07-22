@@ -90,16 +90,16 @@ output exec {{
             TCBindReg &tc_bind, VPEControlReg &vpe_control,
             MVPConf0Reg &mvp_conf0)
     {
-        vpe_conf0 = xc->readMiscReg(VPEConf0);
-        tc_bind_mt = xc->readRegOtherThread(TCBind + Ctrl_Base_DepTag);
-        tc_bind = xc->readMiscReg(TCBind);
-        vpe_control = xc->readMiscReg(VPEControl);
-        mvp_conf0 = xc->readMiscReg(MVPConf0);
+        vpe_conf0 = xc->readMiscReg(MISCREG_VPE_CONF0);
+        tc_bind_mt = xc->readRegOtherThread(MISCREG_TC_BIND + Ctrl_Base_DepTag);
+        tc_bind = xc->readMiscReg(MISCREG_TC_BIND);
+        vpe_control = xc->readMiscReg(MISCREG_VPE_CONTROL);
+        mvp_conf0 = xc->readMiscReg(MISCREG_MVP_CONF0);
     }
 
     void getMTExValues(%(CPU_exec_context)s *xc, Config3Reg &config3)
     {
-        config3 = xc->readMiscReg(Config3);
+        config3 = xc->readMiscReg(MISCREG_CONFIG3);
     }
 }};
 

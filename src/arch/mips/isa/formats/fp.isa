@@ -135,12 +135,13 @@ output exec {{
                 cpu->setFloatRegOperandBits(inst, 0, mips_nan);
 
                 //Read FCSR from FloatRegFile
-                uint32_t fcsr_bits = cpu->tcBase()->readFloatRegBits(FCSR);
+                uint32_t fcsr_bits =
+                    cpu->tcBase()->readFloatRegBits(FLOATREG_FCSR);
 
                 uint32_t new_fcsr = genInvalidVector(fcsr_bits);
 
                 //Write FCSR from FloatRegFile
-                cpu->tcBase()->setFloatRegBits(FCSR, new_fcsr);
+                cpu->tcBase()->setFloatRegBits(FLOATREG_FCSR, new_fcsr);
 
                 if (traceData) { traceData->setData(mips_nan); }
                 return true;
@@ -153,13 +154,13 @@ output exec {{
         fpResetCauseBits(%(CPU_exec_context)s *cpu)
         {
             //Read FCSR from FloatRegFile
-            uint32_t fcsr = cpu->tcBase()->readFloatRegBits(FCSR);
+            uint32_t fcsr = cpu->tcBase()->readFloatRegBits(FLOATREG_FCSR);
 
             // TODO: Use utility function here
             fcsr = bits(fcsr, 31, 18) << 18 | bits(fcsr, 11, 0);
 
             //Write FCSR from FloatRegFile
-            cpu->tcBase()->setFloatRegBits(FCSR, fcsr);
+            cpu->tcBase()->setFloatRegBits(FLOATREG_FCSR, fcsr);
         }
 }};
 

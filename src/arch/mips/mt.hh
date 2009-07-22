@@ -55,7 +55,7 @@ template <class TC>
 inline unsigned
 getVirtProcNum(TC *tc)
 {
-    TCBindReg tcbind = tc->readMiscRegNoEffect(TCBind);
+    TCBindReg tcbind = tc->readMiscRegNoEffect(MISCREG_TC_BIND);
     return tcbind.curVPE;
 }
 
@@ -63,7 +63,7 @@ template <class TC>
 inline unsigned
 getTargetThread(TC *tc)
 {
-    VPEControlReg vpeCtrl = tc->readMiscRegNoEffect(VPEControl);
+    VPEControlReg vpeCtrl = tc->readMiscRegNoEffect(MISCREG_VPE_CONTROL);
     return vpeCtrl.targTC;
 }
 
@@ -77,7 +77,7 @@ haltThread(TC *tc)
         // Save last known PC in TCRestart
         // @TODO: Needs to check if this is a branch and if so,
         // take previous instruction
-        tc->setMiscReg(TCRestart, tc->readNextPC());
+        tc->setMiscReg(MISCREG_TC_RESTART, tc->readNextPC());
 
         warn("%i: Halting thread %i in %s @ PC %x, setting restart PC to %x",
                 curTick, tc->threadId(), tc->getCpuPtr()->name(),
@@ -91,7 +91,7 @@ restoreThread(TC *tc)
 {
     if (tc->status() != TC::Active) {
         // Restore PC from TCRestart
-        IntReg pc = tc->readMiscRegNoEffect(TCRestart);
+        IntReg pc = tc->readMiscRegNoEffect(MISCREG_TC_RESTART);
 
         // TODO: SET PC WITH AN EVENT INSTEAD OF INSTANTANEOUSLY
         tc->setPC(pc);
@@ -109,31 +109,33 @@ template <class TC>
 void
 forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
 {
-    MVPConf0Reg mvpConf = tc->readMiscRegNoEffect(MVPConf0);
+    MVPConf0Reg mvpConf = tc->readMiscRegNoEffect(MISCREG_MVP_CONF0);
     int num_threads = mvpConf.ptc + 1;
 
     int success = 0;
     for (ThreadID tid = 0; tid < num_threads && success == 0; tid++) {
         TCBindReg tidTCBind =
-            tc->readRegOtherThread(TCBind + Ctrl_Base_DepTag, tid);
-        TCBindReg tcBind = tc->readMiscRegNoEffect(TCBind);
+            tc->readRegOtherThread(MISCREG_TC_BIND + Ctrl_Base_DepTag, tid);
+        TCBindReg tcBind = tc->readMiscRegNoEffect(MISCREG_TC_BIND);
 
         if (tidTCBind.curVPE = tcBind.curVPE) {
 
             TCStatusReg tidTCStatus =
-                tc->readRegOtherThread(TCStatus + Ctrl_Base_DepTag,tid);
+                tc->readRegOtherThread(MISCREG_TC_STATUS +
+                                       Ctrl_Base_DepTag,tid);
 
             TCHaltReg tidTCHalt =
-                tc->readRegOtherThread(TCHalt + Ctrl_Base_DepTag,tid);
+                tc->readRegOtherThread(MISCREG_TC_HALT + Ctrl_Base_DepTag,tid);
 
             if (tidTCStatus.da == 1 && tidTCHalt.h == 0 &&
                 tidTCStatus.a == 0 && success == 0) {
 
-                tc->setRegOtherThread(TCRestart + Ctrl_Base_DepTag, Rs, tid);
+                tc->setRegOtherThread(MISCREG_TC_RESTART +
+                                      Ctrl_Base_DepTag, Rs, tid);
                 tc->setRegOtherThread(Rd_bits, Rt, tid);
 
-                StatusReg status = tc->readMiscReg(Status);
-                TCStatusReg tcStatus = tc->readMiscReg(TCStatus);
+                StatusReg status = tc->readMiscReg(MISCREG_STATUS);
+                TCStatusReg tcStatus = tc->readMiscReg(MISCREG_TC_STATUS);
 
                 // Set Run-State to Running
                 tidTCStatus.rnst = 0;
@@ -149,7 +151,7 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
                 tidTCStatus.asid = tcStatus.asid;
 
                 // Write Status Register
-                tc->setRegOtherThread(TCStatus + Ctrl_Base_DepTag,
+                tc->setRegOtherThread(MISCREG_TC_STATUS + Ctrl_Base_DepTag,
                                       tidTCStatus, tid);
 
                 // Mark As Successful Fork
@@ -161,9 +163,10 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
     }
 
     if (success == 0) {
-        VPEControlReg vpeControl = tc->readMiscRegNoEffect(VPEControl);
+        VPEControlReg vpeControl =
+            tc->readMiscRegNoEffect(MISCREG_VPE_CONTROL);
         vpeControl.excpt = 1;
-        tc->setMiscReg(VPEControl, vpeControl);
+        tc->setMiscReg(MISCREG_VPE_CONTROL, vpeControl);
         fault = new ThreadFault();
     }
 }
@@ -174,21 +177,24 @@ int
 yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
 {
     if (src_reg == 0) {
-        MVPConf0Reg mvpConf0 = tc->readMiscRegNoEffect(MVPConf0);
+        MVPConf0Reg mvpConf0 = tc->readMiscRegNoEffect(MISCREG_MVP_CONF0);
         ThreadID num_threads = mvpConf0.ptc + 1;
 
         int ok = 0;
 
         // Get Current VPE & TC numbers from calling thread
-        TCBindReg tcBind = tc->readMiscRegNoEffect(TCBind);
+        TCBindReg tcBind = tc->readMiscRegNoEffect(MISCREG_TC_BIND);
 
         for (ThreadID tid = 0; tid < num_threads; tid++) {
             TCStatusReg tidTCStatus =
-                tc->readRegOtherThread(TCStatus + Ctrl_Base_DepTag, tid);
+                tc->readRegOtherThread(MISCREG_TC_STATUS + Ctrl_Base_DepTag,
+                                       tid);
             TCHaltReg tidTCHalt =
-                tc->readRegOtherThread(TCHalt + Ctrl_Base_DepTag, tid);
+                tc->readRegOtherThread(MISCREG_TC_HALT + Ctrl_Base_DepTag,
+                                       tid);
             TCBindReg tidTCBind =
-                tc->readRegOtherThread(TCBind + Ctrl_Base_DepTag, tid);
+                tc->readRegOtherThread(MISCREG_TC_BIND + Ctrl_Base_DepTag,
+                                       tid);
 
             if (tidTCBind.curVPE == tcBind.curVPE &&
                 tidTCBind.curTC == tcBind.curTC &&
@@ -200,23 +206,24 @@ yieldThread(TC *tc, Fault &fault, int src_reg, uint32_t yield_mask)
         }
 
         if (ok == 1) {
-            TCStatusReg tcStatus = tc->readMiscRegNoEffect(TCStatus);
+            TCStatusReg tcStatus = tc->readMiscRegNoEffect(MISCREG_TC_STATUS);
             tcStatus.a = 0;
-            tc->setMiscReg(TCStatus, tcStatus);
+            tc->setMiscReg(MISCREG_TC_STATUS, tcStatus);
             warn("%i: Deactivating Hardware Thread Context #%i",
                     curTick, tc->threadId());
         }
     } else if (src_reg > 0) {
         if (src_reg && !yield_mask != 0) {
-            VPEControlReg vpeControl = tc->readMiscReg(VPEControl);
+            VPEControlReg vpeControl = tc->readMiscReg(MISCREG_VPE_CONTROL);
             vpeControl.excpt = 2;
-            tc->setMiscReg(VPEControl, vpeControl);
+            tc->setMiscReg(MISCREG_VPE_CONTROL, vpeControl);
             fault = new ThreadFault();
         } else {
         }
     } else if (src_reg != -2) {
-        TCStatusReg tcStatus = tc->readMiscRegNoEffect(TCStatus);
-        VPEControlReg vpeControl = tc->readMiscRegNoEffect(VPEControl);
+        TCStatusReg tcStatus = tc->readMiscRegNoEffect(MISCREG_TC_STATUS);
+        VPEControlReg vpeControl =
+            tc->readMiscRegNoEffect(MISCREG_VPE_CONTROL);
 
         if (vpeControl.ysi == 1 && tcStatus.dt == 1 ) {
             vpeControl.excpt = 4;
@@ -237,14 +244,14 @@ updateStatusView(TC *tc)
 {
     // TCStatus' register view must be the same as
     // Status register view for CU, MX, KSU bits
-    TCStatusReg tcStatus = tc->readMiscRegNoEffect(TCStatus);
-    StatusReg status = tc->readMiscRegNoEffect(Status);
+    TCStatusReg tcStatus = tc->readMiscRegNoEffect(MISCREG_TC_STATUS);
+    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
 
     status.cu = tcStatus.tcu;
     status.mx = tcStatus.tmx;
     status.ksu = tcStatus.tksu;
 
-    tc->setMiscRegNoEffect(Status, status);
+    tc->setMiscRegNoEffect(MISCREG_STATUS, status);
 }
 
 // TC will usually be a object derived from ThreadContext
@@ -255,14 +262,14 @@ updateTCStatusView(TC *tc)
 {
     // TCStatus' register view must be the same as
     // Status register view for CU, MX, KSU bits
-    TCStatusReg tcStatus = tc->readMiscRegNoEffect(TCStatus);
-    StatusReg status = tc->readMiscRegNoEffect(Status);
+    TCStatusReg tcStatus = tc->readMiscRegNoEffect(MISCREG_TC_STATUS);
+    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
 
     tcStatus.tcu = status.cu;
     tcStatus.tmx = status.mx;
     tcStatus.tksu = status.ksu;
 
-    tc->setMiscRegNoEffect(TCStatus, tcStatus);
+    tc->setMiscRegNoEffect(MISCREG_TC_STATUS, tcStatus);
 }
 
 } // namespace MipsISA

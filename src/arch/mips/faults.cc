@@ -178,18 +178,18 @@ void
 MipsFault::setExceptionState(ThreadContext *tc, uint8_t excCode)
 {
     // modify SRS Ctl - Save CSS, put ESS into CSS
-    StatusReg status = tc->readMiscReg(Status);
+    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
     if (status.exl != 1 && status.bev != 1) {
         // SRS Ctl is modified only if Status_EXL and Status_BEV are not set
-        SRSCtlReg srsCtl = tc->readMiscReg(SRSCtl);
+        SRSCtlReg srsCtl = tc->readMiscReg(MISCREG_SRSCTL);
         srsCtl.pss = srsCtl.css;
         srsCtl.css = srsCtl.ess;
-        tc->setMiscRegNoEffect(SRSCtl, srsCtl);
+        tc->setMiscRegNoEffect(MISCREG_SRSCTL, srsCtl);
     }
 
     // set EXL bit (don't care if it is already set!)
     status.exl = 1;
-    tc->setMiscRegNoEffect(Status, status);
+    tc->setMiscRegNoEffect(MISCREG_STATUS, status);
 
     // write EPC
     // CHECK ME  or FIXME or FIX ME or POSSIBLE HACK
@@ -198,21 +198,21 @@ MipsFault::setExceptionState(ThreadContext *tc, uint8_t excCode)
             tc->readPC(), tc->readNextPC(), tc->readNextNPC());
     int bd = 0;
     if (tc->readPC() + sizeof(MachInst) != tc->readNextPC()) {
-        tc->setMiscRegNoEffect(EPC, tc->readPC() - sizeof(MachInst));
+        tc->setMiscRegNoEffect(MISCREG_EPC, tc->readPC() - sizeof(MachInst));
         // In the branch delay slot? set CAUSE_31
         bd = 1;
     } else {
-        tc->setMiscRegNoEffect(EPC, tc->readPC());
+        tc->setMiscRegNoEffect(MISCREG_EPC, tc->readPC());
         // In the branch delay slot? reset CAUSE_31
         bd = 0;
     }
 
     // Set Cause_EXCCODE field
-    CauseReg cause = tc->readMiscReg(Cause);
+    CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
     cause.excCode = excCode;
     cause.bd = bd;
     cause.ce = 0;
-    tc->setMiscRegNoEffect(Cause, cause);
+    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
 }
 
 void
@@ -223,12 +223,12 @@ ArithmeticFault::invoke(ThreadContext *tc)
 
     // Set new PC
     Addr HandlerBase;
-    StatusReg status = tc->readMiscReg(Status);
+    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
     // Here, the handler is dependent on BEV, which is not modified by
     // setExceptionState()
     if (!status.bev) {
         // See MIPS ARM Vol 3, Revision 2, Page 38
-        HandlerBase = vect() + tc->readMiscReg(EBase);
+        HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     } else {
         HandlerBase = 0xBFC00200;
     }
@@ -240,12 +240,12 @@ StoreAddressErrorFault::invoke(ThreadContext *tc)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x5);
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -258,7 +258,7 @@ TrapFault::invoke(ThreadContext *tc)
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -270,7 +270,7 @@ BreakpointFault::invoke(ThreadContext *tc)
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -279,23 +279,23 @@ DtbInvalidFault::invoke(ThreadContext *tc)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
 
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(EntryHi);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
     entryHi.asid = entryHiAsid;
     entryHi.vpn2 = entryHiVPN2;
     entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(EntryHi, entryHi);
+    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
 
-    ContextReg context = tc->readMiscReg(Context);
+    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
     context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(Context, context);
+    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
     setExceptionState(tc, 0x3);
 
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -304,12 +304,12 @@ AddressErrorFault::invoke(ThreadContext *tc)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x4);
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -318,51 +318,51 @@ ItbInvalidFault::invoke(ThreadContext *tc)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     setExceptionState(tc, 0x2);
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(EntryHi);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
     entryHi.asid = entryHiAsid;
     entryHi.vpn2 = entryHiVPN2;
     entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(EntryHi, entryHi);
+    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
 
-    ContextReg context = tc->readMiscReg(Context);
+    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
     context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(Context, context);
+    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
 
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase,tc);
     DPRINTF(MipsPRA, "Exception Handler At: %x , EPC set to %x\n",
-            HandlerBase, tc->readMiscReg(EPC));
+            HandlerBase, tc->readMiscReg(MISCREG_EPC));
 }
 
 void
 ItbRefillFault::invoke(ThreadContext *tc)
 {
-    DPRINTF(MipsPRA, "%s encountered (%x).\n", name(), badVAddr);
+    DPRINTF(MipsPRA, "%s encountered (%x).\n", name(), MISCREG_BADVADDR);
     Addr HandlerBase;
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(EntryHi);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
     entryHi.asid = entryHiAsid;
     entryHi.vpn2 = entryHiVPN2;
     entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(EntryHi, entryHi);
-    ContextReg context = tc->readMiscReg(Context);
+    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
+    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
     context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(Context, context);
+    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
 
-    StatusReg status = tc->readMiscReg(Status);
+    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
     // Since handler depends on EXL bit, must check EXL bit before setting it!!
     // See MIPS ARM Vol 3, Revision 2, Page 38
     if (status.exl == 1) {
         // Offset 0x180 - General Exception Vector
-        HandlerBase = vect() + tc->readMiscReg(EBase);
+        HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     } else {
         // Offset 0x000
-        HandlerBase = tc->readMiscReg(EBase);
+        HandlerBase = tc->readMiscReg(MISCREG_EBASE);
     }
 
     setExceptionState(tc, 0x2);
@@ -375,26 +375,26 @@ DtbRefillFault::invoke(ThreadContext *tc)
     // Set new PC
     DPRINTF(MipsPRA, "%s encountered.\n", name());
     Addr HandlerBase;
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(EntryHi);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
     entryHi.asid = entryHiAsid;
     entryHi.vpn2 = entryHiVPN2;
     entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(EntryHi, entryHi);
+    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
 
-    ContextReg context = tc->readMiscReg(Context);
+    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
     context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(Context, context);
+    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
 
-    StatusReg status = tc->readMiscReg(Status);
+    StatusReg status = tc->readMiscReg(MISCREG_STATUS);
     // Since handler depends on EXL bit, must check EXL bit before setting it!!
     // See MIPS ARM Vol 3, Revision 2, Page 38
     if (status.exl) {
         // Offset 0x180 - General Exception Vector
-        HandlerBase = vect() + tc->readMiscReg(EBase);
+        HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     } else {
         // Offset 0x000
-        HandlerBase = tc->readMiscReg(EBase);
+        HandlerBase = tc->readMiscReg(MISCREG_EBASE);
     }
 
     setExceptionState(tc, 0x3);
@@ -406,21 +406,21 @@ void
 TLBModifiedFault::invoke(ThreadContext *tc)
 {
     DPRINTF(MipsPRA, "%s encountered.\n", name());
-    tc->setMiscRegNoEffect(BadVAddr, badVAddr);
-    EntryHiReg entryHi = tc->readMiscReg(EntryHi);
+    tc->setMiscRegNoEffect(MISCREG_BADVADDR, badVAddr);
+    EntryHiReg entryHi = tc->readMiscReg(MISCREG_ENTRYHI);
     entryHi.asid = entryHiAsid;
     entryHi.vpn2 = entryHiVPN2;
     entryHi.vpn2x = entryHiVPN2X;
-    tc->setMiscRegNoEffect(EntryHi, entryHi);
+    tc->setMiscRegNoEffect(MISCREG_ENTRYHI, entryHi);
 
-    ContextReg context = tc->readMiscReg(Context);
+    ContextReg context = tc->readMiscReg(MISCREG_CONTEXT);
     context.badVPN2 = contextBadVPN2;
-    tc->setMiscRegNoEffect(Context, context);
+    tc->setMiscRegNoEffect(MISCREG_CONTEXT, context);
 
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setExceptionState(tc, 0x1);
     setHandlerPC(HandlerBase, tc);
 
@@ -435,7 +435,7 @@ SystemCallFault::invoke(ThreadContext *tc)
     // Set new PC
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 }
 
@@ -447,13 +447,13 @@ InterruptFault::invoke(ThreadContext *tc)
     setExceptionState(tc, 0x0A);
     Addr HandlerBase;
 
-    CauseReg cause = tc->readMiscRegNoEffect(Cause);
+    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     if (cause.iv) {
         // Offset 200 for release 2
-        HandlerBase = 0x20 + vect() + tc->readMiscRegNoEffect(EBase);
+        HandlerBase = 0x20 + vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
     } else {
         //Ofset at 180 for release 1
-        HandlerBase = vect() + tc->readMiscRegNoEffect(EBase);
+        HandlerBase = vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
     }
 
     setHandlerPC(HandlerBase, tc);
@@ -475,9 +475,9 @@ ResetFault::invoke(ThreadContext *tc)
 #endif
 
     // Set Coprocessor 1 (Floating Point) To Usable
-    StatusReg status = tc->readMiscRegNoEffect(Status);
+    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
     status.cu.cu1 = 1;
-    tc->setMiscReg(Status, status);
+    tc->setMiscReg(MISCREG_STATUS, status);
 }
 
 void
@@ -488,7 +488,7 @@ ReservedInstructionFault::invoke(ThreadContext *tc)
     setExceptionState(tc, 0x0A);
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscRegNoEffect(EBase);
+    HandlerBase = vect() + tc->readMiscRegNoEffect(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 #else
     panic("%s encountered.\n", name());
@@ -517,13 +517,13 @@ CoprocessorUnusableFault::invoke(ThreadContext *tc)
     setExceptionState(tc, 0xb);
     // The ID of the coprocessor causing the exception is stored in
     // CoprocessorUnusableFault::coProcID
-    CauseReg cause = tc->readMiscReg(Cause);
+    CauseReg cause = tc->readMiscReg(MISCREG_CAUSE);
     cause.ce = coProcID;
-    tc->setMiscRegNoEffect(Cause, cause);
+    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
 
     Addr HandlerBase;
     // Offset 0x180 - General Exception Vector
-    HandlerBase = vect() + tc->readMiscReg(EBase);
+    HandlerBase = vect() + tc->readMiscReg(MISCREG_EBASE);
     setHandlerPC(HandlerBase, tc);
 
 #else

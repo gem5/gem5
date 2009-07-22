@@ -311,7 +311,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
     if (IsKSeg0(req->getVaddr())) {
         // Address will not be translated through TLB, set response, and go!
         req->setPaddr(KSeg02Phys(req->getVaddr()));
-        if (getOperatingMode(tc->readMiscReg(Status)) != mode_kernel ||
+        if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
                 req->isMisaligned()) {
             AddressErrorFault *Flt = new AddressErrorFault();
             /* BadVAddr must be set */
@@ -386,7 +386,7 @@ TLB::translateInst(RequestPtr req, ThreadContext *tc)
             }
         } else {
             // Didn't find any match, return a TLB Refill Exception
-            ItbRefillFault *Flt=new ItbRefillFault();
+            ItbRefillFault *Flt = new ItbRefillFault();
             /* EntryHi VPN, ASID fields must be set */
             Flt->entryHiAsid = Asid;
             Flt->entryHiVPN2 = (VPN >> 2);
@@ -431,7 +431,7 @@ TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
     if (IsKSeg0(req->getVaddr())) {
         // Address will not be translated through TLB, set response, and go!
         req->setPaddr(KSeg02Phys(req->getVaddr()));
-        if (getOperatingMode(tc->readMiscReg(Status)) != mode_kernel ||
+        if (getOperatingMode(tc->readMiscReg(MISCREG_STATUS)) != mode_kernel ||
                 req->isMisaligned()) {
             StoreAddressErrorFault *Flt = new StoreAddressErrorFault();
             /* BadVAddr must be set */

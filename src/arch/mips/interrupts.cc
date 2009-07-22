@@ -42,15 +42,15 @@ namespace MipsISA
 
 static inline uint8_t
 getCauseIP(ThreadContext *tc) {
-    CauseReg cause = tc->readMiscRegNoEffect(Cause);
+    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     return cause.ip;
 }
 
 static inline void
 setCauseIP(ThreadContext *tc, uint8_t val) {
-    CauseReg cause = tc->readMiscRegNoEffect(Cause);
+    CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
     cause.ip = val;
-    tc->setMiscRegNoEffect(Cause, cause);
+    tc->setMiscRegNoEffect(MISCREG_CAUSE, cause);
 }
 
 void
@@ -111,14 +111,14 @@ Interrupts::getInterrupt(ThreadContext * tc)
     DPRINTF(Interrupt, "Interrupts getInterrupt\n");
 
     //Check if there are any outstanding interrupts
-    StatusReg status = tc->readMiscRegNoEffect(Status);
+    StatusReg status = tc->readMiscRegNoEffect(MISCREG_STATUS);
     // Interrupts must be enabled, error level must be 0 or interrupts
     // inhibited, and exception level must be 0 or interrupts inhibited
     if ((status.ie == 1) && (status.erl == 0) && (status.exl == 0)) {
         // Software interrupts & hardware interrupts are handled in software.
         // So if any interrupt that isn't masked is detected, jump to interrupt
         // handler
-        CauseReg cause = tc->readMiscRegNoEffect(Cause);
+        CauseReg cause = tc->readMiscRegNoEffect(MISCREG_CAUSE);
         if (status.im && cause.ip) {
             DPRINTF(Interrupt, "Interrupt! IM[7:0]=%d IP[7:0]=%d \n",
                     (unsigned)status.im, (unsigned)cause.ip);
@@ -132,8 +132,8 @@ Interrupts::getInterrupt(ThreadContext * tc)
 bool
 Interrupts::onCpuTimerInterrupt(ThreadContext * tc) const
 {
-    MiscReg compare = tc->readMiscRegNoEffect(Compare);
-    MiscReg count = tc->readMiscRegNoEffect(Count);
+    MiscReg compare = tc->readMiscRegNoEffect(MISCREG_COMPARE);
+    MiscReg count = tc->readMiscRegNoEffect(MISCREG_COUNT);
     if (compare == count && count != 0)
         return true;
     return false;
@@ -153,7 +153,7 @@ Interrupts::interruptsPending(ThreadContext *tc) const
     if (onCpuTimerInterrupt(tc)) {
         DPRINTF(Interrupt, "Interrupts OnCpuTimerINterrupt(tc) == true\n");
         //determine timer interrupt IP #
-        IntCtlReg intCtl = tc->readMiscRegNoEffect(IntCtl);
+        IntCtlReg intCtl = tc->readMiscRegNoEffect(MISCREG_INTCTL);
         uint8_t intStatus = getCauseIP(tc);
         intStatus |= 1 << intCtl.ipti;
         setCauseIP(tc, intStatus);

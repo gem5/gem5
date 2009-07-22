@@ -143,7 +143,7 @@ output exec {{
     bool isDspEnabled(%(CPU_exec_context)s *xc)
     {
 #if FULL_SYSTEM
-        if( bits( xc->readMiscReg(MipsISA::Status), 24, 24 ) == 0 )
+        if( bits( xc->readMiscReg(MISCREG_STATUS), 24, 24 ) == 0 )
             return false;
 #else
         //printf("Syscall Emulation Mode: isDspEnabled() check defaults to TRUE\n");
@@ -156,7 +156,7 @@ output exec {{
     bool isDspPresent(%(CPU_exec_context)s *xc)
     {
 #if FULL_SYSTEM
-        if( bits( xc->readMiscReg(MipsISA::Config3), 10, 10 ) == 0 )
+        if( bits( xc->readMiscReg(MISCREG_CONFIG3), 10, 10 ) == 0 )
             return false;
 #else
         //printf("Syscall Emulation Mode: isDspPresent() check defaults to TRUE\n");
