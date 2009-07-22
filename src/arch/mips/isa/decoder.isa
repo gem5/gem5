@@ -902,7 +902,7 @@ decode OPCODE_HI default Unknown::unknown() {
                             vpn = ((EntryHi >> 11) & 0xFFFFFFFC);
                         }
                         tlbIndex = xc->tcBase()->getITBPtr()->
-                                   probeEntry(VPN, entryHi.asid);
+                                   probeEntry(vpn, entryHi.asid);
                         // Check TLB for entry matching EntryHi
                         if (tlbIndex != -1) {
                             Index = tlbIndex;
