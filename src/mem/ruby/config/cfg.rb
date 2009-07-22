@@ -100,9 +100,11 @@ class LibRubyObject
   end
 
   def self.printConstructors()
+    str = ""
     @@all_objs.each { |obj|
-      print obj.cppClassName, " ", obj.obj_name, " ",obj.argv,"\n"
+      str += obj.cppClassName + " " + obj.obj_name + " " + obj.argv + "\n"
     }
+    return str
   end
   def self.all()
     @@all_objs
@@ -215,7 +217,7 @@ class RubySystem
     EOS
   end
 
-  def self.generateConfig()
+  def self.getConfig()
     # get current time for random seed if set to "rand"
     if @@params[:random_seed] == "rand"
       t = Time.now
@@ -224,13 +226,18 @@ class RubySystem
     if ! @@params[:random_seed].is_a?(Integer)
       raise TypeException
     end
-    print "System sys0 ",argv,"\n"
+    str = "System sys0 "+argv+"\n"
     LibRubyObject.all.each { |obj|
       if obj.is_a?(SetAssociativeCache)
         obj.calculateLatency
       end
     }
-    LibRubyObject.printConstructors
+    str += LibRubyObject.printConstructors
+    return str
+  end
+
+  def self.generateConfig()
+    puts getConfig
   end
 
   def self.printIfacePorts()

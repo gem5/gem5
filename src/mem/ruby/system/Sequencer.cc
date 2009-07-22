@@ -285,6 +285,7 @@ void Sequencer::readCallback(const Address& address, DataBlock& data) {
   removeRequest(request);
 
   assert((request->ruby_request.type == RubyRequestType_LD) ||
+	 (request->ruby_request.type == RubyRequestType_RMW_Read) ||
          (request->ruby_request.type == RubyRequestType_IFETCH));
 
   hitCallback(request, data);
@@ -328,7 +329,8 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
   // update the data
   if (ruby_request.data != NULL) {
     if ((type == RubyRequestType_LD) ||
-        (type == RubyRequestType_IFETCH)) {
+        (type == RubyRequestType_IFETCH) ||
+        (type == RubyRequestType_RMW_Read)) {
       memcpy(ruby_request.data, data.getData(request_address.getOffset(), ruby_request.len), ruby_request.len);
     } else {
       data.setData(ruby_request.data, request_address.getOffset(), ruby_request.len);

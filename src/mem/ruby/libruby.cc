@@ -88,58 +88,7 @@ vector<string> tokenizeString(string str, string delims)
 
 void libruby_init(const char* cfg_filename)
 {
-  stringstream cfg_output;
-
-  // first we execute the Ruby-lang configuration script
-  int fd[2];
-  int pid;
-  if (pipe(fd) == -1) {
-    perror("Error Creating Pipe");
-    exit(EXIT_FAILURE);
-  }
-
-  pid = fork();
-  if (pid == -1){
-    perror("Error forking");
-    exit(EXIT_FAILURE);
-  }
-
-  if (!pid) {
-    // child
-    close(fd[0]); // close the read end of the pipe
-    // replace stdout with the write pipe
-    if (dup2(fd[1], STDOUT_FILENO) == -1) {
-      perror("Error redirecting stdout");
-      exit(EXIT_FAILURE);
-    }
-    if (execlp("ruby", "ruby", "-I", GEMS_ROOT "/ruby/config",
-               GEMS_ROOT "/ruby/config/print_cfg.rb", "-r", cfg_filename, NULL)) {
-      perror("execlp");
-      exit(EXIT_FAILURE);
-    }
-  } else {
-    close(fd[1]);
-
-    int child_status;
-    if (wait(&child_status) == -1) {
-      perror("wait");
-      exit(EXIT_FAILURE);
-    }
-    if (child_status != EXIT_SUCCESS) {
-      exit(EXIT_FAILURE);
-    }
-
-    char buf[100];
-    int bytes_read;
-    while( (bytes_read = read(fd[0], buf, 100)) > 0 ) {
-      for (int i=0;i<bytes_read;i++) {
-        //      cout << buf[i];
-        cfg_output << buf[i];
-      }
-    }
-    assert(bytes_read == 0);
-    close(fd[0]);
-  }
+  ifstream cfg_output(cfg_filename);
 
   vector<RubyObjConf> * sys_conf = new vector<RubyObjConf>;
 
