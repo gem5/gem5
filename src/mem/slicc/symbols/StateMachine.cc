@@ -832,17 +832,21 @@ void StateMachine::printCWakeup(ostream& out, string component)
                     locked_read_request = addr;  \n \
                   } \n \
                   else if (addr == locked_read_request) { \n \
-                    assert (servicing_atomic); \n \
-                    //servicing_atomic = m_version; \n \
+                    ; // do nothing \n\ 
                   } \n \
-                  else { \n \ 
-                    postpone = true; \n \
-                    g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+                  else { \n \
+                    assert(0); // should never be here if servicing one request at a time \n\ 
                   } \n \
                } \n \
                else if (addr != locked_read_request) { \n \
-                 postpone = true; \n \
-                 g_eventQueue_ptr->scheduleEvent(this, 1); \n \
+                 // this is probably caused by shift optimizations \n \
+                 locked_read_request = addr; \n\
+               } \n \
+             } \n \
+             else { \n \
+               if (locked_read_request != Address(-1)) { \n \
+                 locked_read_request = Address(-1); \n \
+                 servicing_atomic = false; \n \
                } \n \
              } \n \
            if (!postpone) { \n \

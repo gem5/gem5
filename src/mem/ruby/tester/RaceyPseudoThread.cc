@@ -1,20 +1,30 @@
 /*
- * Copyright (c) 1999 by Mark Hill and David Wood for the Wisconsin
- * Multifacet Project.  ALL RIGHTS RESERVED.  
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * All rights reserved.
  *
- * ##HEADER##
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
  *
- * This software is furnished under a license and may be used and
- * copied only in accordance with the terms of such license and the
- * inclusion of the above copyright notice.  This software or any
- * other copies thereof or any derivative works may not be provided or
- * otherwise made available to any other persons.  Title to and
- * ownership of the software is retained by Mark Hill and David Wood.
- * Any use of this software must include the above copyright notice.
- * 
- * THIS SOFTWARE IS PROVIDED "AS IS".  THE LICENSOR MAKES NO
- * WARRANTIES ABOUT ITS CORRECTNESS OR PERFORMANCE.
- * */
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /*
  * Description: see RaceyPseudoThread.h
@@ -262,7 +272,6 @@ void RaceyPseudoThread::store_sig(unsigned index, unsigned value) {
   m_read = false;
   m_value = value;
   uint8_t * write_data = new uint8_t[4];
-  uint8_t * read_data = new uint8_t[4];
 
 
   memcpy(write_data, &value, 4);
@@ -273,8 +282,6 @@ void RaceyPseudoThread::store_sig(unsigned index, unsigned value) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
-  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), read_data, 4, 0, RubyRequestType_RMW_Read, RubyAccessMode_User));
-  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(sig(index), write_data, 4, 0, RubyRequestType_RMW_Write, RubyAccessMode_User));
   
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
@@ -296,7 +303,6 @@ void RaceyPseudoThread::store_m(unsigned index, unsigned value) {
   m_read = false;
   m_value = value;
   uint8_t * write_data = new uint8_t[4];
-  uint8_t * read_data = new uint8_t[4];
   memcpy(write_data, &value, 4);
 
   char name [] = "Sequencer_";
@@ -305,8 +311,6 @@ void RaceyPseudoThread::store_m(unsigned index, unsigned value) {
 
   // pc is zero, problem?
   int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), write_data, 4, 0, RubyRequestType_ST, RubyAccessMode_User));
-  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), read_data, 4, 0, RubyRequestType_RMW_Read, RubyAccessMode_User));
-  //int64_t request_id = libruby_issue_request(libruby_get_port_by_name(port_name), RubyRequest(m(index), write_data, 4, 0, RubyRequestType_RMW_Write, RubyAccessMode_User));
   
   ASSERT(m_driver.requests.find(request_id) == m_driver.requests.end());
 
