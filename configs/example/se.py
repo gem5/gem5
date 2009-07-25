@@ -124,6 +124,7 @@ if options.detailed:
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 CPUClass.clock = '2GHz'
+CPUClass.numThreads = len(workloads)
 
 np = options.num_cpus
 
