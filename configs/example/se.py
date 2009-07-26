@@ -91,6 +91,10 @@ if options.output != "":
 if options.errout != "":
     process.errout = options.errout
 
+
+# By default, set workload to path of user-specified binary
+workloads = options.cmd
+
 if options.detailed:
     #check for SMT workload
     workloads = options.cmd.split(';')
