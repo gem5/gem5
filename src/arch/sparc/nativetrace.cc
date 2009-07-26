@@ -36,7 +36,7 @@
 
 namespace Trace {
 
-static char *intRegNames[SparcISA::NumIntArchRegs] = {
+static const char *intRegNames[SparcISA::NumIntArchRegs] = {
     //Global registers
     "g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7",
     //Output registers
@@ -58,7 +58,7 @@ Trace::SparcNativeTrace::check(NativeTraceRecord *record)
 
     // I doubt a real SPARC will describe more integer registers than this.
     assert(SparcISA::NumIntArchRegs == 32);
-    char **regName = intRegNames;
+    const char **regName = intRegNames;
     for (int i = 0; i < SparcISA::NumIntArchRegs; i++) {
         regVal = tc->readIntReg(i);
         read(&realRegVal, sizeof(realRegVal));
