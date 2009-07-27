@@ -86,6 +86,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     nState.update(this);
     mState.update(record->getThread());
 
+    bool errorFound = false;
     // Regular int regs
     for (int i = 0; i < STATE_NUMVALS; i++) {
         if (nState.changed[i] || mState.changed[i]) {
@@ -104,6 +105,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       vergence, regNames[i],
                                       nState.newState[i],
                                       mState.oldState[i], mState.newState[i]);
+                errorFound = true;
             } else if (!mState.changed[i]) {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
                                       "Native: %#010x => %#010x "\
@@ -111,6 +113,7 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       vergence, regNames[i],
                                       nState.oldState[i], nState.newState[i],
                                       mState.newState[i]);
+                errorFound = true;
             } else if (mState.oldState[i] != nState.oldState[i] ||
                        mState.newState[i] != nState.newState[i]) {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
@@ -119,8 +122,20 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       vergence, regNames[i],
                                       nState.oldState[i], nState.newState[i],
                                       mState.oldState[i], mState.newState[i]);
+                errorFound = true;
             }
         }
+    }
+    if (errorFound) {
+        StaticInstPtr inst = record->getStaticInst();
+        assert(inst);
+        bool ran = true;
+        if (inst->isMicroop()) {
+            ran = false;
+            inst = record->getMacroStaticInst();
+        }
+        assert(inst);
+        record->traceInst(inst, ran);
     }
 }
 

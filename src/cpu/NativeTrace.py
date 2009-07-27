@@ -28,9 +28,9 @@
 
 from m5.SimObject import SimObject
 from m5.params import *
-from InstTracer import InstTracer
+from ExeTracer import ExeTracer
 
-class NativeTrace(InstTracer):
+class NativeTrace(ExeTracer):
     abstract = True
     type = 'NativeTrace'
     cxx_class = 'Trace::NativeTrace'
