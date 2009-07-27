@@ -260,7 +260,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 195 */ SyscallDesc("stat64", unimplementedFunc),
     /* 196 */ SyscallDesc("lstat64", lstat64Func<ArmLinux>),
-    /* 197 */ SyscallDesc("fstat64", fstatFunc<ArmLinux>),
+    /* 197 */ SyscallDesc("fstat64", fstat64Func<ArmLinux>),
     /* 198 */ SyscallDesc("lchown", unimplementedFunc),
     /* 199 */ SyscallDesc("getuid", getuidFunc),
     /* 200 */ SyscallDesc("getgid", getgidFunc),
