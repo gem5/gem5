@@ -39,6 +39,56 @@ namespace Trace {
 class ArmNativeTrace : public NativeTrace
 {
   public:
+    enum StateID {
+        STATE_R0,
+        STATE_R1,
+        STATE_R2,
+        STATE_R3,
+        STATE_R4,
+        STATE_R5,
+        STATE_R6,
+        STATE_R7,
+        STATE_R8,
+        STATE_R9,
+        STATE_R10,
+        STATE_R11,
+        STATE_FP = STATE_R11,
+        STATE_R12,
+        STATE_R13,
+        STATE_SP = STATE_R13,
+        STATE_R14,
+        STATE_LR = STATE_R14,
+        STATE_R15,
+        STATE_PC = STATE_R15,
+        STATE_CPSR,
+        STATE_NUMVALS
+    };
+
+  protected:
+    struct ThreadState {
+        bool changed[STATE_NUMVALS];
+        uint32_t state[2][STATE_NUMVALS];
+        uint32_t *newState;
+        uint32_t *oldState;
+        int current;
+        void update(NativeTrace *parent);
+        void update(ThreadContext *tc);
+
+        ThreadState()
+        {
+            for (int i = 0; i < STATE_NUMVALS; i++) {
+                changed[i] = false;
+                state[0][i] = state[1][i] = 0;
+                current = 0;
+                newState = state[0];
+                oldState = state[1];
+            }
+        }
+    };
+
+    ThreadState nState, mState;
+
+  public:
     ArmNativeTrace(const Params *p) : NativeTrace(p)
     {}
 

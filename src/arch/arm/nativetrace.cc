@@ -36,39 +36,92 @@
 
 namespace Trace {
 
+#if TRACING_ON
 static const char *regNames[] = {
     "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
     "r8", "r9", "r10", "fp", "r12", "sp", "lr", "pc",
     "cpsr"
 };
+#endif
+
+void
+Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
+{
+    oldState = state[current];
+    current = (current + 1) % 2;
+    newState = state[current];
+
+    parent->read(newState, sizeof(newState[0]) * STATE_NUMVALS);
+    for (int i = 0; i < STATE_NUMVALS; i++) {
+        newState[i] = ArmISA::gtoh(newState[i]);
+        changed[i] = (oldState[i] != newState[i]);
+    }
+}
+
+void
+Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
+{
+    oldState = state[current];
+    current = (current + 1) % 2;
+    newState = state[current];
+
+    // Regular int regs
+    for (int i = 0; i < 15; i++) {
+        newState[i] = tc->readIntReg(i);
+        changed[i] = (oldState[i] != newState[i]);
+    }
+
+    //R15, aliased with the PC
+    newState[STATE_PC] = tc->readNextPC();
+    changed[STATE_PC] = (newState[STATE_PC] != oldState[STATE_PC]);
+
+    //CPSR
+    newState[STATE_CPSR] = tc->readMiscReg(MISCREG_CPSR);
+    changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
+}
 
 void
 Trace::ArmNativeTrace::check(NativeTraceRecord *record)
 {
-    ThreadContext *tc = record->getThread();
+    nState.update(this);
+    mState.update(record->getThread());
 
-    uint32_t regVal, realRegVal;
-
-    const char **regName = regNames;
     // Regular int regs
-    for (int i = 0; i < 15; i++) {
-        regVal = tc->readIntReg(i);
-        read(&realRegVal, sizeof(realRegVal));
-        realRegVal = ArmISA::gtoh(realRegVal);
-        checkReg(*(regName++), regVal, realRegVal);
+    for (int i = 0; i < STATE_NUMVALS; i++) {
+        if (nState.changed[i] || mState.changed[i]) {
+            const char *vergence = "  ";
+            if (mState.oldState[i] == nState.oldState[i] &&
+                mState.newState[i] != nState.newState[i]) {
+                vergence = "<>";
+            } else if (mState.oldState[i] != nState.oldState[i] &&
+                       mState.newState[i] == nState.newState[i]) {
+                vergence = "><";
+            }
+            if (!nState.changed[i]) {
+                DPRINTF(ExecRegDelta, "%s [%5s] "\
+                                      "Native:         %#010x         "\
+                                      "M5:     %#010x => %#010x\n",
+                                      vergence, regNames[i],
+                                      nState.newState[i],
+                                      mState.oldState[i], mState.newState[i]);
+            } else if (!mState.changed[i]) {
+                DPRINTF(ExecRegDelta, "%s [%5s] "\
+                                      "Native: %#010x => %#010x "\
+                                      "M5:             %#010x        \n",
+                                      vergence, regNames[i],
+                                      nState.oldState[i], nState.newState[i],
+                                      mState.newState[i]);
+            } else if (mState.oldState[i] != nState.oldState[i] ||
+                       mState.newState[i] != nState.newState[i]) {
+                DPRINTF(ExecRegDelta, "%s [%5s] "\
+                                      "Native: %#010x => %#010x "\
+                                      "M5:     %#010x => %#010x\n",
+                                      vergence, regNames[i],
+                                      nState.oldState[i], nState.newState[i],
+                                      mState.oldState[i], mState.newState[i]);
+            }
+        }
     }
-
-    //R15, aliased with the PC
-    regVal = tc->readNextPC();
-    read(&realRegVal, sizeof(realRegVal));
-    realRegVal = ArmISA::gtoh(realRegVal);
-    checkReg(*(regName++), regVal, realRegVal);
-
-    //CPSR
-    regVal = tc->readMiscReg(MISCREG_CPSR);
-    read(&realRegVal, sizeof(realRegVal));
-    realRegVal = ArmISA::gtoh(realRegVal);
-    checkReg(*(regName++), regVal, realRegVal);
 }
 
 } /* namespace Trace */
