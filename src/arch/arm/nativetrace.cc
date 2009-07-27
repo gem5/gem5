@@ -91,13 +91,17 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
     for (int i = 0; i < STATE_NUMVALS; i++) {
         if (nState.changed[i] || mState.changed[i]) {
             const char *vergence = "  ";
-            if (mState.oldState[i] == nState.oldState[i] &&
-                mState.newState[i] != nState.newState[i]) {
+            bool oldMatch = (mState.oldState[i] == nState.oldState[i]);
+            bool newMatch = (mState.newState[i] == nState.newState[i]);
+            if (oldMatch && newMatch) {
+                // The more things change, the more they stay the same.
+                continue;
+            } else if (oldMatch && !newMatch) {
                 vergence = "<>";
-            } else if (mState.oldState[i] != nState.oldState[i] &&
-                       mState.newState[i] == nState.newState[i]) {
+            } else if (!oldMatch && newMatch) {
                 vergence = "><";
             }
+            errorFound = true;
             if (!nState.changed[i]) {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
                                       "Native:         %#010x         "\
@@ -105,7 +109,6 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       vergence, regNames[i],
                                       nState.newState[i],
                                       mState.oldState[i], mState.newState[i]);
-                errorFound = true;
             } else if (!mState.changed[i]) {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
                                       "Native: %#010x => %#010x "\
@@ -113,16 +116,13 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
                                       vergence, regNames[i],
                                       nState.oldState[i], nState.newState[i],
                                       mState.newState[i]);
-                errorFound = true;
-            } else if (mState.oldState[i] != nState.oldState[i] ||
-                       mState.newState[i] != nState.newState[i]) {
+            } else {
                 DPRINTF(ExecRegDelta, "%s [%5s] "\
                                       "Native: %#010x => %#010x "\
                                       "M5:     %#010x => %#010x\n",
                                       vergence, regNames[i],
                                       nState.oldState[i], nState.newState[i],
                                       mState.oldState[i], mState.newState[i]);
-                errorFound = true;
             }
         }
     }
