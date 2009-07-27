@@ -61,12 +61,24 @@ int main(int argc, char * argv[], char * envp[])
     //Parse the command line arguments
     bool printInitial = false;
     bool printTrace = true;
+    string host = "localhost";
     for(int x = 1; x < argc; x++)
     {
         if(!strcmp(argv[x], "-h"))
         {
             printUsage(argv[0]);
             return 0;
+        }
+        if(!strcmp(argv[x], "--host"))
+        {
+            x++;
+            if(x >= argc)
+            {
+                cerr << "Incorrect usage.\n" << endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+            host = argv[x];
         }
         else if(!strcmp(argv[x], "-r"))
         {
@@ -127,7 +139,7 @@ int main(int argc, char * argv[], char * envp[])
             return 1;
         }
         struct hostent *server;
-        server = gethostbyname("localhost");
+        server = gethostbyname(host.c_str());
         if(!server)
         {
             cerr << "Couldn't get host ip! " << strerror(errno) << endl;
