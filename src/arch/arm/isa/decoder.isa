@@ -423,6 +423,11 @@ format DataOp {
                         0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
                         0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
                     }
+                    0xe: decode RN {
+                        0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
+                        0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
+                        0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
+                    }
                 }
             }
         }
