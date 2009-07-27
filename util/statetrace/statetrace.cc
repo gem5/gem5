@@ -28,19 +28,19 @@
  * Authors: Gabe Black
  */
 
-#include <iostream>
+#include <cstring>
+#include <errno.h>
 #include <fstream>
+#include <iostream>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdio.h>
 #include <string>
+#include <sys/ptrace.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/ptrace.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
 
 #include "printer.hh"
 #include "tracechild.hh"

@@ -29,10 +29,11 @@
  */
 
 #include "tracechild.hh"
-#include <sys/wait.h>
-#include <sys/ptrace.h>
-#include <iostream>
+#include <cstring>
 #include <errno.h>
+#include <iostream>
+#include <sys/ptrace.h>
+#include <sys/wait.h>
 
 using namespace std;
 
