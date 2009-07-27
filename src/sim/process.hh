@@ -295,6 +295,10 @@ class LiveProcess : public Process
         M5_AT_CLKTCK = 17,
 
         M5_AT_SECURE = 23,
+        M5_BASE_PLATFORM = 24,
+        M5_AT_RANDOM = 25,
+
+        M5_AT_EXECFN = 31,
 
         M5_AT_VECTOR_SIZE = 44
     };
