@@ -51,10 +51,31 @@ Trace::ArmNativeTrace::ThreadState::update(NativeTrace *parent)
     current = (current + 1) % 2;
     newState = state[current];
 
-    parent->read(newState, sizeof(newState[0]) * STATE_NUMVALS);
+    memcpy(newState, oldState, sizeof(state[0]));
+
+    uint32_t diffVector;
+    parent->read(&diffVector, sizeof(diffVector));
+    diffVector = ArmISA::gtoh(diffVector);
+
+    int changes = 0;
     for (int i = 0; i < STATE_NUMVALS; i++) {
-        newState[i] = ArmISA::gtoh(newState[i]);
-        changed[i] = (oldState[i] != newState[i]);
+        if (diffVector & 0x1) {
+            changed[i] = true;
+            changes++;
+        } else {
+            changed[i] = false;
+        }
+        diffVector >>= 1;
+    }
+
+    uint32_t values[changes];
+    parent->read(values, sizeof(values));
+    int pos = 0;
+    for (int i = 0; i < STATE_NUMVALS; i++) {
+        if (changed[i]) {
+            newState[i] = ArmISA::gtoh(values[pos++]);
+            changed[i] = (newState[i] != oldState[i]);
+        }
     }
 }
 

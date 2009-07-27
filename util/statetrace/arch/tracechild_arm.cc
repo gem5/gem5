@@ -46,23 +46,38 @@ const char* ARMTraceChild::regNames[numregs] = {
 
 ARMTraceChild::ARMTraceChild()
 {
-    for (int x = 0; x < numregs; x++)
+    for (int x = 0; x < numregs; x++) {
+        memset(&regs, 0, sizeof(regs));
+        memset(&oldregs, 0, sizeof(regs));
         regDiffSinceUpdate[x] = false;
+    }
 }
 
 bool ARMTraceChild::sendState(int socket)
 {
     uint32_t regVal = 0;
-    for(int x = 0; x < numregs; x++)
-    {
-        regVal = getRegVal(x);
-        if(write(socket, &regVal, sizeof(regVal)) == -1)
-        {
+    uint32_t message[numregs + 1];
+    int pos = 1;
+    message[0] = 0;
+    for (int x = 0; x < numregs; x++) {
+        if (regDiffSinceUpdate[x]) {
+            message[0] = message[0] | (1 << x);
+            message[pos++] = getRegVal(x);
+        }
+    }
+
+    size_t sent = 0;
+    size_t toSend = pos * sizeof(message[0]);
+    uint8_t *messagePtr = (uint8_t *)message;
+    while (toSend != 0) {
+        sent = write(socket, messagePtr, toSend);
+        if (sent == -1) {
             cerr << "Write failed! " << strerror(errno) << endl;
             tracing = false;
             return false;
         }
-      
+        toSend -= sent;
+        messagePtr += sent;
     }
     
     return true;

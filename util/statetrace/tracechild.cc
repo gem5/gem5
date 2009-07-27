@@ -79,11 +79,6 @@ bool TraceChild::startTracing(const char * pathToFile, char * const argv[])
                 return false;
         }
         tracing = true;
-        if(!update(pid))
-        {
-                cout << "Didn't update successfully!" << endl;
-                return false;
-        }
         return true;
 }
 
