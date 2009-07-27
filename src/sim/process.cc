@@ -748,7 +748,9 @@ LiveProcess::create(LiveProcessParams * params)
       case ObjectFile::Linux:
         process = new ArmLinuxProcess(params, objFile);
         break;
-
+      case ObjectFile::LinuxArmOABI:
+        fatal("M5 does not support ARM OABI binaries. Please recompile with an"
+              " EABI compiler.");
       default:
         fatal("Unknown/unsupported operating system.");
     }

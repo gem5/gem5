@@ -59,7 +59,8 @@ class ObjectFile
         UnknownOpSys,
         Tru64,
         Linux,
-        Solaris
+        Solaris,
+        LinuxArmOABI
     };
 
   protected:
