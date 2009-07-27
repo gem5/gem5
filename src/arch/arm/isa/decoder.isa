@@ -422,7 +422,10 @@ format DataOp {
             // ARM System Call (SoftWare Interrupt)
             1: swi({{ if (testPredicate(Cpsr, condCode))
                       {
-                          xc->syscall(IMMED_23_0);
+                          if (IMMED_23_0)
+                              xc->syscall(IMMED_23_0);
+                          else
+                              xc->syscall(R7);
                       }
             }});
         }

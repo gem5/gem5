@@ -57,6 +57,7 @@ def operands {{
     'Rm': ('IntReg', 'uw', 'RM', 'IsInteger', 2, maybePCRead, maybePCWrite),
     'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3, maybePCRead, maybePCWrite),
     'Rn': ('IntReg', 'uw', 'RN', 'IsInteger', 4, maybePCRead, maybePCWrite),
+    'R7': ('IntReg', 'uw', '7', 'IsInteger', 5),
 
     #Destination register for load/store double instructions
     'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),

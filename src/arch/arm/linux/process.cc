@@ -448,7 +448,8 @@ ArmLinuxProcess::getDesc(int callnum)
     // Angel SWI syscalls are unsupported in this release
     if (callnum == 0x123456) {
         panic("Attempt to execute an ANGEL_SWI system call (newlib-related)");
-    } else if ((callnum & 0x00f00000) == 0x00900000) {
+    } else if ((callnum & 0x00f00000) == 0x00900000 || 
+            (callnum & 0xf0000) == 0xf0000) {
         callnum &= 0x000fffff;
         if ((callnum & 0x0f0000) == 0xf0000) {
             callnum -= 0x0f0001;
