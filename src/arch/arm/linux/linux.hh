@@ -66,29 +66,13 @@ class ArmLinux : public Linux
     //@}
 
     /// For mmap().
-    static const unsigned TGT_MAP_ANONYMOUS = 0x800;
-
-    //@{
-    /// For getsysinfo().
-    static const unsigned GSI_PLATFORM_NAME = 103; //!< platform name as string
-    static const unsigned GSI_CPU_INFO = 59;       //!< CPU information
-    static const unsigned GSI_PROC_TYPE = 60;      //!< get proc_type
-    static const unsigned GSI_MAX_CPU = 30;        //!< max # cpu's on this machine
-    static const unsigned GSI_CPUS_IN_BOX = 55;    //!< number of CPUs in system
-    static const unsigned GSI_PHYSMEM = 19;        //!< Physical memory in KB
-    static const unsigned GSI_CLK_TCK = 42;        //!< clock freq in Hz
-    //@}
+    static const unsigned TGT_MAP_ANONYMOUS = 0x20;
 
     //@{
     /// For getrusage().
     static const int TGT_RUSAGE_SELF = 0;
     static const int TGT_RUSAGE_CHILDREN = -1;
     static const int TGT_RUSAGE_BOTH = -2;
-    //@}
-
-    //@{
-    /// For setsysinfo().
-    static const unsigned SSI_IEEE_FP_CONTROL = 14; //!< ieee_set_fp_control()
     //@}
 
     //@{
@@ -114,12 +98,11 @@ class ArmLinux : public Linux
         TGT_RLIMIT_DATA = 2,
         TGT_RLIMIT_STACK = 3,
         TGT_RLIMIT_CORE = 4,
-        TGT_RLIMIT_NOFILE = 5,
-        TGT_RLIMIT_AS = 6,
-        TGT_RLIMIT_RSS = 7,
-        TGT_RLIMIT_VMEM = 7,
-        TGT_RLIMIT_NPROC = 8,
-        TGT_RLIMIT_MEMLOCK = 9,
+        TGT_RLIMIT_RSS = 5,
+        TGT_RLIMIT_NPROC = 6,
+        TGT_RLIMIT_NOFILE = 7,
+        TGT_RLIMIT_MEMLOCK = 8,
+        TGT_RLIMIT_AS = 9,
         TGT_RLIMIT_LOCKS = 10
     };
 
