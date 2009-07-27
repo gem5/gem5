@@ -62,6 +62,9 @@ namespace ArmISA
         MISCREG_SPSR_UND,
         MISCREG_SPSR_ABT,
         MISCREG_FPSR,
+        MISCREG_FPSID,
+        MISCREG_FPSCR,
+        MISCREG_FPEXC,
 	NUM_MISCREGS
     };
 

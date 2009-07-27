@@ -82,7 +82,10 @@ def operands {{
 
     'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', 'IsInteger', 40),
     'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', 'IsInteger', 41),
-    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 42),
-    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 43),
+    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', 'IsInteger', 42),
+    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', 'IsInteger', 43),
+    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', 'IsInteger', 44),
+    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 45),
+    'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 46)
 
 }};
