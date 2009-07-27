@@ -416,6 +416,15 @@ format DataOp {
                     }
                 }
             }
+            0xa: decode MISC_OPCODE {
+                0x1: decode MEDIA_OPCODE {
+                    0xf: decode RN {
+                        0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
+                        0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
+                        0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
+                    }
+                }
+            }
         }
         format PredOp {
             // ARM System Call (SoftWare Interrupt)
