@@ -128,7 +128,6 @@ void TBETable<ENTRY>::allocate(const Address& address)
 {
   assert(isPresent(address) == false);
   assert(m_map.size() < m_number_of_TBEs);
-  g_system_ptr->getProfiler()->L2tbeUsageSample(m_map.size());
   m_map.add(address, ENTRY());
 }
 

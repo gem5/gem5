@@ -64,11 +64,6 @@ void profile_outstanding_request(int outstanding)
   g_system_ptr->getProfiler()->profileOutstandingRequest(outstanding);
 }
 
-void profile_outstanding_persistent_request(int outstanding)
-{
-  g_system_ptr->getProfiler()->profileOutstandingPersistentRequest(outstanding);
-}
-
 void profile_average_latency_estimate(int latency)
 {
   g_system_ptr->getProfiler()->profileAverageLatencyEstimate(latency);
@@ -82,26 +77,6 @@ void profile_sharing(const Address& addr, AccessType type, NodeID requestor, con
 void profileMsgDelay(int virtualNetwork, int delayCycles)
 {
   g_system_ptr->getProfiler()->profileMsgDelay(virtualNetwork, delayCycles);
-}
-
-void profile_token_retry(const Address& addr, AccessType type, int count)
-{
-  g_system_ptr->getProfiler()->getAddressProfiler()->profileRetry(addr, type, count);
-}
-
-void profile_filter_action(int action)
-{
-  g_system_ptr->getProfiler()->profileFilterAction(action);
-}
-
-void profile_persistent_prediction(const Address& addr, AccessType type)
-{
-  g_system_ptr->getProfiler()->getAddressProfiler()->profilePersistentPrediction(addr, type);
-}
-
-void profile_multicast_retry(const Address& addr, int count)
-{
-  g_system_ptr->getProfiler()->profileMulticastRetry(addr, count);
 }
 
 void profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor)

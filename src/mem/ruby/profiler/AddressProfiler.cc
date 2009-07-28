@@ -54,7 +54,6 @@ AddressProfiler::AddressProfiler()
   m_macroBlockAccessTrace = new Map<Address, AccessTraceForAddress>;
   m_programCounterAccessTrace = new Map<Address, AccessTraceForAddress>;
   m_retryProfileMap = new Map<Address, AccessTraceForAddress>;
-  m_persistentPredictionProfileMap = new Map<Address, AccessTraceForAddress>;
   clearStats();
 }
 
@@ -64,7 +63,6 @@ AddressProfiler::~AddressProfiler()
   delete m_macroBlockAccessTrace;
   delete m_programCounterAccessTrace;
   delete m_retryProfileMap;
-  delete m_persistentPredictionProfileMap;
 }
 
 void AddressProfiler::setHotLines(bool hot_lines){
@@ -125,31 +123,10 @@ void AddressProfiler::printStats(ostream& out) const
     m_retryProfileHisto.printPercent(out);
     out << endl;
 
-    out << "retry_histogram_per_instruction: ";
-    m_retryProfileHisto.printWithMultiplier(out, 1.0 / double(g_system_ptr->getProfiler()->getTotalInstructionsExecuted()));
-    out << endl;
-
     printSorted(out, m_retryProfileMap, "block_address");
     out << endl;
   }
 
-  if (m_persistentPredictionProfileHisto.size() > 0) {
-    out << "Persistent Prediction Profile" << endl;
-    out << "-------------" << endl;
-    out << endl;
-    out << "persistent prediction_histogram: " << m_persistentPredictionProfileHisto << endl;
-
-    out << "persistent prediction_histogram_percent: ";
-    m_persistentPredictionProfileHisto.printPercent(out);
-    out << endl;
-
-    out << "persistentPrediction_histogram_per_instruction: ";
-    m_persistentPredictionProfileHisto.printWithMultiplier(out, 1.0 / double(g_system_ptr->getProfiler()->getTotalInstructionsExecuted()));
-    out << endl;
-
-    printSorted(out, m_persistentPredictionProfileMap, "block_address");
-    out << endl;
-  }
 }
 
 void AddressProfiler::clearStats()
@@ -231,12 +208,6 @@ void AddressProfiler::profileRetry(const Address& data_addr, AccessType type, in
   if (count > 1) {
     lookupTraceForAddress(data_addr, m_retryProfileMap).addSample(count);
   }
-}
-
-void AddressProfiler::profilePersistentPrediction(const Address& data_addr, AccessType type)
-{
-  m_persistentPredictionProfileHisto.add(1);
-  lookupTraceForAddress(data_addr, m_persistentPredictionProfileMap).addSample(1);
 }
 
 // ***** Normal Functions ******

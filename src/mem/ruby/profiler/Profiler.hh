@@ -72,7 +72,6 @@
 #include "mem/ruby/system/MemoryControl.hh"
 
 class CacheMsg;
-class CacheProfiler;
 class AddressProfiler;
 
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
@@ -140,9 +139,6 @@ public:
   void profileOutstandingPersistentRequest(int outstanding) { m_outstanding_persistent_requests.add(outstanding); }
   void profileAverageLatencyEstimate(int latency) { m_average_latency_estimate.add(latency); }
 
-  void countBAUnicast() { m_num_BA_unicasts++; }
-  void countBABroadcast() { m_num_BA_broadcasts++; }
-
   void recordPrediction(bool wasGood, bool wasPredicted);
 
   void startTransaction(int cpu);
@@ -153,15 +149,8 @@ public:
   void bankBusy();
   void missLatency(Time t, RubyRequestType type);
   void swPrefetchLatency(Time t, CacheRequestType type, GenericMachineType respondingMach);
-  void stopTableUsageSample(int num) { m_stopTableProfile.add(num); }
-  void L1tbeUsageSample(int num) { m_L1tbeProfile.add(num); }
-  void L2tbeUsageSample(int num) { m_L2tbeProfile.add(num); }
   void sequencerRequests(int num) { m_sequencer_requests.add(num); }
-  void storeBuffer(int size, int blocks) { m_store_buffer_size.add(size); m_store_buffer_blocks.add(blocks);}
 
-  void profileGetXMaskPrediction(const Set& pred_set);
-  void profileGetSMaskPrediction(const Set& pred_set);
-  void profileTrainingMask(const Set& pred_set);
   void profileTransition(const string& component, NodeID version, Address addr,
                          const string& state, const string& event,
                          const string& next_state, const string& note);
@@ -169,7 +158,6 @@ public:
 
   void print(ostream& out) const;
 
-  int64 getTotalInstructionsExecuted() const;
   int64 getTotalTransactionsExecuted() const;
 
   void rubyWatch(int proc);
@@ -209,9 +197,6 @@ private:
   Profiler& operator=(const Profiler& obj);
 
   // Data Members (m_ prefix)
-  CacheProfiler* m_L1D_cache_profiler_ptr;
-  CacheProfiler* m_L1I_cache_profiler_ptr;
-  CacheProfiler* m_L2_cache_profiler_ptr;
   AddressProfiler* m_address_profiler_ptr;
   AddressProfiler* m_inst_profiler_ptr;
 
@@ -224,9 +209,6 @@ private:
   Time m_ruby_start;
   time_t m_real_time_start_time;
 
-  int m_num_BA_unicasts;
-  int m_num_BA_broadcasts;
-
   Vector<integer_t> m_perProcTotalMisses;
   Vector<integer_t> m_perProcUserMisses;
   Vector<integer_t> m_perProcSupervisorMisses;
@@ -236,16 +218,10 @@ private:
   integer_t m_busyBankCount;
   Histogram m_multicast_retry_histogram;
 
-  Histogram m_L1tbeProfile;
-  Histogram m_L2tbeProfile;
-  Histogram m_stopTableProfile;
-
   Histogram m_filter_action_histogram;
   Histogram m_tbeProfile;
 
   Histogram m_sequencer_requests;
-  Histogram m_store_buffer_size;
-  Histogram m_store_buffer_blocks;
   Histogram m_read_sharing_histogram;
   Histogram m_write_sharing_histogram;
   Histogram m_all_sharing_histogram;
@@ -256,7 +232,6 @@ private:
 
   Vector<Histogram> m_missLatencyHistograms;
   Vector<Histogram> m_machLatencyHistograms;
-  Histogram m_L2MissLatencyHistogram;
   Histogram m_allMissLatencyHistogram;
 
   Histogram  m_allSWPrefetchLatencyHistogram;
@@ -267,18 +242,6 @@ private:
   Histogram m_delayedCyclesHistogram;
   Histogram m_delayedCyclesNonPFHistogram;
   Vector<Histogram> m_delayedCyclesVCHistograms;
-
-  int m_predictions;
-  int m_predictionOpportunities;
-  int m_goodPredictions;
-
-  Histogram m_gets_mask_prediction;
-  Histogram m_getx_mask_prediction;
-  Histogram m_explicit_training_mask;
-
-  // For profiling possibly conflicting requests
-  Map<Address, Time>* m_conflicting_map_ptr;
-  Histogram m_conflicting_histogram;
 
   Histogram m_outstanding_requests;
   Histogram m_outstanding_persistent_requests;
