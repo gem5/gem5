@@ -123,6 +123,7 @@ int main(int argc, char * argv[], char * envp[])
         cerr << "Couldn't start target program" << endl;
         return 1;
     }
+    child->step();
     if(printInitial)
     {
         child->outputStartState(cout);
@@ -157,7 +158,6 @@ int main(int argc, char * argv[], char * envp[])
             cerr << "Couldn't connect to server! " << strerror(errno) << endl;
             return 1;
         }
-        child->step();
         while(child->isTracing())
         {
                 if(!child->sendState(sock))
