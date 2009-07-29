@@ -262,7 +262,9 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
         assert(flatIndex < TheISA::NumIntRegs);
-        return intRegs[flatIndex];
+        uint64_t regVal = intRegs[flatIndex];
+        DPRINTF(IntRegs, "Reading int reg %d as %#x.\n", reg_idx, regVal);
+        return regVal;
     }
 
     FloatReg readFloatReg(int reg_idx)
@@ -283,6 +285,7 @@ class SimpleThread : public ThreadState
     {
         int flatIndex = isa.flattenIntIndex(reg_idx);
         assert(flatIndex < TheISA::NumIntRegs);
+        DPRINTF(IntRegs, "Setting int reg %d to %#x.\n", reg_idx, val);
         intRegs[flatIndex] = val;
     }
 
