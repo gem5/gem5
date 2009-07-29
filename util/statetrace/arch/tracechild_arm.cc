@@ -203,22 +203,28 @@ ostream & ARMTraceChild::outputStartState(ostream & os)
 
 bool ARMTraceChild::step()
 {
+    const uint32_t bkpt_inst = 0xe7f001f0;
 
-    const uint32_t bkpt_inst = 0xE1200070;
-    const uint32_t bkpt_mask = 0xFFF000F0;
+    uint32_t lr = getRegVal(14);
+    uint32_t pc = getPC();
+    uint32_t lrOp;
 
-    const uint32_t swi_inst = 0x0F0000000;
-    const uint32_t swi_mask = 0x0F0000000;
+    // Since ARM uses software breakpoints behind the scenes, they don't work
+    // in read only areas like the page of routines provided by the kernel. The
+    // link register generally holds the address the process wants to the
+    // kernel to return to after it's done, so we'll install a software
+    // breakpoint there. If the lr happens to point to the next instruction
+    // we'll leave out our breakpoint to avoid an infinite loop. This isn't a
+    // fool proof strategy, but it should work well in all the reasonable
+    // scenarios I can think of right now.
 
-    uint32_t next_op = ptrace(PTRACE_PEEKDATA, pid, getPC(), 0);
-    if ((next_op & swi_mask) == swi_inst) {
-        ptrace(PTRACE_POKEDATA, pid, next_op + sizeof(uint32_t), bkpt_inst);
-        ptraceSingleStep();
-        ptrace(PTRACE_POKEDATA, pid, next_op + sizeof(uint32_t), next_op);
-    } 
-    else
-    {
-        ptraceSingleStep();
+    if (pc != lr) {
+        lrOp = ptrace(PTRACE_PEEKDATA, pid, lr, 0);
+        ptrace(PTRACE_POKEDATA, pid, lr, bkpt_inst);
+    }
+    ptraceSingleStep();
+    if (pc != lr) {
+        ptrace(PTRACE_POKEDATA, pid, lr, lrOp);
     }
 }
 

@@ -104,8 +104,13 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
 void
 Trace::ArmNativeTrace::check(NativeTraceRecord *record)
 {
+    ThreadContext *tc = record->getThread();
+    // This area is read only on the target. It can't stop there to tell us
+    // what's going on, so we should skip over anything there also.
+    if (tc->readNextPC() > 0xffff0000)
+        return;
     nState.update(this);
-    mState.update(record->getThread());
+    mState.update(tc);
 
     bool errorFound = false;
     // Regular int regs
