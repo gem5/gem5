@@ -77,7 +77,7 @@ class ArmLinux : public Linux
 
     //@{
     /// ioctl() command codes.
-    static const unsigned TIOCGETP_   = 0x40067408;
+    static const unsigned TIOCGETP_   = 0x5401;
     static const unsigned TIOCSETP_   = 0x80067409;
     static const unsigned TIOCSETN_   = 0x8006740a;
     static const unsigned TIOCSETC_   = 0x80067411;
