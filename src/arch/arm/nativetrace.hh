@@ -33,6 +33,7 @@
 
 #include "base/types.hh"
 #include "cpu/nativetrace.hh"
+#include "params/ArmNativeTrace.hh"
 
 namespace Trace {
 
@@ -88,8 +89,19 @@ class ArmNativeTrace : public NativeTrace
 
     ThreadState nState, mState;
 
+    bool stopOnPCError;
+
   public:
-    ArmNativeTrace(const Params *p) : NativeTrace(p)
+    typedef ArmNativeTraceParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    ArmNativeTrace(const Params *p) :
+        NativeTrace(p), stopOnPCError(p->stop_on_pc_error)
     {}
 
     void check(NativeTraceRecord *record);

@@ -33,3 +33,5 @@ from NativeTrace import NativeTrace
 class ArmNativeTrace(NativeTrace):
     type = 'ArmNativeTrace'
     cxx_class = 'Trace::ArmNativeTrace'
+    stop_on_pc_error = Param.Bool(True,
+            "Stop M5 if it and statetrace's pcs are different")

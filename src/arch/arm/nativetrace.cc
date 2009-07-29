@@ -162,6 +162,11 @@ Trace::ArmNativeTrace::check(NativeTraceRecord *record)
         }
         assert(inst);
         record->traceInst(inst, ran);
+
+        bool pcError = (mState.newState[STATE_PC] !=
+                        nState.newState[STATE_PC]);
+        if (stopOnPCError && pcError)
+            panic("Native trace detected an error in control flow!");
     }
 }
 
