@@ -106,7 +106,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 40 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
     /* 42 */ SyscallDesc("pipe", unimplementedFunc),
-    /* 43 */ SyscallDesc("times", unimplementedFunc),
+    /* 43 */ SyscallDesc("times", ignoreFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
     /* 45 */ SyscallDesc("brk", brkFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
