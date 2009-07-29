@@ -418,7 +418,6 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     uint32_t tlsPtr = process->getSyscallArg(tc, 0);
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
