@@ -105,7 +105,8 @@ let {{
     def getCcCode(flagtype):
         icReg = icImm = iv = ''
         if flagtype == "none":
-            icReg = icImm = iv = '1'
+            icReg = icImm = 'Cpsr<29:>'
+            iv = 'Cpsr<28:>'
         elif flagtype == "add":
             icReg = icImm = 'findCarry(32, resTemp, Rn, op2)'
             iv = 'findOverflow(32, resTemp, Rn, op2)'
@@ -125,7 +126,8 @@ let {{
     def getImmCcCode(flagtype):
         ivValue = icValue = ''
         if flagtype == "none":
-            icValue = ivValue = '1'
+            icValue = 'Cpsr<29:>'
+            ivValue = 'Cpsr<28:>'
         elif flagtype == "add":
             icValue = 'findCarry(32, resTemp, Rn, rotated_imm)'
             ivValue = 'findOverflow(32, resTemp, Rn, rotated_imm)'
