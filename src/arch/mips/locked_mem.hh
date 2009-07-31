@@ -51,7 +51,7 @@ inline void
 handleLockedRead(XC *xc, Request *req)
 {
     xc->setMiscRegNoEffect(MISCREG_LLADDR, req->getPaddr() & ~0xf);
-    xc->setMiscRegNoEffect(MISCREG_LLADDR, true);
+    xc->setMiscRegNoEffect(MISCREG_LLFLAG, true);
     DPRINTF(LLSC, "[tid:%i]: Load-Link Flag Set & Load-Link"
                   " Address set to %x.\n",
             req->threadId(), req->getPaddr() & ~0xf);
@@ -83,15 +83,10 @@ handleLockedWrite(XC *xc, Request *req)
             int stCondFailures = xc->readStCondFailures();
             stCondFailures++;
             xc->setStCondFailures(stCondFailures);
-            if (stCondFailures % 10 == 0) {
+            if (stCondFailures % 100000 == 0) {
                 warn("%i: context %d: %d consecutive "
                      "store conditional failures\n",
                      curTick, xc->contextId(), stCondFailures);
-            }
-
-            if (stCondFailures == 5000) {
-                panic("Max (5000) Store Conditional Fails Reached. "
-                        "Check Code For Deadlock.\n");
             }
 
             if (!lock_flag){
