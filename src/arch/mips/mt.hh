@@ -118,7 +118,7 @@ forkThread(TC *tc, Fault &fault, int Rd_bits, int Rs, int Rt)
             tc->readRegOtherThread(MISCREG_TC_BIND + Ctrl_Base_DepTag, tid);
         TCBindReg tcBind = tc->readMiscRegNoEffect(MISCREG_TC_BIND);
 
-        if (tidTCBind.curVPE = tcBind.curVPE) {
+        if (tidTCBind.curVPE == tcBind.curVPE) {
 
             TCStatusReg tidTCStatus =
                 tc->readRegOtherThread(MISCREG_TC_STATUS +
