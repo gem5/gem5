@@ -48,7 +48,11 @@ namespace ArmISA
       public:
         void clear()
         {
-            // Unknown startup state currently
+            memset(miscRegs, 0, sizeof(miscRegs));
+            CPSR cpsr = 0;
+            cpsr.mode = MODE_USER;
+            miscRegs[MISCREG_CPSR] = cpsr;
+            //XXX We need to initialize the rest of the state.
         }
 
         MiscReg

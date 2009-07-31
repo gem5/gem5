@@ -46,7 +46,7 @@ using namespace ArmISA;
 ArmLiveProcess::ArmLiveProcess(LiveProcessParams *params, ObjectFile *objFile)
     : LiveProcess(params, objFile)
 {
-    stack_base = 0xc0000000L;
+    stack_base = 0xbf000000L;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     next_thread_stack_base = stack_base - (8 * 1024 * 1024);
@@ -88,73 +88,239 @@ ArmLiveProcess::copyStringArray32(std::vector<std::string> &strings,
 void
 ArmLiveProcess::argsInit(int intSize, int pageSize)
 {
+    typedef AuxVector<uint32_t> auxv_t;
+    std::vector<auxv_t> auxv;
+
+    string filename;
+    if (argv.size() < 1)
+        filename = "";
+    else
+        filename = argv[0];
+
+    //We want 16 byte alignment
+    uint64_t align = 16;
+
     // Overloaded argsInit so that we can fine-tune for ARM architecture
     Process::startup();
 
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
-    // Calculate how much space we need for arg & env arrays.
-    int argv_array_size = intSize * (argv.size() + 1);
-    int envp_array_size = intSize * (envp.size() + 1);
-    int arg_data_size = 0;
-    for (int i = 0; i < argv.size(); ++i) {
-        arg_data_size += argv[i].size() + 1;
+    enum ArmCpuFeature {
+        Arm_Swp = 1 << 0,
+        Arm_Half = 1 << 1,
+        Arm_Thumb = 1 << 2,
+        Arm_26Bit = 1 << 3,
+        Arm_FastMult = 1 << 4,
+        Arm_Fpa = 1 << 5,
+        Arm_Vfp = 1 << 6,
+        Arm_Edsp = 1 << 7,
+        Arm_Java = 1 << 8,
+        Arm_Iwmmxt = 1 << 9,
+        Arm_Crunch = 1 << 10
+    };
+
+    //Setup the auxilliary vectors. These will already have endian conversion.
+    //Auxilliary vectors are loaded only for elf formatted executables.
+    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    if (elfObject) {
+        uint32_t features =
+            Arm_Swp |
+            Arm_Half |
+            Arm_Thumb |
+//            Arm_26Bit |
+            Arm_FastMult |
+//            Arm_Fpa |
+            Arm_Vfp |
+            Arm_Edsp |
+            Arm_Java |
+//            Arm_Iwmmxt |
+//            Arm_Crunch |
+            0;
+
+        //Bits which describe the system hardware capabilities
+        //XXX Figure out what these should be
+        auxv.push_back(auxv_t(M5_AT_HWCAP, features));
+        //The system page size
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, ArmISA::VMPageSize));
+        //Frequency at which times() increments
+        auxv.push_back(auxv_t(M5_AT_CLKTCK, 0x64));
+        // For statically linked executables, this is the virtual address of the
+        // program header tables if they appear in the executable image
+        auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
+        // This is the size of a program header entry from the elf file.
+        auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
+        // This is the number of program headers from the original elf file.
+        auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        //This is the address of the elf "interpreter", It should be set
+        //to 0 for regular executables. It should be something else
+        //(not sure what) for dynamic libraries.
+        auxv.push_back(auxv_t(M5_AT_BASE, 0));
+
+        //XXX Figure out what this should be.
+        auxv.push_back(auxv_t(M5_AT_FLAGS, 0));
+        //The entry point to the program
+        auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
+        //Different user and group IDs
+        auxv.push_back(auxv_t(M5_AT_UID, uid()));
+        auxv.push_back(auxv_t(M5_AT_EUID, euid()));
+        auxv.push_back(auxv_t(M5_AT_GID, gid()));
+        auxv.push_back(auxv_t(M5_AT_EGID, egid()));
+        //Whether to enable "secure mode" in the executable
+        auxv.push_back(auxv_t(M5_AT_SECURE, 0));
+        //The filename of the program
+        auxv.push_back(auxv_t(M5_AT_EXECFN, 0));
+        //The string "v51" with unknown meaning
+        auxv.push_back(auxv_t(M5_AT_PLATFORM, 0));
     }
+
+    //Figure out how big the initial stack nedes to be
+
+    // A sentry NULL void pointer at the top of the stack.
+    int sentry_size = intSize;
+
+    string platform = "v51";
+    int platform_size = platform.size() + 1;
+
+    // The aux vectors are put on the stack in two groups. The first group are
+    // the vectors that are generated as the elf is loaded. The second group
+    // are the ones that were computed ahead of time and include the platform
+    // string.
+    int aux_data_size = filename.size() + 1;
+
     int env_data_size = 0;
     for (int i = 0; i < envp.size(); ++i) {
         env_data_size += envp[i].size() + 1;
     }
+    int arg_data_size = 0;
+    for (int i = 0; i < argv.size(); ++i) {
+        arg_data_size += argv[i].size() + 1;
+    }
 
-    int space_needed =
-        argv_array_size + envp_array_size + arg_data_size + env_data_size;
-    if (space_needed < 16*1024)
-        space_needed = 16*1024;
+    int info_block_size =
+        sentry_size + env_data_size + arg_data_size +
+        aux_data_size + platform_size;
 
-    // set bottom of stack
+    //Each auxilliary vector is two 4 byte words
+    int aux_array_size = intSize * 2 * (auxv.size() + 1);
+
+    int envp_array_size = intSize * (envp.size() + 1);
+    int argv_array_size = intSize * (argv.size() + 1);
+
+    int argc_size = intSize;
+
+    //Figure out the size of the contents of the actual initial frame
+    int frame_size =
+        info_block_size +
+        aux_array_size +
+        envp_array_size +
+        argv_array_size +
+        argc_size;
+
+    //There needs to be padding after the auxiliary vector data so that the
+    //very bottom of the stack is aligned properly.
+    int partial_size = frame_size;
+    int aligned_partial_size = roundUp(partial_size, align);
+    int aux_padding = aligned_partial_size - partial_size;
+
+    int space_needed = frame_size + aux_padding;
+
     stack_min = stack_base - space_needed;
-    // align it
-    stack_min = roundDown(stack_min, pageSize);
+    stack_min = roundDown(stack_min, align);
     stack_size = stack_base - stack_min;
+
     // map memory
-    pTable->allocate(stack_min, roundUp(stack_size, pageSize));
+    pTable->allocate(roundDown(stack_min, pageSize),
+                     roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    Addr argv_array_base = stack_min + intSize; // room for argc
-    Addr envp_array_base = argv_array_base + argv_array_size;
-    Addr arg_data_base = envp_array_base + envp_array_size;
-    Addr env_data_base = arg_data_base + arg_data_size;
+    uint32_t sentry_base = stack_base - sentry_size;
+    uint32_t aux_data_base = sentry_base - aux_data_size;
+    uint32_t env_data_base = aux_data_base - env_data_size;
+    uint32_t arg_data_base = env_data_base - arg_data_size;
+    uint32_t platform_base = arg_data_base - platform_size;
+    uint32_t auxv_array_base = platform_base - aux_array_size - aux_padding;
+    uint32_t envp_array_base = auxv_array_base - envp_array_size;
+    uint32_t argv_array_base = envp_array_base - argv_array_size;
+    uint32_t argc_base = argv_array_base - argc_size;
+
+    DPRINTF(Stack, "The addresses of items on the initial stack:\n");
+    DPRINTF(Stack, "0x%x - aux data\n", aux_data_base);
+    DPRINTF(Stack, "0x%x - env data\n", env_data_base);
+    DPRINTF(Stack, "0x%x - arg data\n", arg_data_base);
+    DPRINTF(Stack, "0x%x - platform base\n", platform_base);
+    DPRINTF(Stack, "0x%x - auxv array\n", auxv_array_base);
+    DPRINTF(Stack, "0x%x - envp array\n", envp_array_base);
+    DPRINTF(Stack, "0x%x - argv array\n", argv_array_base);
+    DPRINTF(Stack, "0x%x - argc \n", argc_base);
+    DPRINTF(Stack, "0x%x - stack min\n", stack_min);
 
     // write contents to stack
-    uint64_t argc = argv.size();
-    if (intSize == 8)
-        argc = htog((uint64_t)argc);
-    else if (intSize == 4)
-        argc = htog((uint32_t)argc);
-    else
-        panic("Unknown int size");
 
-    initVirtMem->writeBlob(stack_min, (uint8_t*)&argc, intSize);
+    // figure out argc
+    uint32_t argc = argv.size();
+    uint32_t guestArgc = ArmISA::htog(argc);
 
-    copyStringArray32(argv, argv_array_base, arg_data_base, initVirtMem);
-    copyStringArray32(envp, envp_array_base, env_data_base, initVirtMem);
+    //Write out the sentry void *
+    uint32_t sentry_NULL = 0;
+    initVirtMem->writeBlob(sentry_base,
+            (uint8_t*)&sentry_NULL, sentry_size);
 
-    /*
-    //uint8_t insns[] = {0xe5, 0x9f, 0x00, 0x08, 0xe1, 0xa0, 0xf0, 0x0e};
-    uint8_t insns[] = {0x08, 0x00, 0x9f, 0xe5, 0x0e, 0xf0, 0xa0, 0xe1};
+    //Fix up the aux vectors which point to other data
+    for (int i = auxv.size() - 1; i >= 0; i--) {
+        if (auxv[i].a_type == M5_AT_PLATFORM) {
+            auxv[i].a_val = platform_base;
+            initVirtMem->writeString(platform_base, platform.c_str());
+        } else if (auxv[i].a_type == M5_AT_EXECFN) {
+            auxv[i].a_val = aux_data_base;
+            initVirtMem->writeString(aux_data_base, filename.c_str());
+        }
+    }
 
-    initVirtMem->writeBlob(0xffff0fe0, insns, 8);
-    */
+    //Copy the aux stuff
+    for(int x = 0; x < auxv.size(); x++)
+    {
+        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+                (uint8_t*)&(auxv[x].a_type), intSize);
+        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+                (uint8_t*)&(auxv[x].a_val), intSize);
+    }
+    //Write out the terminating zeroed auxilliary vector
+    const uint64_t zero = 0;
+    initVirtMem->writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
+            (uint8_t*)&zero, 2 * intSize);
+
+    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+
+    initVirtMem->writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-
-    tc->setIntReg(ArgumentReg1, argc);
-    tc->setIntReg(ArgumentReg2, argv_array_base);
+    //Set the stack pointer register
     tc->setIntReg(StackPointerReg, stack_min);
+    //A pointer to a function to run when the program exits. We'll set this
+    //to zero explicitly to make sure this isn't used.
+    tc->setIntReg(ArgumentReg0, 0);
+    //Set argument regs 1 and 2 to argv[0] and envp[0] respectively
+    if (argv.size() > 0) {
+        tc->setIntReg(ArgumentReg1, arg_data_base + arg_data_size -
+                                    argv[argv.size() - 1].size() - 1);
+    } else {
+        tc->setIntReg(ArgumentReg1, 0);
+    }
+    if (envp.size() > 0) {
+        tc->setIntReg(ArgumentReg2, env_data_base + env_data_size -
+                                    envp[envp.size() - 1].size() - 1);
+    } else {
+        tc->setIntReg(ArgumentReg2, 0);
+    }
 
     Addr prog_entry = objFile->entryPoint();
     tc->setPC(prog_entry);
     tc->setNextPC(prog_entry + sizeof(MachInst));
+
+    //Align the "stack_min" to a page boundary.
+    stack_min = roundDown(stack_min, pageSize);
 }
 
 ArmISA::IntReg

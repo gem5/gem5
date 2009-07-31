@@ -113,8 +113,7 @@ format DataOp {
                 0x1: decode OPCODE {
                     0x9: BranchExchange::bx({{ }});
                     0xb: PredOp::clz({{
-                        unsigned lsb = findLsbSet(Rm);
-                        Rd = (lsb > 31) ? 32 : lsb;
+                        Rd = ((Rm == 0) ? 32 : (31 - findMsbSet(Rm)));
                     }});
                 }
                 0x2: decode OPCODE {
@@ -319,6 +318,10 @@ format DataOp {
             0x12,0x16,0x1a,0x1e: ArmMacroFMOp::sfm_pw({{ }});
             0x13,0x17,0x1b,0x1f: ArmMacroFMOp::lfm_pw({{ }});
         }
+        0xb: decode LOADOP {
+            0x0: WarnUnimpl::fstmx();
+            0x1: WarnUnimpl::fldmx();
+        }
     }
     0x7: decode OPCODE_24 {
         0: decode CPNUM {
@@ -417,12 +420,29 @@ format DataOp {
                     }
                 }
             }
+            0xa: decode MISC_OPCODE {
+                0x1: decode MEDIA_OPCODE {
+                    0xf: decode RN {
+                        0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
+                        0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
+                        0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
+                    }
+                    0xe: decode RN {
+                        0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
+                        0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
+                        0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
+                    }
+                }
+            }
         }
         format PredOp {
             // ARM System Call (SoftWare Interrupt)
             1: swi({{ if (testPredicate(Cpsr, condCode))
                       {
-                          xc->syscall(IMMED_23_0);
+                          if (IMMED_23_0)
+                              xc->syscall(IMMED_23_0);
+                          else
+                              xc->syscall(R7);
                       }
             }});
         }

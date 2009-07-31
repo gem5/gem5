@@ -1,5 +1,5 @@
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
-warn: allowing mmap of file @ fd 4294967295. This will break if not /dev/zero.
-For more information see: http://www.m5sim.org/warn/3a2134f6
+warn: 	instruction 'fstmx' unimplemented
+For more information see: http://www.m5sim.org/warn/21b09adb
 hack: be nice to actually delete the event here

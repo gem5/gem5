@@ -29,10 +29,11 @@
  */
 
 #include "tracechild.hh"
-#include <sys/wait.h>
-#include <sys/ptrace.h>
-#include <iostream>
+#include <cstring>
 #include <errno.h>
+#include <iostream>
+#include <sys/ptrace.h>
+#include <sys/wait.h>
 
 using namespace std;
 
@@ -78,11 +79,6 @@ bool TraceChild::startTracing(const char * pathToFile, char * const argv[])
                 return false;
         }
         tracing = true;
-        if(!update(pid))
-        {
-                cout << "Didn't update successfully!" << endl;
-                return false;
-        }
         return true;
 }
 

@@ -106,7 +106,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 40 */ SyscallDesc("rmdir", unimplementedFunc),
     /* 41 */ SyscallDesc("dup", unimplementedFunc),
     /* 42 */ SyscallDesc("pipe", unimplementedFunc),
-    /* 43 */ SyscallDesc("times", unimplementedFunc),
+    /* 43 */ SyscallDesc("times", ignoreFunc),
     /* 44 */ SyscallDesc("prof", unimplementedFunc),
     /* 45 */ SyscallDesc("brk", brkFunc),
     /* 46 */ SyscallDesc("setgid", unimplementedFunc),
@@ -260,7 +260,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
     /* 195 */ SyscallDesc("stat64", unimplementedFunc),
     /* 196 */ SyscallDesc("lstat64", lstat64Func<ArmLinux>),
-    /* 197 */ SyscallDesc("fstat64", fstatFunc<ArmLinux>),
+    /* 197 */ SyscallDesc("fstat64", fstat64Func<ArmLinux>),
     /* 198 */ SyscallDesc("lchown", unimplementedFunc),
     /* 199 */ SyscallDesc("getuid", getuidFunc),
     /* 200 */ SyscallDesc("getgid", getgidFunc),
@@ -418,7 +418,6 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     uint32_t tlsPtr = process->getSyscallArg(tc, 0);
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
 
     tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
@@ -448,7 +447,8 @@ ArmLinuxProcess::getDesc(int callnum)
     // Angel SWI syscalls are unsupported in this release
     if (callnum == 0x123456) {
         panic("Attempt to execute an ANGEL_SWI system call (newlib-related)");
-    } else if ((callnum & 0x00f00000) == 0x00900000) {
+    } else if ((callnum & 0x00f00000) == 0x00900000 || 
+            (callnum & 0xf0000) == 0xf0000) {
         callnum &= 0x000fffff;
         if ((callnum & 0x0f0000) == 0xf0000) {
             callnum -= 0x0f0001;
@@ -496,7 +496,7 @@ ArmLinuxProcess::startup()
     {
         0x00, 0x30, 0x92, 0xe5, //ldr r3, [r2]
         0x00, 0x30, 0x53, 0xe0, //subs r3, r3, r0
-        0x00, 0x10, 0x92, 0x05, //streq r1, [r2]
+        0x00, 0x10, 0x82, 0x05, //streq r1, [r2]
         0x03, 0x00, 0xa0, 0xe1, //mov r0, r3
         0x0e, 0xf0, 0xa0, 0xe1  //usr_ret lr
     };

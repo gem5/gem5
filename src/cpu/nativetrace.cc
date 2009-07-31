@@ -38,7 +38,7 @@ using namespace std;
 namespace Trace {
 
 NativeTrace::NativeTrace(const Params *p)
-    : InstTracer(p)
+    : ExeTracer(p)
 {
     if (ListenSocket::allDisabled())
         fatal("All listeners are disabled!");

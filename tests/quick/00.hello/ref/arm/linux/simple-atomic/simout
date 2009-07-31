@@ -5,13 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jun  9 2009 23:46:33
-M5 revision 6639f3c716a6 6238 default qtip tip armreg.patch qbase
-M5 started Jun  9 2009 23:53:49
+M5 compiled Jul 27 2009 00:45:04
+M5 revision 44a3d32f3217 6414 default qtip tip runnableagainstatupdate.patch
+M5 started Jul 27 2009 00:45:05
 M5 executing on fajita
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 2299000 because target called exit()
+Exiting @ tick 2748500 because target called exit()

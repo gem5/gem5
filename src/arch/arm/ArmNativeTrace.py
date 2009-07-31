@@ -1,4 +1,4 @@
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2009 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,31 +26,12 @@
 #
 # Authors: Gabe Black
 
-CXX      := g++
-INCLUDES := -I ./ -I ./arch
-CXXFLAGS := -O3 -ggdb
+from m5.SimObject import SimObject
+from m5.params import *
+from NativeTrace import NativeTrace
 
-define build-obj
-$(CXX) -c $(patsubst %.o,%.cc,$@) -o $@ $(INCLUDES) $(CXXFLAGS)
-endef
-
-define final-link
-$(CXX) $(INCLUDES) $(CXXFLAGS) -o $@ $^
-endef
-
-all: statetrace
-
-printer.o: printer.cc printer.hh tracechild.hh refcnt.hh regstate.hh
-	$(build-obj)
-statetrace.o: statetrace.cc printer.hh tracechild.hh refcnt.hh regstate.hh
-	$(build-obj)
-tracechild.o: tracechild.cc tracechild.hh regstate.hh
-	$(build-obj)
-tracechild_arch.o: statetrace.cc printer.hh tracechild.hh refcnt.hh regstate.hh arch/tracechild_arm.hh arch/tracechild_arm.cc arch/tracechild_i386.hh arch/tracechild_i386.cc arch/tracechild_amd64.cc arch/tracechild_amd64.hh arch/tracechild_sparc.cc arch/tracechild_sparc.hh
-	$(build-obj)
-
-statetrace: printer.o statetrace.o tracechild.o tracechild_arch.o
-	$(final-link)
-
-clean:
-	rm -f *.o statetrace
+class ArmNativeTrace(NativeTrace):
+    type = 'ArmNativeTrace'
+    cxx_class = 'Trace::ArmNativeTrace'
+    stop_on_pc_error = Param.Bool(True,
+            "Stop M5 if it and statetrace's pcs are different")

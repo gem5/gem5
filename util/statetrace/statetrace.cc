@@ -28,19 +28,19 @@
  * Authors: Gabe Black
  */
 
-#include <iostream>
+#include <cstring>
+#include <errno.h>
 #include <fstream>
+#include <iostream>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <stdio.h>
 #include <string>
+#include <sys/ptrace.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/ptrace.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <errno.h>
 
 #include "printer.hh"
 #include "tracechild.hh"
@@ -61,12 +61,24 @@ int main(int argc, char * argv[], char * envp[])
     //Parse the command line arguments
     bool printInitial = false;
     bool printTrace = true;
+    string host = "localhost";
     for(int x = 1; x < argc; x++)
     {
         if(!strcmp(argv[x], "-h"))
         {
             printUsage(argv[0]);
             return 0;
+        }
+        if(!strcmp(argv[x], "--host"))
+        {
+            x++;
+            if(x >= argc)
+            {
+                cerr << "Incorrect usage.\n" << endl;
+                printUsage(argv[0]);
+                return 1;
+            }
+            host = argv[x];
         }
         else if(!strcmp(argv[x], "-r"))
         {
@@ -111,6 +123,7 @@ int main(int argc, char * argv[], char * envp[])
         cerr << "Couldn't start target program" << endl;
         return 1;
     }
+    child->step();
     if(printInitial)
     {
         child->outputStartState(cout);
@@ -127,7 +140,7 @@ int main(int argc, char * argv[], char * envp[])
             return 1;
         }
         struct hostent *server;
-        server = gethostbyname("localhost");
+        server = gethostbyname(host.c_str());
         if(!server)
         {
             cerr << "Couldn't get host ip! " << strerror(errno) << endl;
@@ -145,7 +158,6 @@ int main(int argc, char * argv[], char * envp[])
             cerr << "Couldn't connect to server! " << strerror(errno) << endl;
             return 1;
         }
-        child->step();
         while(child->isTracing())
         {
                 if(!child->sendState(sock))

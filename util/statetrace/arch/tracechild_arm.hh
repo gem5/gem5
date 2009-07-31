@@ -25,70 +25,89 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
+ * Authors: Ali Saidi
+ *          Gabe Black
  */
-#ifndef __ARCH_ARM_MISCREGS_HH__
-#define __ARCH_ARM_MISCREGS_HH__
 
-#include "base/bitunion.hh"
+#ifndef TRACECHILD_ARM_HH
+#define TRACECHILD_ARM_HH
 
-namespace ArmISA
+#include <cassert>
+#include <string>
+#include <sys/user.h>
+#include <sys/ptrace.h>
+#include "tracechild.hh"
+
+
+class ARMTraceChild : public TraceChild
 {
-    enum ConditionCode {
-        COND_EQ  =   0,
-        COND_NE, //  1
-        COND_CS, //  2
-        COND_CC, //  3
-        COND_MI, //  4
-        COND_PL, //  5
-        COND_VS, //  6
-        COND_VC, //  7
-        COND_HI, //  8
-        COND_LS, //  9
-        COND_GE, // 10
-        COND_LT, // 11
-        COND_GT, // 12
-        COND_LE, // 13
-        COND_AL, // 14
-        COND_NV  // 15
+  public:
+    enum RegNum
+    {
+        // r0 - r3 argument, temp, caller save
+        // r4 - r10 callee save
+        // r11 - FP
+        // r12 - temp
+        // r13 - stack
+        // r14 - link
+        // r15 - pc
+        R0, R1, R2, R3, R4, R5, R6, R7,
+        R8, R9, R10, FP, R12, SP, LR, PC,
+        CPSR,
+        numregs
     };
+  private:
+    char printBuffer[256];
+    static const char *regNames[numregs];
+    uint32_t getRegs(user_regs& myregs, int num);
+    user_regs regs;
+    user_regs oldregs;
+    bool regDiffSinceUpdate[numregs];
+    
+  protected:
+    bool update(int pid);
+  
+  public:
+    ARMTraceChild();
+    bool sendState(int socket);
 
-    enum MiscRegIndex {
-        MISCREG_CPSR = 0,
-	MISCREG_SPSR,
-        MISCREG_SPSR_FIQ,
-        MISCREG_SPSR_IRQ,
-        MISCREG_SPSR_SVC,
-        MISCREG_SPSR_UND,
-        MISCREG_SPSR_ABT,
-        MISCREG_FPSR,
-        MISCREG_FPSID,
-        MISCREG_FPSCR,
-        MISCREG_FPEXC,
-	NUM_MISCREGS
-    };
+    int getNumRegs() 
+    {
+        return numregs;
+    }
 
-    const char * const miscRegName[NUM_MISCREGS] = {
-    	"cpsr",
-	"spsr", "spsr_fiq", "spsr_irq", "spsr_svc", "spsr_und", "spsr_abt",
-	"fpsr"
-    };
+    bool diffSinceUpdate(int num)
+    {
+        assert(num < numregs && num >= 0);
+        return regDiffSinceUpdate[num];
+    }
 
-    BitUnion32(CPSR)
-        Bitfield<31> n;
-        Bitfield<30> z;
-        Bitfield<29> c;
-        Bitfield<28> v;
-        Bitfield<27> q;
-        Bitfield<24> j;
-        Bitfield<19, 16> ge;
-        Bitfield<9> e;
-        Bitfield<8> a;
-        Bitfield<7> i;
-        Bitfield<6> f;
-        Bitfield<5> t;
-        Bitfield<4, 0> mode;
-    EndBitUnion(CPSR)
+    std::string getRegName(int num)
+    {
+        assert(num < numregs && num >= 0);
+        return regNames[num];
+    }
+
+    int64_t getRegVal(int num);
+    int64_t getOldRegVal(int num);
+  
+    bool step();
+
+    uint64_t getPC()
+    {
+            return getRegVal(PC);
+    }
+
+    uint64_t getSP()
+    {
+            return getRegVal(SP);
+    }
+
+    char * printReg(int num);
+
+    std::ostream & outputStartState(std::ostream & os);
+
 };
 
-#endif // __ARCH_ARM_MISCREGS_HH__
+#endif
+

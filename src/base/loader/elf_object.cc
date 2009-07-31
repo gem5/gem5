@@ -107,7 +107,6 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
         {
 
           case ELFOSABI_LINUX:
-          case ELFOSABI_ARM:
             opSys = ObjectFile::Linux;
             break;
           case ELFOSABI_SOLARIS:
@@ -115,6 +114,9 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             break;
           case ELFOSABI_TRU64:
             opSys = ObjectFile::Tru64;
+            break;
+          case ELFOSABI_ARM:
+            opSys = ObjectFile::LinuxArmOABI;
             break;
           default:
             opSys = ObjectFile::UnknownOpSys;

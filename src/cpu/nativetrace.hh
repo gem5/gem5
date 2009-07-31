@@ -37,8 +37,8 @@
 #include "base/socket.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
-#include "sim/insttracer.hh"
 
 class ThreadContext;
 
@@ -46,7 +46,7 @@ namespace Trace {
 
 class NativeTrace;
 
-class NativeTraceRecord : public InstRecord
+class NativeTraceRecord : public ExeTracerRecord
 {
   protected:
     NativeTrace * parent;
@@ -56,7 +56,7 @@ class NativeTraceRecord : public InstRecord
                Tick _when, ThreadContext *_thread,
                const StaticInstPtr _staticInst, Addr _pc, bool spec,
                const StaticInstPtr _macroStaticInst = NULL, MicroPC _upc = 0)
-        : InstRecord(_when, _thread, _staticInst, _pc, spec,
+        : ExeTracerRecord(_when, _thread, _staticInst, _pc, spec,
                 _macroStaticInst, _upc),
         parent(_parent)
     {
@@ -65,7 +65,7 @@ class NativeTraceRecord : public InstRecord
     void dump();
 };
 
-class NativeTrace : public InstTracer
+class NativeTrace : public ExeTracer
 {
   protected:
     int fd;

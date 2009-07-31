@@ -33,6 +33,8 @@
 #elif defined __amd64__
 //        #error "AMD64 architecture not implemented"
         #include "arch/tracechild_amd64.cc"
+#elif defined __arm__
+        #include "arch/tracechild_arm.cc"
 #elif defined __hppa__
         #error "Hppa architecture not implemented"
 #elif defined __i386__ || defined __i486__ || \
