@@ -347,6 +347,10 @@ class Request : public FastAlloc
         return _flags;
     }
 
+    /** Note that unlike other accessors, this function sets *specific
+       flags* (ORs them in); it does not assign its argument to the
+       _flags field.  Thus this method should rightly be called
+       setFlags() and not just flags(). */
     void
     setFlags(Flags flags)
     {
@@ -376,21 +380,6 @@ class Request : public FastAlloc
     {
         assert(privateFlags.isSet(VALID_VADDR));
         return _flags & ASI_BITS;
-    }
-
-    /** Accessor function for MMAPED_IPR flag. */
-    bool
-    isMmapedIpr()
-    {
-        assert(privateFlags.isSet(VALID_PADDR));
-        return _flags.isSet(MMAPED_IPR);
-    }
-
-    void
-    setMmapedIpr(bool r)
-    {
-        assert(VALID_VADDR);
-        _flags.set(MMAPED_IPR);
     }
 
     /** Accessor function to check if sc result is valid. */
@@ -452,7 +441,8 @@ class Request : public FastAlloc
         return _pc;
     }
 
-    /** Accessor Function to Check Cacheability. */
+    /** Accessor functions for flags.  Note that these are for testing
+       only; setting flags should be done via setFlags(). */
     bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
     bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
     bool isPrefetch() const { return _flags.isSet(PREFETCH); }
@@ -460,6 +450,7 @@ class Request : public FastAlloc
     bool isLocked() const { return _flags.isSet(LOCKED); }
     bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
+    bool isMmapedIpr() const { return _flags.isSet(MMAPED_IPR); }
 
     bool
     isMisaligned() const

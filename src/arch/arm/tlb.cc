@@ -147,7 +147,7 @@ TLB::checkCacheability(RequestPtr &req)
   // or by the TLB entry
   if((req->getVaddr() & VAddrUncacheable) == VAddrUncacheable) {
     // mark request as uncacheable
-    req->setFlags(req->getFlags() | Request::UNCACHEABLE);
+    req->setFlags(Request::UNCACHEABLE);
   }
   return NoFault;
 }
