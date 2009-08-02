@@ -132,17 +132,17 @@ class Request : public FastAlloc
      * The physical address of the request. Valid only if validPaddr
      * is set.
      */
-    Addr paddr;
+    Addr _paddr;
 
     /**
      * The size of the request. This field must be set when vaddr or
      * paddr is written via setVirt() or setPhys(), so it is always
      * valid as long as one of the address fields is valid.
      */
-    int size;
+    int _size;
 
     /** Flag structure for the request. */
-    Flags flags;
+    Flags _flags;
 
     /** Private flags for field validity checking. */
     PrivateFlags privateFlags;
@@ -155,15 +155,15 @@ class Request : public FastAlloc
     Tick _time;
 
     /** The address space ID. */
-    int asid;
+    int _asid;
 
     /** The virtual address of the request. */
-    Addr vaddr;
+    Addr _vaddr;
 
     /**
      * Extra data for the request, such as the return value of
      * store conditional or the compare value for a CAS. */
-    uint64_t extraData;
+    uint64_t _extraData;
 
     /** The context ID (for statistics, typically). */
     int _contextId;
@@ -171,10 +171,13 @@ class Request : public FastAlloc
     int _threadId;
 
     /** program counter of initiating access; for tracing/debugging */
-    Addr pc;
+    Addr _pc;
 
   public:
-    /** Minimal constructor.  No fields are initialized. */
+    /** Minimal constructor.  No fields are initialized. 
+     *  (Note that _flags and privateFlags are cleared by Flags
+     *  default constructor.)
+     */
     Request()
     {}
 
@@ -218,23 +221,23 @@ class Request : public FastAlloc
      * allocated Request object.
      */
     void
-    setPhys(Addr _paddr, int _size, Flags _flags, Tick time)
+    setPhys(Addr paddr, int size, Flags flags, Tick time)
     {
-        assert(_size >= 0);
-        paddr = _paddr;
-        size = _size;
+        assert(size >= 0);
+        _paddr = paddr;
+        _size = size;
         _time = time;
 
-        flags.clear(~STICKY_FLAGS);
-        flags.set(_flags);
+        _flags.clear(~STICKY_FLAGS);
+        _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
     }
 
     void
-    setPhys(Addr _paddr, int _size, Flags _flags)
+    setPhys(Addr paddr, int size, Flags flags)
     {
-        setPhys(_paddr, _size, _flags, curTick);
+        setPhys(paddr, size, flags, curTick);
     }
 
     /**
@@ -242,18 +245,17 @@ class Request : public FastAlloc
      * allocated Request object.
      */
     void
-    setVirt(int _asid, Addr _vaddr, int _size, Flags _flags, Addr _pc)
+    setVirt(int asid, Addr vaddr, int size, Flags flags, Addr pc)
     {
-        assert(_size >= 0);
-        asid = _asid;
-        vaddr = _vaddr;
-        size = _size;
-        flags = _flags;
-        pc = _pc;
+        assert(size >= 0);
+        _asid = asid;
+        _vaddr = vaddr;
+        _size = size;
+        _pc = pc;
         _time = curTick;
 
-        flags.clear(~STICKY_FLAGS);
-        flags.set(_flags);
+        _flags.clear(~STICKY_FLAGS);
+        _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
     }
@@ -265,10 +267,10 @@ class Request : public FastAlloc
      * to guarantee that the size and flags are also set.
      */
     void
-    setPaddr(Addr _paddr)
+    setPaddr(Addr paddr)
     {
         assert(privateFlags.isSet(VALID_VADDR));
-        paddr = _paddr;
+        _paddr = paddr;
         privateFlags.set(VALID_PADDR);
     }
 
@@ -280,14 +282,14 @@ class Request : public FastAlloc
     {
         assert(privateFlags.isSet(VALID_VADDR));
         assert(privateFlags.noneSet(VALID_PADDR));
-        assert(split_addr > vaddr && split_addr < vaddr + size);
+        assert(split_addr > _vaddr && split_addr < _vaddr + _size);
         req1 = new Request;
         *req1 = *this;
         req2 = new Request;
         *req2 = *this;
-        req1->size = split_addr - vaddr;
-        req2->vaddr = split_addr;
-        req2->size = size - req1->size;
+        req1->_size = split_addr - _vaddr;
+        req2->_vaddr = split_addr;
+        req2->_size = _size - req1->_size;
     }
 
     /**
@@ -303,7 +305,7 @@ class Request : public FastAlloc
     getPaddr()
     {
         assert(privateFlags.isSet(VALID_PADDR));
-        return paddr;
+        return _paddr;
     }
 
     /**
@@ -319,7 +321,7 @@ class Request : public FastAlloc
     getSize()
     {
         assert(privateFlags.isSet(VALID_SIZE));
-        return size;
+        return _size;
     }
 
     /** Accessor for time. */
@@ -342,14 +344,14 @@ class Request : public FastAlloc
     getFlags()
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
-        return flags;
+        return _flags;
     }
 
     void
-    setFlags(Flags _flags)
+    setFlags(Flags flags)
     {
         assert(privateFlags.isSet(VALID_PADDR|VALID_VADDR));
-        flags.set(_flags);
+        _flags.set(flags);
     }
 
     /** Accessor function for vaddr.*/
@@ -357,7 +359,7 @@ class Request : public FastAlloc
     getVaddr()
     {
         assert(privateFlags.isSet(VALID_VADDR));
-        return vaddr;
+        return _vaddr;
     }
 
     /** Accessor function for asid.*/
@@ -365,7 +367,7 @@ class Request : public FastAlloc
     getAsid()
     {
         assert(privateFlags.isSet(VALID_VADDR));
-        return asid;
+        return _asid;
     }
 
     /** Accessor function for asi.*/
@@ -373,7 +375,7 @@ class Request : public FastAlloc
     getAsi()
     {
         assert(privateFlags.isSet(VALID_VADDR));
-        return flags & ASI_BITS;
+        return _flags & ASI_BITS;
     }
 
     /** Accessor function for MMAPED_IPR flag. */
@@ -381,14 +383,14 @@ class Request : public FastAlloc
     isMmapedIpr()
     {
         assert(privateFlags.isSet(VALID_PADDR));
-        return flags.isSet(MMAPED_IPR);
+        return _flags.isSet(MMAPED_IPR);
     }
 
     void
     setMmapedIpr(bool r)
     {
         assert(VALID_VADDR);
-        flags.set(MMAPED_IPR);
+        _flags.set(MMAPED_IPR);
     }
 
     /** Accessor function to check if sc result is valid. */
@@ -403,14 +405,14 @@ class Request : public FastAlloc
     getExtraData() const
     {
         assert(privateFlags.isSet(VALID_EXTRA_DATA));
-        return extraData;
+        return _extraData;
     }
 
     /** Accessor function for store conditional return value.*/
     void
-    setExtraData(uint64_t _extraData)
+    setExtraData(uint64_t extraData)
     {
-        extraData = _extraData;
+        _extraData = extraData;
         privateFlags.set(VALID_EXTRA_DATA);
     }
 
@@ -447,31 +449,31 @@ class Request : public FastAlloc
     getPC() const
     {
         assert(privateFlags.isSet(VALID_PC));
-        return pc;
+        return _pc;
     }
 
     /** Accessor Function to Check Cacheability. */
-    bool isUncacheable() const { return flags.isSet(UNCACHEABLE); }
-    bool isInstFetch() const { return flags.isSet(INST_FETCH); }
-    bool isPrefetch() const { return flags.isSet(PREFETCH); }
-    bool isLLSC() const { return flags.isSet(LLSC); }
-    bool isLocked() const { return flags.isSet(LOCKED); }
-    bool isSwap() const { return flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
-    bool isCondSwap() const { return flags.isSet(MEM_SWAP_COND); }
+    bool isUncacheable() const { return _flags.isSet(UNCACHEABLE); }
+    bool isInstFetch() const { return _flags.isSet(INST_FETCH); }
+    bool isPrefetch() const { return _flags.isSet(PREFETCH); }
+    bool isLLSC() const { return _flags.isSet(LLSC); }
+    bool isLocked() const { return _flags.isSet(LOCKED); }
+    bool isSwap() const { return _flags.isSet(MEM_SWAP|MEM_SWAP_COND); }
+    bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
 
     bool
     isMisaligned() const
     {
-        if (flags.isSet(NO_ALIGN_FAULT))
+        if (_flags.isSet(NO_ALIGN_FAULT))
             return false;
 
-        if ((vaddr & 0x1))
+        if ((_vaddr & 0x1))
             return true;
 
-        if (flags.isSet(NO_HALF_WORD_ALIGN_FAULT))
+        if (_flags.isSet(NO_HALF_WORD_ALIGN_FAULT))
             return false;
 
-        if ((vaddr & 0x2))
+        if ((_vaddr & 0x2))
             return true;
 
         return false;
