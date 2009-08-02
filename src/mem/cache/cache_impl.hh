@@ -268,8 +268,9 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
     blk = tags->accessBlock(pkt->getAddr(), lat);
 
-    DPRINTF(Cache, "%s %x %s\n", pkt->cmdString(), pkt->getAddr(),
-            (blk) ? "hit" : "miss");
+    DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
+            pkt->req->isInstFetch() ? " (ifetch)" : "",
+            pkt->getAddr(), (blk) ? "hit" : "miss");
 
     if (blk != NULL) {
 

@@ -857,9 +857,8 @@ inline Fault
 BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
 {
     reqMade = true;
-    Request *req = new Request();
-    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->contextId(), threadNumber);
+    Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
+                               thread->contextId(), threadNumber);
 
     fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Read);
 
@@ -913,9 +912,8 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     }
 
     reqMade = true;
-    Request *req = new Request();
-    req->setVirt(asid, addr, sizeof(T), flags, this->PC);
-    req->setThreadContext(thread->contextId(), threadNumber);
+    Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
+                               thread->contextId(), threadNumber);
 
     fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Write);
 

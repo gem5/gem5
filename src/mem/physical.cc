@@ -211,8 +211,8 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
 
 #define CASE(A, T)                                                      \
   case sizeof(T):                                                       \
-    DPRINTF(MemoryAccess, A " of size %i on address 0x%x data 0x%x\n",  \
-            pkt->getSize(), pkt->getAddr(), pkt->get<T>());             \
+    DPRINTF(MemoryAccess,"%s of size %i on address 0x%x data 0x%x\n",   \
+            A, pkt->getSize(), pkt->getAddr(), pkt->get<T>());          \
   break
 
 
@@ -224,8 +224,8 @@ PhysicalMemory::checkLockedAddrList(PacketPtr pkt)
           CASE(A, uint16_t);                                            \
           CASE(A, uint8_t);                                             \
           default:                                                      \
-            DPRINTF(MemoryAccess, A " of size %i on address 0x%x\n",    \
-                    pkt->getSize(), pkt->getAddr());                    \
+            DPRINTF(MemoryAccess, "%s of size %i on address 0x%x\n",    \
+                    A, pkt->getSize(), pkt->getAddr());                 \
         }                                                               \
     } while (0)
 
@@ -281,6 +281,7 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         if (overwrite_mem)
             std::memcpy(hostAddr, &overwrite_val, pkt->getSize());
 
+        assert(!pkt->req->isInstFetch());
         TRACE_PACKET("Read/Write");
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
@@ -289,11 +290,12 @@ PhysicalMemory::doAtomicAccess(PacketPtr pkt)
         }
         if (pmemAddr)
             memcpy(pkt->getPtr<uint8_t>(), hostAddr, pkt->getSize());
-        TRACE_PACKET("Read");
+        TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
     } else if (pkt->isWrite()) {
         if (writeOK(pkt)) {
             if (pmemAddr)
                 memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
+            assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
         }
     } else if (pkt->isInvalidate()) {

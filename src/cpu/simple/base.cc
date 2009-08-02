@@ -282,7 +282,6 @@ BaseSimpleCPU::copy(Addr dest)
             memReq->dest = dest_addr;
             memReq->size = 64;
             memReq->time = curTick;
-            memReq->flags &= ~INST_FETCH;
             dcacheInterface->access(memReq);
         }
     }

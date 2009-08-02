@@ -596,9 +596,9 @@ DefaultFetch<Impl>::fetchCacheLine(Addr fetch_PC, Fault &ret_fault, ThreadID tid
     // Setup the memReq to do a read of the first instruction's address.
     // Set the appropriate read size and flags as well.
     // Build request here.
-    RequestPtr mem_req = new Request(tid, block_PC, cacheBlkSize, 0,
-                                     fetch_PC, cpu->thread[tid]->contextId(),
-                                     tid);
+    RequestPtr mem_req =
+        new Request(tid, block_PC, cacheBlkSize, Request::INST_FETCH,
+                    fetch_PC, cpu->thread[tid]->contextId(), tid);
 
     memReq[tid] = mem_req;
 

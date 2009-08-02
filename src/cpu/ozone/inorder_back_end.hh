@@ -211,7 +211,6 @@ InorderBackEnd<Impl>::read(Addr addr, T &data, unsigned flags)
         memReq->cmd = Read;
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~INST_FETCH;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -252,7 +251,6 @@ InorderBackEnd<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 //      memcpy(memReq->data,(uint8_t *)&data,memReq->size);
         memReq->completionEvent = NULL;
         memReq->time = curTick;
-        memReq->flags &= ~INST_FETCH;
         MemAccessResult result = dcacheInterface->access(memReq);
 
         // Ugly hack to get an event scheduled *only* if the access is
@@ -293,7 +291,6 @@ InorderBackEnd<Impl>::read(MemReqPtr &req, T &data, int load_idx)
     req->time = curTick;
     assert(!req->data);
     req->data = new uint8_t[64];
-    req->flags &= ~INST_FETCH;
     Fault fault = cpu->read(req, data);
     memcpy(req->data, &data, sizeof(T));
 
@@ -363,7 +360,6 @@ InorderBackEnd<Impl>::write(MemReqPtr &req, T &data, int store_idx)
         memcpy(req->data,(uint8_t *)&data,req->size);
         req->completionEvent = NULL;
         req->time = curTick;
-        req->flags &= ~INST_FETCH;
         MemAccessResult result = dcacheInterface->access(req);
 
         // Ugly hack to get an event scheduled *only* if the access is
