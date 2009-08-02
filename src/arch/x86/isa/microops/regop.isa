@@ -517,34 +517,38 @@ let {{
     class Xor(LogicRegOp):
         code = 'DestReg = merge(DestReg, psrc1 ^ op2, dataSize)'
 
-    # Neither of these is quite correct because it assumes that right shifting
-    # a signed or unsigned value does sign or zero extension respectively.
-    # The C standard says that what happens on a right shift with a 1 in the
-    # MSB position is undefined. On x86 and under likely most compilers the
-    # "right thing" happens, but this isn't a guarantee.
     class Mul1s(WrRegOp):
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            int64_t spsrc1_h = spsrc1 >> halfSize;
-            int64_t spsrc1_l = spsrc1 & mask(halfSize);
-            int64_t spsrc2_h = sop2 >> halfSize;
-            int64_t spsrc2_l = sop2 & mask(halfSize);
-            ProdHi = ((spsrc1_l * spsrc2_h + spsrc1_h * spsrc2_l +
-                      ((spsrc1_l * spsrc2_l) >> halfSize)) >> halfSize) +
-                     spsrc1_h * spsrc2_h;
+            uint64_t shifter = (1ULL << halfSize);
+            uint64_t hiResult;
+            uint64_t psrc1_h = psrc1 / shifter;
+            uint64_t psrc1_l = psrc1 & mask(halfSize);
+            uint64_t psrc2_h = op2 / shifter;
+            uint64_t psrc2_l = op2 & mask(halfSize);
+            hiResult = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
+                        ((psrc1_l * psrc2_l) / shifter)) /shifter) +
+                       psrc1_h * psrc2_h;
+            if (spsrc1 < 0)
+                hiResult -= op2;
+            int64_t bigSop2 = sop2;
+            if (bigSop2 < 0)
+                hiResult -= psrc1;
+            ProdHi = hiResult;
             '''
 
     class Mul1u(WrRegOp):
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            uint64_t psrc1_h = psrc1 >> halfSize;
+            uint64_t shifter = (1ULL << halfSize);
+            uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = op2 >> halfSize;
+            uint64_t psrc2_h = op2 / shifter;
             uint64_t psrc2_l = op2 & mask(halfSize);
             ProdHi = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
-                      ((psrc1_l * psrc2_l) >> halfSize)) >> halfSize) +
+                      ((psrc1_l * psrc2_l) / shifter)) / shifter) +
                      psrc1_h * psrc2_h;
             '''
 
