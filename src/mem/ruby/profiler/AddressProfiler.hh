@@ -63,7 +63,6 @@ public:
   void clearStats();
 
   void addTraceSample(Address data_addr, Address pc_addr, CacheRequestType type, AccessModeType access_mode, NodeID id, bool sharing_miss);
-  void profilePersistentPrediction(const Address& data_addr, AccessType type);
   void profileRetry(const Address& data_addr, AccessType type, int count);
   void profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
   void profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
@@ -87,8 +86,6 @@ private:
   Map<Address, AccessTraceForAddress>* m_macroBlockAccessTrace;
   Map<Address, AccessTraceForAddress>* m_programCounterAccessTrace;
   Map<Address, AccessTraceForAddress>* m_retryProfileMap;
-  Map<Address, AccessTraceForAddress>* m_persistentPredictionProfileMap;
-  Histogram m_persistentPredictionProfileHisto;
   Histogram m_retryProfileHisto;
   Histogram m_retryProfileHistoWrite;
   Histogram m_retryProfileHistoRead;

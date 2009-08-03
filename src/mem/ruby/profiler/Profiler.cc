@@ -52,7 +52,6 @@
  */
 
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/network/Network.hh"
@@ -73,26 +72,12 @@ static double process_memory_total();
 static double process_memory_resident();
 
 Profiler::Profiler(const string & name)
-  : m_conflicting_histogram(-1)
 {
   m_name = name;
   m_requestProfileMap_ptr = new Map<string, int>;
-  m_L1D_cache_profiler_ptr = new CacheProfiler("L1D_cache");
-  m_L1I_cache_profiler_ptr = new CacheProfiler("L1I_cache");
-
-  m_L2_cache_profiler_ptr = new CacheProfiler("L2_cache");
 
   m_inst_profiler_ptr = NULL;
   m_address_profiler_ptr = NULL;
-
-/*
-  m_address_profiler_ptr = new AddressProfiler;
-  m_inst_profiler_ptr = NULL;
-  if (m_all_instructions) {
-    m_inst_profiler_ptr = new AddressProfiler;
-  }
-*/
-  m_conflicting_map_ptr = new Map<Address, Time>;
 
   m_real_time_start_time = time(NULL); // Not reset in clearStats()
   m_stats_period = 1000000; // Default
@@ -105,12 +90,7 @@ Profiler::~Profiler()
   if (m_periodic_output_file_ptr != &cerr) {
     delete m_periodic_output_file_ptr;
   }
-  delete m_address_profiler_ptr;
-  delete m_L1D_cache_profiler_ptr;
-  delete m_L1I_cache_profiler_ptr;
-  delete m_L2_cache_profiler_ptr;
   delete m_requestProfileMap_ptr;
-  delete m_conflicting_map_ptr;
 }
 
 void Profiler::init(const vector<string> & argv, vector<string> memory_control_names)
@@ -182,32 +162,24 @@ void Profiler::wakeup()
 {
   // FIXME - avoid the repeated code
 
-  Vector<integer_t> perProcInstructionCount;
-  perProcInstructionCount.setSize(RubySystem::getNumberOfSequencers());
-
   Vector<integer_t> perProcCycleCount;
   perProcCycleCount.setSize(RubySystem::getNumberOfSequencers());
 
   for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
-    perProcInstructionCount[i] = g_system_ptr->getInstructionCount(i) - m_instructions_executed_at_start[i] + 1;
     perProcCycleCount[i] = g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
     // The +1 allows us to avoid division by zero
   }
 
   integer_t total_misses = m_perProcTotalMisses.sum();
-  integer_t instruction_executed = perProcInstructionCount.sum();
   integer_t simics_cycles_executed = perProcCycleCount.sum();
   integer_t transactions_started = m_perProcStartTransaction.sum();
   integer_t transactions_ended = m_perProcEndTransaction.sum();
 
   (*m_periodic_output_file_ptr) << "ruby_cycles: " << g_eventQueue_ptr->getTime()-m_ruby_start << endl;
   (*m_periodic_output_file_ptr) << "total_misses: " << total_misses << " " << m_perProcTotalMisses << endl;
-  (*m_periodic_output_file_ptr) << "instruction_executed: " << instruction_executed << " " << perProcInstructionCount << endl;
   (*m_periodic_output_file_ptr) << "simics_cycles_executed: " << simics_cycles_executed << " " << perProcCycleCount << endl;
   (*m_periodic_output_file_ptr) << "transactions_started: " << transactions_started << " " << m_perProcStartTransaction << endl;
   (*m_periodic_output_file_ptr) << "transactions_ended: " << transactions_ended << " " << m_perProcEndTransaction << endl;
-  (*m_periodic_output_file_ptr) << "L1TBE_usage: " << m_L1tbeProfile << endl;
-  (*m_periodic_output_file_ptr) << "L2TBE_usage: " << m_L2tbeProfile << endl;
   (*m_periodic_output_file_ptr) << "mbytes_resident: " << process_memory_resident() << endl;
   (*m_periodic_output_file_ptr) << "mbytes_total: " << process_memory_total() << endl;
   if (process_memory_total() > 0) {
@@ -292,7 +264,7 @@ void Profiler::printStats(ostream& out, bool short_stats)
   out << "Virtual_time_in_seconds: " << seconds << endl;
   out << "Virtual_time_in_minutes: " << minutes << endl;
   out << "Virtual_time_in_hours:   " << hours << endl;
-  out << "Virtual_time_in_days:    " << hours << endl;
+  out << "Virtual_time_in_days:    " << days << endl;
   out << endl;
 
   out << "Ruby_current_time: " << g_eventQueue_ptr->getTime() << endl;
@@ -308,43 +280,26 @@ void Profiler::printStats(ostream& out, bool short_stats)
     }
     out << endl;
 
-    if(m_num_BA_broadcasts + m_num_BA_unicasts != 0){
-      out << endl;
-      out << "Broadcast_percent: " << (float)m_num_BA_broadcasts/(m_num_BA_broadcasts+m_num_BA_unicasts) << endl;
-    }
   }
 
-  Vector<integer_t> perProcInstructionCount;
   Vector<integer_t> perProcCycleCount;
-  Vector<double> perProcCPI;
-  Vector<double> perProcMissesPerInsn;
-  Vector<double> perProcInsnPerTrans;
   Vector<double> perProcCyclesPerTrans;
   Vector<double> perProcMissesPerTrans;
 
-  perProcInstructionCount.setSize(RubySystem::getNumberOfSequencers());
-  perProcCycleCount.setSize(RubySystem::getNumberOfSequencers());
-  perProcCPI.setSize(RubySystem::getNumberOfSequencers());
-  perProcMissesPerInsn.setSize(RubySystem::getNumberOfSequencers());
 
-  perProcInsnPerTrans.setSize(RubySystem::getNumberOfSequencers());
+  perProcCycleCount.setSize(RubySystem::getNumberOfSequencers());
   perProcCyclesPerTrans.setSize(RubySystem::getNumberOfSequencers());
   perProcMissesPerTrans.setSize(RubySystem::getNumberOfSequencers());
 
   for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
-    perProcInstructionCount[i] = g_system_ptr->getInstructionCount(i) - m_instructions_executed_at_start[i] + 1;
     perProcCycleCount[i] = g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
     // The +1 allows us to avoid division by zero
-    perProcCPI[i] = double(ruby_cycles)/perProcInstructionCount[i];
-    perProcMissesPerInsn[i] = 1000.0 * (double(m_perProcTotalMisses[i]) / double(perProcInstructionCount[i]));
 
     int trans = m_perProcEndTransaction[i];
     if (trans == 0) {
-      perProcInsnPerTrans[i] = 0;
       perProcCyclesPerTrans[i] = 0;
       perProcMissesPerTrans[i] = 0;
     } else {
-      perProcInsnPerTrans[i] = perProcInstructionCount[i] / double(trans);
       perProcCyclesPerTrans[i] = ruby_cycles / double(trans);
       perProcMissesPerTrans[i] = m_perProcTotalMisses[i] / double(trans);
     }
@@ -353,12 +308,10 @@ void Profiler::printStats(ostream& out, bool short_stats)
   integer_t total_misses = m_perProcTotalMisses.sum();
   integer_t user_misses = m_perProcUserMisses.sum();
   integer_t supervisor_misses = m_perProcSupervisorMisses.sum();
-  integer_t instruction_executed = perProcInstructionCount.sum();
   integer_t simics_cycles_executed = perProcCycleCount.sum();
   integer_t transactions_started = m_perProcStartTransaction.sum();
   integer_t transactions_ended = m_perProcEndTransaction.sum();
 
-  double instructions_per_transaction = (transactions_ended != 0) ? double(instruction_executed) / double(transactions_ended) : 0;
   double cycles_per_transaction = (transactions_ended != 0) ? (RubySystem::getNumberOfSequencers() * double(ruby_cycles)) / double(transactions_ended) : 0;
   double misses_per_transaction = (transactions_ended != 0) ? double(total_misses) / double(transactions_ended) : 0;
 
@@ -367,22 +320,14 @@ void Profiler::printStats(ostream& out, bool short_stats)
   out << "user_misses: " << user_misses << " " << m_perProcUserMisses << endl;
   out << "supervisor_misses: " << supervisor_misses << " " << m_perProcSupervisorMisses << endl;
   out << endl;
-  out << "instruction_executed: " << instruction_executed << " " << perProcInstructionCount << endl;
   out << "ruby_cycles_executed: " << simics_cycles_executed << " " << perProcCycleCount << endl;
-  out << "cycles_per_instruction: " << (RubySystem::getNumberOfSequencers()*double(ruby_cycles))/double(instruction_executed) << " " << perProcCPI << endl;
-  out << "misses_per_thousand_instructions: " << 1000.0 * (double(total_misses) / double(instruction_executed)) << " " << perProcMissesPerInsn << endl;
   out << endl;
   out << "transactions_started: " << transactions_started << " " << m_perProcStartTransaction << endl;
   out << "transactions_ended: " << transactions_ended << " " << m_perProcEndTransaction << endl;
-  out << "instructions_per_transaction: " << instructions_per_transaction << " " << perProcInsnPerTrans << endl;
   out << "cycles_per_transaction: " << cycles_per_transaction  << " " << perProcCyclesPerTrans << endl;
   out << "misses_per_transaction: " << misses_per_transaction << " " << perProcMissesPerTrans << endl;
 
   out << endl;
-
-  //  m_L1D_cache_profiler_ptr->printStats(out);
-  //  m_L1I_cache_profiler_ptr->printStats(out);
-  //  m_L2_cache_profiler_ptr->printStats(out);
 
   out << endl;
 
@@ -409,7 +354,7 @@ void Profiler::printStats(ostream& out, bool short_stats)
     if (m_memReq || m_memRefresh) {    // if there's a memory controller at all
       long long int total_stalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
       double stallsPerReq = total_stalls * 1.0 / m_memReq;
-      out << "Memory control:" << endl;
+      out << "Memory control " << (*it) << ":" << endl;
       out << "  memory_total_requests: " << m_memReq << endl;  // does not include refreshes
       out << "  memory_reads: " << m_memRead << endl;
       out << "  memory_writes: " << m_memWrite << endl;
@@ -463,12 +408,7 @@ void Profiler::printStats(ostream& out, bool short_stats)
     out << "Busy Bank Count:" << m_busyBankCount << endl;
     out << endl;
 
-    out << "L1TBE_usage: " << m_L1tbeProfile << endl;
-    out << "L2TBE_usage: " << m_L2tbeProfile << endl;
-    out << "StopTable_usage: " << m_stopTableProfile << endl;
     out << "sequencer_requests_outstanding: " << m_sequencer_requests << endl;
-    out << "store_buffer_size: " << m_store_buffer_size << endl;
-    out << "unique_blocks_in_store_buffer: " << m_store_buffer_blocks << endl;
     out << endl;
   }
 
@@ -486,7 +426,6 @@ void Profiler::printStats(ostream& out, bool short_stats)
         out << "miss_latency_" << GenericMachineType(i) << ": " << m_machLatencyHistograms[i] << endl;
       }
     }
-    out << "miss_latency_L2Miss: " << m_L2MissLatencyHistogram << endl;
 
     out << endl;
 
@@ -504,12 +443,6 @@ void Profiler::printStats(ostream& out, bool short_stats)
       }
     }
     out << "prefetch_latency_L2Miss:" << m_SWPrefetchL2MissLatencyHistogram << endl;
-
-    out << "multicast_retries: " << m_multicast_retry_histogram << endl;
-    out << "gets_mask_prediction_count: " << m_gets_mask_prediction << endl;
-    out << "getx_mask_prediction_count: " << m_getx_mask_prediction << endl;
-    out << "explicit_training_mask: " << m_explicit_training_mask << endl;
-    out << endl;
 
     if (m_all_sharing_histogram.size() > 0) {
       out << "all_sharing: " << m_all_sharing_histogram << endl;
@@ -529,17 +462,8 @@ void Profiler::printStats(ostream& out, bool short_stats)
       out << endl;
     }
 
-    if (m_conflicting_histogram.size() > 0) {
-      out << "conflicting_histogram: " << m_conflicting_histogram << endl;
-      out << "conflicting_histogram_percent: "; m_conflicting_histogram.printPercent(out); out << endl;
-      out << endl;
-    }
-
     if (m_outstanding_requests.size() > 0) {
       out << "outstanding_requests: "; m_outstanding_requests.printPercent(out); out << endl;
-      if (m_outstanding_persistent_requests.size() > 0) {
-        out << "outstanding_persistent_requests: "; m_outstanding_persistent_requests.printPercent(out); out << endl;
-      }
       out << endl;
     }
   }
@@ -610,19 +534,13 @@ void Profiler::printResourceUsage(ostream& out) const
 
 void Profiler::clearStats()
 {
-  m_num_BA_unicasts = 0;
-  m_num_BA_broadcasts = 0;
-
   m_ruby_start = g_eventQueue_ptr->getTime();
 
-  m_instructions_executed_at_start.setSize(RubySystem::getNumberOfSequencers());
   m_cycles_executed_at_start.setSize(RubySystem::getNumberOfSequencers());
   for (int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
     if (g_system_ptr == NULL) {
-      m_instructions_executed_at_start[i] = 0;
       m_cycles_executed_at_start[i] = 0;
     } else {
-      m_instructions_executed_at_start[i] = g_system_ptr->getInstructionCount(i);
       m_cycles_executed_at_start[i] = g_system_ptr->getCycleCount(i);
     }
   }
@@ -657,11 +575,7 @@ void Profiler::clearStats()
     m_delayedCyclesVCHistograms[i].clear();
   }
 
-  m_gets_mask_prediction.clear();
-  m_getx_mask_prediction.clear();
-  m_explicit_training_mask.clear();
-
-  m_missLatencyHistograms.setSize(CacheRequestType_NUM);
+  m_missLatencyHistograms.setSize(RubyRequestType_NUM);
   for(int i=0; i<m_missLatencyHistograms.size(); i++) {
     m_missLatencyHistograms[i].clear(200);
   }
@@ -670,7 +584,6 @@ void Profiler::clearStats()
     m_machLatencyHistograms[i].clear(200);
   }
   m_allMissLatencyHistogram.clear(200);
-  m_L2MissLatencyHistogram.clear(200);
 
   m_SWPrefetchLatencyHistograms.setSize(CacheRequestType_NUM);
   for(int i=0; i<m_SWPrefetchLatencyHistograms.size(); i++) {
@@ -681,27 +594,13 @@ void Profiler::clearStats()
     m_SWPrefetchMachLatencyHistograms[i].clear(200);
   }
   m_allSWPrefetchLatencyHistogram.clear(200);
-  m_SWPrefetchL2MissLatencyHistogram.clear(200);
-
-  m_multicast_retry_histogram.clear();
-
-  m_L1tbeProfile.clear();
-  m_L2tbeProfile.clear();
-  m_stopTableProfile.clear();
-  m_filter_action_histogram.clear();
 
   m_sequencer_requests.clear();
-  m_store_buffer_size.clear();
-  m_store_buffer_blocks.clear();
   m_read_sharing_histogram.clear();
   m_write_sharing_histogram.clear();
   m_all_sharing_histogram.clear();
   m_cache_to_cache = 0;
   m_memory_to_cache = 0;
-
-  m_predictions = 0;
-  m_predictionOpportunities = 0;
-  m_goodPredictions = 0;
 
   // clear HashMaps
   m_requestProfileMap_ptr->clear();
@@ -709,39 +608,9 @@ void Profiler::clearStats()
   // count requests profiled
   m_requests = 0;
 
-  // Conflicting requests
-  m_conflicting_map_ptr->clear();
-  m_conflicting_histogram.clear();
-
   m_outstanding_requests.clear();
   m_outstanding_persistent_requests.clear();
 
-  m_L1D_cache_profiler_ptr->clearStats();
-  m_L1I_cache_profiler_ptr->clearStats();
-  m_L2_cache_profiler_ptr->clearStats();
-
-  // for MemoryControl:
-/*
-  m_memReq = 0;
-  m_memBankBusy = 0;
-  m_memBusBusy = 0;
-  m_memTfawBusy = 0;
-  m_memReadWriteBusy = 0;
-  m_memDataBusBusy = 0;
-  m_memRefresh = 0;
-  m_memRead = 0;
-  m_memWrite = 0;
-  m_memWaitCycles = 0;
-  m_memInputQ = 0;
-  m_memBankQ = 0;
-  m_memArbWait = 0;
-  m_memRandBusy = 0;
-  m_memNotOld = 0;
-
-  for (int bank=0; bank < m_memBankCount.size(); bank++) {
-    m_memBankCount[bank] = 0;
-  }
-*/
 //added by SS
   vector<string>::iterator it;
 
@@ -771,19 +640,6 @@ void Profiler::clearStats()
 
   // update the start time
   m_ruby_start = g_eventQueue_ptr->getTime();
-}
-
-void Profiler::profileConflictingRequests(const Address& addr)
-{
-  assert(addr == line_address(addr));
-  Time last_time = m_ruby_start;
-  if (m_conflicting_map_ptr->exist(addr)) {
-    last_time = m_conflicting_map_ptr->lookup(addr);
-  }
-  Time current_time = g_eventQueue_ptr->getTime();
-  assert (current_time - last_time > 0);
-  m_conflicting_histogram.add(current_time - last_time);
-  m_conflicting_map_ptr->add(addr, current_time);
 }
 
 void Profiler::addAddressTraceSample(const CacheMsg& msg, NodeID id)
@@ -843,27 +699,6 @@ void Profiler::profileRequest(const string& requestStr)
   }
 }
 
-void Profiler::recordPrediction(bool wasGood, bool wasPredicted)
-{
-  m_predictionOpportunities++;
-  if(wasPredicted){
-    m_predictions++;
-    if(wasGood){
-      m_goodPredictions++;
-    }
-  }
-}
-
-void Profiler::profileFilterAction(int action)
-{
-  m_filter_action_histogram.add(action);
-}
-
-void Profiler::profileMulticastRetry(const Address& addr, int count)
-{
-  m_multicast_retry_histogram.add(count);
-}
-
 void Profiler::startTransaction(int cpu)
 {
   m_perProcStartTransaction[cpu]++;
@@ -894,12 +729,6 @@ void Profiler::missLatency(Time t, RubyRequestType type)
 {
   m_allMissLatencyHistogram.add(t);
   m_missLatencyHistograms[type].add(t);
-  /*
-  m_machLatencyHistograms[respondingMach].add(t);
-  if(respondingMach == GenericMachineType_Directory || respondingMach == GenericMachineType_NUM) {
-    m_L2MissLatencyHistogram.add(t);
-  }
-  */
 }
 
 // non-zero cycle prefetch request
@@ -968,41 +797,6 @@ static double process_memory_resident()
   return double(res_size_in_pages)*MULTIPLIER; // size in megabytes
 }
 
-void Profiler::profileGetXMaskPrediction(const Set& pred_set)
-{
-  m_getx_mask_prediction.add(pred_set.count());
-}
-
-void Profiler::profileGetSMaskPrediction(const Set& pred_set)
-{
-  m_gets_mask_prediction.add(pred_set.count());
-}
-
-void Profiler::profileTrainingMask(const Set& pred_set)
-{
-  m_explicit_training_mask.add(pred_set.count());
-}
-
-int64 Profiler::getTotalInstructionsExecuted() const
-{
-  int64 sum = 1;     // Starting at 1 allows us to avoid division by zero
-  for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
-    sum += (g_system_ptr->getInstructionCount(i) - m_instructions_executed_at_start[i]);
-  }
-  return sum;
-}
-
-int64 Profiler::getTotalTransactionsExecuted() const
-{
-  int64 sum = m_perProcEndTransaction.sum();
-  if (sum > 0) {
-    return sum;
-  } else {
-    return 1;  // Avoid division by zero errors
-  }
-}
-
-
 void Profiler::rubyWatch(int id){
     //int rn_g1 = 0;//SIMICS_get_register_number(id, "g1");
   uint64 tr = 0;//SIMICS_read_register(id, rn_g1);
@@ -1027,6 +821,10 @@ bool Profiler::watchAddress(Address addr){
       return true;
     else
       return false;
+}
+
+int64 Profiler::getTotalTransactionsExecuted() const {
+  return m_perProcEndTransaction.sum();
 }
 
 // For MemoryControl:

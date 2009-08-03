@@ -127,6 +127,7 @@ public:
   void print(ostream& out) const;
   void printData(ostream& out) const;
 
+  void clearStats() const;
   void printStats(ostream& out) const;
 
 private:
@@ -559,6 +560,11 @@ inline
 void CacheMemory::printData(ostream& out) const
 {
   out << "printData() not supported" << endl;
+}
+
+inline void CacheMemory::clearStats() const
+{
+  m_profiler_ptr->clearStats();
 }
 
 inline
