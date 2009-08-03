@@ -22,7 +22,7 @@ Directory_Controller config: DirectoryController_0
   directory_latency: 6
   directory_name: DirectoryMemory_0
   memory_controller_name: MemoryControl_0
-  memory_latency: 158
+  memory_latency: 1
   number_of_TBEs: 256
   recycle_latency: 10
   to_mem_ctrl_latency: 1
@@ -376,46 +376,42 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jul/19/2009 15:34:56
+Real time: Jul/29/2009 15:40:36
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 2553
-Elapsed_time_in_minutes: 42.55
-Elapsed_time_in_hours: 0.709167
-Elapsed_time_in_days: 0.0295486
+Elapsed_time_in_seconds: 1279
+Elapsed_time_in_minutes: 21.3167
+Elapsed_time_in_hours: 0.355278
+Elapsed_time_in_days: 0.0148032
 
-Virtual_time_in_seconds: 2552.07
-Virtual_time_in_minutes: 42.5345
-Virtual_time_in_hours:   0.708908
-Virtual_time_in_days:    0.708908
+Virtual_time_in_seconds: 1279.21
+Virtual_time_in_minutes: 21.3202
+Virtual_time_in_hours:   0.355336
+Virtual_time_in_days:    0.0148057
 
 Ruby_current_time: 31814465
 Ruby_start_time: 1
 Ruby_cycles: 31814464
 
-mbytes_resident: 150.715
-mbytes_total: 1502.59
-resident_ratio: 0.100309
+mbytes_resident: 150.707
+mbytes_total: 1502.61
+resident_ratio: 0.100302
 
 Total_misses: 0
 total_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 user_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 supervisor_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 
-instruction_executed: 8 [ 1 1 1 1 1 1 1 1 ]
 ruby_cycles_executed: 254515720 [ 31814465 31814465 31814465 31814465 31814465 31814465 31814465 31814465 ]
-cycles_per_instruction: 3.18145e+07 [ 3.18145e+07 3.18145e+07 3.18145e+07 3.18145e+07 3.18145e+07 3.18145e+07 3.18145e+07 3.18145e+07 ]
-misses_per_thousand_instructions: 0 [ 0 0 0 0 0 0 0 0 ]
 
 transactions_started: 0 [ 0 0 0 0 0 0 0 0 ]
 transactions_ended: 0 [ 0 0 0 0 0 0 0 0 ]
-instructions_per_transaction: 0 [ 0 0 0 0 0 0 0 0 ]
 cycles_per_transaction: 0 [ 0 0 0 0 0 0 0 0 ]
 misses_per_transaction: 0 [ 0 0 0 0 0 0 0 0 ]
 
 
-Memory control:
+Memory control MemoryControl_0:
   memory_total_requests: 1388468
   memory_reads: 694293
   memory_writes: 694043
@@ -443,29 +439,18 @@ DMA-0:0
 
 Busy Bank Count:0
 
-L1TBE_usage: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-L2TBE_usage: [binsize: 4 max: 134 count: 2136875 average: 36.3375 | standard deviation: 28.2827 | 23454 78361 154838 242576 298777 279946 206526 134119 41748 9990 11123 15179 20545 27694 35924 44642 53192 60320 64615 65514 62260 55913 47160 36948 26700 17667 10728 5693 2725 1295 483 159 53 8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-StopTable_usage: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 sequencer_requests_outstanding: [binsize: 1 max: 16 count: 748260 average: 11.8029 | standard deviation: 3.40671 | 0 1091 2889 5609 9615 15772 23675 33311 44184 55041 64248 70323 72503 72248 68934 64870 143947 ]
-store_buffer_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-unique_blocks_in_store_buffer: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
 miss_latency: [binsize: 128 max: 20559 count: 748171 average: 3866.31 | standard deviation: 2352.95 | 21417 1969 3723 6729 8868 8455 7676 8627 10203 11965 13796 13743 11900 13009 16352 17532 16234 15941 17304 16977 16916 18538 19194 16531 16082 17521 18191 15886 15702 16749 15616 14095 14916 15648 13793 11856 12863 13378 11663 10762 11443 11095 9691 9387 10128 9009 7817 8024 8496 7458 6302 6700 6887 5633 5066 5555 5357 4326 4220 4651 4016 3318 3403 3600 3054 2613 2796 2637 2141 2011 2128 1973 1548 1420 1531 1276 1047 1080 1093 914 741 749 732 584 493 515 525 388 363 345 325 251 268 277 202 190 183 189 147 117 143 119 90 93 91 82 60 58 58 49 51 48 39 28 34 36 30 17 16 21 24 23 12 17 16 9 12 16 12 13 7 4 7 8 7 8 5 7 5 8 4 4 6 5 3 3 2 1 4 1 2 1 0 0 0 1 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_2: [binsize: 128 max: 20559 count: 486192 average: 3864.95 | standard deviation: 2353.73 | 13998 1281 2484 4424 5714 5472 5029 5648 6631 7775 8926 8800 7735 8448 10496 11466 10602 10387 11224 11076 10939 12065 12497 10830 10391 11396 11931 10259 10262 10939 10169 9130 9608 10113 8955 7714 8408 8711 7593 6973 7459 7162 6232 6134 6554 5848 5110 5134 5495 4860 4083 4319 4432 3674 3259 3647 3406 2774 2755 3099 2579 2160 2269 2367 1984 1705 1833 1725 1372 1293 1349 1289 1004 902 970 862 693 720 732 613 484 488 462 374 341 336 349 246 226 213 205 156 178 186 130 122 119 126 100 72 94 79 57 64 63 57 37 38 35 33 35 27 23 19 22 28 17 7 10 14 16 16 10 7 11 6 8 9 3 6 5 4 4 4 4 4 2 6 3 5 4 3 2 5 3 3 1 1 2 1 2 1 0 0 0 0 1 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 miss_latency_3: [binsize: 128 max: 19863 count: 261979 average: 3868.82 | standard deviation: 2351.5 | 7419 688 1239 2305 3154 2983 2647 2979 3572 4190 4870 4943 4165 4561 5856 6066 5632 5554 6080 5901 5977 6473 6697 5701 5691 6125 6260 5627 5440 5810 5447 4965 5308 5535 4838 4142 4455 4667 4070 3789 3984 3933 3459 3253 3574 3161 2707 2890 3001 2598 2219 2381 2455 1959 1807 1908 1951 1552 1465 1552 1437 1158 1134 1233 1070 908 963 912 769 718 779 684 544 518 561 414 354 360 361 301 257 261 270 210 152 179 176 142 137 132 120 95 90 91 72 68 64 63 47 45 49 40 33 29 28 25 23 20 23 16 16 21 16 9 12 8 13 10 6 7 8 7 2 10 5 3 4 7 9 7 2 0 3 4 3 4 3 1 2 3 0 1 4 0 0 0 1 0 2 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_L2Miss: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
 prefetch_latency: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 prefetch_latency_L2Miss:[binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-multicast_retries: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-gets_mask_prediction_count: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-getx_mask_prediction_count: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-explicit_training_mask: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
 Request vs. RubySystem State Profile
 --------------------------------
 
@@ -486,9 +471,9 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 18 count: 1496498 average: 0.0019285 
 Resource Usage
 --------------
 page_size: 4096
-user_time: 2550
-system_time: 1
-page_reclaims: 39807
+user_time: 1279
+system_time: 0
+page_reclaims: 39805
 page_faults: 0
 swaps: 0
 block_inputs: 0
@@ -650,7 +635,7 @@ l1u_0 cache stats:
   l1u_0_total_prefetches: 0
   l1u_0_total_sw_prefetches: 0
   l1u_0_total_hw_prefetches: 0
-  l1u_0_misses_per_transaction: 93523
+  l1u_0_misses_per_transaction: inf
 
   l1u_0_request_type_LD:   64.8311%
   l1u_0_request_type_ST:   35.1689%
@@ -664,7 +649,7 @@ l1u_1 cache stats:
   l1u_1_total_prefetches: 0
   l1u_1_total_sw_prefetches: 0
   l1u_1_total_hw_prefetches: 0
-  l1u_1_misses_per_transaction: 93506
+  l1u_1_misses_per_transaction: inf
 
   l1u_1_request_type_LD:   64.8162%
   l1u_1_request_type_ST:   35.1838%
@@ -678,7 +663,7 @@ l1u_2 cache stats:
   l1u_2_total_prefetches: 0
   l1u_2_total_sw_prefetches: 0
   l1u_2_total_hw_prefetches: 0
-  l1u_2_misses_per_transaction: 93510
+  l1u_2_misses_per_transaction: inf
 
   l1u_2_request_type_LD:   64.931%
   l1u_2_request_type_ST:   35.069%
@@ -692,7 +677,7 @@ l1u_3 cache stats:
   l1u_3_total_prefetches: 0
   l1u_3_total_sw_prefetches: 0
   l1u_3_total_hw_prefetches: 0
-  l1u_3_misses_per_transaction: 93558
+  l1u_3_misses_per_transaction: inf
 
   l1u_3_request_type_LD:   64.9693%
   l1u_3_request_type_ST:   35.0307%
@@ -706,7 +691,7 @@ l1u_4 cache stats:
   l1u_4_total_prefetches: 0
   l1u_4_total_sw_prefetches: 0
   l1u_4_total_hw_prefetches: 0
-  l1u_4_misses_per_transaction: 93567
+  l1u_4_misses_per_transaction: inf
 
   l1u_4_request_type_LD:   65.2474%
   l1u_4_request_type_ST:   34.7526%
@@ -720,7 +705,7 @@ l1u_5 cache stats:
   l1u_5_total_prefetches: 0
   l1u_5_total_sw_prefetches: 0
   l1u_5_total_hw_prefetches: 0
-  l1u_5_misses_per_transaction: 93561
+  l1u_5_misses_per_transaction: inf
 
   l1u_5_request_type_LD:   65.0004%
   l1u_5_request_type_ST:   34.9996%
@@ -734,7 +719,7 @@ l1u_6 cache stats:
   l1u_6_total_prefetches: 0
   l1u_6_total_sw_prefetches: 0
   l1u_6_total_hw_prefetches: 0
-  l1u_6_misses_per_transaction: 93502
+  l1u_6_misses_per_transaction: inf
 
   l1u_6_request_type_LD:   64.9569%
   l1u_6_request_type_ST:   35.0431%
@@ -748,7 +733,7 @@ l1u_7 cache stats:
   l1u_7_total_prefetches: 0
   l1u_7_total_sw_prefetches: 0
   l1u_7_total_hw_prefetches: 0
-  l1u_7_misses_per_transaction: 93509
+  l1u_7_misses_per_transaction: inf
 
   l1u_7_request_type_LD:   65.1189%
   l1u_7_request_type_ST:   34.8811%

@@ -51,6 +51,7 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   case RubyRequestType_Locked_Write:
   case RubyRequestType_RMW_Read:
   case RubyRequestType_RMW_Write:
+  case RubyRequestType_NUM:
     assert(0);
   }
 

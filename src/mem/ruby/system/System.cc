@@ -347,15 +347,16 @@ void RubySystem::printStats(ostream& out)
 
 void RubySystem::clearStats() const
 {
-  /*
   m_profiler_ptr->clearStats();
-  for (int i=0; i<m_rubyRequestQueues.size(); i++)
-    for (int j=0;j<m_rubyRequestQueues[i].size(); j++)
-      m_rubyRequestQueues[i][j]->clearStats();
   m_network_ptr->clearStats();
-  for (int i=0; i < MachineType_base_level(MachineType_NUM); i++)
-    m_controllers[i][0]->clearStats();
-  */
+  for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
+       it != m_caches.end(); it++) {
+    (*it).second->clearStats();
+  }
+  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
+       it != m_controllers.end(); it++) {
+    (*it).second->clearStats();
+  }
 }
 
 void RubySystem::recordCacheContents(CacheRecorder& tr) const
