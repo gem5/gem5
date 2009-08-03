@@ -107,6 +107,9 @@ IdeController::IdeController(Params *p)
     }
     primary.select(false);
     secondary.select(false);
+
+    ioEnabled = (config.command & htole(PCI_CMD_IOSE));
+    bmEnabled = (config.command & htole(PCI_CMD_BME));
 }
 
 bool
