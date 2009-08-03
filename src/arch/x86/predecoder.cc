@@ -77,6 +77,7 @@ namespace X86ISA
         immediateCollected = 0;
         emi.immediate = 0;
         emi.displacement = 0;
+        emi.dispSize = 0;
 
         emi.modRM = 0;
         emi.sib = 0;
@@ -383,6 +384,8 @@ namespace X86ISA
                 emiIsReady = true;
                 nextState = ResetState;
             }
+
+            emi.dispSize = displacementSize;
         }
         else
             nextState = DisplacementState;

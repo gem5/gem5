@@ -82,7 +82,8 @@ namespace __hash_namespace {
                     ((uint64_t)emi.opcode.op)) ^
                     emi.immediate ^ emi.displacement ^
                     emi.mode ^
-                    emi.opSize ^ emi.addrSize ^ emi.stackSize;
+                    emi.opSize ^ emi.addrSize ^
+                    emi.stackSize ^ emi.dispSize;
         };
     };
 }

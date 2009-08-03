@@ -175,6 +175,8 @@ namespace X86ISA
         uint8_t addrSize;
         //The effective stack size.
         uint8_t stackSize;
+        //The size of the displacement
+        uint8_t dispSize;
 
         //Mode information
         OperatingMode mode;
@@ -187,12 +189,13 @@ namespace X86ISA
                      "op = {\n\t\tnum = %d,\n\t\top = %#x,\n\t\t"
                            "prefixA = %#x,\n\t\tprefixB = %#x\n\t},\n\t"
                      "modRM = %#x,\n\tsib = %#x,\n\t"
-                     "immediate = %#x,\n\tdisplacement = %#x\n}\n",
+                     "immediate = %#x,\n\tdisplacement = %#x\n\t"
+                     "dispSize = %d}\n",
                      (uint8_t)emi.legacy, (uint8_t)emi.rex,
                      emi.opcode.num, (uint8_t)emi.opcode.op,
                      emi.opcode.prefixA, emi.opcode.prefixB,
                      (uint8_t)emi.modRM, (uint8_t)emi.sib,
-                     emi.immediate, emi.displacement);
+                     emi.immediate, emi.displacement, emi.dispSize);
         return os;
     }
 
@@ -226,6 +229,8 @@ namespace X86ISA
         if(emi1.addrSize != emi2.addrSize)
             return false;
         if(emi1.stackSize != emi2.stackSize)
+            return false;
+        if(emi1.dispSize != emi2.dispSize)
             return false;
         return true;
     }
