@@ -86,7 +86,8 @@ class SouthBridge(SimObject):
     ide.BAR3Size = '3B'
     ide.BAR3LegacyIO = True
     ide.BAR4 = 1
-    ide.Command = 1
+    ide.Command = 0
+    ide.ProgIF = 0x80
     ide.InterruptLine = 14
     ide.InterruptPin = 1
 
