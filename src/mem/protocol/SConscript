@@ -61,7 +61,7 @@ def slicc_generator(target, source, env, for_signature):
     if not isdir(hdir):
         os.mkdir(hdir)
 
-    do_html = "no_html"
+    do_html = "html"
     cmdline = [ slicc_bin, pdir, hdir, protocol, do_html ]
     cmdline += [ str(s) for s in source[2:] ]
     cmdline = ' '.join(cmdline)
