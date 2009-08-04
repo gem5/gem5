@@ -32,7 +32,11 @@
  *
  */
 
-machine(L1Cache, "Directory protocol") {
+machine(L1Cache, "Directory protocol") 
+ : int request_latency, 
+   int l2_select_low_bit, 
+   int l2_select_high_bit
+{
 
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
@@ -125,7 +129,7 @@ machine(L1Cache, "Directory protocol") {
   external_type(CacheMemory) {
     bool cacheAvail(Address);
     Address cacheProbe(Address);
-    void allocate(Address);
+    void allocate(Address, Entry);
     void deallocate(Address);
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
@@ -141,11 +145,11 @@ machine(L1Cache, "Directory protocol") {
 
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
-  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
-  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
-  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
+  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
+  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
   TimerTable useTimerTable;
 
   Entry getCacheEntry(Address addr), return_by_ref="yes" {
@@ -305,7 +309,7 @@ machine(L1Cache, "Directory protocol") {
         assert(in_msg.Destination.isElement(machineID));
         DEBUG_EXPR("MRM_DEBUG: L1 received");
         DEBUG_EXPR(in_msg.Type);
-        if (in_msg.Type == CoherenceRequestType:GETX) {
+if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_READ || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID && in_msg.RequestorMachine == MachineType:L1Cache) {
             trigger(Event:Own_GETX, in_msg.Address);
           } else {
@@ -357,40 +361,40 @@ machine(L1Cache, "Directory protocol") {
           // ** INSTRUCTION ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.Address);
+            trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 asks the L2 for it.
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1IcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 so let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         } else {
           // *** DATA ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, put the request on the queue to the shared L2
-            trigger(Event:L1_Replacement, in_msg.Address);
+            trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 ask the L2 for it
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1DcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1 let's see if the L2 has it
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room in the L1
-              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         }
@@ -403,11 +407,12 @@ machine(L1Cache, "Directory protocol") {
 
   action(a_issueGETS, "a", desc="Issue GETS") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestNetwork_out, RequestMsg, latency= request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						  l2_select_low_bit, l2_select_high_bit));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
@@ -417,11 +422,12 @@ machine(L1Cache, "Directory protocol") {
 
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						  l2_select_low_bit, l2_select_high_bit));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
@@ -430,34 +436,37 @@ machine(L1Cache, "Directory protocol") {
   }
 
   action(d_issuePUTX, "d", desc="Issue PUTX") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
-    enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
 
   action(dd_issuePUTO, "\d", desc="Issue PUTO") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
-    enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
 
   action(dd_issuePUTS, "\ds", desc="Issue PUTS") {
-    // enqueue(writebackNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
-    enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+    // enqueue(writebackNetwork_out, RequestMsg, latency=request_latency) {
+    enqueue(requestNetwork_out, RequestMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTS;
       out_msg.Requestor := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -465,11 +474,12 @@ machine(L1Cache, "Directory protocol") {
   action(e_sendData, "e", desc="Send data from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(in_msg.Address, machineID));
+          out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						    l2_select_low_bit, l2_select_high_bit));
           out_msg.DataBlk := getCacheEntry(address).DataBlk;
           // out_msg.Dirty := getCacheEntry(address).Dirty;
           out_msg.Dirty := false;
@@ -480,7 +490,7 @@ machine(L1Cache, "Directory protocol") {
         DEBUG_EXPR(in_msg.Address);
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -497,11 +507,12 @@ machine(L1Cache, "Directory protocol") {
   }
 
   action(e_sendDataToL2, "ee", desc="Send data from cache to requestor") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.DataBlk := getCacheEntry(address).DataBlk;
       out_msg.Dirty := getCacheEntry(address).Dirty;
       out_msg.Acks := 0; // irrelevant
@@ -513,12 +524,13 @@ machine(L1Cache, "Directory protocol") {
   action(ee_sendDataExclusive, "\e", desc="Send data from cache to requestor, don't keep a shared copy") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L2Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
           out_msg.SenderMachine := MachineType:L1Cache;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(in_msg.Address, machineID));
+          out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						    l2_select_low_bit, l2_select_high_bit));
           out_msg.DataBlk := getCacheEntry(address).DataBlk;
           out_msg.Dirty := getCacheEntry(address).Dirty;
           out_msg.Acks := in_msg.Acks;
@@ -527,7 +539,7 @@ machine(L1Cache, "Directory protocol") {
         DEBUG_EXPR("Sending exclusive data to L2");
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -546,7 +558,7 @@ machine(L1Cache, "Directory protocol") {
   action(f_sendAck, "f", desc="Send ack from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -557,12 +569,13 @@ machine(L1Cache, "Directory protocol") {
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
           out_msg.SenderMachine := MachineType:L1Cache;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(in_msg.Address, machineID));
+          out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						    l2_select_low_bit, l2_select_high_bit));
           out_msg.Acks := 0 - 1; // -1
           out_msg.MessageSize := MessageSizeType:Response_Control;
         }
@@ -571,21 +584,23 @@ machine(L1Cache, "Directory protocol") {
   }
 
   action(g_sendUnblock, "g", desc="Send unblock to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
 
   action(gg_sendUnblockExclusive, "\g", desc="Send unblock exclusive to memory") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -627,7 +642,6 @@ machine(L1Cache, "Directory protocol") {
   action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
     peek(responseToL1Cache_in, ResponseMsg) {
       DEBUG_EXPR("MRM_DEBUG: L1 decrementNumberOfMessages");
-      DEBUG_EXPR(id);
       DEBUG_EXPR(in_msg.Acks);
       TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - in_msg.Acks;
     }
@@ -660,7 +674,7 @@ machine(L1Cache, "Directory protocol") {
   action(q_sendDataFromTBEToCache, "q", desc="Send data from TBE to cache") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
@@ -673,11 +687,12 @@ machine(L1Cache, "Directory protocol") {
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+          out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						    l2_select_low_bit, l2_select_high_bit));
           out_msg.DataBlk := TBEs[address].DataBlk;
           // out_msg.Dirty := TBEs[address].Dirty;
           out_msg.Dirty := false;
@@ -691,7 +706,7 @@ machine(L1Cache, "Directory protocol") {
   action(q_sendExclusiveDataFromTBEToCache, "qq", desc="Send data from TBE to cache") {
     peek(requestNetwork_in, RequestMsg) {
       if (in_msg.RequestorMachine == MachineType:L1Cache) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
@@ -703,11 +718,12 @@ machine(L1Cache, "Directory protocol") {
         }
       }
       else {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+          out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						    l2_select_low_bit, l2_select_high_bit));
           out_msg.DataBlk := TBEs[address].DataBlk;
           out_msg.Dirty := TBEs[address].Dirty;
           out_msg.Acks := in_msg.Acks;
@@ -720,11 +736,12 @@ machine(L1Cache, "Directory protocol") {
 
   // L2 will usually request data for a writeback
   action(qq_sendWBDataFromTBEToL2, "\q", desc="Send data from TBE to L2") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_REQUEST_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency=request_latency) {
       out_msg.Address := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L1Cache;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
+						l2_select_low_bit, l2_select_high_bit));
       out_msg.Dirty := TBEs[address].Dirty;
       if (TBEs[address].Dirty) {
         out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;
@@ -770,13 +787,13 @@ machine(L1Cache, "Directory protocol") {
 
   action(ii_allocateL1DCacheBlock, "\i", desc="Set L1 D-cache tag equal to tag of block B.") {
     if (L1DcacheMemory.isTagPresent(address) == false) {
-      L1DcacheMemory.allocate(address);
+      L1DcacheMemory.allocate(address, new Entry);
     }
   }
 
   action(jj_allocateL1ICacheBlock, "\j", desc="Set L1 I-cache tag equal to tag of block B.") {
     if (L1IcacheMemory.isTagPresent(address) == false) {
-      L1IcacheMemory.allocate(address);
+      L1IcacheMemory.allocate(address, new Entry);
     }
   }
 
@@ -784,7 +801,7 @@ machine(L1Cache, "Directory protocol") {
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(mandatoryQueue_in, CacheMsg) {
-      profile_miss(in_msg, id);
+      //      profile_miss(in_msg);
     }
   }
 

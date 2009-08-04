@@ -37,6 +37,7 @@
  */
 
 #include "mem/slicc/ast/FuncDeclAST.hh"
+#include "mem/slicc/ast/FormalParamAST.hh"
 #include "mem/slicc/symbols/SymbolTable.hh"
 #include "mem/slicc/main.hh"
 

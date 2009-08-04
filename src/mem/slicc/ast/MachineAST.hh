@@ -45,13 +45,14 @@
 #include "mem/slicc/ast/TypeFieldAST.hh"
 #include "mem/slicc/symbols/StateMachine.hh"
 
+class FormalParamAST;
+
 class MachineAST : public DeclAST {
 public:
   // Constructors
   MachineAST(string* ident_ptr,
              PairListAST* pairs_ptr,
-             Vector<TypeFieldAST*>* config_params_ptr,
-             std::vector<std::string*>* latency_vector,
+             Vector<FormalParamAST*>* config_parameters,
              DeclListAST* decl_list_ptr);
 
   // Destructor
@@ -69,10 +70,9 @@ private:
   MachineAST& operator=(const MachineAST& obj);
 
   // Data Members (m_ prefix)
-  std::vector<std::string*>* m_latency_vector;
+  Vector<FormalParamAST*>* m_config_parameters;
   string* m_ident_ptr;
   DeclListAST* m_decl_list_ptr;
-  Vector<TypeFieldAST*>* m_config_params_ptr;
   PairListAST* m_pairs_ptr;
 };
 

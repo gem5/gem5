@@ -107,7 +107,6 @@ structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
   Address LineAddress,       desc="Line address for this request";
   NetDest Destination,       desc="Destination";
   DataBlock DataBlk,         desc="DataBlk attached to this request";
-  int Offset,                desc="The offset into the datablock";
   int Len,                   desc="The length of the request";
   MessageSizeType MessageSize, desc="size category of the message";
 }

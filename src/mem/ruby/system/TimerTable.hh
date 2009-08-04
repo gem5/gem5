@@ -43,13 +43,12 @@
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
 class Consumer;
-class Chip;
 
 class TimerTable {
 public:
 
   // Constructors
-  TimerTable(Chip* chip_ptr);
+  TimerTable();
 
   // Destructor
   //~TimerTable();
@@ -77,7 +76,6 @@ private:
 
   // Data Members (m_prefix)
   Map<Address, Time> m_map;
-  Chip* m_chip_ptr;
   mutable bool m_next_valid;
   mutable Time m_next_time; // Only valid if m_next_valid is true
   mutable Address m_next_address;  // Only valid if m_next_valid is true

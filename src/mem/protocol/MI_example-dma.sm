@@ -1,5 +1,7 @@
 
-machine(DMA, "DMA Controller") {
+machine(DMA, "DMA Controller") 
+: int request_latency
+{
 
   MessageBuffer responseFromDir, network="From", virtual_network="4", ordered="true", no_vector="true";
   MessageBuffer reqToDirectory, network="To", virtual_network="5", ordered="false", no_vector="true";
@@ -35,12 +37,12 @@ machine(DMA, "DMA Controller") {
 
   out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
 
-  in_port(dmaRequestQueue_in, DMARequestMsg, mandatoryQueue, desc="...") {
+  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
     if (dmaRequestQueue_in.isReady()) {
-      peek(dmaRequestQueue_in, DMARequestMsg) {
-        if (in_msg.Type == DMARequestType:READ ) {
+      peek(dmaRequestQueue_in, SequencerMsg) {
+        if (in_msg.Type == SequencerRequestType:LD ) {
           trigger(Event:ReadRequest, in_msg.LineAddress);
-        } else if (in_msg.Type == DMARequestType:WRITE) {
+        } else if (in_msg.Type == SequencerRequestType:ST) {
           trigger(Event:WriteRequest, in_msg.LineAddress);
         } else {
           error("Invalid request type");
@@ -64,9 +66,9 @@ machine(DMA, "DMA Controller") {
   }
 
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
-    peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg) {
-        out_msg.PhysicalAddress := address;
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
         out_msg.LineAddress := in_msg.LineAddress; 
         out_msg.Type := DMARequestType:READ;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -78,9 +80,9 @@ machine(DMA, "DMA Controller") {
   }
 
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
-    peek(dmaRequestQueue_in, DMARequestMsg) {
-        enqueue(reqToDirectory_out, DMARequestMsg) {
-          out_msg.PhysicalAddress := address;
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
           out_msg.LineAddress := in_msg.LineAddress; 
           out_msg.Type := DMARequestType:WRITE;
           out_msg.DataBlk := in_msg.DataBlk;

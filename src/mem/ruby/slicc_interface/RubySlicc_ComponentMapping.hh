@@ -85,6 +85,14 @@ MachineID map_Address_to_DMA(const Address & addr)
   return dma;
 }
 
+inline
+MachineID mapAddressToRange(const Address & addr, MachineType type, int low_bit, int high_bit)
+{
+  MachineID mach = {type, 0};
+  mach.num = addr.bitSelect(low_bit, high_bit);
+  return mach;
+}
+
 extern inline NodeID machineIDToNodeID(MachineID machID)
 {
   return machID.num;

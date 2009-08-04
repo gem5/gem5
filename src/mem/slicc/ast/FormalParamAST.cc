@@ -38,12 +38,23 @@
 
 #include "mem/slicc/ast/FormalParamAST.hh"
 #include "mem/slicc/ast/StatementAST.hh"
+#include "mem/slicc/ast/TypeAST.hh"
 #include "mem/slicc/symbols/SymbolTable.hh"
 
 FormalParamAST::~FormalParamAST()
 {
   delete m_ident_ptr;
   delete m_type_ast_ptr;
+}
+
+string FormalParamAST::getTypeName() const 
+{ 
+  return m_type_ast_ptr->toString(); 
+}
+
+Type* FormalParamAST::getType() const
+{
+  return m_type_ast_ptr->lookupType();
 }
 
 Type* FormalParamAST::generate(string& code) const

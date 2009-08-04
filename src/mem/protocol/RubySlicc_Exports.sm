@@ -39,7 +39,10 @@ external_type(string, primitive="yes");
 external_type(uint64, primitive="yes");
 external_type(Time, primitive="yes", default="0");
 external_type(Address);
-
+external_type(DataBlock, desc="..."){
+  void clear();
+  void copyPartial(DataBlock, int, int);
+}
 
 // Declarations of external types that are common to all protocols
 
@@ -131,12 +134,12 @@ enumeration(CacheRequestType, desc="...", default="CacheRequestType_NULL") {
   IO,          desc="I/O";
   REPLACEMENT, desc="Replacement";
   COMMIT,      desc="Commit version";
-  LD_XACT,     desc="Transactional Load";
-  LDX_XACT,    desc="Transactional Load-Intend-To-Modify";
-  ST_XACT,     desc="Transactional Store";
-  BEGIN_XACT,  desc="Begin Transaction";
-  COMMIT_XACT, desc="Commit Transaction";
-  ABORT_XACT,  desc="Abort Transaction";
+  NULL,        desc="Invalid request type";
+}
+
+enumeration(SequencerRequestType, desc="...", default="SequencerRequestType_NULL") {
+  LD,          desc="Load";
+  ST,          desc="Store";
   NULL,        desc="Invalid request type";
 }
 
@@ -167,7 +170,9 @@ enumeration(GenericRequestType, desc="...", default="GenericRequestType_NULL") {
   ST_XACT,     desc="Transactional Store";
   BEGIN_XACT,  desc="Begin Transaction";
   COMMIT_XACT, desc="Commit Transaction";
-  ABORT_XACT,  desc="Abort Transaction";
+  ABORT_XACT,  desc="Abort Transaction";	
+  DMA_READ,    desc="DMA READ";
+  DMA_WRITE,   desc="DMA WRITE";
   NULL,        desc="null request type";
 }
 
@@ -229,6 +234,18 @@ structure(CacheMsg, desc="...", interface="Message") {
   Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   AccessModeType AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
+  PrefetchBit Prefetch,      desc="Is this a prefetch request";
+}
+
+// CacheMsg
+structure(SequencerMsg, desc="...", interface="Message") {
+  Address LineAddress,       desc="Line address for this request";
+  Address PhysicalAddress,   desc="Physical address for this request";
+  SequencerRequestType Type,     desc="Type of request (LD, ST, etc)";
+  Address ProgramCounter,    desc="Program counter of the instruction that caused the miss";
+  AccessModeType AccessMode, desc="user/supervisor access type";
+  DataBlock DataBlk,         desc="Data";
+  int Len,                   desc="size in bytes of access";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
 }
 

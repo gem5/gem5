@@ -233,6 +233,7 @@ class RubySystem
       end
     }
     str += LibRubyObject.printConstructors
+    #puts str.gsub('%',' ').gsub('#','\n')
     return str
   end
 
@@ -287,39 +288,54 @@ end
 
 
 class CacheController < NetPort
-  @@total_cache_controllers = 0
-  attr :caches
-  attr :sequencer
-  def initialize(obj_name, mach_type, caches, sequencer)
+  @@total_cache_controllers = Hash.new
+
+  def initialize(obj_name, mach_type, caches)
     super(obj_name, mach_type)
-    @caches = caches
-    @caches.each { |cache|
+    caches.each { |cache|
       cache.controller = self
     }
 
-    @sequencer = sequencer
-    @sequencer.controller = self
-
-    @version = @@total_cache_controllers
-    @@total_cache_controllers += 1
-    @sequencer.version = @version
-    buffer_size()
+    if !@@total_cache_controllers.has_key?(mach_type)
+      @@total_cache_controllers[mach_type] = 0
+    end
+    @version = @@total_cache_controllers[mach_type]
+    @@total_cache_controllers[mach_type] += 1
+    
+    # call inhereted parameters
+    transitions_per_cycle
+    buffer_size
+    number_of_TBEs
+    recycle_latency
   end
 
   def argv()
     vec = "version "+@version.to_s
-    @caches.each { |cache|
-      vec += " cache " + cache.obj_name
-    }
-    vec += " sequencer "+@sequencer.obj_name
     vec += " transitions_per_cycle "+@params[:transitions_per_cycle].to_s
     vec += " buffer_size "+@params[:buffer_size].to_s
     vec += " number_of_TBEs "+@params[:number_of_TBEs].to_s
-
+    vec += " recycle_latency "+@params[:recycle_latency].to_s
   end
 
   def cppClassName()
     "generated:"+@mach_type
+  end
+end
+
+class L1CacheController < CacheController
+  attr :sequencer
+
+  def initialize(obj_name, mach_type, caches, sequencer)
+    super(obj_name, mach_type, caches)
+
+    @sequencer = sequencer
+    @sequencer.controller = self
+    @sequencer.version = @version
+  end
+
+  def argv()
+    vec = super()
+    vec += " sequencer "+@sequencer.obj_name
   end
 end
 
@@ -364,7 +380,7 @@ class DMAController < NetPort
   end
 
   def argv()
-    "version "+@version.to_s+" dma_sequencer "+@dma_sequencer.obj_name+" transitions_per_cycle "+@params[:transitions_per_cycle].to_s + " buffer_size "+@params[:buffer_size].to_s + " number_of_TBEs "+@params[:number_of_TBEs].to_s
+    "version "+@version.to_s+" dma_sequencer "+@dma_sequencer.obj_name+" transitions_per_cycle "+@params[:transitions_per_cycle].to_s + " buffer_size "+@params[:buffer_size].to_s + " number_of_TBEs "+@params[:number_of_TBEs].to_s +  " recycle_latency "+@params[:recycle_latency].to_s
   end
 
   def cppClassName()
@@ -606,7 +622,7 @@ class Network < LibRubyObject
   end
 
   def printTopology()
-    topology.printFile
+    topology().printFile
   end
   def cppClassName()
     "SimpleNetwork"
@@ -682,31 +698,6 @@ class Profiler < LibRubyObject
 
   def cppClassName()
     "Profiler"
-  end
-
-end
-
-class MI_example_CacheController < CacheController
-  def initialize(obj_name, mach_type, caches, sequencer)
-    super(obj_name, mach_type, caches, sequencer)
-  end
-  def argv()
-    vec = super()
-    vec += " issue_latency "+issue_latency.to_s
-    vec += " cache_response_latency "+cache_response_latency.to_s
-  end
-
-end
-
-class MI_example_DirectoryController < DirectoryController
-  def initialize(obj_name, mach_type, directory, memory_control)
-    super(obj_name, mach_type, directory, memory_control)
-  end
-  def argv()
-    vec = super()
-    vec += " to_mem_ctrl_latency "+to_mem_ctrl_latency.to_s
-    vec += " directory_latency "+directory_latency.to_s
-    vec += " memory_latency "+memory_latency.to_s
   end
 
 end

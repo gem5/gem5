@@ -77,7 +77,14 @@ void EnqueueStatementAST::generate(string& code, Type* return_type_ptr) const
   code += ".enqueue(out_msg";
 
   if (getPairs().exist("latency")) {
-    code += ", m_LATENCY_" + getPairs().lookup("latency");
+    bool is_number = true;
+    string val = getPairs().lookup("latency");
+    for (int i=0; i<val.size(); i++)
+      if (!isdigit(val[i])) is_number = false;
+    if (is_number)
+      code += ", " + getPairs().lookup("latency");
+    else
+      code += ", m_" + getPairs().lookup("latency");
   }
 
   code += ");\n";

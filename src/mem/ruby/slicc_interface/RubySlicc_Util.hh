@@ -173,4 +173,9 @@ extern inline Address makeLineAddress(Address addr)
   return result;
 }
 
+extern inline int addressOffset(Address addr)
+{
+  return addr.getOffset();
+}
+
 #endif //SLICC_UTIL_H

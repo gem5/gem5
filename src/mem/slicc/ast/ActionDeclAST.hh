@@ -41,7 +41,8 @@
 
 #include "mem/slicc/slicc_global.hh"
 #include "mem/slicc/ast/DeclAST.hh"
-#include "mem/slicc/ast/StatementListAST.hh"
+
+class StatementListAST;
 
 class ActionDeclAST : public DeclAST {
 public:
