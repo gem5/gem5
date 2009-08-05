@@ -768,7 +768,7 @@ let {{
                 uint64_t top = flags.cf << (dataSize * 8 - shiftAmt);
                 if(shiftAmt > 1)
                     top |= psrc1 << (dataSize * 8 - shiftAmt + 1);
-                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
+                uint64_t bottom = bits(psrc1, dataSize * 8 - 1, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
