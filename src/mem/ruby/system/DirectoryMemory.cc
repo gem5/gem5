@@ -58,12 +58,14 @@ void DirectoryMemory::init(const vector<string> & argv)
     if ( (*it) == "version" )
       m_version = atoi( (*(++it)).c_str() );
     else if ( (*it) == "size_mb" ) {
-      m_size_bytes = atoi((*(++it)).c_str()) * (1<<20);
+      m_size_bytes = atoi((*(++it)).c_str()) * static_cast<uint64>(1<<20);
       m_size_bits = log_int(m_size_bytes);
     } else if ( (*it) == "controller" ) {
       m_controller = RubySystem::getController((*(++it)));
-    } else
+    } else {
+      cerr << "DirectoryMemory: Unkown config parameter: " << (*it) << endl;
       assert(0);
+    }
   }
   assert(m_controller != NULL);
 

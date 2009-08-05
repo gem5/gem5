@@ -104,6 +104,9 @@ public:
   static RubyPort* getPortOnly(const string & name) {
     assert(m_ports.count(name) == 1); return m_ports[name]; }
   static RubyPort* getPort(const string & name, void (*hit_callback)(int64_t)) {
+    if (m_ports.count(name) != 1){
+      cerr << "Port " << name << " has " << m_ports.count(name) << " instances" << endl;
+    }
     assert(m_ports.count(name) == 1); m_ports[name]->registerHitCallback(hit_callback); return m_ports[name]; }
   static Network* getNetwork() { assert(m_network_ptr != NULL); return m_network_ptr; }
   static Topology* getTopology(const string & name) { assert(m_topologies.count(name) == 1); return m_topologies[name]; }

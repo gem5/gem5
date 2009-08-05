@@ -111,8 +111,6 @@ extern "C" int yylex();
 %type <expr_ptr> expr literal enumeration
 %type <expr_vector_ptr> expr_list
 
-%type <stdstring_vector_ptr> myrule
-
 %type <pair_ptr> pair
 %type <pair_list_ptr> pair_list pairs
 
@@ -148,9 +146,7 @@ decls: decl decls { $2->insertAtTop($1); $$ = $2; }
      | { $$ = new Vector<DeclAST*>; }
      ;
 
-decl:  MACHINE_DECL     '(' ident pair_list ')' ':' myrule '{' decl_list '}' { $$ = new MachineAST($3, $4, NULL, $7, $9); }
-//    |  MACHINE_DECL     '(' ident pair_list ')' ':' type_members '{' decl_list '}' { $$ = new MachineAST($3, $4, $7, string_vector, $9); }
-    |  MACHINE_DECL     '(' ident pair_list ')' '{' decl_list '}' { $$ = new MachineAST($3, $4, NULL, new vector<string*>(), $7); }
+decl:  MACHINE_DECL     '(' ident pair_list ')' ':' formal_param_list '{' decl_list '}' { $$ = new MachineAST($3, $4, $7, $9); }
     |  ACTION_DECL      '(' ident pair_list ')' statement_list { $$ = new ActionDeclAST($3, $4, $6); }
     |  IN_PORT_DECL     '(' ident ',' type ',' var pair_list ')' statement_list { $$ = new InPortDeclAST($3, $5, $7, $8, $10); }
     |  OUT_PORT_DECL    '(' ident ',' type ',' var pair_list ')' SEMICOLON { $$ = new OutPortDeclAST($3, $5, $7, $8); }
@@ -335,10 +331,6 @@ var: ident { $$ = new VarExprAST($1); }
 
 field: ident { $$ = $1; }
      ;
-
-myrule: myrule IDENT { $1->push_back($2); }
-      | IDENT { $$ = new vector<string*>(1, $1); }
-      ;
 
 %%
 

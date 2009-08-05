@@ -8,20 +8,27 @@
 
 require "cfg.rb"
 
+RubySystem.reset
+
 # default values
 
 num_cores = 2
-L1_CACHE_SIZE_KB = 32
-L1_CACHE_ASSOC = 8
-L1_CACHE_LATENCY = 1
+l1_cache_size_kb = 32
+l1_cache_assoc = 8
+l1_cache_latency = 1
 num_memories = 2
 memory_size_mb = 1024
-NUM_DMA = 1
+num_dma = 1
+protocol = "MI_example"
 
 # check for overrides
 
+
 for i in 0..$*.size-1 do
-  if $*[i] == "-p"
+  if $*[i] == "-c"
+    protocol = $*[i+1]
+    i = i+1
+  elsif $*[i] == "-p"
     num_cores = $*[i+1].to_i
     i = i+1
   elsif $*[i] == "-m"
@@ -36,13 +43,17 @@ end
 net_ports = Array.new
 iface_ports = Array.new
 
+assert(protocol == "MI_example", __FILE__ + " cannot be used with protocol " + protocol)
+
+require protocol+".rb"
+
 num_cores.times { |n|
-  cache = SetAssociativeCache.new("l1u_"+n.to_s, L1_CACHE_SIZE_KB, L1_CACHE_LATENCY, L1_CACHE_ASSOC, "PSEUDO_LRU")
+  cache = SetAssociativeCache.new("l1u_"+n.to_s, l1_cache_size_kb, l1_cache_latency, l1_cache_assoc, "PSEUDO_LRU")
   sequencer = Sequencer.new("Sequencer_"+n.to_s, cache, cache)
   iface_ports << sequencer
   net_ports << MI_example_CacheController.new("L1CacheController_"+n.to_s,
                                    "L1Cache",
-                                   [cache],
+                                   cache,
                                    sequencer)
 }
 num_memories.times { |n|
@@ -52,10 +63,10 @@ num_memories.times { |n|
                                        "Directory",
                                        directory, memory_control)
 }
-NUM_DMA.times { |n|
+num_dma.times { |n|
   dma_sequencer = DMASequencer.new("DMASequencer_"+n.to_s)
   iface_ports << dma_sequencer
-  net_ports << DMAController.new("DMAController_"+n.to_s, "DMA", dma_sequencer)
+  net_ports << MI_example_DMAController.new("DMAController_"+n.to_s, "DMA", dma_sequencer)
 }
 
 topology = CrossbarTopology.new("theTopology", net_ports)

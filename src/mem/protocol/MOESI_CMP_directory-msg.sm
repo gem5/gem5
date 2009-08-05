@@ -44,6 +44,9 @@ enumeration(CoherenceRequestType, desc="...") {
   WB_ACK_DATA,    desc="Writeback ack";
   WB_NACK,   desc="Writeback neg. ack";
   INV,       desc="Invalidation";
+  
+  DMA_READ,  desc="DMA Read";
+  DMA_WRITE, desc="DMA Write";
 }
 
 // CoherenceResponseType
@@ -56,6 +59,8 @@ enumeration(CoherenceResponseType, desc="...") {
   WRITEBACK_CLEAN_DATA,   desc="Clean writeback (contains data)";
   WRITEBACK_CLEAN_ACK,   desc="Clean writeback (contains no data)";
   WRITEBACK_DIRTY_DATA,   desc="Dirty writeback (contains data)";
+
+  DMA_ACK,           desc="Ack that a DMA write completed";
 }
 
 // TriggerType
@@ -72,10 +77,12 @@ structure(TriggerMsg, desc="...", interface="Message") {
 // RequestMsg (and also forwarded requests)
 structure(RequestMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";
+  int Len,                     desc="Length of Request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
   MachineID Requestor,            desc="Node who initiated the request";
   MachineType RequestorMachine,   desc="type of component";
   NetDest Destination,             desc="Multicast destination mask";
+  DataBlock DataBlk,           desc="data for the cache line (DMA WRITE request)";
   int Acks,                    desc="How many acks to expect";
   MessageSizeType MessageSize, desc="size category of the message";
   AccessModeType AccessMode,    desc="user/supervisor access type";
@@ -95,32 +102,4 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   MessageSizeType MessageSize, desc="size category of the message";
 }
 
-GenericRequestType convertToGenericType(CoherenceRequestType type) {
-  if(type == CoherenceRequestType:PUTX) {
-    return GenericRequestType:PUTX;
-  } else if(type == CoherenceRequestType:GETS) {
-    return GenericRequestType:GETS;
-  } else if(type == CoherenceRequestType:GETX) {
-    return GenericRequestType:GETX;
-  } else if(type == CoherenceRequestType:PUTS) {
-    return GenericRequestType:PUTS;
-  } else if(type == CoherenceRequestType:PUTX) {
-    return GenericRequestType:PUTS;
-  } else if(type == CoherenceRequestType:PUTO) {
-    return GenericRequestType:PUTO;
-  } else if(type == CoherenceRequestType:PUTO_SHARERS) {
-    return GenericRequestType:PUTO;
-  } else if(type == CoherenceRequestType:INV) {
-    return GenericRequestType:INV;
-  } else if(type == CoherenceRequestType:WB_ACK) {
-    return GenericRequestType:WB_ACK;
-  } else if(type == CoherenceRequestType:WB_ACK_DATA) {
-    return GenericRequestType:WB_ACK;
-  } else if(type == CoherenceRequestType:WB_NACK) {
-    return GenericRequestType:NACK;
-  } else {
-    DEBUG_EXPR(type);
-    error("invalid CoherenceRequestType");
-  }
-}
 

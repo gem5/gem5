@@ -49,11 +49,12 @@ class State;
 class Action;
 class Var;
 class Func;
+class FormalParamAST;
 
 class StateMachine : public Symbol {
 public:
   // Constructors
-  StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  std::vector<std::string*>* latency_vector);
+  StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  Vector<FormalParamAST*>* config_parameters);
 
   // Destructor
   ~StateMachine();
@@ -94,7 +95,7 @@ public:
   void print(ostream& out) const { out << "[StateMachine: " << toString() << "]" << endl; }
 private:
 
-  std::vector<std::string*> m_latency_vector;
+  Vector<FormalParamAST*>* m_config_parameters;
 
   // Private Methods
   void checkForDuplicate(const Symbol& sym) const;

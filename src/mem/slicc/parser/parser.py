@@ -76,7 +76,7 @@ tokens = [ 'EQ', 'NE', 'LT', 'GT', 'LE', 'GE',
            'NOT', 'AND', 'OR',
            'PLUS', 'DASH', 'STAR', 'SLASH',
            'DOUBLE_COLON', 'SEMICOLON',
-           'ASSIGN', 'DOT', 'LATENCY',
+           'ASSIGN', 'DOT',
            'IDENT', 'LIT_BOOL', 'FLOATNUMBER', 'NUMBER', 'STRING' ]
 tokens += reserved.values()
 
@@ -197,19 +197,8 @@ def p_decl(p):
             | d_func_def"""
     p[0] = p[1]
 
-def p_latency(p):
-    """latency : LATENCY"""
-    pass
-
-def p_latencies(p):
-    """latencies : latency latencies
-                 | empty"""
-    return []
-
 def p_d_machine(p):
-    """d_machine : MACHINE '(' ident pair_l ')' '{' decl_l '}'
-           | MACHINE '(' ident pair_l ')' ':' type_members '{' decl_l '}'
-           | MACHINE '(' ident pair_l ')' ':' latencies '{' decl_l '}'"""
+    """d_machine : MACHINE '(' ident pair_l ')' ':' param_l '{' decl_l '}'"""
 
     if len(p) == 9:
         decl_l = p[7]
@@ -549,10 +538,11 @@ def scan(filenames):
     for filename in filenames:
         lex.lexer.lineno = 1
         try:
+            print "parsing ",filename
             results = yacc.parse(file(filename, 'r').read())
         except (TokenError, ParseError), e:
             sys.exit("%s: %s:%d" % (e, filename, e.token.lineno))
-
+            
         for result in results:
             result.add(hh, cc)
 

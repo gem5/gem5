@@ -34,7 +34,7 @@ void profileCacheCLBsize(int size, int numStaleI);
 void profileMemoryCLBsize(int size, int numStaleI);
 
 // used by 2level exclusive cache protocols
-void profile_miss(CacheMsg msg, NodeID id);
+void profile_miss(CacheMsg msg);
 
 // used by non-fast path protocols
 void profile_L1Cache_miss(CacheMsg msg, NodeID l1cacheID);

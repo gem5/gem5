@@ -40,7 +40,9 @@
 #define FORMALPARAMAST_H
 
 #include "mem/slicc/slicc_global.hh"
-#include "mem/slicc/ast/TypeAST.hh"
+#include "mem/slicc/ast/AST.hh"
+
+class TypeAST;
 
 
 class FormalParamAST : public AST {
@@ -55,6 +57,8 @@ public:
   Type* generate(string& code) const;
   void print(ostream& out) const { out << "[FormalParamAST: " << *m_ident_ptr << "]"; }
   string getName() const { return *m_ident_ptr; }
+  string getTypeName() const;
+  Type* getType() const;
 private:
   // Private Methods
 

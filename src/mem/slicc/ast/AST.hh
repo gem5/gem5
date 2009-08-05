@@ -50,28 +50,28 @@ public:
   // Constructors
   AST(Map<string, string> pairs) { m_pairs = pairs; };
   AST() {};
-
+  
   // Destructor
   virtual ~AST() {};
-
+  
   // Public Methods
   virtual void print(ostream& out) const = 0;
   void error(string err_msg) const { m_location.error(err_msg); };
   string embedError(string err_msg) const { return m_location.embedError(err_msg); };
   void warning(string err_msg) const { m_location.warning(err_msg); };
-
+  
   const Location& getLocation() const { return m_location; };
-
+  
   const Map<string, string>& getPairs() const { return m_pairs; };
   Map<string, string>& getPairs() { return m_pairs; };
-
+  
 private:
   // Private Methods
-
+  
   // Private copy constructor and assignment operator
   //  AST(const AST& obj);
   //  AST& operator=(const AST& obj);
-
+  
   // Data Members (m_ prefix)
   Location m_location;
   Map<string, string> m_pairs;

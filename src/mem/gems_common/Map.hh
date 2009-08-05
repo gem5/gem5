@@ -93,6 +93,8 @@ bool Map<KEY_TYPE, VALUE_TYPE>::exist(const KEY_TYPE& key) const
 template <class KEY_TYPE, class VALUE_TYPE>
 VALUE_TYPE& Map<KEY_TYPE, VALUE_TYPE>::lookup(const KEY_TYPE& key) const
 {
+  if (!exist(key))
+    cerr << *this << " is looking for " << key << endl;
   assert(exist(key));
   return m_map[key];
 }

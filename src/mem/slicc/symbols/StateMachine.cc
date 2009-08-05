@@ -43,14 +43,25 @@
 #include "mem/slicc/symbols/SymbolTable.hh"
 #include "mem/gems_common/util.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/slicc/ast/FormalParamAST.hh"
 
 #include <set>
 
-StateMachine::StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  std::vector<std::string*>* latency_vector)
+StateMachine::StateMachine(string ident, const Location& location, const Map<string, string>& pairs,  Vector<FormalParamAST*>* config_parameters)
   : Symbol(ident, location, pairs)
 {
   m_table_built = false;
-  m_latency_vector = *latency_vector;
+  m_config_parameters = config_parameters;
+  
+  for (int i=0; i< m_config_parameters->size(); i++) {
+    Var* var = new Var(m_config_parameters->ref(i)->getName(), 
+		       location, 
+		       m_config_parameters->ref(i)->getType(), 
+		       "m_"+m_config_parameters->ref(i)->getName(),
+		       Map<string, string>(),
+		       this);
+    g_sym_table.registerSym(m_config_parameters->ref(i)->getName(), var);
+  }
 }
 
 StateMachine::~StateMachine()
@@ -284,9 +295,8 @@ void StateMachine::printControllerH(ostream& out, string component)
   out << "private:" << endl;
 //added by SS
 //  found_to_mem = 0;
-  std::vector<std::string*>::const_iterator it;
-  for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++){
-        out << "  int m_" << (*it)->c_str() << ";" << endl;
+  for(int i=0;i<m_config_parameters->size();i++){
+    out << "  int m_" << m_config_parameters->ref(i)->getName() << ";" << endl;
   }
   if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
     out << "  bool servicing_atomic;" << endl;
@@ -429,40 +439,21 @@ void StateMachine::printControllerC(ostream& out, string component)
   out << "    else if (argv[i] == \"number_of_TBEs\") " << endl;
   out << "      m_number_of_TBEs = atoi(argv[i+1].c_str());" << endl;
 
-  if (m_latency_vector.size()) {
-  out << "    else { " << endl;
-    std::vector<std::string*>::const_iterator it;
-    for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++) {
-      string str = (*it)->c_str();
-      str.erase(0,8);
-//convert to lowercase
-      size_t i;
-      char* strc = (char*) malloc (str.length()+1);
-      strc[str.length()]=0;
-      for(i=0; i < str.length(); i++) {
-        strc[i] = str.at(i);
-        strc[i] = tolower(strc[i]);
-      }
-      str = strc;
-      delete strc;
-      out << "      if (argv[i] == \"" << str << "\"){" << endl;
-      if (str == "to_mem_ctrl_latency")
-        out << "        m_" << (*it)->c_str() << "=" << "atoi(argv[i+1].c_str())+(random() % 5);" << endl;
+  if (m_config_parameters->size()) {
+    for(int i= 0 ; i < m_config_parameters->size(); i++) {
+      out << "    else if (argv[i] == \"" << m_config_parameters->ref(i)->getName() << "\")" << endl;
+      if (m_config_parameters->ref(i)->getTypeName() == "int")
+	out << "      m_" << m_config_parameters->ref(i)->getName() << "=" << "atoi(argv[i+1].c_str());" << endl;      
       else
-        out << "        m_" << (*it)->c_str() << "=" << "atoi(argv[i+1].c_str());" << endl;
-//      out << "        printf (\"SET m_" << it->c_str() << "= %i \\n \", m_" << it->c_str() << ");" << endl;
-      out << "      }" << endl;
+	assert(0); // only int parameters are supported right now
+      //      if (str == "to_mem_ctrl_latency")
+      //        out << "        m_" << (*it)->c_str() << "=" << "atoi(argv[i+1].c_str())+(random() % 5);" << endl;
     }
-  out << "    }" << endl;
   }
   out << "  }" << endl;
-
   out << "  m_net_ptr = net_ptr;" << endl;
   out << "  m_machineID.type = MachineType_" << component << ";" << endl;
   out << "  m_machineID.num = m_version;" << endl;
-
-//  out << "  printf (\"I set m_LATENCY_ISSUE_LATENCY to %i \\n \", m_LATENCY_ISSUE_LATENCY);" << endl;
-//  out << "  printf (\"I set m_LATENCY_CACHE_RESPONSE_LATENCY to %i \\n \", m_LATENCY_CACHE_RESPONSE_LATENCY);" << endl;
 
   // make configuration array
   out << "  for (size_t i=0; i < argv.size(); i+=2) {" << endl;
@@ -724,25 +715,7 @@ void StateMachine::printControllerC(ostream& out, string component)
 
 
       string c_code_string = action.lookupPair("c_code");
-/*
-      size_t found = c_code_string.find("RubyConfig::get");
 
-      if (found!=string::npos){ //found --> replace it with local access
-        //if it is related to latency --> replace it
-        std::vector<std::string*>::const_iterator it;
-        for(it=m_latency_vector.begin();it!=m_latency_vector.end();it++){
-          string str = (*it)->c_str();
-          str.erase(0,8);
-          size_t fd = c_code_string.find(str, found);
-          if (fd!=string::npos && (fd == found+15)){
-            string rstr = "m_";
-            rstr += (*it)->c_str();
-            c_code_string.replace(found,15+str.size()+2,rstr);
-            break;
-          }
-        }
-      }
-*/
       // add here:
       if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
         if (c_code_string.find("writeCallback") != string::npos) {

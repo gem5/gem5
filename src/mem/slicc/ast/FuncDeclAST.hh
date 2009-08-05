@@ -43,7 +43,8 @@
 #include "mem/slicc/ast/DeclAST.hh"
 #include "mem/slicc/ast/TypeFieldAST.hh"
 #include "mem/slicc/ast/TypeAST.hh"
-#include "mem/slicc/ast/FormalParamAST.hh"
+
+class FormalParamsAST;
 
 class FuncDeclAST : public DeclAST {
 public:

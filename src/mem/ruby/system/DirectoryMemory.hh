@@ -59,7 +59,7 @@ public:
   int mapAddressToLocalIdx(PhysAddress address);
   static int mapAddressToDirectoryVersion(PhysAddress address);
 
-  int getSize() { return m_size_bytes; }
+  uint64 getSize() { return m_size_bytes; }
 
   // Public Methods
   void printConfig(ostream& out) const;
@@ -84,8 +84,8 @@ private:
   // Data Members (m_ prefix)
   Directory_Entry **m_entries;
   //  int m_size;  // # of memory module blocks this directory is responsible for
-  uint32 m_size_bytes;
-  uint32 m_size_bits;
+  uint64 m_size_bytes;
+  uint64 m_size_bits;
   int m_num_entries;
   int m_version;
 

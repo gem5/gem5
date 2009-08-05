@@ -106,19 +106,6 @@ class Profiler < LibRubyObject
 end
 
 #added by SS
-class MI_example_CacheController < CacheController
-  default_param :issue_latency, Integer, 2
-  default_param :cache_response_latency, Integer, 12
-end
-
-class MI_example_DirectoryController < DirectoryController
-  default_param :to_mem_ctrl_latency, Integer, 1
-  default_param :directory_latency, Integer, 6
-  default_param :memory_latency, Integer, 158
-end
-
-
-#added by SS
 class MemoryControl < LibRubyObject
 
   default_param :mem_bus_cycle_multiplier, Integer, 10
@@ -139,6 +126,43 @@ class MemoryControl < LibRubyObject
   default_param :mem_random_arbitrate, Integer, 0
   default_param :mem_fixed_delay, Integer, 0
 
+end
+
+###### Protocols #######
+
+## MI_example protocol
+
+class MI_example_CacheController < L1CacheController
+  default_param :issue_latency, Integer, 2
+  default_param :cache_response_latency, Integer, 12
+end
+
+class MI_example_DirectoryController < DirectoryController
+  default_param :directory_latency, Integer, 6
+end
+
+class MI_example_DMAController < DMAController
+  default_param :request_latency, Integer, 6
+end
+
+## MOESI_CMP_directory protocol
+
+class MOESI_CMP_directory_L1CacheController < L1CacheController
+  default_param :request_latency, Integer, 2
+end
+
+class MOESI_CMP_directory_L2CacheController < CacheController
+  default_param :request_latency, Integer, 2
+  default_param :response_latency, Integer, 2
+end
+
+class MOESI_CMP_directory_DirectoryController < DirectoryController
+  default_param :directory_latency, Integer, 6
+end
+
+class MOESI_CMP_directory_DMAController < DMAController
+  default_param :request_latency, Integer, 6
+  default_param :response_latency, Integer, 6
 end
 
 class RubySystem

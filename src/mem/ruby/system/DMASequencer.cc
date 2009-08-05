@@ -4,9 +4,8 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
 /* SLICC generated types */
-#include "mem/protocol/DMARequestMsg.hh"
-#include "mem/protocol/DMARequestType.hh"
-#include "mem/protocol/DMAResponseMsg.hh"
+#include "mem/protocol/SequencerMsg.hh"
+#include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/System.hh"
 
 DMASequencer::DMASequencer(const string & name)
@@ -66,20 +65,16 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   active_request.bytes_issued = 0;
   active_request.id = makeUniqueRequestID();
 
-  DMARequestMsg msg;
+  SequencerMsg msg;
   msg.getPhysicalAddress() = Address(paddr);
   msg.getLineAddress() = line_address(msg.getPhysicalAddress());
-  msg.getType() = write ? DMARequestType_WRITE : DMARequestType_READ;
-  msg.getOffset() = paddr & m_data_block_mask;
-  msg.getLen() = (msg.getOffset() + len) <= RubySystem::getBlockSizeBytes() ?
+  msg.getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
+  int offset = paddr & m_data_block_mask;
+  msg.getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
     len : 
-    RubySystem::getBlockSizeBytes() - msg.getOffset();
-  if (write) {
-    msg.getType() = DMARequestType_WRITE;
-    msg.getDataBlk().setData(data, msg.getOffset(), msg.getLen());
-  } else {
-    msg.getType() = DMARequestType_READ;
-  }
+    RubySystem::getBlockSizeBytes() - offset;
+  if (write)
+    msg.getDataBlk().setData(data, offset, msg.getLen());
   m_mandatory_q_ptr->enqueue(msg);
   active_request.bytes_issued += msg.getLen();
 
@@ -96,14 +91,13 @@ void DMASequencer::issueNext()
     return;
   }
 
-  DMARequestMsg msg;
+  SequencerMsg msg;
   msg.getPhysicalAddress() = Address(active_request.start_paddr + 
 				     active_request.bytes_completed);
   assert((msg.getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
   msg.getLineAddress() = line_address(msg.getPhysicalAddress());
-  msg.getOffset() = 0;
-  msg.getType() = (active_request.write ? DMARequestType_WRITE : 
-		   DMARequestType_READ);
+  msg.getType() = (active_request.write ? SequencerRequestType_ST : 
+		   SequencerRequestType_LD);
   msg.getLen() = (active_request.len - 
 		  active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
 		  active_request.len - active_request.bytes_completed :
@@ -111,9 +105,9 @@ void DMASequencer::issueNext()
   if (active_request.write) {
     msg.getDataBlk().setData(&active_request.data[active_request.bytes_completed], 
 			     0, msg.getLen());
-    msg.getType() = DMARequestType_WRITE;
+    msg.getType() = SequencerRequestType_ST;
   } else {
-    msg.getType() = DMARequestType_READ;
+    msg.getType() = SequencerRequestType_LD;
   }
   m_mandatory_q_ptr->enqueue(msg);
   active_request.bytes_issued += msg.getLen();

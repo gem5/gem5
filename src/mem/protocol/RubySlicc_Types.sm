@@ -29,11 +29,6 @@
 
 // External Types
 
-external_type(DataBlock, desc="..."){
-  void clear();
-  void copyPartial(DataBlock, int, int);
-}
-
 external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
 
 external_type(OutPort, primitive="yes");

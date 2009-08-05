@@ -1,5 +1,9 @@
 
-machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_DIRECTORY_LATENCY LATENCY_MEMORY_LATENCY {
+machine(Directory, "Directory protocol") 
+: int directory_latency,
+  int dma_select_low_bit,
+  int dma_select_num_bits
+{
 
   MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
   MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
@@ -65,9 +69,9 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   // TBE entries for DMA requests
   structure(TBE, desc="TBE entries for outstanding DMA requests") {
+    Address PhysicalAddress, desc="physical address";
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
-    int Offset,            desc="...";
     int Len,               desc="...";
   }
 
@@ -180,7 +184,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -192,7 +196,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(l_sendWriteBackAck, "la", desc="Send writeback ack to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.OriginalRequestorMachId;
@@ -204,7 +208,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -218,29 +222,9 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     directory[address].Owner.clear();
   }
 
-//  action(d_sendData, "d", desc="Send data to requestor") {
-//    peek(requestQueue_in, RequestMsg) {
-//      enqueue(responseNetwork_out, ResponseMsg, latency="MEMORY_LATENCY") {
-//        out_msg.Address := address;
-//
-//        if (in_msg.Type == CoherenceRequestType:GETS && directory[address].Sharers.count() == 0) {
-//          // out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE_CLEAN;
-//          out_msg.Type := CoherenceResponseType:DATA;
-//        } else {
-//          out_msg.Type := CoherenceResponseType:DATA;
-//        }
-//
-//        out_msg.Sender := machineID;
-//        out_msg.Destination.add(in_msg.Requestor);
-//        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
-//        out_msg.MessageSize := MessageSizeType:Response_Data;
-//      }
-//    }
-//  }
-
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -251,26 +235,15 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
     }
   }
 
-//  action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
-//    peek(dmaRequestQueue_in, DMARequestMsg) {
-//      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
-//        out_msg.PhysicalAddress := address;
-//        out_msg.Type := DMAResponseType:DATA;
-//        out_msg.DataBlk := directory[in_msg.PhysicalAddress].DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-//        out_msg.Destination.add(map_Address_to_DMA(address));
-//        out_msg.MessageSize := MessageSizeType:Response_Data;
-//      }
-//    }
-//  }
-
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
+						  dma_select_low_bit, dma_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -280,23 +253,25 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(drp_sendDMAData, "drp", desc="Send Data to DMA controller from incoming PUTX") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
+						  dma_select_low_bit, dma_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
   }
 
   action(da_sendDMAAck, "da", desc="Send Ack to DMA controller") {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:ACK;
-        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
+						  dma_select_low_bit, dma_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
   }
@@ -318,7 +293,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
       APPEND_TRANSITION_COMMENT(directory[in_msg.Address].Owner);
       APPEND_TRANSITION_COMMENT("Req: ");
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
@@ -330,7 +305,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:INV;
       out_msg.Requestor := machineID;
@@ -359,14 +334,14 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
   }
 
   action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
+    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       TBEs.allocate(address);
       TBEs[address].DataBlk := in_msg.DataBlk;
-      TBEs[address].Offset := in_msg.Offset;
+      TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
       TBEs[address].Len := in_msg.Len;
     }
   }
@@ -389,7 +364,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -403,7 +378,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -414,29 +389,15 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
       }
     }
   }
-//  action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
-//     peek(dmaRequestQueue_in, DMARequestMsg) {
-//      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
-//        out_msg.Address := address;
-//        out_msg.Type := MemoryRequestType:MEMORY_WB;
-//        out_msg.OriginalRequestorMachId := machineID;
-//        out_msg.DataBlk := in_msg.DataBlk;
-//        out_msg.MessageSize := in_msg.MessageSize;
-
-//        DEBUG_EXPR(out_msg);
-//      }
-//    }
-//  }
-
 
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         //out_msg.OriginalRequestorMachId := machineID;
         //out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.DataBlk.copyPartial(in_msg.DataBlk, in_msg.Offset, in_msg.Len);
+        out_msg.DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.PhysicalAddress), in_msg.Len);
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
@@ -447,12 +408,12 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         //out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
+        out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
@@ -465,7 +426,7 @@ machine(Directory, "Directory protocol") : LATENCY_TO_MEM_CTRL_LATENCY LATENCY_D
 
   action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;

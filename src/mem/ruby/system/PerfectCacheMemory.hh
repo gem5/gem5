@@ -43,7 +43,6 @@
 #include "mem/gems_common/Map.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/slicc_interface/AbstractChip.hh"
 
 template<class ENTRY>
 class PerfectCacheLineState {
@@ -54,11 +53,18 @@ public:
 };
 
 template<class ENTRY>
+extern inline
+ostream& operator<<(ostream& out, const PerfectCacheLineState<ENTRY>& obj)
+{
+  return out;
+}
+
+template<class ENTRY>
 class PerfectCacheMemory {
 public:
 
   // Constructors
-  PerfectCacheMemory(AbstractChip* chip_ptr);
+  PerfectCacheMemory();
 
   // Destructor
   //~PerfectCacheMemory();
@@ -106,7 +112,6 @@ private:
 
   // Data Members (m_prefix)
   Map<Address, PerfectCacheLineState<ENTRY> > m_map;
-  AbstractChip* m_chip_ptr;
 };
 
 // Output operator declaration
@@ -129,9 +134,8 @@ ostream& operator<<(ostream& out, const PerfectCacheMemory<ENTRY>& obj)
 
 template<class ENTRY>
 extern inline
-PerfectCacheMemory<ENTRY>::PerfectCacheMemory(AbstractChip* chip_ptr)
+PerfectCacheMemory<ENTRY>::PerfectCacheMemory()
 {
-  m_chip_ptr = chip_ptr;
 }
 
 // STATIC METHODS

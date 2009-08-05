@@ -35,11 +35,9 @@
 #include "mem/ruby/system/TimerTable.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
-TimerTable::TimerTable(Chip* chip_ptr)
+TimerTable::TimerTable()
 {
-  assert(chip_ptr != NULL);
   m_consumer_ptr  = NULL;
-  m_chip_ptr = chip_ptr;
   m_next_valid = false;
   m_next_address = Address(0);
   m_next_time = 0;
