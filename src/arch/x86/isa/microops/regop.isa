@@ -727,10 +727,11 @@ let {{
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            if(shiftAmt)
+            uint8_t realShiftAmt = shiftAmt % (dataSize * 8);
+            if(realShiftAmt)
             {
-                uint64_t top = psrc1 << (dataSize * 8 - shiftAmt);
-                uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
+                uint64_t top = psrc1 << (dataSize * 8 - realShiftAmt);
+                uint64_t bottom = bits(psrc1, dataSize * 8, realShiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
