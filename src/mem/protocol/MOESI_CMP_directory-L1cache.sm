@@ -35,7 +35,7 @@
 machine(L1Cache, "Directory protocol") 
  : int request_latency, 
    int l2_select_low_bit, 
-   int l2_select_high_bit
+   int l2_select_num_bits
 {
 
   // NODE L1 CACHE
@@ -412,7 +412,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						  l2_select_low_bit, l2_select_high_bit));
+						  l2_select_low_bit, l2_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
@@ -427,7 +427,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
         out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						  l2_select_low_bit, l2_select_high_bit));
+						  l2_select_low_bit, l2_select_num_bits));
         out_msg.MessageSize := MessageSizeType:Request_Control;
         out_msg.AccessMode := in_msg.AccessMode;
         out_msg.Prefetch := in_msg.Prefetch;
@@ -442,7 +442,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -454,7 +454,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceRequestType:PUTO;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -466,7 +466,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceRequestType:PUTS;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
     }
   }
@@ -479,7 +479,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						    l2_select_low_bit, l2_select_high_bit));
+						    l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := getCacheEntry(address).DataBlk;
           // out_msg.Dirty := getCacheEntry(address).Dirty;
           out_msg.Dirty := false;
@@ -512,7 +512,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.DataBlk := getCacheEntry(address).DataBlk;
       out_msg.Dirty := getCacheEntry(address).Dirty;
       out_msg.Acks := 0; // irrelevant
@@ -530,7 +530,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Sender := machineID;
           out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						    l2_select_low_bit, l2_select_high_bit));
+						    l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := getCacheEntry(address).DataBlk;
           out_msg.Dirty := getCacheEntry(address).Dirty;
           out_msg.Acks := in_msg.Acks;
@@ -575,7 +575,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Sender := machineID;
           out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						    l2_select_low_bit, l2_select_high_bit));
+						    l2_select_low_bit, l2_select_num_bits));
           out_msg.Acks := 0 - 1; // -1
           out_msg.MessageSize := MessageSizeType:Response_Control;
         }
@@ -589,7 +589,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -600,7 +600,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Type := CoherenceResponseType:UNBLOCK_EXCLUSIVE;
       out_msg.Sender := machineID;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Unblock_Control;
     }
   }
@@ -692,7 +692,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Type := CoherenceResponseType:DATA;
           out_msg.Sender := machineID;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						    l2_select_low_bit, l2_select_high_bit));
+						    l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := TBEs[address].DataBlk;
           // out_msg.Dirty := TBEs[address].Dirty;
           out_msg.Dirty := false;
@@ -723,7 +723,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
           out_msg.Sender := machineID;
           out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						    l2_select_low_bit, l2_select_high_bit));
+						    l2_select_low_bit, l2_select_num_bits));
           out_msg.DataBlk := TBEs[address].DataBlk;
           out_msg.Dirty := TBEs[address].Dirty;
           out_msg.Acks := in_msg.Acks;
@@ -741,7 +741,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L1Cache;
       out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache, 
-						l2_select_low_bit, l2_select_high_bit));
+						l2_select_low_bit, l2_select_num_bits));
       out_msg.Dirty := TBEs[address].Dirty;
       if (TBEs[address].Dirty) {
         out_msg.Type := CoherenceResponseType:WRITEBACK_DIRTY_DATA;

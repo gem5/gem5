@@ -86,10 +86,12 @@ MachineID map_Address_to_DMA(const Address & addr)
 }
 
 inline
-MachineID mapAddressToRange(const Address & addr, MachineType type, int low_bit, int high_bit)
+MachineID mapAddressToRange(const Address & addr, MachineType type, int low_bit, int num_bits)
 {
   MachineID mach = {type, 0};
-  mach.num = addr.bitSelect(low_bit, high_bit);
+  if (num_bits == 0)
+    return mach;
+  mach.num = addr.bitSelect(low_bit, low_bit+num_bits-1);
   return mach;
 }
 

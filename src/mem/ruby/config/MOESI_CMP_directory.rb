@@ -26,14 +26,13 @@ class MOESI_CMP_directory_L1CacheController < L1CacheController
     num_block_bits = log_int(RubySystem.block_size_bytes)
 
     l2_select_low_bit = num_block_bits
-    l2_select_high_bit = num_block_bits + num_select_bits - 1
 
     vec = super()
     vec += " icache " + @icache.obj_name
     vec += " dcache " + @dcache.obj_name
     vec += " request_latency "+request_latency().to_s
     vec += " l2_select_low_bit " + l2_select_low_bit.to_s
-    vec += " l2_select_high_bit " + l2_select_high_bit.to_s
+    vec += " l2_select_num_bits " + num_select_bits.to_s
     return vec
   end
 end
