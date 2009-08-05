@@ -639,7 +639,7 @@ let {{
 
     class Mov(CondRegOp):
         code = 'DestReg = merge(SrcReg1, op2, dataSize)'
-        else_code = 'DestReg=DestReg;'
+        else_code = 'DestReg = merge(DestReg, DestReg, dataSize);'
 
     # Shift instructions
 
