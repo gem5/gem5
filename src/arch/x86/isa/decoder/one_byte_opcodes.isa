@@ -330,14 +330,8 @@
             //The 64 bit versions of both of these should be illegal only
             //if CPUID says it isn't supported. For now, we'll just assume
             //that it's supported.
-            0x6: decode MODE_SUBMODE {
-                0x0: SAHF_64();
-                default: SAHF();
-            }
-            0x7: decode MODE_SUBMODE {
-                0x0: LAHF_64();
-                default: LAHF();
-            }
+            0x6: SAHF();
+            0x7: LAHF();
         }
         0x14: decode OPCODE_OP_BOTTOM3 {
             0x0: MOV(rAb, Ob);

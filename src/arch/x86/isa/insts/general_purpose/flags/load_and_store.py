@@ -55,26 +55,10 @@
 
 microcode = '''
 def macroop SAHF {
-    # This will fold to ah since this never executes in 64 bit mode.
-    ruflags rsp, dataSize=1
-};
-
-# This is allows the instruction to write to ah in 64 bit mode.
-def macroop SAHF_64 {
-    ruflags t1
-    slli t1, t1, 8
-    mov t1, t1, rax, dataSize=1
-    mov rax, rax, t1, dataSize=2
+    ruflags ah, dataSize=1
 };
 
 def macroop LAHF {
-    # This will fold to ah since this never executes in 64 bit mode.
-    wruflags rsp, t0, dataSize=1
-};
-
-# This is allows the instruction to read from ah in 64 bit mode.
-def macroop LAHF_64 {
-    srli t1, rax, 8, dataSize=2
-    wruflags t1, t0, dataSize=1
+    wruflags ah, t0, dataSize=1
 };
 '''
