@@ -78,7 +78,7 @@ namespace X86ISA
             if(subtract)
                 flags ^= (flagMask & (ECFBit | CFBit));
         }
-        if(flagMask & PFBit && findParity(dataSize*8, _dest))
+        if(flagMask & PFBit && !findParity(8, _dest))
             flags |= PFBit;
         if(flagMask & AFBit)
         {
