@@ -767,7 +767,7 @@ let {{
                 CCFlagBits flags = ccFlagBits;
                 uint64_t top = flags.cf << (dataSize * 8 - shiftAmt);
                 if(shiftAmt > 1)
-                    top |= psrc1 << (dataSize * 8 - shiftAmt - 1);
+                    top |= psrc1 << (dataSize * 8 - shiftAmt + 1);
                 uint64_t bottom = bits(psrc1, dataSize * 8, shiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
