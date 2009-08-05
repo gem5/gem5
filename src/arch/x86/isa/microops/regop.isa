@@ -648,8 +648,10 @@ let {{
                 ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
                 int CFBits = 0;
                 //Figure out if we -would- set the CF bits if requested.
-                if (bits(SrcReg1, dataSize * 8 - shiftAmt))
+                if (shiftAmt <= dataSize * 8 &&
+                        bits(SrcReg1, dataSize * 8 - shiftAmt)) {
                     CFBits = 1;
+                }
                 //If some combination of the CF bits need to be set, set them.
                 if ((ext & (CFBit | ECFBit)) && CFBits)
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
