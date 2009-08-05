@@ -100,8 +100,15 @@ t_SEMICOLON = r';'
 t_ASSIGN = r':='
 t_DOT = r'\.'
 
-class TokenError(Exception): pass
-class ParseError(Exception): pass
+class TokenError(Exception):
+    def __init__(self, msg, t):
+        super(TokenError, self).__init__(msg)
+        self.token = t
+
+class ParseError(Exception):
+    def __init__(self, msg, t):
+        super(ParseError, self).__init__(msg)
+        self.token = t
 
 def t_error(t):
     raise TokenError("Illegal character", t)
@@ -157,7 +164,7 @@ def p_file(p):
     p[0] = [ x for x in p[1] if x is not None ]
 
 def p_error(t):
-    raise ParseError(t)
+    raise ParseError("Syntax error", t)
 
 def p_empty(p):
     "empty :"
@@ -544,7 +551,7 @@ def scan(filenames):
         try:
             results = yacc.parse(file(filename, 'r').read())
         except (TokenError, ParseError), e:
-            raise type(e), tuple([filename] + [ i for i in e ])
+            sys.exit("%s: %s:%d" % (e, filename, e.token.lineno))
 
         for result in results:
             result.add(hh, cc)
