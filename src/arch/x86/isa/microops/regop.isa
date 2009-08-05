@@ -530,10 +530,9 @@ let {{
             hiResult = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
                         ((psrc1_l * psrc2_l) / shifter)) /shifter) +
                        psrc1_h * psrc2_h;
-            if (spsrc1 < 0)
+            if (bits(psrc1, dataSize * 8 - 1))
                 hiResult -= op2;
-            int64_t bigSop2 = sop2;
-            if (bigSop2 < 0)
+            if (bits(op2, dataSize * 8 - 1))
                 hiResult -= psrc1;
             ProdHi = hiResult;
             '''
