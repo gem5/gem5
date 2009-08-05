@@ -680,8 +680,11 @@ let {{
                 //worry about setting them.
                 ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                if ((ext & (CFBit | ECFBit)) && 
+                        shiftAmt <= dataSize * 8 &&
+                        bits(SrcReg1, shiftAmt - 1)) {
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                }
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && bits(SrcReg1, dataSize * 8 - 1))
                     ccFlagBits = ccFlagBits | OFBit;
