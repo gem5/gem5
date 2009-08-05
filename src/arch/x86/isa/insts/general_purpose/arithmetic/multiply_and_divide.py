@@ -61,26 +61,26 @@ microcode = '''
 
 def macroop MUL_B_R
 {
-    mul1u rax, reg
+    mul1u rax, reg, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 def macroop MUL_B_M
 {
     ld t1, seg, sib, disp
-    mul1u rax, t1
+    mul1u rax, t1, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 def macroop MUL_B_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1u rax, t1
+    mul1u rax, t1, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 #
@@ -89,26 +89,26 @@ def macroop MUL_B_P
 
 def macroop MUL_R
 {
-    mul1u rax, reg
+    mul1u rax, reg, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 def macroop MUL_M
 {
     ld t1, seg, sib, disp
-    mul1u rax, t1
+    mul1u rax, t1, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 def macroop MUL_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1u rax, t1
+    mul1u rax, t1, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 #
@@ -117,26 +117,26 @@ def macroop MUL_P
 
 def macroop IMUL_B_R
 {
-    mul1s rax, reg
+    mul1s rax, reg, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 def macroop IMUL_B_M
 {
     ld t1, seg, sib, disp
-    mul1s rax, t1
+    mul1s rax, t1, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 def macroop IMUL_B_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1s rax, t1
+    mul1s rax, t1, flags=(OF,CF)
     mulel rax
-    muleh ah, flags=(OF,CF)
+    muleh ah
 };
 
 #
@@ -145,50 +145,50 @@ def macroop IMUL_B_P
 
 def macroop IMUL_R
 {
-    mul1s rax, reg
+    mul1s rax, reg, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 def macroop IMUL_M
 {
     ld t1, seg, sib, disp
-    mul1s rax, t1
+    mul1s rax, t1, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 def macroop IMUL_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1s rax, t1
+    mul1s rax, t1, flags=(OF,CF)
     mulel rax
-    muleh rdx, flags=(OF,CF)
+    muleh rdx
 };
 
 def macroop IMUL_R_R
 {
-    mul1s reg, regm
+    mul1s reg, regm, flags=(OF,CF)
     mulel reg
-    muleh t0, flags=(CF,OF)
+    muleh t0
 };
 
 def macroop IMUL_R_M
 {
     ld t1, seg, sib, disp
-    mul1s reg, t1
+    mul1s reg, t1, flags=(CF,OF)
     mulel reg
-    muleh t0, flags=(CF,OF)
+    muleh t0
 };
 
 def macroop IMUL_R_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mul1s reg, t1
+    mul1s reg, t1, flags=(CF,OF)
     mulel reg
-    muleh t0, flags=(CF,OF)
+    muleh t0
 };
 
 #
@@ -198,18 +198,18 @@ def macroop IMUL_R_P
 def macroop IMUL_R_R_I
 {
     limm t1, imm
-    mul1s regm, t1
+    mul1s regm, t1, flags=(OF,CF)
     mulel reg
-    muleh t0, flags=(OF,CF)
+    muleh t0
 };
 
 def macroop IMUL_R_M_I
 {
     limm t1, imm
     ld t2, seg, sib, disp
-    mul1s t2, t1
+    mul1s t2, t1, flags=(OF,CF)
     mulel reg
-    muleh t0, flags=(OF,CF)
+    muleh t0
 };
 
 def macroop IMUL_R_P_I
@@ -217,9 +217,9 @@ def macroop IMUL_R_P_I
     rdip t7
     limm t1, imm
     ld t2, seg, riprel
-    mul1s t2, t1
+    mul1s t2, t1, flags=(OF,CF)
     mulel reg
-    muleh t0, flags=(OF,CF)
+    muleh t0
 };
 
 #

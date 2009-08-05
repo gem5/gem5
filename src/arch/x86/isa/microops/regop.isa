@@ -536,6 +536,14 @@ let {{
                 hiResult -= psrc1;
             ProdHi = hiResult;
             '''
+        flag_code = '''
+            if ((-ProdHi & mask(dataSize * 8)) !=
+                    bits(ProdLow, dataSize * 8 - 1)) {
+                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
+            } else {
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
+            }
+        '''
 
     class Mul1u(WrRegOp):
         code = '''
@@ -550,6 +558,13 @@ let {{
                       ((psrc1_l * psrc2_l) / shifter)) / shifter) +
                      psrc1_h * psrc2_h;
             '''
+        flag_code = '''
+            if (ProdHi) {
+                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
+            } else {
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
+            }
+        '''
 
     class Mulel(RdRegOp):
         code = 'DestReg = merge(SrcReg1, ProdLow, dataSize);'
@@ -561,12 +576,6 @@ let {{
             super(RdRegOp, self).__init__(dest, src1, \
                     "InstRegIndex(NUM_INTREGS)", flags, dataSize)
         code = 'DestReg = merge(SrcReg1, ProdHi, dataSize);'
-        flag_code = '''
-            if (ProdHi)
-                ccFlagBits = ccFlagBits | (ext & (CFBit | OFBit | ECFBit));
-            else
-                ccFlagBits = ccFlagBits & ~(ext & (CFBit | OFBit | ECFBit));
-        '''
 
     # One or two bit divide
     class Div1(WrRegOp):
