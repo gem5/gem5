@@ -176,13 +176,13 @@ def macroop ROR_P_R
 
 def macroop RCL_R_I
 {
-    rcli reg, reg, imm
+    rcli reg, reg, imm, flags=(OF,CF)
 };
 
 def macroop RCL_M_I
 {
     ldst t1, seg, sib, disp
-    rcli t1, t1, imm
+    rcli t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -190,19 +190,19 @@ def macroop RCL_P_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    rcli t1, t1, imm
+    rcli t1, t1, imm, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop RCL_1_R
 {
-    rcli reg, reg, 1
+    rcli reg, reg, 1, flags=(OF,CF)
 };
 
 def macroop RCL_1_M
 {
     ldst t1, seg, sib, disp
-    rcli t1, t1, 1
+    rcli t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -210,19 +210,19 @@ def macroop RCL_1_P
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    rcli t1, t1, 1
+    rcli t1, t1, 1, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop RCL_R_R
 {
-    rcl reg, reg, regm
+    rcl reg, reg, regm, flags=(OF,CF)
 };
 
 def macroop RCL_M_R
 {
     ldst t1, seg, sib, disp
-    rcl t1, t1, reg
+    rcl t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -230,7 +230,7 @@ def macroop RCL_P_R
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    rcl t1, t1, reg
+    rcl t1, t1, reg, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
