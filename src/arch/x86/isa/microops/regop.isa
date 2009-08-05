@@ -700,7 +700,7 @@ let {{
             // Because what happens to the bits shift -in- on a right shift
             // is not defined in the C/C++ standard, we have to sign extend
             // them manually to be sure.
-            uint64_t arithMask =
+            uint64_t arithMask = (shiftAmt == 0) ? 0 :
                 -bits(psrc1, dataSize * 8 - 1) << (dataSize * 8 - shiftAmt);
             DestReg = merge(DestReg, (psrc1 >> shiftAmt) | arithMask, dataSize);
             '''
