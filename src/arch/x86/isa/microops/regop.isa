@@ -525,7 +525,7 @@ let {{
             uint64_t hiResult;
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = op2 / shifter;
+            uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);
             uint64_t psrc2_l = op2 & mask(halfSize);
             hiResult = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
                         ((psrc1_l * psrc2_l) / shifter)) /shifter) +
@@ -545,7 +545,7 @@ let {{
             uint64_t shifter = (1ULL << halfSize);
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
-            uint64_t psrc2_h = op2 / shifter;
+            uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);
             uint64_t psrc2_l = op2 & mask(halfSize);
             ProdHi = ((psrc1_l * psrc2_h + psrc1_h * psrc2_l +
                       ((psrc1_l * psrc2_l) / shifter)) / shifter) +
