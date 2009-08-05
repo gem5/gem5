@@ -839,15 +839,16 @@ let {{
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            if(shiftAmt)
+            uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
+            if(realShiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
-                uint64_t top = psrc1 << shiftAmt;
-                uint64_t bottom = flags.cf << (shiftAmt - 1);
+                uint64_t top = psrc1 << realShiftAmt;
+                uint64_t bottom = flags.cf << (realShiftAmt - 1);
                 if(shiftAmt > 1)
                     bottom |=
                         bits(psrc1, dataSize * 8 - 1,
-                                   dataSize * 8 - shiftAmt + 1);
+                                   dataSize * 8 - realShiftAmt + 1);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -856,13 +857,15 @@ let {{
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
+                int origCFBit = (ccFlagBits & CFBit) ? 1 : 0;
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
                 ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
                 int msb = bits(DestReg, dataSize * 8 - 1);
-                int CFBits = bits(SrcReg1, dataSize * 8 - shiftAmt);
+                int CFBits = bits(SrcReg1, dataSize * 8 - realShiftAmt);
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && CFBits)
+                if ((ext & (CFBit | ECFBit)) && 
+                        (realShiftAmt == 0) ? origCFBit : CFBits)
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
                 //Figure out what the OF bit should be.
                 if ((ext & OFBit) && (msb ^ CFBits))
