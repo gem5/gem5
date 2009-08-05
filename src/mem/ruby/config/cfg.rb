@@ -150,6 +150,9 @@ class NetPort < LibRubyObject
   def cppClassName
     "NetPort"
   end
+  def self.totalOfType(mach_type)
+    return @@type_cnt[mach_type]
+  end
 end
 
 class MemoryVector < LibRubyObject
@@ -190,11 +193,20 @@ end
 class RubySystem
 
   @@params = Hash.new
+  @@defaults = Hash.new
   @@network = nil
 
   def self.init(iface_ports, network)
     @@iface_ports = iface_ports
     @@network = network
+  end
+
+  def self.reset()
+    @@iface_ports = nil
+    @@network = nil
+    @@params.each { |param_name, param|
+      param = @@defaults[param_name]
+    }
   end
 
   def self.default_param(param_name, type, default)
@@ -204,6 +216,7 @@ class RubySystem
       assert default.is_a?(type), "default value of param \"#{param_name}\" does not match type #{type}"
     end
     @@params[param_name] = default
+    @@defaults[param_name] = default
     method_name = (param_name.to_s).to_sym
     instance_eval <<-EOS
        def #{method_name.to_s}
