@@ -229,7 +229,7 @@ def macroop IMUL_R_P_I
 def macroop DIV_B_R
 {
     # Do the initial part of the division
-    div1 rsi, reg, dataSize=1
+    div1 ah, reg, dataSize=1
 
     #These are split out so we can initialize the number of bits in the
     #second register
@@ -244,7 +244,7 @@ divLoopTop:
 
     #Unload the answer
     divq rax, dataSize=1
-    divr rsi, dataSize=1
+    divr ah, dataSize=1
 };
 
 def macroop DIV_B_M
@@ -252,7 +252,7 @@ def macroop DIV_B_M
     ld t2, seg, sib, disp
 
     # Do the initial part of the division
-    div1 rsi, t2, dataSize=1
+    div1 ah, t2, dataSize=1
 
     #These are split out so we can initialize the number of bits in the
     #second register
@@ -267,7 +267,7 @@ divLoopTop:
 
     #Unload the answer
     divq rax, dataSize=1
-    divr rsi, dataSize=1
+    divr ah, dataSize=1
 };
 
 def macroop DIV_B_P
@@ -276,7 +276,7 @@ def macroop DIV_B_P
     ld t2, seg, riprel, disp
 
     # Do the initial part of the division
-    div1 rsi, t2, dataSize=1
+    div1 ah, t2, dataSize=1
 
     #These are split out so we can initialize the number of bits in the
     #second register
@@ -291,7 +291,7 @@ divLoopTop:
 
     #Unload the answer
     divq rax, dataSize=1
-    divr rsi, dataSize=1
+    divr ah, dataSize=1
 };
 
 #
@@ -384,7 +384,7 @@ def macroop IDIV_B_R
     # Negate dividend
     sub t1, t0, rax, flags=(ECF,), dataSize=1
     ruflag t4, 3
-    sub t2, t0, rsi, dataSize=1
+    sub t2, t0, ah, dataSize=1
     sub t2, t2, t4
 
     #Find the sign of the divisor
@@ -398,11 +398,11 @@ def macroop IDIV_B_R
 
     #Find the sign of the dividend
     #FIXME!!! This depends on shifts setting the carry flag correctly.
-    slli t0, rsi, 1, flags=(ECF,), dataSize=1
+    slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
     mov t1, t1, rax, flags=(nCECF,), dataSize=1
-    mov t2, t2, rsi, flags=(nCECF,), dataSize=1
+    mov t2, t2, ah, flags=(nCECF,), dataSize=1
 
     # Do the initial part of the division
     div1 t2, t3, dataSize=1
@@ -429,10 +429,10 @@ divLoopTop:
 
     # Negate the remainder
     sub t4, t0, t6, dataSize=1
-    # If the dividend was negitive, put the negated remainder in rsi.
-    mov rsi, rsi, t4, (CECF,), dataSize=1
-    # Otherwise put the regular remainder in rsi.
-    mov rsi, rsi, t6, (nCECF,), dataSize=1
+    # If the dividend was negitive, put the negated remainder in ah.
+    mov ah, ah, t4, (CECF,), dataSize=1
+    # Otherwise put the regular remainder in ah.
+    mov ah, ah, t6, (nCECF,), dataSize=1
 
     # Negate the quotient.
     sub t4, t0, t5, dataSize=1
@@ -455,7 +455,7 @@ def macroop IDIV_B_M
     # Negate dividend
     sub t1, t0, rax, flags=(ECF,), dataSize=1
     ruflag t4, 3
-    sub t2, t0, rsi, dataSize=1
+    sub t2, t0, ah, dataSize=1
     sub t2, t2, t4
 
     ld t3, seg, sib, disp
@@ -471,11 +471,11 @@ def macroop IDIV_B_M
 
     #Find the sign of the dividend
     #FIXME!!! This depends on shifts setting the carry flag correctly.
-    slli t0, rsi, 1, flags=(ECF,), dataSize=1
+    slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
     mov t1, t1, rax, flags=(nCECF,), dataSize=1
-    mov t2, t2, rsi, flags=(nCECF,), dataSize=1
+    mov t2, t2, ah, flags=(nCECF,), dataSize=1
 
     # Do the initial part of the division
     div1 t2, t3, dataSize=1
@@ -502,10 +502,10 @@ divLoopTop:
 
     # Negate the remainder
     sub t4, t0, t6, dataSize=1
-    # If the dividend was negitive, put the negated remainder in rsi.
-    mov rsi, rsi, t4, (CECF,), dataSize=1
-    # Otherwise put the regular remainder in rsi.
-    mov rsi, rsi, t6, (nCECF,), dataSize=1
+    # If the dividend was negitive, put the negated remainder in ah.
+    mov ah, ah, t4, (CECF,), dataSize=1
+    # Otherwise put the regular remainder in ah.
+    mov ah, ah, t6, (nCECF,), dataSize=1
 
     # Negate the quotient.
     sub t4, t0, t5, dataSize=1
@@ -528,7 +528,7 @@ def macroop IDIV_B_P
     # Negate dividend
     sub t1, t0, rax, flags=(ECF,), dataSize=1
     ruflag t4, 3
-    sub t2, t0, rsi, dataSize=1
+    sub t2, t0, ah, dataSize=1
     sub t2, t2, t4
 
     rdip t7
@@ -545,11 +545,11 @@ def macroop IDIV_B_P
 
     #Find the sign of the dividend
     #FIXME!!! This depends on shifts setting the carry flag correctly.
-    slli t0, rsi, 1, flags=(ECF,), dataSize=1
+    slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
     mov t1, t1, rax, flags=(nCECF,), dataSize=1
-    mov t2, t2, rsi, flags=(nCECF,), dataSize=1
+    mov t2, t2, ah, flags=(nCECF,), dataSize=1
 
     # Do the initial part of the division
     div1 t2, t3, dataSize=1
@@ -576,10 +576,10 @@ divLoopTop:
 
     # Negate the remainder
     sub t4, t0, t6, dataSize=1
-    # If the dividend was negitive, put the negated remainder in rsi.
-    mov rsi, rsi, t4, (CECF,), dataSize=1
-    # Otherwise put the regular remainder in rsi.
-    mov rsi, rsi, t6, (nCECF,), dataSize=1
+    # If the dividend was negitive, put the negated remainder in ah.
+    mov ah, ah, t4, (CECF,), dataSize=1
+    # Otherwise put the regular remainder in ah.
+    mov ah, ah, t6, (nCECF,), dataSize=1
 
     # Negate the quotient.
     sub t4, t0, t5, dataSize=1
