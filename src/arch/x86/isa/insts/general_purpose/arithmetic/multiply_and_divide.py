@@ -63,8 +63,7 @@ def macroop MUL_B_R
 {
     mul1u rax, reg
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 def macroop MUL_B_M
@@ -72,8 +71,7 @@ def macroop MUL_B_M
     ld t1, seg, sib, disp
     mul1u rax, t1
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 def macroop MUL_B_P
@@ -82,8 +80,7 @@ def macroop MUL_B_P
     ld t1, seg, riprel, disp
     mul1u rax, t1
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 #
@@ -122,8 +119,7 @@ def macroop IMUL_B_R
 {
     mul1s rax, reg
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 def macroop IMUL_B_M
@@ -131,8 +127,7 @@ def macroop IMUL_B_M
     ld t1, seg, sib, disp
     mul1s rax, t1
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 def macroop IMUL_B_P
@@ -141,8 +136,7 @@ def macroop IMUL_B_P
     ld t1, seg, riprel, disp
     mul1s rax, t1
     mulel rax
-    # Really ah
-    muleh rsi, flags=(OF,CF)
+    muleh ah, flags=(OF,CF)
 };
 
 #
