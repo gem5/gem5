@@ -711,8 +711,12 @@ let {{
                 //worry about setting them.
                 ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                uint8_t effectiveShift =
+                    (shiftAmt <= dataSize * 8) ? shiftAmt : (dataSize * 8);
+                if ((ext & (CFBit | ECFBit)) &&
+                        bits(SrcReg1, effectiveShift - 1)) {
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                }
                 //Use the regular mechanisms to calculate the other flags.
                 ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
                         DestReg, psrc1, op2);
