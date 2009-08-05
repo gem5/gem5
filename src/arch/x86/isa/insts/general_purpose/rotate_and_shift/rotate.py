@@ -56,13 +56,13 @@
 microcode = '''
 def macroop ROL_R_I
 {
-    roli reg, reg, imm
+    roli reg, reg, imm, flags=(OF,CF)
 };
 
 def macroop ROL_M_I
 {
     ldst t1, seg, sib, disp
-    roli t1, t1, imm
+    roli t1, t1, imm, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -70,19 +70,19 @@ def macroop ROL_P_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    roli t1, t1, imm
+    roli t1, t1, imm, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop ROL_1_R
 {
-    roli reg, reg, 1
+    roli reg, reg, 1, flags=(OF,CF)
 };
 
 def macroop ROL_1_M
 {
     ldst t1, seg, sib, disp
-    roli t1, t1, 1
+    roli t1, t1, 1, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -90,19 +90,19 @@ def macroop ROL_1_P
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    roli t1, t1, 1
+    roli t1, t1, 1, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
 def macroop ROL_R_R
 {
-    rol reg, reg, regm
+    rol reg, reg, regm, flags=(OF,CF)
 };
 
 def macroop ROL_M_R
 {
     ldst t1, seg, sib, disp
-    rol t1, t1, reg
+    rol t1, t1, reg, flags=(OF,CF)
     st t1, seg, sib, disp
 };
 
@@ -110,7 +110,7 @@ def macroop ROL_P_R
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    rol t1, t1, reg
+    rol t1, t1, reg, flags=(OF,CF)
     st t1, seg, riprel, disp
 };
 
