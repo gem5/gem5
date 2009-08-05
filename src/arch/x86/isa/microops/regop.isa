@@ -762,13 +762,14 @@ let {{
         code = '''
             uint8_t shiftAmt =
                 (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
-            if(shiftAmt)
+            uint8_t realShiftAmt = shiftAmt % (dataSize * 8 + 1);
+            if(realShiftAmt)
             {
                 CCFlagBits flags = ccFlagBits;
-                uint64_t top = flags.cf << (dataSize * 8 - shiftAmt);
-                if(shiftAmt > 1)
-                    top |= psrc1 << (dataSize * 8 - shiftAmt + 1);
-                uint64_t bottom = bits(psrc1, dataSize * 8 - 1, shiftAmt);
+                uint64_t top = flags.cf << (dataSize * 8 - realShiftAmt);
+                if (realShiftAmt > 1)
+                    top |= psrc1 << (dataSize * 8 - realShiftAmt + 1);
+                uint64_t bottom = bits(psrc1, dataSize * 8 - 1, realShiftAmt);
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
@@ -787,8 +788,11 @@ let {{
                     ccFlagBits = ccFlagBits | OFBit;
                 }
                 //If some combination of the CF bits need to be set, set them.
-                if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
+                if ((ext & (CFBit | ECFBit)) &&
+                        (realShiftAmt == 0) ? origCFBit :
+                        bits(SrcReg1, realShiftAmt - 1)) {
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                }
                 //Use the regular mechanisms to calculate the other flags.
                 ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
                         DestReg, psrc1, op2);
