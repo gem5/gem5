@@ -777,13 +777,15 @@ let {{
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
             if (shiftAmt) {
+                int origCFBit = (ccFlagBits & CFBit) ? 1 : 0;
                 //Zero out any flags we might modify. This way we only have to
                 //worry about setting them.
                 ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
                 //Figure out what the OF bit should be.
-                if ((ext & OFBit) && ((ccFlagBits & CFBit) ^
-                                      bits(SrcReg1, dataSize * 8 - 1)))
+                if ((ext & OFBit) && (origCFBit ^
+                                      bits(SrcReg1, dataSize * 8 - 1))) {
                     ccFlagBits = ccFlagBits | OFBit;
+                }
                 //If some combination of the CF bits need to be set, set them.
                 if ((ext & (CFBit | ECFBit)) && bits(SrcReg1, shiftAmt - 1))
                     ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
