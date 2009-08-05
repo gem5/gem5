@@ -734,7 +734,7 @@ let {{
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
-                DestReg = DestReg;
+                DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -771,7 +771,7 @@ let {{
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
-                DestReg = DestReg;
+                DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -805,7 +805,7 @@ let {{
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
-                DestReg = DestReg;
+                DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
@@ -844,7 +844,7 @@ let {{
                 DestReg = merge(DestReg, top | bottom, dataSize);
             }
             else
-                DestReg = DestReg;
+                DestReg = merge(DestReg, DestReg, dataSize);
             '''
         flag_code = '''
             // If the shift amount is zero, no flags should be modified.
