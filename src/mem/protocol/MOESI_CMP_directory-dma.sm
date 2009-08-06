@@ -98,7 +98,8 @@ machine(DMA, "DMA Controller")
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
           trigger(Event:DMA_Ack, in_msg.Address);
-        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+		   in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, in_msg.Address);
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Inv_Ack, in_msg.Address);
