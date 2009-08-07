@@ -224,14 +224,14 @@ def macroop CMOVNP_R_R
 def macroop CMOVNP_R_M
 {
     ld t1, seg, sib, disp
-    mov reg, reg, regm, flags=(nCPF,)
+    mov reg, reg, t1, flags=(nCPF,)
 };
 
 def macroop CMOVNP_R_P
 {
     rdip t7
     ld t1, seg, riprel, disp
-    mov reg, reg, regm, flags=(nCPF,)
+    mov reg, reg, t1, flags=(nCPF,)
 };
 
 def macroop CMOVL_R_R
