@@ -831,7 +831,7 @@
                 0x2: rsm_smm();
                 0x3: Inst::BTS(Ev,Gv);
                 0x4: Inst::SHRD(Ev,Gv,Ib);
-                0x5: shrd_Ev_Gv_rCl();
+                0x5: Inst::SHRD(Ev,Gv);
                 //0x6: group16();
                 0x6: decode MODRM_REG {
                     0x0: fxsave();

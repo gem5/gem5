@@ -220,38 +220,49 @@ def macroop SHR_P_R
     st t1, seg, riprel, disp
 };
 
-# SHRD will not set OF correctly when the shift count is 1.
-def macroop SHRD_R_R_I
+def macroop SHRD_R_R
 {
-    srli t1, reg, imm, flags=(CF,)
-    rori t2, regm, imm
-    srli t3, regm, imm
-    xor t2, t2, t3
-    or reg, t1, t2
+    mdbi regm, 0
+    srd reg, reg, rcx, flags=(CF,OF,SF,ZF,PF)
 };
 
-# SHRD will not set OF correctly when the shift count is 1.
-def macroop SHRD_M_R_I
+def macroop SHRD_M_R
 {
     ldst t1, seg, sib, disp
-    srli t1, t1, imm, flags=(CF,)
-    rori t2, reg, imm
-    srli t3, reg, imm
-    xor t2, t2, t3
-    or t1, t1, t2
+    mdbi reg, 0
+    srd t1, t1, rcx, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, sib, disp
 };
 
-# SHRD will not set OF correctly when the shift count is 1.
+def macroop SHRD_P_R
+{
+    rdip t7
+    ldst t1, seg, riprel, disp
+    mdbi reg, 0
+    srd t1, t1, rcx, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, riprel, disp
+};
+
+def macroop SHRD_R_R_I
+{
+    mdbi regm, 0
+    srdi reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
+};
+
+def macroop SHRD_M_R_I
+{
+    ldst t1, seg, sib, disp
+    mdbi reg, 0
+    srdi t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, sib, disp
+};
+
 def macroop SHRD_P_R_I
 {
     rdip t7
     ldst t1, seg, riprel, disp
-    srli t1, t1, imm, flags=(CF,)
-    rori t2, reg, imm
-    srli t3, reg, imm
-    xor t2, t2, t3
-    or t1, t1, t2
+    mdbi reg, 0
+    srdi t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
     st t1, seg, riprel, disp
 };
 
