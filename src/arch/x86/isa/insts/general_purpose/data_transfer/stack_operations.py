@@ -150,13 +150,14 @@ def macroop LEAVE {
     # Make the default data size of pops 64 bits in 64 bit mode
     .adjust_env oszIn64Override
 
-    mov t1, t1, rbp, dataSize=asz
+    mov t1, t1, rbp, dataSize=ssz
     ld rbp, ss, [1, t0, t1], dataSize=ssz
-    mov rsp, rsp, t1, dataSize=asz
-    addi rsp, rsp, ssz, dataSize=asz
+    mov rsp, rsp, t1, dataSize=ssz
+    addi rsp, rsp, ssz, dataSize=ssz
 };
 
 def macroop ENTER_I_I {
+    .adjust_env oszIn64Override
     # This needs to check all the addresses it writes to before it actually
     # writes any values.
 
@@ -168,10 +169,10 @@ def macroop ENTER_I_I {
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
     # Push rbp.
-    stupd rbp, ss, [1, t0, rsp], "-env.stackSize", dataSize=ssz
+    stupd rbp, ss, [1, t0, rsp], "-env.dataSize"
 
     # Save the stack pointer for later
-    mov t6, t6, rsp, dataSize=asz
+    mov t6, t6, rsp
 
     # If the nesting level is zero, skip all this stuff.
     sub t0, t1, t0, flags=(EZF,), dataSize=2
@@ -183,8 +184,8 @@ def macroop ENTER_I_I {
 
     limm t4, "ULL(-1)", dataSize=8
 topOfLoop:
-    ld t5, ss, [ssz, t4, rbp], dataSize=ssz
-    stupd t5, ss, [1, t0, rsp], "-env.stackSize"
+    ld t5, ss, [dsz, t4, rbp]
+    stupd t5, ss, [1, t0, rsp], "-env.dataSize"
 
     # If we're not done yet, loop
     subi t4, t4, 1, dataSize=8
@@ -193,10 +194,10 @@ topOfLoop:
 
 bottomOfLoop:
     # Push the old rbp onto the stack
-    stupd t6, ss, [1, t0, rsp], "-env.stackSize"
+    stupd t6, ss, [1, t0, rsp], "-env.dataSize"
 
 skipLoop:
-    sub rsp, rsp, t2, dataSize=asz
-    mov rbp, rbp, t6, dataSize=asz
+    sub rsp, rsp, t2, dataSize=ssz
+    mov rbp, rbp, t6
 };
 '''
