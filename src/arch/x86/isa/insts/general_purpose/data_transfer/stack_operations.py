@@ -162,9 +162,9 @@ def macroop ENTER_I_I {
     # writes any values.
 
     # Pull the different components out of the immediate
-    limm t1, imm
+    limm t1, imm, dataSize=8
     zexti t2, t1, 15, dataSize=8
-    srli t1, t1, 16
+    srli t1, t1, 16, dataSize=8
     zexti t1, t1, 5, dataSize=8
     # t1 is now the masked nesting level, and t2 is the amount of storage.
 
