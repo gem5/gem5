@@ -884,6 +884,107 @@ let {{
             }
         '''
 
+    class Sld(RegOp):
+        code = '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
+            uint8_t dataBits = dataSize * 8;
+            uint8_t realShiftAmt = shiftAmt % (2 * dataBits);
+            uint64_t result;
+            if (realShiftAmt == 0) {
+                result = psrc1;
+            } else if (realShiftAmt < dataBits) {
+                result = (psrc1 << realShiftAmt) |
+                         (DoubleBits >> (dataBits - realShiftAmt));
+            } else {
+                result = (DoubleBits << (realShiftAmt - dataBits)) |
+                         (psrc1 >> (2 * dataBits - realShiftAmt));
+            }
+            DestReg = merge(DestReg, result, dataSize);
+            '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                int CFBits = 0;
+                //Figure out if we -would- set the CF bits if requested.
+                if ((realShiftAmt == 0 &&
+                        bits(DoubleBits, 0)) ||
+                    (realShiftAmt <= dataBits &&
+                     bits(SrcReg1, dataBits - realShiftAmt)) ||
+                    (realShiftAmt > dataBits &&
+                     bits(DoubleBits, 2 * dataBits - realShiftAmt))) {
+                    CFBits = 1;
+                }
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && CFBits)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (bits(SrcReg1, dataBits - 1) ^
+                                      bits(result, dataBits - 1)))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
+
+    class Srd(RegOp):
+        code = '''
+            uint8_t shiftAmt = (op2 & ((dataSize == 8) ? mask(6) : mask(5)));
+            uint8_t dataBits = dataSize * 8;
+            uint8_t realShiftAmt = shiftAmt % (2 * dataBits);
+            uint64_t result;
+            if (realShiftAmt == 0) {
+                result = psrc1;
+            } else if (realShiftAmt < dataBits) {
+                // Because what happens to the bits shift -in- on a right
+                // shift is not defined in the C/C++ standard, we have to
+                // mask them out to be sure they're zero.
+                uint64_t logicalMask = mask(dataBits - realShiftAmt);
+                result = ((psrc1 >> realShiftAmt) & logicalMask) |
+                         (DoubleBits << (dataBits - realShiftAmt));
+            } else {
+                uint64_t logicalMask = mask(2 * dataBits - realShiftAmt);
+                result = ((DoubleBits >> (realShiftAmt - dataBits)) &
+                          logicalMask) |
+                         (psrc1 << (2 * dataBits - realShiftAmt));
+            }
+            DestReg = merge(DestReg, result, dataSize);
+            '''
+        flag_code = '''
+            // If the shift amount is zero, no flags should be modified.
+            if (shiftAmt) {
+                //Zero out any flags we might modify. This way we only have to
+                //worry about setting them.
+                ccFlagBits = ccFlagBits & ~(ext & (CFBit | ECFBit | OFBit));
+                int CFBits = 0;
+                //If some combination of the CF bits need to be set, set them.
+                if ((realShiftAmt == 0 &&
+                            bits(DoubleBits, dataBits - 1)) ||
+                        (realShiftAmt <= dataBits &&
+                         bits(SrcReg1, realShiftAmt - 1)) ||
+                        (realShiftAmt > dataBits &&
+                         bits(DoubleBits, realShiftAmt - dataBits - 1))) {
+                    CFBits = 1;
+                }
+                //If some combination of the CF bits need to be set, set them.
+                if ((ext & (CFBit | ECFBit)) && CFBits)
+                    ccFlagBits = ccFlagBits | (ext & (CFBit | ECFBit));
+                //Figure out what the OF bit should be.
+                if ((ext & OFBit) && (bits(SrcReg1, dataBits - 1) ^
+                                      bits(result, dataBits - 1)))
+                    ccFlagBits = ccFlagBits | OFBit;
+                //Use the regular mechanisms to calculate the other flags.
+                ccFlagBits = genFlags(ccFlagBits, ext & ~(CFBit | ECFBit | OFBit),
+                        DestReg, psrc1, op2);
+            }
+        '''
+
+    class Mdb(WrRegOp):
+        code = 'DoubleBits = psrc1 ^ op2;'
+
     class Wrip(WrRegOp, CondRegOp):
         code = 'RIP = psrc1 + sop2 + CSBase'
         else_code="RIP = RIP;"

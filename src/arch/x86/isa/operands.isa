@@ -127,6 +127,7 @@ def operands {{
         'Quotient':      impIntReg(2, 9),
         'Remainder':     impIntReg(3, 10),
         'Divisor':       impIntReg(4, 11),
+        'DoubleBits':    impIntReg(5, 11),
         'Rax':           intReg('(INTREG_RAX)', 12),
         'Rbx':           intReg('(INTREG_RBX)', 13),
         'Rcx':           intReg('(INTREG_RCX)', 14),
