@@ -114,6 +114,52 @@ def macroop SAL_P_R
     st t1, seg, riprel, disp
 };
 
+def macroop SHLD_R_R
+{
+    mdbi regm, 0
+    sld reg, reg, rcx, flags=(CF,OF,SF,ZF,PF)
+};
+
+def macroop SHLD_M_R
+{
+    ldst t1, seg, sib, disp
+    mdbi reg, 0
+    sld t1, t1, rcx, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, sib, disp
+};
+
+def macroop SHLD_P_R
+{
+    rdip t7
+    ldst t1, seg, riprel, disp
+    mdbi reg, 0
+    sld t1, t1, rcx, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, riprel, disp
+};
+
+def macroop SHLD_R_R_I
+{
+    mdbi regm, 0
+    sldi reg, reg, imm, flags=(CF,OF,SF,ZF,PF)
+};
+
+def macroop SHLD_M_R_I
+{
+    ldst t1, seg, sib, disp
+    mdbi reg, 0
+    sldi t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, sib, disp
+};
+
+def macroop SHLD_P_R_I
+{
+    rdip t7
+    ldst t1, seg, riprel, disp
+    mdbi reg, 0
+    sldi t1, t1, imm, flags=(CF,OF,SF,ZF,PF)
+    st t1, seg, riprel, disp
+};
+
 def macroop SHR_R_I
 {
     srli reg, reg, imm, flags=(CF,OF,SF,ZF,PF)

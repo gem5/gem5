@@ -820,8 +820,8 @@
                     Rdx = result.rdx;
                     }});
                 0x3: Inst::BT(Ev,Gv);
-                0x4: shld_Ev_Gv_Ib();
-                0x5: shld_Ev_Gv_rCl();
+                0x4: Inst::SHLD(Ev,Gv,Ib);
+                0x5: Inst::SHLD(Ev,Gv);
                 0x6: xbts_and_cmpxchg();
                 0x7: ibts_and_cmpxchg();
             }
