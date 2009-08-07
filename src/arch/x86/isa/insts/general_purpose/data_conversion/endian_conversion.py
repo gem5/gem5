@@ -64,15 +64,15 @@ def macroop BSWAP_D_R
 def macroop BSWAP_Q_R
 {
     roli reg, reg, 8, dataSize=2
-    roli reg, reg, 16, dataSize=4
-    roli reg, reg, 8, dataSize=2
-    roli reg, reg, 32, dataSize=8
-    roli reg, reg, 8, dataSize=2
-    roli reg, reg, 16, dataSize=4
-    roli reg, reg, 8, dataSize=2
+    roli t1, reg, 16, dataSize=4
+    # Top 4 bytes of t1 are now zero
+    roli t1, t1, 8, dataSize=2
+    roli t1, t1, 32, dataSize=8
+    srli t2, reg, 32, dataSize=8
+    roli t2, t2, 8, dataSize=2
+    roli t2, t2, 16, dataSize=4
+    # Top 4 bytes of t2 are now zero
+    roli t2, t2, 8, dataSize=2
+    or reg, t1, t2, dataSize=8
 };
 '''
-#let {{
-#    class BSWAP(Inst):
-#       "GenFault ${new UnimpInstFault}"
-#}};
