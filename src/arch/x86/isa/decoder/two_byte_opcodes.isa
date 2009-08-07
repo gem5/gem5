@@ -1067,7 +1067,7 @@
                 }
                 default: Inst::UD2();
             }
-            0x1E: decode OPCODE_OP_BOTTOM3 {
+            0x1E: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x1: psllw_Pq_Qq();
