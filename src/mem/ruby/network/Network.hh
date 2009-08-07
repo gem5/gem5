@@ -71,6 +71,8 @@ public:
   int getEndpointBandwidth() { return m_endpoint_bandwidth; }
   bool getAdaptiveRouting() {return m_adaptive_routing; }
   int getLinkLatency() { return m_link_latency; }
+  int MessageSizeType_to_int(MessageSizeType size_type);
+
 
   // returns the queue requested for the given component
   virtual MessageBuffer* getToNetQueue(NodeID id, bool ordered, int netNumber) = 0;
@@ -107,6 +109,8 @@ protected:
   Topology* m_topology_ptr;
   bool m_adaptive_routing;
   int m_link_latency;
+  int m_control_msg_size;
+  int m_data_msg_size;
 };
 
 // Output operator declaration
@@ -121,43 +125,6 @@ ostream& operator<<(ostream& out, const Network& obj)
   obj.print(out);
   out << flush;
   return out;
-}
-
-// Code to map network message size types to an integer number of bytes
-const int CONTROL_MESSAGE_SIZE = 8;
-const int DATA_MESSAGE_SIZE = (RubySystem::getBlockSizeBytes()+8);
-
-extern inline
-int MessageSizeType_to_int(MessageSizeType size_type)
-{
-  switch(size_type) {
-  case MessageSizeType_Undefined:
-    ERROR_MSG("Can't convert Undefined MessageSizeType to integer");
-    break;
-  case MessageSizeType_Control:
-  case MessageSizeType_Request_Control:
-  case MessageSizeType_Reissue_Control:
-  case MessageSizeType_Response_Control:
-  case MessageSizeType_Writeback_Control:
-  case MessageSizeType_Forwarded_Control:
-  case MessageSizeType_Invalidate_Control:
-  case MessageSizeType_Unblock_Control:
-  case MessageSizeType_Persistent_Control:
-  case MessageSizeType_Completion_Control:
-    return CONTROL_MESSAGE_SIZE;
-    break;
-  case MessageSizeType_Data:
-  case MessageSizeType_Response_Data:
-  case MessageSizeType_ResponseLocal_Data:
-  case MessageSizeType_ResponseL2hit_Data:
-  case MessageSizeType_Writeback_Data:
-    return DATA_MESSAGE_SIZE;
-    break;
-  default:
-    ERROR_MSG("Invalid range for type MessageSizeType");
-    break;
-  }
-  return 0;
 }
 
 #endif //NETWORK_H

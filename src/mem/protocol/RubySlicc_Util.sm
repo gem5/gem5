@@ -37,7 +37,6 @@ Time zero_time();
 NodeID intToID(int nodenum);
 int IDToInt(NodeID id);
 int addressToInt(Address addr);
-int MessageSizeTypeToInt(MessageSizeType size_type);
 bool multicast_retry();
 int numberOfNodes();
 int numberOfL1CachePerChip();

@@ -602,7 +602,7 @@ class Network < LibRubyObject
     vec += " buffer_size "+buffer_size.to_s
     vec += " link_latency "+adaptive_routing.to_s
     vec += " on_chip_latency "+on_chip_latency.to_s
-
+    vec += " control_msg_size "+control_msg_size.to_s
   end
 
   def printTopology()

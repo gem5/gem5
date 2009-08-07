@@ -916,7 +916,7 @@ machine(L2Cache, "Token protocol") {
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(L1requestNetwork_in, RequestMsg) {
       // AccessModeType not implemented
-      profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize),  in_msg.Prefetch, machineIDToNodeID(in_msg.Requestor));
+      //profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize),  in_msg.Prefetch, machineIDToNodeID(in_msg.Requestor));
     }
   }
 

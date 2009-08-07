@@ -1,3 +1,5 @@
+Redirecting stdout to build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby/simout
+Redirecting stderr to build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby/simerr
 M5 Simulator System
 
 Copyright (c) 2001-2008
@@ -5,11 +7,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 29 2009 15:19:07
-M5 revision a6e8795b73de+ 6384+ default tip
-M5 started Jul 29 2009 15:19:16
-M5 executing on clover-02.cs.wisc.edu
+M5 compiled Aug  7 2009 11:05:15
+M5 revision e34c4d587f38 6440 default qtip qbase tip tushar/ruby-data_msg_size-bug-fix
+M5 started Aug  7 2009 11:05:38
+M5 executing on ca2h0439
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby -re tests/run.py build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 31814464 because maximum number of loads reached
+Exiting @ tick 31633980 because maximum number of loads reached
