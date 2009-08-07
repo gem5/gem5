@@ -62,7 +62,7 @@ def macroop SCAS_M {
     mov t2, t2, t3, flags=(nCEZF,), dataSize=asz
 
     ld t1, es, [1, t0, rdi]
-    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     add rdi, rdi, t2, dataSize=asz
 };
@@ -84,7 +84,7 @@ def macroop SCAS_E_M {
 
 topOfLoop:
     ld t1, es, [1, t0, rdi]
-    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
@@ -105,7 +105,7 @@ def macroop SCAS_N_M {
 
 topOfLoop:
     ld t1, es, [1, t0, rdi]
-    sub t0, t1, rax, flags=(OF, SF, ZF, AF, PF, CF)
+    sub t0, rax, t1, flags=(OF, SF, ZF, AF, PF, CF)
 
     subi rcx, rcx, 1, flags=(EZF,), dataSize=asz
     add rdi, rdi, t2, dataSize=asz
