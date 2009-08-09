@@ -2,7 +2,7 @@
 ================ Begin RubySystem Configuration Print ================
 
 RubySystem config:
-  random_seed: 184716
+  random_seed: 1234
   randomization: 0
   tech_nm: 45
   freq_mhz: 3000
@@ -14,18 +14,20 @@ DMA_Controller config: DMAController_0
   version: 0
   buffer_size: 32
   dma_sequencer: DMASequencer_0
-  number_of_TBEs: 128
+  number_of_TBEs: 256
+  recycle_latency: 10
+  request_latency: 6
   transitions_per_cycle: 32
 Directory_Controller config: DirectoryController_0
   version: 0
   buffer_size: 32
   directory_latency: 6
   directory_name: DirectoryMemory_0
+  dma_select_low_bit: 6
+  dma_select_num_bits: 0
   memory_controller_name: MemoryControl_0
-  memory_latency: 158
-  number_of_TBEs: 128
+  number_of_TBEs: 256
   recycle_latency: 10
-  to_mem_ctrl_latency: 1
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_0
   version: 0
@@ -33,7 +35,8 @@ L1Cache_Controller config: L1CacheController_0
   cache: l1u_0
   cache_response_latency: 12
   issue_latency: 2
-  number_of_TBEs: 128
+  number_of_TBEs: 256
+  recycle_latency: 10
   sequencer: Sequencer_0
   transitions_per_cycle: 32
 Cache config: l1u_0
@@ -103,82 +106,42 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Jul/06/2009 11:11:44
+Real time: Aug/09/2009 04:00:22
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 1
-Elapsed_time_in_minutes: 0.0166667
-Elapsed_time_in_hours: 0.000277778
-Elapsed_time_in_days: 1.15741e-05
+Elapsed_time_in_seconds: 4
+Elapsed_time_in_minutes: 0.0666667
+Elapsed_time_in_hours: 0.00111111
+Elapsed_time_in_days: 4.62963e-05
 
-Virtual_time_in_seconds: 0.87
-Virtual_time_in_minutes: 0.0145
-Virtual_time_in_hours:   0.000241667
-Virtual_time_in_days:    0.000241667
+Virtual_time_in_seconds: 1.19
+Virtual_time_in_minutes: 0.0198333
+Virtual_time_in_hours:   0.000330556
+Virtual_time_in_days:    1.37731e-05
 
 Ruby_current_time: 26617001
 Ruby_start_time: 1
 Ruby_cycles: 26617000
 
-mbytes_resident: 145.273
-mbytes_total: 1330.63
-resident_ratio: 0.109179
+mbytes_resident: 144.777
+mbytes_total: 1352.41
+resident_ratio: 0.107057
 
 Total_misses: 0
 total_misses: 0 [ 0 ]
 user_misses: 0 [ 0 ]
 supervisor_misses: 0 [ 0 ]
 
-instruction_executed: 1 [ 1 ]
 ruby_cycles_executed: 26617001 [ 26617001 ]
-cycles_per_instruction: 2.6617e+07 [ 2.6617e+07 ]
-misses_per_thousand_instructions: 0 [ 0 ]
 
 transactions_started: 0 [ 0 ]
 transactions_ended: 0 [ 0 ]
-instructions_per_transaction: 0 [ 0 ]
 cycles_per_transaction: 0 [ 0 ]
 misses_per_transaction: 0 [ 0 ]
 
-L1D_cache cache stats: 
-  L1D_cache_total_misses: 0
-  L1D_cache_total_demand_misses: 0
-  L1D_cache_total_prefetches: 0
-  L1D_cache_total_sw_prefetches: 0
-  L1D_cache_total_hw_prefetches: 0
-  L1D_cache_misses_per_transaction: 0
-  L1D_cache_misses_per_instruction: 0
-  L1D_cache_instructions_per_misses: NaN
 
-  L1D_cache_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-L1I_cache cache stats: 
-  L1I_cache_total_misses: 0
-  L1I_cache_total_demand_misses: 0
-  L1I_cache_total_prefetches: 0
-  L1I_cache_total_sw_prefetches: 0
-  L1I_cache_total_hw_prefetches: 0
-  L1I_cache_misses_per_transaction: 0
-  L1I_cache_misses_per_instruction: 0
-  L1I_cache_instructions_per_misses: NaN
-
-  L1I_cache_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-L2_cache cache stats: 
-  L2_cache_total_misses: 0
-  L2_cache_total_demand_misses: 0
-  L2_cache_total_prefetches: 0
-  L2_cache_total_sw_prefetches: 0
-  L2_cache_total_hw_prefetches: 0
-  L2_cache_misses_per_transaction: 0
-  L2_cache_misses_per_instruction: 0
-  L2_cache_instructions_per_misses: NaN
-
-  L2_cache_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
-
-Memory control:
+Memory control MemoryControl_0:
   memory_total_requests: 1082
   memory_reads: 557
   memory_writes: 525
@@ -205,30 +168,19 @@ DMA-0:0
 
 Busy Bank Count:0
 
-L1TBE_usage: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-L2TBE_usage: [binsize: 1 max: 1 count: 1082 average: 0.485213 | standard deviation: 0.500693 | 557 525 ]
-StopTable_usage: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 sequencer_requests_outstanding: [binsize: 1 max: 1 count: 8873 average:     1 | standard deviation: 0 | 0 8873 ]
-store_buffer_size: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-unique_blocks_in_store_buffer: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 2 max: 279 count: 8873 average: 12.5938 | standard deviation: 41.1326 | 0 8316 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 30 0 0 0 0 11 0 0 0 0 480 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 0 0 0 1 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_1: [binsize: 2 max: 279 count: 6886 average: 9.86669 | standard deviation: 35.7801 | 0 6566 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 0 0 0 6 0 0 0 0 280 0 0 0 0 7 0 0 0 0 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_2: [binsize: 2 max: 279 count: 1053 average: 24.4786 | standard deviation: 57.8541 | 0 913 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 0 0 0 4 0 0 0 0 118 0 0 0 0 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_3: [binsize: 2 max: 259 count: 934 average: 19.3009 | standard deviation: 51.067 | 0 837 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 0 0 0 1 0 0 0 0 82 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_L2Miss: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+miss_latency: [binsize: 2 max: 277 count: 8873 average: 11.531 | standard deviation: 40.8912 | 8316 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 30 0 0 0 0 11 0 0 0 0 480 0 0 0 0 10 0 0 0 0 10 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 0 0 0 1 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_1: [binsize: 2 max: 277 count: 6886 average: 8.82021 | standard deviation: 35.5704 | 6566 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 9 0 0 0 0 6 0 0 0 0 280 0 0 0 0 7 0 0 0 0 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 6 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_2: [binsize: 2 max: 277 count: 1053 average: 23.3457 | standard deviation: 57.517 | 913 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 10 0 0 0 0 4 0 0 0 0 118 0 0 0 0 2 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 3 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_3: [binsize: 2 max: 257 count: 934 average: 18.197 | standard deviation: 50.763 | 837 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 11 0 0 0 0 1 0 0 0 0 82 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
 prefetch_latency: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 prefetch_latency_L2Miss:[binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-multicast_retries: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-gets_mask_prediction_count: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-getx_mask_prediction_count: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-explicit_training_mask: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-
 Request vs. RubySystem State Profile
 --------------------------------
 
@@ -249,13 +201,13 @@ Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 1082 average:     0 | standa
 Resource Usage
 --------------
 page_size: 4096
-user_time: 0
+user_time: 1
 system_time: 0
-page_reclaims: 37883
+page_reclaims: 38363
 page_faults: 0
 swaps: 0
 block_inputs: 0
-block_outputs: 48
+block_outputs: 0
 
 Network Stats
 -------------
@@ -301,7 +253,22 @@ links_utilized_percent_switch_3: 0.000135502
   outgoing_messages_switch_3_link_1_Control: 557 4456 [ 557 0 0 0 0 0 ] base_latency: 1
   outgoing_messages_switch_3_link_1_Data: 525 4200 [ 525 0 0 0 0 0 ] base_latency: 1
 
- --- DMA ---
+l1u_0 cache stats: 
+  l1u_0_total_misses: 557
+  l1u_0_total_demand_misses: 557
+  l1u_0_total_prefetches: 0
+  l1u_0_total_sw_prefetches: 0
+  l1u_0_total_hw_prefetches: 0
+  l1u_0_misses_per_transaction: inf
+
+  l1u_0_request_type_LD:   25.1346%
+  l1u_0_request_type_ST:   17.4147%
+  l1u_0_request_type_IFETCH:   57.4506%
+
+  l1u_0_access_mode_type_SupervisorMode:   557    100%
+  l1u_0_request_size: [binsize: log2 max: 8 count: 557 average: 7.5368 | standard deviation: 1.45496 | 0 12 1 42 502 ]
+
+ --- DMA 0 ---
  - Event Counts -
 ReadRequest  0
 WriteRequest  0
@@ -316,7 +283,7 @@ BUSY_RD  Data  0 <--
 
 BUSY_WR  Ack  0 <-- 
 
- --- Directory ---
+ --- Directory 0 ---
  - Event Counts -
 GETX  557
 GETS  0
@@ -379,7 +346,7 @@ ID_W  DMA_READ  0 <--
 ID_W  DMA_WRITE  0 <-- 
 ID_W  Memory_Ack  0 <-- 
 
- --- L1Cache ---
+ --- L1Cache 0 ---
  - Event Counts -
 Load  1053
 Ifetch  6886

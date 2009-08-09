@@ -5,13 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul  6 2009 11:09:41
-M5 revision d3635cac686a 6289 default ruby_refs.diff qtip tip
-M5 started Jul  6 2009 11:11:41
-M5 executing on maize
-command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-atomic-ruby -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-atomic-ruby
+M5 compiled Aug  9 2009 03:58:47
+M5 revision 33faa9915d16 6486 default tip
+M5 started Aug  9 2009 03:58:49
+M5 executing on tater
+command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-atomic-ruby -re tests/run.py build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-atomic-ruby
 Global frequency set at 1000000000000 ticks per second
-  Debug: Adding to filter: 'q' (Queue)
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 5491500 because target called exit()
+Exiting @ tick 5504000 because target called exit()
