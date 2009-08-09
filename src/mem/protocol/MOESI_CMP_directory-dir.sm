@@ -698,7 +698,7 @@ machine(Directory, "Directory protocol")
   }
 
 
-  transition({MM, MO, MI, MIS, OS, OSS}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ}) {
+  transition({MM, MO, MI, MIS, OS, OSS, XI_M, XI_U, OI_D}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
     zz_recycleRequest;
   }
 
@@ -713,7 +713,7 @@ machine(Directory, "Directory protocol")
     j_popIncomingUnblockQueue;
   }
 
-  transition({IS, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ}) {
+  transition({IS, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
     zz_recycleRequest;
   }
 
