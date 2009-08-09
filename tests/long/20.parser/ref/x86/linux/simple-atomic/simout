@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2009 19:00:07
-M5 revision e6dd09514462 6117 default qtip tip stats-update
-M5 started Apr 21 2009 19:26:09
-M5 executing on zizzer
+M5 compiled Aug  8 2009 12:09:45
+M5 revision f8cd1918b0c6 6483 default qtip tip condmovezerostats.patch
+M5 started Aug  8 2009 12:09:45
+M5 executing on tater
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic -re tests/run.py build/X86_SE/tests/fast/long/20.parser/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
@@ -74,4 +74,4 @@ info: Increasing stack size by one page.
   about 2 million people attended 
   the five best costumes got prizes 
 No errors!
-Exiting @ tick 868476160000 because target called exit()
+Exiting @ tick 868585211000 because target called exit()
