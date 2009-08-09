@@ -544,7 +544,7 @@
                 0x5: IMUL_B(Eb);
                 //This should be Eb, but it access the entire word value ax.
                 0x6: DIV_B(Ew);
-                0x7: IDIV(Eb);
+                0x7: IDIV_B(Eb);
             }
             //0x7: group3_Ev();
             0x7: decode MODRM_REG {
