@@ -388,7 +388,6 @@ def macroop IDIV_B_R
     sub t2, t2, t4
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, reg, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
@@ -397,7 +396,6 @@ def macroop IDIV_B_R
     mov t3, t3, reg, flags=(nCECF,), dataSize=1
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
@@ -440,7 +438,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,), dataSize=1
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,), dataSize=1
+    slli t0, reg, 1, flags=(ECF,), dataSize=1
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5, dataSize=1
@@ -458,19 +456,17 @@ def macroop IDIV_B_M
     sub t2, t0, ah, dataSize=1
     sub t2, t2, t4
 
-    ld t3, seg, sib, disp
+    ld t8, seg, sib, disp
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t3, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
-    sub t4, t0, t3, dataSize=1
+    sub t3, t0, t8, dataSize=1
     # Put the divisor's absolute value into t3
-    mov t3, t3, t4, flags=(CECF,), dataSize=1
+    mov t3, t3, t8, flags=(nCECF,), dataSize=1
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
@@ -513,7 +509,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,), dataSize=1
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,), dataSize=1
+    slli t0, t8, 1, flags=(ECF,), dataSize=1
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5, dataSize=1
@@ -532,19 +528,17 @@ def macroop IDIV_B_P
     sub t2, t2, t4
 
     rdip t7
-    ld t3, seg, riprel, disp
+    ld t8, seg, riprel, disp
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t3, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
-    sub t4, t0, t3, dataSize=1
+    sub t3, t0, t8, dataSize=1
     # Put the divisor's absolute value into t3
-    mov t3, t3, t4, flags=(CECF,), dataSize=1
+    mov t3, t3, t8, flags=(nCECF,), dataSize=1
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, ah, 1, flags=(ECF,), dataSize=1
 
     # Put the dividend's absolute value into t1 and t2
@@ -587,7 +581,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,), dataSize=1
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,), dataSize=1
+    slli t0, t8, 1, flags=(ECF,), dataSize=1
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5, dataSize=1
@@ -610,7 +604,6 @@ def macroop IDIV_R
     sub t2, t2, t4
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, reg, 1, flags=(ECF,)
 
     # Negate divisor
@@ -619,7 +612,6 @@ def macroop IDIV_R
     mov t3, t3, reg, flags=(nCECF,)
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, rdx, 1, flags=(ECF,)
 
     # Put the dividend's absolute value into t1 and t2
@@ -664,7 +656,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,)
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,)
+    slli t0, reg, 1, flags=(ECF,)
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5
@@ -682,16 +674,16 @@ def macroop IDIV_M
     sub t2, t0, rdx
     sub t2, t2, t4
 
-    ld t3, seg, sib, disp
+    ld t8, seg, sib, disp
 
     #Find the sign of the divisor
     #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t3, 1, flags=(ECF,)
 
     # Negate divisor
-    sub t4, t0, t3
+    sub t3, t0, t8
     # Put the divisor's absolute value into t3
-    mov t3, t3, t4, flags=(CECF,)
+    mov t3, t3, t8, flags=(nCECF,)
 
     #Find the sign of the dividend
     #FIXME!!! This depends on shifts setting the carry flag correctly.
@@ -739,7 +731,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,)
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,)
+    slli t0, t8, 1, flags=(ECF,)
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5
@@ -758,16 +750,16 @@ def macroop IDIV_P
     sub t2, t2, t4
 
     rdip t7
-    ld t3, seg, riprel, disp
+    ld t8, seg, riprel, disp
 
     #Find the sign of the divisor
     #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t3, 1, flags=(ECF,)
 
     # Negate divisor
-    sub t4, t0, t3
+    sub t3, t0, t8
     # Put the divisor's absolute value into t3
-    mov t3, t3, t4, flags=(CECF,)
+    mov t3, t3, t4, flags=(nCECF,)
 
     #Find the sign of the dividend
     #FIXME!!! This depends on shifts setting the carry flag correctly.
@@ -815,7 +807,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,)
 
     # Check the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,)
+    slli t0, t8, 1, flags=(ECF,)
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5
