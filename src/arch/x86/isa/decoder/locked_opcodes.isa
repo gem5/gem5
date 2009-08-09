@@ -160,7 +160,8 @@
                         0x1: XADD_LOCKED(Mv,Gv);
                         //0x7: group9();
                         0x7: decode MODRM_REG {
-                            0x1: WarnUnimpl::cmpxchg_Mq_LOCKED();
+                            //Also CMPXCHG16B
+                            0x1: CMPXCHG8B_LOCKED(Mdp);
                         }
                     }
                 }

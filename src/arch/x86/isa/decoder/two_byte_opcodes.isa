@@ -898,7 +898,8 @@
                 0x1: Inst::XADD(Ev,Gv);
                 //0x7: group9();
                 0x7: decode MODRM_REG {
-                    0x1: cmpxchg_Mq();
+                    //Also CMPXCHG16B
+                    0x1: Inst::CMPXCHG8B(Mdp);
                     0x6: decode LEGACY_OP {
                         0x1: vmclear_Mq();
                         default: decode LEGACY_REP {

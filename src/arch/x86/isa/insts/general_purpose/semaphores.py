@@ -98,6 +98,100 @@ def macroop CMPXCHG_LOCKED_P_R {
     mov rax, rax, t1, flags=(nCZF,)
 };
 
+def macroop CMPXCHG8B_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldst t2, seg, [1, t0, t1], 0
+    ldst t3, seg, [1, t0, t1], dsz
+
+    sub t0, rax, t2, flags=(ZF,)
+    br label("doneComparing"), flags=(nCZF,)
+    sub t0, rdx, t3, flags=(ZF,)
+doneComparing:
+
+    # If they're equal, set t3:t2 to rbx:rcx to write to memory
+    mov t2, t2, rbx, flags=(CZF,)
+    mov t3, t3, rcx, flags=(CZF,)
+
+    # If they're not equal, set rdx:rax to the value from memory.
+    mov rax, rax, t2, flags=(nCZF,)
+    mov rdx, rdx, t3, flags=(nCZF,)
+
+    # Write to memory
+    st t3, seg, [1, t0, t1], dsz
+    st t2, seg, [1, t0, t1], 0
+};
+
+def macroop CMPXCHG8B_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldst t2, seg, [1, t0, t1], 0
+    ldst t3, seg, [1, t0, t1], dsz
+
+    sub t0, rax, t2, flags=(ZF,)
+    br label("doneComparing"), flags=(nCZF,)
+    sub t0, rdx, t3, flags=(ZF,)
+doneComparing:
+
+    # If they're equal, set t3:t2 to rbx:rcx to write to memory
+    mov t2, t2, rbx, flags=(CZF,)
+    mov t3, t3, rcx, flags=(CZF,)
+
+    # If they're not equal, set rdx:rax to the value from memory.
+    mov rax, rax, t2, flags=(nCZF,)
+    mov rdx, rdx, t3, flags=(nCZF,)
+
+    # Write to memory
+    st t3, seg, [1, t0, t1], dsz
+    st t2, seg, [1, t0, t1], 0
+};
+
+def macroop CMPXCHG8B_LOCKED_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldstl t2, seg, [1, t0, t1], 0
+    ldstl t3, seg, [1, t0, t1], dsz
+
+    sub t0, rax, t2, flags=(ZF,)
+    br label("doneComparing"), flags=(nCZF,)
+    sub t0, rdx, t3, flags=(ZF,)
+doneComparing:
+
+    # If they're equal, set t3:t2 to rbx:rcx to write to memory
+    mov t2, t2, rbx, flags=(CZF,)
+    mov t3, t3, rcx, flags=(CZF,)
+
+    # If they're not equal, set rdx:rax to the value from memory.
+    mov rax, rax, t2, flags=(nCZF,)
+    mov rdx, rdx, t3, flags=(nCZF,)
+
+    # Write to memory
+    stul t3, seg, [1, t0, t1], dsz
+    stul t2, seg, [1, t0, t1], 0
+};
+
+def macroop CMPXCHG8B_LOCKED_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldstl t2, seg, [1, t0, t1], 0
+    ldstl t3, seg, [1, t0, t1], dsz
+
+    sub t0, rax, t2, flags=(ZF,)
+    br label("doneComparing"), flags=(nCZF,)
+    sub t0, rdx, t3, flags=(ZF,)
+doneComparing:
+
+    # If they're equal, set t3:t2 to rbx:rcx to write to memory
+    mov t2, t2, rbx, flags=(CZF,)
+    mov t3, t3, rcx, flags=(CZF,)
+
+    # If they're not equal, set rdx:rax to the value from memory.
+    mov rax, rax, t2, flags=(nCZF,)
+    mov rdx, rdx, t3, flags=(nCZF,)
+
+    # Write to memory
+    stul t3, seg, [1, t0, t1], dsz
+    stul t2, seg, [1, t0, t1], 0
+};
+
 def macroop XADD_M_R {
     ldst t1, seg, sib, disp
     add t2, t1, reg, flags=(OF,SF,ZF,AF,PF,CF)
