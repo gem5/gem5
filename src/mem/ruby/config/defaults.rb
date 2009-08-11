@@ -82,6 +82,8 @@ class Network < LibRubyObject
 
   # on chip latency
   default_param :on_chip_latency, Integer, 1
+ 
+  default_param :control_msg_size, Integer, 8
 end
 
 class GarnetNetwork < Network

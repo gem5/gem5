@@ -978,7 +978,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(uu_profileMiss, "\u", desc="Profile the demand miss") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize), in_msg.Prefetch, L1CacheMachIDToProcessorNum(in_msg.RequestorMachId));
+      //profile_L2Cache_miss(convertToGenericType(in_msg.Type), in_msg.AccessMode, MessageSizeTypeToInt(in_msg.MessageSize), in_msg.Prefetch, L1CacheMachIDToProcessorNum(in_msg.RequestorMachId));
     }
   }
 
