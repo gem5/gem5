@@ -39,7 +39,7 @@ class Debug < LibRubyObject
   default_param :protocol_trace, Boolean, false
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
-  default_param :filter_string, String, ""
+  default_param :filter_string, String, "none"
 
   # filters debugging messages based on priority (low, med, high)
   default_param :verbosity_string, String, "none"
