@@ -61,6 +61,8 @@ void Sequencer::init(const vector<string> & argv)
   m_instCache_ptr = NULL;
   m_dataCache_ptr = NULL;
   m_controller = NULL;
+  m_servicing_atomic = -1;
+  m_atomics_counter = 0;
   for (size_t i=0; i<argv.size(); i+=2) {
     if ( argv[i] == "controller") {
       m_controller = RubySystem::getController(argv[i+1]); // args[i] = "L1Cache"
@@ -342,7 +344,7 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
 }
 
 // Returns true if the sequencer already has a load or store outstanding
-bool Sequencer::isReady(const RubyRequest& request) const {
+bool Sequencer::isReady(const RubyRequest& request) {
   // POLINA: check if we are currently flushing the write buffer, if so Ruby is returned as not ready
   // to simulate stalling of the front-end
   // Do we stall all the sequencers? If it is atomic instruction - yes!
@@ -355,6 +357,31 @@ bool Sequencer::isReady(const RubyRequest& request) const {
     //cout << "OUTSTANDING REQUEST EXISTS " << p << " VER " << m_version << endl;
     //printProgress(cout);
     return false;
+  }
+
+  if (m_servicing_atomic != -1 && m_servicing_atomic != (int)request.proc_id) {
+    assert(m_atomics_counter > 0);
+    return false;
+  }
+  else {
+    if (request.type == RubyRequestType_RMW_Read) {
+      if (m_servicing_atomic == -1) {
+        assert(m_atomics_counter == 0);
+        m_servicing_atomic = (int)request.proc_id;
+      }
+      else {
+        assert(m_servicing_atomic == (int)request.proc_id);
+      }
+      m_atomics_counter++;
+    }
+    else if (request.type == RubyRequestType_RMW_Write) {
+      assert(m_servicing_atomic == (int)request.proc_id);
+      assert(m_atomics_counter > 0);
+      m_atomics_counter--;
+      if (m_atomics_counter == 0) {
+        m_servicing_atomic = -1;
+      }
+    }
   }
 
   return true;
@@ -438,7 +465,7 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   }
   Address line_addr(request.paddr);
   line_addr.makeLineAddress();
-  CacheMsg msg(line_addr, Address(request.paddr), ctype, Address(request.pc), amtype, request.len, PrefetchBit_No);
+  CacheMsg msg(line_addr, Address(request.paddr), ctype, Address(request.pc), amtype, request.len, PrefetchBit_No, request.proc_id);
 
   if (Debug::getProtocolTrace()) {
     g_system_ptr->getProfiler()->profileTransition("Seq", m_version, Address(request.paddr),
