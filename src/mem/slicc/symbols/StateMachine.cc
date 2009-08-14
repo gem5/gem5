@@ -302,6 +302,7 @@ void StateMachine::printControllerH(ostream& out, string component)
   }
   if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
     out << "  bool servicing_atomic;" << endl;
+    out << "  bool started_receiving_writes;" << endl;
     out << "  Address locked_read_request1;" << endl;
     out << "  Address locked_read_request2;" << endl;
     out << "  Address locked_read_request3;" << endl;
@@ -416,6 +417,7 @@ void StateMachine::printControllerC(ostream& out, string component)
   out << "{ " << endl;
   if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
     out << "  servicing_atomic = false;" << endl;
+    out << "  started_receiving_writes = false;" << endl;
     out << "  locked_read_request1 = Address(-1);" << endl;
     out << "  locked_read_request2 = Address(-1);" << endl;
     out << "  locked_read_request3 = Address(-1);" << endl;
@@ -823,6 +825,7 @@ void StateMachine::printCWakeup(ostream& out, string component)
                   } \n \
                } \n \
                else if (addr != locked_read_request1) { \n \
+                 if (!started_receiving_writes) { \n \
                   if (locked_read_request2 == Address(-1)) { \n \
                     assert(read_counter == 1); \n \
                     locked_read_request2 = addr; \n \
@@ -843,6 +846,7 @@ void StateMachine::printCWakeup(ostream& out, string component)
                     // this can happen if there are multiple optimized consequtive shifts \n \
                     assert(0); \n \
                   } \n \
+                 } \n \
                } \n \
              } \n \
              else { \n \
@@ -854,6 +858,7 @@ void StateMachine::printCWakeup(ostream& out, string component)
                  locked_read_request3 = Address(-1); \n \
                  locked_read_request4 = Address(-1); \n \
                  servicing_atomic = false; \n \
+                 started_receiving_writes = false; \n \
                  read_counter = 0; \n \
                } \n \
              } \n \
@@ -927,9 +932,11 @@ void StateMachine::printCWakeup(ostream& out, string component)
     out << "void " << component << "_Controller::clear_atomic()" << endl;
     out << "{" << endl;
     out << "  assert(servicing_atomic); " << endl;
+    out << "  started_receiving_writes = true; " << endl;
     out << "  read_counter--; " << endl;
     out << "  if (read_counter == 0) { " << endl;
     out << "    servicing_atomic = false; " << endl;
+    out << "    started_receiving_writes = false; " << endl;
     out << "    locked_read_request1 = Address(-1); " << endl;
     out << "    locked_read_request2 = Address(-1); " << endl;
     out << "    locked_read_request3 = Address(-1); " << endl;
