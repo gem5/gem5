@@ -274,6 +274,12 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   if (request->ruby_request.type == RubyRequestType_Locked_Read) {
     m_dataCache_ptr->setLocked(address, m_version);
   }
+  else if (request->ruby_request.type == RubyRequestType_RMW_Read) {
+    m_controller->set_atomic(address);
+  }
+  else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
+    m_controller->clear_atomic();
+  }
 
   hitCallback(request, data);
 }
