@@ -309,7 +309,7 @@ class CacheController < NetPort
       cache.controller = self
     }
 
-    if !@@total_cache_controllers.has_key?(mach_type)
+    if !@@total_cache_controllers.key?(mach_type)
       @@total_cache_controllers[mach_type] = 0
     end
     @version = @@total_cache_controllers[mach_type]
