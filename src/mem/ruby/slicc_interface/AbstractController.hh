@@ -22,6 +22,7 @@ public:
   virtual const string getName() const = 0;   // return instance name
   virtual const MachineType getMachineType() const = 0;
   virtual void set_atomic(Address addr) = 0;
+  virtual void started_writes() = 0;
   virtual void clear_atomic() = 0;
 
   virtual void print(ostream & out) const = 0;

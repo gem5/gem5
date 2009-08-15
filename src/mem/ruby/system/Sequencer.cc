@@ -416,6 +416,9 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
           m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
         }
       }
+      if (request.type == RubyRequestType_RMW_Write) {
+        m_controller->started_writes();
+      }
       issueRequest(request);
 
     // TODO: issue hardware prefetches here
