@@ -28,17 +28,20 @@
 
 __all__ = [ 'orderdict' ]
 
-class orderdict(dict):
-    def __init__(self, d = {}):
-        self._keys = d.keys()
-        super(orderdict, self).__init__(d)
+from UserDict import DictMixin
+
+class orderdict(dict, DictMixin):
+    def __init__(self, *args, **kwargs):
+        if len(args) > 1:
+            raise TypeError("expected at most one argument, got %d" % \
+                            len(args))
+        self._keys = []
+        self.update(*args, **kwargs)
 
     def __setitem__(self, key, item):
-        super(orderdict, self).__setitem__(key, item)
-        if not hasattr(self, '_keys'):
-            self._keys = [key,]
-        if key not in self._keys:
+        if key not in self:
             self._keys.append(key)
+        super(orderdict, self).__setitem__(key, item)
 
     def __delitem__(self, key):
         super(orderdict, self).__delitem__(key)
@@ -48,33 +51,23 @@ class orderdict(dict):
         super(orderdict, self).clear()
         self._keys = []
 
-    def items(self):
-        for i in self._keys:
-            yield i, self[i]
+    def iterkeys(self):
+        for key in self._keys:
+            yield key
+
+    def itervalues(self):
+        for key in self._keys:
+            yield self[key]
+
+    def iteritems(self):
+        for key in self._keys:
+            yield key, self[key]
 
     def keys(self):
-        return self._keys
-
-    def popitem(self):
-        if len(self._keys) == 0:
-            raise KeyError('dictionary is empty')
-        else:
-            key = self._keys[-1]
-            val = self[key]
-            del self[key]
-            return key, val
-
-    def setdefault(self, key, failobj = None):
-        super(orderdict, self).setdefault(key, failobj)
-        if key not in self._keys:
-            self._keys.append(key)
-
-    def update(self, d):
-        for key in d.keys():
-            if not self.has_key(key):
-                self._keys.append(key)
-        super(orderdict, self).update(d)
+        return self._keys[:]
 
     def values(self):
-        for i in self._keys:
-            yield self[i]
+        return [ self[key] for key in self._keys ]
+
+    def items(self):
+        return [ (self[key],key) for key in self._keys ]

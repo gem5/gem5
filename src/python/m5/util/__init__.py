@@ -29,6 +29,7 @@
 from attrdict import attrdict, optiondict
 from misc import *
 from multidict import multidict
+from orderdict import orderdict
 import jobfile
 
 def print_list(items, indent=4):
