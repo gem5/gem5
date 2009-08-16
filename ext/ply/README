@@ -1,33 +1,41 @@
-PLY (Python Lex-Yacc)                   Version 2.3  (February 18, 2007)
+PLY (Python Lex-Yacc)                   Version 3.2
 
-David M. Beazley (dave@dabeaz.com)
+Copyright (C) 2001-2009,
+David M. Beazley (Dabeaz LLC)
+All rights reserved.
 
-Copyright (C) 2001-2007   David M. Beazley
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are
+met:
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+* Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.  
+* Redistributions in binary form must reproduce the above copyright notice, 
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.  
+* Neither the name of the David Beazley or Dabeaz LLC may be used to
+  endorse or promote products derived from this software without
+  specific prior written permission. 
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-
-See the file COPYING for a complete copy of the LGPL.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 Introduction
 ============
 
 PLY is a 100% Python implementation of the common parsing tools lex
-and yacc.   Although several other parsing tools are available for
-Python, there are several reasons why you might want to consider PLY:
+and yacc. Here are a few highlights:
 
- -  The tools are very closely modeled after traditional lex/yacc.
+ -  PLY is very closely modeled after traditional lex/yacc.
     If you know how to use these tools in C, you will find PLY
     to be similar.
 
@@ -43,8 +51,8 @@ Python, there are several reasons why you might want to consider PLY:
  -  Parsing is based on LR-parsing which is fast, memory efficient, 
     better suited to large grammars, and which has a number of nice
     properties when dealing with syntax errors and other parsing problems.
-    Currently, PLY builds its parsing tables using the SLR algorithm which 
-    is slightly weaker than LALR(1) used in traditional yacc. 
+    Currently, PLY builds its parsing tables using the LALR(1)
+    algorithm used in yacc.
 
  -  PLY uses Python introspection features to build lexers and parsers.  
     This greatly simplifies the task of parser construction since it reduces 
@@ -56,16 +64,8 @@ Python, there are several reasons why you might want to consider PLY:
     PLY can be used to parse grammars consisting of several hundred
     rules (as might be found for a language like C).  The lexer and LR 
     parser are also reasonably efficient when parsing typically
-    sized programs.
-
-The original version of PLY was developed for an Introduction to
-Compilers course where students used it to build a compiler for a
-simple Pascal-like language.  Their compiler had to include lexical
-analysis, parsing, type checking, type inference, and generation of
-assembly code for the SPARC processor.  Because of this, the current
-implementation has been extensively tested and debugged.  In addition,
-most of the API and error checking steps have been adapted to address
-common usability problems.
+    sized programs.  People have used PLY to build parsers for
+    C, C++, ADA, and other real programming languages.
 
 How to Use
 ==========
@@ -96,10 +96,10 @@ A simple example is found at the end of this document
 
 Requirements
 ============
-PLY requires the use of Python 2.1 or greater.  However, you should
+PLY requires the use of Python 2.2 or greater.  However, you should
 use the latest Python release if possible.  It should work on just
 about any platform.  PLY has been tested with both CPython and Jython.
-However, it does not seem to work with IronPython.
+It also seems to work with IronPython.
 
 Resources
 =========
@@ -127,16 +127,13 @@ Elias Ioup did the first implementation of LALR(1) parsing in PLY-1.x.
 Andrew Waters and Markus Schoepflin were instrumental in reporting bugs
 and testing a revised LALR(1) implementation for PLY-2.0.
 
-Special Note for PLY-2.x
+Special Note for PLY-3.0
 ========================
-PLY-2.0 is the first in a series of PLY releases that will be adding a
-variety of significant new features.  The first release in this series
-(Ply-2.0) should be 100% compatible with all previous Ply-1.x releases
-except for the fact that Ply-2.0 features a correct implementation of
-LALR(1) table generation.  
-
-If you have suggestions for improving PLY in future 2.x releases, please
-contact me.   - Dave
+PLY-3.0 the first PLY release to support Python 3. However, backwards
+compatibility with Python 2.2 is still preserved. PLY provides dual
+Python 2/3 compatibility by restricting its implementation to a common
+subset of basic language features. You should not convert PLY using
+2to3--it is not necessary and may in fact break the implementation.
 
 Example
 =======
@@ -169,11 +166,7 @@ t_NAME    = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
 def t_NUMBER(t):
     r'\d+'
-    try:
-        t.value = int(t.value)
-    except ValueError:
-        print "Integer value too large", t.value
-        t.value = 0
+    t.value = int(t.value)
     return t
 
 # Ignored characters
@@ -255,12 +248,12 @@ while 1:
 
 Bug Reports and Patches
 =======================
-Because of the extremely specialized and advanced nature of PLY, I
-rarely spend much time working on it unless I receive very specific
-bug-reports and/or patches to fix problems. I also try to incorporate
-submitted feature requests and enhancements into each new version.  To
-contact me about bugs and/or new features, please send email to
-dave@dabeaz.com.
+My goal with PLY is to simply have a decent lex/yacc implementation
+for Python.  As a general rule, I don't spend huge amounts of time
+working on it unless I receive very specific bug reports and/or
+patches to fix problems. I also try to incorporate submitted feature
+requests and enhancements into each new version.  To contact me about
+bugs and/or new features, please send email to dave@dabeaz.com.
 
 In addition there is a Google group for discussing PLY related issues at
 

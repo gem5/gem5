@@ -4,9 +4,8 @@
 # Duplicated rule name
 # -----------------------------------------------------------------------------
 import sys
-sys.tracebacklimit = 0
 
-sys.path.insert(0,"..")
+if ".." not in sys.path: sys.path.insert(0,"..")
 import ply.yacc as yacc
 
 from calclex import tokens
@@ -27,7 +26,7 @@ def p_statement(t):
 
 def p_statement(t):
     'statement : expression'
-    print t[1]
+    print(t[1])
 
 def p_expression_binop(t):
     '''expression : expression PLUS expression
@@ -37,7 +36,7 @@ def p_expression_binop(t):
     if t[2] == '+'  : t[0] = t[1] + t[3]
     elif t[2] == '-': t[0] = t[1] - t[3]
     elif t[2] == '*': t[0] = t[1] * t[3]
-    elif t[3] == '/': t[0] = t[1] / t[3]
+    elif t[2] == '/': t[0] = t[1] / t[3]
 
 def p_expression_uminus(t):
     'expression : MINUS expression %prec UMINUS'
@@ -56,11 +55,11 @@ def p_expression_name(t):
     try:
         t[0] = names[t[1]]
     except LookupError:
-        print "Undefined name '%s'" % t[1]
+        print("Undefined name '%s'" % t[1])
         t[0] = 0
 
 def p_error(t):
-    print "Syntax error at '%s'" % t.value
+    print("Syntax error at '%s'" % t.value)
 
 yacc.yacc()
 

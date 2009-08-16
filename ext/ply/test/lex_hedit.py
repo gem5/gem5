@@ -14,7 +14,7 @@
 # such tokens
 # -----------------------------------------------------------------------------
 import sys
-sys.path.insert(0,"..")
+if ".." not in sys.path: sys.path.insert(0,"..")
 
 import ply.lex as lex
 
@@ -29,16 +29,16 @@ def t_H_EDIT_DESCRIPTOR(t):
     r"\d+H.*"                     # This grabs all of the remaining text
     i = t.value.index('H')
     n = eval(t.value[:i])
-
+    
     # Adjust the tokenizing position
     t.lexer.lexpos -= len(t.value) - (i+1+n)
     t.value = t.value[i+1:i+1+n]
-    return t
-
+    return t                                  
+    
 def t_error(t):
-    print "Illegal character '%s'" % t.value[0]
+    print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
-
+    
 # Build the lexer
 lex.lex()
 lex.runmain(data="3Habc 10Habcdefghij 2Hxy")
