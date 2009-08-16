@@ -27,6 +27,7 @@
 # Authors: Nathan Binkert
 
 from attrdict import attrdict, optiondict
+from code_formatter import code_formatter
 from misc import *
 from multidict import multidict
 from orderdict import orderdict
