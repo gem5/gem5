@@ -459,7 +459,7 @@ def macroop IDIV_B_M
     ld t8, seg, sib, disp
 
     #Find the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,), dataSize=1
+    slli t0, t8, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
     sub t3, t0, t8, dataSize=1
@@ -531,7 +531,7 @@ def macroop IDIV_B_P
     ld t8, seg, riprel, disp
 
     #Find the sign of the divisor
-    slli t0, t3, 1, flags=(ECF,), dataSize=1
+    slli t0, t8, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
     sub t3, t0, t8, dataSize=1
@@ -678,7 +678,7 @@ def macroop IDIV_M
 
     #Find the sign of the divisor
     #FIXME!!! This depends on shifts setting the carry flag correctly.
-    slli t0, t3, 1, flags=(ECF,)
+    slli t0, t8, 1, flags=(ECF,)
 
     # Negate divisor
     sub t3, t0, t8
@@ -754,7 +754,7 @@ def macroop IDIV_P
 
     #Find the sign of the divisor
     #FIXME!!! This depends on shifts setting the carry flag correctly.
-    slli t0, t3, 1, flags=(ECF,)
+    slli t0, t8, 1, flags=(ECF,)
 
     # Negate divisor
     sub t3, t0, t8
