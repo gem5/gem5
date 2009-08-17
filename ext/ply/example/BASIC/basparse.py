@@ -39,12 +39,12 @@ def p_program_error(p):
     p[0] = None
     p.parser.error = 1
 
-#### Format of all BASIC statements.
+#### Format of all BASIC statements. 
 
 def p_statement(p):
     '''statement : INTEGER command NEWLINE'''
     if isinstance(p[2],str):
-        print p[2],"AT LINE", p[1]
+        print("%s %s %s" % (p[2],"AT LINE", p[1]))
         p[0] = None
         p.parser.error = 1
     else:
@@ -68,7 +68,7 @@ def p_statement_blank(p):
 
 def p_statement_bad(p):
     '''statement : INTEGER error NEWLINE'''
-    print "MALFORMED STATEMENT AT LINE", p[1]
+    print("MALFORMED STATEMENT AT LINE %s" % p[1])
     p[0] = None
     p.parser.error = 1
 
@@ -121,7 +121,7 @@ def p_command_print_bad(p):
 #### Optional ending on PRINT. Either a comma (,) or semicolon (;)
 
 def p_optend(p):
-    '''optend : COMMA
+    '''optend : COMMA 
               | SEMI
               |'''
     if len(p)  == 2:
@@ -188,7 +188,7 @@ def p_optstep(p):
        p[0] = None
 
 #### NEXT statement
-
+    
 def p_command_next(p):
     '''command : NEXT ID'''
 
@@ -392,30 +392,30 @@ def p_item_expr(p):
     p[0] = ("",p[1])
 
 #### Empty
-
+   
 def p_empty(p):
     '''empty : '''
 
 #### Catastrophic error handler
 def p_error(p):
     if not p:
-        print "SYNTAX ERROR AT EOF"
+        print("SYNTAX ERROR AT EOF")
 
 bparser = yacc.yacc()
 
-def parse(data):
+def parse(data,debug=0):
     bparser.error = 0
-    p = bparser.parse(data)
+    p = bparser.parse(data,debug=debug)
     if bparser.error: return None
     return p
 
 
 
 
-
-
-
-
+       
+   
+  
+            
 
 
 

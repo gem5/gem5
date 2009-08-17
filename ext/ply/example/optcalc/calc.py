@@ -8,6 +8,9 @@
 import sys
 sys.path.insert(0,"../..")
 
+if sys.version_info[0] >= 3:
+    raw_input = input
+
 tokens = (
     'NAME','NUMBER',
     'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
@@ -30,7 +33,7 @@ def t_NUMBER(t):
     try:
         t.value = int(t.value)
     except ValueError:
-        print "Integer value too large", t.value
+        print("Integer value too large %s" % t.value)
         t.value = 0
     return t
 
@@ -39,11 +42,11 @@ t_ignore = " \t"
 def t_newline(t):
     r'\n+'
     t.lexer.lineno += t.value.count("\n")
-
+    
 def t_error(t):
-    print "Illegal character '%s'" % t.value[0]
+    print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
-
+    
 # Build the lexer
 import ply.lex as lex
 lex.lex(optimize=1)
@@ -65,7 +68,7 @@ def p_statement_assign(t):
 
 def p_statement_expr(t):
     'statement : expression'
-    print t[1]
+    print(t[1])
 
 def p_expression_binop(t):
     '''expression : expression PLUS expression
@@ -95,11 +98,14 @@ def p_expression_name(t):
     try:
         t[0] = names[t[1]]
     except LookupError:
-        print "Undefined name '%s'" % t[1]
+        print("Undefined name '%s'" % t[1])
         t[0] = 0
 
 def p_error(t):
-    print "Syntax error at '%s'" % t.value
+    if t:
+        print("Syntax error at '%s'" % t.value)
+    else:
+        print("Syntax error at EOF")
 
 import ply.yacc as yacc
 yacc.yacc(optimize=1)

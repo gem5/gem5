@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 import sys
 
-sys.path.append("..")
+if ".." not in sys.path: sys.path.insert(0,"..")
 import ply.lex as lex
 
 tokens = (
@@ -28,7 +28,7 @@ def t_NUMBER(t):
     try:
         t.value = int(t.value)
     except ValueError:
-        print "Integer value too large", t.value
+        print("Integer value too large %s" % t.value)
         t.value = 0
     return t
 
@@ -37,11 +37,11 @@ t_ignore = " \t"
 def t_newline(t):
     r'\n+'
     t.lineno += t.value.count("\n")
-
+    
 def t_error(t):
-    print "Illegal character '%s'" % t.value[0]
+    print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
-
+    
 # Build the lexer
 lex.lex()
 
