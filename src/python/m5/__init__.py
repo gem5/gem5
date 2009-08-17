@@ -103,8 +103,11 @@ try:
 except ImportError:
     internal = None
 
-import defines
-build_env.update(defines.buildEnv)
+try:
+    import defines
+    build_env.update(defines.buildEnv)
+except ImportError:
+    defines = None
 
 if internal:
     defines.compileDate = internal.core.compileDate
@@ -120,4 +123,8 @@ if internal:
 
 import SimObject
 import params
-import objects
+
+try:
+    import objects
+except ImportError:
+    objects = None

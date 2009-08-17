@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug  5 2009 13:36:56
-M5 revision 26abdfe2d980+ 6439+ default tip
-M5 started Aug  5 2009 13:37:49
-M5 executing on clover-02.cs.wisc.edu
+M5 compiled Aug 11 2009 13:41:17
+M5 revision be123e27612f+ 6494+ default tip
+M5 started Aug 11 2009 13:45:58
+M5 executing on svvint01
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby -re tests/run.py build/ALPHA_SE/tests/fast/quick/50.memtest/alpha/linux/memtest-ruby
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 31871402 because maximum number of loads reached
+Exiting @ tick 31749698 because maximum number of loads reached

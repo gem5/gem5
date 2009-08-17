@@ -11,7 +11,7 @@ end
 
 def assert(condition,message)
   unless condition
-    raise AssertionFailure, "Assertion failed: #{message}"
+    raise AssertionFailure, "\n\nAssertion failed: \n\n   #{message}\n\n"
   end
 end
 
@@ -309,7 +309,7 @@ class CacheController < NetPort
       cache.controller = self
     }
 
-    if !@@total_cache_controllers.has_key?(mach_type)
+    if !@@total_cache_controllers.key?(mach_type)
       @@total_cache_controllers[mach_type] = 0
     end
     @version = @@total_cache_controllers[mach_type]
@@ -631,7 +631,7 @@ class Network < LibRubyObject
     vec += " buffer_size "+buffer_size.to_s
     vec += " link_latency "+adaptive_routing.to_s
     vec += " on_chip_latency "+on_chip_latency.to_s
-
+    vec += " control_msg_size "+control_msg_size.to_s
   end
 
   def printTopology()

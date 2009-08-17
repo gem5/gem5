@@ -106,11 +106,6 @@ extern inline int addressToInt(Address addr)
   return (int) addr.getLineAddress();
 }
 
-extern inline int MessageSizeTypeToInt(MessageSizeType size_type)
-{
-  return MessageSizeType_to_int(size_type);
-}
-
 extern inline bool long_enough_ago(Time event)
 {
   return ((get_time() - event) > 200);

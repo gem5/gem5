@@ -169,7 +169,7 @@ void Switch::printStats(ostream& out) const
         int sum = message_counts[type].sum();
         if (sum != 0) {
           out << "  outgoing_messages_switch_" << m_switch_id << "_link_" << link << "_" << type
-              << ": " << sum << " " << sum * MessageSizeType_to_int(type)
+              << ": " << sum << " " << sum * (RubySystem::getNetwork()->MessageSizeType_to_int(type))
               << " " << message_counts[type] << " base_latency: " << throttle_ptr->getLatency() << endl;
         }
       }

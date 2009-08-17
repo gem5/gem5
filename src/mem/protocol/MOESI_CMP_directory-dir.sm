@@ -101,7 +101,7 @@ machine(Directory, "Directory protocol")
   }
 
   structure(TBE, desc="...") {
-    Address address,   desc="Address for this entry";
+    Address PhysicalAddress,   desc="Physical address for this entry";
     int Len,           desc="Length of request";
     DataBlock DataBlk, desc="DataBlk";
     MachineID Requestor, desc="original requestor";
@@ -245,9 +245,9 @@ machine(Directory, "Directory protocol")
         } else if (in_msg.Type == CoherenceRequestType:PUTO_SHARERS) {
           trigger(Event:PUTO_SHARERS, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
-          trigger(Event:DMA_READ, in_msg.Address);
+          trigger(Event:DMA_READ, makeLineAddress(in_msg.Address));
         } else if (in_msg.Type == CoherenceRequestType:DMA_WRITE) {
-          trigger(Event:DMA_WRITE, in_msg.Address);
+          trigger(Event:DMA_WRITE, makeLineAddress(in_msg.Address));
         } else {
           error("Invalid message");
         }
@@ -527,12 +527,15 @@ machine(Directory, "Directory protocol")
   }
 
   action(l_writeDMADataToMemoryFromTBE, "\ll", desc="Write data from a DMA_WRITE to memory") {
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(address), TBEs[address].Len);
+    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, 
+					   addressOffset(TBEs[address].PhysicalAddress), 
+					   TBEs[address].Len);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE entry") {
     peek (requestQueue_in, RequestMsg) {
       TBEs.allocate(address);
+      TBEs[address].PhysicalAddress := in_msg.Address;
       TBEs[address].Len := in_msg.Len;
       TBEs[address].DataBlk := in_msg.DataBlk;
       TBEs[address].Requestor := in_msg.Requestor;
@@ -695,7 +698,7 @@ machine(Directory, "Directory protocol")
   }
 
 
-  transition({MM, MO, MI, MIS, OS, OSS}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ}) {
+  transition({MM, MO, MI, MIS, OS, OSS, XI_M, XI_U, OI_D}, {GETS, GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
     zz_recycleRequest;
   }
 
@@ -710,7 +713,7 @@ machine(Directory, "Directory protocol")
     j_popIncomingUnblockQueue;
   }
 
-  transition({IS, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ}) {
+  transition({IS, SS, OO}, {GETX, PUTO, PUTO_SHARERS, PUTX, DMA_READ, DMA_WRITE}) {
     zz_recycleRequest;
   }
 

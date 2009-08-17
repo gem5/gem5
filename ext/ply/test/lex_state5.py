@@ -1,19 +1,18 @@
-# lex_state2.py
+# lex_state5.py
 #
 # Bad state declaration
 
 import sys
-sys.path.insert(0,"..")
+if ".." not in sys.path: sys.path.insert(0,"..")
 
 import ply.lex as lex
 
-tokens = [
+tokens = [ 
     "PLUS",
     "MINUS",
     "NUMBER",
     ]
 
-comment = 1
 states = (('comment', 'exclusive'),
           ('comment', 'exclusive'))
 
@@ -25,17 +24,16 @@ t_NUMBER = r'\d+'
 def t_comment(t):
     r'/\*'
     t.lexer.begin('comment')
-    print "Entering comment state"
+    print("Entering comment state")
 
 def t_comment_body_part(t):
     r'(.|\n)*\*/'
-    print "comment body", t
+    print("comment body %s" % t)
     t.lexer.begin('INITIAL')
 
 def t_error(t):
     pass
 
-import sys
 
 lex.lex()
 

@@ -83,9 +83,9 @@ machine(DMA, "DMA Controller")
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, SequencerMsg) {
         if (in_msg.Type == SequencerRequestType:LD ) {
-          trigger(Event:ReadRequest, in_msg.PhysicalAddress);
+          trigger(Event:ReadRequest, in_msg.LineAddress);
         } else if (in_msg.Type == SequencerRequestType:ST) {
-          trigger(Event:WriteRequest, in_msg.PhysicalAddress);
+          trigger(Event:WriteRequest, in_msg.LineAddress);
         } else {
           error("Invalid request type");
         }
@@ -97,11 +97,12 @@ machine(DMA, "DMA Controller")
     if (dmaResponseQueue_in.isReady()) {
       peek( dmaResponseQueue_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:DMA_ACK) {
-          trigger(Event:DMA_Ack, in_msg.Address);
-        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
-          trigger(Event:Data, in_msg.Address);
+          trigger(Event:DMA_Ack, makeLineAddress(in_msg.Address));
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+		   in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, makeLineAddress(in_msg.Address));
         } else if (in_msg.Type == CoherenceResponseType:ACK) {
-          trigger(Event:Inv_Ack, in_msg.Address);
+          trigger(Event:Inv_Ack, makeLineAddress(in_msg.Address));
         } else {
           error("Invalid response type");
         }
@@ -125,7 +126,7 @@ machine(DMA, "DMA Controller")
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
-        out_msg.Address := address;
+        out_msg.Address := in_msg.PhysicalAddress;
         out_msg.Type := CoherenceRequestType:DMA_READ;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
@@ -139,7 +140,7 @@ machine(DMA, "DMA Controller")
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
       enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
-          out_msg.Address := address;
+          out_msg.Address := in_msg.PhysicalAddress;
           out_msg.Type := CoherenceRequestType:DMA_WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;

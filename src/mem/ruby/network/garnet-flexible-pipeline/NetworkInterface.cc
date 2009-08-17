@@ -109,7 +109,7 @@ bool NetworkInterface::flitisizeMessage(MsgPtr msg_ptr, int vnet)
         NetworkMessage *net_msg_ptr = dynamic_cast<NetworkMessage*>(msg_ptr.ref());
         NetDest net_msg_dest = net_msg_ptr->getInternalDestination();
         Vector<NodeID> dest_nodes = net_msg_dest.getAllDest(); // gets all the destinations associated with this message.
-        int num_flits = (int) ceil((double) MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getNetworkConfig()->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
+        int num_flits = (int) ceil((double) m_net_ptr->MessageSizeType_to_int(net_msg_ptr->getMessageSize())/m_net_ptr->getNetworkConfig()->getFlitSize() ); // Number of flits is dependent on the link bandwidth available. This is expressed in terms of bytes/cycle or the flit size
 
         for(int ctr = 0; ctr < dest_nodes.size(); ctr++) // loop because we will be converting all multicast messages into unicast messages
         {

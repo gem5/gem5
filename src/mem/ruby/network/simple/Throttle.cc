@@ -275,8 +275,8 @@ int network_message_to_size(NetworkMessage* net_msg_ptr)
   // Artificially increase the size of broadcast messages
   if (BROADCAST_SCALING > 1) {
     if (net_msg_ptr->getDestination().isBroadcast()) {
-      return (MessageSizeType_to_int(net_msg_ptr->getMessageSize()) * MESSAGE_SIZE_MULTIPLIER * BROADCAST_SCALING);
+      return (RubySystem::getNetwork()->MessageSizeType_to_int(net_msg_ptr->getMessageSize()) * MESSAGE_SIZE_MULTIPLIER * BROADCAST_SCALING);
     }
   }
-  return (MessageSizeType_to_int(net_msg_ptr->getMessageSize()) * MESSAGE_SIZE_MULTIPLIER);
+  return (RubySystem::getNetwork()->MessageSizeType_to_int(net_msg_ptr->getMessageSize()) * MESSAGE_SIZE_MULTIPLIER);
 }

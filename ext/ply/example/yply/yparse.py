@@ -25,7 +25,7 @@ def p_defsection(p):
     print "precedence = ", repr(preclist)
     print
     print "# -------------- RULES ----------------"
-    print
+    print 
 
 def p_rulesection(p):
     '''rulesection : rules SECTION'''
@@ -78,12 +78,12 @@ def p_idlist(p):
         p[1].append(p[3])
 
 def p_tokenid(p):
-    '''tokenid : ID
+    '''tokenid : ID 
                | ID NUMBER
                | QLITERAL
                | QLITERAL NUMBER'''
     p[0] = p[1]
-
+    
 def p_optsemi(p):
     '''optsemi : ';'
                | empty'''
@@ -165,7 +165,7 @@ def p_rule_empty(p):
 
 def p_rule_empty2(p):
    '''rule : ID ':' morerules ';' '''
-
+   
    p[3].insert(0,[])
    p[0] = (p[1],p[3])
 
@@ -173,10 +173,10 @@ def p_morerules(p):
    '''morerules : morerules '|' rulelist
                 | '|' rulelist
                 | '|'  '''
-
-   if len(p) == 2:
+ 
+   if len(p) == 2:   
        p[0] = [[]]
-   elif len(p) == 3:
+   elif len(p) == 3: 
        p[0] = [p[2]]
    else:
        p[0] = p[1]
