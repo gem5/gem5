@@ -326,7 +326,7 @@
                 0x8: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::MOVSD(Vq,Wq);
                     0x1: Inst::MOVSD(Wq,Vq);
-                    0x2: movddup_Vo_Wq();
+                    0x2: Inst::MOVDDUP(Vo,Wq);
                     default: Inst::UD2();
                 }
                 default: Inst::UD2();

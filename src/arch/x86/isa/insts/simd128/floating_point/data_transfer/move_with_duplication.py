@@ -54,7 +54,22 @@
 # Authors: Gabe Black
 
 microcode = '''
-# MOVDDUP
+def macroop MOVDDUP_XMM_XMM {
+    movfp xmmh, xmmlm, dataSize=8
+    movfp xmml, xmmlm, dataSize=8
+};
+
+def macroop MOVDDUP_XMM_M {
+    ldfp xmml, seg, sib, disp, dataSize=8
+    movfp xmmh, xmml, dataSize=8
+};
+
+def macroop MOVDDUP_XMM_P {
+    rdip t7
+    ldfp xmml, seg, riprel, disp, dataSize=8
+    movfp xmmh, xmml, dataSize=8
+};
+
 # MOVSLDUP
 # MOVSHDUP
 '''
