@@ -190,7 +190,7 @@ let {{
                 typeQual = ""
                 if match.group("typeQual"):
                     typeQual = match.group("typeQual")
-                src2_name = "%spsrc2%s" % (match.group("prefix"), typeQual)
+                src2_name = "%sFpSrcReg2%s" % (match.group("prefix"), typeQual)
                 self.buildCppClasses(name, Name, suffix,
                         matcher.sub(src2_name, code))
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
@@ -965,6 +965,90 @@ let {{
                 sum += resBits;
             }
             FpDestReg.uqw = sum & mask(destSize * 8);
+        '''
+
+    class Msrl(MediaOp):
+        code = '''
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t shiftAmt = op2.uqw;
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t resBits;
+                if (shiftAmt >= sizeBits) {
+                    resBits = 0;
+                } else {
+                    resBits = (arg1Bits >> shiftAmt) &
+                        mask(sizeBits - shiftAmt);
+                }
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
+    class Msra(MediaOp):
+        code = '''
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t shiftAmt = op2.uqw;
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t resBits;
+                if (shiftAmt >= sizeBits) {
+                    if (bits(arg1Bits, sizeBits - 1))
+                        resBits = mask(sizeBits);
+                    else
+                        resBits = 0;
+                } else {
+                    resBits = (arg1Bits >> shiftAmt);
+                    resBits = resBits |
+                        (0 - (resBits & (1 << (sizeBits - 1 - shiftAmt))));
+                }
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
+    class Msll(MediaOp):
+        code = '''
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t shiftAmt = op2.uqw;
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t resBits;
+                if (shiftAmt >= sizeBits) {
+                    resBits = 0;
+                } else {
+                    resBits = (arg1Bits << shiftAmt);
+                }
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
         '''
 
     class Cvti2f(MediaOp):
