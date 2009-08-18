@@ -677,7 +677,6 @@ def macroop IDIV_M
     ld t8, seg, sib, disp
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t8, 1, flags=(ECF,)
 
     # Negate divisor
@@ -686,7 +685,6 @@ def macroop IDIV_M
     mov t3, t3, t8, flags=(nCECF,)
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, rdx, 1, flags=(ECF,)
 
     # Put the dividend's absolute value into t1 and t2
@@ -753,7 +751,6 @@ def macroop IDIV_P
     ld t8, seg, riprel, disp
 
     #Find the sign of the divisor
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, t8, 1, flags=(ECF,)
 
     # Negate divisor
@@ -762,7 +759,6 @@ def macroop IDIV_P
     mov t3, t3, t4, flags=(nCECF,)
 
     #Find the sign of the dividend
-    #FIXME!!! This depends on shifts setting the carry flag correctly.
     slli t0, rdx, 1, flags=(ECF,)
 
     # Put the dividend's absolute value into t1 and t2
