@@ -1343,6 +1343,88 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Mcmpf2r(MediaOp):
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x8) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                double arg1, arg2;
+
+                if (size == 4) {
+                    floatInt fi;
+                    fi.i = arg1Bits;
+                    arg1 = fi.f;
+                    fi.i = arg2Bits;
+                    arg2 = fi.f;
+                } else {
+                    doubleInt di;
+                    di.i = arg1Bits;
+                    arg1 = di.d;
+                    di.i = arg2Bits;
+                    arg2 = di.d;
+                }
+
+                uint64_t resBits = 0;
+                bool nanop = isnan(arg1) || isnan(arg2);
+                switch (ext & mask(3)) {
+                  case 0:
+                    if (arg1 == arg2 && !nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 1:
+                    if (arg1 < arg2 && !nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 2:
+                    if (arg1 <= arg2 && !nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 3:
+                    if (nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 4:
+                    if (arg1 != arg2 || nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 5:
+                    if (!(arg1 < arg2) || nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 6:
+                    if (!(arg1 <= arg2) || nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                  case 7:
+                    if (!nanop)
+                        resBits = mask(sizeBits);
+                    break;
+                };
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Mcmpf2rf(MediaOp):
         def __init__(self, src1, src2,\
                 size = None, destSize = None, srcSize = None, ext = None):
