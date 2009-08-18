@@ -907,7 +907,7 @@
                         // no prefix
                         0x0: decode OPCODE_OP_BOTTOM3 {
                             0x2: CMPPS(Vo,Wo,Ib);
-                            0x3: WarnUnimpl::movnti_Mdq_Gdq();
+                            0x3: MOVNTI(Mdp,Gdp);
                             0x4: PINSRW(Pq,Ew,Ib);
                             0x5: PEXTRW(Gd,PRq,Ib);
                             0x6: SHUFPS(Vps,Wps,Ib);

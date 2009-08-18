@@ -346,10 +346,17 @@ processDescriptor:
     wrdl reg, t3, t1
     wrsel reg, t1
 };
+
+def macroop MOVNTI_M_R {
+    st reg, seg, sib, disp
+};
+
+def macroop MOVNTI_P_R {
+    rdip t7
+    st reg, seg, riprel, disp
+};
 '''
 #let {{
 #    class MOVD(Inst):
-#       "GenFault ${new UnimpInstFault}"
-#    class MOVNTI(Inst):
 #       "GenFault ${new UnimpInstFault}"
 #}};
