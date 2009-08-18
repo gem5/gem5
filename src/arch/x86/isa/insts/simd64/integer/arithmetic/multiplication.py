@@ -54,9 +54,78 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PMULHW
-# PMULLW
-# PMULHRW
-# PMULHUW
-# PMULUDQ
+def macroop PMULHW_MMX_MMX {
+    mmuli mmx, mmx, mmxm, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULHW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULHW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULLW_MMX_MMX {
+    mmuli mmx, mmx, mmxm, size=2, ext=2
+};
+
+def macroop PMULLW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=2
+};
+
+def macroop PMULLW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=2
+};
+
+def macroop PMULHRW_MMX_MMX {
+    mmuli mmx, mmx, mmxm, size=2, ext=(0x2 | 0x4 | 0x8)
+};
+
+def macroop PMULHRW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=(0x2 | 0x4 | 0x8)
+};
+
+def macroop PMULHRW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=(0x2 | 0x4 | 0x8)
+};
+
+def macroop PMULHUW_MMX_MMX {
+    mmuli mmx, mmx, mmxm, size=2, ext=8
+};
+
+def macroop PMULHUW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=8
+};
+
+def macroop PMULHUW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, size=2, ext=8
+};
+
+def macroop PMULUDQ_MMX_MMX {
+    mmuli mmx, mmx, mmxm, srcSize=4, destSize=8, ext=1
+};
+
+def macroop PMULUDQ_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=1
+};
+
+def macroop PMULUDQ_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=1
+};
 '''

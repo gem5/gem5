@@ -948,7 +948,7 @@
                     0x2: psrld_Pq_Qq();
                     0x3: psrlq_Pq_Qq();
                     0x4: Inst::PADDQ(Pq,Qq);
-                    0x5: pmullw_Pq_Qq();
+                    0x5: Inst::PMULLW(Pq,Qq);
                     0x7: pmovmskb_Gd_PRq();
                     default: Inst::UD2();
                 }
@@ -964,7 +964,7 @@
                     0x2: psrld_Vo_Wo();
                     0x3: psrlq_Vo_Wo();
                     0x4: Inst::PADDQ(Vo,Wo);
-                    0x5: pmullw_Vo_Wo();
+                    0x5: Inst::PMULLW(Vo,Wo);
                     0x6: Inst::MOVQ(Wq,Vq);
                     0x7: pmovmskb_Gd_VRo();
                 }
@@ -1010,8 +1010,8 @@
                     0x1: psraw_Pq_Qq();
                     0x2: psrad_Pq_Qq();
                     0x3: pavgw_Pq_Qq();
-                    0x4: pmulhuw_Pq_Qq();
-                    0x5: pmulhw_Pq_Qq();
+                    0x4: Inst::PMULHUW(Pq,Qq);
+                    0x5: Inst::PMULHW(Pq,Qq);
                     0x7: movntq_Mq_Pq();
                     default: Inst::UD2();
                 }
@@ -1026,8 +1026,8 @@
                     0x1: psraw_Vo_Wo();
                     0x2: psrad_Vo_Wo();
                     0x3: pavgw_Vo_Wo();
-                    0x4: pmulhuw_Vo_Wo();
-                    0x5: pmulhw_Vo_Wo();
+                    0x4: Inst::PMULHUW(Vo,Wo);
+                    0x5: Inst::PMULHW(Vo,Wo);
                     0x6: cvttpd2dq_Vo_Wo();
                     0x7: movntdq_Mo_Vo();
                 }
@@ -1071,7 +1071,7 @@
                     0x1: psllw_Pq_Qq();
                     0x2: pslld_Pq_Qq();
                     0x3: psllq_Pq_Qq();
-                    0x4: pmuludq_Pq_Qq();
+                    0x4: Inst::PMULUDQ(Pq,Qq);
                     0x5: pmaddwd_Pq_Qq();
                     0x6: psadbw_Pq_Qq();
                     0x7: maskmovq_Pq_PRq();
@@ -1082,7 +1082,7 @@
                     0x1: psllw_Vo_Wo();
                     0x2: pslld_Vo_Wo();
                     0x3: psllq_Vo_Wo();
-                    0x4: pmuludq_Vo_Wo();
+                    0x4: Inst::PMULUDQ(Vo,Wo);
                     0x5: pmaddwd_Vo_Wo();
                     0x6: psadbw_Vo_Wo();
                     0x7: maskmovdqu_Vo_VRo();

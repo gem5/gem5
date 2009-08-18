@@ -54,8 +54,83 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PMULHW
-# PMULLW
-# PMULHUW
-# PMULUDQ
+def macroop PMULHW_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, size=2, ext=(0x2 | 0x8)
+    mmuli xmmh, xmmh, xmmhm, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULHW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=(0x2 | 0x8)
+    mmuli xmmh, xmmh, ufp2, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULHW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=(0x2 | 0x8)
+    mmuli xmmh, xmmh, ufp2, size=2, ext=(0x2 | 0x8)
+};
+
+def macroop PMULLW_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, size=2, ext=2
+    mmuli xmmh, xmmh, xmmhm, size=2, ext=2
+};
+
+def macroop PMULLW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=2
+    mmuli xmmh, xmmh, ufp2, size=2, ext=2
+};
+
+def macroop PMULLW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=2
+    mmuli xmmh, xmmh, ufp2, size=2, ext=2
+};
+
+def macroop PMULHUW_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, size=2, ext=8
+    mmuli xmmh, xmmh, xmmhm, size=2, ext=8
+};
+
+def macroop PMULHUW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=8
+    mmuli xmmh, xmmh, ufp2, size=2, ext=8
+};
+
+def macroop PMULHUW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, size=2, ext=8
+    mmuli xmmh, xmmh, ufp2, size=2, ext=8
+};
+
+def macroop PMULUDQ_XMM_XMM {
+    mmuli xmml, xmml, xmmlm, srcSize=4, destSize=8, ext=1
+    mmuli xmmh, xmmh, xmmhm, srcSize=4, destSize=8, ext=1
+};
+
+def macroop PMULUDQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=1
+    mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=1
+};
+
+def macroop PMULUDQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli xmml, xmml, ufp1, srcSize=4, destSize=8, ext=1
+    mmuli xmmh, xmmh, ufp2, srcSize=4, destSize=8, ext=1
+};
 '''
