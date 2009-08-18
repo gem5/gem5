@@ -55,21 +55,21 @@
 
 microcode = '''
 def macroop UNPCKLPS_XMM_XMM {
-    unpack xmmh, xmml, xmmlm, sel=1, size=4
-    unpack xmml, xmml, xmmlm, sel=0, size=4
+    unpack xmmh, xmml, xmmlm, ext=1, size=4
+    unpack xmml, xmml, xmmlm, ext=0, size=4
 };
 
 def macroop UNPCKLPS_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack xmmh, xmml, ufp1, sel=1, size=4
-    unpack xmml, xmml, ufp1, sel=0, size=4
+    unpack xmmh, xmml, ufp1, ext=1, size=4
+    unpack xmml, xmml, ufp1, ext=0, size=4
 };
 
 def macroop UNPCKLPS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack xmmh, xmml, ufp1, sel=1, size=4
-    unpack xmml, xmml, ufp1, sel=0, size=4
+    unpack xmmh, xmml, ufp1, ext=1, size=4
+    unpack xmml, xmml, ufp1, ext=0, size=4
 };
 
 def macroop UNPCKLPD_XMM_XMM {
@@ -86,23 +86,23 @@ def macroop UNPCKLPD_XMM_P {
 };
 
 def macroop UNPCKHPS_XMM_XMM {
-    unpack xmml, xmmh, xmmhm, sel=0, size=4
-    unpack xmmh, xmmh, xmmhm, sel=1, size=4
+    unpack xmml, xmmh, xmmhm, ext=0, size=4
+    unpack xmmh, xmmh, xmmhm, ext=1, size=4
 };
 
 def macroop UNPCKHPS_XMM_M {
     lea t1, seg, sib, disp, dataSize=asz
     ldfp ufp1, seg, [1, t0, t1], 8, dataSize=8
-    unpack xmml, xmmh, ufp1, sel=0, size=4
-    unpack xmmh, xmmh, ufp1, sel=1, size=4
+    unpack xmml, xmmh, ufp1, ext=0, size=4
+    unpack xmmh, xmmh, ufp1, ext=1, size=4
 };
 
 def macroop UNPCKHPS_XMM_P {
     rdip t7
     lea t1, seg, riprel, disp, dataSize=asz
     ldfp ufp1, seg, [1, t0, t1], 8, dataSize=8
-    unpack xmml, xmmh, ufp1, sel=0, size=4
-    unpack xmmh, xmmh, ufp1, sel=1, size=4
+    unpack xmml, xmmh, ufp1, ext=0, size=4
+    unpack xmmh, xmmh, ufp1, ext=1, size=4
 };
 
 def macroop UNPCKHPD_XMM_XMM {

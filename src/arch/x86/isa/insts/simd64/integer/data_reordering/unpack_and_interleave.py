@@ -55,92 +55,92 @@
 
 microcode = '''
 def macroop PUNPCKLBW_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=0, size=1
+    unpack mmx, mmx, mmxm, ext=0, size=1
 };
 
 def macroop PUNPCKLBW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=1
+    unpack mmx, mmx, ufp1, ext=0, size=1
 };
 
 def macroop PUNPCKLBW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=1
+    unpack mmx, mmx, ufp1, ext=0, size=1
 };
 
 def macroop PUNPCKLWD_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=0, size=2
+    unpack mmx, mmx, mmxm, ext=0, size=2
 };
 
 def macroop PUNPCKLWD_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=2
+    unpack mmx, mmx, ufp1, ext=0, size=2
 };
 
 def macroop PUNPCKLWD_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=2
+    unpack mmx, mmx, ufp1, ext=0, size=2
 };
 
 def macroop PUNPCKLDQ_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=0, size=4
+    unpack mmx, mmx, mmxm, ext=0, size=4
 };
 
 def macroop PUNPCKLDQ_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=4
+    unpack mmx, mmx, ufp1, ext=0, size=4
 };
 
 def macroop PUNPCKLDQ_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=0, size=4
+    unpack mmx, mmx, ufp1, ext=0, size=4
 };
 
 def macroop PUNPCKHBW_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=1, size=1
+    unpack mmx, mmx, mmxm, ext=1, size=1
 };
 
 def macroop PUNPCKHBW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=1
+    unpack mmx, mmx, ufp1, ext=1, size=1
 };
 
 def macroop PUNPCKHBW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=1
+    unpack mmx, mmx, ufp1, ext=1, size=1
 };
 
 def macroop PUNPCKHWD_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=1, size=2
+    unpack mmx, mmx, mmxm, ext=1, size=2
 };
 
 def macroop PUNPCKHWD_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=2
+    unpack mmx, mmx, ufp1, ext=1, size=2
 };
 
 def macroop PUNPCKHWD_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=2
+    unpack mmx, mmx, ufp1, ext=1, size=2
 };
 
 def macroop PUNPCKHDQ_MMX_MMX {
-    unpack mmx, mmx, mmxm, sel=1, size=4
+    unpack mmx, mmx, mmxm, ext=1, size=4
 };
 
 def macroop PUNPCKHDQ_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=4
+    unpack mmx, mmx, ufp1, ext=1, size=4
 };
 
 def macroop PUNPCKHDQ_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    unpack mmx, mmx, ufp1, sel=1, size=4
+    unpack mmx, mmx, ufp1, ext=1, size=4
 };
 '''

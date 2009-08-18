@@ -57,12 +57,12 @@ def template MediaOpRegDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -80,12 +80,12 @@ def template MediaOpImmDeclare {{
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
                 InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
     };
@@ -101,10 +101,10 @@ def template MediaOpRegConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
-                _src1, _src2, _dest, _srcSize, _destSize, _sel,
+                _src1, _src2, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -114,10 +114,10 @@ def template MediaOpRegConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
-                _src1, _src2, _dest, _srcSize, _destSize, _sel,
+                _src1, _src2, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -134,10 +134,10 @@ def template MediaOpImmConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
-                _src1, _imm8, _dest, _srcSize, _destSize, _sel,
+                _src1, _imm8, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -147,10 +147,10 @@ def template MediaOpImmConstructor {{
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
             InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
-            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
-                _src1, _imm8, _dest, _srcSize, _destSize, _sel,
+                _src1, _imm8, _dest, _srcSize, _destSize, _ext,
                 %(op_class)s)
     {
         buildMe();
@@ -252,7 +252,7 @@ let {{
         abstract = True
 
         def __init__(self, dest, src1, op2,
-                size = None, destSize = None, srcSize = None, sel = None):
+                size = None, destSize = None, srcSize = None, ext = None):
             self.dest = dest
             self.src1 = src1
             self.op2 = op2
@@ -267,10 +267,10 @@ let {{
                 raise Exception, "Source size not set."
             if self.destSize is None:
                 raise Exception, "Dest size not set."
-            if sel is None:
-                self.sel = 0
+            if ext is None:
+                self.ext = 0
             else:
-                self.sel = sel
+                self.ext = ext 
 
         def getAllocator(self, *microFlags):
             className = self.className
@@ -278,21 +278,21 @@ let {{
                 className += "Imm"
             allocator = '''new %(class_name)s(machInst, macrocodeBlock
                     %(flags)s, %(src1)s, %(op2)s, %(dest)s,
-                    %(srcSize)s, %(destSize)s, %(sel)s)''' % {
+                    %(srcSize)s, %(destSize)s, %(ext)s)''' % {
                 "class_name" : className,
                 "flags" : self.microFlagsText(microFlags),
                 "src1" : self.src1, "op2" : self.op2,
                 "dest" : self.dest,
                 "srcSize" : self.srcSize,
                 "destSize" : self.destSize,
-                "sel" : self.sel}
+                "ext" : self.ext}
             return allocator
 
     class Mov2int(MediaOp):
         def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, sel = None):
+                size = None, destSize = None, srcSize = None, ext = None):
             super(Mov2int, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, sel)
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
         code = '''
             uint64_t fpSrcReg1 = bits(FpSrcReg1.uqw, srcSize * 8 - 1, 0);
             DestReg = merge(DestReg, fpSrcReg1, destSize);
@@ -300,9 +300,9 @@ let {{
 
     class Mov2fp(MediaOp):
         def __init__(self, dest, src, \
-                size = None, destSize = None, srcSize = None, sel = None):
+                size = None, destSize = None, srcSize = None, ext = None):
             super(Mov2fp, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, sel)
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
         code = '''
             uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
             FpDestReg.uqw =
@@ -314,7 +314,7 @@ let {{
             assert(srcSize == destSize);
             int size = destSize;
             int items = (sizeof(FloatRegBits) / size) / 2;
-            int offset = sel ? items : 0;
+            int offset = ext ? items : 0;
             uint64_t result = 0;
             for (int i = 0; i < items; i++) {
                 uint64_t pickedLow =

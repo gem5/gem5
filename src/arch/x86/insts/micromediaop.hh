@@ -42,7 +42,7 @@ namespace X86ISA
         const RegIndex dest;
         const uint8_t srcSize;
         const uint8_t destSize;
-        const uint8_t sel;
+        const uint8_t ext;
         static const RegIndex foldOBit = 0;
 
         // Constructor
@@ -51,13 +51,13 @@ namespace X86ISA
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 InstRegIndex _src1, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _sel,
+                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
             X86MicroopBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
                     __opClass),
             src1(_src1.idx), dest(_dest.idx),
-            srcSize(_srcSize), destSize(_destSize), sel(_sel)
+            srcSize(_srcSize), destSize(_destSize), ext(_ext)
         {}
     };
 
@@ -72,11 +72,11 @@ namespace X86ISA
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _sel,
+                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
             MediaOpBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
-                    _src1, _dest, _srcSize, _destSize, _sel,
+                    _src1, _dest, _srcSize, _destSize, _ext,
                     __opClass),
             src2(_src2.idx)
         {}
@@ -96,11 +96,11 @@ namespace X86ISA
                 bool isMicro, bool isDelayed,
                 bool isFirst, bool isLast,
                 InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
-                uint8_t _srcSize, uint8_t _destSize, uint8_t _sel,
+                uint8_t _srcSize, uint8_t _destSize, uint8_t _ext,
                 OpClass __opClass) :
             MediaOpBase(_machInst, mnem, _instMnem,
                     isMicro, isDelayed, isFirst, isLast,
-                    _src1, _dest, _srcSize, _destSize, _sel,
+                    _src1, _dest, _srcSize, _destSize, _ext,
                     __opClass),
             imm8(_imm8)
         {}
