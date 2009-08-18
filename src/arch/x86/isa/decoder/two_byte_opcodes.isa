@@ -552,7 +552,7 @@
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::PUNPCKLBW(Pq,Qd);
-                    0x1: punpcklwd_Pq_Qd();
+                    0x1: Inst::PUNPCKLWD(Pq,Qd);
                     0x2: punpckldq_Pq_Qd();
                     0x3: packsswb_Pq_Qq();
                     0x4: pcmpgtb_Pq_Qq();
@@ -563,7 +563,7 @@
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::PUNPCKLBW(Vo,Wq);
-                    0x1: punpcklwd_Vo_Wq();
+                    0x1: Inst::PUNPCKLWD(Vo,Wq);
                     0x2: punpckldq_Vo_Wq();
                     0x3: packsswb_Vo_Wo();
                     0x4: pcmpgtb_Vo_Wo();
