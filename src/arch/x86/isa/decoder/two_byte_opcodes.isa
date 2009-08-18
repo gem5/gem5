@@ -740,7 +740,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: vmread_Ed_or_Eq_Gd_or_Gq();
                     0x1: vmwrite_Gd_or_Gq_Ed_or_Eq();
-                    0x6: mov_Ed_Pd();
+                    0x6: Inst::MOVD(Edp,Pdp);
                     0x7: mov_Qq_Pq();
                     default: Inst::UD2();
                 }

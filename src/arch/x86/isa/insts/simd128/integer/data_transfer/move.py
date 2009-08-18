@@ -66,6 +66,19 @@ def macroop MOVD_MMX_P {
     rdip t7
     ldfp mmx, seg, riprel, disp, dataSize=8
 };
+
+def macroop MOVD_R_MMX {
+    mov2int reg, mmxm, size=dsz 
+};
+
+def macroop MOVD_M_MMX {
+    stfp mmx, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVD_P_MMX {
+    rdip t7
+    stfp mmx, seg, riprel, disp, dataSize=8
+};
 '''
 # MOVQ
 # MOVDQA
