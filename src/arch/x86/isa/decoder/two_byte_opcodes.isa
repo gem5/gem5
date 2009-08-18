@@ -907,10 +907,10 @@
                         // no prefix
                         0x0: decode OPCODE_OP_BOTTOM3 {
                             0x2: WarnUnimpl::cmpccps_Vo_Wo_Ib();
-                            0x3: CVTDQ2PS(Vo,Wo);
-                            0x4: SUBPS(Vo,Wo);
-                            0x5: MINPS(Vo,Wo);
-                            0x6: DIVPS(Vo,Wo);
+                            0x3: WarnUnimpl::movnti_Mdq_Gdq();
+                            0x4: WarnUnimpl::pinsrw_Pq_Ew_Ib();
+                            0x5: WarnUnimpl::pextrw_Gd_PRq_Ib();
+                            0x6: WarnUnimpl::shufps_Vps_Wps_Ib();
                         }
                         // repe (0xF3)
                         0x4: decode OPCODE_OP_BOTTOM3 {
@@ -920,9 +920,9 @@
                         // operand size (0x66)
                         0x1: decode OPCODE_OP_BOTTOM3 {
                             0x2: WarnUnimpl::cmpccpd_Vo_Wo_Ib();
-                            0x4: SUBPD(Vo,Wo);
-                            0x5: MINPD(Vo,Wo);
-                            0x6: DIVPD(Vo,Wo);
+                            0x4: WarnUnimpl::pinsrw_Vdw_Ew_Ib();
+                            0x5: WarnUnimpl::pextrw_Gd_VRdq_Ib();
+                            0x6: WarnUnimpl::shufpd_Vpd_Wpd_Ib();
                             default: UD2();
                         }
                         // repne (0xF2)
