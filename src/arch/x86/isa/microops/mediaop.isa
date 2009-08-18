@@ -347,6 +347,24 @@ let {{
             DestReg = DestReg | result;
         '''
 
+    class Maskmov(MediaOp):
+        code = '''
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                if (bits(FpSrcReg2.uqw, hiIndex))
+                    result = insertBits(result, hiIndex, loIndex, arg1Bits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Unpack(MediaOp):
         code = '''
             assert(srcSize == destSize);
