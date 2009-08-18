@@ -551,7 +551,7 @@
             0x0C: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: punpcklbw_Pq_Qd();
+                    0x0: Inst::PUNPCKLBW(Pq,Qd);
                     0x1: punpcklwd_Pq_Qd();
                     0x2: punpckldq_Pq_Qd();
                     0x3: packsswb_Pq_Qq();
