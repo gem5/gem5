@@ -288,20 +288,20 @@
             0x02: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: movups_Vo_Wo();
-                    0x1: movups_Wo_Vo();
+                    0x0: Inst::MOVUPS(Vo,Wo);
+                    0x1: Inst::MOVUPS(Wo,Vo);
                     0x2: decode MODRM_MOD {
-                        0x3: movhlps_Vq_VRq();
-                        default: movlps_Vq_Mq();
+                        0x3: Inst::MOVHLPS(Vq,VRq);
+                        default: Inst::MOVLPS(Vq,Mq);
                     }
-                    0x3: movlps_Mq_Vq();
+                    0x3: Inst::MOVLPS(Mq,Vq);
                     0x4: Inst::UNPCKLPS(Vps,Wq);
                     0x5: Inst::UNPCKHPS(Vpd,Wq);
                     0x6: decode MODRM_MOD {
-                        0x3: movlhps_Vq_VRq();
-                        default: movhps_Vq_Mq();
+                        0x3: Inst::MOVLHPS(Vq,VRq);
+                        default: Inst::MOVHPS(Vq,Mq);
                     }
-                    0x7: movhps_Mq_Vq();
+                    0x7: Inst::MOVHPS(Mq,Vq);
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
@@ -313,14 +313,14 @@
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: movupd_Vo_Wo();
-                    0x1: movupd_Wo_Vo();
+                    0x0: Inst::MOVUPD(Vo,Wo);
+                    0x1: Inst::MOVUPD(Wo,Vo);
                     0x2: Inst::MOVLPD(Vq,Mq);
                     0x3: Inst::MOVLPD(Mq,Vq);
                     0x4: Inst::UNPCKLPD(Vo,Wq);
                     0x5: Inst::UNPCKHPD(Vo,Wo);
-                    0x6: movhpd_Vq_Mq();
-                    0x7: movhpd_Mq_Vq();
+                    0x6: Inst::MOVHPD(Vq,Mq);
+                    0x7: Inst::MOVHPD(Mq,Vq);
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
@@ -389,8 +389,8 @@
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: movapd_Vo_Wo();
-                    0x1: movapd_Wo_Vo();
+                    0x0: Inst::MOVAPD(Vo,Wo);
+                    0x1: Inst::MOVAPD(Wo,Vo);
                     0x2: Inst::CVTPI2PD(Vo,Qq);
                     0x3: movntpd_Mo_Vo();
                     0x4: cvttpd2pi_Pq_Wo();
