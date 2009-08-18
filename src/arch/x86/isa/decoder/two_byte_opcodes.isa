@@ -549,9 +549,9 @@
                     0x1: Inst::PUNPCKLWD(Pq,Qd);
                     0x2: Inst::PUNPCKLDQ(Pq,Qd);
                     0x3: Inst::PACKSSWB(Pq,Qq);
-                    0x4: pcmpgtb_Pq_Qq();
-                    0x5: pcmpgtw_Pq_Qq();
-                    0x6: pcmpgtd_Pq_Qq();
+                    0x4: Inst::PCMPGTB(Pq,Qq);
+                    0x5: Inst::PCMPGTW(Pq,Qq);
+                    0x6: Inst::PCMPGTD(Pq,Qq);
                     0x7: Inst::PACKUSWB(Pq,Qq);
                 }
                 // operand size (0x66)
@@ -560,9 +560,9 @@
                     0x1: Inst::PUNPCKLWD(Vo,Wq);
                     0x2: Inst::PUNPCKLDQ(Vo,Wq);
                     0x3: Inst::PACKSSWB(Vo,Wo);
-                    0x4: pcmpgtb_Vo_Wo();
-                    0x5: pcmpgtw_Vo_Wo();
-                    0x6: pcmpgtd_Vo_Wo();
+                    0x4: Inst::PCMPGTB(Vo,Wo);
+                    0x5: Inst::PCMPGTW(Vo,Wo);
+                    0x6: Inst::PCMPGTD(Vo,Wo);
                     0x7: Inst::PACKUSWB(Vo,Wo);
                 }
                 default: Inst::UD2();
@@ -652,9 +652,9 @@
                         }
                         default: Inst::UD2();
                     }
-                    0x4: pcmpeqb_Pq_Qq();
-                    0x5: pcmpeqw_Pq_Qq();
-                    0x6: pcmpeqd_Pq_Qq();
+                    0x4: Inst::PCMPEQB(Pq,Qq);
+                    0x5: Inst::PCMPEQW(Pq,Qq);
+                    0x6: Inst::PCMPEQD(Pq,Qq);
                     0x7: emms();
                 }
                 // repe (0xF3)
@@ -717,9 +717,9 @@
                         }
                         default: Inst::UD2();
                     }
-                    0x4: pcmpeqb_Vo_Wo();
-                    0x5: pcmpeqw_Vo_Wo();
-                    0x6: pcmpeqd_Vo_Wo();
+                    0x4: Inst::PCMPEQB(Vo,Wo);
+                    0x5: Inst::PCMPEQW(Vo,Wo);
+                    0x6: Inst::PCMPEQD(Vo,Wo);
                     default: Inst::UD2();
                 }
                 // repne (0xF2)

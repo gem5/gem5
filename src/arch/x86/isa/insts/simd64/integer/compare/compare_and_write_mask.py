@@ -54,10 +54,93 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PCMPEQB
-# PCMPEQW
-# PCMPEQD
-# PCMPGTB
-# PCMPGTW
-# PCMPGTD
+def macroop PCMPEQB_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=1, ext=0
+};
+
+def macroop PCMPEQB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PCMPEQB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PCMPEQW_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=2, ext=0
+};
+
+def macroop PCMPEQW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PCMPEQW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PCMPEQD_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=4, ext=0
+};
+
+def macroop PCMPEQD_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PCMPEQD_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PCMPGTB_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=1, ext=2
+};
+
+def macroop PCMPGTB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=1, ext=2
+};
+
+def macroop PCMPGTB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=1, ext=2
+};
+
+def macroop PCMPGTW_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=2, ext=2
+};
+
+def macroop PCMPGTW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=2, ext=2
+};
+
+def macroop PCMPGTW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=2, ext=2
+};
+
+def macroop PCMPGTD_MMX_MMX {
+    mcmpi2r mmx, mmx, mmxm, size=4, ext=2
+};
+
+def macroop PCMPGTD_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=4, ext=2
+};
+
+def macroop PCMPGTD_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mcmpi2r mmx, mmx, ufp1, size=4, ext=2
+};
 '''

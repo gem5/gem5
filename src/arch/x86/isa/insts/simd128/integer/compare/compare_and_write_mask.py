@@ -54,10 +54,123 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PCMPEQB
-# PCMPEQW
-# PCMPEQD
-# PCMPGTB
-# PCMPGTW
-# PCMPGTD
+def macroop PCMPEQB_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=1, ext=0
+    mcmpi2r xmmh, xmmh, xmmhm, size=1, ext=0
+};
+
+def macroop PCMPEQB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=1, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PCMPEQB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=1, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PCMPEQW_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=2, ext=0
+    mcmpi2r xmmh, xmmh, xmmhm, size=2, ext=0
+};
+
+def macroop PCMPEQW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=2, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=2, ext=0
+};
+
+def macroop PCMPEQW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=2, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=2, ext=0
+};
+
+def macroop PCMPEQD_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=4, ext=0
+    mcmpi2r xmmh, xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop PCMPEQD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=4, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop PCMPEQD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=4, ext=0
+    mcmpi2r xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop PCMPGTB_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=1, ext=2
+    mcmpi2r xmmh, xmmh, xmmhm, size=1, ext=2
+};
+
+def macroop PCMPGTB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=1, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=1, ext=2
+};
+
+def macroop PCMPGTB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=1, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=1, ext=2
+};
+
+def macroop PCMPGTW_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=2, ext=2
+    mcmpi2r xmmh, xmmh, xmmhm, size=2, ext=2
+};
+
+def macroop PCMPGTW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=2, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=2, ext=2
+};
+
+def macroop PCMPGTW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=2, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=2, ext=2
+};
+
+def macroop PCMPGTD_XMM_XMM {
+    mcmpi2r xmml, xmml, xmmlm, size=4, ext=2
+    mcmpi2r xmmh, xmmh, xmmhm, size=4, ext=2
+};
+
+def macroop PCMPGTD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=4, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=4, ext=2
+};
+
+def macroop PCMPGTD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpi2r xmml, xmml, ufp1, size=4, ext=2
+    mcmpi2r xmmh, xmmh, ufp2, size=4, ext=2
+};
 '''
