@@ -335,6 +335,73 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Pack(MediaOp):
+        code = '''
+            assert(srcSize == destSize * 2);
+            int items = (sizeof(FloatRegBits) / destSize);
+            int destBits = destSize * 8;
+            int srcBits = srcSize * 8;
+            uint64_t result = 0;
+            int i;
+            for (i = 0; i < items / 2; i++) {
+                uint64_t picked =
+                    bits(FpSrcReg1.uqw, (i + 1) * srcBits - 1,
+                                        (i + 0) * srcBits);
+                unsigned signBit = bits(picked, srcBits - 1);
+                uint64_t overflow = bits(picked, srcBits - 1, destBits - 1);
+
+                // Handle saturation.
+                if (signBit) {
+                    if (overflow != mask(destBits - srcBits + 1)) {
+                        if (ext & 0x1)
+                            picked = (1 << (destBits - 1));
+                        else
+                            picked = 0;
+                    }
+                } else {
+                    if (overflow != 0) {
+                        if (ext & 0x1)
+                            picked = mask(destBits - 1);
+                        else
+                            picked = mask(destBits);
+                    }
+                }
+                result = insertBits(result,
+                                    (i + 1) * destBits - 1,
+                                    (i + 0) * destBits,
+                                    picked);
+            }
+            for (;i < items; i++) {
+                uint64_t picked =
+                    bits(FpSrcReg2.uqw, (i - items + 1) * srcBits - 1,
+                                        (i - items + 0) * srcBits);
+                unsigned signBit = bits(picked, srcBits - 1);
+                uint64_t overflow = bits(picked, srcBits - 1, destBits - 1);
+
+                // Handle saturation.
+                if (signBit) {
+                    if (overflow != mask(destBits - srcBits + 1)) {
+                        if (ext & 0x1)
+                            picked = (1 << (destBits - 1));
+                        else
+                            picked = 0;
+                    }
+                } else {
+                    if (overflow != 0) {
+                        if (ext & 0x1)
+                            picked = mask(destBits - 1);
+                        else
+                            picked = mask(destBits);
+                    }
+                }
+                result = insertBits(result,
+                                    (i + 1) * destBits - 1,
+                                    (i + 0) * destBits,
+                                    picked);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Mxor(MediaOp):
         def __init__(self, dest, src1, src2):
             super(Mxor, self).__init__(dest, src1, src2, 1)
