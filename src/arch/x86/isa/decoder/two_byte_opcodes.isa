@@ -465,7 +465,7 @@
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: movmskps_Gd_VRo();
-                    0x1: sqrtps_Vo_Wo();
+                    0x1: Inst::SQRTPS(Vo,Wo);
                     0x2: rqsrtps_Vo_Wo();
                     0x3: rcpps_Vo_Wo();
                     0x4: Inst::ANDPS(Vo,Wo);
@@ -475,7 +475,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x1: sqrtss_Vd_Wd();
+                    0x1: Inst::SQRTSS(Vd,Wd);
                     0x2: rsqrtss_Vd_Wd();
                     0x3: rcpss_Vd_Wd();
                     default: Inst::UD2();
@@ -483,7 +483,7 @@
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: movmskpd_Gd_VRo();
-                    0x1: sqrtpd_Vo_Wo();
+                    0x1: Inst::SQRTPD(Vo,Wo);
                     0x4: Inst::ANDPD(Vo,Wo);
                     0x5: Inst::ANDNPD(Vo,Wo);
                     0x6: Inst::ORPD(Vo,Wo);
@@ -495,7 +495,7 @@
                 format Inst {
                     // repne (0xF2)
                     0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x1: SQRTSD(Vq,Wq);
+                        0x1: Inst::SQRTSD(Vq,Wq);
                         default: UD2();
                     }
                     default: UD2();

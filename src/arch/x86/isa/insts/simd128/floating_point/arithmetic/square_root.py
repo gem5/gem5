@@ -54,22 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# SQRTPS
-# SQRTPD
-# SQRTSS
+def macroop SQRTSS_XMM_XMM {
+    msqrt xmml, xmmlm, size=4, ext=1
+};
+
+def macroop SQRTSS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msqrt xmml, ufp1, size=4, ext=1
+};
+
+def macroop SQRTSS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msqrt xmml, ufp1, size=4, ext=1
+};
+
+def macroop SQRTPS_XMM_XMM {
+    msqrt xmml, xmmlm, size=4, ext=0
+    msqrt xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop SQRTPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    msqrt xmml, ufp1, size=4, ext=0
+    msqrt xmmh, ufp2, size=4, ext=0
+};
+
+def macroop SQRTPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    msqrt xmml, ufp1, size=4, ext=0
+    msqrt xmmh, ufp2, size=4, ext=0
+};
 
 def macroop SQRTSD_XMM_XMM {
-    sqrtfp xmml, xmml, xmmlm
+    msqrt xmml, xmmlm, size=8, ext=1
 };
 
 def macroop SQRTSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    sqrtfp xmml, xmml, ufp1
+    msqrt xmml, ufp1, size=8, ext=1
 };
 
 def macroop SQRTSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    sqrtfp xmml, xmml, ufp1
+    msqrt xmml, ufp1, size=8, ext=1
+};
+
+def macroop SQRTPD_XMM_XMM {
+    msqrt xmml, xmmlm, size=8, ext=0
+    msqrt xmmh, xmmhm, size=8, ext=0
+};
+
+def macroop SQRTPD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    msqrt xmml, ufp1, size=8, ext=0
+    msqrt xmmh, ufp2, size=8, ext=0
+};
+
+def macroop SQRTPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    msqrt xmml, ufp1, size=8, ext=0
+    msqrt xmmh, ufp2, size=8, ext=0
 };
 '''
