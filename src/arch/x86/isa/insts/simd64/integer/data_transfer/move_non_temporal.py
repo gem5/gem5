@@ -55,5 +55,10 @@
 
 microcode = '''
 # MOVNTQ
-# MASKMOVQ
+
+def macroop MASKMOVQ_MMX_MMX {
+    ldfp ufp1, ds, [1, t0, rdi], dataSize=8
+    maskmov ufp1, mmx, mmxm, size=1
+    stfp ufp1, ds, [1, t0, rdi], dataSize=8
+};
 '''

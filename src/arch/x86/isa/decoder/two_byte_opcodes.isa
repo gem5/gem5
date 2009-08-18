@@ -1067,7 +1067,7 @@
                         0x4: PMULUDQ(Pq,Qq);
                         0x5: PMADDWD(Pq,Qq);
                         0x6: PSADBW(Pq,Qq);
-                        0x7: WarnUnimpl::maskmovq_Pq_PRq();
+                        0x7: MASKMOVQ(Pq,PRq);
                         default: UD2();
                     }
                     // operand size (0x66)
@@ -1078,7 +1078,7 @@
                         0x4: PMULUDQ(Vo,Wo);
                         0x5: PMADDWD(Vo,Wo);
                         0x6: PSADBW(Vo,Wo);
-                        0x7: WarnUnimpl::maskmovdqu_Vo_VRo();
+                        0x7: MASKMOVDQU(Vo,VRo);
                         default: UD2();
                     }
                     // repne (0xF2)

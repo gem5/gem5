@@ -55,5 +55,13 @@
 
 microcode = '''
 # MOVNTDQ
-# MASKMOVDQU
+
+def macroop MASKMOVDQU_XMM_XMM {
+    ldfp ufp1, ds, [1, t0, rdi], dataSize=8
+    ldfp ufp2, ds, [1, t0, rdi], 8, dataSize=8
+    maskmov ufp1, xmml, xmmlm, size=1
+    maskmov ufp2, xmmh, xmmhm, size=1
+    stfp ufp1, ds, [1, t0, rdi], dataSize=8
+    stfp ufp2, ds, [1, t0, rdi], 8, dataSize=8
+};
 '''
