@@ -54,5 +54,18 @@
 # Authors: Gabe Black
 
 microcode = '''
-# POR
+def macroop POR_MMX_MMX {
+    mor mmx, mmx, mmxm
+};
+
+def macroop POR_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mor mmx, mmx, ufp1
+};
+
+def macroop POR_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mor mmx, mmx, ufp1
+};
 '''

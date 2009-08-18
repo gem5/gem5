@@ -470,7 +470,7 @@
                     0x3: rcpps_Vo_Wo();
                     0x4: andps_Vo_Wo();
                     0x5: andnps_Vo_Wo();
-                    0x6: orps_Vo_Wo();
+                    0x6: Inst::ORPS(Vo,Wo);
                     0x7: Inst::XORPS(Vo,Wo);
                 }
                 // repe (0xF3)
@@ -486,7 +486,7 @@
                     0x1: sqrtpd_Vo_Wo();
                     0x4: andpd_Vo_Wo();
                     0x5: andnpd_Vo_Wo();
-                    0x6: orpd_Vo_Wo();
+                    0x6: Inst::ORPD(Vo,Wo);
                     //This really should be type o, but it works on q sized
                     //chunks at a time.
                     0x7: Inst::XORPD(Vq,Wq);
@@ -1046,7 +1046,7 @@
                     0x0: psubsb_Pq_Qq();
                     0x1: psubsw_Pq_Qq();
                     0x2: pminsw_Pq_Qq();
-                    0x3: por_Pq_Qq();
+                    0x3: Inst::POR(Pq,Qq);
                     0x4: paddsb_Pq_Qq();
                     0x5: paddsw_Pq_Qq();
                     0x6: pmaxsw_Pq_Qq();
@@ -1057,7 +1057,7 @@
                     0x0: psubsb_Vo_Wo();
                     0x1: psubsw_Vo_Wo();
                     0x2: pminsw_Vo_Wo();
-                    0x3: por_Vo_Wo();
+                    0x3: Inst::POR(Vo,Wo);
                     0x4: paddsb_Vo_Wo();
                     0x5: paddsw_Vo_Wo();
                     0x6: pmaxsw_Vo_Wo();

@@ -54,5 +54,25 @@
 # Authors: Gabe Black
 
 microcode = '''
-# POR
+def macroop POR_XMM_XMM {
+    mor xmml, xmml, xmmlm
+    mor xmmh, xmmh, xmmhm
+};
+
+def macroop POR_XMM_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mor xmml, xmml, ufp1
+    mor xmmh, xmmh, ufp2
+};
+
+def macroop POR_XMM_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mor xmml, xmml, ufp1
+    mor xmmh, xmmh, ufp2
+};
 '''
