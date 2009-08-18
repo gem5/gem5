@@ -270,6 +270,8 @@ X86_64LiveProcess::startup()
                     // setting it to one.
         cr0.pe = 1; // We're definitely in protected mode.
         tc->setMiscReg(MISCREG_CR0, cr0);
+
+        tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
     }
 }
 
@@ -390,6 +392,8 @@ I386LiveProcess::startup()
                     // setting it to one.
         cr0.pe = 1; // We're definitely in protected mode.
         tc->setMiscReg(MISCREG_CR0, cr0);
+
+        tc->setMiscReg(MISCREG_MXCSR, 0x1f80);
     }
 }
 
