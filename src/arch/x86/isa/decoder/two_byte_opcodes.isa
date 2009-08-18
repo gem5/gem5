@@ -1000,43 +1000,41 @@
                     }
                     default: UD2();
                 }
-            }
-            0x1C: decode LEGACY_DECODEVAL {
-                // no prefix
-                0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: pavgb_Pq_Qq();
-                    0x1: Inst::PSRAW(Pq,Qq);
-                    0x2: Inst::PSRAD(Pq,Qq);
-                    0x3: pavgw_Pq_Qq();
-                    0x4: Inst::PMULHUW(Pq,Qq);
-                    0x5: Inst::PMULHW(Pq,Qq);
-                    0x7: movntq_Mq_Pq();
-                    default: Inst::UD2();
+                0x1C: decode LEGACY_DECODEVAL {
+                    // no prefix
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x0: PAVGB(Pq,Qq);
+                        0x1: PSRAW(Pq,Qq);
+                        0x2: PSRAD(Pq,Qq);
+                        0x3: PAVGW(Pq,Qq);
+                        0x4: PMULHUW(Pq,Qq);
+                        0x5: PMULHW(Pq,Qq);
+                        0x7: WarnUnimpl::movntq_Mq_Pq();
+                        default: UD2();
+                    }
+                    // repe (0xF3)
+                    0x4: decode OPCODE_OP_BOTTOM3 {
+                        0x6: CVTDQ2PD(Vo,Wq);
+                        default: UD2();
+                    }
+                    // operand size (0x66)
+                    0x1: decode OPCODE_OP_BOTTOM3 {
+                        0x0: PAVGB(Vo,Wo);
+                        0x1: PSRAW(Vo,Wo);
+                        0x2: PSRAD(Vo,Wo);
+                        0x3: PAVGW(Vo,Wo);
+                        0x4: PMULHUW(Vo,Wo);
+                        0x5: PMULHW(Vo,Wo);
+                        0x6: WarnUnimpl::cvttpd2dq_Vo_Wo();
+                        0x7: WarnUnimpl::movntdq_Mo_Vo();
+                    }
+                    // repne (0xF2)
+                    0x8: decode OPCODE_OP_BOTTOM3 {
+                        0x6: WarnUnimpl::cvtpd2dq_Vo_Wo();
+                        default: UD2();
+                    }
+                    default: UD2();
                 }
-                // repe (0xF3)
-                0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x6: Inst::CVTDQ2PD(Vo,Wq);
-                    default: Inst::UD2();
-                }
-                // operand size (0x66)
-                0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: pavgb_Vo_Wo();
-                    0x1: Inst::PSRAW(Vo,Wo);
-                    0x2: Inst::PSRAD(Vo,Wo);
-                    0x3: pavgw_Vo_Wo();
-                    0x4: Inst::PMULHUW(Vo,Wo);
-                    0x5: Inst::PMULHW(Vo,Wo);
-                    0x6: cvttpd2dq_Vo_Wo();
-                    0x7: movntdq_Mo_Vo();
-                }
-                // repne (0xF2)
-                0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x6: cvtpd2dq_Vo_Wo();
-                    default: Inst::UD2();
-                }
-                default: Inst::UD2();
-            }
-            format Inst {
                 0x1D: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {

@@ -54,7 +54,34 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PAVGB
-# PAVGW
+def macroop PAVGB_MMX_MMX {
+    mavg mmx, mmx, mmxm, size=1, ext=0
+};
+
+def macroop PAVGB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mavg mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PAVGB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mavg mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PAVGW_MMX_MMX {
+    mavg mmx, mmx, mmxm, size=2, ext=0
+};
+
+def macroop PAVGW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mavg mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PAVGW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mavg mmx, mmx, ufp1, size=2, ext=0
+};
 # PAVGUSB
 '''

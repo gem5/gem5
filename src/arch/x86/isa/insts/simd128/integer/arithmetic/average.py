@@ -54,6 +54,63 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PAVGB
-# PAVGW
+def macroop PAVGB_XMM_XMM {
+    mavg xmml, xmml, xmmlm, size=1, ext=0
+    mavg xmmh, xmmh, xmmhm, size=1, ext=0
+};
+
+def macroop PAVGB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=1, ext=0
+    mavg xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PAVGB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=1, ext=0
+    mavg xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PAVGUSB_XMM_XMM {
+    mavg xmml, xmml, xmmlm, size=1, ext=0
+    mavg xmmh, xmmh, xmmhm, size=1, ext=0
+};
+
+def macroop PAVGUSB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=1, ext=0
+    mavg xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PAVGUSB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=1, ext=0
+    mavg xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PAVGW_XMM_XMM {
+    mavg xmml, xmml, xmmlm, size=2, ext=0
+    mavg xmmh, xmmh, xmmhm, size=2, ext=0
+};
+
+def macroop PAVGW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=2, ext=0
+    mavg xmmh, xmmh, ufp2, size=2, ext=0
+};
+
+def macroop PAVGW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mavg xmml, xmml, ufp1, size=2, ext=0
+    mavg xmmh, xmmh, ufp2, size=2, ext=0
+};
 '''
