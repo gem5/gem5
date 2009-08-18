@@ -983,7 +983,7 @@
                     0x3: Inst::PAND(Pq,Qq);
                     0x4: Inst::PADDUSB(Pq,Qq);
                     0x5: Inst::PADDUSW(Pq,Qq);
-                    0x6: pmaxub_Pq_Qq();
+                    0x6: Inst::PMAXUB(Pq,Qq);
                     0x7: Inst::PANDN(Pq,Qq);
                 }
                 // operand size (0x66)
@@ -994,7 +994,7 @@
                     0x3: Inst::PAND(Vo,Wo);
                     0x4: Inst::PADDUSB(Vo,Wo);
                     0x5: Inst::PADDUSW(Vo,Wo);
-                    0x6: pmaxub_Vo_Wo();
+                    0x6: Inst::PMAXUB(Vo,Wo);
                     0x7: Inst::PANDN(Vo,Wo);
                 }
                 default: Inst::UD2();
@@ -1043,7 +1043,7 @@
                     0x3: Inst::POR(Pq,Qq);
                     0x4: Inst::PADDSB(Pq,Qq);
                     0x5: Inst::PADDSW(Pq,Qq);
-                    0x6: pmaxsw_Pq_Qq();
+                    0x6: Inst::PMAXSW(Pq,Qq);
                     0x7: Inst::PXOR(Pq,Qq);
                 }
                 // operand size (0x66)
@@ -1054,7 +1054,7 @@
                     0x3: Inst::POR(Vo,Wo);
                     0x4: Inst::PADDSB(Vo,Wo);
                     0x5: Inst::PADDSW(Vo,Wo);
-                    0x6: pmaxsw_Vo_Wo();
+                    0x6: Inst::PMAXSW(Vo,Wo);
                     0x7: Inst::PXOR(Vo,Wo);
                 }
                 default: Inst::UD2();
