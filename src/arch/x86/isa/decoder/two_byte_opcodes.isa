@@ -469,7 +469,7 @@
                     0x2: rqsrtps_Vo_Wo();
                     0x3: rcpps_Vo_Wo();
                     0x4: Inst::ANDPS(Vo,Wo);
-                    0x5: andnps_Vo_Wo();
+                    0x5: Inst::ANDNPS(Vo,Wo);
                     0x6: Inst::ORPS(Vo,Wo);
                     0x7: Inst::XORPS(Vo,Wo);
                 }
@@ -485,7 +485,7 @@
                     0x0: movmskpd_Gd_VRo();
                     0x1: sqrtpd_Vo_Wo();
                     0x4: Inst::ANDPD(Vo,Wo);
-                    0x5: andnpd_Vo_Wo();
+                    0x5: Inst::ANDNPD(Vo,Wo);
                     0x6: Inst::ORPD(Vo,Wo);
                     //This really should be type o, but it works on q sized
                     //chunks at a time.
@@ -990,7 +990,7 @@
                     0x4: paddusb_Pq_Qq();
                     0x5: paddusw_Pq_Qq();
                     0x6: pmaxub_Pq_Qq();
-                    0x7: pandn_Pq_Qq();
+                    0x7: Inst::PANDN(Pq,Qq);
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
@@ -1001,7 +1001,7 @@
                     0x4: paddusb_Vo_Wo();
                     0x5: paddusw_Vo_Wo();
                     0x6: pmaxub_Vo_Wo();
-                    0x7: pandn_Vo_Wo();
+                    0x7: Inst::PANDN(Vo,Wo);
                 }
                 default: Inst::UD2();
             }
