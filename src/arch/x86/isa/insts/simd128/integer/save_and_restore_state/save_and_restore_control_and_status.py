@@ -54,6 +54,15 @@
 # Authors: Gabe Black
 
 microcode = '''
-# STMXCSR
+def macroop STMXCSR_M {
+    rdval t1, "InstRegIndex(MISCREG_MXCSR)"
+    st t1, seg, sib, disp
+};
+
+def macroop STMXCSR_P {
+    rdval t1, "InstRegIndex(MISCREG_MXCSR)"
+    rdip t7
+    st t1, seg, riprel, disp
+};
 # LDMXCSR
 '''
