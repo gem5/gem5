@@ -295,8 +295,8 @@
                         default: movlps_Vq_Mq();
                     }
                     0x3: movlps_Mq_Vq();
-                    0x4: unpcklps();
-                    0x5: unpckhps();
+                    0x4: Inst::UNPCKLPS(Vps,Wq);
+                    0x5: Inst::UNPCKHPS(Vpd,Wq);
                     0x6: decode MODRM_MOD {
                         0x3: movlhps_Vq_VRq();
                         default: movhps_Vq_Mq();
@@ -317,8 +317,8 @@
                     0x1: movupd_Wo_Vo();
                     0x2: Inst::MOVLPD(Vq,Mq);
                     0x3: Inst::MOVLPD(Mq,Vq);
-                    0x4: unpcklpd_Vo_Wq();
-                    0x5: unpckhpd_Vo_Wo();
+                    0x4: Inst::UNPCKLPD(Vo,Wq);
+                    0x5: Inst::UNPCKHPD(Vo,Wo);
                     0x6: movhpd_Vq_Mq();
                     0x7: movhpd_Mq_Vq();
                 }
