@@ -54,6 +54,45 @@
 # Authors: Gabe Black
 
 microcode = '''
-# SHUFPS
-# SHUFPD
+def macroop SHUFPS_XMM_XMM_I {
+    shuffle ufp1, xmml, xmmh, size=4, ext="IMMEDIATE"
+    shuffle xmmh, xmmlm, xmmhm, size=4, ext="IMMEDIATE >> 4"
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop SHUFPS_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, xmml, xmmh, size=4, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=4, ext="IMMEDIATE >> 4"
+};
+
+def macroop SHUFPS_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, xmml, xmmh, size=4, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=4, ext="IMMEDIATE >> 4"
+};
+
+def macroop SHUFPD_XMM_XMM_I {
+    shuffle ufp1, xmml, xmmh, size=8, ext="IMMEDIATE"
+    shuffle xmmh, xmmlm, xmmhm, size=8, ext="IMMEDIATE >> 1"
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop SHUFPD_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, xmml, xmmh, size=8, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=8, ext="IMMEDIATE >> 1"
+};
+
+def macroop SHUFPD_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, xmml, xmmh, size=8, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=8, ext="IMMEDIATE >> 1"
+};
 '''

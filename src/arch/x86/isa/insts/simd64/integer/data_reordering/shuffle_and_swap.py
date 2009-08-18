@@ -54,6 +54,20 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSHUFW
-# PSWAPD
+def macroop PSHUFW_MMX_MMX_I {
+    shuffle mmx, mmxm, mmxm, size=2, ext=imm
+};
+
+def macroop PSHUFW_MMX_M_I {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    shuffle mmx, ufp1, ufp1, size=2, ext=imm
+};
+
+def macroop PSHUFW_MMX_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    shuffle mmx, ufp1, ufp1, size=2, ext=imm
+};
+
 '''
+# PSWAPD

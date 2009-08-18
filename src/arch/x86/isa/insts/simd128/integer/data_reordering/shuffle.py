@@ -54,7 +54,54 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSHUFD
-# PSHUFHW
-# PSHUFLW
+def macroop PSHUFD_XMM_XMM_I {
+    shuffle ufp1, xmmlm, xmmhm, size=4, ext="IMMEDIATE"
+    shuffle xmmh, xmmlm, xmmhm, size=4, ext="IMMEDIATE >> 4"
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop PSHUFD_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, ufp1, ufp2, size=4, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=4, ext="IMMEDIATE >> 4"
+};
+
+def macroop PSHUFD_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmml, ufp1, ufp2, size=4, ext="IMMEDIATE"
+    shuffle xmmh, ufp1, ufp2, size=4, ext="IMMEDIATE >> 4"
+};
+
+def macroop PSHUFHW_XMM_XMM_I {
+    shuffle xmmh, xmmhm, xmmhm, size=2, ext=imm
+};
+
+def macroop PSHUFHW_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmmh, ufp1, ufp1, size=2, ext=imm
+};
+
+def macroop PSHUFHW_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    shuffle xmmh, ufp1, ufp1, size=2, ext=imm
+};
+
+def macroop PSHUFLW_XMM_XMM_I {
+    shuffle xmml, xmmlm, xmmlm, size=2, ext=imm
+};
+
+def macroop PSHUFLW_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    shuffle xmml, ufp1, ufp1, size=2, ext=imm
+};
+
+def macroop PSHUFLW_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    shuffle xmml, ufp1, ufp1, size=2, ext=imm
+};
 '''
