@@ -156,8 +156,10 @@ namespace X86ISA
             uint8_t num;
             //The first byte detected in a 2+ byte opcode. Should be 0xF0.
             uint8_t prefixA;
-            //The second byte detected in a 3+ byte opcode. Could be 0xF0 for
-            //3dnow instructions, or 0x38-0x3F for some SSE instructions.
+            //The second byte detected in a 3+ byte opcode. Could be 0x38-0x3F
+            //for some SSE instructions. 3dNow! instructions are handled as
+            //two byte opcodes and then split out further by the immediate
+            //byte.
             uint8_t prefixB;
             //The main opcode byte. The highest addressed byte in the opcode.
             Opcode op;

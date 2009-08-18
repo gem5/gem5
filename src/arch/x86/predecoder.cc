@@ -195,7 +195,7 @@ namespace X86ISA
         State nextState = ErrorState;
         emi.opcode.num++;
         //We can't handle 3+ byte opcodes right now
-        assert(emi.opcode.num < 3);
+        assert(emi.opcode.num < 4);
         consumeByte();
         if(emi.opcode.num == 1 && nextByte == 0x0f)
         {
@@ -203,11 +203,8 @@ namespace X86ISA
             DPRINTF(Predecoder, "Found two byte opcode.\n");
             emi.opcode.prefixA = nextByte;
         }
-        else if(emi.opcode.num == 2 &&
-                (nextByte == 0x0f ||
-                 (nextByte & 0xf8) == 0x38))
+        else if(emi.opcode.num == 2 && (nextByte == 0x38 || nextByte == 0x3F))
         {
-            panic("Three byte opcodes aren't yet supported!\n");
             nextState = OpcodeState;
             DPRINTF(Predecoder, "Found three byte opcode.\n");
             emi.opcode.prefixB = nextByte;

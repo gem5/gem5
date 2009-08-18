@@ -70,25 +70,7 @@ decode LEGACY_LOCK default Unknown::unknown()
         //2 byte opcodes
         ##include "two_byte_opcodes.isa"
         //3 byte opcodes
-        0x3: decode OPCODE_PREFIXA {
-            0xF0: decode OPCODE_PREFIXB {
-                //We don't handle these properly in the predecoder yet, so
-                //there's no reason to implement them for now.
-                0x38: decode OPCODE_OP {
-                    default: FailUnimpl::sseThreeEight();
-                }
-                0x3A: decode OPCODE_OP {
-                    default: FailUnimpl::sseThreeA();
-                }
-                0xF0: decode OPCODE_OP {
-                    default: FailUnimpl::threednow();
-                }
-                default: M5InternalError::error(
-                    {{"Unexpected second opcode byte in three byte opcode!"}});
-            }
-            default: M5InternalError::error(
-                {{"Unexpected first opcode byte in three byte opcode!"}});
-        }
+        ##include "three_byte_opcodes.isa"
     }
     //Lock prefix
     ##include "locked_opcodes.isa"
