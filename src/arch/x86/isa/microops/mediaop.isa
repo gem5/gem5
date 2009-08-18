@@ -759,6 +759,41 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Maddi(MediaOp):
+        code = '''
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t resBits = arg1Bits + arg2Bits;
+                
+                if (ext & 0x2) {
+                    if (findCarry(sizeBits, resBits, arg1Bits, arg2Bits))
+                        resBits = mask(sizeBits);
+                } else if (ext & 0x4) {
+                    int arg1Sign = bits(arg1Bits, sizeBits - 1);
+                    int arg2Sign = bits(arg2Bits, sizeBits - 1);
+                    int resSign = bits(resBits, sizeBits - 1);
+                    if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
+                        if (resSign == 0)
+                            resBits = (1 << (sizeBits - 1));
+                        else
+                            resBits = mask(sizeBits - 1);
+                    }
+                }
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Cvti2f(MediaOp):
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):

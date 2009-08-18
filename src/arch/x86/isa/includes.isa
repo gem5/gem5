@@ -156,6 +156,7 @@ output exec {{
 #include "arch/x86/miscregs.hh"
 #include "arch/x86/tlb.hh"
 #include "base/bigint.hh"
+#include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "sim/sim_exit.hh"
