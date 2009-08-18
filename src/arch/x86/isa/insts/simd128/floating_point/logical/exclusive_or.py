@@ -62,16 +62,16 @@ def macroop XORPD_XMM_XMM {
 };
 
 def macroop XORPD_XMM_M {
-    ldfp ufp1, seg, sib, disp
-    ldfp ufp2, seg, sib, "DISPLACEMENT + 8"
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
     xorfp xmml, xmml, ufp1
     xorfp xmmh, xmmh, ufp2
 };
 
 def macroop XORPD_XMM_P {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
-    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8"
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
     xorfp xmml, xmml, ufp1
     xorfp xmmh, xmmh, ufp2
 };

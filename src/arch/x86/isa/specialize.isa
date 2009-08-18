@@ -139,7 +139,7 @@ let {{
             opType = OpType(opTypes[0])
             opTypes.pop(0)
 
-            if opType.tag not in ("I", "J"):
+            if opType.tag not in ("I", "J", "P", "PR", "Q", "V", "VR", "W"):
                 if opType.size:
                     env.setSize(opType.size)
 

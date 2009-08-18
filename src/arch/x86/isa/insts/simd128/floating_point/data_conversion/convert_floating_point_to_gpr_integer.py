@@ -63,13 +63,13 @@ def macroop CVTTSD2SI_R_XMM {
 };
 
 def macroop CVTTSD2SI_R_M {
-    ldfp ufp1, seg, sib, disp
+    ldfp ufp1, seg, sib, disp, dataSize=8
     cvtf_d2i reg, ufp1
 };
 
 def macroop CVTTSD2SI_R_P {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
+    ldfp ufp1, seg, riprel, disp, dataSize=8
     cvtf_d2i reg, ufp1
 };
 '''

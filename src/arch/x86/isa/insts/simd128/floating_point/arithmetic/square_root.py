@@ -63,13 +63,13 @@ def macroop SQRTSD_XMM_XMM {
 };
 
 def macroop SQRTSD_XMM_M {
-    ldfp ufp1, seg, sib, disp
+    ldfp ufp1, seg, sib, disp, dataSize=8
     sqrtfp xmml, xmml, ufp1
 };
 
 def macroop SQRTSD_XMM_P {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
+    ldfp ufp1, seg, riprel, disp, dataSize=8
     sqrtfp xmml, xmml, ufp1
 };
 '''
