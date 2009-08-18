@@ -139,6 +139,10 @@
             }
             0x2: decode OPCODE_PREFIXA {
                 0x0F: decode OPCODE_OP_TOP5 {
+                    0x04: decode OPCODE_OP_BOTTOM3 {
+                        0x0: WarnUnimpl::mov_Rd_CR8D();
+                        0x2: WarnUnimpl::mov_CR8D_Rd();
+                    }
                     0x15: decode OPCODE_OP_BOTTOM3 {
                         0x3: BTS_LOCKED(Mv,Gv);
                     }
