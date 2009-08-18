@@ -348,4 +348,11 @@ let {{
         code = '''
             FpDestReg.uqw = FpSrcReg1.uqw | FpSrcReg2.uqw;
         '''
+
+    class Mand(MediaOp):
+        def __init__(self, dest, src1, src2):
+            super(Mand, self).__init__(dest, src1, src2, 1)
+        code = '''
+            FpDestReg.uqw = FpSrcReg1.uqw & FpSrcReg2.uqw;
+        '''
 }};
