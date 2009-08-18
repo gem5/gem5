@@ -906,7 +906,7 @@
                     default: decode LEGACY_DECODEVAL {
                         // no prefix
                         0x0: decode OPCODE_OP_BOTTOM3 {
-                            0x2: WarnUnimpl::cmpccps_Vo_Wo_Ib();
+                            0x2: CMPPS(Vo,Wo,Ib);
                             0x3: WarnUnimpl::movnti_Mdq_Gdq();
                             0x4: PINSRW(Pq,Ew,Ib);
                             0x5: PEXTRW(Gd,PRq,Ib);
@@ -914,12 +914,12 @@
                         }
                         // repe (0xF3)
                         0x4: decode OPCODE_OP_BOTTOM3 {
-                            0x2: WarnUnimpl::cmpccss_Vd_Wd_Ib();
+                            0x2: CMPSS(Vd,Wd,Ib);
                             default: UD2();
                         }
                         // operand size (0x66)
                         0x1: decode OPCODE_OP_BOTTOM3 {
-                            0x2: WarnUnimpl::cmpccpd_Vo_Wo_Ib();
+                            0x2: CMPPD(Vo,Wo,Ib);
                             0x4: PINSRW(Vdw,Ew,Ib);
                             0x5: PEXTRW(Gd,VRdq,Ib);
                             0x6: SHUFPD(Vpd,Wpd,Ib);
@@ -927,7 +927,7 @@
                         }
                         // repne (0xF2)
                         0x8: decode OPCODE_OP_BOTTOM3 {
-                            0x2: WarnUnimpl::cmpccsd_Vq_Wq_Ib();
+                            0x2: CMPSD(Vq,Wq,Ib);
                             default: UD2();
                         }
                         default: UD2();

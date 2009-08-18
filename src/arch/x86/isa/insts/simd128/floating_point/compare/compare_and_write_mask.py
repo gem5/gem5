@@ -54,8 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CMPPS
-# CMPPD
-# CMPSS
-# CMPSD
+def macroop CMPPS_XMM_XMM_I {
+    mcmpf2r xmml, xmml, xmmlm, size=4, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, xmmhm, size=4, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPPS_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, ufp2, size=4, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPPS_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, ufp2, size=4, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPPD_XMM_XMM_I {
+    mcmpf2r xmml, xmml, xmmlm, size=8, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, xmmhm, size=8, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPPD_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, ufp2, size=8, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPPD_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE & mask(3)"
+    mcmpf2r xmmh, xmmh, ufp2, size=8, ext="IMMEDIATE & mask(3)"
+};
+
+def macroop CMPSS_XMM_XMM_I {
+    mcmpf2r xmml, xmml, xmmlm, size=4, ext="IMMEDIATE | 0x8"
+};
+
+def macroop CMPSS_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE | 0x8"
+};
+
+def macroop CMPSS_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE | 0x8"
+};
+
+def macroop CMPSD_XMM_XMM_I {
+    mcmpf2r xmml, xmml, xmmlm, size=8, ext="IMMEDIATE | 0x8"
+};
+
+def macroop CMPSD_XMM_M_I {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE | 0x8"
+};
+
+def macroop CMPSD_XMM_P_I {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE | 0x8"
+};
 '''
