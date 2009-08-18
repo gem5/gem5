@@ -127,8 +127,27 @@ def macroop PUNPCKHBW_XMM_P {
     unpack xmml, xmmh, ufp1, sel=0, size=1
     unpack xmmh, xmmh, ufp1, sel=1, size=1
 };
+
+def macroop PUNPCKHWD_XMM_XMM {
+    unpack xmml, xmmh, xmmhm, sel=0, size=2
+    unpack xmmh, xmmh, xmmhm, sel=1, size=2
+};
+
+def macroop PUNPCKHWD_XMM_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], 8, dataSize=8
+    unpack xmml, xmmh, ufp1, sel=0, size=2
+    unpack xmmh, xmmh, ufp1, sel=1, size=2
+};
+
+def macroop PUNPCKHWD_XMM_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], 8, dataSize=8
+    unpack xmml, xmmh, ufp1, sel=0, size=2
+    unpack xmmh, xmmh, ufp1, sel=1, size=2
+};
 '''
-# PUNPCKHWD
 # PUNPCKHDQ
 # PUNPCKHQDQ
 # PUNPCKLQDQ
