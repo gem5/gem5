@@ -54,5 +54,18 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PXOR
+def macroop PXOR_MMX_MMX {
+    mxor mmx, mmx, mmxm
+};
+
+def macroop PXOR_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mxor mmx, mmx, ufp1
+};
+
+def macroop PXOR_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mxor mmx, mmx, ufp1
+};
 '''

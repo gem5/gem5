@@ -1050,7 +1050,7 @@
                     0x4: paddsb_Pq_Qq();
                     0x5: paddsw_Pq_Qq();
                     0x6: pmaxsw_Pq_Qq();
-                    0x7: pxor_Pq_Qq();
+                    0x7: Inst::PXOR(Pq,Qq);
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
@@ -1061,7 +1061,7 @@
                     0x4: paddsb_Vo_Wo();
                     0x5: paddsw_Vo_Wo();
                     0x6: pmaxsw_Vo_Wo();
-                    0x7: pxor_Vo_Wo();
+                    0x7: Inst::PXOR(Vo,Wo);
                 }
                 default: Inst::UD2();
             }
