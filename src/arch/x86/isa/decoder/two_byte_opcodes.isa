@@ -562,7 +562,7 @@
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: punpcklbw_Vo_Wq();
+                    0x0: Inst::PUNPCKLBW(Vo,Wq);
                     0x1: punpcklwd_Vo_Wq();
                     0x2: punpckldq_Vo_Wq();
                     0x3: packsswb_Vo_Wo();

@@ -54,12 +54,28 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop PUNPCKLBW_XMM_XMM {
+    unpack xmmh, xmml, xmmlm, sel=1, size=1
+    unpack xmml, xmml, xmmlm, sel=0, size=1
+};
+
+def macroop PUNPCKLBW_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    unpack xmmh, xmml, ufp1, sel=1, size=1
+    unpack xmml, xmml, ufp1, sel=0, size=1
+};
+
+def macroop PUNPCKLBW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    unpack xmmh, xmml, ufp1, sel=1, size=1
+    unpack xmml, xmml, ufp1, sel=0, size=1
+};
+'''
 # PUNPCKHBW
 # PUNPCKHWD
 # PUNPCKHDQ
 # PUNPCKHQDQ
-# PUNPCKLBW
 # PUNPCKLWD
 # PUNPCKLDQ
 # PUNPCKLQDQ
-'''
