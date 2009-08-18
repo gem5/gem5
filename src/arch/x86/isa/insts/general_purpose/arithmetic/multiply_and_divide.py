@@ -221,15 +221,26 @@ def macroop IMUL_R_P_I
     mulel reg
     muleh t0
 };
+'''
+
+pcRel = '''
+    rdip t7
+    ld %s, seg, riprel, disp
+'''
+sibRel = '''
+    ld %s, seg, sib, disp
+'''
 
 #
 # One byte version of unsigned division
 #
 
-def macroop DIV_B_R
+divcode = '''
+def macroop DIV_B_%(suffix)s
 {
+    %(readOp1)s
     # Do the initial part of the division
-    div1 ah, reg, dataSize=1
+    div1 ah, %(op1)s, dataSize=1
 
     #These are split out so we can initialize the number of bits in the
     #second register
@@ -246,62 +257,18 @@ divLoopTop:
     divq rax, dataSize=1
     divr ah, dataSize=1
 };
-
-def macroop DIV_B_M
-{
-    ld t2, seg, sib, disp
-
-    # Do the initial part of the division
-    div1 ah, t2, dataSize=1
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t1, rax, 8, dataSize=1
-    div2 t1, rax, t1, dataSize=1
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t1, rax, t1, dataSize=1
-    div2 t1, rax, t1, flags=(EZF,), dataSize=1
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq rax, dataSize=1
-    divr ah, dataSize=1
-};
-
-def macroop DIV_B_P
-{
-    rdip t7
-    ld t2, seg, riprel, disp
-
-    # Do the initial part of the division
-    div1 ah, t2, dataSize=1
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t1, rax, 8, dataSize=1
-    div2 t1, rax, t1, dataSize=1
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t1, rax, t1, dataSize=1
-    div2 t1, rax, t1, flags=(EZF,), dataSize=1
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq rax, dataSize=1
-    divr ah, dataSize=1
-};
+'''
 
 #
 # Unsigned division
 #
 
-def macroop DIV_R
+divcode += '''
+def macroop DIV_%(suffix)s
 {
+    %(readOp1)s
     # Do the initial part of the division
-    div1 rdx, reg
+    div1 rdx, %(op1)s
 
     #These are split out so we can initialize the number of bits in the
     #second register
@@ -321,65 +288,14 @@ divLoopTop:
     divq rax
     divr rdx
 };
-
-def macroop DIV_M
-{
-    ld t2, seg, sib, disp
-
-    # Do the initial part of the division
-    div1 rdx, t2
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t1, rax, "env.dataSize * 8"
-    div2 t1, rax, t1
-
-    #Loop until we're out of bits to shift in
-    #The amount of unrolling here could stand some tuning
-divLoopTop:
-    div2 t1, rax, t1
-    div2 t1, rax, t1
-    div2 t1, rax, t1
-    div2 t1, rax, t1, flags=(EZF,)
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq rax
-    divr rdx
-};
-
-def macroop DIV_P
-{
-    rdip t7
-    ld t2, seg, riprel, disp
-
-    # Do the initial part of the division
-    div1 rdx, t2
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t1, rax, "env.dataSize * 8"
-    div2 t1, rax, t1
-
-    #Loop until we're out of bits to shift in
-    #The amount of unrolling here could stand some tuning
-divLoopTop:
-    div2 t1, rax, t1
-    div2 t1, rax, t1
-    div2 t1, rax, t1
-    div2 t1, rax, t1, flags=(EZF,)
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq rax
-    divr rdx
-};
+'''
 
 #
 # One byte version of signed division
 #
 
-def macroop IDIV_B_R
+divcode += '''
+def macroop IDIV_B_%(suffix)s
 {
     # Negate dividend
     sub t1, t0, rax, flags=(ECF,), dataSize=1
@@ -387,13 +303,15 @@ def macroop IDIV_B_R
     sub t2, t0, ah, dataSize=1
     sub t2, t2, t4
 
+    %(readOp1)s
+
     #Find the sign of the divisor
-    slli t0, reg, 1, flags=(ECF,), dataSize=1
+    slli t0, %(op1)s, 1, flags=(ECF,), dataSize=1
 
     # Negate divisor
-    sub t3, t0, reg, dataSize=1
+    sub t3, t0, %(op1)s, dataSize=1
     # Put the divisor's absolute value into t3
-    mov t3, t3, reg, flags=(nCECF,), dataSize=1
+    mov t3, t3, %(op1)s, flags=(nCECF,), dataSize=1
 
     #Find the sign of the dividend
     slli t0, ah, 1, flags=(ECF,), dataSize=1
@@ -438,7 +356,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,), dataSize=1
 
     # Check the sign of the divisor
-    slli t0, reg, 1, flags=(ECF,), dataSize=1
+    slli t0, %(op1)s, 1, flags=(ECF,), dataSize=1
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5, dataSize=1
@@ -447,155 +365,14 @@ divLoopTop:
     # Otherwise put the one that wasn't negated (at least here) in rax.
     mov rax, rax, t5, (nCECF,), dataSize=1
 };
-
-def macroop IDIV_B_M
-{
-    # Negate dividend
-    sub t1, t0, rax, flags=(ECF,), dataSize=1
-    ruflag t4, 3
-    sub t2, t0, ah, dataSize=1
-    sub t2, t2, t4
-
-    ld t8, seg, sib, disp
-
-    #Find the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,), dataSize=1
-
-    # Negate divisor
-    sub t3, t0, t8, dataSize=1
-    # Put the divisor's absolute value into t3
-    mov t3, t3, t8, flags=(nCECF,), dataSize=1
-
-    #Find the sign of the dividend
-    slli t0, ah, 1, flags=(ECF,), dataSize=1
-
-    # Put the dividend's absolute value into t1 and t2
-    mov t1, t1, rax, flags=(nCECF,), dataSize=1
-    mov t2, t2, ah, flags=(nCECF,), dataSize=1
-
-    # Do the initial part of the division
-    div1 t2, t3, dataSize=1
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t4, t1, 8, dataSize=1
-    div2 t4, t1, t4, dataSize=1
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t4, t1, t4, dataSize=1
-    div2 t4, t1, t4, flags=(EZF,), dataSize=1
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq t5, dataSize=1
-    divr t6, dataSize=1
-
-    # Fix up signs. The sign of the dividend is still lying around in ECF.
-    # The sign of the remainder, ah, is the same as the dividend. The sign
-    # of the quotient is negated if the signs of the divisor and dividend
-    # were different.
-
-    # Negate the remainder
-    sub t4, t0, t6, dataSize=1
-    # If the dividend was negitive, put the negated remainder in ah.
-    mov ah, ah, t4, (CECF,), dataSize=1
-    # Otherwise put the regular remainder in ah.
-    mov ah, ah, t6, (nCECF,), dataSize=1
-
-    # Negate the quotient.
-    sub t4, t0, t5, dataSize=1
-    # If the dividend was negative, start using the negated quotient
-    mov t5, t5, t4, (CECF,), dataSize=1
-
-    # Check the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,), dataSize=1
-
-    # Negate the (possibly already negated) quotient
-    sub t4, t0, t5, dataSize=1
-    # If the divisor was negative, put the negated quotient in rax.
-    mov rax, rax, t4, (CECF,), dataSize=1
-    # Otherwise put the one that wasn't negated (at least here) in rax.
-    mov rax, rax, t5, (nCECF,), dataSize=1
-};
-
-def macroop IDIV_B_P
-{
-    # Negate dividend
-    sub t1, t0, rax, flags=(ECF,), dataSize=1
-    ruflag t4, 3
-    sub t2, t0, ah, dataSize=1
-    sub t2, t2, t4
-
-    rdip t7
-    ld t8, seg, riprel, disp
-
-    #Find the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,), dataSize=1
-
-    # Negate divisor
-    sub t3, t0, t8, dataSize=1
-    # Put the divisor's absolute value into t3
-    mov t3, t3, t8, flags=(nCECF,), dataSize=1
-
-    #Find the sign of the dividend
-    slli t0, ah, 1, flags=(ECF,), dataSize=1
-
-    # Put the dividend's absolute value into t1 and t2
-    mov t1, t1, rax, flags=(nCECF,), dataSize=1
-    mov t2, t2, ah, flags=(nCECF,), dataSize=1
-
-    # Do the initial part of the division
-    div1 t2, t3, dataSize=1
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t4, t1, 8, dataSize=1
-    div2 t4, t1, t4, dataSize=1
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t4, t1, t4, dataSize=1
-    div2 t4, t1, t4, flags=(EZF,), dataSize=1
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq t5, dataSize=1
-    divr t6, dataSize=1
-
-    # Fix up signs. The sign of the dividend is still lying around in ECF.
-    # The sign of the remainder, ah, is the same as the dividend. The sign
-    # of the quotient is negated if the signs of the divisor and dividend
-    # were different.
-
-    # Negate the remainder
-    sub t4, t0, t6, dataSize=1
-    # If the dividend was negitive, put the negated remainder in ah.
-    mov ah, ah, t4, (CECF,), dataSize=1
-    # Otherwise put the regular remainder in ah.
-    mov ah, ah, t6, (nCECF,), dataSize=1
-
-    # Negate the quotient.
-    sub t4, t0, t5, dataSize=1
-    # If the dividend was negative, start using the negated quotient
-    mov t5, t5, t4, (CECF,), dataSize=1
-
-    # Check the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,), dataSize=1
-
-    # Negate the (possibly already negated) quotient
-    sub t4, t0, t5, dataSize=1
-    # If the divisor was negative, put the negated quotient in rax.
-    mov rax, rax, t4, (CECF,), dataSize=1
-    # Otherwise put the one that wasn't negated (at least here) in rax.
-    mov rax, rax, t5, (nCECF,), dataSize=1
-};
+'''
 
 #
 # Signed division
 #
 
-def macroop IDIV_R
+divcode += '''
+def macroop IDIV_%(suffix)s
 {
     # Negate dividend
     sub t1, t0, rax, flags=(ECF,)
@@ -603,13 +380,15 @@ def macroop IDIV_R
     sub t2, t0, rdx
     sub t2, t2, t4
 
+    %(readOp1)s
+
     #Find the sign of the divisor
-    slli t0, reg, 1, flags=(ECF,)
+    slli t0, %(op1)s, 1, flags=(ECF,)
 
     # Negate divisor
-    sub t3, t0, reg
+    sub t3, t0, %(op1)s
     # Put the divisor's absolute value into t3
-    mov t3, t3, reg, flags=(nCECF,)
+    mov t3, t3, %(op1)s, flags=(nCECF,)
 
     #Find the sign of the dividend
     slli t0, rdx, 1, flags=(ECF,)
@@ -656,154 +435,7 @@ divLoopTop:
     mov t5, t5, t4, (CECF,)
 
     # Check the sign of the divisor
-    slli t0, reg, 1, flags=(ECF,)
-
-    # Negate the (possibly already negated) quotient
-    sub t4, t0, t5
-    # If the divisor was negative, put the negated quotient in rax.
-    mov rax, rax, t4, (CECF,)
-    # Otherwise put the one that wasn't negated (at least here) in rax.
-    mov rax, rax, t5, (nCECF,)
-};
-
-def macroop IDIV_M
-{
-    # Negate dividend
-    sub t1, t0, rax, flags=(ECF,)
-    ruflag t4, 3
-    sub t2, t0, rdx
-    sub t2, t2, t4
-
-    ld t8, seg, sib, disp
-
-    #Find the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,)
-
-    # Negate divisor
-    sub t3, t0, t8
-    # Put the divisor's absolute value into t3
-    mov t3, t3, t8, flags=(nCECF,)
-
-    #Find the sign of the dividend
-    slli t0, rdx, 1, flags=(ECF,)
-
-    # Put the dividend's absolute value into t1 and t2
-    mov t1, t1, rax, flags=(nCECF,)
-    mov t2, t2, rdx, flags=(nCECF,)
-
-    # Do the initial part of the division
-    div1 t2, t3
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t4, t1, "env.dataSize * 8"
-    div2 t4, t1, t4
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t4, t1, t4
-    div2 t4, t1, t4
-    div2 t4, t1, t4
-    div2 t4, t1, t4, flags=(EZF,)
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq t5
-    divr t6
-
-    # Fix up signs. The sign of the dividend is still lying around in ECF.
-    # The sign of the remainder, ah, is the same as the dividend. The sign
-    # of the quotient is negated if the signs of the divisor and dividend
-    # were different.
-
-    # Negate the remainder
-    sub t4, t0, t6
-    # If the dividend was negitive, put the negated remainder in rdx.
-    mov rdx, rdx, t4, (CECF,)
-    # Otherwise put the regular remainder in rdx.
-    mov rdx, rdx, t6, (nCECF,)
-
-    # Negate the quotient.
-    sub t4, t0, t5
-    # If the dividend was negative, start using the negated quotient
-    mov t5, t5, t4, (CECF,)
-
-    # Check the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,)
-
-    # Negate the (possibly already negated) quotient
-    sub t4, t0, t5
-    # If the divisor was negative, put the negated quotient in rax.
-    mov rax, rax, t4, (CECF,)
-    # Otherwise put the one that wasn't negated (at least here) in rax.
-    mov rax, rax, t5, (nCECF,)
-};
-
-def macroop IDIV_P
-{
-    # Negate dividend
-    sub t1, t0, rax, flags=(ECF,)
-    ruflag t4, 3
-    sub t2, t0, rdx
-    sub t2, t2, t4
-
-    rdip t7
-    ld t8, seg, riprel, disp
-
-    #Find the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,)
-
-    # Negate divisor
-    sub t3, t0, t8
-    # Put the divisor's absolute value into t3
-    mov t3, t3, t4, flags=(nCECF,)
-
-    #Find the sign of the dividend
-    slli t0, rdx, 1, flags=(ECF,)
-
-    # Put the dividend's absolute value into t1 and t2
-    mov t1, t1, rax, flags=(nCECF,)
-    mov t2, t2, rdx, flags=(nCECF,)
-
-    # Do the initial part of the division
-    div1 t2, t3
-
-    #These are split out so we can initialize the number of bits in the
-    #second register
-    div2i t4, t1, "env.dataSize * 8"
-    div2 t4, t1, t4
-
-    #Loop until we're out of bits to shift in
-divLoopTop:
-    div2 t4, t1, t4
-    div2 t4, t1, t4
-    div2 t4, t1, t4
-    div2 t4, t1, t4, flags=(EZF,)
-    br label("divLoopTop"), flags=(nCEZF,)
-
-    #Unload the answer
-    divq t5
-    divr t6
-
-    # Fix up signs. The sign of the dividend is still lying around in ECF.
-    # The sign of the remainder, ah, is the same as the dividend. The sign
-    # of the quotient is negated if the signs of the divisor and dividend
-    # were different.
-
-    # Negate the remainder
-    sub t4, t0, t6
-    # If the dividend was negitive, put the negated remainder in rdx.
-    mov rdx, rdx, t4, (CECF,)
-    # Otherwise put the regular remainder in rdx.
-    mov rdx, rdx, t6, (nCECF,)
-
-    # Negate the quotient.
-    sub t4, t0, t5
-    # If the dividend was negative, start using the negated quotient
-    mov t5, t5, t4, (CECF,)
-
-    # Check the sign of the divisor
-    slli t0, t8, 1, flags=(ECF,)
+    slli t0, %(op1)s, 1, flags=(ECF,)
 
     # Negate the (possibly already negated) quotient
     sub t4, t0, t5
@@ -813,3 +445,10 @@ divLoopTop:
     mov rax, rax, t5, (nCECF,)
 };
 '''
+
+microcode += divcode % {"suffix": "R",
+                        "readOp1": "", "op1": "reg"}
+microcode += divcode % {"suffix": "M",
+                        "readOp1": sibRel % "t2", "op1": "t2"}
+microcode += divcode % {"suffix": "P",
+                        "readOp1": pcRel % "t2", "op1": "t2"}
