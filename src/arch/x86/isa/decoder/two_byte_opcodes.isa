@@ -459,7 +459,7 @@
                 0x0A: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::movmskps_Gd_VRo();
+                        0x0: MOVMSKPS(Gd,VRo);
                         0x1: SQRTPS(Vo,Wo);
                         0x2: WarnUnimpl::rqsrtps_Vo_Wo();
                         0x3: WarnUnimpl::rcpps_Vo_Wo();
@@ -477,7 +477,7 @@
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::movmskpd_Gd_VRo();
+                        0x0: MOVMSKPD(Gd,VRo);
                         0x1: SQRTPD(Vo,Wo);
                         0x4: ANDPD(Vo,Wo);
                         0x5: ANDNPD(Vo,Wo);
@@ -849,22 +849,23 @@
                 }
                 0x7: Inst::IMUL(Gv,Ev);
             }
-            0x16: decode OPCODE_OP_BOTTOM3 {
-                0x0: Inst::CMPXCHG(Eb,Gb);
-                0x1: Inst::CMPXCHG(Ev,Gv);
-                0x2: lss_Gz_Mp();
-                0x3: Inst::BTR(Ev,Gv);
-                0x4: lfs_Gz_Mp();
-                0x5: lgs_Gz_Mp();
-                //The size of the second operand in these instructions should
-                //really be "b" or "w", but it's set to v in order to have a
-                //consistent register size. This shouldn't affect behavior.
-                0x6: Inst::MOVZX_B(Gv,Ev);
-                0x7: Inst::MOVZX_W(Gv,Ev);
-            }
-            0x17: decode OPCODE_OP_BOTTOM3 {
-                0x0: jmpe_Jz(); // IA-64?
-                format Inst {
+            format Inst {
+                0x16: decode OPCODE_OP_BOTTOM3 {
+                    0x0: CMPXCHG(Eb,Gb);
+                    0x1: CMPXCHG(Ev,Gv);
+                    0x2: WarnUnimpl::lss_Gz_Mp();
+                    0x3: BTR(Ev,Gv);
+                    0x4: WarnUnimpl::lfs_Gz_Mp();
+                    0x5: WarnUnimpl::lgs_Gz_Mp();
+                    //The size of the second operand in these instructions
+                    //should really be "b" or "w", but it's set to v in order
+                    //to have a consistent register size. This shouldn't
+                    //affect behavior.
+                    0x6: MOVZX_B(Gv,Ev);
+                    0x7: MOVZX_W(Gv,Ev);
+                }
+                0x17: decode OPCODE_OP_BOTTOM3 {
+                    0x0: WarnUnimpl::jmpe_Jz(); // IA-64?
                     //0x1: group11_UD2();
                     0x1: UD2();
                     //0x2: group8_Ev_Ib();
@@ -876,16 +877,15 @@
                         default: UD2();
                     }
                     0x3: BTC(Ev,Gv);
+                    0x4: BSF(Gv,Ev);
+                    0x5: BSR(Gv,Ev);
+                    //The size of the second operand in these instructions
+                    //should really be "b" or "w", but it's set to v in order
+                    //to have a consistent register size. This shouldn't
+                    //affect behavior.
+                    0x6: MOVSX_B(Gv,Ev);
+                    0x7: MOVSX_W(Gv,Ev);
                 }
-                0x4: Inst::BSF(Gv,Ev);
-                0x5: Inst::BSR(Gv,Ev);
-                //The size of the second operand in these instructions should
-                //really be "b" or "w", but it's set to v in order to have a
-                //consistent register size. This shouldn't affect behavior.
-                0x6: Inst::MOVSX_B(Gv,Ev);
-                0x7: Inst::MOVSX_W(Gv,Ev);
-            }
-            format Inst {
                 0x18: decode OPCODE_OP_BOTTOM3 {
                     0x0: XADD(Eb,Gb);
                     0x1: XADD(Ev,Gv);
@@ -938,43 +938,41 @@
                     8: BSWAP_Q(Bq);
                     default: UD2();
                 }
-            }
-            0x1A: decode LEGACY_DECODEVAL {
-                // no prefix
-                0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x1: Inst::PSRLW(Pq,Qq);
-                    0x2: Inst::PSRLD(Pq,Qq);
-                    0x3: Inst::PSRLQ(Pq,Qq);
-                    0x4: Inst::PADDQ(Pq,Qq);
-                    0x5: Inst::PMULLW(Pq,Qq);
-                    0x7: pmovmskb_Gd_PRq();
-                    default: Inst::UD2();
+                0x1A: decode LEGACY_DECODEVAL {
+                    // no prefix
+                    0x0: decode OPCODE_OP_BOTTOM3 {
+                        0x1: PSRLW(Pq,Qq);
+                        0x2: PSRLD(Pq,Qq);
+                        0x3: PSRLQ(Pq,Qq);
+                        0x4: PADDQ(Pq,Qq);
+                        0x5: PMULLW(Pq,Qq);
+                        0x7: PMOVMSKB(Gd,PRq);
+                        default: UD2();
+                    }
+                    // repe (0xF3)
+                    0x4: decode OPCODE_OP_BOTTOM3 {
+                        0x6: WarnUnimpl::movq2dq_Vo_PRq();
+                        default: UD2();
+                    }
+                    // operand size (0x66)
+                    0x1: decode OPCODE_OP_BOTTOM3 {
+                        0x0: WarnUnimpl::addsubpd_Vo_Wo();
+                        0x1: PSRLW(Vo,Wo);
+                        0x2: PSRLD(Vo,Wo);
+                        0x3: PSRLQ(Vo,Wo);
+                        0x4: PADDQ(Vo,Wo);
+                        0x5: PMULLW(Vo,Wo);
+                        0x6: MOVQ(Wq,Vq);
+                        0x7: PMOVMSKB(Gd,VRo);
+                    }
+                    // repne (0xF2)
+                    0x8: decode OPCODE_OP_BOTTOM3 {
+                        0x0: WarnUnimpl::addsubps_Vo_Wo();
+                        0x6: WarnUnimpl::movdq2q_Pq_VRq();
+                        default: UD2();
+                    }
+                    default: UD2();
                 }
-                // repe (0xF3)
-                0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x6: movq2dq_Vo_PRq();
-                    default: Inst::UD2();
-                }
-                // operand size (0x66)
-                0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addsubpd_Vo_Wo();
-                    0x1: Inst::PSRLW(Vo,Wo);
-                    0x2: Inst::PSRLD(Vo,Wo);
-                    0x3: Inst::PSRLQ(Vo,Wo);
-                    0x4: Inst::PADDQ(Vo,Wo);
-                    0x5: Inst::PMULLW(Vo,Wo);
-                    0x6: Inst::MOVQ(Wq,Vq);
-                    0x7: pmovmskb_Gd_VRo();
-                }
-                // repne (0xF2)
-                0x8: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addsubps_Vo_Wo();
-                    0x6: movdq2q_Pq_VRq();
-                    default: Inst::UD2();
-                }
-                default: Inst::UD2();
-            }
-            format Inst {
                 0x1B: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {

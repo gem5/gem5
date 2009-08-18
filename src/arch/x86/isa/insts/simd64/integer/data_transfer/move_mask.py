@@ -54,5 +54,8 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PMOVMSKB
+def macroop PMOVMSKB_R_MMX {
+    limm reg, 0
+    movsign reg, mmxm, size=1, ext=0
+};
 '''

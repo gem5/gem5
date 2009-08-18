@@ -54,6 +54,15 @@
 # Authors: Gabe Black
 
 microcode = '''
-# MOVMSKPS
-# MOVMSKPD
+def macroop MOVMSKPS_R_XMM {
+    limm reg, 0
+    movsign reg, xmmlm, size=4, ext=0
+    movsign reg, xmmhm, size=4, ext=1
+};
+
+def macroop MOVMSKPD_R_XMM {
+    limm reg, 0
+    movsign reg, xmmlm, size=8, ext=0
+    movsign reg, xmmhm, size=8, ext=1
+};
 '''
