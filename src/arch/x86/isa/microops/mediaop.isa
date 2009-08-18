@@ -919,8 +919,15 @@ let {{
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
-                int srcHiIndex = (i + 1) * srcBits - 1;
-                int srcLoIndex = (i + 0) * srcBits;
+                int offset = 0;
+                if (ext & 16) {
+                    if (ext & 32)
+                        offset = i * (destBits - srcBits);
+                    else
+                        offset = i * (destBits - srcBits) + srcBits;
+                }
+                int srcHiIndex = (i + 1) * srcBits - 1 + offset;
+                int srcLoIndex = (i + 0) * srcBits + offset;
                 uint64_t arg1Bits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
                 uint64_t arg2Bits = bits(FpSrcReg2.uqw, srcHiIndex, srcLoIndex);
                 uint64_t resBits;
