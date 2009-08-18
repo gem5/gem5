@@ -1176,6 +1176,78 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Cvtf2i(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, ext = None):
+            super(Cvtf2i, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(destSize == 4 || destSize == 8);
+            assert(srcSize == 4 || srcSize == 8);
+            int srcSizeBits = srcSize * 8;
+            int destSizeBits = destSize * 8;
+            int items;
+            int srcStart = 0;
+            int destStart = 0;
+            if (srcSize == 2 * destSize) {
+                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / srcSize;
+                if (ext & 0x2)
+                    destStart = destSizeBits * items;
+            } else if (destSize == 2 * srcSize) {
+                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                if (ext & 0x2)
+                    srcStart = srcSizeBits * items;
+            } else {
+                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+            }
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int srcHiIndex = srcStart + (i + 1) * srcSizeBits - 1;
+                int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
+                uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
+                double arg;
+
+                if (srcSize == 4) {
+                    floatInt fi;
+                    fi.i = argBits;
+                    arg = fi.f;
+                } else {
+                    doubleInt di;
+                    di.i = argBits;
+                    arg = di.d;
+                }
+
+                if (ext & 0x4) {
+                    if (arg >= 0)
+                        arg += 0.5;
+                    else
+                        arg -= 0.5;
+                }
+
+                if (destSize == 4) {
+                    argBits = (uint32_t)(float)arg;
+                } else {
+                    argBits = (uint64_t)arg;
+                }
+                int destHiIndex = destStart + (i + 1) * destSizeBits - 1;
+                int destLoIndex = destStart + (i + 0) * destSizeBits;
+                result = insertBits(result, destHiIndex, destLoIndex, argBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Cvti2f(MediaOp):
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
