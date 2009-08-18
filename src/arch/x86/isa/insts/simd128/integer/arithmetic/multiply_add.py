@@ -54,5 +54,35 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PMADDWD
+def macroop PMADDWD_XMM_XMM {
+    mmuli ufp3, xmml, xmmlm, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmml, xmmlm, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmml, ufp3, ufp4, size=4, ext=0
+    mmuli ufp3, xmmh, xmmhm, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmmh, xmmhm, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmmh, ufp3, ufp4, size=4, ext=0
+};
+
+def macroop PMADDWD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmuli ufp3, xmml, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmml, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmml, ufp3, ufp4, size=4, ext=0
+    mmuli ufp3, xmmh, ufp2, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmmh, ufp2, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmmh, ufp3, ufp4, size=4, ext=0
+};
+
+def macroop PMADDWD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmuli ufp3, xmml, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmml, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmml, ufp3, ufp4, size=4, ext=0
+    mmuli ufp3, xmmh, ufp2, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
+    mmuli ufp4, xmmh, ufp2, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    maddi xmmh, ufp3, ufp4, size=4, ext=0
+};
 '''
