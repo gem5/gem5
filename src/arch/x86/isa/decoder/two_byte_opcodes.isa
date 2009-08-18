@@ -908,8 +908,8 @@
                         0x0: decode OPCODE_OP_BOTTOM3 {
                             0x2: WarnUnimpl::cmpccps_Vo_Wo_Ib();
                             0x3: WarnUnimpl::movnti_Mdq_Gdq();
-                            0x4: WarnUnimpl::pinsrw_Pq_Ew_Ib();
-                            0x5: WarnUnimpl::pextrw_Gd_PRq_Ib();
+                            0x4: PINSRW(Pq,Ew,Ib);
+                            0x5: PEXTRW(Gd,PRq,Ib);
                             0x6: WarnUnimpl::shufps_Vps_Wps_Ib();
                         }
                         // repe (0xF3)
@@ -920,8 +920,8 @@
                         // operand size (0x66)
                         0x1: decode OPCODE_OP_BOTTOM3 {
                             0x2: WarnUnimpl::cmpccpd_Vo_Wo_Ib();
-                            0x4: WarnUnimpl::pinsrw_Vdw_Ew_Ib();
-                            0x5: WarnUnimpl::pextrw_Gd_VRdq_Ib();
+                            0x4: PINSRW(Vdw,Ew,Ib);
+                            0x5: PEXTRW(Gd,VRdq,Ib);
                             0x6: WarnUnimpl::shufpd_Vpd_Wpd_Ib();
                             default: UD2();
                         }

@@ -54,6 +54,26 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PEXTRW
-# PINSRW
+def macroop PEXTRW_R_XMM_I {
+    mov2int reg, xmmlm, "IMMEDIATE & mask(3)", size=2, ext=1
+    mov2int reg, xmmhm, "IMMEDIATE & mask(3)", size=2, ext=1
+};
+
+def macroop PINSRW_XMM_R_I {
+    mov2fp xmml, regm, "IMMEDIATE & mask(3)", size=2, ext=1
+    mov2fp xmmh, regm, "IMMEDIATE & mask(3)", size=2, ext=1
+};
+
+def macroop PINSRW_XMM_M_I {
+    ld t1, seg, sib, disp, dataSize=2
+    mov2fp xmml, t1, "IMMEDIATE & mask(3)", size=2, ext=1
+    mov2fp xmmh, t1, "IMMEDIATE & mask(3)", size=2, ext=1
+};
+
+def macroop PINSRW_XMM_P_I {
+    rdip t7
+    ld t1, seg, riprel, disp, dataSize=2
+    mov2fp xmml, t1, "IMMEDIATE & mask(3)", size=2, ext=1
+    mov2fp xmmh, t1, "IMMEDIATE & mask(3)", size=2, ext=1
+};
 '''
