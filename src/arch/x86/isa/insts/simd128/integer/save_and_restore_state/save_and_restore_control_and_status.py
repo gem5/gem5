@@ -64,5 +64,15 @@ def macroop STMXCSR_P {
     rdip t7
     st t1, seg, riprel, disp
 };
-# LDMXCSR
+
+def macroop LDMXCSR_M {
+    ld t1, seg, sib, disp
+    wrval "InstRegIndex(MISCREG_MXCSR)", t1
+};
+
+def macroop LDMXCSR_P {
+    rdip t7
+    ld t1, seg, riprel, disp
+    wrval "InstRegIndex(MISCREG_MXCSR)", t1
+};
 '''

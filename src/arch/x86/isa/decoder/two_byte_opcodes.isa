@@ -828,7 +828,7 @@
                 0x6: decode MODRM_REG {
                     0x0: fxsave();
                     0x1: fxrstor();
-                    0x2: ldmxcsr();
+                    0x2: Inst::LDMXCSR(Md);
                     0x3: Inst::STMXCSR(Md);
                     0x4: Inst::UD2();
                     0x5: decode MODRM_MOD {
