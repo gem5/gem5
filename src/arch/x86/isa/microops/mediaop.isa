@@ -948,6 +948,25 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Msad(MediaOp):
+        code = '''
+            int srcBits = srcSize * 8;
+            int items = sizeof(FloatRegBits) / srcSize;
+
+            uint64_t sum = 0;
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * srcBits - 1;
+                int loIndex = (i + 0) * srcBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                int64_t resBits = arg1Bits - arg2Bits;
+                if (resBits < 0)
+                    resBits = -resBits;
+                sum += resBits;
+            }
+            FpDestReg.uqw = sum & mask(destSize * 8);
+        '''
+
     class Cvti2f(MediaOp):
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
