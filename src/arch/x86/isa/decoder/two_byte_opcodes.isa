@@ -578,7 +578,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::PUNPCKHBW(Pq,Qq);
                     0x1: Inst::PUNPCKHWD(Pq,Qq);
-                    0x2: punpckhdq_Pq_Qq();
+                    0x2: Inst::PUNPCKHDQ(Pq,Qq);
                     0x3: packssdw_Pq_Qq();
                     0x6: Inst::MOVD(Pq,Edp);
                     0x7: Inst::MOVQ(Pq,Qq);
@@ -593,7 +593,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::PUNPCKHBW(Vo,Wo);
                     0x1: Inst::PUNPCKHWD(Vo,Wo);
-                    0x2: punpckhdq_Vo_Wo();
+                    0x2: Inst::PUNPCKHDQ(Vo,Wo);
                     0x3: packssdw_Vo_Wo();
                     0x4: punpcklqdq_Vo_Wq();
                     0x5: punpcklqdq_Vo_Wq();
