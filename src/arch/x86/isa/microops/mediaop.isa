@@ -955,6 +955,26 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Mavg(MediaOp):
+        code = '''
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t resBits = (arg1Bits + arg2Bits + 1) / 2;
+                
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Msad(MediaOp):
         code = '''
             int srcBits = srcSize * 8;
