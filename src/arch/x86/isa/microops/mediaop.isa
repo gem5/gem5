@@ -1,0 +1,311 @@
+/// Copyright (c) 2009 The Regents of The University of Michigan
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Gabe Black
+
+def template MediaOpExecute {{
+        Fault %(class_name)s::execute(%(CPU_exec_context)s *xc,
+                Trace::InstRecord *traceData) const
+        {
+            Fault fault = NoFault;
+
+            %(op_decl)s;
+            %(op_rd)s;
+
+            %(code)s;
+
+            //Write the resulting state to the execution context
+            if(fault == NoFault)
+            {
+                %(op_wb)s;
+            }
+            return fault;
+        }
+}};
+
+def template MediaOpRegDeclare {{
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+        void buildMe();
+
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MediaOpImmDeclare {{
+
+    class %(class_name)s : public %(base_class)s
+    {
+      protected:
+        void buildMe();
+
+      public:
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+
+        %(class_name)s(ExtMachInst _machInst,
+                const char * instMnem,
+                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                uint8_t _srcSize, uint8_t _destSize, uint16_t _sel);
+
+        %(BasicExecDeclare)s
+    };
+}};
+
+def template MediaOpRegConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false,
+                _src1, _src2, _dest, _srcSize, _destSize, _sel,
+                %(op_class)s)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            InstRegIndex _src1, InstRegIndex _src2, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast,
+                _src1, _src2, _dest, _srcSize, _destSize, _sel,
+                %(op_class)s)
+    {
+        buildMe();
+    }
+}};
+
+def template MediaOpImmConstructor {{
+
+    inline void %(class_name)s::buildMe()
+    {
+        %(constructor)s;
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                false, false, false, false,
+                _src1, _imm8, _dest, _srcSize, _destSize, _sel,
+                %(op_class)s)
+    {
+        buildMe();
+    }
+
+    inline %(class_name)s::%(class_name)s(
+            ExtMachInst machInst, const char * instMnem,
+            bool isMicro, bool isDelayed, bool isFirst, bool isLast,
+            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            uint8_t _srcSize, uint8_t _destSize, uint16_t _sel) :
+        %(base_class)s(machInst, "%(mnemonic)s", instMnem,
+                isMicro, isDelayed, isFirst, isLast,
+                _src1, _imm8, _dest, _srcSize, _destSize, _sel,
+                %(op_class)s)
+    {
+        buildMe();
+    }
+}};
+
+let {{
+    # Make these empty strings so that concatenating onto
+    # them will always work.
+    header_output = ""
+    decoder_output = ""
+    exec_output = ""
+
+    immTemplates = (
+            MediaOpImmDeclare,
+            MediaOpImmConstructor,
+            MediaOpExecute)
+
+    regTemplates = (
+            MediaOpRegDeclare,
+            MediaOpRegConstructor,
+            MediaOpExecute)
+
+    class MediaOpMeta(type):
+        def buildCppClasses(self, name, Name, suffix, code):
+
+            # Globals to stick the output in
+            global header_output
+            global decoder_output
+            global exec_output
+
+            # If op2 is used anywhere, make register and immediate versions
+            # of this code.
+            matcher = re.compile("(?<!\\w)(?P<prefix>s?)op2(?P<typeQual>\\.\\w+)?")
+            match = matcher.search(code)
+            if match:
+                typeQual = ""
+                if match.group("typeQual"):
+                    typeQual = match.group("typeQual")
+                src2_name = "%spsrc2%s" % (match.group("prefix"), typeQual)
+                self.buildCppClasses(name, Name, suffix,
+                        matcher.sub(src2_name, code))
+                self.buildCppClasses(name + "i", Name, suffix + "Imm",
+                        matcher.sub("imm8", code))
+                return
+
+            base = "X86ISA::MediaOp"
+
+            # If imm8 shows up in the code, use the immediate templates, if
+            # not, hopefully the register ones will be correct.
+            matcher = re.compile("(?<!\w)imm8(?!\w)")
+            if matcher.search(code):
+                base += "Imm"
+                templates = immTemplates
+            else:
+                base += "Reg"
+                templates = regTemplates
+
+            # Get everything ready for the substitution
+            iop = InstObjParams(name, Name + suffix, base, {"code" : code})
+
+            # Generate the actual code (finally!)
+            header_output += templates[0].subst(iop)
+            decoder_output += templates[1].subst(iop)
+            exec_output += templates[2].subst(iop)
+
+
+        def __new__(mcls, Name, bases, dict):
+            abstract = False
+            name = Name.lower()
+            if "abstract" in dict:
+                abstract = dict['abstract']
+                del dict['abstract']
+
+            cls = super(MediaOpMeta, mcls).__new__(mcls, Name, bases, dict)
+            if not abstract:
+                cls.className = Name
+                cls.base_mnemonic = name
+                code = cls.code
+
+                # Set up the C++ classes
+                mcls.buildCppClasses(cls, name, Name, "", code)
+
+                # Hook into the microassembler dict
+                global microopClasses
+                microopClasses[name] = cls
+
+                # If op2 is used anywhere, make register and immediate versions
+                # of this code.
+                matcher = re.compile("op2(?P<typeQual>\\.\\w+)?")
+                if matcher.search(code):
+                    microopClasses[name + 'i'] = cls
+            return cls
+
+
+    class MediaOp(X86Microop):
+        __metaclass__ = MediaOpMeta
+        # This class itself doesn't act as a microop
+        abstract = True
+
+        def __init__(self, dest, src1, op2,
+                size = None, destSize = None, srcSize = None, sel = None):
+            self.dest = dest
+            self.src1 = src1
+            self.op2 = op2
+            if size is not None:
+                self.srcSize = size
+                self.destSize = size
+            if srcSize is not None:
+                self.srcSize = srcSize
+            if destSize is not None:
+                self.destSize = destSize
+            if self.srcSize is None:
+                raise Exception, "Source size not set."
+            if self.destSize is None:
+                raise Exception, "Dest size not set."
+            if sel is None:
+                self.sel = 0
+            else:
+                self.sel = sel
+
+        def getAllocator(self, *microFlags):
+            className = self.className
+            if self.mnemonic == self.base_mnemonic + 'i':
+                className += "Imm"
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+                    %(flags)s, %(src1)s, %(op2)s, %(dest)s,
+                    %(srcSize)s, %(destSize)s, %(sel)s)''' % {
+                "class_name" : className,
+                "flags" : self.microFlagsText(microFlags),
+                "src1" : self.src1, "op2" : self.op2,
+                "dest" : self.dest,
+                "srcSize" : self.srcSize,
+                "destSize" : self.destSize,
+                "sel" : self.sel}
+            return allocator
+
+    class Mov2int(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, sel = None):
+            super(Mov2int, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, sel)
+        code = '''
+            uint64_t fpSrcReg1 = bits(FpSrcReg1.uqw, srcSize * 8 - 1, 0);
+            DestReg = merge(DestReg, fpSrcReg1, destSize);
+        '''
+
+    class Mov2fp(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, sel = None):
+            super(Mov2fp, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, sel)
+        code = '''
+            uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
+            FpDestReg.uqw =
+                insertBits(FpDestReg.uqw, destSize * 8 - 1, 0, srcReg1);
+        '''
+}};

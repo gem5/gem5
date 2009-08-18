@@ -100,6 +100,7 @@ output header {{
 #include "arch/x86/insts/macroop.hh"
 #include "arch/x86/insts/microfpop.hh"
 #include "arch/x86/insts/microldstop.hh"
+#include "arch/x86/insts/micromediaop.hh"
 #include "arch/x86/insts/microregop.hh"
 #include "arch/x86/insts/static_inst.hh"
 #include "arch/x86/isa_traits.hh"
