@@ -471,7 +471,7 @@
                     0x4: andps_Vo_Wo();
                     0x5: andnps_Vo_Wo();
                     0x6: orps_Vo_Wo();
-                    0x7: xorps_Vo_Wo();
+                    0x7: Inst::XORPS(Vo,Wo);
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {

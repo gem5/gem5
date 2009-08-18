@@ -54,25 +54,43 @@
 # Authors: Gabe Black
 
 microcode = '''
-# XORPS
-
 def macroop XORPD_XMM_XMM {
-    xorfp xmml, xmml, xmmlm
-    xorfp xmmh, xmmh, xmmhm
+    mxor xmml, xmml, xmmlm
+    mxor xmmh, xmmh, xmmhm
 };
 
 def macroop XORPD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    xorfp xmml, xmml, ufp1
-    xorfp xmmh, xmmh, ufp2
+    mxor xmml, xmml, ufp1
+    mxor xmmh, xmmh, ufp2
 };
 
 def macroop XORPD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    xorfp xmml, xmml, ufp1
-    xorfp xmmh, xmmh, ufp2
+    mxor xmml, xmml, ufp1
+    mxor xmmh, xmmh, ufp2
+};
+
+def macroop XORPS_XMM_XMM {
+    mxor xmml, xmml, xmmlm
+    mxor xmmh, xmmh, xmmhm
+};
+
+def macroop XORPS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mxor xmml, xmml, ufp1
+    mxor xmmh, xmmh, ufp2
+};
+
+def macroop XORPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mxor xmml, xmml, ufp1
+    mxor xmmh, xmmh, ufp2
 };
 '''
