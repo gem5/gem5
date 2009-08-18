@@ -123,8 +123,74 @@ def macroop MINSD_XMM_P {
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     mminf xmml, xmml, ufp1, ext=1, size=8
 };
+
+def macroop MAXPS_XMM_XMM {
+    mmaxf xmml, xmml, xmmlm, ext=0, size=4
+    mmaxf xmmh, xmmh, xmmhm, ext=0, size=4
+};
+
+def macroop MAXPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=0, size=4
+    mmaxf xmmh, xmmh, ufp2, ext=0, size=4
+};
+
+def macroop MAXPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=0, size=4
+    mmaxf xmmh, xmmh, ufp2, ext=0, size=4
+};
+
+def macroop MAXPD_XMM_XMM {
+    mmaxf xmml, xmml, xmmlm, ext=0, size=8
+    mmaxf xmmh, xmmh, xmmhm, ext=0, size=8
+};
+
+def macroop MAXPD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=0, size=8
+    mmaxf xmmh, xmmh, ufp2, ext=0, size=8
+};
+
+def macroop MAXPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=0, size=8
+    mmaxf xmmh, xmmh, ufp2, ext=0, size=8
+};
+
+def macroop MAXSS_XMM_XMM {
+    mmaxf xmml, xmml, xmmlm, ext=1, size=4
+};
+
+def macroop MAXSS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=1, size=4
+};
+
+def macroop MAXSS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=1, size=4
+};
+
+def macroop MAXSD_XMM_XMM {
+    mmaxf xmml, xmml, xmmlm, ext=1, size=8
+};
+
+def macroop MAXSD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=1, size=8
+};
+
+def macroop MAXSD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    mmaxf xmml, xmml, ufp1, ext=1, size=8
+};
 '''
-# MAXPS
-# MAXPD
-# MAXSS
-# MAXSD

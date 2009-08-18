@@ -511,7 +511,7 @@
                     0x4: subps_Vo_Wo();
                     0x5: Inst::MINPS(Vo,Wo);
                     0x6: divps_Vo_Wo();
-                    0x7: maxps_Vo_Wo();
+                    0x7: Inst::MAXPS(Vo,Wo);
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
@@ -522,7 +522,7 @@
                     0x4: subss_Vd_Wd();
                     0x5: Inst::MINSS(Vd,Wd);
                     0x6: divss_Vd_Wd();
-                    0x7: maxss_Vd_Wd();
+                    0x7: Inst::MAXSS(Vd,Wd);
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
@@ -533,7 +533,7 @@
                     0x4: subpd_Vo_Wo();
                     0x5: Inst::MINPD(Vo,Wo);
                     0x6: divpd_Vo_Wo();
-                    0x7: maxpd_Vo_Wo();
+                    0x7: Inst::MAXPD(Vo,Wo);
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
@@ -543,7 +543,7 @@
                     0x4: Inst::SUBSD(Vq,Wq);
                     0x5: Inst::MINSD(Vq,Wq);
                     0x6: Inst::DIVSD(Vq,Wq);
-                    0x7: maxsd_Vq_Wq();
+                    0x7: Inst::MAXSD(Vq,Wq);
                     default: Inst::UD2();
                 }
                 default: Inst::UD2();
