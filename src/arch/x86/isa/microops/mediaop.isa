@@ -365,6 +365,48 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class shuffle(MediaOp):
+        code = '''
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = sizeof(FloatRegBits) / size;
+            int options;
+            int optionBits;
+            if (size == 8) {
+                options = 2;
+                optionBits = 1;
+            } else {
+                options = 4;
+                optionBits = 2;
+            }
+
+            uint64_t result = 0;
+            uint8_t sel = ext;
+
+            for (int i = 0; i < items; i++) {
+                uint64_t resBits;
+                uint8_t lsel = sel & mask(optionBits);
+                if (lsel * size >= sizeof(FloatRegBits)) {
+                    lsel -= options / 2;
+                    resBits = bits(FpSrcReg2.uqw,
+                            (lsel + 1) * sizeBits - 1,
+                            (lsel + 0) * sizeBits);
+                }  else {
+                    resBits = bits(FpSrcReg1.uqw,
+                            (lsel + 1) * sizeBits - 1,
+                            (lsel + 0) * sizeBits);
+                }
+
+                sel >>= optionBits;
+
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Unpack(MediaOp):
         code = '''
             assert(srcSize == destSize);
