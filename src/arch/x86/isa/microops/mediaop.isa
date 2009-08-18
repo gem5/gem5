@@ -529,4 +529,49 @@ let {{
             }
             FpDestReg.uqw = result;
         '''
+
+    class Msqrt(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, ext = None):
+            super(Msqrt, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            assert(srcSize == 4 || srcSize == 8);
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t argBits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+
+                if (size == 4) {
+                    floatInt fi;
+                    fi.i = argBits;
+                    fi.f = sqrt(fi.f);
+                    argBits = fi.i;
+                } else {
+                    doubleInt di;
+                    di.i = argBits;
+                    di.d = sqrt(di.d);
+                    argBits = di.i;
+                }
+                result = insertBits(result, hiIndex, loIndex, argBits);
+            }
+            FpDestReg.uqw = result;
+        '''
 }};
