@@ -54,32 +54,6 @@
 # Authors: Gabe Black
 
 microcode = '''
-def macroop MOVD_MMX_R {
-    mov2fp mmx, regm, srcSize=dsz, destSize=8
-};
-
-def macroop MOVD_MMX_M {
-    ldfp mmx, seg, sib, disp, dataSize=8
-};
-
-def macroop MOVD_MMX_P {
-    rdip t7
-    ldfp mmx, seg, riprel, disp, dataSize=8
-};
-
-def macroop MOVD_R_MMX {
-    mov2int reg, mmxm, size=dsz 
-};
-
-def macroop MOVD_M_MMX {
-    stfp mmx, seg, sib, disp, dataSize=8
-};
-
-def macroop MOVD_P_MMX {
-    rdip t7
-    stfp mmx, seg, riprel, disp, dataSize=8
-};
-
 def macroop MOVQ_XMM_XMM {
     movfp xmml, xmmlm
     lfpimm xmmh, 0
@@ -103,28 +77,6 @@ def macroop MOVQ_M_XMM {
 def macroop MOVQ_P_XMM {
     rdip t7
     stfp xmml, seg, riprel, disp, dataSize=8
-};
-
-def macroop MOVQ_MMX_MMX {
-    movfp mmx, mmxm
-};
-
-def macroop MOVQ_MMX_M {
-    ldfp mmx, seg, sib, disp, dataSize=8
-};
-
-def macroop MOVQ_MMX_P {
-    rdip t7
-    ldfp mmx, seg, riprel, disp, dataSize=8
-};
-
-def macroop MOVQ_M_MMX {
-    stfp mmx, seg, sib, disp, dataSize=8
-};
-
-def macroop MOVQ_P_MMX {
-    rdip t7
-    stfp mmx, seg, riprel, disp, dataSize=8
 };
 '''
 # MOVDQA
