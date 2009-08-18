@@ -379,8 +379,8 @@
                     0x3: movntps_Mo_Vo();
                     0x4: cvttps2pi_Pq_Wq();
                     0x5: cvtpS2pi_Pq_Wq();
-                    0x6: ucomiss_Vd_Wd();
-                    0x7: comiss_Vd_Wd();
+                    0x6: Inst::UCOMISS(Vd,Wd);
+                    0x7: Inst::COMISS(Vd,Wd);
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
@@ -398,7 +398,7 @@
                     0x4: cvttpd2pi_Pq_Wo();
                     0x5: cvtpd2pi_Pq_Wo();
                     0x6: Inst::UCOMISD(Vq,Wq);
-                    0x7: comisd_Vq_Wq();
+                    0x7: Inst::COMISD(Vq,Wq);
                 }
                 // repne (0xF2)
                 0x8: decode OPCODE_OP_BOTTOM3 {
