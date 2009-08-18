@@ -82,8 +82,12 @@ def macroop MOVQ_P_XMM {
 def macroop MOVDQ2Q_MMX_XMM {
     movfp mmx, xmmlm, dataSize=8
 };
+
+def macroop MOVQ2DQ_XMM_MMX {
+    movfp xmml, mmxm, dataSize=8
+    lfpimm xmmh, 0
+};
 '''
 # MOVDQA
 # MOVDQU
-# MOVQ2DQ
 # LDDQU

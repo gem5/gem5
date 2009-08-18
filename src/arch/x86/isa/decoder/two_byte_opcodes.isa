@@ -951,7 +951,7 @@
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x6: WarnUnimpl::movq2dq_Vo_PRq();
+                        0x6: MOVQ2DQ(Vo,PRq);
                         default: UD2();
                     }
                     // operand size (0x66)
