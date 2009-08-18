@@ -54,12 +54,123 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSUBB
-# PSUBW
-# PSUBD
-# PSUBQ
-# PSUBSB
-# PSUBSW
-# PSUBUSB
-# PSUBUSW
+def macroop PSUBB_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=1, ext=0
+};
+
+def macroop PSUBB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PSUBB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=0
+};
+
+def macroop PSUBW_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=2, ext=0
+};
+
+def macroop PSUBW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PSUBW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PSUBD_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=4, ext=0
+};
+
+def macroop PSUBD_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PSUBD_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PSUBQ_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=8, ext=0
+};
+
+def macroop PSUBQ_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=8, ext=0
+};
+
+def macroop PSUBQ_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=8, ext=0
+};
+
+def macroop PSUBSB_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=1, ext=4
+};
+
+def macroop PSUBSB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=4
+};
+
+def macroop PSUBSB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=4
+};
+
+def macroop PSUBSW_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=2, ext=4
+};
+
+def macroop PSUBSW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=4
+};
+
+def macroop PSUBSW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=4
+};
+
+def macroop PSUBUSB_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=1, ext=2
+};
+
+def macroop PSUBUSB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=2
+};
+
+def macroop PSUBUSB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=1, ext=2
+};
+
+def macroop PSUBUSW_MMX_MMX {
+    msubi mmx, mmx, mmxm, size=2, ext=2
+};
+
+def macroop PSUBUSW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=2
+};
+
+def macroop PSUBUSW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubi mmx, mmx, ufp1, size=2, ext=2
+};
 '''

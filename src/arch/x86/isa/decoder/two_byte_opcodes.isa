@@ -980,8 +980,8 @@
                 0x1B: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubusb_Pq_Qq();
-                        0x1: WarnUnimpl::psubusw_Pq_Qq();
+                        0x0: PSUBUSB(Pq,Qq);
+                        0x1: PSUBUSW(Pq,Qq);
                         0x2: PMINUB(Pq,Qq);
                         0x3: PAND(Pq,Qq);
                         0x4: PADDUSB(Pq,Qq);
@@ -991,8 +991,8 @@
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubusb_Vo_Wo();
-                        0x1: WarnUnimpl::psubusw_Vo_Wo();
+                        0x0: PSUBUSB(Vo,Wo);
+                        0x1: PSUBUSW(Vo,Wo);
                         0x2: PMINUB(Vo,Wo);
                         0x3: PAND(Vo,Wo);
                         0x4: PADDUSB(Vo,Wo);
@@ -1042,8 +1042,8 @@
                 0x1D: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubsb_Pq_Qq();
-                        0x1: WarnUnimpl::psubsw_Pq_Qq();
+                        0x0: PSUBSB(Pq,Qq);
+                        0x1: PSUBSW(Pq,Qq);
                         0x2: PMINSW(Pq,Qq);
                         0x3: POR(Pq,Qq);
                         0x4: PADDSB(Pq,Qq);
@@ -1053,8 +1053,8 @@
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubsb_Vo_Wo();
-                        0x1: WarnUnimpl::psubsw_Vo_Wo();
+                        0x0: PSUBSB(Vo,Wo);
+                        0x1: PSUBSW(Vo,Wo);
                         0x2: PMINSW(Vo,Wo);
                         0x3: POR(Vo,Wo);
                         0x4: PADDSB(Vo,Wo);
@@ -1099,10 +1099,10 @@
                 0x1F: decode LEGACY_DECODEVAL {
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubb_Pq_Qq();
-                        0x1: WarnUnimpl::psubw_Pq_Qq();
-                        0x2: WarnUnimpl::psubd_Pq_Qq();
-                        0x3: WarnUnimpl::psubq_Pq_Qq();
+                        0x0: PSUBB(Pq,Qq);
+                        0x1: PSUBW(Pq,Qq);
+                        0x2: PSUBD(Pq,Qq);
+                        0x3: PSUBQ(Pq,Qq);
                         0x4: PADDB(Pq,Qq);
                         0x5: PADDW(Pq,Qq);
                         0x6: PADDD(Pq,Qq);
@@ -1110,10 +1110,10 @@
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::psubb_Vo_Wo();
-                        0x1: WarnUnimpl::psubw_Vo_Wo();
-                        0x2: WarnUnimpl::psubd_Vo_Wo();
-                        0x3: WarnUnimpl::psubq_Vo_Wo();
+                        0x0: PSUBB(Vo,Wo);
+                        0x1: PSUBW(Vo,Wo);
+                        0x2: PSUBD(Vo,Wo);
+                        0x3: PSUBQ(Vo,Wo);
                         0x4: PADDB(Vo,Wo);
                         0x5: PADDW(Vo,Wo);
                         0x6: PADDD(Vo,Wo);
