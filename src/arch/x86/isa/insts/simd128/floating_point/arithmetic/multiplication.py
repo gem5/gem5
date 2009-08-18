@@ -58,16 +58,16 @@ microcode = '''
 # MULPD
 # MULSS
 
-def macroop MULSD_R_R {
+def macroop MULSD_XMM_XMM {
     mulfp xmml, xmml, xmmlm
 };
 
-def macroop MULSD_R_M {
+def macroop MULSD_XMM_M {
     ldfp ufp1, seg, sib, disp
     mulfp xmml, xmml, ufp1
 };
 
-def macroop MULSD_R_P {
+def macroop MULSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     mulfp xmml, xmml, ufp1

@@ -56,19 +56,19 @@
 microcode = '''
 # XORPS
 
-def macroop XORPD_R_R {
+def macroop XORPD_XMM_XMM {
     xorfp xmml, xmml, xmmlm
     xorfp xmmh, xmmh, xmmhm
 };
 
-def macroop XORPD_R_M {
+def macroop XORPD_XMM_M {
     ldfp ufp1, seg, sib, disp
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8"
     xorfp xmml, xmml, ufp1
     xorfp xmmh, xmmh, ufp2
 };
 
-def macroop XORPD_R_P {
+def macroop XORPD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8"

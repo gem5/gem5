@@ -58,16 +58,16 @@ microcode = '''
 # COMISD
 # UCOMISS
 
-def macroop UCOMISD_R_R {
+def macroop UCOMISD_XMM_XMM {
     compfp xmml, xmmlm
 };
 
-def macroop UCOMISD_R_M {
+def macroop UCOMISD_XMM_M {
     ldfp ufp1, seg, sib, disp
     compfp xmml, ufp1
 };
 
-def macroop UCOMISD_R_P {
+def macroop UCOMISD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     compfp xmml, ufp1

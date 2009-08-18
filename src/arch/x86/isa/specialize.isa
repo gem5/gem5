@@ -190,7 +190,12 @@ let {{
                 env.addReg(ModRMRegIndex)
                 env.addToDisassembly(
                         "printReg(out, %s, regSize);\n" % ModRMRegIndex)
-                Name += "_R"
+                if opType.tag == "P":
+                    Name += "_MMX"
+                elif opType.tag == "V":
+                    Name += "_XMM"
+                else:
+                    Name += "_R"
             elif opType.tag in ("E", "Q", "W"):
                 # This might refer to memory or to a register. We need to
                 # divide it up farther.
@@ -202,9 +207,16 @@ let {{
                 # modrm addressing.
                 memEnv = copy.copy(env)
                 memEnv.doModRM = True
+                regSuffix = "_R"
+                if opType.tag == "Q":
+                    regSuffix = "_MMX"
+                elif opType.tag == "W":
+                    regSuffix = "_XMM"
                 return doSplitDecode("MODRM_MOD",
-                    {"3" : (specializeInst, Name + "_R", copy.copy(opTypes), regEnv)},
-                           (doRipRelativeDecode, Name, copy.copy(opTypes), memEnv))
+                    {"3" : (specializeInst, Name + regSuffix,
+                            copy.copy(opTypes), regEnv)},
+                           (doRipRelativeDecode, Name,
+                            copy.copy(opTypes), memEnv))
             elif opType.tag in ("I", "J"):
                 # Immediates
                 env.addToDisassembly(
@@ -218,7 +230,12 @@ let {{
                 env.addReg(ModRMRMIndex)
                 env.addToDisassembly(
                         "printReg(out, %s, regSize);\n" % ModRMRMIndex)
-                Name += "_R"
+                if opType.tag == "PR":
+                    Name += "_MMX"
+                elif opType.tag == "VR":
+                    Name += "_XMM"
+                else:
+                    Name += "_R"
             elif opType.tag in ("X", "Y"):
                 # This type of memory addressing is for string instructions.
                 # They'll use the right index and segment internally.

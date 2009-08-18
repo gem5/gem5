@@ -58,16 +58,16 @@ microcode = '''
 # DIVPD
 # DIVSS
 
-def macroop DIVSD_R_R {
+def macroop DIVSD_XMM_XMM {
     divfp xmml, xmml, xmmlm
 };
 
-def macroop DIVSD_R_M {
+def macroop DIVSD_XMM_M {
     ldfp ufp1, seg, sib, disp
     divfp xmml, xmml, ufp1
 };
 
-def macroop DIVSD_R_P {
+def macroop DIVSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     divfp xmml, xmml, ufp1

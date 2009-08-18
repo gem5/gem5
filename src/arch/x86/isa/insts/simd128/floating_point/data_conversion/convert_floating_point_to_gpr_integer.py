@@ -58,7 +58,7 @@ microcode = '''
 # CVTSD2SI
 # CVTTSS2SI
 
-def macroop CVTTSD2SI_R_R {
+def macroop CVTTSD2SI_R_XMM {
     cvtf_d2i reg, xmmlm
 };
 

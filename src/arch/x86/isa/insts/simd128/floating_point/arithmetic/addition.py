@@ -58,16 +58,16 @@ microcode = '''
 # ADDPD
 # ADDSS
 
-def macroop ADDSD_R_R {
+def macroop ADDSD_XMM_XMM {
     addfp xmml, xmml, xmmlm
 };
 
-def macroop ADDSD_R_M {
+def macroop ADDSD_XMM_M {
     ldfp ufp1, seg, sib, disp
     addfp xmml, xmml, ufp1
 };
 
-def macroop ADDSD_R_P {
+def macroop ADDSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     addfp xmml, xmml, ufp1

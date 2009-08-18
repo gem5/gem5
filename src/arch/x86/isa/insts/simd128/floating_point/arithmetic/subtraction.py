@@ -58,16 +58,16 @@ microcode = '''
 # SUBPD
 # SUBSS
 
-def macroop SUBSD_R_R {
+def macroop SUBSD_XMM_XMM {
     subfp xmml, xmml, xmmlm
 };
 
-def macroop SUBSD_R_M {
+def macroop SUBSD_XMM_M {
     ldfp ufp1, seg, sib, disp
     subfp xmml, xmml, ufp1
 };
 
-def macroop SUBSD_R_P {
+def macroop SUBSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     subfp xmml, xmml, ufp1

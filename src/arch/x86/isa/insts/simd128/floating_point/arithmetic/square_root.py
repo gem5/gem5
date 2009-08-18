@@ -58,16 +58,16 @@ microcode = '''
 # SQRTPD
 # SQRTSS
 
-def macroop SQRTSD_R_R {
+def macroop SQRTSD_XMM_XMM {
     sqrtfp xmml, xmml, xmmlm
 };
 
-def macroop SQRTSD_R_M {
+def macroop SQRTSD_XMM_M {
     ldfp ufp1, seg, sib, disp
     sqrtfp xmml, xmml, ufp1
 };
 
-def macroop SQRTSD_R_P {
+def macroop SQRTSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp
     sqrtfp xmml, xmml, ufp1
