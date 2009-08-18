@@ -164,12 +164,43 @@ let {{
             return allocator
 
     microopClasses["limm"] = LimmOp
+
+    class LfpimmOp(X86Microop):
+        def __init__(self, dest, imm, dataSize="env.dataSize"):
+            self.className = "Lfpimm"
+            self.mnemonic = "lfpimm"
+            self.dest = dest
+            if isinstance(imm, (int, long)):
+                imm = "ULL(%d)" % imm
+            if isinstance(imm, float):
+                imm = "reinterpret_cast<uint64_t>((double)(%d))"
+            self.imm = imm
+            self.dataSize = dataSize
+
+        def getAllocator(self, *microFlags):
+            allocator = '''new %(class_name)s(machInst, macrocodeBlock
+                    %(flags)s, %(dest)s, %(imm)s, %(dataSize)s)''' % {
+                "class_name" : self.className,
+                "mnemonic" : self.mnemonic,
+                "flags" : self.microFlagsText(microFlags),
+                "dest" : self.dest, "imm" : self.imm,
+                "dataSize" : self.dataSize}
+            return allocator
+
+    microopClasses["lfpimm"] = LfpimmOp
 }};
 
 let {{
     # Build up the all register version of this micro op
     iop = InstObjParams("limm", "Limm", 'X86MicroopBase',
             {"code" : "DestReg = merge(DestReg, imm, dataSize);"})
+    header_output += MicroLimmOpDeclare.subst(iop)
+    decoder_output += MicroLimmOpConstructor.subst(iop)
+    decoder_output += MicroLimmOpDisassembly.subst(iop)
+    exec_output += MicroLimmOpExecute.subst(iop)
+
+    iop = InstObjParams("lfpimm", "Lfpimm", 'X86MicroopBase',
+            {"code" : "FpDestReg.uqw = imm"})
     header_output += MicroLimmOpDeclare.subst(iop)
     decoder_output += MicroLimmOpConstructor.subst(iop)
     decoder_output += MicroLimmOpDisassembly.subst(iop)
