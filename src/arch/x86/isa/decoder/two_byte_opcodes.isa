@@ -377,16 +377,16 @@
                     0x1: Inst::MOVAPS(Wq,Vq);
                     0x2: Inst::CVTPI2PS(Vq,Qq);
                     0x3: movntps_Mo_Vo();
-                    0x4: cvttps2pi_Pq_Wq();
-                    0x5: cvtpS2pi_Pq_Wq();
+                    0x4: Inst::CVTTPS2PI(Pq,Wq);
+                    0x5: Inst::CVTPS2PI(Pq,Wq);
                     0x6: Inst::UCOMISS(Vd,Wd);
                     0x7: Inst::COMISS(Vd,Wd);
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
                     0x2: Inst::CVTSI2SS(Vd,Ed);
-                    0x4: cvttss2si_Gd_Wd();
-                    0x5: cvtss2si_Gd_Wd();
+                    0x4: Inst::CVTTSS2SI(Gd,Wd);
+                    0x5: Inst::CVTSS2SI(Gd,Wd);
                     default: Inst::UD2();
                 }
                 // operand size (0x66)
@@ -395,8 +395,8 @@
                     0x1: Inst::MOVAPD(Wo,Vo);
                     0x2: Inst::CVTPI2PD(Vo,Qq);
                     0x3: movntpd_Mo_Vo();
-                    0x4: cvttpd2pi_Pq_Wo();
-                    0x5: cvtpd2pi_Pq_Wo();
+                    0x4: Inst::CVTTPD2PI(Pq,Wo);
+                    0x5: Inst::CVTPD2PI(Pq,Wo);
                     0x6: Inst::UCOMISD(Vq,Wq);
                     0x7: Inst::COMISD(Vq,Wq);
                 }
@@ -406,7 +406,7 @@
                     0x2: Inst::CVTSI2SD(Vdp,Edp);
                     // The size of the W operand should be q, not dp
                     0x4: Inst::CVTTSD2SI(Gdp,Wdp);
-                    0x5: cvtsd2si_Gd_Wq();
+                    0x5: Inst::CVTSD2SI(Gd,Wq);
                     default: Inst::UD2();
                 }
                 default: Inst::UD2();
@@ -511,7 +511,7 @@
                         0x0: ADDSS(Vd,Wd);
                         0x1: MULSS(Vd,Wd);
                         0x2: CVTSS2SD(Vq,Wd);
-                        0x3: WarnUnimpl::cvttps2dq_Vo_Wo();
+                        0x3: CVTTPS2DQ(Vo,Wo);
                         0x4: SUBSS(Vd,Wd);
                         0x5: MINSS(Vd,Wd);
                         0x6: DIVSS(Vd,Wd);
@@ -522,7 +522,7 @@
                         0x0: ADDPD(Vo,Wo);
                         0x1: MULPD(Vo,Wo);
                         0x2: CVTPD2PS(Vo,Wo);
-                        0x3: WarnUnimpl::cvtps2dq_Vo_Wo();
+                        0x3: CVTPS2DQ(Vo,Wo);
                         0x4: SUBPD(Vo,Wo);
                         0x5: MINPD(Vo,Wo);
                         0x6: DIVPD(Vo,Wo);
@@ -1023,12 +1023,12 @@
                         0x3: PAVGW(Vo,Wo);
                         0x4: PMULHUW(Vo,Wo);
                         0x5: PMULHW(Vo,Wo);
-                        0x6: WarnUnimpl::cvttpd2dq_Vo_Wo();
+                        0x6: CVTTPD2DQ(Vo,Wo);
                         0x7: WarnUnimpl::movntdq_Mo_Vo();
                     }
                     // repne (0xF2)
                     0x8: decode OPCODE_OP_BOTTOM3 {
-                        0x6: WarnUnimpl::cvtpd2dq_Vo_Wo();
+                        0x6: CVTPD2DQ(Vo,Wo);
                         default: UD2();
                     }
                     default: UD2();

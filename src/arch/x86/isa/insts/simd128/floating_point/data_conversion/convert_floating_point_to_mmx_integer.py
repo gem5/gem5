@@ -54,8 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTPS2PI
-# CVTPD2PI
-# CVTTPS2PI
-# CVTTPD2PI
+def macroop CVTPS2PI_MMX_XMM {
+    cvtf2i mmx, xmmlm, size=4, ext=4
+};
+
+def macroop CVTPS2PI_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvtf2i mmx, ufp1, size=4, ext=4
+};
+
+def macroop CVTPS2PI_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvtf2i mmx, ufp1, size=4, ext=4
+};
+
+def macroop CVTPD2PI_MMX_XMM {
+    cvtf2i mmx, xmmlm, srcSize=8, destSize=4, ext=4
+    cvtf2i mmx, xmmhm, srcSize=8, destSize=4, ext=(4 | 2)
+};
+
+def macroop CVTPD2PI_MMX_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i mmx, ufp1, srcSize=8, destSize=4, ext=4
+    cvtf2i mmx, ufp2, srcSize=8, destSize=4, ext=(4 | 2)
+};
+
+def macroop CVTPD2PI_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i mmx, ufp1, srcSize=8, destSize=4, ext=4
+    cvtf2i mmx, ufp2, srcSize=8, destSize=4, ext=(4 | 2)
+};
+
+def macroop CVTTPS2PI_MMX_XMM {
+    cvtf2i mmx, xmmlm, size=4, ext=0
+};
+
+def macroop CVTTPS2PI_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvtf2i mmx, ufp1, size=4, ext=0
+};
+
+def macroop CVTTPS2PI_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvtf2i mmx, ufp1, size=4, ext=0
+};
+
+def macroop CVTTPD2PI_MMX_XMM {
+    cvtf2i mmx, xmmlm, srcSize=8, destSize=4, ext=0
+    cvtf2i mmx, xmmhm, srcSize=8, destSize=4, ext=2
+};
+
+def macroop CVTTPD2PI_MMX_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i mmx, ufp1, srcSize=8, destSize=4, ext=0
+    cvtf2i mmx, ufp2, srcSize=8, destSize=4, ext=2
+};
+
+def macroop CVTTPD2PI_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i mmx, ufp1, srcSize=8, destSize=4, ext=0
+    cvtf2i mmx, ufp2, srcSize=8, destSize=4, ext=2
+};
 '''

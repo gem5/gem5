@@ -54,8 +54,89 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTPS2DQ
-# CVTPD2DQ
-# CVTTPS2DQ
-# CVTTPD2DQ
+def macroop CVTPS2DQ_XMM_XMM {
+    cvtf2i xmml, xmmlm, size=4, ext=4
+    cvtf2i xmmh, xmmhm, size=4, ext=4
+};
+
+def macroop CVTPS2DQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, size=4, ext=4
+    cvtf2i xmmh, ufp2, size=4, ext=4
+};
+
+def macroop CVTPS2DQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, size=4, ext=4
+    cvtf2i xmmh, ufp2, size=4, ext=4
+};
+
+def macroop CVTPD2DQ_XMM_XMM {
+    cvtf2i xmml, xmmlm, srcSize=8, destSize=4, ext=4
+    cvtf2i xmml, xmmhm, srcSize=8, destSize=4, ext=(4 | 2)
+    lfpimm xmmh, 0
+};
+
+def macroop CVTPD2DQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, srcSize=8, destSize=4, ext=4
+    cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=(4 | 2)
+    lfpimm xmmh, 0
+};
+
+def macroop CVTPD2DQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, srcSize=8, destSize=4, ext=4
+    cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=(4 | 2)
+    lfpimm xmmh, 0
+};
+
+def macroop CVTTPS2DQ_XMM_XMM {
+    cvtf2i xmml, xmmlm, size=4, ext=0
+    cvtf2i xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop CVTTPS2DQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, size=4, ext=0
+    cvtf2i xmmh, ufp2, size=4, ext=0
+};
+
+def macroop CVTTPS2DQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, size=4, ext=0
+    cvtf2i xmmh, ufp2, size=4, ext=0
+};
+
+def macroop CVTTPD2DQ_XMM_XMM {
+    cvtf2i xmml, xmmlm, srcSize=8, destSize=4, ext=0
+    cvtf2i xmml, xmmhm, srcSize=8, destSize=4, ext=2
+    lfpimm xmmh, 0
+};
+
+def macroop CVTTPD2DQ_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, srcSize=8, destSize=4, ext=0
+    cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=2
+    lfpimm xmmh, 0
+};
+
+def macroop CVTTPD2DQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2i xmml, ufp1, srcSize=8, destSize=4, ext=0
+    cvtf2i xmml, ufp2, srcSize=8, destSize=4, ext=2
+    lfpimm xmmh, 0
+};
 '''
