@@ -187,5 +187,17 @@ def macroop PUNPCKHQDQ_XMM_P {
     movfp xmml, xmmh
     movfp xmmh, ufp1
 };
+
+def macroop PUNPCKLQDQ_XMM_XMM {
+    movfp xmmh, xmmlm
+};
+
+def macroop PUNPCKLQDQ_XMM_M {
+    ldfp xmmh, seg, sib, disp, dataSize=8
+};
+
+def macroop PUNPCKLQDQ_XMM_P {
+    rdip t7
+    ldfp xmmh, seg, riprel, disp, dataSize=8
+};
 '''
-# PUNPCKLQDQ

@@ -595,7 +595,7 @@
                     0x1: Inst::PUNPCKHWD(Vo,Wo);
                     0x2: Inst::PUNPCKHDQ(Vo,Wo);
                     0x3: packssdw_Vo_Wo();
-                    0x4: punpcklqdq_Vo_Wq();
+                    0x4: Inst::PUNPCKLQDQ(Vo,Wq);
                     0x5: Inst::PUNPCKHQDQ(Vo,Wq);
                     0x6: movd_Vo_Ed();
                     0x7: movdqa_Vo_Wo();
