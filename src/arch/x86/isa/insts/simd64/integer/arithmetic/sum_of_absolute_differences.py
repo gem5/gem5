@@ -54,5 +54,18 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSADBW
+def macroop PSADBW_MMX_MMX {
+    msad mmx, mmx, mmxm, srcSize=1, destSize=2
+};
+
+def macroop PSADBW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msad mmx, mmx, ufp1, srcSize=1, destSize=2
+};
+
+def macroop PSADBW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msad mmx, mmx, ufp1, srcSize=1, destSize=2
+};
 '''

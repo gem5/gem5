@@ -54,5 +54,23 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSADBW
+def macroop PSADBW_XMM_XMM {
+    msad xmml, xmml, xmmlm, srcSize=1, destSize=2
+    msad xmmh, xmmh, xmmhm, srcSize=1, destSize=2
+};
+
+def macroop PSADBW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    msad xmml, xmml, ufp1, srcSize=1, destSize=2
+    msad xmmh, xmmh, ufp2, srcSize=1, destSize=2
+};
+
+def macroop PSADBW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    msad xmml, xmml, ufp1, srcSize=1, destSize=2
+    msad xmmh, xmmh, ufp2, srcSize=1, destSize=2
+};
 '''
