@@ -308,4 +308,30 @@ let {{
             FpDestReg.uqw =
                 insertBits(FpDestReg.uqw, destSize * 8 - 1, 0, srcReg1);
         '''
+
+    class Unpack(MediaOp):
+        code = '''
+            assert(srcSize == destSize);
+            int size = destSize;
+            int items = (sizeof(FloatRegBits) / size) / 2;
+            int offset = sel ? items : 0;
+            uint64_t result = 0;
+            for (int i = 0; i < items; i++) {
+                uint64_t pickedLow =
+                    bits(FpSrcReg1.uqw, (i + offset + 1) * 8 * size - 1,
+                                        (i + offset) * 8 * size);
+                result = insertBits(result,
+                                    (2 * i + 1) * 8 * size - 1,
+                                    (2 * i + 0) * 8 * size,
+                                    pickedLow);
+                uint64_t pickedHigh =
+                    bits(FpSrcReg2.uqw, (i + offset + 1) * 8 * size - 1,
+                                        (i + offset) * 8 * size);
+                result = insertBits(result,
+                                    (2 * i + 2) * 8 * size - 1,
+                                    (2 * i + 1) * 8 * size,
+                                    pickedHigh);
+            }
+            FpDestReg.uqw = result;
+        '''
 }};
