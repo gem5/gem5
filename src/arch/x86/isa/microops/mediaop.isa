@@ -712,4 +712,50 @@ let {{
             }
             FpDestReg.uqw = result;
         '''
+
+    class Mdivf(MediaOp):
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            assert(srcSize == 4 || srcSize == 8);
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                uint64_t resBits;
+
+                if (size == 4) {
+                    floatInt arg1, arg2, res;
+                    arg1.i = arg1Bits;
+                    arg2.i = arg2Bits;
+                    res.f = arg1.f / arg2.f;
+                    resBits = res.i;
+                } else {
+                    doubleInt arg1, arg2, res;
+                    arg1.i = arg1Bits;
+                    arg2.i = arg2Bits;
+                    res.d = arg1.d / arg2.d;
+                    resBits = res.i;
+                }
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
 }};
