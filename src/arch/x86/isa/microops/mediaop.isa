@@ -1342,4 +1342,59 @@ let {{
             }
             FpDestReg.uqw = result;
         '''
+
+    class Mcmpf2rf(MediaOp):
+        def __init__(self, src1, src2,\
+                size = None, destSize = None, srcSize = None, ext = None):
+            super(Mcmpf2rf, self).__init__("InstRegIndex(0)", src1,\
+                    src2, size, destSize, srcSize, ext)
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(srcSize == destSize);
+            assert(srcSize == 4 || srcSize == 8);
+            int size = srcSize;
+            int sizeBits = size * 8;
+
+            double arg1, arg2;
+            uint64_t arg1Bits = bits(FpSrcReg1.uqw, sizeBits - 1, 0);
+            uint64_t arg2Bits = bits(FpSrcReg2.uqw, sizeBits - 1, 0);
+            if (size == 4) {
+                floatInt fi;
+                fi.i = arg1Bits;
+                arg1 = fi.f;
+                fi.i = arg2Bits;
+                arg2 = fi.f;
+            } else {
+                doubleInt di;
+                di.i = arg1Bits;
+                arg1 = di.d;
+                di.i = arg2Bits;
+                arg2 = di.d;
+            }
+
+            //               ZF PF CF
+            // Unordered      1  1  1
+            // Greater than   0  0  0
+            // Less than      0  0  1
+            // Equal          1  0  0
+            //           OF = SF = AF = 0
+            ccFlagBits = ccFlagBits & ~(OFBit | SFBit | AFBit |
+                                        ZFBit | PFBit | CFBit);
+            if (isnan(arg1) || isnan(arg2))
+                ccFlagBits = ccFlagBits | (ZFBit | PFBit | CFBit);
+            else if(arg1 < arg2)
+                ccFlagBits = ccFlagBits | CFBit;
+            else if(arg1 == arg2)
+                ccFlagBits = ccFlagBits | ZFBit;
+        '''
 }};
