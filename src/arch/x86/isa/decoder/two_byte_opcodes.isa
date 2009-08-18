@@ -468,7 +468,7 @@
                     0x1: sqrtps_Vo_Wo();
                     0x2: rqsrtps_Vo_Wo();
                     0x3: rcpps_Vo_Wo();
-                    0x4: andps_Vo_Wo();
+                    0x4: Inst::ANDPS(Vo,Wo);
                     0x5: andnps_Vo_Wo();
                     0x6: Inst::ORPS(Vo,Wo);
                     0x7: Inst::XORPS(Vo,Wo);
@@ -484,7 +484,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: movmskpd_Gd_VRo();
                     0x1: sqrtpd_Vo_Wo();
-                    0x4: andpd_Vo_Wo();
+                    0x4: Inst::ANDPD(Vo,Wo);
                     0x5: andnpd_Vo_Wo();
                     0x6: Inst::ORPD(Vo,Wo);
                     //This really should be type o, but it works on q sized
@@ -986,7 +986,7 @@
                     0x0: psubusb_Pq_Qq();
                     0x1: psubusw_Pq_Qq();
                     0x2: pminub_Pq_Qq();
-                    0x3: pand_Pq_Qq();
+                    0x3: Inst::PAND(Pq,Qq);
                     0x4: paddusb_Pq_Qq();
                     0x5: paddusw_Pq_Qq();
                     0x6: pmaxub_Pq_Qq();
@@ -997,7 +997,7 @@
                     0x0: psubusb_Vo_Wo();
                     0x1: psubusw_Vo_Wo();
                     0x2: pminub_Vo_Wo();
-                    0x3: pand_Vo_Wo();
+                    0x3: Inst::PAND(Vo,Wo);
                     0x4: paddusb_Vo_Wo();
                     0x5: paddusw_Vo_Wo();
                     0x6: pmaxub_Vo_Wo();

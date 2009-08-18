@@ -54,6 +54,19 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PAND
-# PANDN
+def macroop PAND_MMX_MMX {
+    mand mmx, mmx, mmxm
+};
+
+def macroop PAND_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mand mmx, mmx, ufp1
+};
+
+def macroop PAND_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mand mmx, mmx, ufp1
+};
 '''
+# PANDN

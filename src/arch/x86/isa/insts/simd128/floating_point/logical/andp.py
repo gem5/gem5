@@ -54,8 +54,49 @@
 # Authors: Gabe Black
 
 microcode = '''
-# ANDPS
-# ANDPD
+def macroop ANDPS_XMM_XMM {
+    mand xmml, xmml, xmmlm
+    mand xmmh, xmmh, xmmhm
+};
+
+def macroop ANDPS_XMM_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mand xmml, xmml, ufp1
+    mand xmmh, xmmh, ufp2
+};
+
+def macroop ANDPS_XMM_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mand xmml, xmml, ufp1
+    mand xmmh, xmmh, ufp2
+};
+
+def macroop ANDPD_XMM_XMM {
+    mand xmml, xmml, xmmlm
+    mand xmmh, xmmh, xmmhm
+};
+
+def macroop ANDPD_XMM_M {
+    lea t1, seg, sib, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mand xmml, xmml, ufp1
+    mand xmmh, xmmh, ufp2
+};
+
+def macroop ANDPD_XMM_P {
+    rdip t7
+    lea t1, seg, riprel, disp, dataSize=asz
+    ldfp ufp1, seg, [1, t0, t1], dataSize=8
+    ldfp ufp2, seg, [1, t0, t1], 8, dataSize=8
+    mand xmml, xmml, ufp1
+    mand xmmh, xmmh, ufp2
+};
+'''
 # ANDNPS
 # ANDNPD
-'''
