@@ -54,22 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# ADDPS
-# ADDPD
-# ADDSS
+def macroop ADDSS_XMM_XMM {
+    maddf xmml, xmml, xmmlm, size=4, ext=1
+};
+
+def macroop ADDSS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    maddf xmml, xmml, ufp1, size=4, ext=1
+};
+
+def macroop ADDSS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    maddf xmml, xmml, ufp1, size=4, ext=1
+};
 
 def macroop ADDSD_XMM_XMM {
-    addfp xmml, xmml, xmmlm
+    maddf xmml, xmml, xmmlm, size=8, ext=1
 };
 
 def macroop ADDSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    addfp xmml, xmml, ufp1
+    maddf xmml, xmml, ufp1, size=8, ext=1
 };
 
 def macroop ADDSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    addfp xmml, xmml, ufp1
+    maddf xmml, xmml, ufp1, size=8, ext=1
+};
+
+def macroop ADDPS_XMM_XMM {
+    maddf xmml, xmml, xmmlm, size=4, ext=0
+    maddf xmmh, xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop ADDPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    maddf xmml, xmml, ufp1, size=4, ext=0
+    maddf xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop ADDPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    maddf xmml, xmml, ufp1, size=4, ext=0
+    maddf xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop ADDPD_XMM_XMM {
+    maddf xmml, xmml, xmmlm, size=8, ext=0
+    maddf xmmh, xmmh, xmmhm, size=8, ext=0
+};
+
+def macroop ADDPD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    maddf xmml, xmml, ufp1, size=8, ext=0
+    maddf xmmh, xmmh, ufp2, size=8, ext=0
+};
+
+def macroop ADDPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    maddf xmml, xmml, ufp1, size=8, ext=0
+    maddf xmmh, xmmh, ufp2, size=8, ext=0
 };
 '''

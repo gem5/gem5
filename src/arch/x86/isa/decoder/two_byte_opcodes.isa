@@ -504,7 +504,7 @@
             0x0B: decode LEGACY_DECODEVAL {
                 // no prefix
                 0x0: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addps_Vo_Wo();
+                    0x0: Inst::ADDPS(Vo,Wo);
                     0x1: mulps_Vo_Wo();
                     0x2: cvtps2pd_Vo_Wq();
                     0x3: cvtdq2ps_Vo_Wo();
@@ -515,7 +515,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addss_Vd_Wd();
+                    0x0: Inst::ADDSS(Vd,Wd);
                     0x1: mulss_Vd_Wd();
                     0x2: cvtss2sd_Vq_Wd();
                     0x3: cvttps2dq_Vo_Wo();
@@ -526,7 +526,7 @@
                 }
                 // operand size (0x66)
                 0x1: decode OPCODE_OP_BOTTOM3 {
-                    0x0: addpd_Vo_Wo();
+                    0x0: Inst::ADDPD(Vo,Wo);
                     0x1: mulpd_Vo_Wo();
                     0x2: cvtpd2ps_Vo_Wo();
                     0x3: cvtps2dq_Vo_Wo();
