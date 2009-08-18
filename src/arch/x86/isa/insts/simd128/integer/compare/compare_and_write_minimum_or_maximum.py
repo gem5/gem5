@@ -54,8 +54,46 @@
 # Authors: Gabe Black
 
 microcode = '''
+def macroop PMINUB_XMM_XMM {
+    mmini xmml, xmml, xmmlm, size=1, ext=0
+    mmini xmmh, xmmh, xmmhm, size=1, ext=0
+};
+
+def macroop PMINUB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmini xmml, xmml, ufp1, size=1, ext=0
+    mmini xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PMINUB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmini xmml, xmml, ufp1, size=1, ext=0
+    mmini xmmh, xmmh, ufp2, size=1, ext=0
+};
+
+def macroop PMINSW_XMM_XMM {
+    mmini xmml, xmml, xmmlm, size=2, ext=2
+    mmini xmmh, xmmh, xmmhm, size=2, ext=2
+};
+
+def macroop PMINSW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmini xmml, xmml, ufp1, size=2, ext=2
+    mmini xmmh, xmmh, ufp2, size=2, ext=2
+};
+
+def macroop PMINSW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmini xmml, xmml, ufp1, size=2, ext=2
+    mmini xmmh, xmmh, ufp2, size=2, ext=2
+};
+
 # PMAXUB
-# PMINUB
 # PMAXSW
-# PMINSW
 '''

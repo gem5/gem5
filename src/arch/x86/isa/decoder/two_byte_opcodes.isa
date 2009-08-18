@@ -979,7 +979,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: psubusb_Pq_Qq();
                     0x1: psubusw_Pq_Qq();
-                    0x2: pminub_Pq_Qq();
+                    0x2: Inst::PMINUB(Pq,Qq);
                     0x3: Inst::PAND(Pq,Qq);
                     0x4: Inst::PADDUSB(Pq,Qq);
                     0x5: Inst::PADDUSW(Pq,Qq);
@@ -990,7 +990,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: psubusb_Vo_Wo();
                     0x1: psubusw_Vo_Wo();
-                    0x2: pminub_Vo_Wo();
+                    0x2: Inst::PMINUB(Vo,Wo);
                     0x3: Inst::PAND(Vo,Wo);
                     0x4: Inst::PADDUSB(Vo,Wo);
                     0x5: Inst::PADDUSW(Vo,Wo);
@@ -1039,7 +1039,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: psubsb_Pq_Qq();
                     0x1: psubsw_Pq_Qq();
-                    0x2: pminsw_Pq_Qq();
+                    0x2: Inst::PMINSW(Pq,Qq);
                     0x3: Inst::POR(Pq,Qq);
                     0x4: Inst::PADDSB(Pq,Qq);
                     0x5: Inst::PADDSW(Pq,Qq);
@@ -1050,7 +1050,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: psubsb_Vo_Wo();
                     0x1: psubsw_Vo_Wo();
-                    0x2: pminsw_Vo_Wo();
+                    0x2: Inst::PMINSW(Vo,Wo);
                     0x3: Inst::POR(Vo,Wo);
                     0x4: Inst::PADDSB(Vo,Wo);
                     0x5: Inst::PADDSW(Vo,Wo);
