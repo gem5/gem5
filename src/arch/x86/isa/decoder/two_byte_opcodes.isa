@@ -509,7 +509,7 @@
                     0x2: cvtps2pd_Vo_Wq();
                     0x3: cvtdq2ps_Vo_Wo();
                     0x4: subps_Vo_Wo();
-                    0x5: minps_Vo_Wo();
+                    0x5: Inst::MINPS(Vo,Wo);
                     0x6: divps_Vo_Wo();
                     0x7: maxps_Vo_Wo();
                 }
@@ -520,7 +520,7 @@
                     0x2: cvtss2sd_Vq_Wd();
                     0x3: cvttps2dq_Vo_Wo();
                     0x4: subss_Vd_Wd();
-                    0x5: minss_Vd_Wd();
+                    0x5: Inst::MINSS(Vd,Wd);
                     0x6: divss_Vd_Wd();
                     0x7: maxss_Vd_Wd();
                 }
@@ -531,7 +531,7 @@
                     0x2: cvtpd2ps_Vo_Wo();
                     0x3: cvtps2dq_Vo_Wo();
                     0x4: subpd_Vo_Wo();
-                    0x5: minpd_Vo_Wo();
+                    0x5: Inst::MINPD(Vo,Wo);
                     0x6: divpd_Vo_Wo();
                     0x7: maxpd_Vo_Wo();
                 }
@@ -541,7 +541,7 @@
                     0x1: Inst::MULSD(Vq,Wq);
                     0x2: cvtsd2ss_Vd_Wq();
                     0x4: Inst::SUBSD(Vq,Wq);
-                    0x5: minsd_Vq_Wq();
+                    0x5: Inst::MINSD(Vq,Wq);
                     0x6: Inst::DIVSD(Vq,Wq);
                     0x7: maxsd_Vq_Wq();
                     default: Inst::UD2();
@@ -916,7 +916,7 @@
                         0x2: cmpccps_Vo_Wo_Ib();
                         0x3: cvtdq2ps_Vo_Wo();
                         0x4: subps_Vo_Wo();
-                        0x5: minps_Vo_Wo();
+                        0x5: Inst::MINPS(Vo,Wo);
                         0x6: divps_Vo_Wo();
                     }
                     // repe (0xF3)
@@ -928,7 +928,7 @@
                     0x1: decode OPCODE_OP_BOTTOM3 {
                         0x2: cmpccpd_Vo_Wo_Ib();
                         0x4: subpd_Vo_Wo();
-                        0x5: minpd_Vo_Wo();
+                        0x5: Inst::MINPD(Vo,Wo);
                         0x6: divpd_Vo_Wo();
                         default: Inst::UD2();
                     }
