@@ -373,10 +373,7 @@
                     //because they are split in two, they use q (quadword).
                     0x0: Inst::MOVAPS(Vq,Wq);
                     0x1: Inst::MOVAPS(Wq,Vq);
-                    0x2: decode MODRM_MOD {
-                        0x3: cvtpi2pS_Vq_Pq();
-                        default: cvtpi2ps_Vq_Mq();
-                    }
+                    0x2: Inst::CVTPI2PS(Vq,Qq);
                     0x3: movntps_Mo_Vo();
                     0x4: cvttps2pi_Pq_Wq();
                     0x5: cvtpS2pi_Pq_Wq();
@@ -385,7 +382,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x2: cvtsi2ss_Vd_Ed();
+                    0x2: Inst::CVTSI2SS(Vd,Ed);
                     0x4: cvttss2si_Gd_Wd();
                     0x5: cvtss2si_Gd_Wd();
                     default: Inst::UD2();
@@ -394,10 +391,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: movapd_Vo_Wo();
                     0x1: movapd_Wo_Vo();
-                    0x2: decode MODRM_MOD {
-                        0x3: cvtpi2pd_Vo_Pq();
-                        default: cvtpi2pd_Vo_Mq();
-                    }
+                    0x2: Inst::CVTPI2PD(Vo,Qq);
                     0x3: movntpd_Mo_Vo();
                     0x4: cvttpd2pi_Pq_Wo();
                     0x5: cvtpd2pi_Pq_Wo();
@@ -507,7 +501,7 @@
                     0x0: Inst::ADDPS(Vo,Wo);
                     0x1: Inst::MULPS(Vo,Wo);
                     0x2: cvtps2pd_Vo_Wq();
-                    0x3: cvtdq2ps_Vo_Wo();
+                    0x3: Inst::CVTDQ2PS(Vo,Wo);
                     0x4: Inst::SUBPS(Vo,Wo);
                     0x5: Inst::MINPS(Vo,Wo);
                     0x6: Inst::DIVPS(Vo,Wo);
@@ -914,7 +908,7 @@
                     // no prefix
                     0x0: decode OPCODE_OP_BOTTOM3 {
                         0x2: cmpccps_Vo_Wo_Ib();
-                        0x3: cvtdq2ps_Vo_Wo();
+                        0x3: Inst::CVTDQ2PS(Vo,Wo);
                         0x4: Inst::SUBPS(Vo,Wo);
                         0x5: Inst::MINPS(Vo,Wo);
                         0x6: Inst::DIVPS(Vo,Wo);
@@ -1019,7 +1013,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x6: cvtdq2pd_Vo_Wq();
+                    0x6: Inst::CVTDQ2PD(Vo,Wq);
                     default: Inst::UD2();
                 }
                 // operand size (0x66)

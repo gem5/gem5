@@ -54,20 +54,35 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTSI2SS
+def macroop CVTSI2SS_XMM_R {
+    mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+};
+
+def macroop CVTSI2SS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+};
+
+def macroop CVTSI2SS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+};
 
 def macroop CVTSI2SD_XMM_R {
-    cvtf_i2d xmml, regm
+    mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
 };
 
 def macroop CVTSI2SD_XMM_M {
-    ld t1, seg, sib, disp
-    cvtf_i2d xmml, t1
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
 };
 
 def macroop CVTSI2SD_XMM_P {
     rdip t7
-    ld t1, seg, riprel, disp
-    cvtf_i2d xmml, t1
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
 };
 '''

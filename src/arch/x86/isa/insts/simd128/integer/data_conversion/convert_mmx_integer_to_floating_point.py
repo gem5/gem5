@@ -54,6 +54,36 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTPI2PS
-# CVTPI2PD
+def macroop CVTPI2PS_XMM_MMX {
+    cvti2f xmml, mmxm, size=4, ext=0
+};
+
+def macroop CVTPI2PS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvti2f xmml, ufp1, size=4, ext=0
+};
+
+def macroop CVTPI2PS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvti2f xmml, ufp1, size=4, ext=0
+};
+
+def macroop CVTPI2PD_XMM_MMX {
+    cvti2f xmml, mmxm, srcSize=4, destSize=8, ext=0
+    cvti2f xmmh, mmxm, srcSize=4, destSize=8, ext=2
+};
+
+def macroop CVTPI2PD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=4, destSize=8, ext=0
+    cvti2f xmmh, ufp1, srcSize=4, destSize=8, ext=2
+};
+
+def macroop CVTPI2PD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=4, destSize=8, ext=0
+    cvti2f xmmh, ufp1, srcSize=4, destSize=8, ext=2
+};
 '''

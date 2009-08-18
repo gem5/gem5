@@ -54,6 +54,41 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTDQ2PS
-# CVTDQ2PD
+def macroop CVTDQ2PS_XMM_XMM {
+    cvti2f xmml, xmmlm, size=4, ext=0
+    cvti2f xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop CVTDQ2PS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvti2f xmml, ufp1, size=4, ext=0
+    cvti2f xmmh, ufp2, size=4, ext=0
+};
+
+def macroop CVTDQ2PS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvti2f xmml, ufp1, size=4, ext=0
+    cvti2f xmmh, ufp2, size=4, ext=0
+};
+
+def macroop CVTDQ2PD_XMM_XMM {
+    cvti2f xmmh, xmmlm, srcSize=4, destSize=8, ext=2
+    cvti2f xmml, xmmlm, srcSize=4, destSize=8, ext=0
+};
+
+def macroop CVTDQ2PD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=4, destSize=8, ext=0
+    cvti2f xmmh, ufp1, srcSize=4, destSize=8, ext=2
+};
+
+def macroop CVTDQ2PD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvti2f xmml, ufp1, srcSize=4, destSize=8, ext=0
+    cvti2f xmmh, ufp1, srcSize=4, destSize=8, ext=2
+};
 '''

@@ -54,8 +54,7 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTPI2PS
-# CVTPI2PD
+# CVTPI2PS and CVTPI2PD are implemented in simd128
 # PI2FW
 # PI2FD
 '''
