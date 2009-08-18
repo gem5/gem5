@@ -54,6 +54,33 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PFSUB
-# PFSUBR
+def macroop PFSUB_MMX_MMX {
+    msubf mmx, mmx, mmxm, size=4, ext=0
+};
+
+def macroop PFSUB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubf mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PFSUB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubf mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PFSUBR_MMX_MMX {
+    msubf mmx, mmxm, mmx, size=4, ext=0
+};
+
+def macroop PFSUBR_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msubf mmx, ufp1, mmx, size=4, ext=0
+};
+
+def macroop PFSUBR_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msubf mmx, ufp1, mmx, size=4, ext=0
+};
 '''
