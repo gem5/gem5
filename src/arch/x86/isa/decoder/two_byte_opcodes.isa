@@ -510,7 +510,7 @@
                     0x3: cvtdq2ps_Vo_Wo();
                     0x4: Inst::SUBPS(Vo,Wo);
                     0x5: Inst::MINPS(Vo,Wo);
-                    0x6: divps_Vo_Wo();
+                    0x6: Inst::DIVPS(Vo,Wo);
                     0x7: Inst::MAXPS(Vo,Wo);
                 }
                 // repe (0xF3)
@@ -521,7 +521,7 @@
                     0x3: cvttps2dq_Vo_Wo();
                     0x4: Inst::SUBSS(Vd,Wd);
                     0x5: Inst::MINSS(Vd,Wd);
-                    0x6: divss_Vd_Wd();
+                    0x6: Inst::DIVSS(Vd,Wd);
                     0x7: Inst::MAXSS(Vd,Wd);
                 }
                 // operand size (0x66)
@@ -532,7 +532,7 @@
                     0x3: cvtps2dq_Vo_Wo();
                     0x4: Inst::SUBPD(Vo,Wo);
                     0x5: Inst::MINPD(Vo,Wo);
-                    0x6: divpd_Vo_Wo();
+                    0x6: Inst::DIVPD(Vo,Wo);
                     0x7: Inst::MAXPD(Vo,Wo);
                 }
                 // repne (0xF2)
@@ -917,7 +917,7 @@
                         0x3: cvtdq2ps_Vo_Wo();
                         0x4: Inst::SUBPS(Vo,Wo);
                         0x5: Inst::MINPS(Vo,Wo);
-                        0x6: divps_Vo_Wo();
+                        0x6: Inst::DIVPS(Vo,Wo);
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
@@ -929,7 +929,7 @@
                         0x2: cmpccpd_Vo_Wo_Ib();
                         0x4: Inst::SUBPD(Vo,Wo);
                         0x5: Inst::MINPD(Vo,Wo);
-                        0x6: divpd_Vo_Wo();
+                        0x6: Inst::DIVPD(Vo,Wo);
                         default: Inst::UD2();
                     }
                     // repne (0xF2)
