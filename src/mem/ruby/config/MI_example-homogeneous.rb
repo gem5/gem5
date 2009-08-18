@@ -34,6 +34,13 @@ for i in 0..$*.size-1 do
   elsif $*[i] == "-m"
     num_memories = $*[i+1].to_i
     i = i+1
+  elsif $*[i] == "-R"
+    if $*[i+1] == "rand"
+      RubySystem.random_seed = "rand"
+    else
+      RubySystem.random_seed = $*[i+1].to_i
+    end
+    i = i+ 1
   elsif $*[i] == "-s"
     memory_size_mb = $*[i+1].to_i
     i = i + 1
