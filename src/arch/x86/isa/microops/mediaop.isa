@@ -870,6 +870,45 @@ let {{
             FpDestReg.uqw = result;
         '''
 
+    class Mmuli(MediaOp):
+        code = '''
+            int srcBits = srcSize * 8;
+            int destBits = destSize * 8;
+            assert(destBits <= 64);
+            assert(destSize >= srcSize);
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / destSize);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int srcHiIndex = (i + 1) * srcBits - 1;
+                int srcLoIndex = (i + 0) * srcBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, srcHiIndex, srcLoIndex);
+                uint64_t resBits;
+
+                if (ext & 0x2) {
+                    int64_t arg1 = arg1Bits |
+                        (0 - (arg1Bits & (1 << (srcBits - 1))));
+                    int64_t arg2 = arg2Bits |
+                        (0 - (arg2Bits & (1 << (srcBits - 1))));
+                    resBits = (uint64_t)(arg1 * arg2);
+                } else {
+                    resBits = arg1Bits * arg2Bits;
+                }
+
+                if (ext & 0x4)
+                    resBits += (1 << (destBits - 1));
+                
+                if (ext & 0x8)
+                    resBits >>= destBits;
+
+                int destHiIndex = (i + 1) * destBits - 1;
+                int destLoIndex = (i + 0) * destBits;
+                result = insertBits(result, destHiIndex, destLoIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
+
     class Cvti2f(MediaOp):
         def __init__(self, dest, src, \
                 size = None, destSize = None, srcSize = None, ext = None):
