@@ -54,8 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSLLW
-# PSLLD
-# PSLLQ
-# PSLLDQ
+def macroop PSLLW_XMM_XMM {
+    msll xmmh, xmmh, xmmlm, size=2, ext=0
+    msll xmml, xmml, xmmlm, size=2, ext=0
+};
+
+def macroop PSLLW_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=2, ext=0
+    msll xmmh, xmmh, ufp1, size=2, ext=0
+};
+
+def macroop PSLLW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=2, ext=0
+    msll xmmh, xmmh, ufp1, size=2, ext=0
+};
+
+def macroop PSLLW_XMM_I {
+    mslli xmml, xmml, imm, size=2, ext=0
+    mslli xmmh, xmmh, imm, size=2, ext=0
+};
+
+def macroop PSLLD_XMM_XMM {
+    msll xmmh, xmmh, xmmlm, size=4, ext=0
+    msll xmml, xmml, xmmlm, size=4, ext=0
+};
+
+def macroop PSLLD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=4, ext=0
+    msll xmmh, xmmh, ufp1, size=4, ext=0
+};
+
+def macroop PSLLD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=4, ext=0
+    msll xmmh, xmmh, ufp1, size=4, ext=0
+};
+
+def macroop PSLLD_XMM_I {
+    mslli xmml, xmml, imm, size=4, ext=0
+    mslli xmmh, xmmh, imm, size=4, ext=0
+};
+
+def macroop PSLLQ_XMM_XMM {
+    msll xmmh, xmmh, xmmlm, size=8, ext=0
+    msll xmml, xmml, xmmlm, size=8, ext=0
+};
+
+def macroop PSLLQ_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=8, ext=0
+    msll xmmh, xmmh, ufp1, size=8, ext=0
+};
+
+def macroop PSLLQ_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll xmml, xmml, ufp1, size=8, ext=0
+    msll xmmh, xmmh, ufp1, size=8, ext=0
+};
+
+def macroop PSLLQ_XMM_I {
+    mslli xmml, xmml, imm, size=8, ext=0
+    mslli xmmh, xmmh, imm, size=8, ext=0
+};
 '''
+# PSLLDQ

@@ -54,7 +54,60 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSLLW
-# PSLLD
-# PSLLQ
+def macroop PSLLW_MMX_MMX {
+    msll mmx, mmx, mmxm, size=2, ext=0
+};
+
+def macroop PSLLW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PSLLW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=2, ext=0
+};
+
+def macroop PSLLW_MMX_I {
+    mslli mmx, mmx, imm, size=2, ext=0
+};
+
+def macroop PSLLD_MMX_MMX {
+    msll mmx, mmx, mmxm, size=4, ext=0
+};
+
+def macroop PSLLD_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PSLLD_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=4, ext=0
+};
+
+def macroop PSLLD_MMX_I {
+    mslli mmx, mmx, imm, size=4, ext=0
+};
+
+def macroop PSLLQ_MMX_MMX {
+    msll mmx, mmx, mmxm, size=8, ext=0
+};
+
+def macroop PSLLQ_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=8, ext=0
+};
+
+def macroop PSLLQ_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msll mmx, mmx, ufp1, size=8, ext=0
+};
+
+def macroop PSLLQ_MMX_I {
+    mslli mmx, mmx, imm, size=8, ext=0
+};
 '''

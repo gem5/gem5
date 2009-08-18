@@ -54,6 +54,49 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PSRAW
-# PSRAD
+def macroop PSRAW_XMM_XMM {
+    msra xmmh, xmmh, xmmlm, size=2, ext=0
+    msra xmml, xmml, xmmlm, size=2, ext=0
+};
+
+def macroop PSRAW_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msra xmml, xmml, ufp1, size=2, ext=0
+    msra xmmh, xmmh, ufp1, size=2, ext=0
+};
+
+def macroop PSRAW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msra xmml, xmml, ufp1, size=2, ext=0
+    msra xmmh, xmmh, ufp1, size=2, ext=0
+};
+
+def macroop PSRAW_XMM_I {
+    msrai xmml, xmml, imm, size=2, ext=0
+    msrai xmmh, xmmh, imm, size=2, ext=0
+};
+
+def macroop PSRAD_XMM_XMM {
+    msra xmmh, xmmh, xmmlm, size=4, ext=0
+    msra xmml, xmml, xmmlm, size=4, ext=0
+};
+
+def macroop PSRAD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    msra xmml, xmml, ufp1, size=4, ext=0
+    msra xmmh, xmmh, ufp1, size=4, ext=0
+};
+
+def macroop PSRAD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    msra xmml, xmml, ufp1, size=4, ext=0
+    msra xmmh, xmmh, ufp1, size=4, ext=0
+};
+
+def macroop PSRAD_XMM_I {
+    msrai xmml, xmml, imm, size=4, ext=0
+    msrai xmmh, xmmh, imm, size=4, ext=0
+};
 '''
