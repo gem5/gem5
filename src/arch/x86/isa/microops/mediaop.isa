@@ -289,24 +289,45 @@ let {{
             return allocator
 
     class Mov2int(MediaOp):
-        def __init__(self, dest, src, \
+        def __init__(self, dest, src1, src2 = 0, \
                 size = None, destSize = None, srcSize = None, ext = None):
-            super(Mov2int, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+            super(Mov2int, self).__init__(dest, src1,\
+                    src2, size, destSize, srcSize, ext)
         code = '''
-            uint64_t fpSrcReg1 = bits(FpSrcReg1.uqw, srcSize * 8 - 1, 0);
-            DestReg = merge(DestReg, fpSrcReg1, destSize);
+            int items = sizeof(FloatRegBits) / srcSize;
+            int offset = imm8;
+            if (bits(src1, 0) && (ext & 0x1))
+                offset -= items;
+            if (offset >= 0 && offset < items) {
+                uint64_t fpSrcReg1 =
+                    bits(FpSrcReg1.uqw,
+                            (offset + 1) * srcSize * 8 - 1,
+                            (offset + 0) * srcSize * 8);
+                DestReg = merge(0, fpSrcReg1, destSize);
+            } else {
+                DestReg = DestReg;
+            }
         '''
 
     class Mov2fp(MediaOp):
-        def __init__(self, dest, src, \
+        def __init__(self, dest, src1, src2 = 0, \
                 size = None, destSize = None, srcSize = None, ext = None):
-            super(Mov2fp, self).__init__(dest, src,\
-                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+            super(Mov2fp, self).__init__(dest, src1,\
+                    src2, size, destSize, srcSize, ext)
         code = '''
-            uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
-            FpDestReg.uqw =
-                insertBits(FpDestReg.uqw, destSize * 8 - 1, 0, srcReg1);
+            int items = sizeof(FloatRegBits) / destSize;
+            int offset = imm8;
+            if (bits(dest, 0) && (ext & 0x1))
+                offset -= items;
+            if (offset >= 0 && offset < items) {
+                uint64_t srcReg1 = pick(SrcReg1, 0, srcSize);
+                FpDestReg.uqw =
+                    insertBits(FpDestReg.uqw,
+                            (offset + 1) * destSize * 8 - 1,
+                            (offset + 0) * destSize * 8, srcReg1);
+            } else {
+                FpDestReg.uqw = FpDestReg.uqw;
+            }
         '''
 
     class Unpack(MediaOp):
