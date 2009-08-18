@@ -31,10 +31,11 @@ struct RubyRequest {
   uint64_t pc;
   RubyRequestType type;
   RubyAccessMode access_mode;
+  unsigned proc_id;
 
   RubyRequest() {}
-  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode)
-    : paddr(_paddr), data(_data), len(_len), pc(_pc), type(_type), access_mode(_access_mode)
+  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode, unsigned _proc_id = 0)
+    : paddr(_paddr), data(_data), len(_len), pc(_pc), type(_type), access_mode(_access_mode), proc_id(_proc_id)
   {}
 };
 

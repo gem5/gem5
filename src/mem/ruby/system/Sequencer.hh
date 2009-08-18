@@ -84,7 +84,7 @@ public:
 
   // called by Tester or Simics
   int64_t makeRequest(const RubyRequest & request);
-  bool isReady(const RubyRequest& request) const;
+  bool isReady(const RubyRequest& request);
   bool empty() const;
 
   void print(ostream& out) const;
@@ -125,7 +125,8 @@ private:
   // Global outstanding request count, across all request tables
   int m_outstanding_count;
   bool m_deadlock_check_scheduled;
-
+  int m_servicing_atomic;
+  int m_atomics_counter;
 };
 
 // Output operator declaration

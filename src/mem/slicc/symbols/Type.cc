@@ -277,6 +277,11 @@ void Type::printTypeH(string path) const
       string id = m_data_member_ident_vec[i];
       out << "const " << type->cIdent() << "& local_" << id;
     }
+
+    if (isMessage()) {
+      out << ", const unsigned local_proc_id" << flush;
+    }
+
     out << ")" << endl;
 
     // Call superclass constructor
@@ -293,7 +298,9 @@ void Type::printTypeH(string path) const
         string next_line_value = m_data_member_pairs_vec[i].lookup("nextLineCallHack");
         out << "    m_" << id << next_line_value << ";" << endl;
       }
-
+    }
+    if (isMessage()) {
+      out << "    proc_id = local_proc_id;" << endl << flush;
     }
     out << "  }" << endl;
   } // end of if(!isGlobal())
@@ -426,6 +433,10 @@ void Type::printTypeH(string path) const
       }
       out << endl;
     }
+  }
+
+  if (isMessage()) {
+    out << "  unsigned proc_id;" << endl << flush;
   }
 
   out << "};" << endl;  // End class

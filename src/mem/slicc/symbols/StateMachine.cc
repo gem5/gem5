@@ -290,6 +290,9 @@ void StateMachine::printControllerH(ostream& out, string component)
   out << "  void print(ostream& out) const;" << endl;
   out << "  void printConfig(ostream& out) const;" << endl;
   out << "  void wakeup();" << endl;
+  out << "  void set_atomic(Address addr);" << endl;
+  out << "  void started_writes();" << endl;
+  out << "  void clear_atomic();" << endl;
   out << "  void printStats(ostream& out) const { s_profiler.dumpStats(out); }" << endl;
   out << "  void clearStats() { s_profiler.clearStats(); }" << endl;
   out << "private:" << endl;
@@ -299,8 +302,13 @@ void StateMachine::printControllerH(ostream& out, string component)
     out << "  int m_" << m_config_parameters->ref(i)->getName() << ";" << endl;
   }
   if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
-    out << "  bool servicing_atomic;" << endl;
-    out << "  Address locked_read_request;" << endl;
+    out << "  int servicing_atomic;" << endl;
+    out << "  bool started_receiving_writes;" << endl;
+    out << "  Address locked_read_request1;" << endl;
+    out << "  Address locked_read_request2;" << endl;
+    out << "  Address locked_read_request3;" << endl;
+    out << "  Address locked_read_request4;" << endl;
+    out << "  int read_counter;" << endl;
   }
   out << "  int m_number_of_TBEs;" << endl;
 
@@ -409,8 +417,13 @@ void StateMachine::printControllerC(ostream& out, string component)
   out << " : m_name(name)" << endl;
   out << "{ " << endl;
   if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
-    out << "  servicing_atomic = false;" << endl;
-    out << "  locked_read_request = Address(-1);" << endl;
+    out << "  servicing_atomic = 0;" << endl;
+    out << "  started_receiving_writes = false;" << endl;
+    out << "  locked_read_request1 = Address(-1);" << endl;
+    out << "  locked_read_request2 = Address(-1);" << endl;
+    out << "  locked_read_request3 = Address(-1);" << endl;
+    out << "  locked_read_request4 = Address(-1);" << endl;
+    out << "  read_counter = 0;" << endl;
   }
   out << "  m_num_controllers++; " << endl;
   for(int i=0; i < numObjects(); i++) {
@@ -716,23 +729,6 @@ void StateMachine::printControllerC(ostream& out, string component)
 
       string c_code_string = action.lookupPair("c_code");
 
-      // add here:
-      if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
-        if (c_code_string.find("writeCallback") != string::npos) {
-          string::size_type pos = c_code_string.find("(((*m_L1Cache_sequencer_ptr)).writeCallback");
-          assert(pos != string::npos);
-          string atomics_string = "\n  if (servicing_atomic) { \n \
-   servicing_atomic = false; \n \
-   locked_read_request = Address(-1); \n \
- } \n \
- else if (!servicing_atomic) { \n \
-   if (addr == locked_read_request) { \n \
-     servicing_atomic = true; \n \
-   } \n \
- } \n  ";
-          c_code_string.insert(pos, atomics_string);
-        }
-      }
       out << c_code_string;
 
       out << "}" << endl;
@@ -798,43 +794,84 @@ void StateMachine::printCWakeup(ostream& out, string component)
     string::size_type pos = output.find("TransitionResult result = doTransition((L1Cache_mandatory_request_type_to_event(((*in_msg_ptr)).m_Type)), L1Cache_getState(addr), addr);");
     assert(pos != string::npos);
     string atomics_string = "\n \
-             bool postpone = false; \n \
              if ((((*in_msg_ptr)).m_Type) == CacheRequestType_ATOMIC) { \n \
-               if (!servicing_atomic) { \n \
-                  if (locked_read_request == Address(-1)) { \n \
-                    locked_read_request = addr;  \n \
+               if (servicing_atomic == 0) { \n \
+                  if (locked_read_request1 == Address(-1)) { \n \
+                    assert(read_counter == 0); \n \ 
+                    locked_read_request1 = addr;  \n \
+                    assert(read_counter == 0); \n \
+                    read_counter++; \n \
                   } \n \
-                  else if (addr == locked_read_request) { \n \
+                  else if (addr == locked_read_request1) { \n \
                     ; // do nothing \n\ 
                   } \n \
                   else { \n \
                     assert(0); // should never be here if servicing one request at a time \n\ 
                   } \n \
                } \n \
-               else if (addr != locked_read_request) { \n \
-                 // this is probably caused by shift optimizations \n \
-                 locked_read_request = addr; \n\
+               else if (!started_receiving_writes) { \n \
+               if (servicing_atomic == 1) { \n \
+                  if (locked_read_request2 == Address(-1)) { \n \
+                    assert(locked_read_request1 != Address(-1)); \n \
+                    assert(read_counter == 1); \n \ 
+                    locked_read_request2 = addr;  \n \
+                    assert(read_counter == 1); \n \
+                    read_counter++; \n \
+                  } \n \
+                  else if (addr == locked_read_request2) { \n \
+                    ; // do nothing \n\ 
+                  } \n \
+                  else { \n \
+                    assert(0); // should never be here if servicing one request at a time \n\ 
+                  } \n \
+               } \n \
+               else if (servicing_atomic == 2) { \n \
+                  if (locked_read_request3 == Address(-1)) { \n \
+                    assert(locked_read_request1 != Address(-1)); \n \
+                    assert(locked_read_request2 != Address(-1)); \n \
+                    assert(read_counter == 1); \n \ 
+                    locked_read_request3 = addr;  \n \
+                    assert(read_counter == 2); \n \
+                    read_counter++; \n \
+                  } \n \
+                  else if (addr == locked_read_request3) { \n \
+                    ; // do nothing \n\ 
+                  } \n \
+                  else { \n \
+                    assert(0); // should never be here if servicing one request at a time \n\ 
+                  } \n \
+               } \n \
+               else if (servicing_atomic == 3) { \n \
+                  if (locked_read_request4 == Address(-1)) { \n \
+                    assert(locked_read_request1 != Address(-1)); \n \
+                    assert(locked_read_request2 != Address(-1)); \n \
+                    assert(locked_read_request3 != Address(-1)); \n \
+                    assert(read_counter == 1); \n \ 
+                    locked_read_request4 = addr;  \n \
+                    assert(read_counter == 3); \n \
+                    read_counter++; \n \ 
+                  } \n \
+                  else if (addr == locked_read_request4) { \n \
+                    ; // do nothing \n\ 
+                  } \n \
+                  else { \n \
+                    assert(0); // should never be here if servicing one request at a time \n\ 
+                  } \n \
+               } \n \
+               else { \n \
+                 assert(0); \n \
                } \n \
              } \n \
-             else { \n \
-               if (locked_read_request != Address(-1)) { \n \
-                 locked_read_request = Address(-1); \n \
-                 servicing_atomic = false; \n \
-               } \n \
-             } \n \
-           if (!postpone) { \n \
+             } \n \  
                ";
-
-
-
     output.insert(pos, atomics_string);
-    string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
+    /*string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
     string::size_type next_pos = output.find(foo, pos);
     next_pos = next_pos + foo.length();
 
     assert(next_pos != string::npos);
     string complete = "              }\n";
-    output.insert(next_pos, complete);
+    output.insert(next_pos, complete);*/
     //out << port->lookupPair("c_code_in_port");
     out << output;
     out << endl;
@@ -849,9 +886,16 @@ void StateMachine::printCWakeup(ostream& out, string component)
           out << "    if ((((*m_L1Cache_forwardToCache_ptr)).isReady())) {" << endl;
           out << "      const RequestMsg* in_msg_ptr;" << endl;
           out << "      in_msg_ptr = dynamic_cast<const RequestMsg*>(((*m_L1Cache_forwardToCache_ptr)).peek());" << endl;
-          out << "      if ((servicing_atomic && locked_read_request == ((*in_msg_ptr)).m_Address)) {" << endl;
+          out << "      if ((((servicing_atomic == 1)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address)) || " << endl;
+          out << "       ((servicing_atomic == 2)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address)) || " << endl;
+          out << "       ((servicing_atomic == 3)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address)) || " << endl;
+          out << "       ((servicing_atomic == 4)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address || locked_read_request1 == ((*in_msg_ptr)).m_Address)))) {" << endl;
+//          out << "      (locked_read_request2 == ((*in_msg_ptr)).m_Address) || (locked_read_request3 == ((*in_msg_ptr)).m_Address) || " << endl;
+//          out << "      (locked_read_request4 == ((*in_msg_ptr)).m_Address))) { " << endl;
+
           out << "        postpone = true;" << endl;
           out << "      }" << endl;
+              
           out << "    }" << endl;
           out << "    if (!postpone) {" << endl;
         }
@@ -876,6 +920,49 @@ void StateMachine::printCWakeup(ostream& out, string component)
   //  out << "  DEBUG_NEWLINE(GENERATED_COMP, MedPrio);" << endl;
   out << "}" << endl;
   out << endl;
+
+
+  // tack on two more functions
+  if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
+    out << "void " << component << "_Controller::set_atomic(Address addr)" << endl;
+    out << "{" << endl;
+    out << "  servicing_atomic++; " << endl;
+    out << "}" << endl;
+    out << "void " << component << "_Controller::started_writes()" << endl;
+    out << "{" << endl;
+    out << "  started_receiving_writes = true; " << endl;
+    out << "}" << endl;
+    out << "void " << component << "_Controller::clear_atomic()" << endl;
+    out << "{" << endl;
+    out << "  assert(servicing_atomic > 0); " << endl;
+    out << "  read_counter--; " << endl;
+    out << "  servicing_atomic--; " << endl;
+    out << "  if (read_counter == 0) { " << endl;
+    out << "    servicing_atomic = 0; " << endl;
+    out << "    started_receiving_writes = false; " << endl;
+    out << "    locked_read_request1 = Address(-1); " << endl;
+    out << "    locked_read_request2 = Address(-1); " << endl;
+    out << "    locked_read_request3 = Address(-1); " << endl;
+    out << "    locked_read_request4 = Address(-1); " << endl;
+    out << "  } " << endl;
+    out << "}" << endl;
+  }
+  else {
+    out << "void " << component << "_Controller::started_writes()" << endl;
+    out << "{" << endl;
+    out << "  assert(0); " << endl;
+    out << "}" << endl;
+    out << "void " << component << "_Controller::set_atomic(Address addr)" << endl;
+    out << "{" << endl;
+    out << "  assert(0); " << endl;
+    out << "}" << endl;
+
+    out << "void " << component << "_Controller::clear_atomic()" << endl;
+    out << "{" << endl;
+    out << "  assert(0); " << endl;
+    out << "}" << endl;
+  }
+
 }
 
 void StateMachine::printCSwitch(ostream& out, string component)
