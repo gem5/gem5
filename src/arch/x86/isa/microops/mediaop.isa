@@ -330,6 +330,23 @@ let {{
             }
         '''
 
+    class Movsign(MediaOp):
+        def __init__(self, dest, src, \
+                size = None, destSize = None, srcSize = None, ext = None):
+            super(Movsign, self).__init__(dest, src,\
+                    "InstRegIndex(0)", size, destSize, srcSize, ext)
+        code = '''
+            int items = sizeof(FloatRegBits) / srcSize;
+            uint64_t result = 0;
+            int offset = (ext & 0x1) ? items : 0;
+            for (int i = 0; i < items; i++) {
+                uint64_t picked =
+                    bits(FpSrcReg1.uqw, (i + 1) * 8 * srcSize - 1);
+                result = insertBits(result, i + offset, i + offset, picked);
+            }
+            DestReg = DestReg | result;
+        '''
+
     class Unpack(MediaOp):
         code = '''
             assert(srcSize == destSize);
