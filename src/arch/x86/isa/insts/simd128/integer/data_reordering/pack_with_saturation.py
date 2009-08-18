@@ -54,7 +54,66 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PACKSSDW
-# PACKSSWB
-# PACKUSWB
+def macroop PACKSSDW_XMM_XMM {
+    pack ufp1, xmml, xmmh, ext=1, srcSize=4, destSize=2
+    pack xmmh, xmmlm, xmmhm, ext=1, srcSize=4, destSize=2
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop PACKSSDW_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=1, srcSize=4, destSize=2
+    pack xmmh, ufp1, ufp2, ext=1, srcSize=4, destSize=2
+};
+
+def macroop PACKSSDW_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=1, srcSize=4, destSize=2
+    pack xmmh, ufp1, ufp2, ext=1, srcSize=4, destSize=2
+};
+
+def macroop PACKSSWB_XMM_XMM {
+    pack ufp1, xmml, xmmh, ext=1, srcSize=2, destSize=1
+    pack xmmh, xmmlm, xmmhm, ext=1, srcSize=2, destSize=1
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop PACKSSWB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=1, srcSize=2, destSize=1
+    pack xmmh, ufp1, ufp2, ext=1, srcSize=2, destSize=1
+};
+
+def macroop PACKSSWB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=1, srcSize=2, destSize=1
+    pack xmmh, ufp1, ufp2, ext=1, srcSize=2, destSize=1
+};
+
+def macroop PACKUSWB_XMM_XMM {
+    pack ufp1, xmml, xmmh, ext=0, srcSize=2, destSize=1
+    pack xmmh, xmmlm, xmmhm, ext=0, srcSize=2, destSize=1
+    movfp xmml, ufp1, dataSize=8
+};
+
+def macroop PACKUSWB_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=0, srcSize=2, destSize=1
+    pack xmmh, ufp1, ufp2, ext=0, srcSize=2, destSize=1
+};
+
+def macroop PACKUSWB_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    pack xmml, xmml, xmmh, ext=0, srcSize=2, destSize=1
+    pack xmmh, ufp1, ufp2, ext=0, srcSize=2, destSize=1
+};
 '''

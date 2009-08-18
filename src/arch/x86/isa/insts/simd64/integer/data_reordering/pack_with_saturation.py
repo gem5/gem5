@@ -54,7 +54,48 @@
 # Authors: Gabe Black
 
 microcode = '''
-# PACKSSDW
-# PACKSSWB
-# PACKUSWB
+def macroop PACKSSDW_MMX_MMX {
+    pack mmx, mmx, mmxm, ext=1, srcSize=4, destSize=2
+};
+
+def macroop PACKSSDW_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=1, srcSize=4, destSize=2
+};
+
+def macroop PACKSSDW_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=1, srcSize=4, destSize=2
+};
+
+def macroop PACKSSWB_MMX_MMX {
+    pack mmx, mmx, mmxm, ext=1, srcSize=2, destSize=1
+};
+
+def macroop PACKSSWB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=1, srcSize=2, destSize=1
+};
+
+def macroop PACKSSWB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=1, srcSize=2, destSize=1
+};
+
+def macroop PACKUSWB_MMX_MMX {
+    pack mmx, mmx, mmxm, ext=0, srcSize=2, destSize=1
+};
+
+def macroop PACKUSWB_MMX_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=0, srcSize=2, destSize=1
+};
+
+def macroop PACKUSWB_MMX_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    pack mmx, mmx, ufp1, ext=0, srcSize=2, destSize=1
+};
 '''
