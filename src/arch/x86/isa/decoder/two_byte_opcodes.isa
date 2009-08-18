@@ -292,7 +292,33 @@
                 0x4: Inst::UD2();
                 0x5: Inst::PREFETCH(Mb);
                 0x6: FailUnimpl::femms();
-                0x7: FailUnimpl::threednow();
+                0x7: decode IMMEDIATE {
+                    0x0C: pi2fw_Pq_Qq();
+                    0x0D: pi2fd_Pq_Qq();
+                    0x1C: pf2iw_Pq_Qq();
+                    0x1D: pf2id_Pq_Qq();
+                    0x8A: pfnacc_Pq_Qq();
+                    0x8E: pfpnacc_Pq_Qq();
+                    0x90: pfcmpge_Pq_Qq();
+                    0x94: pfmin_Pq_Qq();
+                    0x96: pfrcp_Pq_Qq();
+                    0x97: pfrsqrt_Pq_Qq();
+                    0x9A: Inst::PFSUB(Pq,Qq);
+                    0x9E: pfadd_Pq_Qq();
+                    0xA0: pfcmpgt_Pq_Qq();
+                    0xA4: pfmax_Pq_Qq();
+                    0xA6: pfrcpit1_Pq_Qq();
+                    0xA7: pfrsqit1_Pq_Qq();
+                    0xAA: Inst::PFSUBR(Pq,Qq);
+                    0xAE: pfacc_Pq_Qq();
+                    0xB0: pfcmpeq_Pq_Qq();
+                    0xB4: Inst::PFMUL(Pq,Qq);
+                    0xB6: pfrcpit2_Pq_Qq();
+                    0xB7: Inst::PMULHRW(Pq,Qq);
+                    0xBB: pswapd_Pq_Qq();
+                    0xBF: pavgusb_Pq_Qq();
+                    default: Inst::UD2();
+                }
             }
             format Inst{
                 0x02: decode LEGACY_DECODEVAL {
