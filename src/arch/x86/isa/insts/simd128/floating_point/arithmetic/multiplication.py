@@ -54,22 +54,73 @@
 # Authors: Gabe Black
 
 microcode = '''
-# MULPS
-# MULPD
-# MULSS
+def macroop MULSS_XMM_XMM {
+    mmulf xmml, xmml, xmmlm, size=4, ext=1
+};
+
+def macroop MULSS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    mmulf xmml, xmml, ufp1, size=4, ext=1
+};
+
+def macroop MULSS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    mmulf xmml, xmml, ufp1, size=4, ext=1
+};
 
 def macroop MULSD_XMM_XMM {
-    mulfp xmml, xmml, xmmlm
+    mmulf xmml, xmml, xmmlm, size=8, ext=1
 };
 
 def macroop MULSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mulfp xmml, xmml, ufp1
+    mmulf xmml, xmml, ufp1, size=8, ext=1
 };
 
 def macroop MULSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mulfp xmml, xmml, ufp1
+    mmulf xmml, xmml, ufp1, size=8, ext=1
+};
+
+def macroop MULPS_XMM_XMM {
+    mmulf xmml, xmml, xmmlm, size=4, ext=0
+    mmulf xmmh, xmmh, xmmhm, size=4, ext=0
+};
+
+def macroop MULPS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmulf xmml, xmml, ufp1, size=4, ext=0
+    mmulf xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop MULPS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmulf xmml, xmml, ufp1, size=4, ext=0
+    mmulf xmmh, xmmh, ufp2, size=4, ext=0
+};
+
+def macroop MULPD_XMM_XMM {
+    mmulf xmml, xmml, xmmlm, size=8, ext=0
+    mmulf xmmh, xmmh, xmmhm, size=8, ext=0
+};
+
+def macroop MULPD_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    mmulf xmml, xmml, ufp1, size=8, ext=0
+    mmulf xmmh, xmmh, ufp2, size=8, ext=0
+};
+
+def macroop MULPD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    mmulf xmml, xmml, ufp1, size=8, ext=0
+    mmulf xmmh, xmmh, ufp2, size=8, ext=0
 };
 '''
