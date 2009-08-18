@@ -112,6 +112,8 @@ let {{
         "regm" : regIdx("env.regm"),
         "xmmlm" : regIdx("FLOATREG_XMM_LOW(env.regm)"),
         "xmmhm" : regIdx("FLOATREG_XMM_HIGH(env.regm)"),
+        "mmx" : regIdx("FLOATREG_MMX(env.reg)"),
+        "mmxm" : regIdx("FLOATREG_MMX(env.regm)"),
         "imm" : "adjustedImm",
         "disp" : "adjustedDisp",
         "seg" : regIdx("env.seg"),
