@@ -54,8 +54,74 @@
 # Authors: Gabe Black
 
 microcode = '''
-# CVTPS2PD
-# CVTPD2PS
-# CVTSS2SD
-# CVTSD2SS
+def macroop CVTSS2SD_XMM_XMM {
+    cvtf2f xmml, xmmlm, destSize=8, srcSize=4, ext=1
+};
+
+def macroop CVTSS2SD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvtf2f xmml, ufp1, destSize=8, srcSize=4, ext=1
+};
+
+def macroop CVTSS2SD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvtf2f xmml, ufp1, destSize=8, srcSize=4, ext=1
+};
+
+def macroop CVTSD2SS_XMM_XMM {
+    cvtf2f xmml, xmmlm, destSize=4, srcSize=8, ext=1
+};
+
+def macroop CVTSD2SS_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvtf2f xmml, ufp1, destSize=4, srcSize=8, ext=1
+};
+
+def macroop CVTSD2SS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvtf2f xmml, ufp1, destSize=4, srcSize=8, ext=1
+};
+
+def macroop CVTPS2PD_XMM_XMM {
+    cvtf2f xmmh, xmmlm, destSize=8, srcSize=4, ext=2
+    cvtf2f xmml, xmmlm, destSize=8, srcSize=4, ext=0
+};
+
+def macroop CVTPS2PD_XMM_M {
+    ldfp ufp1, seg, sib, disp, dataSize=8
+    cvtf2f xmmh, ufp1, destSize=8, srcSize=4, ext=2
+    cvtf2f xmml, ufp1, destSize=8, srcSize=4, ext=0
+};
+
+def macroop CVTPS2PD_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, disp, dataSize=8
+    cvtf2f xmmh, ufp1, destSize=8, srcSize=4, ext=2
+    cvtf2f xmml, ufp1, destSize=8, srcSize=4, ext=0
+};
+
+def macroop CVTPD2PS_XMM_XMM {
+    cvtf2f xmml, xmmlm, destSize=4, srcSize=8, ext=0
+    cvtf2f xmml, xmmhm, destSize=4, srcSize=8, ext=2
+    lfpimm xmmh, 0
+};
+
+def macroop CVTPD2PS_XMM_M {
+    ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
+    cvtf2f xmml, ufp1, destSize=4, srcSize=8, ext=0
+    cvtf2f xmml, ufp2, destSize=4, srcSize=8, ext=2
+    lfpimm xmmh, 0
+};
+
+def macroop CVTPD2PS_XMM_P {
+    rdip t7
+    ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
+    cvtf2f xmml, ufp1, destSize=4, srcSize=8, ext=0
+    cvtf2f xmml, ufp2, destSize=4, srcSize=8, ext=2
+    lfpimm xmmh, 0
+};
 '''

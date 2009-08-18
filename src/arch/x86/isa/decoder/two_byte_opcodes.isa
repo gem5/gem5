@@ -500,7 +500,7 @@
                 0x0: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::ADDPS(Vo,Wo);
                     0x1: Inst::MULPS(Vo,Wo);
-                    0x2: cvtps2pd_Vo_Wq();
+                    0x2: Inst::CVTPS2PD(Vo,Wq);
                     0x3: Inst::CVTDQ2PS(Vo,Wo);
                     0x4: Inst::SUBPS(Vo,Wo);
                     0x5: Inst::MINPS(Vo,Wo);
@@ -511,7 +511,7 @@
                 0x4: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::ADDSS(Vd,Wd);
                     0x1: Inst::MULSS(Vd,Wd);
-                    0x2: cvtss2sd_Vq_Wd();
+                    0x2: Inst::CVTSS2SD(Vq,Wd);
                     0x3: cvttps2dq_Vo_Wo();
                     0x4: Inst::SUBSS(Vd,Wd);
                     0x5: Inst::MINSS(Vd,Wd);
@@ -522,7 +522,7 @@
                 0x1: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::ADDPD(Vo,Wo);
                     0x1: Inst::MULPD(Vo,Wo);
-                    0x2: cvtpd2ps_Vo_Wo();
+                    0x2: Inst::CVTPD2PS(Vo,Wo);
                     0x3: cvtps2dq_Vo_Wo();
                     0x4: Inst::SUBPD(Vo,Wo);
                     0x5: Inst::MINPD(Vo,Wo);
@@ -533,7 +533,7 @@
                 0x8: decode OPCODE_OP_BOTTOM3 {
                     0x0: Inst::ADDSD(Vq,Wq);
                     0x1: Inst::MULSD(Vq,Wq);
-                    0x2: cvtsd2ss_Vd_Wq();
+                    0x2: Inst::CVTSD2SS(Vd,Wq);
                     0x4: Inst::SUBSD(Vq,Wq);
                     0x5: Inst::MINSD(Vq,Wq);
                     0x6: Inst::DIVSD(Vq,Wq);
