@@ -968,7 +968,7 @@
                     // repne (0xF2)
                     0x8: decode OPCODE_OP_BOTTOM3 {
                         0x0: WarnUnimpl::addsubps_Vo_Wo();
-                        0x6: WarnUnimpl::movdq2q_Pq_VRq();
+                        0x6: MOVDQ2Q(Pq,VRq);
                         default: UD2();
                     }
                     default: UD2();
