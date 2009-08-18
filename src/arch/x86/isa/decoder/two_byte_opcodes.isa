@@ -581,7 +581,7 @@
                     0x2: punpckhdq_Pq_Qq();
                     0x3: packssdw_Pq_Qq();
                     0x6: Inst::MOVD(Pq,Edp);
-                    0x7: movq_Pq_Qq();
+                    0x7: Inst::MOVQ(Pq,Qq);
                     default: Inst::UD2();
                 }
                 // repe (0xF3)
@@ -741,12 +741,12 @@
                     0x0: vmread_Ed_or_Eq_Gd_or_Gq();
                     0x1: vmwrite_Gd_or_Gq_Ed_or_Eq();
                     0x6: Inst::MOVD(Edp,Pdp);
-                    0x7: mov_Qq_Pq();
+                    0x7: Inst::MOVQ(Qq,Pq);
                     default: Inst::UD2();
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x6: movq_Vo_Mq_or_Vq_Vq();
+                    0x6: Inst::MOVQ(Vq,Wq);
                     0x7: movdqu_Wo_Vo();
                     default: Inst::UD2();
                 }
@@ -969,10 +969,7 @@
                     0x3: psrlq_Vo_Wo();
                     0x4: paddq_Vo_Wo();
                     0x5: pmullw_Vo_Wo();
-                    0x6: decode MODRM_MOD {
-                        0x3: movq_Vq_Vq();
-                        default: movq_Mq_Vq();
-                    }
+                    0x6: Inst::MOVQ(Wq,Vq);
                     0x7: pmovmskb_Gd_VRo();
                 }
                 // repne (0xF2)
