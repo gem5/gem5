@@ -306,8 +306,8 @@
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x0: WarnUnimpl::movss_Vd_Wd();
-                        0x1: WarnUnimpl::movss_Wd_Vd();
+                        0x0: MOVSS(Vd,Wd);
+                        0x1: MOVSS(Wd,Vd);
                         0x2: WarnUnimpl::movsldup_Vo_Wo();
                         0x6: WarnUnimpl::movshdup_Vo_Wo();
                         default: UD2();

@@ -249,7 +249,31 @@ def macroop MOVLHPS_XMM_XMM {
     movfp xmmh, xmmlm, dataSize=8
 };
 
-# MOVSS
+def macroop MOVSS_XMM_XMM {
+    movfp xmml, xmmlm, dataSize=4
+};
+
+def macroop MOVSS_XMM_M {
+    lfpimm xmml, 0
+    lfpimm xmmh, 0
+    ldfp xmml, seg, sib, disp, dataSize=4
+};
+
+def macroop MOVSS_XMM_P {
+    rdip t7
+    lfpimm xmml, 0
+    lfpimm xmmh, 0
+    ldfp xmml, seg, riprel, disp, dataSize=4
+};
+
+def macroop MOVSS_M_XMM {
+    stfp xmml, seg, sib, disp, dataSize=4
+};
+
+def macroop MOVSS_P_XMM {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=4
+};
 
 def macroop MOVSD_XMM_M {
     # Zero xmmh
