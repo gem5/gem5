@@ -580,7 +580,7 @@
                     0x1: punpckhwd_Pq_Qq();
                     0x2: punpckhdq_Pq_Qq();
                     0x3: packssdw_Pq_Qq();
-                    0x6: movd_Pq_Ed();
+                    0x6: Inst::MOVD(Pq,Edp);
                     0x7: movq_Pq_Qq();
                     default: Inst::UD2();
                 }

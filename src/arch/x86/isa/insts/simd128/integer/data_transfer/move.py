@@ -54,11 +54,22 @@
 # Authors: Gabe Black
 
 microcode = '''
-# MOVD
+def macroop MOVD_MMX_R {
+    mov2fp mmx, regm, srcSize=dsz, destSize=8
+};
+
+def macroop MOVD_MMX_M {
+    ldfp mmx, seg, sib, disp, dataSize=8
+};
+
+def macroop MOVD_MMX_P {
+    rdip t7
+    ldfp mmx, seg, riprel, disp, dataSize=8
+};
+'''
 # MOVQ
 # MOVDQA
 # MOVDQU
 # MOVDQ2Q
 # MOVQ2DQ
 # LDDQU
-'''
