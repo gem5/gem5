@@ -818,4 +818,43 @@ let {{
             }
             FpDestReg.uqw = result;
         '''
+
+    class Mcmpi2r(MediaOp):
+        code = '''
+            union floatInt
+            {
+                float f;
+                uint32_t i;
+            };
+            union doubleInt
+            {
+                double d;
+                uint64_t i;
+            };
+
+            assert(srcSize == destSize);
+            int size = srcSize;
+            int sizeBits = size * 8;
+            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            uint64_t result = FpDestReg.uqw;
+
+            for (int i = 0; i < items; i++) {
+                int hiIndex = (i + 1) * sizeBits - 1;
+                int loIndex = (i + 0) * sizeBits;
+                uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
+                int64_t arg1 = arg1Bits |
+                    (0 - (arg1Bits & (1 << (sizeBits - 1))));
+                uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
+                int64_t arg2 = arg2Bits |
+                    (0 - (arg2Bits & (1 << (sizeBits - 1))));
+
+                uint64_t resBits = 0;
+                if ((ext & 0x2) == 0 && arg1 == arg2 ||
+                        (ext & 0x2) == 0x2 && arg1 > arg2)
+                    resBits = mask(sizeBits);
+
+                result = insertBits(result, hiIndex, loIndex, resBits);
+            }
+            FpDestReg.uqw = result;
+        '''
 }};
