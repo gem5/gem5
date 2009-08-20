@@ -65,6 +65,10 @@ def macroop FLD_P {
     movfp st(-1), ufp1, spm=-1
 };
 
+def macroop FST_R {
+    movfp sti, st(0)
+};
+
 def macroop FST_M {
     stfp st(0), seg, sib, disp
 };
@@ -72,6 +76,10 @@ def macroop FST_M {
 def macroop FST_P {
     rdip t7
     stfp st(0), seg, riprel, disp
+};
+
+def macroop FSTP_R {
+    movfp sti, st(0), spm=1
 };
 
 def macroop FSTP_M {
