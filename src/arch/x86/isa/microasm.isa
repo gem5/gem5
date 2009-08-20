@@ -219,6 +219,8 @@ let {{
         return regIdx("NUM_FLOATREGS + (((%s) + 8) %% 8)" % index)
 
     assembler.symbols["st"] = stack_index
+    assembler.symbols["sti"] = stack_index("env.reg")
+    assembler.symbols["stim"] = stack_index("env.regm")
 
     macroopDict = assembler.assemble(microcode)
 
