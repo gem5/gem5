@@ -43,28 +43,20 @@
 
 using namespace std;
 
-MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
-                   bool bcd, Tick frequency)
-    : EventManager(em), _name(n), event(this, frequency)
+static uint8_t
+bcdize(uint8_t val)
 {
-    memset(clock_data, 0, sizeof(clock_data));
-    stat_regA = RTCA_32768HZ | RTCA_1024HZ;
-    stat_regB = RTCB_PRDC_IE | RTCB_24HR;
-    if (!bcd)
-        stat_regB |= RTCB_BIN;
+    uint8_t result;
+    result = val % 10;
+    result += (val / 10) << 4;
+    return result;
+}
 
+void
+MC146818::setTime(const struct tm time)
+{
+    curTime = time;
     year = time.tm_year;
-
-    if (bcd) {
-        // The datasheet says that the year field can be either BCD or
-        // years since 1900.  Linux seems to be happy with years since
-        // 1900.
-        year = year % 100;
-        int tens = year / 10;
-        int ones = year % 10;
-        year = (tens << 4) + ones;
-    }
-
     // Unix is 0-11 for month, data seet says start at 1
     mon = time.tm_mon + 1;
     mday = time.tm_mday;
@@ -75,6 +67,30 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
     // Datasheet says 1 is sunday
     wday = time.tm_wday + 1;
 
+    if (!(stat_regB & RTCB_BIN)) {
+        // The datasheet says that the year field can be either BCD or
+        // years since 1900.  Linux seems to be happy with years since
+        // 1900.
+        year = bcdize(year % 100);
+        mon = bcdize(mon);
+        mday = bcdize(mday);
+        hour = bcdize(hour);
+        min = bcdize(min);
+        sec = bcdize(sec);
+    }
+}
+
+MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
+                   bool bcd, Tick frequency)
+    : EventManager(em), _name(n), event(this, frequency), tickEvent(this)
+{
+    memset(clock_data, 0, sizeof(clock_data));
+    stat_regA = RTCA_32768HZ | RTCA_1024HZ;
+    stat_regB = RTCB_PRDC_IE | RTCB_24HR;
+    if (!bcd)
+        stat_regB |= RTCB_BIN;
+
+    setTime(time);
     DPRINTFN("Real-time clock set to %s", asctime(&time));
 }
 
@@ -141,6 +157,34 @@ MC146818::readData(uint8_t addr)
     }
 }
 
+static time_t
+mkutctime(struct tm *time)
+{
+    time_t ret;
+    char *tz;
+
+    tz = getenv("TZ");
+    setenv("TZ", "", 1);
+    tzset();
+    ret = mktime(time);
+    if (tz)
+        setenv("TZ", tz, 1);
+    else
+        unsetenv("TZ");
+    tzset();
+    return ret;
+}
+
+void
+MC146818::tickClock()
+{
+    if (stat_regB & RTCB_NO_UPDT)
+        return;
+    time_t calTime = mkutctime(&curTime);
+    calTime++;
+    setTime(*gmtime(&calTime));
+}
+
 void
 MC146818::serialize(const string &base, ostream &os)
 {
@@ -189,4 +233,18 @@ const char *
 MC146818::RTCEvent::description() const
 {
     return "RTC interrupt";
+}
+
+void
+MC146818::RTCTickEvent::process()
+{
+    DPRINTF(MC146818, "RTC clock tick\n");
+    parent->schedule(this, curTick + Clock::Int::s);
+    parent->tickClock();
+}
+
+const char *
+MC146818::RTCTickEvent::description() const
+{
+    return "RTC clock tick";
 }

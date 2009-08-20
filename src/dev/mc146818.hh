@@ -64,12 +64,32 @@ class MC146818 : public EventManager
         virtual const char *description() const;
     };
 
+    /** Event for RTC periodic interrupt */
+    struct RTCTickEvent : public Event
+    {
+        MC146818 * parent;
+
+        RTCTickEvent(MC146818 * _parent) : parent(_parent)
+        {
+            parent->schedule(this, curTick + Clock::Int::s);
+        }
+
+        /** Event process to occur at interrupt*/
+        void process();
+
+        /** Event description */
+        const char *description() const;
+    };
+
   private:
     std::string _name;
     const std::string &name() const { return _name; }
 
     /** RTC periodic interrupt event */
     RTCEvent event;
+
+    /** RTC tick event */
+    RTCTickEvent tickEvent;
 
     /** Data for real-time clock function */
     union {
@@ -89,6 +109,10 @@ class MC146818 : public EventManager
         };
     };
 
+    struct tm curTime;
+
+    void setTime(const struct tm time);
+
     /** RTC status register A */
     uint8_t stat_regA;
 
@@ -105,6 +129,8 @@ class MC146818 : public EventManager
 
     /** RTC read data */
     uint8_t readData(const uint8_t addr);
+
+    void tickClock();
 
     /**
       * Serialize this object to the given output stream.
