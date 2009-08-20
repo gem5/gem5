@@ -96,7 +96,7 @@ MC146818::writeData(const uint8_t addr, const uint8_t data)
             replaceBits(stat_regA, data, 6, 0);
             break;
           case RTC_STAT_REGB:
-            if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != (RTCB_BIN | RTCB_24HR))
+            if ((data & ~(RTCB_PRDC_IE | RTCB_SQWE)) != RTCB_24HR)
                 panic("Write to RTC reg B bits that are not implemented!\n");
 
             if (data & RTCB_PRDC_IE) {
