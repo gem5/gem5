@@ -61,7 +61,7 @@ void Sequencer::init(const vector<string> & argv)
   m_instCache_ptr = NULL;
   m_dataCache_ptr = NULL;
   m_controller = NULL;
-  m_servicing_atomic = -1;
+  m_servicing_atomic = 200;
   m_atomics_counter = 0;
   for (size_t i=0; i<argv.size(); i+=2) {
     if ( argv[i] == "controller") {
@@ -108,6 +108,7 @@ void Sequencer::wakeup() {
       WARN_MSG("Possible Deadlock detected");
       WARN_EXPR(request);
       WARN_EXPR(m_version);
+      WARN_EXPR(request->ruby_request.paddr);
       WARN_EXPR(keys.size());
       WARN_EXPR(current_time);
       WARN_EXPR(request->issue_time);
@@ -344,13 +345,22 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
       data.setData(ruby_request.data, request_address.getOffset(), ruby_request.len);
     }
   }
-
+  if (type == RubyRequestType_RMW_Write) {
+    if (m_servicing_atomic != ruby_request.proc_id) {
+      assert(0);
+    }
+    assert(m_atomics_counter > 0);
+    m_atomics_counter--;
+    if (m_atomics_counter == 0) {
+      m_servicing_atomic = 200;
+    }
+  }
   m_hit_callback(srequest->id);
   delete srequest;
 }
 
 // Returns true if the sequencer already has a load or store outstanding
-bool Sequencer::isReady(const RubyRequest& request) {
+bool Sequencer::isReady(const RubyRequest& request, bool dont_set) {
   // POLINA: check if we are currently flushing the write buffer, if so Ruby is returned as not ready
   // to simulate stalling of the front-end
   // Do we stall all the sequencers? If it is atomic instruction - yes!
@@ -365,27 +375,30 @@ bool Sequencer::isReady(const RubyRequest& request) {
     return false;
   }
 
-  if (m_servicing_atomic != -1 && m_servicing_atomic != (int)request.proc_id) {
+  assert(request.proc_id != 100);
+  if (m_servicing_atomic != 200 && m_servicing_atomic != request.proc_id) {
     assert(m_atomics_counter > 0);
     return false;
   }
   else {
-    if (request.type == RubyRequestType_RMW_Read) {
-      if (m_servicing_atomic == -1) {
-        assert(m_atomics_counter == 0);
-        m_servicing_atomic = (int)request.proc_id;
+    if (!dont_set) {
+      if (request.type == RubyRequestType_RMW_Read) {
+        if (m_servicing_atomic == 200) {
+          assert(m_atomics_counter == 0);
+          m_servicing_atomic = request.proc_id;
+        }
+        else {
+          assert(m_servicing_atomic == request.proc_id);
+        }
+        m_atomics_counter++;
       }
       else {
-        assert(m_servicing_atomic == (int)request.proc_id);
-      }
-      m_atomics_counter++;
-    }
-    else if (request.type == RubyRequestType_RMW_Write) {
-      assert(m_servicing_atomic == (int)request.proc_id);
-      assert(m_atomics_counter > 0);
-      m_atomics_counter--;
-      if (m_atomics_counter == 0) {
-        m_servicing_atomic = -1;
+        if (m_servicing_atomic == request.proc_id) {
+          if (request.type != RubyRequestType_RMW_Write) {
+            m_servicing_atomic = 200;
+            m_atomics_counter = 0;
+          }
+        }
       }
     }
   }
@@ -405,7 +418,7 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
     int64_t id = makeUniqueRequestID();
     SequencerRequest *srequest = new SequencerRequest(request, id, g_eventQueue_ptr->getTime());
     bool found = insertRequest(srequest);
-    if (!found)
+    if (!found) {
       if (request.type == RubyRequestType_Locked_Write) {
         // NOTE: it is OK to check the locked flag here as the mandatory queue will be checked first
         // ensuring that nothing comes between checking the flag and servicing the store
@@ -423,6 +436,10 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
 
     // TODO: issue hardware prefetches here
     return id;
+    }
+    else {
+      assert(0);
+    }
   }
   else {
     return -1;
