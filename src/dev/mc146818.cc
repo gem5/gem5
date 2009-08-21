@@ -52,6 +52,15 @@ bcdize(uint8_t val)
     return result;
 }
 
+static uint8_t
+unbcdize(uint8_t val)
+{
+    uint8_t result;
+    result = val & 0xf;
+    result += (val >> 4) * 10;
+    return result;
+}
+
 void
 MC146818::setTime(const struct tm time)
 {
@@ -101,9 +110,16 @@ MC146818::~MC146818()
 void
 MC146818::writeData(const uint8_t addr, const uint8_t data)
 {
-    if (addr < RTC_STAT_REGA)
+    if (addr < RTC_STAT_REGA) {
         clock_data[addr] = data;
-    else {
+        curTime.tm_sec = unbcdize(sec);
+        curTime.tm_min = unbcdize(min);
+        curTime.tm_hour = unbcdize(hour);
+        curTime.tm_mday = unbcdize(mday);
+        curTime.tm_mon = unbcdize(mon) - 1;
+        curTime.tm_year = ((unbcdize(year) + 50) % 100) + 1950;
+        curTime.tm_wday = unbcdize(wday) - 1;
+    } else {
         switch (addr) {
           case RTC_STAT_REGA:
             // The "update in progress" bit is read only.
