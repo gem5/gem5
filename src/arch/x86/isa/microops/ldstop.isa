@@ -529,7 +529,8 @@ let {{
                 dataSize="env.dataSize",
                 addressSize="env.addressSize", atCPL0=False):
             super(CdaOp, self).__init__("InstRegIndex(NUM_INTREGS)", segment,
-                    addr, disp, dataSize, addressSize, "0", atCPL0, False)
+                    addr, disp, dataSize, addressSize, "Request::NO_ACCESS",
+                    atCPL0, False)
             self.className = "Cda"
             self.mnemonic = "cda"
 
