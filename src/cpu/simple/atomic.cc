@@ -324,7 +324,7 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
         Fault fault = thread->dtb->translateAtomic(req, tc, BaseTLB::Read);
 
         // Now do the access.
-        if (fault == NoFault) {
+        if (fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
             Packet pkt = Packet(req,
                     req->isLLSC() ? MemCmd::LoadLockedReq : MemCmd::ReadReq,
                     Packet::Broadcast);
@@ -481,7 +481,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 }
             }
 
-            if (do_access) {
+            if (do_access && !req->getFlags().isSet(Request::NO_ACCESS)) {
                 Packet pkt = Packet(req, cmd, Packet::Broadcast);
                 pkt.dataStatic(dataPtr);
 
