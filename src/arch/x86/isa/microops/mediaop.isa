@@ -1406,8 +1406,8 @@ let {{
                     (0 - (arg2Bits & (1 << (sizeBits - 1))));
 
                 uint64_t resBits = 0;
-                if ((ext & 0x2) == 0 && arg1 == arg2 ||
-                        (ext & 0x2) == 0x2 && arg1 > arg2)
+                if (((ext & 0x2) == 0 && arg1 == arg2) ||
+                    ((ext & 0x2) == 0x2 && arg1 > arg2))
                     resBits = mask(sizeBits);
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
