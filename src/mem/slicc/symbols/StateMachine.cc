@@ -862,7 +862,19 @@ void StateMachine::printCWakeup(ostream& out, string component)
                  assert(0); \n \
                } \n \
              } \n \
-             } \n \  
+             } \n \ 
+             else { \n \
+               if (servicing_atomic > 0) { \n \
+                 // reset \n \
+                  servicing_atomic = 0; \n \
+                  read_counter = 0; \n \
+                  started_receiving_writes = false; \n \
+                  locked_read_request1 = Address(-1); \n \
+                  locked_read_request2 = Address(-1); \n \
+                  locked_read_request3 = Address(-1); \n \
+                  locked_read_request4 = Address(-1); \n \
+                } \n \
+              } \n \
                ";
     output.insert(pos, atomics_string);
     /*string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
