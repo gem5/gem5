@@ -361,6 +361,10 @@ machine(Directory, "Directory protocol")
     requestQueue_in.recycle();
   }
 
+  action(y_recycleDMARequestQueue, "y", desc="recycle dma request queue") {
+    dmaRequestQueue_in.recycle();
+  }
+
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestQueue_in, RequestMsg) {
@@ -449,12 +453,16 @@ machine(Directory, "Directory protocol")
 
   // TRANSITIONS
 
-  transition({M_DRD, M_DWR}, GETX) {
+  transition({M_DRD, M_DWR, M_DWRI}, GETX) {
     z_recycleRequestQueue;
   }
 
-  transition({IM, MI, ID, ID_W}, {GETX, GETS, DMA_READ, DMA_WRITE, PUTX, PUTX_NotOwner} ) {
+  transition({IM, MI, ID, ID_W}, {GETX, GETS, PUTX, PUTX_NotOwner} ) {
     z_recycleRequestQueue;
+  }
+
+  transition({IM, MI, ID, ID_W}, {DMA_READ, DMA_WRITE} ) {
+    y_recycleDMARequestQueue;
   }
 
   transition(I, GETX, IM) {
