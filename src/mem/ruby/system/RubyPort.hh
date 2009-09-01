@@ -21,6 +21,8 @@ public:
 
   virtual int64_t makeRequest(const RubyRequest & request) = 0;
 
+  virtual bool isReady(const RubyRequest & request, bool dont_set = false) = 0;
+
   void registerHitCallback(void (*hit_callback)(int64_t request_id)) {
     assert(m_hit_callback == NULL); // can't assign hit_callback twice
     m_hit_callback = hit_callback;
