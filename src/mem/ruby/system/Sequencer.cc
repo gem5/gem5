@@ -461,14 +461,8 @@ void Sequencer::issueRequest(const RubyRequest& request) {
     ctype = CacheRequestType_ST;
     break;
   case RubyRequestType_Locked_Read:
-    ctype = CacheRequestType_ST;
-    break;
   case RubyRequestType_Locked_Write:
-    ctype = CacheRequestType_ST;
-    break;
   case RubyRequestType_RMW_Read:
-    ctype = CacheRequestType_ATOMIC;
-    break;
   case RubyRequestType_RMW_Write:
     ctype = CacheRequestType_ATOMIC;
     break;
