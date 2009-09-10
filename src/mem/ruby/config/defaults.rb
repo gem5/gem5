@@ -163,8 +163,8 @@ class MOESI_CMP_directory_DirectoryController < DirectoryController
 end
 
 class MOESI_CMP_directory_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-  default_param :response_latency, Integer, 6
+  default_param :request_latency, Integer, 14
+  default_param :response_latency, Integer, 14
 end
 
 class RubySystem
