@@ -33,7 +33,14 @@
  */
 
 
-machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATENCY_L1_RESPONSE_LATENCY LATENCY_TO_L2_LATENCY {
+machine(L1Cache, "MSI Directory L1 Cache CMP")
+ : int l1_request_latency,
+   int l1_response_latency,
+   int to_l2_latency,
+   int l2_select_low_bit,
+   int l2_select_num_bits
+{
+
 
   // NODE L1 CACHE
   // From this node's L1 cache TO the network
@@ -120,7 +127,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   external_type(CacheMemory) {
     bool cacheAvail(Address);
     Address cacheProbe(Address);
-    void allocate(Address);
+    void allocate(Address, Entry);
     void deallocate(Address);
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
@@ -139,9 +146,9 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 //  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
 //  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
 
-  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["L1Icache"])';
+  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
 
-  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["L1Dcache"])';
+  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
 
 
 //  MessageBuffer mandatoryQueue, ordered="false", rank="100", abstract_chip_ptr="true";
@@ -178,10 +185,10 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   }
 
   State getState(Address addr) {
-    if((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == true){
-      DEBUG_EXPR(id);
-      DEBUG_EXPR(addr);
-    }
+//    if((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == true){
+//      DEBUG_EXPR(id);
+//      DEBUG_EXPR(addr);
+//    }
     assert((L1DcacheMemory.isTagPresent(addr) && L1IcacheMemory.isTagPresent(addr)) == false);
 
     if(L1_TBEs.isPresent(addr)) {
@@ -343,13 +350,14 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   // ACTIONS
   action(a_issueGETS, "a", desc="Issue GETS") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
         DEBUG_EXPR(address);
-        DEBUG_EXPR(out_msg.Destination);
+        //DEBUG_EXPR(out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -359,13 +367,14 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
   action(ai_issueGETINSTR, "ai", desc="Issue GETINSTR") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GET_INSTR;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
         DEBUG_EXPR(address);
-        DEBUG_EXPR(out_msg.Destination);
+        //DEBUG_EXPR(out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -376,14 +385,15 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
   action(b_issueGETX, "b", desc="Issue GETX") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
-        DEBUG_EXPR(machineID);
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        //DEBUG_EXPR(machineID);
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
         DEBUG_EXPR(address);
-        DEBUG_EXPR(out_msg.Destination);
+        //DEBUG_EXPR(out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -393,13 +403,14 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
   action(c_issueUPGRADE, "c", desc="Issue GETX") {
     peek(mandatoryQueue_in, CacheMsg) {
-      enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(requestIntraChipL1Network_out, RequestMsg, latency= l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:UPGRADE;
         out_msg.Requestor := machineID;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
         DEBUG_EXPR(address);
-        DEBUG_EXPR(out_msg.Destination);
+        //DEBUG_EXPR(out_msg.Destination);
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.Prefetch := in_msg.Prefetch;
         out_msg.AccessMode := in_msg.AccessMode;
@@ -409,7 +420,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
   action(d_sendDataToRequestor, "d", desc="send data to requestor") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
-      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
@@ -422,20 +433,21 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   }
 
   action(d2_sendDataToL2, "d2", desc="send data to the L2 cache because of M downgrade") {
-    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
       out_msg.Dirty := getL1CacheEntry(address).Dirty;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
 
   action(dt_sendDataToRequestor_fromTBE, "dt", desc="send data to requestor") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
-      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.DataBlk := L1_TBEs[address].DataBlk;
@@ -448,20 +460,21 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   }
 
   action(d2t_sendDataToL2_fromTBE, "d2t", desc="send data to the L2 cache") {
-    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.DataBlk := L1_TBEs[address].DataBlk;
       out_msg.Dirty := L1_TBEs[address].Dirty;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
 
   action(e_sendAckToRequestor, "e", desc="send invalidate ack to requestor (could be L2 or L1)") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
-      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -472,32 +485,34 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   }
 
   action(f_sendDataToL2, "f", desc="send data to the L2 cache") {
-    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
       out_msg.Dirty := getL1CacheEntry(address).Dirty;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
   }
 
   action(ft_sendDataToL2_fromTBE, "ft", desc="send data to the L2 cache") {
-    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.DataBlk := L1_TBEs[address].DataBlk;
       out_msg.Dirty := L1_TBEs[address].Dirty;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Writeback_Data;
     }
   }
 
   action(fi_sendInvAck, "fi", desc="send data to the L2 cache") {
     peek(requestIntraChipL1Network_in, RequestMsg) {
-      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL1Network_out, ResponseMsg, latency=l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -510,13 +525,14 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
 
   action(g_issuePUTX, "g", desc="send data to the L2 cache") {
-    enqueue(requestIntraChipL1Network_out, RequestMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(requestIntraChipL1Network_out, RequestMsg, latency=l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.DataBlk := getL1CacheEntry(address).DataBlk;
       out_msg.Dirty := getL1CacheEntry(address).Dirty;
       out_msg.Requestor:= machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       if (getL1CacheEntry(address).Dirty) {
         out_msg.MessageSize := MessageSizeType:Writeback_Data;
       } else {
@@ -526,34 +542,40 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
   }
 
   action(j_sendUnblock, "j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency="TO_L2_LATENCY") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency=to_l2_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:UNBLOCK;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Control;
+      DEBUG_EXPR(address);
+      
     }
   }
 
   action(jj_sendExclusiveUnblock, "\j", desc="send unblock to the L2 cache") {
-    enqueue(unblockNetwork_out, ResponseMsg, latency="TO_L2_LATENCY") {
+    enqueue(unblockNetwork_out, ResponseMsg, latency=to_l2_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:EXCLUSIVE_UNBLOCK;
       out_msg.Sender := machineID;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address, machineID));
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                                                  l2_select_low_bit, l2_select_num_bits));
       out_msg.MessageSize := MessageSizeType:Response_Control;
+      DEBUG_EXPR(address);
+
     }
   }
 
 
 
   action(h_load_hit, "h", desc="If not prefetch, notify sequencer the load completed.") {
-    DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    //DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
     sequencer.readCallback(address, getL1CacheEntry(address).DataBlk);
   }
 
   action(hh_store_hit, "\h", desc="If not prefetch, notify sequencer that store completed.") {
-    DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
+    //DEBUG_EXPR(getL1CacheEntry(address).DataBlk);
     sequencer.writeCallback(address, getL1CacheEntry(address).DataBlk);
     getL1CacheEntry(address).Dirty := true;
   }
@@ -611,13 +633,13 @@ machine(L1Cache, "MSI Directory L1 Cache CMP") : LATENCY_L1_REQUEST_LATENCY LATE
 
   action(oo_allocateL1DCacheBlock, "\o", desc="Set L1 D-cache tag equal to tag of block B.") {
     if (L1DcacheMemory.isTagPresent(address) == false) {
-      L1DcacheMemory.allocate(address);
+      L1DcacheMemory.allocate(address, new Entry);
     }
   }
 
   action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
     if (L1IcacheMemory.isTagPresent(address) == false) {
-      L1IcacheMemory.allocate(address);
+      L1IcacheMemory.allocate(address, new Entry);
     }
   }
 

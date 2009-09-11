@@ -110,6 +110,7 @@ void DataBlock::print(ostream& out) const
   out << "[ ";
   for (int i = 0; i < size; i++) {
     out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
+    out << setfill(' ');
   }
   out << dec << "]" << flush;
 }

@@ -90,6 +90,7 @@ machine(L1Cache, "Directory protocol")
     Own_GETX,      desc="We observe our own GetX forwarded back to us";
     Fwd_GETX,      desc="A GetX from another processor";
     Fwd_GETS,      desc="A GetS from another processor";
+    Fwd_DMA,      desc="A GetS from another processor";
     Inv,           desc="Invalidations from the directory";
 
     // Responses
@@ -309,7 +310,7 @@ machine(L1Cache, "Directory protocol")
         assert(in_msg.Destination.isElement(machineID));
         DEBUG_EXPR("MRM_DEBUG: L1 received");
         DEBUG_EXPR(in_msg.Type);
-if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_READ || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
+if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID && in_msg.RequestorMachine == MachineType:L1Cache) {
             trigger(Event:Own_GETX, in_msg.Address);
           } else {
@@ -317,6 +318,8 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:DMA_READ) {
+          trigger(Event:Fwd_DMA, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
           trigger(Event:Writeback_Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK_DATA) {
@@ -826,7 +829,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     zz_recycleMandatoryQueue;
   }
 
-  transition({M_W, MM_W}, {Fwd_GETS, Fwd_GETX, Own_GETX, Inv}) {
+  transition({M_W, MM_W}, {Fwd_GETS, Fwd_DMA, Fwd_GETX, Own_GETX, Inv}) {
     z_recycleRequestQueue;
   }
 
@@ -892,7 +895,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     l_popForwardQueue;
   }
 
-  transition(S, Fwd_GETS) {
+  transition(S, {Fwd_GETS, Fwd_DMA}) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -921,7 +924,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     l_popForwardQueue;
   }
 
-  transition(O, Fwd_GETS) {
+  transition(O, {Fwd_GETS, Fwd_DMA}) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -950,6 +953,12 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
 
   transition(MM, Fwd_GETS, I) {
     ee_sendDataExclusive;
+    l_popForwardQueue;
+  }
+
+  transition(MM, Fwd_DMA, MM) {
+    //ee_sendDataExclusive;
+    e_sendData;
     l_popForwardQueue;
   }
 
@@ -982,6 +991,11 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
   }
 
   transition(M, Fwd_GETS, O) {
+    e_sendData;
+    l_popForwardQueue;
+  }
+
+  transition(M, Fwd_DMA, M) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -1025,7 +1039,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     n_popResponseQueue;
   }
 
-  transition(SM, Fwd_GETS) {
+  transition(SM, {Fwd_DMA, Fwd_GETS}) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -1044,7 +1058,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     l_popForwardQueue;
   }
 
-  transition(OM, Fwd_GETS, OM) {
+  transition(OM, {Fwd_DMA, Fwd_GETS}, OM) {
     e_sendData;
     l_popForwardQueue;
   }
@@ -1105,12 +1119,17 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
     l_popForwardQueue;
   }
 
+  transition(MI, Fwd_DMA, MI) {
+    q_sendDataFromTBEToCache;
+    l_popForwardQueue;
+  }
+
   transition(MI, Fwd_GETX, II) {
     q_sendExclusiveDataFromTBEToCache;
     l_popForwardQueue;
   }
 
-  transition({SI, OI}, Fwd_GETS) {
+  transition({SI, OI}, {Fwd_DMA, Fwd_GETS}) {
     q_sendDataFromTBEToCache;
     l_popForwardQueue;
   }
