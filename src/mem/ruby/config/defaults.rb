@@ -179,7 +179,7 @@ class RubySystem
   # you can still have a non-deterministic simulation if random seed
   # is set to "rand".  This is because the Ruby swtiches use random
   # link priority elevation
-  default_param :randomization, Boolean, false
+  default_param :randomization, Boolean, true
 
   # tech_nm is the device size used to calculate latency and area
   # information about system components
