@@ -375,7 +375,6 @@ bool Sequencer::isReady(const RubyRequest& request, bool dont_set) {
     return false;
   }
 
-  assert(request.proc_id != 100);
   if (m_servicing_atomic != 200 && m_servicing_atomic != request.proc_id) {
     assert(m_atomics_counter > 0);
     return false;
