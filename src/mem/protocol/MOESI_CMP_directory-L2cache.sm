@@ -138,6 +138,7 @@ machine(L2Cache, "Token protocol")
     L1_PUTS,             desc="local sharer wants to writeback";
     Fwd_GETX,      desc="A GetX from another processor";
     Fwd_GETS,      desc="A GetS from another processor";
+    Fwd_DMA,      desc="A request from DMA";
     Own_GETX,      desc="A GetX from this node";
     Inv,           desc="Invalidations from the directory";
 
@@ -584,7 +585,7 @@ machine(L2Cache, "Token protocol")
   in_port(requestNetwork_in, RequestMsg, GlobalRequestToL2Cache) {
     if (requestNetwork_in.isReady()) {
       peek(requestNetwork_in, RequestMsg) {
-        if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_READ || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
+        if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestType:DMA_WRITE) {
           if (in_msg.Requestor == machineID) {
             trigger(Event:Own_GETX, in_msg.Address);
           } else {
@@ -592,6 +593,8 @@ machine(L2Cache, "Token protocol")
           }
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
           trigger(Event:Fwd_GETS, in_msg.Address);
+        } else if(in_msg.Type == CoherenceRequestType:DMA_READ) {
+          trigger(Event:Fwd_DMA, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:WB_ACK) {
@@ -1456,7 +1459,15 @@ machine(L2Cache, "Token protocol")
     zz_recycleResponseQueue;
   }
 
-  transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS}, {Fwd_GETX, Fwd_GETS, Inv}) {
+  transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, IGS, IGM, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS}, {Fwd_GETX, Fwd_GETS, Fwd_DMA}) {
+    zz_recycleRequestQueue;
+  }
+
+  transition({IFGX, IFGS, ISFGS, IFGXX, IFLXO, OFGX, ILOW, ILOXW, ILOSW, ILOSXW, SLSW, OLSW, ILSW, IW, OW, SW, OXW, OLSXW, ILXW, IFLS, IFLO, IFLOX, IFLOXX, IFLOSX,OLSXS, MM, SS, OO, SLSS, OLSS, OLSF, IGMIOFS}, {Inv}) {
+    zz_recycleRequestQueue;
+  }
+
+  transition({IGM, IGS}, {Own_GETX}) {
     zz_recycleRequestQueue;
   }
 
@@ -1519,6 +1530,27 @@ machine(L2Cache, "Token protocol")
     t_recordFwdSID;
     j_forwardGlobalRequestToLocalOwner;
     m_popRequestQueue;
+  }
+
+  transition({ILOS, ILOSX}, Fwd_DMA) {
+    i_allocateTBE;
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition({ILO, ILX, ILOX}, Fwd_DMA) {
+    i_allocateTBE;
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+ 
+  transition({ILOS, ILOSX, ILO, ILX, ILOX, ILXW}, Data) {
+    i_copyDataToTBE;
+    c_sendDataFromTBEToFwdGETS;
+    s_deallocateTBE;
+    n_popResponseQueue;
   }
 
   transition(IFGS, Data, ILO) {
@@ -1598,7 +1630,7 @@ machine(L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 
-  transition({O, OLS}, Fwd_GETS) {
+  transition({O, OLS}, {Fwd_GETS, Fwd_DMA}) {
     dd_sendDataToFwdGETS;
     m_popRequestQueue;
   }
@@ -1609,6 +1641,10 @@ machine(L2Cache, "Token protocol")
     m_popRequestQueue;
   }
 
+  transition(OLSX, Fwd_DMA) {
+    dd_sendDataToFwdGETS;
+    m_popRequestQueue;
+  }
 
   transition(M, Fwd_GETX, I) {
     dd_sendDataToFwdGETX;
@@ -1629,6 +1665,10 @@ machine(L2Cache, "Token protocol")
      m_popRequestQueue;
   }
 
+  transition(M, Fwd_DMA) {
+     dd_sendExclusiveDataToFwdGETS;
+     m_popRequestQueue;
+  }
 
   transition({OLS, OLSX}, Fwd_GETX, OLSF) {
     i_allocateTBE;
@@ -1837,8 +1877,6 @@ machine(L2Cache, "Token protocol")
     n_popResponseQueue;
   }
 
-
-
   // LOCAL REQUESTS THAT MUST ISSUE
 
   transition(NP, {L1_PUTS, L1_PUTX, L1_PUTO}) {
@@ -1949,7 +1987,7 @@ machine(L2Cache, "Token protocol")
     o_popL1RequestQueue;
   }
 
-  transition(OGMIO, Fwd_GETS) {
+  transition(OGMIO, {Fwd_GETS, Fwd_DMA}) {
     t_recordFwdSID;
     c_sendDataFromTBEToFwdGETS;
     m_popRequestQueue;
@@ -1979,6 +2017,12 @@ machine(L2Cache, "Token protocol")
   }
 
   transition(IGMIO, Fwd_GETS, IGMIOFS) {
+    t_recordFwdSID;
+    j_forwardGlobalRequestToLocalOwner;
+    m_popRequestQueue;
+  }
+
+  transition(IGMIO, Fwd_DMA) {
     t_recordFwdSID;
     j_forwardGlobalRequestToLocalOwner;
     m_popRequestQueue;
@@ -2163,7 +2207,7 @@ machine(L2Cache, "Token protocol")
 
   }
 
-  transition(IGMO, Fwd_GETS) {
+  transition(IGMO, {Fwd_GETS, Fwd_DMA}) {
     t_recordFwdSID;
     c_sendDataFromTBEToFwdGETS;
     m_popRequestQueue;
@@ -2518,13 +2562,13 @@ machine(L2Cache, "Token protocol")
     n_popTriggerQueue;
   }
 
-  transition(OLSI, Fwd_GETS) {
+  transition(OLSI, {Fwd_GETS, Fwd_DMA}) {
     t_recordFwdSID;
     c_sendDataFromTBEToFwdGETS;
     m_popRequestQueue;
   }
 
-  transition({MI, OI}, Fwd_GETS, OI) {
+  transition({MI, OI}, {Fwd_GETS, Fwd_DMA}, OI) {
     t_recordFwdSID;
     c_sendDataFromTBEToFwdGETS;
     m_popRequestQueue;

@@ -227,16 +227,18 @@ machine(DMA, "DMA Controller")
     p_popResponseQueue;
   }
 
-  transition(BUSY_RD, Data) {
+  transition(BUSY_RD, Data, READY) {
     t_updateTBEData;
-    u_updateAckCount;
-    o_checkForCompletion;
+    d_dataCallbackFromTBE;
+    w_deallocateTBE;
+    //u_updateAckCount;
+    //o_checkForCompletion;
     p_popResponseQueue;
   }
 
   transition(BUSY_RD, All_Acks, READY) {
     d_dataCallbackFromTBE;
-    u_sendExclusiveUnblockToDir;
+    //u_sendExclusiveUnblockToDir;
     w_deallocateTBE;
     p_popTriggerQueue;
   }
