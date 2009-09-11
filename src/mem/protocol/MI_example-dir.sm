@@ -21,7 +21,8 @@ machine(Directory, "Directory protocol")
     M_DRD, desc="Blocked on an invalidation for a DMA read";
     M_DWR, desc="Blocked on an invalidation for a DMA write";
 
-    M_DWRI, desc="Intermediate state M_DWR-->I";
+    M_DWRI, desc="Intermediate state M_DWR-->I"; 
+    M_DRDI, desc="Intermediate state M_DRD-->I";
 
     IM, desc="Intermediate state I-->M";
     MI, desc="Intermediate state M-->I";
@@ -306,11 +307,11 @@ machine(Directory, "Directory protocol")
   action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
-      out_msg.Address := address;
-      out_msg.Type := CoherenceRequestType:INV;
-      out_msg.Requestor := machineID;
-      out_msg.Destination := directory[in_msg.PhysicalAddress].Owner;
-      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:INV;
+        out_msg.Requestor := machineID;
+        out_msg.Destination := directory[in_msg.PhysicalAddress].Owner;
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
   }
@@ -323,16 +324,15 @@ machine(Directory, "Directory protocol")
     dmaRequestQueue_in.dequeue();
   }
 
-  action(l_writeDataToMemory, "l", desc="Write PUTX data to memory") {
+  action(l_writeDataToMemory, "pl", desc="Write PUTX data to memory") {
     peek(requestQueue_in, RequestMsg) {
       // assert(in_msg.Dirty);
       // assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
       directory[in_msg.Address].DataBlk := in_msg.DataBlk;
-      DEBUG_EXPR(in_msg.Address);
-      DEBUG_EXPR(in_msg.DataBlk);
+      //directory[in_msg.Address].DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
     }
   }
-
+  
   action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
     directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
   }
@@ -416,7 +416,8 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
-        //out_msg.DataBlk := in_msg.DataBlk;
+        // get incoming data
+        // out_msg.DataBlk := in_msg.DataBlk;
         out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
@@ -448,22 +449,25 @@ machine(Directory, "Directory protocol")
   }
 
   action(w_writeDataToMemoryFromTBE, "\w", desc="Write date to directory memory from TBE") {
-    directory[address].DataBlk := TBEs[address].DataBlk;
+    //directory[address].DataBlk := TBEs[address].DataBlk;
+    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+
   }
 
   // TRANSITIONS
 
-  transition({M_DRD, M_DWR, M_DWRI}, GETX) {
+  transition({M_DRD, M_DWR, M_DWRI, M_DRDI}, GETX) {
     z_recycleRequestQueue;
   }
 
   transition({IM, MI, ID, ID_W}, {GETX, GETS, PUTX, PUTX_NotOwner} ) {
     z_recycleRequestQueue;
   }
-
+ 
   transition({IM, MI, ID, ID_W}, {DMA_READ, DMA_WRITE} ) {
     y_recycleDMARequestQueue;
   }
+
 
   transition(I, GETX, IM) {
     //d_sendData;
@@ -507,17 +511,26 @@ machine(Directory, "Directory protocol")
   }
 
   transition(M, DMA_READ, M_DRD) {
+    v_allocateTBE;
     inv_sendCacheInvalidate;
     p_popIncomingDMARequestQueue;
   }
 
-  transition(M_DRD, PUTX, I) {
+  transition(M_DRD, PUTX, M_DRDI) {     
+    l_writeDataToMemory;
     drp_sendDMAData;
     c_clearOwner;
-    a_sendWriteBackAck;
-    d_deallocateDirectory;
+    l_queueMemoryWBRequest;
     i_popIncomingRequestQueue;
   }
+
+  transition(M_DRDI, Memory_Ack, I) {
+    l_sendWriteBackAck;
+    w_deallocateTBE;   
+    d_deallocateDirectory;
+    l_popMemQueue;
+  }
+
 
   transition(M, DMA_WRITE, M_DWR) {
     v_allocateTBE;
@@ -526,6 +539,7 @@ machine(Directory, "Directory protocol")
   }
 
   transition(M_DWR, PUTX, M_DWRI) {
+    l_writeDataToMemory;
     qw_queueMemoryWBRequest_partialTBE;
     c_clearOwner;
     i_popIncomingRequestQueue;
@@ -547,6 +561,7 @@ machine(Directory, "Directory protocol")
   }
 
   transition(M, PUTX, MI) {
+    l_writeDataToMemory;
     c_clearOwner;
     v_allocateTBEFromRequestNet;
     l_queueMemoryWBRequest;
