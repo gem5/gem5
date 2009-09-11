@@ -32,7 +32,11 @@
  *
  */
 
-machine(L2Cache, "MOSI Directory L2 Cache CMP") {
+machine(L2Cache, "MESI Directory L2 Cache CMP")
+ : int l2_request_latency,  
+   int l2_response_latency,
+   int to_l1_latency
+{
 
   // L2 BANK QUEUES
   // From local bank of L2 cache TO the network
@@ -41,9 +45,10 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   MessageBuffer responseFromL2Cache, network="To", virtual_network="3", ordered="false";  // this L2 bank -> a local L1 || Memory
 
   // FROM the network to this local bank of L2 cache
+  MessageBuffer unblockToL2Cache, network="From", virtual_network="4", ordered="false";  // a local L1 || Memory -> this L2 bank
   MessageBuffer L1RequestToL2Cache, network="From", virtual_network="0", ordered="false";  // a local L1 -> this L2 bank
   MessageBuffer responseToL2Cache, network="From", virtual_network="3", ordered="false";  // a local L1 || Memory -> this L2 bank
-  MessageBuffer unblockToL2Cache, network="From", virtual_network="4", ordered="false";  // a local L1 || Memory -> this L2 bank
+//  MessageBuffer unblockToL2Cache, network="From", virtual_network="4", ordered="false";  // a local L1 || Memory -> this L2 bank
 
   // STATES
   enumeration(State, desc="L2 Cache states", default="L2Cache_State_NP") {
@@ -73,7 +78,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     MT_IIB, desc="Blocked for L1_GETS from MT, waiting for unblock and data";
     MT_IB, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
-
+ 
   }
 
   // EVENTS
@@ -111,6 +116,8 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     Unblock_Cancel, desc="Unblock from L1 requestor (FOR XACT MEMORY)";
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
+    MEM_Inv, desc="Invalidation from directory";
+
   }
 
   // TYPES
@@ -141,7 +148,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   external_type(CacheMemory) {
     bool cacheAvail(Address);
     Address cacheProbe(Address);
-    void allocate(Address);
+    void allocate(Address, Entry);
     void deallocate(Address);
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
@@ -156,12 +163,12 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     bool isPresent(Address);
   }
 
-  TBETable L2_TBEs, template_hack="<L2Cache_TBE>", no_vector="true";
+  TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
 
 //  CacheMemory L2cacheMemory, template_hack="<L2Cache_Entry>", constructor_hack='L2_CACHE_NUM_SETS_BITS,L2_CACHE_ASSOC,MachineType_L2Cache,int_to_string(i)';
 
 
-  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])', no_vector="true";
+  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
 
   // inclusive cache, returns L2 entries only
   Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
@@ -196,10 +203,9 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   }
 
   void addSharer(Address addr, MachineID requestor) {
-    DEBUG_EXPR(machineID);
-    DEBUG_EXPR(requestor);
-    DEBUG_EXPR(addr);
-    assert(map_L1CacheMachId_to_L2Cache(addr, requestor) == machineID);
+    //DEBUG_EXPR(machineID);
+    //DEBUG_EXPR(requestor);
+    //DEBUG_EXPR(addr);
     L2cacheMemory[addr].Sharers.add(requestor);
   }
 
@@ -273,6 +279,29 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   out_port(responseIntraChipL2Network_out, ResponseMsg, responseFromL2Cache);
 
 
+  in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache) {
+    if(L1unblockNetwork_in.isReady()) {
+      peek(L1unblockNetwork_in,  ResponseMsg) {
+        DEBUG_EXPR(in_msg.Address);
+	DEBUG_EXPR(getState(in_msg.Address));
+        DEBUG_EXPR(in_msg.Sender);
+        DEBUG_EXPR(in_msg.Type);
+        DEBUG_EXPR(in_msg.Destination);
+
+        assert(in_msg.Destination.isElement(machineID));
+        if (in_msg.Type == CoherenceResponseType:EXCLUSIVE_UNBLOCK) {
+          trigger(Event:Exclusive_Unblock, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
+          trigger(Event:Unblock, in_msg.Address);
+        } else {
+          error("unknown unblock message");
+        }
+      }
+    }
+  }
+
+
+
   // Response IntraChip L2 Network - response msg to this particular L2 bank
   in_port(responseIntraChipL2Network_in, ResponseMsg, responseToL2Cache) {
     if (responseIntraChipL2Network_in.isReady()) {
@@ -301,6 +330,8 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
             trigger(Event:Mem_Data, in_msg.Address);  // L2 now has data and all off-chip acks
           } else if(in_msg.Type == CoherenceResponseType:MEMORY_ACK) {
             trigger(Event:Mem_Ack, in_msg.Address);  // L2 now has data and all off-chip acks
+          } else if(in_msg.Type == CoherenceResponseType:INV) {
+            trigger(Event:MEM_Inv, in_msg.Address);  // L2 now has data and all off-chip acks
           } else {
             error("unknown message type");
           }
@@ -314,11 +345,11 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     if(L1RequestIntraChipL2Network_in.isReady()) {
       peek(L1RequestIntraChipL2Network_in,  RequestMsg) {
         DEBUG_EXPR(in_msg.Address);
-        DEBUG_EXPR(id);
+        //DEBUG_EXPR(id);
         DEBUG_EXPR(getState(in_msg.Address));
-        DEBUG_EXPR(in_msg.Requestor);
+        //DEBUG_EXPR(in_msg.Requestor);
         DEBUG_EXPR(in_msg.Type);
-        DEBUG_EXPR(in_msg.Destination);
+        //DEBUG_EXPR(in_msg.Destination);
         assert(machineIDToMachineType(in_msg.Requestor) == MachineType:L1Cache);
         assert(in_msg.Destination.isElement(machineID));
         if (L2cacheMemory.isTagPresent(in_msg.Address)) {
@@ -341,26 +372,12 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     }
   }
 
-  in_port(L1unblockNetwork_in, ResponseMsg, unblockToL2Cache) {
-    if(L1unblockNetwork_in.isReady()) {
-      peek(L1unblockNetwork_in,  ResponseMsg) {
-        assert(in_msg.Destination.isElement(machineID));
-        if (in_msg.Type == CoherenceResponseType:EXCLUSIVE_UNBLOCK) {
-          trigger(Event:Exclusive_Unblock, in_msg.Address);
-        } else if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
-          trigger(Event:Unblock, in_msg.Address);
-        } else {
-          error("unknown unblock message");
-        }
-      }
-    }
-  }
 
   // ACTIONS
 
   action(a_issueFetchToMemory, "a", desc="fetch data from memory") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(DirRequestIntraChipL2Network_out, RequestMsg, latency="L2_REQUEST_LATENCY") {
+      enqueue(DirRequestIntraChipL2Network_out, RequestMsg, latency=l2_request_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
@@ -372,7 +389,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(b_forwardRequestToExclusive, "b", desc="Forward request to the exclusive L1") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency="1") {
+      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency=to_l1_latency) {
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
@@ -383,7 +400,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   }
 
   action(c_exclusiveReplacement, "c", desc="Send data to memory") {
-    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:MEMORY_DATA;
       out_msg.Sender := machineID;
@@ -394,8 +411,19 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     }
   }
 
+  action(c_exclusiveCleanReplacement, "cc", desc="Send ack to memory for clean replacement") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:ACK;
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(map_Address_to_Directory(address));
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+    }
+  }
+
+
   action(ct_exclusiveReplacementFromTBE, "ct", desc="Send data to memory") {
-    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:MEMORY_DATA;
       out_msg.Sender := machineID;
@@ -409,7 +437,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(d_sendDataToRequestor, "d", desc="Send data from cache to reqeustor") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -428,7 +456,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(dd_sendExclusiveDataToRequestor, "dd", desc="Send data from cache to reqeustor") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.Sender := machineID;
@@ -447,7 +475,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(ds_sendSharedDataToRequestor, "ds", desc="Send data from cache to reqeustor") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="L2_RESPONSE_LATENCY") {
+      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=l2_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
@@ -462,7 +490,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(e_sendDataToGetSRequestors, "e", desc="Send data from cache to all GetS IDs") {
     assert(L2_TBEs[address].L1_GetS_IDs.count() > 0);
-    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="1") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=to_l1_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
@@ -475,7 +503,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(ex_sendExclusiveDataToGetSRequestors, "ex", desc="Send data from cache to all GetS IDs") {
     assert(L2_TBEs[address].L1_GetS_IDs.count() == 1);
-    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="1") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=to_l1_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
       out_msg.Sender := machineID;
@@ -488,24 +516,24 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
 
   action(ee_sendDataToGetXRequestor, "ee", desc="Send data from cache to GetX ID") {
-    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="1") {
+    enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=to_l1_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA;
       out_msg.Sender := machineID;
       out_msg.Destination.add(L2_TBEs[address].L1_GetX_ID);
-      DEBUG_EXPR(out_msg.Destination);
+      //DEBUG_EXPR(out_msg.Destination);
       out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
       out_msg.Dirty := getL2CacheEntry(address).Dirty;
       DEBUG_EXPR(out_msg.Address);
-      DEBUG_EXPR(out_msg.Destination);
-      DEBUG_EXPR(out_msg.DataBlk);
+      //DEBUG_EXPR(out_msg.Destination);
+      //DEBUG_EXPR(out_msg.DataBlk);
       out_msg.MessageSize := MessageSizeType:Response_Data;
     }
   }
 
 
   action(f_sendInvToSharers, "f", desc="invalidate sharers for L2 replacement") {
-    enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency="1") {
+    enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency=to_l1_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:INV;
       out_msg.Requestor := machineID;
@@ -516,7 +544,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(fw_sendFwdInvToSharers, "fw", desc="invalidate sharers for request") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency="1") {
+      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency=to_l1_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := in_msg.Requestor;
@@ -529,7 +557,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(fwm_sendFwdInvToSharersMinusRequestor, "fwm", desc="invalidate sharers for request, requestor is sharer") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency="1") {
+      enqueue(L1RequestIntraChipL2Network_out, RequestMsg, latency=to_l1_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := in_msg.Requestor;
@@ -621,7 +649,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(qq_allocateL2CacheBlock, "\q", desc="Set L2 cache tag equal to tag of block B.") {
     if (L2cacheMemory.isTagPresent(address) == false) {
-      L2cacheMemory.allocate(address);
+      L2cacheMemory.allocate(address, new Entry);
     }
   }
 
@@ -631,7 +659,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(t_sendWBAck, "t", desc="Send writeback ACK") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="1") {
+      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=to_l1_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:WB_ACK;
         out_msg.Sender := machineID;
@@ -643,7 +671,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
 
   action(ts_sendInvAckToUpgrader, "ts", desc="Send ACK to upgrader") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency="1") {
+      enqueue(responseIntraChipL2Network_out, ResponseMsg, latency=to_l1_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -715,6 +743,11 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     L1RequestIntraChipL2Network_in.recycle();
   }
 
+  action(zn_recycleResponseNetwork, "zn", desc="recycle memory request") {
+    responseIntraChipL2Network_in.recycle();
+  }
+
+
   //*****************************************************
   // TRANSITIONS
   //*****************************************************
@@ -735,6 +768,15 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
   transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean}) {
     zz_recycleL1RequestQueue;
   }
+
+  transition({IM, IS, ISS, SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, MEM_Inv) {         
+    zn_recycleResponseNetwork;
+  }
+
+  transition({S_I, M_I, MT_I}, MEM_Inv) {         
+    o_popIncomingResponseQueue;
+  }
+
 
   transition({SS_MB, M_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE}) {
     zz_recycleL1RequestQueue;
@@ -846,11 +888,12 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     rr_deallocateL2CacheBlock;
   }
 
-  transition(SS, L2_Replacement, S_I) {
+  transition(SS, {L2_Replacement, MEM_Inv}, S_I) {
     i_allocateTBE;
     f_sendInvToSharers;
     rr_deallocateL2CacheBlock;
   }
+
 
   transition(M, L1_GETX, MT_MB) {
     d_sendDataToRequestor;
@@ -874,13 +917,15 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     jj_popL1RequestQueue;
   }
 
-  transition(M, L2_Replacement, M_I) {
+  transition(M, {L2_Replacement, MEM_Inv}, M_I) {
     i_allocateTBE;
     c_exclusiveReplacement;
     rr_deallocateL2CacheBlock;
   }
 
   transition(M, L2_Replacement_clean, M_I) {
+    i_allocateTBE;
+    c_exclusiveCleanReplacement;
     rr_deallocateL2CacheBlock;
   }
 
@@ -902,7 +947,7 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     jj_popL1RequestQueue;
   }
 
-  transition(MT, L2_Replacement, MT_I) {
+  transition(MT, {L2_Replacement, MEM_Inv}, MT_I) {
     i_allocateTBE;
     f_sendInvToSharers;
     rr_deallocateL2CacheBlock;
@@ -977,8 +1022,8 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     o_popIncomingResponseQueue;
   }
 
-  transition(I_I, Ack_all, NP) {
-    s_deallocateTBE;
+  transition(I_I, Ack_all, M_I) {
+    c_exclusiveCleanReplacement;
     o_popIncomingResponseQueue;
   }
 
@@ -988,8 +1033,8 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     o_popIncomingResponseQueue;
   }
 
-  transition(MCT_I, WB_Data_clean, NP) {
-    s_deallocateTBE;
+  transition(MCT_I, {WB_Data_clean, Ack_all}, M_I) {
+    c_exclusiveCleanReplacement;   
     o_popIncomingResponseQueue;
   }
 
@@ -999,11 +1044,6 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     o_popIncomingResponseQueue;
   }
 
-  // clean data that L1 exclusive never wrote
-  transition(MCT_I, Ack_all, NP) {
-    s_deallocateTBE;
-    o_popIncomingResponseQueue;
-  }
 
   // drop this because L1 will send data again
   //  the reason we don't accept is that the request virtual network may be completely backed up
@@ -1036,4 +1076,6 @@ machine(L2Cache, "MOSI Directory L2 Cache CMP") {
     o_popIncomingResponseQueue;
   }
 }
+
+
 

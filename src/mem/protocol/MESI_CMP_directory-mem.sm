@@ -35,14 +35,17 @@
 // Copied here by aep 12/14/07
 
 
-machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATENCY LATENCY_TO_MEM_CTRL_LATENCY {
+machine(Directory, "MESI_CMP_filter_directory protocol") 
+ : int to_mem_ctrl_latency,
+   int directory_latency
+{
 
   MessageBuffer requestToDir, network="From", virtual_network="2", ordered="false";
   MessageBuffer responseToDir, network="From", virtual_network="3", ordered="false";
   MessageBuffer responseFromDir, network="To", virtual_network="3", ordered="false";
 
-  MessageBuffer dmaRequestFromDir, network="To", virtual_network="4", ordered="true", no_vector="true";
-  MessageBuffer dmaRequestToDir, network="From", virtual_network="5", ordered="true", no_vector="true";
+  MessageBuffer dmaRequestFromDir, network="To", virtual_network="6", ordered="true";
+  MessageBuffer dmaRequestToDir, network="From", virtual_network="7", ordered="true";
 
 
   // STATES
@@ -50,7 +53,15 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
     // Base states
     I, desc="Owner";
     ID, desc="Intermediate state for DMA_READ when in I";
-    ID_W, desc="Intermediate state for DMA_WRITE when in I";
+    ID_W, desc="Intermediate state for DMA_WRITE when in I";    
+
+    M, desc="Modified";
+    IM, desc="Intermediate State I>M";
+    MI, desc="Intermediate State M>I";
+    M_DRD, desc="Intermediate State when there is a dma read";
+    M_DRDI, desc="Intermediate State when there is a dma read";
+    M_DWR, desc="Intermediate State when there is a dma write";
+    M_DWRI, desc="Intermediate State when there is a dma write";
   }
 
   // Events
@@ -62,7 +73,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 //added by SS for dma
     DMA_READ, desc="A DMA Read memory request";
     DMA_WRITE, desc="A DMA Write memory request";
-
+    CleanReplacement, desc="Clean Replacement in L2 cache";
 
   }
 
@@ -70,7 +81,10 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   // DirectoryEntry
   structure(Entry, desc="...") {
+    State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
+    NetDest Sharers,                   desc="Sharers for this block";
+    NetDest Owner,                     desc="Owner of this block"; 
   }
 
   external_type(DirectoryMemory) {
@@ -83,6 +97,21 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   }
 
+  // TBE entries for DMA requests
+  structure(TBE, desc="TBE entries for outstanding DMA requests") {
+    Address PhysicalAddress, desc="physical address";
+    State TBEState,        desc="Transient State";
+    DataBlock DataBlk,     desc="Data to be written (DMA write only)";
+    int Len,               desc="...";
+  }
+    
+  external_type(TBETable) {
+    TBE lookup(Address);  
+    void allocate(Address); 
+    void deallocate(Address);
+    bool isPresent(Address);
+  } 
+
 
   // ** OBJECTS **
 
@@ -94,12 +123,39 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
   MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_controller_name"])';
 
 
+  TBETable TBEs, template_hack="<Directory_TBE>";
+      
   State getState(Address addr) {
-    return State:I;
-  }
+    if (TBEs.isPresent(addr)) {
+      return TBEs[addr].TBEState;   
+    } else if (directory.isPresent(addr)) {
+      return directory[addr].DirectoryState;
+    } else {
+      return State:I;
+    }
+  }  
+   
 
   void setState(Address addr, State state) {
+
+    if (TBEs.isPresent(addr)) {
+      TBEs[addr].TBEState := state;
+    }
+  
+    if (directory.isPresent(addr)) {
+  
+      if (state == State:I)  {
+        assert(directory[addr].Owner.count() == 0);
+        assert(directory[addr].Sharers.count() == 0);
+      } else if (state == State:M) {
+        assert(directory[addr].Owner.count() == 1);
+        assert(directory[addr].Sharers.count() == 0);
+      }
+      
+      directory[addr].DirectoryState := state;
+    }
   }
+
 
   bool isGETRequest(CoherenceRequestType type) {
     return (type == CoherenceRequestType:GETS) ||
@@ -120,9 +176,9 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
     if (dmaRequestQueue_in.isReady()) {
       peek(dmaRequestQueue_in, DMARequestMsg) {
         if (in_msg.Type == DMARequestType:READ) {
-          trigger(Event:DMA_READ, in_msg.PhysicalAddress);
+          trigger(Event:DMA_READ, in_msg.LineAddress);
         } else if (in_msg.Type == DMARequestType:WRITE) {
-          trigger(Event:DMA_WRITE, in_msg.PhysicalAddress);
+          trigger(Event:DMA_WRITE, in_msg.LineAddress);
         } else {
           error("Invalid message");
         }
@@ -151,6 +207,8 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceResponseType:MEMORY_DATA) {
           trigger(Event:Data, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:ACK) {
+          trigger(Event:CleanReplacement, in_msg.Address);
         } else {
           DEBUG_EXPR(in_msg.Type);
           error("Invalid message");
@@ -179,12 +237,12 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   // Actions
   action(a_sendAck, "a", desc="Send ack to L2") {
-    peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="TO_MEM_CTRL_LATENCY") {
+    peek(responseNetwork_in, ResponseMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:MEMORY_ACK;
         out_msg.Sender := machineID;
-        out_msg.Destination.add(in_msg.OriginalRequestorMachId);
+        out_msg.Destination.add(in_msg.Sender);
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
@@ -192,7 +250,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:MEMORY_DATA;
         out_msg.Sender := machineID;
@@ -200,6 +258,19 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false;
         out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  // Actions
+  action(aa_sendAck, "aa", desc="Send ack to L2") {
+    peek(memQueue_in, MemoryMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=to_mem_ctrl_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_ACK;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.OriginalRequestorMachId);
+        out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
   }
@@ -218,7 +289,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -234,7 +305,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   action(qw_queueMemoryWBRequest, "qw", desc="Queue off-chip writeback request") {
     peek(responseNetwork_in, ResponseMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.Sender := machineID;
@@ -258,7 +329,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 //added by SS for dma
   action(qf_queueMemoryFetchRequestDMA, "qfd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
@@ -276,7 +347,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   action(dr_sendDMAData, "dr", desc="Send Data to DMA controller from directory") {
     peek(memQueue_in, MemoryMsg) {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency=to_mem_ctrl_latency) {
         out_msg.PhysicalAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
@@ -288,18 +359,22 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
 
   action(dw_writeDMAData, "dw", desc="DMA Write data to memory") {
     peek(dmaRequestQueue_in, DMARequestMsg) {
-      directory[in_msg.PhysicalAddress].DataBlk.copyPartial(in_msg.DataBlk, in_msg.Offset, in_msg.Len);
+      //directory[in_msg.PhysicalAddress].DataBlk.copyPartial(in_msg.DataBlk, in_msg.Offset, in_msg.Len);
+
+      directory[in_msg.PhysicalAddress].DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.PhysicalAddress), in_msg.Len);
     }
   }
 
   action(qw_queueMemoryWBRequest_partial, "qwp", desc="Queue off-chip writeback request") {
      peek(dmaRequestQueue_in, DMARequestMsg) {
-      enqueue(memQueue_out, MemoryMsg, latency="TO_MEM_CTRL_LATENCY") {
+      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
         out_msg.OriginalRequestorMachId := machineID;
         //out_msg.DataBlk := in_msg.DataBlk;
-        out_msg.DataBlk.copyPartial(in_msg.DataBlk, in_msg.Offset, in_msg.Len);
+        out_msg.DataBlk.copyPartial(in_msg.DataBlk, addressOffset(address), in_msg.Len);
+
+
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := in_msg.Prefetch;
 
@@ -309,7 +384,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
   }
 
   action(da_sendDMAAck, "da", desc="Send Ack to DMA controller") {
-      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency=to_mem_ctrl_latency) {
         out_msg.PhysicalAddress := address;
         out_msg.Type := DMAResponseType:ACK;
         out_msg.Destination.add(map_Address_to_DMA(address));
@@ -318,33 +393,123 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
   }
 
   action(z_recycleRequestQueue, "z", desc="recycle request queue") {
-    requestNetwork_in.dequeue();
+    requestNetwork_in.recycle();
   }
+
+  action(zz_recycleDMAQueue, "zz", desc="recycle DMA queue") {
+    dmaRequestQueue_in.recycle();
+  }
+
+
+  action(e_ownerIsRequestor, "e", desc="The owner is now the requestor") {
+    peek(requestNetwork_in, RequestMsg) {
+      directory[address].Owner.clear();
+      directory[address].Owner.add(in_msg.Requestor);
+    }
+  }
+
+
+  action(inv_sendCacheInvalidate, "inv", desc="Invalidate a cache block") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency=directory_latency) {
+      out_msg.Address := address;
+      out_msg.Type := CoherenceResponseType:INV;
+      out_msg.Sender := machineID;
+      out_msg.Destination := directory[in_msg.PhysicalAddress].Owner;
+      out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+    }
+  }
+
+
+  action(drp_sendDMAData, "drp", desc="Send Data to DMA controller from incoming PUTX") {
+    peek(responseNetwork_in, ResponseMsg) {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency=to_mem_ctrl_latency) {
+        out_msg.PhysicalAddress := address;
+        out_msg.Type := DMAResponseType:DATA;
+        out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
+        out_msg.Destination.add(map_Address_to_DMA(address));
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(c_clearOwner, "c", desc="Clear the owner field") {
+    directory[address].Owner.clear();
+  }
+
+  action(v_allocateTBE, "v", desc="Allocate TBE") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      TBEs.allocate(address);
+      TBEs[address].DataBlk := in_msg.DataBlk;
+      TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
+      TBEs[address].Len := in_msg.Len; 
+    }
+  }
+
+  action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
+    //directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
+    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+
+
+  }
+
+
+  action(qw_queueMemoryWBRequest_partialTBE, "qwt", desc="Queue off-chip writeback request") {
+    peek(responseNetwork_in, ResponseMsg) {
+      enqueue(memQueue_out, MemoryMsg, latency=to_mem_ctrl_latency) {
+        out_msg.Address := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.OriginalRequestorMachId := in_msg.Sender;
+        //out_msg.DataBlk := in_msg.DataBlk;
+        //out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
+        out_msg.DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+ 
+        out_msg.MessageSize := in_msg.MessageSize;
+        //out_msg.Prefetch := in_msg.Prefetch;
+   
+        DEBUG_EXPR(out_msg);
+      }
+    }
+  }
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE") {
+    TBEs.deallocate(address); 
+  }
+
 
   // TRANSITIONS
 
-  transition(I, Fetch) {
-    //d_sendData;
+
+  transition(I, Fetch, IM) {
     qf_queueMemoryFetchRequest;
+    e_ownerIsRequestor;
     j_popIncomingRequestQueue;
   }
 
-  transition(I, Data) {
+  transition(IM, Memory_Data, M) {
+    d_sendData;
+    l_popMemQueue;
+  }
+//added by SS
+  transition(M, CleanReplacement, I) {
+    c_clearOwner;
+    a_sendAck;
+    k_popIncomingResponseQueue;
+  }
+
+  transition(M, Data, MI) {
     m_writeDataToMemory;
-    //a_sendAck;
     qw_queueMemoryWBRequest;
     k_popIncomingResponseQueue;
   }
 
-  transition(I, Memory_Data) {
-    d_sendData;
+  transition(MI, Memory_Ack, I) {
+    c_clearOwner;
+    aa_sendAck;
     l_popMemQueue;
   }
 
-  transition(I, Memory_Ack) {
-    a_sendAck;
-    l_popMemQueue;
-  }
 
 //added by SS for dma support
   transition(I, DMA_READ, ID) {
@@ -368,9 +533,52 @@ machine(Directory, "MESI_CMP_filter_directory protocol")  : LATENCY_MEMORY_LATEN
     l_popMemQueue;
   }
 
-  transition({ID, ID_W}, {Fetch, Data} ) {
+  transition({ID, ID_W, M_DRDI, M_DWRI, IM, MI}, {Fetch, Data} ) {
     z_recycleRequestQueue;
   }
 
+  transition({ID, ID_W, M_DRD, M_DRDI, M_DWR, M_DWRI, IM, MI}, {DMA_WRITE, DMA_READ} ) {
+    zz_recycleDMAQueue;
+  }
+
+
+  transition(M, DMA_READ, M_DRD) {
+    inv_sendCacheInvalidate;
+    p_popIncomingDMARequestQueue;
+  }
+
+  transition(M_DRD, Data, M_DRDI) {
+    drp_sendDMAData;
+    m_writeDataToMemory;
+    qw_queueMemoryWBRequest;
+    k_popIncomingResponseQueue;
+  }
+
+  transition(M_DRDI, Memory_Ack, I) {
+    aa_sendAck;
+    c_clearOwner;
+    l_popMemQueue;
+  }
+
+  transition(M, DMA_WRITE, M_DWR) {
+    v_allocateTBE;
+    inv_sendCacheInvalidate;
+    p_popIncomingDMARequestQueue;
+  }
+
+  transition(M_DWR, Data, M_DWRI) {
+    m_writeDataToMemory;
+    qw_queueMemoryWBRequest_partialTBE;
+    k_popIncomingResponseQueue; 
+  }
+
+  transition(M_DWRI, Memory_Ack, I) {
+    dwt_writeDMADataFromTBE;
+    aa_sendAck;
+    c_clearOwner;
+    da_sendDMAAck;
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
 
 }
