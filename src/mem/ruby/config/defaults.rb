@@ -9,7 +9,7 @@ class NetPort < LibRubyObject
 
   # buffer_size limits the size of all other buffers connecting to
   # SLICC Controllers.  When 0, infinite buffering is used.
-  default_param :buffer_size, Integer, 32
+  default_param :buffer_size, Integer, 0
 
   # added by SS for TBE
   default_param :number_of_TBEs, Integer, 256
@@ -36,7 +36,7 @@ class Debug < LibRubyObject
   #   1. change protocol_trace = true
   #   2. enable debug in the Ruby Makefile
   #   3. set start_time = 1
-  default_param :protocol_trace, Boolean, false
+  default_param :protocol_trace, Boolean, true
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
   default_param :filter_string, String, "none"
@@ -46,9 +46,9 @@ class Debug < LibRubyObject
 
   # filters debugging messages based on a ruby time
   default_param :start_time, Integer, 1
-
+  
   # sends debugging messages to a output filename
-  default_param :output_filename, String, "none"
+  default_param :output_filename, String, "debug_ss"
 end
 
 class Topology < LibRubyObject
@@ -71,11 +71,11 @@ end
 class Network < LibRubyObject
   default_param :endpoint_bandwidth, Integer, 10000
   default_param :adaptive_routing, Boolean, true
-  default_param :number_of_virtual_networks, Integer, 6
+  default_param :number_of_virtual_networks, Integer, 10
   default_param :fan_out_degree, Integer, 4
 
   # default buffer size.  Setting to 0 indicates infinite buffering
-  default_param :buffer_size, Integer, 3
+  default_param :buffer_size, Integer, 0
 
   # local memory latency ?? NetworkLinkLatency
   default_param :link_latency, Integer, 1
@@ -203,5 +203,32 @@ class RubySystem
   default_param :tracer, Tracer, Tracer.new("tracer0")
 
   default_param :profiler, Profiler, Profiler.new("profiler0")
+end
+#added by SS
+
+class MESI_CMP_directory_L2CacheController < CacheController
+  default_param :l2_request_latency, Integer, 2
+  default_param :l2_response_latency, Integer, 2
+  default_param :to_L1_latency, Integer, 1
+
+#if 0 then automatically calculated
+  default_param :lowest_bit, Integer, 0
+  default_param :highest_bit, Integer, 0    
+end
+
+class MESI_CMP_directory_L1CacheController < L1CacheController
+  default_param :l1_request_latency, Integer, 2
+  default_param :l1_response_latency, Integer, 2
+  default_param :to_L2_latency, Integer, 1
+end
+
+
+class MESI_CMP_directory_DirectoryController < DirectoryController
+  default_param :to_mem_ctrl_latency, Integer, 1
+  default_param :directory_latency, Integer, 6
+end
+
+class MESI_CMP_directory_DMAController < DMAController
+  default_param :request_latency, Integer, 6
 end
 
