@@ -163,8 +163,8 @@ class MOESI_CMP_directory_DirectoryController < DirectoryController
 end
 
 class MOESI_CMP_directory_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-  default_param :response_latency, Integer, 6
+  default_param :request_latency, Integer, 14
+  default_param :response_latency, Integer, 14
 end
 
 class RubySystem
@@ -179,7 +179,7 @@ class RubySystem
   # you can still have a non-deterministic simulation if random seed
   # is set to "rand".  This is because the Ruby swtiches use random
   # link priority elevation
-  default_param :randomization, Boolean, false
+  default_param :randomization, Boolean, true
 
   # tech_nm is the device size used to calculate latency and area
   # information about system components

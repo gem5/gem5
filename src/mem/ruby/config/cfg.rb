@@ -11,7 +11,7 @@ end
 
 def assert(condition,message)
   unless condition
-    raise AssertionFailure, "\n\nAssertion failed: \n\n   #{message}\n\n"
+    raise AssertionFailure.new(message), "\n\nAssertion failed: \n\n   #{message}\n\n"
   end
 end
 

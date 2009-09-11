@@ -156,6 +156,7 @@ private:
 
   // The first index is the # of cache lines.
   // The second index is the the amount associativity.
+  m5::hash_map<Address, int> m_tag_index;
   Vector<Vector<AbstractCacheEntry*> > m_cache;
   Vector<Vector<int> > m_locked;
 
@@ -286,6 +287,12 @@ int CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
 {
   assert(tag == line_address(tag));
   // search the set for the tags
+  m5::hash_map<Address, int>::const_iterator it = m_tag_index.find(tag);
+  if (it != m_tag_index.end())
+    if (m_cache[cacheSet][it->second]->m_Permission != AccessPermission_NotPresent)
+      return it->second;
+  return -1; // Not found
+  /*
   for (int i=0; i < m_cache_assoc; i++) {
     if ((m_cache[cacheSet][i] != NULL) &&
         (m_cache[cacheSet][i]->m_Address == tag) &&
@@ -294,6 +301,7 @@ int CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
     }
   }
   return -1; // Not found
+  */
 }
 
 // Given a cache index: returns the index of the tag in a set.
@@ -303,11 +311,19 @@ int CacheMemory::findTagInSetIgnorePermissions(Index cacheSet, const Address& ta
 {
   assert(tag == line_address(tag));
   // search the set for the tags
+  m5::hash_map<Address, int>::const_iterator it = m_tag_index.find(tag);
+  if (it != m_tag_index.end())
+    return it->second;
+  return -1; // Not found
+  /*
+  assert(tag == line_address(tag));
+  // search the set for the tags
   for (int i=0; i < m_cache_assoc; i++) {
     if (m_cache[cacheSet][i] != NULL && m_cache[cacheSet][i]->m_Address == tag)
       return i;
   }
   return -1; // Not found
+  */
 }
 
 // PUBLIC METHODS
@@ -418,6 +434,7 @@ void CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
       m_cache[cacheSet][i]->m_Address = address;
       m_cache[cacheSet][i]->m_Permission = AccessPermission_Invalid;
       m_locked[cacheSet][i] = -1;
+      m_tag_index[address] = i;
 
       m_replacementPolicy_ptr->touch(cacheSet, i, g_eventQueue_ptr->getTime());
 
@@ -439,6 +456,7 @@ void CacheMemory::deallocate(const Address& address)
     delete m_cache[cacheSet][location];
     m_cache[cacheSet][location] = NULL;
     m_locked[cacheSet][location] = -1;
+    m_tag_index.erase(address);
   }
 }
 

@@ -34,7 +34,7 @@ struct RubyRequest {
   unsigned proc_id;
 
   RubyRequest() {}
-  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode, unsigned _proc_id = 0)
+  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode, unsigned _proc_id = 100)
     : paddr(_paddr), data(_data), len(_len), pc(_pc), type(_type), access_mode(_access_mode), proc_id(_proc_id)
   {}
 };
@@ -75,6 +75,12 @@ RubyPortHandle libruby_get_port_by_name(const char* name);
  * hit_callback (passed to libruby_get_port)
  */
 int64_t libruby_issue_request(RubyPortHandle p, struct RubyRequest request);
+
+
+/**
+ *
+ */
+bool libruby_isReady(RubyPortHandle p, struct RubyRequest request);
 
 /**
  * writes data directly into Ruby's data array.  Note that this
