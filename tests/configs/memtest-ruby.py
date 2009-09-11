@@ -35,7 +35,7 @@ nb_cores = 8
 cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 import ruby_config
-ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", nb_cores)
+ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),

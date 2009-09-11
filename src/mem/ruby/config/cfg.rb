@@ -296,9 +296,6 @@ private
 
 end
 
-
-
-
 class CacheController < NetPort
   @@total_cache_controllers = Hash.new
 
@@ -438,27 +435,27 @@ class SetAssociativeCache < Cache
       cacti_args << 360 << 0 << 0 << 0 << 0 << 1 << 1 << 1 << 1 << 0 << 0
       cacti_args << 50 << 10 << 10 << 0 << 1 << 1
 
-#      cacti_cmd = File.dirname(__FILE__) + "/cacti/cacti " + cacti_args.join(" ")
+      cacti_cmd = File.dirname(__FILE__) + "/cacti/cacti " + cacti_args.join(" ")
 
-#      IO.popen(cacti_cmd) { |pipe|
-#        str1 = pipe.readline
-#        str2 = pipe.readline
-#        results = str2.split(", ")
-#        if results.size != 61
-#          print "CACTI ERROR: CACTI produced unexpected output.\n"
-#          print "Are you using the version shipped with libruby?\n"
-#          raise Exception
-#        end
-#        latency_ns = results[5].to_f
-#        if (latency_ns == "1e+39")
-#          print "CACTI ERROR:  CACTI was unable to realistically model the cache ",@obj_name,"\n"
-#          print "Either change the cache parameters or manually set the latency values\n"
-#          raise Exception
-#        end
-#        clk_period_ns = 1e9 * (1.0 / (RubySystem.freq_mhz * 1e6))
-#        latency_cycles = (latency_ns / clk_period_ns).ceil
-#        @latency = latency_cycles
-#      }
+      IO.popen(cacti_cmd) { |pipe|
+        str1 = pipe.readline
+        str2 = pipe.readline
+        results = str2.split(", ")
+        if results.size != 61
+          print "CACTI ERROR: CACTI produced unexpected output.\n"
+          print "Are you using the version shipped with libruby?\n"
+          raise Exception
+        end
+        latency_ns = results[5].to_f
+        if (latency_ns == "1e+39")
+          print "CACTI ERROR:  CACTI was unable to realistically model the cache ",@obj_name,"\n"
+          print "Either change the cache parameters or manually set the latency values\n"
+          raise Exception
+        end
+        clk_period_ns = 1e9 * (1.0 / (RubySystem.freq_mhz * 1e6))
+        latency_cycles = (latency_ns / clk_period_ns).ceil
+        @latency = latency_cycles
+      }
     elsif @latency.is_a?(Float)
       clk_period_ns = 1e9 * (1.0 / (RubySystem.freq_mhz * 1e6))
       latency_cycles = (@latency / clk_period_ns).ceil
@@ -757,5 +754,4 @@ class GarnetFlexiblePipeline < GarnetNetwork
   end
 end
 
-#added by SS
 require "defaults.rb"

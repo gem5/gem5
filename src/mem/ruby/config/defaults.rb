@@ -9,7 +9,7 @@ class NetPort < LibRubyObject
 
   # buffer_size limits the size of all other buffers connecting to
   # SLICC Controllers.  When 0, infinite buffering is used.
-  default_param :buffer_size, Integer, 0
+  default_param :buffer_size, Integer, 32
 
   # added by SS for TBE
   default_param :number_of_TBEs, Integer, 256
@@ -36,19 +36,19 @@ class Debug < LibRubyObject
   #   1. change protocol_trace = true
   #   2. enable debug in the Ruby Makefile
   #   3. set start_time = 1
-  default_param :protocol_trace, Boolean, true
+  default_param :protocol_trace, Boolean, false
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
-  default_param :filter_string, String, "none"
+  default_param :filter_string, String, ""
 
   # filters debugging messages based on priority (low, med, high)
-  default_param :verbosity_string, String, "none"
+  default_param :verbosity_string, String, ""
 
   # filters debugging messages based on a ruby time
   default_param :start_time, Integer, 1
   
   # sends debugging messages to a output filename
-  default_param :output_filename, String, "debug_ss"
+  default_param :output_filename, String, ""
 end
 
 class Topology < LibRubyObject
@@ -167,6 +167,32 @@ class MOESI_CMP_directory_DMAController < DMAController
   default_param :response_latency, Integer, 14
 end
 
+class MESI_CMP_directory_L2CacheController < CacheController
+  default_param :l2_request_latency, Integer, 2
+  default_param :l2_response_latency, Integer, 2
+  default_param :to_L1_latency, Integer, 1
+
+#if 0 then automatically calculated
+  default_param :lowest_bit, Integer, 0
+  default_param :highest_bit, Integer, 0    
+end
+
+class MESI_CMP_directory_L1CacheController < L1CacheController
+  default_param :l1_request_latency, Integer, 2
+  default_param :l1_response_latency, Integer, 2
+  default_param :to_L2_latency, Integer, 1
+end
+
+
+class MESI_CMP_directory_DirectoryController < DirectoryController
+  default_param :to_mem_ctrl_latency, Integer, 1
+  default_param :directory_latency, Integer, 6
+end
+
+class MESI_CMP_directory_DMAController < DMAController
+  default_param :request_latency, Integer, 6
+end
+
 class RubySystem
 
   # Random seed used by the simulation. If set to "rand", the seed
@@ -206,29 +232,5 @@ class RubySystem
 end
 #added by SS
 
-class MESI_CMP_directory_L2CacheController < CacheController
-  default_param :l2_request_latency, Integer, 2
-  default_param :l2_response_latency, Integer, 2
-  default_param :to_L1_latency, Integer, 1
 
-#if 0 then automatically calculated
-  default_param :lowest_bit, Integer, 0
-  default_param :highest_bit, Integer, 0    
-end
-
-class MESI_CMP_directory_L1CacheController < L1CacheController
-  default_param :l1_request_latency, Integer, 2
-  default_param :l1_response_latency, Integer, 2
-  default_param :to_L2_latency, Integer, 1
-end
-
-
-class MESI_CMP_directory_DirectoryController < DirectoryController
-  default_param :to_mem_ctrl_latency, Integer, 1
-  default_param :directory_latency, Integer, 6
-end
-
-class MESI_CMP_directory_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-end
 
