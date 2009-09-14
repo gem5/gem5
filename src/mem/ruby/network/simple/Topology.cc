@@ -79,7 +79,6 @@ void Topology::init(const vector<string> & argv)
       m_connections = argv[i+1];
     else if (argv[i] == "print_config") {
       m_print_config = string_to_bool(argv[i+1]);
-      cerr << "print config: " << m_print_config << endl;
     }
   }
   assert(m_network_ptr != NULL);
