@@ -1,7 +1,5 @@
 #!/usr/bin/ruby
 
-
-
 class NetPort < LibRubyObject
   # number of transitions a SLICC state machine can transition per
   # cycle
@@ -11,7 +9,6 @@ class NetPort < LibRubyObject
   # SLICC Controllers.  When 0, infinite buffering is used.
   default_param :buffer_size, Integer, 32
 
-  # added by SS for TBE
   default_param :number_of_TBEs, Integer, 256
 
   default_param :recycle_latency, Integer, 10
@@ -39,10 +36,10 @@ class Debug < LibRubyObject
   default_param :protocol_trace, Boolean, false
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
-  default_param :filter_string, String, ""
+  default_param :filter_string, String, "none"
 
-  # filters debugging messages based on priority (low, med, high)
-  default_param :verbosity_string, String, ""
+  # filters debugging messages based on priority (none, low, med, high)
+  default_param :verbosity_string, String, "none"
 
   # filters debugging messages based on a ruby time
   default_param :start_time, Integer, 1
@@ -65,7 +62,7 @@ class Topology < LibRubyObject
 
   # indicates whether the topology config will be displayed in the
   # stats file
-  default_param :print_config, Boolean, true
+  default_param :print_config, Boolean, false
 end
 
 class Network < LibRubyObject
@@ -94,20 +91,15 @@ class GarnetNetwork < Network
   default_param :using_network_testing, Boolean, false
 end
 
-
-
-#added by SS
 class Tracer < LibRubyObject
   default_param :warmup_length, Integer, 1000000
 end
 
-#added by SS
 class Profiler < LibRubyObject
   default_param :hot_lines, Boolean, false
   default_param :all_instructions, Boolean, false
 end
 
-#added by SS
 class MemoryControl < LibRubyObject
 
   default_param :mem_bus_cycle_multiplier, Integer, 10
@@ -230,7 +222,6 @@ class RubySystem
 
   default_param :profiler, Profiler, Profiler.new("profiler0")
 end
-#added by SS
 
 
 

@@ -1,17 +1,11 @@
 #!/usr/bin/ruby
 
-class AssertionFailure < RuntimeError
-end
+root = File.dirname(File.expand_path(__FILE__))
+require root+'/assert.rb'
 
 class Boolean
   def self.is_a?(obj)
     return self.name == "Boolean"
-  end
-end
-
-def assert(condition,message)
-  unless condition
-    raise AssertionFailure.new(message), "\n\nAssertion failed: \n\n   #{message}\n\n"
   end
 end
 
