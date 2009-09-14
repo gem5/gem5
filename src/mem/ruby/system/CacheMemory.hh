@@ -292,16 +292,6 @@ int CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
     if (m_cache[cacheSet][it->second]->m_Permission != AccessPermission_NotPresent)
       return it->second;
   return -1; // Not found
-  /*
-  for (int i=0; i < m_cache_assoc; i++) {
-    if ((m_cache[cacheSet][i] != NULL) &&
-        (m_cache[cacheSet][i]->m_Address == tag) &&
-        (m_cache[cacheSet][i]->m_Permission != AccessPermission_NotPresent)) {
-      return i;
-    }
-  }
-  return -1; // Not found
-  */
 }
 
 // Given a cache index: returns the index of the tag in a set.
@@ -315,15 +305,6 @@ int CacheMemory::findTagInSetIgnorePermissions(Index cacheSet, const Address& ta
   if (it != m_tag_index.end())
     return it->second;
   return -1; // Not found
-  /*
-  assert(tag == line_address(tag));
-  // search the set for the tags
-  for (int i=0; i < m_cache_assoc; i++) {
-    if (m_cache[cacheSet][i] != NULL && m_cache[cacheSet][i]->m_Address == tag)
-      return i;
-  }
-  return -1; // Not found
-  */
 }
 
 // PUBLIC METHODS
