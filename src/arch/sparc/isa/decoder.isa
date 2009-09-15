@@ -226,7 +226,8 @@ decode OP default Unknown::unknown()
                 if(Rs2_or_imm13.udw == 0) fault = new DivisionByZero;
                 else Rd = Rs1.udw / Rs2_or_imm13.udw;}});
             0x1E: IntOpCcRes::udivcc({{
-                    uint32_t resTemp, val2 = Rs2_or_imm13.udw;
+                    uint64_t resTemp;
+                    uint32_t val2 = Rs2_or_imm13.udw;
                     int32_t overflow = 0;
                     if(val2 == 0) fault = new DivisionByZero;
                     else
