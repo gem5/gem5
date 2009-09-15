@@ -40,6 +40,7 @@
 
 #include "arch/isa_traits.hh"
 #include "arch/types.hh"
+#include "arch/registers.hh"
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "base/types.hh"
@@ -296,6 +297,32 @@ class InOrderCPU : public BaseCPU
 
     /** Get a Memory Port */
     Port* getPort(const std::string &if_name, int idx = 0);
+
+#if FULL_SYSTEM
+    /** HW return from error interrupt. */
+    Fault hwrei(ThreadID tid);
+
+    bool simPalCheck(int palFunc, ThreadID tid);
+
+    /** Returns the Fault for any valid interrupt. */
+    Fault getInterrupts();
+
+    /** Processes any an interrupt fault. */
+    void processInterrupts(Fault interrupt);
+
+    /** Halts the CPU. */
+    void halt() { panic("Halt not implemented!\n"); }
+
+    /** Update the Virt and Phys ports of all ThreadContexts to
+     * reflect change in memory connections. */
+    void updateMemPorts();
+
+    /** Check if this address is a valid instruction address. */
+    bool validInstAddr(Addr addr) { return true; }
+
+    /** Check if this address is a valid data address. */
+    bool validDataAddr(Addr addr) { return true; }
+#endif
 
     /** trap() - sets up a trap event on the cpuTraps to handle given fault.
      *  trapCPU() - Traps to handle given fault
@@ -578,8 +605,6 @@ class InOrderCPU : public BaseCPU
     ActivityRecorder activityRec;
 
   public:
-    void readFunctional(Addr addr, uint32_t &buffer);
-
     /** Number of Active Threads in the CPU */
     ThreadID numActiveThreads() { return activeThreads.size(); }
 
@@ -596,6 +621,10 @@ class InOrderCPU : public BaseCPU
 
     /** Wakes the CPU, rescheduling the CPU if it's not already active. */
     void wakeCPU();
+
+#if FULL_SYSTEM
+    virtual void wakeup();
+#endif
 
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();
@@ -621,6 +650,14 @@ class InOrderCPU : public BaseCPU
 
         return total;
     }
+
+#if FULL_SYSTEM
+    /** Pointer to the system. */
+    System *system;
+
+    /** Pointer to physical memory. */
+    PhysicalMemory *physmem;
+#endif
 
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum[ThePipeline::MaxThreads];

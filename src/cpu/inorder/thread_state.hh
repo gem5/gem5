@@ -33,13 +33,23 @@
 
 #include "arch/faults.hh"
 #include "arch/isa_traits.hh"
+#include "base/callback.hh"
+#include "base/output.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "sim/sim_exit.hh"
 
 class Event;
+class InOrderCPU;
+
+#if FULL_SYSTEM
+class EndQuiesceEvent;
+class FunctionProfile;
+class ProfileNode;
+#else
 class FunctionalMemory;
 class Process;
-class InOrderCPU;
+#endif
 
 /**
  * Class that has various thread state, such as the status, the
@@ -66,16 +76,28 @@ class InOrderThreadState : public ThreadState {
      */
     bool trapPending;
 
-
+#if FULL_SYSTEM
+    InOrderThreadState(InOrderCPU *_cpu, ThreadID _thread_num)
+        : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), 0/*_thread_num*/),
+          cpu(_cpu), inSyscall(0), trapPending(0)
+    { }
+#else
     InOrderThreadState(InOrderCPU *_cpu, ThreadID _thread_num,
                        Process *_process)
         : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), 0/*_thread_num*/,
                       _process),
           cpu(_cpu), inSyscall(0), trapPending(0)
     { }
+#endif
 
+#if !FULL_SYSTEM
     /** Handles the syscall. */
     void syscall(int64_t callnum) { process->syscall(callnum, tc); }
+#endif
+
+#if FULL_SYSTEM
+    void dumpFuncProfile();    
+#endif
 
     /** Pointer to the ThreadContext of this thread. */
     ThreadContext *tc;

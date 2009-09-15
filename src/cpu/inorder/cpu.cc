@@ -51,6 +51,15 @@
 #include "sim/process.hh"
 #include "sim/stat_control.hh"
 
+#if FULL_SYSTEM
+#include "cpu/quiesce_event.hh"
+#include "sim/system.hh"
+#endif
+
+#if THE_ISA == ALPHA_ISA
+#include "arch/alpha/osfpal.hh"
+#endif
+
 using namespace std;
 using namespace TheISA;
 using namespace ThePipeline;
@@ -171,11 +180,16 @@ InOrderCPU::InOrderCPU(Params *params)
       timeBuffer(2 , 2),
       removeInstsThisCycle(false),
       activityRec(params->name, NumStages, 10, params->activity),
+#if FULL_SYSTEM
+      system(params->system),
+      physmem(system->physmem),
+#endif // FULL_SYSTEM
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
       numVirtProcs(1)
 {
+    ThreadID active_threads;
     cpu_params = params;
 
     resPool = new ResourcePool(this, params);
@@ -183,13 +197,17 @@ InOrderCPU::InOrderCPU(Params *params)
     // Resize for Multithreading CPUs
     thread.resize(numThreads);
 
-    ThreadID active_threads = params->workload.size();
+#if FULL_SYSTEM
+    active_threads = 1;
+#else
+    active_threads = params->workload.size();
 
     if (active_threads > MaxThreads) {
         panic("Workload Size too large. Increase the 'MaxThreads'"
               "in your InOrder implementation or "
               "edit your workload size.");
     }
+#endif
 
     // Bind the fetch & data ports from the resource pool.
     fetchPortIdx = resPool->getPortIdx(params->fetchMemPort);
@@ -203,6 +221,11 @@ InOrderCPU::InOrderCPU(Params *params)
     }
 
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
+#if FULL_SYSTEM
+        // SMT is not supported in FS mode yet.
+        assert(this->numThreads == 1);
+        this->thread[tid] = new Thread(this, 0);
+#else
         if (tid < (ThreadID)params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
                     tid, this->thread[tid]);
@@ -214,6 +237,7 @@ InOrderCPU::InOrderCPU(Params *params)
             Process* dummy_proc = params->workload[0];
             this->thread[tid] = new Thread(this, tid, dummy_proc);
         }
+#endif
 
         // Setup the TC that will serve as the interface to the threads/CPU.
         InOrderThreadContext *tc = new InOrderThreadContext;
@@ -447,13 +471,6 @@ InOrderCPU::init()
 }
 
 void
-InOrderCPU::readFunctional(Addr addr, uint32_t &buffer)
-{
-    tcBase()->getMemPort()->readBlob(addr, (uint8_t*)&buffer, sizeof(uint32_t));
-    buffer = gtoh(buffer);
-}
-
-void
 InOrderCPU::reset()
 {
     for (int i = 0; i < numThreads; i++) {
@@ -467,6 +484,61 @@ InOrderCPU::getPort(const std::string &if_name, int idx)
 {
     return resPool->getPort(if_name, idx);
 }
+
+#if FULL_SYSTEM
+Fault
+InOrderCPU::hwrei(ThreadID tid)
+{
+    panic("hwrei: Unimplemented");
+    
+    return NoFault;
+}
+
+
+bool
+InOrderCPU::simPalCheck(int palFunc, ThreadID tid)
+{
+    panic("simPalCheck: Unimplemented");
+
+    return true;
+}
+
+
+Fault
+InOrderCPU::getInterrupts()
+{
+    // Check if there are any outstanding interrupts
+    return this->interrupts->getInterrupt(this->threadContexts[0]);
+}
+
+
+void
+InOrderCPU::processInterrupts(Fault interrupt)
+{
+    // Check for interrupts here.  For now can copy the code that
+    // exists within isa_fullsys_traits.hh.  Also assume that thread 0
+    // is the one that handles the interrupts.
+    // @todo: Possibly consolidate the interrupt checking code.
+    // @todo: Allow other threads to handle interrupts.
+
+    assert(interrupt != NoFault);
+    this->interrupts->updateIntrInfo(this->threadContexts[0]);
+
+    DPRINTF(InOrderCPU, "Interrupt %s being handled\n", interrupt->name());
+    this->trap(interrupt, 0);
+}
+
+
+void
+InOrderCPU::updateMemPorts()
+{
+    // Update all ThreadContext's memory ports (Functional/Virtual
+    // Ports)
+    ThreadID size = thread.size();
+    for (ThreadID i = 0; i < size; ++i)
+        thread[i]->connectMemPorts(thread[i]->getTC());
+}
+#endif
 
 void
 InOrderCPU::trap(Fault fault, ThreadID tid, int delay)
@@ -1230,6 +1302,22 @@ InOrderCPU::wakeCPU()
     mainEventQueue.schedule(&tickEvent, curTick);
 }
 
+#if FULL_SYSTEM
+
+void
+InOrderCPU::wakeup()
+{
+    if (this->thread[0]->status() != ThreadContext::Suspended)
+        return;
+
+    this->wakeCPU();
+
+    DPRINTF(Quiesce, "Suspended Processor woken\n");
+    this->threadContexts[0]->activate();
+}
+#endif
+
+#if !FULL_SYSTEM
 void
 InOrderCPU::syscall(int64_t callnum, ThreadID tid)
 {
@@ -1251,6 +1339,7 @@ InOrderCPU::syscall(int64_t callnum, ThreadID tid)
     // Clear Non-Speculative Block Variable
     nonSpecInstActive[tid] = false;
 }
+#endif
 
 void
 InOrderCPU::prefetch(DynInstPtr inst)

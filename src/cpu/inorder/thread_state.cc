@@ -29,37 +29,19 @@
  *
  */
 
-#include <string>
-
-#include "cpu/base.hh"
-#include "cpu/inst_seq.hh"
-#include "cpu/static_inst.hh"
+#include "arch/isa_traits.hh"
+#include "cpu/exetrace.hh"
+#include "cpu/inorder/thread_state.hh"
 #include "cpu/inorder/cpu.hh"
-#include "cpu/inorder/inorder_dyn_inst.hh"
-#include "cpu/inorder/pipeline_traits.hh"
-#include "params/InOrderCPU.hh"
 
-InOrderCPU *
-InOrderCPUParams::create()
-{
+using namespace TheISA;
+
 #if FULL_SYSTEM
-    // Full-system only supports a single thread for the moment.
-    ThreadID actual_num_threads = 1;
-#else
-    ThreadID actual_num_threads =
-        (numThreads >= workload.size()) ? numThreads : workload.size();
-
-    if (workload.size() == 0) {
-        fatal("Must specify at least one workload!");
-    }
-#endif
-
-    numThreads = actual_num_threads;
-
-    instShiftAmt = 2;
-
-    return new InOrderCPU(this);
+void 
+InOrderThreadState::dumpFuncProfile()    
+{
+    std::ostream *os = simout.create(csprintf("profile.%s.dat", cpu->name()));
+    profile->dump(tc, *os);
 }
-
-
+#endif
 

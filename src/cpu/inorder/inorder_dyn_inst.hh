@@ -43,6 +43,7 @@
 #include "arch/mt.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/inorder/inorder_trace.hh"
 #include "config/full_system.hh"
 #include "cpu/thread_context.hh"
@@ -55,6 +56,11 @@
 #include "cpu/inorder/pipeline_traits.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
+#include "sim/faults.hh"
+
+#if THE_ISA==ALPHA_ISA
+#include "arch/alpha/ev5.hh"
+#endif
 
 /**
  * @file
@@ -64,6 +70,7 @@
 // Forward declaration.
 class StaticInstPtr;
 class ResourceRequest;
+class Packet;
 
 class InOrderDynInst : public FastAlloc, public RefCounted
 {
@@ -486,7 +493,16 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setCurResSlot(unsigned slot_num) { curResSlot = slot_num; }
 
     /** Calls a syscall. */
+#if FULL_SYSTEM
+    /** Calls hardware return from error interrupt. */
+    Fault hwrei();
+    /** Traps to handle specified fault. */
+    void trap(Fault fault);
+    bool simPalCheck(int palFunc);
+#else
+    /** Calls a syscall. */
     void syscall(int64_t callnum);
+#endif
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
     Fault copySrcTranslate(Addr src);

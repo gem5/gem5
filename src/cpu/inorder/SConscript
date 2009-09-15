@@ -79,6 +79,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	Source('resources/mult_div_unit.cc')
 	Source('resource_pool.cc')
 	Source('reg_dep_map.cc')
+	Source('thread_state.cc')
 	Source('thread_context.cc')
 	Source('cpu.cc')
 
