@@ -508,12 +508,12 @@ const int X86_64LinuxProcess::numSyscalls =
 
 SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /*   0 */ SyscallDesc("restart_syscall", unimplementedFunc),
-    /*   1 */ SyscallDesc("exit", unimplementedFunc),
+    /*   1 */ SyscallDesc("exit", exitFunc),
     /*   2 */ SyscallDesc("fork", unimplementedFunc),
-    /*   3 */ SyscallDesc("read", unimplementedFunc),
+    /*   3 */ SyscallDesc("read", readFunc),
     /*   4 */ SyscallDesc("write", writeFunc),
-    /*   5 */ SyscallDesc("open", openFunc<X86Linux64>),
-    /*   6 */ SyscallDesc("close", unimplementedFunc),
+    /*   5 */ SyscallDesc("open", openFunc<X86Linux32>),
+    /*   6 */ SyscallDesc("close", closeFunc),
     /*   7 */ SyscallDesc("waitpid", unimplementedFunc),
     /*   8 */ SyscallDesc("creat", unimplementedFunc),
     /*   9 */ SyscallDesc("link", unimplementedFunc),
