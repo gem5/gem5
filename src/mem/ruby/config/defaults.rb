@@ -160,8 +160,8 @@ class MOESI_CMP_directory_DMAController < DMAController
 end
 
 class MESI_CMP_directory_L2CacheController < CacheController
-  default_param :l2_request_latency, Integer, 2
-  default_param :l2_response_latency, Integer, 2
+  default_param :request_latency, Integer, 2
+  default_param :response_latency, Integer, 2
   default_param :to_L1_latency, Integer, 1
 
 #if 0 then automatically calculated
