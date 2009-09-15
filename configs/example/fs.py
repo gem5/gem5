@@ -123,7 +123,7 @@ if options.l2cache:
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
-if options.caches:
+if options.caches or options.l2cache:
     test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
     test_sys.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
     test_sys.iocache = IOCache(addr_range=AddrRange(0, size='8GB'))
