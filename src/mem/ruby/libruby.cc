@@ -133,10 +133,6 @@ void libruby_read_ram(uint64_t paddr, uint8_t* data, int len)
   RubySystem::getMemoryVector()->read(Address(paddr), data, len);
 }
 
-bool libruby_isReady(RubyPortHandle p, struct RubyRequest request) {
-  return static_cast<RubyPort*>(p)->isReady(request, true);
-}
-
 int64_t libruby_issue_request(RubyPortHandle p, struct RubyRequest request)
 {
   return static_cast<RubyPort*>(p)->makeRequest(request);

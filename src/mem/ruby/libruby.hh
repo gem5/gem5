@@ -76,12 +76,6 @@ RubyPortHandle libruby_get_port_by_name(const char* name);
  */
 int64_t libruby_issue_request(RubyPortHandle p, struct RubyRequest request);
 
-
-/**
- *
- */
-bool libruby_isReady(RubyPortHandle p, struct RubyRequest request);
-
 /**
  * writes data directly into Ruby's data array.  Note that this
  * ignores caches, and should be considered incoherent after
