@@ -94,8 +94,9 @@ if options.errout != "":
 
 # By default, set workload to path of user-specified binary
 workloads = options.cmd
+numThreads = 1
 
-if options.detailed:
+if options.detailed or options.inorder:
     #check for SMT workload
     workloads = options.cmd.split(';')
     if len(workloads) > 1:
@@ -124,11 +125,12 @@ if options.detailed:
                 smt_process.errout = errouts[smt_idx]
             process += [smt_process, ]
             smt_idx += 1
-
+    numThreads = len(workloads)
+    
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
 CPUClass.clock = '2GHz'
-CPUClass.numThreads = len(workloads)
+CPUClass.numThreads = numThreads;
 
 np = options.num_cpus
 
