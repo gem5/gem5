@@ -302,7 +302,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 211 */ SyscallDesc("tgkill", unimplementedFunc), //32 bit
     /* 212 */ SyscallDesc("waitpid", unimplementedFunc), //32 bit
     /* 213 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 214 */ SyscallDesc("sysinfo", unimplementedFunc), //32 bit
+    /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<Sparc32Linux>), //32 bit
     /* 215 */ SyscallDesc("ipc", unimplementedFunc), //32 bit
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc), //32 bit
     /* 217 */ SyscallDesc("clone", cloneFunc),
@@ -608,7 +608,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 211 */ SyscallDesc("tgkill", unimplementedFunc),
     /* 212 */ SyscallDesc("waitpid", unimplementedFunc),
     /* 213 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 214 */ SyscallDesc("sysinfo", unimplementedFunc),
+    /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<SparcLinux>),
     /* 215 */ SyscallDesc("ipc", unimplementedFunc),
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc),
     /* 217 */ SyscallDesc("clone", cloneFunc),

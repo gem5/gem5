@@ -179,7 +179,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 113 */ SyscallDesc("vm86", unimplementedFunc),
     /* 114 */ SyscallDesc("wait4", unimplementedFunc),
     /* 115 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 116 */ SyscallDesc("sysinfo", unimplementedFunc),
+    /* 116 */ SyscallDesc("sysinfo", sysinfoFunc<ArmLinux>),
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),

@@ -59,6 +59,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"
+#include "sim/system.hh"
 #include "sim/process.hh"
 
 ///
@@ -558,6 +559,22 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
 }
 
+/// Target sysinfo() handler.
+template <class OS>
+SyscallReturn
+sysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+         ThreadContext *tc)
+{
+
+   TypedBufferArg<typename OS::tgt_sysinfo> sysinfo(process->getSyscallArg(tc, 0));   
+
+   sysinfo->uptime=seconds_since_epoch;
+   sysinfo->totalram=process->system->memSize();
+
+   sysinfo.copyOut(tc->getMemPort());
+
+   return 0;
+}
 
 /// Target chmod() handler.
 template <class OS>

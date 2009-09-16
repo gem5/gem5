@@ -440,7 +440,7 @@ SyscallDesc AlphaLinuxProcess::syscallDescs[] = {
     /* 315 */ SyscallDesc("munlock", unimplementedFunc),
     /* 316 */ SyscallDesc("mlockall", unimplementedFunc),
     /* 317 */ SyscallDesc("munlockall", unimplementedFunc),
-    /* 318 */ SyscallDesc("sysinfo", unimplementedFunc),
+    /* 318 */ SyscallDesc("sysinfo", sysinfoFunc<AlphaLinux>),
     /* 319 */ SyscallDesc("_sysctl", unimplementedFunc),
     /* 320 */ SyscallDesc("was sys_idle", unimplementedFunc),
     /* 321 */ SyscallDesc("oldumount", unimplementedFunc),
