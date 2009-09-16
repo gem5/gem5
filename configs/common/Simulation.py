@@ -95,6 +95,10 @@ def run(options, root, testsys, cpu_class):
         for i in xrange(np):
             testsys.cpu[i].progress_interval = options.prog_intvl
 
+    if options.maxinsts:
+        for i in xrange(np):
+            testsys.cpu[i].max_insts_any_thread = options.maxinsts
+
     if cpu_class:
         switch_cpus = [cpu_class(defer_registration=True, cpu_id=(np+i))
                        for i in xrange(np)]
