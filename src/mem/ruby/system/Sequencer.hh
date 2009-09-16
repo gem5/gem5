@@ -84,7 +84,7 @@ public:
 
   // called by Tester or Simics
   int64_t makeRequest(const RubyRequest & request);
-  bool isReady(const RubyRequest& request, bool dont_set = false);
+  int isReady(const RubyRequest& request);
   bool empty() const;
 
   void print(ostream& out) const;

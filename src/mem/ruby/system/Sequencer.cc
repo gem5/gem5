@@ -27,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "mem/ruby/libruby.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
@@ -360,49 +361,41 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
 }
 
 // Returns true if the sequencer already has a load or store outstanding
-bool Sequencer::isReady(const RubyRequest& request, bool dont_set) {
+int Sequencer::isReady(const RubyRequest& request) {
   // POLINA: check if we are currently flushing the write buffer, if so Ruby is returned as not ready
   // to simulate stalling of the front-end
   // Do we stall all the sequencers? If it is atomic instruction - yes!
   if (m_outstanding_count >= m_max_outstanding_requests) {
-    return false;
+    return LIBRUBY_BUFFER_FULL;
   }
 
   if( m_writeRequestTable.exist(line_address(Address(request.paddr))) ||
       m_readRequestTable.exist(line_address(Address(request.paddr))) ){
     //cout << "OUTSTANDING REQUEST EXISTS " << p << " VER " << m_version << endl;
     //printProgress(cout);
-    return false;
+    return LIBRUBY_ALIASED_REQUEST;
   }
-
-  if (m_servicing_atomic != 200 && m_servicing_atomic != request.proc_id) {
-    assert(m_atomics_counter > 0);
-    return false;
+  
+  if (request.type == RubyRequestType_RMW_Read) {
+    if (m_servicing_atomic == 200) {
+      assert(m_atomics_counter == 0);
+      m_servicing_atomic = request.proc_id;
+    }
+    else {
+      assert(m_servicing_atomic == request.proc_id);
+    }
+    m_atomics_counter++;
   }
   else {
-    if (!dont_set) {
-      if (request.type == RubyRequestType_RMW_Read) {
-        if (m_servicing_atomic == 200) {
-          assert(m_atomics_counter == 0);
-          m_servicing_atomic = request.proc_id;
-        }
-        else {
-          assert(m_servicing_atomic == request.proc_id);
-        }
-        m_atomics_counter++;
-      }
-      else {
-        if (m_servicing_atomic == request.proc_id) {
-          if (request.type != RubyRequestType_RMW_Write) {
-            m_servicing_atomic = 200;
-            m_atomics_counter = 0;
-          }
-        }
+    if (m_servicing_atomic == request.proc_id) {
+      if (request.type != RubyRequestType_RMW_Write) {
+	m_servicing_atomic = 200;
+	m_atomics_counter = 0;
       }
     }
   }
 
-  return true;
+  return 1;
 }
 
 bool Sequencer::empty() const {
@@ -413,7 +406,8 @@ bool Sequencer::empty() const {
 int64_t Sequencer::makeRequest(const RubyRequest & request)
 {
   assert(Address(request.paddr).getOffset() + request.len <= RubySystem::getBlockSizeBytes());
-  if (isReady(request)) {
+  int ready = isReady(request);
+  if (ready > 0) {
     int64_t id = makeUniqueRequestID();
     SequencerRequest *srequest = new SequencerRequest(request, id, g_eventQueue_ptr->getTime());
     bool found = insertRequest(srequest);
@@ -441,7 +435,7 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
     }
   }
   else {
-    return -1;
+    return ready;
   }
 }
 

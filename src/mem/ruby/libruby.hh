@@ -69,6 +69,12 @@ RubyPortHandle libruby_get_port(const char* name, void (*hit_callback)(int64_t a
 RubyPortHandle libruby_get_port_by_name(const char* name);
 
 
+/** 
+ * libruby_issue_request error return codes 
+ */
+#define LIBRUBY_BUFFER_FULL -2
+#define LIBRUBY_ALIASED_REQUEST -3
+
 /**
  * issue_request returns a unique access_id to identify the ruby
  * transaction. This access_id is later returned to the caller via
