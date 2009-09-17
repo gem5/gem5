@@ -324,11 +324,12 @@ let {{
                         matcher.sub(src2_name, flag_code),
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code))
+                imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
-                        matcher.sub("imm8", code),
-                        matcher.sub("imm8", flag_code),
-                        matcher.sub("imm8", cond_check),
-                        matcher.sub("imm8", else_code))
+                        matcher.sub(imm_name, code),
+                        matcher.sub(imm_name, flag_code),
+                        matcher.sub(imm_name, cond_check),
+                        matcher.sub(imm_name, else_code))
                 return
 
             # If there's something optional to do with flags, generate
@@ -353,13 +354,16 @@ let {{
             matcher = re.compile("(?<!\w)spsrc2(?!\w)")
             if matcher.search(allCode):
                 code = "int64_t spsrc2 = signedPick(SrcReg2, 1, dataSize);" + code
+            matcher = re.compile("(?<!\w)simm8(?!\w)")
+            if matcher.search(allCode):
+                code = "int8_t simm8 = imm8;" + code
 
             base = "X86ISA::RegOp"
 
             # If imm8 shows up in the code, use the immediate templates, if
             # not, hopefully the register ones will be correct.
             templates = regTemplates
-            matcher = re.compile("(?<!\w)imm8(?!\w)")
+            matcher = re.compile("(?<!\w)s?imm8(?!\w)")
             if matcher.search(allCode):
                 base += "Imm"
                 templates = immTemplates
