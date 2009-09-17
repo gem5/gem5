@@ -191,7 +191,7 @@ namespace X86ISA
 /*      7 */ BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY, BY,
 /*      8 */ BY, ZW, BY, BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
 /*      9 */ 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
-/*      A */ BY, VW, BY, VW, 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 ,
+/*      A */ VW, VW, VW, VW, 0 , 0 , 0 , 0 , BY, ZW, 0 , 0 , 0 , 0 , 0 , 0 ,
 /*      B */ BY, BY, BY, BY, BY, BY, BY, BY, VW, VW, VW, VW, VW, VW, VW, VW,
 /*      C */ BY, BY, WO, 0 , 0 , 0 , BY, ZW, EN, 0 , WO, 0 , 0 , BY, 0 , 0 ,
 /*      D */ 0 , 0 , 0 , 0 , BY, BY, 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0 ,
