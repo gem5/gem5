@@ -62,8 +62,8 @@ void Sequencer::init(const vector<string> & argv)
   m_instCache_ptr = NULL;
   m_dataCache_ptr = NULL;
   m_controller = NULL;
-  m_servicing_atomic = 200;
-  m_atomics_counter = 0;
+  m_atomic_reads = 0;
+  m_atomic_writes = 0;
   for (size_t i=0; i<argv.size(); i+=2) {
     if ( argv[i] == "controller") {
       m_controller = RubySystem::getController(argv[i+1]); // args[i] = "L1Cache"
@@ -265,6 +265,7 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
   assert(m_writeRequestTable.exist(line_address(address)));
 
   SequencerRequest* request = m_writeRequestTable.lookup(address);
+
   removeRequest(request);
 
   assert((request->ruby_request.type == RubyRequestType_ST) ||
@@ -280,7 +281,7 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
     m_controller->set_atomic(address);
   }
   else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
-    m_controller->clear_atomic();
+    m_controller->clear_atomic(address);
   }
 
   hitCallback(request, data);
@@ -346,16 +347,7 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
       data.setData(ruby_request.data, request_address.getOffset(), ruby_request.len);
     }
   }
-  if (type == RubyRequestType_RMW_Write) {
-    if (m_servicing_atomic != ruby_request.proc_id) {
-      assert(0);
-    }
-    assert(m_atomics_counter > 0);
-    m_atomics_counter--;
-    if (m_atomics_counter == 0) {
-      m_servicing_atomic = 200;
-    }
-  }
+
   m_hit_callback(srequest->id);
   delete srequest;
 }
@@ -376,25 +368,6 @@ int Sequencer::isReady(const RubyRequest& request) {
     return LIBRUBY_ALIASED_REQUEST;
   }
   
-  if (request.type == RubyRequestType_RMW_Read) {
-    if (m_servicing_atomic == 200) {
-      assert(m_atomics_counter == 0);
-      m_servicing_atomic = request.proc_id;
-    }
-    else {
-      assert(m_servicing_atomic == request.proc_id);
-    }
-    m_atomics_counter++;
-  }
-  else {
-    if (m_servicing_atomic == request.proc_id) {
-      if (request.type != RubyRequestType_RMW_Write) {
-	m_servicing_atomic = 200;
-	m_atomics_counter = 0;
-      }
-    }
-  }
-
   return 1;
 }
 
@@ -422,9 +395,6 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
           m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
         }
       }
-      if (request.type == RubyRequestType_RMW_Write) {
-        m_controller->started_writes();
-      }
       issueRequest(request);
 
     // TODO: issue hardware prefetches here
@@ -445,18 +415,55 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   CacheRequestType ctype;
   switch(request.type) {
   case RubyRequestType_IFETCH:
+    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
+      m_controller->reset_atomics();
+    }
+    else if (m_atomic_writes > 0) {
+      assert(m_atomic_reads > m_atomic_writes);
+      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
+      assert(false);
+    }
     ctype = CacheRequestType_IFETCH;
     break;
   case RubyRequestType_LD:
+    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
+      m_controller->reset_atomics();
+    }
+    else if (m_atomic_writes > 0) {
+      assert(m_atomic_reads > m_atomic_writes);
+      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
+      assert(false);
+    }
     ctype = CacheRequestType_LD;
     break;
   case RubyRequestType_ST:
+    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
+      m_controller->reset_atomics();
+    }
+    else if (m_atomic_writes > 0) {
+      assert(m_atomic_reads > m_atomic_writes);
+      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
+      assert(false);
+    }
     ctype = CacheRequestType_ST;
     break;
   case RubyRequestType_Locked_Read:
   case RubyRequestType_Locked_Write:
+    ctype = CacheRequestType_ATOMIC;
+    break;
   case RubyRequestType_RMW_Read:
+    assert(m_atomic_writes == 0);
+    m_atomic_reads++;
+    ctype = CacheRequestType_ATOMIC;
+    break;
   case RubyRequestType_RMW_Write:
+    assert(m_atomic_reads > 0);
+    assert(m_atomic_writes < m_atomic_reads);
+    m_atomic_writes++;
+    if (m_atomic_reads == m_atomic_writes) {
+      m_atomic_reads = 0;
+      m_atomic_writes = 0;
+    }
     ctype = CacheRequestType_ATOMIC;
     break;
   default:

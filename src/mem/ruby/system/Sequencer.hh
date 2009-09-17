@@ -125,8 +125,8 @@ private:
   // Global outstanding request count, across all request tables
   int m_outstanding_count;
   bool m_deadlock_check_scheduled;
-  unsigned m_servicing_atomic;
-  int m_atomics_counter;
+  int m_atomic_reads;
+  int m_atomic_writes;
 };
 
 // Output operator declaration

@@ -72,7 +72,7 @@ def format_file(filename):
     if file_type(filename) in format_types:
         return True
 
-    return False
+    return True 
 
 def checkwhite_line(line):
     match = lead.search(line)

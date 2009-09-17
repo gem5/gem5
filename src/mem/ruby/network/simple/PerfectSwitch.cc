@@ -184,7 +184,7 @@ void PerfectSwitch::wakeup()
 
         assert(m_link_order.size() == m_routing_table.size());
         assert(m_link_order.size() == m_out.size());
-//changed by SS
+
         if (m_network_ptr->getAdaptiveRouting()) {
           if (m_network_ptr->isVNetOrdered(vnet)) {
             // Don't adaptively route

@@ -291,8 +291,8 @@ void StateMachine::printControllerH(ostream& out, string component)
   out << "  void printConfig(ostream& out) const;" << endl;
   out << "  void wakeup();" << endl;
   out << "  void set_atomic(Address addr);" << endl;
-  out << "  void started_writes();" << endl;
-  out << "  void clear_atomic();" << endl;
+  out << "  void clear_atomic(Address addr);" << endl;
+  out << "  void reset_atomics();" << endl;
   out << "  void printStats(ostream& out) const { s_profiler.dumpStats(out); }" << endl;
   out << "  void clearStats() { s_profiler.clearStats(); }" << endl;
   out << "private:" << endl;
@@ -876,7 +876,8 @@ void StateMachine::printCWakeup(ostream& out, string component)
                 } \n \
               } \n \
                ";
-    output.insert(pos, atomics_string);
+
+    // output.insert(pos, atomics_string);
     /*string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
     string::size_type next_pos = output.find(foo, pos);
     next_pos = next_pos + foo.length();
@@ -898,13 +899,19 @@ void StateMachine::printCWakeup(ostream& out, string component)
           out << "    if ((((*m_L1Cache_forwardToCache_ptr)).isReady())) {" << endl;
           out << "      const RequestMsg* in_msg_ptr;" << endl;
           out << "      in_msg_ptr = dynamic_cast<const RequestMsg*>(((*m_L1Cache_forwardToCache_ptr)).peek());" << endl;
-          out << "      if ((((servicing_atomic == 1)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address)) || " << endl;
-          out << "       ((servicing_atomic == 2)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address)) || " << endl;
-          out << "       ((servicing_atomic == 3)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address)) || " << endl;
-          out << "       ((servicing_atomic == 4)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address || locked_read_request1 == ((*in_msg_ptr)).m_Address)))) {" << endl;
-//          out << "      (locked_read_request2 == ((*in_msg_ptr)).m_Address) || (locked_read_request3 == ((*in_msg_ptr)).m_Address) || " << endl;
-//          out << "      (locked_read_request4 == ((*in_msg_ptr)).m_Address))) { " << endl;
-
+          out << "      if ((((servicing_atomic > 0)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address || locked_read_request1 == ((*in_msg_ptr)).m_Address)))) {" << endl;
+          out << "        postpone = true;" << endl;
+          out << "      }" << endl;
+              
+          out << "    }" << endl;
+          out << "    if (!postpone) {" << endl;
+        }
+        else if (port->toString().find("requestNetwork_in") != string::npos || port->toString().find("requestIntraChipL1Network_in") != string::npos) {
+          out << "    bool postpone = false;" << endl;
+          out << "    if ((((*m_L1Cache_requestToL1Cache_ptr)).isReady())) {" << endl;
+          out << "      const RequestMsg* in_msg_ptr;" << endl;
+          out << "      in_msg_ptr = dynamic_cast<const RequestMsg*>(((*m_L1Cache_requestToL1Cache_ptr)).peek());" << endl;
+          out << "      if ((((servicing_atomic > 0)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address || locked_read_request1 == ((*in_msg_ptr)).m_Address)))) {" << endl;
           out << "        postpone = true;" << endl;
           out << "      }" << endl;
               
@@ -919,6 +926,12 @@ void StateMachine::printCWakeup(ostream& out, string component)
       out << port->lookupPair("c_code_in_port");
       if (strncmp(component.c_str(), "L1Cache", 7) == 0) {
         if (port->toString().find("forwardRequestNetwork_in") != string::npos) {
+          out << "}" << endl;
+        }
+        else if (port->toString().find("requestIntraChipL1Network_in") != string::npos) {
+          out << "}" << endl;
+        }
+        else if (port->toString().find("requestNetwork_in") != string::npos) {
           out << "}" << endl;
         }
       }
@@ -939,37 +952,66 @@ void StateMachine::printCWakeup(ostream& out, string component)
     out << "void " << component << "_Controller::set_atomic(Address addr)" << endl;
     out << "{" << endl;
     out << "  servicing_atomic++; " << endl;
+    out << "  switch (servicing_atomic) { " << endl;
+    out << "    case(1): " << endl;
+    out << "      assert(locked_read_request1 == Address(-1)); " << endl;
+    out << "      locked_read_request1 = addr; " << endl;
+    out << "      break; " << endl;
+    out << "    case(2): " << endl;
+    out << "      assert(locked_read_request2 == Address(-1)); " << endl;
+    out << "      locked_read_request2 = addr; " << endl;
+    out << "      break; " << endl;
+    out << "    case(3): " << endl;
+    out << "      assert(locked_read_request3 == Address(-1)); " << endl;
+    out << "      locked_read_request3 = addr; " << endl;
+    out << "      break; " << endl;
+    out << "    case(4): " << endl;
+    out << "      assert(locked_read_request4 == Address(-1)); " << endl;
+    out << "      locked_read_request4 = addr; " << endl;
+    out << "      break; " << endl;
+    out << "    default: " << endl;
+    out << "      assert(0);" << endl;
+    out << "  }" << endl;
     out << "}" << endl;
-    out << "void " << component << "_Controller::started_writes()" << endl;
-    out << "{" << endl;
-    out << "  started_receiving_writes = true; " << endl;
-    out << "}" << endl;
-    out << "void " << component << "_Controller::clear_atomic()" << endl;
+
+    out << "void " << component << "_Controller::clear_atomic(Address addr)" << endl;
     out << "{" << endl;
     out << "  assert(servicing_atomic > 0); " << endl;
-    out << "  read_counter--; " << endl;
+    out << "  if (addr == locked_read_request1) " << endl;
+    out << "    locked_read_request1 = Address(-1);" << endl;
+    out << "  else if (addr == locked_read_request2)" << endl;
+    out << "    locked_read_request2 = Address(-1);" << endl;
+    out << "  else if (addr == locked_read_request3)" << endl;
+    out << "    locked_read_request3 = Address(-1);" << endl;
+    out << "  else if (addr == locked_read_request4)" << endl;
+    out << "    locked_read_request4 = Address(-1);" << endl;
+    out << "  else " << endl;
+    out << "    assert(0); " << endl;
     out << "  servicing_atomic--; " << endl;
-    out << "  if (read_counter == 0) { " << endl;
-    out << "    servicing_atomic = 0; " << endl;
-    out << "    started_receiving_writes = false; " << endl;
-    out << "    locked_read_request1 = Address(-1); " << endl;
-    out << "    locked_read_request2 = Address(-1); " << endl;
-    out << "    locked_read_request3 = Address(-1); " << endl;
-    out << "    locked_read_request4 = Address(-1); " << endl;
-    out << "  } " << endl;
+    out << "}" << endl;
+
+    out << "void " << component << "_Controller::reset_atomics()" << endl;
+    out << "{" << endl;
+    out << "  assert(servicing_atomic > 0); " << endl;
+    out << "  servicing_atomic = 0; " << endl;
+    out << "  locked_read_request1 = Address(-1);" << endl;
+    out << "  locked_read_request2 = Address(-1);" << endl;
+    out << "  locked_read_request3 = Address(-1);" << endl;
+    out << "  locked_read_request4 = Address(-1);" << endl;
     out << "}" << endl;
   }
   else {
-    out << "void " << component << "_Controller::started_writes()" << endl;
-    out << "{" << endl;
-    out << "  assert(0); " << endl;
-    out << "}" << endl;
     out << "void " << component << "_Controller::set_atomic(Address addr)" << endl;
     out << "{" << endl;
     out << "  assert(0); " << endl;
     out << "}" << endl;
 
-    out << "void " << component << "_Controller::clear_atomic()" << endl;
+    out << "void " << component << "_Controller::clear_atomic(Address addr)" << endl;
+    out << "{" << endl;
+    out << "  assert(0); " << endl;
+    out << "}" << endl;
+
+    out << "void " << component << "_Controller::reset_atomics()" << endl;
     out << "{" << endl;
     out << "  assert(0); " << endl;
     out << "}" << endl;
