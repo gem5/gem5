@@ -45,7 +45,9 @@ class MipsLiveProcess : public LiveProcess
   protected:
     MipsLiveProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    virtual void startup();
+    void startup();
+
+    void argsInit(int intSize, int pageSize);
 
   public:
     MipsISA::IntReg getSyscallArg(ThreadContext *tc, int i);

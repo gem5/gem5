@@ -413,12 +413,6 @@ MipsLinuxProcess::MipsLinuxProcess(LiveProcessParams * params,
      Num_Syscall_Descs(sizeof(syscallDescs) / sizeof(SyscallDesc))
 {  }
 
-void
-MipsLinuxProcess::startup()
-{
-    MipsLiveProcess::argsInit(MachineBytes, VMPageSize);
-}
-
 SyscallDesc*
 MipsLinuxProcess::getDesc(int callnum)
 {
