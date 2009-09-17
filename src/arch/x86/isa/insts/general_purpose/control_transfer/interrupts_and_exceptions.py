@@ -62,7 +62,7 @@ def macroop IRET_PROT {
     .adjust_env oszIn64Override
 
     # Check for a nested task. This isn't supported at the moment.
-    rflag t1, NT
+    rflag t1, 14; #NT bit
     panic "Task switching with iret is unimplemented!", flags=(nCEZF,)
 
     #t1 = temp_RIP
