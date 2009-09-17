@@ -149,12 +149,12 @@ def template MicroRegOpImmDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
@@ -203,7 +203,7 @@ def template MicroRegOpImmConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
@@ -216,7 +216,7 @@ def template MicroRegOpImmConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
