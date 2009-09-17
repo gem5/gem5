@@ -82,6 +82,8 @@ class MultDivUnit : public Resource {
     /** Register extra resource stats */
     virtual void regStats();
 
+    void requestAgain(DynInstPtr inst, bool &try_request);
+
   protected:
     /** Latency & Repeat Rate for Multiply Insts */
     unsigned multRepeatRate;
