@@ -992,7 +992,6 @@ void StateMachine::printCWakeup(ostream& out, string component)
 
     out << "void " << component << "_Controller::reset_atomics()" << endl;
     out << "{" << endl;
-    out << "  assert(servicing_atomic > 0); " << endl;
     out << "  servicing_atomic = 0; " << endl;
     out << "  locked_read_request1 = Address(-1);" << endl;
     out << "  locked_read_request2 = Address(-1);" << endl;
