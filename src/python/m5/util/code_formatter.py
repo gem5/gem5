@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import __builtin__
 import inspect
 import os
 import re
@@ -64,8 +65,8 @@ class lookup(object):
             if self.formatter.globals and item in self.frame.f_globals:
                 return self.frame.f_globals[item]
 
-        if item in __builtins__:
-            return __builtins__[item]
+        if item in __builtin__.__dict__:
+            return __builtin__.__dict__[item]
 
         try:
             item = int(item)
