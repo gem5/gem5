@@ -45,6 +45,12 @@ class attrdict(dict):
             return self.__delitem__(attr)
         return super(attrdict, self).__delattr__(attr)
 
+    def __getstate__(self):
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(state)
+
 class multiattrdict(attrdict):
     """Wrap attrdict so that nested attribute accesses automatically create
     nested dictionaries."""
