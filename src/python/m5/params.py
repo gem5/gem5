@@ -93,6 +93,8 @@ class ParamValue(object):
 
 # Regular parameter description.
 class ParamDesc(object):
+    file_ext = 'ptype'
+
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
@@ -127,7 +129,7 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             ptype = SimObject.allClasses[self.ptype_str]
-            assert issubclass(ptype, SimObject.SimObject)
+            assert isSimObjectClass(ptype)
             self.ptype = ptype
             return ptype
 
@@ -182,6 +184,8 @@ class SimObjVector(VectorParamValue):
             v.print_ini(ini_file)
 
 class VectorParamDesc(ParamDesc):
+    file_ext = 'vptype'
+
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
     def convert(self, value):
