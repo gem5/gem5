@@ -73,7 +73,6 @@ protocol = env['PROTOCOL']
 sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),
             protocol_dir.File("%s.slicc" % protocol) ]
 
-sys.path[0:0] = [env['ENV']['M5_PLY']]
 execfile(slicc_dir.File('parser/parser.py').srcnode().abspath)
 
 sm_files = read_slicc([s.srcnode().abspath for s in sources])

@@ -111,8 +111,12 @@ from os.path import join as joinpath, split as splitpath
 import SCons
 import SCons.Node
 
-# M5 includes
-sys.path[1:1] = [ Dir('src/python').srcnode().abspath ]
+extra_python_paths = [
+    Dir('src/python').srcnode().abspath, # M5 includes
+    Dir('ext/ply').srcnode().abspath, # ply is used by several files
+    ]
+    
+sys.path[1:1] = extra_python_paths
 
 from m5.util import compareVersions, readCommand
 
@@ -122,7 +126,7 @@ from m5.util import compareVersions, readCommand
 #
 ########################################################################
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
-                 'RANLIB' ])
+                 'PYTHONPATH', 'RANLIB' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
@@ -132,6 +136,10 @@ for key,val in os.environ.iteritems():
 main = Environment(ENV=use_env)
 main.root = Dir(".")         # The current directory (where this file lives).
 main.srcdir = Dir("src")     # The source directory
+
+# add useful python code PYTHONPATH so it can be used by subprocesses
+# as well
+main.AppendENVPath('PYTHONPATH', extra_python_paths)
 
 ########################################################################
 #
@@ -338,9 +346,6 @@ Export('extras_dir_list')
 # the ext directory should be on the #includes path
 main.Append(CPPPATH=[Dir('ext')])
 
-# M5_PLY is used by isa_parser.py to find the PLY package.
-main.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
-
 CXX_version = readCommand([main['CXX'],'--version'], exception=False)
 CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
@@ -386,7 +391,7 @@ if main['BATCH']:
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
-    main.Append(CCFLAGS=Split("-Wno-uninitialized"))
+    main.Append(CCFLAGS="-Wno-uninitialized")
 
 # Check for SWIG
 if not main.has_key('SWIG'):
