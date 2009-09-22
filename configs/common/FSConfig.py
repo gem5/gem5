@@ -26,8 +26,6 @@
 #
 # Authors: Kevin Lim
 
-import m5
-from m5 import makeList
 from m5.objects import *
 from Benchmarks import *
 

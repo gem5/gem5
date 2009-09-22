@@ -28,7 +28,6 @@
 
 from m5.params import *
 from m5.proxy import *
-from m5 import build_env
 from Device import BasicPioDevice
 
 class Uart(BasicPioDevice):

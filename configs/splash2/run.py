@@ -29,10 +29,14 @@
 # Splash2 Run Script
 #
 
+import os
+import optparse
+import sys
+
 import m5
 from m5.objects import *
-import os, optparse, sys
-m5.AddToPath('../common')
+
+m5.util.addToPath('../common')
 
 # --------------------
 # Define Command Line Options

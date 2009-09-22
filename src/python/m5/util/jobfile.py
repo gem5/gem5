@@ -28,9 +28,6 @@
 
 import sys
 
-from attrdict import optiondict
-from misc import crossproduct
-
 class Data(object):
     def __init__(self, name, desc, **kwargs):
         self.name = name
@@ -108,7 +105,8 @@ class Data(object):
                 yield key
 
     def optiondict(self):
-        result = optiondict()
+        import m5.util
+        result = m5.util.optiondict()
         for key in self:
             result[key] = self[key]
         return result
@@ -328,7 +326,9 @@ class Configuration(Data):
             optgroups = [ g.subopts() for g in groups ]
         if not optgroups:
             return
-        for options in crossproduct(optgroups):
+
+        import m5.util
+        for options in m5.util.crossproduct(optgroups):
             for opt in options:
                 cpt = opt._group._checkpoint
                 if not isinstance(cpt, bool) and cpt != opt:

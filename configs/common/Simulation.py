@@ -28,9 +28,13 @@
 
 from os import getcwd
 from os.path import join as joinpath
+
 import m5
+from m5.defines import buildEnv
 from m5.objects import *
-m5.AddToPath('../common')
+from m5.util import *
+
+addToPath('../common')
 
 def setCPUClass(options):
 
@@ -82,10 +86,10 @@ def run(options, root, testsys, cpu_class):
         cptdir = getcwd()
 
     if options.fast_forward and options.checkpoint_restore != None:
-        m5.fatal("Error: Can't specify both --fast-forward and --checkpoint-restore")
+        fatal("Can't specify both --fast-forward and --checkpoint-restore")
 
     if options.standard_switch and not options.caches:
-        m5.fatal("Error: Must specify --caches when using --standard-switch")
+        fatal("Must specify --caches when using --standard-switch")
 
     np = options.num_cpus
     max_checkpoints = options.max_checkpoints
@@ -107,7 +111,7 @@ def run(options, root, testsys, cpu_class):
             if options.fast_forward:
                 testsys.cpu[i].max_insts_any_thread = int(options.fast_forward)
             switch_cpus[i].system =  testsys
-            if not m5.build_env['FULL_SYSTEM']:
+            if not buildEnv['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
             # simulation period
@@ -126,7 +130,7 @@ def run(options, root, testsys, cpu_class):
         for i in xrange(np):
             switch_cpus[i].system =  testsys
             switch_cpus_1[i].system =  testsys
-            if not m5.build_env['FULL_SYSTEM']:
+            if not buildEnv['FULL_SYSTEM']:
                 switch_cpus[i].workload = testsys.cpu[i].workload
                 switch_cpus_1[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[0].clock
@@ -141,7 +145,7 @@ def run(options, root, testsys, cpu_class):
             # Fast forward to a simpoint (warning: time consuming)
             elif options.simpoint:
                 if testsys.cpu[i].workload[0].simpoint == 0:
-                    m5.fatal('simpoint not found')
+                    fatal('simpoint not found')
                 testsys.cpu[i].max_insts_any_thread = \
                     testsys.cpu[i].workload[0].simpoint
             # No distance specified, just switch
@@ -174,7 +178,7 @@ def run(options, root, testsys, cpu_class):
         if options.simpoint:
             for i in xrange(np):
                 if testsys.cpu[i].workload[0].simpoint == 0:
-                    m5.fatal('no simpoint for testsys.cpu[%d].workload[0]', i)
+                    fatal('no simpoint for testsys.cpu[%d].workload[0]', i)
                 checkpoint_inst = int(testsys.cpu[i].workload[0].simpoint) + offset
                 testsys.cpu[i].max_insts_any_thread = checkpoint_inst
                 # used for output below
@@ -194,14 +198,13 @@ def run(options, root, testsys, cpu_class):
         import re
 
         if not isdir(cptdir):
-            m5.fatal("checkpoint dir %s does not exist!", cptdir)
+            fatal("checkpoint dir %s does not exist!", cptdir)
 
         if options.at_instruction:
             checkpoint_dir = joinpath(cptdir, "cpt.%s.%s" % \
                     (options.bench, options.checkpoint_restore))
             if not exists(checkpoint_dir):
-                m5.fatal("Unable to find checkpoint directory %s",
-                         checkpoint_dir)
+                fatal("Unable to find checkpoint directory %s", checkpoint_dir)
 
             print "Restoring checkpoint ..."
             m5.restoreCheckpoint(root, checkpoint_dir)
@@ -209,7 +212,7 @@ def run(options, root, testsys, cpu_class):
         elif options.simpoint:
             # assume workload 0 has the simpoint
             if testsys.cpu[0].workload[0].simpoint == 0:
-                m5.fatal('Unable to find simpoint')
+                fatal('Unable to find simpoint')
 
             options.checkpoint_restore += \
                 int(testsys.cpu[0].workload[0].simpoint)
@@ -217,8 +220,8 @@ def run(options, root, testsys, cpu_class):
             checkpoint_dir = joinpath(cptdir, "cpt.%s.%d" % \
                     (options.bench, options.checkpoint_restore))
             if not exists(checkpoint_dir):
-                m5.fatal("Unable to find checkpoint directory %s.%s",
-                        options.bench, options.checkpoint_restore)
+                fatal("Unable to find checkpoint directory %s.%s",
+                      options.bench, options.checkpoint_restore)
 
             print "Restoring checkpoint ..."
             m5.restoreCheckpoint(root,checkpoint_dir)
@@ -237,7 +240,7 @@ def run(options, root, testsys, cpu_class):
             cpt_num = options.checkpoint_restore
 
             if cpt_num > len(cpts):
-                m5.fatal('Checkpoint %d not found', cpt_num)
+                fatal('Checkpoint %d not found', cpt_num)
 
             ## Adjust max tick based on our starting tick
             maxtick = maxtick - int(cpts[cpt_num - 1])

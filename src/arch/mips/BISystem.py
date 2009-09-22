@@ -28,10 +28,11 @@
 #
 # Authors: Jaidev Patwardhan
 
-from m5 import build_env
+from m5.defines import buildEnv
+
 from System import *
 
-if build_env['FULL_SYSTEM']:
+if buildEnv['FULL_SYSTEM']:
     class BareIronMipsSystem(MipsSystem):
         type = 'BareIronMipsSystem'
         system_type = 34

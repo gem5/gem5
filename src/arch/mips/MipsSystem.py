@@ -28,10 +28,10 @@
 #
 # Authors: Jaidev Patwardhan
 
-from m5.SimObject import SimObject
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from m5 import build_env
+
 from System import System
 
 class MipsSystem(System):
@@ -42,7 +42,7 @@ class MipsSystem(System):
     system_type = Param.UInt64("Type of system we are emulating")
     system_rev = Param.UInt64("Revision of system we are emulating")
 
-if build_env['FULL_SYSTEM']:
+if buildEnv['FULL_SYSTEM']:
     class LinuxMipsSystem(MipsSystem):
         type = 'LinuxMipsSystem'
         system_type = 34

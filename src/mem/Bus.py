@@ -26,12 +26,12 @@
 #
 # Authors: Nathan Binkert
 
-from m5 import build_env
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
 from MemObject import MemObject
 
-if build_env['FULL_SYSTEM']:
+if buildEnv['FULL_SYSTEM']:
     from Device import BadAddr
 
 class Bus(MemObject):

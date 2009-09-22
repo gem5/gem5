@@ -29,12 +29,13 @@
 # Authors: Jaidev Patwardhan
 #          Korey Sewell
 
-from m5.SimObject import SimObject
+from m5.defines import buildEnv
 from m5.params import *
+
 from BaseCPU import BaseCPU
 
 class BaseMipsCPU(BaseCPU)
-    if build_env['TARGET_ISA'] == 'mips':
+    if buildEnv['TARGET_ISA'] == 'mips':
         CP0_IntCtl_IPTI = Param.Unsigned(0,"No Description")
         CP0_IntCtl_IPPCI = Param.Unsigned(0,"No Description")
         CP0_SrsCtl_HSS = Param.Unsigned(0,"No Description")

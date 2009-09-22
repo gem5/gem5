@@ -26,11 +26,11 @@
 #
 # Authors: Kevin Lim
 
+from m5.defines import buildEnv
 from m5.params import *
-from m5 import build_env
 from BaseCPU import BaseCPU
 
-if build_env['USE_CHECKER']:
+if buildEnv['USE_CHECKER']:
     from OzoneChecker import OzoneChecker
 
 class DerivOzoneCPU(BaseCPU):
@@ -38,7 +38,7 @@ class DerivOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    if build_env['USE_CHECKER']:
+    if buildEnv['USE_CHECKER']:
         checker = Param.BaseCPU("Checker CPU")
 
     icache_port = Port("Instruction Port")

@@ -26,10 +26,11 @@
 #
 # Authors: Ron Dreslinski
 
+import optparse
+import sys
+
 import m5
 from m5.objects import *
-import os, optparse, sys
-m5.AddToPath('../common')
 
 parser = optparse.OptionParser()
 

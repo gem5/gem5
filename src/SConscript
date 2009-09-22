@@ -49,7 +49,7 @@ Import('*')
 # Children need to see the environment
 Export('env')
 
-build_env = dict([(opt, env[opt]) for opt in export_vars])
+build_env = [(opt, env[opt]) for opt in export_vars]
 
 ########################################################################
 # Code for adding source files of various types
@@ -266,6 +266,8 @@ for opt in export_vars:
 # Prevent any SimObjects from being added after this point, they
 # should all have been added in the SConscripts above
 #
+SimObject.fixed = True
+
 class DictImporter(object):
     '''This importer takes a dictionary of arbitrary module names that
     map to arbitrary filenames.'''
@@ -283,7 +285,7 @@ class DictImporter(object):
         self.installed = set()
 
     def find_module(self, fullname, path):
-        if fullname == 'defines':
+        if fullname == 'm5.defines':
             return self
 
         if fullname == 'm5.objects':
@@ -293,7 +295,7 @@ class DictImporter(object):
             return None
 
         source = self.modules.get(fullname, None)
-        if source is not None and exists(source.snode.abspath):
+        if source is not None and fullname.startswith('m5.objects'):
             return self
 
         return None
@@ -308,8 +310,8 @@ class DictImporter(object):
             mod.__path__ = fullname.split('.')
             return mod
 
-        if fullname == 'defines':
-            mod.__dict__['buildEnv'] = build_env
+        if fullname == 'm5.defines':
+            mod.__dict__['buildEnv'] = m5.util.SmartDict(build_env)
             return mod
 
         source = self.modules[fullname]
@@ -321,14 +323,17 @@ class DictImporter(object):
 
         return mod
 
+import m5.SimObject
+import m5.params
+
+m5.SimObject.clear()
+m5.params.clear()
+
 # install the python importer so we can grab stuff from the source
 # tree itself.  We can't have SimObjects added after this point or
 # else we won't know about them for the rest of the stuff.
-SimObject.fixed = True
 importer = DictImporter(PySource.modules)
 sys.meta_path[0:0] = [ importer ]
-
-import m5
 
 # import all sim objects so we can populate the all_objects list
 # make sure that we're working with a list, then let's sort it
@@ -346,6 +351,12 @@ all_enums = m5.params.allEnums
 all_params = {}
 for name,obj in sorted(sim_objects.iteritems()):
     for param in obj._params.local.values():
+        # load the ptype attribute now because it depends on the
+        # current version of SimObject.allClasses, but when scons
+        # actually uses the value, all versions of
+        # SimObject.allClasses will have been loaded
+        param.ptype
+
         if not hasattr(param, 'swig_decl'):
             continue
         pname = param.ptype_str
@@ -365,13 +376,24 @@ depends = [ PySource.modules[dep].tnode for dep in module_depends ]
 #
 
 # Generate Python file containing a dict specifying the current
-# build_env flags.
+# buildEnv flags.
 def makeDefinesPyFile(target, source, env):
-    f = file(str(target[0]), 'w')
     build_env, hg_info = [ x.get_contents() for x in source ]
-    print >>f, "buildEnv = %s" % build_env
-    print >>f, "hgRev = '%s'" % hg_info
-    f.close()
+
+    code = m5.util.code_formatter()
+    code("""
+import m5.internal
+import m5.util
+
+buildEnv = m5.util.SmartDict($build_env)
+hgRev = '$hg_info'
+
+compileDate = m5.internal.core.compileDate
+for k,v in m5.internal.core.__dict__.iteritems():
+    if k.startswith('flag_'):
+        setattr(buildEnv, k[5:], v)
+""")
+    code.write(str(target[0]))
 
 defines_info = [ Value(build_env), Value(env['HG_INFO']) ]
 # Generate a file with all of the compile options in it

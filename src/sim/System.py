@@ -27,9 +27,10 @@
 # Authors: Nathan Binkert
 
 from m5.SimObject import SimObject
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from m5 import build_env
+
 from PhysicalMemory import *
 
 class MemoryMode(Enum): vals = ['invalid', 'atomic', 'timing']
@@ -40,7 +41,7 @@ class System(SimObject):
 
     physmem = Param.PhysicalMemory(Parent.any, "physical memory")
     mem_mode = Param.MemoryMode('atomic', "The mode the memory system is in")
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         abstract = True
         boot_cpu_frequency = Param.Frequency(Self.cpu[0].clock.frequency,
                                              "boot processor frequency")

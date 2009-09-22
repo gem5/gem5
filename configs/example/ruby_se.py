@@ -30,17 +30,22 @@
 #
 # "m5 test.py"
 
-import m5
-
-if m5.build_env['FULL_SYSTEM']:
-    m5.panic("This script requires syscall emulation mode (*_SE).")
-
-from m5.objects import *
-import os, optparse, sys
+import os
+import optparse
+import sys
 from os.path import join as joinpath
-m5.AddToPath('../common')
+
+import m5
+from m5.defines import buildEnv
+from m5.objects import *
+from m5.util import addToPath, panic
+
+if buildEnv['FULL_SYSTEM']:
+    panic("This script requires syscall emulation mode (*_SE).")
+
+addToPath('../common')
+
 import Simulation
-#from Caches import *
 from cpu2000 import *
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
@@ -72,7 +77,7 @@ if args:
 
 if options.bench:
     try:
-        if m5.build_env['TARGET_ISA'] != 'alpha':
+        if buildEnv['TARGET_ISA'] != 'alpha':
             print >>sys.stderr, "Simpoints code only works for Alpha ISA at this time"
             sys.exit(1)
         exec("workload = %s('alpha', 'tru64', 'ref')" % options.bench)
