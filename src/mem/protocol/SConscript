@@ -29,30 +29,56 @@
 # Authors: Nathan Binkert
 
 import os
-import re
-import string
 import sys
 
-from os.path import basename, dirname, exists, expanduser, isdir, isfile
-from os.path import join as joinpath
-
-import SCons
+from os.path import isdir, isfile, join as joinpath
 
 Import('*')
 
 if not env['RUBY']:
     Return()
 
-slicc_dir = Dir('../slicc')
 protocol_dir = Dir('.')
 html_dir = Dir('html')
+slicc_dir = Dir('../slicc')
+
+sys.path[1:1] = [ Dir('..').srcnode().abspath ]
+from slicc.parser import SLICC
+
+slicc_depends = []
+for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
+    for f in files:
+        if f.endswith('.py'):
+            slicc_depends.append(File(joinpath(root, f)))
 
 #
 # Use SLICC
 #
-def slicc_generator(target, source, env, for_signature):
-    slicc_bin = str(source[0])
-    protocol = source[1].get_contents()
+
+def slicc_scanner(node, env, path):
+    contents = node.get_contents()
+    files = [ line.strip() for line in contents.splitlines() ]
+    return files
+
+env.Append(SCANNERS=Scanner(function=slicc_scanner,skeys=['.slicc']))
+
+def slicc_emitter(target, source, env):
+    files = [s.srcnode().abspath for s in source[1:]]
+    slicc = SLICC(debug=True)
+    print "SLICC parsing..."
+    for name in slicc.load(files, verbose=True):
+        print "    %s" % name
+
+    hh,cc = slicc.files()
+    target.extend(sorted(hh))
+    target.extend(sorted(cc))
+    f = file('/tmp/asdf', 'w')
+    for t in target:
+        print >>f, t
+    return target, source
+
+def slicc_action(target, source, env):
+    protocol = source[0].get_contents()
     pdir = str(protocol_dir)
     hdir = str(html_dir)
 
@@ -61,31 +87,31 @@ def slicc_generator(target, source, env, for_signature):
     if not isdir(hdir):
         os.mkdir(hdir)
 
-    do_html = "html"
-    cmdline = [ slicc_bin, pdir, hdir, protocol, do_html ]
-    cmdline += [ str(s) for s in source[2:] ]
-    cmdline = ' '.join(cmdline)
-    return cmdline
+    slicc = SLICC(debug=True)
+    files = [str(s) for s in source[1:]]
+    slicc.load(files, verbose=False)
 
-slicc_builder = Builder(generator=slicc_generator)
+    print "SLICC Generator pass 1..."
+    slicc.findMachines()
+
+    print "SLICC Generator pass 2..."
+    slicc.generate()
+
+    print "SLICC writing C++ files..."
+    slicc.writeCodeFiles(pdir)
+
+    print "SLICC writing HTML files..."
+    slicc.writeHTMLFiles(hdir)
+
+slicc_builder = Builder(action=slicc_action, emitter=slicc_emitter)
 
 protocol = env['PROTOCOL']
 sources = [ protocol_dir.File("RubySlicc_interfaces.slicc"),
             protocol_dir.File("%s.slicc" % protocol) ]
 
-execfile(slicc_dir.File('parser/parser.py').srcnode().abspath)
-
-sm_files = read_slicc([s.srcnode().abspath for s in sources])
-sm_files = [ protocol_dir.File(f) for f in sm_files ]
-
-hh, cc = scan([s.srcnode().abspath for s in sm_files])
-hh = [ protocol_dir.File(f) for f in hh ]
-cc = [ protocol_dir.File(f) for f in cc ]
-
-slicc_bin = slicc_dir.File("slicc")
-
 env.Append(BUILDERS={'SLICC' : slicc_builder})
-env.SLICC(hh + cc, [ slicc_bin, Value(protocol) ] + sm_files)
+nodes = env.SLICC([], [ Value(protocol) ] + sources)
+env.Depends(nodes, slicc_depends)
 
-for f in cc:
+for f in sorted(s for s in nodes if str(s).endswith('.cc')):
     Source(f)
