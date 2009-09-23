@@ -29,9 +29,9 @@
  *          Nathan Binkert
  */
 
-//For ISA_HAS_DELAY_SLOT
 #include "arch/isa_traits.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "kern/system_events.hh"
 

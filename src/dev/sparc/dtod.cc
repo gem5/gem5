@@ -39,6 +39,7 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "dev/sparc/dtod.hh"
 #include "dev/platform.hh"
 #include "mem/packet_access.hh"

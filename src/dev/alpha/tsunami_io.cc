@@ -42,6 +42,7 @@
 
 #include "base/time.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "dev/rtcreg.h"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami.hh"

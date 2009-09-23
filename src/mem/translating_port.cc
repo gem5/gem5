@@ -30,7 +30,9 @@
  */
 
 #include <string>
+
 #include "base/chunk_generator.hh"
+#include "config/the_isa.hh"
 #include "mem/port.hh"
 #include "mem/translating_port.hh"
 #include "mem/page_table.hh"

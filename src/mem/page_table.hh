@@ -42,6 +42,7 @@
 #include "arch/tlb.hh"
 #include "base/hashmap.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "mem/request.hh"
 #include "sim/faults.hh"
 #include "sim/serialize.hh"

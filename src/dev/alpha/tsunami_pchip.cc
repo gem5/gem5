@@ -38,6 +38,7 @@
 #include <vector>
 
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "dev/alpha/tsunami_pchip.hh"
 #include "dev/alpha/tsunamireg.h"
 #include "dev/alpha/tsunami.hh"

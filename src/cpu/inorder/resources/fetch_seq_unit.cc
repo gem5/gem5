@@ -29,6 +29,7 @@
  *
  */
 
+#include "config/the_isa.hh"
 #include "cpu/inorder/resources/fetch_seq_unit.hh"
 #include "cpu/inorder/resource_pool.hh"
 

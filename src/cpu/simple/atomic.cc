@@ -32,6 +32,7 @@
 #include "arch/mmaped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/atomic.hh"
 #include "mem/packet.hh"

@@ -36,6 +36,7 @@
 #include <string>
 #include <vector>
 
+#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/alpha/tsunami_cchip.hh"
 #include "dev/alpha/tsunami_pchip.hh"

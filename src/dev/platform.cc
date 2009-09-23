@@ -30,6 +30,7 @@
  */
 
 #include "base/misc.hh"
+#include "config/the_isa.hh"
 #include "dev/platform.hh"
 #include "sim/sim_exit.hh"
 

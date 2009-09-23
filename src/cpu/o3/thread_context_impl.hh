@@ -30,6 +30,7 @@
  */
 
 #include "arch/registers.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/quiesce_event.hh"
 

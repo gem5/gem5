@@ -32,8 +32,6 @@
 #ifndef __PRINTK_HH__
 #define __PRINTK_HH__
 
-#include "arch/isa_specific.hh"
-
 #include <sstream>
 
 class Arguments;

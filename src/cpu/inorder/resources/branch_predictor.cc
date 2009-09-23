@@ -29,6 +29,7 @@
  *
  */
 
+#include "config/the_isa.hh"
 #include "cpu/inorder/resources/branch_predictor.hh"
 
 using namespace std;

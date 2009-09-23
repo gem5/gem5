@@ -34,15 +34,14 @@
 #include <string>
 #include <sstream>
 
+#include "arch/faults.hh"
 #include "base/cprintf.hh"
 #include "base/trace.hh"
-
-#include "arch/faults.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
-#include "mem/request.hh"
-
-#include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/inorder_dyn_inst.hh"
+#include "mem/request.hh"
 
 using namespace std;
 using namespace TheISA;

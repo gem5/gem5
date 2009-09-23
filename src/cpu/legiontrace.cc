@@ -31,7 +31,7 @@
  *          Steve Raasch
  */
 
-#include "arch/isa_specific.hh"
+#include "config/the_isa.hh"
 #if THE_ISA != SPARC_ISA
     #error Legion tracing only works with SPARC simulations!
 #endif

@@ -38,6 +38,7 @@
 
 #include "arch/x86/intmessage.hh"
 #include "arch/x86/x86_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "dev/terminal.hh"
 #include "dev/x86/i82094aa.hh"

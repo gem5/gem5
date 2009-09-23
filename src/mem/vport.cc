@@ -34,6 +34,7 @@
  */
 
 #include "base/chunk_generator.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/vport.hh"
 

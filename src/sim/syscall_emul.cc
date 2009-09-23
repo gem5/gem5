@@ -38,12 +38,12 @@
 #include "sim/syscall_emul.hh"
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
-
 #include "sim/sim_exit.hh"
 
 using namespace std;

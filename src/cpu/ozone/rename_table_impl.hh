@@ -29,6 +29,8 @@
  */
 
 #include <cstdlib>  // Not really sure what to include to get NULL
+
+#include "config/the_isa.hh"
 #include "cpu/ozone/rename_table.hh"
 
 template <class Impl>

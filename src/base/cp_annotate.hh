@@ -41,6 +41,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "config/cp_annotate.hh"
+#include "config/the_isa.hh"
 #include "sim/serialize.hh"
 #include "sim/startup.hh"
 #include "sim/system.hh"

@@ -40,6 +40,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
@@ -53,7 +54,6 @@
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
-#include "arch/isa_specific.hh"
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/linux/process.hh"
 #include "arch/alpha/tru64/process.hh"

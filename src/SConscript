@@ -228,9 +228,6 @@ env.Append(CPPPATH=Dir('.'))
 for extra_dir in extras_dir_list:
     env.Append(CPPPATH=Dir(extra_dir))
 
-# Add a flag defining what THE_ISA should be for all compilation
-env.Append(CPPDEFINES=[('THE_ISA','%s_ISA' % env['TARGET_ISA'].upper())])
-
 # Workaround for bug in SCons version > 0.97d20071212
 # Scons bug id: 2006 M5 Bug id: 308 
 for root, dirs, files in os.walk(base_dir, topdown=True):
@@ -260,6 +257,31 @@ for extra_dir in extras_dir_list:
 
 for opt in export_vars:
     env.ConfigFile(opt)
+
+def makeTheISA(source, target, env):
+    f = file(str(target[0]), 'w')
+
+    isas = [ src.get_contents() for src in source ]
+    target = env['TARGET_ISA']
+    def define(isa):
+        return isa.upper() + '_ISA'
+    
+    def namespace(isa):
+        return isa[0].upper() + isa[1:].lower() + 'ISA' 
+
+
+    print >>f, '#ifndef __CONFIG_THE_ISA_HH__'
+    print >>f, '#define __CONFIG_THE_ISA_HH__'
+    print >>f
+    for i,isa in enumerate(isas):
+        print >>f, '#define %s %d' % (define(isa), i + 1)
+    print >>f
+    print >>f, '#define THE_ISA %s' % (define(target))
+    print >>f, '#define TheISA %s' % (namespace(target))
+    print >>f
+    print >>f, '#endif // __CONFIG_THE_ISA_HH__'  
+
+env.Command('config/the_isa.hh', map(Value, all_isa_list), makeTheISA)
 
 ########################################################################
 #

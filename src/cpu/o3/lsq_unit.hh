@@ -40,6 +40,7 @@
 #include "arch/faults.hh"
 #include "arch/locked_mem.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "base/fast_alloc.hh"
 #include "base/hashmap.hh"
 #include "cpu/inst_seq.hh"

@@ -31,6 +31,7 @@
 
 #ifndef __TRU64_HH__
 #define __TRU64_HH__
+
 #include "config/full_system.hh"
 #include "kern/operatingsystem.hh"
 
@@ -55,6 +56,7 @@ class Tru64 {};
 #include <string.h>     // for memset()
 #include <unistd.h>
 
+#include "config/the_isa.hh"
 #include "arch/alpha/registers.hh"
 #include "cpu/base.hh"
 #include "sim/core.hh"

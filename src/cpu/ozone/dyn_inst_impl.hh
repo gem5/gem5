@@ -30,6 +30,7 @@
 
 #include "sim/faults.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/ozone/dyn_inst.hh"
 
 #if FULL_SYSTEM

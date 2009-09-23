@@ -31,6 +31,7 @@
 #ifndef __CPU_OZONE_SIMPLE_PARAMS_HH__
 #define __CPU_OZONE_SIMPLE_PARAMS_HH__
 
+#include "config/the_isa.hh"
 #include "cpu/ozone/cpu.hh"
 
 //Forward declarations

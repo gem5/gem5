@@ -45,6 +45,7 @@
 #include "base/timebuf.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"

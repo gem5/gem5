@@ -30,6 +30,7 @@
  */
 
 #include "base/str.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/pipeline_stage.hh"
 #include "cpu/inorder/resource_pool.hh"
 #include "cpu/inorder/cpu.hh"

@@ -28,15 +28,15 @@
  * Authors: Kevin Lim
  */
 
+#include <algorithm>
+
 #include "arch/types.hh"
 #include "arch/isa_traits.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/bpred_unit.hh"
-
 #include "params/DerivO3CPU.hh"
-
-#include <algorithm>
 
 template<class Impl>
 BPredUnit<Impl>::BPredUnit(DerivO3CPUParams *params)

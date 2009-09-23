@@ -35,6 +35,7 @@
 #include "base/output.hh"
 #include "base/str.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "mem/ruby/common/Debug.hh"
 #include "mem/ruby/libruby.hh"
 #include "mem/ruby/system/RubyPort.hh"

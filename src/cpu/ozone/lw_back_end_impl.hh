@@ -28,8 +28,8 @@
  * Authors: Kevin Lim
  */
 
+#include "config/the_isa.hh"
 #include "config/use_checker.hh"
-
 #include "cpu/ozone/lw_back_end.hh"
 #include "cpu/op_class.hh"
 

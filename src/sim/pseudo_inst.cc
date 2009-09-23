@@ -35,10 +35,10 @@
 #include <fstream>
 #include <string>
 
-#include "config/full_system.hh"
-
 #include "arch/vtophys.hh"
 #include "base/debug.hh"
+#include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/quiesce_event.hh"

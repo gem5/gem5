@@ -38,6 +38,7 @@
 #include "cpu/exetrace.hh"
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
+#include "config/the_isa.hh"
 #include "enums/OpClass.hh"
 
 using namespace std;

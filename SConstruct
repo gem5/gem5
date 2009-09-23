@@ -742,17 +742,10 @@ def make_switching_dir(dname, switch_headers, env):
     # list of ISAs from env['ALL_ISA_LIST'].
     def gen_switch_hdr(target, source, env):
         fname = str(target[0])
-        bname = basename(fname)
         f = open(fname, 'w')
-        f.write('#include "arch/isa_specific.hh"\n')
-        cond = '#if'
-        for isa in all_isa_list:
-            f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
-                    % (cond, isa.upper(), dname, isa, bname))
-            cond = '#elif'
-        f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+        isa = env['TARGET_ISA'].lower()
+        print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
         f.close()
-        return 0
 
     # String to print when generating header
     def gen_switch_hdr_string(target, source, env):

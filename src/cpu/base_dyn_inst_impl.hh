@@ -35,12 +35,11 @@
 
 #include "base/cprintf.hh"
 #include "base/trace.hh"
-
-#include "sim/faults.hh"
+#include "config/the_isa.hh"
+#include "cpu/base_dyn_inst.hh"
 #include "cpu/exetrace.hh"
 #include "mem/request.hh"
-
-#include "cpu/base_dyn_inst.hh"
+#include "sim/faults.hh"
 
 #define NOHASH
 #ifndef NOHASH

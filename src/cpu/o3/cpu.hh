@@ -42,6 +42,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"

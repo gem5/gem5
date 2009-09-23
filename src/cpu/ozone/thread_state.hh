@@ -31,13 +31,14 @@
 #ifndef __CPU_OZONE_THREAD_STATE_HH__
 #define __CPU_OZONE_THREAD_STATE_HH__
 
-#include "sim/faults.hh"
-#include "arch/types.hh"
 #include "arch/regfile.hh"
+#include "arch/types.hh"
 #include "base/callback.hh"
 #include "base/output.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
+#include "sim/faults.hh"
 #include "sim/process.hh"
 #include "sim/sim_exit.hh"
 

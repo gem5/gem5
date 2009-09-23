@@ -34,6 +34,7 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"

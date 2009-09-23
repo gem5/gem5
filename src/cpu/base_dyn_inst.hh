@@ -39,6 +39,7 @@
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inst_seq.hh"

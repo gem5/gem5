@@ -32,6 +32,7 @@
 #ifndef __CPU_INORDER_THREAD_CONTEXT_HH__
 #define __CPU_INORDER_THREAD_CONTEXT_HH__
 
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/inorder/thread_state.hh"

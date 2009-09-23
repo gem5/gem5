@@ -29,7 +29,7 @@
  *          Kevin Lim
  */
 
-#include "arch/isa_specific.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/scoreboard.hh"
 
 Scoreboard::Scoreboard(unsigned activeThreads,

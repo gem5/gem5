@@ -32,6 +32,7 @@
 #define __CPU_THREAD_STATE_HH__
 
 #include "arch/types.hh"
+#include "config/the_isa.hh"
 #include "cpu/profile.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"

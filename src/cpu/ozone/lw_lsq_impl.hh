@@ -28,10 +28,10 @@
  * Authors: Kevin Lim
  */
 
-#include "config/use_checker.hh"
-
 #include "arch/faults.hh"
 #include "base/str.hh"
+#include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/ozone/lw_lsq.hh"
 #include "cpu/checker/cpu.hh"
 

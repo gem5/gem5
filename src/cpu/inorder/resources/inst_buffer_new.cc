@@ -31,7 +31,9 @@
 
 #include <vector>
 #include <list>
+
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/resources/inst_buffer.hh"
 #include "cpu/inorder/cpu.hh"

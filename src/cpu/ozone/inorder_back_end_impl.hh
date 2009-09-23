@@ -30,6 +30,7 @@
 
 #include "sim/faults.hh"
 #include "arch/types.hh"
+#include "config/the_isa.hh"
 #include "cpu/ozone/inorder_back_end.hh"
 #include "cpu/ozone/thread_state.hh"
 

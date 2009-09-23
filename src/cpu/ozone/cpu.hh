@@ -36,6 +36,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/inst_seq.hh"

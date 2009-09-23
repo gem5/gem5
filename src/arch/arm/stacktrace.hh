@@ -34,6 +34,7 @@
 #define __ARCH_ARM_STACKTRACE_HH__
 
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 
 class ThreadContext;

@@ -47,9 +47,11 @@
 #include "arch/registers.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "sim/sim_object.hh"
 #include "sim/syscallreturn.hh"
 
+class BaseRemoteGDB;
 class GDBListener;
 class PageTable;
 class ProcessParams;
@@ -58,10 +60,6 @@ class SyscallDesc;
 class System;
 class ThreadContext;
 class TranslatingPort;
-namespace TheISA
-{
-    class RemoteGDB;
-}
 
 template<class IntType>
 struct AuxVector
@@ -94,7 +92,7 @@ class Process : public SimObject
     std::vector<int> contextIds;
 
     // remote gdb objects
-    std::vector<TheISA::RemoteGDB *> remoteGDB;
+    std::vector<BaseRemoteGDB *> remoteGDB;
     std::vector<GDBListener *> gdbListen;
     bool breakpoint();
 

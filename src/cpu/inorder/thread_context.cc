@@ -30,6 +30,7 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inorder/thread_context.hh"
 

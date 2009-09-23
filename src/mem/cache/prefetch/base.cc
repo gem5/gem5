@@ -33,12 +33,14 @@
  * Hardware Prefetcher Definition.
  */
 
+#include <list>
+
 #include "arch/isa_traits.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/request.hh"
-#include <list>
 
 BasePrefetcher::BasePrefetcher(const BaseCacheParams *p)
     : size(p->prefetcher_size), pageStop(!p->prefetch_past_page),

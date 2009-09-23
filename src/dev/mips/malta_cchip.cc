@@ -39,6 +39,7 @@
 
 #include "arch/mips/mips_core_specific.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
 #include "dev/mips/malta.hh"
@@ -56,7 +57,7 @@ using namespace TheISA;
 MaltaCChip::MaltaCChip(Params *p)
     : BasicPioDevice(p), malta(p->malta)
 {
-                warn("MaltaCCHIP::MaltaCChip() not implemented.");
+    warn("MaltaCCHIP::MaltaCChip() not implemented.");
 
     pioSize = 0xfffffff;
     //Put back pointer in malta

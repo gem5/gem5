@@ -31,6 +31,7 @@
 
 #include <iomanip>
 
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inorder/inorder_trace.hh"
 #include "cpu/static_inst.hh"

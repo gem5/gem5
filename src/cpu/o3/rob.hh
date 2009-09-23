@@ -36,6 +36,8 @@
 #include <utility>
 #include <vector>
 
+#include "config/the_isa.hh"
+
 /**
  * ROB class.  The ROB is largely what drives squashing.
  */
