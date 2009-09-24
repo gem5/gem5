@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 21 2009 18:01:16
-M5 revision e6dd09514462 6117 default qtip tip stats-update
-M5 started Apr 21 2009 18:01:42
-M5 executing on zizzer
+M5 compiled Sep 24 2009 12:19:09
+M5 revision 9bc3e4611009+ 6661+ default tip
+M5 started Sep 24 2009 12:19:47
+M5 executing on zooks
 command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-atomic -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 2828000 because target called exit()
+Exiting @ tick 2842500 because target called exit()
