@@ -36,7 +36,7 @@ class Debug < LibRubyObject
   #   1. change protocol_trace = true
   #   2. enable debug in the Ruby Makefile
   #   3. set start_time = 1
-  default_param :protocol_trace, Boolean, true
+  default_param :protocol_trace, Boolean, false
 
   # a string for filtering debugging output (for all g_debug vars see Debug.h)
   default_param :filter_string, String, "none"
@@ -48,7 +48,7 @@ class Debug < LibRubyObject
   default_param :start_time, Integer, 1
   
   # sends debugging messages to a output filename
-  default_param :output_filename, String, "debug_ss"
+  default_param :output_filename, String, "none"
 end
 
 class Topology < LibRubyObject
