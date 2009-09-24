@@ -55,6 +55,7 @@ class Tokenizer(object):
                         break
                     yield tok
         self.input = _input()
+        self.lexer = lexer
 
     def next(self):
         return self.input.next()
@@ -67,6 +68,9 @@ class Tokenizer(object):
             return self.next()
         except StopIteration:
             return None
+
+    def __getattr__(self, attr):
+        return getattr(self.lexer, attr)
 
 class Grammar(object):
     def __init__(self, output=None, debug=False):
