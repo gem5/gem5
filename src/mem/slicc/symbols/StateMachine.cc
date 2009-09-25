@@ -791,101 +791,7 @@ void StateMachine::printCWakeup(ostream& out, string component)
         << component << "InPort " << port->toString() 
         << endl;
     string output = port->lookupPair("c_code_in_port");
-    string::size_type pos = output.find("TransitionResult result = doTransition((L1Cache_mandatory_request_type_to_event(((*in_msg_ptr)).m_Type)), L1Cache_getState(addr), addr);");
-    assert(pos != string::npos);
-    string atomics_string = "\n \
-             if ((((*in_msg_ptr)).m_Type) == CacheRequestType_ATOMIC) { \n \
-               if (servicing_atomic == 0) { \n \
-                  if (locked_read_request1 == Address(-1)) { \n \
-                    assert(read_counter == 0); \n \ 
-                    locked_read_request1 = addr;  \n \
-                    assert(read_counter == 0); \n \
-                    read_counter++; \n \
-                  } \n \
-                  else if (addr == locked_read_request1) { \n \
-                    ; // do nothing \n\ 
-                  } \n \
-                  else { \n \
-                    assert(0); // should never be here if servicing one request at a time \n\ 
-                  } \n \
-               } \n \
-               else if (!started_receiving_writes) { \n \
-               if (servicing_atomic == 1) { \n \
-                  if (locked_read_request2 == Address(-1)) { \n \
-                    assert(locked_read_request1 != Address(-1)); \n \
-                    assert(read_counter == 1); \n \ 
-                    locked_read_request2 = addr;  \n \
-                    assert(read_counter == 1); \n \
-                    read_counter++; \n \
-                  } \n \
-                  else if (addr == locked_read_request2) { \n \
-                    ; // do nothing \n\ 
-                  } \n \
-                  else { \n \
-                    assert(0); // should never be here if servicing one request at a time \n\ 
-                  } \n \
-               } \n \
-               else if (servicing_atomic == 2) { \n \
-                  if (locked_read_request3 == Address(-1)) { \n \
-                    assert(locked_read_request1 != Address(-1)); \n \
-                    assert(locked_read_request2 != Address(-1)); \n \
-                    assert(read_counter == 1); \n \ 
-                    locked_read_request3 = addr;  \n \
-                    assert(read_counter == 2); \n \
-                    read_counter++; \n \
-                  } \n \
-                  else if (addr == locked_read_request3) { \n \
-                    ; // do nothing \n\ 
-                  } \n \
-                  else { \n \
-                    assert(0); // should never be here if servicing one request at a time \n\ 
-                  } \n \
-               } \n \
-               else if (servicing_atomic == 3) { \n \
-                  if (locked_read_request4 == Address(-1)) { \n \
-                    assert(locked_read_request1 != Address(-1)); \n \
-                    assert(locked_read_request2 != Address(-1)); \n \
-                    assert(locked_read_request3 != Address(-1)); \n \
-                    assert(read_counter == 1); \n \ 
-                    locked_read_request4 = addr;  \n \
-                    assert(read_counter == 3); \n \
-                    read_counter++; \n \ 
-                  } \n \
-                  else if (addr == locked_read_request4) { \n \
-                    ; // do nothing \n\ 
-                  } \n \
-                  else { \n \
-                    assert(0); // should never be here if servicing one request at a time \n\ 
-                  } \n \
-               } \n \
-               else { \n \
-                 assert(0); \n \
-               } \n \
-             } \n \
-             } \n \ 
-             else { \n \
-               if (servicing_atomic > 0) { \n \
-                 // reset \n \
-                  servicing_atomic = 0; \n \
-                  read_counter = 0; \n \
-                  started_receiving_writes = false; \n \
-                  locked_read_request1 = Address(-1); \n \
-                  locked_read_request2 = Address(-1); \n \
-                  locked_read_request3 = Address(-1); \n \
-                  locked_read_request4 = Address(-1); \n \
-                } \n \
-              } \n \
-               ";
 
-    // output.insert(pos, atomics_string);
-    /*string foo = "// Cannot do anything with this transition, go check next doable transition (mostly likely of next port)\n";
-    string::size_type next_pos = output.find(foo, pos);
-    next_pos = next_pos + foo.length();
-
-    assert(next_pos != string::npos);
-    string complete = "              }\n";
-    output.insert(next_pos, complete);*/
-    //out << port->lookupPair("c_code_in_port");
     out << output;
     out << endl;
   }
@@ -992,7 +898,6 @@ void StateMachine::printCWakeup(ostream& out, string component)
 
     out << "void " << component << "_Controller::reset_atomics()" << endl;
     out << "{" << endl;
-    out << "  assert(servicing_atomic > 0); " << endl;
     out << "  servicing_atomic = 0; " << endl;
     out << "  locked_read_request1 = Address(-1);" << endl;
     out << "  locked_read_request2 = Address(-1);" << endl;
