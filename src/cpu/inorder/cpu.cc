@@ -435,7 +435,7 @@ InOrderCPU::tick()
             //Tick next_tick = curTick + cycles(1);
             //tickEvent.schedule(next_tick);
             mainEventQueue.schedule(&tickEvent, nextCycle(curTick + 1));
-            DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", nextCycle() + curTick);
+            DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", nextCycle(curTick + 1));
         }
     }
 
