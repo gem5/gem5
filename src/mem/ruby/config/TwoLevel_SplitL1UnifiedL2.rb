@@ -57,7 +57,7 @@ end
 net_ports = Array.new
 iface_ports = Array.new
 
-assert((protocol == "MESI_CMP_directory" or protocol == "MOESI_CMP_directory"), __FILE__+" cannot be used with protocol #{protocol}");
+assert((protocol == "MESI_CMP_directory" or protocol == "MOESI_CMP_directory"), __FILE__+" cannot be used with protocol '#{protocol}'");
 
 require protocol+".rb"
 
