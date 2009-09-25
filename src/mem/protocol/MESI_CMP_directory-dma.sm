@@ -3,8 +3,8 @@ machine(DMA, "DMA Controller")
 : int request_latency
 {
 
-  MessageBuffer responseFromDir, network="From", virtual_network="6", ordered="true", no_vector="true";
-  MessageBuffer reqToDirectory, network="To", virtual_network="7", ordered="false", no_vector="true";
+  MessageBuffer responseFromDir, network="From", virtual_network="1", ordered="true", no_vector="true";
+  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", no_vector="true";
 
   enumeration(State, desc="DMA states", default="DMA_State_READY") {
     READY, desc="Ready to accept a new request";
@@ -51,13 +51,13 @@ machine(DMA, "DMA Controller")
     }
   }
 
-  in_port(dmaResponseQueue_in, DMAResponseMsg, responseFromDir, desc="...") {
+  in_port(dmaResponseQueue_in, ResponseMsg, responseFromDir, desc="...") {
     if (dmaResponseQueue_in.isReady()) {
-      peek( dmaResponseQueue_in, DMAResponseMsg) {
-        if (in_msg.Type == DMAResponseType:ACK) {
-          trigger(Event:Ack, in_msg.LineAddress);
-        } else if (in_msg.Type == DMAResponseType:DATA) {
-          trigger(Event:Data, in_msg.LineAddress);
+      peek( dmaResponseQueue_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:ACK) {
+          trigger(Event:Ack, makeLineAddress(in_msg.Address));
+        } else if (in_msg.Type == CoherenceResponseType:DATA) {
+          trigger(Event:Data, makeLineAddress(in_msg.Address));
         } else {
           error("Invalid response type");
         }
@@ -67,10 +67,9 @@ machine(DMA, "DMA Controller")
 
   action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
-        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-        out_msg.LineAddress := in_msg.LineAddress; 
-        out_msg.Type := DMARequestType:READ;
+      enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
+        out_msg.Address := in_msg.PhysicalAddress;
+        out_msg.Type := CoherenceRequestType:DMA_READ;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
         out_msg.Destination.add(map_Address_to_Directory(address));
@@ -81,10 +80,9 @@ machine(DMA, "DMA Controller")
 
   action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
     peek(dmaRequestQueue_in, SequencerMsg) {
-      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
-          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
-          out_msg.LineAddress := in_msg.LineAddress; 
-          out_msg.Type := DMARequestType:WRITE;
+      enqueue(reqToDirectory_out, RequestMsg, latency=request_latency) {
+          out_msg.Address := in_msg.PhysicalAddress;
+          out_msg.Type := CoherenceRequestType:DMA_WRITE;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;
           out_msg.Destination.add(map_Address_to_Directory(address));
@@ -94,13 +92,11 @@ machine(DMA, "DMA Controller")
   }
 
   action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
-    peek (dmaResponseQueue_in, DMAResponseMsg) {
-      dma_sequencer.ackCallback();
-    }
+    dma_sequencer.ackCallback();
   }
 
   action(d_dataCallback, "d", desc="Write data to dma sequencer") {
-    peek (dmaResponseQueue_in, DMAResponseMsg) {
+    peek (dmaResponseQueue_in, ResponseMsg) {
       dma_sequencer.dataCallback(in_msg.DataBlk);
     }
   }

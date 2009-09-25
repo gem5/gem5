@@ -27,12 +27,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id: MSI_MOSI_CMP_directory-L1cache.sm 1.10 05/01/19 15:55:40-06:00 beckmann@s0-28.cs.wisc.edu $
- *
- */
-
-
 machine(L1Cache, "MSI Directory L1 Cache CMP")
  : int l1_request_latency,
    int l1_response_latency,
@@ -47,15 +41,15 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
   MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
   // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="3", ordered="false";
-  MessageBuffer unblockFromL1Cache, network="To", virtual_network="4", ordered="false";
+  MessageBuffer responseFromL1Cache, network="To", virtual_network="1", ordered="false";
+  MessageBuffer unblockFromL1Cache, network="To", virtual_network="2", ordered="false";
 
 
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="1", ordered="false";
+  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false";
   // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="3", ordered="false";
+  MessageBuffer responseToL1Cache, network="From", virtual_network="1", ordered="false";
 
   // STATES
   enumeration(State, desc="Cache states", default="L1Cache_State_I") {
