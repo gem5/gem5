@@ -68,8 +68,6 @@ class BaseCache(MemObject):
          "Latency of the prefetcher")
     prefetch_policy = Param.Prefetch('none',
          "Type of prefetcher to use")
-    prefetch_cache_check_push = Param.Bool(True,
-         "Check if in cache on push or pop of prefetch queue")
     prefetch_use_cpu_id = Param.Bool(True,
          "Use the CPU ID to separate calculations of prefetches")
     prefetch_data_accesses_only = Param.Bool(False,

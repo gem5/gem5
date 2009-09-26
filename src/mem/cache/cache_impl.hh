@@ -1301,11 +1301,14 @@ Cache<TagStore>::getNextMSHR()
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
-            // Update statistic on number of prefetches issued
-            // (hwpf_mshr_misses)
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
-            // Don't request bus, since we already have it
-            return allocateMissBuffer(pkt, curTick, false);
+            Addr pf_addr = blockAlign(pkt->getAddr());
+            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr)) {
+                // Update statistic on number of prefetches issued
+                // (hwpf_mshr_misses)
+                mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+                // Don't request bus, since we already have it
+                return allocateMissBuffer(pkt, curTick, false);
+            }
         }
     }
 
