@@ -160,6 +160,7 @@ TraceFlag('DynInst')
 TraceFlag('ExecEnable')
 TraceFlag('ExecCPSeq')
 TraceFlag('ExecEffAddr')
+TraceFlag('ExecFaulting', 'Trace faulting instructions')
 TraceFlag('ExecFetchSeq')
 TraceFlag('ExecOpClass')
 TraceFlag('ExecRegDelta')
@@ -176,6 +177,6 @@ TraceFlag('PCEvent')
 TraceFlag('Quiesce')
 
 CompoundFlag('Exec', [ 'ExecEnable', 'ExecTicks', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro' ])
+    'ExecEffAddr', 'ExecResult', 'ExecSymbol', 'ExecMicro', 'ExecFaulting' ])
 CompoundFlag('ExecNoTicks', [ 'ExecEnable', 'ExecOpClass', 'ExecThread',
-    'ExecEffAddr', 'ExecResult', 'ExecMicro' ])
+    'ExecEffAddr', 'ExecResult', 'ExecMicro', 'ExecFaulting' ])

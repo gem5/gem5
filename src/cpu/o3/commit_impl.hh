@@ -1076,9 +1076,11 @@ DefaultCommit<Impl>::commitHead(DynInstPtr &head_inst, unsigned inst_num)
         commitStatus[tid] = TrapPending;
 
         if (head_inst->traceData) {
-            head_inst->traceData->setFetchSeq(head_inst->seqNum);
-            head_inst->traceData->setCPSeq(thread[tid]->numInst);
-            head_inst->traceData->dump();
+            if (DTRACE(ExecFaulting)) {
+                head_inst->traceData->setFetchSeq(head_inst->seqNum);
+                head_inst->traceData->setCPSeq(thread[tid]->numInst);
+                head_inst->traceData->dump();
+            }
             delete head_inst->traceData;
             head_inst->traceData = NULL;
         }
