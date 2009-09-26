@@ -449,7 +449,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     } else {
         // miss
 
-        Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+        Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
         if (mshr) {
@@ -692,7 +692,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
                                   CachePort *incomingPort,
                                   CachePort *otherSidePort)
 {
-    Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
+    Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
 
     pkt->pushLabel(name());
@@ -1162,7 +1162,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
 
-    Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+    Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
     // Let the MSHR itself track the snoop and decide whether we want
