@@ -166,7 +166,11 @@ sub printdiff
     # Set $postcontext to print the next $postcontext_lines matching lines.
     $postcontext = $postcontext_lines;
 
-    STDOUT->flush();
+    # Normally we flush after the postcontext lines are printed, but if
+    # the user has decreed that there aren't any we need to flush now
+    if ($postcontext == 0) {
+        STDOUT->flush();
+    }
 }
 
 
@@ -291,10 +295,12 @@ while (1) {
 	# figure out what to do with this line
 	if ($postcontext > 0) {
 	    # we're in the post-context of a diff: print it
-	    $postcontext--;
 	    print ' ', $l1;
 	    $lineno1++;
 	    $lineno2++;
+            if (--$postcontext == 0) {
+                STDOUT->flush();
+            }
 	}
 	else {
 	    # we're in the middle of a matching region... save this
