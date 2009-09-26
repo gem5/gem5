@@ -1264,6 +1264,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
         toDecode->insts[numInst] = instruction;
         toDecode->size++;
 
+        wroteToTimeBuffer = true;
+
         DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
 
         fetchStatus[tid] = TrapPending;
