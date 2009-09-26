@@ -411,9 +411,12 @@ buildEnv = m5.util.SmartDict($build_env)
 hgRev = '$hg_info'
 
 compileDate = m5.internal.core.compileDate
-for k,v in m5.internal.core.__dict__.iteritems():
-    if k.startswith('flag_'):
-        setattr(buildEnv, k[5:], v)
+_globals = globals()
+for key,val in m5.internal.core.__dict__.iteritems():
+    if key.startswith('flag_'):
+        flag = key[5:]
+        _globals[flag] = val
+del _globals
 """)
     code.write(str(target[0]))
 
