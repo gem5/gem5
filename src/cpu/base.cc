@@ -151,7 +151,7 @@ BaseCPU::BaseCPU(Params *p)
         *counter = numThreads;
         for (ThreadID tid = 0; tid < numThreads; ++tid) {
             Event *event = new CountedExitEvent(cause, *counter);
-            comInstEventQueue[tid]->schedule(event, p->max_insts_any_thread);
+            comInstEventQueue[tid]->schedule(event, p->max_insts_all_threads);
         }
     }
 
