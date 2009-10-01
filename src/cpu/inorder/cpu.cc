@@ -224,19 +224,19 @@ InOrderCPU::InOrderCPU(Params *params)
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
 #if FULL_SYSTEM
         // SMT is not supported in FS mode yet.
-        assert(this->numThreads == 1);
-        this->thread[tid] = new Thread(this, 0);
+        assert(numThreads == 1);
+        thread[tid] = new Thread(this, 0);
 #else
         if (tid < (ThreadID)params->workload.size()) {
             DPRINTF(InOrderCPU, "Workload[%i] process is %#x\n",
-                    tid, this->thread[tid]);
-            this->thread[tid] =
+                    tid, params->workload[tid]->prog_fname);
+            thread[tid] =
                 new Thread(this, tid, params->workload[tid]);
         } else {
             //Allocate Empty thread so M5 can use later
             //when scheduling threads to CPU
             Process* dummy_proc = params->workload[0];
-            this->thread[tid] = new Thread(this, tid, dummy_proc);
+            thread[tid] = new Thread(this, tid, dummy_proc);
         }
 #endif
 
