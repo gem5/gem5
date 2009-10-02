@@ -978,9 +978,14 @@ mmapFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     }
 
     // pick next address from our "mmap region"
-    start = p->mmap_end;
+    if (OS::mmapGrowsDown()) {
+        start = p->mmap_end - length;
+        p->mmap_end = start;
+    } else {
+        start = p->mmap_end;
+        p->mmap_end += length;
+    }
     p->pTable->allocate(start, length);
-    p->mmap_end += length;
 
     if (!(flags & OS::TGT_MAP_ANONYMOUS)) {
         warn("allowing mmap of file @ fd %d. "
