@@ -184,7 +184,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
-    mmap_start = mmap_end = (Addr)0xf7ffd000ULL;
+    mmap_start = mmap_end = (Addr)0xf7ffe000ULL;
 }
 
 SyscallDesc*
