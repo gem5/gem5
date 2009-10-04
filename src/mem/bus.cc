@@ -244,6 +244,9 @@ Bus::recvTiming(PacketPtr pkt)
             // Packet not successfully sent. Leave or put it on the retry list.
             // illegal to block responses... can lead to deadlock
             assert(!pkt->isResponse());
+            // It's also illegal to force a transaction to retry after
+            // someone else has committed to respond.
+            assert(!pkt->memInhibitAsserted());
             DPRINTF(Bus, "recvTiming: src %d dst %d %s 0x%x TGT RETRY\n",
                     src, pkt->getDest(), pkt->cmdString(), pkt->getAddr());
             addToRetryList(src_port);
