@@ -45,7 +45,7 @@
 //Sequencer::Sequencer(int core_id, MessageBuffer* mandatory_q)
 
 #define LLSC_FAIL -2
-
+long int already = 0;
 Sequencer::Sequencer(const string & name)
   :RubyPort(name)
 {
@@ -354,9 +354,6 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
 
 // Returns true if the sequencer already has a load or store outstanding
 int Sequencer::isReady(const RubyRequest& request) {
-  // POLINA: check if we are currently flushing the write buffer, if so Ruby is returned as not ready
-  // to simulate stalling of the front-end
-  // Do we stall all the sequencers? If it is atomic instruction - yes!
   if (m_outstanding_count >= m_max_outstanding_requests) {
     return LIBRUBY_BUFFER_FULL;
   }
@@ -417,6 +414,8 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   case RubyRequestType_IFETCH:
     if (m_atomic_reads > 0 && m_atomic_writes == 0) {
       m_controller->reset_atomics();
+      m_atomic_writes = 0;
+      m_atomic_reads = 0;
     }
     else if (m_atomic_writes > 0) {
       assert(m_atomic_reads > m_atomic_writes);
@@ -428,6 +427,8 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   case RubyRequestType_LD:
     if (m_atomic_reads > 0 && m_atomic_writes == 0) {
       m_controller->reset_atomics();
+      m_atomic_writes = 0;
+      m_atomic_reads = 0;
     }
     else if (m_atomic_writes > 0) {
       assert(m_atomic_reads > m_atomic_writes);
@@ -439,6 +440,8 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   case RubyRequestType_ST:
     if (m_atomic_reads > 0 && m_atomic_writes == 0) {
       m_controller->reset_atomics();
+      m_atomic_writes = 0;
+      m_atomic_reads = 0;
     }
     else if (m_atomic_writes > 0) {
       assert(m_atomic_reads > m_atomic_writes);
