@@ -598,7 +598,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /*  88 */ SyscallDesc("reboot", unimplementedFunc),
     /*  89 */ SyscallDesc("readdir", unimplementedFunc),
     /*  90 */ SyscallDesc("mmap", unimplementedFunc),
-    /*  91 */ SyscallDesc("munmap", unimplementedFunc),
+    /*  91 */ SyscallDesc("munmap", munmapFunc),
     /*  92 */ SyscallDesc("truncate", unimplementedFunc),
     /*  93 */ SyscallDesc("ftruncate", unimplementedFunc),
     /*  94 */ SyscallDesc("fchmod", unimplementedFunc),
