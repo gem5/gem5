@@ -12,13 +12,13 @@ RubySystem.reset
 # default values
 
 num_cores = 2
-l1_icache_size_kb = 32
+l1_icache_size_kb = 64
 l1_icache_assoc = 8
 l1_icache_latency = 1
 l1_dcache_size_kb = 32
 l1_dcache_assoc = 8
 l1_dcache_latency = 1
-l2_cache_size_kb = 2048 # total size (sum of all banks)
+l2_cache_size_kb = 8192 # total size (sum of all banks)
 l2_cache_assoc = 16
 l2_cache_latency = 12
 num_l2_banks = num_cores
@@ -35,6 +35,9 @@ for i in 0..$*.size-1 do
   if $*[i] == "-c" or $*[i] == "--protocol"
     i += 1
     protocol = $*[i]
+  elsif $*[i] == "-B"
+    num_l2_banks = $*[i+1].to_i
+    i = i+1
   elsif $*[i] == "-m"
     num_memories = $*[i+1].to_i
     i = i+1
