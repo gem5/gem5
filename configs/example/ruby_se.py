@@ -138,7 +138,6 @@ rubymem = RubyMemory(
   range = AddrRange("512MB"),
   clock = "1GHz",
   num_cpus = np,
-  libruby_file = "src/mem/ruby/amd64-linux/generated/MOESI_CMP_directory/bin/libruby.so",
   config_file = "ruby.config",
   stats_file = "m5out/ruby.stats"
 )
