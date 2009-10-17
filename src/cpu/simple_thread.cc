@@ -203,7 +203,7 @@ SimpleThread::serialize(ostream &os)
     // 
     // Now must serialize all the ISA dependent state
     //
-    isa.serialize(os);
+    isa.serialize(cpu, os);
 }
 
 
@@ -223,7 +223,7 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     // 
     // Now must unserialize all the ISA dependent state
     //
-    isa.unserialize(cp, section);
+    isa.unserialize(cpu, cp, section);
 }
 
 #if FULL_SYSTEM

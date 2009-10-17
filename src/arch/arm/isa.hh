@@ -95,9 +95,10 @@ namespace ArmISA
             return reg;
         }
 
-        void serialize(std::ostream &os)
+        void serialize(EventManager *em, std::ostream &os)
         {}
-        void unserialize(Checkpoint *cp, const std::string &section)
+        void unserialize(EventManager *em, Checkpoint *cp,
+                const std::string &section)
         {}
 
         ISA()
