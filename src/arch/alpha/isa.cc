@@ -36,7 +36,7 @@ namespace AlphaISA
 {
 
 void
-ISA::serialize(std::ostream &os)
+ISA::serialize(EventManager *em, std::ostream &os)
 {
     SERIALIZE_SCALAR(fpcr);
     SERIALIZE_SCALAR(uniq);
@@ -46,7 +46,7 @@ ISA::serialize(std::ostream &os)
 }
 
 void
-ISA::unserialize(Checkpoint *cp, const std::string &section)
+ISA::unserialize(EventManager *em, Checkpoint *cp, const std::string &section)
 {
     UNSERIALIZE_SCALAR(fpcr);
     UNSERIALIZE_SCALAR(uniq);

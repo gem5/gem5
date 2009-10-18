@@ -199,6 +199,11 @@ SimpleThread::serialize(ostream &os)
     SERIALIZE_SCALAR(nextPC);
     SERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
+
+    // 
+    // Now must serialize all the ISA dependent state
+    //
+    isa.serialize(cpu, os);
 }
 
 
@@ -214,6 +219,11 @@ SimpleThread::unserialize(Checkpoint *cp, const std::string &section)
     UNSERIALIZE_SCALAR(nextPC);
     UNSERIALIZE_SCALAR(nextNPC);
     // thread_num and cpu_id are deterministic from the config
+
+    // 
+    // Now must unserialize all the ISA dependent state
+    //
+    isa.unserialize(cpu, cp, section);
 }
 
 #if FULL_SYSTEM
