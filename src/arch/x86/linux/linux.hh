@@ -142,8 +142,8 @@ class X86Linux32 : public Linux
         uint32_t st_uid;
         uint32_t st_gid;
         uint64_t st_rdev;
-        int64_t st_size;
         uint8_t __pad3[4];
+        int64_t st_size;
         uint32_t st_blksize;
         uint64_t st_blocks;
         uint32_t st_atimeX;
@@ -153,7 +153,7 @@ class X86Linux32 : public Linux
         uint32_t st_ctimeX;
         uint32_t st_ctime_nsec;
         uint64_t st_ino;
-    } tgt_stat64;
+    } __attribute__((__packed__)) tgt_stat64;
 
     static OpenFlagTransTable openFlagTable[];
 
