@@ -232,7 +232,7 @@ SyscallDesc X86_64LinuxProcess::syscallDescs[] = {
     /*   1 */ SyscallDesc("write", writeFunc),
     /*   2 */ SyscallDesc("open", openFunc<X86Linux64>),
     /*   3 */ SyscallDesc("close", closeFunc),
-    /*   4 */ SyscallDesc("stat", unimplementedFunc),
+    /*   4 */ SyscallDesc("stat", stat64Func<X86Linux64>),
     /*   5 */ SyscallDesc("fstat", fstat64Func<X86Linux64>),
     /*   6 */ SyscallDesc("lstat", unimplementedFunc),
     /*   7 */ SyscallDesc("poll", unimplementedFunc),
