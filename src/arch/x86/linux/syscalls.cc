@@ -702,7 +702,7 @@ SyscallDesc I386LinuxProcess::syscallDescs[] = {
     /* 192 */ SyscallDesc("mmap2", mmapFunc<X86Linux32>),
     /* 193 */ SyscallDesc("truncate64", unimplementedFunc),
     /* 194 */ SyscallDesc("ftruncate64", unimplementedFunc),
-    /* 195 */ SyscallDesc("stat64", unimplementedFunc),
+    /* 195 */ SyscallDesc("stat64", stat64Func<X86Linux32>),
     /* 196 */ SyscallDesc("lstat64", unimplementedFunc),
     /* 197 */ SyscallDesc("fstat64", fstat64Func<X86Linux32>),
     /* 198 */ SyscallDesc("lchown32", unimplementedFunc),
