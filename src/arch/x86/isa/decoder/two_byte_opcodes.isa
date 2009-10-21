@@ -604,7 +604,7 @@
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x7: WarnUnimpl::movdqu_Vo_Wo();
+                        0x7: MOVDQU(Vo,Wo);
                         default: UD2();
                     }
                     // operand size (0x66)
@@ -616,7 +616,7 @@
                         0x4: PUNPCKLQDQ(Vo,Wq);
                         0x5: PUNPCKHQDQ(Vo,Wq);
                         0x6: WarnUnimpl::movd_Vo_Ed();
-                        0x7: WarnUnimpl::movdqa_Vo_Wo();
+                        0x7: MOVDQA(Vo,Wo);
                     }
                     default: UD2();
                 }
@@ -702,7 +702,7 @@
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
                         0x6: MOVQ(Vq,Wq);
-                        0x7: WarnUnimpl::movdqu_Wo_Vo();
+                        0x7: MOVDQU(Wo,Vo);
                         default: UD2();
                     }
                     // operand size (0x66)
@@ -710,7 +710,7 @@
                         0x4: WarnUnimpl::haddpd_Vo_Wo();
                         0x5: WarnUnimpl::hsubpd_Vo_Wo();
                         0x6: WarnUnimpl::movd_Ed_Vd();
-                        0x7: WarnUnimpl::movdqa_Wo_Vo();
+                        0x7: MOVDQA(Wo,Vo);
                         default: UD2();
                     }
                     // repne (0xF2)
