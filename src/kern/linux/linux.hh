@@ -136,6 +136,17 @@ class Linux : public OperatingSystem
         int64_t tv_usec;        //!< microseconds
     };
 
+    /// Clock ticks per second, for times().
+    static const int _SC_CLK_TCK = 100;
+
+    /// For times().
+    struct tms {
+        int64_t tms_utime;      //!< user time
+        int64_t tms_stime;      //!< system time
+        int64_t tms_cutime;     //!< user time of children
+        int64_t tms_cstime;     //!< system time of children
+    };
+
     // For writev/readv
     struct tgt_iovec {
         uint64_t iov_base; // void *

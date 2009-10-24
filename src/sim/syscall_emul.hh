@@ -1131,6 +1131,30 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 0;
 }
 
+/// Target times() function.
+template <class OS>
+SyscallReturn
+timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+           ThreadContext *tc)
+{
+    TypedBufferArg<typename OS::tms> bufp(process->getSyscallArg(tc, 0));
+
+    // Fill in the time structure (in clocks)
+    int64_t clocks = curTick * OS::_SC_CLK_TCK / Clock::Int::s;
+    bufp->tms_utime = clocks;
+    bufp->tms_stime = 0;
+    bufp->tms_cutime = 0;
+    bufp->tms_cstime = 0;
+
+    // Convert to host endianness
+    bufp->tms_utime = htog(bufp->tms_utime);
+
+    // Write back
+    bufp.copyOut(tc->getMemPort());
+
+    // Return clock ticks since system boot
+    return clocks;
+}
 
 
 
