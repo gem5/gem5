@@ -469,7 +469,7 @@ copyOutStat64Buf(TranslatingPort * mem, Addr addr,
 {
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
-    convertStatBuf<tgt_stat_buf, hst_stat64>(tgt, host, fakeTTY);
+    convertStat64Buf<tgt_stat_buf, hst_stat64>(tgt, host, fakeTTY);
     tgt.copyOut(mem);
 }
 
