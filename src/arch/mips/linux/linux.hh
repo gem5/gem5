@@ -100,6 +100,7 @@ class MipsLinux : public Linux
     static const unsigned TIOCISATTY_ = 0x5480;
     static const unsigned TIOCGETS_   = 0x540d;
     static const unsigned TIOCGETA_   = 0x7417;
+    static const unsigned TCSETAW_    = 0x5403; // 2.6.15 kernel
     //@}
 
     /// For table().

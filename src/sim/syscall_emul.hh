@@ -500,6 +500,7 @@ ioctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
       case OS::TIOCGETC_:
       case OS::TIOCGETS_:
       case OS::TIOCGETA_:
+      case OS::TCSETAW_:
         return -ENOTTY;
 
       default:
