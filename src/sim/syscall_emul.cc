@@ -405,6 +405,22 @@ ftruncateFunc(SyscallDesc *desc, int num,
 }
 
 SyscallReturn
+ftruncate64Func(SyscallDesc *desc, int num,
+                LiveProcess *process, ThreadContext *tc)
+{
+    int fd = process->sim_fd(process->getSyscallArg(tc, 0));
+
+    if (fd < 0)
+        return -EBADF;
+
+    // I'm not sure why, but the length argument is in arg reg 3
+    loff_t length = process->getSyscallArg(tc, 3);
+
+    int result = ftruncate64(fd, length);
+    return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
 umaskFunc(SyscallDesc *desc, int num, LiveProcess *process, ThreadContext *tc)
 {
     // Letting the simulated program change the simulator's umask seems like

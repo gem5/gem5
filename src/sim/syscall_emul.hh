@@ -260,6 +260,11 @@ SyscallReturn ftruncateFunc(SyscallDesc *desc, int num,
                             LiveProcess *p, ThreadContext *tc);
 
 
+/// Target ftruncate64() handler.
+SyscallReturn ftruncate64Func(SyscallDesc *desc, int num,
+                              LiveProcess *p, ThreadContext *tc);
+
+
 /// Target umask() handler.
 SyscallReturn umaskFunc(SyscallDesc *desc, int num,
                         LiveProcess *p, ThreadContext *tc);
