@@ -1156,6 +1156,25 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return clocks;
 }
 
+/// Target time() function.
+template <class OS>
+SyscallReturn
+timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+           ThreadContext *tc)
+{
+    typename OS::time_t sec, usec;
+    getElapsedTime(sec, usec);
+    sec += seconds_since_epoch;
+
+    Addr taddr = (Addr)process->getSyscallArg(tc, 0);
+    if(taddr != 0) {
+        typename OS::time_t t = sec;
+        t = htog(t);
+        TranslatingPort *p = tc->getMemPort();
+        p->writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
+    }
+    return sec;
+}
 
 
 #endif // __SIM_SYSCALL_EMUL_HH__
