@@ -144,6 +144,24 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
             if (!p->pTable->translate(gen.addr()))
                 p->pTable->allocate(roundDown(gen.addr(), VMPageSize),
                                     VMPageSize);
+
+            // if the address is already there, zero it out
+            else {
+                uint8_t zero  = 0;
+                TranslatingPort *tp = tc->getMemPort();
+
+                // split non-page aligned accesses
+                Addr next_page = roundUp(gen.addr(), VMPageSize);
+                uint32_t size_needed = next_page - gen.addr();
+                tp->memsetBlob(gen.addr(), zero, size_needed);
+                if (gen.addr() + VMPageSize > next_page &&
+                    next_page < new_brk &&
+                    p->pTable->translate(next_page))
+                {
+                    size_needed = VMPageSize - size_needed;
+                    tp->memsetBlob(next_page, zero, size_needed);
+                }
+            }
         }
     }
 
