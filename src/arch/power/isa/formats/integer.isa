@@ -1,0 +1,369 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2009 The University of Edinburgh
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Timothy M. Jones
+
+////////////////////////////////////////////////////////////////////
+//
+// Integer ALU instructions
+//
+
+
+// Instruction class constructor template when Rc is set.
+def template IntRcConstructor {{
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+                %(constructor)s;
+                rcSet = true;
+        }
+}};
+
+
+// Instruction class constructor template when OE is set.
+def template IntOeConstructor {{
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+                %(constructor)s;
+                oeSet = true;
+        }
+}};
+
+
+// Instruction class constructor template when both Rc and OE are set.
+def template IntRcOeConstructor {{
+        inline %(class_name)s::%(class_name)s(ExtMachInst machInst)  : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
+        {
+                %(constructor)s;
+                rcSet = true;
+                oeSet = true;
+        }
+}};
+
+
+let {{
+
+readXERCode = 'Xer xer = XER;'
+
+setXERCode = 'XER = xer;'
+
+computeCR0Code = '''
+    Cr cr = CR;
+    cr.cr0 = makeCRField((int32_t)%(result)s, (int32_t)0, xer.so);
+    CR = cr;
+'''
+
+computeCACode = '''
+    if (findCarry(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ca = 1;
+    } else {
+        xer.ca = 0;
+    }
+'''
+
+computeOVCode = '''
+    if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
+        xer.ov = 1;
+        xer.so = 1;
+    } else {
+        xer.ov = 0;
+    }
+'''
+
+computeDivOVCode = '''
+    if (divSetOV) {
+        xer.ov = 1;
+        xer.so = 1;
+    } else {
+        if (findOverflow(32, %(result)s, %(inputa)s, %(inputb)s)) {
+            xer.ov = 1;
+            xer.so = 1;
+        } else {
+            xer.ov = 0;
+        }
+    }
+'''
+
+}};
+
+
+// A basic integer instruction.
+def format IntOp(code, inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer instructions with immediate (signed or unsigned).
+def format IntImmOp(code, inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer instructions with immediate that perform arithmetic.
+// These instructions all write to Rt and use an altered form of the
+// value in source register Ra, hence the use of src to hold the actual
+// value. The control flags include the use of code to compute the
+// carry bit or the CR0 code.
+def format IntImmArithOp(code, ctrl_flags = [], inst_flags = []) {{
+
+    # Set up the dictionary and deal with control flags
+    dict = {'result':'Rt', 'inputa':'src', 'inputb':'imm'}
+    if ctrl_flags:
+        code += readXERCode
+        for val in ctrl_flags:
+            if val == 'computeCA':
+                code += computeCACode % dict + setXERCode
+            elif val == 'computeCR0':
+                code += computeCR0Code % dict
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer instructions with immediate that perform arithmetic but use
+// the value 0 when Ra == 0. We generate two versions of each instruction
+// corresponding to these two different scenarios. The correct version is
+// determined at decode (see the CheckRaDecode template).
+def format IntImmArithCheckRaOp(code, code_ra0, inst_flags = []) {{
+
+    # First the version where Ra is non-zero
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmOp', code, inst_flags,
+                 CheckRaDecode, BasicConstructor)
+
+    # Now another version where Ra == 0
+    (header_output_ra0, decoder_output_ra0, _, exec_output_ra0) = \
+        GenAluOp(name, Name + 'RaZero', 'IntImmOp', code_ra0, inst_flags,
+                 CheckRaDecode, BasicConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_ra0
+    decoder_output += decoder_output_ra0
+    exec_output += exec_output_ra0
+}};
+
+
+// Integer instructions with immediate that perform logic operations.
+// All instructions write to Ra and use Rs as a source register. Some
+// also compute the CR0 code too.
+def format IntImmLogicOp(code, computeCR0 = 0, inst_flags = []) {{
+
+    # Set up the dictionary and deal with computing CR0
+    dict = {'result':'Ra'}
+    if computeCR0:
+        code += readXERCode + computeCR0Code % dict
+
+    # Generate the class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntImmOp', code, inst_flags, BasicDecode,
+                 BasicConstructor)
+}};
+
+
+// Integer instructions that perform logic operations. The result is
+// always written into Ra. All instructions have 2 versions depending on
+// whether the Rc bit is set to compute the CR0 code. This is determined
+// at decode as before.
+def format IntLogicOp(code, inst_flags = []) {{
+    dict = {'result':'Ra'}
+
+    # Code when Rc is set
+    code_rc1 = code + readXERCode + computeCR0Code % dict
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+
+// Integer instructions with a shift amount. As above, except inheriting
+// from the IntShiftOp class.
+def format IntShiftOp(code, inst_flags = []) {{
+    dict = {'result':'Ra'}
+
+    # Code when Rc is set
+    code_rc1 = code + readXERCode + computeCR0Code % dict
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntShiftOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntShiftOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+
+// Instructions in this format are all reduced to the form Rt = src1 + src2,
+// therefore we just give src1 and src2 definitions. In working out the
+// template we first put in the definitions of the variables and then
+// the code for the addition. We also deal with computing the carry flag
+// if required.
+//
+// We generate 4 versions of each instruction. This correspond to the
+// different combinations of having the OE bit set or unset (which controls
+// whether the overflow flag is computed) and the Rc bit set or unset too
+// (which controls whether the CR0 code is computed).
+def format IntSumOp(src1, src2, ca = {{ 0 }}, computeCA = 0,
+                    inst_flags = []) {{
+
+    # The result is always in Rt, but the source values vary
+    dict = {'result':'Rt', 'inputa':'src1', 'inputb':'src2'}
+
+    # Add code to set up variables and do the sum
+    code  = 'uint32_t src1 = ' + src1 + ';\n'
+    code += 'uint32_t src2 = ' + src2 + ';\n'
+    code += 'uint32_t ca = ' + ca + ';\n'
+    code += 'Rt = src1 + src2 + ca;\n'
+
+    # Add code for calculating the carry, if needed
+    if computeCA:
+        code += computeCACode % dict + setXERCode
+
+    # Setup the 4 code versions and add code to access XER if necessary
+    code_rc1 = readXERCode + code
+    code_oe1 = readXERCode + code + computeOVCode % dict + setXERCode
+    code_rc1_oe1 = readXERCode + code + computeOVCode % dict + setXERCode
+    if (computeCA or ca == 'xer.ca'):
+        code = readXERCode + code
+    code_rc1 += computeCR0Code % dict
+    code_rc1_oe1 += computeCR0Code % dict
+
+    # Generate the classes
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntOp', code, inst_flags,
+                 CheckRcOeDecode, BasicConstructor)
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
+                 CheckRcOeDecode, IntRcConstructor)
+    (header_output_oe1, decoder_output_oe1, _, exec_output_oe1) = \
+        GenAluOp(name, Name + 'OeSet', 'IntOp', code_oe1, inst_flags,
+                 CheckRcOeDecode, IntOeConstructor)
+    (header_output_rc1_oe1, decoder_output_rc1_oe1, _, exec_output_rc1_oe1) = \
+        GenAluOp(name, Name + 'RcSetOeSet', 'IntOp', code_rc1_oe1,
+                 inst_flags, CheckRcOeDecode, IntRcOeConstructor)
+
+    # Finally, add to the other outputs
+    header_output += \
+        header_output_rc1 + header_output_oe1 + header_output_rc1_oe1
+    decoder_output += \
+        decoder_output_rc1 + decoder_output_oe1 + decoder_output_rc1_oe1
+    exec_output += \
+        exec_output_rc1 + exec_output_oe1 + exec_output_rc1_oe1
+
+}};
+
+
+// Instructions that use source registers Ra and Rb, with the result
+// placed into Rt. Basically multiply and divide instructions. The
+// carry bit is never set, but overflow can be calculated. Division
+// explicitly sets the overflow bit in certain situations and this is
+// dealt with using the 'divSetOV' boolean in decoder.isa. We generate
+// two versions of each instruction to deal with the Rc bit.
+def format IntArithOp(code, computeOV = 0, inst_flags = []) {{
+
+    # The result is always in Rt, but the source values vary
+    dict = {'result':'Rt', 'inputa':'src1', 'inputb':'src2'}
+
+    # Deal with setting the overflow flag
+    if computeOV:
+        code = 'bool divSetOV = false;\n' + code
+        code += computeDivOVCode % dict + setXERCode
+
+    # Setup the 2 code versions and add code to access XER if necessary
+    code_rc1 = readXERCode + code + computeCR0Code % dict
+    if computeOV:
+        code = readXERCode + code
+
+    # Generate the classes
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+
+// A special format for rotate instructions which use certain fields
+// from the instruction's binary encoding. We need two versions for each
+// instruction to deal with the Rc bit.
+def format IntRotateOp(code, inst_flags = []) {{
+
+    # The result is always in Ra
+    dict = {'result':'Ra'}
+
+    # Setup the code for when Rc is set
+    code_rc1 = readXERCode + code + computeCR0Code % dict
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'IntRotateOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'IntRotateOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};

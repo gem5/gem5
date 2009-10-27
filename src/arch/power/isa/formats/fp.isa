@@ -1,0 +1,132 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2009 The University of Edinburgh
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Timothy M. Jones
+
+////////////////////////////////////////////////////////////////////
+//
+// Floating Point operate instructions
+//
+
+
+let {{
+
+    readFPSCRCode = 'Fpscr fpscr = FPSCR;'
+
+    computeCR1Code = '''
+        Cr cr = CR;
+        cr.cr1 = (fpscr.fx << 3) | (fpscr.fex << 2) |
+                 (fpscr.vx << 1) | fpscr.ox;
+        CR = cr;
+    '''
+
+}};
+
+// Primary format for floating point operate instructions:
+def format FloatOp(code, inst_flags = []) {{
+    iop = InstObjParams(name, Name, 'FloatOp',
+                        {"code": code},
+                        inst_flags)
+    header_output = BasicDeclare.subst(iop)
+    decoder_output = BasicConstructor.subst(iop)
+    decode_block = BasicDecode.subst(iop)
+    exec_output = BasicExecute.subst(iop)
+}};
+
+// Floating point operations that compute the CR1 code if RC is set. No other
+// special registers are touched using these operations.
+def format FloatRCCheckOp(code, inst_flags = []) {{
+
+    # Code when Rc is set
+    code_rc1 = code + readFPSCRCode + computeCR1Code
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'FloatOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+// Floating point elementary arithmetic operations. Besides having two
+// versions of each instruction for when Rc is set or not, we also have
+// to alter lots of special registers depending on the result of the
+// operation. The result is always in Ft.sf.
+def format FloatArithOp(code, inst_flags = []) {{
+
+    # Code when Rc is set
+    code_rc1 = code + readFPSCRCode + computeCR1Code
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'FloatOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};
+
+// Floating point rounding and conversion operations. Besides having two
+// versions of each instruction for when Rc is set or not, we also have
+// to alter lots of special registers depending on the result of the
+// operation. The result is always in Ft.sf.
+def format FloatConvertOp(code, inst_flags = []) {{
+
+    # Code when Rc is set
+    code_rc1 = code + readFPSCRCode + computeCR1Code
+
+    # Generate the first class
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'FloatOp', code, inst_flags,
+                 CheckRcDecode, BasicConstructor)
+
+    # Generate the second class
+    (header_output_rc1, decoder_output_rc1, _, exec_output_rc1) = \
+        GenAluOp(name, Name + 'RcSet', 'FloatOp', code_rc1, inst_flags,
+                 CheckRcDecode, IntRcConstructor)
+
+    # Finally, add to the other outputs
+    header_output += header_output_rc1
+    decoder_output += decoder_output_rc1
+    exec_output += exec_output_rc1
+}};

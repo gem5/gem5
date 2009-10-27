@@ -97,6 +97,19 @@ ElfObject::tryFile(const string &fname, int fd, size_t len, uint8_t *data)
             arch = ObjectFile::Alpha;
         } else if (ehdr.e_machine == EM_ARM) {
             arch = ObjectFile::Arm;
+        } else if (ehdr.e_machine == EM_PPC &&
+                ehdr.e_ident[EI_CLASS] == ELFCLASS32) {
+          if (ehdr.e_ident[EI_DATA] == ELFDATA2MSB) {
+                arch = ObjectFile::Power;
+          } else {
+                fatal("The binary you're trying to load is compiled for "
+                        "little endian Power.\nM5 only supports big "
+                        "endian Power. Please recompile your binary.\n");
+          }
+        } else if (ehdr.e_machine == EM_PPC64) {
+            fatal("The binary you're trying to load is compiled for 64-bit "
+                  "Power. M5\n only supports 32-bit Power. Please "
+                  "recompile your binary.\n");
         } else {
             warn("Unknown architecture: %d\n", ehdr.e_machine);
             arch = ObjectFile::UnknownArch;

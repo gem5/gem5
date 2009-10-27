@@ -52,7 +52,8 @@ class ObjectFile
         Mips,
         X86_64,
         I386,
-        Arm
+        Arm,
+        Power
     };
 
     enum OpSys {

@@ -59,6 +59,10 @@ elif buildEnv['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB
     if buildEnv['FULL_SYSTEM']:
         from ArmInterrupts import ArmInterrupts
+elif buildEnv['TARGET_ISA'] == 'power':
+    from PowerTLB import PowerTLB
+    if buildEnv['FULL_SYSTEM']:
+        from PowerInterrupts import PowerInterrupts
 
 class BaseCPU(MemObject):
     type = 'BaseCPU'
@@ -116,6 +120,13 @@ class BaseCPU(MemObject):
         if buildEnv['FULL_SYSTEM']:
             interrupts = Param.ArmInterrupts(
                     ArmInterrupts(), "Interrupt Controller")
+    elif buildEnv['TARGET_ISA'] == 'power':
+        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
+        dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
+        itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
+        if buildEnv['FULL_SYSTEM']:
+            interrupts = Param.PowerInterrupts(
+                    PowerInterrupts(), "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
             buildEnv['TARGET_ISA']
