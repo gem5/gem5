@@ -41,19 +41,19 @@ class TypeFieldEnumAST(TypeFieldAST):
     def generate(self, type):
         # Add enumeration
         if not type.enumAdd(self.field_id, self.pairs_ast.pairs):
-            error("Duplicate enumeration: %s:%s" % (type, self.field_id))
+            self.error("Duplicate enumeration: %s:%s" % (type, self.field_id))
 
         # Fill machine info
         machine = self.symtab.state_machine
 
         if str(type) == "State":
             if not machine:
-                error("State declaration not part of a machine.")
+                self.error("State declaration not part of a machine.")
             s = State(self.symtab, self.field_id, self.location, self.pairs)
             machine.addState(s)
 
         if str(type) == "Event":
             if not machine:
-                error("Event declaration not part of a machine.")
+                self.error("Event declaration not part of a machine.")
             e = Event(self.symtab, self.field_id, self.location, self.pairs)
             machine.addEvent(e)

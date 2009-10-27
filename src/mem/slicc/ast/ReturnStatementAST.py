@@ -42,7 +42,7 @@ class ReturnStatementAST(StatementAST):
 
         # Is return valid here?
         if return_type is None:
-            error("Invalid 'return' statement")
+            self.error("Invalid 'return' statement")
 
         # The return type must match
         if return_type != actual_type:

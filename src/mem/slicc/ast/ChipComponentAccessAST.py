@@ -85,8 +85,8 @@ class ChipMethodAccessAST(ChipComponentAccessAST):
 
         # Verify that this is a method of the object
         if not var.type.methodExist(methodId):
-            error("%s: Type '%s' does not have a method '%s'" % \
-                  ("Invalid method call", var.type, methodId))
+            self.error("%s: Type '%s' does not have a method '%s'" % \
+                       ("Invalid method call", var.type, methodId))
 
         expected_size = len(var.type.methodParamType(methodId))
         if len(self.expr_vec) != expected_size:

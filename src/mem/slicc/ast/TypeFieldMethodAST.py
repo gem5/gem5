@@ -47,4 +47,4 @@ class TypeFieldMethodAST(TypeFieldAST):
 
         # Add method
         if not type.methodAdd(self.ident, return_type, types):
-            error("Duplicate method: %s:%s()" % (type, self.ident))
+            self.error("Duplicate method: %s:%s()" % (type, self.ident))

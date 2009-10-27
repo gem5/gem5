@@ -47,9 +47,9 @@ class MemberExprAST(ExprAST):
 
         # Verify that this is a valid field name for this type
         if self.field not in return_type.data_members:
-            error("Invalid object field: " +
-                  "Type '%s' does not have data member %s" % \
-                  (return_type, self.field))
+            self.error("Invalid object field: " +
+                       "Type '%s' does not have data member %s" % \
+                       (return_type, self.field))
 
         # Return the type of the field
         return return_type.data_members[self.field].type

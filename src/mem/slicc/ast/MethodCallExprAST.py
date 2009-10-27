@@ -55,22 +55,22 @@ class MethodCallExprAST(ExprAST):
 
         # Verify that this is a method of the object
         if methodId not in obj_type.methods:
-            error("Invalid method call: Type '%s' does not have a method '%s'",
-                  obj_type, methodId)
+            self.error("Invalid method call: Type '%s' does not have a method '%s'",
+                       obj_type, methodId)
 
         if len(self.expr_ast_vec) != \
                len(obj_type.methods[methodId].param_types):
             # Right number of parameters
-            error("Wrong number of parameters for function name: '%s', " + \
-                  "expected: , actual: ", proc_name,
+            self.error("Wrong number of parameters for function name: '%s', " + \
+                       "expected: , actual: ", proc_name,
                   len(obj_type.methods[methodId].param_types),
                   len(self.expr_ast_vec))
 
         for actual_type, expected_type in \
                 zip(paramTypes, obj_type.methods[methodId].param_types):
             if actual_type != expected_type:
-                error("Type mismatch: expected: %s actual: %s",
-                       expected_type, actual_type)
+                self.error("Type mismatch: expected: %s actual: %s",
+                           expected_type, actual_type)
 
         # Return the return type of the method
         return obj_type.methods[methodId].return_type
