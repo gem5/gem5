@@ -187,21 +187,21 @@ def macroop MOVHPS_P_XMM {
 };
 
 def macroop MOVHPD_XMM_M {
-    ldfp xmmh, seg, sib, "DISPLACEMENT", dataSize=8
+    ldfp xmmh, seg, sib, disp, dataSize=8
 };
 
 def macroop MOVHPD_XMM_P {
     rdip t7
-    ldfp xmmh, seg, riprel, "DISPLACEMENT", dataSize=8
+    ldfp xmmh, seg, riprel, disp, dataSize=8
 };
 
 def macroop MOVHPD_M_XMM {
-    stfp xmmh, seg, sib, "DISPLACEMENT", dataSize=8
+    stfp xmmh, seg, sib, disp, dataSize=8
 };
 
 def macroop MOVHPD_P_XMM {
     rdip t7
-    stfp xmmh, seg, riprel, "DISPLACEMENT", dataSize=8
+    stfp xmmh, seg, riprel, disp, dataSize=8
 };
 
 def macroop MOVLPS_XMM_M {
