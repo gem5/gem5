@@ -355,6 +355,36 @@ def macroop MOVNTI_P_R {
     rdip t7
     st reg, seg, riprel, disp
 };
+
+def macroop MOVD_XMM_R {
+   mov2fp xmml, regm, srcSize=dsz, destSize=dsz
+   lfpimm xmmh, 0
+};
+
+def macroop MOVD_XMM_M {
+    ldfp xmml, seg, sib, disp, dataSize=dsz
+    lfpimm xmmh, 0
+};
+
+def macroop MOVD_XMM_P {
+    rdip t7
+    ldfp xmml, seg, riprel, disp, dataSize=dsz
+    lfpimm xmmh, 0
+};
+
+def macroop MOVD_R_XMM {
+    mov2int reg, xmml, size=dsz
+};
+
+def macroop MOVD_M_XMM {
+    stfp xmml, seg, sib, disp, dataSize=dsz
+};
+
+def macroop MOVD_P_XMM {
+    rdip t7
+    stfp xmml, seg, riprel, disp, dataSize=dsz
+};
+
 '''
 #let {{
 #    class MOVD(Inst):

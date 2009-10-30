@@ -615,7 +615,7 @@
                         0x3: PACKSSDW(Vo,Wo);
                         0x4: PUNPCKLQDQ(Vo,Wq);
                         0x5: PUNPCKHQDQ(Vo,Wq);
-                        0x6: WarnUnimpl::movd_Vo_Ed();
+                        0x6: MOVD(Vo,Edp);
                         0x7: MOVDQA(Vo,Wo);
                     }
                     default: UD2();
@@ -709,7 +709,7 @@
                     0x1: decode OPCODE_OP_BOTTOM3 {
                         0x4: HADDPD(Vo,Wo);
                         0x5: WarnUnimpl::hsubpd_Vo_Wo();
-                        0x6: WarnUnimpl::movd_Ed_Vd();
+                        0x6: MOVD(Edp,Vd);
                         0x7: MOVDQA(Wo,Vo);
                         default: UD2();
                     }
