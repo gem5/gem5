@@ -707,7 +707,7 @@
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x4: WarnUnimpl::haddpd_Vo_Wo();
+                        0x4: HADDPD(Vo,Wo);
                         0x5: WarnUnimpl::hsubpd_Vo_Wo();
                         0x6: WarnUnimpl::movd_Ed_Vd();
                         0x7: MOVDQA(Wo,Vo);
