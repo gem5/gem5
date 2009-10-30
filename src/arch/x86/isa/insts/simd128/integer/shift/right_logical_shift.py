@@ -122,5 +122,41 @@ def macroop PSRLQ_XMM_I {
     msrli xmml, xmml, imm, size=8, ext=0
     msrli xmmh, xmmh, imm, size=8, ext=0
 };
+
+def macroop PSRLDQ_XMM_I {
+    limm  t2, 8
+    subi t1, t2, imm, flags=(ECF,), dataSize=1
+    br label("psrldq_less_8"), flags=(nCECF,)
+    # Greater than 8
+
+    limm  t2, 16
+    subi t1, t2, imm, flags=(ECF,), dataSize=1
+    br label("psrldq_less_16"), flags=(nCECF,)
+
+    # Greater than 16
+
+    lfpimm  xmml, 0
+    lfpimm  xmmh, 0
+    br label("psrldq_end")
+
+psrldq_less_16:
+
+    # Between 8 and 16
+
+    msrli xmml, xmmh, "(IMMEDIATE-8)<<3", size=8, ext=0
+    lfpimm  xmmh, 0
+    br label("psrldq_end")
+
+psrldq_less_8:
+
+    # Less than 8
+
+    mslli ufp1, xmmh, "(8-IMMEDIATE) << 3", size=8, ext=0
+    msrli xmml, xmml, "IMMEDIATE << 3", size=8, ext=0
+    msrli xmmh, xmmh, "IMMEDIATE << 3", size=8, ext=0
+    mor   xmml, xmml, ufp1
+
+psrldq_end:
+    fault "NoFault"
+};
 '''
-# PSRLDQ

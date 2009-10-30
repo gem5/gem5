@@ -673,9 +673,9 @@
                         //0x3: group14_pshimq();
                         0x3: decode MODRM_REG {
                             0x2: PSRLQ(VRo,Ib);
-                            0x3: WarnUnimpl::psrldq_VRo_Ib();
+                            0x3: PSRLDQ(VRo,Ib);
                             0x6: PSLLQ(VRo,Ib);
-                            0x7: WarnUnimpl::pslldq_VRo_Ib();
+                            0x7: PSLLDQ(VRo,Ib);
                             default: UD2();
                         }
                         0x4: PCMPEQB(Vo,Wo);
