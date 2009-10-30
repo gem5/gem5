@@ -451,6 +451,25 @@ ftruncateFunc(SyscallDesc *desc, int num,
 }
 
 SyscallReturn
+truncate64Func(SyscallDesc *desc, int num,
+                LiveProcess *process, ThreadContext *tc)
+{
+    int index = 0;
+    string path;
+
+    if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, index)))
+       return -EFAULT;
+
+    loff_t length = process->getSyscallArg(tc, index, 64);
+
+    // Adjust path for current working directory
+    path = process->fullPath(path);
+
+    int result = truncate64(path.c_str(), length);
+    return (result == -1) ? -errno : result;
+}
+
+SyscallReturn
 ftruncate64Func(SyscallDesc *desc, int num,
                 LiveProcess *process, ThreadContext *tc)
 {
