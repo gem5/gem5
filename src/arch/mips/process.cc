@@ -147,10 +147,10 @@ MipsLiveProcess::argsInit(int intSize, int pageSize)
 
 
 MipsISA::IntReg
-MipsLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+MipsLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
-    return tc->readIntReg(FirstArgumentReg + i);
+    return tc->readIntReg(FirstArgumentReg + i++);
 }
 
 void

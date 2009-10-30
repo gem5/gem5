@@ -48,7 +48,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Solaris::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Solaris::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "SunOS");
     strcpy(name->nodename, "m5.eecs.umich.edu");

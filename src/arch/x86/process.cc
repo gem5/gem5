@@ -698,10 +698,10 @@ X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn return_value)
 }
 
 X86ISA::IntReg
-X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs);
-    return tc->readIntReg(ArgumentReg[i]);
+    return tc->readIntReg(ArgumentReg[i++]);
 }
 
 void
@@ -712,10 +712,21 @@ X86_64LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 }
 
 X86ISA::IntReg
-I386LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs32);
-    return tc->readIntReg(ArgumentReg32[i]);
+    return tc->readIntReg(ArgumentReg32[i++]);
+}
+
+X86ISA::IntReg
+I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    assert(width == 32 || width == 64);
+    assert(i < NumArgumentRegs);
+    uint64_t retVal = tc->readIntReg(ArgumentReg32[i++]) & mask(32);
+    if (width == 64)
+        retVal |= ((uint64_t)tc->readIntReg(ArgumentReg[i++]) << 32);
+    return retVal;
 }
 
 void

@@ -50,7 +50,7 @@ class PowerLiveProcess : public LiveProcess
 
   public:
     void argsInit(int intSize, int pageSize);
-    PowerISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    PowerISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, PowerISA::IntReg val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };

@@ -324,10 +324,10 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 }
 
 ArmISA::IntReg
-ArmLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+ArmLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 4);
-    return tc->readIntReg(ArgumentReg0 + i);
+    return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 void

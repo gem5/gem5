@@ -95,7 +95,7 @@ class Sparc32LiveProcess : public SparcLiveProcess
 
     void flushWindows(ThreadContext *tc);
 
-    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 
@@ -123,7 +123,7 @@ class Sparc64LiveProcess : public SparcLiveProcess
 
     void flushWindows(ThreadContext *tc);
 
-    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    SparcISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, SparcISA::IntReg val);
 };
 

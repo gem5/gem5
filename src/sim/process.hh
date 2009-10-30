@@ -325,7 +325,9 @@ class LiveProcess : public Process
     std::string getcwd() const { return cwd; }
 
     virtual void syscall(int64_t callnum, ThreadContext *tc);
-    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int i) = 0;
+
+    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i) = 0;
+    virtual TheISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
     virtual void setSyscallArg(ThreadContext *tc,
             int i, TheISA::IntReg val) = 0;
     virtual void setSyscallReturn(ThreadContext *tc,

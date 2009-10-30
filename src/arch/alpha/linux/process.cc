@@ -48,7 +48,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -67,13 +68,15 @@ static SyscallReturn
 osf_getsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = process->getSyscallArg(tc, 0);
+    int index = 0;
+    unsigned op = process->getSyscallArg(tc, index);
+    Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 45: { // GSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
+          TypedBufferArg<uint64_t> fpcr(bufPtr);
           // I don't think this exactly matches the HW FPCR
           *fpcr = 0;
           fpcr.copyOut(tc->getMemPort());
@@ -94,13 +97,15 @@ static SyscallReturn
 osf_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
                    ThreadContext *tc)
 {
-    unsigned op = process->getSyscallArg(tc, 0);
+    int index = 0;
+    unsigned op = process->getSyscallArg(tc, index);
+    Addr bufPtr = process->getSyscallArg(tc, index);
     // unsigned nbytes = process->getSyscallArg(tc, 2);
 
     switch (op) {
 
       case 14: { // SSI_IEEE_FP_CONTROL
-          TypedBufferArg<uint64_t> fpcr(process->getSyscallArg(tc, 1));
+          TypedBufferArg<uint64_t> fpcr(bufPtr);
           // I don't think this exactly matches the HW FPCR
           fpcr.copyIn(tc->getMemPort());
           DPRINTFR(SyscallVerbose, "osf_setsysinfo(SSI_IEEE_FP_CONTROL): "

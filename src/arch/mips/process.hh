@@ -50,7 +50,7 @@ class MipsLiveProcess : public LiveProcess
     void argsInit(int intSize, int pageSize);
 
   public:
-    MipsISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+    MipsISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
     void setSyscallArg(ThreadContext *tc, int i, MipsISA::IntReg val);
     void setSyscallReturn(ThreadContext *tc, SyscallReturn return_value);
 };

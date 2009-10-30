@@ -266,10 +266,10 @@ PowerLiveProcess::argsInit(int intSize, int pageSize)
 }
 
 PowerISA::IntReg
-PowerLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+PowerLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 5);
-    return tc->readIntReg(ArgumentReg0 + i);
+    return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 void

@@ -193,10 +193,10 @@ AlphaLiveProcess::startup()
 }
 
 AlphaISA::IntReg
-AlphaLiveProcess::getSyscallArg(ThreadContext *tc, int i)
+AlphaLiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
-    return tc->readIntReg(FirstArgumentReg + i);
+    return tc->readIntReg(FirstArgumentReg + i++);
 }
 
 void

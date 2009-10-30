@@ -647,6 +647,12 @@ LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
     desc->doSyscall(callnum, this, tc);
 }
 
+IntReg
+LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    return getSyscallArg(tc, i);
+}
+
 LiveProcess *
 LiveProcess::create(LiveProcessParams * params)
 {

@@ -68,7 +68,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -94,8 +95,9 @@ archPrctlFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     };
 
     //First argument is the code, second is the address
-    int code = process->getSyscallArg(tc, 0);
-    uint64_t addr = process->getSyscallArg(tc, 1);
+    int index = 0;
+    int code = process->getSyscallArg(tc, index);
+    uint64_t addr = process->getSyscallArg(tc, index);
     uint64_t fsBase, gsBase;
     TranslatingPort *p = tc->getMemPort();
     switch(code)
@@ -159,7 +161,8 @@ setThreadArea32Func(SyscallDesc *desc, int callnum,
 
     assert((maxTLSEntry + 1) * sizeof(uint64_t) <= x86lp->gdtSize());
 
-    TypedBufferArg<UserDesc32> userDesc(process->getSyscallArg(tc, 0));
+    int argIndex = 0;
+    TypedBufferArg<UserDesc32> userDesc(process->getSyscallArg(tc, argIndex));
     TypedBufferArg<uint64_t>
         gdt(x86lp->gdtStart() + minTLSEntry * sizeof(uint64_t),
                 numTLSEntries * sizeof(uint64_t));

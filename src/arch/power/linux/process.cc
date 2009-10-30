@@ -52,7 +52,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -437,12 +438,12 @@ PowerLinuxProcess::startup()
 }
 
 PowerISA::IntReg
-PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int i)
+PowerLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     // Linux apparently allows more parameter than the ABI says it should.
     // This limit may need to be increased even further.
     assert(i < 6);
-    return tc->readIntReg(ArgumentReg0 + i);
+    return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 void

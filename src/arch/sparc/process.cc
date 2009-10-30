@@ -514,10 +514,10 @@ void Sparc64LiveProcess::flushWindows(ThreadContext *tc)
 }
 
 IntReg
-Sparc32LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+Sparc32LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
-    return bits(tc->readIntReg(FirstArgumentReg + i), 31, 0);
+    return bits(tc->readIntReg(FirstArgumentReg + i++), 31, 0);
 }
 
 void
@@ -528,10 +528,10 @@ Sparc32LiveProcess::setSyscallArg(ThreadContext *tc, int i, IntReg val)
 }
 
 IntReg
-Sparc64LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+Sparc64LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < 6);
-    return tc->readIntReg(FirstArgumentReg + i);
+    return tc->readIntReg(FirstArgumentReg + i++);
 }
 
 void
