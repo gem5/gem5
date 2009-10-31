@@ -52,7 +52,9 @@ using namespace TheISA;
 void
 SyscallDesc::doSyscall(int callnum, LiveProcess *process, ThreadContext *tc)
 {
+#if TRACING_ON
     int index = 0;
+#endif
     DPRINTFR(SyscallVerbose,
              "%d: %s: syscall %s called w/arguments %d,%d,%d,%d\n",
              curTick, tc->getCpuPtr()->name(), name,
