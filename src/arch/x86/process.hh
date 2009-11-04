@@ -101,6 +101,16 @@ namespace X86ISA
         X86_64LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
                 SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
+        class VSyscallPage
+        {
+          public:
+            Addr base;
+            Addr size;
+            Addr vtimeOffset;
+            Addr vgettimeofdayOffset;
+        };
+        VSyscallPage vsyscallPage;
+
       public:
         void argsInit(int intSize, int pageSize);
         void startup();

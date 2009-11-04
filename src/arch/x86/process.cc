@@ -139,6 +139,12 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
+
+    vsyscallPage.base = 0xffffffffff600000ULL;
+    vsyscallPage.size = VMPageSize;
+    vsyscallPage.vtimeOffset = 0x400;
+    vsyscallPage.vgettimeofdayOffset = 0x410;
+
     // Set up stack. On X86_64 Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space plus one page
     // for undertermined purposes.
@@ -204,6 +210,24 @@ X86_64LiveProcess::startup()
         return;
 
     argsInit(sizeof(uint64_t), VMPageSize);
+
+       // Set up the vsyscall page for this process.
+    pTable->allocate(vsyscallPage.base, vsyscallPage.size);
+    uint8_t vtimeBlob[] = {
+        0x48,0xc7,0xc0,0xc9,0x00,0x00,0x00,    // mov    $0xc9,%rax
+        0x0f,0x05,                             // syscall
+        0xc3                                   // retq
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
+            vtimeBlob, sizeof(vtimeBlob));
+
+    uint8_t vgettimeofdayBlob[] = {
+        0x48,0xc7,0xc0,0x60,0x00,0x00,0x00,    // mov    $0x60,%rax
+        0x0f,0x05,                             // syscall
+        0xc3                                   // retq
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
+            vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
