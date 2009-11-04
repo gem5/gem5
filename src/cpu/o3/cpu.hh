@@ -669,9 +669,6 @@ class FullO3CPU : public BaseO3CPU
 #if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
-
-    /** Pointer to physical memory. */
-    PhysicalMemory *physmem;
 #endif
 
     /** Event to call process() on once draining has completed. */

@@ -200,7 +200,6 @@ FullO3CPU<Impl>::FullO3CPU(DerivO3CPUParams *params)
       globalSeqNum(1),
 #if FULL_SYSTEM
       system(params->system),
-      physmem(system->physmem),
 #endif // FULL_SYSTEM
       drainCount(0),
       deferRegistration(params->defer_registration)

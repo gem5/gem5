@@ -91,9 +91,6 @@ class O3ThreadContext : public ThreadContext
     virtual System *getSystemPtr() { return cpu->system; }
 
 #if FULL_SYSTEM
-    /** Returns a pointer to physical memory. */
-    virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
-
     /** Returns a pointer to this thread's kernel statistics. */
     virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }
