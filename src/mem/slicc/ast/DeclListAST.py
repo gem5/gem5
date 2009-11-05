@@ -38,9 +38,11 @@ class DeclListAST(AST):
     def __repr__(self):
         return "[DeclListAST: %s]" % (', '.join(repr(d) for d in self.decls))
 
-    def files(self, hh, cc, parent=None):
+    def files(self, parent=None):
+        s = set()
         for decl in self.decls:
-            decl.files(hh, cc, parent)
+            s |= decl.files(parent)
+        return s
 
     def generate(self):
         for decl in self.decls:

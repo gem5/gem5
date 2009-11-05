@@ -78,15 +78,7 @@ def main(args=None):
         output("    %s", filename)
 
     if opts.print_files:
-        hh, cc = slicc.files()
-        hh = sorted(hh)
-        cc = sorted(cc)
-        print 'Headers:'
-        for i in hh:
-            print '    %s' % i
-
-        print 'Sources:'
-        for i in cc:
+        for i in sorted(slicc.files()):
             print '    %s' % i
     else:
         output("Generator pass 1...")

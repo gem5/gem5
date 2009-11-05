@@ -114,19 +114,17 @@ class SLICC(Grammar):
         self.symtab.writeHTMLFiles(code_path)
 
     def files(self):
-        cc = set([
+        f = set([
             'ControllerFactory.cc',
-            'MachineType.cc'])
-
-        hh = set([
             'ControllerFactory.hh',
+            'MachineType.cc',
             'MachineType.hh',
             'Types.hh' ])
 
         for decl_list in self.decl_list_vec:
-            decl_list.files(hh, cc)
+            f |= decl_list.files()
 
-        return hh, cc
+        return f
 
     t_ignore = '\t '
 

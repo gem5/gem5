@@ -40,16 +40,16 @@ class MachineAST(DeclAST):
     def __repr__(self):
         return "[Machine: %r]" % self.ident
 
-    def files(self, hh, cc, parent=None):
-        hh.add('%s_Controller.hh' % self.ident)
-        hh.add('%s_Profiler.hh' % self.ident)
+    def files(self, parent=None):
+        s = set(('%s_Controller.cc' % self.ident,
+                 '%s_Controller.hh' % self.ident,
+                 '%s_Profiler.cc' % self.ident,
+                 '%s_Profiler.hh' % self.ident,
+                 '%s_Transitions.cc' % self.ident,
+                 '%s_Wakeup.cc' % self.ident))
 
-        cc.add('%s_Controller.cc' % self.ident)
-        cc.add('%s_Profiler.cc' % self.ident)
-        cc.add('%s_Transitions.cc' % self.ident)
-        cc.add('%s_Wakeup.cc' % self.ident)
-
-        self.decls.files(hh, cc, self.ident)
+        s |= self.decls.files(self.ident)
+        return s
 
     def generate(self):
         # Make a new frame

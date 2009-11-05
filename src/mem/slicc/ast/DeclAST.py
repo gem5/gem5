@@ -31,8 +31,8 @@ class DeclAST(AST):
     def __init__(self, slicc, pairs):
         super(DeclAST, self).__init__(slicc, pairs)
 
-    def files(self, hh, cc, parent=None):
-        pass
+    def files(self, parent=None):
+        return set()
 
     def findMachines(self):
         return

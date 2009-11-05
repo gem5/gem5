@@ -42,15 +42,15 @@ class FuncDeclAST(DeclAST):
     def __repr__(self):
         return "[FuncDecl: %s]" % self.ident
 
-    def files(self, hh, cc, parent=None):
+    def files(self, parent=None):
         if "external" in self or self.statements is None:
-            return
+            return set()
 
         if parent:
             ident = "%s_%s" % (parent, self.ident)
         else:
             ident = self.ident
-        cc.add("%s.cc" % ident)
+        return set(("%s.cc" % ident,))
 
     def generate(self):
         types = []

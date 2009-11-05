@@ -69,9 +69,7 @@ def slicc_emitter(target, source, env):
     for name in slicc.load(files, verbose=True):
         print "    %s" % name
 
-    hh,cc = slicc.files()
-    target.extend(sorted(hh))
-    target.extend(sorted(cc))
+    target.extend(sorted(slicc.files()))
     return target, source
 
 def slicc_action(target, source, env):
