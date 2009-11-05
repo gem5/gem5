@@ -148,7 +148,7 @@ inline
 physical_address_t Address::bitSelect(int small, int big) const // rips bits inclusive
 {
   physical_address_t mask;
-  assert(big >= small);
+  assert((unsigned)big >= (unsigned)small);
 
   if (big >= ADDRESS_WIDTH - 1) {
     return (m_address >> small);

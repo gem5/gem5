@@ -32,6 +32,8 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <cstdio>
 #include <string>
 
 #include "arch/remote_gdb.hh"

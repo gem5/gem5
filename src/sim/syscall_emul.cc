@@ -32,8 +32,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <string>
+#include <cstdio>
 #include <iostream>
+#include <string>
 
 #include "sim/syscall_emul.hh"
 #include "base/chunk_generator.hh"

@@ -41,9 +41,11 @@
     #error Legion tracing only works in full system!
 #endif
 
-#include <iomanip>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+#include <cstdio>
+#include <iomanip>
 
 #include "arch/sparc/predecoder.hh"
 #include "arch/sparc/registers.hh"

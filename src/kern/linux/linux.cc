@@ -28,6 +28,7 @@
  * Authors: Ali Saidi
  */
 
+#include <cstdio>
 #include <string>
 
 #include "cpu/thread_context.hh"

@@ -211,7 +211,7 @@ X86System::startup()
 
     numGDTEntries++;
 
-    SegSelector ds;
+    SegSelector ds = 0;
     ds.si = numGDTEntries - 1;
 
     tc->setMiscReg(MISCREG_DS, (MiscReg)ds);

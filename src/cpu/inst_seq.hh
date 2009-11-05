@@ -32,6 +32,8 @@
 #ifndef __STD_TYPES_HH__
 #define __STD_TYPES_HH__
 
+#include "base/types.hh"
+
 // inst sequence type, used to order instructions in the ready list,
 // if this rolls over the ready list order temporarily will get messed
 // up, but execution will continue and complete correctly

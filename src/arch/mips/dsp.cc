@@ -463,6 +463,8 @@ MipsISA::dspMuleq(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl)
     uint64_t b_values[SIMD_MAX_VALS];
     uint64_t c_values[SIMD_MAX_VALS];
 
+    memset(c_values, 0, sizeof(c_values));
+
     simdUnpack(a, a_values, SIMD_FMT_PH, SIGNED);
     simdUnpack(b, b_values, SIMD_FMT_PH, SIGNED);
 
@@ -743,7 +745,7 @@ MipsISA::dspMulsaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     int nvals = SIMD_NVALS[fmt];
     uint64_t a_values[SIMD_MAX_VALS];
     uint64_t b_values[SIMD_MAX_VALS];
-    int64_t temp[2];
+    int64_t temp[2] = {0, 0};
     uint32_t ouflag = 0;
 
     simdUnpack(a, a_values, fmt, SIGNED);

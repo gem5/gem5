@@ -41,7 +41,7 @@ void
 ISA::updateHandyM5Reg(Efer efer, CR0 cr0,
                       SegAttr csAttr, SegAttr ssAttr, RFLAGS rflags)
 {
-    HandyM5Reg m5reg;
+    HandyM5Reg m5reg = 0;
     if (efer.lma) {
         m5reg.mode = LongMode;
         if (csAttr.longMode)

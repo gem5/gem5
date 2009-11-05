@@ -29,6 +29,7 @@
 
 #include "arch/arm/insts/static_inst.hh"
 #include "base/condcodes.hh"
+#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
 
 namespace ArmISA
@@ -62,7 +63,7 @@ ArmStaticInst::shift_rm_imm(uint32_t base, uint32_t shamt,
         else
             return (base << (32 - shamt)) | (base >> shamt);
       default:
-        fprintf(stderr, "Unhandled shift type\n");
+        ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
     }
@@ -101,7 +102,7 @@ ArmStaticInst::shift_rm_rs(uint32_t base, uint32_t shamt,
         else
             return (base << (32 - shamt)) | (base >> shamt);
       default:
-        fprintf(stderr, "Unhandled shift type\n");
+        ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
     }
@@ -141,7 +142,7 @@ ArmStaticInst::shift_carry_imm(uint32_t base, uint32_t shamt,
         else
             return (base >> (shamt - 1)) & 1;
       default:
-        fprintf(stderr, "Unhandled shift type\n");
+        ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
     }
@@ -182,7 +183,7 @@ ArmStaticInst::shift_carry_rs(uint32_t base, uint32_t shamt,
             shamt = 32;
         return (base >> (shamt - 1)) & 1;
       default:
-        fprintf(stderr, "Unhandled shift type\n");
+        ccprintf(std::cerr, "Unhandled shift type\n");
         exit(1);
         break;
     }

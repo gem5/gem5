@@ -28,6 +28,7 @@
  * Authors: Nathan Binkert
  */
 
+#include <cstdio>
 #include <sstream>
 #include <string>
 
