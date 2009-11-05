@@ -72,9 +72,6 @@ def slicc_emitter(target, source, env):
     hh,cc = slicc.files()
     target.extend(sorted(hh))
     target.extend(sorted(cc))
-    f = file('/tmp/asdf', 'w')
-    for t in target:
-        print >>f, t
     return target, source
 
 def slicc_action(target, source, env):
