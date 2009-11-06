@@ -419,7 +419,7 @@
                 // extend it, and there's no easy way to specify only checking
                 // the first byte.
                 0x5: decode IMMEDIATE {
-                    0xffffffffffffff80:
+                    -0x80:
                          SyscallInst::int80('xc->syscall(Rax)', IsSyscall);
                     default: int_Ib();
                 }
