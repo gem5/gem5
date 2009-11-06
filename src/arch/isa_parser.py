@@ -128,7 +128,7 @@ class ISAParser(Grammar):
 
     # Integer literal
     def t_INTLIT(self, t):
-        r'(0x[\da-fA-F]+)|\d+'
+        r'-?(0x[\da-fA-F]+)|\d+'
         try:
             t.value = int(t.value,0)
         except ValueError:
