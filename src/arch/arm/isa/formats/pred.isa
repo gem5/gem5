@@ -34,7 +34,7 @@
 //
 
 let {{
-    predicateTest = 'testPredicate(Cpsr, condCode)'
+    predicateTest = 'testPredicate(CondCodes, condCode)'
 }};
 
 def template PredOpExecute {{
@@ -90,8 +90,8 @@ let {{
         _iv = %(ivValue)s & 1;
         _ic = %(icValue)s & 1;
 
-        Cpsr =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
-            (Cpsr & 0x0FFFFFFF);
+        CondCodes =  _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
+            (CondCodes & 0x0FFFFFFF);
 
         DPRINTF(Arm, "in = %%d\\n", _in);
         DPRINTF(Arm, "iz = %%d\\n", _iz);
@@ -105,8 +105,8 @@ let {{
     def getCcCode(flagtype):
         icReg = icImm = iv = ''
         if flagtype == "none":
-            icReg = icImm = 'Cpsr<29:>'
-            iv = 'Cpsr<28:>'
+            icReg = icImm = 'CondCodes<29:>'
+            iv = 'CondCodes<28:>'
         elif flagtype == "add":
             icReg = icImm = 'findCarry(32, resTemp, Rn, op2)'
             iv = 'findOverflow(32, resTemp, Rn, op2)'
@@ -117,17 +117,17 @@ let {{
             icReg = icImm = 'findCarry(32, resTemp, op2, ~Rn)'
             iv = 'findOverflow(32, resTemp, op2, ~Rn)'
         else:
-            icReg = 'shift_carry_rs(Rm, Rs, shift, Cpsr<29:>)'
-            icImm = 'shift_carry_imm(Rm, shift_size, shift, Cpsr<29:>)'
-            iv = 'Cpsr<28:>'
+            icReg = 'shift_carry_rs(Rm, Rs, shift, CondCodes<29:>)'
+            icImm = 'shift_carry_imm(Rm, shift_size, shift, CondCodes<29:>)'
+            iv = 'CondCodes<28:>'
         return (calcCcCode % {"icValue" : icReg, "ivValue" : iv},
                 calcCcCode % {"icValue" : icImm, "ivValue" : iv})
 
     def getImmCcCode(flagtype):
         ivValue = icValue = ''
         if flagtype == "none":
-            icValue = 'Cpsr<29:>'
-            ivValue = 'Cpsr<28:>'
+            icValue = 'CondCodes<29:>'
+            ivValue = 'CondCodes<28:>'
         elif flagtype == "add":
             icValue = 'findCarry(32, resTemp, Rn, rotated_imm)'
             ivValue = 'findOverflow(32, resTemp, Rn, rotated_imm)'
@@ -138,18 +138,18 @@ let {{
             icValue = 'findCarry(32, resTemp, rotated_imm, ~Rn)'
             ivValue = 'findOverflow(32, resTemp, rotated_imm, ~Rn)'
         else:
-            icValue = '(rotate ? rotated_carry:Cpsr<29:>)'
-            ivValue = 'Cpsr<28:>'
+            icValue = '(rotate ? rotated_carry:CondCodes<29:>)'
+            ivValue = 'CondCodes<28:>'
         return calcCcCode % vars()
 }};
 
 def format DataOp(code, flagtype = logic) {{
     (regCcCode, immCcCode) = getCcCode(flagtype)
     regCode = '''uint32_t op2 = shift_rm_rs(Rm, Rs,
-                                            shift, Cpsr<29:0>);
+                                            shift, CondCodes<29:0>);
                  op2 = op2;''' + code
     immCode = '''uint32_t op2 = shift_rm_imm(Rm, shift_size,
-                                             shift, Cpsr<29:0>);
+                                             shift, CondCodes<29:0>);
                  op2 = op2;''' + code
     regIop = InstObjParams(name, Name, 'PredIntOp',
                            {"code": regCode,

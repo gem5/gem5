@@ -91,9 +91,9 @@ format DataOp {
                 0x2: sub({{ Rd = resTemp = Rn - op2; }}, sub);
                 0x3: rsb({{ Rd = resTemp = op2 - Rn; }}, rsb);
                 0x4: add({{ Rd = resTemp = Rn + op2; }}, add);
-                0x5: adc({{ Rd = resTemp = Rn + op2 + Cpsr<29:>; }}, add);
-                0x6: sbc({{ Rd = resTemp = Rn - op2 - !Cpsr<29:>; }}, sub);
-                0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }}, rsb);
+                0x5: adc({{ Rd = resTemp = Rn + op2 + CondCodes<29:>; }}, add);
+                0x6: sbc({{ Rd = resTemp = Rn - op2 - !CondCodes<29:>; }}, sub);
+                0x7: rsc({{ Rd = resTemp = op2 - Rn - !CondCodes<29:>; }}, rsb);
                 0x8: tst({{ resTemp = Rn & op2; }});
                 0x9: teq({{ resTemp = Rn ^ op2; }});
                 0xa: cmp({{ resTemp = Rn - op2; }}, sub);
@@ -163,9 +163,15 @@ format DataOp {
                 0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }}, sub);
                 0x3: rsbi({{ Rd = resTemp = rotated_imm - Rn; }}, rsb);
                 0x4: addi({{ Rd = resTemp = Rn + rotated_imm; }}, add);
-                0x5: adci({{ Rd = resTemp = Rn + rotated_imm + Cpsr<29:>; }}, add);
-                0x6: sbci({{ Rd = resTemp = Rn -rotated_imm - !Cpsr<29:>; }}, sub);
-                0x7: rsci({{ Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}}, rsb);
+                0x5: adci({{
+                    Rd = resTemp = Rn + rotated_imm + CondCodes<29:>;
+                }}, add);
+                0x6: sbci({{
+                    Rd = resTemp = Rn -rotated_imm - !CondCodes<29:>;
+                }}, sub);
+                0x7: rsci({{
+                    Rd = resTemp = rotated_imm - Rn - !CondCodes<29:>;
+                }}, rsb);
                 0x8: tsti({{ resTemp = Rn & rotated_imm; }});
                 0x9: teqi({{ resTemp = Rn ^ rotated_imm; }});
                 0xa: cmpi({{ resTemp = Rn - rotated_imm; }}, sub);
@@ -437,7 +443,7 @@ format DataOp {
         }
         format PredOp {
             // ARM System Call (SoftWare Interrupt)
-            1: swi({{ if (testPredicate(Cpsr, condCode))
+            1: swi({{ if (testPredicate(CondCodes, condCode))
                       {
                           if (IMMED_23_0)
                               xc->syscall(IMMED_23_0);
