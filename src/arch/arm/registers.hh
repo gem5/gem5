@@ -77,7 +77,6 @@ const int ReturnAddressReg = 14;
 const int PCReg = 15;
 
 const int ZeroReg = NumIntArchRegs;
-const int AddrReg = ZeroReg + 1; // Used to generate address for uops
 
 const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;
@@ -114,35 +113,6 @@ enum FCSRFields {
     Flag_Field = 1,
     Enable_Field = 6,
     Cause_Field = 11
-};
-
-enum MiscIntRegNums {
-    zero_reg = NumIntArchRegs,
-    addr_reg,
-
-    rhi,
-    rlo,
-
-    r8_fiq,    /* FIQ mode register bank */
-    r9_fiq,
-    r10_fiq,
-    r11_fiq,
-    r12_fiq,
-
-    r13_fiq,   /* FIQ mode SP and LR */
-    r14_fiq,
-
-    r13_irq,   /* IRQ mode SP and LR */
-    r14_irq,
-
-    r13_svc,   /* SVC mode SP and LR */
-    r14_svc,
-
-    r13_undef, /* UNDEF mode SP and LR */
-    r14_undef,
-
-    r13_abt,   /* ABT mode SP and LR */
-    r14_abt
 };
 
 } // namespace ArmISA
