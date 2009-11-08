@@ -32,6 +32,7 @@
 #define __ARCH_ARM_REGISTERS_HH__
 
 #include "arch/arm/max_inst_regs.hh"
+#include "arch/arm/intregs.hh"
 #include "arch/arm/miscregs.hh"
 
 namespace ArmISA {
@@ -51,13 +52,12 @@ typedef float FloatReg;
 typedef uint64_t MiscReg;
 
 // Constants Related to the number of registers
-const int NumIntArchRegs = 16;
-const int NumIntSpecialRegs = 19;
+const int NumIntArchRegs = NUM_ARCH_INTREGS;
 const int NumFloatArchRegs = 16;
 const int NumFloatSpecialRegs = 5;
 const int NumInternalProcRegs = 0;
 
-const int NumIntRegs = NumIntArchRegs + NumIntSpecialRegs;
+const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
 
 const int NumMiscRegs = NUM_MISCREGS;
@@ -72,11 +72,11 @@ const int ArgumentReg1 = 1;
 const int ArgumentReg2 = 2;
 const int ArgumentReg3 = 3;
 const int FramePointerReg = 11;
-const int StackPointerReg = 13;
-const int ReturnAddressReg = 14;
-const int PCReg = 15;
+const int StackPointerReg = INTREG_SP;
+const int ReturnAddressReg = INTREG_LR;
+const int PCReg = INTREG_PC;
 
-const int ZeroReg = NumIntArchRegs;
+const int ZeroReg = INTREG_ZERO;
 
 const int SyscallNumReg = ReturnValueReg;
 const int SyscallPseudoReturnReg = ReturnValueReg;

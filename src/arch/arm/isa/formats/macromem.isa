@@ -213,9 +213,9 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             break;
     }
 
-    // Add 0 to Rn and stick it in Raddr (register 17).
+    // Add 0 to Rn and stick it in ureg0.
     // This is equivalent to a move.
-    microOps[0] = new MicroAddiUop(machInst, 17, RN, 0);
+    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, RN, 0);
 
     unsigned j = 0;
     for (int i = 1; i < ones+1; i++) {
@@ -225,9 +225,11 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         regs_to_handle &= ~(1<<j);
 
         if (loadop)
-            microOps[i] = new MicroLdrUop(machInst, j, 17, start_addr);
+            microOps[i] = new MicroLdrUop(machInst, j,
+                    INTREG_UREG0, start_addr);
         else
-            microOps[i] = new MicroStrUop(machInst, j, 17, start_addr);
+            microOps[i] = new MicroStrUop(machInst, j,
+                    INTREG_UREG0, start_addr);
 
         if (up)
             start_addr += 4;
