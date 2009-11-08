@@ -44,14 +44,44 @@ namespace ArmISA
     {
       protected:
         MiscReg miscRegs[NumMiscRegs];
+        const IntRegIndex *intRegMap;
+
+        void
+        updateRegMap(CPSR cpsr)
+        {
+            switch (cpsr.mode) {
+              case MODE_USER:
+              case MODE_SYSTEM:
+                intRegMap = IntRegUsrMap;
+                break;
+              case MODE_FIQ:
+                intRegMap = IntRegFiqMap;
+                break;
+              case MODE_IRQ:
+                intRegMap = IntRegIrqMap;
+                break;
+              case MODE_SVC:
+                intRegMap = IntRegSvcMap;
+                break;
+              case MODE_ABORT:
+                intRegMap = IntRegAbtMap;
+                break;
+              case MODE_UNDEFINED:
+                intRegMap = IntRegUndMap;
+                break;
+              default:
+                panic("Unrecognized mode setting in CPSR.\n");
+            }
+        }
 
       public:
         void clear()
         {
             memset(miscRegs, 0, sizeof(miscRegs));
             CPSR cpsr = 0;
-            cpsr.mode = MODE_USER;
+            cpsr.mode = MODE_SYSTEM;
             miscRegs[MISCREG_CPSR] = cpsr;
+            updateRegMap(cpsr);
             //XXX We need to initialize the rest of the state.
         }
 
@@ -79,6 +109,9 @@ namespace ArmISA
         void
         setMiscReg(int misc_reg, const MiscReg &val, ThreadContext *tc)
         {
+            if (misc_reg == MISCREG_CPSR) {
+                updateRegMap(val);
+            }
             assert(misc_reg < NumMiscRegs);
             miscRegs[misc_reg] = val;
         }
@@ -86,7 +119,13 @@ namespace ArmISA
         int
         flattenIntIndex(int reg)
         {
-            return reg;
+            assert(reg >= 0);
+            if (reg < NUM_ARCH_INTREGS) {
+                return intRegMap[reg];
+            } else {
+                assert(reg < NUM_INTREGS);
+                return reg;
+            }
         }
 
         int
