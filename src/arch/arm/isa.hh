@@ -79,7 +79,7 @@ namespace ArmISA
         {
             memset(miscRegs, 0, sizeof(miscRegs));
             CPSR cpsr = 0;
-            cpsr.mode = MODE_SYSTEM;
+            cpsr.mode = MODE_USER;
             miscRegs[MISCREG_CPSR] = cpsr;
             updateRegMap(cpsr);
             //XXX We need to initialize the rest of the state.
