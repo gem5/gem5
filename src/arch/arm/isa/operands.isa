@@ -63,7 +63,6 @@ def operands {{
     'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),
     'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5, maybePCRead, maybePCWrite),
 
-    'Raddr': ('IntReg', 'uw', '17', 'IsInteger', 6),
     'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 7),
     'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 8),
     'LR': ('IntReg', 'uw', '14', 'IsInteger', 9),
