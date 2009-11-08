@@ -59,6 +59,7 @@ namespace ArmISA
         MISCREG_SPSR_FIQ,
         MISCREG_SPSR_IRQ,
         MISCREG_SPSR_SVC,
+        MISCREG_SPSR_MON,
         MISCREG_SPSR_UND,
         MISCREG_SPSR_ABT,
         MISCREG_FPSR,

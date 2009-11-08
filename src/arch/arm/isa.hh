@@ -63,6 +63,9 @@ namespace ArmISA
               case MODE_SVC:
                 intRegMap = IntRegSvcMap;
                 break;
+              case MODE_MON:
+                intRegMap = IntRegMonMap;
+                break;
               case MODE_ABORT:
                 intRegMap = IntRegAbtMap;
                 break;

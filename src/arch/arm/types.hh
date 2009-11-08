@@ -156,6 +156,7 @@ namespace ArmISA
         MODE_FIQ = 17,
         MODE_IRQ = 18,
         MODE_SVC = 19,
+        MODE_MON = 22,
         MODE_ABORT = 23,
         MODE_UNDEFINED = 27,
         MODE_SYSTEM = 31
