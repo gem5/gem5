@@ -175,7 +175,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
-    _gdtStart = 0x100000000;
+    _gdtStart = ULL(0x100000000);
     _gdtSize = VMPageSize;
 
     vsyscallPage.base = 0xffffe000ULL;

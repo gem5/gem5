@@ -585,7 +585,12 @@ StaticInstPtr
     # 'default'
     def p_case_label_0(self, t):
         'case_label : intlit_list'
-        t[0] = ': '.join(map(lambda a: 'case %#x' % a, t[1]))
+        def make_case(intlit):
+            if intlit >= 2**32:
+                return 'case ULL(%#x)' % intlit
+            else:
+                return 'case %#x' % intlit
+        t[0] = ': '.join(map(make_case, t[1]))
 
     def p_case_label_1(self, t):
         'case_label : DEFAULT'
