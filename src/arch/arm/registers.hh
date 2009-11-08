@@ -55,7 +55,6 @@ typedef uint64_t MiscReg;
 const int NumIntArchRegs = NUM_ARCH_INTREGS;
 const int NumFloatArchRegs = 16;
 const int NumFloatSpecialRegs = 5;
-const int NumInternalProcRegs = 0;
 
 const int NumIntRegs = NUM_INTREGS;
 const int NumFloatRegs = NumFloatArchRegs + NumFloatSpecialRegs;
