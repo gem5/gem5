@@ -102,6 +102,8 @@ enum IntRegIndex
 
     INTREG_ZERO, // Dummy zero reg since there has to be one.
     INTREG_UREG0,
+    INTREG_RHI,
+    INTREG_RLO,
 
     NUM_INTREGS,
     NUM_ARCH_INTREGS = INTREG_PC + 1,

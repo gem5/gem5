@@ -63,9 +63,9 @@ def operands {{
     'Rdo': ('IntReg', 'uw', '(RD & ~1)', 'IsInteger', 4, maybePCRead, maybePCWrite),
     'Rde': ('IntReg', 'uw', '(RD | 1)', 'IsInteger', 5, maybePCRead, maybePCWrite),
 
-    'Rhi': ('IntReg', 'uw', '18', 'IsInteger', 7),
-    'Rlo': ('IntReg', 'uw', '19', 'IsInteger', 8),
-    'LR': ('IntReg', 'uw', '14', 'IsInteger', 9),
+    'Rhi': ('IntReg', 'uw', 'INTREG_RHI', 'IsInteger', 7),
+    'Rlo': ('IntReg', 'uw', 'INTREG_RLO', 'IsInteger', 8),
+    'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
 
     #Register fields for microops
     'Ra' : ('IntReg', 'uw', 'ura', 'IsInteger', 11, maybePCRead, maybePCWrite),
