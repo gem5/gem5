@@ -324,6 +324,13 @@ INTREG_FIQ(unsigned index)
     return IntRegFiqMap[index];
 }
 
+static inline IntRegIndex
+intRegForceUser(unsigned index)
+{
+    assert(index < NUM_ARCH_INTREGS);
+    return (IntRegIndex)(index + NUM_INTREGS);
+}
+
 }
 
 #endif

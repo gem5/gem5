@@ -180,11 +180,12 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
     %(constructor)s;
     uint32_t regs = reglist;
     uint32_t addr = 0;
+    bool up = machInst.puswl.up;
 
     if (!up)
         addr = (ones << 2) - 4;
 
-    if (prepost)
+    if (machInst.puswl.prepost)
         addr += 4;
 
     // Add 0 to Rn and stick it in ureg0.
@@ -198,10 +199,18 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
             reg++;
         replaceBits(regs, reg, 0);
 
-        if (loadop)
-            microOps[i] = new MicroLdrUop(machInst, reg, INTREG_UREG0, addr);
-        else
-            microOps[i] = new MicroStrUop(machInst, reg, INTREG_UREG0, addr);
+        unsigned regIdx = reg;
+        if (machInst.puswl.psruser) {
+            regIdx = intRegForceUser(regIdx);
+        }
+
+        if (machInst.puswl.loadOp) {
+            microOps[i] =
+                new MicroLdrUop(machInst, regIdx, INTREG_UREG0, addr);
+        } else {
+            microOps[i] =
+                new MicroStrUop(machInst, regIdx, INTREG_UREG0, addr);
+        }
 
         if (up)
             addr += 4;
@@ -210,7 +219,7 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
     }
 
     StaticInstPtr &lastUop = microOps[numMicroops - 1];
-    if (writeback) {
+    if (machInst.puswl.writeback) {
         if (up) {
             lastUop = new MicroAddiUop(machInst, RN, RN, ones * 4);
         } else {
