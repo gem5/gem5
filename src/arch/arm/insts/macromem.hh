@@ -84,33 +84,20 @@ class MicroMemOp : public MicroIntOp
  */
 class ArmMacroMemoryOp : public PredMacroOp
 {
-    protected:
+  protected:
     /// Memory request flags.  See mem_req_base.hh.
     unsigned memAccessFlags;
 
     uint32_t reglist;
     uint32_t ones;
-    uint32_t puswl,
-             prepost,
-             up,
-             psruser,
-             writeback,
-             loadop;
 
     ArmMacroMemoryOp(const char *mnem, ExtMachInst _machInst,
                      OpClass __opClass)
-            : PredMacroOp(mnem, _machInst, __opClass),
-                          memAccessFlags(0),
-                          reglist(machInst.regList), ones(0),
-                          puswl(machInst.puswl),
-                          prepost(machInst.puswl.prepost),
-                          up(machInst.puswl.up),
-                          psruser(machInst.puswl.psruser),
-                          writeback(machInst.puswl.writeback),
-                          loadop(machInst.puswl.loadOp)
+            : PredMacroOp(mnem, _machInst, __opClass), memAccessFlags(0),
+              reglist(machInst.regList), ones(0)
     {
         ones = number_of_ones(reglist);
-        numMicroops = ones + writeback + 1;
+        numMicroops = ones + machInst.puswl.writeback + 1;
         // Remember that writeback adds a uop
         microOps = new StaticInstPtr[numMicroops];
     }
@@ -121,7 +108,7 @@ class ArmMacroMemoryOp : public PredMacroOp
  */
 class ArmMacroFPAOp : public PredMacroOp
 {
-    protected:
+  protected:
     uint32_t puswl,
              prepost,
              up,
@@ -150,7 +137,7 @@ class ArmMacroFPAOp : public PredMacroOp
  */
 class ArmMacroFMOp : public PredMacroOp
 {
-    protected:
+  protected:
     uint32_t punwl,
              prepost,
              up,

@@ -125,8 +125,11 @@ namespace ArmISA
             assert(reg >= 0);
             if (reg < NUM_ARCH_INTREGS) {
                 return intRegMap[reg];
+            } else if (reg < NUM_INTREGS) {
+                return reg;
             } else {
-                assert(reg < NUM_INTREGS);
+                reg -= NUM_INTREGS;
+                assert(reg < NUM_ARCH_INTREGS);
                 return reg;
             }
         }
