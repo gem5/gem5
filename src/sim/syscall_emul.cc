@@ -306,7 +306,7 @@ SyscallReturn
 getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int result = 0;
-    int index;
+    int index = 0;
     Addr bufPtr = p->getSyscallArg(tc, index);
     unsigned long size = p->getSyscallArg(tc, index);
     BufferArg buf(bufPtr, size);
