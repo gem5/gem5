@@ -632,12 +632,22 @@ TLB::translate(RequestPtr req, ThreadContext *tc, Translation *translation,
                 Process *p = tc->getProcessPtr();
                 TlbEntry newEntry;
                 bool success = p->pTable->lookup(vaddr, newEntry);
-                if(!success && mode != Execute) {
+                if (!success && mode != Execute) {
                     p->checkAndAllocNextPage(vaddr);
                     success = p->pTable->lookup(vaddr, newEntry);
                 }
-                if(!success) {
-                    panic("Tried to execute unmapped address %#x.\n", vaddr);
+                if (!success) {
+                    const char *modeStr = "";
+                    if (mode == Execute)
+                        modeStr = "execute";
+                    else if (mode == Read)
+                        modeStr = "read";
+                    else if (mode == Write)
+                        modeStr = "write";
+                    else
+                        modeStr = "?";
+                    panic("Tried to %s unmapped address %#x.\n",
+                            modeStr, vaddr);
                 } else {
                     Addr alignedVaddr = p->pTable->pageAlign(vaddr);
                     DPRINTF(TLB, "Mapping %#x to %#x\n", alignedVaddr,
