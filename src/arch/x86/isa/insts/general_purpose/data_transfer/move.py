@@ -357,7 +357,7 @@ def macroop MOVNTI_P_R {
 };
 
 def macroop MOVD_XMM_R {
-   mov2fp xmml, regm, srcSize=dsz, destSize=dsz
+   mov2fp xmml, regm, srcSize=dsz, destSize=8
    lfpimm xmmh, 0
 };
 
@@ -373,7 +373,7 @@ def macroop MOVD_XMM_P {
 };
 
 def macroop MOVD_R_XMM {
-    mov2int reg, xmml, size=dsz
+    mov2int reg, xmmlm, size=dsz
 };
 
 def macroop MOVD_M_XMM {
