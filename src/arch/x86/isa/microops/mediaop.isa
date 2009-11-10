@@ -1237,7 +1237,7 @@ let {{
                 }
 
                 if (destSize == 4) {
-                    argBits = (uint32_t)(float)arg;
+                    argBits = (uint32_t)arg;
                 } else {
                     argBits = (uint64_t)arg;
                 }
