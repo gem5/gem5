@@ -85,6 +85,14 @@ namespace ArmISA
             cpsr.mode = MODE_USER;
             miscRegs[MISCREG_CPSR] = cpsr;
             updateRegMap(cpsr);
+
+            SCTLR sctlr = 0;
+            sctlr.nmfi = 1;
+            sctlr.rao1 = 1;
+            sctlr.rao2 = 1;
+            sctlr.rao3 = 1;
+            sctlr.rao4 = 1;
+
             //XXX We need to initialize the rest of the state.
         }
 

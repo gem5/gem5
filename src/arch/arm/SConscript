@@ -48,7 +48,7 @@ if env['TARGET_ISA'] == 'arm':
     SimObject('ArmTLB.py')
 
     TraceFlag('Arm')
-
+    TraceFlag('Faults', "Trace Exceptions, interrupts, svc/swi")
     if env['FULL_SYSTEM']:
         #Insert Full-System Files Here
         pass
