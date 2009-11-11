@@ -353,8 +353,14 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
             recordEvent("Uncached Read");
 
         //If there's a fault, return it
-        if (fault != NoFault)
-            return fault;
+        if (fault != NoFault) {
+            if (req->isPrefetch()) {
+                return NoFault;
+            } else {
+                return fault;
+            }
+        }
+
         //If we don't need to access a second cache line, stop now.
         if (secondAddr <= addr)
         {
@@ -531,7 +537,11 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 assert(locked);
                 locked = false;
             }
-            return fault;
+            if (fault != NoFault && req->isPrefetch()) {
+                return NoFault;
+            } else {
+                return fault;
+            }
         }
 
         /*

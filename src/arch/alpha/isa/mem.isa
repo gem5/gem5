@@ -548,7 +548,7 @@ def format LoadOrPrefetch(memacc_code, ea_code = {{ EA = Rb + disp; }},
     pf_flags = makeList(pf_flags)
     inst_flags = makeList(inst_flags)
 
-    pf_mem_flags = mem_flags + pf_flags + ['NO_FAULT']
+    pf_mem_flags = mem_flags + pf_flags + ['PREFETCH']
     pf_inst_flags = inst_flags + ['IsMemRef', 'IsLoad',
                                   'IsDataPrefetch', 'MemReadOp']
 

@@ -619,7 +619,7 @@ def format StoreUnalignedMemory(memacc_code, ea_code = {{ EA = (Rs + disp) & ~3;
 
 def format Prefetch(ea_code = {{ EA = Rs + disp; }},
                           mem_flags = [], pf_flags = [], inst_flags = []) {{
-    pf_mem_flags = mem_flags + pf_flags + ['NO_FAULT']
+    pf_mem_flags = mem_flags + pf_flags + ['PREFETCH']
     pf_inst_flags = inst_flags + ['IsMemRef', 'IsLoad',
                                   'IsDataPrefetch', 'MemReadOp']
 

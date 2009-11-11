@@ -72,8 +72,6 @@ class Request : public FastAlloc
     /** This request is to a memory mapped register. */
     static const FlagsType MMAPED_IPR                  = 0x00002000;
 
-    /** The request should not cause a page fault. */
-    static const FlagsType NO_FAULT                    = 0x00010000;
     /** The request should ignore unaligned access faults */
     static const FlagsType NO_ALIGN_FAULT              = 0x00020000;
     /** The request should ignore unaligned access faults */

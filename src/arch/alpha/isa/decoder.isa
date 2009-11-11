@@ -627,7 +627,7 @@ decode OPCODE default Unknown::unknown() {
         format MiscPrefetch {
             0xf800: wh64({{ EA = Rb & ~ULL(63); }},
                          {{ xc->writeHint(EA, 64, memAccessFlags); }},
-                         mem_flags = NO_FAULT,
+                         mem_flags = PREFETCH,
                          inst_flags = [IsMemRef, IsDataPrefetch,
                                        IsStore, MemWriteOp]);
         }
