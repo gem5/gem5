@@ -51,20 +51,25 @@ format DataOp {
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }});
-                    0x5: WarnUnimpl::smlal();
+                    }}, llbit);
+                    0x5: smlal({{ 
+                        resTemp = ((int64_t)Rm) * ((int64_t)Rs); 
+                        resTemp += (((uint64_t)Rn) << 32) | ((uint64_t)Rd); 
+                        Rd = (uint32_t)(resTemp & 0xffffffff);
+                        Rn = (uint32_t)(resTemp >> 32);
+                    }}, llbit);
                     0x6: smull({{
                         resTemp = ((int64_t)(int32_t)Rm)*
                                   ((int64_t)(int32_t)Rs);
                         Rd = (int32_t)(resTemp & 0xffffffff);
                         Rn = (int32_t)(resTemp >> 32);
-                    }});
+                    }}, llbit);
                     0x7: umlal({{
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }});
+                    }}, llbit);
                 }
                 1: decode PUBWL {
                     0x10: WarnUnimpl::swp();
@@ -105,9 +110,17 @@ format DataOp {
             }
             1: decode MISC_OPCODE {
                 0x0: decode OPCODE {
-                    0x8: WarnUnimpl::mrs_cpsr();
-                    0x9: WarnUnimpl::msr_cpsr();
-                    0xa: WarnUnimpl::mrs_spsr();
+                    0x8: PredOp::mrs_cpsr({{ Rd = Cpsr | CondCodes; }});
+                    0x9: PredOp::msr_cpsr({{
+                        //assert(!RN<1:0>);
+                        if (OPCODE_18) {
+                            Cpsr = Cpsr<31:20> | mbits(Rm, 19, 16) | Cpsr<15:0>;
+                        }
+                        if (OPCODE_19) {
+                            CondCodes = mbits(Rm, 31,27);
+                        }
+                    }});
+                    0xa: PredOp::mrs_spsr({{ Rd = 0; // should be SPSR}});
                     0xb: WarnUnimpl::msr_spsr();
                 }
                 0x1: decode OPCODE {
@@ -129,28 +142,32 @@ format DataOp {
                     0xb: WarnUnimpl::qdsub();
                 }
                 0x8: decode OPCODE {
-                    0x8: WarnUnimpl::smlabb();
+                    0x8: smlabb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
                     0x9: WarnUnimpl::smlalbb();
                     0xa: WarnUnimpl::smlawb();
-                    0xb: WarnUnimpl::smulbb();
+                    0xb: smulbb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>); }}, none);
                 }
                 0xa: decode OPCODE {
-                    0x8: WarnUnimpl::smlatb();
-                    0x9: WarnUnimpl::smulwb();
+                    0x8: smlatb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
+                    0x9: smulwb({{ 
+                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<15:0>), 47, 16); 
+                    }}, none);
                     0xa: WarnUnimpl::smlaltb();
-                    0xb: WarnUnimpl::smultb();
+                    0xb: smultb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>); }}, none);
                 }
                 0xc: decode OPCODE {
-                    0x8: WarnUnimpl::smlabt();
+                    0x8: smlabt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
                     0x9: WarnUnimpl::smlawt();
                     0xa: WarnUnimpl::smlalbt();
-                    0xb: WarnUnimpl::smulbt();
+                    0xb: smulbt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>); }}, none);
                 }
                 0xe: decode OPCODE {
-                    0x8: WarnUnimpl::smlatt();
-                    0x9: WarnUnimpl::smulwt();
+                    0x8: smlatt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
+                    0x9: smulwt({{ 
+                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<31:16>), 47, 16); 
+                    }}, none);
                     0xa: WarnUnimpl::smlaltt();
-                    0xb: WarnUnimpl::smultt();
+                    0xb: smultt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>); }}, none);
                 }
             }
         }
@@ -184,8 +201,16 @@ format DataOp {
         }
         1: decode OPCODE {
             // The following two instructions aren't supposed to be defined
-            0x8: WarnUnimpl::undefined_instruction();
-            0x9: WarnUnimpl::undefined_instruction();
+            0x8: DataOp::movw({{ Rd = IMMED_11_0 | (RN << 12) ; }});
+            0x9: DataImmOp::msr_ia_cpsr ({{ 
+                    //assert(!RN<1:0>);
+                    if (OPCODE_18) {
+                        Cpsr = Cpsr<31:20> | rotated_imm | Cpsr<15:0>;
+                    }
+                    if (OPCODE_19) {
+                        CondCodes = rotated_imm;
+                    }
+            }});
 
             0xa: WarnUnimpl::mrs_i_cpsr();
             0xb: WarnUnimpl::mrs_i_spsr();
@@ -440,6 +465,7 @@ format DataOp {
                     }
                 }
             }
+            0xf: WarnUnimpl::mcr_cp15();
         }
         format PredOp {
             // ARM System Call (SoftWare Interrupt)

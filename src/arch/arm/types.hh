@@ -52,6 +52,7 @@ namespace ArmISA
         Bitfield<23, 21> opcode23_21;
         Bitfield<22>     opcode22;
         Bitfield<19>     opcode19;
+        Bitfield<18>     opcode18;
         Bitfield<15, 12> opcode15_12;
         Bitfield<15>     opcode15;
         Bitfield<7,  4>  miscOpcode;
