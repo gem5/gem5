@@ -525,7 +525,7 @@ let {{
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (1ULL << halfSize);
+            uint64_t shifter = (ULL(1) << halfSize);
             uint64_t hiResult;
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
@@ -553,7 +553,7 @@ let {{
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (1ULL << halfSize);
+            uint64_t shifter = (ULL(1) << halfSize);
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
             uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);
