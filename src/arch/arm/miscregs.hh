@@ -55,7 +55,7 @@ namespace ArmISA
 
     enum MiscRegIndex {
         MISCREG_CPSR = 0,
-	MISCREG_SPSR,
+        MISCREG_SPSR,
         MISCREG_SPSR_FIQ,
         MISCREG_SPSR_IRQ,
         MISCREG_SPSR_SVC,
@@ -66,13 +66,13 @@ namespace ArmISA
         MISCREG_FPSID,
         MISCREG_FPSCR,
         MISCREG_FPEXC,
-	NUM_MISCREGS
+        MISCREG_SCTLR,
+        NUM_MISCREGS
     };
 
     const char * const miscRegName[NUM_MISCREGS] = {
-    	"cpsr",
-	"spsr", "spsr_fiq", "spsr_irq", "spsr_svc", "spsr_und", "spsr_abt",
-	"fpsr"
+        "cpsr", "spsr", "spsr_fiq", "spsr_irq", "spsr_svc", "spsr_und", 
+        "spsr_abt", "fpsr", "fpsid", "fpscr", "fpexc", "sctlr"
     };
 
     BitUnion32(CPSR)
@@ -81,8 +81,10 @@ namespace ArmISA
         Bitfield<29> c;
         Bitfield<28> v;
         Bitfield<27> q;
+        Bitfield<26,25> it1;
         Bitfield<24> j;
         Bitfield<19, 16> ge;
+        Bitfield<15,10> it2;
         Bitfield<9> e;
         Bitfield<8> a;
         Bitfield<7> i;
@@ -90,6 +92,31 @@ namespace ArmISA
         Bitfield<5> t;
         Bitfield<4, 0> mode;
     EndBitUnion(CPSR)
+
+    BitUnion32(SCTLR)
+        Bitfield<30> te;  // Thumb Exception Enable
+        Bitfield<29> afe; // Access flag enable
+        Bitfield<28> tre; // TEX Remap bit 
+        Bitfield<27> nmfi;// Non-maskable fast interrupts enable
+        Bitfield<25> ee;  // Exception Endianness bit
+        Bitfield<24> ve;  // Interrupt vectors enable
+        Bitfield<23> rao1;// Read as one
+        Bitfield<22> u;   // Alignment (now unused)
+        Bitfield<21> fi;  // Fast interrupts configuration enable
+        Bitfield<18> rao2;// Read as one
+        Bitfield<17> ha;  // Hardware access flag enable
+        Bitfield<16> rao3;// Read as one
+        Bitfield<14> rr;  // Round robin cache replacement
+        Bitfield<13> v;   // Base address for exception vectors
+        Bitfield<12> i;   // instruction cache enable
+        Bitfield<11> z;   // branch prediction enable bit
+        Bitfield<10> sw;  // Enable swp/swpb
+        Bitfield<6,3> rao4;// Read as one
+        Bitfield<7>  b;   // Endianness support (unused)  
+        Bitfield<2>  c;   // Cache enable bit
+        Bitfield<1>  a;   // Alignment fault checking
+        Bitfield<0>  m;   // MMU enable bit 
+    EndBitUnion(SCTLR)
 };
 
 #endif // __ARCH_ARM_MISCREGS_HH__
