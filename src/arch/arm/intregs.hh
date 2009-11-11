@@ -63,31 +63,26 @@ enum IntRegIndex
     INTREG_SP_SVC = INTREG_R13_SVC,
     INTREG_R14_SVC,
     INTREG_LR_SVC = INTREG_R14_SVC,
-    INTREG_R15_SVC = INTREG_R15,
 
     INTREG_R13_MON,
     INTREG_SP_MON = INTREG_R13_MON,
     INTREG_R14_MON,
     INTREG_LR_MON = INTREG_R14_MON,
-    INTREG_R15_MON = INTREG_R15,
 
     INTREG_R13_ABT,
     INTREG_SP_ABT = INTREG_R13_ABT,
     INTREG_R14_ABT,
     INTREG_LR_ABT = INTREG_R14_ABT,
-    INTREG_R15_ABT = INTREG_R15,
 
     INTREG_R13_UND,
     INTREG_SP_UND = INTREG_R13_UND,
     INTREG_R14_UND,
     INTREG_LR_UND = INTREG_R14_UND,
-    INTREG_R15_UND = INTREG_R15,
 
     INTREG_R13_IRQ,
     INTREG_SP_IRQ = INTREG_R13_IRQ,
     INTREG_R14_IRQ,
     INTREG_LR_IRQ = INTREG_R14_IRQ,
-    INTREG_R15_IRQ = INTREG_R15,
 
     INTREG_R8_FIQ,
     INTREG_R9_FIQ,
@@ -98,7 +93,6 @@ enum IntRegIndex
     INTREG_SP_FIQ = INTREG_R13_FIQ,
     INTREG_R14_FIQ,
     INTREG_LR_FIQ = INTREG_R14_FIQ,
-    INTREG_R15_FIQ = INTREG_R15,
 
     INTREG_ZERO, // Dummy zero reg since there has to be one.
     INTREG_UREG0,
@@ -147,6 +141,7 @@ enum IntRegIndex
     INTREG_R11_SVC = INTREG_R11,
     INTREG_R12_SVC = INTREG_R12,
     INTREG_PC_SVC = INTREG_PC,
+    INTREG_R15_SVC = INTREG_R15,
 
     /* MON mode */
     INTREG_R0_MON = INTREG_R0,
@@ -163,6 +158,7 @@ enum IntRegIndex
     INTREG_R11_MON = INTREG_R11,
     INTREG_R12_MON = INTREG_R12,
     INTREG_PC_MON = INTREG_PC,
+    INTREG_R15_MON = INTREG_R15,
 
     /* ABT mode */
     INTREG_R0_ABT = INTREG_R0,
@@ -179,6 +175,7 @@ enum IntRegIndex
     INTREG_R11_ABT = INTREG_R11,
     INTREG_R12_ABT = INTREG_R12,
     INTREG_PC_ABT = INTREG_PC,
+    INTREG_R15_ABT = INTREG_R15,
 
     /* UND mode */
     INTREG_R0_UND = INTREG_R0,
@@ -195,6 +192,7 @@ enum IntRegIndex
     INTREG_R11_UND = INTREG_R11,
     INTREG_R12_UND = INTREG_R12,
     INTREG_PC_UND = INTREG_PC,
+    INTREG_R15_UND = INTREG_R15,
 
     /* IRQ mode */
     INTREG_R0_IRQ = INTREG_R0,
@@ -211,6 +209,7 @@ enum IntRegIndex
     INTREG_R11_IRQ = INTREG_R11,
     INTREG_R12_IRQ = INTREG_R12,
     INTREG_PC_IRQ = INTREG_PC,
+    INTREG_R15_IRQ = INTREG_R15,
 
     /* FIQ mode */
     INTREG_R0_FIQ = INTREG_R0,
@@ -222,6 +221,7 @@ enum IntRegIndex
     INTREG_R6_FIQ = INTREG_R6,
     INTREG_R7_FIQ = INTREG_R7,
     INTREG_PC_FIQ = INTREG_PC,
+    INTREG_R15_FIQ = INTREG_R15,
 };
 
 typedef IntRegIndex IntRegMap[NUM_ARCH_INTREGS];
@@ -328,7 +328,8 @@ static inline IntRegIndex
 intRegForceUser(unsigned index)
 {
     assert(index < NUM_ARCH_INTREGS);
-    return (IntRegIndex)(index + NUM_INTREGS);
+
+    return index == 15 ? (IntRegIndex)15 : (IntRegIndex)(index + NUM_INTREGS);
 }
 
 }
