@@ -218,7 +218,8 @@ void CacheMemory::init(const vector<string> & argv)
     }
   }
 
-  m_cache_num_sets = cache_size / m_cache_assoc;
+  int num_lines = (cache_size*1024)/RubySystem::getBlockSizeBytes();
+  m_cache_num_sets = num_lines / m_cache_assoc;
   m_cache_num_set_bits = log_int(m_cache_num_sets);
 
   if(policy == "PSEUDO_LRU")
