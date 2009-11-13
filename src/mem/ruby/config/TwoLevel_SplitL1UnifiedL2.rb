@@ -35,6 +35,9 @@ for i in 0..$*.size-1 do
   if $*[i] == "-c" or $*[i] == "--protocol"
     i += 1
     protocol = $*[i]
+  elsif $*[i] == "-A"
+    l1_dcache_size_kb = $*[i+1].to_i
+    i = i+1
   elsif $*[i] == "-B"
     num_l2_banks = $*[i+1].to_i
     i = i+1
