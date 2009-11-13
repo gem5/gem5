@@ -354,15 +354,13 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
 
 // Returns true if the sequencer already has a load or store outstanding
 int Sequencer::isReady(const RubyRequest& request) {
-  if (m_outstanding_count >= m_max_outstanding_requests) {
-    return LIBRUBY_BUFFER_FULL;
-  }
-
   if( m_writeRequestTable.exist(line_address(Address(request.paddr))) ||
       m_readRequestTable.exist(line_address(Address(request.paddr))) ){
-    //cout << "OUTSTANDING REQUEST EXISTS " << p << " VER " << m_version << endl;
-    //printProgress(cout);
     return LIBRUBY_ALIASED_REQUEST;
+  }
+
+  if (m_outstanding_count >= m_max_outstanding_requests) {
+    return LIBRUBY_BUFFER_FULL;
   }
   
   return 1;
