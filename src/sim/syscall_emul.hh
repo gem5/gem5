@@ -1187,7 +1187,7 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     TypedBufferArg<typename OS::tms> bufp(process->getSyscallArg(tc, index));
 
     // Fill in the time structure (in clocks)
-    int64_t clocks = curTick * OS::_SC_CLK_TCK / Clock::Int::s;
+    int64_t clocks = curTick * OS::M5_SC_CLK_TCK / Clock::Int::s;
     bufp->tms_utime = clocks;
     bufp->tms_stime = 0;
     bufp->tms_cutime = 0;

@@ -461,12 +461,16 @@ truncate64Func(SyscallDesc *desc, int num,
     if (!tc->getMemPort()->tryReadString(path, process->getSyscallArg(tc, index)))
        return -EFAULT;
 
-    loff_t length = process->getSyscallArg(tc, index, 64);
+    int64_t length = process->getSyscallArg(tc, index, 64);
 
     // Adjust path for current working directory
     path = process->fullPath(path);
 
+#if NO_STAT64
+    int result = truncate(path.c_str(), length);
+#else
     int result = truncate64(path.c_str(), length);
+#endif
     return (result == -1) ? -errno : result;
 }
 
@@ -480,9 +484,13 @@ ftruncate64Func(SyscallDesc *desc, int num,
     if (fd < 0)
         return -EBADF;
 
-    loff_t length = process->getSyscallArg(tc, index, 64);
+    int64_t length = process->getSyscallArg(tc, index, 64);
 
+#if NO_STAT64
+    int result = ftruncate(fd, length);
+#else
     int result = ftruncate64(fd, length);
+#endif
     return (result == -1) ? -errno : result;
 }
 

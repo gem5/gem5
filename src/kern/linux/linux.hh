@@ -138,7 +138,7 @@ class Linux : public OperatingSystem
     };
 
     /// Clock ticks per second, for times().
-    static const int _SC_CLK_TCK = 100;
+    static const int M5_SC_CLK_TCK = 100;
 
     /// For times().
     struct tms {
