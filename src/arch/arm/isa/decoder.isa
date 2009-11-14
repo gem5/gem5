@@ -355,77 +355,79 @@ format DataOp {
         }
     }
     0x7: decode OPCODE_24 {
-        0: decode CPNUM {
-            // Coprocessor Instructions
-            0x1: decode OPCODE_4 {
+        0: decode OPCODE_4 {
+            0: decode CPNUM {
                 format FloatOp {
-                    // Basic FPA Instructions
-                    0: decode OPCODE_23_20 {
-                        0x0: decode OPCODE_15 {
-                            0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
-                            1: mvf({{ Fd.sf = Fm.sf; }});
-                        }
-                        0x1: decode OPCODE_15 {
-                            0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
-                            1: mnf({{ Fd.sf = -Fm.sf; }});
-                        }
-                        0x2: decode OPCODE_15 {
-                            0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
-                            1: abs({{ Fd.sf = fabs(Fm.sf); }});
-                        }
-                        0x3: decode OPCODE_15 {
-                            0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
-                            1: rnd({{ Fd.sf = rint(Fm.sf); }});
-                        }
-                        0x4: decode OPCODE_15 {
-                            0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
-                            1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
-                        }
-                        0x5: decode OPCODE_15 {
-                            0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
-                            1: log({{ Fd.sf = log10(Fm.sf); }});
-                        }
-                        0x6: decode OPCODE_15 {
-                            0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
-                            1: lgn({{ Fd.sf = log(Fm.sf); }});
-                        }
-                        0x7: decode OPCODE_15 {
-                            0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
-                            1: exp({{ Fd.sf = exp(Fm.sf); }});
-                        }
-                        0x8: decode OPCODE_15 {
-                            0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
-                            1: sin({{ Fd.sf = sin(Fm.sf); }});
-                        }
-                        0x9: decode OPCODE_15 {
-                            0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
-                            1: cos({{ Fd.sf = cos(Fm.sf); }});
-                        }
-                        0xa: decode OPCODE_15 {
-                            0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
-                            1: tan({{ Fd.sf = tan(Fm.sf); }});
-                        }
-                        0xb: decode OPCODE_15 {
-                            0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
-                            1: asn({{ Fd.sf = asin(Fm.sf); }});
-                        }
-                        0xc: decode OPCODE_15 {
-                            0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
-                            1: acs({{ Fd.sf = acos(Fm.sf); }});
-                        }
-                        0xd: decode OPCODE_15 {
-                            1: atn({{ Fd.sf = atan(Fm.sf); }});
-                        }
-                        0xe: decode OPCODE_15 {
-                            // Unnormalised Round
-                            1: FailUnimpl::urd();
-                        }
-                        0xf: decode OPCODE_15 {
-                            // Normalise
-                            1: FailUnimpl::nrm();
-                        }
-                    }
-                    1: decode OPCODE_15_12 {
+                    0x1: decode OPCODE_23_20 {
+                            0x0: decode OPCODE_15 {
+                                0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
+                                1: mvf({{ Fd.sf = Fm.sf; }});
+                            }
+                            0x1: decode OPCODE_15 {
+                                0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
+                                1: mnf({{ Fd.sf = -Fm.sf; }});
+                            }
+                            0x2: decode OPCODE_15 {
+                                0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
+                                1: abs({{ Fd.sf = fabs(Fm.sf); }});
+                            }
+                            0x3: decode OPCODE_15 {
+                                0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
+                                1: rnd({{ Fd.sf = rint(Fm.sf); }});
+                            }
+                            0x4: decode OPCODE_15 {
+                                0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
+                                1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
+                            }
+                            0x5: decode OPCODE_15 {
+                                0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
+                                1: log({{ Fd.sf = log10(Fm.sf); }});
+                            }
+                            0x6: decode OPCODE_15 {
+                                0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
+                                1: lgn({{ Fd.sf = log(Fm.sf); }});
+                            }
+                            0x7: decode OPCODE_15 {
+                                0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
+                                1: exp({{ Fd.sf = exp(Fm.sf); }});
+                            }
+                            0x8: decode OPCODE_15 {
+                                0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
+                                1: sin({{ Fd.sf = sin(Fm.sf); }});
+                            }
+                            0x9: decode OPCODE_15 {
+                                0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
+                                1: cos({{ Fd.sf = cos(Fm.sf); }});
+                            }
+                            0xa: decode OPCODE_15 {
+                                0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
+                                1: tan({{ Fd.sf = tan(Fm.sf); }});
+                            }
+                            0xb: decode OPCODE_15 {
+                                0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
+                                1: asn({{ Fd.sf = asin(Fm.sf); }});
+                            }
+                            0xc: decode OPCODE_15 {
+                                0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
+                                1: acs({{ Fd.sf = acos(Fm.sf); }});
+                            }
+                            0xd: decode OPCODE_15 {
+                                1: atn({{ Fd.sf = atan(Fm.sf); }});
+                            }
+                            0xe: decode OPCODE_15 {
+                                // Unnormalised Round
+                                1: FailUnimpl::urd();
+                            }
+                            0xf: decode OPCODE_15 {
+                                // Normalise
+                                1: FailUnimpl::nrm();
+                            }
+                    } // OPCODE_23_20
+                } // format FloatOp
+            } // CPNUM
+            1: decode CPNUM { // 27-24=1110,4 ==1
+                1: decode OPCODE_15_12 {
+                    format FloatOp {
                         0xf: decode OPCODE_23_21 {
                             format FloatCmp {
                                 0x4: cmf({{ Fn.df }}, {{ Fm.df }});
@@ -448,37 +450,43 @@ format DataOp {
                             0x4: FailUnimpl::wfc();
                             0x5: FailUnimpl::rfc();
                         }
-                    }
+                    } // format FloatOp
                 }
+                0xa: decode MISC_OPCODE {
+                    0x1: decode MEDIA_OPCODE {
+                        0xf: decode RN {
+                            0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
+                            0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
+                            0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
+                        }
+                        0xe: decode RN {
+                            0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
+                            0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
+                            0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
+                        }
+                    } // MEDIA_OPCODE (MISC_OPCODE 0x1)
+                } // MISC_OPCODE (CPNUM 0xA)
+                0xf: decode OPCODE_20 {
+                    0: WarnUnimpl::mcr_cp15();
+                    1: WarnUnimpl::mrc_cp15();
+                }   
+            } // CPNUM  (OP4 == 1)
+        } //OPCODE_4
+
+#if FULL_SYSTEM
+        1: PredOp::swi({{ fault = new SupervisorCall; }}, IsSerializeAfter, IsNonSpeculative, IsSyscall); 
+#else
+        1: PredOp::swi({{ if (testPredicate(CondCodes, condCode))
+            {
+                if (IMMED_23_0)
+                    xc->syscall(IMMED_23_0);
+                else
+                    xc->syscall(R7);
             }
-            0xa: decode MISC_OPCODE {
-                0x1: decode MEDIA_OPCODE {
-                    0xf: decode RN {
-                        0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
-                        0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
-                        0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
-                    }
-                    0xe: decode RN {
-                        0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
-                        0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
-                        0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
-                    }
-                }
-            }
-            0xf: WarnUnimpl::mcr_cp15();
-        }
-        format PredOp {
-            // ARM System Call (SoftWare Interrupt)
-            1: swi({{ if (testPredicate(CondCodes, condCode))
-                      {
-                          if (IMMED_23_0)
-                              xc->syscall(IMMED_23_0);
-                          else
-                              xc->syscall(R7);
-                      }
-            }});
-        }
-    }
+        }});
+#endif // FULL_SYSTEM
+    } // OPCODE_24
+
 }
 }
 
