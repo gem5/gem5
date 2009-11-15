@@ -113,17 +113,34 @@ format DataOp {
                     0x8: PredOp::mrs_cpsr({{
                         Rd = (Cpsr | CondCodes) & 0xF8FF03DF;
                     }});
-                    0x9: PredOp::msr_cpsr({{
-                        //assert(!RN<1:0>);
-                        if (OPCODE_18) {
-                            Cpsr = Cpsr<31:20> | mbits(Rm, 19, 16) | Cpsr<15:0>;
-                        }
-                        if (OPCODE_19) {
-                            CondCodes = mbits(Rm, 31,27);
-                        }
-                    }});
+                    0x9: decode USEIMM {
+                        // The mask field is the same as the RN index.
+                        0: PredImmOp::msr_cpsr_imm({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 rotated_imm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                        }});
+                        1: PredOp::msr_cpsr_reg({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 Rm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                        }});
+                    }
                     0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
-                    0xb: WarnUnimpl::msr_spsr();
+                    0xb: decode USEIMM {
+                        // The mask field is the same as the RN index.
+                        0: PredImmOp::msr_spsr_imm({{
+                            Spsr = spsrWriteByInstr(Spsr, rotated_imm,
+                                                    RN, false);
+                        }});
+                        1: PredOp::msr_spsr_reg({{
+                            Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
+                        }});
+                    }
                 }
                 0x1: decode OPCODE {
                     0x9: BranchExchange::bx({{ }});
