@@ -81,12 +81,12 @@ def operands {{
     #Memory Operand
     'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 30),
 
-    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', 'IsInteger', 40),
-    'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', 'IsInteger', 41),
-    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', 'IsInteger', 42),
-    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', 'IsInteger', 43),
-    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', 'IsInteger', 44),
-    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', 'IsInteger', 45),
+    'Cpsr': ('ControlReg', 'uw', 'MISCREG_CPSR', (None, None, 'IsControl'), 40),
+    'Spsr': ('ControlReg', 'uw', 'MISCREG_SPSR', (None, None, 'IsControl'), 41),
+    'Fpsr': ('ControlReg', 'uw', 'MISCREG_FPSR', (None, None, 'IsControl'), 42),
+    'Fpsid': ('ControlReg', 'uw', 'MISCREG_FPSID', (None, None, 'IsControl'), 43),
+    'Fpscr': ('ControlReg', 'uw', 'MISCREG_FPSCR', (None, None, 'IsControl'), 44),
+    'Fpexc': ('ControlReg', 'uw', 'MISCREG_FPEXC', (None, None, 'IsControl'), 45),
     'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 50),
     'NNPC': ('NNPC', 'uw', None, (None, None, 'IsControl'), 51)
 
