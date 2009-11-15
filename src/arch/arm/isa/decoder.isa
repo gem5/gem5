@@ -115,17 +115,17 @@ format DataOp {
                     }});
                     0x9: decode USEIMM {
                         // The mask field is the same as the RN index.
-                        0: PredImmOp::msr_cpsr_imm({{
-                            uint32_t newCpsr =
-                                cpsrWriteByInstr(Cpsr | CondCodes,
-                                                 rotated_imm, RN, false);
-                            Cpsr = ~CondCodesMask & newCpsr;
-                            CondCodes = CondCodesMask & newCpsr;
-                        }});
-                        1: PredOp::msr_cpsr_reg({{
+                        0: PredOp::msr_cpsr_reg({{
                             uint32_t newCpsr =
                                 cpsrWriteByInstr(Cpsr | CondCodes,
                                                  Rm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                        }});
+                        1: PredImmOp::msr_cpsr_imm({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 rotated_imm, RN, false);
                             Cpsr = ~CondCodesMask & newCpsr;
                             CondCodes = CondCodesMask & newCpsr;
                         }});
@@ -133,12 +133,12 @@ format DataOp {
                     0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
                     0xb: decode USEIMM {
                         // The mask field is the same as the RN index.
-                        0: PredImmOp::msr_spsr_imm({{
+                        0: PredOp::msr_spsr_reg({{
+                            Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
+                        }});
+                        1: PredImmOp::msr_spsr_imm({{
                             Spsr = spsrWriteByInstr(Spsr, rotated_imm,
                                                     RN, false);
-                        }});
-                        1: PredOp::msr_spsr_reg({{
-                            Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
                         }});
                     }
                 }
