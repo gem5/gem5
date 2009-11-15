@@ -93,6 +93,10 @@ namespace ArmISA
         Bitfield<4, 0> mode;
     EndBitUnion(CPSR)
 
+    // This mask selects bits of the CPSR that actually go in the CondCodes
+    // integer register to allow renaming.
+    static const uint32_t CondCodesMask = 0xF80F0000;
+
     BitUnion32(SCTLR)
         Bitfield<30> te;  // Thumb Exception Enable
         Bitfield<29> afe; // Access flag enable
