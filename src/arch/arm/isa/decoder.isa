@@ -110,7 +110,9 @@ format DataOp {
             }
             1: decode MISC_OPCODE {
                 0x0: decode OPCODE {
-                    0x8: PredOp::mrs_cpsr({{ Rd = Cpsr | CondCodes; }});
+                    0x8: PredOp::mrs_cpsr({{
+                        Rd = (Cpsr | CondCodes) & 0xF8FF03DF;
+                    }});
                     0x9: PredOp::msr_cpsr({{
                         //assert(!RN<1:0>);
                         if (OPCODE_18) {
@@ -120,7 +122,7 @@ format DataOp {
                             CondCodes = mbits(Rm, 31,27);
                         }
                     }});
-                    0xa: PredOp::mrs_spsr({{ Rd = 0; // should be SPSR}});
+                    0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
                     0xb: WarnUnimpl::msr_spsr();
                 }
                 0x1: decode OPCODE {
