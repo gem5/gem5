@@ -210,6 +210,7 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
     microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, RN, 0);
 
     unsigned reg = 0;
+    bool forceUser = machInst.puswl.psruser;
     for (int i = 1; i < ones + 1; i++) {
         // Find the next register.
         while (!bits(regs, reg))
@@ -217,13 +218,19 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
         replaceBits(regs, reg, 0);
 
         unsigned regIdx = reg;
-        if (machInst.puswl.psruser) {
+        if (forceUser) {
             regIdx = intRegForceUser(regIdx);
         }
 
         if (machInst.puswl.loadOp) {
-            microOps[i] =
-                new MicroLdrUop(machInst, regIdx, INTREG_UREG0, addr);
+            if (reg == INTREG_PC && forceUser) {
+                // This must be the exception return form of ldm.
+                microOps[i] =
+                    new MicroLdrRetUop(machInst, regIdx, INTREG_UREG0, addr);
+            } else {
+                microOps[i] =
+                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, addr);
+            }
         } else {
             microOps[i] =
                 new MicroStrUop(machInst, regIdx, INTREG_UREG0, addr);
