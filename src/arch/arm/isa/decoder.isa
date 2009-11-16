@@ -221,18 +221,26 @@ format DataOp {
         1: decode OPCODE {
             // The following two instructions aren't supposed to be defined
             0x8: DataOp::movw({{ Rd = IMMED_11_0 | (RN << 12) ; }});
-            0x9: DataImmOp::msr_ia_cpsr ({{ 
-                    //assert(!RN<1:0>);
-                    if (OPCODE_18) {
-                        Cpsr = Cpsr<31:20> | rotated_imm | Cpsr<15:0>;
-                    }
-                    if (OPCODE_19) {
-                        CondCodes = rotated_imm;
-                    }
+            0x9: decode RN {
+                0: decode IMM {
+                    0: PredImmOp::nop({{ ; }});
+                    1: WarnUnimpl::yield();
+                    2: WarnUnimpl::wfe();
+                    3: WarnUnimpl::wfi();
+                    4: WarnUnimpl::sev();
+                }
+                default: PredImmOp::msr_i_cpsr({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 rotated_imm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                }});
+            }
+            0xa: PredOp::movt({{ Rd = IMMED_11_0 << 16 | RN << 28 | Rd<15:0>; }});
+            0xb: PredImmOp::msr_i_spsr({{
+                       Spsr = spsrWriteByInstr(Spsr, rotated_imm, RN, false); 
             }});
-
-            0xa: WarnUnimpl::mrs_i_cpsr();
-            0xb: WarnUnimpl::mrs_i_spsr();
         }
     }
     0x2: AddrMode2::addrMode2(Disp, disp);
