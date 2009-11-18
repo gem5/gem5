@@ -287,7 +287,15 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
 
     return NoFault;
 #else
-  fatal("translate atomic not yet implemented\n");
+    SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
+    if (!sctlr.m) {
+        req->setPaddr(req->getVaddr());
+        return NoFault;
+    }
+    panic("MMU translation not implemented\n");
+    return NoFault;
+    
+
 #endif
 }
 

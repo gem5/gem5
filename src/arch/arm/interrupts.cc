@@ -28,33 +28,10 @@
  * Authors: Ali Saidi
  */
 
-
-#include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
-#include "cpu/thread_context.hh"
-
-
-namespace ArmISA {
-
-void
-initCPU(ThreadContext *tc, int cpuId)
+#include "arch/arm/interrupts.hh"
+    
+ArmISA::Interrupts *
+ArmInterruptsParams::create()
 {
-    // Reset CP15?? What does that mean -- ali
-    
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
-}
-
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
-#endif
-}
-
+    return new ArmISA::Interrupts(this);
 }

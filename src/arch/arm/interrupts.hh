@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2006 The Regents of The University of Michigan
  * Copyright (c) 2009 ARM Limited
  * All rights reserved.
  *
@@ -28,33 +29,93 @@
  * Authors: Ali Saidi
  */
 
+#ifndef __ARCH_ARM_INTERRUPT_HH__
+#define __ARCH_ARM_INTERRUPT_HH__
 
 #include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
+#include "arch/arm/isa_traits.hh"
+#include "arch/arm/registers.hh"
 #include "cpu/thread_context.hh"
+#include "params/ArmInterrupts.hh"
+#include "sim/sim_object.hh"
 
-
-namespace ArmISA {
-
-void
-initCPU(ThreadContext *tc, int cpuId)
+namespace ArmISA
 {
-    // Reset CP15?? What does that mean -- ali
-    
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
-}
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
-#endif
-}
+class Interrupts : public SimObject
+{
+  private:
+    BaseCPU * cpu;
 
-}
+    uint64_t intStatus;
+
+  public:
+
+    void
+    setCPU(BaseCPU * _cpu)
+    {
+        cpu = _cpu;
+    }
+
+    typedef ArmInterruptsParams Params;
+
+    const Params *
+    params() const
+    {
+        return dynamic_cast<const Params *>(_params);
+    }
+
+    Interrupts(Params * p) : SimObject(p), cpu(NULL)
+    {
+        clearAll();
+    }
+
+
+    void
+    post(int int_num, int index)
+    {
+    }
+
+    void
+    clear(int int_num, int index)
+    {
+    }
+
+    void
+    clearAll()
+    {
+        intStatus = 0;
+    }
+
+    bool
+    checkInterrupts(ThreadContext *tc) const
+    {
+        return intStatus;
+    }
+
+    Fault
+    getInterrupt(ThreadContext *tc)
+    {
+        warn_once("ARM  Interrupts not handled\n");
+        return NoFault;
+    }
+
+    void
+    updateIntrInfo(ThreadContext *tc)
+    {
+
+    }
+
+    void
+    serialize(std::ostream &os)
+    {
+    }
+
+    void
+    unserialize(Checkpoint *cp, const std::string &section)
+    {
+    }
+};
+} // namespace ARM_ISA
+
+#endif // __ARCH_ARM_INTERRUPT_HH__

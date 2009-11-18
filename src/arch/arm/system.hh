@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,33 +28,29 @@
  * Authors: Ali Saidi
  */
 
+#ifndef __ARCH_ARM_SYSTEM_HH__
+#define __ARCH_ARM_SYSTEM_HH__
 
-#include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
-#include "cpu/thread_context.hh"
+#include <string>
+#include <vector>
 
+#include "params/ArmSystem.hh"
+#include "sim/sim_object.hh"
+#include "sim/system.hh"
 
-namespace ArmISA {
-
-void
-initCPU(ThreadContext *tc, int cpuId)
+class ArmSystem : public System
 {
-    // Reset CP15?? What does that mean -- ali
+  public:
+    typedef ArmSystemParams Params;
+    ArmSystem(Params *p);
+    ~ArmSystem();
     
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
-}
+    virtual Addr fixFuncEventAddr(Addr addr)
+    {
+        //XXX This may eventually have to do something useful.
+        return addr;
+    }
+};
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
 #endif
-}
 
-}

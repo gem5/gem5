@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * Copyright (c) 2009 ARM Limited
  * All rights reserved.
  *
@@ -28,33 +29,94 @@
  * Authors: Ali Saidi
  */
 
+/** @file
+ * Implementation of Versatile platform.
+ */
 
-#include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
-#include "cpu/thread_context.hh"
+#include <deque>
+#include <string>
+#include <vector>
 
+#include "config/the_isa.hh"
+#include "cpu/intr_control.hh"
+#include "dev/arm/versatile.hh"
+#include "dev/terminal.hh"
+#include "sim/system.hh"
 
-namespace ArmISA {
+using namespace std;
+using namespace TheISA;
+
+Versatile::Versatile(const Params *p)
+    : Platform(p), system(p->system)
+{
+    // set the back pointer from the system to myself
+    system->platform = this;
+}
+
+Tick
+Versatile::intrFrequency()
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
 
 void
-initCPU(ThreadContext *tc, int cpuId)
+Versatile::postConsoleInt()
 {
-    // Reset CP15?? What does that mean -- ali
-    
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
+    warn_once("Don't know what interrupt to post for console.\n");
+    //panic("Need implementation\n");
 }
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
+void
+Versatile::clearConsoleInt()
+{
+    warn_once("Don't know what interrupt to clear for console.\n");
+    //panic("Need implementation\n");
+}
+
+void
+Versatile::postPciInt(int line)
+{
+    panic("Need implementation\n");
+}
+
+void
+Versatile::clearPciInt(int line)
+{
+    panic("Need implementation\n");
+}
+
+Addr
+Versatile::pciToDma(Addr pciAddr) const
+{
+    panic("Need implementation\n");
     M5_DUMMY_RETURN
-#endif
 }
 
+
+Addr
+Versatile::calcPciConfigAddr(int bus, int dev, int func)
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
+
+Addr
+Versatile::calcPciIOAddr(Addr addr)
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
+
+Addr
+Versatile::calcPciMemAddr(Addr addr)
+{
+    panic("Need implementation\n");
+    M5_DUMMY_RETURN
+}
+
+Versatile *
+VersatileParams::create()
+{
+    return new Versatile(this);
 }

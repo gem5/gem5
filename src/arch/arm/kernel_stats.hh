@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2004-2005 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -25,36 +25,33 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
+ * Authors: Gabe Black
  */
 
+#ifndef __ARCH_ARM_KERNEL_STATS_HH__
+#define __ARCH_ARM_KERNEL_STATS_HH__
 
-#include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
-#include "cpu/thread_context.hh"
+#include <map>
+#include <stack>
+#include <string>
+#include <vector>
 
+#include "kern/kernel_stats.hh"
 
 namespace ArmISA {
+namespace Kernel {
 
-void
-initCPU(ThreadContext *tc, int cpuId)
+enum cpu_mode { hypervisor, kernel, user, idle, cpu_mode_num };
+extern const char *modestr[];
+
+class Statistics : public ::Kernel::Statistics
 {
-    // Reset CP15?? What does that mean -- ali
-    
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
-}
+  public:
+    Statistics(System *system) : ::Kernel::Statistics(system)
+    {}
+};
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
-#endif
-}
+} /* end namespace ArmISA::Kernel */
+} /* end namespace ArmISA */
 
-}
+#endif // __ARCH_ARM_KERNEL_STATS_HH__

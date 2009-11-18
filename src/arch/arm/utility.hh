@@ -125,6 +125,17 @@ namespace ArmISA {
     {
         panic("Copy Misc. Regs Not Implemented Yet\n");
     }
+
+    void initCPU(ThreadContext *tc, int cpuId);
+    
+    static inline bool
+    inUserMode(ThreadContext *tc)
+    {
+        return (tc->readMiscRegNoEffect(MISCREG_CPSR) & 0x1f) == MODE_USER;
+    }
+
+uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+
 };
 
 

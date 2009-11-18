@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009 ARM Limited
+ * Copyright (c) 2002-2006 The Regents of The University of Michigan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -28,33 +28,24 @@
  * Authors: Ali Saidi
  */
 
-
-#include "arch/arm/faults.hh"
-#include "arch/arm/utility.hh"
-#include "cpu/thread_context.hh"
+#include "arch/arm/system.hh"
 
 
-namespace ArmISA {
+using namespace LittleEndianGuest;
 
-void
-initCPU(ThreadContext *tc, int cpuId)
+ArmSystem::ArmSystem(Params *p)
+    : System(p)
 {
-    // Reset CP15?? What does that mean -- ali
-    
-    // FPEXC.EN = 0
-    
-    static Fault reset = new Reset;
-    if (cpuId == 0)
-        reset->invoke(tc);
+
 }
 
-uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
-#if FULL_SYSTEM
-    panic("getArgument() not implemented for ARM!\n");
-#else
-    panic("getArgument() only implemented for FULL_SYSTEM\n");
-    M5_DUMMY_RETURN
-#endif
+ArmSystem::~ArmSystem()
+{
 }
 
+
+ArmSystem *
+ArmSystemParams::create()
+{
+    return new ArmSystem(this);
 }

@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2005 The Regents of The University of Michigan
- * Copyright (c) 2007-2008 The Florida State University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,22 +25,20 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Ali Saidi
- *          Stephen Hines
+ * Authors: Nathan Binkert
  */
 
 #ifndef __ARCH_ARM_STACKTRACE_HH__
 #define __ARCH_ARM_STACKTRACE_HH__
 
 #include "base/trace.hh"
-#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 
 class ThreadContext;
-class StackTrace;
-
 namespace ArmISA
 {
+
+class StackTrace;
 
 class ProcessInfo
 {
@@ -65,7 +62,7 @@ class ProcessInfo
 class StackTrace
 {
   protected:
-    typedef TheISA::MachInst MachInst;
+    typedef ArmISA::MachInst MachInst;
   private:
     ThreadContext *tc;
     std::vector<Addr> stack;
@@ -95,10 +92,6 @@ class StackTrace
   public:
     const std::vector<Addr> &getstack() const { return stack; }
 
-    static const int user = 1;
-    static const int console = 2;
-    static const int unknown = 3;
-
 #if TRACING_ON
   private:
     void dump();
@@ -124,6 +117,6 @@ StackTrace::trace(ThreadContext *tc, StaticInstPtr inst)
     return true;
 }
 
-}
+} // Namespace ArmISA
 
 #endif // __ARCH_ARM_STACKTRACE_HH__
