@@ -105,6 +105,7 @@ structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
   DMARequestType Type,       desc="Request type (read/write)";
   Address PhysicalAddress,   desc="Physical address for this request";
   Address LineAddress,       desc="Line address for this request";
+  MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,       desc="Destination";
   DataBlock DataBlk,         desc="DataBlk attached to this request";
   int Len,                   desc="The length of the request";
