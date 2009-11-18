@@ -97,6 +97,9 @@ class MemberMethodCallExprAST(MethodCallExprAST):
         methodId = obj_type.methodId(self.proc_name, paramTypes)
 
         prefix = ""
+        if methodId not in obj_type.methods:
+            self.error("Invalid method call: Type '%s' does not have a method '%s'",
+                       obj_type, methodId)
         return_type = obj_type.methods[methodId].return_type
         if return_type.isInterface:
             prefix = "static_cast<%s &>" % return_type.c_ident
