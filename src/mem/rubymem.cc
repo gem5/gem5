@@ -58,7 +58,14 @@ RubyMemory::RubyMemory(const Params *p)
     ruby_clock = p->clock;
     ruby_phase = p->phase;
 
+    DPRINTF(Ruby, "creating Ruby Memory from file %s\n",
+            p->config_file.c_str());
+
     ifstream config(p->config_file.c_str());
+
+    if (config.good() == false) {
+        fatal("Did not successfully open %s.\n", p->config_file.c_str());
+    }
 
     vector<RubyObjConf> sys_conf;
     while (!config.eof()) {
