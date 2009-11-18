@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,6 +40,7 @@
 #include "mem/physical.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubyMemory.hh"
+#include "mem/port.hh"
 
 class RubyExitCallback;
 
@@ -46,18 +48,26 @@ class RubyMemory : public PhysicalMemory
 {
   public:
     std::vector<RubyPort *> ruby_ports;
+    std::vector<RubyPort *> ruby_dma_ports;
     class Port : public MemoryPort
     {
         friend void ruby_hit_callback(int64_t req_id);
 
         RubyMemory *ruby_mem;
+        RubyPort *ruby_port;
 
       public:
-        Port(const std::string &_name, RubyMemory *_memory);
-        void sendTiming(PacketPtr pkt);
+        Port(const std::string &_name, 
+             RubyMemory *_memory,
+             RubyPort *_port);
+        bool sendTiming(PacketPtr pkt);
+        void hitCallback(PacketPtr pkt);
 
       protected:
         virtual bool recvTiming(PacketPtr pkt);
+
+      private:
+        bool isPioAddress(Addr addr);
     };
 
     class RubyEvent : public Event
@@ -110,8 +120,6 @@ class RubyMemory : public PhysicalMemory
                              //options change & M5 determines the
                              //stats file to use
 
-    void hitCallback(PacketPtr pkt, Port *port);
-
     void printStats(std::ostream & out) const;
     void clearStats();
     void printConfig(std::ostream & out) const;
@@ -125,6 +133,14 @@ class RubyMemory : public PhysicalMemory
 
   public:
     static std::map<int64_t, PacketPtr> pending_requests;
+    RubyMemory::Port* pio_port;
+
+  protected:
+    std::vector<MemoryPort*> dma_ports;
+
+  public:
+    virtual void serialize(std::ostream &os);
+    virtual void unserialize(Checkpoint *cp, const std::string &section);
 };
 
 void ruby_hit_callback(int64_t);

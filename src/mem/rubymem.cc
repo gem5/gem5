@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2001-2005 The Regents of The University of Michigan
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Daniel Sanchez
+ *          Brad Beckmann
  */
 
 #include <iostream>
@@ -63,6 +65,7 @@ RubyMemory::RubyMemory(const Params *p)
         char buffer[65536];
         config.getline(buffer, sizeof(buffer));
         string line = buffer;
+        DPRINTF(Ruby, "%s %d\n", line, line.empty());
         if (line.empty())
             continue;
         vector<string> tokens;
@@ -81,11 +84,27 @@ RubyMemory::RubyMemory(const Params *p)
 
     RubySystem::create(sys_conf);
 
+    //
+    // Create the necessary ruby_ports to connect to the sequencers.
+    // This code should be fixed when the configuration systems are unified
+    // and the ruby configuration text files no longer exist.  Also,
+    // it would be great to remove the single ruby_hit_callback func with
+    // separate pointers to particular ports to rubymem.  However, functional
+    // access currently prevent the improvement.
+    //
     for (int i = 0; i < params()->num_cpus; i++) {
         RubyPort *p = RubySystem::getPort(csprintf("Sequencer_%d", i),
                                           ruby_hit_callback);
         ruby_ports.push_back(p);
     }
+
+    for (int i = 0; i < params()->num_dmas; i++) {
+        RubyPort *p = RubySystem::getPort(csprintf("DMASequencer_%d", i),
+                                          ruby_hit_callback);
+        ruby_dma_ports.push_back(p);
+    }
+
+    pio_port = NULL;
 }
 
 void
@@ -106,7 +125,6 @@ RubyMemory::init()
     //g_debug_ptr->setDebugTime(1);
     //g_debug_ptr->setDebugOutputFile("ruby.debug");
 
-
     g_system_ptr->clearStats();
 
     if (ports.size() == 0) {
@@ -116,6 +134,15 @@ RubyMemory::init()
     for (PortIterator pi = ports.begin(); pi != ports.end(); ++pi) {
         if (*pi)
             (*pi)->sendStatusChange(Port::RangeChange);
+    }
+
+    for (PortIterator pi = dma_ports.begin(); pi != dma_ports.end(); ++pi) {
+        if (*pi)
+            (*pi)->sendStatusChange(Port::RangeChange);
+    }
+
+    if (pio_port != NULL) {
+        pio_port->sendStatusChange(Port::RangeChange);
     }
 
     //Print stats at exit
@@ -141,35 +168,45 @@ RubyMemory::~RubyMemory()
     delete g_system_ptr;
 }
 
-void
-RubyMemory::hitCallback(PacketPtr pkt, Port *port)
-{
-    DPRINTF(MemoryAccess, "Hit callback\n");
-
-    bool needsResponse = pkt->needsResponse();
-    doAtomicAccess(pkt);
-
-    // turn packet around to go back to requester if response expected
-    if (needsResponse) {
-        // recvAtomic() should already have turned packet into
-        // atomic response
-        assert(pkt->isResponse());
-        DPRINTF(MemoryAccess, "Sending packet back over port\n");
-        port->sendTiming(pkt);
-    } else {
-        delete pkt;
-    }
-    DPRINTF(MemoryAccess, "Hit callback done!\n");
-}
-
 Port *
 RubyMemory::getPort(const std::string &if_name, int idx)
 {
+    DPRINTF(Ruby, "getting port %d %s\n", idx, if_name);
+    DPRINTF(Ruby, 
+            "number of ruby ports %d and dma ports %d\n", 
+            ruby_ports.size(),
+            ruby_dma_ports.size());
+
     // Accept request for "functional" port for backwards compatibility
     // with places where this function is called from C++.  I'd prefer
     // to move all these into Python someday.
     if (if_name == "functional") {
-        return new Port(csprintf("%s-functional", name()), this);
+        return new Port(csprintf("%s-functional", name()), 
+                        this,
+                        ruby_ports[idx]);
+    }
+
+    // 
+    // if dma port request, allocate the appropriate prot
+    //
+    if (if_name == "dma_port") {
+        assert(idx < ruby_dma_ports.size());
+        RubyMemory::Port* dma_port = 
+          new Port(csprintf("%s-dma_port%d", name(), idx), 
+                   this, 
+                   ruby_dma_ports[idx]);
+        dma_ports.push_back(dma_port);
+        return dma_port;
+    }
+
+    //
+    // if pio port, ensure that there is only one
+    //
+    if (if_name == "pio_port") {
+        assert(pio_port == NULL);
+        pio_port = 
+          new RubyMemory::Port("ruby_pio_port", this, NULL);
+        return pio_port;
     }
 
     if (if_name != "port") {
@@ -184,30 +221,68 @@ RubyMemory::getPort(const std::string &if_name, int idx)
         panic("RubyMemory::getPort: port %d already assigned", idx);
     }
 
-    Port *port = new Port(csprintf("%s-port%d", name(), idx), this);
+    //
+    // Currently this code assumes that each cpu has both a
+    // icache and dcache port and therefore divides by two.  This will be
+    // fixed once we unify the configuration systems and Ruby sequencers
+    // directly support M5 ports.
+    //
+    assert(idx/2 < ruby_ports.size());
+    Port *port = new Port(csprintf("%s-port%d", name(), idx), 
+                          this, 
+                          ruby_ports[idx/2]);
 
     ports[idx] = port;
     return port;
 }
 
-RubyMemory::Port::Port(const std::string &_name, RubyMemory *_memory)
+RubyMemory::Port::Port(const std::string &_name, 
+                       RubyMemory *_memory,
+                       RubyPort *_port)
     : PhysicalMemory::MemoryPort::MemoryPort(_name, _memory)
 {
+    DPRINTF(Ruby, "creating port to ruby memory %s\n", _name);
     ruby_mem = _memory;
+    ruby_port = _port;
 }
 
 bool
 RubyMemory::Port::recvTiming(PacketPtr pkt)
 {
-    DPRINTF(MemoryAccess, "Timing access caught\n");
+    DPRINTF(MemoryAccess, 
+            "Timing access caught for address %#x\n",
+            pkt->getAddr());
 
     //dsm: based on SimpleTimingPort::recvTiming(pkt);
 
-    // If the device is only a slave, it should only be sending
-    // responses, which should never get nacked.  There used to be
-    // code to hanldle nacks here, but I'm pretty sure it didn't work
-    // correctly with the drain code, so that would need to be fixed
-    // if we ever added it back.
+    //
+    // In FS mode, ruby memory will receive pio responses from devices and
+    // it must forward these responses back to the particular CPU.
+    //
+   if (pkt->isResponse() != false && isPioAddress(pkt->getAddr()) != false) {
+        DPRINTF(MemoryAccess, 
+                "Pio Response callback %#x\n",
+                pkt->getAddr());
+        RubyMemory::SenderState *senderState =
+          safe_cast<RubyMemory::SenderState *>(pkt->senderState);
+        RubyMemory::Port *port = senderState->port;
+        
+        // pop the sender state from the packet
+        pkt->senderState = senderState->saved;
+        delete senderState;
+        
+        port->sendTiming(pkt);
+
+        return true;
+    }
+
+    //
+    // After checking for pio responses, the remainder of packets
+    // received by ruby should only be M5 requests, which should never 
+    // get nacked.  There used to be code to hanldle nacks here, but 
+    // I'm pretty sure it didn't work correctly with the drain code, 
+    // so that would need to be fixed if we ever added it back.
+    //
     assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
@@ -221,6 +296,18 @@ RubyMemory::Port::recvTiming(PacketPtr pkt)
     // Save the port in the sender state object
     pkt->senderState = new SenderState(this, pkt->senderState);
 
+    //
+    // Check for pio requests and directly send them to the dedicated
+    // pio_port.
+    //
+    if (isPioAddress(pkt->getAddr()) != false) {
+        return ruby_mem->pio_port->sendTiming(pkt);
+    }
+
+    //
+    // For DMA and CPU requests, translate them to ruby requests before
+    // sending them to our assigned ruby port.
+    //
     RubyRequestType type = RubyRequestType_NULL;
     Addr pc = 0;
     if (pkt->isRead()) {
@@ -241,7 +328,6 @@ RubyMemory::Port::recvTiming(PacketPtr pkt)
                              RubyAccessMode_Supervisor);
 
     // Submit the ruby request
-    RubyPort *ruby_port = ruby_mem->ruby_ports[pkt->req->contextId()];
     int64_t req_id = ruby_port->makeRequest(ruby_request);
     if (req_id == -1) {
         RubyMemory::SenderState *senderState =
@@ -262,6 +348,12 @@ RubyMemory::Port::recvTiming(PacketPtr pkt)
 void
 ruby_hit_callback(int64_t req_id)
 {
+    //
+    // Note: This single fuction can be called by cpu and dma ports,
+    // as well as the functional port.  The functional port prevents
+    // us from replacing this single function with separate port
+    // functions.
+    //
     typedef map<int64_t, PacketPtr> map_t;
     map_t &prm = RubyMemory::pending_requests;
 
@@ -280,13 +372,58 @@ ruby_hit_callback(int64_t req_id)
     pkt->senderState = senderState->saved;
     delete senderState;
 
-    port->ruby_mem->hitCallback(pkt, port);
+    port->hitCallback(pkt);
 }
 
 void
+RubyMemory::Port::hitCallback(PacketPtr pkt)
+{
+
+    bool needsResponse = pkt->needsResponse();
+
+    DPRINTF(MemoryAccess, "Hit callback needs response %d\n",
+            needsResponse);
+
+    ruby_mem->doAtomicAccess(pkt);
+
+    // turn packet around to go back to requester if response expected
+    if (needsResponse) {
+        // recvAtomic() should already have turned packet into
+        // atomic response
+        assert(pkt->isResponse());
+        DPRINTF(MemoryAccess, "Sending packet back over port\n");
+        sendTiming(pkt);
+    } else {
+        delete pkt;
+    }
+    DPRINTF(MemoryAccess, "Hit callback done!\n");
+}
+
+bool
 RubyMemory::Port::sendTiming(PacketPtr pkt)
 {
     schedSendTiming(pkt, curTick + 1); //minimum latency, must be > 0
+    return true;
+}
+
+bool
+RubyMemory::Port::isPioAddress(Addr addr)
+{
+    AddrRangeList pioAddrList;
+    bool snoop = false;
+    if (ruby_mem->pio_port == NULL) {
+        return false;
+    }
+  
+    ruby_mem->pio_port->getPeerAddressRanges(pioAddrList, snoop);
+    for(AddrRangeIter iter = pioAddrList.begin(); iter != pioAddrList.end(); iter++) {
+        if (addr >= iter->start && addr <= iter->end) {
+            DPRINTF(MemoryAccess, "Pio request found in %#llx - %#llx range\n",
+                    iter->start, iter->end);
+            return true;
+        }
+    }
+    return false;
 }
 
 void RubyMemory::printConfigStats()
@@ -313,6 +450,17 @@ void RubyMemory::printConfig(std::ostream & out) const {
     //g_system_ptr->printConfig(out);
 }
 
+void RubyMemory::serialize(ostream &os)
+{
+    PhysicalMemory::serialize(os);
+}
+
+void RubyMemory::unserialize(Checkpoint *cp, const string &section)
+{
+    DPRINTF(Config, "Ruby memory being restored\n");
+    reschedule(rubyTickEvent, curTick + ruby_clock + ruby_phase);
+    PhysicalMemory::unserialize(cp, section);
+}
 
 //Python-interface code
 RubyMemory *

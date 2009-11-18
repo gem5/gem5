@@ -37,6 +37,9 @@ for i in 0..$*.size-1 do
   elsif $*[i] == "-s"
     memory_size_mb = $*[i+1].to_i
     i = i + 1
+  elsif $*[i] == "-D"
+    num_dma = $*[i+1].to_i
+    i = i + 1
   end
 end
 

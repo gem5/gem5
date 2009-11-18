@@ -42,4 +42,6 @@ class RubyMemory(PhysicalMemory):
     debug = Param.Bool(False, "Use ruby debug")
     debug_file = Param.String("ruby.debug",
         "path to the Ruby debug output file (stdout if blank)")
-
+    num_dmas = Param.Int(0, "Number of DMA ports connected to the Ruby memory")
+    dma_port = VectorPort("Ruby_dma_ports")
+    pio_port = Port("Ruby_pio_port")
