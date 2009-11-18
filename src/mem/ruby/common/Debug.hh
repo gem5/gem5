@@ -63,6 +63,7 @@ enum DebugComponents
     CACHE_COMP,
     PREDICTOR_COMP,
     ALLOCATOR_COMP,
+    MEMORY_COMP,
     NUMBER_OF_COMPS
 };
 
