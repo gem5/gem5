@@ -493,10 +493,53 @@ format DataOp {
                         }
                     } // MEDIA_OPCODE (MISC_OPCODE 0x1)
                 } // MISC_OPCODE (CPNUM 0xA)
-                0xf: decode OPCODE_20 {
-                    0: WarnUnimpl::mcr_cp15();
-                    1: WarnUnimpl::mrc_cp15();
-                }   
+                0xf: decode RN {
+                    // Barrriers, Cache Maintence, NOPS
+                    7: decode OPCODE_23_21 {
+                        0: decode RM {
+                            0: decode OPC2 {
+                                4: decode OPCODE_20 {
+                                    0: PredOp::mcr_cp15_nop1({{ }}); // was wfi
+                                }
+                            }
+                            1: WarnUnimpl::cp15_cache_maint();
+                            4: WarnUnimpl::cp15_par();
+                            5: decode OPC2 {
+                                0,1: WarnUnimpl::cp15_cache_maint2();
+                                4: PredOp::cp15_isb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                                6,7: WarnUnimpl::cp15_bp_maint();
+                            }
+                            6: WarnUnimpl::cp15_cache_maint3();
+                            8: WarnUnimpl::cp15_va_to_pa();
+                            10: decode OPC2 {
+                                1,2: WarnUnimpl::cp15_cache_maint3();
+                                4: PredOp::cp15_dsb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                                5: PredOp::cp15_dmb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                            }
+                            11: WarnUnimpl::cp15_cache_maint4();
+                            13: decode OPC2 {
+                                1: decode OPCODE_20 {
+                                    0: PredOp::mcr_cp15_nop2({{ }}); // was prefetch
+                                }
+                            }
+                            14: WarnUnimpl::cp15_cache_maint5();
+                        } // RM
+                    } // OPCODE_23_21 CR
+                            
+                    // Thread ID and context ID registers
+                    // Thread ID register needs cheaper access than miscreg
+                    13: WarnUnimpl::mcr_mrc_cp15_c7(); 
+
+                    // All the rest
+                    default: decode OPCODE_20 {
+                        0: PredOp::mcr_cp15({{ 
+                               fault = setCp15Register(Rd, RN, OPCODE_23_21, RM, OPC2); 
+                        }});
+                        1: PredOp::mrc_cp15({{ 
+                               fault = readCp15Register(Rd, RN, OPCODE_23_21, RM, OPC2); 
+                        }});
+                    }
+                }  // RN 
             } // CPNUM  (OP4 == 1)
         } //OPCODE_4
 

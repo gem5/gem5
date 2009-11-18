@@ -57,4 +57,20 @@ uint64_t getArgument(ThreadContext *tc, int number, bool fp) {
 #endif
 }
 
+Fault 
+setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2)
+{
+   return new UnimpFault(csprintf("MCR CP15: CRn: %d opc1: %d CRm: %d opc1: %d\n", 
+               CRn, opc1, CRm, opc2));     
+}
+
+Fault 
+readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2)
+{
+   return new UnimpFault(csprintf("MRC CP15: CRn: %d opc1: %d CRm: %d opc1: %d\n", 
+           CRn, opc1, CRm, opc2));
+
+}
+
+
 }

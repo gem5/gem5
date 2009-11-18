@@ -135,6 +135,9 @@ namespace ArmISA {
     }
 
 uint64_t getArgument(ThreadContext *tc, int number, bool fp);
+    
+Fault setCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);
+Fault readCp15Register(uint32_t &Rd, int CRn, int opc1, int CRm, int opc2);
 
 };
 

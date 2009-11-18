@@ -27,6 +27,7 @@
  * Authors: Stephen Hines
  */
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/insts/static_inst.hh"
 #include "base/condcodes.hh"
 #include "base/cprintf.hh"
