@@ -51,10 +51,10 @@ class Chip;
 class MessageBuffer {
 public:
   // Constructors
-  MessageBuffer();
-  MessageBuffer(const Chip* chip_ptr); // The chip_ptr is ignored, but could be used for extra debugging
+  // The chip_ptr is ignored, but could be used for extra debugging
+  MessageBuffer(const Chip* chip_ptr = NULL,
+                const string &name = "");
 
-  // Use Default Destructor
   // ~MessageBuffer()
 
   // Public Methods
