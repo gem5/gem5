@@ -68,7 +68,7 @@ class StateMachine(Symbol):
         # Check for duplicate action
         for other in self.actions.itervalues():
             if action.ident == other.ident:
-                a.warning("Duplicate action definition: %s" % a.ident)
+                action.warning("Duplicate action definition: %s" % action.ident)
                 action.error("Duplicate action definition: %s" % action.ident)
             if action.short == other.short:
                 other.warning("Duplicate action shorthand: %s" % other.ident)
