@@ -374,3 +374,6 @@ def run(options, root, testsys, cpu_class):
         exit_cause = exit_event.getCause()
     print 'Exiting @ cycle %i because %s' % (m5.curTick(), exit_cause)
 
+    if options.checkpoint_at_end:
+        m5.checkpoint(root, joinpath(cptdir, "cpt.%d"))
+

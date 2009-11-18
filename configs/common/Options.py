@@ -53,6 +53,9 @@ parser.add_option("--checkpoint-dir", action="store", type="string",
     help="Place all checkpoints in this absolute directory")
 parser.add_option("-r", "--checkpoint-restore", action="store", type="int",
     help="restore from checkpoint <N>")
+parser.add_option("--checkpoint-at-end", action="store_true",
+                  help="take a checkpoint at end of run")
+
 
 # CPU Switching - default switch model goes from a checkpoint
 # to a timing simple CPU with caches to warm up, then to detailed CPU for
