@@ -86,8 +86,11 @@ cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads, \
          for i in xrange(options.testers) ]
 
 # create the desired simulated system
-# ruby memory
-ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", options.testers)
+# ruby memory must be at least 16 MB to work with the mem tester
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb",
+                                   cores = options.testers,
+                                   memory_size = 16,
+                                   ports_per_cpu = 1)
 
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
                 physmem = ruby_memory)

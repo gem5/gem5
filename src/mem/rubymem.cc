@@ -58,6 +58,8 @@ RubyMemory::RubyMemory(const Params *p)
     ruby_clock = p->clock;
     ruby_phase = p->phase;
 
+    ports_per_cpu = p->ports_per_core;
+
     DPRINTF(Ruby, "creating Ruby Memory from file %s\n",
             p->config_file.c_str());
 
@@ -230,14 +232,14 @@ RubyMemory::getPort(const std::string &if_name, int idx)
 
     //
     // Currently this code assumes that each cpu has both a
-    // icache and dcache port and therefore divides by two.  This will be
-    // fixed once we unify the configuration systems and Ruby sequencers
+    // icache and dcache port and therefore divides by ports per cpu.  This will
+    // be fixed once we unify the configuration systems and Ruby sequencers
     // directly support M5 ports.
     //
-    assert(idx/2 < ruby_ports.size());
+    assert(idx/ports_per_cpu < ruby_ports.size());
     Port *port = new Port(csprintf("%s-port%d", name(), idx), 
                           this, 
-                          ruby_ports[idx/2]);
+                          ruby_ports[idx/ports_per_cpu]);
 
     ports[idx] = port;
     return port;

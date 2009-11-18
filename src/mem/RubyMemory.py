@@ -45,3 +45,4 @@ class RubyMemory(PhysicalMemory):
     num_dmas = Param.Int(0, "Number of DMA ports connected to the Ruby memory")
     dma_port = VectorPort("Ruby_dma_ports")
     pio_port = Port("Ruby_pio_port")
+    ports_per_core = Param.Int(2, "Number of per core. Typical two: icache + dcache")

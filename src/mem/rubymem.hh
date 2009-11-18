@@ -130,6 +130,7 @@ class RubyMemory : public PhysicalMemory
     Tick ruby_clock;
     Tick ruby_phase;
     RubyExitCallback* rubyExitCB;
+    int ports_per_cpu;
 
   public:
     static std::map<int64_t, PacketPtr> pending_requests;

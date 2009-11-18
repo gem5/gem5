@@ -8,7 +8,7 @@ from m5.params import *
 
 def generate(config_file, cores=1, memories=1, memory_size=1024, \
              cache_size=32768, cache_assoc=8, dmas=1,
-             ruby_tick='1t'):
+             ruby_tick='1t', ports_per_cpu=2):
     default = joinpath(dirname(__file__), '../../src/mem/ruby/config')
     ruby_config = os.environ.get('RUBY_CONFIG', default)
     args = [ "ruby", "-I", ruby_config, joinpath(ruby_config, "print_cfg.rb"),
@@ -25,4 +25,5 @@ def generate(config_file, cores=1, memories=1, memory_size=1024, \
                                  config_file = temp_config,
                                  num_cpus = cores,
                                  range = AddrRange(str(memory_size)+"MB"),
-                                 num_dmas = dmas)
+                                 num_dmas = dmas,
+                                 ports_per_core = ports_per_cpu)
