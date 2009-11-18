@@ -105,6 +105,8 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
 
 MC146818::~MC146818()
 {
+    deschedule(tickEvent);
+    deschedule(event);
 }
 
 void
