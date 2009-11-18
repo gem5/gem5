@@ -171,6 +171,9 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
 
 AtomicSimpleCPU::~AtomicSimpleCPU()
 {
+    if (tickEvent.scheduled()) {
+        deschedule(tickEvent);
+    }
 }
 
 void
