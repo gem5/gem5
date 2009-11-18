@@ -66,6 +66,12 @@ ostream& operator<<(ostream& out, const RubyRequestType& obj)
   return out;
 }
 
+ostream& operator<<(std::ostream& out, const RubyRequest& obj)
+{
+  out << hex << "0x" << obj.paddr << flush;
+  return out;
+}
+
 vector<string> tokenizeString(string str, string delims)
 {
   vector<string> tokens;

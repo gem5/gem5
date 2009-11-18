@@ -44,6 +44,10 @@
 //Sequencer::Sequencer(int core_id, MessageBuffer* mandatory_q)
 
 #define LLSC_FAIL -2
+ostream& operator<<(std::ostream& out, const SequencerRequest& obj) {
+  out << obj.ruby_request << flush;
+  return out;
+}
 
 Sequencer::Sequencer(const string & name)
   :RubyPort(name)
@@ -106,7 +110,7 @@ void Sequencer::wakeup() {
     SequencerRequest* request = m_readRequestTable.lookup(keys[i]);
     if (current_time - request->issue_time >= m_deadlock_threshold) {
       WARN_MSG("Possible Deadlock detected");
-      WARN_EXPR(request);
+      WARN_EXPR(request->ruby_request);
       WARN_EXPR(m_version);
       WARN_EXPR(keys.size());
       WARN_EXPR(current_time);
@@ -121,7 +125,7 @@ void Sequencer::wakeup() {
     SequencerRequest* request = m_writeRequestTable.lookup(keys[i]);
     if (current_time - request->issue_time >= m_deadlock_threshold) {
       WARN_MSG("Possible Deadlock detected");
-      WARN_EXPR(request);
+      WARN_EXPR(request->ruby_request);
       WARN_EXPR(m_version);
       WARN_EXPR(current_time);
       WARN_EXPR(request->issue_time);
