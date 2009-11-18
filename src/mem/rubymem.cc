@@ -60,7 +60,7 @@ RubyMemory::RubyMemory(const Params *p)
 
     vector<RubyObjConf> sys_conf;
     while (!config.eof()) {
-        char buffer[4096];
+        char buffer[65536];
         config.getline(buffer, sizeof(buffer));
         string line = buffer;
         if (line.empty())
@@ -119,8 +119,8 @@ RubyMemory::init()
     }
 
     //Print stats at exit
-    RubyExitCallback* rc = new RubyExitCallback(this);
-    registerExitCallback(rc);
+    rubyExitCB = new RubyExitCallback(this);
+    registerExitCallback(rubyExitCB);
 
     //Sched RubyEvent, automatically reschedules to advance ruby cycles
     rubyTickEvent = new RubyEvent(this);
@@ -138,6 +138,7 @@ RubyMemory::tick()
 
 RubyMemory::~RubyMemory()
 {
+    delete g_system_ptr;
 }
 
 void

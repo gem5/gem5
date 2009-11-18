@@ -45,7 +45,11 @@ class DataBlock {
   }
 
   // Destructor
-  ~DataBlock() { if(m_alloc) delete [] m_data;}
+  ~DataBlock() { 
+    if(m_alloc) {
+      delete [] m_data;
+    }
+  }
 
   DataBlock& operator=(const DataBlock& obj);
 

@@ -63,7 +63,7 @@ public:
   NetDest& operator=(const Set& obj);
 
   // Destructor
-  // ~NetDest();
+  ~NetDest() { DEBUG_MSG(MEMORY_COMP, LowPrio, "NetDest Destructor"); }
 
   // Public Methods
   void add(MachineID newElement);

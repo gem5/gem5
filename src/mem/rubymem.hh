@@ -40,6 +40,8 @@
 #include "mem/ruby/system/RubyPort.hh"
 #include "params/RubyMemory.hh"
 
+class RubyExitCallback;
+
 class RubyMemory : public PhysicalMemory
 {
   public:
@@ -119,6 +121,7 @@ class RubyMemory : public PhysicalMemory
   private:
     Tick ruby_clock;
     Tick ruby_phase;
+    RubyExitCallback* rubyExitCB;
 
   public:
     static std::map<int64_t, PacketPtr> pending_requests;

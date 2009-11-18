@@ -124,7 +124,7 @@ SimpleNetwork::~SimpleNetwork()
   }
   m_switch_ptr_vector.deletePointers();
   m_buffers_to_free.deletePointers();
-  delete m_topology_ptr;
+  // delete m_topology_ptr;
 }
 
 // From a switch to an endpoint node
