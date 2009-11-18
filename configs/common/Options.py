@@ -62,6 +62,7 @@ parser.add_option("-s", "--standard-switch", action="store_true",
 parser.add_option("-w", "--warmup", action="store", type="int",
     help="if -s, then this is the warmup period.  else, this is ignored",
     default=5000000000)
+parser.add_option("--profile", help="CPU profile interval")
 
 # Fastforwarding and simpoint related materials
 parser.add_option("-W", "--warmup-insts", action="store", type="int",
