@@ -186,10 +186,19 @@ RubyMemory::getPort(const std::string &if_name, int idx)
             ruby_ports.size(),
             ruby_dma_ports.size());
 
+    //
+    // By default, getPort will be passed an idx of -1.  Of course this is an
+    // invalid ruby port index and must be a modified
+    //
+    if (idx == -1) {
+        idx = 0;
+    }
+
     // Accept request for "functional" port for backwards compatibility
     // with places where this function is called from C++.  I'd prefer
     // to move all these into Python someday.
     if (if_name == "functional") {
+        assert(idx < ruby_ports.size());
         return new Port(csprintf("%s-functional", name()), 
                         this,
                         ruby_ports[idx]);
