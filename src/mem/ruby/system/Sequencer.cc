@@ -49,6 +49,10 @@ long int already = 0;
 Sequencer::Sequencer(const string & name)
   :RubyPort(name)
 {
+  m_store_waiting_on_load_cycles = 0;
+  m_store_waiting_on_store_cycles = 0;
+  m_load_waiting_on_store_cycles = 0;
+  m_load_waiting_on_load_cycles = 0;
 }
 
 void Sequencer::init(const vector<string> & argv)
@@ -141,6 +145,14 @@ void Sequencer::wakeup() {
   } else {
     m_deadlock_check_scheduled = false;
   }
+}
+
+void Sequencer::printStats(ostream & out) const {
+  out << "Sequencer: " << m_name << endl;
+  out << "  store_waiting_on_load_cycles: " << m_store_waiting_on_load_cycles << endl;
+  out << "  store_waiting_on_store_cycles: " << m_store_waiting_on_store_cycles << endl;
+  out << "  load_waiting_on_load_cycles: " << m_load_waiting_on_load_cycles << endl;
+  out << "  load_waiting_on_store_cycles: " << m_load_waiting_on_store_cycles << endl;
 }
 
 void Sequencer::printProgress(ostream& out) const{
@@ -354,8 +366,24 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
 
 // Returns true if the sequencer already has a load or store outstanding
 int Sequencer::isReady(const RubyRequest& request) {
-  if( m_writeRequestTable.exist(line_address(Address(request.paddr))) ||
-      m_readRequestTable.exist(line_address(Address(request.paddr))) ){
+  bool is_outstanding_store = m_writeRequestTable.exist(line_address(Address(request.paddr)));
+  bool is_outstanding_load = m_readRequestTable.exist(line_address(Address(request.paddr)));
+  if ( is_outstanding_store ) {
+    if ((request.type == RubyRequestType_LD) ||
+        (request.type == RubyRequestType_IFETCH) ||
+        (request.type == RubyRequestType_RMW_Read)) {
+      m_store_waiting_on_load_cycles++;
+    } else {
+      m_store_waiting_on_store_cycles++;
+    }
+    return LIBRUBY_ALIASED_REQUEST;
+  } else if ( is_outstanding_load ) {
+    if ((request.type == RubyRequestType_ST) ||
+        (request.type == RubyRequestType_RMW_Write) ) {
+      m_load_waiting_on_store_cycles++;
+    } else {
+      m_load_waiting_on_load_cycles++;
+    }
     return LIBRUBY_ALIASED_REQUEST;
   }
 
@@ -392,14 +420,14 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
       }
       issueRequest(request);
 
-    // TODO: issue hardware prefetches here
-    return id;
+      // TODO: issue hardware prefetches here
+      return id;
     }
     else {
       assert(0);
+      return 0;
     }
-  }
-  else {
+  } else {
     return ready;
   }
 }

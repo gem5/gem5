@@ -88,6 +88,7 @@ public:
   bool empty() const;
 
   void print(ostream& out) const;
+  void printStats(ostream & out) const;
   void checkCoherence(const Address& address);
 
   //  bool getRubyMemoryValue(const Address& addr, char* value, unsigned int size_in_bytes);
@@ -127,6 +128,11 @@ private:
   bool m_deadlock_check_scheduled;
   int m_atomic_reads;
   int m_atomic_writes;
+
+  int m_store_waiting_on_load_cycles;
+  int m_store_waiting_on_store_cycles;
+  int m_load_waiting_on_store_cycles;
+  int m_load_waiting_on_load_cycles;
 };
 
 // Output operator declaration
