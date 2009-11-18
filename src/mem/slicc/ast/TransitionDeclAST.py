@@ -46,9 +46,20 @@ class TransitionDeclAST(DeclAST):
         if machine is None:
             self.error("Transition declaration not part of a machine.")
 
+        for action in self.actions:
+            if action not in machine.actions:
+                self.error("Invalid action: %s is not part of machine: %s" % \
+                           (action, machine))
+
         for state in self.states:
+            if state not in machine.states:
+                self.error("Invalid state: %s is not part of machine: %s" % \
+                           (state, machine))
             next_state = self.next_state or state
             for event in self.events:
+                if event not in machine.events:
+                    self.error("Invalid event: %s is not part of machine: %s" % \
+                               (event, machine))
                 t = Transition(self.symtab, machine, state, event, next_state,
                                self.actions, self.location, self.pairs)
                 machine.addTransition(t)
