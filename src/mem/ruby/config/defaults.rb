@@ -117,7 +117,7 @@ class MemoryControl < LibRubyObject
   default_param :mem_ctl_latency, Integer, 12
   default_param :refresh_period, Integer, 1560
   default_param :tFaw, Integer, 0
-  default_param :mem_random_arbitrate, Integer, 0
+  default_param :mem_random_arbitrate, Integer, 11
   default_param :mem_fixed_delay, Integer, 0
 
 end
@@ -195,9 +195,10 @@ class RubySystem
   # When set to true, the simulation will insert random delays on
   # message enqueue times.  Note that even if this is set to false,
   # you can still have a non-deterministic simulation if random seed
-  # is set to "rand".  This is because the Ruby swtiches use random
-  # link priority elevation
-  default_param :randomization, Boolean, true
+  # is set to "rand".  This is used mainly to debug protocols by forcing 
+  # really strange interleavings and should not be used for 
+  # performance runs.
+  default_param :randomization, Boolean, false
 
   # tech_nm is the device size used to calculate latency and area
   # information about system components
