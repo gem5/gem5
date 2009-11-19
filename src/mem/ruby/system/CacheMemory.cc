@@ -52,12 +52,12 @@ CacheMemory::CacheMemory(const string & name)
 
 void CacheMemory::init(const vector<string> & argv)
 {
-  int cache_size = 0;
+  int cache_size = -1;
   string policy;
 
   m_controller = NULL;
   for (uint32 i=0; i<argv.size(); i+=2) {
-    if (argv[i] == "size_kb") {
+    if (argv[i] == "size") {
       cache_size = atoi(argv[i+1].c_str());
     } else if (argv[i] == "latency") {
       m_latency = atoi(argv[i+1].c_str());
@@ -72,8 +72,12 @@ void CacheMemory::init(const vector<string> & argv)
     }
   }
 
-  m_cache_num_sets = cache_size / m_cache_assoc;
+  assert(cache_size != -1);
+  
+  m_cache_num_sets = (cache_size / m_cache_assoc) / RubySystem::getBlockSizeBytes();
+  assert(m_cache_num_sets > 1);
   m_cache_num_set_bits = log_int(m_cache_num_sets);
+  assert(m_cache_num_set_bits > 0);
 
   if(policy == "PSEUDO_LRU")
     m_replacementPolicy_ptr = new PseudoLRUPolicy(m_cache_num_sets, m_cache_assoc);

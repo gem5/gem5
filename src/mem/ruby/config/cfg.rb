@@ -401,17 +401,17 @@ class DMAController < NetPort
 end
 
 class Cache < LibRubyObject
-  attr :size_kb, :latency
+  attr :size, :latency
   attr_writer :controller
-  def initialize(obj_name, size_kb, latency)
+  def initialize(obj_name, size, latency)
     super(obj_name)
-    assert size_kb.is_a?(Integer), "Cache size must be an integer"
-    @size_kb = size_kb
+    assert size.is_a?(Integer), "Cache size must be an integer"
+    @size = size
     @latency = latency
   end
 
   def args
-    "controller "+@controller.obj_name+" size_kb "+@size_kb.to_s+" latency "+@latency.to_s
+    "controller "+@controller.obj_name+" size "+@size.to_s+" latency "+@latency.to_s
   end
 end
 
@@ -422,8 +422,8 @@ class SetAssociativeCache < Cache
   #  when an integer, it represents the number of cycles for a hit
   #  when a float, it represents the cache access time in ns
   #  when set to "auto", libruby will attempt to find a realistic latency by running CACTI
-  def initialize(obj_name, size_kb, latency, assoc, replacement_policy)
-    super(obj_name, size_kb, latency)
+  def initialize(obj_name, size, latency, assoc, replacement_policy)
+    super(obj_name, size, latency)
     @assoc = assoc
     @replacement_policy = replacement_policy
   end
@@ -431,7 +431,7 @@ class SetAssociativeCache < Cache
   def calculateLatency()
     if @latency == "auto"
       cacti_args = Array.new()
-      cacti_args << (@size_kb*1024) <<  RubySystem.block_size_bytes << @assoc
+      cacti_args << (@size) <<  RubySystem.block_size_bytes << @assoc
       cacti_args << 1 << 0 << 0 << 0 << 1
       cacti_args << RubySystem.tech_nm << RubySystem.block_size_bytes*8
       cacti_args << 0 << 0 << 0 << 1 << 0 << 0 << 0 << 0 << 1

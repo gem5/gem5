@@ -13,7 +13,7 @@ RubySystem.reset
 # default values
 
 num_cores = 2
-l1_cache_size_kb = 32
+l1_cache_size_kb = 32768
 l1_cache_assoc = 8
 l1_cache_latency = 1
 num_memories = 2
@@ -37,6 +37,12 @@ for i in 0..$*.size-1 do
   elsif $*[i] == "-s"
     memory_size_mb = $*[i+1].to_i
     i = i + 1
+  elsif $*[i] == "-C"
+    l1_cache_size_bytes = $*[i+1].to_i
+    i = i + 1
+  elsif $*[i] == "-A"
+    l1_cache_assoc = $*[i+1].to_i
+    i = i + 1
   elsif $*[i] == "-D"
     num_dma = $*[i+1].to_i
     i = i + 1
@@ -51,7 +57,7 @@ assert(protocol == "MI_example", __FILE__ + " cannot be used with protocol " + p
 require protocol+".rb"
 
 num_cores.times { |n|
-  cache = SetAssociativeCache.new("l1u_"+n.to_s, l1_cache_size_kb, l1_cache_latency, l1_cache_assoc, "PSEUDO_LRU")
+  cache = SetAssociativeCache.new("l1u_"+n.to_s, l1_cache_size_bytes, l1_cache_latency, l1_cache_assoc, "PSEUDO_LRU")
   sequencer = Sequencer.new("Sequencer_"+n.to_s, cache, cache)
   iface_ports << sequencer
   net_ports << MI_example_CacheController.new("L1CacheController_"+n.to_s,
