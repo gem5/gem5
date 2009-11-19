@@ -50,6 +50,7 @@ enumeration(CoherenceResponseType, desc="...") {
   WB_EXCLUSIVE_CLEAN, desc="Clean writeback of exclusive data";
   WB_EXCLUSIVE_DIRTY, desc="Dirty writeback of exclusive data";
   UNBLOCK,            desc="Unblock";
+  NULL,               desc="Null value";
 }
 
 // TriggerType

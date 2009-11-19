@@ -176,7 +176,6 @@ end
 
 class MOESI_hammer_DirectoryController < DirectoryController
   default_param :memory_controller_latency, Integer, 12
-  default_param :memory_latency, Integer, 50
 end
 
 class RubySystem

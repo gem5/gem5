@@ -27,7 +27,6 @@ class MOESI_hammer_DirectoryController < DirectoryController
   def argv()
     vec = super()
     vec += " memory_controller_latency "+memory_controller_latency.to_s
-    vec += " memory_latency "+memory_controller_latency.to_s
   end
 end
 
