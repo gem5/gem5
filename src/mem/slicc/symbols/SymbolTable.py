@@ -72,7 +72,10 @@ class SymbolTable(object):
                 continue
 
             if types is not None:
-                assert isinstance(symbol, types)
+                if not isinstance(symbol, types):
+                    symbol.error("Symbol '%s' is not of types '%s'.",
+                                 symbol,
+                                 types)
 
             return symbol
 
