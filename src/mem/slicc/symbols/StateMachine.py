@@ -162,7 +162,7 @@ class StateMachine(Symbol):
 
         seen_types = set()
         for var in self.objects:
-            if var.type.ident not in seen_types:
+            if var.type.ident not in seen_types and not var.type.isPrimitive:
                 code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
             seen_types.add(var.type.ident)
 
@@ -283,7 +283,7 @@ static int m_num_controllers;
         # include object classes
         seen_types = set()
         for var in self.objects:
-            if var.type.ident not in seen_types:
+            if var.type.ident not in seen_types and not var.type.isPrimitive:
                 code('#include "mem/protocol/${{var.type.c_ident}}.hh"')
             seen_types.add(var.type.ident)
 
@@ -339,8 +339,11 @@ void $c_ident::init(Network *net_ptr, const vector<string> &argv)
             code('else if (argv[i] == "${{param.name}}")')
             if param.type_ast.type.ident == "int":
                 code('    m_${{param.name}} = atoi(argv[i+1].c_str());')
+            elif param.type_ast.type.ident == "bool":
+                code('    m_${{param.name}} = string_to_bool(argv[i+1]);')
             else:
-                self.error("only int parameters are supported right now")
+                self.error("only int and bool parameters are "\
+                           "currently supported")
         code.dedent()
         code.dedent()
         code('''
