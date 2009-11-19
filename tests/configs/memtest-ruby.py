@@ -35,7 +35,10 @@ nb_cores = 8
 cpus = [ MemTest() for i in xrange(nb_cores) ]
 
 import ruby_config
-ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", nb_cores)
+ruby_memory = ruby_config.generate("MI_example-homogeneous.rb",
+                                   cores = nb_cores,
+                                   cache_size = 256,
+                                   cache_assoc = 2)
 
 # system simulated
 system = System(cpu = cpus, funcmem = PhysicalMemory(),
