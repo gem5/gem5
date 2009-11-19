@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,9 +25,26 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * AMD's contributions to the MOESI hammer protocol do not constitute an 
+ * endorsement of its similarity to any AMD products.
+ *
+ * Authors: Milo Martin
+ *          Brad Beckmann
  */
 
-machine(Directory, "AMD Hammer-like protocol") {
+machine(Directory, "AMD Hammer-like protocol") 
+: int memory_controller_latency,
+  int memory_latency
+{
+
+  MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
+  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
+//  MessageBuffer dmaRequestFromDir, network="To", virtual_network="4", ordered="true";
+
+  MessageBuffer requestToDir, network="From", virtual_network="3", ordered="false";
+  MessageBuffer unblockToDir, network="From", virtual_network="0", ordered="false";
+//  MessageBuffer dmaRequestToDir, network="From", virtual_network="5", ordered="true";
 
   // STATES
   enumeration(State, desc="Directory states", default="Directory_State_E") {
@@ -66,7 +84,7 @@ machine(Directory, "AMD Hammer-like protocol") {
 
   // ** OBJECTS **
 
-  DirectoryMemory directory;
+  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory_name"])';
 
   State getState(Address addr) {
     return directory[addr].DirectoryState;
@@ -123,7 +141,7 @@ machine(Directory, "AMD Hammer-like protocol") {
   
   action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_ACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -135,7 +153,7 @@ machine(Directory, "AMD Hammer-like protocol") {
 
   action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:WB_NACK;
         out_msg.Requestor := in_msg.Requestor;
@@ -147,10 +165,10 @@ machine(Directory, "AMD Hammer-like protocol") {
 
   action(d_sendData, "d", desc="Send data to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency=memory_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA;
-        out_msg.Sender := id;
+        out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := directory[in_msg.Address].DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
@@ -162,10 +180,10 @@ machine(Directory, "AMD Hammer-like protocol") {
 
   action(dd_sendExclusiveData, "\d", desc="Send exclusive data to requestor") {
     peek(requestQueue_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="MEMORY_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency=memory_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
-        out_msg.Sender := id;
+        out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := directory[in_msg.Address].DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
@@ -176,9 +194,9 @@ machine(Directory, "AMD Hammer-like protocol") {
   }
 
   action(f_forwardRequest, "f", desc="Forward requests") {
-    if (numberOfNodes() > 1) {
+    if (getNumberOfLastLevelCaches() > 1) {
       peek(requestQueue_in, RequestMsg) {
-        enqueue(forwardNetwork_out, RequestMsg, latency="DIRECTORY_LATENCY") {
+        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
           out_msg.Address := address;
           out_msg.Type := in_msg.Type;
           out_msg.Requestor := in_msg.Requestor;

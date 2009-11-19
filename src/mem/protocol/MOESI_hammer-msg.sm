@@ -24,6 +24,9 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * AMD's contributions to the MOESI hammer protocol do not constitute an 
+ * endorsement of its similarity to any AMD products.
  */
 
 // CoherenceRequestType
@@ -65,7 +68,7 @@ structure(TriggerMsg, desc="...", interface="Message") {
 structure(RequestMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";
   CoherenceRequestType Type,   desc="Type of request (GetS, GetX, PutX, etc)";
-  NodeID Requestor,            desc="Node who initiated the request";
+  MachineID Requestor,            desc="Node who initiated the request";
   NetDest Destination,             desc="Multicast destination mask";
   MessageSizeType MessageSize, desc="size category of the message";
 }
@@ -74,7 +77,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
 structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   Address Address,             desc="Physical address for this request";
   CoherenceResponseType Type,  desc="Type of response (Ack, Data, etc)";
-  NodeID Sender,               desc="Node who sent the data";
+  MachineID Sender,               desc="Node who sent the data";
   NetDest Destination,             desc="Node to whom the data is sent";
   DataBlock DataBlk,           desc="data for the cache line";
   bool Dirty,                  desc="Is the data dirty (different than memory)?";
