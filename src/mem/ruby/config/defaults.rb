@@ -167,6 +167,18 @@ class MOESI_CMP_directory_DMAController < DMAController
   default_param :response_latency, Integer, 6
 end
 
+## MOESI_hammer protocol
+
+class MOESI_hammer_CacheController < L1CacheController
+  default_param :issue_latency, Integer, 2
+  default_param :cache_response_latency, Integer, 12
+end
+
+class MOESI_hammer_DirectoryController < DirectoryController
+  default_param :memory_controller_latency, Integer, 12
+  default_param :memory_latency, Integer, 50
+end
+
 class RubySystem
 
   # Random seed used by the simulation. If set to "rand", the seed
