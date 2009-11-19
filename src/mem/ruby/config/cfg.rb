@@ -538,7 +538,6 @@ class MemoryControl < LibRubyObject
   end
 end
 
-
 class Sequencer < IfacePort
 
   def cppClassName()

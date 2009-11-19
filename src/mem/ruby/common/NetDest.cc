@@ -133,13 +133,14 @@ NodeID NetDest::elementAt(MachineID index) {
   return m_bits[vecIndex(index)].elementAt(bitIndex(index.num));
 }
 
-NodeID NetDest::smallestElement() const
+MachineID NetDest::smallestElement() const
 {
   assert(count() > 0);
   for (int i=0; i<m_bits.size(); i++) {
     for (int j=0; j<m_bits[i].getSize(); j++) {
       if (m_bits[i].isElement(j)) {
-        return j;
+        MachineID mach = {MachineType_from_base_level(i), j};
+        return mach;
       }
     }
   }

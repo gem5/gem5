@@ -32,21 +32,32 @@
  *
  */
 
-machine(L1Cache, "Token protocol") {
+machine(L1Cache, "Token protocol") 
+ : int l1_request_latency,
+   int l1_response_latency,
+   int l2_select_low_bit, 
+   int l2_select_num_bits,
+   int N_tokens,
+   int retry_threshold,
+   int fixed_timeout_latency,
+   bool dynamic_timeout_enabled
+{
 
   // From this node's L1 cache TO the network
-  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
-  MessageBuffer requestFromL1Cache, network="To", virtual_network="0", ordered="false";
+
   // a local L1 -> this L2 bank
-  MessageBuffer responseFromL1Cache, network="To", virtual_network="2", ordered="false";
-  MessageBuffer persistentFromL1Cache, network="To", virtual_network="3", ordered="true";
+  MessageBuffer responseFromL1Cache, network="To", virtual_network="1", ordered="false";
+  MessageBuffer persistentFromL1Cache, network="To", virtual_network="2", ordered="true";
+  // a local L1 -> this L2 bank, currently ordered with directory forwarded requests
+  MessageBuffer requestFromL1Cache, network="To", virtual_network="4", ordered="false";
+
 
   // To this node's L1 cache FROM the network
   // a L2 bank -> this L1
-  MessageBuffer requestToL1Cache, network="From", virtual_network="0", ordered="false";
+  MessageBuffer responseToL1Cache, network="From", virtual_network="1", ordered="false";
+  MessageBuffer persistentToL1Cache, network="From", virtual_network="2", ordered="true";
   // a L2 bank -> this L1
-  MessageBuffer responseToL1Cache, network="From", virtual_network="2", ordered="false";
-  MessageBuffer persistentToL1Cache, network="From", virtual_network="3", ordered="true";
+  MessageBuffer requestToL1Cache, network="From", virtual_network="4", ordered="false";
 
   // STATES
   enumeration(State, desc="Cache states", default="L1Cache_State_I") {
@@ -111,10 +122,6 @@ machine(L1Cache, "Token protocol") {
 
   // TYPES
 
-  int getRetryThreshold();
-  int getFixedTimeoutLatency();
-  bool getDynamicTimeoutEnabled();
-
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
     State CacheState,        desc="cache state";
@@ -143,7 +150,7 @@ machine(L1Cache, "Token protocol") {
   external_type(CacheMemory) {
     bool cacheAvail(Address);
     Address cacheProbe(Address);
-    void allocate(Address);
+    void allocate(Address, Entry);
     void deallocate(Address);
     Entry lookup(Address);
     void changePermission(Address, AccessPermission);
@@ -157,17 +164,28 @@ machine(L1Cache, "Token protocol") {
     bool isPresent(Address);
   }
 
+  external_type(PersistentTable) {
+    void persistentRequestLock(Address, MachineID, AccessType);
+    void persistentRequestUnlock(Address, MachineID);
+    bool okToIssueStarving(Address, MachineID);
+    MachineID findSmallest(Address);
+    AccessType typeOfSmallest(Address);
+    void markEntries(Address);
+    bool isLocked(Address);
+    int countStarvingForAddress(Address);
+    int countReadStarvingForAddress(Address);
+  }
 
   TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
-  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
-  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
+  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
+  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
-  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
+  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   bool starving, default="false";
 
-  PersistentTable persistentTable, constructor_hack="i";
+  PersistentTable persistentTable;
   TimerTable useTimerTable;
   TimerTable reissueTimerTable;
 
@@ -175,11 +193,11 @@ machine(L1Cache, "Token protocol") {
   int outstandingPersistentRequests, default="0";
 
   int averageLatencyHysteresis, default="(8)"; // Constant that provides hysteresis for calculated the estimated average
-  int averageLatencyCounter, default="(500 << (*m_L1Cache_averageLatencyHysteresis_vec[i]))";
+  int averageLatencyCounter, default="(500 << (*m_L1Cache_averageLatencyHysteresis_ptr))";
 
   int averageLatencyEstimate() {
     DEBUG_EXPR( (averageLatencyCounter >> averageLatencyHysteresis) );
-    profile_average_latency_estimate( (averageLatencyCounter >> averageLatencyHysteresis) );
+    //profile_average_latency_estimate( (averageLatencyCounter >> averageLatencyHysteresis) );
     return averageLatencyCounter >> averageLatencyHysteresis;
   }
 
@@ -366,29 +384,32 @@ machine(L1Cache, "Token protocol") {
     }
   }
 
-  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
-    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
-      return GenericMachineType:L1Cache_wCC;  // NOTE direct L1 hits should not call this
-    } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
-      if ( sender == (map_L1CacheMachId_to_L2Cache(addr,machineID))) {
-        return GenericMachineType:L2Cache;
-      } else {
-        return GenericMachineType:L2Cache_wCC;
-      }
-    } else {
-      return ConvertMachToGenericMach(machineIDToMachineType(sender));
-    }
-  }
+//  GenericMachineType getNondirectHitMachType(Address addr, MachineID sender) {
+//    if (machineIDToMachineType(sender) == MachineType:L1Cache) {
+//      return GenericMachineType:L1Cache_wCC;  // NOTE direct L1 hits should not call this
+//    } else if (machineIDToMachineType(sender) == MachineType:L2Cache) {
+//
+//      if (sender == (mapAddressToRange(addr, 
+//                                       MachineType:L2Cache,
+//                                       l2_select_low_bit,
+//                                       l2_select_num_bits))) {
+//
+//        return GenericMachineType:L2Cache;
+//      } else {
+//        return GenericMachineType:L2Cache_wCC;
+//      }
+//    } else {
+//      return ConvertMachToGenericMach(machineIDToMachineType(sender));
+//    }
+//  }
 
-  bool okToIssueStarving(Address addr) {
-    return persistentTable.okToIssueStarving(addr);
+  bool okToIssueStarving(Address addr, MachineID machinID) {
+    return persistentTable.okToIssueStarving(addr, machineID);
   }
 
   void markPersistentEntries(Address addr) {
     persistentTable.markEntries(addr);
   }
-
-  MessageBuffer triggerQueue, ordered="false", random="false";
 
   // ** OUT_PORTS **
   out_port(persistentNetwork_out, PersistentMsg, persistentFromL1Cache);
@@ -507,7 +528,11 @@ machine(L1Cache, "Token protocol") {
         // Mark TBE flag if response received off-chip.  Use this to update average latency estimate
         if ( in_msg.SenderMachine == MachineType:L2Cache ) {
 
-          if (in_msg.Sender == map_L1CacheMachId_to_L2Cache(in_msg.Address, machineID)) {
+          if (in_msg.Sender == mapAddressToRange(in_msg.Address,
+                                                 MachineType:L2Cache,
+                                                 l2_select_low_bit,
+                                                 l2_select_num_bits)) {
+
             // came from an off-chip L2 cache
             if (L1_TBEs.isPresent(in_msg.Address)) {
                // L1_TBEs[in_msg.Address].ExternalResponse := true;
@@ -523,15 +548,15 @@ machine(L1Cache, "Token protocol") {
             // profile_memory_response( in_msg.Address);
           }
         } else if ( in_msg.SenderMachine == MachineType:L1Cache) {
-          if (isLocalProcessor(machineID, in_msg.Sender) == false) {
-            if (L1_TBEs.isPresent(in_msg.Address)) {
+          //if (isLocalProcessor(machineID, in_msg.Sender) == false) {
+            //if (L1_TBEs.isPresent(in_msg.Address)) {
                // L1_TBEs[in_msg.Address].ExternalResponse := true;
                // profile_offchipL1_response(in_msg.Address );
-            }
-          }
-          else {
+            //}
+          //}
+          //else {
                // profile_onchipL1_response(in_msg.Address );
-          }
+          //}
         } else {
           error("unexpected SenderMachine");
         }
@@ -570,42 +595,42 @@ machine(L1Cache, "Token protocol") {
           // ** INSTRUCTION ACCESS ***
 
           // Check to see if it is in the OTHER L1
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, try to write it to the L2
-              trigger(Event:L1_Replacement, in_msg.Address);
+              trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
 
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1IcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1IcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room
-              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1IcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         } else {
           // *** DATA ACCESS ***
 
             // Check to see if it is in the OTHER L1
-          if (L1IcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1IcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The block is in the wrong L1, try to write it to the L2
-            trigger(Event:L1_Replacement, in_msg.Address);
+            trigger(Event:L1_Replacement, in_msg.LineAddress);
           }
 
-          if (L1DcacheMemory.isTagPresent(in_msg.Address)) {
+          if (L1DcacheMemory.isTagPresent(in_msg.LineAddress)) {
             // The tag matches for the L1, so the L1 fetches the line.  We know it can't be in the L2 due to exclusion
-            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+            trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
           } else {
-            if (L1DcacheMemory.cacheAvail(in_msg.Address)) {
+            if (L1DcacheMemory.cacheAvail(in_msg.LineAddress)) {
               // L1 does't have the line, but we have space for it in the L1
-              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.Address);
+              trigger(mandatory_request_type_to_event(in_msg.Type), in_msg.LineAddress);
             } else {
               // No room in the L1, so we need to make room
-              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.Address));
+              trigger(Event:L1_Replacement, L1DcacheMemory.cacheProbe(in_msg.LineAddress));
             }
           }
         }
@@ -618,19 +643,31 @@ machine(L1Cache, "Token protocol") {
   action(a_issueReadRequest, "a", desc="Issue GETS") {
       if (L1_TBEs[address].IssueCount == 0) {
         // Update outstanding requests
-        profile_outstanding_request(outstandingRequests);
+        //profile_outstanding_request(outstandingRequests);
         outstandingRequests := outstandingRequests + 1;
       }
 
-      if (L1_TBEs[address].IssueCount >= getRetryThreshold() ) {
+      if (L1_TBEs[address].IssueCount >= retry_threshold) {
         // Issue a persistent request if possible
-        if (okToIssueStarving(address) && (starving == false)) {
-          enqueue(persistentNetwork_out, PersistentMsg, latency="L1_REQUEST_LATENCY") {
+        if (okToIssueStarving(address, machineID) && (starving == false)) {
+          enqueue(persistentNetwork_out, PersistentMsg, latency = l1_request_latency) {
             out_msg.Address := address;
             out_msg.Type := PersistentRequestType:GETS_PERSISTENT;
             out_msg.Requestor := machineID;
             out_msg.Destination.broadcast(MachineType:L1Cache);
-            out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+            
+            //
+            // Currently the configuration system limits the system to only one
+            // chip.  Therefore, if we assume one shared L2 cache, then only one
+            // pertinent L2 cache exist.
+            //
+            //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+            
+            out_msg.Destination.add(mapAddressToRange(address,
+                                                      MachineType:L2Cache,
+                                                      l2_select_low_bit,
+                                                      l2_select_num_bits));
+
             out_msg.Destination.add(map_Address_to_Directory(address));
             out_msg.MessageSize := MessageSizeType:Persistent_Control;
             out_msg.Prefetch := L1_TBEs[address].Prefetch;
@@ -640,11 +677,11 @@ machine(L1Cache, "Token protocol") {
           starving := true;
 
           if (L1_TBEs[address].IssueCount == 0) {
-            profile_persistent_prediction(address, L1_TBEs[address].AccessType);
+            //profile_persistent_prediction(address, L1_TBEs[address].AccessType);
           }
 
           // Update outstanding requests
-          profile_outstanding_persistent_request(outstandingPersistentRequests);
+          //profile_outstanding_persistent_request(outstandingPersistentRequests);
           outstandingPersistentRequests := outstandingPersistentRequests + 1;
 
           // Increment IssueCount
@@ -666,11 +703,16 @@ machine(L1Cache, "Token protocol") {
         }
       } else {
         // Make a normal request
-        enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(requestNetwork_out, RequestMsg, latency = l1_request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:GETS;
           out_msg.Requestor := machineID;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+
+          out_msg.Destination.add(mapAddressToRange(address,
+                                                    MachineType:L2Cache,
+                                                    l2_select_low_bit,
+                                                    l2_select_num_bits));
+
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
           if (L1_TBEs[address].IssueCount == 0) {
             out_msg.MessageSize := MessageSizeType:Request_Control;
@@ -682,11 +724,18 @@ machine(L1Cache, "Token protocol") {
         }
 
         // send to other local L1s, with local bit set
-        enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(requestNetwork_out, RequestMsg, latency = l1_request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:GETS;
           out_msg.Requestor := machineID;
-          out_msg.Destination := getOtherLocalL1IDs(machineID);
+
+          //
+          // Since only one chip, assuming all L1 caches are local
+          //
+          //out_msg.Destination := getOtherLocalL1IDs(machineID);
+          out_msg.Destination.broadcast(MachineType:L1Cache);
+          out_msg.Destination.remove(machineID);
+
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
           out_msg.isLocal := true;
           if (L1_TBEs[address].IssueCount == 0) {
@@ -703,10 +752,10 @@ machine(L1Cache, "Token protocol") {
 
         // Set a wakeup timer
 
-        if (getDynamicTimeoutEnabled()) {
+        if (dynamic_timeout_enabled) {
           reissueTimerTable.set(address, 1.25 * averageLatencyEstimate());
         } else {
-          reissueTimerTable.set(address, getFixedTimeoutLatency());
+          reissueTimerTable.set(address, fixed_timeout_latency);
         }
 
       }
@@ -716,20 +765,32 @@ machine(L1Cache, "Token protocol") {
 
       if (L1_TBEs[address].IssueCount == 0) {
         // Update outstanding requests
-        profile_outstanding_request(outstandingRequests);
+        //profile_outstanding_request(outstandingRequests);
         outstandingRequests := outstandingRequests + 1;
       }
 
-      if (L1_TBEs[address].IssueCount >= getRetryThreshold() ) {
+      if (L1_TBEs[address].IssueCount >= retry_threshold) {
         // Issue a persistent request if possible
-        if ( okToIssueStarving(address) && (starving == false)) {
-          enqueue(persistentNetwork_out, PersistentMsg, latency="L1_REQUEST_LATENCY") {
+        if ( okToIssueStarving(address, machineID) && (starving == false)) {
+          enqueue(persistentNetwork_out, PersistentMsg, latency = l1_request_latency) {
             out_msg.Address := address;
             out_msg.Type := PersistentRequestType:GETX_PERSISTENT;
             out_msg.Requestor := machineID;
             out_msg.RequestorMachine := MachineType:L1Cache;
             out_msg.Destination.broadcast(MachineType:L1Cache);
-            out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+            //
+            // Currently the configuration system limits the system to only one
+            // chip.  Therefore, if we assume one shared L2 cache, then only one
+            // pertinent L2 cache exist.
+            //
+            //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+            
+            out_msg.Destination.add(mapAddressToRange(address,
+                                                      MachineType:L2Cache,
+                                                      l2_select_low_bit,
+                                                      l2_select_num_bits));
+
             out_msg.Destination.add(map_Address_to_Directory(address));
             out_msg.MessageSize := MessageSizeType:Persistent_Control;
             out_msg.Prefetch := L1_TBEs[address].Prefetch;
@@ -739,11 +800,11 @@ machine(L1Cache, "Token protocol") {
           starving := true;
 
           // Update outstanding requests
-          profile_outstanding_persistent_request(outstandingPersistentRequests);
+          //profile_outstanding_persistent_request(outstandingPersistentRequests);
           outstandingPersistentRequests := outstandingPersistentRequests + 1;
 
           if (L1_TBEs[address].IssueCount == 0) {
-            profile_persistent_prediction(address, L1_TBEs[address].AccessType);
+            //profile_persistent_prediction(address, L1_TBEs[address].AccessType);
           }
 
           // Increment IssueCount
@@ -766,12 +827,17 @@ machine(L1Cache, "Token protocol") {
 
       } else  {
         // Make a normal request
-        enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(requestNetwork_out, RequestMsg, latency = l1_request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:GETX;
           out_msg.Requestor := machineID;
           out_msg.RequestorMachine := MachineType:L1Cache;
-          out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+
+          out_msg.Destination.add(mapAddressToRange(address,
+                                                    MachineType:L2Cache,
+                                                    l2_select_low_bit,
+                                                    l2_select_num_bits));
+
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
 
           if (L1_TBEs[address].IssueCount == 0) {
@@ -784,12 +850,19 @@ machine(L1Cache, "Token protocol") {
         }
 
         // send to other local L1s too
-        enqueue(requestNetwork_out, RequestMsg, latency="L1_REQUEST_LATENCY") {
+        enqueue(requestNetwork_out, RequestMsg, latency = l1_request_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:GETX;
           out_msg.Requestor := machineID;
           out_msg.isLocal := true;
-          out_msg.Destination := getOtherLocalL1IDs(machineID);
+
+          //
+          // Since only one chip, assuming all L1 caches are local
+          //
+          //out_msg.Destination := getOtherLocalL1IDs(machineID);
+          out_msg.Destination.broadcast(MachineType:L1Cache);
+          out_msg.Destination.remove(machineID);
+
           out_msg.RetryNum := L1_TBEs[address].IssueCount;
           if (L1_TBEs[address].IssueCount == 0) {
             out_msg.MessageSize := MessageSizeType:Request_Control;
@@ -807,10 +880,10 @@ machine(L1Cache, "Token protocol") {
         DEBUG_EXPR(L1_TBEs[address].IssueCount);
 
         // Set a wakeup timer
-        if (getDynamicTimeoutEnabled()) {
+        if (dynamic_timeout_enabled) {
           reissueTimerTable.set(address, 1.25 * averageLatencyEstimate());
         } else {
-          reissueTimerTable.set(address, getFixedTimeoutLatency());
+          reissueTimerTable.set(address, fixed_timeout_latency);
         }
       }
   }
@@ -818,7 +891,7 @@ machine(L1Cache, "Token protocol") {
   action(bb_bounceResponse, "\b", desc="Bounce tokens and data to memory") {
     peek(responseNetwork_in, ResponseMsg) {
       // FIXME, should use a 3rd vnet
-      enqueue(responseNetwork_out, ResponseMsg, latency="NULL_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
@@ -833,11 +906,16 @@ machine(L1Cache, "Token protocol") {
   }
 
   action(c_ownedReplacement, "c", desc="Issue writeback") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
       out_msg.Address := address;
       out_msg.Sender := machineID;
       out_msg.SenderMachine := MachineType:L1Cache;
-      out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+
+      out_msg.Destination.add(mapAddressToRange(address,
+                                                MachineType:L2Cache,
+                                                l2_select_low_bit,
+                                                l2_select_num_bits));
+
       out_msg.Tokens := getCacheEntry(address).Tokens;
       out_msg.DataBlk := getCacheEntry(address).DataBlk;
       out_msg.Dirty := getCacheEntry(address).Dirty;
@@ -853,11 +931,16 @@ machine(L1Cache, "Token protocol") {
 
     // don't send writeback if replacing block with no tokens
     if (getCacheEntry(address).Tokens != 0) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:L1Cache;
-        out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+
+        out_msg.Destination.add(mapAddressToRange(address,
+                                                  MachineType:L2Cache,
+                                                  l2_select_low_bit,
+                                                  l2_select_num_bits));
+
         out_msg.Tokens := getCacheEntry(address).Tokens;
         out_msg.DataBlk := getCacheEntry(address).DataBlk;
         // assert(getCacheEntry(address).Dirty == false);
@@ -879,7 +962,7 @@ machine(L1Cache, "Token protocol") {
 
   action(d_sendDataWithToken, "d", desc="Send data and a token from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
@@ -902,14 +985,14 @@ machine(L1Cache, "Token protocol") {
 
   action(d_sendDataWithNTokenIfAvail, "\dd", desc="Send data and a token from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      if (getCacheEntry(address).Tokens > N_tokens()) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      if (getCacheEntry(address).Tokens > N_tokens) {
+        enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
           out_msg.SenderMachine := MachineType:L1Cache;
           out_msg.Destination.add(in_msg.Requestor);
-          out_msg.Tokens := N_tokens();
+          out_msg.Tokens := N_tokens;
           out_msg.DataBlk := getCacheEntry(address).DataBlk;
           // out_msg.Dirty := getCacheEntry(address).Dirty;
           out_msg.Dirty := false;
@@ -919,10 +1002,10 @@ machine(L1Cache, "Token protocol") {
             out_msg.MessageSize := MessageSizeType:Response_Data;
           }
         }
-        getCacheEntry(address).Tokens := getCacheEntry(address).Tokens - N_tokens();
+        getCacheEntry(address).Tokens := getCacheEntry(address).Tokens - N_tokens;
       }
       else if (getCacheEntry(address).Tokens > 1) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
@@ -946,7 +1029,7 @@ machine(L1Cache, "Token protocol") {
 
   action(dd_sendDataWithAllTokens, "\d", desc="Send data and all tokens from cache to requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
@@ -969,7 +1052,7 @@ machine(L1Cache, "Token protocol") {
   action(e_sendAckWithCollectedTokens, "e", desc="Send ack with the tokens we've collected thus far.") {
     // assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     if (getCacheEntry(address).Tokens > 0) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
@@ -986,7 +1069,7 @@ machine(L1Cache, "Token protocol") {
   action(ee_sendDataWithAllTokens, "\e", desc="Send data and all tokens from cache to starver") {
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     assert(getCacheEntry(address).Tokens > 0);
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_OWNER;
       out_msg.Sender := machineID;
@@ -1005,23 +1088,23 @@ machine(L1Cache, "Token protocol") {
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     assert(getCacheEntry(address).Tokens > 0);
     if (getCacheEntry(address).Tokens > 1) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:L1Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getCacheEntry(address).Tokens >= 1);
-        if (getCacheEntry(address).Tokens > N_tokens()) {
-          out_msg.Tokens := getCacheEntry(address).Tokens - N_tokens();
+        if (getCacheEntry(address).Tokens > N_tokens) {
+          out_msg.Tokens := getCacheEntry(address).Tokens - N_tokens;
         } else {
           out_msg.Tokens := getCacheEntry(address).Tokens - 1;
         }
         out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
-    if (getCacheEntry(address).Tokens > N_tokens()) {
-      getCacheEntry(address).Tokens := N_tokens();
+    if (getCacheEntry(address).Tokens > N_tokens) {
+      getCacheEntry(address).Tokens := N_tokens;
     } else {
       getCacheEntry(address).Tokens := 1;
     }
@@ -1031,15 +1114,15 @@ machine(L1Cache, "Token protocol") {
     //assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
     assert(getCacheEntry(address).Tokens > 0);
     if (getCacheEntry(address).Tokens > 1) {
-      enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:L1Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getCacheEntry(address).Tokens >= 1);
-        if (getCacheEntry(address).Tokens > N_tokens()) {
-          out_msg.Tokens := getCacheEntry(address).Tokens - N_tokens();
+        if (getCacheEntry(address).Tokens > N_tokens) {
+          out_msg.Tokens := getCacheEntry(address).Tokens - N_tokens;
         } else {
           out_msg.Tokens := getCacheEntry(address).Tokens - 1;
         }
@@ -1047,8 +1130,8 @@ machine(L1Cache, "Token protocol") {
         out_msg.Dirty := getCacheEntry(address).Dirty;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
-      if (getCacheEntry(address).Tokens > N_tokens()) {
-        getCacheEntry(address).Tokens := N_tokens();
+      if (getCacheEntry(address).Tokens > N_tokens) {
+        getCacheEntry(address).Tokens := N_tokens;
       } else {
         getCacheEntry(address).Tokens := 1;
       }
@@ -1061,7 +1144,7 @@ machine(L1Cache, "Token protocol") {
     peek(responseNetwork_in, ResponseMsg) {
       // assert(persistentTable.findSmallest(address) != id); // Make sure we never bounce tokens to ourself
       // FIXME, should use a 3rd vnet in some cases
-      enqueue(responseNetwork_out, ResponseMsg, latency="NULL_LATENCY") {
+      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
@@ -1079,7 +1162,8 @@ machine(L1Cache, "Token protocol") {
   action(h_load_hit, "h", desc="Notify sequencer the load completed.") {
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    sequencer.readCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
+    //sequencer.readCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
+    sequencer.readCallback(address, getCacheEntry(address).DataBlk);
   }
 
   action(x_external_load_hit, "x", desc="Notify sequencer the load completed.") {
@@ -1087,14 +1171,16 @@ machine(L1Cache, "Token protocol") {
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
 
-      sequencer.readCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
+      //sequencer.readCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
+      sequencer.readCallback(address, getCacheEntry(address).DataBlk);
     }
   }
 
   action(hh_store_hit, "\h", desc="Notify sequencer that store completed.") {
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
-    sequencer.writeCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
+    //sequencer.writeCallback(address, getCacheEntry(address).DataBlk, GenericMachineType:L1Cache, PrefetchBit:No);
+    sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
     getCacheEntry(address).Dirty := true;
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
   }
@@ -1103,7 +1189,8 @@ machine(L1Cache, "Token protocol") {
     DEBUG_EXPR(address);
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
     peek(responseNetwork_in, ResponseMsg) {
-      sequencer.writeCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
+      //sequencer.writeCallback(address, getCacheEntry(address).DataBlk, getNondirectHitMachType(in_msg.Address, in_msg.Sender), PrefetchBit:No);
+      sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
     }
     getCacheEntry(address).Dirty := true;
     DEBUG_EXPR(getCacheEntry(address).DataBlk);
@@ -1133,8 +1220,6 @@ machine(L1Cache, "Token protocol") {
     useTimerTable.unset(address);
   }
 
-
-
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue.") {
     mandatoryQueue_in.dequeue();
   }
@@ -1156,14 +1241,19 @@ machine(L1Cache, "Token protocol") {
   }
 
   action(p_informL2AboutTokenLoss, "p", desc="Inform L2 about loss of all tokens") {
-    enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+    enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
        out_msg.Address := address;
        out_msg.Type := CoherenceResponseType:INV;
        out_msg.Tokens := 0;
        out_msg.Sender := machineID;
        out_msg.SenderMachine := MachineType:L1Cache;
        out_msg.DestMachine := MachineType:L2Cache;
-       out_msg.Destination.add(map_L1CacheMachId_to_L2Cache(address,machineID));
+
+       out_msg.Destination.add(mapAddressToRange(address,
+                                                 MachineType:L2Cache,
+                                                 l2_select_low_bit,
+                                                 l2_select_num_bits));
+
        out_msg.MessageSize := MessageSizeType:Response_Control;
     }
   }
@@ -1189,13 +1279,25 @@ machine(L1Cache, "Token protocol") {
     if (L1_TBEs[address].WentPersistent) {
       // assert(starving == true);
       outstandingRequests := outstandingRequests - 1;
-      enqueue(persistentNetwork_out, PersistentMsg, latency="L1_REQUEST_LATENCY") {
+      enqueue(persistentNetwork_out, PersistentMsg, latency = l1_request_latency) {
         out_msg.Address := address;
         out_msg.Type := PersistentRequestType:DEACTIVATE_PERSISTENT;
         out_msg.Requestor := machineID;
         out_msg.RequestorMachine := MachineType:L1Cache;
         out_msg.Destination.broadcast(MachineType:L1Cache);
-        out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+        //
+        // Currently the configuration system limits the system to only one
+        // chip.  Therefore, if we assume one shared L2 cache, then only one
+        // pertinent L2 cache exist.
+        //
+        //out_msg.Destination.addNetDest(getAllPertinentL2Banks(address));
+
+        out_msg.Destination.add(mapAddressToRange(address,
+                                                  MachineType:L2Cache,
+                                                  l2_select_low_bit,
+                                                  l2_select_num_bits));
+
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.MessageSize := MessageSizeType:Persistent_Control;
       }
@@ -1217,14 +1319,14 @@ machine(L1Cache, "Token protocol") {
     //  profile_token_retry(address, L1_TBEs[address].AccessType, 1);
     //}
 
-    profile_token_retry(address, L1_TBEs[address].AccessType, L1_TBEs[address].IssueCount);
+    //profile_token_retry(address, L1_TBEs[address].AccessType, L1_TBEs[address].IssueCount);
     L1_TBEs.deallocate(address);
   }
 
   action(t_sendAckWithCollectedTokens, "t", desc="Send ack with the tokens we've collected thus far.") {
     if (getCacheEntry(address).Tokens > 0) {
       peek(requestNetwork_in, RequestMsg) {
-        enqueue(responseNetwork_out, ResponseMsg, latency="L1_RESPONSE_LATENCY") {
+        enqueue(responseNetwork_out, ResponseMsg, latency = l1_response_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
@@ -1259,13 +1361,13 @@ machine(L1Cache, "Token protocol") {
 
   action(ii_allocateL1DCacheBlock, "\i", desc="Set L1 D-cache tag equal to tag of block B.") {
     if (L1DcacheMemory.isTagPresent(address) == false) {
-      L1DcacheMemory.allocate(address);
+      L1DcacheMemory.allocate(address, new Entry);
     }
   }
 
   action(pp_allocateL1ICacheBlock, "\p", desc="Set L1 I-cache tag equal to tag of block B.") {
     if (L1IcacheMemory.isTagPresent(address) == false) {
-      L1IcacheMemory.allocate(address);
+      L1IcacheMemory.allocate(address, new Entry);
     }
   }
 
@@ -1279,11 +1381,6 @@ machine(L1Cache, "Token protocol") {
     peek(responseNetwork_in, ResponseMsg) {
       assert(getCacheEntry(address).DataBlk == in_msg.DataBlk);
     }
-  }
-
-
-  action(z_stall, "z", desc="Stall") {
-
   }
 
   action(zz_recycleMandatoryQueue, "\z", desc="Send the head of the mandatory queue to the back of the queue.") {

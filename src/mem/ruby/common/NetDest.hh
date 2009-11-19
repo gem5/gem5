@@ -96,7 +96,7 @@ public:
   //For Princeton Network
   Vector<NodeID> getAllDest();
 
-  NodeID smallestElement() const;
+  MachineID smallestElement() const;
   MachineID smallestElement(MachineType machine) const;
 
   void setSize();

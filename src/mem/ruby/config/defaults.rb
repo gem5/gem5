@@ -167,6 +167,33 @@ class MOESI_CMP_directory_DMAController < DMAController
   default_param :response_latency, Integer, 6
 end
 
+## MOESI_CMP_token protocol
+
+class MOESI_CMP_token_L1CacheController < L1CacheController
+  default_param :l1_request_latency, Integer, 2
+  default_param :l1_response_latency, Integer, 2
+  default_param :retry_threshold, Integer, 1
+  default_param :fixed_timeout_latency, Integer, 300
+  default_param :dynamic_timeout_enabled, Boolean, true
+end
+
+class MOESI_CMP_token_L2CacheController < CacheController
+  default_param :l2_request_latency, Integer, 2
+  default_param :l2_response_latency, Integer, 2
+  default_param :filtering_enabled, Boolean, true
+end
+
+class MOESI_CMP_token_DirectoryController < DirectoryController
+  default_param :directory_latency, Integer, 6
+  default_param :distributed_persistent, Boolean, true
+  default_param :fixed_timeout_latency, Integer, 300
+end
+
+class MOESI_CMP_token_DMAController < DMAController
+  default_param :request_latency, Integer, 6
+  default_param :response_latency, Integer, 6
+end
+
 ## MOESI_hammer protocol
 
 class MOESI_hammer_CacheController < L1CacheController

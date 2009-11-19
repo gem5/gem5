@@ -30,20 +30,26 @@
 #ifndef PersistentTable_H
 #define PersistentTable_H
 
-#include "Global.h"
-#include "MachineID.h"
-#include "AccessType.h"
+#include "mem/ruby/common/Global.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/protocol/AccessType.hh"
+#include "mem/ruby/common/NetDest.hh"
 
-class AbstractChip;
+class PersistentTableEntry {
+public:
+  void print(ostream& out) const {}
 
-template <class KEY_TYPE, class VALUE_TYPE> class Map;
-class Address;
-class PersistentTableEntry;
+  NetDest m_starving;
+  NetDest m_marked;
+  NetDest m_request_to_write;
+};
 
 class PersistentTable {
 public:
   // Constructors
-  PersistentTable(AbstractChip* chip_ptr, int version);
+  PersistentTable();
 
   // Destructor
   ~PersistentTable();
@@ -51,7 +57,7 @@ public:
   // Public Methods
   void persistentRequestLock(const Address& address, MachineID locker, AccessType type);
   void persistentRequestUnlock(const Address& address, MachineID unlocker);
-  bool okToIssueStarving(const Address& address) const;
+  bool okToIssueStarving(const Address& address, MachineID machID) const;
   MachineID findSmallest(const Address& address) const;
   AccessType typeOfSmallest(const Address& address) const;
   void markEntries(const Address& address);
@@ -71,18 +77,22 @@ private:
 
   // Data Members (m_prefix)
   Map<Address, PersistentTableEntry>* m_map_ptr;
-  AbstractChip* m_chip_ptr;
-  int m_version;
 };
-
-// Output operator declaration
-ostream& operator<<(ostream& out, const PersistentTable& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
-extern inline 
+extern inline
 ostream& operator<<(ostream& out, const PersistentTable& obj)
+{
+  obj.print(out);
+  out << flush;
+  return out;
+}
+
+// Output operator definition
+extern inline
+ostream& operator<<(ostream& out, const PersistentTableEntry& obj)
 {
   obj.print(out);
   out << flush;

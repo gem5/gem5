@@ -52,7 +52,6 @@ void dirProfileCoherenceRequest(NodeID node, bool needCLB);
 bool isPerfectProtocol();
 bool L1trainsPrefetcher();
 int max_tokens();
-int N_tokens();
 bool distributedPersistentEnabled();
 Address setOffset(Address addr, int offset);
 Address makeLineAddress(Address addr);
