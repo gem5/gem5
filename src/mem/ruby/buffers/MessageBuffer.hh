@@ -46,14 +46,10 @@
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/gems_common/util.hh"
 
-class Chip;
-
 class MessageBuffer {
 public:
   // Constructors
-  // The chip_ptr is ignored, but could be used for extra debugging
-  MessageBuffer(const Chip* chip_ptr = NULL,
-                const string &name = "");
+  MessageBuffer(const string &name = "");
 
   // ~MessageBuffer()
 

@@ -34,8 +34,7 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
-MessageBuffer::MessageBuffer(const Chip* chip_ptr,
-                             const string &name)
+MessageBuffer::MessageBuffer(const string &name)
 {
   m_msg_counter = 0;
   m_consumer_ptr = NULL;
