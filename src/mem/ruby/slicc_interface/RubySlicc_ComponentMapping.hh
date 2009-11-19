@@ -61,6 +61,15 @@
 #define MACHINETYPE_L3CACHE_ENUM MachineType_NUM
 #endif
 
+#ifdef MACHINETYPE_DMA
+#define MACHINETYPE_DMA_ENUM MachineType_DMA
+#else
+#define MACHINETYPE_DMA_ENUM MachineType_NUM
+#endif
+
+// used to determine the number of acks to wait for
+int getNumberOfLastLevelCaches();
+
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
 inline
@@ -81,7 +90,7 @@ MachineID map_Address_to_Directory(const Address &addr)
 inline
 MachineID map_Address_to_DMA(const Address & addr)
 {
-  MachineID dma = {MachineType_DMA, 0};
+  MachineID dma = {MACHINETYPE_DMA_ENUM, 0};
   return dma;
 }
 

@@ -70,6 +70,8 @@ public:
   //  static CacheMemory* createCache(int level, int num, char split_type, AbstractCacheEntry* (*entry_factory)());
   //  static CacheMemory* getCache(int cache_id);
 
+  static int numberOfLastLevelCaches();
+  
   // Public Methods
   void printConfig(ostream& out);
 
@@ -167,6 +169,8 @@ private:
   int m_cache_num_set_bits;
   int m_cache_assoc;
 
+  static int m_num_last_level_caches;
+  static MachineType m_last_level_machine_type;
   static Vector< CacheMemory* > m_all_caches;
 };
 

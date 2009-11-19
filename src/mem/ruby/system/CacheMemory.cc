@@ -28,6 +28,9 @@
 
 #include "mem/ruby/system/CacheMemory.hh"
 
+int CacheMemory::m_num_last_level_caches = 0;
+MachineType CacheMemory::m_last_level_machine_type = MachineType_FIRST;
+
 // Output operator declaration
 //ostream& operator<<(ostream& out, const CacheMemory<ENTRY>& obj);
 
@@ -55,6 +58,8 @@ void CacheMemory::init(const vector<string> & argv)
   int cache_size = -1;
   string policy;
 
+  m_num_last_level_caches = 
+    MachineType_base_count(MachineType_FIRST);
   m_controller = NULL;
   for (uint32 i=0; i<argv.size(); i+=2) {
     if (argv[i] == "size") {
@@ -67,6 +72,12 @@ void CacheMemory::init(const vector<string> & argv)
       policy = argv[i+1];
     } else if (argv[i] == "controller") {
       m_controller = RubySystem::getController(argv[i+1]);
+      if (m_last_level_machine_type < m_controller->getMachineType()) {
+        m_num_last_level_caches = 
+          MachineType_base_count(m_controller->getMachineType());
+        m_last_level_machine_type = 
+          m_controller->getMachineType();
+      } 
     } else {
       cerr << "WARNING: CacheMemory: Unknown configuration parameter: " << argv[i] << endl;
     }
@@ -109,6 +120,13 @@ CacheMemory::~CacheMemory()
     }
   }
 }
+
+int
+CacheMemory::numberOfLastLevelCaches() 
+{ 
+  return m_num_last_level_caches; 
+}
+
 
 void CacheMemory::printConfig(ostream& out)
 {

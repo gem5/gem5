@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 1999-2005 Mark D. Hill and David A. Wood
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,36 +27,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Mapping functions
 
-int getNumberOfLastLevelCaches();
+#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/system/CacheMemory.hh"
 
-// NodeID map_address_to_node(Address addr);
-MachineID mapAddressToRange(Address addr, MachineType type, int low, int high);
-MachineID map_Address_to_DMA(Address addr);
-MachineID map_Address_to_Directory(Address addr);
-NodeID map_Address_to_DirectoryNode(Address addr);
-
-
-MachineID getL1MachineID(NodeID L1RubyNode);
-NodeID getChipID(MachineID L2machID);
-MachineID getCollectorDest(MachineID L1machID);
-MachineID getCollectorL1Cache(MachineID colID);
-NetDest getMultiStaticL2BankNetDest(Address addr, Set sharers);
-bool isL1OnChip(MachineID L1machID, NodeID L2NodeID);
-bool isL2OnChip(MachineID L2machID, NodeID L2NodeID);
-
-int getNumBanksInBankSet();
-NodeID machineIDToNodeID(MachineID machID);
-NodeID machineIDToVersion(MachineID machID);
-MachineType machineIDToMachineType(MachineID machID);
-NodeID L1CacheMachIDToProcessorNum(MachineID machID);
-NodeID L2CacheMachIDToChipID(MachineID machID);
-Set getOtherLocalL1IDs(MachineID L1);
-Set getLocalL1IDs(MachineID L1);
-Set getExternalL1IDs(MachineID L1);
-NetDest getAllPertinentL2Banks(Address addr);
-bool isLocalProcessor(MachineID thisId, MachineID tarId);
-
-GenericMachineType ConvertMachToGenericMach(MachineType machType);
+int getNumberOfLastLevelCaches()
+{
+  return CacheMemory::numberOfLastLevelCaches();
+}
 
