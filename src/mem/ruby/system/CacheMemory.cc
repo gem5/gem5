@@ -98,6 +98,12 @@ CacheMemory::~CacheMemory()
 {
   if(m_replacementPolicy_ptr != NULL)
     delete m_replacementPolicy_ptr;
+  delete m_profiler_ptr;
+  for (int i = 0; i < m_cache_num_sets; i++) {
+    for (int j = 0; j < m_cache_assoc; j++) {
+      delete m_cache[i][j];
+    }
+  }
 }
 
 void CacheMemory::printConfig(ostream& out)
