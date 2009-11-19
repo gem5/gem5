@@ -1,0 +1,5 @@
+../protocols/MOESI_hammer-msg.sm
+../protocols/hammer-ni.sm 
+../protocols/MOESI_hammer-cache.sm
+../protocols/MOESI_hammer-dir.sm
+../protocols/standard_1level-node.sm
