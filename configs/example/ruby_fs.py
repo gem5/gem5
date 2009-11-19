@@ -71,8 +71,12 @@ parser.add_option("-o", "--options", default="",
 parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
 parser.add_option("--output", default="", help="Redirect stdout to a file.")
 parser.add_option("--errout", default="", help="Redirect stderr to a file.")
+
+# ruby options
 parser.add_option("--ruby-debug", action="store_true")
 parser.add_option("--ruby-debug-file", default="", help="Ruby debug out file (stdout if blank)")
+parser.add_option("--protocol", default="", help="Ruby protocol compiled into binary")
+
 
 # ruby host memory experimentation
 parser.add_option("--cache_size", type="int")
@@ -98,12 +102,17 @@ else:
     bm = [SysConfig()]
 
 #
-# currently ruby fs only works in timing mode because ruby does not support
-# atomic accesses by devices
+# currently ruby fs only works in simple timing mode because ruby does not
+# support atomic accesses by devices.  Also ruby_fs currently assumes
+# that is running a checkpoints that were created by ALPHA_FS under atomic
+# mode.  Since switch cpus are not defined in these checkpoints, we don't
+# fast forward with the atomic cpu and instead set the FutureClass to None.
+# Therefore the cpus resolve to the correct names and unserialize correctly.
 #
 assert(options.timing)
-
-(CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
+class CPUClass(TimingSimpleCPU): pass
+test_mem_mode = 'timing'
+FutureClass = None
 
 CPUClass.clock = '1GHz'
 
@@ -139,12 +148,22 @@ if options.map_levels:
 else:
     map_levels = 4 # 4 levels is the default
 
+if options.protocol == "MOESI_hammer":
+    ruby_config_file = "MOESI_hammer-homogeneous.rb"
+elif options.protocol == "MOESI_CMP_token":
+    ruby_config_file = "TwoLevel_SplitL1UnifiedL2.rb"
+elif options.protocol == "MI_example":
+    ruby_config_file = "MI_example-homogeneous.rb"
+else:
+    print "Error: unsupported ruby protocol"
+    sys.exit(1)
+
 #
 # Currently, since ruby configuraiton is separate from m5, we need to manually
 # tell ruby that two dma ports are created by makeLinuxAlphaRubySystem().
 # Eventually, this will be fix with a unified configuration system.
 #
-rubymem = ruby_config.generate("MI_example-homogeneous.rb",
+rubymem = ruby_config.generate(ruby_config_file,
                                np,
                                np,
                                128,
