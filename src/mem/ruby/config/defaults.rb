@@ -178,6 +178,10 @@ class MOESI_hammer_DirectoryController < DirectoryController
   default_param :memory_controller_latency, Integer, 12
 end
 
+class MOESI_hammer_DMAController < DMAController
+  default_param :request_latency, Integer, 6
+end
+
 class RubySystem
 
   # Random seed used by the simulation. If set to "rand", the seed
