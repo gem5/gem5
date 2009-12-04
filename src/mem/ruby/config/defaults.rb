@@ -35,7 +35,26 @@ class Debug < LibRubyObject
   #   3. set start_time = 1
   default_param :protocol_trace, Boolean, false
 
-  # a string for filtering debugging output (for all g_debug vars see Debug.h)
+  # a string for filtering debugging output. Valid options (also see Debug.cc):
+  #    {"System",            's' },
+  #    {"Node",              'N' },
+  #    {"Queue",             'q' },
+  #    {"Event Queue",       'e' },
+  #    {"Network",           'n' },
+  #    {"Sequencer",         'S' },
+  #    {"Tester",            't' },
+  #    {"Generated",         'g' },
+  #    {"SLICC",             'l' },
+  #    {"Network Queues",    'Q' },
+  #    {"Time",              'T' },
+  #    {"Network Internals", 'i' },
+  #    {"Store Buffer",      'b' },
+  #    {"Cache",             'c' },
+  #    {"Predictor",         'p' },
+  #    {"Allocator",         'a' }
+  #
+  #  e.g., "sq" will print system and queue debugging messages
+  #  Set to "none" for no debugging output
   default_param :filter_string, String, "none"
 
   # filters debugging messages based on priority (none, low, med, high)
@@ -45,7 +64,8 @@ class Debug < LibRubyObject
   default_param :start_time, Integer, 1
   
   # sends debugging messages to a output filename
-  default_param :output_filename, String, ""
+  # set to "none" to print to stdout
+  default_param :output_filename, String, "none"
 end
 
 class Topology < LibRubyObject
@@ -68,17 +88,17 @@ end
 class Network < LibRubyObject
   default_param :endpoint_bandwidth, Integer, 10000
   default_param :adaptive_routing, Boolean, true
-  default_param :number_of_virtual_networks, Integer, 10
-  default_param :fan_out_degree, Integer, 4
+  default_param :number_of_virtual_networks, Integer, 5
+  #  default_param :fan_out_degree, Integer, 4
 
   # default buffer size.  Setting to 0 indicates infinite buffering
-  default_param :buffer_size, Integer, 0
+  #  default_param :buffer_size, Integer, 0
 
   # local memory latency ?? NetworkLinkLatency
   default_param :link_latency, Integer, 1
 
   # on chip latency
-  default_param :on_chip_latency, Integer, 1
+  #  default_param :on_chip_latency, Integer, 1
  
   default_param :control_msg_size, Integer, 8
 end

@@ -44,7 +44,7 @@
 
 int DirectoryMemory::m_num_directories = 0;
 int DirectoryMemory::m_num_directories_bits = 0;
-int DirectoryMemory::m_total_size_bytes = 0;
+uint64_t DirectoryMemory::m_total_size_bytes = 0;
 
 DirectoryMemory::DirectoryMemory(const string & name)
  : m_name(name)

@@ -116,9 +116,9 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 //  DirectoryMemory directory, constructor_hack="i";
 //  MemoryControl memBuffer, constructor_hack="i";
 
-  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory_name"])';
+  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory"])';
 
-  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_controller_name"])';
+  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_control"])';
 
 
   TBETable TBEs, template_hack="<Directory_TBE>";

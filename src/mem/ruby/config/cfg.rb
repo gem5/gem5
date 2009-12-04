@@ -11,14 +11,44 @@ end
 
 class LibRubyObject
   @@all_objs = Array.new
-  attr_reader :obj_name
   @@default_params = Hash.new
+  @@param_types = Hash.new
+
+  attr_reader :obj_name
 
   def initialize(obj_name)
     assert obj_name.is_a?(String), "Obj_Name must be a string"
     @obj_name = obj_name
     @@all_objs << self
     @params = Hash.new
+
+    # add all parent parameter accessors if they don't exist
+    self.class.ancestors.each { |ancestor|
+      if @@default_params.key?(ancestor.name.to_sym)
+        @@default_params[ancestor.name.to_sym].each { |p, default|
+          p = p.to_sym
+          @params[p] = default
+          if ! respond_to?(p)
+            self.class.send(:define_method, p) {
+              @params[p] = @@default_params[ancestor.name.to_sym][p] if ! @params.key?(p)
+              return @params[p]
+            }
+          end
+          setter_method_name = (p.to_s + "=").to_sym
+          if ! respond_to?(setter_method_name)
+            self.class.send(:define_method, setter_method_name) { |val|
+              type = @@param_types[ancestor.name.to_sym][p]
+              if val.is_a?(FalseClass) || val.is_a?(TrueClass)
+                assert type.is_a?(Boolean), "default value of param \"#{p}\" must be either true or false"
+              else
+                assert val.is_a?(type), "default value of param \"#{p}\", which is of type #{val.class.name} does not match expected type #{type}"
+              end
+              @params[p] = val
+            }
+          end
+        }
+      end
+    }
   end
 
   def cppClassName()
@@ -29,40 +59,24 @@ class LibRubyObject
     idx = self.name.to_sym
     @@default_params[idx] = Hash.new if ! @@default_params.key?(idx)
     @@default_params[idx][param_name] = nil
-    send :define_method, param_name do
-      @params[param_name] = @@default_params[idx][param_name] if ! @params.key?(param_name)
-      @params[param_name]
-    end
-    method_name = (param_name.to_s + "=").to_sym
-    send :define_method, method_name do |val|
-      if val.is_a?(FalseClass) || val.is_a?(TrueClass)
-        assert type.is_a?(Boolean), "default value of param \"#{param_name}\" must be either true or false"
-      else
-        assert val.is_a?(type), "default value of param \"#{param_name}\" does not match type #{type}"
-      end
-#      assert val.is_a?(type), "#{param_name} must be of type #{type}"
-      @params[param_name] = val
-    end
+    @@param_types[idx] = Hash.new if ! @@param_types.key?(idx)
+    @@param_types[idx][param_name] = type
   end
 
   def self.default_param(param_name, type, default)
-    idx = self.name.to_sym
-    @@default_params[idx] = Hash.new if ! @@default_params.key?(idx)
+
     if default.is_a?(FalseClass) || default.is_a?(TrueClass)
       assert type.is_a?(Boolean), "default value of param \"#{param_name}\" must be either true or false"
     else
       assert default.is_a?(type), "default value of param \"#{param_name}\" does not match type #{type}"
     end
+
+    idx = self.name.to_sym
+    @@default_params[idx] = Hash.new if ! @@default_params.key?(idx)
     @@default_params[idx][param_name] = default
-    send :define_method, param_name do
-      @params[param_name] = @@default_params[idx][param_name] if ! @params.key?(param_name)
-      @params[param_name]
-    end
-    method_name = (param_name.to_s + "=").to_sym
-    send :define_method, method_name do |val|
-      assert val.is_a?(type), "#{param_name} must be of type #{type}"
-      @params[param_name] = val
-    end
+    @@param_types[idx] = Hash.new if ! @@param_types.key?(idx)
+    @@param_types[idx][param_name] = type
+
   end
 
   def applyDefaults()
@@ -80,6 +94,7 @@ class LibRubyObject
 
     @params.each { |key, val|
       str += key.id2name + " "
+      assert(val != nil, "parameter #{key} is nil")
       if val.is_a?(LibRubyObject)
         str += val.obj_name + " "
       else
@@ -117,36 +132,32 @@ end
 
 class NetPort < LibRubyObject
   attr :mach_type
-  attr_reader :version
+  param :version, Integer
 
   @@type_cnt = Hash.new
-  @type_id
   def initialize(obj_name, mach_type)
     super(obj_name)
     @mach_type = mach_type
     @@type_cnt[mach_type] ||= 0
-    @type_id = @@type_cnt[mach_type]
+    self.version= @@type_cnt[mach_type] # sets the version parameter
+
     @@type_cnt[mach_type] += 1
 
-    idx = "NetPort".to_sym
-    @@default_params[idx] = Hash.new if ! @@default_params.key?(idx)
-    @@default_params[idx].each { |key, val|
-      @params[key] = val if ! @params.key?(key)
-    }
   end
 
   def port_name
     mach_type
   end
   def port_num
-    @type_id
-  end
-  def cppClassName
-    "NetPort"
+    version
   end
   def self.totalOfType(mach_type)
     return @@type_cnt[mach_type]
   end
+  def cppClassName()
+    "generated:"+@mach_type
+  end
+
 end
 
 class MemoryVector < LibRubyObject
@@ -155,7 +166,7 @@ class MemoryVector < LibRubyObject
   end
 
   def cppClassName
-    "MemoryController"
+    "MemoryVector"
   end
 end
 
@@ -291,33 +302,12 @@ private
 end
 
 class CacheController < NetPort
-  @@total_cache_controllers = Hash.new
 
   def initialize(obj_name, mach_type, caches)
     super(obj_name, mach_type)
     caches.each { |cache|
       cache.controller = self
     }
-
-    if !@@total_cache_controllers.key?(mach_type)
-      @@total_cache_controllers[mach_type] = 0
-    end
-    @version = @@total_cache_controllers[mach_type]
-    @@total_cache_controllers[mach_type] += 1
-    
-    # call inhereted parameters
-    transitions_per_cycle
-    buffer_size
-    number_of_TBEs
-    recycle_latency
-  end
-
-  def argv()
-    vec = "version "+@version.to_s
-    vec += " transitions_per_cycle "+@params[:transitions_per_cycle].to_s
-    vec += " buffer_size "+@params[:buffer_size].to_s
-    vec += " number_of_TBEs "+@params[:number_of_TBEs].to_s
-    vec += " recycle_latency "+@params[:recycle_latency].to_s
   end
 
   def cppClassName()
@@ -325,89 +315,92 @@ class CacheController < NetPort
   end
 end
 
+class Sequencer < IfacePort
+end
+
 class L1CacheController < CacheController
-  attr :sequencer
+  param :sequencer, Sequencer
 
   def initialize(obj_name, mach_type, caches, sequencer)
     super(obj_name, mach_type, caches)
 
-    @sequencer = sequencer
-    @sequencer.controller = self
-    @sequencer.version = @version
+    sequencer.controller = self
+    sequencer.version = version
+    self.sequencer= sequencer
   end
 
-  def argv()
-    vec = super()
-    vec += " sequencer "+@sequencer.obj_name
-  end
+#  def argv()
+#    vec = super()
+#    vec += " sequencer "+@sequencer.obj_name
+#  end
+end
+
+class DirectoryMemory < LibRubyObject
+end
+class MemoryControl < LibRubyObject
 end
 
 class DirectoryController < NetPort
   @@total_directory_controllers = 0
-  attr :directory
-  attr :memory_control
+  param :directory, DirectoryMemory
+  param :memory_control, MemoryControl
 
   def initialize(obj_name, mach_type, directory, memory_control)
     super(obj_name, mach_type)
 
-    @directory = directory
     directory.controller = self
-
-    @memory_control = memory_control
+    directory.version = @@total_directory_controllers
+    self.directory = directory
+    self.memory_control = memory_control
 
     @version = @@total_directory_controllers
     @@total_directory_controllers += 1
     buffer_size()
   end
 
-  def argv()
-    "version "+@version.to_s+" directory_name "+@directory.obj_name+" transitions_per_cycle "+@params[:transitions_per_cycle].to_s + " buffer_size "+@params[:buffer_size].to_s + " number_of_TBEs "+@params[:number_of_TBEs].to_s + " memory_controller_name "+@memory_control.obj_name + " recycle_latency "+@params[:recycle_latency].to_s
-  end
-
   def cppClassName()
     "generated:"+@mach_type
   end
 
+end
+
+class DMASequencer < IfacePort
 end
 
 class DMAController < NetPort
   @@total_dma_controllers = 0
-  attr :dma_sequencer
+  param :dma_sequencer, DMASequencer
+  param :version, Integer
+
   def initialize(obj_name, mach_type, dma_sequencer)
     super(obj_name, mach_type)
-    @dma_sequencer = dma_sequencer
-    @version = @@total_dma_controllers
-    @@total_dma_controllers += 1
     dma_sequencer.controller = self
-    buffer_size
+    dma_sequencer.version = @@total_dma_controllers
+    self.dma_sequencer = dma_sequencer
+
+    self.version = @@total_dma_controllers
+    @@total_dma_controllers += 1
   end
 
-  def argv()
-    "version "+@version.to_s+" dma_sequencer "+@dma_sequencer.obj_name+" transitions_per_cycle "+@params[:transitions_per_cycle].to_s + " buffer_size "+@params[:buffer_size].to_s + " number_of_TBEs "+@params[:number_of_TBEs].to_s +  " recycle_latency "+@params[:recycle_latency].to_s
-  end
-
-  def cppClassName()
-    "generated:"+@mach_type
-  end
 end
 
 class Cache < LibRubyObject
-  attr :size_kb, :latency
-  attr_writer :controller
+  param :size_kb, Integer
+  param :latency, Integer
+  param :controller, NetPort
   def initialize(obj_name, size_kb, latency)
     super(obj_name)
-    assert size_kb.is_a?(Integer), "Cache size must be an integer"
-    @size_kb = size_kb
-    @latency = latency
+    self.size_kb = size_kb
+    self.latency = latency
+    # controller must be set manually by the configuration script
+    # because there is a cyclic dependence
   end
 
-  def args
-    "controller "+@controller.obj_name+" size_kb "+@size_kb.to_s+" latency "+@latency.to_s
-  end
 end
 
 class SetAssociativeCache < Cache
-  attr :assoc, :replacement_policy
+  param :assoc, Integer
+  param :replacement_policy, String
 
   # latency can be either an integer, a float, or the string "auto"
   #  when an integer, it represents the number of cycles for a hit
@@ -415,14 +408,14 @@ class SetAssociativeCache < Cache
   #  when set to "auto", libruby will attempt to find a realistic latency by running CACTI
   def initialize(obj_name, size_kb, latency, assoc, replacement_policy)
     super(obj_name, size_kb, latency)
-    @assoc = assoc
-    @replacement_policy = replacement_policy
+    self.assoc = assoc
+    self.replacement_policy = replacement_policy
   end
 
   def calculateLatency()
-    if @latency == "auto"
+    if self.latency == "auto"
       cacti_args = Array.new()
-      cacti_args << (@size_kb*1024) <<  RubySystem.block_size_bytes << @assoc
+      cacti_args << (self.size_kb*1024) <<  RubySystem.block_size_bytes << self.assoc
       cacti_args << 1 << 0 << 0 << 0 << 1
       cacti_args << RubySystem.tech_nm << RubySystem.block_size_bytes*8
       cacti_args << 0 << 0 << 0 << 1 << 0 << 0 << 0 << 0 << 1
@@ -448,19 +441,15 @@ class SetAssociativeCache < Cache
         end
         clk_period_ns = 1e9 * (1.0 / (RubySystem.freq_mhz * 1e6))
         latency_cycles = (latency_ns / clk_period_ns).ceil
-        @latency = latency_cycles
+        self.latency = latency_cycles
       }
-    elsif @latency.is_a?(Float)
+    elsif self.latency.is_a?(Float)
       clk_period_ns = 1e9 * (1.0 / (RubySystem.freq_mhz * 1e6))
-      latency_cycles = (@latency / clk_period_ns).ceil
-      @latency = latency_cycles
-    elsif ! @latency.is_a?(Integer)
+      latency_cycles = (self.latency / clk_period_ns).ceil
+      self.latency = latency_cycles
+    elsif ! self.latency.is_a?(Integer)
       raise Exception
     end
-  end
-
-  def argv()
-    args+" assoc "+@assoc.to_s+" replacement_policy "+@replacement_policy
   end
 
   def cppClassName()
@@ -469,18 +458,16 @@ class SetAssociativeCache < Cache
 end
 
 class DirectoryMemory < LibRubyObject
-  attr :size_mb
-  attr_writer :controller
+  param :size_mb, Integer
+  param :controller, NetPort
+  param :version, Integer
+
   @@total_size_mb = 0
 
   def initialize(obj_name, size_mb)
     super(obj_name)
-    @size_mb = size_mb
+    self.size_mb = size_mb
     @@total_size_mb += size_mb
-  end
-
-  def argv()
-    "version "+@controller.version.to_s+" size_mb "+@size_mb.to_s+" controller "+@controller.obj_name
   end
 
   def cppClassName()
@@ -492,37 +479,10 @@ class DirectoryMemory < LibRubyObject
   end
 end
 
-#added by SS
 class MemoryControl < LibRubyObject
-  attr :name
   def initialize(obj_name)
     super(obj_name)
-    @name = obj_name
   end
-
-  def argv()
-    vec = super()
-    vec += " mem_bus_cycle_multiplier "+mem_bus_cycle_multiplier.to_s
-    vec += " banks_per_rank "+banks_per_rank.to_s
-    vec += " ranks_per_dimm "+ranks_per_dimm.to_s
-    vec += " dimms_per_channel "+dimms_per_channel.to_s
-    vec += " bank_bit_0 "+bank_bit_0.to_s
-    vec += " rank_bit_0 "+rank_bit_0.to_s
-    vec += " dimm_bit_0 "+dimm_bit_0.to_s
-    vec += " bank_queue_size "+bank_queue_size.to_s
-    vec += " bank_busy_time "+bank_busy_time.to_s
-    vec += " rank_rank_delay "+rank_rank_delay.to_s
-    vec += " read_write_delay "+read_write_delay.to_s
-    vec += " basic_bus_busy_time "+basic_bus_busy_time.to_s
-    vec += " mem_ctl_latency "+mem_ctl_latency.to_s
-    vec += " refresh_period "+refresh_period.to_s
-    vec += " tFaw "+tFaw.to_s
-    vec += " mem_random_arbitrate "+mem_random_arbitrate.to_s
-    vec += " mem_fixed_delay "+mem_fixed_delay.to_s
-    vec += " memory_controller_name "+@name
-
-  end
-
 
   def cppClassName()
     "MemoryControl"
@@ -556,17 +516,11 @@ end
 
 
 class DMASequencer < IfacePort
+  param :controller, NetPort
+  param :version, Integer
+
   def initialize(obj_name)
     super(obj_name)
-    @params = {
-      :controller => nil,
-      :version => nil
-    }
-  end
-
-  def controller=(controller)
-    @params[:controller] = controller.obj_name
-    @params[:version] = controller.version
   end
 
   def cppClassName()
@@ -574,7 +528,7 @@ class DMASequencer < IfacePort
   end
 
   def bochsConnType()
-    return "dma"+@params[:version].to_s
+    return "dma"+self.version.to_s
   end
 end
 
@@ -605,22 +559,8 @@ class Network < LibRubyObject
   param :topology, Topology
   def initialize(name, topo)
     super(name)
-    @params[:topology] = topo
     topo.network= self
-  end
-
-  def argv()
-    vec = super()
-
-    vec += " endpoint_bandwidth "+endpoint_bandwidth.to_s
-    vec += " adaptive_routing "+adaptive_routing.to_s
-    vec += " number_of_virtual_networks "+number_of_virtual_networks.to_s
-    vec += " fan_out_degree "+fan_out_degree.to_s
-
-    vec += " buffer_size "+buffer_size.to_s
-    vec += " link_latency "+adaptive_routing.to_s
-    vec += " on_chip_latency "+on_chip_latency.to_s
-    vec += " control_msg_size "+control_msg_size.to_s
+    self.topology = topo
   end
 
   def printTopology()
@@ -681,7 +621,6 @@ class CrossbarTopology < Topology
   end
 end
 
-#added by SS
 class Tracer < LibRubyObject
   def initialize(obj_name)
     super(obj_name)
@@ -704,29 +643,15 @@ class Profiler < LibRubyObject
 
 end
 
-#added by SS
 class GarnetNetwork < Network
   def initialize(name, topo)
     super(name, topo)
   end
-  def argv()
-    vec = super()
-    vec += " flit_size "+flit_size.to_s
-    vec += " number_of_pipe_stages "+number_of_pipe_stages.to_s
-    vec += " vcs_per_class "+vcs_per_class.to_s
-    vec += " buffer_size "+buffer_size.to_s
-    vec += " using_network_testing "+using_network_testing.to_s
-  end
-
 end
 
 class GarnetFixedPipeline < GarnetNetwork
   def initialize(name, net_ports)
     super(name, net_ports)
-  end
-
-  def argv()
-    super()
   end
 
   def cppClassName()
@@ -737,10 +662,6 @@ end
 class GarnetFlexiblePipeline < GarnetNetwork
   def initialize(name, net_ports)
     super(name, net_ports)
-  end
-
-  def argv()
-    super()
   end
 
   def cppClassName()
