@@ -36,6 +36,7 @@
 namespace X86ISA
 {
     enum MediaFlag {
+        MediaMultHiOp = 1,
         MediaScalarOp = 128
     };
 
@@ -74,6 +75,12 @@ namespace X86ISA
         numItems(int size) const
         {
             return scalarOp() ? 1 : (sizeof(FloatRegBits) / size);
+        }
+
+        bool
+        multHi() const
+        {
+            return ext & MediaMultHiOp;
         }
     };
 

@@ -1043,7 +1043,7 @@ let {{
                 if (ext & 0x4)
                     resBits += (ULL(1) << (destBits - 1));
                 
-                if (ext & 0x8)
+                if (multHi())
                     resBits >>= destBits;
 
                 int destHiIndex = (i + 1) * destBits - 1;
