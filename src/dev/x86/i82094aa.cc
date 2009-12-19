@@ -36,7 +36,8 @@
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
-X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p), IntDev(this),
+X86ISA::I82094AA::I82094AA(Params *p) : PioDevice(p),
+    IntDev(this, p->int_latency),
     latency(p->pio_latency), pioAddr(p->pio_addr),
     extIntPic(p->external_int_pic), lowestPriorityOffset(0)
 {
