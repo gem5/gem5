@@ -75,23 +75,23 @@ def macroop PMINUB_XMM_P {
 };
 
 def macroop PMINSW_XMM_XMM {
-    mmini xmml, xmml, xmmlm, size=2, ext=2
-    mmini xmmh, xmmh, xmmhm, size=2, ext=2
+    mmini xmml, xmml, xmmlm, size=2, ext=Signed
+    mmini xmmh, xmmh, xmmhm, size=2, ext=Signed
 };
 
 def macroop PMINSW_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    mmini xmml, xmml, ufp1, size=2, ext=2
-    mmini xmmh, xmmh, ufp2, size=2, ext=2
+    mmini xmml, xmml, ufp1, size=2, ext=Signed
+    mmini xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
 def macroop PMINSW_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    mmini xmml, xmml, ufp1, size=2, ext=2
-    mmini xmmh, xmmh, ufp2, size=2, ext=2
+    mmini xmml, xmml, ufp1, size=2, ext=Signed
+    mmini xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
 def macroop PMAXUB_XMM_XMM {
@@ -115,22 +115,22 @@ def macroop PMAXUB_XMM_P {
 };
 
 def macroop PMAXSW_XMM_XMM {
-    mmaxi xmml, xmml, xmmlm, size=2, ext=2
-    mmaxi xmmh, xmmh, xmmhm, size=2, ext=2
+    mmaxi xmml, xmml, xmmlm, size=2, ext=Signed
+    mmaxi xmmh, xmmh, xmmhm, size=2, ext=Signed
 };
 
 def macroop PMAXSW_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    mmaxi xmml, xmml, ufp1, size=2, ext=2
-    mmaxi xmmh, xmmh, ufp2, size=2, ext=2
+    mmaxi xmml, xmml, ufp1, size=2, ext=Signed
+    mmaxi xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
 def macroop PMAXSW_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    mmaxi xmml, xmml, ufp1, size=2, ext=2
-    mmaxi xmmh, xmmh, ufp2, size=2, ext=2
+    mmaxi xmml, xmml, ufp1, size=2, ext=Signed
+    mmaxi xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 '''

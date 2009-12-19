@@ -451,14 +451,14 @@ let {{
                 // Handle saturation.
                 if (signBit) {
                     if (overflow != mask(destBits - srcBits + 1)) {
-                        if (ext & 0x1)
+                        if (signedOp())
                             picked = (ULL(1) << (destBits - 1));
                         else
                             picked = 0;
                     }
                 } else {
                     if (overflow != 0) {
-                        if (ext & 0x1)
+                        if (signedOp())
                             picked = mask(destBits - 1);
                         else
                             picked = mask(destBits);
@@ -479,14 +479,14 @@ let {{
                 // Handle saturation.
                 if (signBit) {
                     if (overflow != mask(destBits - srcBits + 1)) {
-                        if (ext & 0x1)
+                        if (signedOp())
                             picked = (ULL(1) << (destBits - 1));
                         else
                             picked = 0;
                     }
                 } else {
                     if (overflow != 0) {
-                        if (ext & 0x1)
+                        if (signedOp())
                             picked = mask(destBits - 1);
                         else
                             picked = mask(destBits);
@@ -648,7 +648,7 @@ let {{
                     (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
 
-                if (ext & 0x2) {
+                if (signedOp()) {
                     if (arg1 < arg2) {
                         resBits = arg1Bits;
                     } else {
@@ -686,7 +686,7 @@ let {{
                     (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
 
-                if (ext & 0x2) {
+                if (signedOp()) {
                     if (arg1 > arg2) {
                         resBits = arg1Bits;
                     } else {
@@ -949,17 +949,19 @@ let {{
                 uint64_t resBits = arg1Bits + arg2Bits;
                 
                 if (ext & 0x2) {
-                    if (findCarry(sizeBits, resBits, arg1Bits, arg2Bits))
-                        resBits = mask(sizeBits);
-                } else if (ext & 0x4) {
-                    int arg1Sign = bits(arg1Bits, sizeBits - 1);
-                    int arg2Sign = bits(arg2Bits, sizeBits - 1);
-                    int resSign = bits(resBits, sizeBits - 1);
-                    if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
-                        if (resSign == 0)
-                            resBits = (ULL(1) << (sizeBits - 1));
-                        else
-                            resBits = mask(sizeBits - 1);
+                    if (signedOp()) {
+                        int arg1Sign = bits(arg1Bits, sizeBits - 1);
+                        int arg2Sign = bits(arg2Bits, sizeBits - 1);
+                        int resSign = bits(resBits, sizeBits - 1);
+                        if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
+                            if (resSign == 0)
+                                resBits = (ULL(1) << (sizeBits - 1));
+                            else
+                                resBits = mask(sizeBits - 1);
+                        }
+                    } else {
+                        if (findCarry(sizeBits, resBits, arg1Bits, arg2Bits))
+                            resBits = mask(sizeBits);
                     }
                 }
 
@@ -984,21 +986,23 @@ let {{
                 uint64_t resBits = arg1Bits - arg2Bits;
                 
                 if (ext & 0x2) {
-                    if (arg2Bits > arg1Bits) {
-                        resBits = 0;
-                    } else if (!findCarry(sizeBits, resBits,
-                                         arg1Bits, ~arg2Bits)) {
-                        resBits = mask(sizeBits);
-                    }
-                } else if (ext & 0x4) {
-                    int arg1Sign = bits(arg1Bits, sizeBits - 1);
-                    int arg2Sign = !bits(arg2Bits, sizeBits - 1);
-                    int resSign = bits(resBits, sizeBits - 1);
-                    if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
-                        if (resSign == 0)
-                            resBits = (ULL(1) << (sizeBits - 1));
-                        else
-                            resBits = mask(sizeBits - 1);
+                    if (signedOp()) {
+                        int arg1Sign = bits(arg1Bits, sizeBits - 1);
+                        int arg2Sign = !bits(arg2Bits, sizeBits - 1);
+                        int resSign = bits(resBits, sizeBits - 1);
+                        if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
+                            if (resSign == 0)
+                                resBits = (ULL(1) << (sizeBits - 1));
+                            else
+                                resBits = mask(sizeBits - 1);
+                        }
+                    } else {
+                        if (arg2Bits > arg1Bits) {
+                            resBits = 0;
+                        } else if (!findCarry(sizeBits, resBits,
+                                             arg1Bits, ~arg2Bits)) {
+                            resBits = mask(sizeBits);
+                        }
                     }
                 }
 
@@ -1030,7 +1034,7 @@ let {{
                 uint64_t arg2Bits = bits(FpSrcReg2.uqw, srcHiIndex, srcLoIndex);
                 uint64_t resBits;
 
-                if (ext & 0x2) {
+                if (signedOp()) {
                     int64_t arg1 = arg1Bits |
                         (0 - (arg1Bits & (ULL(1) << (srcBits - 1))));
                     int64_t arg2 = arg2Bits |

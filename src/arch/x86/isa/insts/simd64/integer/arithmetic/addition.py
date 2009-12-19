@@ -115,33 +115,33 @@ def macroop PADDQ_MMX_P {
 };
 
 def macroop PADDSB_MMX_MMX {
-    maddi mmx, mmx, mmxm, size=1, ext=4
+    maddi mmx, mmx, mmxm, size=1, ext = "2 |" + Signed
 };
 
 def macroop PADDSB_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    maddi mmx, mmx, ufp1, size=1, ext=4
+    maddi mmx, mmx, ufp1, size=1, ext = "2 |" + Signed
 };
 
 def macroop PADDSB_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    maddi mmx, mmx, ufp1, size=1, ext=4
+    maddi mmx, mmx, ufp1, size=1, ext = "2 |" + Signed
 };
 
 def macroop PADDSW_MMX_MMX {
-    maddi mmx, mmx, mmxm, size=2, ext=4
+    maddi mmx, mmx, mmxm, size=2, ext = "2 |" + Signed
 };
 
 def macroop PADDSW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    maddi mmx, mmx, ufp1, size=2, ext=4
+    maddi mmx, mmx, ufp1, size=2, ext = "2 |" + Signed
 };
 
 def macroop PADDSW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    maddi mmx, mmx, ufp1, size=2, ext=4
+    maddi mmx, mmx, ufp1, size=2, ext = "2 |" + Signed
 };
 
 def macroop PADDUSB_MMX_MMX {

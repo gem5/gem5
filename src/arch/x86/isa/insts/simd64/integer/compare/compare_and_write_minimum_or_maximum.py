@@ -70,18 +70,18 @@ def macroop PMINUB_MMX_P {
 };
 
 def macroop PMINSW_MMX_MMX {
-    mmini mmx, mmx, mmxm, size=2, ext=2
+    mmini mmx, mmx, mmxm, size=2, ext=Signed
 };
 
 def macroop PMINSW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mmini mmx, mmx, ufp1, size=2, ext=2
+    mmini mmx, mmx, ufp1, size=2, ext=Signed
 };
 
 def macroop PMINSW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mmini mmx, mmx, ufp1, size=2, ext=2
+    mmini mmx, mmx, ufp1, size=2, ext=Signed
 };
 
 def macroop PMAXUB_MMX_MMX {
@@ -100,17 +100,17 @@ def macroop PMAXUB_MMX_P {
 };
 
 def macroop PMAXSW_MMX_MMX {
-    mmaxi mmx, mmx, mmxm, size=2, ext=2
+    mmaxi mmx, mmx, mmxm, size=2, ext=Signed
 };
 
 def macroop PMAXSW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mmaxi mmx, mmx, ufp1, size=2, ext=2
+    mmaxi mmx, mmx, ufp1, size=2, ext=Signed
 };
 
 def macroop PMAXSW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mmaxi mmx, mmx, ufp1, size=2, ext=2
+    mmaxi mmx, mmx, ufp1, size=2, ext=Signed
 };
 '''

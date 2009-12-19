@@ -115,33 +115,33 @@ def macroop PSUBQ_MMX_P {
 };
 
 def macroop PSUBSB_MMX_MMX {
-    msubi mmx, mmx, mmxm, size=1, ext=4
+    msubi mmx, mmx, mmxm, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSB_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    msubi mmx, mmx, ufp1, size=1, ext=4
+    msubi mmx, mmx, ufp1, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSB_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    msubi mmx, mmx, ufp1, size=1, ext=4
+    msubi mmx, mmx, ufp1, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_MMX_MMX {
-    msubi mmx, mmx, mmxm, size=2, ext=4
+    msubi mmx, mmx, mmxm, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    msubi mmx, mmx, ufp1, size=2, ext=4
+    msubi mmx, mmx, ufp1, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    msubi mmx, mmx, ufp1, size=2, ext=4
+    msubi mmx, mmx, ufp1, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBUSB_MMX_MMX {

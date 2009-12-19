@@ -135,43 +135,43 @@ def macroop PSUBQ_XMM_P {
 };
 
 def macroop PSUBSB_XMM_XMM {
-    msubi xmml, xmml, xmmlm, size=1, ext=4
-    msubi xmmh, xmmh, xmmhm, size=1, ext=4
+    msubi xmml, xmml, xmmlm, size=1, ext = "2 |" + Signed
+    msubi xmmh, xmmh, xmmhm, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSB_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    msubi xmml, xmml, ufp1, size=1, ext=4
-    msubi xmmh, xmmh, ufp2, size=1, ext=4
+    msubi xmml, xmml, ufp1, size=1, ext = "2 |" + Signed
+    msubi xmmh, xmmh, ufp2, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSB_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    msubi xmml, xmml, ufp1, size=1, ext=4
-    msubi xmmh, xmmh, ufp2, size=1, ext=4
+    msubi xmml, xmml, ufp1, size=1, ext = "2 |" + Signed
+    msubi xmmh, xmmh, ufp2, size=1, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_XMM_XMM {
-    msubi xmml, xmml, xmmlm, size=2, ext=4
-    msubi xmmh, xmmh, xmmhm, size=2, ext=4
+    msubi xmml, xmml, xmmlm, size=2, ext = "2 |" + Signed
+    msubi xmmh, xmmh, xmmhm, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    msubi xmml, xmml, ufp1, size=2, ext=4
-    msubi xmmh, xmmh, ufp2, size=2, ext=4
+    msubi xmml, xmml, ufp1, size=2, ext = "2 |" + Signed
+    msubi xmmh, xmmh, ufp2, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBSW_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    msubi xmml, xmml, ufp1, size=2, ext=4
-    msubi xmmh, xmmh, ufp2, size=2, ext=4
+    msubi xmml, xmml, ufp1, size=2, ext = "2 |" + Signed
+    msubi xmmh, xmmh, ufp2, size=2, ext = "2 |" + Signed
 };
 
 def macroop PSUBUSB_XMM_XMM {

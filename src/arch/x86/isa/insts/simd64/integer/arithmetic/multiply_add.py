@@ -55,23 +55,23 @@
 
 microcode = '''
 def macroop PMADDWD_MMX_MMX {
-    mmuli ufp3, mmx, mmxm, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
-    mmuli ufp4, mmx, mmxm, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    mmuli ufp3, mmx, mmxm, srcSize=2, destSize=4, ext = Signed + "| 0x10 | 0x20"
+    mmuli ufp4, mmx, mmxm, srcSize=2, destSize=4, ext = Signed + "| 0x10"
     maddi mmx, ufp3, ufp4, size=4, ext=0
 };
 
 def macroop PMADDWD_MMX_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mmuli ufp3, mmx, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
-    mmuli ufp4, mmx, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    mmuli ufp3, mmx, ufp1, srcSize=2, destSize=4, ext = Signed + "| 0x10 | 0x20"
+    mmuli ufp4, mmx, ufp1, srcSize=2, destSize=4, ext = Signed + "| 0x10"
     maddi mmx, ufp3, ufp4, size=4, ext=0
 };
 
 def macroop PMADDWD_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mmuli ufp3, mmx, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10 | 0x20)
-    mmuli ufp4, mmx, ufp1, srcSize=2, destSize=4, ext=(0x2 | 0x10)
+    mmuli ufp3, mmx, ufp1, srcSize=2, destSize=4, ext = Signed + "| 0x10 | 0x20"
+    mmuli ufp4, mmx, ufp1, srcSize=2, destSize=4, ext = Signed + "| 0x10"
     maddi mmx, ufp3, ufp4, size=4, ext=0
 };
 '''

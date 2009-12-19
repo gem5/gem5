@@ -37,6 +37,7 @@ namespace X86ISA
 {
     enum MediaFlag {
         MediaMultHiOp = 1,
+        MediaSignedOp = 64,
         MediaScalarOp = 128
     };
 
@@ -81,6 +82,12 @@ namespace X86ISA
         multHi() const
         {
             return ext & MediaMultHiOp;
+        }
+
+        bool
+        signedOp() const
+        {
+            return ext & MediaSignedOp;
         }
     };
 

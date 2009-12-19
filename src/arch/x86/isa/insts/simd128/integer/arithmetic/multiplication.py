@@ -55,43 +55,43 @@
 
 microcode = '''
 def macroop PMULHW_XMM_XMM {
-    mmuli xmml, xmml, xmmlm, size=2, ext = "0x2 |" + MultHi
-    mmuli xmmh, xmmh, xmmhm, size=2, ext = "0x2 |" + MultHi
+    mmuli xmml, xmml, xmmlm, size=2, ext = Signed + "|" + MultHi
+    mmuli xmmh, xmmh, xmmhm, size=2, ext = Signed + "|" + MultHi
 };
 
 def macroop PMULHW_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    mmuli xmml, xmml, ufp1, size=2, ext = "0x2 |" + MultHi
-    mmuli xmmh, xmmh, ufp2, size=2, ext = "0x2 |" + MultHi
+    mmuli xmml, xmml, ufp1, size=2, ext = Signed + "|" + MultHi
+    mmuli xmmh, xmmh, ufp2, size=2, ext = Signed + "|" + MultHi
 };
 
 def macroop PMULHW_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    mmuli xmml, xmml, ufp1, size=2, ext = "0x2 |" + MultHi
-    mmuli xmmh, xmmh, ufp2, size=2, ext = "0x2 |" + MultHi
+    mmuli xmml, xmml, ufp1, size=2, ext = Signed + "|" + MultHi
+    mmuli xmmh, xmmh, ufp2, size=2, ext = Signed + "|" + MultHi
 };
 
 def macroop PMULLW_XMM_XMM {
-    mmuli xmml, xmml, xmmlm, size=2, ext=2
-    mmuli xmmh, xmmh, xmmhm, size=2, ext=2
+    mmuli xmml, xmml, xmmlm, size=2, ext=Signed
+    mmuli xmmh, xmmh, xmmhm, size=2, ext=Signed
 };
 
 def macroop PMULLW_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT + 8", dataSize=8
-    mmuli xmml, xmml, ufp1, size=2, ext=2
-    mmuli xmmh, xmmh, ufp2, size=2, ext=2
+    mmuli xmml, xmml, ufp1, size=2, ext=Signed
+    mmuli xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
 def macroop PMULLW_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT + 8", dataSize=8
-    mmuli xmml, xmml, ufp1, size=2, ext=2
-    mmuli xmmh, xmmh, ufp2, size=2, ext=2
+    mmuli xmml, xmml, ufp1, size=2, ext=Signed
+    mmuli xmmh, xmmh, ufp2, size=2, ext=Signed
 };
 
 def macroop PMULHUW_XMM_XMM {
