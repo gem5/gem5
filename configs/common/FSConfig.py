@@ -216,6 +216,8 @@ def makeX86System(mem_mode, numCPUs = 1, mdesc = None, self = None):
     mdesc.diskname = 'x86root.img'
     self.readfile = mdesc.script()
 
+    self.mem_mode = mem_mode
+
     # Physical memory
     self.membus = MemBus(bus_id=1)
     self.physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
