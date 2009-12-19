@@ -55,33 +55,33 @@
 
 microcode = '''
 def macroop DIVSS_XMM_XMM {
-    mdivf xmml, xmml, xmmlm, size=4, ext=1
+    mdivf xmml, xmml, xmmlm, size=4, ext=Scalar
 };
 
 def macroop DIVSS_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mdivf xmml, xmml, ufp1, size=4, ext=1
+    mdivf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop DIVSS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mdivf xmml, xmml, ufp1, size=4, ext=1
+    mdivf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop DIVSD_XMM_XMM {
-    mdivf xmml, xmml, xmmlm, size=8, ext=1
+    mdivf xmml, xmml, xmmlm, size=8, ext=Scalar
 };
 
 def macroop DIVSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mdivf xmml, xmml, ufp1, size=8, ext=1
+    mdivf xmml, xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop DIVSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mdivf xmml, xmml, ufp1, size=8, ext=1
+    mdivf xmml, xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop DIVPS_XMM_XMM {

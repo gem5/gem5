@@ -95,32 +95,32 @@ def macroop CMPPD_XMM_P_I {
 };
 
 def macroop CMPSS_XMM_XMM_I {
-    mcmpf2r xmml, xmml, xmmlm, size=4, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, xmmlm, size=4, ext="IMMEDIATE |" + Scalar
 };
 
 def macroop CMPSS_XMM_M_I {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE |" + Scalar
 };
 
 def macroop CMPSS_XMM_P_I {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, ufp1, size=4, ext="IMMEDIATE |" + Scalar
 };
 
 def macroop CMPSD_XMM_XMM_I {
-    mcmpf2r xmml, xmml, xmmlm, size=8, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, xmmlm, size=8, ext="IMMEDIATE |" + Scalar
 };
 
 def macroop CMPSD_XMM_M_I {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE |" + Scalar
 };
 
 def macroop CMPSD_XMM_P_I {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE | 0x8"
+    mcmpf2r xmml, xmml, ufp1, size=8, ext="IMMEDIATE |" + Scalar
 };
 '''

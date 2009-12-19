@@ -95,33 +95,33 @@ def macroop MINPD_XMM_P {
 };
 
 def macroop MINSS_XMM_XMM {
-    mminf xmml, xmml, xmmlm, ext=1, size=4
+    mminf xmml, xmml, xmmlm, ext=Scalar, size=4
 };
 
 def macroop MINSS_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mminf xmml, xmml, ufp1, ext=1, size=4
+    mminf xmml, xmml, ufp1, ext=Scalar, size=4
 };
 
 def macroop MINSS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mminf xmml, xmml, ufp1, ext=1, size=4
+    mminf xmml, xmml, ufp1, ext=Scalar, size=4
 };
 
 def macroop MINSD_XMM_XMM {
-    mminf xmml, xmml, xmmlm, ext=1, size=8
+    mminf xmml, xmml, xmmlm, ext=Scalar, size=8
 };
 
 def macroop MINSD_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mminf xmml, xmml, ufp1, ext=1, size=8
+    mminf xmml, xmml, ufp1, ext=Scalar, size=8
 };
 
 def macroop MINSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mminf xmml, xmml, ufp1, ext=1, size=8
+    mminf xmml, xmml, ufp1, ext=Scalar, size=8
 };
 
 def macroop MAXPS_XMM_XMM {
@@ -165,32 +165,32 @@ def macroop MAXPD_XMM_P {
 };
 
 def macroop MAXSS_XMM_XMM {
-    mmaxf xmml, xmml, xmmlm, ext=1, size=4
+    mmaxf xmml, xmml, xmmlm, ext=Scalar, size=4
 };
 
 def macroop MAXSS_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mmaxf xmml, xmml, ufp1, ext=1, size=4
+    mmaxf xmml, xmml, ufp1, ext=Scalar, size=4
 };
 
 def macroop MAXSS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mmaxf xmml, xmml, ufp1, ext=1, size=4
+    mmaxf xmml, xmml, ufp1, ext=Scalar, size=4
 };
 
 def macroop MAXSD_XMM_XMM {
-    mmaxf xmml, xmml, xmmlm, ext=1, size=8
+    mmaxf xmml, xmml, xmmlm, ext=Scalar, size=8
 };
 
 def macroop MAXSD_XMM_M {
     ldfp ufp1, seg, sib, "DISPLACEMENT", dataSize=8
-    mmaxf xmml, xmml, ufp1, ext=1, size=8
+    mmaxf xmml, xmml, ufp1, ext=Scalar, size=8
 };
 
 def macroop MAXSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, "DISPLACEMENT", dataSize=8
-    mmaxf xmml, xmml, ufp1, ext=1, size=8
+    mmaxf xmml, xmml, ufp1, ext=Scalar, size=8
 };
 '''

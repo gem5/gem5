@@ -55,18 +55,18 @@
 
 microcode = '''
 def macroop SQRTSS_XMM_XMM {
-    msqrt xmml, xmmlm, size=4, ext=1
+    msqrt xmml, xmmlm, size=4, ext=Scalar
 };
 
 def macroop SQRTSS_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    msqrt xmml, ufp1, size=4, ext=1
+    msqrt xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop SQRTSS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    msqrt xmml, ufp1, size=4, ext=1
+    msqrt xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop SQRTPS_XMM_XMM {
@@ -90,18 +90,18 @@ def macroop SQRTPS_XMM_P {
 };
 
 def macroop SQRTSD_XMM_XMM {
-    msqrt xmml, xmmlm, size=8, ext=1
+    msqrt xmml, xmmlm, size=8, ext=Scalar
 };
 
 def macroop SQRTSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    msqrt xmml, ufp1, size=8, ext=1
+    msqrt xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop SQRTSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    msqrt xmml, ufp1, size=8, ext=1
+    msqrt xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop SQRTPD_XMM_XMM {

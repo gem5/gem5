@@ -35,6 +35,10 @@
 
 namespace X86ISA
 {
+    enum MediaFlag {
+        MediaScalarOp = 128
+    };
+
     class MediaOpBase : public X86MicroopBase
     {
       protected:
@@ -59,6 +63,18 @@ namespace X86ISA
             src1(_src1.idx), dest(_dest.idx),
             srcSize(_srcSize), destSize(_destSize), ext(_ext)
         {}
+
+        bool
+        scalarOp() const
+        {
+            return ext & MediaScalarOp;
+        }
+        
+        int
+        numItems(int size) const
+        {
+            return scalarOp() ? 1 : (sizeof(FloatRegBits) / size);
+        }
     };
 
     class MediaOpReg : public MediaOpBase

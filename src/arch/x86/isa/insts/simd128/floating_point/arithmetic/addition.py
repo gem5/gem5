@@ -55,33 +55,33 @@
 
 microcode = '''
 def macroop ADDSS_XMM_XMM {
-    maddf xmml, xmml, xmmlm, size=4, ext=1
+    maddf xmml, xmml, xmmlm, size=4, ext=Scalar
 };
 
 def macroop ADDSS_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    maddf xmml, xmml, ufp1, size=4, ext=1
+    maddf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop ADDSS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    maddf xmml, xmml, ufp1, size=4, ext=1
+    maddf xmml, xmml, ufp1, size=4, ext=Scalar
 };
 
 def macroop ADDSD_XMM_XMM {
-    maddf xmml, xmml, xmmlm, size=8, ext=1
+    maddf xmml, xmml, xmmlm, size=8, ext=Scalar
 };
 
 def macroop ADDSD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    maddf xmml, xmml, ufp1, size=8, ext=1
+    maddf xmml, xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop ADDSD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    maddf xmml, xmml, ufp1, size=8, ext=1
+    maddf xmml, xmml, ufp1, size=8, ext=Scalar
 };
 
 def macroop ADDPS_XMM_XMM {

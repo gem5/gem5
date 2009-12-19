@@ -352,7 +352,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -545,7 +545,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -595,7 +595,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -634,7 +634,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -672,7 +672,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -725,7 +725,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -766,7 +766,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -812,7 +812,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -858,7 +858,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -904,7 +904,7 @@ let {{
             int size = srcSize;
             int sizeBits = size * 8;
             assert(srcSize == 4 || srcSize == 8);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -938,7 +938,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -973,7 +973,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -1013,7 +1013,7 @@ let {{
             int destBits = destSize * 8;
             assert(destBits <= 64);
             assert(destSize >= srcSize);
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / destSize);
+            int items = numItems(destSize);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -1058,7 +1058,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -1098,7 +1098,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t shiftAmt = op2.uqw;
             uint64_t result = FpDestReg.uqw;
 
@@ -1125,7 +1125,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t shiftAmt = op2.uqw;
             uint64_t result = FpDestReg.uqw;
 
@@ -1156,7 +1156,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t shiftAmt = op2.uqw;
             uint64_t result = FpDestReg.uqw;
 
@@ -1201,15 +1201,15 @@ let {{
             int srcStart = 0;
             int destStart = 0;
             if (srcSize == 2 * destSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / srcSize;
+                items = numItems(srcSize);
                 if (ext & 0x2)
                     destStart = destSizeBits * items;
             } else if (destSize == 2 * srcSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
                 if (ext & 0x2)
                     srcStart = srcSizeBits * items;
             } else {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
             }
             uint64_t result = FpDestReg.uqw;
 
@@ -1273,15 +1273,15 @@ let {{
             int srcStart = 0;
             int destStart = 0;
             if (srcSize == 2 * destSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / srcSize;
+                items = numItems(srcSize);
                 if (ext & 0x2)
                     destStart = destSizeBits * items;
             } else if (destSize == 2 * srcSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
                 if (ext & 0x2)
                     srcStart = srcSizeBits * items;
             } else {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
             }
             uint64_t result = FpDestReg.uqw;
 
@@ -1334,15 +1334,15 @@ let {{
             int srcStart = 0;
             int destStart = 0;
             if (srcSize == 2 * destSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / srcSize;
+                items = numItems(srcSize);
                 if (ext & 0x2)
                     destStart = destSizeBits * items;
             } else if (destSize == 2 * srcSize) {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
                 if (ext & 0x2)
                     srcStart = srcSizeBits * items;
             } else {
-                items = (ext & 0x1) ? 1: sizeof(FloatRegBits) / destSize;
+                items = numItems(destSize);
             }
             uint64_t result = FpDestReg.uqw;
 
@@ -1393,7 +1393,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x1) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {
@@ -1432,7 +1432,7 @@ let {{
             assert(srcSize == destSize);
             int size = srcSize;
             int sizeBits = size * 8;
-            int items = (ext & 0x8) ? 1: (sizeof(FloatRegBits) / size);
+            int items = numItems(size);
             uint64_t result = FpDestReg.uqw;
 
             for (int i = 0; i < items; i++) {

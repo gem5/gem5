@@ -181,6 +181,9 @@ let {{
                 'kernel_gs_base'):
         assembler.symbols[reg] = regIdx("MISCREG_%s" % reg.upper())
 
+    for flag in ('Scalar',):
+        assembler.symbols[flag] = 'Media%sOp' % flag
+
     # Code literal which forces a default 64 bit operand size in 64 bit mode.
     assembler.symbols["oszIn64Override"] = '''
     if (machInst.mode.submode == SixtyFourBitMode &&

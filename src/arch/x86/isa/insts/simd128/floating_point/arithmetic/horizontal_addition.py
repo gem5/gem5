@@ -57,23 +57,23 @@ microcode = '''
 # HADDPS
 
 def macroop HADDPD_XMM_XMM {
-    maddf ufp1, xmmh , xmml, size=8, ext=1
-    maddf xmmh, xmmlm, xmmhm, size=8, ext=1
+    maddf ufp1, xmmh , xmml, size=8, ext=Scalar
+    maddf xmmh, xmmlm, xmmhm, size=8, ext=Scalar
     movfp xmml, ufp1
 };
 
 def macroop HADDPD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
     ldfp ufp2, seg, sib, "DISPLACEMENT+8", dataSize=8
-    maddf xmml, xmmh, xmml, size=8, ext=1
-    maddf xmmh, ufp1, ufp2, size=8, ext=1
+    maddf xmml, xmmh, xmml, size=8, ext=Scalar
+    maddf xmmh, ufp1, ufp2, size=8, ext=Scalar
 };
 
 def macroop HADDPD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
     ldfp ufp2, seg, riprel, "DISPLACEMENT+8", dataSize=8
-    maddf xmml, xmmh, xmml, size=8, ext=1
-    maddf xmmh, ufp1, ufp2, size=8, ext=1
+    maddf xmml, xmmh, xmml, size=8, ext=Scalar
+    maddf xmmh, ufp1, ufp2, size=8, ext=Scalar
 };
 '''

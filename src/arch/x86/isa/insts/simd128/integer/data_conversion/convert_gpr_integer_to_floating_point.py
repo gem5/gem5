@@ -56,33 +56,33 @@
 microcode = '''
 def macroop CVTSI2SS_XMM_R {
     mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=Scalar
 };
 
 def macroop CVTSI2SS_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=Scalar
 };
 
 def macroop CVTSI2SS_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=4, ext=Scalar
 };
 
 def macroop CVTSI2SD_XMM_R {
     mov2fp ufp1, regm, destSize=dsz, srcSize=dsz
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=Scalar
 };
 
 def macroop CVTSI2SD_XMM_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=Scalar
 };
 
 def macroop CVTSI2SD_XMM_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=1
+    cvti2f xmml, ufp1, srcSize=dsz, destSize=8, ext=Scalar
 };
 '''

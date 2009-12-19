@@ -115,17 +115,17 @@ def macroop PMULHUW_MMX_P {
 };
 
 def macroop PMULUDQ_MMX_MMX {
-    mmuli mmx, mmx, mmxm, srcSize=4, destSize=8, ext=1
+    mmuli mmx, mmx, mmxm, srcSize=4, destSize=8, ext=Scalar
 };
 
 def macroop PMULUDQ_MMX_M {
     ldfp ufp1, seg, sib, disp, dataSize=8
-    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=1
+    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=Scalar
 };
 
 def macroop PMULUDQ_MMX_P {
     rdip t7
     ldfp ufp1, seg, riprel, disp, dataSize=8
-    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=1
+    mmuli mmx, mmx, ufp1, srcSize=4, destSize=8, ext=Scalar
 };
 '''
