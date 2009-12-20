@@ -338,6 +338,31 @@ decode OPCODE default Unknown::unknown() {
         0x1c: decode INTFUNC {
             0x00: decode RA { 31: sextb({{ Rc.sb = Rb_or_imm< 7:0>; }}); }
             0x01: decode RA { 31: sextw({{ Rc.sw = Rb_or_imm<15:0>; }}); }
+
+            0x30: ctpop({{
+                             uint64_t count = 0;
+                             for (int i = 0; Rb<63:i>; ++i) {
+                                 if (Rb<i:i> == 0x1)
+                                     ++count;
+                             }
+                             Rc = count;
+                           }}, IntAluOp);
+
+            0x31: perr({{
+                             uint64_t temp = 0;
+                             int hi = 7;
+                             int lo = 0;
+                             for (int i = 0; i < 8; ++i) {
+                                 uint8_t ra_ub = Ra.uq<hi:lo>;
+                                 uint8_t rb_ub = Rb.uq<hi:lo>;
+                                 temp += (ra_ub >= rb_ub) ? 
+                                         (ra_ub - rb_ub) : (rb_ub - ra_ub);
+                                 hi += 8;
+                                 lo += 8;
+                             }
+                             Rc = temp;
+                           }});
+
             0x32: ctlz({{
                              uint64_t count = 0;
                              uint64_t temp = Rb;
@@ -359,26 +384,163 @@ decode OPCODE default Unknown::unknown() {
                              if (!(temp<7:0>)) { temp >>= 8; count += 8; }
                              if (!(temp<3:0>)) { temp >>= 4; count += 4; }
                              if (!(temp<1:0>)) { temp >>= 2; count += 2; }
+                             if (!(temp<0:0> & ULL(0x1))) { 
+                                 temp >>= 1; count += 1; 
+                             }
                              if (!(temp<0:0> & ULL(0x1))) count += 1;
                              Rc = count;
                            }}, IntAluOp);
 
-            format FailUnimpl {
-                0x30: ctpop();
-                0x31: perr();
-                0x34: unpkbw();
-                0x35: unpkbl();
-                0x36: pkwb();
-                0x37: pklb();
-                0x38: minsb8();
-                0x39: minsw4();
-                0x3a: minub8();
-                0x3b: minuw4();
-                0x3c: maxub8();
-                0x3d: maxuw4();
-                0x3e: maxsb8();
-                0x3f: maxsw4();
-            }
+
+            0x34: unpkbw({{ 
+                             Rc = (Rb.uq<7:0> 
+                                   | (Rb.uq<15:8> << 16) 
+                                   | (Rb.uq<23:16> << 32) 
+                                   | (Rb.uq<31:24> << 48)); 
+                           }}, IntAluOp);
+
+            0x35: unpkbl({{
+                             Rc = (Rb.uq<7:0> | (Rb.uq<15:8> << 32)); 
+                           }}, IntAluOp);
+
+            0x36: pkwb({{
+                             Rc = (Rb.uq<7:0> 
+                                   | (Rb.uq<23:16> << 8) 
+                                   | (Rb.uq<39:32> << 16) 
+                                   | (Rb.uq<55:48> << 24)); 
+                           }}, IntAluOp);
+
+            0x37: pklb({{
+                             Rc = (Rb.uq<7:0> | (Rb.uq<39:32> << 8)); 
+                           }}, IntAluOp);
+
+            0x38: minsb8({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 56;
+                             for (int i = 7; i >= 0; --i) {
+                                 int8_t ra_sb = Ra.uq<hi:lo>;
+                                 int8_t rb_sb = Rb.uq<hi:lo>;
+                                 temp = ((temp << 8) 
+                                         | ((ra_sb < rb_sb) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 8;
+                                 lo -= 8;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x39: minsw4({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 48;
+                             for (int i = 3; i >= 0; --i) {
+                                 int16_t ra_sw = Ra.uq<hi:lo>;
+                                 int16_t rb_sw = Rb.uq<hi:lo>;
+                                 temp = ((temp << 16) 
+                                         | ((ra_sw < rb_sw) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 16;
+                                 lo -= 16;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3a: minub8({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 56;
+                             for (int i = 7; i >= 0; --i) {
+                                 uint8_t ra_ub = Ra.uq<hi:lo>;
+                                 uint8_t rb_ub = Rb.uq<hi:lo>;
+                                 temp = ((temp << 8) 
+                                         | ((ra_ub < rb_ub) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 8;
+                                 lo -= 8;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3b: minuw4({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 48;
+                             for (int i = 3; i >= 0; --i) {
+                                 uint16_t ra_sw = Ra.uq<hi:lo>;
+                                 uint16_t rb_sw = Rb.uq<hi:lo>;
+                                 temp = ((temp << 16) 
+                                         | ((ra_sw < rb_sw) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 16;
+                                 lo -= 16;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3c: maxub8({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 56;
+                             for (int i = 7; i >= 0; --i) {
+                                 uint8_t ra_ub = Ra.uq<hi:lo>;
+                                 uint8_t rb_ub = Rb.uq<hi:lo>;
+                                 temp = ((temp << 8) 
+                                         | ((ra_ub > rb_ub) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 8;
+                                 lo -= 8;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3d: maxuw4({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 48;
+                             for (int i = 3; i >= 0; --i) {
+                                 uint16_t ra_uw = Ra.uq<hi:lo>;
+                                 uint16_t rb_uw = Rb.uq<hi:lo>;
+                                 temp = ((temp << 16) 
+                                         | ((ra_uw > rb_uw) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 16;
+                                 lo -= 16;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3e: maxsb8({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 56;
+                             for (int i = 7; i >= 0; --i) {
+                                 int8_t ra_sb = Ra.uq<hi:lo>;
+                                 int8_t rb_sb = Rb.uq<hi:lo>;
+                                 temp = ((temp << 8) 
+                                         | ((ra_sb > rb_sb) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 8;
+                                 lo -= 8;
+                             }
+                             Rc = temp;
+                          }});
+
+            0x3f: maxsw4({{
+                             uint64_t temp = 0;
+                             int hi = 63;
+                             int lo = 48;
+                             for (int i = 3; i >= 0; --i) {
+                                 int16_t ra_sw = Ra.uq<hi:lo>;
+                                 int16_t rb_sw = Rb.uq<hi:lo>;
+                                 temp = ((temp << 16) 
+                                         | ((ra_sw > rb_sw) ? Ra.uq<hi:lo>
+                                                          : Rb.uq<hi:lo>));
+                                 hi -= 16;
+                                 lo -= 16;
+                             }
+                             Rc = temp;
+                          }});
 
             format BasicOperateWithNopCheck {
                 0x70: decode RB {
