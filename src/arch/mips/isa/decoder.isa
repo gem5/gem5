@@ -2477,7 +2477,13 @@ decode OPCODE_HI default Unknown::unknown() {
                     }
                 }
                 0x3: decode OP {
+#if FULL_SYSTEM
                     0x0: FailUnimpl::rdhwr();
+#else
+                    0x0: decode RD {
+                        29: BasicOp::rdhwr({{ Rt = TpValue; }});
+                    }
+#endif
                 }
             }
         }
