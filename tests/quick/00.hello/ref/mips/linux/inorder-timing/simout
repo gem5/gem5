@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Sep 24 2009 12:19:09
-M5 revision 9bc3e4611009+ 6661+ default tip
-M5 started Sep 24 2009 12:19:46
-M5 executing on zooks
-command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/inorder-timing
+M5 compiled Dec 29 2009 23:25:57
+M5 revision b49d467587f8 6811 default processinit.patch qtip tip
+M5 started Dec 29 2009 23:25:59
+M5 executing on fajita
+command line: build/MIPS_SE/m5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 29521500 because target called exit()
+Exiting @ tick 29940500 because target called exit()
