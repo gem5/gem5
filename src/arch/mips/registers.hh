@@ -275,6 +275,7 @@ enum MiscRegIndex{
     MISCREG_DESAVE = 248,       //Bank 31: 248-256
 
     MISCREG_LLFLAG = 257,
+    MISCREG_TP_VALUE,
 
     MISCREG_NUMREGS
 };

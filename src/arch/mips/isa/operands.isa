@@ -109,8 +109,11 @@ def operands {{
     #LL Flag
     'LLFlag': ('ControlReg', 'uw', 'MISCREG_LLFLAG', None, 1),
 
+    #Thread pointer value for SE mode
+    'TpValue': ('ControlReg', 'ud', 'MISCREG_TP_VALUE', None, 1),
+
     # Index Register
-    'Index':('ControlReg','uw','MISCREG_INDEX',None,1),
+    'Index': ('ControlReg','uw','MISCREG_INDEX',None,1),
 
 
     'CP0_RD_SEL': ('ControlReg', 'uw', '(RD << 3 | SEL)', None, 1),
