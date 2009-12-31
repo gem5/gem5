@@ -126,6 +126,16 @@ sys_setsysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     return 1;
 }
 
+static SyscallReturn
+setThreadAreaFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
+                  ThreadContext *tc)
+{
+    int index = 0;
+    Addr addr = process->getSyscallArg(tc, index);
+    tc->setMiscRegNoEffect(MISCREG_TP_VALUE, addr);
+    return 0;
+}
+
 SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /*  0 */ SyscallDesc("syscall", unimplementedFunc),
     /*  1 */ SyscallDesc("exit", exitFunc),
@@ -410,7 +420,7 @@ SyscallDesc MipsLinuxProcess::syscallDescs[] = {
     /* 280 */ SyscallDesc("add_key", unimplementedFunc),
     /* 281 */ SyscallDesc("request_key", unimplementedFunc),
     /* 282 */ SyscallDesc("keyctl", unimplementedFunc),
-    /* 283 */ SyscallDesc("set_thread_area", unimplementedFunc),
+    /* 283 */ SyscallDesc("set_thread_area", setThreadAreaFunc),
     /* 284 */ SyscallDesc("inotify_init", unimplementedFunc),
     /* 285 */ SyscallDesc("inotify_add_watch", unimplementedFunc),
     /* 286 */ SyscallDesc("inotify_rm_watch", unimplementedFunc),
