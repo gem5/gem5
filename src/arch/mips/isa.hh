@@ -64,18 +64,15 @@ namespace MipsISA
         std::vector<std::vector<MiscReg> > miscRegFile_WriteMask;
         std::vector<BankType> bankType;
 
-        BaseCPU *cpu;
-
       public:
         ISA();
-        ISA(BaseCPU *_cpu);
 
         void init();
 
         void clear(unsigned tid_or_vpn = 0);
 
         void reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *_cpu);
+                   unsigned num_vpes, BaseCPU *cpu);
 
         void expandForMultithreading(ThreadID num_threads, unsigned num_vpes);
 
@@ -147,11 +144,11 @@ namespace MipsISA
         };
 
         // Schedule a CP0 Update Event
-        void scheduleCP0Update(int delay = 0);
+        void scheduleCP0Update(BaseCPU *cpu, int delay = 0);
 
         // If any changes have been made, then check the state for changes
         // and if necessary alert the CPU
-        void updateCPU();
+        void updateCPU(BaseCPU *cpu);
 
         // Keep a List of CPU Events that need to be deallocated
         std::queue<CP0Event*> cp0EventRemoveList;

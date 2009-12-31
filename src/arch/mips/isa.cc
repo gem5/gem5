@@ -91,12 +91,6 @@ ISA::ISA()
     init();
 }
 
-ISA::ISA(BaseCPU *_cpu)
-{
-    cpu = _cpu;
-    init();
-}
-
 void
 ISA::init()
 {
@@ -173,11 +167,10 @@ ISA::expandForMultithreading(ThreadID num_threads, unsigned num_vpes)
 //@TODO: Use MIPS STYLE CONSTANTS (e.g. TCHALT_H instead of TCH_H)
 void
 ISA::reset(std::string core_name, ThreadID num_threads,
-                   unsigned num_vpes, BaseCPU *_cpu)
+                   unsigned num_vpes, BaseCPU *cpu)
 {
     DPRINTF(MipsPRA, "Resetting CP0 State with %i TCs and %i VPEs\n",
             num_threads, num_vpes);
-    cpu = _cpu;
 
     MipsISA::CoreSpecific &cp = cpu->coreParams;
 
@@ -499,7 +492,7 @@ ISA::setMiscReg(int misc_reg, const MiscReg &val,
 
     miscRegFile[misc_reg][reg_sel] = cp0_val;
 
-    scheduleCP0Update(1);
+    scheduleCP0Update(tc->getCpuPtr(), 1);
 }
 
 /**
@@ -528,7 +521,7 @@ ISA::filterCP0Write(int misc_reg, int reg_sel, const MiscReg &val)
 }
 
 void
-ISA::scheduleCP0Update(int delay)
+ISA::scheduleCP0Update(BaseCPU *cpu, int delay)
 {
     if (!cp0Updated) {
         cp0Updated = true;
@@ -540,7 +533,7 @@ ISA::scheduleCP0Update(int delay)
 }
 
 void
-ISA::updateCPU()
+ISA::updateCPU(BaseCPU *cpu)
 {
     ///////////////////////////////////////////////////////////////////
     //
@@ -578,7 +571,7 @@ ISA::CP0Event::process()
     switch (cp0EventType)
     {
       case UpdateCP0:
-        cp0->updateCPU();
+        cp0->updateCPU(cpu);
         break;
     }
 }
