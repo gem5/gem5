@@ -2476,10 +2476,8 @@ decode OPCODE_HI default Unknown::unknown() {
                         }
                     }
                 }
-                0x3: decode OP_HI {
-                    0x2: decode OP_LO {
-                        0x3: FailUnimpl::rdhwr();
-                    }
+                0x3: decode OP {
+                    0x0: FailUnimpl::rdhwr();
                 }
             }
         }
