@@ -47,7 +47,8 @@ class MipsLiveProcess : public LiveProcess
 
     void startup();
 
-    void argsInit(int intSize, int pageSize);
+    template<class IntType>
+    void argsInit(int pageSize);
 
   public:
     MipsISA::IntReg getSyscallArg(ThreadContext *tc, int &i);

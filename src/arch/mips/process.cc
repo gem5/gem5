@@ -34,6 +34,7 @@
 #include "arch/mips/process.hh"
 
 #include "base/loader/object_file.hh"
+#include "base/loader/elf_object.hh"
 #include "base/misc.hh"
 #include "cpu/thread_context.hh"
 
@@ -61,8 +62,8 @@ MipsLiveProcess::MipsLiveProcess(LiveProcessParams * params,
     brk_point = objFile->dataBase() + objFile->dataSize() + objFile->bssSize();
     brk_point = roundUp(brk_point, VMPageSize);
 
-    // Set up region for mmaps. For now, start at bottom of kuseg space.
-    mmap_start = mmap_end = 0x10000;
+    // Set up region for mmaps.  Start it 1GB above the top of the heap.
+    mmap_start = mmap_end = brk_point + 0x40000000L;
 }
 
 void
@@ -70,18 +71,52 @@ MipsLiveProcess::startup()
 {
     Process::startup();
 
-    argsInit(MachineBytes, VMPageSize);
+    argsInit<uint32_t>(VMPageSize);
 }
 
+template<class IntType>
 void
-MipsLiveProcess::argsInit(int intSize, int pageSize)
+MipsLiveProcess::argsInit(int pageSize)
 {
+    int intSize = sizeof(IntType);
+    Process::startup();
+
     // load object file into target memory
     objFile->loadSections(initVirtMem);
 
-    // Calculate how much space we need for arg & env arrays.
+    typedef AuxVector<IntType> auxv_t;
+    std::vector<auxv_t> auxv;
+
+    ElfObject * elfObject = dynamic_cast<ElfObject *>(objFile);
+    if (elfObject)
+    {
+        // Set the system page size
+        auxv.push_back(auxv_t(M5_AT_PAGESZ, MipsISA::VMPageSize));
+        // Set the frequency at which time() increments
+        auxv.push_back(auxv_t(M5_AT_CLKTCK, 100));
+        // For statically linked executables, this is the virtual
+        // address of the program header tables if they appear in the
+        // executable image.
+        auxv.push_back(auxv_t(M5_AT_PHDR, elfObject->programHeaderTable()));
+        DPRINTF(Loader, "auxv at PHDR %08p\n", elfObject->programHeaderTable());
+        // This is the size of a program header entry from the elf file.
+        auxv.push_back(auxv_t(M5_AT_PHENT, elfObject->programHeaderSize()));
+        // This is the number of program headers from the original elf file.
+        auxv.push_back(auxv_t(M5_AT_PHNUM, elfObject->programHeaderCount()));
+        //The entry point to the program
+        auxv.push_back(auxv_t(M5_AT_ENTRY, objFile->entryPoint()));
+        //Different user and group IDs
+        auxv.push_back(auxv_t(M5_AT_UID, uid()));
+        auxv.push_back(auxv_t(M5_AT_EUID, euid()));
+        auxv.push_back(auxv_t(M5_AT_GID, gid()));
+        auxv.push_back(auxv_t(M5_AT_EGID, egid()));
+    }
+
+    // Calculate how much space we need for arg & env & auxv arrays.
     int argv_array_size = intSize * (argv.size() + 1);
     int envp_array_size = intSize * (envp.size() + 1);
+    int auxv_array_size = intSize * 2 * (auxv.size() + 1);
+
     int arg_data_size = 0;
     for (vector<string>::size_type i = 0; i < argv.size(); ++i) {
         arg_data_size += argv[i].size() + 1;
@@ -92,9 +127,11 @@ MipsLiveProcess::argsInit(int intSize, int pageSize)
     }
 
     int space_needed =
-         argv_array_size + envp_array_size + arg_data_size + env_data_size;
-    if (space_needed < 32*1024)
-        space_needed = 32*1024;
+        argv_array_size +
+        envp_array_size +
+        auxv_array_size +
+        arg_data_size +
+        env_data_size;
 
     // set bottom of stack
     stack_min = stack_base - space_needed;
@@ -105,33 +142,37 @@ MipsLiveProcess::argsInit(int intSize, int pageSize)
     pTable->allocate(stack_min, roundUp(stack_size, pageSize));
 
     // map out initial stack contents
-    // ========
-    // NOTE: Using uint32_t hardcodes MIPS32 and not MIPS64
-    // even if MIPS64 was intended. This is because the
-    // copyStringArray function templates on the parameters.
-    // Elegant way to check intSize and vary between 32/64?
-    // ========
-    uint32_t argv_array_base = stack_min + intSize; // room for argc
-    uint32_t envp_array_base = argv_array_base + argv_array_size;
-    uint32_t arg_data_base = envp_array_base + envp_array_size;
-    uint32_t env_data_base = arg_data_base + arg_data_size;
+    IntType argv_array_base = stack_min + intSize; // room for argc
+    IntType envp_array_base = argv_array_base + argv_array_size;
+    IntType auxv_array_base = envp_array_base + envp_array_size;
+    IntType arg_data_base = auxv_array_base + auxv_array_size;
+    IntType env_data_base = arg_data_base + arg_data_size;
 
     // write contents to stack
-    uint32_t argc = argv.size();
+    IntType argc = argv.size();
 
-    if (intSize == 8)
-        argc = htog((uint64_t)argc);
-    else if (intSize == 4)
-        argc = htog((uint32_t)argc);
-    else
-        panic("Unknown int size");
-
+    argc = htog((IntType)argc);
 
     initVirtMem->writeBlob(stack_min, (uint8_t*)&argc, intSize);
 
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
+
+    // Copy the aux vector
+    for (typename vector<auxv_t>::size_type x = 0; x < auxv.size(); x++) {
+        initVirtMem->writeBlob(auxv_array_base + x * 2 * intSize,
+                (uint8_t*)&(auxv[x].a_type), intSize);
+        initVirtMem->writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
+                (uint8_t*)&(auxv[x].a_val), intSize);
+    }
+
+    // Write out the terminating zeroed auxilliary vector
+    for (unsigned i = 0; i < 2; i++) {
+        const IntType zero = 0;
+        const Addr addr = auxv_array_base + 2 * intSize * (auxv.size() + i);
+        initVirtMem->writeBlob(addr, (uint8_t*)&zero, intSize);
+    }
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
 
