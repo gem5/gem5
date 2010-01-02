@@ -5,9 +5,9 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Dec 29 2009 23:25:57
-M5 revision b49d467587f8 6811 default processinit.patch qtip tip
-M5 started Dec 29 2009 23:25:59
+M5 compiled Jan  2 2010 07:01:31
+M5 revision a538feb8a617 6813 default qtip tip qbase fixhelp.patch
+M5 started Jan  2 2010 07:03:09
 M5 executing on fajita
 command line: build/MIPS_SE/m5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/simple-timing -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
