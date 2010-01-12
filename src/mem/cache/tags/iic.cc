@@ -219,7 +219,7 @@ IIC::regStats(const string &name)
 
 
 IICTag*
-IIC::accessBlock(Addr addr, int &lat)
+IIC::accessBlock(Addr addr, int &lat, int context_src)
 {
     Addr tag = extractTag(addr);
     unsigned set = hash(addr);
@@ -338,7 +338,7 @@ IIC::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-IIC::insertBlock(Addr addr, BlkType* blk)
+IIC::insertBlock(Addr addr, BlkType* blk, int context_src)
 {
 }
 

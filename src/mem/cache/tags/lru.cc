@@ -150,7 +150,7 @@ LRU::~LRU()
 }
 
 LRUBlk*
-LRU::accessBlock(Addr addr, int &lat)
+LRU::accessBlock(Addr addr, int &lat, int context_src)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
@@ -200,7 +200,7 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-LRU::insertBlock(Addr addr, LRU::BlkType *blk)
+LRU::insertBlock(Addr addr, LRU::BlkType *blk, int context_src)
 {
     if (!blk->isTouched) {
         tagsInUse++;

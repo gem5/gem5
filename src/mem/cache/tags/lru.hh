@@ -172,7 +172,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* accessBlock(Addr addr, int &lat);
+    LRUBlk* accessBlock(Addr addr, int &lat, int context_src);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -197,7 +197,7 @@ public:
      * @param addr The address to update.
      * @param blk The block to update.
      */
-     void insertBlock(Addr addr, BlkType *blk);
+     void insertBlock(Addr addr, BlkType *blk, int context_src);
 
     /**
      * Generate the tag from the given address.
