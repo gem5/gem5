@@ -324,10 +324,10 @@ Usage: scons [scons options] [build options] [target(s)]
 Global sticky options:
 '''
 
-help_text += global_sticky_vars.GenerateHelpText(main)
-
 # Update main environment with values from ARGUMENTS & global_sticky_vars_file
 global_sticky_vars.Update(main)
+
+help_text += global_sticky_vars.GenerateHelpText(main)
 
 # Save sticky variable settings back to current variables file
 global_sticky_vars.Save(global_sticky_vars_file, main)
