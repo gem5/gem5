@@ -422,7 +422,7 @@ Serializable::serializeAll(const string &cpt_dir)
     time_t t = time(NULL);
     if (!outstream.is_open())
         fatal("Unable to open file %s for writing\n", cpt_file.c_str());
-    outstream << "// checkpoint generated: " << ctime(&t);
+    outstream << "## checkpoint generated: " << ctime(&t);
 
     globals.serialize(outstream);
     SimObject::serializeAll(outstream);
