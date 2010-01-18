@@ -422,7 +422,7 @@ class IIC : public BaseTags
      * @param lat The access latency.
      * @return A pointer to the block found, if any.
      */
-    IICTag* accessBlock(Addr addr, int &lat);
+    IICTag* accessBlock(Addr addr, int &lat, int context_src);
 
     /**
      * Find the block, do not update the replacement data.
@@ -440,7 +440,7 @@ class IIC : public BaseTags
      */
     IICTag* findVictim(Addr addr, PacketList &writebacks);
 
-    void insertBlock(Addr addr, BlkType *blk);
+    void insertBlock(Addr addr, BlkType *blk, int context_src);
 
     /**
      * Called at end of simulation to complete average block reference stats.

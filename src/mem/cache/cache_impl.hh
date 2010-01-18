@@ -266,7 +266,8 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         return false;
     }
 
-    blk = tags->accessBlock(pkt->getAddr(), lat);
+    int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+    blk = tags->accessBlock(pkt->getAddr(), lat, id);
 
     DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -299,7 +300,8 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 incMissCount(pkt);
                 return false;
             }
-            tags->insertBlock(pkt->getAddr(), blk);
+            int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+            tags->insertBlock(pkt->getAddr(), blk, id);
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
@@ -976,7 +978,8 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             tempBlock->tag = tags->extractTag(addr);
             DPRINTF(Cache, "using temp block for %x\n", addr);
         } else {
-            tags->insertBlock(addr, blk);
+            int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
+            tags->insertBlock(pkt->getAddr(), blk, id);
         }
     } else {
         // existing block... probably an upgrade

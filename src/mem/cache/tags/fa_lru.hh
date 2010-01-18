@@ -182,7 +182,7 @@ public:
      * @param inCache The FALRUBlk::inCache flags.
      * @return Pointer to the cache block.
      */
-    FALRUBlk* accessBlock(Addr addr, int &lat, int *inCache = 0);
+    FALRUBlk* accessBlock(Addr addr, int &lat, int context_src, int *inCache = 0);
 
     /**
      * Find the block in the cache, do not update the replacement data.
@@ -200,7 +200,7 @@ public:
      */
     FALRUBlk* findVictim(Addr addr, PacketList & writebacks);
 
-    void insertBlock(Addr addr, BlkType *blk);
+    void insertBlock(Addr addr, BlkType *blk, int context_src);
 
     /**
      * Return the hit latency of this cache.

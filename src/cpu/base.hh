@@ -274,7 +274,7 @@ class BaseCPU : public MemObject
      */
     virtual BranchPred *getBranchPred() { return NULL; };
 
-    virtual Counter totalInstructions() const { return 0; }
+    virtual Counter totalInstructions() const = 0;
 
     // Function tracing
   private:
