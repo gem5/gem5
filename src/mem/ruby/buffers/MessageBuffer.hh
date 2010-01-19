@@ -64,6 +64,11 @@ public:
             (m_prio_heap.peekMin().m_time <= g_eventQueue_ptr->getTime()));
   }
 
+  void delayHead() {
+    MessageBufferNode node = m_prio_heap.extractMin();
+    enqueue(node.m_msgptr, 1);
+  }
+
   bool areNSlotsAvailable(int n);
   int getPriority() { return m_priority_rank; }
   void setPriority(int rank) { m_priority_rank = rank; }

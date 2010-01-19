@@ -66,8 +66,6 @@ void Sequencer::init(const vector<string> & argv)
   m_instCache_ptr = NULL;
   m_dataCache_ptr = NULL;
   m_controller = NULL;
-  m_atomic_reads = 0;
-  m_atomic_writes = 0;
   for (size_t i=0; i<argv.size(); i+=2) {
     if ( argv[i] == "controller") {
       m_controller = RubySystem::getController(argv[i+1]); // args[i] = "L1Cache"
@@ -285,15 +283,15 @@ void Sequencer::writeCallback(const Address& address, DataBlock& data) {
          (request->ruby_request.type == RubyRequestType_RMW_Write) ||  
          (request->ruby_request.type == RubyRequestType_Locked_Read) ||
          (request->ruby_request.type == RubyRequestType_Locked_Write));
-  // POLINA: the assumption is that atomics are only on data cache and not instruction cache
+
   if (request->ruby_request.type == RubyRequestType_Locked_Read) {
     m_dataCache_ptr->setLocked(address, m_version);
   }
   else if (request->ruby_request.type == RubyRequestType_RMW_Read) {
-    m_controller->set_atomic(address);
+    m_controller->blockOnQueue(address, m_mandatory_q_ptr);
   }
   else if (request->ruby_request.type == RubyRequestType_RMW_Write) {
-    m_controller->clear_atomic(address);
+    m_controller->unblock(address);
   }
 
   hitCallback(request, data);
@@ -438,42 +436,12 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   CacheRequestType ctype;
   switch(request.type) {
   case RubyRequestType_IFETCH:
-    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
-      m_controller->reset_atomics();
-      m_atomic_writes = 0;
-      m_atomic_reads = 0;
-    }
-    else if (m_atomic_writes > 0) {
-      assert(m_atomic_reads > m_atomic_writes);
-      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
-      assert(false);
-    }
     ctype = CacheRequestType_IFETCH;
     break;
   case RubyRequestType_LD:
-    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
-      m_controller->reset_atomics();
-      m_atomic_writes = 0;
-      m_atomic_reads = 0;
-    }
-    else if (m_atomic_writes > 0) {
-      assert(m_atomic_reads > m_atomic_writes);
-      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
-      assert(false);
-    }
     ctype = CacheRequestType_LD;
     break;
   case RubyRequestType_ST:
-    if (m_atomic_reads > 0 && m_atomic_writes == 0) {
-      m_controller->reset_atomics();
-      m_atomic_writes = 0;
-      m_atomic_reads = 0;
-    }
-    else if (m_atomic_writes > 0) {
-      assert(m_atomic_reads > m_atomic_writes);
-      cerr << "WARNING: Expected: " << m_atomic_reads << " RMW_Writes, but only received: " << m_atomic_writes << endl;
-      assert(false);
-    }
     ctype = CacheRequestType_ST;
     break;
   case RubyRequestType_Locked_Read:
@@ -481,18 +449,9 @@ void Sequencer::issueRequest(const RubyRequest& request) {
     ctype = CacheRequestType_ATOMIC;
     break;
   case RubyRequestType_RMW_Read:
-    assert(m_atomic_writes == 0);
-    m_atomic_reads++;
     ctype = CacheRequestType_ATOMIC;
     break;
   case RubyRequestType_RMW_Write:
-    assert(m_atomic_reads > 0);
-    assert(m_atomic_writes < m_atomic_reads);
-    m_atomic_writes++;
-    if (m_atomic_reads == m_atomic_writes) {
-      m_atomic_reads = 0;
-      m_atomic_writes = 0;
-    }
     ctype = CacheRequestType_ATOMIC;
     break;
   default:

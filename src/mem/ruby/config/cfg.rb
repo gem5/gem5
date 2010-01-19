@@ -385,12 +385,12 @@ class DMAController < NetPort
 end
 
 class Cache < LibRubyObject
-  param :size_kb, Integer
+  param :size, Integer
   param :latency, Integer
   param :controller, NetPort
-  def initialize(obj_name, size_kb, latency)
+  def initialize(obj_name, size, latency)
     super(obj_name)
-    self.size_kb = size_kb
+    self.size = size
     self.latency = latency
     # controller must be set manually by the configuration script
     # because there is a cyclic dependence
@@ -406,8 +406,8 @@ class SetAssociativeCache < Cache
   #  when an integer, it represents the number of cycles for a hit
   #  when a float, it represents the cache access time in ns
   #  when set to "auto", libruby will attempt to find a realistic latency by running CACTI
-  def initialize(obj_name, size_kb, latency, assoc, replacement_policy)
-    super(obj_name, size_kb, latency)
+  def initialize(obj_name, size, latency, assoc, replacement_policy)
+    super(obj_name, size, latency)
     self.assoc = assoc
     self.replacement_policy = replacement_policy
   end
@@ -415,7 +415,7 @@ class SetAssociativeCache < Cache
   def calculateLatency()
     if self.latency == "auto"
       cacti_args = Array.new()
-      cacti_args << (self.size_kb*1024) <<  RubySystem.block_size_bytes << self.assoc
+      cacti_args << (self.size*1024) <<  RubySystem.block_size_bytes << self.assoc
       cacti_args << 1 << 0 << 0 << 0 << 1
       cacti_args << RubySystem.tech_nm << RubySystem.block_size_bytes*8
       cacti_args << 0 << 0 << 0 << 1 << 0 << 0 << 0 << 0 << 1

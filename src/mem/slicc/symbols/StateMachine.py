@@ -185,11 +185,10 @@ public:
     void print(ostream& out) const;
     void printConfig(ostream& out) const;
     void wakeup();
-    void set_atomic(Address addr);
-    void clear_atomic(Address addr);
-    void reset_atomics();
     void printStats(ostream& out) const { s_profiler.dumpStats(out); }
     void clearStats() { s_profiler.clearStats(); }
+    void blockOnQueue(Address addr, MessageBuffer* port);
+    void unblock(Address addr);
 private:
 ''')
 
@@ -197,16 +196,6 @@ private:
         # added by SS
         for param in self.config_parameters:
             code('int m_${{param.ident}};')
-
-        if self.ident == "L1Cache":
-            code('''
-int servicing_atomic;
-Address locked_read_request1;
-Address locked_read_request2;
-Address locked_read_request3;
-Address locked_read_request4;
-int read_counter;
-''')
 
         code('''
 int m_number_of_TBEs;
@@ -221,6 +210,8 @@ map< string, string > m_cfg;
 NodeID m_version;
 Network* m_net_ptr;
 MachineID m_machineID;
+bool m_is_blocking;
+map< Address, MessageBuffer* > m_block_map;
 ${ident}_Profiler s_profiler;
 static int m_num_controllers;
 // Internal functions
@@ -297,15 +288,6 @@ $c_ident::$c_ident(const string &name)
 {
 ''')
         code.indent()
-        if self.ident == "L1Cache":
-            code('''
-servicing_atomic = 0;
-locked_read_request1 = Address(-1);
-locked_read_request2 = Address(-1);
-locked_read_request3 = Address(-1);
-locked_read_request4 = Address(-1);
-read_counter = 0;
-''')
 
         code('m_num_controllers++;')
         for var in self.objects:
@@ -515,6 +497,17 @@ const MachineType $c_ident::getMachineType() const{
     return MachineType_${ident};
 }
 
+void $c_ident::blockOnQueue(Address addr, MessageBuffer* port) {
+    m_is_blocking = true;
+    m_block_map[addr] = port;
+}
+void $c_ident::unblock(Address addr) {
+    m_block_map.erase(addr);
+    if (m_block_map.size() == 0) {
+       m_is_blocking = false;
+    }
+}
+
 void $c_ident::print(ostream& out) const { out << "[$c_ident " << m_version << "]"; }
 
 void $c_ident::printConfig(ostream& out) const {
@@ -580,54 +573,12 @@ void ${ident}_Controller::wakeup()
 
         # InPorts
         #
-        # Find the position of the mandatory queue in the vector so
-        # that we can print it out first
-
-        mandatory_q = None
-        if self.ident == "L1Cache":
-            for i,port in enumerate(self.in_ports):
-                assert "c_code_in_port" in port
-                if str(port).find("mandatoryQueue_in") >= 0:
-                    assert mandatory_q is None
-                    mandatory_q = port
-
-            assert mandatory_q is not None
-
-            # print out the mandatory queue here
-            port = mandatory_q
-            code('// ${ident}InPort $port')
-            output = port["c_code_in_port"]
-
-            code('$output')
-
         for port in self.in_ports:
-            # don't print out mandatory queue twice
-            if port == mandatory_q:
-                continue
-
-            if ident == "L1Cache":
-                if (str(port).find("forwardRequestNetwork_in") >= 0 or str(port).find("requestNetwork_in") >= 0 or str(port).find("requestIntraChipL1Network_in") >= 0):
-                    code('''
-bool postpone = false;
-if ((((*m_L1Cache_forwardToCache_ptr)).isReady())) {
-    const RequestMsg* in_msg_ptr;
-    in_msg_ptr = dynamic_cast<const RequestMsg*>(((*m_L1Cache_forwardToCache_ptr)).peek());
-    if ((((servicing_atomic > 0)  && (locked_read_request1 == ((*in_msg_ptr)).m_Address || locked_read_request2 == ((*in_msg_ptr)).m_Address || locked_read_request3 == ((*in_msg_ptr)).m_Address || locked_read_request1 == ((*in_msg_ptr)).m_Address)))) {
-            postpone = true;
-    }
-}
-if (!postpone) {
-''')
             code.indent()
             code('// ${ident}InPort $port')
             code('${{port["c_code_in_port"]}}')
             code.dedent()
 
-            if ident == "L1Cache":
-                if (str(port).find("forwardRequestNetwork_in") >= 0 or str(port).find("requestNetwork_in") >= 0 or str(port).find("requestIntraChipL1Network_in") >= 0):
-                    code.dedent()
-                    code('}')
-                    code.indent()
             code('')
 
         code.dedent()
@@ -637,83 +588,6 @@ if (!postpone) {
     }
 }
 ''')
-
-        if self.ident == "L1Cache":
-            code('''
-void ${ident}_Controller::set_atomic(Address addr)
-{
-    servicing_atomic++; 
-    switch (servicing_atomic) { 
-      case(1):
-        assert(locked_read_request1 == Address(-1));
-        locked_read_request1 = addr;
-        break;
-      case(2):
-        assert(locked_read_request2 == Address(-1));
-        locked_read_request2 = addr;
-        break;
-      case(3):
-        assert(locked_read_request3 == Address(-1));
-        locked_read_request3 = addr;
-        break;
-      case(4):
-        assert(locked_read_request4 == Address(-1));
-        locked_read_request4 = addr;
-        break;
-      default:
-        assert(0);
-
-    }    
-}
-
-void ${ident}_Controller::clear_atomic(Address addr)
-{
-
-    assert(servicing_atomic > 0);
-    if (addr == locked_read_request1)
-        locked_read_request1 = Address(-1);
-    else if (addr == locked_read_request2)
-        locked_read_request2 = Address(-1);
-    else if (addr == locked_read_request3)
-        locked_read_request3 = Address(-1);
-    else if (addr == locked_read_request4)
-        locked_read_request4 = Address(-1);
-    else
-       assert(0);
-    servicing_atomic--;
-
-}
-
-void ${ident}_Controller::reset_atomics()
-{
-
-    servicing_atomic = 0;
-    locked_read_request1 = Address(-1);
-    locked_read_request2 = Address(-1);
-    locked_read_request3 = Address(-1);
-    locked_read_request4 = Address(-1);
-
-}
-
-''')
-        else:
-            code('''
-void ${ident}_Controller::reset_atomics()
-{
-    assert(0); 
-}
-
-void ${ident}_Controller::set_atomic(Address addr)
-{
-    assert(0); 
-}
-
-void ${ident}_Controller::clear_atomic(Address addr)
-{
-    assert(0); 
-}
-''')
-
 
         code.write(path, "%s_Wakeup.cc" % self.ident)
 

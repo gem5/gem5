@@ -238,7 +238,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   // Response IntraChip L1 Network - response msg to this L1 cache
   in_port(responseIntraChipL1Network_in, ResponseMsg, responseToL1Cache) {
     if (responseIntraChipL1Network_in.isReady()) {
-      peek(responseIntraChipL1Network_in, ResponseMsg) {
+      peek(responseIntraChipL1Network_in, ResponseMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
         if(in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
           trigger(Event:Data_Exclusive, in_msg.Address);
@@ -271,7 +271,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   // Request InterChip network - request from this L1 cache to the shared L2
   in_port(requestIntraChipL1Network_in, RequestMsg, requestToL1Cache) {
     if(requestIntraChipL1Network_in.isReady()) {
-      peek(requestIntraChipL1Network_in, RequestMsg) {
+      peek(requestIntraChipL1Network_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:INV) {
           trigger(Event:Inv, in_msg.Address);
@@ -292,7 +292,7 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
   // Mandatory Queue betweens Node's CPU and it's L1 caches
   in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 

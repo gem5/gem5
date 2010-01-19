@@ -128,8 +128,6 @@ private:
   // Global outstanding request count, across all request tables
   int m_outstanding_count;
   bool m_deadlock_check_scheduled;
-  int m_atomic_reads;
-  int m_atomic_writes;
 
   int m_store_waiting_on_load_cycles;
   int m_store_waiting_on_store_cycles;

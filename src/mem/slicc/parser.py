@@ -514,8 +514,8 @@ class SLICC(Grammar):
         p[0] = ast.EnqueueStatementAST(self, p[3], p[5], p[6], p[8])
 
     def p_statement__peek(self, p):
-        "statement : PEEK '(' var ',' type ')' statements"
-        p[0] = ast.PeekStatementAST(self, p[3], p[5], p[7], "peek")
+        "statement : PEEK '(' var ',' type pairs ')' statements"
+        p[0] = ast.PeekStatementAST(self, p[3], p[5], p[6], p[8], "peek")
 
     def p_statement__copy_head(self, p):
         "statement : COPY_HEAD '(' var ',' var pairs ')' SEMI"

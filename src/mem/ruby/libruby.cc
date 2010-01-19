@@ -58,11 +58,8 @@ RubyRequestType string_to_RubyRequestType(std::string str)
 
 ostream& operator<<(ostream& out, const RubyRequestType& obj)
 {
-  cerr << "in op" << endl;
   out << RubyRequestType_to_string(obj);
-  cerr << "flushing" << endl;
   out << flush;
-  cerr << "done" << endl;
   return out;
 }
 

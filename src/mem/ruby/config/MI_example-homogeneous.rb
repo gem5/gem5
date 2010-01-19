@@ -13,7 +13,7 @@ RubySystem.reset
 # default values
 
 num_cores = 2
-l1_cache_size_kb = 32768
+l1_cache_size_bytes = 32768
 l1_cache_assoc = 8
 l1_cache_latency = 1
 num_memories = 2

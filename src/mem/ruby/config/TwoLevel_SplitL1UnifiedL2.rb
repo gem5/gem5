@@ -68,8 +68,8 @@ assert((protocol == "MESI_CMP_directory" or protocol == "MOESI_CMP_directory"), 
 require protocol+".rb"
 
 num_cores.times { |n|
-  icache = SetAssociativeCache.new("l1i_"+n.to_s, l1_icache_size_kb, l1_icache_latency, l1_icache_assoc, "PSEUDO_LRU")
-  dcache = SetAssociativeCache.new("l1d_"+n.to_s, l1_dcache_size_kb, l1_dcache_latency, l1_dcache_assoc, "PSEUDO_LRU")
+  icache = SetAssociativeCache.new("l1i_"+n.to_s, l1_icache_size_kb*1024, l1_icache_latency, l1_icache_assoc, "PSEUDO_LRU")
+  dcache = SetAssociativeCache.new("l1d_"+n.to_s, l1_dcache_size_kb*1024, l1_dcache_latency, l1_dcache_assoc, "PSEUDO_LRU")
   sequencer = Sequencer.new("Sequencer_"+n.to_s, icache, dcache)
   iface_ports << sequencer
   if protocol == "MOESI_CMP_directory"
@@ -87,7 +87,7 @@ num_cores.times { |n|
   end
 }
 num_l2_banks.times { |n|
-  cache = SetAssociativeCache.new("l2u_"+n.to_s, l2_cache_size_kb/num_l2_banks, l2_cache_latency, l2_cache_assoc, "PSEUDO_LRU")
+  cache = SetAssociativeCache.new("l2u_"+n.to_s, (l2_cache_size_kb*1024)/num_l2_banks, l2_cache_latency, l2_cache_assoc, "PSEUDO_LRU")
   if protocol == "MOESI_CMP_directory"
     net_ports << MOESI_CMP_directory_L2CacheController.new("L2CacheController_"+n.to_s,
                                                            "L2Cache",
