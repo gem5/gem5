@@ -1,8 +1,6 @@
 
 machine(Directory, "Directory protocol") 
-: int directory_latency,
-  int dma_select_low_bit,
-  int dma_select_num_bits
+: int directory_latency
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
@@ -74,6 +72,7 @@ machine(Directory, "Directory protocol")
     State TBEState,        desc="Transient State";
     DataBlock DataBlk,     desc="Data to be written (DMA write only)";
     int Len,               desc="...";
+    MachineID DmaRequestor, desc="DMA requestor";
   }
 
   external_type(TBETable) {
@@ -243,8 +242,7 @@ machine(Directory, "Directory protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
-						  dma_select_low_bit, dma_select_num_bits));
+        out_msg.Destination.add(TBEs[address].DmaRequestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -259,8 +257,7 @@ machine(Directory, "Directory protocol")
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:DATA;
         out_msg.DataBlk := in_msg.DataBlk;   // we send the entire data block and rely on the dma controller to split it up if need be
-        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
-						  dma_select_low_bit, dma_select_num_bits));
+        out_msg.Destination.add(TBEs[address].DmaRequestor);
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -271,8 +268,7 @@ machine(Directory, "Directory protocol")
         out_msg.PhysicalAddress := address;
         out_msg.LineAddress := address;
         out_msg.Type := DMAResponseType:ACK;
-        out_msg.Destination.add(mapAddressToRange(address, MachineType:DMA, 
-						  dma_select_low_bit, dma_select_num_bits));
+        out_msg.Destination.add(TBEs[address].DmaRequestor); 
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
   }
@@ -343,6 +339,14 @@ machine(Directory, "Directory protocol")
       TBEs[address].DataBlk := in_msg.DataBlk;
       TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
       TBEs[address].Len := in_msg.Len;
+      TBEs[address].DmaRequestor := in_msg.Requestor;
+    }
+  }
+
+  action(r_allocateTbeForDmaRead, "\r", desc="Allocate TBE for DMA Read") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      TBEs.allocate(address);
+      TBEs[address].DmaRequestor := in_msg.Requestor;
     }
   }
 
@@ -485,6 +489,7 @@ machine(Directory, "Directory protocol")
 
   transition(I, DMA_READ, ID) {
     //dr_sendDMAData;
+    r_allocateTbeForDmaRead;
     qf_queueMemoryFetchRequestDMA;
     p_popIncomingDMARequestQueue;
   }
@@ -492,6 +497,7 @@ machine(Directory, "Directory protocol")
   transition(ID, Memory_Data, I) {
     dr_sendDMAData;
     //p_popIncomingDMARequestQueue;
+    w_deallocateTBE;
     l_popMemQueue;
   }
 

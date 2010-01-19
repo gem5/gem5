@@ -33,9 +33,10 @@
  * @file
  * Simobject instatiation of caches.
  */
+#include <list>
 #include <vector>
 
-// Must be included first to determine which caches we want
+#include "config/the_isa.hh"
 #include "enums/Prefetch.hh"
 #include "mem/config/cache.hh"
 #include "mem/cache/base.hh"

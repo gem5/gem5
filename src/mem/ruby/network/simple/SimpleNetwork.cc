@@ -87,8 +87,10 @@ void SimpleNetwork::init(const vector<string> & argv)
     m_toNetQueues[node].setSize(m_virtual_networks);
     m_fromNetQueues[node].setSize(m_virtual_networks);
     for (int j = 0; j < m_virtual_networks; j++) {
-      m_toNetQueues[node][j] = new MessageBuffer;
-      m_fromNetQueues[node][j] = new MessageBuffer;
+      m_toNetQueues[node][j] = new MessageBuffer(
+                   "toNet node "+int_to_string(node)+" j "+int_to_string(j));
+      m_fromNetQueues[node][j] = new MessageBuffer(
+                   "fromNet node "+int_to_string(node)+" j "+int_to_string(j));
     }
   }
 
@@ -124,7 +126,7 @@ SimpleNetwork::~SimpleNetwork()
   }
   m_switch_ptr_vector.deletePointers();
   m_buffers_to_free.deletePointers();
-  delete m_topology_ptr;
+  // delete m_topology_ptr;
 }
 
 // From a switch to an endpoint node

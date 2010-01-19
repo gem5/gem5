@@ -28,9 +28,10 @@
  * Authors: Ali Saidi
  */
 
-#include "base/misc.hh"
-
 #include <iostream>
+
+#include "base/misc.hh"
+#include "base/types.hh"
 
 #ifndef __BASE_BIGINT_HH__
 #define __BASE_BIGINT_HH__

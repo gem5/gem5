@@ -36,6 +36,7 @@
 #include "base/debug.hh"
 #include "base/inet.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "cpu/intr_control.hh"
 #include "cpu/thread_context.hh"
 #include "dev/etherlink.hh"

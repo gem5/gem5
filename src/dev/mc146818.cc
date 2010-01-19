@@ -105,6 +105,8 @@ MC146818::MC146818(EventManager *em, const string &n, const struct tm time,
 
 MC146818::~MC146818()
 {
+    deschedule(tickEvent);
+    deschedule(event);
 }
 
 void
@@ -207,6 +209,15 @@ MC146818::serialize(const string &base, ostream &os)
     arrayParamOut(os, base + ".clock_data", clock_data, sizeof(clock_data));
     paramOut(os, base + ".stat_regA", stat_regA);
     paramOut(os, base + ".stat_regB", stat_regB);
+
+    //
+    // save the timer tick and rtc clock tick values to correctly reschedule 
+    // them during unserialize
+    //
+    Tick rtcTimerInterruptTickOffset = event.when() - curTick;
+    SERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
+    Tick rtcClockTickOffset = event.when() - curTick;
+    SERIALIZE_SCALAR(rtcClockTickOffset);
 }
 
 void
@@ -218,10 +229,15 @@ MC146818::unserialize(const string &base, Checkpoint *cp,
     paramIn(cp, section, base + ".stat_regA", stat_regA);
     paramIn(cp, section, base + ".stat_regB", stat_regB);
 
-    // We're not unserializing the event here, but we need to
-    // rescehedule the event since curTick was moved forward by the
-    // checkpoint
-    reschedule(event, curTick + event.interval);
+    //
+    // properly schedule the timer and rtc clock events
+    //
+    Tick rtcTimerInterruptTickOffset;
+    UNSERIALIZE_SCALAR(rtcTimerInterruptTickOffset);
+    reschedule(event, curTick + rtcTimerInterruptTickOffset);
+    Tick rtcClockTickOffset;
+    UNSERIALIZE_SCALAR(rtcClockTickOffset);
+    reschedule(tickEvent, curTick + rtcClockTickOffset);
 }
 
 MC146818::RTCEvent::RTCEvent(MC146818 * _parent, Tick i)

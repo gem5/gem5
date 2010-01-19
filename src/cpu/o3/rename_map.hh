@@ -39,8 +39,9 @@
 #include <utility>
 #include <vector>
 
-#include "cpu/o3/free_list.hh"
 #include "arch/types.hh"
+#include "config/the_isa.hh"
+#include "cpu/o3/free_list.hh"
 
 class SimpleRenameMap
 {

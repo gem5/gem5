@@ -38,6 +38,7 @@ parser.add_option("--fastmem", action="store_true")
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int")
 parser.add_option("--maxtime", type="float")
+parser.add_option("--maxinsts", type="int")
 parser.add_option("--prog_intvl", type="int")
 
 
@@ -52,6 +53,9 @@ parser.add_option("--checkpoint-dir", action="store", type="string",
     help="Place all checkpoints in this absolute directory")
 parser.add_option("-r", "--checkpoint-restore", action="store", type="int",
     help="restore from checkpoint <N>")
+parser.add_option("--checkpoint-at-end", action="store_true",
+                  help="take a checkpoint at end of run")
+
 
 # CPU Switching - default switch model goes from a checkpoint
 # to a timing simple CPU with caches to warm up, then to detailed CPU for
@@ -61,6 +65,7 @@ parser.add_option("-s", "--standard-switch", action="store_true",
 parser.add_option("-w", "--warmup", action="store", type="int",
     help="if -s, then this is the warmup period.  else, this is ignored",
     default=5000000000)
+parser.add_option("--profile", help="CPU profile interval")
 
 # Fastforwarding and simpoint related materials
 parser.add_option("-W", "--warmup-insts", action="store", type="int",

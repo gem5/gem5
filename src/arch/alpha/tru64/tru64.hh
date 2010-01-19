@@ -99,6 +99,7 @@ class AlphaTru64 : public Tru64
     static const unsigned TIOCISATTY_ = 0x2000745e;
     static const unsigned TIOCGETS_   = 0x402c7413;
     static const unsigned TIOCGETA_   = 0x40127417;
+    static const unsigned TCSETAW_    = 0x80147419;
     //@}
 
     //@{

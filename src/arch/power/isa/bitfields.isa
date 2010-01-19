@@ -1,0 +1,84 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2009 The University of Edinburgh
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Timothy M. Jones
+
+////////////////////////////////////////////////////////////////////
+//
+// Bitfield definitions.
+//
+// The endianness is the opposite to what's used here, so things
+// are reversed sometimes. Not sure of a fix to this though...
+
+// Opcode fields
+def bitfield OPCODE        <31:26>;
+def bitfield X_XO          <10:0>;
+def bitfield XO_XO         <10:1>;
+def bitfield A_XO          <5:1>;
+
+// Register fields
+def bitfield RA            <20:16>;
+def bitfield RB            <15:11>;
+def bitfield RS            <25:21>;
+def bitfield RT            <25:21>;
+def bitfield FRA           <20:16>;
+def bitfield FRB           <15:11>;
+def bitfield FRC           <10:6>;
+def bitfield FRS           <25:21>;
+def bitfield FRT           <25:21>;
+
+// The record bit can be in two positions
+// Used to enable setting of the condition register
+def bitfield RC31          <0>;
+def bitfield RC21          <10>;
+
+// Used to enable setting of the overflow flags
+def bitfield OE            <10>;
+
+// SPR field for mtspr instruction
+def bitfield SPR           <20:11>;
+
+// FXM field for mtcrf instruction
+def bitfield FXM           <19:12>;
+
+// Branch fields
+def bitfield LK            <0>;
+def bitfield AA            <1>;
+
+// Specifies a CR or FPSCR field
+def bitfield BF            <25:23>;
+
+// Fields for FPSCR manipulation instructions
+def bitfield FLM           <24:17>;
+def bitfield L             <25>;
+def bitfield W             <16>;
+// Named so to avoid conflicts with range.hh
+def bitfield U_FIELD       <15:12>;
+
+// Field for specifying a bit in CR or FPSCR
+def bitfield BT            <25:21>;

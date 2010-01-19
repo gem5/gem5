@@ -101,11 +101,21 @@ namespace X86ISA
         X86_64LiveProcess(LiveProcessParams *params, ObjectFile *objFile,
                 SyscallDesc *_syscallDescs, int _numSyscallDescs);
 
+        class VSyscallPage
+        {
+          public:
+            Addr base;
+            Addr size;
+            Addr vtimeOffset;
+            Addr vgettimeofdayOffset;
+        };
+        VSyscallPage vsyscallPage;
+
       public:
         void argsInit(int intSize, int pageSize);
         void startup();
 
-        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 
@@ -130,7 +140,8 @@ namespace X86ISA
         void startup();
 
         void syscall(int64_t callnum, ThreadContext *tc);
-        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int i);
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i);
+        X86ISA::IntReg getSyscallArg(ThreadContext *tc, int &i, int width);
         void setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val);
     };
 }

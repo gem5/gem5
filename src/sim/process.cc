@@ -32,6 +32,8 @@
 
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <cstdio>
 #include <string>
 
 #include "arch/remote_gdb.hh"
@@ -40,6 +42,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "mem/page_table.hh"
 #include "mem/physical.hh"
@@ -53,7 +56,6 @@
 #include "sim/syscall_emul.hh"
 #include "sim/system.hh"
 
-#include "arch/isa_specific.hh"
 #if THE_ISA == ALPHA_ISA
 #include "arch/alpha/linux/process.hh"
 #include "arch/alpha/tru64/process.hh"
@@ -66,6 +68,8 @@
 #include "arch/arm/linux/process.hh"
 #elif THE_ISA == X86_ISA
 #include "arch/x86/linux/process.hh"
+#elif THE_ISA == POWER_ISA
+#include "arch/power/linux/process.hh"
 #else
 #error "THE_ISA not set"
 #endif
@@ -626,7 +630,7 @@ LiveProcess::argsInit(int intSize, int pageSize)
     tc->setPC(prog_entry);
     tc->setNextPC(prog_entry + sizeof(MachInst));
 
-#if THE_ISA != ALPHA_ISA //e.g. MIPS or Sparc
+#if THE_ISA != ALPHA_ISA && THE_ISA != POWER_ISA //e.g. MIPS or Sparc
     tc->setNextNPC(prog_entry + (2 * sizeof(MachInst)));
 #endif
 
@@ -643,6 +647,12 @@ LiveProcess::syscall(int64_t callnum, ThreadContext *tc)
         fatal("Syscall %d out of range", callnum);
 
     desc->doSyscall(callnum, this, tc);
+}
+
+IntReg
+LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    return getSyscallArg(tc, i);
 }
 
 LiveProcess *
@@ -751,6 +761,20 @@ LiveProcess::create(LiveProcessParams * params)
       case ObjectFile::LinuxArmOABI:
         fatal("M5 does not support ARM OABI binaries. Please recompile with an"
               " EABI compiler.");
+      default:
+        fatal("Unknown/unsupported operating system.");
+    }
+#elif THE_ISA == POWER_ISA
+    if (objFile->getArch() != ObjectFile::Power)
+        fatal("Object file architecture does not match compiled ISA (Power).");
+    switch (objFile->getOpSys()) {
+      case ObjectFile::UnknownOpSys:
+        warn("Unknown operating system; assuming Linux.");
+        // fall through
+      case ObjectFile::Linux:
+        process = new PowerLinuxProcess(params, objFile);
+        break;
+
       default:
         fatal("Unknown/unsupported operating system.");
     }

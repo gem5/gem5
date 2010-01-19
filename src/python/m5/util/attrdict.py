@@ -45,6 +45,12 @@ class attrdict(dict):
             return self.__delitem__(attr)
         return super(attrdict, self).__delattr__(attr)
 
+    def __getstate__(self):
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(state)
+
 class multiattrdict(attrdict):
     """Wrap attrdict so that nested attribute accesses automatically create
     nested dictionaries."""
@@ -52,7 +58,7 @@ class multiattrdict(attrdict):
         try:
             return super(multiattrdict, self).__getattr__(attr)
         except AttributeError:
-            d = optiondict()
+            d = multiattrdict()
             setattr(self, attr, d)
             return d
 
@@ -80,8 +86,12 @@ if __name__ == '__main__':
     print dir(x)
     print(x)
 
+    print
+    print "multiattrdict"
     x = multiattrdict()
+    x.x.x.x = 9
     x.y.z = 9
     print x
     print x.y
     print x.y.z
+    print x.z.z

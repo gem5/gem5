@@ -28,9 +28,8 @@
  * Authors: Ali Saidi
  */
 
-//To get endianness
 #include "arch/isa_traits.hh"
-
+#include "config/the_isa.hh"
 #include "mem/port.hh"
 #include "sim/byteswap.hh"
 

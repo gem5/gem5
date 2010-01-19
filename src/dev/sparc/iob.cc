@@ -90,20 +90,18 @@ void
 Iob::readIob(PacketPtr pkt)
 {
         Addr accessAddr = pkt->getAddr() - iobManAddr;
-        int index;
-        uint64_t data;
 
         if (accessAddr >= IntManAddr && accessAddr < IntManAddr + IntManSize) {
-            index = (accessAddr - IntManAddr) >> 3;
-            data = intMan[index].cpu << 8 | intMan[index].vector << 0;
+            int index = (accessAddr - IntManAddr) >> 3;
+            uint64_t data = intMan[index].cpu << 8 | intMan[index].vector << 0;
             pkt->set(data);
             return;
         }
 
         if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
-            index = (accessAddr - IntManAddr) >> 3;
-            data = intCtl[index].mask  ? 1 << 2 : 0 |
-                   intCtl[index].pend  ? 1 << 0 : 0;
+            int index = (accessAddr - IntCtlAddr) >> 3;
+            uint64_t data = intCtl[index].mask  ? 1 << 2 : 0 |
+                intCtl[index].pend  ? 1 << 0 : 0;
             pkt->set(data);
             return;
         }
@@ -199,7 +197,7 @@ Iob::writeIob(PacketPtr pkt)
         }
 
         if (accessAddr >= IntCtlAddr && accessAddr < IntCtlAddr + IntCtlSize) {
-            index = (accessAddr - IntManAddr) >> 3;
+            index = (accessAddr - IntCtlAddr) >> 3;
             data = pkt->get<uint64_t>();
             intCtl[index].mask = bits(data,2,2);
             if (bits(data,1,1))

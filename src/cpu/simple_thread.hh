@@ -39,6 +39,7 @@
 #include "arch/types.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/thread_state.hh"
 #include "mem/request.hh"

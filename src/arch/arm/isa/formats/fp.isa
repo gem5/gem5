@@ -119,8 +119,8 @@ let {{
         _ic = %(fReg1)s >= %(fReg2)s;
         _iv = (isnan(%(fReg1)s) || isnan(%(fReg2)s)) & 1;
 
-        Cpsr = _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
-            (Cpsr & 0x0FFFFFFF);
+        CondCodes = _in << 31 | _iz << 30 | _ic << 29 | _iv << 28 |
+            (CondCodes & 0x0FFFFFFF);
         '''
 }};
 

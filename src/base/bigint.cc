@@ -28,9 +28,9 @@
  * Authors: Gabe Black
  */
 
-#include "base/bigint.hh"
-
 #include <iostream>
+
+#include "base/bigint.hh"
 
 using namespace std;
 

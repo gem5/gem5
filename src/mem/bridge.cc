@@ -93,7 +93,9 @@ Bridge::init()
         fatal("Both ports of bus bridge are not connected to a bus.\n");
 
     if (portA.peerBlockSize() != portB.peerBlockSize())
-        fatal("Busses don't have the same block size... Not supported.\n");
+        fatal("port A size %d, port B size %d \n " \
+              "Busses don't have the same block size... Not supported.\n",
+              portA.peerBlockSize(), portB.peerBlockSize());
 }
 
 bool

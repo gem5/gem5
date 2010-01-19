@@ -37,24 +37,30 @@
 #include <list>
 #include <string>
 
-#include "arch/isa_traits.hh"
 #include "arch/faults.hh"
-#include "arch/types.hh"
+#include "arch/isa_traits.hh"
 #include "arch/mt.hh"
+#include "arch/types.hh"
 #include "base/fast_alloc.hh"
 #include "base/trace.hh"
-#include "cpu/inorder/inorder_trace.hh"
+#include "base/types.hh"
 #include "config/full_system.hh"
-#include "cpu/thread_context.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
+#include "cpu/inorder/inorder_trace.hh"
+#include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inorder/resource.hh"
+#include "cpu/inorder/thread_state.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
-#include "cpu/inorder/thread_state.hh"
-#include "cpu/inorder/resource.hh"
-#include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/thread_context.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
+
+#if THE_ISA == ALPHA_ISA
+#include "arch/alpha/ev5.hh"
+#endif
 
 /**
  * @file
@@ -64,6 +70,7 @@
 // Forward declaration.
 class StaticInstPtr;
 class ResourceRequest;
+class Packet;
 
 class InOrderDynInst : public FastAlloc, public RefCounted
 {
@@ -486,7 +493,16 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     void setCurResSlot(unsigned slot_num) { curResSlot = slot_num; }
 
     /** Calls a syscall. */
+#if FULL_SYSTEM
+    /** Calls hardware return from error interrupt. */
+    Fault hwrei();
+    /** Traps to handle specified fault. */
+    void trap(Fault fault);
+    bool simPalCheck(int palFunc);
+#else
+    /** Calls a syscall. */
     void syscall(int64_t callnum);
+#endif
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
     Fault copySrcTranslate(Addr src);

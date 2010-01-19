@@ -35,6 +35,7 @@
 #include "base/loader/object_file.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "sim/arguments.hh"
 #include "sim/core.hh"

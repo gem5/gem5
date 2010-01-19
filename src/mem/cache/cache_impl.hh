@@ -449,7 +449,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     } else {
         // miss
 
-        Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+        Addr blk_addr = blockAlign(pkt->getAddr());
         MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
         if (mshr) {
@@ -692,7 +692,7 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt,
                                   CachePort *incomingPort,
                                   CachePort *otherSidePort)
 {
-    Addr blk_addr = pkt->getAddr() & ~(blkSize - 1);
+    Addr blk_addr = blockAlign(pkt->getAddr());
     BlkType *blk = tags->findBlock(pkt->getAddr());
 
     pkt->pushLabel(name());
@@ -1162,7 +1162,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
 
     BlkType *blk = tags->findBlock(pkt->getAddr());
 
-    Addr blk_addr = pkt->getAddr() & ~(Addr(blkSize-1));
+    Addr blk_addr = blockAlign(pkt->getAddr());
     MSHR *mshr = mshrQueue.findMatch(blk_addr);
 
     // Let the MSHR itself track the snoop and decide whether we want
@@ -1301,11 +1301,14 @@ Cache<TagStore>::getNextMSHR()
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
-            // Update statistic on number of prefetches issued
-            // (hwpf_mshr_misses)
-            mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
-            // Don't request bus, since we already have it
-            return allocateMissBuffer(pkt, curTick, false);
+            Addr pf_addr = blockAlign(pkt->getAddr());
+            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr)) {
+                // Update statistic on number of prefetches issued
+                // (hwpf_mshr_misses)
+                mshr_misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+                // Don't request bus, since we already have it
+                return allocateMissBuffer(pkt, curTick, false);
+            }
         }
     }
 

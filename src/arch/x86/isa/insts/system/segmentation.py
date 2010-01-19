@@ -179,7 +179,8 @@ def macroop LTR_R
     wrdh t3, t1, t2
     wrdl tr, t1, reg
     wrbase tr, t3, dataSize=8
-    ori t1, t1, (1 << 9)
+    limm t5, (1 << 9)
+    or t1, t1, t5
     st t1, tsg, [8, t4, t0], dataSize=8
 };
 
@@ -195,7 +196,8 @@ def macroop LTR_M
     wrdh t3, t1, t2
     wrdl tr, t1, t5
     wrbase tr, t3, dataSize=8
-    ori t1, t1, (1 << 9)
+    limm t5, (1 << 9)
+    or t1, t1, t5
     st t1, tsg, [8, t4, t0], dataSize=8
 };
 
@@ -212,7 +214,8 @@ def macroop LTR_P
     wrdh t3, t1, t2
     wrdl tr, t1, t5
     wrbase tr, t3, dataSize=8
-    ori t1, t1, (1 << 9)
+    limm t5, (1 << 9)
+    or t1, t1, t5
     st t1, tsg, [8, t4, t0], dataSize=8
 };
 

@@ -42,6 +42,7 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "mem/page_table.hh"
 #include "sim/process.hh"
 #include "sim/sim_object.hh"

@@ -83,8 +83,9 @@ namespace AlphaISA
             intr_flag = 0;
         }
 
-        void serialize(std::ostream &os);
-        void unserialize(Checkpoint *cp, const std::string &section);
+        void serialize(EventManager *em, std::ostream &os);
+        void unserialize(EventManager *em, Checkpoint *cp,
+                const std::string &section);
 
         void reset(std::string core_name, ThreadID num_threads,
                    unsigned num_vpes, BaseCPU *_cpu)

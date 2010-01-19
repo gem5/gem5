@@ -34,6 +34,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/registers.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/rename.hh"
 #include "params/DerivO3CPU.hh"
 

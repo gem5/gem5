@@ -30,23 +30,77 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/inorder/thread_context.hh"
 
 using namespace TheISA;
 
+#if FULL_SYSTEM
+
+VirtualPort *
+InOrderThreadContext::getVirtPort()
+{
+    return thread->getVirtPort();
+}
+
+
+void
+InOrderThreadContext::dumpFuncProfile()
+{
+    thread->dumpFuncProfile();
+}
+
+
+Tick
+InOrderThreadContext::readLastActivate()
+{
+    return thread->lastActivate;
+}
+
+
+Tick
+InOrderThreadContext::readLastSuspend()
+{
+    return thread->lastSuspend;
+}
+
+
+void
+InOrderThreadContext::profileClear()
+{
+    thread->profileClear();
+}
+
+
+void
+InOrderThreadContext::profileSample()
+{
+    thread->profileSample();
+}
+#endif
+
 void
 InOrderThreadContext::takeOverFrom(ThreadContext *old_context)
 {
     // some things should already be set up
+    assert(getSystemPtr() == old_context->getSystemPtr());
+#if !FULL_SYSTEM
     assert(getProcessPtr() == old_context->getProcessPtr());
+#endif
+
+
 
     // copy over functional state
     setStatus(old_context->status());
     copyArchRegs(old_context);
 
+#if !FULL_SYSTEM
     thread->funcExeInst = old_context->readFuncExeInst();
+#endif
+ 
     old_context->setStatus(ThreadContext::Halted);
+
     thread->inSyscall = false;
     thread->trapPending = false;
 }
@@ -97,8 +151,8 @@ void
 InOrderThreadContext::regStats(const std::string &name)
 {
 #if FULL_SYSTEM
-    thread->kernelStats = new Kernel::Statistics(cpu->system);
-    thread->kernelStats->regStats(name + ".kern");
+    //thread->kernelStats = new Kernel::Statistics(cpu->system);
+    //thread->kernelStats->regStats(name + ".kern");
 #endif
     ;
 }
@@ -107,22 +161,14 @@ InOrderThreadContext::regStats(const std::string &name)
 void
 InOrderThreadContext::serialize(std::ostream &os)
 {
-#if FULL_SYSTEM
-    if (thread->kernelStats)
-        thread->kernelStats->serialize(os);
-#endif
-    ;
+    panic("serialize unimplemented");
 }
 
 
 void
 InOrderThreadContext::unserialize(Checkpoint *cp, const std::string &section)
 {
-#if FULL_SYSTEM
-    if (thread->kernelStats)
-        thread->kernelStats->unserialize(cp, section);
-#endif
-    ;
+    panic("unserialize unimplemented");    
 }
 
 TheISA::MachInst

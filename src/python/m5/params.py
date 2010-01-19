@@ -50,12 +50,9 @@ import re
 import sys
 import time
 
-import convert
 import proxy
 import ticks
 from util import *
-
-import SimObject
 
 def isSimObject(*args, **kwargs):
     return SimObject.isSimObject(*args, **kwargs)
@@ -96,6 +93,8 @@ class ParamValue(object):
 
 # Regular parameter description.
 class ParamDesc(object):
+    file_ext = 'ptype'
+
     def __init__(self, ptype_str, ptype, *args, **kwargs):
         self.ptype_str = ptype_str
         # remember ptype only if it is provided
@@ -130,7 +129,7 @@ class ParamDesc(object):
     def __getattr__(self, attr):
         if attr == 'ptype':
             ptype = SimObject.allClasses[self.ptype_str]
-            assert issubclass(ptype, SimObject.SimObject)
+            assert isSimObjectClass(ptype)
             self.ptype = ptype
             return ptype
 
@@ -185,6 +184,8 @@ class SimObjVector(VectorParamValue):
             v.print_ini(ini_file)
 
 class VectorParamDesc(ParamDesc):
+    file_ext = 'vptype'
+
     # Convert assigned value to appropriate type.  If the RHS is not a
     # list or tuple, it generates a single-element list.
     def convert(self, value):
@@ -711,32 +712,31 @@ class MetaEnum(MetaParamValue):
 
         super(MetaEnum, cls).__init__(name, bases, init_dict)
 
-    def __str__(cls):
-        return cls.__name__
-
     # Generate C++ class declaration for this enum type.
     # Note that we wrap the enum in a class/struct to act as a namespace,
     # so that the enum strings can be brief w/o worrying about collisions.
     def cxx_decl(cls):
-        code = "#ifndef __ENUM__%s\n" % cls
-        code += '#define __ENUM__%s\n' % cls
+        name = cls.__name__
+        code = "#ifndef __ENUM__%s\n" % name
+        code += '#define __ENUM__%s\n' % name
         code += '\n'
         code += 'namespace Enums {\n'
-        code += '    enum %s {\n' % cls
+        code += '    enum %s {\n' % name
         for val in cls.vals:
             code += '        %s = %d,\n' % (val, cls.map[val])
-        code += '        Num_%s = %d,\n' % (cls, len(cls.vals))
+        code += '        Num_%s = %d,\n' % (name, len(cls.vals))
         code += '    };\n'
-        code += '    extern const char *%sStrings[Num_%s];\n' % (cls, cls)
+        code += '    extern const char *%sStrings[Num_%s];\n' % (name, name)
         code += '}\n'
         code += '\n'
         code += '#endif\n'
         return code
 
     def cxx_def(cls):
-        code = '#include "enums/%s.hh"\n' % cls
+        name = cls.__name__
+        code = '#include "enums/%s.hh"\n' % name
         code += 'namespace Enums {\n'
-        code += '    const char *%sStrings[Num_%s] =\n' % (cls, cls)
+        code += '    const char *%sStrings[Num_%s] =\n' % (name, name)
         code += '    {\n'
         for val in cls.vals:
             code += '        "%s",\n' % val
@@ -1170,6 +1170,15 @@ class PortParamDesc(object):
     ptype_str = 'Port'
     ptype = Port
 
+baseEnums = allEnums.copy()
+baseParams = allParams.copy()
+
+def clear():
+    global allEnums, allParams
+
+    allEnums = baseEnums.copy()
+    allParams = baseParams.copy()
+
 __all__ = ['Param', 'VectorParam',
            'Enum', 'Bool', 'String', 'Float',
            'Int', 'Unsigned', 'Int8', 'UInt8', 'Int16', 'UInt16',
@@ -1184,3 +1193,5 @@ __all__ = ['Param', 'VectorParam',
            'Time',
            'NextEthernetAddr', 'NULL',
            'Port', 'VectorPort']
+
+import SimObject

@@ -71,6 +71,7 @@ machine(DMA, "DMA Controller")
         out_msg.PhysicalAddress := in_msg.PhysicalAddress;
         out_msg.LineAddress := in_msg.LineAddress; 
         out_msg.Type := DMARequestType:READ;
+        out_msg.Requestor := machineID;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Len := in_msg.Len;
         out_msg.Destination.add(map_Address_to_Directory(address));
@@ -85,6 +86,7 @@ machine(DMA, "DMA Controller")
           out_msg.PhysicalAddress := in_msg.PhysicalAddress;
           out_msg.LineAddress := in_msg.LineAddress; 
           out_msg.Type := DMARequestType:WRITE;
+          out_msg.Requestor := machineID;
           out_msg.DataBlk := in_msg.DataBlk;
           out_msg.Len := in_msg.Len;
           out_msg.Destination.add(map_Address_to_Directory(address));
@@ -111,10 +113,6 @@ machine(DMA, "DMA Controller")
 
   action(p_popResponseQueue, "\p", desc="Pop request queue") {
     dmaResponseQueue_in.dequeue();
-  }
-
-  action(z_stall, "z", desc="dma is busy..stall") {
-    // do nothing
   }
 
   transition(READY, ReadRequest, BUSY_RD) {

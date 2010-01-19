@@ -30,8 +30,8 @@
  */
 
 #include "arch/locked_mem.hh"
+#include "config/the_isa.hh"
 #include "config/use_checker.hh"
-
 #include "cpu/o3/lsq.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "base/str.hh"

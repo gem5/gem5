@@ -26,8 +26,8 @@
 #
 # Authors: Kevin Lim
 
+from m5.defines import buildEnv
 from m5.params import *
-from m5 import build_env
 from BaseCPU import BaseCPU
 
 class SimpleOzoneCPU(BaseCPU):
@@ -35,7 +35,7 @@ class SimpleOzoneCPU(BaseCPU):
 
     numThreads = Param.Unsigned("number of HW thread contexts")
 
-    if not build_env['FULL_SYSTEM']:
+    if not buildEnv['FULL_SYSTEM']:
         mem = Param.FunctionalMemory(NULL, "memory")
 
     width = Param.Unsigned("Width")

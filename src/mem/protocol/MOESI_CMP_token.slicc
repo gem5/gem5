@@ -2,4 +2,5 @@ MOESI_CMP_token-msg.sm
 MOESI_CMP_token-L1cache.sm
 MOESI_CMP_token-L2cache.sm
 MOESI_CMP_token-dir.sm
+MOESI_CMP_token-dma.sm
 standard_CMP-protocol.sm

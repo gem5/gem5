@@ -32,6 +32,7 @@
 #define __CPU_OZONE_RENAME_TABLE_HH__
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 
 /** Rename table that holds the rename of each architectural register to
  *  producing DynInst. Needs to support copying from one table to another.

@@ -26,37 +26,43 @@
 #
 # Authors: Nathan Binkert
 
-from MemObject import MemObject
+import sys
+
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from m5 import build_env
+
 from Bus import Bus
 from InstTracer import InstTracer
 from ExeTracer import ExeTracer
-import sys
+from MemObject import MemObject
 
 default_tracer = ExeTracer()
 
-if build_env['TARGET_ISA'] == 'alpha':
+if buildEnv['TARGET_ISA'] == 'alpha':
     from AlphaTLB import AlphaDTB, AlphaITB
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         from AlphaInterrupts import AlphaInterrupts
-elif build_env['TARGET_ISA'] == 'sparc':
+elif buildEnv['TARGET_ISA'] == 'sparc':
     from SparcTLB import SparcTLB
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         from SparcInterrupts import SparcInterrupts
-elif build_env['TARGET_ISA'] == 'x86':
+elif buildEnv['TARGET_ISA'] == 'x86':
     from X86TLB import X86TLB
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         from X86LocalApic import X86LocalApic
-elif build_env['TARGET_ISA'] == 'mips':
+elif buildEnv['TARGET_ISA'] == 'mips':
     from MipsTLB import MipsTLB
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         from MipsInterrupts import MipsInterrupts
-elif build_env['TARGET_ISA'] == 'arm':
+elif buildEnv['TARGET_ISA'] == 'arm':
     from ArmTLB import ArmTLB
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         from ArmInterrupts import ArmInterrupts
+elif buildEnv['TARGET_ISA'] == 'power':
+    from PowerTLB import PowerTLB
+    if buildEnv['FULL_SYSTEM']:
+        from PowerInterrupts import PowerInterrupts
 
 class BaseCPU(MemObject):
     type = 'BaseCPU'
@@ -76,47 +82,54 @@ class BaseCPU(MemObject):
     do_statistics_insts = Param.Bool(True,
         "enable statistics pseudo instructions")
 
-    if build_env['FULL_SYSTEM']:
+    if buildEnv['FULL_SYSTEM']:
         profile = Param.Latency('0ns', "trace the kernel stack")
         do_quiesce = Param.Bool(True, "enable quiesce instructions")
     else:
         workload = VectorParam.Process("processes to run")
 
-    if build_env['TARGET_ISA'] == 'sparc':
+    if buildEnv['TARGET_ISA'] == 'sparc':
         dtb = Param.SparcTLB(SparcTLB(), "Data TLB")
         itb = Param.SparcTLB(SparcTLB(), "Instruction TLB")
-        if build_env['FULL_SYSTEM']:
+        if buildEnv['FULL_SYSTEM']:
             interrupts = Param.SparcInterrupts(
                 SparcInterrupts(), "Interrupt Controller")
-    elif build_env['TARGET_ISA'] == 'alpha':
+    elif buildEnv['TARGET_ISA'] == 'alpha':
         dtb = Param.AlphaTLB(AlphaDTB(), "Data TLB")
         itb = Param.AlphaTLB(AlphaITB(), "Instruction TLB")
-        if build_env['FULL_SYSTEM']:
+        if buildEnv['FULL_SYSTEM']:
             interrupts = Param.AlphaInterrupts(
                 AlphaInterrupts(), "Interrupt Controller")
-    elif build_env['TARGET_ISA'] == 'x86':
+    elif buildEnv['TARGET_ISA'] == 'x86':
         dtb = Param.X86TLB(X86TLB(), "Data TLB")
         itb = Param.X86TLB(X86TLB(), "Instruction TLB")
-        if build_env['FULL_SYSTEM']:
+        if buildEnv['FULL_SYSTEM']:
             _localApic = X86LocalApic(pio_addr=0x2000000000000000)
             interrupts = \
                 Param.X86LocalApic(_localApic, "Interrupt Controller")
-    elif build_env['TARGET_ISA'] == 'mips':
+    elif buildEnv['TARGET_ISA'] == 'mips':
         dtb = Param.MipsTLB(MipsTLB(), "Data TLB")
         itb = Param.MipsTLB(MipsTLB(), "Instruction TLB")
-        if build_env['FULL_SYSTEM']:
+        if buildEnv['FULL_SYSTEM']:
             interrupts = Param.MipsInterrupts(
                     MipsInterrupts(), "Interrupt Controller")
-    elif build_env['TARGET_ISA'] == 'arm':
+    elif buildEnv['TARGET_ISA'] == 'arm':
         UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
         dtb = Param.ArmTLB(ArmTLB(), "Data TLB")
         itb = Param.ArmTLB(ArmTLB(), "Instruction TLB")
-        if build_env['FULL_SYSTEM']:
+        if buildEnv['FULL_SYSTEM']:
             interrupts = Param.ArmInterrupts(
                     ArmInterrupts(), "Interrupt Controller")
+    elif buildEnv['TARGET_ISA'] == 'power':
+        UnifiedTLB = Param.Bool(True, "Is this a Unified TLB?")
+        dtb = Param.PowerTLB(PowerTLB(), "Data TLB")
+        itb = Param.PowerTLB(PowerTLB(), "Instruction TLB")
+        if buildEnv['FULL_SYSTEM']:
+            interrupts = Param.PowerInterrupts(
+                    PowerInterrupts(), "Interrupt Controller")
     else:
         print "Don't know what TLB to use for ISA %s" % \
-            build_env['TARGET_ISA']
+            buildEnv['TARGET_ISA']
         sys.exit(1)
 
     max_insts_all_threads = Param.Counter(0,
@@ -139,7 +152,7 @@ class BaseCPU(MemObject):
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
     _mem_ports = []
-    if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
+    if buildEnv['TARGET_ISA'] == 'x86' and buildEnv['FULL_SYSTEM']:
         _mem_ports = ["itb.walker.port",
                       "dtb.walker.port",
                       "interrupts.pio",
@@ -157,7 +170,7 @@ class BaseCPU(MemObject):
         self.icache_port = ic.cpu_side
         self.dcache_port = dc.cpu_side
         self._mem_ports = ['icache.mem_side', 'dcache.mem_side']
-        if build_env['TARGET_ISA'] == 'x86' and build_env['FULL_SYSTEM']:
+        if buildEnv['TARGET_ISA'] == 'x86' and buildEnv['FULL_SYSTEM']:
             self._mem_ports += ["itb.walker_port", "dtb.walker_port"]
 
     def addTwoLevelCacheHierarchy(self, ic, dc, l2c):
@@ -168,7 +181,7 @@ class BaseCPU(MemObject):
         self.l2cache.cpu_side = self.toL2Bus.port
         self._mem_ports = ['l2cache.mem_side']
 
-    if build_env['TARGET_ISA'] == 'mips':
+    if buildEnv['TARGET_ISA'] == 'mips':
         CP0_IntCtl_IPTI = Param.Unsigned(0,"No Description")
         CP0_IntCtl_IPPCI = Param.Unsigned(0,"No Description")
         CP0_SrsCtl_HSS = Param.Unsigned(0,"No Description")

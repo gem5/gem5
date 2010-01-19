@@ -39,6 +39,7 @@
 #include "mem/ruby/common/Debug.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/gems_common/util.hh"
+#include "base/misc.hh"
 
 class Debug;
 extern Debug* g_debug_ptr;
@@ -70,6 +71,7 @@ DebugComponentData debugComponents[] =
     {"Cache",             'c' },
     {"Predictor",         'p' },
     {"Allocator",         'a' },
+    {"Memory",            'M' },
 };
 
 extern "C" void changeDebugVerbosity(VerbosityLevel vb);
@@ -95,19 +97,27 @@ Debug::Debug()
 
 Debug::Debug( const string & name, const vector<string> & argv )
 {
-  for (size_t i=0;i<argv.size();i+=2){
-    if (argv[i] == "filter_string")
-      setFilterString( argv[i+1].c_str() );
-    else if (argv[i] == "verbosity_string")
+  // 
+  // must clear the filter before adding filter strings
+  //
+  clearFilter();
+
+  for (size_t i=0;i<argv.size();i+=2) {
+    if (argv[i] == "filter_string") {
+      if (setFilterString(argv[i+1].c_str())) {
+        fatal("could not set filter string to %s\n", argv[i+1].c_str());
+      }
+    } else if (argv[i] == "verbosity_string") {
       setVerbosityString( argv[i+1].c_str() );
-    else if (argv[i] == "start_time")
+    } else if (argv[i] == "start_time") {
       m_starting_cycle = atoi( argv[i+1].c_str() );
-    else if (argv[i] == "output_filename")
+    } else if (argv[i] == "output_filename") {
       setDebugOutputFile( argv[i+1].c_str() );
-    else if (argv[i] == "protocol_trace")
+    } else if (argv[i] == "protocol_trace") {
       m_protocol_trace = string_to_bool(argv[i+1]);
-    else
-      assert(0);
+    } else {
+      fatal("invalid argument %s\n");
+    }
   }
 }
 
@@ -119,7 +129,8 @@ Debug::Debug( const char *filterString, const char *verboseString,
   debug_cout_ptr = &cout;
 
   m_starting_cycle = filterStartTime;
-  setFilterString( filterString );
+  if (setFilterString(filterString))
+    fatal("could not set filter string to %s\n", filterString);
   setVerbosityString( verboseString );
   setDebugOutputFile( filename );
 }

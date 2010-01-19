@@ -105,6 +105,7 @@ class AlphaLinux : public Linux
     static const unsigned TIOCISATTY_ = 0x2000745e;
     static const unsigned TIOCGETS_   = 0x402c7413;
     static const unsigned TIOCGETA_   = 0x40127417;
+    static const unsigned TCSETAW_    = 0x80147419; // 2.6.15 kernel
     //@}
 
     /// For table().
@@ -125,6 +126,21 @@ class AlphaLinux : public Linux
         TGT_RLIMIT_MEMLOCK = 9,
         TGT_RLIMIT_LOCKS = 10
     };
+   
+    typedef struct {
+       int64_t  uptime;    /* Seconds since boot */
+       uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
+       uint64_t totalram;  /* Total usable main memory size */
+       uint64_t freeram;   /* Available memory size */
+       uint64_t sharedram; /* Amount of shared memory */
+       uint64_t bufferram; /* Memory used by buffers */
+       uint64_t totalswap; /* Total swap space size */
+       uint64_t freeswap;  /* swap space still available */
+       uint16_t procs;     /* Number of current processes */
+       uint64_t totalhigh; /* Total high memory size */
+       uint64_t freehigh;  /* Available high memory size */
+       uint64_t mem_unit;  /* Memory unit size in bytes */
+    } tgt_sysinfo;
 };
 
 #endif // __ALPHA_ALPHA_LINUX_LINUX_HH__

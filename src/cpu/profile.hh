@@ -34,6 +34,7 @@
 #include <map>
 
 #include "arch/stacktrace.hh"
+#include "config/the_isa.hh"
 #include "cpu/static_inst.hh"
 #include "base/types.hh"
 

@@ -40,6 +40,7 @@
 #include "base/stats/events.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/profile.hh"

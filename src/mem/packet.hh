@@ -437,6 +437,7 @@ class Packet : public FastAlloc, public Printable
     bool hadBadAddress() const { return cmd == MemCmd::BadAddressError; }
     void copyError(Packet *pkt) { assert(pkt->isError()); cmd = pkt->cmd; }
 
+    bool isSrcValid() { return flags.isSet(VALID_SRC); }
     /// Accessor function to get the source index of the packet.
     NodeID getSrc() const    { assert(flags.isSet(VALID_SRC)); return src; }
     /// Accessor function to set the source index of the packet.
@@ -444,6 +445,7 @@ class Packet : public FastAlloc, public Printable
     /// Reset source field, e.g. to retransmit packet on different bus.
     void clearSrc() { flags.clear(VALID_SRC); }
 
+    bool isDestValid() { return flags.isSet(VALID_DST); }
     /// Accessor function for the destination index of the packet.
     NodeID getDest() const     { assert(flags.isSet(VALID_DST)); return dest; }
     /// Accessor function to set the destination index of the packet.

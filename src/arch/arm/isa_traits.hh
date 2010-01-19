@@ -104,6 +104,8 @@ namespace ArmISA
     const int WordBytes = 4;
     const int HalfwordBytes = 2;
     const int ByteBytes = 1;
+
+    const uint32_t HighVecs = 0xFFFF0000;
 };
 
 using namespace ArmISA;

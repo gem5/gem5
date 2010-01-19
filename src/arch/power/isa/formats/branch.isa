@@ -1,0 +1,222 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2009 The University of Edinburgh
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Timothy M. Jones
+
+////////////////////////////////////////////////////////////////////
+//
+// Control transfer instructions
+//
+// From the Power ISA Book I v2.06, page 33, the following rules should
+// be obeyed by programmers:
+//
+// - Use branch instructions where LK == 1 only as subroutine calls.
+// - Pair each subroutine call with a bclr instruction with BH == 00
+//   that returns from the subroutine.
+// - Do not use bclrl as a subroutine call.
+//
+// Therefore, I've flagged all versions that update the link register (LR)
+// as calls, except bclrl (BranchLrCtrCond format) which is flagged as
+// a return.
+
+
+let {{
+
+# Simple code to update link register (LR).
+updateLrCode = 'LR = PC + 4;'
+
+}};
+
+// Instructions that unconditionally branch relative to the current PC.
+def format BranchPCRel(br_code, inst_flags = []) {{
+    inst_flags += ('IsUncondControl', 'IsDirectControl')
+    basic_code = br_code
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchPCRel', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    update_flags = inst_flags + [ 'IsCall' ]
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchPCRel', update_code,
+                 update_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};
+
+// Instructions that unconditionally branch to a specific address.
+def format BranchNonPCRel(br_code, inst_flags = []) {{
+    inst_flags += ('IsUncondControl', 'IsDirectControl')
+    basic_code = br_code
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchNonPCRel', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    update_flags = inst_flags + [ 'IsCall' ]
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchNonPCRel', update_code,
+                 update_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};
+
+let {{
+
+# Check the condition register (CR) allows the branch to be taken.
+def GetCondCode(br_code):
+    cond_code =  'if(condOk(CR)) {\n'
+    cond_code += '    ' + br_code + '\n'
+    cond_code += '} else {\n'
+    cond_code += '    NPC = NPC;\n'
+    cond_code += '}\n'
+    return cond_code
+
+# Check the condition register (CR) and count register (CTR) allow the
+# branch to be taken. Also, in certain situations, decrement the count
+# register too. This takes place in ctrOk within BranchCond classes.
+def GetCtrCondCode(br_code):
+    cond_code =  'uint32_t ctr = CTR;\n'
+    cond_code += 'bool ctr_ok = ctrOk(ctr);\n'
+    cond_code += 'bool cond_ok = condOk(CR);\n'
+    cond_code += 'if(ctr_ok && cond_ok) {\n'
+    cond_code += '    ' + br_code + '\n'
+    cond_code += '} else {\n'
+    cond_code += '    NPC = NPC;\n'
+    cond_code += '}\n'
+    cond_code += 'CTR = ctr;\n'
+    return cond_code
+
+}};
+
+// Instructions that conditionally branch relative to the current PC based on
+// the condition register (CR) and count register (CTR).
+def format BranchPCRelCondCtr(br_code, inst_flags = []) {{
+    inst_flags += ('IsCondControl', 'IsDirectControl')
+    basic_code = GetCtrCondCode(br_code)
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchPCRelCond', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    update_flags = inst_flags + [ 'IsCall' ]
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchPCRelCond', update_code,
+                 update_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};
+
+// Instructions that conditionally branch to a specific address based on the
+// condition register (CR) and count register (CTR).
+def format BranchNonPCRelCondCtr(br_code, inst_flags = []) {{
+    inst_flags += ('IsCondControl', 'IsDirectControl')
+    basic_code = GetCtrCondCode(br_code)
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchNonPCRelCond', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    update_flags = inst_flags + [ 'IsCall' ]
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchNonPCRelCond', update_code,
+                 update_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};
+
+// Instructions that conditionally branch to the address in the link register
+// (LR) based on the condition register (CR) and count register (CTR).
+def format BranchLrCondCtr(br_code, inst_flags = []) {{
+    inst_flags += ('IsCondControl', 'IsIndirectControl', 'IsReturn')
+    basic_code = GetCtrCondCode(br_code)
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchRegCond', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchRegCond', update_code,
+                 inst_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};
+
+// Instructions that conditionally branch to the address in the count register
+// (CTR) based on the condition register (CR).
+def format BranchCtrCond(br_code, inst_flags = []) {{
+    inst_flags += ('IsCondControl', 'IsIndirectControl')
+    basic_code = GetCondCode(br_code)
+
+    # The version that does not update LR
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenAluOp(name, Name, 'BranchRegCond', basic_code, inst_flags,
+                 CheckLkDecode, BasicConstructor)
+
+    # The version that does the update
+    update_code = basic_code + updateLrCode
+    update_flags = inst_flags + [ 'IsCall' ]
+    (header_output_up, decoder_output_up, _, exec_output_up) = \
+        GenAluOp(name, Name + 'UpdateLr', 'BranchRegCond', update_code,
+                 update_flags, CheckLkDecode, BasicConstructor)
+
+    # Add the outputs together
+    header_output += header_output_up
+    decoder_output += decoder_output_up
+    exec_output += exec_output_up
+}};

@@ -26,7 +26,7 @@
 #
 # Authors: Korey Sewell
 
-m5.AddToPath('../configs/common')
+m5.util.addToPath('../configs/common')
 from cpu2000 import vortex
 
 workload = vortex(isa, opsys, 'smred')

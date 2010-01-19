@@ -38,14 +38,18 @@ def bitfield ENCODING      encoding;
 def bitfield OPCODE        opcode;
 def bitfield MEDIA_OPCODE  mediaOpcode;
 def bitfield MEDIA_OPCODE2 mediaOpcode2;
+def bitfield USEIMM        useImm;
 def bitfield OPCODE_24	   opcode24;
 def bitfield OPCODE_23_20  opcode23_20;
 def bitfield OPCODE_23_21  opcode23_21;
 def bitfield OPCODE_22     opcode22;
+def bitfield OPCODE_20	   opcode20;
 def bitfield OPCODE_19	   opcode19;
+def bitfield OPCODE_18	   opcode18;
 def bitfield OPCODE_15_12  opcode15_12;
 def bitfield OPCODE_15	   opcode15;
 def bitfield MISC_OPCODE   miscOpcode;
+def bitfield OPC2          opc2; 
 def bitfield OPCODE_7      opcode7;
 def bitfield OPCODE_4      opcode4;
 

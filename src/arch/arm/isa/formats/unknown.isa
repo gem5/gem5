@@ -74,7 +74,7 @@ output exec {{
     {
         panic("attempt to execute unknown instruction "
               "(inst 0x%08x, opcode 0x%x, binary: %s)", machInst, OPCODE, inst2string(machInst));
-        return new UnimplementedOpcodeFault;
+        return new UnimpFault("Unimplemented Instruction");
     }
 }};
 

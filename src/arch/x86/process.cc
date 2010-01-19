@@ -139,6 +139,12 @@ X86_64LiveProcess::X86_64LiveProcess(LiveProcessParams *params,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
+
+    vsyscallPage.base = 0xffffffffff600000ULL;
+    vsyscallPage.size = VMPageSize;
+    vsyscallPage.vtimeOffset = 0x400;
+    vsyscallPage.vgettimeofdayOffset = 0x410;
+
     // Set up stack. On X86_64 Linux, stack goes from the top of memory
     // downward, less the hole for the kernel address space plus one page
     // for undertermined purposes.
@@ -169,7 +175,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
         int _numSyscallDescs) :
     X86LiveProcess(params, objFile, _syscallDescs, _numSyscallDescs)
 {
-    _gdtStart = 0x100000000;
+    _gdtStart = ULL(0x100000000);
     _gdtSize = VMPageSize;
 
     vsyscallPage.base = 0xffffe000ULL;
@@ -184,7 +190,7 @@ I386LiveProcess::I386LiveProcess(LiveProcessParams *params,
 
     // Set up region for mmaps. This was determined empirically and may not
     // always be correct.
-    mmap_start = mmap_end = (Addr)0xf7ffd000ULL;
+    mmap_start = mmap_end = (Addr)0xf7ffe000ULL;
 }
 
 SyscallDesc*
@@ -204,6 +210,24 @@ X86_64LiveProcess::startup()
         return;
 
     argsInit(sizeof(uint64_t), VMPageSize);
+
+       // Set up the vsyscall page for this process.
+    pTable->allocate(vsyscallPage.base, vsyscallPage.size);
+    uint8_t vtimeBlob[] = {
+        0x48,0xc7,0xc0,0xc9,0x00,0x00,0x00,    // mov    $0xc9,%rax
+        0x0f,0x05,                             // syscall
+        0xc3                                   // retq
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vtimeOffset,
+            vtimeBlob, sizeof(vtimeBlob));
+
+    uint8_t vgettimeofdayBlob[] = {
+        0x48,0xc7,0xc0,0x60,0x00,0x00,0x00,    // mov    $0x60,%rax
+        0x0f,0x05,                             // syscall
+        0xc3                                   // retq
+    };
+    initVirtMem->writeBlob(vsyscallPage.base + vsyscallPage.vgettimeofdayOffset,
+            vgettimeofdayBlob, sizeof(vgettimeofdayBlob));
 
     for (int i = 0; i < contextIds.size(); i++) {
         ThreadContext * tc = system->getThreadContext(contextIds[i]);
@@ -698,10 +722,10 @@ X86LiveProcess::setSyscallReturn(ThreadContext *tc, SyscallReturn return_value)
 }
 
 X86ISA::IntReg
-X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+X86_64LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs);
-    return tc->readIntReg(ArgumentReg[i]);
+    return tc->readIntReg(ArgumentReg[i++]);
 }
 
 void
@@ -712,10 +736,21 @@ X86_64LiveProcess::setSyscallArg(ThreadContext *tc, int i, X86ISA::IntReg val)
 }
 
 X86ISA::IntReg
-I386LiveProcess::getSyscallArg(ThreadContext *tc, int i)
+I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     assert(i < NumArgumentRegs32);
-    return tc->readIntReg(ArgumentReg32[i]);
+    return tc->readIntReg(ArgumentReg32[i++]);
+}
+
+X86ISA::IntReg
+I386LiveProcess::getSyscallArg(ThreadContext *tc, int &i, int width)
+{
+    assert(width == 32 || width == 64);
+    assert(i < NumArgumentRegs);
+    uint64_t retVal = tc->readIntReg(ArgumentReg32[i++]) & mask(32);
+    if (width == 64)
+        retVal |= ((uint64_t)tc->readIntReg(ArgumentReg[i++]) << 32);
+    return retVal;
 }
 
 void

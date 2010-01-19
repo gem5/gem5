@@ -96,6 +96,7 @@ For more details, see:
 """
     raise
 
+# Global Python includes
 import os
 import re
 import subprocess
@@ -106,55 +107,18 @@ from os.path import abspath, basename, dirname, expanduser, normpath
 from os.path import exists,  isdir, isfile
 from os.path import join as joinpath, split as splitpath
 
+# SCons includes
 import SCons
 import SCons.Node
 
-def read_command(cmd, **kwargs):
-    """run the command cmd, read the results and return them
-    this is sorta like `cmd` in shell"""
-    from subprocess import Popen, PIPE, STDOUT
-
-    if isinstance(cmd, str):
-        cmd = cmd.split()
-
-    no_exception = 'exception' in kwargs
-    exception = kwargs.pop('exception', None)
+extra_python_paths = [
+    Dir('src/python').srcnode().abspath, # M5 includes
+    Dir('ext/ply').srcnode().abspath, # ply is used by several files
+    ]
     
-    kwargs.setdefault('shell', False)
-    kwargs.setdefault('stdout', PIPE)
-    kwargs.setdefault('stderr', STDOUT)
-    kwargs.setdefault('close_fds', True)
-    try:
-        subp = Popen(cmd, **kwargs)
-    except Exception, e:
-        if no_exception:
-            return exception
-        raise
+sys.path[1:1] = extra_python_paths
 
-    return subp.communicate()[0]
-
-# helper function: compare arrays or strings of version numbers.
-# E.g., compare_version((1,3,25), (1,4,1)')
-# returns -1, 0, 1 if v1 is <, ==, > v2
-def compare_versions(v1, v2):
-    def make_version_list(v):
-        if isinstance(v, (list,tuple)):
-            return v
-        elif isinstance(v, str):
-            return map(lambda x: int(re.match('\d+', x).group()), v.split('.'))
-        else:
-            raise TypeError
-
-    v1 = make_version_list(v1)
-    v2 = make_version_list(v2)
-    # Compare corresponding elements of lists
-    for n1,n2 in zip(v1, v2):
-        if n1 < n2: return -1
-        if n1 > n2: return  1
-    # all corresponding values are equal... see if one has extra values
-    if len(v1) < len(v2): return -1
-    if len(v1) > len(v2): return  1
-    return 0
+from m5.util import compareVersions, readCommand
 
 ########################################################################
 #
@@ -162,7 +126,7 @@ def compare_versions(v1, v2):
 #
 ########################################################################
 use_vars = set([ 'AS', 'AR', 'CC', 'CXX', 'HOME', 'LD_LIBRARY_PATH', 'PATH',
-                 'RANLIB' ])
+                 'PYTHONPATH', 'RANLIB' ])
 
 use_env = {}
 for key,val in os.environ.iteritems():
@@ -172,6 +136,10 @@ for key,val in os.environ.iteritems():
 main = Environment(ENV=use_env)
 main.root = Dir(".")         # The current directory (where this file lives).
 main.srcdir = Dir("src")     # The source directory
+
+# add useful python code PYTHONPATH so it can be used by subprocesses
+# as well
+main.AppendENVPath('PYTHONPATH', extra_python_paths)
 
 ########################################################################
 #
@@ -217,7 +185,7 @@ if hgdir.exists():
     # 1) Grab repository revision if we know it.
     cmd = "hg id -n -i -t -b"
     try:
-        hg_info = read_command(cmd, cwd=main.root.abspath).strip()
+        hg_info = readCommand(cmd, cwd=main.root.abspath).strip()
     except OSError:
         print mercurial_bin_not_found
 
@@ -378,11 +346,8 @@ Export('extras_dir_list')
 # the ext directory should be on the #includes path
 main.Append(CPPPATH=[Dir('ext')])
 
-# M5_PLY is used by isa_parser.py to find the PLY package.
-main.Append(ENV = { 'M5_PLY' : Dir('ext/ply').abspath })
-
-CXX_version = read_command([main['CXX'],'--version'], exception=False)
-CXX_V = read_command([main['CXX'],'-V'], exception=False)
+CXX_version = readCommand([main['CXX'],'--version'], exception=False)
+CXX_V = readCommand([main['CXX'],'-V'], exception=False)
 
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
 main['SUNCC'] = CXX_V and CXX_V.find('Sun C++') >= 0
@@ -426,7 +391,7 @@ if main['BATCH']:
 
 if sys.platform == 'cygwin':
     # cygwin has some header file issues...
-    main.Append(CCFLAGS=Split("-Wno-uninitialized"))
+    main.Append(CCFLAGS="-Wno-uninitialized")
 
 # Check for SWIG
 if not main.has_key('SWIG'):
@@ -435,7 +400,7 @@ if not main.has_key('SWIG'):
     Exit(1)
 
 # Check for appropriate SWIG version
-swig_version = read_command(('swig', '-version'), exception='').split()
+swig_version = readCommand(('swig', '-version'), exception='').split()
 # First 3 words should be "SWIG Version x.y.z"
 if len(swig_version) < 3 or \
         swig_version[0] != 'SWIG' or swig_version[1] != 'Version':
@@ -443,7 +408,7 @@ if len(swig_version) < 3 or \
     Exit(1)
 
 min_swig_version = '1.3.28'
-if compare_versions(swig_version[2], min_swig_version) < 0:
+if compareVersions(swig_version[2], min_swig_version) < 0:
     print 'Error: SWIG version', min_swig_version, 'or newer required.'
     print '       Installed version:', swig_version[2]
     Exit(1)
@@ -514,8 +479,8 @@ conf.CheckLeading()
 try:
     import platform
     uname = platform.uname()
-    if uname[0] == 'Darwin' and compare_versions(uname[2], '9.0.0') >= 0:
-        if int(read_command('sysctl -n hw.cpu64bit_capable')[0]):
+    if uname[0] == 'Darwin' and compareVersions(uname[2], '9.0.0') >= 0:
+        if int(readCommand('sysctl -n hw.cpu64bit_capable')[0]):
             main.Append(CCFLAGS='-arch x86_64')
             main.Append(CFLAGS='-arch x86_64')
             main.Append(LINKFLAGS='-arch x86_64')
@@ -615,9 +580,9 @@ have_mysql = bool(mysql_config)
 
 # Check MySQL version.
 if have_mysql:
-    mysql_version = read_command(mysql_config + ' --version')
+    mysql_version = readCommand(mysql_config + ' --version')
     min_mysql_version = '4.1'
-    if compare_versions(mysql_version, min_mysql_version) < 0:
+    if compareVersions(mysql_version, min_mysql_version) < 0:
         print 'Warning: MySQL', min_mysql_version, 'or newer required.'
         print '         Version', mysql_version, 'detected.'
         have_mysql = False
@@ -777,17 +742,10 @@ def make_switching_dir(dname, switch_headers, env):
     # list of ISAs from env['ALL_ISA_LIST'].
     def gen_switch_hdr(target, source, env):
         fname = str(target[0])
-        bname = basename(fname)
         f = open(fname, 'w')
-        f.write('#include "arch/isa_specific.hh"\n')
-        cond = '#if'
-        for isa in all_isa_list:
-            f.write('%s THE_ISA == %s_ISA\n#include "%s/%s/%s"\n'
-                    % (cond, isa.upper(), dname, isa, bname))
-            cond = '#elif'
-        f.write('#else\n#error "THE_ISA not set"\n#endif\n')
+        isa = env['TARGET_ISA'].lower()
+        print >>f, '#include "%s/%s/%s"' % (dname, isa, basename(fname))
         f.close()
-        return 0
 
     # String to print when generating header
     def gen_switch_hdr_string(target, source, env):

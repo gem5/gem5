@@ -35,3 +35,4 @@ if not env['RUBY']:
 
 Source('AbstractCacheEntry.cc')
 Source('RubySlicc_Profiler_interface.cc')
+Source('RubySlicc_ComponentMapping.cc')

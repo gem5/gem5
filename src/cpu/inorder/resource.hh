@@ -36,6 +36,7 @@
 #include <list>
 #include <string>
 
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"

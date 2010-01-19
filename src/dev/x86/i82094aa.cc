@@ -151,7 +151,7 @@ X86ISA::I82094AA::signalInterrupt(int line)
         DPRINTF(I82094AA, "Entry was masked.\n");
         return;
     } else {
-        TriggerIntMessage message;
+        TriggerIntMessage message = 0;
         message.destination = entry.dest;
         if (entry.deliveryMode == DeliveryMode::ExtInt) {
             assert(extIntPic);

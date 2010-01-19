@@ -45,16 +45,20 @@ namespace ArmISA
 
         // All the different types of opcode fields.
         Bitfield<27, 25> encoding;
+        Bitfield<25>     useImm;
         Bitfield<24, 21> opcode;
         Bitfield<24, 20> mediaOpcode;
         Bitfield<24>     opcode24;
         Bitfield<23, 20> opcode23_20;
         Bitfield<23, 21> opcode23_21;
+        Bitfield<20>     opcode20;
         Bitfield<22>     opcode22;
         Bitfield<19>     opcode19;
+        Bitfield<18>     opcode18;
         Bitfield<15, 12> opcode15_12;
         Bitfield<15>     opcode15;
         Bitfield<7,  4>  miscOpcode;
+        Bitfield<7,5>    opc2;
         Bitfield<7>      opcode7;
         Bitfield<4>      opcode4;
 
@@ -156,6 +160,7 @@ namespace ArmISA
         MODE_FIQ = 17,
         MODE_IRQ = 18,
         MODE_SVC = 19,
+        MODE_MON = 22,
         MODE_ABORT = 23,
         MODE_UNDEFINED = 27,
         MODE_SYSTEM = 31

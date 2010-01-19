@@ -39,6 +39,7 @@
 #include <string>
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "base/chunk_generator.hh"
 #include "base/cprintf.hh" // csprintf
 #include "base/trace.hh"

@@ -379,7 +379,7 @@ class BaseCache : public MemObject
     }
 
 
-    Addr blockAlign(Addr addr) const { return (addr & ~(blkSize - 1)); }
+    Addr blockAlign(Addr addr) const { return (addr & ~(Addr(blkSize - 1))); }
 
 
     const Range<Addr> &getAddrRange() const { return addrRange; }

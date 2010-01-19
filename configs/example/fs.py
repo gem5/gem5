@@ -26,15 +26,20 @@
 #
 # Authors: Ali Saidi
 
-import optparse, os, sys
+import optparse
+import os
+import sys
 
 import m5
-
-if not m5.build_env['FULL_SYSTEM']:
-    m5.fatal("This script requires full-system mode (*_FS).")
-
+from m5.defines import buildEnv
 from m5.objects import *
-m5.AddToPath('../common')
+from m5.util import addToPath, fatal
+
+if not buildEnv['FULL_SYSTEM']:
+    fatal("This script requires full-system mode (*_FS).")
+
+addToPath('../common')
+
 from FSConfig import *
 from SysPaths import *
 from Benchmarks import *
@@ -98,16 +103,16 @@ else:
 
 np = options.num_cpus
 
-if m5.build_env['TARGET_ISA'] == "alpha":
+if buildEnv['TARGET_ISA'] == "alpha":
     test_sys = makeLinuxAlphaSystem(test_mem_mode, bm[0])
-elif m5.build_env['TARGET_ISA'] == "mips":
+elif buildEnv['TARGET_ISA'] == "mips":
     test_sys = makeLinuxMipsSystem(test_mem_mode, bm[0])
-elif m5.build_env['TARGET_ISA'] == "sparc":
+elif buildEnv['TARGET_ISA'] == "sparc":
     test_sys = makeSparcSystem(test_mem_mode, bm[0])
-elif m5.build_env['TARGET_ISA'] == "x86":
+elif buildEnv['TARGET_ISA'] == "x86":
     test_sys = makeLinuxX86System(test_mem_mode, np, bm[0])
 else:
-    m5.fatal("incapable of building non-alpha or non-sparc full system!")
+    fatal("incapable of building non-alpha or non-sparc full system!")
 
 if options.kernel is not None:
     test_sys.kernel = binary(options.kernel)
@@ -123,7 +128,7 @@ if options.l2cache:
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
-if options.caches:
+if options.caches or options.l2cache:
     test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
     test_sys.bridge.filter_ranges_b=[AddrRange(0, size='8GB')]
     test_sys.iocache = IOCache(addr_range=AddrRange(0, size='8GB'))
@@ -142,17 +147,17 @@ for i in xrange(np):
     if options.fastmem:
         test_sys.cpu[i].physmem_port = test_sys.physmem.port
 
-if m5.build_env['TARGET_ISA'] == 'mips':
+if buildEnv['TARGET_ISA'] == 'mips':
     setMipsOptions(TestCPUClass)
 
 if len(bm) == 2:
-    if m5.build_env['TARGET_ISA'] == 'alpha':
+    if buildEnv['TARGET_ISA'] == 'alpha':
         drive_sys = makeLinuxAlphaSystem(drive_mem_mode, bm[1])
-    elif m5.build_env['TARGET_ISA'] == 'mips':
+    elif buildEnv['TARGET_ISA'] == 'mips':
         drive_sys = makeLinuxMipsSystem(drive_mem_mode, bm[1])
-    elif m5.build_env['TARGET_ISA'] == 'sparc':
+    elif buildEnv['TARGET_ISA'] == 'sparc':
         drive_sys = makeSparcSystem(drive_mem_mode, bm[1])
-    elif m5.build.env['TARGET_ISA'] == 'x86':
+    elif buildEnv['TARGET_ISA'] == 'x86':
         drive_sys = makeX86System(drive_mem_mode, np, bm[1])
     drive_sys.cpu = DriveCPUClass(cpu_id=0)
     drive_sys.cpu.connectMemPorts(drive_sys.membus)

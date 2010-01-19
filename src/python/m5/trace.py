@@ -48,5 +48,5 @@ def help():
         if flag == 'All':
             continue
         print "    %s: %s" % (flag, flags.descriptions[flag])
-        util.print_list(flags.compoundMap[flag], indent=8)
+        util.printList(flags.compoundMap[flag], indent=8)
         print

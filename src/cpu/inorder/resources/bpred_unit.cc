@@ -33,6 +33,7 @@
 
 #include "base/trace.hh"
 #include "base/traceflags.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/resources/bpred_unit.hh"
 
 using namespace std;

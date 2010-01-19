@@ -34,702 +34,704 @@ import traceback
 # get type names
 from types import *
 
-# Prepend the directory where the PLY lex & yacc modules are found
-# to the search path.  Assumes we're compiling in a subdirectory
-# of 'build' in the current tree.
-sys.path[0:0] = [os.environ['M5_PLY']]
+from m5.util.grammar import Grammar
 
-from ply import lex
-from ply import yacc
+class ISAParser(Grammar):
+    def __init__(self, *args, **kwargs):
+        super(ISAParser, self).__init__(*args, **kwargs)
+        self.templateMap = {}
 
-#####################################################################
-#
-#                                Lexer
-#
-# The PLY lexer module takes two things as input:
-# - A list of token names (the string list 'tokens')
-# - A regular expression describing a match for each token.  The
-#   regexp for token FOO can be provided in two ways:
-#   - as a string variable named t_FOO
-#   - as the doc string for a function named t_FOO.  In this case,
-#     the function is also executed, allowing an action to be
-#     associated with each token match.
-#
-#####################################################################
+    #####################################################################
+    #
+    #                                Lexer
+    #
+    # The PLY lexer module takes two things as input:
+    # - A list of token names (the string list 'tokens')
+    # - A regular expression describing a match for each token.  The
+    #   regexp for token FOO can be provided in two ways:
+    #   - as a string variable named t_FOO
+    #   - as the doc string for a function named t_FOO.  In this case,
+    #     the function is also executed, allowing an action to be
+    #     associated with each token match.
+    #
+    #####################################################################
 
-# Reserved words.  These are listed separately as they are matched
-# using the same regexp as generic IDs, but distinguished in the
-# t_ID() function.  The PLY documentation suggests this approach.
-reserved = (
-    'BITFIELD', 'DECODE', 'DECODER', 'DEFAULT', 'DEF', 'EXEC', 'FORMAT',
-    'HEADER', 'LET', 'NAMESPACE', 'OPERAND_TYPES', 'OPERANDS',
-    'OUTPUT', 'SIGNED', 'TEMPLATE'
+    # Reserved words.  These are listed separately as they are matched
+    # using the same regexp as generic IDs, but distinguished in the
+    # t_ID() function.  The PLY documentation suggests this approach.
+    reserved = (
+        'BITFIELD', 'DECODE', 'DECODER', 'DEFAULT', 'DEF', 'EXEC', 'FORMAT',
+        'HEADER', 'LET', 'NAMESPACE', 'OPERAND_TYPES', 'OPERANDS',
+        'OUTPUT', 'SIGNED', 'TEMPLATE'
+        )
+
+    # List of tokens.  The lex module requires this.
+    tokens = reserved + (
+        # identifier
+        'ID',
+
+        # integer literal
+        'INTLIT',
+
+        # string literal
+        'STRLIT',
+
+        # code literal
+        'CODELIT',
+
+        # ( ) [ ] { } < > , ; . : :: *
+        'LPAREN', 'RPAREN',
+        'LBRACKET', 'RBRACKET',
+        'LBRACE', 'RBRACE',
+        'LESS', 'GREATER', 'EQUALS',
+        'COMMA', 'SEMI', 'DOT', 'COLON', 'DBLCOLON',
+        'ASTERISK',
+
+        # C preprocessor directives
+        'CPPDIRECTIVE'
+
+    # The following are matched but never returned. commented out to
+    # suppress PLY warning
+        # newfile directive
+    #    'NEWFILE',
+
+        # endfile directive
+    #    'ENDFILE'
     )
 
-# List of tokens.  The lex module requires this.
-tokens = reserved + (
-    # identifier
-    'ID',
+    # Regular expressions for token matching
+    t_LPAREN           = r'\('
+    t_RPAREN           = r'\)'
+    t_LBRACKET         = r'\['
+    t_RBRACKET         = r'\]'
+    t_LBRACE           = r'\{'
+    t_RBRACE           = r'\}'
+    t_LESS             = r'\<'
+    t_GREATER          = r'\>'
+    t_EQUALS           = r'='
+    t_COMMA            = r','
+    t_SEMI             = r';'
+    t_DOT              = r'\.'
+    t_COLON            = r':'
+    t_DBLCOLON         = r'::'
+    t_ASTERISK         = r'\*'
 
-    # integer literal
-    'INTLIT',
+    # Identifiers and reserved words
+    reserved_map = { }
+    for r in reserved:
+        reserved_map[r.lower()] = r
 
-    # string literal
-    'STRLIT',
+    def t_ID(self, t):
+        r'[A-Za-z_]\w*'
+        t.type = self.reserved_map.get(t.value, 'ID')
+        return t
 
-    # code literal
-    'CODELIT',
+    # Integer literal
+    def t_INTLIT(self, t):
+        r'(0x[\da-fA-F]+)|\d+'
+        try:
+            t.value = int(t.value,0)
+        except ValueError:
+            error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
+            t.value = 0
+        return t
 
-    # ( ) [ ] { } < > , ; . : :: *
-    'LPAREN', 'RPAREN',
-    'LBRACKET', 'RBRACKET',
-    'LBRACE', 'RBRACE',
-    'LESS', 'GREATER', 'EQUALS',
-    'COMMA', 'SEMI', 'DOT', 'COLON', 'DBLCOLON',
-    'ASTERISK',
-
-    # C preprocessor directives
-    'CPPDIRECTIVE'
-
-# The following are matched but never returned. commented out to
-# suppress PLY warning
-    # newfile directive
-#    'NEWFILE',
-
-    # endfile directive
-#    'ENDFILE'
-)
-
-# Regular expressions for token matching
-t_LPAREN           = r'\('
-t_RPAREN           = r'\)'
-t_LBRACKET         = r'\['
-t_RBRACKET         = r'\]'
-t_LBRACE           = r'\{'
-t_RBRACE           = r'\}'
-t_LESS             = r'\<'
-t_GREATER          = r'\>'
-t_EQUALS           = r'='
-t_COMMA            = r','
-t_SEMI             = r';'
-t_DOT              = r'\.'
-t_COLON            = r':'
-t_DBLCOLON         = r'::'
-t_ASTERISK         = r'\*'
-
-# Identifiers and reserved words
-reserved_map = { }
-for r in reserved:
-    reserved_map[r.lower()] = r
-
-def t_ID(t):
-    r'[A-Za-z_]\w*'
-    t.type = reserved_map.get(t.value,'ID')
-    return t
-
-# Integer literal
-def t_INTLIT(t):
-    r'(0x[\da-fA-F]+)|\d+'
-    try:
-        t.value = int(t.value,0)
-    except ValueError:
-        error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
-        t.value = 0
-    return t
-
-# String literal.  Note that these use only single quotes, and
-# can span multiple lines.
-def t_STRLIT(t):
-    r"(?m)'([^'])+'"
-    # strip off quotes
-    t.value = t.value[1:-1]
-    t.lexer.lineno += t.value.count('\n')
-    return t
+    # String literal.  Note that these use only single quotes, and
+    # can span multiple lines.
+    def t_STRLIT(self, t):
+        r"(?m)'([^'])+'"
+        # strip off quotes
+        t.value = t.value[1:-1]
+        t.lexer.lineno += t.value.count('\n')
+        return t
 
 
-# "Code literal"... like a string literal, but delimiters are
-# '{{' and '}}' so they get formatted nicely under emacs c-mode
-def t_CODELIT(t):
-    r"(?m)\{\{([^\}]|}(?!\}))+\}\}"
-    # strip off {{ & }}
-    t.value = t.value[2:-2]
-    t.lexer.lineno += t.value.count('\n')
-    return t
+    # "Code literal"... like a string literal, but delimiters are
+    # '{{' and '}}' so they get formatted nicely under emacs c-mode
+    def t_CODELIT(self, t):
+        r"(?m)\{\{([^\}]|}(?!\}))+\}\}"
+        # strip off {{ & }}
+        t.value = t.value[2:-2]
+        t.lexer.lineno += t.value.count('\n')
+        return t
 
-def t_CPPDIRECTIVE(t):
-    r'^\#[^\#].*\n'
-    t.lexer.lineno += t.value.count('\n')
-    return t
+    def t_CPPDIRECTIVE(self, t):
+        r'^\#[^\#].*\n'
+        t.lexer.lineno += t.value.count('\n')
+        return t
 
-def t_NEWFILE(t):
-    r'^\#\#newfile\s+"[\w/.-]*"'
-    fileNameStack.push((t.value[11:-1], t.lexer.lineno))
-    t.lexer.lineno = 0
+    def t_NEWFILE(self, t):
+        r'^\#\#newfile\s+"[\w/.-]*"'
+        fileNameStack.push((t.value[11:-1], t.lexer.lineno))
+        t.lexer.lineno = 0
 
-def t_ENDFILE(t):
-    r'^\#\#endfile'
-    (old_filename, t.lexer.lineno) = fileNameStack.pop()
+    def t_ENDFILE(self, t):
+        r'^\#\#endfile'
+        (old_filename, t.lexer.lineno) = fileNameStack.pop()
 
-#
-# The functions t_NEWLINE, t_ignore, and t_error are
-# special for the lex module.
-#
+    #
+    # The functions t_NEWLINE, t_ignore, and t_error are
+    # special for the lex module.
+    #
 
-# Newlines
-def t_NEWLINE(t):
-    r'\n+'
-    t.lexer.lineno += t.value.count('\n')
+    # Newlines
+    def t_NEWLINE(self, t):
+        r'\n+'
+        t.lexer.lineno += t.value.count('\n')
 
-# Comments
-def t_comment(t):
-    r'//.*'
+    # Comments
+    def t_comment(self, t):
+        r'//.*'
 
-# Completely ignored characters
-t_ignore           = ' \t\x0c'
+    # Completely ignored characters
+    t_ignore = ' \t\x0c'
 
-# Error handler
-def t_error(t):
-    error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
-    t.skip(1)
+    # Error handler
+    def t_error(self, t):
+        error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
+        t.skip(1)
 
-# Build the lexer
-lexer = lex.lex()
+    #####################################################################
+    #
+    #                                Parser
+    #
+    # Every function whose name starts with 'p_' defines a grammar
+    # rule.  The rule is encoded in the function's doc string, while
+    # the function body provides the action taken when the rule is
+    # matched.  The argument to each function is a list of the values
+    # of the rule's symbols: t[0] for the LHS, and t[1..n] for the
+    # symbols on the RHS.  For tokens, the value is copied from the
+    # t.value attribute provided by the lexer.  For non-terminals, the
+    # value is assigned by the producing rule; i.e., the job of the
+    # grammar rule function is to set the value for the non-terminal
+    # on the LHS (by assigning to t[0]).
+    #####################################################################
 
-#####################################################################
-#
-#                                Parser
-#
-# Every function whose name starts with 'p_' defines a grammar rule.
-# The rule is encoded in the function's doc string, while the
-# function body provides the action taken when the rule is matched.
-# The argument to each function is a list of the values of the
-# rule's symbols: t[0] for the LHS, and t[1..n] for the symbols
-# on the RHS.  For tokens, the value is copied from the t.value
-# attribute provided by the lexer.  For non-terminals, the value
-# is assigned by the producing rule; i.e., the job of the grammar
-# rule function is to set the value for the non-terminal on the LHS
-# (by assigning to t[0]).
-#####################################################################
-
-# The LHS of the first grammar rule is used as the start symbol
-# (in this case, 'specification').  Note that this rule enforces
-# that there will be exactly one namespace declaration, with 0 or more
-# global defs/decls before and after it.  The defs & decls before
-# the namespace decl will be outside the namespace; those after
-# will be inside.  The decoder function is always inside the namespace.
-def p_specification(t):
-    'specification : opt_defs_and_outputs name_decl opt_defs_and_outputs decode_block'
-    global_code = t[1]
-    isa_name = t[2]
-    namespace = isa_name + "Inst"
-    # wrap the decode block as a function definition
-    t[4].wrap_decode_block('''
+    # The LHS of the first grammar rule is used as the start symbol
+    # (in this case, 'specification').  Note that this rule enforces
+    # that there will be exactly one namespace declaration, with 0 or
+    # more global defs/decls before and after it.  The defs & decls
+    # before the namespace decl will be outside the namespace; those
+    # after will be inside.  The decoder function is always inside the
+    # namespace.
+    def p_specification(self, t):
+        'specification : opt_defs_and_outputs name_decl opt_defs_and_outputs decode_block'
+        global_code = t[1]
+        isa_name = t[2]
+        namespace = isa_name + "Inst"
+        # wrap the decode block as a function definition
+        t[4].wrap_decode_block('''
 StaticInstPtr
 %(isa_name)s::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {
     using namespace %(namespace)s;
 ''' % vars(), '}')
-    # both the latter output blocks and the decode block are in the namespace
-    namespace_code = t[3] + t[4]
-    # pass it all back to the caller of yacc.parse()
-    t[0] = (isa_name, namespace, global_code, namespace_code)
-
-# ISA name declaration looks like "namespace <foo>;"
-def p_name_decl(t):
-    'name_decl : NAMESPACE ID SEMI'
-    t[0] = t[2]
-
-# 'opt_defs_and_outputs' is a possibly empty sequence of
-# def and/or output statements.
-def p_opt_defs_and_outputs_0(t):
-    'opt_defs_and_outputs : empty'
-    t[0] = GenCode()
-
-def p_opt_defs_and_outputs_1(t):
-    'opt_defs_and_outputs : defs_and_outputs'
-    t[0] = t[1]
-
-def p_defs_and_outputs_0(t):
-    'defs_and_outputs : def_or_output'
-    t[0] = t[1]
-
-def p_defs_and_outputs_1(t):
-    'defs_and_outputs : defs_and_outputs def_or_output'
-    t[0] = t[1] + t[2]
-
-# The list of possible definition/output statements.
-def p_def_or_output(t):
-    '''def_or_output : def_format
-                     | def_bitfield
-                     | def_bitfield_struct
-                     | def_template
-                     | def_operand_types
-                     | def_operands
-                     | output_header
-                     | output_decoder
-                     | output_exec
-                     | global_let'''
-    t[0] = t[1]
-
-# Output blocks 'output <foo> {{...}}' (C++ code blocks) are copied
-# directly to the appropriate output section.
-
-
-# Protect any non-dict-substitution '%'s in a format string
-# (i.e. those not followed by '(')
-def protect_non_subst_percents(s):
-    return re.sub(r'%(?!\()', '%%', s)
-
-# Massage output block by substituting in template definitions and bit
-# operators.  We handle '%'s embedded in the string that don't
-# indicate template substitutions (or CPU-specific symbols, which get
-# handled in GenCode) by doubling them first so that the format
-# operation will reduce them back to single '%'s.
-def process_output(s):
-    s = protect_non_subst_percents(s)
-    # protects cpu-specific symbols too
-    s = protect_cpu_symbols(s)
-    return substBitOps(s % templateMap)
-
-def p_output_header(t):
-    'output_header : OUTPUT HEADER CODELIT SEMI'
-    t[0] = GenCode(header_output = process_output(t[3]))
-
-def p_output_decoder(t):
-    'output_decoder : OUTPUT DECODER CODELIT SEMI'
-    t[0] = GenCode(decoder_output = process_output(t[3]))
-
-def p_output_exec(t):
-    'output_exec : OUTPUT EXEC CODELIT SEMI'
-    t[0] = GenCode(exec_output = process_output(t[3]))
-
-# global let blocks 'let {{...}}' (Python code blocks) are executed
-# directly when seen.  Note that these execute in a special variable
-# context 'exportContext' to prevent the code from polluting this
-# script's namespace.
-def p_global_let(t):
-    'global_let : LET CODELIT SEMI'
-    updateExportContext()
-    exportContext["header_output"] = ''
-    exportContext["decoder_output"] = ''
-    exportContext["exec_output"] = ''
-    exportContext["decode_block"] = ''
-    try:
-        exec fixPythonIndentation(t[2]) in exportContext
-    except Exception, exc:
-        error(t.lexer.lineno,
-              'error: %s in global let block "%s".' % (exc, t[2]))
-    t[0] = GenCode(header_output = exportContext["header_output"],
-                   decoder_output = exportContext["decoder_output"],
-                   exec_output = exportContext["exec_output"],
-                   decode_block = exportContext["decode_block"])
-
-# Define the mapping from operand type extensions to C++ types and bit
-# widths (stored in operandTypeMap).
-def p_def_operand_types(t):
-    'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
-    try:
-        userDict = eval('{' + t[3] + '}')
-    except Exception, exc:
-        error(t.lexer.lineno,
-              'error: %s in def operand_types block "%s".' % (exc, t[3]))
-    buildOperandTypeMap(userDict, t.lexer.lineno)
-    t[0] = GenCode() # contributes nothing to the output C++ file
-
-# Define the mapping from operand names to operand classes and other
-# traits.  Stored in operandNameMap.
-def p_def_operands(t):
-    'def_operands : DEF OPERANDS CODELIT SEMI'
-    if not globals().has_key('operandTypeMap'):
-        error(t.lexer.lineno,
-              'error: operand types must be defined before operands')
-    try:
-        userDict = eval('{' + t[3] + '}', exportContext)
-    except Exception, exc:
-        error(t.lexer.lineno,
-              'error: %s in def operands block "%s".' % (exc, t[3]))
-    buildOperandNameMap(userDict, t.lexer.lineno)
-    t[0] = GenCode() # contributes nothing to the output C++ file
-
-# A bitfield definition looks like:
-# 'def [signed] bitfield <ID> [<first>:<last>]'
-# This generates a preprocessor macro in the output file.
-def p_def_bitfield_0(t):
-    'def_bitfield : DEF opt_signed BITFIELD ID LESS INTLIT COLON INTLIT GREATER SEMI'
-    expr = 'bits(machInst, %2d, %2d)' % (t[6], t[8])
-    if (t[2] == 'signed'):
-        expr = 'sext<%d>(%s)' % (t[6] - t[8] + 1, expr)
-    hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-    t[0] = GenCode(header_output = hash_define)
-
-# alternate form for single bit: 'def [signed] bitfield <ID> [<bit>]'
-def p_def_bitfield_1(t):
-    'def_bitfield : DEF opt_signed BITFIELD ID LESS INTLIT GREATER SEMI'
-    expr = 'bits(machInst, %2d, %2d)' % (t[6], t[6])
-    if (t[2] == 'signed'):
-        expr = 'sext<%d>(%s)' % (1, expr)
-    hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-    t[0] = GenCode(header_output = hash_define)
-
-# alternate form for structure member: 'def bitfield <ID> <ID>'
-def p_def_bitfield_struct(t):
-    'def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI'
-    if (t[2] != ''):
-        error(t.lexer.lineno, 'error: structure bitfields are always unsigned.')
-    expr = 'machInst.%s' % t[5]
-    hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-    t[0] = GenCode(header_output = hash_define)
-
-def p_id_with_dot_0(t):
-    'id_with_dot : ID'
-    t[0] = t[1]
-
-def p_id_with_dot_1(t):
-    'id_with_dot : ID DOT id_with_dot'
-    t[0] = t[1] + t[2] + t[3]
-
-def p_opt_signed_0(t):
-    'opt_signed : SIGNED'
-    t[0] = t[1]
-
-def p_opt_signed_1(t):
-    'opt_signed : empty'
-    t[0] = ''
-
-# Global map variable to hold templates
-templateMap = {}
-
-def p_def_template(t):
-    'def_template : DEF TEMPLATE ID CODELIT SEMI'
-    templateMap[t[3]] = Template(t[4])
-    t[0] = GenCode()
-
-# An instruction format definition looks like
-# "def format <fmt>(<params>) {{...}};"
-def p_def_format(t):
-    'def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI'
-    (id, params, code) = (t[3], t[5], t[7])
-    defFormat(id, params, code, t.lexer.lineno)
-    t[0] = GenCode()
-
-# The formal parameter list for an instruction format is a possibly
-# empty list of comma-separated parameters.  Positional (standard,
-# non-keyword) parameters must come first, followed by keyword
-# parameters, followed by a '*foo' parameter that gets excess
-# positional arguments (as in Python).  Each of these three parameter
-# categories is optional.
-#
-# Note that we do not support the '**foo' parameter for collecting
-# otherwise undefined keyword args.  Otherwise the parameter list is
-# (I believe) identical to what is supported in Python.
-#
-# The param list generates a tuple, where the first element is a list of
-# the positional params and the second element is a dict containing the
-# keyword params.
-def p_param_list_0(t):
-    'param_list : positional_param_list COMMA nonpositional_param_list'
-    t[0] = t[1] + t[3]
-
-def p_param_list_1(t):
-    '''param_list : positional_param_list
-                  | nonpositional_param_list'''
-    t[0] = t[1]
-
-def p_positional_param_list_0(t):
-    'positional_param_list : empty'
-    t[0] = []
-
-def p_positional_param_list_1(t):
-    'positional_param_list : ID'
-    t[0] = [t[1]]
-
-def p_positional_param_list_2(t):
-    'positional_param_list : positional_param_list COMMA ID'
-    t[0] = t[1] + [t[3]]
-
-def p_nonpositional_param_list_0(t):
-    'nonpositional_param_list : keyword_param_list COMMA excess_args_param'
-    t[0] = t[1] + t[3]
-
-def p_nonpositional_param_list_1(t):
-    '''nonpositional_param_list : keyword_param_list
-                                | excess_args_param'''
-    t[0] = t[1]
-
-def p_keyword_param_list_0(t):
-    'keyword_param_list : keyword_param'
-    t[0] = [t[1]]
-
-def p_keyword_param_list_1(t):
-    'keyword_param_list : keyword_param_list COMMA keyword_param'
-    t[0] = t[1] + [t[3]]
-
-def p_keyword_param(t):
-    'keyword_param : ID EQUALS expr'
-    t[0] = t[1] + ' = ' + t[3].__repr__()
-
-def p_excess_args_param(t):
-    'excess_args_param : ASTERISK ID'
-    # Just concatenate them: '*ID'.  Wrap in list to be consistent
-    # with positional_param_list and keyword_param_list.
-    t[0] = [t[1] + t[2]]
-
-# End of format definition-related rules.
-##############
-
-#
-# A decode block looks like:
-#       decode <field1> [, <field2>]* [default <inst>] { ... }
-#
-def p_decode_block(t):
-    'decode_block : DECODE ID opt_default LBRACE decode_stmt_list RBRACE'
-    default_defaults = defaultStack.pop()
-    codeObj = t[5]
-    # use the "default defaults" only if there was no explicit
-    # default statement in decode_stmt_list
-    if not codeObj.has_decode_default:
-        codeObj += default_defaults
-    codeObj.wrap_decode_block('switch (%s) {\n' % t[2], '}\n')
-    t[0] = codeObj
-
-# The opt_default statement serves only to push the "default defaults"
-# onto defaultStack.  This value will be used by nested decode blocks,
-# and used and popped off when the current decode_block is processed
-# (in p_decode_block() above).
-def p_opt_default_0(t):
-    'opt_default : empty'
-    # no default specified: reuse the one currently at the top of the stack
-    defaultStack.push(defaultStack.top())
-    # no meaningful value returned
-    t[0] = None
-
-def p_opt_default_1(t):
-    'opt_default : DEFAULT inst'
-    # push the new default
-    codeObj = t[2]
-    codeObj.wrap_decode_block('\ndefault:\n', 'break;\n')
-    defaultStack.push(codeObj)
-    # no meaningful value returned
-    t[0] = None
-
-def p_decode_stmt_list_0(t):
-    'decode_stmt_list : decode_stmt'
-    t[0] = t[1]
-
-def p_decode_stmt_list_1(t):
-    'decode_stmt_list : decode_stmt decode_stmt_list'
-    if (t[1].has_decode_default and t[2].has_decode_default):
-        error(t.lexer.lineno, 'Two default cases in decode block')
-    t[0] = t[1] + t[2]
-
-#
-# Decode statement rules
-#
-# There are four types of statements allowed in a decode block:
-# 1. Format blocks 'format <foo> { ... }'
-# 2. Nested decode blocks
-# 3. Instruction definitions.
-# 4. C preprocessor directives.
-
-
-# Preprocessor directives found in a decode statement list are passed
-# through to the output, replicated to all of the output code
-# streams.  This works well for ifdefs, so we can ifdef out both the
-# declarations and the decode cases generated by an instruction
-# definition.  Handling them as part of the grammar makes it easy to
-# keep them in the right place with respect to the code generated by
-# the other statements.
-def p_decode_stmt_cpp(t):
-    'decode_stmt : CPPDIRECTIVE'
-    t[0] = GenCode(t[1], t[1], t[1], t[1])
-
-# A format block 'format <foo> { ... }' sets the default instruction
-# format used to handle instruction definitions inside the block.
-# This format can be overridden by using an explicit format on the
-# instruction definition or with a nested format block.
-def p_decode_stmt_format(t):
-    'decode_stmt : FORMAT push_format_id LBRACE decode_stmt_list RBRACE'
-    # The format will be pushed on the stack when 'push_format_id' is
-    # processed (see below).  Once the parser has recognized the full
-    # production (though the right brace), we're done with the format,
-    # so now we can pop it.
-    formatStack.pop()
-    t[0] = t[4]
-
-# This rule exists so we can set the current format (& push the stack)
-# when we recognize the format name part of the format block.
-def p_push_format_id(t):
-    'push_format_id : ID'
-    try:
-        formatStack.push(formatMap[t[1]])
-        t[0] = ('', '// format %s' % t[1])
-    except KeyError:
-        error(t.lexer.lineno, 'instruction format "%s" not defined.' % t[1])
-
-# Nested decode block: if the value of the current field matches the
-# specified constant, do a nested decode on some other field.
-def p_decode_stmt_decode(t):
-    'decode_stmt : case_label COLON decode_block'
-    label = t[1]
-    codeObj = t[3]
-    # just wrap the decoding code from the block as a case in the
-    # outer switch statement.
-    codeObj.wrap_decode_block('\n%s:\n' % label)
-    codeObj.has_decode_default = (label == 'default')
-    t[0] = codeObj
-
-# Instruction definition (finally!).
-def p_decode_stmt_inst(t):
-    'decode_stmt : case_label COLON inst SEMI'
-    label = t[1]
-    codeObj = t[3]
-    codeObj.wrap_decode_block('\n%s:' % label, 'break;\n')
-    codeObj.has_decode_default = (label == 'default')
-    t[0] = codeObj
-
-# The case label is either a list of one or more constants or 'default'
-def p_case_label_0(t):
-    'case_label : intlit_list'
-    t[0] = ': '.join(map(lambda a: 'case %#x' % a, t[1]))
-
-def p_case_label_1(t):
-    'case_label : DEFAULT'
-    t[0] = 'default'
-
-#
-# The constant list for a decode case label must be non-empty, but may have
-# one or more comma-separated integer literals in it.
-#
-def p_intlit_list_0(t):
-    'intlit_list : INTLIT'
-    t[0] = [t[1]]
-
-def p_intlit_list_1(t):
-    'intlit_list : intlit_list COMMA INTLIT'
-    t[0] = t[1]
-    t[0].append(t[3])
-
-# Define an instruction using the current instruction format (specified
-# by an enclosing format block).
-# "<mnemonic>(<args>)"
-def p_inst_0(t):
-    'inst : ID LPAREN arg_list RPAREN'
-    # Pass the ID and arg list to the current format class to deal with.
-    currentFormat = formatStack.top()
-    codeObj = currentFormat.defineInst(t[1], t[3], t.lexer.lineno)
-    args = ','.join(map(str, t[3]))
-    args = re.sub('(?m)^', '//', args)
-    args = re.sub('^//', '', args)
-    comment = '\n// %s::%s(%s)\n' % (currentFormat.id, t[1], args)
-    codeObj.prepend_all(comment)
-    t[0] = codeObj
-
-# Define an instruction using an explicitly specified format:
-# "<fmt>::<mnemonic>(<args>)"
-def p_inst_1(t):
-    'inst : ID DBLCOLON ID LPAREN arg_list RPAREN'
-    try:
-        format = formatMap[t[1]]
-    except KeyError:
-        error(t.lexer.lineno, 'instruction format "%s" not defined.' % t[1])
-    codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
-    comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
-    codeObj.prepend_all(comment)
-    t[0] = codeObj
-
-# The arg list generates a tuple, where the first element is a list of
-# the positional args and the second element is a dict containing the
-# keyword args.
-def p_arg_list_0(t):
-    'arg_list : positional_arg_list COMMA keyword_arg_list'
-    t[0] = ( t[1], t[3] )
-
-def p_arg_list_1(t):
-    'arg_list : positional_arg_list'
-    t[0] = ( t[1], {} )
-
-def p_arg_list_2(t):
-    'arg_list : keyword_arg_list'
-    t[0] = ( [], t[1] )
-
-def p_positional_arg_list_0(t):
-    'positional_arg_list : empty'
-    t[0] = []
-
-def p_positional_arg_list_1(t):
-    'positional_arg_list : expr'
-    t[0] = [t[1]]
-
-def p_positional_arg_list_2(t):
-    'positional_arg_list : positional_arg_list COMMA expr'
-    t[0] = t[1] + [t[3]]
-
-def p_keyword_arg_list_0(t):
-    'keyword_arg_list : keyword_arg'
-    t[0] = t[1]
-
-def p_keyword_arg_list_1(t):
-    'keyword_arg_list : keyword_arg_list COMMA keyword_arg'
-    t[0] = t[1]
-    t[0].update(t[3])
-
-def p_keyword_arg(t):
-    'keyword_arg : ID EQUALS expr'
-    t[0] = { t[1] : t[3] }
-
-#
-# Basic expressions.  These constitute the argument values of
-# "function calls" (i.e. instruction definitions in the decode block)
-# and default values for formal parameters of format functions.
-#
-# Right now, these are either strings, integers, or (recursively)
-# lists of exprs (using Python square-bracket list syntax).  Note that
-# bare identifiers are trated as string constants here (since there
-# isn't really a variable namespace to refer to).
-#
-def p_expr_0(t):
-    '''expr : ID
-            | INTLIT
-            | STRLIT
-            | CODELIT'''
-    t[0] = t[1]
-
-def p_expr_1(t):
-    '''expr : LBRACKET list_expr RBRACKET'''
-    t[0] = t[2]
-
-def p_list_expr_0(t):
-    'list_expr : expr'
-    t[0] = [t[1]]
-
-def p_list_expr_1(t):
-    'list_expr : list_expr COMMA expr'
-    t[0] = t[1] + [t[3]]
-
-def p_list_expr_2(t):
-    'list_expr : empty'
-    t[0] = []
-
-#
-# Empty production... use in other rules for readability.
-#
-def p_empty(t):
-    'empty :'
-    pass
-
-# Parse error handler.  Note that the argument here is the offending
-# *token*, not a grammar symbol (hence the need to use t.value)
-def p_error(t):
-    if t:
-        error(t.lexer.lineno, "syntax error at '%s'" % t.value)
-    else:
-        error(0, "unknown syntax error", True)
-
-# END OF GRAMMAR RULES
-#
+        # both the latter output blocks and the decode block are in
+        # the namespace
+        namespace_code = t[3] + t[4]
+        # pass it all back to the caller of yacc.parse()
+        t[0] = (isa_name, namespace, global_code, namespace_code)
+
+    # ISA name declaration looks like "namespace <foo>;"
+    def p_name_decl(self, t):
+        'name_decl : NAMESPACE ID SEMI'
+        t[0] = t[2]
+
+    # 'opt_defs_and_outputs' is a possibly empty sequence of
+    # def and/or output statements.
+    def p_opt_defs_and_outputs_0(self, t):
+        'opt_defs_and_outputs : empty'
+        t[0] = GenCode()
+
+    def p_opt_defs_and_outputs_1(self, t):
+        'opt_defs_and_outputs : defs_and_outputs'
+        t[0] = t[1]
+
+    def p_defs_and_outputs_0(self, t):
+        'defs_and_outputs : def_or_output'
+        t[0] = t[1]
+
+    def p_defs_and_outputs_1(self, t):
+        'defs_and_outputs : defs_and_outputs def_or_output'
+        t[0] = t[1] + t[2]
+
+    # The list of possible definition/output statements.
+    def p_def_or_output(self, t):
+        '''def_or_output : def_format
+                         | def_bitfield
+                         | def_bitfield_struct
+                         | def_template
+                         | def_operand_types
+                         | def_operands
+                         | output_header
+                         | output_decoder
+                         | output_exec
+                         | global_let'''
+        t[0] = t[1]
+
+    # Output blocks 'output <foo> {{...}}' (C++ code blocks) are copied
+    # directly to the appropriate output section.
+
+    # Massage output block by substituting in template definitions and
+    # bit operators.  We handle '%'s embedded in the string that don't
+    # indicate template substitutions (or CPU-specific symbols, which
+    # get handled in GenCode) by doubling them first so that the
+    # format operation will reduce them back to single '%'s.
+    def process_output(self, s):
+        s = protect_non_subst_percents(s)
+        # protects cpu-specific symbols too
+        s = protect_cpu_symbols(s)
+        return substBitOps(s % self.templateMap)
+
+    def p_output_header(self, t):
+        'output_header : OUTPUT HEADER CODELIT SEMI'
+        t[0] = GenCode(header_output = self.process_output(t[3]))
+
+    def p_output_decoder(self, t):
+        'output_decoder : OUTPUT DECODER CODELIT SEMI'
+        t[0] = GenCode(decoder_output = self.process_output(t[3]))
+
+    def p_output_exec(self, t):
+        'output_exec : OUTPUT EXEC CODELIT SEMI'
+        t[0] = GenCode(exec_output = self.process_output(t[3]))
+
+    # global let blocks 'let {{...}}' (Python code blocks) are
+    # executed directly when seen.  Note that these execute in a
+    # special variable context 'exportContext' to prevent the code
+    # from polluting this script's namespace.
+    def p_global_let(self, t):
+        'global_let : LET CODELIT SEMI'
+        updateExportContext()
+        exportContext["header_output"] = ''
+        exportContext["decoder_output"] = ''
+        exportContext["exec_output"] = ''
+        exportContext["decode_block"] = ''
+        try:
+            exec fixPythonIndentation(t[2]) in exportContext
+        except Exception, exc:
+            error(t.lexer.lineno,
+                  'error: %s in global let block "%s".' % (exc, t[2]))
+        t[0] = GenCode(header_output = exportContext["header_output"],
+                       decoder_output = exportContext["decoder_output"],
+                       exec_output = exportContext["exec_output"],
+                       decode_block = exportContext["decode_block"])
+
+    # Define the mapping from operand type extensions to C++ types and
+    # bit widths (stored in operandTypeMap).
+    def p_def_operand_types(self, t):
+        'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
+        try:
+            userDict = eval('{' + t[3] + '}')
+        except Exception, exc:
+            error(t.lexer.lineno,
+                  'error: %s in def operand_types block "%s".' % (exc, t[3]))
+        buildOperandTypeMap(userDict, t.lexer.lineno)
+        t[0] = GenCode() # contributes nothing to the output C++ file
+
+    # Define the mapping from operand names to operand classes and
+    # other traits.  Stored in operandNameMap.
+    def p_def_operands(self, t):
+        'def_operands : DEF OPERANDS CODELIT SEMI'
+        if not globals().has_key('operandTypeMap'):
+            error(t.lexer.lineno,
+                  'error: operand types must be defined before operands')
+        try:
+            userDict = eval('{' + t[3] + '}', exportContext)
+        except Exception, exc:
+            error(t.lexer.lineno,
+                  'error: %s in def operands block "%s".' % (exc, t[3]))
+        buildOperandNameMap(userDict, t.lexer.lineno)
+        t[0] = GenCode() # contributes nothing to the output C++ file
+
+    # A bitfield definition looks like:
+    # 'def [signed] bitfield <ID> [<first>:<last>]'
+    # This generates a preprocessor macro in the output file.
+    def p_def_bitfield_0(self, t):
+        'def_bitfield : DEF opt_signed BITFIELD ID LESS INTLIT COLON INTLIT GREATER SEMI'
+        expr = 'bits(machInst, %2d, %2d)' % (t[6], t[8])
+        if (t[2] == 'signed'):
+            expr = 'sext<%d>(%s)' % (t[6] - t[8] + 1, expr)
+        hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
+        t[0] = GenCode(header_output = hash_define)
+
+    # alternate form for single bit: 'def [signed] bitfield <ID> [<bit>]'
+    def p_def_bitfield_1(self, t):
+        'def_bitfield : DEF opt_signed BITFIELD ID LESS INTLIT GREATER SEMI'
+        expr = 'bits(machInst, %2d, %2d)' % (t[6], t[6])
+        if (t[2] == 'signed'):
+            expr = 'sext<%d>(%s)' % (1, expr)
+        hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
+        t[0] = GenCode(header_output = hash_define)
+
+    # alternate form for structure member: 'def bitfield <ID> <ID>'
+    def p_def_bitfield_struct(self, t):
+        'def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI'
+        if (t[2] != ''):
+            error(t.lexer.lineno,
+                  'error: structure bitfields are always unsigned.')
+        expr = 'machInst.%s' % t[5]
+        hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
+        t[0] = GenCode(header_output = hash_define)
+
+    def p_id_with_dot_0(self, t):
+        'id_with_dot : ID'
+        t[0] = t[1]
+
+    def p_id_with_dot_1(self, t):
+        'id_with_dot : ID DOT id_with_dot'
+        t[0] = t[1] + t[2] + t[3]
+
+    def p_opt_signed_0(self, t):
+        'opt_signed : SIGNED'
+        t[0] = t[1]
+
+    def p_opt_signed_1(self, t):
+        'opt_signed : empty'
+        t[0] = ''
+
+    def p_def_template(self, t):
+        'def_template : DEF TEMPLATE ID CODELIT SEMI'
+        self.templateMap[t[3]] = Template(t[4])
+        t[0] = GenCode()
+
+    # An instruction format definition looks like
+    # "def format <fmt>(<params>) {{...}};"
+    def p_def_format(self, t):
+        'def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI'
+        (id, params, code) = (t[3], t[5], t[7])
+        defFormat(id, params, code, t.lexer.lineno)
+        t[0] = GenCode()
+
+    # The formal parameter list for an instruction format is a
+    # possibly empty list of comma-separated parameters.  Positional
+    # (standard, non-keyword) parameters must come first, followed by
+    # keyword parameters, followed by a '*foo' parameter that gets
+    # excess positional arguments (as in Python).  Each of these three
+    # parameter categories is optional.
+    #
+    # Note that we do not support the '**foo' parameter for collecting
+    # otherwise undefined keyword args.  Otherwise the parameter list
+    # is (I believe) identical to what is supported in Python.
+    #
+    # The param list generates a tuple, where the first element is a
+    # list of the positional params and the second element is a dict
+    # containing the keyword params.
+    def p_param_list_0(self, t):
+        'param_list : positional_param_list COMMA nonpositional_param_list'
+        t[0] = t[1] + t[3]
+
+    def p_param_list_1(self, t):
+        '''param_list : positional_param_list
+                      | nonpositional_param_list'''
+        t[0] = t[1]
+
+    def p_positional_param_list_0(self, t):
+        'positional_param_list : empty'
+        t[0] = []
+
+    def p_positional_param_list_1(self, t):
+        'positional_param_list : ID'
+        t[0] = [t[1]]
+
+    def p_positional_param_list_2(self, t):
+        'positional_param_list : positional_param_list COMMA ID'
+        t[0] = t[1] + [t[3]]
+
+    def p_nonpositional_param_list_0(self, t):
+        'nonpositional_param_list : keyword_param_list COMMA excess_args_param'
+        t[0] = t[1] + t[3]
+
+    def p_nonpositional_param_list_1(self, t):
+        '''nonpositional_param_list : keyword_param_list
+                                    | excess_args_param'''
+        t[0] = t[1]
+
+    def p_keyword_param_list_0(self, t):
+        'keyword_param_list : keyword_param'
+        t[0] = [t[1]]
+
+    def p_keyword_param_list_1(self, t):
+        'keyword_param_list : keyword_param_list COMMA keyword_param'
+        t[0] = t[1] + [t[3]]
+
+    def p_keyword_param(self, t):
+        'keyword_param : ID EQUALS expr'
+        t[0] = t[1] + ' = ' + t[3].__repr__()
+
+    def p_excess_args_param(self, t):
+        'excess_args_param : ASTERISK ID'
+        # Just concatenate them: '*ID'.  Wrap in list to be consistent
+        # with positional_param_list and keyword_param_list.
+        t[0] = [t[1] + t[2]]
+
+    # End of format definition-related rules.
+    ##############
+
+    #
+    # A decode block looks like:
+    #       decode <field1> [, <field2>]* [default <inst>] { ... }
+    #
+    def p_decode_block(self, t):
+        'decode_block : DECODE ID opt_default LBRACE decode_stmt_list RBRACE'
+        default_defaults = defaultStack.pop()
+        codeObj = t[5]
+        # use the "default defaults" only if there was no explicit
+        # default statement in decode_stmt_list
+        if not codeObj.has_decode_default:
+            codeObj += default_defaults
+        codeObj.wrap_decode_block('switch (%s) {\n' % t[2], '}\n')
+        t[0] = codeObj
+
+    # The opt_default statement serves only to push the "default
+    # defaults" onto defaultStack.  This value will be used by nested
+    # decode blocks, and used and popped off when the current
+    # decode_block is processed (in p_decode_block() above).
+    def p_opt_default_0(self, t):
+        'opt_default : empty'
+        # no default specified: reuse the one currently at the top of
+        # the stack
+        defaultStack.push(defaultStack.top())
+        # no meaningful value returned
+        t[0] = None
+
+    def p_opt_default_1(self, t):
+        'opt_default : DEFAULT inst'
+        # push the new default
+        codeObj = t[2]
+        codeObj.wrap_decode_block('\ndefault:\n', 'break;\n')
+        defaultStack.push(codeObj)
+        # no meaningful value returned
+        t[0] = None
+
+    def p_decode_stmt_list_0(self, t):
+        'decode_stmt_list : decode_stmt'
+        t[0] = t[1]
+
+    def p_decode_stmt_list_1(self, t):
+        'decode_stmt_list : decode_stmt decode_stmt_list'
+        if (t[1].has_decode_default and t[2].has_decode_default):
+            error(t.lexer.lineno, 'Two default cases in decode block')
+        t[0] = t[1] + t[2]
+
+    #
+    # Decode statement rules
+    #
+    # There are four types of statements allowed in a decode block:
+    # 1. Format blocks 'format <foo> { ... }'
+    # 2. Nested decode blocks
+    # 3. Instruction definitions.
+    # 4. C preprocessor directives.
+
+
+    # Preprocessor directives found in a decode statement list are
+    # passed through to the output, replicated to all of the output
+    # code streams.  This works well for ifdefs, so we can ifdef out
+    # both the declarations and the decode cases generated by an
+    # instruction definition.  Handling them as part of the grammar
+    # makes it easy to keep them in the right place with respect to
+    # the code generated by the other statements.
+    def p_decode_stmt_cpp(self, t):
+        'decode_stmt : CPPDIRECTIVE'
+        t[0] = GenCode(t[1], t[1], t[1], t[1])
+
+    # A format block 'format <foo> { ... }' sets the default
+    # instruction format used to handle instruction definitions inside
+    # the block.  This format can be overridden by using an explicit
+    # format on the instruction definition or with a nested format
+    # block.
+    def p_decode_stmt_format(self, t):
+        'decode_stmt : FORMAT push_format_id LBRACE decode_stmt_list RBRACE'
+        # The format will be pushed on the stack when 'push_format_id'
+        # is processed (see below).  Once the parser has recognized
+        # the full production (though the right brace), we're done
+        # with the format, so now we can pop it.
+        formatStack.pop()
+        t[0] = t[4]
+
+    # This rule exists so we can set the current format (& push the
+    # stack) when we recognize the format name part of the format
+    # block.
+    def p_push_format_id(self, t):
+        'push_format_id : ID'
+        try:
+            formatStack.push(formatMap[t[1]])
+            t[0] = ('', '// format %s' % t[1])
+        except KeyError:
+            error(t.lexer.lineno,
+                  'instruction format "%s" not defined.' % t[1])
+
+    # Nested decode block: if the value of the current field matches
+    # the specified constant, do a nested decode on some other field.
+    def p_decode_stmt_decode(self, t):
+        'decode_stmt : case_label COLON decode_block'
+        label = t[1]
+        codeObj = t[3]
+        # just wrap the decoding code from the block as a case in the
+        # outer switch statement.
+        codeObj.wrap_decode_block('\n%s:\n' % label)
+        codeObj.has_decode_default = (label == 'default')
+        t[0] = codeObj
+
+    # Instruction definition (finally!).
+    def p_decode_stmt_inst(self, t):
+        'decode_stmt : case_label COLON inst SEMI'
+        label = t[1]
+        codeObj = t[3]
+        codeObj.wrap_decode_block('\n%s:' % label, 'break;\n')
+        codeObj.has_decode_default = (label == 'default')
+        t[0] = codeObj
+
+    # The case label is either a list of one or more constants or
+    # 'default'
+    def p_case_label_0(self, t):
+        'case_label : intlit_list'
+        def make_case(intlit):
+            if intlit >= 2**32:
+                return 'case ULL(%#x)' % intlit
+            else:
+                return 'case %#x' % intlit
+        t[0] = ': '.join(map(make_case, t[1]))
+
+    def p_case_label_1(self, t):
+        'case_label : DEFAULT'
+        t[0] = 'default'
+
+    #
+    # The constant list for a decode case label must be non-empty, but
+    # may have one or more comma-separated integer literals in it.
+    #
+    def p_intlit_list_0(self, t):
+        'intlit_list : INTLIT'
+        t[0] = [t[1]]
+
+    def p_intlit_list_1(self, t):
+        'intlit_list : intlit_list COMMA INTLIT'
+        t[0] = t[1]
+        t[0].append(t[3])
+
+    # Define an instruction using the current instruction format
+    # (specified by an enclosing format block).
+    # "<mnemonic>(<args>)"
+    def p_inst_0(self, t):
+        'inst : ID LPAREN arg_list RPAREN'
+        # Pass the ID and arg list to the current format class to deal with.
+        currentFormat = formatStack.top()
+        codeObj = currentFormat.defineInst(t[1], t[3], t.lexer.lineno)
+        args = ','.join(map(str, t[3]))
+        args = re.sub('(?m)^', '//', args)
+        args = re.sub('^//', '', args)
+        comment = '\n// %s::%s(%s)\n' % (currentFormat.id, t[1], args)
+        codeObj.prepend_all(comment)
+        t[0] = codeObj
+
+    # Define an instruction using an explicitly specified format:
+    # "<fmt>::<mnemonic>(<args>)"
+    def p_inst_1(self, t):
+        'inst : ID DBLCOLON ID LPAREN arg_list RPAREN'
+        try:
+            format = formatMap[t[1]]
+        except KeyError:
+            error(t.lexer.lineno,
+                  'instruction format "%s" not defined.' % t[1])
+        codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
+        comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
+        codeObj.prepend_all(comment)
+        t[0] = codeObj
+
+    # The arg list generates a tuple, where the first element is a
+    # list of the positional args and the second element is a dict
+    # containing the keyword args.
+    def p_arg_list_0(self, t):
+        'arg_list : positional_arg_list COMMA keyword_arg_list'
+        t[0] = ( t[1], t[3] )
+
+    def p_arg_list_1(self, t):
+        'arg_list : positional_arg_list'
+        t[0] = ( t[1], {} )
+
+    def p_arg_list_2(self, t):
+        'arg_list : keyword_arg_list'
+        t[0] = ( [], t[1] )
+
+    def p_positional_arg_list_0(self, t):
+        'positional_arg_list : empty'
+        t[0] = []
+
+    def p_positional_arg_list_1(self, t):
+        'positional_arg_list : expr'
+        t[0] = [t[1]]
+
+    def p_positional_arg_list_2(self, t):
+        'positional_arg_list : positional_arg_list COMMA expr'
+        t[0] = t[1] + [t[3]]
+
+    def p_keyword_arg_list_0(self, t):
+        'keyword_arg_list : keyword_arg'
+        t[0] = t[1]
+
+    def p_keyword_arg_list_1(self, t):
+        'keyword_arg_list : keyword_arg_list COMMA keyword_arg'
+        t[0] = t[1]
+        t[0].update(t[3])
+
+    def p_keyword_arg(self, t):
+        'keyword_arg : ID EQUALS expr'
+        t[0] = { t[1] : t[3] }
+
+    #
+    # Basic expressions.  These constitute the argument values of
+    # "function calls" (i.e. instruction definitions in the decode
+    # block) and default values for formal parameters of format
+    # functions.
+    #
+    # Right now, these are either strings, integers, or (recursively)
+    # lists of exprs (using Python square-bracket list syntax).  Note
+    # that bare identifiers are trated as string constants here (since
+    # there isn't really a variable namespace to refer to).
+    #
+    def p_expr_0(self, t):
+        '''expr : ID
+                | INTLIT
+                | STRLIT
+                | CODELIT'''
+        t[0] = t[1]
+
+    def p_expr_1(self, t):
+        '''expr : LBRACKET list_expr RBRACKET'''
+        t[0] = t[2]
+
+    def p_list_expr_0(self, t):
+        'list_expr : expr'
+        t[0] = [t[1]]
+
+    def p_list_expr_1(self, t):
+        'list_expr : list_expr COMMA expr'
+        t[0] = t[1] + [t[3]]
+
+    def p_list_expr_2(self, t):
+        'list_expr : empty'
+        t[0] = []
+
+    #
+    # Empty production... use in other rules for readability.
+    #
+    def p_empty(self, t):
+        'empty :'
+        pass
+
+    # Parse error handler.  Note that the argument here is the
+    # offending *token*, not a grammar symbol (hence the need to use
+    # t.value)
+    def p_error(self, t):
+        if t:
+            error(t.lexer.lineno, "syntax error at '%s'" % t.value)
+        else:
+            error(0, "unknown syntax error", True)
+
+    # END OF GRAMMAR RULES
+
 # Now build the parser.
-parser = yacc.yacc()
-
+parser = ISAParser()
 
 #####################################################################
 #
@@ -765,6 +767,11 @@ def expand_cpu_symbols_to_string(template):
 # the template).
 def protect_cpu_symbols(template):
     return re.sub(r'%(?=\(CPU_)', '%%', template)
+
+# Protect any non-dict-substitution '%'s in a format string
+# (i.e. those not followed by '(')
+def protect_non_subst_percents(s):
+    return re.sub(r'%(?!\()', '%%', s)
 
 ###############
 # GenCode class
@@ -839,7 +846,7 @@ exportContext = {}
 
 def updateExportContext():
     exportContext.update(exportDict(*exportContextSymbols))
-    exportContext.update(templateMap)
+    exportContext.update(parser.templateMap)
 
 def exportDict(*symNames):
     return dict([(s, eval(s)) for s in symNames])
@@ -1049,7 +1056,7 @@ class Template:
         # Build a dict ('myDict') to use for the template substitution.
         # Start with the template namespace.  Make a copy since we're
         # going to modify it.
-        myDict = templateMap.copy()
+        myDict = parser.templateMap.copy()
 
         if isinstance(d, InstObjParams):
             # If we're dealing with an InstObjParams object, we need
@@ -1462,6 +1469,16 @@ class MemOperand(Operand):
     # forming a type via "uint%d_t".  Divide by 8 if you want bytes.
     def makeAccSize(self):
         return self.size
+
+class PCOperand(Operand):
+    def makeConstructor(self):
+        return ''
+
+    def makeRead(self):
+        return '%s = xc->readPC();\n' % self.base_name
+
+    def makeWrite(self):
+        return 'xc->setPC(%s);\n' % self.base_name
 
 class UPCOperand(Operand):
     def makeConstructor(self):
@@ -1975,8 +1992,7 @@ def parse_isa_desc(isa_desc_file, output_dir):
     fileNameStack.push((isa_desc_file, 0))
 
     # Parse it.
-    (isa_name, namespace, global_code, namespace_code) = \
-        parser.parse(isa_desc, lexer=lexer)
+    (isa_name, namespace, global_code, namespace_code) = parser.parse(isa_desc)
 
     # grab the last three path components of isa_desc_file to put in
     # the output

@@ -41,7 +41,7 @@ def fixGlobalFrequency():
         print "Global frequency set at %d ticks per second" % int(tps)
 
 def setGlobalFrequency(ticksPerSecond):
-    import convert
+    from m5.util import convert
 
     global tps, tps_fixed
 

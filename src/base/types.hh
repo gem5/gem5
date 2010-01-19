@@ -55,6 +55,7 @@ typedef int64_t Counter;
  * @note using an unsigned breaks the cache.
  */
 typedef int64_t Tick;
+typedef uint64_t UTick;
 
 const Tick MaxTick = LL(0x7fffffffffffffff);
 

@@ -91,7 +91,32 @@ MultDivUnit::freeSlot(int slot_idx)
     Resource::freeSlot(slot_idx);    
 }
 
+//@TODO: Should we push this behavior into base-class to generically
+//       accomodate all multicyle resources?
+void
+MultDivUnit::requestAgain(DynInstPtr inst, bool &service_request)
+{
+    ResReqPtr mult_div_req = findRequest(inst);
+    assert(mult_div_req);
 
+    service_request = true;
+
+    // Check to see if this instruction is requesting the same command
+    // or a different one
+    if (mult_div_req->cmd != inst->resSched.top()->cmd) {
+        // If different, then update command in the request
+        mult_div_req->cmd = inst->resSched.top()->cmd;
+        DPRINTF(InOrderMDU,
+                "[tid:%i]: [sn:%i]: Updating the command for this instruction\n",
+                inst->readTid(), inst->seqNum);
+    } else {
+        // If same command, just check to see if memory access was completed
+        // but dont try to re-execute
+        DPRINTF(InOrderMDU,
+                "[tid:%i]: [sn:%i]: requesting this resource again\n",
+                inst->readTid(), inst->seqNum);
+    }
+}
 int
 MultDivUnit::getSlot(DynInstPtr inst)
 {
@@ -232,8 +257,13 @@ MultDivUnit::execute(int slot_num)
         //      counting down the time
         {
             DPRINTF(InOrderMDU, "End MDU called ...\n");    
-            if (mult_div_req->getInst()->isExecuted())
+            if (mult_div_req->getInst()->isExecuted()) {
+                DPRINTF(InOrderMDU, "Mult/Div finished.\n");                    
                 mult_div_req->done();            
+            } else {                
+                mult_div_req->setCompleted(false);
+            }
+            
         }
         break;
 

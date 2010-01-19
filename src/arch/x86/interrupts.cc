@@ -500,7 +500,7 @@ X86ISA::Interrupts::setReg(ApicRegIndex reg, uint32_t val)
             InterruptCommandRegHigh high = regs[APIC_INTERRUPT_COMMAND_HIGH];
             // Record that an IPI is being sent.
             low.deliveryStatus = 1;
-            TriggerIntMessage message;
+            TriggerIntMessage message = 0;
             message.destination = high.destination;
             message.vector = low.vector;
             message.deliveryMode = low.deliveryMode;

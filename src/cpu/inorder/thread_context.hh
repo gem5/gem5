@@ -32,6 +32,7 @@
 #ifndef __CPU_INORDER_THREAD_CONTEXT_HH__
 #define __CPU_INORDER_THREAD_CONTEXT_HH__
 
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/inorder/thread_state.hh"
@@ -101,10 +102,48 @@ class InOrderThreadContext : public ThreadContext
 
     virtual void setNextMicroPC(uint64_t val) { };
 
+#if FULL_SYSTEM
+    /** Returns a pointer to physical memory. */
+    virtual PhysicalMemory *getPhysMemPtr() 
+    { assert(0); return 0; /*return cpu->physmem;*/ }
+
+    /** Returns a pointer to this thread's kernel statistics. */
+    virtual TheISA::Kernel::Statistics *getKernelStats()
+    { return thread->kernelStats; }
+
+    virtual FunctionalPort *getPhysPort() { return thread->getPhysPort(); }
+
+    virtual VirtualPort *getVirtPort();
+
+    virtual void connectMemPorts(ThreadContext *tc) { thread->connectMemPorts(tc); }
+
+    /** Dumps the function profiling information.
+     * @todo: Implement.
+     */
+    virtual void dumpFuncProfile();
+
+    /** Reads the last tick that this thread was activated on. */
+    virtual Tick readLastActivate();
+    /** Reads the last tick that this thread was suspended on. */
+    virtual Tick readLastSuspend();
+
+    /** Clears the function profiling information. */
+    virtual void profileClear();
+
+    /** Samples the function profiling information. */
+    virtual void profileSample();
+
+    /** Returns pointer to the quiesce event. */
+    virtual EndQuiesceEvent *getQuiesceEvent()
+    {
+        return this->thread->quiesceEvent;
+    }
+#else
     virtual TranslatingPort *getMemPort() { return thread->getMemPort(); }
 
     /** Returns a pointer to this thread's process. */
     virtual Process *getProcessPtr() { return thread->getProcessPtr(); }
+#endif
 
     /** Returns this thread's status. */
     virtual Status status() const { return thread->status(); }
@@ -232,9 +271,11 @@ class InOrderThreadContext : public ThreadContext
      * misspeculating, this is set as false. */
     virtual bool misspeculating() { return false; }
 
+#if !FULL_SYSTEM
     /** Executes a syscall in SE mode. */
     virtual void syscall(int64_t callnum)
     { return cpu->syscall(callnum, thread->readTid()); }
+#endif
 
     /** Reads the funcExeInst counter. */
     virtual Counter readFuncExeInst() { return thread->funcExeInst; }

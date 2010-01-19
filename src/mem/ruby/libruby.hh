@@ -39,6 +39,8 @@ struct RubyRequest {
   {}
 };
 
+std::ostream& operator<<(std::ostream& out, const RubyRequest& obj);
+
 /**
  * Initialize the system.  cfg_file is a Ruby-lang configuration script
  */

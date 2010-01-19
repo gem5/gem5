@@ -34,10 +34,6 @@ import traceback
 # get type names
 from types import *
 
-# Prepend the directory where the PLY lex & yacc modules are found
-# to the search path.
-sys.path[0:0] = [os.environ['M5_PLY']]
-
 from ply import lex
 from ply import yacc
 

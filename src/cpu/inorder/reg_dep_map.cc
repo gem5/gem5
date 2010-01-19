@@ -30,6 +30,7 @@
  */
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/reg_dep_map.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"

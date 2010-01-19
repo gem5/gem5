@@ -26,7 +26,6 @@
 #
 # Authors: Lisa Hsu
 
-import m5
 from m5.objects import *
 
 class L1Cache(BaseCache):

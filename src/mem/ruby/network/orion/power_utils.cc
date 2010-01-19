@@ -30,6 +30,7 @@
 #include <cmath>
 #include <cstdio>
 
+#include "base/types.hh"
 #include "mem/ruby/network/orion/parm_technology.hh"
 #include "mem/ruby/network/orion/power_utils.hh"
 
@@ -39,11 +40,11 @@
 static char h_tab[256] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7, 4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
 
 
-static unsigned SIM_power_Hamming_slow( unsigned long int old_val, unsigned long int new_val, unsigned long int mask )
+static uint32_t SIM_power_Hamming_slow( uint64_t old_val, uint64_t new_val, uint64_t mask )
 {
   /* old slow code, I don't understand the new fast code though */
-  /* unsigned long int dist;
-  unsigned Hamming = 0;
+  /* uint64_t dist;
+  uint32_t Hamming = 0;
 
   dist = ( old_val ^ new_val ) & mask;
   mask = (mask >> 1) + 1;
@@ -58,7 +59,7 @@ static unsigned SIM_power_Hamming_slow( unsigned long int old_val, unsigned long
 #define TWO(k) (BIGONE << (k))
 #define CYCL(k) (BIGNONE/(1 + (TWO(TWO(k)))))
 #define BSUM(x,k) ((x)+=(x) >> TWO(k), (x) &= CYCL(k))
-  unsigned long int x;
+  uint64_t x;
 
   x = (old_val ^ new_val) & mask;
   x = (x & CYCL(0)) + ((x>>TWO(0)) & CYCL(0));
@@ -74,7 +75,7 @@ static unsigned SIM_power_Hamming_slow( unsigned long int old_val, unsigned long
 
 int SIM_power_init(void)
 {
-  unsigned i;
+  uint32_t i;
 
   /* initialize Hamming distance table */
   for (i = 0; i < 256; i++)
@@ -84,14 +85,16 @@ int SIM_power_init(void)
 }
 
 
-/* assume unsigned long int is unsigned64_t */
-unsigned SIM_power_Hamming(unsigned long int old_val, unsigned long int new_val, unsigned long int mask)
+
+uint32_t
+SIM_power_Hamming(uint64_t old_val, uint64_t new_val, uint64_t mask)
 {
-  union {
-          unsigned long int x;
-          char id[8];
-        } u;
-  unsigned rval;
+    union {
+        uint64_t x;
+        uint64_t id[8];
+    } u;
+
+    uint32_t rval;
 
   u.x = (old_val ^ new_val) & mask;
 
@@ -108,10 +111,12 @@ unsigned SIM_power_Hamming(unsigned long int old_val, unsigned long int new_val,
 }
 
 
-unsigned SIM_power_Hamming_group(unsigned long int d1_new, unsigned long int d1_old, unsigned long int d2_new, unsigned long int d2_old, unsigned width, unsigned n_grp)
+uint32_t
+SIM_power_Hamming_group(uint64_t d1_new, uint64_t d1_old, uint64_t d2_new,
+                        uint64_t d2_old, uint32_t width, uint32_t n_grp)
 {
-  unsigned rval = 0;
-  unsigned long int g1_new, g1_old, g2_new, g2_old, mask;
+  uint32_t rval = 0;
+  uint64_t g1_new, g1_old, g2_new, g2_old, mask;
 
   mask = HAMM_MASK(width);
 
@@ -146,11 +151,12 @@ double logtwo(double x)
   return log10(x)/log10(2);
 }
 
-unsigned SIM_power_logtwo(unsigned long int x)
+uint32_t
+SIM_power_logtwo(uint64_t x)
 {
-  unsigned rval = 0;
+  uint32_t rval = 0;
 
-  while (x >> rval && rval < sizeof(unsigned long int) << 3) rval++;
+  while (x >> rval && rval < sizeof(uint64_t) << 3) rval++;
   if (x == (BIGONE << rval - 1)) rval--;
 
   return rval;

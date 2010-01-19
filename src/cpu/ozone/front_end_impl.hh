@@ -28,12 +28,12 @@
  * Authors: Kevin Lim
  */
 
-#include "config/use_checker.hh"
-
 #include "sim/faults.hh"
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/statistics.hh"
+#include "config/the_isa.hh"
+#include "config/use_checker.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/ozone/front_end.hh"

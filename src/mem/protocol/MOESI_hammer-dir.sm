@@ -1,0 +1,920 @@
+/*
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * AMD's contributions to the MOESI hammer protocol do not constitute an 
+ * endorsement of its similarity to any AMD products.
+ *
+ * Authors: Milo Martin
+ *          Brad Beckmann
+ */
+
+machine(Directory, "AMD Hammer-like protocol") 
+: int memory_controller_latency
+{
+
+  MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
+  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
+  //
+  // For a finite buffered network, note that the DMA response network only 
+  // works at this relatively higher numbered (lower priority) virtual network
+  // because the trigger queue decouples cache responses from DMA responses.
+  //
+  MessageBuffer dmaResponseFromDir, network="To", virtual_network="4", ordered="true";
+
+  MessageBuffer unblockToDir, network="From", virtual_network="0", ordered="false";
+  MessageBuffer responseToDir, network="From", virtual_network="1", ordered="false";
+  MessageBuffer requestToDir, network="From", virtual_network="3", ordered="false";
+  MessageBuffer dmaRequestToDir, network="From", virtual_network="5", ordered="true";
+
+  // STATES
+  enumeration(State, desc="Directory states", default="Directory_State_E") {
+    // Base states
+    NO,             desc="Not Owner";
+    O,              desc="Owner";
+    E,              desc="Exclusive Owner (we can provide the data in exclusive)";
+    NO_B,  "NO^B",  desc="Not Owner, Blocked";
+    O_B,   "O^B",   desc="Owner, Blocked";
+    NO_B_W,         desc="Not Owner, Blocked, waiting for Dram";
+    O_B_W,          desc="Owner, Blocked, waiting for Dram";
+    NO_W,           desc="Not Owner, waiting for Dram";
+    O_W,            desc="Owner, waiting for Dram";
+    NO_DW_B_W,      desc="Not Owner, Dma Write waiting for Dram and cache responses";
+    NO_DR_B_W,      desc="Not Owner, Dma Read waiting for Dram and cache responses";
+    NO_DR_B_D,      desc="Not Owner, Dma Read waiting for cache responses including dirty data";
+    NO_DR_B,        desc="Not Owner, Dma Read waiting for cache responses";
+    NO_DW_W,        desc="Not Owner, Dma Write waiting for Dram";
+    O_DR_B_W,       desc="Owner, Dma Read waiting for Dram and cache responses";
+    O_DR_B,         desc="Owner, Dma Read waiting for cache responses";
+    WB,             desc="Blocked on a writeback";
+    WB_O_W,         desc="Blocked on memory write, will go to O";
+    WB_E_W,         desc="Blocked on memory write, will go to E";
+  }
+
+  // Events
+  enumeration(Event, desc="Directory events") {
+    GETX,                      desc="A GETX arrives";
+    GETS,                      desc="A GETS arrives";
+    PUT,                       desc="A PUT arrives"; 
+    Unblock,                   desc="An unblock message arrives";
+    Writeback_Clean,           desc="The final part of a PutX (no data)";
+    Writeback_Dirty,           desc="The final part of a PutX (data)";
+    Writeback_Exclusive_Clean, desc="The final part of a PutX (no data, exclusive)";
+    Writeback_Exclusive_Dirty, desc="The final part of a PutX (data, exclusive)";
+
+    // DMA requests
+    DMA_READ, desc="A DMA Read memory request";
+    DMA_WRITE, desc="A DMA Write memory request";
+
+    // Memory Controller
+    Memory_Data, desc="Fetched data from memory arrives";
+    Memory_Ack, desc="Writeback Ack from memory arrives";
+
+    // Cache responses required to handle DMA
+    Ack,             desc="Received an ack message";
+    Shared_Ack,      desc="Received an ack message, responder has a shared copy";
+    Shared_Data,     desc="Received a data message, responder has a shared copy";
+    Exclusive_Data,  desc="Received a data message, responder had an exclusive copy, they gave it to us";
+
+    // Triggers
+    All_acks_and_data,            desc="Received all required data and message acks";
+    All_acks_and_data_no_sharers, desc="Received all acks and no other processor has a shared copy";
+  }
+
+  // TYPES
+
+  // DirectoryEntry
+  structure(Entry, desc="...") {
+    State DirectoryState,          desc="Directory state";
+    DataBlock DataBlk,             desc="data for the block";
+  }
+
+  external_type(DirectoryMemory) {
+    Entry lookup(Address);
+    bool isPresent(Address);
+  }
+
+  external_type(MemoryControl, inport="yes", outport="yes") {
+
+  }
+
+  // TBE entries for DMA requests
+  structure(TBE, desc="TBE entries for outstanding DMA requests") {
+    Address PhysicalAddress, desc="physical address";
+    State TBEState,        desc="Transient State";
+    CoherenceResponseType ResponseType, desc="The type for the subsequent response message";
+    DataBlock DmaDataBlk,  desc="DMA Data to be written.  Partial blocks need to merged with system memory";
+    DataBlock DataBlk,     desc="The current view of system memory";
+    int Len,               desc="...";
+    MachineID DmaRequestor, desc="DMA requestor";
+    int NumPendingMsgs,    desc="Number of pending acks/messages";
+    bool CacheDirty,       desc="Indicates whether a cache has responded with dirty data";
+    bool Sharers,          desc="Indicates whether a cache has indicated it is currently a sharer";
+  }
+
+  external_type(TBETable) {
+    TBE lookup(Address);
+    void allocate(Address);
+    void deallocate(Address);
+    bool isPresent(Address);
+  }
+
+  // ** OBJECTS **
+
+  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory_name"])';
+
+  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_controller_name"])';
+
+  TBETable TBEs, template_hack="<Directory_TBE>";
+
+  State getState(Address addr) {
+    if (TBEs.isPresent(addr)) {
+      return TBEs[addr].TBEState;
+    } else {
+      return directory[addr].DirectoryState;
+    }
+  }
+  
+  void setState(Address addr, State state) {
+    if (TBEs.isPresent(addr)) {
+      TBEs[addr].TBEState := state;
+    }
+    directory[addr].DirectoryState := state;
+  }
+  
+  MessageBuffer triggerQueue, ordered="true";
+
+  // ** OUT_PORTS **
+  out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests
+  out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
+  out_port(responseNetwork_out, ResponseMsg, responseFromDir);
+  out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
+  out_port(triggerQueue_out, TriggerMsg, triggerQueue);
+  
+  //
+  // Memory buffer for memory controller to DIMM communication
+  //
+  out_port(memQueue_out, MemoryMsg, memBuffer);
+
+  // ** IN_PORTS **
+  
+  // Trigger Queue
+  in_port(triggerQueue_in, TriggerMsg, triggerQueue) {
+    if (triggerQueue_in.isReady()) {
+      peek(triggerQueue_in, TriggerMsg) {
+        if (in_msg.Type == TriggerType:ALL_ACKS) {
+          trigger(Event:All_acks_and_data, in_msg.Address);
+        } else if (in_msg.Type == TriggerType:ALL_ACKS_NO_SHARERS) {
+          trigger(Event:All_acks_and_data_no_sharers, in_msg.Address);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  in_port(unblockNetwork_in, ResponseMsg, unblockToDir) {
+    if (unblockNetwork_in.isReady()) {
+      peek(unblockNetwork_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
+          trigger(Event:Unblock, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WB_CLEAN) {
+          trigger(Event:Writeback_Clean, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WB_DIRTY) {
+          trigger(Event:Writeback_Dirty, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WB_EXCLUSIVE_CLEAN) {
+          trigger(Event:Writeback_Exclusive_Clean, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:WB_EXCLUSIVE_DIRTY) {
+          trigger(Event:Writeback_Exclusive_Dirty, in_msg.Address);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  // Response Network
+  in_port(responseToDir_in, ResponseMsg, responseToDir) {
+    if (responseToDir_in.isReady()) {
+      peek(responseToDir_in, ResponseMsg) {
+        if (in_msg.Type == CoherenceResponseType:ACK) {
+          trigger(Event:Ack, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:ACK_SHARED) {
+          trigger(Event:Shared_Ack, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
+          trigger(Event:Shared_Data, in_msg.Address);
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
+          trigger(Event:Exclusive_Data, in_msg.Address);
+        } else {
+          error("Unexpected message");
+        }
+      }
+    }
+  }
+
+  in_port(dmaRequestQueue_in, DMARequestMsg, dmaRequestToDir) {
+    if (dmaRequestQueue_in.isReady()) {
+      peek(dmaRequestQueue_in, DMARequestMsg) {
+        if (in_msg.Type == DMARequestType:READ) {
+          trigger(Event:DMA_READ, in_msg.LineAddress);
+        } else if (in_msg.Type == DMARequestType:WRITE) {
+          trigger(Event:DMA_WRITE, in_msg.LineAddress);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  in_port(requestQueue_in, RequestMsg, requestToDir) {
+    if (requestQueue_in.isReady()) {
+      peek(requestQueue_in, RequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:GETS) {
+          trigger(Event:GETS, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:GETX) {
+          trigger(Event:GETX, in_msg.Address);
+        } else if (in_msg.Type == CoherenceRequestType:PUT) {
+          trigger(Event:PUT, in_msg.Address);
+        } else {
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  // off-chip memory request/response is done
+  in_port(memQueue_in, MemoryMsg, memBuffer) {
+    if (memQueue_in.isReady()) {
+      peek(memQueue_in, MemoryMsg) {
+        if (in_msg.Type == MemoryRequestType:MEMORY_READ) {
+          trigger(Event:Memory_Data, in_msg.Address);
+        } else if (in_msg.Type == MemoryRequestType:MEMORY_WB) {
+          trigger(Event:Memory_Ack, in_msg.Address);
+        } else {
+          DEBUG_EXPR(in_msg.Type);
+          error("Invalid message");
+        }
+      }
+    }
+  }
+
+  // Actions
+  
+  action(a_sendWriteBackAck, "a", desc="Send writeback ack to requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:WB_ACK;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(b_sendWriteBackNack, "b", desc="Send writeback nack to requestor") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:WB_NACK;
+        out_msg.Requestor := in_msg.Requestor;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(v_allocateTBE, "v", desc="Allocate TBE") {
+    peek(requestQueue_in, RequestMsg) {
+      TBEs.allocate(address);
+      TBEs[address].PhysicalAddress := address;
+      TBEs[address].ResponseType := CoherenceResponseType:NULL;
+    }
+  }
+
+  action(vd_allocateDmaRequestInTBE, "vd", desc="Record Data in TBE") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      TBEs.allocate(address);
+      TBEs[address].DmaDataBlk := in_msg.DataBlk;
+      TBEs[address].PhysicalAddress := in_msg.PhysicalAddress;
+      TBEs[address].Len := in_msg.Len;
+      TBEs[address].DmaRequestor := in_msg.Requestor;
+      TBEs[address].ResponseType := CoherenceResponseType:DATA_EXCLUSIVE;
+      //
+      // One ack for each last-level cache
+      //
+      TBEs[address].NumPendingMsgs := getNumberOfLastLevelCaches();
+      //
+      // Assume initially that the caches store a clean copy and that memory
+      // will provide the data
+      //
+      TBEs[address].CacheDirty := false;
+    }
+  }
+
+  action(w_deallocateTBE, "w", desc="Deallocate TBE") {
+    TBEs.deallocate(address);
+  }
+
+  action(m_decrementNumberOfMessages, "m", desc="Decrement the number of messages for which we're waiting") {
+    peek(responseToDir_in, ResponseMsg) {
+      assert(in_msg.Acks > 0);
+      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+      //
+      // Note that cache data responses will have an ack count of 2.  However, 
+      // directory DMA requests must wait for acks from all LLC caches, so 
+      // only decrement by 1.
+      //
+      TBEs[address].NumPendingMsgs := TBEs[address].NumPendingMsgs - 1;
+      DEBUG_EXPR(TBEs[address].NumPendingMsgs);
+    }
+  }
+
+  action(n_popResponseQueue, "n", desc="Pop response queue") {
+    responseToDir_in.dequeue();
+  }
+
+  action(o_checkForCompletion, "o", desc="Check if we have received all the messages required for completion") {
+    if (TBEs[address].NumPendingMsgs == 0) {
+      enqueue(triggerQueue_out, TriggerMsg) {
+        out_msg.Address := address;
+        if (TBEs[address].Sharers) {
+          out_msg.Type := TriggerType:ALL_ACKS;
+        } else {
+          out_msg.Type := TriggerType:ALL_ACKS_NO_SHARERS;
+        }
+      }
+    }
+  }
+
+  action(d_sendData, "d", desc="Send data to requestor") {
+    peek(memQueue_in, MemoryMsg) {
+      enqueue(responseNetwork_out, ResponseMsg, latency="1") {
+        out_msg.Address := address;
+        out_msg.Type := TBEs[address].ResponseType;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(in_msg.OriginalRequestorMachId);
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := false; // By definition, the block is now clean
+        out_msg.Acks := 1;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(dr_sendDmaData, "dr", desc="Send Data to DMA controller from memory") {
+    peek(memQueue_in, MemoryMsg) {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+        out_msg.PhysicalAddress := address;
+        out_msg.LineAddress := address;
+        out_msg.Type := DMAResponseType:DATA;
+        //
+        // we send the entire data block and rely on the dma controller to 
+        // split it up if need be
+        //
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Destination.add(TBEs[address].DmaRequestor);
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(dt_sendDmaDataFromTbe, "dt", desc="Send Data to DMA controller from tbe") {
+    peek(triggerQueue_in, TriggerMsg) {
+      enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+        out_msg.PhysicalAddress := address;
+        out_msg.LineAddress := address;
+        out_msg.Type := DMAResponseType:DATA;
+        //
+        // we send the entire data block and rely on the dma controller to 
+        // split it up if need be
+        //
+        out_msg.DataBlk := TBEs[address].DataBlk;
+        out_msg.Destination.add(TBEs[address].DmaRequestor);
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(da_sendDmaAck, "da", desc="Send Ack to DMA controller") {
+    enqueue(dmaResponseNetwork_out, DMAResponseMsg, latency="1") {
+      out_msg.PhysicalAddress := address;
+      out_msg.LineAddress := address;
+      out_msg.Type := DMAResponseType:ACK;
+      out_msg.Destination.add(TBEs[address].DmaRequestor); 
+      out_msg.MessageSize := MessageSizeType:Writeback_Control;
+    }
+  }
+
+  action(rx_recordExclusiveInTBE, "rx", desc="Record Exclusive in TBE") {
+    peek(requestQueue_in, RequestMsg) {
+      TBEs[address].ResponseType := CoherenceResponseType:DATA_EXCLUSIVE;
+    }
+  }
+
+  action(r_recordDataInTBE, "rt", desc="Record Data in TBE") {
+    peek(requestQueue_in, RequestMsg) {
+      TBEs[address].ResponseType := CoherenceResponseType:DATA;
+    }
+  }
+
+  action(r_setSharerBit, "r", desc="We saw other sharers") {
+    TBEs[address].Sharers := true;
+  }
+
+  action(qf_queueMemoryFetchRequest, "qf", desc="Queue off-chip fetch request") {
+    peek(requestQueue_in, RequestMsg) {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
+        out_msg.Address := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := machineID;
+        out_msg.OriginalRequestorMachId := in_msg.Requestor;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.DataBlk := directory[address].DataBlk;
+        DEBUG_EXPR(out_msg);
+      }
+    }
+  }
+
+  action(qd_queueMemoryRequestFromDmaRead, "qd", desc="Queue off-chip fetch request") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
+        out_msg.Address := address;
+        out_msg.Type := MemoryRequestType:MEMORY_READ;
+        out_msg.Sender := machineID;
+        out_msg.OriginalRequestorMachId := in_msg.Requestor;
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.DataBlk := directory[address].DataBlk;
+        DEBUG_EXPR(out_msg);
+      }
+    }
+  }
+
+  action(f_forwardRequest, "f", desc="Forward requests") {
+    if (getNumberOfLastLevelCaches() > 1) {
+      peek(requestQueue_in, RequestMsg) {
+        enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+          out_msg.Address := address;
+          out_msg.Type := in_msg.Type;
+          out_msg.Requestor := in_msg.Requestor;
+          out_msg.Destination.broadcast(MachineType:L1Cache); // Send to all L1 caches
+          out_msg.Destination.remove(in_msg.Requestor); // Don't include the original requestor
+          out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+        }
+      }
+    }
+  }
+
+  action(f_forwardWriteFromDma, "fw", desc="Forward requests") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:GETX;
+        //
+        // Send to all L1 caches, since the requestor is the memory controller
+        // itself
+        //
+        out_msg.Requestor := machineID;
+        out_msg.Destination.broadcast(MachineType:L1Cache); 
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      }
+    }
+  }
+
+  action(f_forwardReadFromDma, "fr", desc="Forward requests") {
+    peek(dmaRequestQueue_in, DMARequestMsg) {
+      enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
+        out_msg.Address := address;
+        out_msg.Type := CoherenceRequestType:GETS;
+        //
+        // Send to all L1 caches, since the requestor is the memory controller
+        // itself
+        //
+        out_msg.Requestor := machineID;
+        out_msg.Destination.broadcast(MachineType:L1Cache); 
+        out_msg.MessageSize := MessageSizeType:Forwarded_Control;
+      }
+    }
+  }
+
+  action(i_popIncomingRequestQueue, "i", desc="Pop incoming request queue") {
+    requestQueue_in.dequeue();
+  }
+
+  action(j_popIncomingUnblockQueue, "j", desc="Pop incoming unblock queue") {
+    unblockNetwork_in.dequeue();
+  }
+
+  action(l_popMemQueue, "q", desc="Pop off-chip request queue") {
+    memQueue_in.dequeue();
+  }
+
+  action(g_popTriggerQueue, "g", desc="Pop trigger queue") {
+    triggerQueue_in.dequeue();
+  }
+
+  action(p_popDmaRequestQueue, "pd", desc="pop dma request queue") {
+    dmaRequestQueue_in.dequeue();
+  }
+
+  action(y_recycleDmaRequestQueue, "y", desc="recycle dma request queue") {
+    dmaRequestQueue_in.recycle();
+  }
+
+  action(r_recordMemoryData, "rd", desc="record data from memory to TBE") {
+    peek(memQueue_in, MemoryMsg) {
+      if (TBEs[address].CacheDirty == false) {
+        TBEs[address].DataBlk := in_msg.DataBlk;
+      }
+    }
+  }
+
+  action(r_recordCacheData, "rc", desc="record data from cache response to TBE") {
+    peek(responseToDir_in, ResponseMsg) {
+      TBEs[address].CacheDirty := true;
+      TBEs[address].DataBlk := in_msg.DataBlk;
+    }
+  }
+
+  action(l_writeDataToMemory, "l", desc="Write PUTX/PUTO data to memory") {
+    peek(unblockNetwork_in, ResponseMsg) {
+      assert(in_msg.Dirty);
+      assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
+      directory[address].DataBlk := in_msg.DataBlk;
+      DEBUG_EXPR(in_msg.Address);
+      DEBUG_EXPR(in_msg.DataBlk);
+    }
+  }
+
+  action(dwt_writeDmaDataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
+    directory[address].DataBlk := TBEs[address].DataBlk;
+    directory[address].DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+  }
+
+  action(a_assertCacheData, "ac", desc="Assert that a cache provided the data") {
+    assert(TBEs[address].CacheDirty);
+  }
+
+  action(l_queueMemoryWBRequest, "lq", desc="Write PUTX data to memory") {
+    peek(unblockNetwork_in, ResponseMsg) {
+      enqueue(memQueue_out, MemoryMsg, latency="1") {
+        out_msg.Address := address;
+        out_msg.Type := MemoryRequestType:MEMORY_WB;
+        DEBUG_EXPR(out_msg);
+      }
+    }
+  }
+
+  action(ld_queueMemoryDmaWrite, "ld", desc="Write DMA data to memory") {
+    enqueue(memQueue_out, MemoryMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := MemoryRequestType:MEMORY_WB;
+      // first, initialize the data blk to the current version of system memory
+      out_msg.DataBlk := TBEs[address].DataBlk;
+      // then add the dma write data
+      out_msg.DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+      DEBUG_EXPR(out_msg);
+    }
+  }
+
+  action(ll_checkIncomingWriteback, "\l", desc="Check PUTX/PUTO response message") {
+    peek(unblockNetwork_in, ResponseMsg) {
+      assert(in_msg.Dirty == false);
+      assert(in_msg.MessageSize == MessageSizeType:Writeback_Control);
+
+      // NOTE: The following check would not be valid in a real
+      // implementation.  We include the data in the "dataless"
+      // message so we can assert the clean data matches the datablock
+      // in memory
+      assert(directory[address].DataBlk == in_msg.DataBlk);
+    }
+  }
+
+  action(zz_recycleRequest, "\z", desc="Recycle the request queue") {
+    requestQueue_in.recycle();
+  }
+
+  // TRANSITIONS
+
+  // Transitions out of E state
+  transition(E, GETX, NO_B_W) {
+    v_allocateTBE;
+    rx_recordExclusiveInTBE;
+    qf_queueMemoryFetchRequest;
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(E, GETS, NO_B_W) {
+    v_allocateTBE;
+    rx_recordExclusiveInTBE;
+    qf_queueMemoryFetchRequest;
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(E, DMA_READ, NO_DR_B_W) {
+    vd_allocateDmaRequestInTBE;
+    qd_queueMemoryRequestFromDmaRead;
+    f_forwardReadFromDma;
+    p_popDmaRequestQueue;
+  }
+
+  // Transitions out of O state
+  transition(O, GETX, NO_B_W) {
+    v_allocateTBE;
+    r_recordDataInTBE;
+    qf_queueMemoryFetchRequest;
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(O, GETS, O_B_W) {
+    v_allocateTBE;
+    r_recordDataInTBE;
+    qf_queueMemoryFetchRequest;
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(O, DMA_READ, O_DR_B_W) {
+    vd_allocateDmaRequestInTBE;
+    qd_queueMemoryRequestFromDmaRead;
+    f_forwardReadFromDma;
+    p_popDmaRequestQueue;
+  }
+
+  transition({E, O, NO}, DMA_WRITE, NO_DW_B_W) {
+    vd_allocateDmaRequestInTBE;
+    f_forwardWriteFromDma;
+    p_popDmaRequestQueue;
+  }
+
+  // Transitions out of NO state
+  transition(NO, GETX, NO_B) {
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(NO, GETS, NO_B) {
+    f_forwardRequest;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(NO, PUT, WB) {
+    a_sendWriteBackAck;
+    i_popIncomingRequestQueue;
+  }
+
+  transition(NO, DMA_READ, NO_DR_B_D) {
+    vd_allocateDmaRequestInTBE;
+    f_forwardReadFromDma;
+    p_popDmaRequestQueue;
+  }
+
+  // Nack PUT requests when races cause us to believe we own the data
+  transition({O, E}, PUT) {
+    b_sendWriteBackNack;
+    i_popIncomingRequestQueue;
+  }
+
+  // Blocked transient states
+  transition({NO_B, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
+              NO_W, O_W, WB, WB_E_W, WB_O_W}, 
+             {GETS, GETX, PUT}) {
+    zz_recycleRequest;
+  }
+
+  transition({NO_B, O_B, NO_DR_B_W, NO_DW_B_W, NO_B_W, NO_DR_B_D, 
+              NO_DR_B, O_DR_B, O_B_W, O_DR_B_W, NO_DW_W, 
+              NO_W, O_W, WB, WB_E_W, WB_O_W}, 
+             {DMA_READ, DMA_WRITE}) {
+    y_recycleDmaRequestQueue;
+  }
+
+  transition(NO_B, Unblock, NO) {
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(O_B, Unblock, O) {
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_B_W, Memory_Data, NO_B) {
+    d_sendData;
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  transition(NO_DR_B_W, Memory_Data, NO_DR_B) {
+    r_recordMemoryData;
+    o_checkForCompletion;
+    l_popMemQueue;
+  }
+
+  transition(O_DR_B_W, Memory_Data, O_DR_B) {
+    r_recordMemoryData;
+    dr_sendDmaData;
+    o_checkForCompletion;
+    l_popMemQueue;
+  }
+
+  transition({NO_DR_B, O_DR_B, NO_DR_B_D, NO_DW_B_W}, Ack) {
+    m_decrementNumberOfMessages;
+    o_checkForCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(NO_DR_B_W, Ack) {
+    m_decrementNumberOfMessages;
+    n_popResponseQueue;
+  }
+
+  transition(NO_DR_B_W, Shared_Ack) {
+    m_decrementNumberOfMessages;
+    r_setSharerBit;
+    n_popResponseQueue;
+  }
+
+  transition({NO_DR_B, NO_DR_B_D}, Shared_Ack) {
+    m_decrementNumberOfMessages;
+    r_setSharerBit;
+    o_checkForCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(NO_DR_B_W, Shared_Data) {
+    r_recordCacheData;
+    m_decrementNumberOfMessages;
+    r_setSharerBit;
+    o_checkForCompletion;
+    n_popResponseQueue;
+  }
+
+  transition({NO_DR_B, NO_DR_B_D}, Shared_Data) {
+    r_recordCacheData;
+    m_decrementNumberOfMessages;
+    r_setSharerBit;
+    o_checkForCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(NO_DR_B_W, Exclusive_Data) {
+    r_recordCacheData;
+    m_decrementNumberOfMessages;
+    n_popResponseQueue;
+  }
+
+  transition({NO_DR_B, NO_DR_B_D, NO_DW_B_W}, Exclusive_Data) {
+    r_recordCacheData;
+    m_decrementNumberOfMessages;
+    o_checkForCompletion;
+    n_popResponseQueue;
+  }
+
+  transition(NO_DR_B, All_acks_and_data, O) {
+    //
+    // Note that the DMA consistency model allows us to send the DMA device
+    // a response as soon as we receive valid data and prior to receiving
+    // all acks.  However, to simplify the protocol we wait for all acks.
+    //
+    dt_sendDmaDataFromTbe;
+    w_deallocateTBE;
+    g_popTriggerQueue;
+  }
+
+  transition(NO_DR_B_D, All_acks_and_data, O) {
+    //
+    // Note that the DMA consistency model allows us to send the DMA device
+    // a response as soon as we receive valid data and prior to receiving
+    // all acks.  However, to simplify the protocol we wait for all acks.
+    //
+    dt_sendDmaDataFromTbe;
+    w_deallocateTBE;
+    g_popTriggerQueue;
+  }
+
+  transition(O_DR_B, All_acks_and_data_no_sharers, O) {
+    w_deallocateTBE;
+    g_popTriggerQueue;
+  }
+
+  transition(NO_DR_B, All_acks_and_data_no_sharers, E) {
+    //
+    // Note that the DMA consistency model allows us to send the DMA device
+    // a response as soon as we receive valid data and prior to receiving
+    // all acks.  However, to simplify the protocol we wait for all acks.
+    //
+    dt_sendDmaDataFromTbe;
+    w_deallocateTBE;
+    g_popTriggerQueue;
+  }
+
+  transition(NO_DR_B_D, All_acks_and_data_no_sharers, E) {
+    a_assertCacheData;
+    //
+    // Note that the DMA consistency model allows us to send the DMA device
+    // a response as soon as we receive valid data and prior to receiving
+    // all acks.  However, to simplify the protocol we wait for all acks.
+    //
+    dt_sendDmaDataFromTbe;
+    w_deallocateTBE;
+    g_popTriggerQueue;
+  }
+
+  transition(NO_DW_B_W, All_acks_and_data_no_sharers, NO_DW_W) {
+    dwt_writeDmaDataFromTBE;
+    ld_queueMemoryDmaWrite;
+    g_popTriggerQueue;
+  }
+
+  transition(NO_DW_W, Memory_Ack, E) {
+    da_sendDmaAck;
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  transition(O_B_W, Memory_Data, O_B) {
+    d_sendData;
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  transition(NO_B_W, Unblock, NO_W) {
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(O_B_W, Unblock, O_W) {
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(NO_W, Memory_Data, NO) {
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  transition(O_W, Memory_Data, O) {
+    w_deallocateTBE;
+    l_popMemQueue;
+  }
+
+  // WB State Transistions
+  transition(WB, Writeback_Dirty, WB_E_W) {
+    l_writeDataToMemory;
+    l_queueMemoryWBRequest;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(WB, Writeback_Exclusive_Dirty, WB_O_W) {
+    l_writeDataToMemory;
+    l_queueMemoryWBRequest;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(WB_E_W, Memory_Ack, E) {
+    l_popMemQueue;
+  }
+
+  transition(WB_O_W, Memory_Ack, O) {
+    l_popMemQueue;
+  }
+
+  transition(WB, Writeback_Clean, O) {
+    ll_checkIncomingWriteback;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(WB, Writeback_Exclusive_Clean, E) {
+    ll_checkIncomingWriteback;
+    j_popIncomingUnblockQueue;
+  }
+
+  transition(WB, Unblock, NO) {
+    j_popIncomingUnblockQueue;
+  }
+}

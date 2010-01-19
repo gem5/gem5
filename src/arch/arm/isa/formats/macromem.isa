@@ -72,6 +72,18 @@ let {{
                                     'predicate_test': predicateTest},
                                    ['IsMicroop'])
 
+    microLdrRetUopCode = '''
+        Ra = Mem;
+        Cpsr = cpsrWriteByInstr(Cpsr, Spsr, 0xF, true);
+    '''
+    microLdrRetUopIop = InstObjParams('ldr_ret_uop', 'MicroLdrRetUop',
+                                      'MicroMemOp',
+                                      {'memacc_code': microLdrRetUopCode,
+                                       'ea_code':
+                                          'EA = Rb + (UP ? imm : -imm);',
+                                       'predicate_test': predicateTest},
+                                      ['IsMicroop'])
+
     microStrUopIop = InstObjParams('str_uop', 'MicroStrUop',
                                    'MicroMemOp',
                                    {'memacc_code': 'Mem = Ra;',
@@ -80,14 +92,19 @@ let {{
                                    ['IsMicroop'])
 
     header_output = MicroMemDeclare.subst(microLdrUopIop) + \
+                    MicroMemDeclare.subst(microLdrRetUopIop) + \
                     MicroMemDeclare.subst(microStrUopIop)
     decoder_output = MicroConstructor.subst(microLdrUopIop) + \
+                     MicroConstructor.subst(microLdrRetUopIop) + \
                      MicroConstructor.subst(microStrUopIop)
     exec_output = LoadExecute.subst(microLdrUopIop) + \
+                  LoadExecute.subst(microLdrRetUopIop) + \
                   StoreExecute.subst(microStrUopIop) + \
                   LoadInitiateAcc.subst(microLdrUopIop) + \
+                  LoadInitiateAcc.subst(microLdrRetUopIop) + \
                   StoreInitiateAcc.subst(microStrUopIop) + \
                   LoadCompleteAcc.subst(microLdrUopIop) + \
+                  LoadCompleteAcc.subst(microLdrRetUopIop) + \
                   StoreCompleteAcc.subst(microStrUopIop)
 }};
 
@@ -178,73 +195,64 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
     : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s)
 {
     %(constructor)s;
-    uint32_t regs_to_handle = reglist;
-    uint32_t start_addr = 0;
+    uint32_t regs = reglist;
+    uint32_t addr = 0;
+    bool up = machInst.puswl.up;
 
-    switch (puswl)
-    {
-        case 0x00: //       stmda
-        case 0x01: //     L ldmda_l
-        case 0x02: //    W  stmda_w
-        case 0x03: //    WL ldmda_wl
-            start_addr = (ones << 2) - 4;
-            break;
-        case 0x08: //  U    stmia_u
-        case 0x09: //  U  L ldmia_ul
-        case 0x0a: //  U W  stmia
-        case 0x0b: //  U WL ldmia
-            start_addr = 0;
-            break;
-        case 0x10: // P     stmdb
-        case 0x11: // P   L ldmdb
-        case 0x12: // P  W  stmdb
-        case 0x13: // P  WL ldmdb
-            start_addr = (ones << 2); // U-bit is already 0 for subtract
-            break;
-        case 0x18: // PU    stmib
-        case 0x19: // PU  L ldmib
-        case 0x1a: // PU W  stmib
-        case 0x1b: // PU WL ldmib
-            start_addr = 4;
-            break;
-        default:
-            panic("Unhandled Load/Store Multiple Instruction, "
-                "puswl = 0x%x", (unsigned) puswl);
-            break;
-    }
+    if (!up)
+        addr = (ones << 2) - 4;
 
-    // Add 0 to Rn and stick it in Raddr (register 17).
+    if (machInst.puswl.prepost)
+        addr += 4;
+
+    // Add 0 to Rn and stick it in ureg0.
     // This is equivalent to a move.
-    microOps[0] = new MicroAddiUop(machInst, 17, RN, 0);
+    microOps[0] = new MicroAddiUop(machInst, INTREG_UREG0, RN, 0);
 
-    unsigned j = 0;
-    for (int i = 1; i < ones+1; i++) {
-        // Get next available bit for transfer
-        while (! ( regs_to_handle & (1<<j)))
-            j++;
-        regs_to_handle &= ~(1<<j);
+    unsigned reg = 0;
+    bool force_user = machInst.puswl.psruser & !OPCODE_15;
+    bool exception_ret = machInst.puswl.psruser & OPCODE_15;
 
-        if (loadop)
-            microOps[i] = new MicroLdrUop(machInst, j, 17, start_addr);
-        else
-            microOps[i] = new MicroStrUop(machInst, j, 17, start_addr);
+    for (int i = 1; i < ones + 1; i++) {
+        // Find the next register.
+        while (!bits(regs, reg))
+            reg++;
+        replaceBits(regs, reg, 0);
+
+        unsigned regIdx = reg;
+        if (force_user) {
+            regIdx = intRegForceUser(regIdx);
+        }
+
+        if (machInst.puswl.loadOp) {
+            if (reg == INTREG_PC && exception_ret) {
+                // This must be the exception return form of ldm.
+                microOps[i] =
+                    new MicroLdrRetUop(machInst, regIdx, INTREG_UREG0, addr);
+            } else {
+                microOps[i] =
+                    new MicroLdrUop(machInst, regIdx, INTREG_UREG0, addr);
+            }
+        } else {
+            microOps[i] =
+                new MicroStrUop(machInst, regIdx, INTREG_UREG0, addr);
+        }
 
         if (up)
-            start_addr += 4;
+            addr += 4;
         else
-            start_addr -= 4;
+            addr -= 4;
     }
 
-    if (writeback) {
+    StaticInstPtr &lastUop = microOps[numMicroops - 1];
+    if (machInst.puswl.writeback) {
         if (up) {
-            microOps[numMicroops-1] =
-                new MicroAddiUop(machInst, RN, RN, ones * 4);
+            lastUop = new MicroAddiUop(machInst, RN, RN, ones * 4);
         } else {
-            microOps[numMicroops-1] =
-                new MicroSubiUop(machInst, RN, RN, ones * 4);
+            lastUop = new MicroSubiUop(machInst, RN, RN, ones * 4);
         }
     }
-    microOps[numMicroops-1]->setLastMicroop();
+    lastUop->setLastMicroop();
 }
 
 }};
@@ -285,14 +293,14 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
     if (writeback)
     {
         if (up) {
-            microOps[numMicroops-1] =
+            microOps[numMicroops - 1] =
                 new MicroAddiUop(machInst, RN, RN, disp8);
         } else {
-            microOps[numMicroops-1] =
+            microOps[numMicroops - 1] =
                 new MicroSubiUop(machInst, RN, RN, disp8);
         }
     }
-    microOps[numMicroops-1]->setLastMicroop();
+    microOps[numMicroops - 1]->setLastMicroop();
 }
 
 }};
@@ -316,14 +324,14 @@ inline %(class_name)s::%(class_name)s(ExtMachInst machInst)
 
     if (writeback) {
         if (up) {
-            microOps[numMicroops-1] =
+            microOps[numMicroops - 1] =
                 new MicroAddiUop(machInst, RN, RN, disp8);
         } else {
-            microOps[numMicroops-1] =
+            microOps[numMicroops - 1] =
                 new MicroSubiUop(machInst, RN, RN, disp8);
         }
     }
-    microOps[numMicroops-1]->setLastMicroop();
+    microOps[numMicroops - 1]->setLastMicroop();
 }
 }};
 

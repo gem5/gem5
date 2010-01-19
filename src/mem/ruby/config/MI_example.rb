@@ -23,8 +23,6 @@ class MI_example_DirectoryController < DirectoryController
   def argv()
     vec = super()
     vec += " directory_latency "+directory_latency.to_s
-    vec += " dma_select_low_bit "+log_int(RubySystem.block_size_bytes).to_s
-    vec += " dma_select_num_bits "+log_int(NetPort.totalOfType("DMA")).to_s
   end
 end
 

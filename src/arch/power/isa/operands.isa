@@ -1,0 +1,81 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2009 The University of Edinburgh
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+// Authors: Timothy M. Jones
+
+def operand_types {{
+    'sb' : ('signed int', 8),
+    'ub' : ('unsigned int', 8),
+    'sh' : ('signed int', 16),
+    'uh' : ('unsigned int', 16),
+    'sw' : ('signed int', 32),
+    'uw' : ('unsigned int', 32),
+    'sq' : ('signed int', 64),
+    'uq' : ('unsigned int', 64),
+    'sf' : ('float', 32),
+    'df' : ('float', 64)
+}};
+
+def operands {{
+    # General Purpose Integer Reg Operands
+    'Ra': ('IntReg', 'uw', 'RA', 'IsInteger', 1),
+    'Rb': ('IntReg', 'uw', 'RB', 'IsInteger', 2),
+    'Rs': ('IntReg', 'uw', 'RS', 'IsInteger', 3),
+    'Rt': ('IntReg', 'uw', 'RT', 'IsInteger', 4),
+
+    # General Purpose Floating Point Reg Operands
+    'Fa': ('FloatReg', 'df', 'FRA', 'IsFloating', 1),
+    'Fb': ('FloatReg', 'df', 'FRB', 'IsFloating', 2),
+    'Fc': ('FloatReg', 'df', 'FRC', 'IsFloating', 3),
+    'Fs': ('FloatReg', 'df', 'FRS', 'IsFloating', 4),
+    'Ft': ('FloatReg', 'df', 'FRT', 'IsFloating', 5),
+
+    # Memory Operand
+    'Mem': ('Mem', 'uw', None, ('IsMemRef', 'IsLoad', 'IsStore'), 8),
+
+    # Program counter and next
+    'PC': ('PC', 'uw', None, (None, None, 'IsControl'), 9),
+    'NPC': ('NPC', 'uw', None, (None, None, 'IsControl'), 9),
+
+    # Control registers
+    'CR': ('IntReg', 'uw', 'INTREG_CR', 'IsInteger', 9),
+    'LR': ('IntReg', 'uw', 'INTREG_LR', 'IsInteger', 9),
+    'CTR': ('IntReg', 'uw', 'INTREG_CTR', 'IsInteger', 9),
+    'XER': ('IntReg', 'uw', 'INTREG_XER', 'IsInteger', 9),
+
+    # Setting as IntReg so things are stored as an integer, not double
+    'FPSCR': ('IntReg', 'uw', 'INTREG_FPSCR', 'IsFloating', 9),
+
+    # Registers for linked loads and stores
+    'Rsv': ('IntReg', 'uw', 'INTREG_RSV', 'IsInteger', 9),
+    'RsvLen': ('IntReg', 'uw', 'INTREG_RSV_LEN', 'IsInteger', 9),
+    'RsvAddr': ('IntReg', 'uw', 'INTREG_RSV_ADDR', 'IsInteger', 9),
+
+    # Hack for non-full-system syscall emulation
+    'R0':  ('IntReg', 'uw', '0', None, 1),
+}};

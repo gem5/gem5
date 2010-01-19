@@ -1,0 +1,3 @@
+TARGET_ISA = 'arm'
+CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU'
+FULL_SYSTEM = 1

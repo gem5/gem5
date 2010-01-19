@@ -42,12 +42,17 @@
 InOrderCPU *
 InOrderCPUParams::create()
 {
+#if FULL_SYSTEM
+    // Full-system only supports a single thread for the moment.
+    ThreadID actual_num_threads = 1;
+#else
     ThreadID actual_num_threads =
         (numThreads >= workload.size()) ? numThreads : workload.size();
 
     if (workload.size() == 0) {
         fatal("Must specify at least one workload!");
     }
+#endif
 
     numThreads = actual_num_threads;
 

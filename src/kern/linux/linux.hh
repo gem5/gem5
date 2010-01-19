@@ -62,6 +62,7 @@ class Linux : public OperatingSystem
     typedef uint64_t size_t;
     typedef uint64_t off_t;
     typedef int64_t time_t;
+    typedef int64_t clock_t;
     typedef uint32_t uid_t;
     typedef uint32_t gid_t;
     //@}
@@ -134,6 +135,17 @@ class Linux : public OperatingSystem
     struct timeval {
         int64_t tv_sec;         //!< seconds
         int64_t tv_usec;        //!< microseconds
+    };
+
+    /// Clock ticks per second, for times().
+    static const int M5_SC_CLK_TCK = 100;
+
+    /// For times().
+    struct tms {
+        int64_t tms_utime;      //!< user time
+        int64_t tms_stime;      //!< system time
+        int64_t tms_cutime;     //!< user time of children
+        int64_t tms_cstime;     //!< system time of children
     };
 
     // For writev/readv

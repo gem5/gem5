@@ -32,7 +32,7 @@ import os
 import socket
 import sys
 
-from util import attrdict
+from util import attrdict, fatal
 import config
 from options import OptionParser
 

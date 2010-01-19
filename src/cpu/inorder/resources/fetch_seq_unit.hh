@@ -36,6 +36,7 @@
 #include <list>
 #include <string>
 
+#include "config/the_isa.hh"
 #include "cpu/inorder/resource.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"

@@ -471,7 +471,7 @@ class EventWrapper : public Event
 inline void
 EventQueue::schedule(Event *event, Tick when)
 {
-    assert(when >= curTick);
+    assert((UTick)when >= (UTick)curTick);
     assert(!event->scheduled());
 #ifdef EVENTQ_DEBUG
     assert((event->flags & Event::Initialized) == Event::Initialized);

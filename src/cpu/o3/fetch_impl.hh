@@ -35,6 +35,7 @@
 #include "arch/isa_traits.hh"
 #include "arch/utility.hh"
 #include "base/types.hh"
+#include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
@@ -1262,6 +1263,8 @@ DefaultFetch<Impl>::fetch(bool &status_change)
 
         toDecode->insts[numInst] = instruction;
         toDecode->size++;
+
+        wroteToTimeBuffer = true;
 
         DPRINTF(Fetch, "[tid:%i]: Blocked, need to handle the trap.\n",tid);
 

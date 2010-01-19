@@ -452,7 +452,7 @@ let {{
                 if (signBit) {
                     if (overflow != mask(destBits - srcBits + 1)) {
                         if (ext & 0x1)
-                            picked = (1 << (destBits - 1));
+                            picked = (ULL(1) << (destBits - 1));
                         else
                             picked = 0;
                     }
@@ -480,7 +480,7 @@ let {{
                 if (signBit) {
                     if (overflow != mask(destBits - srcBits + 1)) {
                         if (ext & 0x1)
-                            picked = (1 << (destBits - 1));
+                            picked = (ULL(1) << (destBits - 1));
                         else
                             picked = 0;
                     }
@@ -642,10 +642,10 @@ let {{
                 int loIndex = (i + 0) * sizeBits;
                 uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
-                    (0 - (arg1Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
-                    (0 - (arg2Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
 
                 if (ext & 0x2) {
@@ -680,10 +680,10 @@ let {{
                 int loIndex = (i + 0) * sizeBits;
                 uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
-                    (0 - (arg1Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
-                    (0 - (arg2Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t resBits;
 
                 if (ext & 0x2) {
@@ -957,7 +957,7 @@ let {{
                     int resSign = bits(resBits, sizeBits - 1);
                     if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
                         if (resSign == 0)
-                            resBits = (1 << (sizeBits - 1));
+                            resBits = (ULL(1) << (sizeBits - 1));
                         else
                             resBits = mask(sizeBits - 1);
                     }
@@ -996,7 +996,7 @@ let {{
                     int resSign = bits(resBits, sizeBits - 1);
                     if ((arg1Sign == arg2Sign) && (arg1Sign != resSign)) {
                         if (resSign == 0)
-                            resBits = (1 << (sizeBits - 1));
+                            resBits = (ULL(1) << (sizeBits - 1));
                         else
                             resBits = mask(sizeBits - 1);
                     }
@@ -1032,16 +1032,16 @@ let {{
 
                 if (ext & 0x2) {
                     int64_t arg1 = arg1Bits |
-                        (0 - (arg1Bits & (1 << (srcBits - 1))));
+                        (0 - (arg1Bits & (ULL(1) << (srcBits - 1))));
                     int64_t arg2 = arg2Bits |
-                        (0 - (arg2Bits & (1 << (srcBits - 1))));
+                        (0 - (arg2Bits & (ULL(1) << (srcBits - 1))));
                     resBits = (uint64_t)(arg1 * arg2);
                 } else {
                     resBits = arg1Bits * arg2Bits;
                 }
 
                 if (ext & 0x4)
-                    resBits += (1 << (destBits - 1));
+                    resBits += (ULL(1) << (destBits - 1));
                 
                 if (ext & 0x8)
                     resBits >>= destBits;
@@ -1142,7 +1142,7 @@ let {{
                 } else {
                     resBits = (arg1Bits >> shiftAmt);
                     resBits = resBits |
-                        (0 - (resBits & (1 << (sizeBits - 1 - shiftAmt))));
+                        (0 - (resBits & (ULL(1) << (sizeBits - 1 - shiftAmt))));
                 }
 
                 result = insertBits(result, hiIndex, loIndex, resBits);
@@ -1237,7 +1237,7 @@ let {{
                 }
 
                 if (destSize == 4) {
-                    argBits = (uint32_t)(float)arg;
+                    argBits = (uint32_t)arg;
                 } else {
                     argBits = (uint64_t)arg;
                 }
@@ -1289,7 +1289,8 @@ let {{
                 int srcHiIndex = srcStart + (i + 1) * srcSizeBits - 1;
                 int srcLoIndex = srcStart + (i + 0) * srcSizeBits;
                 uint64_t argBits = bits(FpSrcReg1.uqw, srcHiIndex, srcLoIndex);
-                int64_t sArg = argBits | (0 - (argBits & (1 << srcHiIndex)));
+
+                int64_t sArg = argBits | (0 - (argBits & (ULL(1) << srcHiIndex)));
                 double arg = sArg;
 
                 if (destSize == 4) {
@@ -1400,10 +1401,10 @@ let {{
                 int loIndex = (i + 0) * sizeBits;
                 uint64_t arg1Bits = bits(FpSrcReg1.uqw, hiIndex, loIndex);
                 int64_t arg1 = arg1Bits |
-                    (0 - (arg1Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg1Bits & (ULL(1) << (sizeBits - 1))));
                 uint64_t arg2Bits = bits(FpSrcReg2.uqw, hiIndex, loIndex);
                 int64_t arg2 = arg2Bits |
-                    (0 - (arg2Bits & (1 << (sizeBits - 1))));
+                    (0 - (arg2Bits & (ULL(1) << (sizeBits - 1))));
 
                 uint64_t resBits = 0;
                 if (((ext & 0x2) == 0 && arg1 == arg2) ||

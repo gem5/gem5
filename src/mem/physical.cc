@@ -36,6 +36,7 @@
 #include <unistd.h>
 #include <zlib.h>
 
+#include <cstdio>
 #include <iostream>
 #include <string>
 
@@ -44,6 +45,7 @@
 #include "base/random.hh"
 #include "base/types.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "mem/packet_access.hh"
 #include "mem/physical.hh"
 #include "sim/eventq.hh"

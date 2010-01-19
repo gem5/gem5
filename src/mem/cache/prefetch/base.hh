@@ -68,10 +68,6 @@ class BasePrefetcher
     /** Do we remove prefetches with later times than a new miss.*/
     bool serialSquash;
 
-    /** Do we check if it is in the cache when inserting into buffer,
-        or removing.*/
-    bool cacheCheckPush;
-
     /** Do we prefetch on only data reads, or on inst reads as well. */
     bool onlyData;
 

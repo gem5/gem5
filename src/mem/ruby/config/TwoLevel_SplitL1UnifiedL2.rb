@@ -27,7 +27,7 @@ memory_size_mb = 1024
 num_dma = 1
 
 #default protocol 
-protocol = ""#"MESI_CMP_directory"
+protocol = "MOESI_CMP_directory"
 
 # check for overrides
 

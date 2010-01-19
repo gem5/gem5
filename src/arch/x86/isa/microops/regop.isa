@@ -149,12 +149,12 @@ def template MicroRegOpImmDeclare {{
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
                 bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(class_name)s(ExtMachInst _machInst,
                 const char * instMnem,
-                InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+                InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
                 uint8_t _dataSize, uint16_t _ext);
 
         %(BasicExecDeclare)s
@@ -203,7 +203,7 @@ def template MicroRegOpImmConstructor {{
 
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
-            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 false, false, false, false,
@@ -216,7 +216,7 @@ def template MicroRegOpImmConstructor {{
     inline %(class_name)s::%(class_name)s(
             ExtMachInst machInst, const char * instMnem,
             bool isMicro, bool isDelayed, bool isFirst, bool isLast,
-            InstRegIndex _src1, uint16_t _imm8, InstRegIndex _dest,
+            InstRegIndex _src1, uint8_t _imm8, InstRegIndex _dest,
             uint8_t _dataSize, uint16_t _ext) :
         %(base_class)s(machInst, "%(mnemonic)s", instMnem,
                 isMicro, isDelayed, isFirst, isLast,
@@ -324,11 +324,12 @@ let {{
                         matcher.sub(src2_name, flag_code),
                         matcher.sub(src2_name, cond_check),
                         matcher.sub(src2_name, else_code))
+                imm_name = "%simm8" % match.group("prefix")
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
-                        matcher.sub("imm8", code),
-                        matcher.sub("imm8", flag_code),
-                        matcher.sub("imm8", cond_check),
-                        matcher.sub("imm8", else_code))
+                        matcher.sub(imm_name, code),
+                        matcher.sub(imm_name, flag_code),
+                        matcher.sub(imm_name, cond_check),
+                        matcher.sub(imm_name, else_code))
                 return
 
             # If there's something optional to do with flags, generate
@@ -353,13 +354,16 @@ let {{
             matcher = re.compile("(?<!\w)spsrc2(?!\w)")
             if matcher.search(allCode):
                 code = "int64_t spsrc2 = signedPick(SrcReg2, 1, dataSize);" + code
+            matcher = re.compile("(?<!\w)simm8(?!\w)")
+            if matcher.search(allCode):
+                code = "int8_t simm8 = imm8;" + code
 
             base = "X86ISA::RegOp"
 
             # If imm8 shows up in the code, use the immediate templates, if
             # not, hopefully the register ones will be correct.
             templates = regTemplates
-            matcher = re.compile("(?<!\w)imm8(?!\w)")
+            matcher = re.compile("(?<!\w)s?imm8(?!\w)")
             if matcher.search(allCode):
                 base += "Imm"
                 templates = immTemplates
@@ -521,7 +525,7 @@ let {{
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (1ULL << halfSize);
+            uint64_t shifter = (ULL(1) << halfSize);
             uint64_t hiResult;
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
@@ -549,7 +553,7 @@ let {{
         code = '''
             ProdLow = psrc1 * op2;
             int halfSize = (dataSize * 8) / 2;
-            uint64_t shifter = (1ULL << halfSize);
+            uint64_t shifter = (ULL(1) << halfSize);
             uint64_t psrc1_h = psrc1 / shifter;
             uint64_t psrc1_l = psrc1 & mask(halfSize);
             uint64_t psrc2_h = (op2 / shifter) & mask(halfSize);

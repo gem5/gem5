@@ -26,548 +26,79 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * Authors: Gabe Black
- *          Stephen Hines
+ * Authors: Ali Saidi
+ *          Gabe Black
  */
 
 #ifndef __ARM_FAULTS_HH__
 #define __ARM_FAULTS_HH__
 
+#include "arch/arm/types.hh"
+#include "config/full_system.hh"
 #include "sim/faults.hh"
 
 // The design of the "name" and "vect" functions is in sim/faults.hh
 
 namespace ArmISA
 {
-typedef const Addr FaultVect;
+typedef const Addr FaultOffset;
 
-class ArmFault : public FaultBase
+class ArmFaultBase : public FaultBase
 {
   protected:
-    virtual bool skipFaultingInstruction() {return false;}
-    virtual bool setRestartAddress() {return true;}
+    Addr getVector(ThreadContext *tc);
+
   public:
-    Addr BadVAddr;
-    Addr EntryHi_Asid;
-    Addr EntryHi_VPN2;
-    Addr EntryHi_VPN2X;
-    Addr Context_BadVPN2;
+    struct FaultVals
+    {
+        const FaultName name;
+        const FaultOffset offset;
+        const OperatingMode nextMode;
+        const uint8_t armPcOffset;
+        const uint8_t thumbPcOffset;
+        const bool abortDisable;
+        const bool fiqDisable;
+        FaultStat count;
+    };
+
 #if FULL_SYSTEM
-  void invoke(ThreadContext * tc) {};
-  void setExceptionState(ThreadContext *,uint8_t);
-  void setHandlerPC(Addr,ThreadContext *);
+    void invoke(ThreadContext *tc);
 #endif
-    virtual FaultVect vect() = 0;
-    virtual FaultStat & countStat() = 0;
+    virtual FaultStat& countStat() = 0;
+    virtual FaultOffset offset() = 0;
+    virtual OperatingMode nextMode() = 0;
+    virtual uint8_t armPcOffset() = 0;
+    virtual uint8_t thumbPcOffset() = 0;
+    virtual bool abortDisable() = 0;
+    virtual bool fiqDisable() = 0;
 };
 
-class MachineCheckFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    bool isMachineCheckFault() {return true;}
-};
-
-class NonMaskableInterrupt : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    bool isNonMaskableInterrupt() {return true;}
-};
-
-class AlignmentFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    bool isAlignmentFault() {return true;}
-};
-
-class AddressErrorFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-
-};
-class StoreAddressErrorFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-
-};
-class UnimplementedOpcodeFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-
-class TLBRefillIFetchFault : public ArmFault
-{
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-class TLBInvalidIFetchFault : public ArmFault
-{
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-class NDtbMissFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class PDtbMissFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DtbPageFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DtbAcvFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class CacheErrorFault : public ArmFault
-{
-  private:
-    Addr vaddr;
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-
-
-
-static inline Fault genMachineCheckFault()
-{
-    return new MachineCheckFault;
-}
-
-static inline Fault genAlignmentFault()
-{
-    return new AlignmentFault;
-}
-
-class ResetFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-
-};
-class SystemCallFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-class SoftResetFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-class DebugSingleStep : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-class DebugInterrupt : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-class CoprocessorUnusableFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-    int coProcID;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-    CoprocessorUnusableFault(int _procid){ coProcID = _procid;}
-};
-
-class ReservedInstructionFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-class ThreadFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
-
-
-class ArithmeticFault : public ArmFault
+template<typename T>
+class ArmFault : public ArmFaultBase
 {
   protected:
-    bool skipFaultingInstruction() {return true;}
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
+    static FaultVals vals;
+
   public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
+    FaultName name() const { return vals.name; }
+    FaultStat & countStat() {return vals.count;}
+    FaultOffset offset() { return vals.offset; }
+    OperatingMode nextMode() { return vals.nextMode; }
+    uint8_t armPcOffset() { return vals.armPcOffset; }
+    uint8_t thumbPcOffset() { return vals.thumbPcOffset; }
+    bool abortDisable() { return vals.abortDisable; }
+    bool fiqDisable() { return vals.fiqDisable; }
 };
 
-class InterruptFault : public ArmFault
-{
-  protected:
-    bool setRestartAddress() {return false;}
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
 
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
+class Reset                : public ArmFault<Reset> {};
+class UndefinedInstruction : public ArmFault<UndefinedInstruction> {};
+class SupervisorCall       : public ArmFault<SupervisorCall> {};
+class PrefetchAbort        : public ArmFault<PrefetchAbort> {};
+class DataAbort            : public ArmFault<DataAbort> {};
+class Interrupt            : public ArmFault<Interrupt> {};
+class FastInterrupt        : public ArmFault<FastInterrupt> {};
 
-    //void invoke(ThreadContext * tc);
-};
-
-class TrapFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-};
-
-class BreakpointFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-};
-
-class ItbRefillFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-};
-class DtbRefillFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-};
-
-class ItbPageFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-};
-
-class ItbInvalidFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-
-};
-class TLBModifiedFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-
-};
-
-class DtbInvalidFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-#if FULL_SYSTEM
-    void invoke(ThreadContext * tc);
-#endif
-
-};
-
-class FloatEnableFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class ItbMissFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class ItbAcvFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class IntegerOverflowFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-};
-
-class DspStateDisabledFault : public ArmFault
-{
-  private:
-    static FaultName _name;
-    static FaultVect _vect;
-    static FaultStat _count;
-  public:
-    FaultName name() const {return _name;}
-    FaultVect vect() {return _vect;}
-    FaultStat & countStat() {return _count;}
-    void invoke(ThreadContext * tc);
-};
 
 } // ArmISA namespace
 

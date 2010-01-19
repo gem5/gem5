@@ -1,0 +1,165 @@
+/*
+ * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+machine(DMA, "DMA Controller") 
+: int request_latency
+{
+
+  MessageBuffer responseFromDir, network="From", virtual_network="4", ordered="true", no_vector="true";
+  MessageBuffer reqToDirectory, network="To", virtual_network="5", ordered="false", no_vector="true";
+
+  enumeration(State, desc="DMA states", default="DMA_State_READY") {
+    READY, desc="Ready to accept a new request";
+    BUSY_RD,  desc="Busy: currently processing a request";
+    BUSY_WR,  desc="Busy: currently processing a request";
+  }
+
+  enumeration(Event, desc="DMA events") {
+    ReadRequest,  desc="A new read request";
+    WriteRequest, desc="A new write request";
+    Data,         desc="Data from a DMA memory read";
+    Ack,          desc="DMA write to memory completed";
+  }
+
+  external_type(DMASequencer) {
+    void ackCallback();
+    void dataCallback(DataBlock);
+  }
+
+  MessageBuffer mandatoryQueue, ordered="false", no_vector="true";
+  DMASequencer dma_sequencer, factory='RubySystem::getDMASequencer(m_cfg["dma_sequencer"])', no_vector="true";
+  State cur_state, no_vector="true";
+
+  State getState(Address addr) {
+    return cur_state;
+  }
+  void setState(Address addr, State state) {
+  cur_state := state;
+  }
+
+  out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
+
+  in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
+    if (dmaRequestQueue_in.isReady()) {
+      peek(dmaRequestQueue_in, SequencerMsg) {
+        if (in_msg.Type == SequencerRequestType:LD ) {
+          trigger(Event:ReadRequest, in_msg.LineAddress);
+        } else if (in_msg.Type == SequencerRequestType:ST) {
+          trigger(Event:WriteRequest, in_msg.LineAddress);
+        } else {
+          error("Invalid request type");
+        }
+      }
+    }
+  }
+
+  in_port(dmaResponseQueue_in, DMAResponseMsg, responseFromDir, desc="...") {
+    if (dmaResponseQueue_in.isReady()) {
+      peek( dmaResponseQueue_in, DMAResponseMsg) {
+        if (in_msg.Type == DMAResponseType:ACK) {
+          trigger(Event:Ack, in_msg.LineAddress);
+        } else if (in_msg.Type == DMAResponseType:DATA) {
+          trigger(Event:Data, in_msg.LineAddress);
+        } else {
+          error("Invalid response type");
+        }
+      }
+    }
+  }
+
+  action(s_sendReadRequest, "s", desc="Send a DMA read request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+        out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+        out_msg.LineAddress := in_msg.LineAddress; 
+        out_msg.Type := DMARequestType:READ;
+        out_msg.Requestor := machineID;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Len := in_msg.Len;
+        out_msg.Destination.add(map_Address_to_Directory(address));
+        out_msg.MessageSize := MessageSizeType:Writeback_Control;
+      }
+    }
+  }
+
+  action(s_sendWriteRequest, "\s", desc="Send a DMA write request to memory") {
+    peek(dmaRequestQueue_in, SequencerMsg) {
+      enqueue(reqToDirectory_out, DMARequestMsg, latency=request_latency) {
+          out_msg.PhysicalAddress := in_msg.PhysicalAddress;
+          out_msg.LineAddress := in_msg.LineAddress; 
+          out_msg.Type := DMARequestType:WRITE;
+          out_msg.Requestor := machineID;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Len := in_msg.Len;
+          out_msg.Destination.add(map_Address_to_Directory(address));
+          out_msg.MessageSize := MessageSizeType:Writeback_Control;
+        }
+      }
+  }
+
+  action(a_ackCallback, "a", desc="Notify dma controller that write request completed") {
+    peek (dmaResponseQueue_in, DMAResponseMsg) {
+      dma_sequencer.ackCallback();
+    }
+  }
+
+  action(d_dataCallback, "d", desc="Write data to dma sequencer") {
+    peek (dmaResponseQueue_in, DMAResponseMsg) {
+      dma_sequencer.dataCallback(in_msg.DataBlk);
+    }
+  }
+
+  action(p_popRequestQueue, "p", desc="Pop request queue") {
+    dmaRequestQueue_in.dequeue();
+  }
+
+  action(p_popResponseQueue, "\p", desc="Pop request queue") {
+    dmaResponseQueue_in.dequeue();
+  }
+
+  transition(READY, ReadRequest, BUSY_RD) {
+    s_sendReadRequest;
+    p_popRequestQueue;
+  }
+
+  transition(READY, WriteRequest, BUSY_WR) {
+    s_sendWriteRequest;
+    p_popRequestQueue;
+  }
+
+  transition(BUSY_RD, Data, READY) {
+    d_dataCallback;
+    p_popResponseQueue;
+  }
+
+  transition(BUSY_WR, Ack, READY) {
+    a_ackCallback;
+    p_popResponseQueue;
+  }
+}

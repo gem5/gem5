@@ -51,20 +51,25 @@ format DataOp {
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }});
-                    0x5: WarnUnimpl::smlal();
+                    }}, llbit);
+                    0x5: smlal({{ 
+                        resTemp = ((int64_t)Rm) * ((int64_t)Rs); 
+                        resTemp += (((uint64_t)Rn) << 32) | ((uint64_t)Rd); 
+                        Rd = (uint32_t)(resTemp & 0xffffffff);
+                        Rn = (uint32_t)(resTemp >> 32);
+                    }}, llbit);
                     0x6: smull({{
                         resTemp = ((int64_t)(int32_t)Rm)*
                                   ((int64_t)(int32_t)Rs);
                         Rd = (int32_t)(resTemp & 0xffffffff);
                         Rn = (int32_t)(resTemp >> 32);
-                    }});
+                    }}, llbit);
                     0x7: umlal({{
                         resTemp = ((uint64_t)Rm)*((uint64_t)Rs);
                         resTemp += ((uint64_t)Rn << 32)+((uint64_t)Rd);
                         Rd = (uint32_t)(resTemp & 0xffffffff);
                         Rn = (uint32_t)(resTemp >> 32);
-                    }});
+                    }}, llbit);
                 }
                 1: decode PUBWL {
                     0x10: WarnUnimpl::swp();
@@ -91,9 +96,9 @@ format DataOp {
                 0x2: sub({{ Rd = resTemp = Rn - op2; }}, sub);
                 0x3: rsb({{ Rd = resTemp = op2 - Rn; }}, rsb);
                 0x4: add({{ Rd = resTemp = Rn + op2; }}, add);
-                0x5: adc({{ Rd = resTemp = Rn + op2 + Cpsr<29:>; }}, add);
-                0x6: sbc({{ Rd = resTemp = Rn - op2 - !Cpsr<29:>; }}, sub);
-                0x7: rsc({{ Rd = resTemp = op2 - Rn - !Cpsr<29:>; }}, rsb);
+                0x5: adc({{ Rd = resTemp = Rn + op2 + CondCodes<29:>; }}, add);
+                0x6: sbc({{ Rd = resTemp = Rn - op2 - !CondCodes<29:>; }}, sub);
+                0x7: rsc({{ Rd = resTemp = op2 - Rn - !CondCodes<29:>; }}, rsb);
                 0x8: tst({{ resTemp = Rn & op2; }});
                 0x9: teq({{ resTemp = Rn ^ op2; }});
                 0xa: cmp({{ resTemp = Rn - op2; }}, sub);
@@ -105,10 +110,37 @@ format DataOp {
             }
             1: decode MISC_OPCODE {
                 0x0: decode OPCODE {
-                    0x8: WarnUnimpl::mrs_cpsr();
-                    0x9: WarnUnimpl::msr_cpsr();
-                    0xa: WarnUnimpl::mrs_spsr();
-                    0xb: WarnUnimpl::msr_spsr();
+                    0x8: PredOp::mrs_cpsr({{
+                        Rd = (Cpsr | CondCodes) & 0xF8FF03DF;
+                    }});
+                    0x9: decode USEIMM {
+                        // The mask field is the same as the RN index.
+                        0: PredOp::msr_cpsr_reg({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 Rm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                        }});
+                        1: PredImmOp::msr_cpsr_imm({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 rotated_imm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                        }});
+                    }
+                    0xa: PredOp::mrs_spsr({{ Rd = Spsr; }});
+                    0xb: decode USEIMM {
+                        // The mask field is the same as the RN index.
+                        0: PredOp::msr_spsr_reg({{
+                            Spsr = spsrWriteByInstr(Spsr, Rm, RN, false);
+                        }});
+                        1: PredImmOp::msr_spsr_imm({{
+                            Spsr = spsrWriteByInstr(Spsr, rotated_imm,
+                                                    RN, false);
+                        }});
+                    }
                 }
                 0x1: decode OPCODE {
                     0x9: BranchExchange::bx({{ }});
@@ -129,28 +161,32 @@ format DataOp {
                     0xb: WarnUnimpl::qdsub();
                 }
                 0x8: decode OPCODE {
-                    0x8: WarnUnimpl::smlabb();
+                    0x8: smlabb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
                     0x9: WarnUnimpl::smlalbb();
                     0xa: WarnUnimpl::smlawb();
-                    0xb: WarnUnimpl::smulbb();
+                    0xb: smulbb({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<15:0>); }}, none);
                 }
                 0xa: decode OPCODE {
-                    0x8: WarnUnimpl::smlatb();
-                    0x9: WarnUnimpl::smulwb();
+                    0x8: smlatb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>) + Rd; }}, overflow);
+                    0x9: smulwb({{ 
+                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<15:0>), 47, 16); 
+                    }}, none);
                     0xa: WarnUnimpl::smlaltb();
-                    0xb: WarnUnimpl::smultb();
+                    0xb: smultb({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<15:0>); }}, none);
                 }
                 0xc: decode OPCODE {
-                    0x8: WarnUnimpl::smlabt();
+                    0x8: smlabt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
                     0x9: WarnUnimpl::smlawt();
                     0xa: WarnUnimpl::smlalbt();
-                    0xb: WarnUnimpl::smulbt();
+                    0xb: smulbt({{ Rn = resTemp = sext<16>(Rm<15:0>) * sext<16>(Rs<31:16>); }}, none);
                 }
                 0xe: decode OPCODE {
-                    0x8: WarnUnimpl::smlatt();
-                    0x9: WarnUnimpl::smulwt();
+                    0x8: smlatt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>) + Rd; }}, overflow);
+                    0x9: smulwt({{ 
+                        Rn = resTemp = bits(sext<32>(Rm) * sext<16>(Rs<31:16>), 47, 16); 
+                    }}, none);
                     0xa: WarnUnimpl::smlaltt();
-                    0xb: WarnUnimpl::smultt();
+                    0xb: smultt({{ Rn = resTemp = sext<16>(Rm<31:16>) * sext<16>(Rs<31:16>); }}, none);
                 }
             }
         }
@@ -163,9 +199,15 @@ format DataOp {
                 0x2: subi({{ Rd = resTemp = Rn - rotated_imm; }}, sub);
                 0x3: rsbi({{ Rd = resTemp = rotated_imm - Rn; }}, rsb);
                 0x4: addi({{ Rd = resTemp = Rn + rotated_imm; }}, add);
-                0x5: adci({{ Rd = resTemp = Rn + rotated_imm + Cpsr<29:>; }}, add);
-                0x6: sbci({{ Rd = resTemp = Rn -rotated_imm - !Cpsr<29:>; }}, sub);
-                0x7: rsci({{ Rd = resTemp = rotated_imm - Rn - !Cpsr<29:>;}}, rsb);
+                0x5: adci({{
+                    Rd = resTemp = Rn + rotated_imm + CondCodes<29:>;
+                }}, add);
+                0x6: sbci({{
+                    Rd = resTemp = Rn -rotated_imm - !CondCodes<29:>;
+                }}, sub);
+                0x7: rsci({{
+                    Rd = resTemp = rotated_imm - Rn - !CondCodes<29:>;
+                }}, rsb);
                 0x8: tsti({{ resTemp = Rn & rotated_imm; }});
                 0x9: teqi({{ resTemp = Rn ^ rotated_imm; }});
                 0xa: cmpi({{ resTemp = Rn - rotated_imm; }}, sub);
@@ -178,11 +220,27 @@ format DataOp {
         }
         1: decode OPCODE {
             // The following two instructions aren't supposed to be defined
-            0x8: WarnUnimpl::undefined_instruction();
-            0x9: WarnUnimpl::undefined_instruction();
-
-            0xa: WarnUnimpl::mrs_i_cpsr();
-            0xb: WarnUnimpl::mrs_i_spsr();
+            0x8: DataOp::movw({{ Rd = IMMED_11_0 | (RN << 12) ; }});
+            0x9: decode RN {
+                0: decode IMM {
+                    0: PredImmOp::nop({{ ; }});
+                    1: WarnUnimpl::yield();
+                    2: WarnUnimpl::wfe();
+                    3: WarnUnimpl::wfi();
+                    4: WarnUnimpl::sev();
+                }
+                default: PredImmOp::msr_i_cpsr({{
+                            uint32_t newCpsr =
+                                cpsrWriteByInstr(Cpsr | CondCodes,
+                                                 rotated_imm, RN, false);
+                            Cpsr = ~CondCodesMask & newCpsr;
+                            CondCodes = CondCodesMask & newCpsr;
+                }});
+            }
+            0xa: PredOp::movt({{ Rd = IMMED_11_0 << 16 | RN << 28 | Rd<15:0>; }});
+            0xb: PredImmOp::msr_i_spsr({{
+                       Spsr = spsrWriteByInstr(Spsr, rotated_imm, RN, false); 
+            }});
         }
     }
     0x2: AddrMode2::addrMode2(Disp, disp);
@@ -324,77 +382,79 @@ format DataOp {
         }
     }
     0x7: decode OPCODE_24 {
-        0: decode CPNUM {
-            // Coprocessor Instructions
-            0x1: decode OPCODE_4 {
+        0: decode OPCODE_4 {
+            0: decode CPNUM {
                 format FloatOp {
-                    // Basic FPA Instructions
-                    0: decode OPCODE_23_20 {
-                        0x0: decode OPCODE_15 {
-                            0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
-                            1: mvf({{ Fd.sf = Fm.sf; }});
-                        }
-                        0x1: decode OPCODE_15 {
-                            0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
-                            1: mnf({{ Fd.sf = -Fm.sf; }});
-                        }
-                        0x2: decode OPCODE_15 {
-                            0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
-                            1: abs({{ Fd.sf = fabs(Fm.sf); }});
-                        }
-                        0x3: decode OPCODE_15 {
-                            0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
-                            1: rnd({{ Fd.sf = rint(Fm.sf); }});
-                        }
-                        0x4: decode OPCODE_15 {
-                            0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
-                            1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
-                        }
-                        0x5: decode OPCODE_15 {
-                            0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
-                            1: log({{ Fd.sf = log10(Fm.sf); }});
-                        }
-                        0x6: decode OPCODE_15 {
-                            0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
-                            1: lgn({{ Fd.sf = log(Fm.sf); }});
-                        }
-                        0x7: decode OPCODE_15 {
-                            0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
-                            1: exp({{ Fd.sf = exp(Fm.sf); }});
-                        }
-                        0x8: decode OPCODE_15 {
-                            0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
-                            1: sin({{ Fd.sf = sin(Fm.sf); }});
-                        }
-                        0x9: decode OPCODE_15 {
-                            0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
-                            1: cos({{ Fd.sf = cos(Fm.sf); }});
-                        }
-                        0xa: decode OPCODE_15 {
-                            0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
-                            1: tan({{ Fd.sf = tan(Fm.sf); }});
-                        }
-                        0xb: decode OPCODE_15 {
-                            0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
-                            1: asn({{ Fd.sf = asin(Fm.sf); }});
-                        }
-                        0xc: decode OPCODE_15 {
-                            0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
-                            1: acs({{ Fd.sf = acos(Fm.sf); }});
-                        }
-                        0xd: decode OPCODE_15 {
-                            1: atn({{ Fd.sf = atan(Fm.sf); }});
-                        }
-                        0xe: decode OPCODE_15 {
-                            // Unnormalised Round
-                            1: FailUnimpl::urd();
-                        }
-                        0xf: decode OPCODE_15 {
-                            // Normalise
-                            1: FailUnimpl::nrm();
-                        }
-                    }
-                    1: decode OPCODE_15_12 {
+                    0x1: decode OPCODE_23_20 {
+                            0x0: decode OPCODE_15 {
+                                0: adf({{ Fd.sf = Fn.sf + Fm.sf; }});
+                                1: mvf({{ Fd.sf = Fm.sf; }});
+                            }
+                            0x1: decode OPCODE_15 {
+                                0: muf({{ Fd.sf = Fn.sf * Fm.sf; }});
+                                1: mnf({{ Fd.sf = -Fm.sf; }});
+                            }
+                            0x2: decode OPCODE_15 {
+                                0: suf({{ Fd.sf = Fn.sf - Fm.sf; }});
+                                1: abs({{ Fd.sf = fabs(Fm.sf); }});
+                            }
+                            0x3: decode OPCODE_15 {
+                                0: rsf({{ Fd.sf = Fm.sf - Fn.sf; }});
+                                1: rnd({{ Fd.sf = rint(Fm.sf); }});
+                            }
+                            0x4: decode OPCODE_15 {
+                                0: dvf({{ Fd.sf = Fn.sf / Fm.sf; }});
+                                1: sqt({{ Fd.sf = sqrt(Fm.sf); }});
+                            }
+                            0x5: decode OPCODE_15 {
+                                0: rdf({{ Fd.sf = Fm.sf / Fn.sf; }});
+                                1: log({{ Fd.sf = log10(Fm.sf); }});
+                            }
+                            0x6: decode OPCODE_15 {
+                                0: pow({{ Fd.sf = pow(Fm.sf, Fn.sf); }});
+                                1: lgn({{ Fd.sf = log(Fm.sf); }});
+                            }
+                            0x7: decode OPCODE_15 {
+                                0: rpw({{ Fd.sf = pow(Fn.sf, Fm.sf); }});
+                                1: exp({{ Fd.sf = exp(Fm.sf); }});
+                            }
+                            0x8: decode OPCODE_15 {
+                                0: rmf({{ Fd.sf = drem(Fn.sf, Fm.sf); }});
+                                1: sin({{ Fd.sf = sin(Fm.sf); }});
+                            }
+                            0x9: decode OPCODE_15 {
+                                0: fml({{ Fd.sf = Fn.sf * Fm.sf; }});
+                                1: cos({{ Fd.sf = cos(Fm.sf); }});
+                            }
+                            0xa: decode OPCODE_15 {
+                                0: fdv({{ Fd.sf = Fn.sf / Fm.sf; }});
+                                1: tan({{ Fd.sf = tan(Fm.sf); }});
+                            }
+                            0xb: decode OPCODE_15 {
+                                0: frd({{ Fd.sf = Fm.sf / Fn.sf; }});
+                                1: asn({{ Fd.sf = asin(Fm.sf); }});
+                            }
+                            0xc: decode OPCODE_15 {
+                                0: pol({{ Fd.sf = atan2(Fn.sf, Fm.sf); }});
+                                1: acs({{ Fd.sf = acos(Fm.sf); }});
+                            }
+                            0xd: decode OPCODE_15 {
+                                1: atn({{ Fd.sf = atan(Fm.sf); }});
+                            }
+                            0xe: decode OPCODE_15 {
+                                // Unnormalised Round
+                                1: FailUnimpl::urd();
+                            }
+                            0xf: decode OPCODE_15 {
+                                // Normalise
+                                1: FailUnimpl::nrm();
+                            }
+                    } // OPCODE_23_20
+                } // format FloatOp
+            } // CPNUM
+            1: decode CPNUM { // 27-24=1110,4 ==1
+                1: decode OPCODE_15_12 {
+                    format FloatOp {
                         0xf: decode OPCODE_23_21 {
                             format FloatCmp {
                                 0x4: cmf({{ Fn.df }}, {{ Fm.df }});
@@ -417,36 +477,86 @@ format DataOp {
                             0x4: FailUnimpl::wfc();
                             0x5: FailUnimpl::rfc();
                         }
-                    }
+                    } // format FloatOp
                 }
-            }
-            0xa: decode MISC_OPCODE {
-                0x1: decode MEDIA_OPCODE {
-                    0xf: decode RN {
-                        0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
-                        0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
-                        0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
+                0xa: decode MISC_OPCODE {
+                    0x1: decode MEDIA_OPCODE {
+                        0xf: decode RN {
+                            0x0: FloatOp::fmrx_fpsid({{ Rd = Fpsid; }});
+                            0x1: FloatOp::fmrx_fpscr({{ Rd = Fpscr; }});
+                            0x8: FloatOp::fmrx_fpexc({{ Rd = Fpexc; }});
+                        }
+                        0xe: decode RN {
+                            0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
+                            0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
+                            0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
+                        }
+                    } // MEDIA_OPCODE (MISC_OPCODE 0x1)
+                } // MISC_OPCODE (CPNUM 0xA)
+                0xf: decode RN {
+                    // Barrriers, Cache Maintence, NOPS
+                    7: decode OPCODE_23_21 {
+                        0: decode RM {
+                            0: decode OPC2 {
+                                4: decode OPCODE_20 {
+                                    0: PredOp::mcr_cp15_nop1({{ }}); // was wfi
+                                }
+                            }
+                            1: WarnUnimpl::cp15_cache_maint();
+                            4: WarnUnimpl::cp15_par();
+                            5: decode OPC2 {
+                                0,1: WarnUnimpl::cp15_cache_maint2();
+                                4: PredOp::cp15_isb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                                6,7: WarnUnimpl::cp15_bp_maint();
+                            }
+                            6: WarnUnimpl::cp15_cache_maint3();
+                            8: WarnUnimpl::cp15_va_to_pa();
+                            10: decode OPC2 {
+                                1,2: WarnUnimpl::cp15_cache_maint3();
+                                4: PredOp::cp15_dsb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                                5: PredOp::cp15_dmb({{ ; }}, IsMemBarrier, IsSerializeBefore);
+                            }
+                            11: WarnUnimpl::cp15_cache_maint4();
+                            13: decode OPC2 {
+                                1: decode OPCODE_20 {
+                                    0: PredOp::mcr_cp15_nop2({{ }}); // was prefetch
+                                }
+                            }
+                            14: WarnUnimpl::cp15_cache_maint5();
+                        } // RM
+                    } // OPCODE_23_21 CR
+                            
+                    // Thread ID and context ID registers
+                    // Thread ID register needs cheaper access than miscreg
+                    13: WarnUnimpl::mcr_mrc_cp15_c7(); 
+
+                    // All the rest
+                    default: decode OPCODE_20 {
+                        0: PredOp::mcr_cp15({{ 
+                               fault = setCp15Register(Rd, RN, OPCODE_23_21, RM, OPC2); 
+                        }});
+                        1: PredOp::mrc_cp15({{ 
+                               fault = readCp15Register(Rd, RN, OPCODE_23_21, RM, OPC2); 
+                        }});
                     }
-                    0xe: decode RN {
-                        0x0: FloatOp::fmxr_fpsid({{ Fpsid = Rd; }});
-                        0x1: FloatOp::fmxr_fpscr({{ Fpscr = Rd; }});
-                        0x8: FloatOp::fmxr_fpexc({{ Fpexc = Rd; }});
-                    }
-                }
+                }  // RN 
+            } // CPNUM  (OP4 == 1)
+        } //OPCODE_4
+
+#if FULL_SYSTEM
+        1: PredOp::swi({{ fault = new SupervisorCall; }}, IsSerializeAfter, IsNonSpeculative, IsSyscall); 
+#else
+        1: PredOp::swi({{ if (testPredicate(CondCodes, condCode))
+            {
+                if (IMMED_23_0)
+                    xc->syscall(IMMED_23_0);
+                else
+                    xc->syscall(R7);
             }
-        }
-        format PredOp {
-            // ARM System Call (SoftWare Interrupt)
-            1: swi({{ if (testPredicate(Cpsr, condCode))
-                      {
-                          if (IMMED_23_0)
-                              xc->syscall(IMMED_23_0);
-                          else
-                              xc->syscall(R7);
-                      }
-            }});
-        }
-    }
+        }});
+#endif // FULL_SYSTEM
+    } // OPCODE_24
+
 }
 }
 

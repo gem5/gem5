@@ -75,8 +75,6 @@ IdeController::Channel::Channel(
 
 IdeController::Channel::~Channel()
 {
-    delete master;
-    delete slave;
 }
 
 IdeController::IdeController(Params *p)

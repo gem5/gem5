@@ -27,7 +27,6 @@
 # Authors: Nathan Binkert
 
 from m5.params import *
-from m5 import build_env
 from BaseCPU import BaseCPU
 
 class O3Checker(BaseCPU):

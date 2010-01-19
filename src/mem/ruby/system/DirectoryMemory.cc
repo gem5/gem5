@@ -84,11 +84,14 @@ void DirectoryMemory::init(const vector<string> & argv)
 DirectoryMemory::~DirectoryMemory()
 {
   // free up all the directory entries
-  for (int i=0;i<m_num_entries;i++)
-    if (m_entries[i] != NULL)
-      delete m_entries;
-  if (m_entries != NULL)
+  for (uint64 i=0;i<m_num_entries;i++) {
+    if (m_entries[i] != NULL) {
+      delete m_entries[i];
+    }
+  }
+  if (m_entries != NULL) {
     delete [] m_entries;
+  }
 }
 
 void DirectoryMemory::printConfig(ostream& out) const

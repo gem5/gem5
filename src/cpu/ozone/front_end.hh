@@ -35,6 +35,7 @@
 
 #include "arch/utility.hh"
 #include "base/timebuf.hh"
+#include "config/the_isa.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/bpred_unit.hh"
 #include "cpu/ozone/rename_table.hh"

@@ -29,6 +29,7 @@
  *
  */
 
+#include "config/the_isa.hh"
 #include "cpu/inorder/resources/decode_unit.hh"
 
 using namespace TheISA;

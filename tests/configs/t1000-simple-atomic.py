@@ -28,7 +28,7 @@
 
 import m5
 from m5.objects import *
-m5.AddToPath('../configs/common')
+m5.util.addToPath('../configs/common')
 import FSConfig
 
 cpu = AtomicSimpleCPU(cpu_id=0)

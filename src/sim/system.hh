@@ -45,6 +45,7 @@
 #include "mem/port.hh"
 #include "params/System.hh"
 #include "sim/sim_object.hh"
+
 #if FULL_SYSTEM
 #include "kern/system_events.hh"
 #include "mem/vport.hh"
@@ -59,10 +60,7 @@ class PhysicalMemory;
 class Platform;
 #endif
 class GDBListener;
-namespace TheISA
-{
-    class RemoteGDB;
-}
+class BaseRemoteGDB;
 
 class System : public SimObject
 {
@@ -187,7 +185,7 @@ class System : public SimObject
 
 #endif
   public:
-    std::vector<TheISA::RemoteGDB *> remoteGDB;
+    std::vector<BaseRemoteGDB *> remoteGDB;
     std::vector<GDBListener *> gdbListen;
     bool breakpoint();
 

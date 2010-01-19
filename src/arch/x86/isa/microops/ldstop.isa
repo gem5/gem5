@@ -157,7 +157,7 @@ def template MicroLoadExecute {{
 
         if (fault == NoFault) {
             %(code)s;
-        } else if (memFlags & Request::PF_EXCLUSIVE) {
+        } else if (memFlags & Request::PREFETCH) {
             // For prefetches, ignore any faults/exceptions.
             return NoFault;
         }
@@ -374,7 +374,7 @@ let {{
             if atCPL0:
                 self.memFlags += " | (CPL0FlagBit << FlagShift)"
             if prefetch:
-                self.memFlags += " | Request::PF_EXCLUSIVE"
+                self.memFlags += " | Request::PREFETCH"
             self.memFlags += " | (machInst.legacy.addr ? " + \
                              "(AddrSizeFlagBit << FlagShift) : 0)"
 

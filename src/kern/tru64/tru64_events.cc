@@ -31,6 +31,7 @@
 
 #include "arch/alpha/ev5.hh"
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/base.hh"
 #include "kern/system_events.hh"

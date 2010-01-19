@@ -38,6 +38,7 @@
 #include "base/misc.hh"
 #include "base/trace.hh"
 #include "base/traceflags.hh"
+#include "config/the_isa.hh"
 #include "cpu/o3/comm.hh"
 
 /**

@@ -604,7 +604,7 @@
                     }
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
-                        0x7: WarnUnimpl::movdqu_Vo_Wo();
+                        0x7: MOVDQU(Vo,Wo);
                         default: UD2();
                     }
                     // operand size (0x66)
@@ -615,8 +615,8 @@
                         0x3: PACKSSDW(Vo,Wo);
                         0x4: PUNPCKLQDQ(Vo,Wq);
                         0x5: PUNPCKHQDQ(Vo,Wq);
-                        0x6: WarnUnimpl::movd_Vo_Ed();
-                        0x7: WarnUnimpl::movdqa_Vo_Wo();
+                        0x6: MOVD(Vo,Edp);
+                        0x7: MOVDQA(Vo,Wo);
                     }
                     default: UD2();
                 }
@@ -673,9 +673,9 @@
                         //0x3: group14_pshimq();
                         0x3: decode MODRM_REG {
                             0x2: PSRLQ(VRo,Ib);
-                            0x3: WarnUnimpl::psrldq_VRo_Ib();
+                            0x3: PSRLDQ(VRo,Ib);
                             0x6: PSLLQ(VRo,Ib);
-                            0x7: WarnUnimpl::pslldq_VRo_Ib();
+                            0x7: PSLLDQ(VRo,Ib);
                             default: UD2();
                         }
                         0x4: PCMPEQB(Vo,Wo);
@@ -702,15 +702,15 @@
                     // repe (0xF3)
                     0x4: decode OPCODE_OP_BOTTOM3 {
                         0x6: MOVQ(Vq,Wq);
-                        0x7: WarnUnimpl::movdqu_Wo_Vo();
+                        0x7: MOVDQU(Wo,Vo);
                         default: UD2();
                     }
                     // operand size (0x66)
                     0x1: decode OPCODE_OP_BOTTOM3 {
-                        0x4: WarnUnimpl::haddpd_Vo_Wo();
+                        0x4: HADDPD(Vo,Wo);
                         0x5: WarnUnimpl::hsubpd_Vo_Wo();
-                        0x6: WarnUnimpl::movd_Ed_Vd();
-                        0x7: WarnUnimpl::movdqa_Wo_Vo();
+                        0x6: MOVD(Edp,Vd);
+                        0x7: MOVDQA(Wo,Vo);
                         default: UD2();
                     }
                     // repne (0xF2)

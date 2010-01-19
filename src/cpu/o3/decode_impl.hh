@@ -28,6 +28,7 @@
  * Authors: Kevin Lim
  */
 
+#include "config/the_isa.hh"
 #include "cpu/o3/decode.hh"
 #include "params/DerivO3CPU.hh"
 

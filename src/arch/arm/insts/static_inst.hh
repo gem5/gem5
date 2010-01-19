@@ -74,6 +74,56 @@ class ArmStaticInst : public StaticInst
     void printDataInst(std::ostream &os, bool withImm) const;
 
     std::string generateDisassembly(Addr pc, const SymbolTable *symtab) const;
+
+    static uint32_t
+    cpsrWriteByInstr(CPSR cpsr, uint32_t val,
+            uint8_t byteMask, bool affectState)
+    {
+        bool privileged = (cpsr.mode != MODE_USER);
+
+        uint32_t bitMask = 0;
+
+        if (bits(byteMask, 3)) {
+            unsigned lowIdx = affectState ? 24 : 27;
+            bitMask = bitMask | mask(31, lowIdx);
+        }
+        if (bits(byteMask, 2)) {
+            bitMask = bitMask | mask(19, 16);
+        }
+        if (bits(byteMask, 1)) {
+            unsigned highIdx = affectState ? 15 : 9;
+            unsigned lowIdx = privileged ? 8 : 9;
+            bitMask = bitMask | mask(highIdx, lowIdx);
+        }
+        if (bits(byteMask, 0)) {
+            if (privileged) {
+                bitMask = bitMask | mask(7, 6);
+                bitMask = bitMask | mask(5);
+            }
+            if (affectState)
+                bitMask = bitMask | (1 << 5);
+        }
+
+        return ((uint32_t)cpsr & ~bitMask) | (val & bitMask);
+    }
+
+    static uint32_t
+    spsrWriteByInstr(uint32_t spsr, uint32_t val,
+            uint8_t byteMask, bool affectState)
+    {
+        uint32_t bitMask = 0;
+
+        if (bits(byteMask, 3))
+            bitMask = bitMask | mask(31, 24);
+        if (bits(byteMask, 2))
+            bitMask = bitMask | mask(19, 16);
+        if (bits(byteMask, 1))
+            bitMask = bitMask | mask(15, 8);
+        if (bits(byteMask, 0))
+            bitMask = bitMask | mask(7, 0);
+
+        return ((spsr & ~bitMask) | (val & bitMask));
+    }
 };
 }
 

@@ -36,17 +36,17 @@
 #include <list>
 #include <string>
 
-#include "arch/tlb.hh"
 #include "arch/predecoder.hh"
-#include "cpu/inorder/resource.hh"
+#include "arch/tlb.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
+#include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inorder/resource.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "mem/port.hh"
-#include "cpu/inorder/pipeline_traits.hh"
-#include "sim/sim_object.hh"
-
 #include "params/InOrderCPU.hh"
+#include "sim/sim_object.hh"
 
 class CacheRequest;
 typedef CacheRequest* CacheReqPtr;

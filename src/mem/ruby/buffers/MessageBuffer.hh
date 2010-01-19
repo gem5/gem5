@@ -46,15 +46,11 @@
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/gems_common/util.hh"
 
-class Chip;
-
 class MessageBuffer {
 public:
   // Constructors
-  MessageBuffer();
-  MessageBuffer(const Chip* chip_ptr); // The chip_ptr is ignored, but could be used for extra debugging
+  MessageBuffer(const string &name = "");
 
-  // Use Default Destructor
   // ~MessageBuffer()
 
   // Public Methods

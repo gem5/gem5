@@ -33,17 +33,18 @@
  * Hardware Prefetcher Definition.
  */
 
+#include <list>
+
 #include "arch/isa_traits.hh"
 #include "base/trace.hh"
+#include "config/the_isa.hh"
 #include "mem/cache/base.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/request.hh"
-#include <list>
 
 BasePrefetcher::BasePrefetcher(const BaseCacheParams *p)
     : size(p->prefetcher_size), pageStop(!p->prefetch_past_page),
       serialSquash(p->prefetch_serial_squash),
-      cacheCheckPush(p->prefetch_cache_check_push),
       onlyData(p->prefetch_data_accesses_only)
 {
 }
@@ -141,9 +142,6 @@ BasePrefetcher::getPacket()
     do {
         pkt = *pf.begin();
         pf.pop_front();
-        if (!cacheCheckPush) {
-            keep_trying = cache->inCache(pkt->getAddr());
-        }
 
         if (keep_trying) {
             DPRINTF(HWPrefetch, "addr 0x%x in cache, skipping\n",
@@ -223,18 +221,6 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             DPRINTF(HWPrefetch, "Found a pf candidate addr: 0x%x, "
                     "inserting into prefetch queue with delay %d time %d\n",
                     addr, *delayIter, time);
-
-            // Check if it is already in the cache
-            if (cacheCheckPush && cache->inCache(addr)) {
-                DPRINTF(HWPrefetch, "Prefetch addr already in cache\n");
-                continue;
-            }
-
-            // Check if it is already in the miss_queue
-            if (cache->inMissQueue(addr)) {
-                DPRINTF(HWPrefetch, "Prefetch addr already in miss queue\n");
-                continue;
-            }
 
             // Check if it is already in the pf buffer
             if (inPrefetch(addr) != pf.end()) {

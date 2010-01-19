@@ -30,10 +30,14 @@
 #
 # "m5 test.py"
 
+import os
+import optparse
+import sys
+
 import m5
 from m5.objects import *
-import os, optparse, sys
-m5.AddToPath('../common')
+
+m5.util.addToPath('../common')
 
 # --------------------
 # Define Command Line Options
@@ -266,10 +270,11 @@ elif options.benchmark == 'WaterNSquared':
 elif options.benchmark == 'WaterSpatial':
     root.workload = Water_spatial()
 else:
-    panic("The --benchmark environment variable was set to something" \
-          +" improper.\nUse Cholesky, FFT, LUContig, LUNoncontig, Radix" \
-          +", Barnes, FMM, OceanContig,\nOceanNoncontig, Raytrace," \
-          +" WaterNSquared, or WaterSpatial\n")
+    m5.util.panic("""
+The --benchmark environment variable was set to something improper.
+Use Cholesky, FFT, LUContig, LUNoncontig, Radix, Barnes, FMM, OceanContig,
+OceanNoncontig, Raytrace, WaterNSquared, or WaterSpatial
+""")
 
 # --------------------
 # Assign the workload to the cpus

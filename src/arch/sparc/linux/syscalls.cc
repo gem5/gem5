@@ -41,7 +41,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -59,9 +60,10 @@ SyscallReturn getresuidFunc(SyscallDesc *desc, int num,
         LiveProcess *p, ThreadContext *tc)
 {
     const IntReg id = htog(100);
-    Addr ruid = p->getSyscallArg(tc, 0);
-    Addr euid = p->getSyscallArg(tc, 1);
-    Addr suid = p->getSyscallArg(tc, 2);
+    int index = 0;
+    Addr ruid = p->getSyscallArg(tc, index);
+    Addr euid = p->getSyscallArg(tc, index);
+    Addr suid = p->getSyscallArg(tc, index);
     //Handle the EFAULT case
     //Set the ruid
     if(ruid)
@@ -302,7 +304,7 @@ SyscallDesc SparcLinuxProcess::syscall32Descs[] = {
     /* 211 */ SyscallDesc("tgkill", unimplementedFunc), //32 bit
     /* 212 */ SyscallDesc("waitpid", unimplementedFunc), //32 bit
     /* 213 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 214 */ SyscallDesc("sysinfo", unimplementedFunc), //32 bit
+    /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<Sparc32Linux>), //32 bit
     /* 215 */ SyscallDesc("ipc", unimplementedFunc), //32 bit
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc), //32 bit
     /* 217 */ SyscallDesc("clone", cloneFunc),
@@ -608,7 +610,7 @@ SyscallDesc SparcLinuxProcess::syscallDescs[] = {
     /* 211 */ SyscallDesc("tgkill", unimplementedFunc),
     /* 212 */ SyscallDesc("waitpid", unimplementedFunc),
     /* 213 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 214 */ SyscallDesc("sysinfo", unimplementedFunc),
+    /* 214 */ SyscallDesc("sysinfo", sysinfoFunc<SparcLinux>),
     /* 215 */ SyscallDesc("ipc", unimplementedFunc),
     /* 216 */ SyscallDesc("sigreturn", unimplementedFunc),
     /* 217 */ SyscallDesc("clone", cloneFunc),

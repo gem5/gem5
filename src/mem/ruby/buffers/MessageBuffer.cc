@@ -34,7 +34,7 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/system/System.hh"
 
-MessageBuffer::MessageBuffer()
+MessageBuffer::MessageBuffer(const string &name)
 {
   m_msg_counter = 0;
   m_consumer_ptr = NULL;
@@ -52,26 +52,7 @@ MessageBuffer::MessageBuffer()
   m_msgs_this_cycle = 0;
   m_not_avail_count = 0;
   m_priority_rank = 0;
-}
-
-MessageBuffer::MessageBuffer(const Chip* chip_ptr)  // The chip_ptr is ignored, but could be used for extra debugging
-{
-  m_msg_counter = 0;
-  m_consumer_ptr = NULL;
-  m_ordering_set = false;
-  m_strict_fifo = true;
-  m_size = 0;
-  m_max_size = -1;
-  m_last_arrival_time = 0;
-  m_randomization = true;
-  m_size_last_time_size_checked = 0;
-  m_time_last_time_size_checked = 0;
-  m_time_last_time_enqueue = 0;
-  m_time_last_time_pop = 0;
-  m_size_at_cycle_start = 0;
-  m_msgs_this_cycle = 0;
-  m_not_avail_count = 0;
-  m_priority_rank = 0;
+  m_name = name;
 }
 
 int MessageBuffer::getSize()

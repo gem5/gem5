@@ -97,7 +97,8 @@ Trace::ArmNativeTrace::ThreadState::update(ThreadContext *tc)
     changed[STATE_PC] = (newState[STATE_PC] != oldState[STATE_PC]);
 
     //CPSR
-    newState[STATE_CPSR] = tc->readMiscReg(MISCREG_CPSR);
+    newState[STATE_CPSR] = tc->readMiscReg(MISCREG_CPSR) |
+                           tc->readIntReg(INTREG_CONDCODES);
     changed[STATE_CPSR] = (newState[STATE_CPSR] != oldState[STATE_CPSR]);
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2008 Princeton University
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,16 +24,14 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Authors: Niket Agarwal
  */
 
 /*
- * NetworkConfig.hh
- *
- * Description: This header file is used to define all configuration parameters required by the interconnection network.
- *
- * Niket Agarwal, Princeton University
- *
- * */
+ * This header file is used to define all configuration parameters
+ * required by the interconnection network.
+ */
 
 #ifndef NETWORKCONFIG_H
 #define NETWORKCONFIG_H

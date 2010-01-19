@@ -107,7 +107,10 @@ public:
     if (m_ports.count(name) != 1){
       cerr << "Port " << name << " has " << m_ports.count(name) << " instances" << endl;
     }
-    assert(m_ports.count(name) == 1); m_ports[name]->registerHitCallback(hit_callback); return m_ports[name]; }
+    assert(m_ports.count(name) == 1); 
+    m_ports[name]->registerHitCallback(hit_callback); 
+    return m_ports[name]; 
+  }
   static Network* getNetwork() { assert(m_network_ptr != NULL); return m_network_ptr; }
   static Topology* getTopology(const string & name) { assert(m_topologies.count(name) == 1); return m_topologies[name]; }
   static CacheMemory* getCache(const string & name) { assert(m_caches.count(name) == 1); return m_caches[name]; }

@@ -326,7 +326,7 @@ CheckerCPU::checkFlags(Request *req)
 {
     // Remove any dynamic flags that don't have to do with the request itself.
     unsigned flags = unverifiedReq->getFlags();
-    unsigned mask = LOCKED | PHYSICAL | VPTE | ALTMODE | UNCACHEABLE | NO_FAULT;
+    unsigned mask = LOCKED | PHYSICAL | VPTE | ALTMODE | UNCACHEABLE | PREFETCH;
     flags = flags & (mask);
     if (flags == req->getFlags()) {
         return false;

@@ -26,21 +26,21 @@
 #
 # Authors: Kevin Lim
 
+from m5.defines import buildEnv
 from m5.params import *
 from m5.proxy import *
-from m5 import build_env
 from BaseCPU import BaseCPU
 from FUPool import *
 
-if build_env['USE_CHECKER']:
+if buildEnv['USE_CHECKER']:
     from O3Checker import O3Checker
 
 class DerivO3CPU(BaseCPU):
     type = 'DerivO3CPU'
     activity = Param.Unsigned(0, "Initial count")
 
-    if build_env['USE_CHECKER']:
-        if not build_env['FULL_SYSTEM']:
+    if buildEnv['USE_CHECKER']:
+        if not buildEnv['FULL_SYSTEM']:
             checker = Param.BaseCPU(O3Checker(workload=Parent.workload,
                                               exitOnError=False,
                                               updateOnError=True,

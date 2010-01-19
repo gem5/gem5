@@ -42,6 +42,7 @@
 #include "base/statistics.hh"
 #include "base/timebuf.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "config/use_checker.hh"
 #include "cpu/activity.hh"
 #include "cpu/base.hh"
@@ -668,9 +669,6 @@ class FullO3CPU : public BaseO3CPU
 #if FULL_SYSTEM
     /** Pointer to the system. */
     System *system;
-
-    /** Pointer to physical memory. */
-    PhysicalMemory *physmem;
 #endif
 
     /** Event to call process() on once draining has completed. */

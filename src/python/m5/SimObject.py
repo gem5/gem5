@@ -31,47 +31,24 @@ import math
 import sys
 import types
 
-import proxy
+try:
+    import pydot
+except:
+    pydot = False
+
 import m5
-from util import *
-
-# These utility functions have to come first because they're
-# referenced in params.py... otherwise they won't be defined when we
-# import params below, and the recursive import of this file from
-# params.py will not find these names.
-def isSimObject(value):
-    return isinstance(value, SimObject)
-
-def isSimObjectClass(value):
-    return issubclass(value, SimObject)
-
-def isSimObjectSequence(value):
-    if not isinstance(value, (list, tuple)) or len(value) == 0:
-        return False
-
-    for val in value:
-        if not isNullPointer(val) and not isSimObject(val):
-            return False
-
-    return True
-
-def isSimObjectOrSequence(value):
-    return isSimObject(value) or isSimObjectSequence(value)
+from m5.util import *
 
 # Have to import params up top since Param is referenced on initial
 # load (when SimObject class references Param to create a class
 # variable, the 'name' param)...
-from params import *
+from m5.params import *
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
-from params import ParamDesc, VectorParamDesc, isNullPointer, SimObjVector
-from proxy import *
+from m5.params import ParamDesc, VectorParamDesc, isNullPointer, SimObjVector
 
-noDot = False
-try:
-    import pydot
-except:
-    noDot = True
+from m5.proxy import *
+from m5.proxy import isproxy
 
 #####################################################################
 #
@@ -141,7 +118,7 @@ class MetaSimObject(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        assert name not in allClasses
+        assert name not in allClasses, "SimObject %s already present" % name
 
         # Copy "private" attributes, functions, and classes to the
         # official dict.  Everything else goes in _init_dict to be
@@ -678,7 +655,7 @@ class SimObject(object):
     def unproxy_all(self):
         for param in self._params.iterkeys():
             value = self._values.get(param)
-            if value != None and proxy.isproxy(value):
+            if value != None and isproxy(value):
                 try:
                     value = value.unproxy(self)
                 except:
@@ -749,8 +726,8 @@ class SimObject(object):
         for param in param_names:
             value = self._values.get(param)
             if value is None:
-                m5.fatal("%s.%s without default or user set value",
-                        self.path(), param)
+                fatal("%s.%s without default or user set value",
+                      self.path(), param)
 
             value = value.getValue()
             if isinstance(self._params[param], VectorParamDesc):
@@ -885,6 +862,34 @@ class SimObject(object):
 def resolveSimObject(name):
     obj = instanceDict[name]
     return obj.getCCObject()
+
+def isSimObject(value):
+    return isinstance(value, SimObject)
+
+def isSimObjectClass(value):
+    return issubclass(value, SimObject)
+
+def isSimObjectSequence(value):
+    if not isinstance(value, (list, tuple)) or len(value) == 0:
+        return False
+
+    for val in value:
+        if not isNullPointer(val) and not isSimObject(val):
+            return False
+
+    return True
+
+def isSimObjectOrSequence(value):
+    return isSimObject(value) or isSimObjectSequence(value)
+
+baseClasses = allClasses.copy()
+baseInstances = instanceDict.copy()
+
+def clear():
+    global allClasses, instanceDict
+
+    allClasses = baseClasses.copy()
+    instanceDict = baseInstances.copy()
 
 # __all__ defines the list of symbols that get exported when
 # 'from config import *' is invoked.  Try to keep this reasonably

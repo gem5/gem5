@@ -86,6 +86,7 @@ class ArmLinux : public Linux
     static const unsigned TIOCISATTY_ = 0x2000745e;
     static const unsigned TIOCGETS_   = 0x402c7413;
     static const unsigned TIOCGETA_   = 0x40127417;
+    static const unsigned TCSETAW_    = 0x5407;     // 2.6.15 kernel
     //@}
 
     /// For table().
@@ -147,6 +148,21 @@ class ArmLinux : public Linux
         uint64_t  st_ino;
     } tgt_stat64;
 
+    typedef struct {
+        int32_t  uptime;    /* Seconds since boot */
+        uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
+        uint32_t totalram;  /* Total usable main memory size */
+        uint32_t freeram;   /* Available memory size */
+        uint32_t sharedram; /* Amount of shared memory */
+        uint32_t bufferram; /* Memory used by buffers */
+        uint32_t totalswap; /* Total swap space size */
+        uint32_t freeswap;  /* swap space still available */
+        uint16_t procs;     /* Number of current processes */
+        uint32_t totalhigh; /* Total high memory size */
+        uint32_t freehigh;  /* Available high memory size */
+        uint32_t mem_unit;  /* Memory unit size in bytes */
+    } tgt_sysinfo;
+   
 
 };
 

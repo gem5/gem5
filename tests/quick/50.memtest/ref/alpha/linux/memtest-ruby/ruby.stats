@@ -12,7 +12,7 @@ RubySystem config:
   memory_size_bits: 30
 DMA_Controller config: DMAController_0
   version: 0
-  buffer_size: 32
+  buffer_size: 0
   dma_sequencer: DMASequencer_0
   number_of_TBEs: 256
   recycle_latency: 10
@@ -20,18 +20,16 @@ DMA_Controller config: DMAController_0
   transitions_per_cycle: 32
 Directory_Controller config: DirectoryController_0
   version: 0
-  buffer_size: 32
+  buffer_size: 0
   directory_latency: 6
   directory_name: DirectoryMemory_0
-  dma_select_low_bit: 6
-  dma_select_num_bits: 0
   memory_controller_name: MemoryControl_0
   number_of_TBEs: 256
   recycle_latency: 10
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_0
   version: 0
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_0
   cache_response_latency: 12
   issue_latency: 2
@@ -41,7 +39,7 @@ L1Cache_Controller config: L1CacheController_0
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_1
   version: 1
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_1
   cache_response_latency: 12
   issue_latency: 2
@@ -51,7 +49,7 @@ L1Cache_Controller config: L1CacheController_1
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_2
   version: 2
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_2
   cache_response_latency: 12
   issue_latency: 2
@@ -61,7 +59,7 @@ L1Cache_Controller config: L1CacheController_2
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_3
   version: 3
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_3
   cache_response_latency: 12
   issue_latency: 2
@@ -71,7 +69,7 @@ L1Cache_Controller config: L1CacheController_3
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_4
   version: 4
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_4
   cache_response_latency: 12
   issue_latency: 2
@@ -81,7 +79,7 @@ L1Cache_Controller config: L1CacheController_4
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_5
   version: 5
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_5
   cache_response_latency: 12
   issue_latency: 2
@@ -91,7 +89,7 @@ L1Cache_Controller config: L1CacheController_5
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_6
   version: 6
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_6
   cache_response_latency: 12
   issue_latency: 2
@@ -101,7 +99,7 @@ L1Cache_Controller config: L1CacheController_6
   transitions_per_cycle: 32
 L1Cache_Controller config: L1CacheController_7
   version: 7
-  buffer_size: 32
+  buffer_size: 0
   cache: l1u_7
   cache_response_latency: 12
   issue_latency: 2
@@ -111,92 +109,92 @@ L1Cache_Controller config: L1CacheController_7
   transitions_per_cycle: 32
 Cache config: l1u_0
   controller: L1CacheController_0
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_1
   controller: L1CacheController_1
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_2
   controller: L1CacheController_2
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_3
   controller: L1CacheController_3
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_4
   controller: L1CacheController_4
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_5
   controller: L1CacheController_5
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_6
   controller: L1CacheController_6
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 Cache config: l1u_7
   controller: L1CacheController_7
-  cache_associativity: 8
-  num_cache_sets_bits: 2
-  num_cache_sets: 4
-  cache_set_size_bytes: 256
-  cache_set_size_Kbytes: 0.25
-  cache_set_size_Mbytes: 0.000244141
-  cache_size_bytes: 2048
-  cache_size_Kbytes: 2
-  cache_size_Mbytes: 0.00195312
+  cache_associativity: 2
+  num_cache_sets_bits: 1
+  num_cache_sets: 2
+  cache_set_size_bytes: 128
+  cache_set_size_Kbytes: 0.125
+  cache_set_size_Mbytes: 0.00012207
+  cache_size_bytes: 256
+  cache_size_Kbytes: 0.25
+  cache_size_Mbytes: 0.000244141
 DirectoryMemory Global Config: 
   number of directory memories: 1
   total memory size bytes: 1073741824
@@ -261,6 +259,10 @@ virtual_net_2: active, ordered
 virtual_net_3: inactive
 virtual_net_4: active, ordered
 virtual_net_5: active, ordered
+virtual_net_6: inactive
+virtual_net_7: inactive
+virtual_net_8: inactive
+virtual_net_9: inactive
 
 --- Begin Topology Print ---
 
@@ -386,34 +388,34 @@ periodic_stats_period: 1000000
 ================ End RubySystem Configuration Print ================
 
 
-Real time: Aug/11/2009 14:40:39
+Real time: Nov/18/2009 17:42:31
 
 Profiler Stats
 --------------
-Elapsed_time_in_seconds: 3281
-Elapsed_time_in_minutes: 54.6833
-Elapsed_time_in_hours: 0.911389
-Elapsed_time_in_days: 0.0379745
+Elapsed_time_in_seconds: 3924
+Elapsed_time_in_minutes: 65.4
+Elapsed_time_in_hours: 1.09
+Elapsed_time_in_days: 0.0454167
 
-Virtual_time_in_seconds: 2972.6
-Virtual_time_in_minutes: 49.5433
-Virtual_time_in_hours:   0.825722
-Virtual_time_in_days:    0.0344051
+Virtual_time_in_seconds: 3921.96
+Virtual_time_in_minutes: 65.366
+Virtual_time_in_hours:   1.08943
+Virtual_time_in_days:    0.0453931
 
-Ruby_current_time: 31749699
+Ruby_current_time: 60455259
 Ruby_start_time: 1
-Ruby_cycles: 31749698
+Ruby_cycles: 60455258
 
-mbytes_resident: 151.695
-mbytes_total: 151.898
-resident_ratio: 0.998688
+mbytes_resident: 151.762
+mbytes_total: 2381.61
+resident_ratio: 0.0637255
 
 Total_misses: 0
 total_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 user_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 supervisor_misses: 0 [ 0 0 0 0 0 0 0 0 ]
 
-ruby_cycles_executed: 253997592 [ 31749699 31749699 31749699 31749699 31749699 31749699 31749699 31749699 ]
+ruby_cycles_executed: 483642072 [ 60455259 60455259 60455259 60455259 60455259 60455259 60455259 60455259 ]
 
 transactions_started: 0 [ 0 0 0 0 0 0 0 0 ]
 transactions_ended: 0 [ 0 0 0 0 0 0 0 0 ]
@@ -422,40 +424,40 @@ misses_per_transaction: 0 [ 0 0 0 0 0 0 0 0 ]
 
 
 Memory control MemoryControl_0:
-  memory_total_requests: 1384962
-  memory_reads: 692528
-  memory_writes: 692278
-  memory_refreshes: 66146
-  memory_total_request_delays: 423608080
-  memory_delays_per_request: 305.863
-  memory_delays_in_input_queue: 89056027
-  memory_delays_behind_head_of_bank_queue: 254719145
-  memory_delays_stalled_at_head_of_bank_queue: 79832908
-  memory_stalls_for_bank_busy: 12075653
+  memory_total_requests: 1497259
+  memory_reads: 748631
+  memory_writes: 748628
+  memory_refreshes: 125949
+  memory_total_request_delays: 10693878
+  memory_delays_per_request: 7.1423
+  memory_delays_in_input_queue: 3751785
+  memory_delays_behind_head_of_bank_queue: 352863
+  memory_delays_stalled_at_head_of_bank_queue: 6589230
+  memory_stalls_for_bank_busy: 1322551
   memory_stalls_for_random_busy: 0
-  memory_stalls_for_anti_starvation: 24439291
-  memory_stalls_for_arbitration: 15511923
-  memory_stalls_for_bus: 20392505
+  memory_stalls_for_anti_starvation: 8817
+  memory_stalls_for_arbitration: 1317249
+  memory_stalls_for_bus: 2228686
   memory_stalls_for_tfaw: 0
-  memory_stalls_for_read_write_turnaround: 5977752
-  memory_stalls_for_read_read_turnaround: 1435784
-  accesses_per_bank: 43368  43904  43706  43665  43508  43366  43384  43354  43590  43325  43301  43542  43264  43288  43218  43319  43219  43118  43315  43079  43237  43057  43107  43328  43242  42939  43225  42922  42943  43105  42885  43139  
+  memory_stalls_for_read_write_turnaround: 1350744
+  memory_stalls_for_read_read_turnaround: 361183
+  accesses_per_bank: 46780  46744  46842  46810  46806  46792  46736  46774  46868  46766  46784  46766  46757  46844  46764  46814  46814  46756  46796  46862  46782  46782  46770  46838  46780  46720  46750  46754  46840  46760  46788  46820  
 
 Busy Controller Counts:
-L1Cache-0:0  L1Cache-1:0  L1Cache-2:1  L1Cache-3:0  L1Cache-4:0  L1Cache-5:1  L1Cache-6:0  L1Cache-7:1  
+L1Cache-0:0  L1Cache-1:0  L1Cache-2:0  L1Cache-3:0  L1Cache-4:0  L1Cache-5:0  L1Cache-6:0  L1Cache-7:0  
 
 Directory-0:0  
 DMA-0:0  
 
 Busy Bank Count:0
 
-sequencer_requests_outstanding: [binsize: 1 max: 16 count: 746700 average: 11.7618 | standard deviation: 3.42904 | 0 1181 3107 5986 10114 16132 24128 33710 44657 55083 64138 69988 72441 71345 68309 64111 142270 ]
+sequencer_requests_outstanding: [binsize: 1 max: 16 count: 749581 average: 15.7532 | standard deviation: 1.38784 | 0 475 726 892 999 1179 1408 1673 2066 2371 2666 3000 3297 3618 4065 5733 715413 ]
 
 All Non-Zero Cycle Demand Cache Accesses
 ----------------------------------------
-miss_latency: [binsize: 128 max: 21029 count: 746603 average: 3851.15 | standard deviation: 2350.44 | 21624 2037 3827 6735 8744 8494 7742 8727 10265 12114 13603 13888 12189 13262 16379 16977 16477 16214 17513 17457 16778 18444 19486 16712 16151 17669 18008 15987 15648 16356 15357 14058 14375 15390 13471 12148 12876 13458 11534 10630 11403 10961 9404 9160 10054 8956 7565 7967 8417 7419 6268 6810 6747 5598 5106 5611 5301 4304 4253 4461 4055 3421 3498 3461 3011 2534 2720 2664 2157 1912 2028 1911 1498 1441 1519 1315 1010 1086 1032 937 690 761 739 551 470 511 494 399 364 334 302 239 267 269 203 196 181 186 121 145 135 120 82 83 82 77 58 67 56 72 50 39 33 27 28 31 32 22 29 30 17 15 24 9 20 12 8 10 23 5 12 6 9 6 8 8 9 5 1 3 3 4 1 2 2 4 1 1 5 3 2 0 3 0 2 3 0 0 0 1 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_2: [binsize: 128 max: 20539 count: 484935 average: 3851.68 | standard deviation: 2350.63 | 13904 1332 2494 4329 5749 5607 5063 5713 6766 7842 8848 9053 7883 8567 10537 10962 10638 10565 11405 11350 10806 12022 12693 10961 10540 11414 11604 10373 10192 10631 9965 9143 9337 9992 8755 7843 8355 8762 7428 6918 7435 7161 6157 5981 6496 5813 4849 5172 5493 4828 4049 4428 4328 3623 3316 3646 3442 2848 2798 2919 2659 2252 2225 2229 1937 1638 1781 1744 1433 1232 1308 1290 987 935 1010 866 664 696 662 603 432 499 463 350 290 332 316 246 240 209 206 142 174 178 129 124 108 122 77 99 92 77 54 48 58 48 32 42 37 50 33 28 24 17 20 23 25 15 22 20 14 10 13 5 16 9 5 5 14 3 7 3 2 4 4 5 6 4 1 3 3 3 0 1 2 3 0 1 4 1 0 0 3 0 2 2 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
-miss_latency_3: [binsize: 128 max: 21029 count: 261668 average: 3850.17 | standard deviation: 2350.1 | 7720 705 1333 2406 2995 2887 2679 3014 3499 4272 4755 4835 4306 4695 5842 6015 5839 5649 6108 6107 5972 6422 6793 5751 5611 6255 6404 5614 5456 5725 5392 4915 5038 5398 4716 4305 4521 4696 4106 3712 3968 3800 3247 3179 3558 3143 2716 2795 2924 2591 2219 2382 2419 1975 1790 1965 1859 1456 1455 1542 1396 1169 1273 1232 1074 896 939 920 724 680 720 621 511 506 509 449 346 390 370 334 258 262 276 201 180 179 178 153 124 125 96 97 93 91 74 72 73 64 44 46 43 43 28 35 24 29 26 25 19 22 17 11 9 10 8 8 7 7 7 10 3 5 11 4 4 3 3 5 9 2 5 3 7 2 4 3 3 1 0 0 0 1 1 1 0 1 1 0 1 2 2 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency: [binsize: 16 max: 2089 count: 749568 average: 1269.27 | standard deviation: 184.346 | 706 46 2 38 9 9 11 1 3 18 234 183 253 263 195 167 114 113 80 74 124 134 192 223 283 302 368 333 358 349 310 281 264 303 303 313 381 411 416 435 426 499 501 538 535 532 518 525 525 512 542 549 555 659 781 726 1112 1090 2204 3346 2562 5313 3505 7093 8407 5152 11332 6998 16292 21050 13121 29097 16803 34587 35992 18551 36492 19051 36733 37381 19033 37972 19036 35937 33738 16101 29532 14057 25324 22428 10173 18224 7932 13852 11409 4860 8441 3641 6175 4984 2172 3417 1391 2332 1751 697 1089 457 745 556 215 291 123 215 137 63 94 40 57 28 9 19 5 8 5 5 4 2 2 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_2: [binsize: 16 max: 2059 count: 487448 average: 1269.28 | standard deviation: 183.834 | 432 31 2 21 7 7 8 1 1 8 150 118 169 171 119 101 77 70 54 51 73 78 128 142 175 205 218 217 223 230 208 191 173 202 219 188 238 265 274 281 284 338 317 343 345 351 350 322 342 355 341 355 368 421 494 491 737 709 1423 2160 1690 3504 2280 4639 5415 3375 7314 4535 10511 13782 8565 18932 10987 22355 23465 12092 23641 12545 24045 24209 12417 24627 12375 23363 21911 10475 19320 9131 16506 14610 6581 11831 5169 8995 7363 3196 5492 2339 3969 3226 1448 2182 890 1520 1118 446 700 293 484 359 146 173 86 141 81 42 61 28 39 21 7 13 3 7 2 3 3 1 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
+miss_latency_3: [binsize: 16 max: 2089 count: 262120 average: 1269.26 | standard deviation: 185.295 | 274 15 0 17 2 2 3 0 2 10 84 65 84 92 76 66 37 43 26 23 51 56 64 81 108 97 150 116 135 119 102 90 91 101 84 125 143 146 142 154 142 161 184 195 190 181 168 203 183 157 201 194 187 238 287 235 375 381 781 1186 872 1809 1225 2454 2992 1777 4018 2463 5781 7268 4556 10165 5816 12232 12527 6459 12851 6506 12688 13172 6616 13345 6661 12574 11827 5626 10212 4926 8818 7818 3592 6393 2763 4857 4046 1664 2949 1302 2206 1758 724 1235 501 812 633 251 389 164 261 197 69 118 37 74 56 21 33 12 18 7 2 6 2 1 3 2 1 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ]
 
 All Non-Zero Cycle SW Prefetch Requests
 ------------------------------------
@@ -469,22 +471,26 @@ filter_action: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN
 
 Message Delayed Cycles
 ----------------------
-Total_delay_cycles: [binsize: 1 max: 34 count: 1493362 average: 0.00198612 | standard deviation: 0.174419 | 1493159 0 2 0 0 0 4 0 2 0 15 0 25 0 45 0 77 0 32 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
-Total_nonPF_delay_cycles: [binsize: 1 max: 34 count: 1493362 average: 0.00198612 | standard deviation: 0.174419 | 1493159 0 2 0 0 0 4 0 2 0 15 0 25 0 45 0 77 0 32 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+Total_delay_cycles: [binsize: 1 max: 0 count: 1497256 average:     0 | standard deviation: 0 | 1497256 ]
+Total_nonPF_delay_cycles: [binsize: 1 max: 0 count: 1497256 average:     0 | standard deviation: 0 | 1497256 ]
   virtual_network_0_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
-  virtual_network_1_delay_cycles: [binsize: 1 max: 0 count: 746603 average:     0 | standard deviation: 0 | 746603 ]
-  virtual_network_2_delay_cycles: [binsize: 1 max: 34 count: 746759 average: 0.00397183 | standard deviation: 0.246637 | 746556 0 2 0 0 0 4 0 2 0 15 0 25 0 45 0 77 0 32 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]
+  virtual_network_1_delay_cycles: [binsize: 1 max: 0 count: 748630 average:     0 | standard deviation: 0 | 748630 ]
+  virtual_network_2_delay_cycles: [binsize: 1 max: 0 count: 748626 average:     0 | standard deviation: 0 | 748626 ]
   virtual_network_3_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_4_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
   virtual_network_5_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  virtual_network_6_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  virtual_network_7_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  virtual_network_8_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
+  virtual_network_9_delay_cycles: [binsize: 1 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 Resource Usage
 --------------
 page_size: 4096
-user_time: 2896
-system_time: 75
-page_reclaims: 38173
-page_faults: 1923
+user_time: 3921
+system_time: 0
+page_reclaims: 40455
+page_faults: 3
 swaps: 0
 block_inputs: 0
 block_outputs: 0
@@ -494,110 +500,74 @@ Network Stats
 
 switch_0_inlinks: 2
 switch_0_outlinks: 2
-links_utilized_percent_switch_0: 0.0918637
-  links_utilized_percent_switch_0_link_0: 0.0367355 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_0_link_1: 0.146992 bw: 160000 base_latency: 1
+links_utilized_percent_switch_0: 0.386974
+  links_utilized_percent_switch_0_link_0: 0.15479 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_0_link_1: 0.619159 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_0_link_0_Response_Data: 93305 6717960 [ 0 93305 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_0_Writeback_Control: 93328 746624 [ 0 0 93328 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Control: 93321 746568 [ 93321 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Data: 86792 6249024 [ 86792 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_0_link_1_Response_Data: 6549 471528 [ 0 6549 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Response_Data: 748630 53901360 [ 0 748630 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_0_Writeback_Control: 748626 5989008 [ 0 0 748626 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Control: 748631 5989048 [ 748631 0 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_0_link_1_Data: 748628 53901216 [ 748628 0 0 0 0 0 0 0 0 0 ] base_latency: 1
 
 switch_1_inlinks: 2
 switch_1_outlinks: 2
-links_utilized_percent_switch_1: 0.0918631
-  links_utilized_percent_switch_1_link_0: 0.0367386 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_1_link_1: 0.146988 bw: 160000 base_latency: 1
+links_utilized_percent_switch_1: 0
+  links_utilized_percent_switch_1_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_1_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_1_link_0_Response_Data: 93314 6718608 [ 0 93314 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_0_Writeback_Control: 93325 746600 [ 0 0 93325 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Control: 93321 746568 [ 93321 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Data: 86443 6223896 [ 86443 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_1_link_1_Response_Data: 6895 496440 [ 0 6895 0 0 0 0 ] base_latency: 1
 
 switch_2_inlinks: 2
 switch_2_outlinks: 2
-links_utilized_percent_switch_2: 0.0918489
-  links_utilized_percent_switch_2_link_0: 0.0367347 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_2_link_1: 0.146963 bw: 160000 base_latency: 1
+links_utilized_percent_switch_2: 0
+  links_utilized_percent_switch_2_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_2_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_2_link_0_Response_Data: 93304 6717888 [ 0 93304 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_0_Writeback_Control: 93317 746536 [ 0 0 93317 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Control: 93309 746472 [ 93309 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Data: 86441 6223752 [ 86441 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_2_link_1_Response_Data: 6881 495432 [ 0 6881 0 0 0 0 ] base_latency: 1
 
 switch_3_inlinks: 2
 switch_3_outlinks: 2
-links_utilized_percent_switch_3: 0.0918764
-  links_utilized_percent_switch_3_link_0: 0.0367424 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_3_link_1: 0.14701 bw: 160000 base_latency: 1
+links_utilized_percent_switch_3: 0
+  links_utilized_percent_switch_3_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_3_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_3_link_0_Response_Data: 93323 6719256 [ 0 93323 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_0_Writeback_Control: 93340 746720 [ 0 0 93340 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Control: 93330 746640 [ 93330 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Data: 86471 6225912 [ 86471 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_3_link_1_Response_Data: 6882 495504 [ 0 6882 0 0 0 0 ] base_latency: 1
 
 switch_4_inlinks: 2
 switch_4_outlinks: 2
-links_utilized_percent_switch_4: 0.091891
-  links_utilized_percent_switch_4_link_0: 0.0367495 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_4_link_1: 0.147032 bw: 160000 base_latency: 1
+links_utilized_percent_switch_4: 0
+  links_utilized_percent_switch_4_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_4_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_4_link_0_Response_Data: 93342 6720624 [ 0 93342 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_0_Writeback_Control: 93350 746800 [ 0 0 93350 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Control: 93353 746824 [ 93353 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Data: 86738 6245136 [ 86738 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_4_link_1_Response_Data: 6628 477216 [ 0 6628 0 0 0 0 ] base_latency: 1
 
 switch_5_inlinks: 2
 switch_5_outlinks: 2
-links_utilized_percent_switch_5: 0.0918769
-  links_utilized_percent_switch_5_link_0: 0.0367404 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_5_link_1: 0.147013 bw: 160000 base_latency: 1
+links_utilized_percent_switch_5: 0
+  links_utilized_percent_switch_5_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_5_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_5_link_0_Response_Data: 93317 6718824 [ 0 93317 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_0_Writeback_Control: 93344 746752 [ 0 0 93344 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Control: 93331 746648 [ 93331 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Data: 86620 6236640 [ 86620 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_5_link_1_Response_Data: 6735 484920 [ 0 6735 0 0 0 0 ] base_latency: 1
 
 switch_6_inlinks: 2
 switch_6_outlinks: 2
-links_utilized_percent_switch_6: 0.0919038
-  links_utilized_percent_switch_6_link_0: 0.0367512 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_6_link_1: 0.147057 bw: 160000 base_latency: 1
+links_utilized_percent_switch_6: 0
+  links_utilized_percent_switch_6_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_6_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_6_link_0_Response_Data: 93344 6720768 [ 0 93344 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_0_Writeback_Control: 93375 747000 [ 0 0 93375 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Control: 93353 746824 [ 93353 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Data: 86552 6231744 [ 86552 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_6_link_1_Response_Data: 6831 491832 [ 0 6831 0 0 0 0 ] base_latency: 1
 
 switch_7_inlinks: 2
 switch_7_outlinks: 2
-links_utilized_percent_switch_7: 0.0919101
-  links_utilized_percent_switch_7_link_0: 0.0367549 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_7_link_1: 0.147065 bw: 160000 base_latency: 1
+links_utilized_percent_switch_7: 0
+  links_utilized_percent_switch_7_link_0: 0 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_7_link_1: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_7_link_0_Response_Data: 93354 6721488 [ 0 93354 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_0_Writeback_Control: 93380 747040 [ 0 0 93380 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Control: 93364 746912 [ 93364 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Data: 86714 6243408 [ 86714 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_7_link_1_Response_Data: 6674 480528 [ 0 6674 0 0 0 0 ] base_latency: 1
 
 switch_8_inlinks: 2
 switch_8_outlinks: 2
-links_utilized_percent_switch_8: 0.687008
-  links_utilized_percent_switch_8_link_0: 0.27487 bw: 640000 base_latency: 1
-  links_utilized_percent_switch_8_link_1: 1.09915 bw: 160000 base_latency: 1
+links_utilized_percent_switch_8: 0.386975
+  links_utilized_percent_switch_8_link_0: 0.15479 bw: 640000 base_latency: 1
+  links_utilized_percent_switch_8_link_1: 0.61916 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_8_link_0_Control: 746682 5973456 [ 746682 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_0_Data: 692771 49879512 [ 692771 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_1_Response_Data: 692528 49862016 [ 0 692528 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_8_link_1_Writeback_Control: 746759 5974072 [ 0 0 746759 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Control: 748631 5989048 [ 748631 0 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_0_Data: 748628 53901216 [ 748628 0 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_1_Response_Data: 748630 53901360 [ 0 748630 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_8_link_1_Writeback_Control: 748626 5989008 [ 0 0 748626 0 0 0 0 0 0 0 ] base_latency: 1
 
 switch_9_inlinks: 2
 switch_9_outlinks: 2
@@ -608,148 +578,106 @@ links_utilized_percent_switch_9: 0
 
 switch_10_inlinks: 10
 switch_10_outlinks: 10
-links_utilized_percent_switch_10: 0.227527
-  links_utilized_percent_switch_10_link_0: 0.146942 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_1: 0.146954 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_2: 0.146939 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_3: 0.146969 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_4: 0.146998 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_5: 0.146962 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_6: 0.147005 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_7: 0.14702 bw: 160000 base_latency: 1
-  links_utilized_percent_switch_10_link_8: 1.09948 bw: 160000 base_latency: 1
+links_utilized_percent_switch_10: 0.123832
+  links_utilized_percent_switch_10_link_0: 0.61916 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_1: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_2: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_3: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_4: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_5: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_6: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_7: 0 bw: 160000 base_latency: 1
+  links_utilized_percent_switch_10_link_8: 0.619159 bw: 160000 base_latency: 1
   links_utilized_percent_switch_10_link_9: 0 bw: 160000 base_latency: 1
 
-  outgoing_messages_switch_10_link_0_Response_Data: 93305 6717960 [ 0 93305 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_0_Writeback_Control: 93328 746624 [ 0 0 93328 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Response_Data: 93314 6718608 [ 0 93314 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_1_Writeback_Control: 93325 746600 [ 0 0 93325 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Response_Data: 93304 6717888 [ 0 93304 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_2_Writeback_Control: 93317 746536 [ 0 0 93317 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Response_Data: 93323 6719256 [ 0 93323 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_3_Writeback_Control: 93340 746720 [ 0 0 93340 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Response_Data: 93342 6720624 [ 0 93342 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_4_Writeback_Control: 93350 746800 [ 0 0 93350 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_Response_Data: 93317 6718824 [ 0 93317 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_5_Writeback_Control: 93344 746752 [ 0 0 93344 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Response_Data: 93344 6720768 [ 0 93344 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_6_Writeback_Control: 93375 747000 [ 0 0 93375 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Response_Data: 93354 6721488 [ 0 93354 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_7_Writeback_Control: 93380 747040 [ 0 0 93380 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_8_Control: 746682 5973456 [ 746682 0 0 0 0 0 ] base_latency: 1
-  outgoing_messages_switch_10_link_8_Data: 692771 49879512 [ 692771 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_Response_Data: 748630 53901360 [ 0 748630 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_0_Writeback_Control: 748626 5989008 [ 0 0 748626 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_8_Control: 748631 5989048 [ 748631 0 0 0 0 0 0 0 0 0 ] base_latency: 1
+  outgoing_messages_switch_10_link_8_Data: 748628 53901216 [ 748628 0 0 0 0 0 0 0 0 0 ] base_latency: 1
 
 l1u_0 cache stats: 
-  l1u_0_total_misses: 93321
-  l1u_0_total_demand_misses: 93321
+  l1u_0_total_misses: 748631
+  l1u_0_total_demand_misses: 748631
   l1u_0_total_prefetches: 0
   l1u_0_total_sw_prefetches: 0
   l1u_0_total_hw_prefetches: 0
   l1u_0_misses_per_transaction: inf
 
-  l1u_0_request_type_LD:   65.0004%
-  l1u_0_request_type_ST:   34.9996%
+  l1u_0_request_type_LD:   65.0336%
+  l1u_0_request_type_ST:   34.9664%
 
-  l1u_0_access_mode_type_SupervisorMode:   93321    100%
-  l1u_0_request_size: [binsize: log2 max: 1 count: 93321 average:     1 | standard deviation: 0 | 0 93321 ]
+  l1u_0_access_mode_type_SupervisorMode:   748631    100%
+  l1u_0_request_size: [binsize: log2 max: 1 count: 748631 average:     1 | standard deviation: 0 | 0 748631 ]
 
 l1u_1 cache stats: 
-  l1u_1_total_misses: 93321
-  l1u_1_total_demand_misses: 93321
+  l1u_1_total_misses: 0
+  l1u_1_total_demand_misses: 0
   l1u_1_total_prefetches: 0
   l1u_1_total_sw_prefetches: 0
   l1u_1_total_hw_prefetches: 0
-  l1u_1_misses_per_transaction: inf
+  l1u_1_misses_per_transaction: nan
 
-  l1u_1_request_type_LD:   65.1536%
-  l1u_1_request_type_ST:   34.8464%
-
-  l1u_1_access_mode_type_SupervisorMode:   93321    100%
-  l1u_1_request_size: [binsize: log2 max: 1 count: 93321 average:     1 | standard deviation: 0 | 0 93321 ]
+  l1u_1_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_2 cache stats: 
-  l1u_2_total_misses: 93309
-  l1u_2_total_demand_misses: 93309
+  l1u_2_total_misses: 0
+  l1u_2_total_demand_misses: 0
   l1u_2_total_prefetches: 0
   l1u_2_total_sw_prefetches: 0
   l1u_2_total_hw_prefetches: 0
-  l1u_2_misses_per_transaction: inf
+  l1u_2_misses_per_transaction: nan
 
-  l1u_2_request_type_LD:   65.0002%
-  l1u_2_request_type_ST:   34.9998%
-
-  l1u_2_access_mode_type_SupervisorMode:   93309    100%
-  l1u_2_request_size: [binsize: log2 max: 1 count: 93309 average:     1 | standard deviation: 0 | 0 93309 ]
+  l1u_2_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_3 cache stats: 
-  l1u_3_total_misses: 93330
-  l1u_3_total_demand_misses: 93330
+  l1u_3_total_misses: 0
+  l1u_3_total_demand_misses: 0
   l1u_3_total_prefetches: 0
   l1u_3_total_sw_prefetches: 0
   l1u_3_total_hw_prefetches: 0
-  l1u_3_misses_per_transaction: inf
+  l1u_3_misses_per_transaction: nan
 
-  l1u_3_request_type_LD:   64.663%
-  l1u_3_request_type_ST:   35.337%
-
-  l1u_3_access_mode_type_SupervisorMode:   93330    100%
-  l1u_3_request_size: [binsize: log2 max: 1 count: 93330 average:     1 | standard deviation: 0 | 0 93330 ]
+  l1u_3_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_4 cache stats: 
-  l1u_4_total_misses: 93353
-  l1u_4_total_demand_misses: 93353
+  l1u_4_total_misses: 0
+  l1u_4_total_demand_misses: 0
   l1u_4_total_prefetches: 0
   l1u_4_total_sw_prefetches: 0
   l1u_4_total_hw_prefetches: 0
-  l1u_4_misses_per_transaction: inf
+  l1u_4_misses_per_transaction: nan
 
-  l1u_4_request_type_LD:   65.2555%
-  l1u_4_request_type_ST:   34.7445%
-
-  l1u_4_access_mode_type_SupervisorMode:   93353    100%
-  l1u_4_request_size: [binsize: log2 max: 1 count: 93353 average:     1 | standard deviation: 0 | 0 93353 ]
+  l1u_4_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_5 cache stats: 
-  l1u_5_total_misses: 93331
-  l1u_5_total_demand_misses: 93331
+  l1u_5_total_misses: 0
+  l1u_5_total_demand_misses: 0
   l1u_5_total_prefetches: 0
   l1u_5_total_sw_prefetches: 0
   l1u_5_total_hw_prefetches: 0
-  l1u_5_misses_per_transaction: inf
+  l1u_5_misses_per_transaction: nan
 
-  l1u_5_request_type_LD:   64.7148%
-  l1u_5_request_type_ST:   35.2852%
-
-  l1u_5_access_mode_type_SupervisorMode:   93331    100%
-  l1u_5_request_size: [binsize: log2 max: 1 count: 93331 average:     1 | standard deviation: 0 | 0 93331 ]
+  l1u_5_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_6 cache stats: 
-  l1u_6_total_misses: 93353
-  l1u_6_total_demand_misses: 93353
+  l1u_6_total_misses: 0
+  l1u_6_total_demand_misses: 0
   l1u_6_total_prefetches: 0
   l1u_6_total_sw_prefetches: 0
   l1u_6_total_hw_prefetches: 0
-  l1u_6_misses_per_transaction: inf
+  l1u_6_misses_per_transaction: nan
 
-  l1u_6_request_type_LD:   64.916%
-  l1u_6_request_type_ST:   35.084%
-
-  l1u_6_access_mode_type_SupervisorMode:   93353    100%
-  l1u_6_request_size: [binsize: log2 max: 1 count: 93353 average:     1 | standard deviation: 0 | 0 93353 ]
+  l1u_6_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
 l1u_7 cache stats: 
-  l1u_7_total_misses: 93364
-  l1u_7_total_demand_misses: 93364
+  l1u_7_total_misses: 0
+  l1u_7_total_demand_misses: 0
   l1u_7_total_prefetches: 0
   l1u_7_total_sw_prefetches: 0
   l1u_7_total_hw_prefetches: 0
-  l1u_7_misses_per_transaction: inf
+  l1u_7_misses_per_transaction: nan
 
-  l1u_7_request_type_LD:   64.9201%
-  l1u_7_request_type_ST:   35.0799%
-
-  l1u_7_access_mode_type_SupervisorMode:   93364    100%
-  l1u_7_request_size: [binsize: log2 max: 1 count: 93364 average:     1 | standard deviation: 0 | 0 93364 ]
+  l1u_7_request_size: [binsize: log2 max: 0 count: 0 average: NaN |standard deviation: NaN | 0 ]
 
  --- DMA 0 ---
  - Event Counts -
@@ -768,24 +696,24 @@ BUSY_WR  Ack  0 <--
 
  --- Directory 0 ---
  - Event Counts -
-GETX  7453001
+GETX  748631
 GETS  0
-PUTX  692359
-PUTX_NotOwner  411
+PUTX  748628
+PUTX_NotOwner  0
 DMA_READ  0
 DMA_WRITE  0
-Memory_Data  692528
-Memory_Ack  692273
+Memory_Data  748630
+Memory_Ack  748626
 
  - Transitions -
-I  GETX  692603
+I  GETX  748631
 I  PUTX_NotOwner  0 <-- 
 I  DMA_READ  0 <-- 
 I  DMA_WRITE  0 <-- 
 
-M  GETX  54075
-M  PUTX  692359
-M  PUTX_NotOwner  411
+M  GETX  0 <-- 
+M  PUTX  748628
+M  PUTX_NotOwner  0 <-- 
 M  DMA_READ  0 <-- 
 M  DMA_WRITE  0 <-- 
 
@@ -795,23 +723,27 @@ M_DRD  PUTX  0 <--
 M_DWR  GETX  0 <-- 
 M_DWR  PUTX  0 <-- 
 
+M_DWRI  GETX  0 <-- 
 M_DWRI  Memory_Ack  0 <-- 
 
-IM  GETX  3217979
+M_DRDI  GETX  0 <-- 
+M_DRDI  Memory_Ack  0 <-- 
+
+IM  GETX  0 <-- 
 IM  GETS  0 <-- 
 IM  PUTX  0 <-- 
 IM  PUTX_NotOwner  0 <-- 
 IM  DMA_READ  0 <-- 
 IM  DMA_WRITE  0 <-- 
-IM  Memory_Data  692528
+IM  Memory_Data  748630
 
-MI  GETX  3488344
+MI  GETX  0 <-- 
 MI  GETS  0 <-- 
 MI  PUTX  0 <-- 
 MI  PUTX_NotOwner  0 <-- 
 MI  DMA_READ  0 <-- 
 MI  DMA_WRITE  0 <-- 
-MI  Memory_Ack  692273
+MI  Memory_Ack  748626
 
 ID  GETX  0 <-- 
 ID  GETS  0 <-- 
@@ -831,289 +763,289 @@ ID_W  Memory_Ack  0 <--
 
  --- L1Cache 0 ---
  - Event Counts -
-Load  60659
+Load  487449
 Ifetch  0
-Store  32662
-Data  93305
-Fwd_GETX  6549
+Store  262120
+Data  748630
+Fwd_GETX  0
 Inv  0
-Replacement  93289
-Writeback_Ack  86728
-Writeback_Nack  51
+Replacement  748628
+Writeback_Ack  748626
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60659
+I  Load  486862
 I  Ifetch  0 <-- 
-I  Store  32662
+I  Store  261769
 I  Inv  0 <-- 
-I  Replacement  6497
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  51
+II  Writeback_Nack  0 <-- 
 
-M  Load  0 <-- 
+M  Load  587
 M  Ifetch  0 <-- 
-M  Store  0 <-- 
-M  Fwd_GETX  6498
+M  Store  351
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86792
+M  Replacement  748628
 
-MI  Fwd_GETX  51
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86728
+MI  Writeback_Ack  748626
 
-IS  Data  60648
+IS  Data  486861
 
-IM  Data  32657
+IM  Data  261769
 
  --- L1Cache 1 ---
  - Event Counts -
-Load  60802
+Load  0
 Ifetch  0
-Store  32519
-Data  93314
-Fwd_GETX  6895
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93289
-Writeback_Ack  86383
-Writeback_Nack  47
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60802
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32519
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6846
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  47
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6848
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86443
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  47
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86383
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60797
+IS  Data  0 <-- 
 
-IM  Data  32517
+IM  Data  0 <-- 
 
  --- L1Cache 2 ---
  - Event Counts -
-Load  60651
+Load  0
 Ifetch  0
-Store  32658
-Data  93304
-Fwd_GETX  6881
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93277
-Writeback_Ack  86393
-Writeback_Nack  43
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60651
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32658
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6836
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  43
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6838
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86441
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  43
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86393
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60647
+IS  Data  0 <-- 
 
-IM  Data  32657
+IM  Data  0 <-- 
 
  --- L1Cache 3 ---
  - Event Counts -
-Load  60350
+Load  0
 Ifetch  0
-Store  32980
-Data  93323
-Fwd_GETX  6882
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93298
-Writeback_Ack  86405
-Writeback_Nack  53
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60350
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32980
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6827
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  53
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6829
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86471
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  53
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86405
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60347
+IS  Data  0 <-- 
 
-IM  Data  32976
+IM  Data  0 <-- 
 
  --- L1Cache 4 ---
  - Event Counts -
-Load  60918
+Load  0
 Ifetch  0
-Store  32435
-Data  93342
-Fwd_GETX  6628
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93321
-Writeback_Ack  86677
-Writeback_Nack  45
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60918
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32435
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6583
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  45
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6583
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86738
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  45
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86677
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60909
+IS  Data  0 <-- 
 
-IM  Data  32433
+IM  Data  0 <-- 
 
  --- L1Cache 5 ---
  - Event Counts -
-Load  60399
+Load  0
 Ifetch  0
-Store  32932
-Data  93317
-Fwd_GETX  6735
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93299
-Writeback_Ack  86554
-Writeback_Nack  55
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60399
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32932
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6679
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  55
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6680
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86620
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  55
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86554
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60389
+IS  Data  0 <-- 
 
-IM  Data  32928
+IM  Data  0 <-- 
 
  --- L1Cache 6 ---
  - Event Counts -
-Load  60601
+Load  0
 Ifetch  0
-Store  32752
-Data  93344
-Fwd_GETX  6831
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93321
-Writeback_Ack  86483
-Writeback_Nack  61
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60601
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32752
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6769
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  61
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6770
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86552
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  61
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86483
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60595
+IS  Data  0 <-- 
 
-IM  Data  32749
+IM  Data  0 <-- 
 
  --- L1Cache 7 ---
  - Event Counts -
-Load  60612
+Load  0
 Ifetch  0
-Store  32752
-Data  93354
-Fwd_GETX  6674
+Store  0
+Data  0
+Fwd_GETX  0
 Inv  0
-Replacement  93332
-Writeback_Ack  86650
-Writeback_Nack  56
+Replacement  0
+Writeback_Ack  0
+Writeback_Nack  0
 
  - Transitions -
-I  Load  60612
+I  Load  0 <-- 
 I  Ifetch  0 <-- 
-I  Store  32752
+I  Store  0 <-- 
 I  Inv  0 <-- 
-I  Replacement  6618
+I  Replacement  0 <-- 
 
-II  Writeback_Nack  56
+II  Writeback_Nack  0 <-- 
 
 M  Load  0 <-- 
 M  Ifetch  0 <-- 
 M  Store  0 <-- 
-M  Fwd_GETX  6618
+M  Fwd_GETX  0 <-- 
 M  Inv  0 <-- 
-M  Replacement  86714
+M  Replacement  0 <-- 
 
-MI  Fwd_GETX  56
+MI  Fwd_GETX  0 <-- 
 MI  Inv  0 <-- 
-MI  Writeback_Ack  86650
+MI  Writeback_Ack  0 <-- 
 
-IS  Data  60603
+IS  Data  0 <-- 
 
-IM  Data  32751
+IM  Data  0 <-- 
 

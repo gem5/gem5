@@ -31,6 +31,7 @@
 #ifndef __CPU_O3_THREAD_CONTEXT_HH__
 #define __CPU_O3_THREAD_CONTEXT_HH__
 
+#include "config/the_isa.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/o3/isa_specific.hh"
 
@@ -90,9 +91,6 @@ class O3ThreadContext : public ThreadContext
     virtual System *getSystemPtr() { return cpu->system; }
 
 #if FULL_SYSTEM
-    /** Returns a pointer to physical memory. */
-    virtual PhysicalMemory *getPhysMemPtr() { return cpu->physmem; }
-
     /** Returns a pointer to this thread's kernel statistics. */
     virtual TheISA::Kernel::Statistics *getKernelStats()
     { return thread->kernelStats; }

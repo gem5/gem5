@@ -34,15 +34,14 @@
 #include <string>
 #include <sstream>
 
+#include "arch/faults.hh"
 #include "base/cprintf.hh"
 #include "base/trace.hh"
-
-#include "arch/faults.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
-#include "mem/request.hh"
-
-#include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/inorder_dyn_inst.hh"
+#include "mem/request.hh"
 
 using namespace std;
 using namespace TheISA;
@@ -297,11 +296,39 @@ InOrderDynInst::memAccess()
     return initiateAcc();
 }
 
+
+#if FULL_SYSTEM
+
+Fault
+InOrderDynInst::hwrei()
+{
+    panic("InOrderDynInst: hwrei: unimplemented\n");    
+    return NoFault;
+}
+
+
+void
+InOrderDynInst::trap(Fault fault)
+{
+    this->cpu->trap(fault, this->threadNumber);
+}
+
+
+bool
+InOrderDynInst::simPalCheck(int palFunc)
+{
+#if THE_ISA != ALPHA_ISA
+    panic("simPalCheck called, but PAL only exists in Alpha!\n");
+#endif
+    return this->cpu->simPalCheck(palFunc, this->threadNumber);
+}
+#else
 void
 InOrderDynInst::syscall(int64_t callnum)
 {
     cpu->syscall(callnum, this->threadNumber);
 }
+#endif
 
 void
 InOrderDynInst::prefetch(Addr addr, unsigned flags)

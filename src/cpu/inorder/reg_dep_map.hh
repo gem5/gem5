@@ -36,6 +36,7 @@
 #include <vector>
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 
 class InOrderCPU;

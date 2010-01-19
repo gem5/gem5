@@ -36,6 +36,7 @@
 #include "arch/predecoder.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/pc_event.hh"

@@ -111,6 +111,22 @@ class X86Linux64 : public Linux
         uint64_t iov_base; // void *
         uint64_t iov_len;  // size_t
     } tgt_iovec;
+
+    typedef struct {
+        int64_t  uptime;    /* Seconds since boot */
+        uint64_t loads[3];  /* 1, 5, and 15 minute load averages */
+        uint64_t totalram;  /* Total usable main memory size */
+        uint64_t freeram;   /* Available memory size */
+        uint64_t sharedram; /* Amount of shared memory */
+        uint64_t bufferram; /* Memory used by buffers */
+        uint64_t totalswap; /* Total swap space size */
+        uint64_t freeswap;  /* swap space still available */
+        uint16_t procs;     /* Number of current processes */
+        uint64_t totalhigh; /* Total high memory size */
+        uint64_t freehigh;  /* Available high memory size */
+        uint64_t mem_unit;  /* Memory unit size in bytes */
+   } tgt_sysinfo;
+
 };
 
 class X86Linux32 : public Linux
@@ -126,8 +142,8 @@ class X86Linux32 : public Linux
         uint32_t st_uid;
         uint32_t st_gid;
         uint64_t st_rdev;
-        int64_t st_size;
         uint8_t __pad3[4];
+        int64_t st_size;
         uint32_t st_blksize;
         uint64_t st_blocks;
         uint32_t st_atimeX;
@@ -137,7 +153,7 @@ class X86Linux32 : public Linux
         uint32_t st_ctimeX;
         uint32_t st_ctime_nsec;
         uint64_t st_ino;
-    } tgt_stat64;
+    } __attribute__((__packed__)) tgt_stat64;
 
     static OpenFlagTransTable openFlagTable[];
 
@@ -160,6 +176,23 @@ class X86Linux32 : public Linux
     static const int NUM_OPEN_FLAGS;
 
     static const unsigned TGT_MAP_ANONYMOUS = 0x20;
+
+    typedef struct {
+       int32_t  uptime;    /* Seconds since boot */
+       uint32_t loads[3];  /* 1, 5, and 15 minute load averages */
+       uint32_t totalram;  /* Total usable main memory size */
+       uint32_t freeram;   /* Available memory size */
+       uint32_t sharedram; /* Amount of shared memory */
+       uint32_t bufferram; /* Memory used by buffers */
+       uint32_t totalswap; /* Total swap space size */
+       uint32_t freeswap;  /* swap space still available */
+       uint16_t procs;     /* Number of current processes */
+       uint32_t totalhigh; /* Total high memory size */
+       uint32_t freehigh;  /* Available high memory size */
+       uint32_t mem_unit;  /* Memory unit size in bytes */
+    } tgt_sysinfo;
+
+    static bool mmapGrowsDown() { return true; }
 };
 
 #endif

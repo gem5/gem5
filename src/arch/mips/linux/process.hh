@@ -43,8 +43,6 @@ class MipsLinuxProcess : public MipsLiveProcess
     /// Constructor.
     MipsLinuxProcess(LiveProcessParams * params, ObjectFile *objFile);
 
-    void startup();
-
     virtual SyscallDesc* getDesc(int callnum);
 
     /// The target system's hostname.

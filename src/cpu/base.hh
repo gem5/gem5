@@ -38,6 +38,7 @@
 #include "arch/microcode_rom.hh"
 #include "base/statistics.hh"
 #include "config/full_system.hh"
+#include "config/the_isa.hh"
 #include "sim/eventq.hh"
 #include "sim/insttracer.hh"
 #include "mem/mem_object.hh"

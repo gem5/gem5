@@ -30,6 +30,7 @@
 
 #include "arch/faults.hh"
 #include "base/str.hh"
+#include "config/the_isa.hh"
 #include "cpu/ozone/lsq_unit.hh"
 
 template <class Impl>

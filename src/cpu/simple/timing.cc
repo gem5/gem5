@@ -32,6 +32,7 @@
 #include "arch/mmaped_ipr.hh"
 #include "arch/utility.hh"
 #include "base/bigint.hh"
+#include "config/the_isa.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/simple/timing.hh"
 #include "mem/packet.hh"
@@ -272,6 +273,8 @@ TimingSimpleCPU::sendData(Fault fault, RequestPtr req,
 {
     _status = Running;
     if (fault != NoFault) {
+        if (req->isPrefetch())
+            fault = NoFault;
         delete data;
         delete req;
 
@@ -314,6 +317,10 @@ TimingSimpleCPU::sendSplitData(Fault fault1, Fault fault2,
 {
     _status = Running;
     if (fault1 != NoFault || fault2 != NoFault) {
+        if (req1->isPrefetch())
+            fault1 = NoFault;
+        if (req2->isPrefetch())
+            fault2 = NoFault;
         delete data;
         delete req1;
         delete req2;
@@ -359,6 +366,8 @@ TimingSimpleCPU::sendSplitData(Fault fault1, Fault fault2,
 void
 TimingSimpleCPU::translationFault(Fault fault)
 {
+    // fault may be NoFault in cases where a fault is suppressed,
+    // for instance prefetches.
     numCycles += tickToCycles(curTick - previousTick);
     previousTick = curTick;
 

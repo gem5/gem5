@@ -26,8 +26,6 @@
 #
 # Authors: Kevin Lim
 
-import m5
-from m5 import makeList
 from m5.objects import *
 from Benchmarks import *
 
@@ -69,6 +67,50 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
     self.tsunami.attachIO(self.iobus)
     self.tsunami.ide.pio = self.iobus.port
     self.tsunami.ethernet.pio = self.iobus.port
+    self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
+                                               read_only = True))
+    self.intrctrl = IntrControl()
+    self.mem_mode = mem_mode
+    self.terminal = Terminal()
+    self.kernel = binary('vmlinux')
+    self.pal = binary('ts_osfpal')
+    self.console = binary('console')
+    self.boot_osflags = 'root=/dev/hda1 console=ttyS0'
+
+    return self
+
+def makeLinuxAlphaRubySystem(mem_mode, rubymem, mdesc = None):
+    class BaseTsunami(Tsunami):
+        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
+        ide = IdeController(disks=[Parent.disk0, Parent.disk2],
+                            pci_func=0, pci_dev=0, pci_bus=0)
+        
+
+    self = LinuxAlphaSystem(physmem = rubymem)
+    if not mdesc:
+        # generic system
+        mdesc = SysConfig()
+    self.readfile = mdesc.script()
+
+    # Create pio bus to connect all device pio ports to rubymem's pio port
+    self.piobus = Bus(bus_id=0)
+    
+    self.disk0 = CowIdeDisk(driveID='master')
+    self.disk2 = CowIdeDisk(driveID='master')
+    self.disk0.childImage(mdesc.disk())
+    self.disk2.childImage(disk('linux-bigswap2.img'))
+    self.tsunami = BaseTsunami()
+    self.tsunami.attachIO(self.piobus)
+    self.tsunami.ide.pio = self.piobus.port
+    self.tsunami.ethernet.pio = self.piobus.port
+
+    # connect the dma ports directly to ruby dma ports
+    self.tsunami.ide.dma = self.physmem.dma_port
+    self.tsunami.ethernet.dma = self.physmem.dma_port
+
+    # connect the pio bus to rubymem
+    self.physmem.pio_port = self.piobus.port
+    
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()

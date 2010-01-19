@@ -50,7 +50,8 @@ static SyscallReturn
 unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, 0));
+    int index = 0;
+    TypedBufferArg<Linux::utsname> name(process->getSyscallArg(tc, index));
 
     strcpy(name->sysname, "Linux");
     strcpy(name->nodename, "m5.eecs.umich.edu");
@@ -179,7 +180,7 @@ SyscallDesc ArmLinuxProcess::syscallDescs[] = {
     /* 113 */ SyscallDesc("vm86", unimplementedFunc),
     /* 114 */ SyscallDesc("wait4", unimplementedFunc),
     /* 115 */ SyscallDesc("swapoff", unimplementedFunc),
-    /* 116 */ SyscallDesc("sysinfo", unimplementedFunc),
+    /* 116 */ SyscallDesc("sysinfo", sysinfoFunc<ArmLinux>),
     /* 117 */ SyscallDesc("ipc", unimplementedFunc),
     /* 118 */ SyscallDesc("fsync", unimplementedFunc),
     /* 119 */ SyscallDesc("sigreturn", unimplementedFunc),
@@ -417,7 +418,8 @@ static SyscallReturn
 setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
-    uint32_t tlsPtr = process->getSyscallArg(tc, 0);
+    int index = 0;
+    uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->getMemPort()->writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
                                 (uint8_t *)&tlsPtr, sizeof(tlsPtr));
@@ -511,12 +513,12 @@ ArmLinuxProcess::startup()
 }
 
 ArmISA::IntReg
-ArmLinuxProcess::getSyscallArg(ThreadContext *tc, int i)
+ArmLinuxProcess::getSyscallArg(ThreadContext *tc, int &i)
 {
     // Linux apparently allows more parameter than the ABI says it should.
     // This limit may need to be increased even further.
     assert(i < 6);
-    return tc->readIntReg(ArgumentReg0 + i);
+    return tc->readIntReg(ArgumentReg0 + i++);
 }
 
 void

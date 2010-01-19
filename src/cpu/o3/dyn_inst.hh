@@ -32,6 +32,7 @@
 #define __CPU_O3_DYN_INST_HH__
 
 #include "arch/isa_traits.hh"
+#include "config/the_isa.hh"
 #include "cpu/base_dyn_inst.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/cpu.hh"
