@@ -58,6 +58,10 @@ void paramIn(Checkpoint *cp, const std::string &section,
              const std::string &name, T &param);
 
 template <class T>
+bool optParamIn(Checkpoint *cp, const std::string &section,
+             const std::string &name, T &param);
+
+template <class T>
 void arrayParamOut(std::ostream &os, const std::string &name,
                    const T *param, unsigned size);
 
@@ -85,6 +89,7 @@ objParamIn(Checkpoint *cp, const std::string &section,
 #define SERIALIZE_SCALAR(scalar)        paramOut(os, #scalar, scalar)
 
 #define UNSERIALIZE_SCALAR(scalar)      paramIn(cp, section, #scalar, scalar)
+#define UNSERIALIZE_OPT_SCALAR(scalar)      optParamIn(cp, section, #scalar, scalar)
 
 // ENUMs are like SCALARs, but we cast them to ints on the way out
 #define SERIALIZE_ENUM(scalar)          paramOut(os, #scalar, (int)scalar)

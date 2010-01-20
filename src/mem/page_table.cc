@@ -223,15 +223,5 @@ PageTable::unserialize(Checkpoint *cp, const std::string &section)
         pTable[vaddr] = *entry;
         ++i;
     }
-
-    process->M5_pid = pTable[vaddr].asn;
-
-#if THE_ISA == ALPHA_ISA
-    // The IPR_DTB_ASN misc reg must be set in Alpha for the tlb to work 
-    // correctly
-    int id = process->contextIds[0];
-    ThreadContext *tc = process->system->getThreadContext(id);
-    tc->setMiscRegNoEffect(IPR_DTB_ASN, process->M5_pid << 57);
-#endif
 }
 

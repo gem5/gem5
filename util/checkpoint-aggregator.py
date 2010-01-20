@@ -50,6 +50,8 @@ def aggregate(options, args):
             if re.compile("cpu").search(sec):
                 newsec = re.sub("cpu", "cpu" + str(i), sec)
                 merged.add_section(newsec)
+                if re.compile("workload$").search(sec):
+                    merged.set(newsec, "M5_pid", i)
 
                 items = config.items(sec)
                 for item in items:

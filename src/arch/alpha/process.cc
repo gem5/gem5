@@ -175,21 +175,22 @@ AlphaLiveProcess::argsInit(int intSize, int pageSize)
 void
 AlphaLiveProcess::startup()
 {
-    if (checkpointRestored)
+    ThreadContext *tc = system->getThreadContext(contextIds[0]);
+    tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
+
+    if (checkpointRestored) {
         return;
+    }
 
     Process::startup();
 
     argsInit(MachineBytes, VMPageSize);
 
-    ThreadContext *tc = system->getThreadContext(contextIds[0]);
     tc->setIntReg(GlobalPointerReg, objFile->globalPointer());
     //Operate in user mode
     tc->setMiscRegNoEffect(IPR_ICM, 0x18);
     //No super page mapping
     tc->setMiscRegNoEffect(IPR_MCSR, 0);
-    //Set this to 0 for now, but it should be unique for each process
-    tc->setMiscRegNoEffect(IPR_DTB_ASN, M5_pid << 57);
 }
 
 AlphaISA::IntReg

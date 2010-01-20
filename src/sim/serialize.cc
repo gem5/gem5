@@ -204,6 +204,18 @@ paramIn(Checkpoint *cp, const string &section, const string &name, T &param)
     }
 }
 
+template <class T>
+bool
+optParamIn(Checkpoint *cp, const string &section, const string &name, T &param)
+{
+    string str;
+    if (!cp->find(section, name, str) || !parseParam(str, param)) {
+        warn("optional parameter %s:%s not present\n", section, name);
+        return false;
+    } else {
+        return true;
+    }
+}
 
 template <class T>
 void
@@ -321,6 +333,9 @@ template void                                                           \
 paramOut(ostream &os, const string &name, type const &param);           \
 template void                                                           \
 paramIn(Checkpoint *cp, const string &section,                          \
+        const string &name, type & param);                              \
+template bool                                                           \
+optParamIn(Checkpoint *cp, const string &section,                       \
         const string &name, type & param);                              \
 template void                                                           \
 arrayParamOut(ostream &os, const string &name,                          \

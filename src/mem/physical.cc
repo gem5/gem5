@@ -540,12 +540,8 @@ PhysicalMemory::unserialize(Checkpoint *cp, const string &section)
     /* Only copy bytes that are non-zero, so we don't give the VM system hell */
     while (curSize < params()->range.size()) {
         bytesRead = gzread(compressedMem, tempPage, chunkSize);
-        if (bytesRead != chunkSize &&
-            bytesRead != params()->range.size() - curSize)
-            fatal("Read failed on physical memory checkpoint file '%s'"
-                  " got %d bytes, expected %d or %d bytes\n",
-                  filename, bytesRead, chunkSize,
-                  params()->range.size() - curSize);
+        if (bytesRead == 0)
+            break;
 
         assert(bytesRead % sizeof(long) == 0);
 
