@@ -34,7 +34,7 @@ struct RubyRequest {
   unsigned proc_id;
 
   RubyRequest() {}
-  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode, unsigned _proc_id = 0)
+  RubyRequest(uint64_t _paddr, uint8_t* _data, int _len, uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode, unsigned _proc_id = 100)
     : paddr(_paddr), data(_data), len(_len), pc(_pc), type(_type), access_mode(_access_mode), proc_id(_proc_id)
   {}
 };
@@ -70,6 +70,12 @@ RubyPortHandle libruby_get_port(const char* name, void (*hit_callback)(int64_t a
  */
 RubyPortHandle libruby_get_port_by_name(const char* name);
 
+
+/** 
+ * libruby_issue_request error return codes 
+ */
+#define LIBRUBY_BUFFER_FULL -2
+#define LIBRUBY_ALIASED_REQUEST -3
 
 /**
  * issue_request returns a unique access_id to identify the ruby

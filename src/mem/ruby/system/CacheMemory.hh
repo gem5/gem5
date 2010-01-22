@@ -54,6 +54,7 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/profiler/CacheProfiler.hh"
 #include "mem/protocol/CacheMsg.hh"
+#include "base/hashmap.hh"
 #include <vector>
 
 class CacheMemory {
@@ -70,8 +71,6 @@ public:
   //  static CacheMemory* createCache(int level, int num, char split_type, AbstractCacheEntry* (*entry_factory)());
   //  static CacheMemory* getCache(int cache_id);
 
-  static int numberOfLastLevelCaches();
-  
   // Public Methods
   void printConfig(ostream& out);
 
@@ -105,6 +104,8 @@ public:
   // Get/Set permission of cache block
   AccessPermission getPermission(const Address& address) const;
   void changePermission(const Address& address, AccessPermission new_perm);
+
+  static int numberOfLastLevelCaches();
 
   int getLatency() const { return m_latency; }
 
@@ -158,6 +159,7 @@ private:
 
   // The first index is the # of cache lines.
   // The second index is the the amount associativity.
+  m5::hash_map<Address, int> m_tag_index;
   Vector<Vector<AbstractCacheEntry*> > m_cache;
   Vector<Vector<int> > m_locked;
 
@@ -169,9 +171,11 @@ private:
   int m_cache_num_set_bits;
   int m_cache_assoc;
 
+  static Vector< CacheMemory* > m_all_caches;
+  
   static int m_num_last_level_caches;
   static MachineType m_last_level_machine_type;
-  static Vector< CacheMemory* > m_all_caches;
+
 };
 
 #endif //CACHEMEMORY_H

@@ -1,7 +1,5 @@
 #!/usr/bin/ruby
 
-
-
 class NetPort < LibRubyObject
   # number of transitions a SLICC state machine can transition per
   # cycle
@@ -9,9 +7,8 @@ class NetPort < LibRubyObject
 
   # buffer_size limits the size of all other buffers connecting to
   # SLICC Controllers.  When 0, infinite buffering is used.
-  default_param :buffer_size, Integer, 0
+  default_param :buffer_size, Integer, 32
 
-  # added by SS for TBE
   default_param :number_of_TBEs, Integer, 256
 
   default_param :recycle_latency, Integer, 10
@@ -38,16 +35,36 @@ class Debug < LibRubyObject
   #   3. set start_time = 1
   default_param :protocol_trace, Boolean, false
 
-  # a string for filtering debugging output (for all g_debug vars see Debug.h)
+  # a string for filtering debugging output. Valid options (also see Debug.cc):
+  #    {"System",            's' },
+  #    {"Node",              'N' },
+  #    {"Queue",             'q' },
+  #    {"Event Queue",       'e' },
+  #    {"Network",           'n' },
+  #    {"Sequencer",         'S' },
+  #    {"Tester",            't' },
+  #    {"Generated",         'g' },
+  #    {"SLICC",             'l' },
+  #    {"Network Queues",    'Q' },
+  #    {"Time",              'T' },
+  #    {"Network Internals", 'i' },
+  #    {"Store Buffer",      'b' },
+  #    {"Cache",             'c' },
+  #    {"Predictor",         'p' },
+  #    {"Allocator",         'a' }
+  #
+  #  e.g., "sq" will print system and queue debugging messages
+  #  Set to "none" for no debugging output
   default_param :filter_string, String, "none"
 
-  # filters debugging messages based on priority (low, med, high)
+  # filters debugging messages based on priority (none, low, med, high)
   default_param :verbosity_string, String, "none"
 
   # filters debugging messages based on a ruby time
   default_param :start_time, Integer, 1
   
   # sends debugging messages to a output filename
+  # set to "none" to print to stdout
   default_param :output_filename, String, "none"
 end
 
@@ -65,23 +82,23 @@ class Topology < LibRubyObject
 
   # indicates whether the topology config will be displayed in the
   # stats file
-  default_param :print_config, Boolean, true
+  default_param :print_config, Boolean, false
 end
 
 class Network < LibRubyObject
   default_param :endpoint_bandwidth, Integer, 10000
   default_param :adaptive_routing, Boolean, true
-  default_param :number_of_virtual_networks, Integer, 10
-  default_param :fan_out_degree, Integer, 4
+  default_param :number_of_virtual_networks, Integer, 5
+  #  default_param :fan_out_degree, Integer, 4
 
   # default buffer size.  Setting to 0 indicates infinite buffering
-  default_param :buffer_size, Integer, 0
+  #  default_param :buffer_size, Integer, 0
 
   # local memory latency ?? NetworkLinkLatency
   default_param :link_latency, Integer, 1
 
   # on chip latency
-  default_param :on_chip_latency, Integer, 1
+  #  default_param :on_chip_latency, Integer, 1
  
   default_param :control_msg_size, Integer, 8
 end
@@ -94,20 +111,15 @@ class GarnetNetwork < Network
   default_param :using_network_testing, Boolean, false
 end
 
-
-
-#added by SS
 class Tracer < LibRubyObject
   default_param :warmup_length, Integer, 1000000
 end
 
-#added by SS
 class Profiler < LibRubyObject
   default_param :hot_lines, Boolean, false
   default_param :all_instructions, Boolean, false
 end
 
-#added by SS
 class MemoryControl < LibRubyObject
 
   default_param :mem_bus_cycle_multiplier, Integer, 10
@@ -125,7 +137,7 @@ class MemoryControl < LibRubyObject
   default_param :mem_ctl_latency, Integer, 12
   default_param :refresh_period, Integer, 1560
   default_param :tFaw, Integer, 0
-  default_param :mem_random_arbitrate, Integer, 0
+  default_param :mem_random_arbitrate, Integer, 11
   default_param :mem_fixed_delay, Integer, 0
 
 end
@@ -163,49 +175,33 @@ class MOESI_CMP_directory_DirectoryController < DirectoryController
 end
 
 class MOESI_CMP_directory_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-  default_param :response_latency, Integer, 6
+  default_param :request_latency, Integer, 14
+  default_param :response_latency, Integer, 14
 end
 
-## MOESI_CMP_token protocol
+class MESI_CMP_directory_L2CacheController < CacheController
+  default_param :request_latency, Integer, 2
+  default_param :response_latency, Integer, 2
+  default_param :to_L1_latency, Integer, 1
 
-class MOESI_CMP_token_L1CacheController < L1CacheController
+#if 0 then automatically calculated
+  default_param :lowest_bit, Integer, 0
+  default_param :highest_bit, Integer, 0    
+end
+
+class MESI_CMP_directory_L1CacheController < L1CacheController
   default_param :l1_request_latency, Integer, 2
   default_param :l1_response_latency, Integer, 2
-  default_param :retry_threshold, Integer, 1
-  default_param :fixed_timeout_latency, Integer, 300
-  default_param :dynamic_timeout_enabled, Boolean, true
+  default_param :to_L2_latency, Integer, 1
 end
 
-class MOESI_CMP_token_L2CacheController < CacheController
-  default_param :l2_request_latency, Integer, 2
-  default_param :l2_response_latency, Integer, 2
-  default_param :filtering_enabled, Boolean, true
-end
 
-class MOESI_CMP_token_DirectoryController < DirectoryController
+class MESI_CMP_directory_DirectoryController < DirectoryController
+  default_param :to_mem_ctrl_latency, Integer, 1
   default_param :directory_latency, Integer, 6
-  default_param :distributed_persistent, Boolean, true
-  default_param :fixed_timeout_latency, Integer, 300
 end
 
-class MOESI_CMP_token_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-  default_param :response_latency, Integer, 6
-end
-
-## MOESI_hammer protocol
-
-class MOESI_hammer_CacheController < L1CacheController
-  default_param :issue_latency, Integer, 2
-  default_param :cache_response_latency, Integer, 12
-end
-
-class MOESI_hammer_DirectoryController < DirectoryController
-  default_param :memory_controller_latency, Integer, 12
-end
-
-class MOESI_hammer_DMAController < DMAController
+class MESI_CMP_directory_DMAController < DMAController
   default_param :request_latency, Integer, 6
 end
 
@@ -219,8 +215,9 @@ class RubySystem
   # When set to true, the simulation will insert random delays on
   # message enqueue times.  Note that even if this is set to false,
   # you can still have a non-deterministic simulation if random seed
-  # is set to "rand".  This is because the Ruby swtiches use random
-  # link priority elevation
+  # is set to "rand".  This is used mainly to debug protocols by forcing 
+  # really strange interleavings and should not be used for 
+  # performance runs.
   default_param :randomization, Boolean, false
 
   # tech_nm is the device size used to calculate latency and area
@@ -246,31 +243,6 @@ class RubySystem
 
   default_param :profiler, Profiler, Profiler.new("profiler0")
 end
-#added by SS
-
-class MESI_CMP_directory_L2CacheController < CacheController
-  default_param :l2_request_latency, Integer, 2
-  default_param :l2_response_latency, Integer, 2
-  default_param :to_L1_latency, Integer, 1
-
-#if 0 then automatically calculated
-  default_param :lowest_bit, Integer, 0
-  default_param :highest_bit, Integer, 0    
-end
-
-class MESI_CMP_directory_L1CacheController < L1CacheController
-  default_param :l1_request_latency, Integer, 2
-  default_param :l1_response_latency, Integer, 2
-  default_param :to_L2_latency, Integer, 1
-end
 
 
-class MESI_CMP_directory_DirectoryController < DirectoryController
-  default_param :to_mem_ctrl_latency, Integer, 1
-  default_param :directory_latency, Integer, 6
-end
-
-class MESI_CMP_directory_DMAController < DMAController
-  default_param :request_latency, Integer, 6
-end
 

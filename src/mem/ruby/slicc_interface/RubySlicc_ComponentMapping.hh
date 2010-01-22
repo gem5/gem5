@@ -94,6 +94,17 @@ MachineID map_Address_to_DMA(const Address & addr)
   return dma;
 }
 
+inline 
+NetDest broadcast(MachineType type)
+{
+  NetDest dest;
+  for (int i=0; i<MachineType_base_count(type); i++) {
+    MachineID mach = {type, i};
+    dest.add(mach);
+  }
+  return dest;
+}
+
 inline
 MachineID mapAddressToRange(const Address & addr, MachineType type, int low_bit, int num_bits)
 {

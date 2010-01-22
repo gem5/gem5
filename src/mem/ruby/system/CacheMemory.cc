@@ -83,10 +83,8 @@ void CacheMemory::init(const vector<string> & argv)
     }
   }
 
-  assert(cache_size != -1);
-  
-  m_cache_num_sets = (cache_size / m_cache_assoc) / RubySystem::getBlockSizeBytes();
-  assert(m_cache_num_sets > 1);
+  int num_lines = cache_size/RubySystem::getBlockSizeBytes();
+  m_cache_num_sets = num_lines / m_cache_assoc;
   m_cache_num_set_bits = log_int(m_cache_num_sets);
   assert(m_cache_num_set_bits > 0);
 
@@ -122,7 +120,7 @@ CacheMemory::~CacheMemory()
 }
 
 int
-CacheMemory::numberOfLastLevelCaches() 
+CacheMemory::numberOfLastLevelCaches()
 { 
   return m_num_last_level_caches; 
 }
@@ -165,13 +163,10 @@ int CacheMemory::findTagInSet(Index cacheSet, const Address& tag) const
 {
   assert(tag == line_address(tag));
   // search the set for the tags
-  for (int i=0; i < m_cache_assoc; i++) {
-    if ((m_cache[cacheSet][i] != NULL) &&
-        (m_cache[cacheSet][i]->m_Address == tag) &&
-        (m_cache[cacheSet][i]->m_Permission != AccessPermission_NotPresent)) {
-      return i;
-    }
-  }
+  m5::hash_map<Address, int>::const_iterator it = m_tag_index.find(tag);
+  if (it != m_tag_index.end())
+    if (m_cache[cacheSet][it->second]->m_Permission != AccessPermission_NotPresent)
+      return it->second;
   return -1; // Not found
 }
 
@@ -181,10 +176,9 @@ int CacheMemory::findTagInSetIgnorePermissions(Index cacheSet, const Address& ta
 {
   assert(tag == line_address(tag));
   // search the set for the tags
-  for (int i=0; i < m_cache_assoc; i++) {
-    if (m_cache[cacheSet][i] != NULL && m_cache[cacheSet][i]->m_Address == tag)
-      return i;
-  }
+  m5::hash_map<Address, int>::const_iterator it = m_tag_index.find(tag);
+  if (it != m_tag_index.end())
+    return it->second;
   return -1; // Not found
 }
 
@@ -291,6 +285,7 @@ void CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
       m_cache[cacheSet][i]->m_Address = address;
       m_cache[cacheSet][i]->m_Permission = AccessPermission_Invalid;
       m_locked[cacheSet][i] = -1;
+      m_tag_index[address] = i;
 
       m_replacementPolicy_ptr->touch(cacheSet, i, g_eventQueue_ptr->getTime());
 
@@ -311,6 +306,7 @@ void CacheMemory::deallocate(const Address& address)
     delete m_cache[cacheSet][location];
     m_cache[cacheSet][location] = NULL;
     m_locked[cacheSet][location] = -1;
+    m_tag_index.erase(address);
   }
 }
 

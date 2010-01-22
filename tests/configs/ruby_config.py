@@ -8,10 +8,11 @@ from m5.params import *
 
 def generate(config_file, cores=1, memories=1, memory_size=1024, \
              cache_size=32768, cache_assoc=8, dmas=1,
-             ruby_tick='1t', ports_per_cpu=2):
+             ruby_tick='1t', ports_per_cpu=2, protocol='MOESI_CMP_directory'):
     default = joinpath(dirname(__file__), '../../src/mem/ruby/config')
     ruby_config = os.environ.get('RUBY_CONFIG', default)
     args = [ "ruby", "-I", ruby_config, joinpath(ruby_config, "print_cfg.rb"),
+             "-c", str(protocol),
              "-r", joinpath(ruby_config, config_file), "-p", str(cores),
              "-m", str(memories), "-s", str(memory_size), "-C", str(cache_size),
              "-A", str(cache_assoc), "-D", str(dmas)]

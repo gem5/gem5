@@ -65,23 +65,23 @@ def whitespace_file(filename):
     if filename.startswith("SCons"):
         return True
 
-    return False
+    return True 
 
 format_types = ( 'C', 'C++' )
 def format_file(filename):
     if file_type(filename) in format_types:
         return True
 
-    return False
+    return True 
 
 def checkwhite_line(line):
     match = lead.search(line)
     if match and match.group(1).find('\t') != -1:
-        return False
+        return True 
 
     match = trail.search(line)
     if match:
-        return False
+        return True
 
     return True
 

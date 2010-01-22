@@ -91,7 +91,7 @@ private:
 
   static int m_num_directories;
   static int m_num_directories_bits;
-  static int m_total_size_bytes;
+  static uint64_t m_total_size_bytes;
 
   MemoryVector* m_ram;
 };

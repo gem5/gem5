@@ -70,7 +70,8 @@ enumeration(CoherenceRequestType, desc="...") {
   WB_NACK,   desc="Writeback neg. ack";
   FWD,      desc="Generic FWD";
 
-
+  DMA_READ, desc="DMA Read";
+  DMA_WRITE, desc="DMA Write";
 }
 
 // CoherenceResponseType
@@ -95,6 +96,7 @@ structure(RequestMsg, desc="...", interface="NetworkMessage") {
   NetDest Destination,          desc="What components receive the request, includes MachineType and num";
   MessageSizeType MessageSize,  desc="size category of the message";
   DataBlock DataBlk,            desc="Data for the cache line (if PUTX)";
+  int Len;
   bool Dirty, default="false",  desc="Dirty bit";
   PrefetchBit Prefetch,         desc="Is this a prefetch request";
 }
@@ -111,68 +113,4 @@ structure(ResponseMsg, desc="...", interface="NetworkMessage") {
   MessageSizeType MessageSize,  desc="size category of the message";
 }
 
-enumeration(DMARequestType, desc="...", default="DMARequestType_NULL") {
-  READ,          desc="Memory Read";
-  WRITE,         desc="Memory Write";
-  NULL,          desc="Invalid";
-}
-
-enumeration(DMAResponseType, desc="...", default="DMAResponseType_NULL") {
-  DATA,          desc="DATA read";
-  ACK,           desc="ACK write";
-  NULL,          desc="Invalid";
-}
-
-structure(DMARequestMsg, desc="...", interface="NetworkMessage") {
-  DMARequestType Type,       desc="Request type (read/write)";
-  Address PhysicalAddress,   desc="Physical address for this request";
-  Address LineAddress,       desc="Line address for this request";
-  NetDest Destination,       desc="Destination";
-  DataBlock DataBlk,         desc="DataBlk attached to this request";
-  int Offset,                desc="The offset into the datablock";
-  int Len,                   desc="The length of the request";
-  MessageSizeType MessageSize, desc="size category of the message";
-}
-
-structure(DMAResponseMsg, desc="...", interface="NetworkMessage") {
-  DMAResponseType Type,      desc="Response type (DATA/ACK)";
-  Address PhysicalAddress,   desc="Physical address for this request";
-  Address LineAddress,       desc="Line address for this request";
-  NetDest Destination,       desc="Destination";
-  DataBlock DataBlk,         desc="DataBlk attached to this request";
-  MessageSizeType MessageSize, desc="size category of the message";
-}
-
-
-
-/*
-GenericRequestType convertToGenericType(CoherenceRequestType type) {
-  if(type == CoherenceRequestType:PUTX) {
-    return GenericRequestType:PUTX;
-  } else if(type == CoherenceRequestType:GETS) {
-    return GenericRequestType:GETS;
-  } else if(type == CoherenceRequestType:GET_INSTR) {
-    return GenericRequestType:GET_INSTR;
-  } else if(type == CoherenceRequestType:GETX) {
-    return GenericRequestType:GETX;
-  } else if(type == CoherenceRequestType:UPGRADE) {
-    return GenericRequestType:UPGRADE;
-  } else if(type == CoherenceRequestType:PUTS) {
-    return GenericRequestType:PUTS;
-  } else if(type == CoherenceRequestType:INV) {
-    return GenericRequestType:INV;
-  } else if(type == CoherenceRequestType:INV_S) {
-    return GenericRequestType:INV_S;
-  } else if(type == CoherenceRequestType:L1_DG) {
-    return GenericRequestType:DOWNGRADE;
-  } else if(type == CoherenceRequestType:WB_ACK) {
-    return GenericRequestType:WB_ACK;
-  } else if(type == CoherenceRequestType:EXE_ACK) {
-    return GenericRequestType:EXE_ACK;
-  } else {
-    DEBUG_EXPR(type);
-    error("invalid CoherenceRequestType");
-  }
-}
-*/
 

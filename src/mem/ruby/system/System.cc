@@ -335,6 +335,10 @@ void RubySystem::printStats(ostream& out)
 
   m_profiler_ptr->printStats(out);
   m_network_ptr->printStats(out);
+  for (map<string, Sequencer*>::const_iterator it = m_sequencers.begin();
+       it != m_sequencers.end(); it++) {
+    (*it).second->printStats(out);
+  }
   for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
        it != m_caches.end(); it++) {
     (*it).second->printStats(out);

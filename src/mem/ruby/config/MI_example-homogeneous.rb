@@ -13,7 +13,7 @@ RubySystem.reset
 # default values
 
 num_cores = 2
-l1_cache_size_kb = 32768
+l1_cache_size_bytes = 32768
 l1_cache_assoc = 8
 l1_cache_latency = 1
 num_memories = 2
@@ -34,6 +34,13 @@ for i in 0..$*.size-1 do
   elsif $*[i] == "-m"
     num_memories = $*[i+1].to_i
     i = i+1
+  elsif $*[i] == "-R"
+    if $*[i+1] == "rand"
+      RubySystem.random_seed = "rand"
+    else
+      RubySystem.random_seed = $*[i+1].to_i
+    end
+    i = i+ 1
   elsif $*[i] == "-s"
     memory_size_mb = $*[i+1].to_i
     i = i + 1

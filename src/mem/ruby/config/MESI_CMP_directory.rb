@@ -12,8 +12,8 @@ class MESI_CMP_directory_L2CacheController < CacheController
   def argv()
     vec = super()
     vec += " cache " + cache.obj_name
-    vec += " l2_request_latency "+l2_request_latency.to_s 
-    vec += " l2_response_latency "+l2_response_latency.to_s
+    vec += " l2_request_latency "+request_latency.to_s 
+    vec += " l2_response_latency "+response_latency.to_s
     vec += " to_l1_latency "+to_L1_latency.to_s
     return vec
   end

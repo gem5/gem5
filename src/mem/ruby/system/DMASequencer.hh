@@ -25,6 +25,7 @@ public:
   void init(const vector<string> & argv);
   /* external interface */
   int64_t makeRequest(const RubyRequest & request);
+  bool isReady(const RubyRequest & request, bool dont_set = false) { assert(0); return false;};
   //  void issueRequest(uint64_t paddr, uint8* data, int len, bool rw);
   bool busy() { return m_is_busy;}
 

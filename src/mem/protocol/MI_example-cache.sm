@@ -17,6 +17,7 @@ machine(L1Cache, "MI Example L1 Cache")
     II, desc="Not Present/Invalid, issued PUT";
     M,  desc="Modified";
     MI,  desc="Modified, issued PUT";
+    MII, desc="Modified, issued PUTX, received nack";
 
     IS,  desc="Issued request for LOAD/IFETCH";
     IM,  desc="Issued request for STORE/ATOMIC";
@@ -137,7 +138,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
   in_port(forwardRequestNetwork_in, RequestMsg, forwardToCache) {
     if (forwardRequestNetwork_in.isReady()) {
-      peek(forwardRequestNetwork_in, RequestMsg) {
+      peek(forwardRequestNetwork_in, RequestMsg, block_on="Address") {
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:Fwd_GETX, in_msg.Address);
         }
@@ -159,7 +160,7 @@ machine(L1Cache, "MI Example L1 Cache")
 
   in_port(responseNetwork_in, ResponseMsg, responseToCache) {
     if (responseNetwork_in.isReady()) {
-      peek(responseNetwork_in, ResponseMsg) {
+      peek(responseNetwork_in, ResponseMsg, block_on="Address") {
         if (in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Data, in_msg.Address);
         }
@@ -173,7 +174,7 @@ machine(L1Cache, "MI Example L1 Cache")
     // Mandatory Queue
   in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
 
         if (cacheMemory.isTagPresent(in_msg.LineAddress) == false &&
@@ -385,6 +386,16 @@ machine(L1Cache, "MI Example L1 Cache")
 
   transition(MI, Fwd_GETX, II) {
     ee_sendDataFromTBE;
+    o_popForwardedRequestQueue;
+  }
+
+  transition(MI, Writeback_Nack, MII) {
+    o_popForwardedRequestQueue;
+  }
+
+  transition(MII, Fwd_GETX, I) {
+    ee_sendDataFromTBE;
+    w_deallocateTBE;
     o_popForwardedRequestQueue;
   }
 

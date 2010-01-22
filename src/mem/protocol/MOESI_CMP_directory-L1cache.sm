@@ -306,7 +306,7 @@ machine(L1Cache, "Directory protocol")
   // Request Network
   in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
     if (requestNetwork_in.isReady()) {
-      peek(requestNetwork_in, RequestMsg) {
+      peek(requestNetwork_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
         DEBUG_EXPR("MRM_DEBUG: L1 received");
         DEBUG_EXPR(in_msg.Type);
@@ -338,7 +338,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
   // Response Network
   in_port(responseToL1Cache_in, ResponseMsg, responseToL1Cache) {
     if (responseToL1Cache_in.isReady()) {
-      peek(responseToL1Cache_in, ResponseMsg) {
+      peek(responseToL1Cache_in, ResponseMsg, block_on="Address") {
         if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceResponseType:DATA) {
@@ -356,7 +356,7 @@ if (in_msg.Type == CoherenceRequestType:GETX || in_msg.Type == CoherenceRequestT
   // Mandatory Queue betweens Node's CPU and it's L1 caches
   in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
