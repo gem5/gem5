@@ -65,7 +65,7 @@ def whitespace_file(filename):
     if filename.startswith("SCons"):
         return True
 
-    return True 
+    return False
 
 format_types = ( 'C', 'C++' )
 def format_file(filename):
@@ -77,11 +77,11 @@ def format_file(filename):
 def checkwhite_line(line):
     match = lead.search(line)
     if match and match.group(1).find('\t') != -1:
-        return True 
+        return False
 
     match = trail.search(line)
     if match:
-        return True
+        return False
 
     return True
 
@@ -275,15 +275,15 @@ def do_check_whitespace(ui, repo, *files, **args):
         if args.get('auto', False):
             result = 'f'
         else:
-            result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", "^[aif]$", "a")
+            while True:
+                result = ui.prompt("(a)bort, (i)gnore, or (f)ix?", default='a')
+                if result in 'aif':
+                    break
+
         if result == 'a':
             return True
-        elif result == 'i':
-            pass
         elif result == 'f':
             fixwhite(repo.wjoin(name), args['tabsize'], fixonly)
-        else:
-            raise util.Abort(_("Invalid response: '%s'") % result)
 
         return False
 
@@ -326,7 +326,8 @@ def do_check_whitespace(ui, repo, *files, **args):
             mod_lines = modified_lines(pctx[0].data(), file_data, len(lines))
             if len(pctx) == 2:
                 m2 = modified_lines(pctx[1].data(), file_data, len(lines))
-                mod_lines = mod_lines & m2 # only the lines that are new in both
+                # only the lines that are new in both
+                mod_lines = mod_lines & m2
         else:
             mod_lines = xrange(0, len(lines))
 
@@ -353,7 +354,7 @@ def check_whitespace(ui, repo, hooktype, node, parent1, parent2, **kwargs):
               "This hook is only meant for pretxncommit, not %s" % hooktype
 
     args = { 'tabsize' : 8 }
-    do_check_whitespace(ui, repo, **args)
+    return do_check_whitespace(ui, repo, **args)
 
 def check_format(ui, repo, hooktype, node, parent1, parent2, **kwargs):
     if hooktype != 'pretxncommit':
