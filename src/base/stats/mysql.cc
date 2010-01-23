@@ -29,6 +29,7 @@
  */
 
 #include <cassert>
+#include <cstdio>
 #include <map>
 #include <sstream>
 #include <string>
