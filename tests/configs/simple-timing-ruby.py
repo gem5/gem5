@@ -30,7 +30,7 @@ import m5
 from m5.objects import *
 
 import ruby_config
-ruby_memory = ruby_config.generate("MI_example-homogeneous.rb", 1)
+ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", 1)
 
 cpu = TimingSimpleCPU(cpu_id=0)
 system = System(cpu = cpu,
