@@ -57,7 +57,7 @@ for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
 
 def slicc_scanner(node, env, path):
     contents = node.get_contents()
-    files = [ line.strip() for line in contents.splitlines() ]
+    files = [ line.strip() for line in contents.splitlines() if line ]
     return files
 
 env.Append(SCANNERS=Scanner(function=slicc_scanner,skeys=['.slicc']))
