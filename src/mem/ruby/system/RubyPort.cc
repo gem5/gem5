@@ -30,6 +30,7 @@
 #include "mem/physical.hh"
 #include "mem/ruby/system/RubyPort.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "cpu/rubytest/RubyTester.hh"
 
 uint16_t RubyPort::m_num_ports = 0;
 
@@ -205,11 +206,18 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     // sending them to our assigned ruby port.
     //
     RubyRequestType type = RubyRequestType_NULL;
+
+    //
+    // If valid, copy the pc to the ruby request
+    //
     Addr pc = 0;
+    if (pkt->req->hasPC()) {
+        pc = pkt->req->getPC();
+    }
+
     if (pkt->isRead()) {
         if (pkt->req->isInstFetch()) {
             type = RubyRequestType_IFETCH;
-            pc = pkt->req->getPC();
         } else {
             type = RubyRequestType_LD; 
         }

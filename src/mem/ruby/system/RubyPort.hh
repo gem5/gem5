@@ -152,11 +152,10 @@ protected:
   MessageBuffer* m_mandatory_q_ptr;
     PioPort* pio_port;
 
-private:
-  static uint16_t m_num_ports;
-  uint16_t m_port_id;
-  uint64_t m_request_cnt;
-
+    //
+    // The pending request map is protected so that the Sequencer can access it.
+    // This is a temporary fix until the libruby inteface is cleaned
+    //
     struct RequestCookie {
         Packet *pkt;
         M5Port *m5Port;
@@ -167,6 +166,12 @@ private:
 
     typedef std::map<int64_t, RequestCookie*> RequestMap;
     static RequestMap pending_cpu_requests;
+
+private:
+  static uint16_t m_num_ports;
+  uint16_t m_port_id;
+  uint64_t m_request_cnt;
+
     static void ruby_hit_callback(int64_t req_id);
 
     M5Port* physMemPort;

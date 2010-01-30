@@ -41,6 +41,7 @@
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "cpu/rubytest/RubyTester.hh"
 
 #include "params/RubySequencer.hh"
 
@@ -74,7 +75,8 @@ Sequencer::Sequencer(const Params *p)
     m_dataCache_ptr = p->dcache;
     m_max_outstanding_requests = p->max_outstanding_requests;
     m_deadlock_threshold = p->deadlock_threshold;
-    
+    m_usingRubyTester = p->using_ruby_tester;
+
     assert(m_max_outstanding_requests > 0);
     assert(m_deadlock_threshold > 0);
     assert(m_instCache_ptr != NULL);
@@ -342,6 +344,30 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
     } else {
       data.setData(ruby_request.data, request_address.getOffset(), ruby_request.len);
     }
+  }
+
+  //
+  // If using the RubyTester, update the RubyTester sender state's subBlock 
+  // with the recieved data.  The tester will later access this state.
+  // Note: RubyPort will access it's sender state before the RubyTester.
+  //
+  if (m_usingRubyTester) {
+      //
+      // Since the hit callback func only takes a request id, we must iterate
+      // through the requests and update the packet's subBlock here.
+      // All this would be fixed if we could attach a M5 pkt pointer to the
+      // ruby request, however that change will break the libruby interface so
+      // we'll hold off on that for now.
+      //
+      RequestMap::iterator i = pending_cpu_requests.find(srequest->id);
+      if (i == pending_cpu_requests.end())
+          panic("could not find pending request %d\n", srequest->id);
+      RequestCookie *cookie = i->second;
+      Packet *pkt = cookie->pkt;
+
+      RubyTester::SenderState* testerSenderState;
+      testerSenderState = safe_cast<RubyTester::SenderState*>(pkt->senderState);
+      testerSenderState->subBlock->mergeFrom(data);
   }
 
   m_hit_callback(srequest->id);

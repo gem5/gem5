@@ -129,6 +129,8 @@ private:
   int m_load_waiting_on_store_cycles;
   int m_load_waiting_on_load_cycles;
 
+  bool m_usingRubyTester;
+
   class SequencerWakeupEvent : public Event
   {
       Sequencer *m_sequencer_ptr;

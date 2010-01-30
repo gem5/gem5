@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,69 +28,78 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-#ifndef SubBlock_H
-#define SubBlock_H
+#ifndef CHECK_H
+#define CHECK_H
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/DataBlock.hh"
-#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/protocol/TesterStatus.hh"
+#include "mem/protocol/AccessModeType.hh"
+#include "cpu/rubytest/RubyTester.hh"
+class SubBlock;
 
-class SubBlock {
+const int CHECK_SIZE_BITS = 2;
+const int CHECK_SIZE = (1<<CHECK_SIZE_BITS);
+
+class Check {
 public:
   // Constructors
-  SubBlock() { }
-  SubBlock(const Address& addr, int size);
+  Check(const Address& address, 
+        const Address& pc,
+        int _num_cpu_sequencer,
+        RubyTester* _tester);
 
-  // Destructor
-  ~SubBlock() { }
-
+  // Default Destructor
+  //~Check(); 
+  
   // Public Methods
-  const Address& getAddress() const { return m_address; }
-  void setAddress(const Address& addr) { m_address = addr; }
 
-  int getSize() const { return m_data.size(); }
-  void setSize(int size) {  m_data.setSize(size); }
-  uint8 getByte(int offset) const { return m_data[offset]; }
-  void setByte(int offset, uint8 data) { m_data[offset] = data; }
-
-  // Shorthands
-  uint8 readByte() const { return getByte(0); }
-  void writeByte(uint8 data) { setByte(0, data); }
-
-  // Merging to and from DataBlocks - We only need to worry about
-  // updates when we are using DataBlocks
-  void mergeTo(DataBlock& data) const { internalMergeTo(data); }
-  void mergeFrom(const DataBlock& data) { internalMergeFrom(data); }
+  void initiate(); // Does Action or Check or nether
+  void performCallback(NodeID proc, SubBlock* data);
+  const Address& getAddress() { return m_address; }
+  void changeAddress(const Address& address);
 
   void print(ostream& out) const;
 private:
+  // Private Methods
+  void initiatePrefetch();
+  void initiateAction();
+  void initiateCheck();
 
-  void internalMergeTo(DataBlock& data) const;
-  void internalMergeFrom(const DataBlock& data);
+  void pickValue();
+  void pickInitiatingNode();
 
+  void debugPrint();
+
+  // Using default copy constructor and assignment operator
+  //  Check(const Check& obj);
+  //  Check& operator=(const Check& obj);
+  
   // Data Members (m_ prefix)
+  TesterStatus m_status;
+  uint8 m_value;
+  int m_store_count;
+  NodeID m_initiatingNode;
   Address m_address;
-  Vector<uint8_t> m_data;
+  Address m_pc;
+  AccessModeType m_access_mode;
+  int m_num_cpu_sequencers;
+  RubyTester* m_tester_ptr;
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const SubBlock& obj);
+ostream& operator<<(ostream& out, const Check& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const SubBlock& obj)
+extern inline 
+ostream& operator<<(ostream& out, const Check& obj)
 {
   obj.print(out);
   out << flush;
   return out;
 }
 
-#endif //SubBlock_H
+#endif //CHECK_H

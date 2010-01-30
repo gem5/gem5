@@ -1,6 +1,7 @@
 
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,69 +28,64 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-#ifndef SubBlock_H
-#define SubBlock_H
+#ifndef CHECKTABLE_H
+#define CHECKTABLE_H
 
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/DataBlock.hh"
 #include "mem/gems_common/Vector.hh"
 
-class SubBlock {
+class Address;
+class Check;
+class RubyTester;
+template <class KEY_TYPE, class VALUE_TYPE> class Map;
+
+class CheckTable {
 public:
   // Constructors
-  SubBlock() { }
-  SubBlock(const Address& addr, int size);
+  CheckTable(int _num_cpu_sequencers, RubyTester* _tester);
 
   // Destructor
-  ~SubBlock() { }
-
+  ~CheckTable();
+  
   // Public Methods
-  const Address& getAddress() const { return m_address; }
-  void setAddress(const Address& addr) { m_address = addr; }
 
-  int getSize() const { return m_data.size(); }
-  void setSize(int size) {  m_data.setSize(size); }
-  uint8 getByte(int offset) const { return m_data[offset]; }
-  void setByte(int offset, uint8 data) { m_data[offset] = data; }
+  Check* getRandomCheck();
+  Check* getCheck(const Address& address);
 
-  // Shorthands
-  uint8 readByte() const { return getByte(0); }
-  void writeByte(uint8 data) { setByte(0, data); }
-
-  // Merging to and from DataBlocks - We only need to worry about
-  // updates when we are using DataBlocks
-  void mergeTo(DataBlock& data) const { internalMergeTo(data); }
-  void mergeFrom(const DataBlock& data) { internalMergeFrom(data); }
+  //  bool isPresent(const Address& address) const;
+  //  void removeCheckFromTable(const Address& address);
+  //  bool isTableFull() const;
+  // Need a method to select a check or retrieve a check
 
   void print(ostream& out) const;
 private:
+  // Private Methods
+  void addCheck(const Address& address);
 
-  void internalMergeTo(DataBlock& data) const;
-  void internalMergeFrom(const DataBlock& data);
-
+  // Private copy constructor and assignment operator
+  CheckTable(const CheckTable& obj);
+  CheckTable& operator=(const CheckTable& obj);
+  
   // Data Members (m_ prefix)
-  Address m_address;
-  Vector<uint8_t> m_data;
+  Vector<Check*> m_check_vector;
+  Map<Address, Check*>* m_lookup_map_ptr;
+
+  int m_num_cpu_sequencers;
+  RubyTester* m_tester_ptr;
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const SubBlock& obj);
+ostream& operator<<(ostream& out, const CheckTable& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const SubBlock& obj)
+extern inline 
+ostream& operator<<(ostream& out, const CheckTable& obj)
 {
   obj.print(out);
   out << flush;
   return out;
 }
 
-#endif //SubBlock_H
+#endif //CHECKTABLE_H

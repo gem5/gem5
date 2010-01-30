@@ -194,6 +194,13 @@ class Request : public FastAlloc
         setPhys(paddr, size, flags, time);
     }
 
+    Request(Addr paddr, int size, Flags flags, Tick time, Addr pc)
+    {
+        setPhys(paddr, size, flags, time);
+        privateFlags.set(VALID_PC);
+        _pc = pc;
+    }
+
     Request(int asid, Addr vaddr, int size, Flags flags, Addr pc,
             int cid, ThreadID tid)
     {

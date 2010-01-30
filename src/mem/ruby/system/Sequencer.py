@@ -20,6 +20,7 @@ class RubySequencer(RubyPort):
         "max requests (incl. prefetches) outstanding")
     deadlock_threshold = Param.Int(500000,
         "max outstanding cycles for a request before deadlock/livelock declared")
+    using_ruby_tester = Param.Bool(False, "")
 
 class DMASequencer(RubyPort):
     type = 'DMASequencer'
