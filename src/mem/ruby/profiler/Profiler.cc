@@ -88,6 +88,8 @@ Profiler::Profiler(const Params *p)
   m_hot_lines = p->hot_lines;
   m_all_instructions = p->all_instructions;
 
+  m_num_of_sequencers = p->num_of_sequencers;
+
   //
   // Initialize the memory controller profiler structs
   //
@@ -125,12 +127,12 @@ Profiler::Profiler(const Params *p)
   m_hot_lines = false;
   m_all_instructions = false;
 
-  m_address_profiler_ptr = new AddressProfiler;
+  m_address_profiler_ptr = new AddressProfiler(m_num_of_sequencers);
   m_address_profiler_ptr -> setHotLines(m_hot_lines);
   m_address_profiler_ptr -> setAllInstructions(m_all_instructions);
 
   if (m_all_instructions) {
-    m_inst_profiler_ptr = new AddressProfiler;
+    m_inst_profiler_ptr = new AddressProfiler(m_num_of_sequencers);
     m_inst_profiler_ptr -> setHotLines(m_hot_lines);
     m_inst_profiler_ptr -> setAllInstructions(m_all_instructions);
   }
@@ -156,9 +158,9 @@ void Profiler::wakeup()
   // FIXME - avoid the repeated code
 
   Vector<integer_t> perProcCycleCount;
-  perProcCycleCount.setSize(RubySystem::getNumberOfSequencers());
+  perProcCycleCount.setSize(m_num_of_sequencers);
 
-  for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
+  for(int i=0; i < m_num_of_sequencers; i++) {
     perProcCycleCount[i] = g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
     // The +1 allows us to avoid division by zero
   }
@@ -317,11 +319,11 @@ void Profiler::printStats(ostream& out, bool short_stats)
   Vector<double> perProcMissesPerTrans;
 
 
-  perProcCycleCount.setSize(RubySystem::getNumberOfSequencers());
-  perProcCyclesPerTrans.setSize(RubySystem::getNumberOfSequencers());
-  perProcMissesPerTrans.setSize(RubySystem::getNumberOfSequencers());
+  perProcCycleCount.setSize(m_num_of_sequencers);
+  perProcCyclesPerTrans.setSize(m_num_of_sequencers);
+  perProcMissesPerTrans.setSize(m_num_of_sequencers);
 
-  for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
+  for(int i=0; i < m_num_of_sequencers; i++) {
     perProcCycleCount[i] = g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
     // The +1 allows us to avoid division by zero
 
@@ -342,7 +344,7 @@ void Profiler::printStats(ostream& out, bool short_stats)
   integer_t transactions_started = m_perProcStartTransaction.sum();
   integer_t transactions_ended = m_perProcEndTransaction.sum();
 
-  double cycles_per_transaction = (transactions_ended != 0) ? (RubySystem::getNumberOfSequencers() * double(ruby_cycles)) / double(transactions_ended) : 0;
+  double cycles_per_transaction = (transactions_ended != 0) ? (m_num_of_sequencers * double(ruby_cycles)) / double(transactions_ended) : 0;
   double misses_per_transaction = (transactions_ended != 0) ? double(total_misses) / double(transactions_ended) : 0;
 
   out << "Total_misses: " << total_misses << endl;
@@ -566,8 +568,8 @@ void Profiler::clearStats()
 {
   m_ruby_start = g_eventQueue_ptr->getTime();
 
-  m_cycles_executed_at_start.setSize(RubySystem::getNumberOfSequencers());
-  for (int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
+  m_cycles_executed_at_start.setSize(m_num_of_sequencers);
+  for (int i=0; i < m_num_of_sequencers; i++) {
     if (g_system_ptr == NULL) {
       m_cycles_executed_at_start[i] = 0;
     } else {
@@ -575,13 +577,13 @@ void Profiler::clearStats()
     }
   }
 
-  m_perProcTotalMisses.setSize(RubySystem::getNumberOfSequencers());
-  m_perProcUserMisses.setSize(RubySystem::getNumberOfSequencers());
-  m_perProcSupervisorMisses.setSize(RubySystem::getNumberOfSequencers());
-  m_perProcStartTransaction.setSize(RubySystem::getNumberOfSequencers());
-  m_perProcEndTransaction.setSize(RubySystem::getNumberOfSequencers());
+  m_perProcTotalMisses.setSize(m_num_of_sequencers);
+  m_perProcUserMisses.setSize(m_num_of_sequencers);
+  m_perProcSupervisorMisses.setSize(m_num_of_sequencers);
+  m_perProcStartTransaction.setSize(m_num_of_sequencers);
+  m_perProcEndTransaction.setSize(m_num_of_sequencers);
 
-  for(int i=0; i < RubySystem::getNumberOfSequencers(); i++) {
+  for(int i=0; i < m_num_of_sequencers; i++) {
     m_perProcTotalMisses[i] = 0;
     m_perProcUserMisses[i] = 0;
     m_perProcSupervisorMisses[i] = 0;

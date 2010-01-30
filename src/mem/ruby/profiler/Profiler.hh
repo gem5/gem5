@@ -262,6 +262,8 @@ private:
   //added by SS
   bool m_hot_lines;
   bool m_all_instructions;
+
+  int m_num_of_sequencers;
 };
 
 // Output operator declaration

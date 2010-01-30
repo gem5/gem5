@@ -66,7 +66,8 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     ranksPerDimm = dir_cntrls[0].memBuffer.ranks_per_dimm
     dimmsPerChannel = dir_cntrls[0].memBuffer.dimms_per_channel
 
-    ruby_profiler = RubyProfiler(mem_cntrl_count = mcCount,
+    ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers),
+                                 mem_cntrl_count = mcCount,
                                  banks_per_rank = banksPerRank,
                                  ranks_per_dimm = ranksPerDimm,
                                  dimms_per_channel = dimmsPerChannel)

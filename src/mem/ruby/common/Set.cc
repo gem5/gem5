@@ -51,7 +51,8 @@
 Set::Set()
 {
   m_p_nArray = NULL;
-  setSize(RubySystem::getNumberOfSequencers());
+  m_nArrayLen = 0;
+  m_nSize = 0;
 }
 
 // copy constructor

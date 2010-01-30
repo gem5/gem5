@@ -45,15 +45,22 @@
 #include "mem/ruby/profiler/Profiler.hh"
 
 // Helper functions
-static AccessTraceForAddress& lookupTraceForAddress(const Address& addr, Map<Address, AccessTraceForAddress>* record_map);
-static void printSorted(ostream& out, const Map<Address, AccessTraceForAddress>* record_map, string description);
+static AccessTraceForAddress& lookupTraceForAddress(const Address& addr, 
+                                                    Map<Address, 
+                                                    AccessTraceForAddress>* record_map);
 
-AddressProfiler::AddressProfiler()
+static void printSorted(ostream& out, 
+                        int num_of_sequencers,
+                        const Map<Address, AccessTraceForAddress>* record_map, 
+                        string description);
+
+AddressProfiler::AddressProfiler(int num_of_sequencers)
 {
   m_dataAccessTrace = new Map<Address, AccessTraceForAddress>;
   m_macroBlockAccessTrace = new Map<Address, AccessTraceForAddress>;
   m_programCounterAccessTrace = new Map<Address, AccessTraceForAddress>;
   m_retryProfileMap = new Map<Address, AccessTraceForAddress>;
+  m_num_of_sequencers = num_of_sequencers;
   clearStats();
 }
 
@@ -88,18 +95,18 @@ void AddressProfiler::printStats(ostream& out) const
     out << "Hot Data Blocks" << endl;
     out << "---------------" << endl;
     out << endl;
-    printSorted(out, m_dataAccessTrace, "block_address");
+    printSorted(out, m_num_of_sequencers, m_dataAccessTrace, "block_address");
 
     out << endl;
     out << "Hot MacroData Blocks" << endl;
     out << "--------------------" << endl;
     out << endl;
-    printSorted(out, m_macroBlockAccessTrace, "macroblock_address");
+    printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace, "macroblock_address");
 
     out << "Hot Instructions" << endl;
     out << "----------------" << endl;
     out << endl;
-    printSorted(out, m_programCounterAccessTrace, "pc_address");
+    printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace, "pc_address");
   }
 
   if (m_all_instructions){
@@ -107,7 +114,7 @@ void AddressProfiler::printStats(ostream& out) const
     out << "All Instructions Profile:" << endl;
     out << "-------------------------" << endl;
     out << endl;
-    printSorted(out, m_programCounterAccessTrace, "pc_address");
+    printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace, "pc_address");
     out << endl;
   }
 
@@ -123,7 +130,7 @@ void AddressProfiler::printStats(ostream& out) const
     m_retryProfileHisto.printPercent(out);
     out << endl;
 
-    printSorted(out, m_retryProfileMap, "block_address");
+    printSorted(out, m_num_of_sequencers, m_retryProfileMap, "block_address");
     out << endl;
   }
 
@@ -212,7 +219,10 @@ void AddressProfiler::profileRetry(const Address& data_addr, AccessType type, in
 
 // ***** Normal Functions ******
 
-static void printSorted(ostream& out, const Map<Address, AccessTraceForAddress>* record_map, string description)
+static void printSorted(ostream& out, 
+                        int num_of_sequencers,
+                        const Map<Address, AccessTraceForAddress>* record_map, 
+                        string description)
 {
   const int records_printed = 100;
 
@@ -241,8 +251,8 @@ static void printSorted(ostream& out, const Map<Address, AccessTraceForAddress>*
   // Allows us to track how many lines where touched by n processors
   Vector<int64> m_touched_vec;
   Vector<int64> m_touched_weighted_vec;
-  m_touched_vec.setSize(RubySystem::getNumberOfSequencers()+1);
-  m_touched_weighted_vec.setSize(RubySystem::getNumberOfSequencers()+1);
+  m_touched_vec.setSize(num_of_sequencers+1);
+  m_touched_weighted_vec.setSize(num_of_sequencers+1);
   for (int i=0; i<m_touched_vec.size(); i++) {
     m_touched_vec[i] = 0;
     m_touched_weighted_vec[i] = 0;

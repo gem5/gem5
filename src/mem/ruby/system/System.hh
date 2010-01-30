@@ -124,9 +124,6 @@ public:
 
   static RubyEventQueue* getEventQueue() { return g_eventQueue_ptr; }
 
-  static int getNumberOfDirectories() { return m_directories.size(); }
-  static int getNumberOfSequencers() { return m_sequencers.size(); }
-
   Profiler* getProfiler() {assert(m_profiler_ptr != NULL); return m_profiler_ptr; }
   static Tracer* getTracer() { assert(m_tracer_ptr != NULL); return m_tracer_ptr; }
   static MemoryVector* getMemoryVector() { assert(m_mem_vec_ptr != NULL); return m_mem_vec_ptr;}
