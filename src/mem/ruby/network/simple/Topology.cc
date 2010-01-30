@@ -238,6 +238,20 @@ void Topology::makeLink(Network *net, SwitchID src, SwitchID dest, const NetDest
   }
 }
 
+void Topology::printStats(ostream& out) const
+{
+    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
+      m_controller_vector[cntrl]->printStats(out);
+    }
+}
+
+void Topology::clearStats()
+{
+    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
+        m_controller_vector[cntrl]->clearStats();
+    }
+}
+
 void Topology::printConfig(ostream& out) const
 {
   if (m_print_config == false) return;

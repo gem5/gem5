@@ -56,6 +56,7 @@
 //#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
 //#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/system/MemoryControl.hh"
+#include "base/output.hh"
 
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
@@ -109,6 +110,12 @@ RubySystem::RubySystem(const Params *p)
     g_system_ptr = this;
     m_mem_vec_ptr = new MemoryVector;
     m_mem_vec_ptr->setSize(m_memory_size_bytes);
+
+    //
+    // Print ruby configuration and stats at exit
+    //
+    RubyExitCallback* rubyExitCB = new RubyExitCallback(p->stats_filename);
+    registerExitCallback(rubyExitCB);
 }
 
 
@@ -263,9 +270,20 @@ void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
 }
 #endif
 
-
 RubySystem *
 RubySystemParams::create()
 {
     return new RubySystem(this);
+}
+
+/**
+ * virtual process function that is invoked when the callback
+ * queue is executed.
+ */
+void RubyExitCallback::process()
+{
+    std::ostream *os = simout.create(stats_filename);
+    RubySystem::printConfig(*os);
+    *os << endl;
+    RubySystem::printStats(*os);
 }

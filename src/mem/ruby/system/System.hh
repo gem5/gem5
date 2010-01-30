@@ -48,6 +48,7 @@
 #include <map>
 #include "sim/sim_object.hh"
 #include "params/RubySystem.hh"
+#include "base/callback.hh"
 
 class Profiler;
 class Network;
@@ -200,6 +201,27 @@ ostream& operator<<(ostream& out, const RubySystem& obj)
   out << flush;
   return out;
 }
+
+class RubyExitCallback : public Callback
+{
+  private:
+    string stats_filename;
+
+  public:
+    /**
+     * virtualize the destructor to make sure that the correct one
+     * gets called.
+     */
+
+    virtual ~RubyExitCallback() {}
+
+    RubyExitCallback(const string& _stats_filename)
+    {
+      stats_filename = _stats_filename;
+    }
+
+    virtual void process();
+};
 
 #endif //SYSTEM_H
 

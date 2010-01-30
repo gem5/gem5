@@ -14,4 +14,5 @@ class RubySystem(SimObject):
     debug = Param.RubyDebug("the default debug object")
     profiler = Param.RubyProfiler("");
     tracer = Param.RubyTracer("");
-    
+    stats_filename = Param.String("ruby.stats",
+        "file to which ruby dumps its stats")

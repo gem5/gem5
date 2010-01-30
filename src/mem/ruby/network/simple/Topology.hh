@@ -102,8 +102,8 @@ public:
   void initNetworkPtr(Network* net_ptr);
 
   const string getName() { return m_name; }
-  void printStats(ostream& out) const {}
-  void clearStats() {}
+  void printStats(ostream& out) const;
+  void clearStats();
   void printConfig(ostream& out) const;
   void print(ostream& out) const { out << "[Topology]"; }
 
