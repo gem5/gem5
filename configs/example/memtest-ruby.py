@@ -115,10 +115,14 @@ for (i, cpu) in enumerate(cpus):
     # Eventually this code should go in a python file specific to the
     # MOESI_hammer protocol
     #
-    
-    l1i_cache = L1Cache()
-    l1d_cache = L1Cache()
-    l2_cache = L2Cache()
+    l1i_profiler = CacheProfiler(description = ("l1i_%s_profiler" % i))
+    l1i_cache = L1Cache(cache_profiler = l1i_profiler)
+
+    l1d_profiler = CacheProfiler(description = ("l1d_%s_profiler" % i))
+    l1d_cache = L1Cache(cache_profiler = l1d_profiler)
+
+    l2_profiler = CacheProfiler(description = ("l2_%s_profiler" % i))
+    l2_cache = L2Cache(cache_profiler = l2_profiler)
 
     cpu_seq = RubySequencer(icache = l1i_cache,
                             dcache = l1d_cache,

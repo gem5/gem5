@@ -43,10 +43,10 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/gems_common/Vector.hh"
 
-CacheProfiler::CacheProfiler(string description)
-  : m_requestSize(-1)
+CacheProfiler::CacheProfiler(const CacheProfilerParams* params)
+  : SimObject(params), m_requestSize(-1)
 {
-  m_description = description;
+  m_description = params->description;
   m_requestTypeVec_ptr = new Vector<int>;
   m_requestTypeVec_ptr->setSize(int(CacheRequestType_NUM));
 
@@ -141,3 +141,8 @@ void CacheProfiler::addStatSample(CacheRequestType requestType, AccessModeType t
   }
 }
 
+CacheProfiler *
+CacheProfilerParams::create()
+{
+    return new CacheProfiler(this);
+}

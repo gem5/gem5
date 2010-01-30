@@ -46,12 +46,15 @@
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/CacheRequestType.hh"
 
+#include "params/CacheProfiler.hh"
+
 template <class TYPE> class Vector;
 
-class CacheProfiler {
+class CacheProfiler : public SimObject {
 public:
   // Constructors
-  CacheProfiler(string description);
+  typedef CacheProfilerParams Params;
+  CacheProfiler(const Params *);
 
   // Destructor
   ~CacheProfiler();

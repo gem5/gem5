@@ -9,3 +9,4 @@ class RubyCache(SimObject):
     latency = Param.Int("");
     assoc = Param.Int("");
     replacement_policy = Param.String("PSEUDO_LRU", "");
+    cache_profiler = Param.CacheProfiler("");

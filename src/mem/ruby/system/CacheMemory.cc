@@ -57,6 +57,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
     m_policy = p->replacement_policy;
+    m_profiler_ptr = p->cache_profiler;
 }
 
 
@@ -360,7 +361,7 @@ void CacheMemory::setMRU(const Address& address)
 void CacheMemory::profileMiss(const CacheMsg & msg) 
 {
   m_profiler_ptr->addStatSample(msg.getType(), msg.getAccessMode(), 
-				msg.getSize(), msg.getPrefetch());
+                                msg.getSize(), msg.getPrefetch());
 }
 
 void CacheMemory::recordCacheContents(CacheRecorder& tr) const
