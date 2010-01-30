@@ -877,13 +877,13 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   // WB State Transistions
-  transition(WB, Writeback_Dirty, WB_E_W) {
+  transition(WB, Writeback_Dirty, WB_O_W) {
     l_writeDataToMemory;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
   }
 
-  transition(WB, Writeback_Exclusive_Dirty, WB_O_W) {
+  transition(WB, Writeback_Exclusive_Dirty, WB_E_W) {
     l_writeDataToMemory;
     l_queueMemoryWBRequest;
     j_popIncomingUnblockQueue;
