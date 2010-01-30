@@ -36,12 +36,13 @@ uint16_t RubyPort::m_num_ports = 0;
 RubyPort::RequestMap RubyPort::pending_cpu_requests;
 
 RubyPort::RubyPort(const Params *p)
-    : MemObject(p),
-      funcMemPort(csprintf("%s-funcmem_port", name()), this)
+    : MemObject(p)
 {
     m_version = p->version;
     assert(m_version != -1);
 
+    physmem = p->physmem;
+    
     m_controller = NULL;
     m_mandatory_q_ptr = NULL;
 
@@ -49,6 +50,7 @@ RubyPort::RubyPort(const Params *p)
     m_request_cnt = 0;
     m_hit_callback = ruby_hit_callback;
     pio_port = NULL;
+    physMemPort = NULL;
     assert(m_num_ports <= 2048); // see below for reason
 }
 
@@ -73,8 +75,23 @@ RubyPort::getPort(const std::string &if_name, int idx)
                                      this);
 
         return pio_port;
-    } else if (if_name == "funcmem_port") {
-        return &funcMemPort;
+    } else if (if_name == "physMemPort") {
+        //
+        // RubyPort should only have one port to physical memory
+        //
+        assert (physMemPort == NULL);
+
+        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), 
+                                 this);
+        
+        return physMemPort;
+    } else if (if_name == "functional") {
+        //
+        // Calls for the functional port only want to access functional memory.
+        // Therefore, directly pass these calls ports to physmem.
+        //
+        assert(physmem != NULL);
+        return physmem->getPort(if_name, idx);
     }
     return NULL;
 }
@@ -248,11 +265,11 @@ RubyPort::M5Port::hitCallback(PacketPtr pkt)
     DPRINTF(MemoryAccess, "Hit callback needs response %d\n",
             needsResponse);
 
-    ruby_port->funcMemPort.sendFunctional(pkt);
+    ruby_port->physMemPort->sendAtomic(pkt);
 
     // turn packet around to go back to requester if response expected
     if (needsResponse) {
-        // recvAtomic() should already have turned packet into
+        // sendAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
         DPRINTF(MemoryAccess, "Sending packet back over port\n");
@@ -282,7 +299,7 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
 {
     AddrRangeList physMemAddrList;
     bool snoop = false;
-    ruby_port->funcMemPort.getPeerAddressRanges(physMemAddrList, snoop);
+    ruby_port->physMemPort->getPeerAddressRanges(physMemAddrList, snoop);
     for(AddrRangeIter iter = physMemAddrList.begin(); 
         iter != physMemAddrList.end(); 
         iter++) {
@@ -292,29 +309,5 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
             return true;
         }
     }
-    assert(isPioAddress(addr));
     return false;
 }
-
-bool
-RubyPort::M5Port::isPioAddress(Addr addr)
-{
-    AddrRangeList pioAddrList;
-    bool snoop = false;
-    if (ruby_port->pio_port == NULL) {
-        return false;
-    }
-  
-    ruby_port->pio_port->getPeerAddressRanges(pioAddrList, snoop);
-    for(AddrRangeIter iter = pioAddrList.begin(); 
-        iter != pioAddrList.end(); 
-        iter++) {
-        if (addr >= iter->start && addr <= iter->end) {
-            DPRINTF(MemoryAccess, "Pio request found in %#llx - %#llx range\n",
-                    iter->start, iter->end);
-            return true;
-        }
-    }
-    return false;
-}
-

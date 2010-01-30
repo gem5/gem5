@@ -79,14 +79,14 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeLinuxAlphaRubySystem(mem_mode, rubymem, mdesc = None):
+def makeLinuxAlphaRubySystem(mem_mode, phys_mem, mdesc = None):
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                             pci_func=0, pci_dev=0, pci_bus=0)
         
 
-    self = LinuxAlphaSystem(physmem = rubymem)
+    self = LinuxAlphaSystem(physmem = phys_mem)
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -94,7 +94,14 @@ def makeLinuxAlphaRubySystem(mem_mode, rubymem, mdesc = None):
 
     # Create pio bus to connect all device pio ports to rubymem's pio port
     self.piobus = Bus(bus_id=0)
-    
+
+    #
+    # Pio functional accesses from devices need direct access to memory
+    # RubyPort currently does support functional accesses.  Therefore provide
+    # the piobus a direct connection to physical memory
+    #
+    self.piobus.port = phys_mem.port
+
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')
     self.disk0.childImage(mdesc.disk())
@@ -104,13 +111,11 @@ def makeLinuxAlphaRubySystem(mem_mode, rubymem, mdesc = None):
     self.tsunami.ide.pio = self.piobus.port
     self.tsunami.ethernet.pio = self.piobus.port
 
-    # connect the dma ports directly to ruby dma ports
-    self.tsunami.ide.dma = self.physmem.dma_port
-    self.tsunami.ethernet.dma = self.physmem.dma_port
+    #
+    # store the dma devices for later connection to dma ruby ports
+    #
+    self.dma_devices = [self.tsunami.ide, self.tsunami.ethernet]
 
-    # connect the pio bus to rubymem
-    self.physmem.pio_port = self.piobus.port
-    
     self.simple_disk = SimpleDisk(disk=RawDiskImage(image_file = mdesc.disk(),
                                                read_only = True))
     self.intrctrl = IntrControl()

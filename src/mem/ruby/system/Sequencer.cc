@@ -197,7 +197,7 @@ bool Sequencer::insertRequest(SequencerRequest* request) {
 
   // See if we should schedule a deadlock check
   if (deadlockCheckEvent.scheduled() == false) {
-    schedule(deadlockCheckEvent, m_deadlock_threshold);
+    schedule(deadlockCheckEvent, m_deadlock_threshold + curTick);
   }
 
   Address line_addr(request->ruby_request.paddr);

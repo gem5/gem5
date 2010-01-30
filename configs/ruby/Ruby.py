@@ -34,13 +34,16 @@ from m5.util import addToPath
 
 import MOESI_hammer
 
-def create_system(options, physmem):
+def create_system(options, physmem, piobus = None, dma_devices = []):
 
     protocol = buildEnv['PROTOCOL']
 
     if protocol == "MOESI_hammer":
-        (sequencers, dir_cntrls, all_cntrls) = MOESI_hammer.create_system( \
-                                                options, physmem)
+        (cpu_sequencers, dir_cntrls, all_cntrls) = \
+            MOESI_hammer.create_system(options, \
+                                       physmem, \
+                                       piobus, \
+                                       dma_devices)
     else:
          print "Error: unsupported ruby protocol"
          sys.exit(1)
@@ -68,7 +71,7 @@ def create_system(options, physmem):
                                  ranks_per_dimm = ranksPerDimm,
                                  dimms_per_channel = dimmsPerChannel)
     
-    ruby = RubySystem(clock = '1GHz',
+    ruby = RubySystem(clock = options.clock,
                       network = network,
                       profiler = ruby_profiler,
                       tracer = RubyTracer(),
@@ -77,6 +80,6 @@ def create_system(options, physmem):
                                         protocol_trace = False),
                       mem_size_mb = mem_size_mb)
 
-    ruby.cpu_ruby_ports = sequencers
+    ruby.cpu_ruby_ports = cpu_sequencers
 
     return ruby

@@ -36,6 +36,7 @@
 
 #include "mem/mem_object.hh"
 #include "mem/tport.hh"
+#include "mem/physical.hh"
 
 #include "params/RubyPort.hh"
 
@@ -63,7 +64,6 @@ public:
         virtual Tick recvAtomic(PacketPtr pkt);
 
       private:
-        bool isPioAddress(Addr addr);
         bool isPhysMemAddress(Addr addr);
     };
 
@@ -169,7 +169,9 @@ private:
     static RequestMap pending_cpu_requests;
     static void ruby_hit_callback(int64_t req_id);
 
-    FunctionalPort funcMemPort;
+    M5Port* physMemPort;
+
+    PhysicalMemory* physmem;
 };
 
 #endif

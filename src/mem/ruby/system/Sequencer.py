@@ -8,6 +8,8 @@ class RubyPort(MemObject):
     port = VectorPort("M5 port")
     version = Param.Int(0, "")
     pio_port = Port("Ruby_pio_port")
+    physmem = Param.PhysicalMemory("")
+    physMemPort = Port("port to physical memory")
 
 class RubySequencer(RubyPort):
     type = 'RubySequencer'
@@ -18,7 +20,6 @@ class RubySequencer(RubyPort):
         "max requests (incl. prefetches) outstanding")
     deadlock_threshold = Param.Int(500000,
         "max outstanding cycles for a request before deadlock/livelock declared")
-    funcmem_port = Port("port to functional memory")
 
 class DMASequencer(RubyPort):
     type = 'DMASequencer'
