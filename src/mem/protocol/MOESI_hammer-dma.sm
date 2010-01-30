@@ -28,7 +28,8 @@
 
 
 machine(DMA, "DMA Controller") 
-: int request_latency = 6
+: DMASequencer * dma_sequencer,
+  int request_latency = 6
 {
 
   MessageBuffer responseFromDir, network="From", virtual_network="4", ordered="true", no_vector="true";
@@ -47,20 +48,14 @@ machine(DMA, "DMA Controller")
     Ack,          desc="DMA write to memory completed";
   }
 
-  external_type(DMASequencer) {
-    void ackCallback();
-    void dataCallback(DataBlock);
-  }
-
   MessageBuffer mandatoryQueue, ordered="false", no_vector="true";
-  DMASequencer dma_sequencer, factory='RubySystem::getDMASequencer(m_cfg["dma_sequencer"])', no_vector="true";
   State cur_state, no_vector="true";
 
   State getState(Address addr) {
     return cur_state;
   }
   void setState(Address addr, State state) {
-  cur_state := state;
+    cur_state := state;
   }
 
   out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");

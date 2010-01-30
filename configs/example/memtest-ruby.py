@@ -104,6 +104,7 @@ class L2Cache(RubyCache):
 #
 l1_cntrl_nodes = []
 dir_cntrl_nodes = []
+dma_cntrl_nodes = []
 
 #
 # Must create the individual controllers before the network to ensure the
@@ -138,12 +139,15 @@ for (i, cpu) in enumerate(cpus):
                                      directory = RubyDirectoryMemory(),
                                      memBuffer = RubyMemoryControl())
 
+    dma_cntrl = DMA_Controller(version = i,
+                               dma_sequencer = DMASequencer())
     #
     # As noted above: Two independent list are track to maintain the order of
     # nodes/controllers assumed by the ruby network
     #
     l1_cntrl_nodes.append(l1_cntrl)
     dir_cntrl_nodes.append(dir_cntrl)
+    dma_cntrl_nodes.append(dma_cntrl)
 
     #
     # Finally tie the memtester ports to the correct system ports
@@ -157,7 +161,8 @@ for (i, cpu) in enumerate(cpus):
 # constructor.
 #
 network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
-                                                dir_cntrl_nodes))
+                                                dir_cntrl_nodes + \
+                                                dma_cntrl_nodes))
 
 mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
                    for dir_cntrl in dir_cntrl_nodes])
@@ -166,7 +171,9 @@ system.ruby = RubySystem(clock = '1GHz',
                          network = network,
                          profiler = RubyProfiler(),
                          tracer = RubyTracer(),
-                         debug = RubyDebug(),
+                         debug = RubyDebug(filter_string = 'qQin',
+                                           verbosity_string = 'high',
+                                           protocol_trace = True),
                          mem_size_mb = mem_size_mb)
 
 

@@ -122,6 +122,11 @@ external_type(MemoryControl, inport="yes", outport="yes") {
 
 }
 
+external_type(DMASequencer) {
+  void ackCallback();
+  void dataCallback(DataBlock);
+}
+
 external_type(TimerTable, inport="yes") {
   bool isReady();
   Address readyAddress();

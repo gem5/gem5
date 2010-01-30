@@ -38,6 +38,7 @@ python_class_map = {"int": "Int",
                     "Sequencer": "RubySequencer",
                     "DirectoryMemory": "RubyDirectoryMemory",
                     "MemoryControl": "RubyMemoryControl",
+                    "DMASequencer": "DMASequencer"
                     }
 
 class StateMachine(Symbol):
@@ -359,7 +360,7 @@ $c_ident::$c_ident(const Params *p)
         #
         contains_sequencer = False
         for param in self.config_parameters:
-            if param.name == "sequencer":
+            if param.name == "sequencer" or param.name == "dma_sequencer":
                 contains_sequencer = True
             if param.pointer:
                 code('m_${{param.name}}_ptr = p->${{param.name}};')
@@ -378,7 +379,19 @@ $c_ident::$c_ident(const Params *p)
             code('''
 m_sequencer_ptr->setController(this);
 ''')
+        #
+        # For the DMA controller, pass the sequencer a pointer to the
+        # controller.
+        #
+        if self.ident == "DMA":
+            if not contains_sequencer:
+                self.error("The DMA controller must include the sequencer " \
+                           "configuration parameter")
 
+            code('''
+m_dma_sequencer_ptr->setController(this);
+''')
+            
         code('m_num_controllers++;')
         for var in self.objects:
             if var.ident.find("mandatoryQueue") >= 0:

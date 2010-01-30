@@ -8,6 +8,10 @@
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/System.hh"
 
+//
+// Fix me: This code needs comments!
+//
+
 DMASequencer::DMASequencer(const Params *p)
   : RubyPort(p)
 {
@@ -15,6 +19,7 @@ DMASequencer::DMASequencer(const Params *p)
 
 void DMASequencer::init()
 {
+  RubyPort::init();
   m_is_busy = false;
   m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
 }
@@ -58,11 +63,16 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   msg.getLineAddress() = line_address(msg.getPhysicalAddress());
   msg.getType() = write ? SequencerRequestType_ST : SequencerRequestType_LD;
   int offset = paddr & m_data_block_mask;
+
   msg.getLen() = (offset + len) <= RubySystem::getBlockSizeBytes() ?
     len : 
     RubySystem::getBlockSizeBytes() - offset;
-  if (write)
+
+  if (write) {
     msg.getDataBlk().setData(data, offset, msg.getLen());
+  }
+
+  assert(m_mandatory_q_ptr != NULL);
   m_mandatory_q_ptr->enqueue(msg);
   active_request.bytes_issued += msg.getLen();
 
@@ -82,14 +92,18 @@ void DMASequencer::issueNext()
   SequencerMsg msg;
   msg.getPhysicalAddress() = Address(active_request.start_paddr + 
 				     active_request.bytes_completed);
+
   assert((msg.getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
   msg.getLineAddress() = line_address(msg.getPhysicalAddress());
+
   msg.getType() = (active_request.write ? SequencerRequestType_ST : 
 		   SequencerRequestType_LD);
+
   msg.getLen() = (active_request.len - 
 		  active_request.bytes_completed < RubySystem::getBlockSizeBytes() ?
 		  active_request.len - active_request.bytes_completed :
 		  RubySystem::getBlockSizeBytes());
+
   if (active_request.write) {
     msg.getDataBlk().setData(&active_request.data[active_request.bytes_completed], 
 			     0, msg.getLen());
@@ -97,6 +111,8 @@ void DMASequencer::issueNext()
   } else {
     msg.getType() = SequencerRequestType_LD;
   }
+
+  assert(m_mandatory_q_ptr != NULL);
   m_mandatory_q_ptr->enqueue(msg);
   active_request.bytes_issued += msg.getLen();
 }
