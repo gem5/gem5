@@ -33,7 +33,6 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-Source('CustomTopology.cc')
 Source('PerfectSwitch.cc')
 Source('SimpleNetwork.cc')
 Source('Switch.cc')
