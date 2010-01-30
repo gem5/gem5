@@ -233,8 +233,8 @@ public:
     void print(ostream& out) const;
     void printConfig(ostream& out) const;
     void wakeup();
-    void printStats(ostream& out) const { s_profiler.dumpStats(out); }
-    void clearStats() { s_profiler.clearStats(); }
+    void printStats(ostream& out) const;
+    void clearStats();
     void blockOnQueue(Address addr, MessageBuffer* port);
     void unblock(Address addr);
 private:
@@ -585,6 +585,38 @@ void $c_ident::printConfig(ostream& out) const {
     for (map<string, string>::const_iterator it = m_cfg.begin(); it != m_cfg.end(); it++) {
         out << "  " << (*it).first << ": " << (*it).second << endl;
     }
+}
+
+void $c_ident::printStats(ostream& out) const {
+''')
+        #
+        # Cache and Memory Controllers have specific profilers associated with
+        # them.  Print out these stats before dumping state transition stats.
+        #
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory" or \
+                   param.type_ast.type.ident == "MemoryControl":
+                assert(param.pointer)
+                code('    m_${{param.ident}}_ptr->printStats(out);')
+
+        code('''
+    s_profiler.dumpStats(out);
+}
+
+void $c_ident::clearStats() {
+''')
+        #
+        # Cache and Memory Controllers have specific profilers associated with
+        # them.  These stats must be cleared too.
+        #
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory" or \
+                   param.type_ast.type.ident == "MemoryControl":
+                assert(param.pointer)
+                code('    m_${{param.ident}}_ptr->clearStats();')
+
+        code('''
+    s_profiler.clearStats();
 }
 
 // Actions
