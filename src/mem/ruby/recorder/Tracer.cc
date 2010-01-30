@@ -89,10 +89,14 @@ void Tracer::stopTrace()
   }
 }
 
-void Tracer::traceRequest(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
+void Tracer::traceRequest(Sequencer* sequencer, 
+                          const Address& data_addr, 
+                          const Address& pc_addr, 
+                          RubyRequestType type, 
+                          Time time)
 {
   assert(m_enabled == true);
-  TraceRecord tr(sequencer_name, data_addr, pc_addr, type, time);
+  TraceRecord tr(sequencer, data_addr, pc_addr, type, time);
   tr.output(m_trace_file);
 }
 

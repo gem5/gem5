@@ -36,10 +36,15 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/protocol/CacheMsg.hh"
+#include "sim/sim_object.hh"
 
-TraceRecord::TraceRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
+TraceRecord::TraceRecord(Sequencer* _sequencer, 
+                         const Address& data_addr, 
+                         const Address& pc_addr, 
+                         RubyRequestType type, 
+                         Time time)
 {
-  m_sequencer_name = sequencer_name;
+  m_sequencer_ptr = _sequencer;
   m_data_address = data_addr;
   m_pc_address = pc_addr;
   m_time = time;
@@ -63,7 +68,7 @@ TraceRecord::TraceRecord(const TraceRecord& obj)
 
 TraceRecord& TraceRecord::operator=(const TraceRecord& obj)
 {
-  m_sequencer_name = obj.m_sequencer_name;
+  m_sequencer_ptr = obj.m_sequencer_ptr;
   m_time = obj.m_time;
   m_data_address = obj.m_data_address;
   m_pc_address = obj.m_pc_address;
@@ -73,34 +78,38 @@ TraceRecord& TraceRecord::operator=(const TraceRecord& obj)
 
 void TraceRecord::issueRequest() const
 {
-  // Lookup sequencer pointer from system
-  // Note that the chip index also needs to take into account SMT configurations
-  Sequencer* sequencer_ptr = RubySystem::getSequencer(m_sequencer_name);
-  assert(sequencer_ptr != NULL);
+  assert(m_sequencer_ptr != NULL);
 
-  RubyRequest request(m_data_address.getAddress(), NULL, RubySystem::getBlockSizeBytes(), m_pc_address.getAddress(), m_type, RubyAccessMode_User);
+  RubyRequest request(m_data_address.getAddress(), 
+                      NULL, 
+                      RubySystem::getBlockSizeBytes(), 
+                      m_pc_address.getAddress(), 
+                      m_type, 
+                      RubyAccessMode_User);
 
   // Clear out the sequencer
-  while (!sequencer_ptr->empty()) {
+  while (!m_sequencer_ptr->empty()) {
     g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
   }
 
-  sequencer_ptr->makeRequest(request);
+  m_sequencer_ptr->makeRequest(request);
 
   // Clear out the sequencer
-  while (!sequencer_ptr->empty()) {
+  while (!m_sequencer_ptr->empty()) {
     g_eventQueue_ptr->triggerEvents(g_eventQueue_ptr->getTime() + 100);
   }
 }
 
 void TraceRecord::print(ostream& out) const
 {
-  out << "[TraceRecord: Node, " << m_sequencer_name << ", " << m_data_address << ", " << m_pc_address << ", " << m_type << ", Time: " << m_time << "]";
+  out << "[TraceRecord: Node, " << m_sequencer_ptr->name() << ", " 
+      << m_data_address << ", " << m_pc_address << ", " 
+      << m_type << ", Time: " << m_time << "]";
 }
 
 void TraceRecord::output(ostream& out) const
 {
-  out << m_sequencer_name << " ";
+  out << m_sequencer_ptr->name() << " ";
   m_data_address.output(out);
   out << " ";
   m_pc_address.output(out);
@@ -111,7 +120,16 @@ void TraceRecord::output(ostream& out) const
 
 bool TraceRecord::input(istream& in)
 {
-  in >> m_sequencer_name;
+  string sequencer_name;
+  in >> sequencer_name;
+  
+  //
+  // The SimObject find function is slow and iterates through the 
+  // simObjectList to find the sequencer pointer.  Therefore, expect trace
+  // playback to be slow.
+  //
+  m_sequencer_ptr = (Sequencer*)SimObject::find(sequencer_name.c_str());
+
   m_data_address.input(in);
   m_pc_address.input(in);
   string type;

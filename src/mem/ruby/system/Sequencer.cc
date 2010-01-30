@@ -467,7 +467,7 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   }
 
   if (g_system_ptr->getTracer()->traceEnabled()) {
-    g_system_ptr->getTracer()->traceRequest(m_name, line_addr, Address(request.pc),
+    g_system_ptr->getTracer()->traceRequest(this, line_addr, Address(request.pc),
                                             request.type, g_eventQueue_ptr->getTime());
   }
 

@@ -47,6 +47,7 @@
 template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
+class Sequencer;
 
 class CacheRecorder {
 public:
@@ -57,7 +58,11 @@ public:
   ~CacheRecorder();
 
   // Public Methods
-  void addRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
+  void addRecord(Sequencer* sequencer, 
+                 const Address& data_addr, 
+                 const Address& pc_addr, 
+                 RubyRequestType type, 
+                 Time time);
   int dumpRecords(string filename);
 
   void print(ostream& out) const;

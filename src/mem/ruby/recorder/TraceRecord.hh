@@ -49,8 +49,17 @@ class CacheMsg;
 class TraceRecord {
 public:
   // Constructors
-  TraceRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
-  TraceRecord() { m_sequencer_name = ""; m_time = 0; m_type = RubyRequestType_NULL; }
+  TraceRecord(Sequencer* _sequencer, 
+              const Address& data_addr, 
+              const Address& pc_addr, 
+              RubyRequestType type, 
+              Time time);
+
+  TraceRecord() { 
+    m_sequencer_ptr = NULL; 
+    m_time = 0; 
+    m_type = RubyRequestType_NULL; 
+  }
 
   // Destructor
   //  ~TraceRecord();
@@ -70,7 +79,7 @@ private:
   // Private Methods
 
   // Data Members (m_ prefix)
-  string m_sequencer_name;
+  Sequencer* m_sequencer_ptr;
   Time m_time;
   Address m_data_address;
   Address m_pc_address;

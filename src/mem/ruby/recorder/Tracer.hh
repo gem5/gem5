@@ -52,6 +52,7 @@
 template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
+class Sequencer;
 
 class Tracer : public SimObject {
 public:
@@ -67,7 +68,11 @@ public:
   void startTrace(string filename);
   void stopTrace();
   bool traceEnabled() { return m_enabled; }
-  void traceRequest(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time);
+  void traceRequest(Sequencer* sequencer, 
+                    const Address& data_addr, 
+                    const Address& pc_addr, 
+                    RubyRequestType type, 
+                    Time time);
 
   void print(ostream& out) const;
 

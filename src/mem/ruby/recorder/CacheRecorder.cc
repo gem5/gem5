@@ -48,9 +48,13 @@ CacheRecorder::~CacheRecorder()
   delete m_records_ptr;
 }
 
-void CacheRecorder::addRecord(const string & sequencer_name, const Address& data_addr, const Address& pc_addr, RubyRequestType type, Time time)
+void CacheRecorder::addRecord(Sequencer* sequencer, 
+                              const Address& data_addr, 
+                              const Address& pc_addr, 
+                              RubyRequestType type, 
+                              Time time)
 {
-  m_records_ptr->insert(TraceRecord(sequencer_name, data_addr, pc_addr, type, time));
+  m_records_ptr->insert(TraceRecord(sequencer, data_addr, pc_addr, type, time));
 }
 
 int CacheRecorder::dumpRecords(string filename)
