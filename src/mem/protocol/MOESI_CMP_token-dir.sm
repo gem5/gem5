@@ -60,7 +60,8 @@ machine(Directory, "Token protocol")
 
     // Memory wait states - can block all messages including persistent requests
     O_W, desc="transitioning to Owner, waiting for memory write";
-    L_W, desc="transitioning to Locked, waiting for memory read";
+    L_O_W, desc="transitioning to Locked, waiting for memory read, could eventually return to O";
+    L_NO_W, desc="transitioning to Locked, waiting for memory read, eventually return to NO";
     DR_L_W, desc="transitioning to Locked underneath a DMA read, waiting for memory data";
     NO_W, desc="transitioning to Not Owner, waiting for memory read";
     O_DW_W, desc="transitioning to Owner, waiting for memory before DMA ack";
@@ -571,6 +572,18 @@ machine(Directory, "Token protocol")
     }
   }
 
+  action(qp_queueMemoryForPersistent, "qp", desc="Queue off-chip fetch request") {
+    enqueue(memQueue_out, MemoryMsg, latency="1") {
+      out_msg.Address := address;
+      out_msg.Type := MemoryRequestType:MEMORY_READ;
+      out_msg.Sender := machineID;
+      out_msg.OriginalRequestorMachId := persistentTable.findSmallest(address);
+      out_msg.MessageSize := MessageSizeType:Request_Control;
+      out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
+      DEBUG_EXPR(out_msg);
+    }
+  }
+
   action(fd_memoryDma, "fd", desc="Queue off-chip fetch request") {
     peek(dmaRequestQueue_in, DMARequestMsg) {    
       enqueue(memQueue_out, MemoryMsg, latency="1") {
@@ -868,8 +881,8 @@ machine(Directory, "Token protocol")
     p_popDmaRequestQueue;
   }
 
-  transition(O, Lockdown, L_W) {
-    qf_queueMemoryFetchRequest;
+  transition(O, Lockdown, L_O_W) {
+    qp_queueMemoryForPersistent;
     l_popIncomingPersistentQueue;
   }
 
@@ -1059,7 +1072,7 @@ machine(Directory, "Token protocol")
     j_popIncomingRequestQueue;
   }
 
-  transition({L, DW_L, DR_L, L_W, DR_L_W}, Lockdown) {
+  transition({L, DW_L, DR_L, L_O_W, L_NO_W, DR_L_W}, Lockdown) {
     l_popIncomingPersistentQueue;
   }
 
@@ -1089,9 +1102,22 @@ machine(Directory, "Token protocol")
     l_popIncomingPersistentQueue;
   }
 
-  transition(L_W, Memory_Data, L) {
+  transition({L_NO_W, L_O_W}, Memory_Data, L) {
     dd_sendDataWithAllTokensToStarver;
     l_popMemQueue;
+  }
+
+  transition(L_O_W, Memory_Ack) {
+    qp_queueMemoryForPersistent;
+    l_popMemQueue;
+  }
+
+  transition(L_O_W, {Unlockdown, Own_Lock_or_Unlock}, O_W) {
+    l_popIncomingPersistentQueue;
+  }
+
+  transition(L_NO_W, {Unlockdown, Own_Lock_or_Unlock}, NO_W) {
+    l_popIncomingPersistentQueue;
   }
 
   transition(DR_L_W, Memory_Data, DR_L) {
@@ -1121,7 +1147,11 @@ machine(Directory, "Token protocol")
     ps_tryIssuingPersistentGETSRequest;
   }
 
-  transition(O_W, Memory_Ack, O) {
+  //
+  // The O_W + Memory_Data > O transistion is confusing, but it can happen if a
+  // presistent request is issued and resolve before memory returns with data
+  //
+  transition(O_W, {Memory_Ack, Memory_Data}, O) {
     l_popMemQueue; 
   }
 
@@ -1130,19 +1160,23 @@ machine(Directory, "Token protocol")
   }
 
   // Blocked states
-  transition({NO_W, O_W, L_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR}, {GETX, GETS}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR}, {GETX, GETS}) {
     z_recycleRequest;
   }
 
-  transition({NO_W, O_W, L_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR, L, DW_L, DR_L}, {DMA_READ, DMA_WRITE}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W, O_DW, NO_DW, NO_DR, L, DW_L, DR_L}, {DMA_READ, DMA_WRITE}) {
     y_recycleDmaRequestQueue;
   }
 
-  transition({NO_W, O_W, L_W, DR_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens}) {
+  transition({NO_W, O_W, L_O_W, L_NO_W, DR_L_W, O_DW_W, O_DR_W}, {Data_Owner, Ack_Owner, Tokens, Ack_All_Tokens}) {
     kz_recycleResponse;
   }
 
-  transition({NO_W, O_W}, Lockdown, L_W) {
+  transition(NO_W, Lockdown, L_NO_W) {
+    l_popIncomingPersistentQueue;
+  }
+
+  transition(O_W, Lockdown, L_O_W) {
     l_popIncomingPersistentQueue;
   }
 
