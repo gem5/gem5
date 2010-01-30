@@ -135,9 +135,11 @@ for (i, cpu) in enumerate(cpus):
                                   L1DcacheMemory = l1d_cache,
                                   L2cacheMemory = l2_cache)
 
+    mem_cntrl = RubyMemoryControl(version = i)
+    
     dir_cntrl = Directory_Controller(version = i,
                                      directory = RubyDirectoryMemory(),
-                                     memBuffer = RubyMemoryControl())
+                                     memBuffer = mem_cntrl)
 
     dma_cntrl = DMA_Controller(version = i,
                                dma_sequencer = DMASequencer())
@@ -167,13 +169,27 @@ network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
 mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
                    for dir_cntrl in dir_cntrl_nodes])
 
+#
+# determine the number of memory controllers and other memory controller
+# parameters for the profiler
+#
+mcCount = len(dir_cntrl_nodes)
+banksPerRank = dir_cntrl_nodes[0].memBuffer.banks_per_rank
+ranksPerDimm = dir_cntrl_nodes[0].memBuffer.ranks_per_dimm
+dimmsPerChannel = dir_cntrl_nodes[0].memBuffer.dimms_per_channel
+
+ruby_profiler = RubyProfiler(mem_cntrl_count = mcCount,
+                             banks_per_rank = banksPerRank,
+                             ranks_per_dimm = ranksPerDimm,
+                             dimms_per_channel = dimmsPerChannel)
+
 system.ruby = RubySystem(clock = '1GHz',
                          network = network,
-                         profiler = RubyProfiler(),
+                         profiler = ruby_profiler,
                          tracer = RubyTracer(),
-                         debug = RubyDebug(filter_string = 'qQin',
-                                           verbosity_string = 'high',
-                                           protocol_trace = True),
+                         debug = RubyDebug(filter_string = 'none',
+                                           verbosity_string = 'none',
+                                           protocol_trace = False),
                          mem_size_mb = mem_size_mb)
 
 

@@ -6,6 +6,10 @@ class RubyProfiler(SimObject):
     cxx_class = 'Profiler'
     hot_lines = Param.Bool(False, "")
     all_instructions = Param.Bool(False, "")
+    mem_cntrl_count = Param.Int(0, "")
+    banks_per_rank = Param.Int("")
+    ranks_per_dimm = Param.Int("")
+    dimms_per_channel = Param.Int("")
 
 class CacheProfiler(SimObject):
     type = 'CacheProfiler'

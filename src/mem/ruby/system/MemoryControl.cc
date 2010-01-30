@@ -154,6 +154,7 @@ ostream& operator<<(ostream& out, const MemoryControl& obj)
 MemoryControl::MemoryControl(const Params *p)
     : SimObject(p)
 {
+    m_version = p->version;
     m_mem_bus_cycle_multiplier = p->mem_bus_cycle_multiplier;
     m_banks_per_rank = p->banks_per_rank;
     m_ranks_per_dimm = p->ranks_per_dimm;
@@ -266,8 +267,8 @@ void MemoryControl::enqueueMemRef (MemoryNode& memRef) {
     printf("New memory request%7d: 0x%08llx %c arrived at %10lld  ", m_msg_counter, addr, is_mem_read? 'R':'W', at);
     printf("bank =%3x\n", bank);
   }
-//  printf ("m_name is %s \n", m_name.c_str());
-  g_system_ptr->getProfiler()->profileMemReq(m_name, bank);
+
+  g_system_ptr->getProfiler()->profileMemReq(m_version, bank);
   m_input_queue.push_back(memRef);
   if (!m_awakened) {
     g_eventQueue_ptr->scheduleEvent(this, 1);
@@ -393,19 +394,19 @@ int MemoryControl::getRank (int bank) {
 
 bool MemoryControl::queueReady (int bank) {
   if ((m_bankBusyCounter[bank] > 0) && !m_mem_fixed_delay) {
-    g_system_ptr->getProfiler()->profileMemBankBusy(m_name);
+    g_system_ptr->getProfiler()->profileMemBankBusy(m_version);
     //if (m_debug) printf("  bank %x busy %d\n", bank, m_bankBusyCounter[bank]);
     return false;
   }
   if (m_mem_random_arbitrate >= 2) {
     if ((random() % 100) < m_mem_random_arbitrate) {
-      g_system_ptr->getProfiler()->profileMemRandBusy(m_name);
+      g_system_ptr->getProfiler()->profileMemRandBusy(m_version);
       return false;
     }
   }
   if (m_mem_fixed_delay) return true;
   if ((m_ageCounter > (2 * m_bank_busy_time)) && !m_oldRequest[bank]) {
-    g_system_ptr->getProfiler()->profileMemNotOld(m_name);
+    g_system_ptr->getProfiler()->profileMemNotOld(m_version);
     return false;
   }
   if (m_busBusyCounter_Basic == m_basic_bus_busy_time) {
@@ -414,26 +415,26 @@ bool MemoryControl::queueReady (int bank) {
     // a bus wait.  This is a little inaccurate since it MIGHT
     // have also been blocked waiting for a read-write or a
     // read-read instead, but it's pretty close.
-    g_system_ptr->getProfiler()->profileMemArbWait(m_name, 1);
+    g_system_ptr->getProfiler()->profileMemArbWait(m_version, 1);
     return false;
   }
   if (m_busBusyCounter_Basic > 0) {
-    g_system_ptr->getProfiler()->profileMemBusBusy(m_name);
+    g_system_ptr->getProfiler()->profileMemBusBusy(m_version);
     return false;
   }
   int rank = getRank(bank);
   if (m_tfaw_count[rank] >= ACTIVATE_PER_TFAW) {
-    g_system_ptr->getProfiler()->profileMemTfawBusy(m_name);
+    g_system_ptr->getProfiler()->profileMemTfawBusy(m_version);
     return false;
   }
   bool write = !m_bankQueues[bank].front().m_is_mem_read;
   if (write && (m_busBusyCounter_Write > 0)) {
-    g_system_ptr->getProfiler()->profileMemReadWriteBusy(m_name);
+    g_system_ptr->getProfiler()->profileMemReadWriteBusy(m_version);
     return false;
   }
   if (!write && (rank != m_busBusy_WhichRank)
              && (m_busBusyCounter_ReadNewRank > 0)) {
-    g_system_ptr->getProfiler()->profileMemDataBusBusy(m_name);
+    g_system_ptr->getProfiler()->profileMemDataBusBusy(m_version);
     return false;
   }
   return true;
@@ -458,7 +459,7 @@ bool MemoryControl::issueRefresh (int bank) {
     //uint64 current_time = g_eventQueue_ptr->getTime();
     //printf("    Refresh bank %3x at %lld\n", bank, current_time);
   //}
-  g_system_ptr->getProfiler()->profileMemRefresh(m_name);
+  g_system_ptr->getProfiler()->profileMemRefresh(m_version);
   m_need_refresh--;
   m_refresh_bank++;
   if (m_refresh_bank >= m_total_banks) m_refresh_bank = 0;
@@ -502,12 +503,12 @@ void MemoryControl::issueRequest (int bank) {
   m_bankBusyCounter[bank] = m_bank_busy_time;
   m_busBusy_WhichRank = rank;
   if (req.m_is_mem_read) {
-    g_system_ptr->getProfiler()->profileMemRead(m_name);
+    g_system_ptr->getProfiler()->profileMemRead(m_version);
     m_busBusyCounter_Basic = m_basic_bus_busy_time;
     m_busBusyCounter_Write = m_basic_bus_busy_time + m_read_write_delay;
     m_busBusyCounter_ReadNewRank = m_basic_bus_busy_time + m_rank_rank_delay;
   } else {
-    g_system_ptr->getProfiler()->profileMemWrite(m_name);
+    g_system_ptr->getProfiler()->profileMemWrite(m_version);
     m_busBusyCounter_Basic = m_basic_bus_busy_time;
     m_busBusyCounter_Write = m_basic_bus_busy_time;
     m_busBusyCounter_ReadNewRank = m_basic_bus_busy_time;
@@ -576,7 +577,7 @@ void MemoryControl::executeCycle () {
     issueRefresh(m_roundRobin);
     int qs = m_bankQueues[m_roundRobin].size();
     if (qs > 1) {
-      g_system_ptr->getProfiler()->profileMemBankQ(m_name, qs-1);
+      g_system_ptr->getProfiler()->profileMemBankQ(m_version, qs-1);
     }
     if (qs > 0) {
       m_idleCount = IDLECOUNT_MAX_VALUE; // we're not idle if anything is queued
@@ -585,14 +586,14 @@ void MemoryControl::executeCycle () {
         issueRequest(m_roundRobin);
         banksIssued++;
         if (m_mem_fixed_delay) {
-          g_system_ptr->getProfiler()->profileMemWaitCycles(m_name, m_mem_fixed_delay);
+          g_system_ptr->getProfiler()->profileMemWaitCycles(m_version, m_mem_fixed_delay);
         }
       }
     }
   }
 
   // memWaitCycles is a redundant catch-all for the specific counters in queueReady
-  g_system_ptr->getProfiler()->profileMemWaitCycles(m_name, queueHeads - banksIssued);
+  g_system_ptr->getProfiler()->profileMemWaitCycles(m_version, queueHeads - banksIssued);
 
   // Check input queue and move anything to bank queues if not full.
   // Since this is done here at the end of the cycle, there will always
@@ -609,7 +610,7 @@ void MemoryControl::executeCycle () {
       m_input_queue.pop_front();
       m_bankQueues[bank].push_back(req);
     }
-    g_system_ptr->getProfiler()->profileMemInputQ(m_name, m_input_queue.size());
+    g_system_ptr->getProfiler()->profileMemInputQ(m_version, m_input_queue.size());
   }
 }
 

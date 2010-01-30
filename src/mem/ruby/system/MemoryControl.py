@@ -4,6 +4,7 @@ from m5.SimObject import SimObject
 class RubyMemoryControl(SimObject):
     type = 'RubyMemoryControl'
     cxx_class = 'MemoryControl'
+    version = Param.Int("");
     mem_bus_cycle_multiplier = Param.Int(10, "");
     banks_per_rank = Param.Int(8, "");
     ranks_per_dimm = Param.Int(2, "");

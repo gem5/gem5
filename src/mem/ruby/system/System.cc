@@ -114,6 +114,7 @@ RubySystem::RubySystem(const Params *p)
 
 void RubySystem::init()
 {
+  m_profiler_ptr->clearStats();
 }
 
 

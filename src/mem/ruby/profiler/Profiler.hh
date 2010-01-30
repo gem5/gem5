@@ -80,22 +80,22 @@ class AddressProfiler;
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
 struct memory_control_profiler {
-  long long int m_memReq;
-  long long int m_memBankBusy;
-  long long int m_memBusBusy;
-  long long int m_memTfawBusy;
-  long long int m_memReadWriteBusy;
-  long long int m_memDataBusBusy;
-  long long int m_memRefresh;
-  long long int m_memRead;
-  long long int m_memWrite;
-  long long int m_memWaitCycles;
-  long long int m_memInputQ;
-  long long int m_memBankQ;
-  long long int m_memArbWait;
-  long long int m_memRandBusy;
-  long long int m_memNotOld;
-  Vector<long long int> m_memBankCount;
+  uint64 m_memReq;
+  uint64 m_memBankBusy;
+  uint64 m_memBusBusy;
+  uint64 m_memTfawBusy;
+  uint64 m_memReadWriteBusy;
+  uint64 m_memDataBusBusy;
+  uint64 m_memRefresh;
+  uint64 m_memRead;
+  uint64 m_memWrite;
+  uint64 m_memWaitCycles;
+  uint64 m_memInputQ;
+  uint64 m_memBankQ;
+  uint64 m_memArbWait;
+  uint64 m_memRandBusy;
+  uint64 m_memNotOld;
+  Vector<uint64> m_memBankCount;
   int m_banks_per_rank;
   int m_ranks_per_dimm;
   int m_dimms_per_channel;
@@ -107,8 +107,6 @@ public:
   // Constructors
     typedef RubyProfilerParams Params;
   Profiler(const Params *);
-
-  void init(const vector<string> & argv, vector<string> memory_control_names);
 
   // Destructor
   ~Profiler();
@@ -173,21 +171,21 @@ public:
   }
 
   // added for MemoryControl:
-  void profileMemReq(string name, int bank);
-  void profileMemBankBusy(string name);
-  void profileMemBusBusy(string name);
-  void profileMemTfawBusy(string name);
-  void profileMemReadWriteBusy(string name);
-  void profileMemDataBusBusy(string name);
-  void profileMemRefresh(string name);
-  void profileMemRead(string name);
-  void profileMemWrite(string name);
-  void profileMemWaitCycles(string name, int cycles);
-  void profileMemInputQ(string name, int cycles);
-  void profileMemBankQ(string name, int cycles);
-  void profileMemArbWait(string name, int cycles);
-  void profileMemRandBusy(string name);
-  void profileMemNotOld(string name);
+  void profileMemReq(int mem_cntrl, int bank);
+  void profileMemBankBusy(int mem_cntrl);
+  void profileMemBusBusy(int mem_cntrl);
+  void profileMemTfawBusy(int mem_cntrl);
+  void profileMemReadWriteBusy(int mem_cntrl);
+  void profileMemDataBusBusy(int mem_cntrl);
+  void profileMemRefresh(int mem_cntrl);
+  void profileMemRead(int mem_cntrl);
+  void profileMemWrite(int mem_cntrl);
+  void profileMemWaitCycles(int mem_cntrl, int cycles);
+  void profileMemInputQ(int mem_cntrl, int cycles);
+  void profileMemBankQ(int mem_cntrl, int cycles);
+  void profileMemArbWait(int mem_cntrl, int cycles);
+  void profileMemRandBusy(int mem_cntrl);
+  void profileMemNotOld(int mem_cntrl);
   //added by SS
   bool getHotLines() { return m_hot_lines; }
   bool getAllInstructions() { return m_all_instructions; }
@@ -259,7 +257,7 @@ private:
 
   // added for MemoryControl:
   //added by SS
-  map< string, memory_control_profiler* > m_memory_control_profilers;
+  Vector < memory_control_profiler* > m_mc_profilers;
 
   //added by SS
   bool m_hot_lines;

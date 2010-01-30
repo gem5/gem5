@@ -123,7 +123,7 @@ private:
 
   // data members
   Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-  string m_name;
+  int m_version;
   string m_description;
   int m_msg_counter;
   int m_awakened;

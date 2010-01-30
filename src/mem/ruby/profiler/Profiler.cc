@@ -88,57 +88,40 @@ Profiler::Profiler(const Params *p)
   m_hot_lines = p->hot_lines;
   m_all_instructions = p->all_instructions;
 
-  RubySystem::m_profiler_ptr = this;
-}
+  //
+  // Initialize the memory controller profiler structs
+  //
+  m_mc_profilers.setSize(p->mem_cntrl_count);
+  for (int mem_cntrl = 0; mem_cntrl < p->mem_cntrl_count; mem_cntrl++) {
+    m_mc_profilers[mem_cntrl] = new memory_control_profiler;
+    m_mc_profilers[mem_cntrl]->m_memReq = 0;
+    m_mc_profilers[mem_cntrl]->m_memBankBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memBusBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memReadWriteBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memDataBusBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memTfawBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memRefresh = 0;
+    m_mc_profilers[mem_cntrl]->m_memRead = 0;
+    m_mc_profilers[mem_cntrl]->m_memWrite = 0;
+    m_mc_profilers[mem_cntrl]->m_memWaitCycles = 0;
+    m_mc_profilers[mem_cntrl]->m_memInputQ = 0;
+    m_mc_profilers[mem_cntrl]->m_memBankQ = 0;
+    m_mc_profilers[mem_cntrl]->m_memArbWait = 0;
+    m_mc_profilers[mem_cntrl]->m_memRandBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memNotOld = 0;
 
-Profiler::~Profiler()
-{
-  if (m_periodic_output_file_ptr != &cerr) {
-    delete m_periodic_output_file_ptr;
-  }
-  delete m_requestProfileMap_ptr;
-}
+    m_mc_profilers[mem_cntrl]->m_banks_per_rank = p->banks_per_rank;
+    m_mc_profilers[mem_cntrl]->m_ranks_per_dimm = p->ranks_per_dimm;
+    m_mc_profilers[mem_cntrl]->m_dimms_per_channel = 
+      p->dimms_per_channel;
 
-void Profiler::init(const vector<string> & argv, vector<string> memory_control_names)
-{
-  // added by SS
-  vector<string>::iterator it;
-  memory_control_profiler* mcp;
-  m_memory_control_names = memory_control_names;
-//  printf ( "Here in Profiler::init \n");
-  for ( it=memory_control_names.begin() ; it < memory_control_names.end(); it++ ){
-//    printf ( "Here in Profiler::init memory control name %s \n", (*it).c_str());
-    mcp = new memory_control_profiler;
-    mcp->m_memReq = 0;
-    mcp->m_memBankBusy = 0;
-    mcp->m_memBusBusy = 0;
-    mcp->m_memReadWriteBusy = 0;
-    mcp->m_memDataBusBusy = 0;
-    mcp->m_memTfawBusy = 0;
-    mcp->m_memRefresh = 0;
-    mcp->m_memRead = 0;
-    mcp->m_memWrite = 0;
-    mcp->m_memWaitCycles = 0;
-    mcp->m_memInputQ = 0;
-    mcp->m_memBankQ = 0;
-    mcp->m_memArbWait = 0;
-    mcp->m_memRandBusy = 0;
-    mcp->m_memNotOld = 0;
+    int totalBanks = p->banks_per_rank * 
+                     p->ranks_per_dimm * 
+                     p->dimms_per_channel;
 
-    mcp->m_banks_per_rank = RubySystem::getMemoryControl((*it).c_str())->getBanksPerRank();
-    mcp->m_ranks_per_dimm = RubySystem::getMemoryControl((*it).c_str())->getRanksPerDimm();
-    mcp->m_dimms_per_channel = RubySystem::getMemoryControl((*it).c_str())->getDimmsPerChannel();
+    m_mc_profilers[mem_cntrl]->m_memBankCount.setSize(totalBanks);
+  }    
 
-    int totalBanks = mcp->m_banks_per_rank
-                 * mcp->m_ranks_per_dimm
-                 * mcp->m_dimms_per_channel;
-
-    mcp->m_memBankCount.setSize(totalBanks);
-
-    m_memory_control_profilers [(*it).c_str()] = mcp;
-  }
-
-  clearStats();
   m_hot_lines = false;
   m_all_instructions = false;
 
@@ -151,6 +134,21 @@ void Profiler::init(const vector<string> & argv, vector<string> memory_control_n
     m_inst_profiler_ptr -> setHotLines(m_hot_lines);
     m_inst_profiler_ptr -> setAllInstructions(m_all_instructions);
   }
+}
+
+Profiler::~Profiler()
+{
+  if (m_periodic_output_file_ptr != &cerr) {
+    delete m_periodic_output_file_ptr;
+  }
+
+  for (int mem_cntrl = 0; 
+       mem_cntrl < m_mc_profilers.size(); 
+       mem_cntrl++) {
+    delete m_mc_profilers[mem_cntrl];
+  }
+
+  delete m_requestProfileMap_ptr;
 }
 
 void Profiler::wakeup()
@@ -170,17 +168,51 @@ void Profiler::wakeup()
   integer_t transactions_started = m_perProcStartTransaction.sum();
   integer_t transactions_ended = m_perProcEndTransaction.sum();
 
-  (*m_periodic_output_file_ptr) << "ruby_cycles: " << g_eventQueue_ptr->getTime()-m_ruby_start << endl;
-  (*m_periodic_output_file_ptr) << "total_misses: " << total_misses << " " << m_perProcTotalMisses << endl;
-  (*m_periodic_output_file_ptr) << "simics_cycles_executed: " << simics_cycles_executed << " " << perProcCycleCount << endl;
-  (*m_periodic_output_file_ptr) << "transactions_started: " << transactions_started << " " << m_perProcStartTransaction << endl;
-  (*m_periodic_output_file_ptr) << "transactions_ended: " << transactions_ended << " " << m_perProcEndTransaction << endl;
-  (*m_periodic_output_file_ptr) << "mbytes_resident: " << process_memory_resident() << endl;
-  (*m_periodic_output_file_ptr) << "mbytes_total: " << process_memory_total() << endl;
+  (*m_periodic_output_file_ptr) << "ruby_cycles: " 
+                                << g_eventQueue_ptr->getTime()-m_ruby_start 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "total_misses: " 
+                                << total_misses 
+                                << " " 
+                                << m_perProcTotalMisses 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "simics_cycles_executed: " 
+                                << simics_cycles_executed 
+                                << " " 
+                                << perProcCycleCount 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "transactions_started: " 
+                                << transactions_started 
+                                << " " 
+                                << m_perProcStartTransaction 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "transactions_ended: " 
+                                << transactions_ended 
+                                << " " 
+                                << m_perProcEndTransaction 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "mbytes_resident: " 
+                                << process_memory_resident() 
+                                << endl;
+
+  (*m_periodic_output_file_ptr) << "mbytes_total: " 
+                                << process_memory_total() 
+                                << endl;
+
   if (process_memory_total() > 0) {
-    (*m_periodic_output_file_ptr) << "resident_ratio: " << process_memory_resident()/process_memory_total() << endl;
+    (*m_periodic_output_file_ptr) << "resident_ratio: " 
+                          << process_memory_resident()/process_memory_total() 
+                          << endl;
   }
-  (*m_periodic_output_file_ptr) << "miss_latency: " << m_allMissLatencyHistogram << endl;
+
+  (*m_periodic_output_file_ptr) << "miss_latency: " 
+                                << m_allMissLatencyHistogram 
+                                << endl;
 
   *m_periodic_output_file_ptr << endl;
 
@@ -207,7 +239,9 @@ void Profiler::setPeriodicStatsFile(const string& filename)
 
 void Profiler::setPeriodicStatsInterval(integer_t period)
 {
-  cout << "Recording periodic statistics every " << m_stats_period << " Ruby cycles" << endl;
+  cout << "Recording periodic statistics every " << m_stats_period 
+       << " Ruby cycles" << endl;
+
   m_stats_period = period;
   g_eventQueue_ptr->scheduleEvent(this, 1);
 }
@@ -271,7 +305,8 @@ void Profiler::printStats(ostream& out, bool short_stats)
     out << "mbytes_resident: " << process_memory_resident() << endl;
     out << "mbytes_total: " << process_memory_total() << endl;
     if (process_memory_total() > 0) {
-      out << "resident_ratio: " << process_memory_resident()/process_memory_total() << endl;
+      out << "resident_ratio: " 
+          << process_memory_resident()/process_memory_total() << endl;
     }
     out << endl;
 
@@ -326,30 +361,30 @@ void Profiler::printStats(ostream& out, bool short_stats)
 
   out << endl;
 
-  vector<string>::iterator it;
-
-  for ( it=m_memory_control_names.begin() ; it < m_memory_control_names.end(); it++ ){
-    long long int m_memReq = m_memory_control_profilers[(*it).c_str()] -> m_memReq;
-    long long int m_memRefresh = m_memory_control_profilers[(*it).c_str()] -> m_memRefresh;
-    long long int m_memInputQ = m_memory_control_profilers[(*it).c_str()] -> m_memInputQ;
-    long long int m_memBankQ = m_memory_control_profilers[(*it).c_str()] -> m_memBankQ;
-    long long int m_memWaitCycles = m_memory_control_profilers[(*it).c_str()] -> m_memWaitCycles;
-    long long int m_memRead = m_memory_control_profilers[(*it).c_str()] -> m_memRead;
-    long long int m_memWrite = m_memory_control_profilers[(*it).c_str()] -> m_memWrite;
-    long long int m_memBankBusy = m_memory_control_profilers[(*it).c_str()] -> m_memBankBusy;
-    long long int m_memRandBusy = m_memory_control_profilers[(*it).c_str()] -> m_memRandBusy;
-    long long int m_memNotOld = m_memory_control_profilers[(*it).c_str()] -> m_memNotOld;
-    long long int m_memArbWait = m_memory_control_profilers[(*it).c_str()] -> m_memArbWait;
-    long long int m_memBusBusy = m_memory_control_profilers[(*it).c_str()] -> m_memBusBusy;
-    long long int m_memTfawBusy = m_memory_control_profilers[(*it).c_str()] -> m_memTfawBusy;
-    long long int m_memReadWriteBusy = m_memory_control_profilers[(*it).c_str()] -> m_memReadWriteBusy;
-    long long int m_memDataBusBusy = m_memory_control_profilers[(*it).c_str()] -> m_memDataBusBusy;
-    Vector<long long int> m_memBankCount = m_memory_control_profilers[(*it).c_str()] -> m_memBankCount;
+  for (int mem_cntrl = 0; 
+       mem_cntrl < m_mc_profilers.size(); 
+       mem_cntrl++) {
+    uint64 m_memReq = m_mc_profilers[mem_cntrl]->m_memReq;
+    uint64 m_memRefresh = m_mc_profilers[mem_cntrl]->m_memRefresh;
+    uint64 m_memInputQ = m_mc_profilers[mem_cntrl]->m_memInputQ;
+    uint64 m_memBankQ = m_mc_profilers[mem_cntrl]->m_memBankQ;
+    uint64 m_memWaitCycles = m_mc_profilers[mem_cntrl]->m_memWaitCycles;
+    uint64 m_memRead = m_mc_profilers[mem_cntrl]->m_memRead;
+    uint64 m_memWrite = m_mc_profilers[mem_cntrl]->m_memWrite;
+    uint64 m_memBankBusy = m_mc_profilers[mem_cntrl]->m_memBankBusy;
+    uint64 m_memRandBusy = m_mc_profilers[mem_cntrl]->m_memRandBusy;
+    uint64 m_memNotOld = m_mc_profilers[mem_cntrl]->m_memNotOld;
+    uint64 m_memArbWait = m_mc_profilers[mem_cntrl]->m_memArbWait;
+    uint64 m_memBusBusy = m_mc_profilers[mem_cntrl]->m_memBusBusy;
+    uint64 m_memTfawBusy = m_mc_profilers[mem_cntrl]->m_memTfawBusy;
+    uint64 m_memReadWriteBusy = m_mc_profilers[mem_cntrl]->m_memReadWriteBusy;
+    uint64 m_memDataBusBusy = m_mc_profilers[mem_cntrl]->m_memDataBusBusy;
+    Vector<uint64> m_memBankCount = m_mc_profilers[mem_cntrl]->m_memBankCount;
 
     if (m_memReq || m_memRefresh) {    // if there's a memory controller at all
-      long long int total_stalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
+      uint64 total_stalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
       double stallsPerReq = total_stalls * 1.0 / m_memReq;
-      out << "Memory control " << (*it) << ":" << endl;
+      out << "Memory control " << mem_cntrl << ":" << endl;
       out << "  memory_total_requests: " << m_memReq << endl;  // does not include refreshes
       out << "  memory_reads: " << m_memRead << endl;
       out << "  memory_writes: " << m_memWrite << endl;
@@ -609,25 +644,29 @@ void Profiler::clearStats()
 //added by SS
   vector<string>::iterator it;
 
-  for ( it=m_memory_control_names.begin() ; it < m_memory_control_names.end(); it++ ){
-    m_memory_control_profilers[(*it).c_str()] -> m_memReq = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memBankBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memBusBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memTfawBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memReadWriteBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memDataBusBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memRefresh = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memRead = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memWrite = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memWaitCycles = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memInputQ = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memBankQ = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memArbWait = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memRandBusy = 0;
-    m_memory_control_profilers[(*it).c_str()] -> m_memNotOld = 0;
+  for (int mem_cntrl = 0; 
+       mem_cntrl < m_mc_profilers.size(); 
+       mem_cntrl++) {
+    m_mc_profilers[mem_cntrl]->m_memReq = 0;
+    m_mc_profilers[mem_cntrl]->m_memBankBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memBusBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memTfawBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memReadWriteBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memDataBusBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memRefresh = 0;
+    m_mc_profilers[mem_cntrl]->m_memRead = 0;
+    m_mc_profilers[mem_cntrl]->m_memWrite = 0;
+    m_mc_profilers[mem_cntrl]->m_memWaitCycles = 0;
+    m_mc_profilers[mem_cntrl]->m_memInputQ = 0;
+    m_mc_profilers[mem_cntrl]->m_memBankQ = 0;
+    m_mc_profilers[mem_cntrl]->m_memArbWait = 0;
+    m_mc_profilers[mem_cntrl]->m_memRandBusy = 0;
+    m_mc_profilers[mem_cntrl]->m_memNotOld = 0;
 
-    for (int bank=0; bank < m_memory_control_profilers[(*it).c_str()] -> m_memBankCount.size(); bank++) {
-        m_memory_control_profilers[(*it).c_str()] -> m_memBankCount[bank] = 0;
+    for (int bank=0; 
+         bank < m_mc_profilers[mem_cntrl]->m_memBankCount.size(); 
+         bank++) {
+        m_mc_profilers[mem_cntrl]->m_memBankCount[bank] = 0;
     }
   }
   // Flush the prefetches through the system - used so that there are no outstanding requests after stats are cleared
@@ -823,26 +862,66 @@ int64 Profiler::getTotalTransactionsExecuted() const {
 }
 
 // For MemoryControl:
-void Profiler::profileMemReq(string name, int bank) {
-//  printf("name is %s", name.c_str());
-  assert(m_memory_control_profilers.count(name) == 1);
-  m_memory_control_profilers[name] -> m_memReq++;
-  m_memory_control_profilers[name] -> m_memBankCount[bank]++;
+void Profiler::profileMemReq(int mem_cntrl, int bank) {
+  m_mc_profilers[mem_cntrl]->m_memReq++;
+  m_mc_profilers[mem_cntrl]->m_memBankCount[bank]++;
 }
-void Profiler::profileMemBankBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memBankBusy++; }
-void Profiler::profileMemBusBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memBusBusy++; }
-void Profiler::profileMemReadWriteBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memReadWriteBusy++; }
-void Profiler::profileMemDataBusBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memDataBusBusy++; }
-void Profiler::profileMemTfawBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memTfawBusy++; }
-void Profiler::profileMemRefresh(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memRefresh++; }
-void Profiler::profileMemRead(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memRead++; }
-void Profiler::profileMemWrite(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memWrite++; }
-void Profiler::profileMemWaitCycles(string name, int cycles) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memWaitCycles += cycles; }
-void Profiler::profileMemInputQ(string name, int cycles) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memInputQ += cycles; }
-void Profiler::profileMemBankQ(string name, int cycles) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memBankQ += cycles; }
-void Profiler::profileMemArbWait(string name, int cycles) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memArbWait += cycles; }
-void Profiler::profileMemRandBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memRandBusy++; }
-void Profiler::profileMemNotOld(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memNotOld++; }
+
+void Profiler::profileMemBankBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memBankBusy++; 
+}
+
+void Profiler::profileMemBusBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memBusBusy++; 
+}
+
+void Profiler::profileMemReadWriteBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memReadWriteBusy++; 
+}
+
+void Profiler::profileMemDataBusBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memDataBusBusy++; 
+}
+
+void Profiler::profileMemTfawBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memTfawBusy++; 
+}
+
+void Profiler::profileMemRefresh(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memRefresh++; 
+}
+
+void Profiler::profileMemRead(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memRead++; 
+}
+
+void Profiler::profileMemWrite(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memWrite++; 
+}
+
+void Profiler::profileMemWaitCycles(int mem_cntrl, int cycles) {
+  m_mc_profilers[mem_cntrl]->m_memWaitCycles += cycles; 
+}
+
+void Profiler::profileMemInputQ(int mem_cntrl, int cycles) {    
+  m_mc_profilers[mem_cntrl]->m_memInputQ += cycles; 
+}
+
+void Profiler::profileMemBankQ(int mem_cntrl, int cycles) {    
+  m_mc_profilers[mem_cntrl]->m_memBankQ += cycles; 
+}
+
+void Profiler::profileMemArbWait(int mem_cntrl, int cycles) {    
+  m_mc_profilers[mem_cntrl]->m_memArbWait += cycles; 
+}
+
+void Profiler::profileMemRandBusy(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memRandBusy++; 
+}
+
+void Profiler::profileMemNotOld(int mem_cntrl) {    
+  m_mc_profilers[mem_cntrl]->m_memNotOld++; 
+}
 
 
 Profiler *
