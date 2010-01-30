@@ -106,8 +106,6 @@ public:
   AccessPermission getPermission(const Address& address) const;
   void changePermission(const Address& address, AccessPermission new_perm);
 
-  static int numberOfLastLevelCaches();
-
   int getLatency() const { return m_latency; }
 
   // Hook for checkpointing the contents of the cache
@@ -172,12 +170,6 @@ private:
   int m_cache_num_sets;
   int m_cache_num_set_bits;
   int m_cache_assoc;
-
-  static Vector< CacheMemory* > m_all_caches;
-  
-  static int m_num_last_level_caches;
-  static MachineType m_last_level_machine_type;
-
 };
 
 #endif //CACHEMEMORY_H

@@ -28,9 +28,6 @@
 
 #include "mem/ruby/system/CacheMemory.hh"
 
-int CacheMemory::m_num_last_level_caches = 0;
-MachineType CacheMemory::m_last_level_machine_type = MachineType_FIRST;
-
 // ******************* Definitions *******************
 
 // Output operator definition
@@ -75,19 +72,6 @@ void CacheMemory::init()
     else
       assert(false);
 
-  m_num_last_level_caches = 
-    MachineType_base_count(MachineType_FIRST);
-#if 0
-  for (uint32 i=0; i<argv.size(); i+=2) {
-      if (m_last_level_machine_type < m_controller->getMachineType()) {
-        m_num_last_level_caches = 
-          MachineType_base_count(m_controller->getMachineType());
-        m_last_level_machine_type = 
-          m_controller->getMachineType();
-      } 
-  }
-#endif
-
   m_cache.setSize(m_cache_num_sets);
   m_locked.setSize(m_cache_num_sets);
   for (int i = 0; i < m_cache_num_sets; i++) {
@@ -111,13 +95,6 @@ CacheMemory::~CacheMemory()
     }
   }
 }
-
-int
-CacheMemory::numberOfLastLevelCaches()
-{ 
-  return m_num_last_level_caches; 
-}
-
 
 void CacheMemory::printConfig(ostream& out)
 {

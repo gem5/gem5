@@ -31,8 +31,4 @@
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 
-int getNumberOfLastLevelCaches()
-{
-  return CacheMemory::numberOfLastLevelCaches();
-}
 

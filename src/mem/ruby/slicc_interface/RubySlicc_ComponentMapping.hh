@@ -42,6 +42,7 @@
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
+#include "mem/protocol/MachineType.hh"
 
 #ifdef MACHINETYPE_L1Cache
 #define MACHINETYPE_L1CACHE_ENUM MachineType_L1Cache
@@ -66,9 +67,6 @@
 #else
 #define MACHINETYPE_DMA_ENUM MachineType_NUM
 #endif
-
-// used to determine the number of acks to wait for
-int getNumberOfLastLevelCaches();
 
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
@@ -152,5 +150,8 @@ extern inline GenericMachineType ConvertMachToGenericMach(MachineType machType) 
   }
 }
 
+extern inline int machineCount(MachineType machType) {
+    return MachineType_base_count(machType);
+}
 
 #endif  // COMPONENTMAPPINGFNS_H

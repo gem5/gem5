@@ -29,7 +29,7 @@
 
 // Mapping functions
 
-int getNumberOfLastLevelCaches();
+int machineCount(MachineType machType);
 
 // NodeID map_address_to_node(Address addr);
 MachineID mapAddressToRange(Address addr, MachineType type, int low, int high);

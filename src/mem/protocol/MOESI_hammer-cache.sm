@@ -379,7 +379,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      TBEs[address].NumPendingMsgs := getNumberOfLastLevelCaches(); // One from each other cache (n-1) plus the memory (+1)
+      TBEs[address].NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
 
@@ -390,7 +390,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.MessageSize := MessageSizeType:Request_Control;
-      TBEs[address].NumPendingMsgs := getNumberOfLastLevelCaches(); // One from each other cache (n-1) plus the memory (+1)
+      TBEs[address].NumPendingMsgs := machineCount(MachineType:L1Cache); // One from each other cache (n-1) plus the memory (+1)
     }
   }
 

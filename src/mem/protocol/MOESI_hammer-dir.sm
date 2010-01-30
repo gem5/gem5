@@ -320,7 +320,7 @@ machine(Directory, "AMD Hammer-like protocol")
       //
       // One ack for each last-level cache
       //
-      TBEs[address].NumPendingMsgs := getNumberOfLastLevelCaches();
+      TBEs[address].NumPendingMsgs := machineCount(MachineType:L1Cache);
       //
       // Assume initially that the caches store a clean copy and that memory
       // will provide the data
@@ -468,7 +468,7 @@ machine(Directory, "AMD Hammer-like protocol")
   }
 
   action(f_forwardRequest, "f", desc="Forward requests") {
-    if (getNumberOfLastLevelCaches() > 1) {
+    if (machineCount(MachineType:L1Cache) > 1) {
       peek(requestQueue_in, RequestMsg) {
         enqueue(forwardNetwork_out, RequestMsg, latency=memory_controller_latency) {
           out_msg.Address := address;
