@@ -65,7 +65,11 @@ ostream& operator<<(ostream& out, const RubyRequestType& obj)
 
 ostream& operator<<(std::ostream& out, const RubyRequest& obj)
 {
-  out << hex << "0x" << obj.paddr << flush;
+  out << hex << "0x" << obj.paddr << " data: 0x" << flush;
+  for (int i = 0; i < obj.len; i++) {
+    out << (int)obj.data[i];
+  }
+  out << dec << " type: " << RubyRequestType_to_string(obj.type) << endl;
   return out;
 }
 
