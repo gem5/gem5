@@ -1,7 +1,8 @@
 
 machine(DMA, "DMA Controller") 
-: int request_latency,
-  int response_latency
+: DMASequencer * dma_sequencer,
+  int request_latency = 14,
+  int response_latency = 14
 {
   
   MessageBuffer goo1, network="From", virtual_network="0", ordered="false";
@@ -47,7 +48,6 @@ machine(DMA, "DMA Controller")
 
   MessageBuffer mandatoryQueue, ordered="false";
   MessageBuffer triggerQueue, ordered="true";
-  DMASequencer dma_sequencer, factory='RubySystem::getDMASequencer(m_cfg["dma_sequencer"])';
   TBETable TBEs, template_hack="<DMA_TBE>";
   State cur_state;
 

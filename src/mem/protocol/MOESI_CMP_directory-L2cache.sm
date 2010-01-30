@@ -33,8 +33,9 @@
  */
 
 machine(L2Cache, "Token protocol") 
-: int response_latency, 
-  int request_latency
+: CacheMemory * L2cacheMemory,
+  int response_latency = 2, 
+  int request_latency = 2
 {
 
   // L2 BANK QUEUES
@@ -209,17 +210,6 @@ machine(L2Cache, "Token protocol")
     bool isPresent(Address);
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-    void setMRU(Address);
-  }
-
   external_type(PerfectCacheMemory) {
     void allocate(Address);
     void deallocate(Address);
@@ -229,15 +219,14 @@ machine(L2Cache, "Token protocol")
 
 
   TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
-  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
   PerfectCacheMemory localDirectory, template_hack="<L2Cache_DirEntry>";
 
 
   Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
     if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory[addr];
+      return static_cast(Entry, L2cacheMemory[addr]);
     } else {
-      return L2cacheMemory[addr];
+      return static_cast(Entry, L2cacheMemory[addr]);
     }
   }
 
@@ -258,11 +247,11 @@ machine(L2Cache, "Token protocol")
   bool isOnlySharer(Address addr, MachineID shar_id) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      if (L2cacheMemory[addr].Sharers.count() > 1) {
+      if (getL2CacheEntry(addr).Sharers.count() > 1) {
         return false;
       }
-      else if (L2cacheMemory[addr].Sharers.count() == 1) {
-        if (L2cacheMemory[addr].Sharers.isElement(shar_id)) {
+      else if (getL2CacheEntry(addr).Sharers.count() == 1) {
+        if (getL2CacheEntry(addr).Sharers.isElement(shar_id)) {
           return true;
         }
         else {
@@ -299,24 +288,24 @@ machine(L2Cache, "Token protocol")
   void copyCacheStateToDir(Address addr) {
     assert(localDirectory.isTagPresent(addr) == false);
     localDirectory.allocate(addr);
-    localDirectory[addr].DirState := L2cacheMemory[addr].CacheState;
-    localDirectory[addr].Sharers := L2cacheMemory[addr].Sharers;
-    localDirectory[addr].Owner := L2cacheMemory[addr].Owner;
-    localDirectory[addr].OwnerValid := L2cacheMemory[addr].OwnerValid;
+    localDirectory[addr].DirState := getL2CacheEntry(addr).CacheState;
+    localDirectory[addr].Sharers := getL2CacheEntry(addr).Sharers;
+    localDirectory[addr].Owner := getL2CacheEntry(addr).Owner;
+    localDirectory[addr].OwnerValid := getL2CacheEntry(addr).OwnerValid;
 
   }
 
   void copyDirToCache(Address addr) {
-    L2cacheMemory[addr].Sharers := localDirectory[addr].Sharers;
-    L2cacheMemory[addr].Owner := localDirectory[addr].Owner;
-    L2cacheMemory[addr].OwnerValid := localDirectory[addr].OwnerValid;
+    getL2CacheEntry(addr).Sharers := localDirectory[addr].Sharers;
+    getL2CacheEntry(addr).Owner := localDirectory[addr].Owner;
+    getL2CacheEntry(addr).OwnerValid := localDirectory[addr].OwnerValid;
   }
 
 
   void recordLocalSharerInDir(Address addr, MachineID shar_id) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      L2cacheMemory[addr].Sharers.add(shar_id);
+      getL2CacheEntry(addr).Sharers.add(shar_id);
     }
     else {
       if (localDirectory.isTagPresent(addr) == false) {
@@ -332,9 +321,9 @@ machine(L2Cache, "Token protocol")
 
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      L2cacheMemory[addr].Sharers.clear();
-      L2cacheMemory[addr].OwnerValid := true;
-      L2cacheMemory[addr].Owner := exc_id;
+      getL2CacheEntry(addr).Sharers.clear();
+      getL2CacheEntry(addr).OwnerValid := true;
+      getL2CacheEntry(addr).Owner := exc_id;
     }
     else {
       if (localDirectory.isTagPresent(addr) == false) {
@@ -350,8 +339,8 @@ machine(L2Cache, "Token protocol")
   void removeAllLocalSharersFromDir(Address addr) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      L2cacheMemory[addr].Sharers.clear();
-      L2cacheMemory[addr].OwnerValid := false;
+      getL2CacheEntry(addr).Sharers.clear();
+      getL2CacheEntry(addr).OwnerValid := false;
     }
     else {
       localDirectory[addr].Sharers.clear();
@@ -362,7 +351,7 @@ machine(L2Cache, "Token protocol")
   void removeSharerFromDir(Address addr, MachineID sender) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      L2cacheMemory[addr].Sharers.remove(sender);
+      getL2CacheEntry(addr).Sharers.remove(sender);
     }
     else {
       localDirectory[addr].Sharers.remove(sender);
@@ -372,7 +361,7 @@ machine(L2Cache, "Token protocol")
   void removeOwnerFromDir(Address addr, MachineID sender) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      L2cacheMemory[addr].OwnerValid := false;
+      getL2CacheEntry(addr).OwnerValid := false;
     }
     else {
       localDirectory[addr].OwnerValid := false;
@@ -382,7 +371,7 @@ machine(L2Cache, "Token protocol")
   bool isLocalSharer(Address addr, MachineID shar_id) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return L2cacheMemory[addr].Sharers.isElement(shar_id);
+      return getL2CacheEntry(addr).Sharers.isElement(shar_id);
     }
     else {
       return localDirectory[addr].Sharers.isElement(shar_id);
@@ -393,7 +382,7 @@ machine(L2Cache, "Token protocol")
   NetDest getLocalSharers(Address addr) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return L2cacheMemory[addr].Sharers;
+      return getL2CacheEntry(addr).Sharers;
     }
     else {
       return localDirectory[addr].Sharers;
@@ -404,7 +393,7 @@ machine(L2Cache, "Token protocol")
   MachineID getLocalOwner(Address addr) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return L2cacheMemory[addr].Owner;
+      return getL2CacheEntry(addr).Owner;
     }
     else {
       return localDirectory[addr].Owner;
@@ -416,7 +405,7 @@ machine(L2Cache, "Token protocol")
   int countLocalSharers(Address addr) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return L2cacheMemory[addr].Sharers.count();
+      return getL2CacheEntry(addr).Sharers.count();
     }
     else {
       return localDirectory[addr].Sharers.count();
@@ -426,7 +415,7 @@ machine(L2Cache, "Token protocol")
   bool isLocalOwnerValid(Address addr) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      return L2cacheMemory[addr].OwnerValid;
+      return getL2CacheEntry(addr).OwnerValid;
     }
     else {
       return localDirectory[addr].OwnerValid;
@@ -436,11 +425,11 @@ machine(L2Cache, "Token protocol")
   int countLocalSharersExceptRequestor(Address addr, MachineID requestor) {
     if (isCacheTagPresent(addr)) {
       assert (localDirectory.isTagPresent(addr) == false);
-      if (L2cacheMemory[addr].Sharers.isElement(requestor)) {
-        return ( L2cacheMemory[addr].Sharers.count() - 1 );
+      if (getL2CacheEntry(addr).Sharers.isElement(requestor)) {
+        return ( getL2CacheEntry(addr).Sharers.count() - 1 );
       }
       else {
-        return L2cacheMemory[addr].Sharers.count();
+        return getL2CacheEntry(addr).Sharers.count();
       }
     }
     else {

@@ -33,6 +33,7 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 
 import MOESI_hammer
+import MOESI_CMP_directory
 import MI_example
 import MOESI_CMP_token
 
@@ -46,6 +47,12 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
                                        physmem, \
                                        piobus, \
                                        dma_devices)
+    elif protocol == "MOESI_CMP_directory":
+        (cpu_sequencers, dir_cntrls, all_cntrls) = \
+            MOESI_CMP_directory.create_system(options, \
+                                          physmem, \
+                                          piobus, \
+                                          dma_devices)
     elif protocol == "MI_example":
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
             MI_example.create_system(options, \

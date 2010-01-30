@@ -33,9 +33,11 @@
  */
 
 machine(L1Cache, "Directory protocol") 
- : int request_latency, 
-   int l2_select_low_bit, 
-   int l2_select_num_bits
+ : Sequencer * sequencer,
+   CacheMemory * L1IcacheMemory,
+   CacheMemory * L1DcacheMemory,
+   int l2_select_num_bits,
+   int request_latency = 2
 {
 
   // NODE L1 CACHE
@@ -127,16 +129,6 @@ machine(L1Cache, "Directory protocol")
     int NumPendingMsgs, default="0",     desc="Number of acks/data messages that this processor is waiting for";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -146,18 +138,16 @@ machine(L1Cache, "Directory protocol")
 
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
-  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
-  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
-  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
   TimerTable useTimerTable;
+  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
   Entry getCacheEntry(Address addr), return_by_ref="yes" {
     if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory[addr];
+      return static_cast(Entry, L1DcacheMemory[addr]);
     } else {
-      return L1IcacheMemory[addr];
+      return static_cast(Entry, L1IcacheMemory[addr]);
     }
   }
 

@@ -32,7 +32,9 @@
  */
 
 machine(Directory, "Directory protocol") 
-: int directory_latency 
+:  DirectoryMemory * directory,
+   MemoryControl * memBuffer,
+   int directory_latency = 6
 {
 
   // ** IN QUEUES **
@@ -92,7 +94,7 @@ machine(Directory, "Directory protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...") {
+  structure(Entry, desc="...", interface='AbstractEntry') {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
     NetDest Sharers,                   desc="Sharers for this block";
@@ -107,11 +109,6 @@ machine(Directory, "Directory protocol")
     MachineID Requestor, desc="original requestor";
   }
 
-  external_type(DirectoryMemory) {
-    Entry lookup(Address);
-    bool isPresent(Address);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -119,55 +116,50 @@ machine(Directory, "Directory protocol")
     bool isPresent(Address);
   }
 
-  // to simulate detailed DRAM
-  external_type(MemoryControl, inport="yes", outport="yes") {
-
-  }
-
-
   // ** OBJECTS **
-
-  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory"])';
-  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_control"])';
   TBETable TBEs, template_hack="<Directory_TBE>";
 
+  Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
+    return static_cast(Entry, directory[addr]);
+  }
+
   State getState(Address addr) {
-    return directory[addr].DirectoryState;
+    return getDirectoryEntry(addr).DirectoryState;
   }
 
   void setState(Address addr, State state) {
     if (directory.isPresent(addr)) {
 
       if (state == State:I) {
-        assert(directory[addr].Owner.count() == 0);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 0);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
 
       if (state == State:S) {
-        assert(directory[addr].Owner.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 0);
       }
 
       if (state == State:O) {
-        assert(directory[addr].Owner.count() == 1);
-        assert(directory[addr].Sharers.isSuperset(directory[addr].Owner) == false);
+        assert(getDirectoryEntry(addr).Owner.count() == 1);
+        assert(getDirectoryEntry(addr).Sharers.isSuperset(getDirectoryEntry(addr).Owner) == false);
       }
 
       if (state == State:M) {
-        assert(directory[addr].Owner.count() == 1);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 1);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
 
       if ((state != State:SS) && (state != State:OO)) {
-        assert(directory[addr].WaitingUnblocks == 0);
+        assert(getDirectoryEntry(addr).WaitingUnblocks == 0);
       }
 
-      if ( (directory[addr].DirectoryState != State:I) && (state == State:I) ) {
-        directory[addr].DirectoryState := state;
+      if ( (getDirectoryEntry(addr).DirectoryState != State:I) && (state == State:I) ) {
+        getDirectoryEntry(addr).DirectoryState := state;
          // disable coherence checker
         // sequencer.checkCoherence(addr);
       }
       else {
-        directory[addr].DirectoryState := state;
+        getDirectoryEntry(addr).DirectoryState := state;
       }
     }
   }
@@ -175,7 +167,7 @@ machine(Directory, "Directory protocol")
   // if no sharers, then directory can be considered both a sharer and exclusive w.r.t. coherence checking
   bool isBlockShared(Address addr) {
     if (directory.isPresent(addr)) {
-      if (directory[addr].DirectoryState == State:I) {
+      if (getDirectoryEntry(addr).DirectoryState == State:I) {
         return true;
       }
     }
@@ -184,7 +176,7 @@ machine(Directory, "Directory protocol")
 
   bool isBlockExclusive(Address addr) {
     if (directory.isPresent(addr)) {
-      if (directory[addr].DirectoryState == State:I) {
+      if (getDirectoryEntry(addr).DirectoryState == State:I) {
         return true;
       }
     }
@@ -211,7 +203,7 @@ machine(Directory, "Directory protocol")
     if (unblockNetwork_in.isReady()) {
       peek(unblockNetwork_in, ResponseMsg) {
         if (in_msg.Type == CoherenceResponseType:UNBLOCK) {
-          if (directory[in_msg.Address].WaitingUnblocks == 1) {
+          if (getDirectoryEntry(in_msg.Address).WaitingUnblocks == 1) {
             trigger(Event:Last_Unblock, in_msg.Address);
           } else {
             trigger(Event:Unblock, in_msg.Address);
@@ -298,16 +290,16 @@ machine(Directory, "Directory protocol")
   }
 
   action(c_clearOwner, "c", desc="Clear the owner field") {
-    directory[address].Owner.clear();
+    getDirectoryEntry(address).Owner.clear();
   }
 
   action(c_moveOwnerToSharer, "cc", desc="Move owner to sharers") {
-    directory[address].Sharers.addNetDest(directory[address].Owner);
-    directory[address].Owner.clear();
+    getDirectoryEntry(address).Sharers.addNetDest(getDirectoryEntry(address).Owner);
+    getDirectoryEntry(address).Owner.clear();
   }
 
   action(cc_clearSharers, "\c", desc="Clear the sharers field") {
-    directory[address].Sharers.clear();
+    getDirectoryEntry(address).Sharers.clear();
   }
 
   action(d_sendDataMsg, "d", desc="Send data to requestor") {
@@ -317,7 +309,7 @@ machine(Directory, "Directory protocol")
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
-        //out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        //out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Acks := in_msg.Acks;
@@ -338,7 +330,7 @@ machine(Directory, "Directory protocol")
         out_msg.Sender := machineID;
         out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
         out_msg.Dirty := false; // By definition, the block is now clean
         out_msg.Type := CoherenceResponseType:DATA_EXCLUSIVE;
         out_msg.MessageSize := MessageSizeType:Response_Data;
@@ -350,8 +342,8 @@ machine(Directory, "Directory protocol")
 
   action(e_ownerIsUnblocker, "e", desc="The owner is now the unblocker") {
     peek(unblockNetwork_in, ResponseMsg) {
-      directory[address].Owner.clear();
-      directory[address].Owner.add(in_msg.Sender);
+      getDirectoryEntry(address).Owner.clear();
+      getDirectoryEntry(address).Owner.add(in_msg.Sender);
     }
   }
 
@@ -361,9 +353,9 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination.addNetDest(directory[in_msg.Address].Owner);
-        out_msg.Acks := directory[address].Sharers.count();
-        if (directory[address].Sharers.isElement(in_msg.Requestor)) {
+        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
+        out_msg.Acks := getDirectoryEntry(address).Sharers.count();
+        if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
         }
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
@@ -377,9 +369,9 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := machineID;
-        out_msg.Destination.addNetDest(directory[in_msg.Address].Owner);
-        out_msg.Acks := directory[address].Sharers.count();
-        if (directory[address].Sharers.isElement(in_msg.Requestor)) {
+        out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Owner);
+        out_msg.Acks := getDirectoryEntry(address).Sharers.count();
+        if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
         }
         out_msg.MessageSize := MessageSizeType:Forwarded_Control;
@@ -389,14 +381,14 @@ machine(Directory, "Directory protocol")
 
   action(g_sendInvalidations, "g", desc="Send invalidations to sharers, not including the requester") {
     peek(requestQueue_in, RequestMsg) {
-      if ((directory[in_msg.Address].Sharers.count() > 1) ||
-          ((directory[in_msg.Address].Sharers.count() > 0) && (directory[in_msg.Address].Sharers.isElement(in_msg.Requestor) == false))) {
+      if ((getDirectoryEntry(in_msg.Address).Sharers.count() > 1) ||
+          ((getDirectoryEntry(in_msg.Address).Sharers.count() > 0) && (getDirectoryEntry(in_msg.Address).Sharers.isElement(in_msg.Requestor) == false))) {
         enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
           out_msg.Address := address;
           out_msg.Type := CoherenceRequestType:INV;
           out_msg.Requestor := in_msg.Requestor;
-          // out_msg.Destination := directory[in_msg.Address].Sharers;
-          out_msg.Destination.addNetDest(directory[in_msg.Address].Sharers);
+          // out_msg.Destination := getDirectoryEntry(in_msg.Address).Sharers;
+          out_msg.Destination.addNetDest(getDirectoryEntry(in_msg.Address).Sharers);
           out_msg.Destination.remove(in_msg.Requestor);
           out_msg.MessageSize := MessageSizeType:Invalidate_Control;
         }
@@ -416,7 +408,7 @@ machine(Directory, "Directory protocol")
     peek(unblockNetwork_in, ResponseMsg) {
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
-      directory[in_msg.Address].DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
       DEBUG_EXPR(in_msg.Address);
       DEBUG_EXPR(in_msg.DataBlk);
     }
@@ -424,7 +416,7 @@ machine(Directory, "Directory protocol")
 
   action(p_writeFwdDataToMemory, "p", desc="Write Response data to memory") {
      peek(unblockNetwork_in, ResponseMsg) {
-      directory[in_msg.Address].DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
       DEBUG_EXPR(in_msg.Address);
       DEBUG_EXPR(in_msg.DataBlk);
     }
@@ -439,23 +431,23 @@ machine(Directory, "Directory protocol")
       // implementation.  We include the data in the "dataless"
       // message so we can assert the clean data matches the datablock
       // in memory
-      assert(directory[in_msg.Address].DataBlk == in_msg.DataBlk);
+      assert(getDirectoryEntry(in_msg.Address).DataBlk == in_msg.DataBlk);
     }
   }
 
   action(m_addUnlockerToSharers, "m", desc="Add the unlocker to the sharer list") {
     peek(unblockNetwork_in, ResponseMsg) {
-      directory[address].Sharers.add(in_msg.Sender);
+      getDirectoryEntry(address).Sharers.add(in_msg.Sender);
     }
   }
 
   action(n_incrementOutstanding, "n", desc="Increment outstanding requests") {
-    directory[address].WaitingUnblocks := directory[address].WaitingUnblocks + 1;
+    getDirectoryEntry(address).WaitingUnblocks := getDirectoryEntry(address).WaitingUnblocks + 1;
   }
 
   action(o_decrementOutstanding, "o", desc="Decrement outstanding requests") {
-    directory[address].WaitingUnblocks := directory[address].WaitingUnblocks - 1;
-    assert(directory[address].WaitingUnblocks >= 0);
+    getDirectoryEntry(address).WaitingUnblocks := getDirectoryEntry(address).WaitingUnblocks - 1;
+    assert(getDirectoryEntry(address).WaitingUnblocks >= 0);
   }
 
   action(q_popMemQueue, "q", desc="Pop off-chip request queue") {
@@ -469,13 +461,13 @@ machine(Directory, "Directory protocol")
         out_msg.Type := MemoryRequestType:MEMORY_READ;
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
-        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
         out_msg.MessageSize := in_msg.MessageSize;
         //out_msg.Prefetch := false;
         // These are not used by memory but are passed back here with the read data:
-        out_msg.ReadX := (in_msg.Type == CoherenceRequestType:GETS && directory[address].Sharers.count() == 0);
-        out_msg.Acks := directory[address].Sharers.count();
-        if (directory[address].Sharers.isElement(in_msg.Requestor)) {
+        out_msg.ReadX := (in_msg.Type == CoherenceRequestType:GETS && getDirectoryEntry(address).Sharers.count() == 0);
+        out_msg.Acks := getDirectoryEntry(address).Sharers.count();
+        if (getDirectoryEntry(address).Sharers.isElement(in_msg.Requestor)) {
           out_msg.Acks := out_msg.Acks - 1;
         }
         DEBUG_EXPR(out_msg);
@@ -497,7 +489,7 @@ machine(Directory, "Directory protocol")
         //out_msg.Prefetch := false;
         // Not used:
         out_msg.ReadX := false;
-        out_msg.Acks := directory[address].Sharers.count();  // for dma requests
+        out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
         DEBUG_EXPR(out_msg);
       }
     }
@@ -515,7 +507,7 @@ machine(Directory, "Directory protocol")
         //out_msg.Prefetch := false;
         // Not used:
         out_msg.ReadX := false;
-        out_msg.Acks := directory[address].Sharers.count();  // for dma requests
+        out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
         DEBUG_EXPR(out_msg);
       }
     }
@@ -538,7 +530,7 @@ machine(Directory, "Directory protocol")
       out_msg.SenderMachine := MachineType:Directory;
       out_msg.Destination.add(in_msg.Requestor);
       out_msg.DataBlk := in_msg.DataBlk;
-      out_msg.Acks := directory[address].Sharers.count();  // for dma requests
+      out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
       out_msg.Type := CoherenceResponseType:DMA_ACK;
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -555,7 +547,7 @@ machine(Directory, "Directory protocol")
         out_msg.Destination.add(TBEs[address].Requestor);
       }
       out_msg.DataBlk := in_msg.DataBlk;
-      out_msg.Acks := directory[address].Sharers.count();  // for dma requests
+      out_msg.Acks := getDirectoryEntry(address).Sharers.count();  // for dma requests
       out_msg.Type := CoherenceResponseType:DMA_ACK;
       out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
@@ -564,12 +556,12 @@ machine(Directory, "Directory protocol")
 
   action(l_writeDMADataToMemory, "\l", desc="Write data from a DMA_WRITE to memory") {
     peek(requestQueue_in, RequestMsg) {
-      directory[address].DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
+      getDirectoryEntry(address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
     }
   }
 
   action(l_writeDMADataToMemoryFromTBE, "\ll", desc="Write data from a DMA_WRITE to memory") {
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, 
+    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, 
 					   addressOffset(TBEs[address].PhysicalAddress), 
 					   TBEs[address].Len);
   }
