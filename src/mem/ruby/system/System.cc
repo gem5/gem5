@@ -60,7 +60,7 @@
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
 int RubySystem::m_tech_nm;
-int RubySystem::m_freq_mhz;
+Tick RubySystem::m_clock;
 int RubySystem::m_block_size_bytes;
 int RubySystem::m_block_size_bits;
 uint64 RubySystem::m_memory_size_bytes;
@@ -93,7 +93,7 @@ RubySystem::RubySystem(const Params *p)
     srandom(m_random_seed);
     m_randomization = p->randomization;
     m_tech_nm = p->tech_nm;
-    m_freq_mhz = p->freq_mhz;
+    m_clock = p->clock;
 
     m_block_size_bytes = p->block_size_bytes;
     assert(is_power_of_2(m_block_size_bytes));
@@ -107,6 +107,7 @@ RubySystem::RubySystem(const Params *p)
     m_profiler_ptr = p->profiler;
     m_tracer_ptr = p->tracer;
 
+    g_eventQueue_ptr = new RubyEventQueue(m_clock);
     g_system_ptr = this;
     m_mem_vec_ptr = new MemoryVector;
     m_mem_vec_ptr->setSize(m_memory_size_bytes);
@@ -129,7 +130,7 @@ void RubySystem::printSystemConfig(ostream & out)
   out << "  random_seed: " << m_random_seed << endl;
   out << "  randomization: " << m_randomization << endl;
   out << "  tech_nm: " << m_tech_nm << endl;
-  out << "  freq_mhz: " << m_freq_mhz << endl;
+  out << "  cycle_period: " << m_clock << endl;
   out << "  block_size_bytes: " << m_block_size_bytes << endl;
   out << "  block_size_bits: " << m_block_size_bits << endl;
   out << "  memory_size_bytes: " << m_memory_size_bytes << endl;

@@ -40,9 +40,8 @@
 
 // Class public method definitions
 
-RubyEventQueue theEventQueue;
-
-RubyEventQueue::RubyEventQueue()
+RubyEventQueue::RubyEventQueue(Tick _clock)
+  : m_clock(_clock)
 {
   m_prio_heap_ptr = NULL;
   init();

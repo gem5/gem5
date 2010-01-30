@@ -70,14 +70,14 @@ class RubyEventQueueNode;
 class RubyEventQueue {
 public:
   // Constructors
-  RubyEventQueue();
+  RubyEventQueue(Tick clock);
 
   // Destructor
   ~RubyEventQueue();
 
   // Public Methods
 
-  Time getTime() const { return m_globalTime; }
+  Time getTime() const { return curTick/m_clock; }
   void scheduleEvent(Consumer* consumer, Time timeDelta) { scheduleEventAbsolute(consumer, timeDelta + m_globalTime); }
   void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
   void triggerEvents(Time t); // called to handle all events <= time t
@@ -96,6 +96,7 @@ private:
   RubyEventQueue& operator=(const RubyEventQueue& obj);
 
   // Data Members (m_ prefix)
+  Tick m_clock;
   PrioHeap<RubyEventQueueNode>* m_prio_heap_ptr;
   Time m_globalTime;
   Time m_timeOfLastRecovery;

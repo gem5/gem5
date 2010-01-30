@@ -158,7 +158,8 @@ network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
 mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
                    for dir_cntrl in dir_cntrl_nodes])
 
-system.ruby = RubySystem(network = network,
+system.ruby = RubySystem(clock = '1GHz',
+                         network = network,
                          profiler = RubyProfiler(),
                          tracer = RubyTracer(),
                          debug = RubyDebug(),
