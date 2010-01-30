@@ -97,24 +97,35 @@ class L2Cache(RubyCache):
     latency = 15
     size = 1048576
 
-class CrossbarTopology(Topology):
-    connections="hi"
+# It would be nice to lump all the network nodes into a single list,
+# but for consistency with the old scripts I'm segregating them by
+# type.  I'm not sure if this is really necessary or not.
+ 
+# net_nodes = []
+l1_cntrl_nodes = []
+dir_cntrl_nodes = []
 
- for cpu in cpus:
+for cpu in cpus:
     l1_cntrl = L1Cache_Controller()
-    cpu_seq = RubySequencer(controller=l1_cntrl,
-                            icache=L1Cache(controller=l1_cntrl),
-                            dcache=L1Cache(controller=l1_cntrl))
+    cpu_seq = RubySequencer(controller = l1_cntrl,
+                            icache = L1Cache(controller = l1_cntrl),
+                            dcache = L1Cache(controller = l1_cntrl))
     cpu.controller = l1_cntrl
     cpu.sequencer = cpu_seq
     cpu.test = cpu_seq.port
     cpu_seq.funcmem_port = system.physmem.port
     cpu.functional = system.funcmem.port
     
-    dir_cntrl = Directory_Controller(directory=RubyDirectoryMemory(),
-                                     memory_control=RubyMemoryControl())
+    dir_cntrl = Directory_Controller(version = i,
+                                     directory = RubyDirectoryMemory(),
+                                     memory_control = RubyMemoryControl())
 
-network = SimpleNetwork(topology=CrossbarTopology())
+    # net_nodes += [l1_cntrl, dir_cntrl]
+    l1_cntrl_nodes.append(l1_cntrl)
+    dir_cntrl_nodes.append(dir_cntrl)
+
+network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
+                                                dir_cntrl_nodes))
 
 system.ruby = RubySystem(network = network,
                          profiler = RubyProfiler(),

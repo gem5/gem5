@@ -52,17 +52,45 @@
 #include "mem/ruby/system/NodeID.hh"
 #include "sim/sim_object.hh"
 #include "params/Topology.hh"
+#include "params/Link.hh"
+#include "params/ExtLink.hh"
+#include "params/IntLink.hh"
 
 class Network;
 class NetDest;
 
 typedef Vector < Vector <int> > Matrix;
 
+class Link : public SimObject {
+  public:
+    typedef LinkParams Params;
+    Link(const Params *p) : SimObject(p) {}
+    const Params *params() const { return (const Params *)_params; }
+};
+
+
+class ExtLink : public Link {
+  public:
+    typedef ExtLinkParams Params;
+    ExtLink(const Params *p) : Link(p) {}
+    const Params *params() const { return (const Params *)_params; }
+};
+
+
+class IntLink : public Link {
+  public:
+    typedef IntLinkParams Params;
+    IntLink(const Params *p) : Link(p) {}
+    const Params *params() const { return (const Params *)_params; }
+};
+
+
 class Topology : public SimObject {
 public:
   // Constructors
     typedef TopologyParams Params;
     Topology(const Params *p);
+    const Params *params() const { return (const Params *)_params; }
 
   // Destructor
   virtual ~Topology() {}
@@ -72,7 +100,7 @@ public:
   // Public Methods
   void makeTopology();
   int numSwitches() const { return m_number_of_switches; }
-  void createLinks(bool isReconfiguration);
+  void createLinks(Network *net, bool isReconfiguration);
 
   const string getName() { return m_name; }
   void printStats(ostream& out) const {}
@@ -86,7 +114,7 @@ protected:
   void addLink(SwitchID src, SwitchID dest, int link_latency);
   void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier);
   void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier, int link_weight);
-  void makeLink(SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int weight, int bw_multiplier, bool isReconfiguration);
+  void makeLink(Network *net, SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int weight, int bw_multiplier, bool isReconfiguration);
 
   //  void makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
 
@@ -98,8 +126,6 @@ protected:
   // Data Members (m_ prefix)
   string m_name;
   bool m_print_config;
-  Network* m_network_ptr;
-  string m_connections;
   NodeID m_nodes;
   int m_number_of_switches;
 

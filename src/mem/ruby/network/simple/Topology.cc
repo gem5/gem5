@@ -39,6 +39,7 @@
 #include "mem/ruby/network/simple/Topology.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/protocol/TopologyType.hh"
 #include "mem/gems_common/util.hh"
 #include "mem/protocol/MachineType.hh"
@@ -65,19 +66,29 @@ static NetDest shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& 
 Topology::Topology(const Params *p)
     : SimObject(p)
 {
-//    m_network_ptr = p->network;
-    m_connections = p->connections;
     m_print_config = p->print_config;
-  m_nodes = MachineType_base_number(MachineType_NUM);
-  m_number_of_switches = 0;
+    m_number_of_switches = p->num_int_nodes;
+  // initialize component latencies record
+  m_component_latencies.setSize(0);
+  m_component_inter_switches.setSize(0);
 }
 
 void Topology::init()
 {
+    // need to defer this until init, to guarantee that constructors
+    // for all the controller objects have been called.
+    m_nodes = MachineType_base_number(MachineType_NUM);
 }
 
 void Topology::makeTopology()
 {
+    if (m_nodes != params()->ext_links.size()) {
+        fatal("m_nodes (%d) != ext_links vector length (%d)\n",
+              m_nodes != params()->ext_links.size());
+    }
+
+    
+
   /*
   if (m_nodes == 1) {
     SwitchID id = newSwitchID();
@@ -95,133 +106,33 @@ void Topology::makeTopology()
   Vector< SwitchID > int_network_switches;  // internal switches extracted from the file
   Vector<bool> endpointConnectionExist;  // used to ensure all endpoints are connected to the network
 
-  endpointConnectionExist.setSize(m_nodes);
+  for (vector<ExtLink*>::const_iterator i = params()->ext_links.begin();
+       i != params()->ext_links.end(); ++i)
+  {
+      const ExtLinkParams *p = (*i)->params();
+      AbstractController *c = p->ext_node;
+      int ext_idx1 =
+          MachineType_base_number(c->getMachineType()) + c->getVersion();
+      int ext_idx2 = ext_idx1 + m_nodes;
+      int int_idx = p->int_node + 2*m_nodes;
 
-  // initialize endpoint check vector
-  for (int k = 0; k < endpointConnectionExist.size(); k++) {
-    endpointConnectionExist[k] = false;
+      addLink(ext_idx1, int_idx, p->latency, p->bw_multiplier, p->weight);
+      addLink(int_idx, ext_idx2, p->latency, p->bw_multiplier, p->weight);
   }
 
-  stringstream networkFile( m_connections );
-
-  string line = "";
-
-  while (!networkFile.eof()) {
-
-    Vector < SwitchID > nodes;
-    nodes.setSize(2);
-    int latency = -1;  // null latency
-    int weight = -1;  // null weight
-    int bw_multiplier = DEFAULT_BW_MULTIPLIER;  // default multiplier incase the network file doesn't define it
-    int i = 0;  // node pair index
-    int varsFound = 0;  // number of varsFound on the line
-    int internalNodes = 0;  // used to determine if the link is between 2 internal nodes
-    std::getline(networkFile, line, '\n');
-    string varStr = string_split(line, ' ');
-
-    // parse the current line in the file
-    while (varStr != "") {
-      string label = string_split(varStr, ':');
-
-      // valid node labels
-      if (label == "ext_node" || label == "int_node") {
-        ASSERT(i < 2); // one link between 2 switches per line
-        varsFound++;
-        bool isNewIntSwitch = true;
-        if (label == "ext_node") { // input link to node
-          MachineType machine = string_to_MachineType(string_split(varStr, ':'));
-          string nodeStr = string_split(varStr, ':');
-          nodes[i] = MachineType_base_number(machine)
-            + atoi(nodeStr.c_str());
-
-          // in nodes should be numbered 0 to m_nodes-1
-          ASSERT(nodes[i] >= 0 && nodes[i] < m_nodes);
-          isNewIntSwitch = false;
-          endpointConnectionExist[nodes[i]] = true;
-        }
-        if (label == "int_node") { // interior node
-          nodes[i] = atoi((string_split(varStr, ':')).c_str())+m_nodes*2;
-          // in nodes should be numbered >= m_nodes*2
-          ASSERT(nodes[i] >= m_nodes*2);
-          for (int k = 0; k < int_network_switches.size(); k++) {
-            if (int_network_switches[k] == nodes[i]) {
-              isNewIntSwitch = false;
-            }
-          }
-          if (isNewIntSwitch) {  // if internal switch
-            m_number_of_switches++;
-            int_network_switches.insertAtBottom(nodes[i]);
-          }
-          internalNodes++;
-        }
-        i++;
-      } else if (label == "link_latency") {
-        latency = atoi((string_split(varStr, ':')).c_str());
-        varsFound++;
-      } else if (label == "bw_multiplier") {  // not necessary, defaults to DEFAULT_BW_MULTIPLIER
-        bw_multiplier = atoi((string_split(varStr, ':')).c_str());
-      } else if (label == "link_weight") {  // not necessary, defaults to link_latency
-        weight = atoi((string_split(varStr, ':')).c_str());
-      } else {
-        cerr << "Error: Unexpected Identifier: " << label << endl;
-        exit(1);
-      }
-      varStr = string_split(line, ' ');
-    }
-    if (varsFound == 3) { // all three necessary link variables where found so add the link
-      nodePairs.insertAtBottom(nodes);
-      latencies.insertAtBottom(latency);
-      if (weight != -1) {
-        weights.insertAtBottom(weight);
-      } else {
-        weights.insertAtBottom(latency);
-      }
-      bw_multis.insertAtBottom(bw_multiplier);
-      Vector < SwitchID > otherDirectionNodes;
-      otherDirectionNodes.setSize(2);
-      otherDirectionNodes[0] = nodes[1];
-      if (internalNodes == 2) {  // this is an internal link
-        otherDirectionNodes[1] = nodes[0];
-      } else {
-        otherDirectionNodes[1] = nodes[0]+m_nodes;
-      }
-      nodePairs.insertAtBottom(otherDirectionNodes);
-      latencies.insertAtBottom(latency);
-      if (weight != -1) {
-        weights.insertAtBottom(weight);
-      } else {
-        weights.insertAtBottom(latency);
-      }
-      bw_multis.insertAtBottom(bw_multiplier);
-    } else {
-      if (varsFound != 0) {  // if this is not a valid link, then no vars should have been found
-        cerr << "Error in line: " << line << endl;
-        exit(1);
-      }
-    }
-  } // end of file
-
-  // makes sure all enpoints are connected in the soon to be created network
-  for (int k = 0; k < endpointConnectionExist.size(); k++) {
-    if (endpointConnectionExist[k] == false) {
-      cerr << "Error: Unconnected Endpoint: " << k << endl;
-      exit(1);
-    }
+  for (vector<IntLink*>::const_iterator i = params()->int_links.begin();
+       i != params()->int_links.end(); ++i)
+  {
+      const IntLinkParams *p = (*i)->params();
+      int a = p->node_a + 2*m_nodes;
+      int b = p->node_b + 2*m_nodes;
+      addLink(a, b, p->latency, p->bw_multiplier, p->weight);
+      addLink(b, a, p->latency, p->bw_multiplier, p->weight);
   }
-
-  ASSERT(nodePairs.size() == latencies.size() && latencies.size() == bw_multis.size() && latencies.size() == weights.size())
-  for (int k = 0; k < nodePairs.size(); k++) {
-    ASSERT(nodePairs[k].size() == 2);
-    addLink(nodePairs[k][0], nodePairs[k][1], latencies[k], bw_multis[k], weights[k]);
-  }
-
-  // initialize component latencies record
-  m_component_latencies.setSize(0);
-  m_component_inter_switches.setSize(0);
 }
 
 
-void Topology::createLinks(bool isReconfiguration)
+void Topology::createLinks(Network *net, bool isReconfiguration)
 {
   // Find maximum switchID
 
@@ -279,7 +190,7 @@ void Topology::createLinks(bool isReconfiguration)
       if (weight > 0 && weight != INFINITE_LATENCY) {
         NetDest destination_set = shortest_path_to_node(i, j, topology_weights, dist);
         assert(latency != -1);
-        makeLink(i, j, destination_set, latency, weight, bw_multiplier, isReconfiguration);
+        makeLink(net, i, j, destination_set, latency, weight, bw_multiplier, isReconfiguration);
       }
     }
   }
@@ -312,20 +223,20 @@ void Topology::addLink(SwitchID src, SwitchID dest, int link_latency, int bw_mul
   m_bw_multiplier_vector.insertAtBottom(bw_multiplier);
 }
 
-void Topology::makeLink(SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration)
+void Topology::makeLink(Network *net, SwitchID src, SwitchID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration)
 {
   // Make sure we're not trying to connect two end-point nodes directly together
   assert((src >= 2*m_nodes) || (dest >= 2*m_nodes));
 
   if (src < m_nodes) {
-    m_network_ptr->makeInLink(src, dest-(2*m_nodes), routing_table_entry, link_latency, bw_multiplier, isReconfiguration);
+    net->makeInLink(src, dest-(2*m_nodes), routing_table_entry, link_latency, bw_multiplier, isReconfiguration);
   } else if (dest < 2*m_nodes) {
     assert(dest >= m_nodes);
     NodeID node = dest-m_nodes;
-    m_network_ptr->makeOutLink(src-(2*m_nodes), node, routing_table_entry, link_latency, link_weight, bw_multiplier, isReconfiguration);
+    net->makeOutLink(src-(2*m_nodes), node, routing_table_entry, link_latency, link_weight, bw_multiplier, isReconfiguration);
   } else {
     assert((src >= 2*m_nodes) && (dest >= 2*m_nodes));
-    m_network_ptr->makeInternalLink(src-(2*m_nodes), dest-(2*m_nodes), routing_table_entry, link_latency, link_weight, bw_multiplier, isReconfiguration);
+    net->makeInternalLink(src-(2*m_nodes), dest-(2*m_nodes), routing_table_entry, link_latency, link_weight, bw_multiplier, isReconfiguration);
   }
 }
 
@@ -453,4 +364,22 @@ Topology *
 TopologyParams::create()
 {
     return new Topology(this);
+}
+
+Link *
+LinkParams::create()
+{
+    return new Link(this);
+}
+
+ExtLink *
+ExtLinkParams::create()
+{
+    return new ExtLink(this);
+}
+
+IntLink *
+IntLinkParams::create()
+{
+    return new IntLink(this);
 }

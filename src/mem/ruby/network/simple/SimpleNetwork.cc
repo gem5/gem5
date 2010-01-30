@@ -62,8 +62,6 @@ Network* Network::createNetwork(int nodes)
 SimpleNetwork::SimpleNetwork(const Params *p)
     : Network(p)
 {
-  m_virtual_networks = 0;
-  m_topology_ptr = NULL;
 }
 
 void SimpleNetwork::init()
@@ -101,7 +99,7 @@ void SimpleNetwork::init()
   for (int i=0; i<number_of_switches; i++) {
     m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
   }
-  m_topology_ptr->createLinks(false);  // false because this isn't a reconfiguration
+  m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
 }
 
 void SimpleNetwork::reset()

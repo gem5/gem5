@@ -30,11 +30,39 @@
 from m5.params import *
 from m5.SimObject import SimObject
 
+class Link(SimObject):
+    type = 'Link'
+    latency = Param.Int(1, "")
+    bw_multiplier = Param.Int("")
+    weight = Param.Int(1, "")
+
+class ExtLink(Link):
+    type = 'ExtLink'
+    ext_node = Param.RubyController("External node")
+    int_node = Param.Int("ID of internal node")
+    bw_multiplier = 64
+
+class IntLink(Link):
+    type = 'IntLink'
+    node_a = Param.Int("ID of internal node on one end")
+    node_b = Param.Int("ID of internal node on other end")
+    bw_multiplier = 16
+
 class Topology(SimObject):
     type = 'Topology'
-    connections = Param.String("")
+    ext_links = VectorParam.ExtLink("Links to external nodes")
+    int_links = VectorParam.IntLink("Links between internal nodes")
+    num_int_nodes = Param.Int("Nunber of internal nodes")
     print_config = Param.Bool(False,
         "display topology config in the stats file")
+
+def makeCrossbar(nodes):
+    ext_links = [ExtLink(ext_node=n, int_node=i)
+                 for (i, n) in enumerate(nodes)]
+    xbar = len(nodes) # node ID for crossbar switch
+    int_links = [IntLink(node_a=i, node_b=xbar) for i in range(len(nodes))]    
+    return Topology(ext_links=ext_links, int_links=int_links,
+                    num_int_nodes=len(nodes)+1)
 
 class RubyNetwork(SimObject):
     type = 'RubyNetwork'

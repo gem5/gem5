@@ -95,7 +95,7 @@ void GarnetNetwork::init()
                 ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
                 m_ni_ptr_vector.insertAtBottom(ni);
         }
-        m_topology_ptr->createLinks(false);  // false because this isn't a reconfiguration
+        m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
 }
 
 GarnetNetwork::~GarnetNetwork()
