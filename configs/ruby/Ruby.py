@@ -54,8 +54,12 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     #
     network = SimpleNetwork(topology = makeCrossbar(all_cntrls))
 
-    mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
-                       for dir_cntrl in dir_cntrls])
+    #
+    # determine the total memory size of the ruby system
+    #
+    total_mem_size = MemorySize('0B')
+    for dir_cntrl in dir_cntrls:
+        total_mem_size.value += dir_cntrl.directory.size.value
 
     ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers))
     
@@ -66,7 +70,7 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
                       debug = RubyDebug(filter_string = 'none',
                                         verbosity_string = 'none',
                                         protocol_trace = False),
-                      mem_size_mb = mem_size_mb)
+                      mem_size = total_mem_size)
 
     ruby.cpu_ruby_ports = cpu_sequencers
 

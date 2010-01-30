@@ -49,7 +49,7 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     : SimObject(p)
 {
     m_version = p->version;
-    m_size_bytes = p->size_mb * static_cast<uint64>(1<<20);
+    m_size_bytes = p->size;
     m_size_bits = log_int(m_size_bytes);
 }
 

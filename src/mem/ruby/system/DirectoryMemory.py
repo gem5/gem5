@@ -6,4 +6,4 @@ class RubyDirectoryMemory(SimObject):
     type = 'RubyDirectoryMemory'
     cxx_class = 'DirectoryMemory'
     version = Param.Int(0, "")
-    size_mb = Param.Int(1024, "")
+    size = Param.MemorySize("1GB", "capacity in bytes")

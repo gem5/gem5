@@ -9,7 +9,7 @@ class RubySystem(SimObject):
     clock = Param.Clock('1GHz', "")
     block_size_bytes = Param.Int(64,
         "default cache block size; must be a power of two");
-    mem_size_mb = Param.Int("");
+    mem_size = Param.MemorySize("total memory size of the system");
     network = Param.RubyNetwork("")
     debug = Param.RubyDebug("the default debug object")
     profiler = Param.RubyProfiler("");

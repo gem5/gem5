@@ -37,17 +37,13 @@ from m5.util import addToPath
 # Note: the L1 Cache latency is only used by the sequencer on fast path hits
 #
 class L1Cache(RubyCache):
-    assoc = 2
     latency = 3
-    size = 32768
 
 #
 # Note: the L2 Cache latency is not currently used
 #
 class L2Cache(RubyCache):
-    assoc = 16
     latency = 15
-    size = 1048576
 
 def create_system(options, phys_mem, piobus, dma_devices):
     
@@ -74,9 +70,12 @@ def create_system(options, phys_mem, piobus, dma_devices):
         #
         # First create the Ruby objects associated with this cpu
         #
-        l1i_cache = L1Cache()
-        l1d_cache = L1Cache()
-        l2_cache = L2Cache()
+        l1i_cache = L1Cache(size = options.l1i_size,
+                            assoc = options.l1i_assoc)
+        l1d_cache = L1Cache(size = options.l1d_size,
+                            assoc = options.l1d_assoc)
+        l2_cache = L2Cache(size = options.l2_size,
+                           assoc = options.l2_assoc)
 
         cpu_seq = RubySequencer(icache = l1i_cache,
                                 dcache = l1d_cache,

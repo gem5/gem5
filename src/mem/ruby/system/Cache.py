@@ -5,7 +5,7 @@ from Controller import RubyController
 class RubyCache(SimObject):
     type = 'RubyCache'
     cxx_class = 'CacheMemory'
-    size = Param.Int("");
+    size = Param.MemorySize("capacity in bytes");
     latency = Param.Int("");
     assoc = Param.Int("");
     replacement_policy = Param.String("PSEUDO_LRU", "");

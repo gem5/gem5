@@ -98,7 +98,7 @@ RubySystem::RubySystem(const Params *p)
     assert(is_power_of_2(m_block_size_bytes));
     m_block_size_bits = log_int(m_block_size_bytes);
 
-    m_memory_size_bytes = (uint64_t)p->mem_size_mb * 1024 * 1024;
+    m_memory_size_bytes = p->mem_size;
     m_memory_size_bits = log_int(m_memory_size_bytes);
 
     m_network_ptr = p->network;
