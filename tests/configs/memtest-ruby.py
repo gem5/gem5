@@ -1,4 +1,5 @@
 # Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -63,7 +64,11 @@ execfile(os.path.join(config_root, "configs/common", "Options.py"))
 
 #MAX CORES IS 8 with the fals sharing method
 nb_cores = 8
-cpus = [ MemTest() for i in xrange(nb_cores) ]
+
+# ruby does not support atomic, functional, or uncacheable accesses
+cpus = [ MemTest(atomic=False, percent_functional=0, \
+                 percent_uncacheable=0) \
+         for i in xrange(nb_cores) ]
 
 # overwrite options.num_cpus with the nb_cores value
 options.num_cpus = nb_cores
@@ -91,3 +96,6 @@ for (i, ruby_port) in enumerate(system.ruby.cpu_ruby_ports):
 
 root = Root(system = system)
 root.system.mem_mode = 'timing'
+
+# Not much point in this being higher than the L1 latency
+m5.ticks.setGlobalFrequency('1ns')

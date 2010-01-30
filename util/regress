@@ -40,7 +40,11 @@ optparser.add_option('-v', '--verbose', dest='verbose', action='store_true',
                      default=False,
                      help='echo commands before executing')
 optparser.add_option('--builds', dest='builds',
-                     default='ALPHA_SE,ALPHA_FS,MIPS_SE,' + \
+                     default='ALPHA_SE,ALPHA_SE_MOESI_hammer,' \
+                     'ALPHA_SE_MESI_CMP_directory,'  \
+                     'ALPHA_SE_MOESI_CMP_directory,' \
+                     'ALPHA_SE_MOESI_CMP_token,' \
+                     'ALPHA_FS,MIPS_SE,' \
                      'POWER_SE,SPARC_SE,SPARC_FS,X86_SE,ARM_SE',
                      help='comma-separated list of build targets to test  '
                      " (default: '%default')" )

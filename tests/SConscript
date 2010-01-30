@@ -264,11 +264,23 @@ if env['FULL_SYSTEM']:
 else:
     configs += ['simple-atomic', 'simple-timing', 'o3-timing', 'memtest',
                 'simple-atomic-mp', 'simple-timing-mp', 'o3-timing-mp',
-                'inorder-timing']
+                'inorder-timing', 'rubytest']
 
 if env['RUBY']:
-    # Hack for Ruby
-    configs += [c + '-ruby' for c in configs]
+    # With Ruby, A protocol must be specified in the environment
+    assert(env['PROTOCOL'])
+
+    #
+    # Is there a way to determine what is Protocol EnumVariable
+    # default and eliminate the need to hard code the default protocol below?
+    #
+    # If the binary includes the default ruby protocol, run both ruby and
+    # non-ruby versions of the tests.  Otherwise just run the ruby versions.
+    #
+    if env['PROTOCOL'] == 'MI_example':
+        configs += [c + "-ruby" for c in configs]
+    else:
+        configs = [c + "-ruby-" + env['PROTOCOL'] for c in configs]
 
 cwd = os.getcwd()
 os.chdir(str(Dir('.').srcdir))

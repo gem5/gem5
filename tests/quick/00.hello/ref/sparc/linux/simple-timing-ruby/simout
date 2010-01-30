@@ -5,12 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul  6 2009 11:07:18
-M5 revision d3635cac686a 6289 default ruby_refs.diff qtip tip
-M5 started Jul  6 2009 11:11:35
-M5 executing on maize
+M5 compiled Jan 21 2010 11:29:25
+M5 revision a2fac757fb31+ 6860+ default qtip brad/rubycfg_orion_update tip
+M5 started Jan 21 2010 11:30:48
+M5 executing on svvint07
 command line: build/SPARC_SE/m5.fast -d build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby -re tests/run.py build/SPARC_SE/tests/fast/quick/00.hello/sparc/linux/simple-timing-ruby
-Global frequency set at 1000000000000 ticks per second
-  Debug: Adding to filter: 'q' (Queue)
+Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Hello World!Exiting @ tick 20314000 because target called exit()
+Hello World!Exiting @ tick 253364 because target called exit()

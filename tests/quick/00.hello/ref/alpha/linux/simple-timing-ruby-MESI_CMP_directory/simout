@@ -1,0 +1,17 @@
+M5 Simulator System
+
+Copyright (c) 2001-2008
+The Regents of The University of Michigan
+All Rights Reserved
+
+
+M5 compiled Jan 28 2010 13:54:58
+M5 revision 6068d4fc30d3+ 6931+ default qtip tip brad/rubycfg_regress_udpate
+M5 started Jan 28 2010 13:57:42
+M5 executing on svvint03
+command line: build/ALPHA_SE_MESI_CMP_directory/m5.fast -d build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MESI_CMP_directory -re tests/run.py build/ALPHA_SE_MESI_CMP_directory/tests/fast/quick/00.hello/alpha/linux/simple-timing-ruby-MESI_CMP_directory
+Global frequency set at 1000000000 ticks per second
+info: Entering event queue @ 0.  Starting simulation...
+info: Increasing stack size by one page.
+Hello world!
+Exiting @ tick 275313 because target called exit()

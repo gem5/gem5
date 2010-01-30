@@ -5,12 +5,12 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug  9 2009 04:00:16
-M5 revision 33faa9915d16+ 6486+ default tip
-M5 started Aug  9 2009 04:00:18
-M5 executing on tater
-command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-timing-ruby -re tests/run.py build/X86_SE/tests/opt/quick/00.hello/x86/linux/simple-timing-ruby
-Global frequency set at 1000000000000 ticks per second
+M5 compiled Jan 21 2010 12:13:38
+M5 revision a2fac757fb31+ 6860+ default qtip brad/rubycfg_orion_update tip
+M5 started Jan 21 2010 12:14:46
+M5 executing on svvint07
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing-ruby -re tests/run.py build/X86_SE/tests/fast/quick/00.hello/x86/linux/simple-timing-ruby
+Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 Hello world!
-Exiting @ tick 26617000 because target called exit()
+Exiting @ tick 287334 because target called exit()

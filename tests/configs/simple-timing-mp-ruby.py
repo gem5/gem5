@@ -28,24 +28,59 @@
 
 import m5
 from m5.objects import *
+from m5.defines import buildEnv
+from m5.util import addToPath
+import os, optparse, sys
+
+if buildEnv['FULL_SYSTEM']:
+    panic("This script requires system-emulation mode (*_SE).")
+
+# Get paths we might need
+config_path = os.path.dirname(os.path.abspath(__file__))
+config_root = os.path.dirname(config_path)
+m5_root = os.path.dirname(config_root)
+addToPath(config_root+'/configs/common')
+addToPath(config_root+'/configs/ruby')
+
+import Ruby
+
+parser = optparse.OptionParser()
+
+#
+# Set the default cache size and associativity to be very small to encourage
+# races between requests and writebacks.
+#
+parser.add_option("--l1d_size", type="string", default="256B")
+parser.add_option("--l1i_size", type="string", default="256B")
+parser.add_option("--l2_size", type="string", default="512B")
+parser.add_option("--l1d_assoc", type="int", default=2)
+parser.add_option("--l1i_assoc", type="int", default=2)
+parser.add_option("--l2_assoc", type="int", default=2)
+
+execfile(os.path.join(config_root, "configs/common", "Options.py"))
+
+(options, args) = parser.parse_args()
 
 nb_cores = 4
 cpus = [ TimingSimpleCPU(cpu_id=i) for i in xrange(nb_cores) ]
 
-import ruby_config
-ruby_memory = ruby_config.generate("TwoLevel_SplitL1UnifiedL2.rb", nb_cores)
+# overwrite the num_cpus to equal nb_cores
+options.num_cpus = nb_cores
 
 # system simulated
-system = System(cpu = cpus, physmem = ruby_memory, membus = Bus())
+system = System(cpu = cpus,
+                physmem = PhysicalMemory())
 
-# add L1 caches
-for cpu in cpus:
-    cpu.connectMemPorts(system.membus)
-    cpu.clock = '2GHz'
+system.ruby = Ruby.create_system(options, system.physmem)
 
-# connect memory to membus
-system.physmem.port = system.membus.port
+assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
 
+for (i, cpu) in enumerate(system.cpu):
+    #
+    # Tie the cpu ports to the ruby cpu ports
+    #
+    cpu.icache_port = system.ruby.cpu_ruby_ports[i].port
+    cpu.dcache_port = system.ruby.cpu_ruby_ports[i].port
 
 # -----------------------
 # run simulation
@@ -53,3 +88,6 @@ system.physmem.port = system.membus.port
 
 root = Root( system = system )
 root.system.mem_mode = 'timing'
+
+# Not much point in this being higher than the L1 latency
+m5.ticks.setGlobalFrequency('1ns')

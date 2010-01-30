@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan  2 2010 07:01:31
-M5 revision a538feb8a617 6813 default qtip tip qbase fixhelp.patch
-M5 started Jan  2 2010 07:03:09
-M5 executing on fajita
-command line: build/MIPS_SE/m5.opt -d build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/simple-timing-ruby -re tests/run.py build/MIPS_SE/tests/opt/quick/00.hello/mips/linux/simple-timing-ruby
-Global frequency set at 1000000000000 ticks per second
+M5 compiled Jan 21 2010 11:12:15
+M5 revision a2fac757fb31+ 6860+ default qtip brad/rubycfg_orion_update tip
+M5 started Jan 21 2010 11:12:51
+M5 executing on svvint07
+command line: build/MIPS_SE/m5.fast -d build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-timing-ruby -re tests/run.py build/MIPS_SE/tests/fast/quick/00.hello/mips/linux/simple-timing-ruby
+Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello World!
-Exiting @ tick 23749000 because target called exit()
+Exiting @ tick 292960 because target called exit()

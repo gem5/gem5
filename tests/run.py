@@ -28,6 +28,8 @@
 
 import os
 import sys
+import re
+import string
 
 from os.path import join as joinpath
 
@@ -61,7 +63,11 @@ def inputpath(app, file=None):
 
 # build configuration
 sys.path.append(joinpath(tests_root, 'configs'))
-execfile(joinpath(tests_root, 'configs', config + '.py'))
+test_filename = config
+# for ruby configurations, remove the protocol name from the test filename
+if re.search('-ruby', test_filename):
+    test_filename = test_filename.split('-ruby')[0]+'-ruby'
+execfile(joinpath(tests_root, 'configs', test_filename + '.py'))
 
 # set default maxtick... script can override
 # -1 means run forever
