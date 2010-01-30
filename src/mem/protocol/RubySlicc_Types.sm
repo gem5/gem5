@@ -29,6 +29,13 @@
 
 // External Types
 
+//
+// **PLEASE NOTE!**  When adding objects to this file you must also add a line
+// in the src/mem/ruby/SConscript file.  Otherwise the external object's .hh 
+// file will not be copied to the protocol directory and you will encounter a 
+// undefined declaration error.
+//
+
 external_type(MessageBuffer, buffer="yes", inport="yes", outport="yes");
 
 external_type(OutPort, primitive="yes");
@@ -117,6 +124,7 @@ external_type(CacheMemory) {
   void changePermission(Address, AccessPermission);
   bool isTagPresent(Address);
   void profileMiss(CacheMsg);
+  void setMRU(Address);
 }
 
 external_type(MemoryControl, inport="yes", outport="yes") {

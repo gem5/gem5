@@ -33,10 +33,11 @@
  */
 
 machine(L2Cache, "Token protocol") 
- : int l2_request_latency,
-   int l2_response_latency,
+ : CacheMemory * L2cacheMemory,
    int N_tokens,
-   bool filtering_enabled
+   int l2_request_latency = 10,
+   int l2_response_latency = 10,
+   bool filtering_enabled = true
 {
 
   // L2 BANK QUEUES
@@ -125,17 +126,6 @@ machine(L2Cache, "Token protocol")
     bool exclusive, default="false", desc="if local exclusive is likely";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-    void setMRU(Address);
-  }
-
   external_type(PerfectCacheMemory) {
     void allocate(Address);
     void deallocate(Address);
@@ -154,22 +144,20 @@ machine(L2Cache, "Token protocol")
     int countReadStarvingForAddress(Address);
   }
 
-  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
-
   PersistentTable persistentTable;
   PerfectCacheMemory localDirectory, template_hack="<L2Cache_DirEntry>";
 
   Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
     if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory[addr];
+      return static_cast(Entry, L2cacheMemory[addr]);
     }
     assert(false);
-    return L2cacheMemory[addr];
+    return static_cast(Entry, L2cacheMemory[addr]);
   }
 
   int getTokens(Address addr) {
     if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory[addr].Tokens;
+      return getL2CacheEntry(addr).Tokens;
     } else {
       return 0;
     }

@@ -34,6 +34,7 @@ from m5.util import addToPath
 
 import MOESI_hammer
 import MI_example
+import MOESI_CMP_token
 
 def create_system(options, physmem, piobus = None, dma_devices = []):
 
@@ -51,6 +52,12 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
                                      physmem, \
                                      piobus, \
                                      dma_devices)
+    elif protocol == "MOESI_CMP_token":
+        (cpu_sequencers, dir_cntrls, all_cntrls) = \
+            MOESI_CMP_token.create_system(options, \
+                                          physmem, \
+                                          piobus, \
+                                          dma_devices)
     else:
          print "Error: unsupported ruby protocol"
          sys.exit(1)

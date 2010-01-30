@@ -28,7 +28,8 @@
 
 
 machine(DMA, "DMA Controller") 
-: int request_latency
+: DMASequencer * dma_sequencer,
+  int request_latency
 {
 
   MessageBuffer responseFromDir, network="From", virtual_network="0", ordered="true", no_vector="true";
@@ -53,7 +54,6 @@ machine(DMA, "DMA Controller")
   }
 
   MessageBuffer mandatoryQueue, ordered="false", no_vector="true";
-  DMASequencer dma_sequencer, factory='RubySystem::getDMASequencer(m_cfg["dma_sequencer"])', no_vector="true";
   State cur_state, no_vector="true";
 
   State getState(Address addr) {

@@ -33,14 +33,16 @@
  */
 
 machine(L1Cache, "Token protocol") 
- : int l1_request_latency,
-   int l1_response_latency,
-   int l2_select_low_bit, 
+ : Sequencer * sequencer,
+   CacheMemory * L1IcacheMemory,
+   CacheMemory * L1DcacheMemory,
    int l2_select_num_bits,
    int N_tokens,
-   int retry_threshold,
-   int fixed_timeout_latency,
-   bool dynamic_timeout_enabled
+   int l1_request_latency = 2,
+   int l1_response_latency = 2,
+   int retry_threshold = 1,
+   int fixed_timeout_latency = 300,
+   bool dynamic_timeout_enabled = true
 {
 
   // From this node's L1 cache TO the network
@@ -147,16 +149,6 @@ machine(L1Cache, "Token protocol")
     PrefetchBit Prefetch,         desc="Is this a prefetch request";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -177,13 +169,11 @@ machine(L1Cache, "Token protocol")
   }
 
   TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
-  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
-  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
 
   MessageBuffer mandatoryQueue, ordered="false", abstract_chip_ptr="true";
-  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   bool starving, default="false";
+  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
   PersistentTable persistentTable;
   TimerTable useTimerTable;
@@ -218,17 +208,17 @@ machine(L1Cache, "Token protocol")
 
   Entry getCacheEntry(Address addr), return_by_ref="yes" {
     if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory[addr];
+      return static_cast(Entry, L1DcacheMemory[addr]);
     } else {
-      return L1IcacheMemory[addr];
+      return static_cast(Entry, L1IcacheMemory[addr]);
     }
   }
 
   int getTokens(Address addr) {
     if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory[addr].Tokens;
+      return static_cast(Entry, L1DcacheMemory[addr]).Tokens;
     } else if (L1IcacheMemory.isTagPresent(addr)) {
-      return L1IcacheMemory[addr].Tokens;
+      return static_cast(Entry, L1IcacheMemory[addr]).Tokens;
     } else {
       return 0;
     }

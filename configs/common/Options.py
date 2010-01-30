@@ -36,6 +36,7 @@ parser.add_option("--l2cache", action="store_true")
 parser.add_option("--fastmem", action="store_true")
 parser.add_option("--clock", action="store", type="string", default='1GHz')
 parser.add_option("--num-dirs", type="int", default=1)
+parser.add_option("--num-l2caches", type="int", default=1)
       
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
