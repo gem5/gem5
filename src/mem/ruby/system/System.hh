@@ -45,7 +45,6 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include <map>
 #include "sim/sim_object.hh"
 #include "params/RubySystem.hh"
 #include "base/callback.hh"
@@ -54,15 +53,7 @@ class Profiler;
 class Network;
 class CacheRecorder;
 class Tracer;
-class Sequencer;
-class DMASequencer;
 class MemoryVector;
-class AbstractController;
-class MessageBuffer;
-class CacheMemory;
-class DirectoryMemory;
-class Topology;
-class MemoryControl;
 
 /*
  * This defines the number of longs (32-bits on 32 bit machines,
@@ -76,16 +67,6 @@ class MemoryControl;
  *
  */
 const int NUMBER_WORDS_PER_SET = 4;
-
-
-struct RubyObjConf {
-  string type;
-  string name;
-  vector<string> argv;
-  RubyObjConf(string _type, string _name, vector<string> _argv)
-    : type(_type), name(_name), argv(_argv)
-  {}
-};
 
 class RubySystem : public SimObject {
 public:
@@ -103,27 +84,8 @@ public:
   static int getMemorySizeBits() { return m_memory_size_bits; }
 
   // Public Methods
-  static RubyPort* getPortOnly(const string & name) {
-    assert(m_ports.count(name) == 1); return m_ports[name]; }
-  static RubyPort* getPort(const string & name, void (*hit_callback)(int64_t)) {
-    if (m_ports.count(name) != 1){
-      cerr << "Port " << name << " has " << m_ports.count(name) << " instances" << endl;
-    }
-    assert(m_ports.count(name) == 1); 
-    m_ports[name]->registerHitCallback(hit_callback); 
-    return m_ports[name]; 
-  }
   static Network* getNetwork() { assert(m_network_ptr != NULL); return m_network_ptr; }
-  static Topology* getTopology(const string & name) { assert(m_topologies.count(name) == 1); return m_topologies[name]; }
-  static CacheMemory* getCache(const string & name) { assert(m_caches.count(name) == 1); return m_caches[name]; }
-  static DirectoryMemory* getDirectory(const string & name) { assert(m_directories.count(name) == 1); return m_directories[name]; }
-  static MemoryControl* getMemoryControl(const string & name) { assert(m_memorycontrols.count(name) == 1); return m_memorycontrols[name]; }
-  static Sequencer* getSequencer(const string & name) { assert(m_sequencers.count(name) == 1); return m_sequencers[name]; }
-  static DMASequencer* getDMASequencer(const string & name) { assert(m_dma_sequencers.count(name) == 1); return m_dma_sequencers[name]; }
-  static AbstractController* getController(const string & name) { assert(m_controllers.count(name) == 1); return m_controllers[name]; }
-
   static RubyEventQueue* getEventQueue() { return g_eventQueue_ptr; }
-
   Profiler* getProfiler() {assert(m_profiler_ptr != NULL); return m_profiler_ptr; }
   static Tracer* getTracer() { assert(m_tracer_ptr != NULL); return m_tracer_ptr; }
   static MemoryVector* getMemoryVector() { assert(m_mem_vec_ptr != NULL); return m_mem_vec_ptr;}
@@ -144,9 +106,6 @@ public:
   */
 
 private:
-  // Constructors
-  RubySystem(const vector <RubyObjConf> & cfg_file);
-
   // Private copy constructor and assignment operator
   RubySystem(const RubySystem& obj);
   RubySystem& operator=(const RubySystem& obj);
@@ -167,17 +126,6 @@ private:
 
   // Data Members (m_ prefix)
   static Network* m_network_ptr;
-  static map< string, Topology* > m_topologies;
-  static map< string, RubyPort* > m_ports;
-  static map< string, CacheMemory* > m_caches;
-  static map< string, DirectoryMemory* > m_directories;
-  static map< string, Sequencer* > m_sequencers;
-  static map< string, DMASequencer* > m_dma_sequencers;
-  static map< string, AbstractController* > m_controllers;
-  static map< string, MemoryControl* > m_memorycontrols;
-
-  //added by SS
-  //static map< string, Tracer* > m_tracers;
 
 public:
   static Profiler* m_profiler_ptr;

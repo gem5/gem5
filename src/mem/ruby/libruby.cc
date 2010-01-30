@@ -137,7 +137,11 @@ RubyPortHandle libruby_get_port(const char* port_name, void (*hit_callback)(int6
 
 RubyPortHandle libruby_get_port_by_name(const char* port_name)
 {
-  return static_cast<RubyPortHandle>(RubySystem::getPortOnly(port_name));
+    //
+    // Fix me: Ports should now be initialized using the python configuration
+    // system
+    //
+    return NULL;//static_cast<RubyPortHandle>(RubySystem::getPortOnly(port_name));
 }
 
 void libruby_write_ram(uint64_t paddr, uint8_t* data, int len)
@@ -152,7 +156,11 @@ void libruby_read_ram(uint64_t paddr, uint8_t* data, int len)
 
 int64_t libruby_issue_request(RubyPortHandle p, struct RubyRequest request)
 {
-  return static_cast<RubyPort*>(p)->makeRequest(request);
+    //
+    // Fix me: Ports should now be accessed using the python configuration
+    // system
+    //
+    return 0;//return static_cast<RubyPort*>(p)->makeRequest(request);
 }
 
 int libruby_tick(int n)

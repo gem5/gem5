@@ -42,18 +42,9 @@
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/recorder/Tracer.hh"
-#include "mem/protocol/Protocol.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/system/Sequencer.hh"
-#include "mem/ruby/system/DMASequencer.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/ruby/system/CacheMemory.hh"
-#include "mem/ruby/system/DirectoryMemory.hh"
-#include "mem/ruby/network/simple/Topology.hh"
-#include "mem/ruby/network/simple/SimpleNetwork.hh"
-#include "mem/ruby/system/RubyPort.hh"
-#include "mem/ruby/system/MemoryControl.hh"
 #include "base/output.hh"
 
 int RubySystem::m_random_seed;
@@ -64,22 +55,10 @@ int RubySystem::m_block_size_bits;
 uint64 RubySystem::m_memory_size_bytes;
 int RubySystem::m_memory_size_bits;
 
-map< string, RubyPort* > RubySystem::m_ports;
-map< string, CacheMemory* > RubySystem::m_caches;
-map< string, DirectoryMemory* > RubySystem::m_directories;
-map< string, Sequencer* > RubySystem::m_sequencers;
-map< string, DMASequencer* > RubySystem::m_dma_sequencers;
-map< string, AbstractController* > RubySystem::m_controllers;
-map< string, MemoryControl* > RubySystem::m_memorycontrols;
-
-
 Network* RubySystem::m_network_ptr;
-map< string, Topology*> RubySystem::m_topologies;
 Profiler* RubySystem::m_profiler_ptr;
 Tracer* RubySystem::m_tracer_ptr;
-
 MemoryVector* RubySystem::m_mem_vec_ptr;
-
 
 RubySystem::RubySystem(const Params *p)
     : SimObject(p)
@@ -145,27 +124,8 @@ void RubySystem::printConfig(ostream& out)
 {
   out << "\n================ Begin RubySystem Configuration Print ================\n\n";
   printSystemConfig(out);
-  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
-       it != m_controllers.end(); it++) {
-    (*it).second->printConfig(out);
-  }
-  for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
-       it != m_caches.end(); it++) {
-    (*it).second->printConfig(out);
-  }
-  DirectoryMemory::printGlobalConfig(out);
-  for (map<string, DirectoryMemory*>::const_iterator it = m_directories.begin();
-       it != m_directories.end(); it++) {
-    (*it).second->printConfig(out);
-  }
-  for (map<string, Sequencer*>::const_iterator it = m_sequencers.begin();
-       it != m_sequencers.end(); it++) {
-    (*it).second->printConfig(out);
-  }
-
   m_network_ptr->printConfig(out);
   m_profiler_ptr->printConfig(out);
-
   out << "\n================ End RubySystem Configuration Print ================\n\n";
 }
 
@@ -181,32 +141,12 @@ void RubySystem::printStats(ostream& out)
 
   m_profiler_ptr->printStats(out);
   m_network_ptr->printStats(out);
-  for (map<string, Sequencer*>::const_iterator it = m_sequencers.begin();
-       it != m_sequencers.end(); it++) {
-    (*it).second->printStats(out);
-  }
-  for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
-       it != m_caches.end(); it++) {
-    (*it).second->printStats(out);
-  }
-  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
-       it != m_controllers.end(); it++) {
-    (*it).second->printStats(out);
-  }
 }
 
 void RubySystem::clearStats() const
 {
   m_profiler_ptr->clearStats();
   m_network_ptr->clearStats();
-  for (map<string, CacheMemory*>::const_iterator it = m_caches.begin();
-       it != m_caches.end(); it++) {
-    (*it).second->clearStats();
-  }
-  for (map<string, AbstractController*>::const_iterator it = m_controllers.begin();
-       it != m_controllers.end(); it++) {
-    (*it).second->clearStats();
-  }
 }
 
 void RubySystem::recordCacheContents(CacheRecorder& tr) const
