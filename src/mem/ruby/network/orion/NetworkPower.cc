@@ -35,9 +35,9 @@
 #include "mem/ruby/network/orion/power_arbiter.hh"
 #include "mem/ruby/network/orion/power_bus.hh"
 #include "mem/ruby/network/orion/NetworkPower.hh"
-#include "mem/ruby/network/garnet-fixed-pipeline/Router_d.hh"
-#include "mem/ruby/network/garnet-fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
+#include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/network/orion/SIM_port.hh"
 #include "mem/ruby/network/orion/parm_technology.hh"
 

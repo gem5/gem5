@@ -30,9 +30,6 @@
 
 Import('*')
 
-# temporarily disable
-Return()
-
 if not env['RUBY']:
     Return()
 

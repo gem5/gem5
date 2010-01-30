@@ -74,11 +74,8 @@ public:
         void swarb_req();
 
         void power_router_initialize(power_router *router, power_router_info *info);
-    double calculate_power() { return 0.0; }
-    double calculate_offline_power(power_router*, power_router_info*)
-    {
-        return 0.0;
-    }
+    double calculate_power();
+    double calculate_offline_power(power_router*, power_router_info*);
         void calculate_performance_numbers();
 
 private:
