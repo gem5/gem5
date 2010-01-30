@@ -37,7 +37,6 @@
 void RubyEventQueueNode::print(ostream& out) const
 {
   out << "[";
-  out << "Time=" << m_time;
   if (m_consumer_ptr != NULL) {
     out << " Consumer=" << m_consumer_ptr;
   } else {

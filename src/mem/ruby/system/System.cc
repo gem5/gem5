@@ -105,7 +105,7 @@ RubySystem::RubySystem(const Params *p)
     m_profiler_ptr = p->profiler;
     m_tracer_ptr = p->tracer;
 
-    g_eventQueue_ptr = new RubyEventQueue(m_clock);
+    g_eventQueue_ptr = new RubyEventQueue(p->eventq, m_clock);
     g_system_ptr = this;
     m_mem_vec_ptr = new MemoryVector;
     m_mem_vec_ptr->setSize(m_memory_size_bytes);

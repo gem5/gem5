@@ -33,83 +33,35 @@
 
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/gems_common/PrioHeap.hh"
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
 
 // Class public method definitions
 
-RubyEventQueue::RubyEventQueue(Tick _clock)
-  : m_clock(_clock)
+RubyEventQueue::RubyEventQueue(EventQueue* eventq, Tick _clock)
+  : EventManager(eventq), m_clock(_clock)
 {
-  m_prio_heap_ptr = NULL;
-  init();
-  assert(g_eventQueue_ptr == NULL);
-  g_eventQueue_ptr = this;
 }
 
 RubyEventQueue::~RubyEventQueue()
 {
-  delete m_prio_heap_ptr;
 }
 
-void RubyEventQueue::init()
-{
-  m_globalTime = 1;
-  m_timeOfLastRecovery = 1;
-  m_prio_heap_ptr = new PrioHeap<RubyEventQueueNode>;
-  m_prio_heap_ptr->init();
-}
-
-bool RubyEventQueue::isEmpty() const
-{
-  return (m_prio_heap_ptr->size() == 0);
+void RubyEventQueue::scheduleEvent(Consumer* consumer, Time timeDelta) 
+{ 
+  scheduleEventAbsolute(consumer, timeDelta + getTime()); 
 }
 
 void RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
 {
   // Check to see if this is a redundant wakeup
-  //  Time time = timeDelta + m_globalTime;
   ASSERT(consumer != NULL);
   if (consumer->getLastScheduledWakeup() != timeAbs) {
     // This wakeup is not redundant
-    RubyEventQueueNode thisNode;
-    thisNode.m_consumer_ptr = consumer;
-    assert(timeAbs > m_globalTime);
-    thisNode.m_time = timeAbs;
-    m_prio_heap_ptr->insert(thisNode);
-    consumer->setLastScheduledWakeup(timeAbs);
-  }
-}
-
-void RubyEventQueue::triggerEvents(Time t)
-{
-  RubyEventQueueNode thisNode;
-
-  while(m_prio_heap_ptr->size() > 0 && m_prio_heap_ptr->peekMin().m_time <= t) {
-    m_globalTime = m_prio_heap_ptr->peekMin().m_time;
-    thisNode = m_prio_heap_ptr->extractMin();
-    assert(thisNode.m_consumer_ptr != NULL);
-    DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,*(thisNode.m_consumer_ptr));
-    DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,thisNode.m_time);
-    thisNode.m_consumer_ptr->triggerWakeup(this);
-  }
-  m_globalTime = t;
-}
-
-void RubyEventQueue::triggerAllEvents()
-{
-  // FIXME - avoid repeated code
-  RubyEventQueueNode thisNode;
-
-  while(m_prio_heap_ptr->size() > 0) {
-    m_globalTime = m_prio_heap_ptr->peekMin().m_time;
-    thisNode = m_prio_heap_ptr->extractMin();
-    assert(thisNode.m_consumer_ptr != NULL);
-    DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,*(thisNode.m_consumer_ptr));
-    DEBUG_EXPR(EVENTQUEUE_COMP,MedPrio,thisNode.m_time);
-    thisNode.m_consumer_ptr->triggerWakeup(this);
+    RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer);
+    assert(timeAbs > getTime());
+    schedule(thisNode, (timeAbs * m_clock));
+    consumer->setLastScheduledWakeup(timeAbs * m_clock);
   }
 }
 
@@ -118,5 +70,5 @@ void RubyEventQueue::triggerAllEvents()
 void
 RubyEventQueue::print(ostream& out) const
 {
-  out << "[Event Queue: " << *m_prio_heap_ptr << "]";
+  out << "[Event Queue:]";
 }

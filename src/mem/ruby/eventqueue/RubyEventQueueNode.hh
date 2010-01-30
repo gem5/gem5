@@ -36,31 +36,27 @@
 #define RUBYEVENTQUEUENODE_H
 
 #include "mem/ruby/common/Global.hh"
-class Consumer;
+#include "sim/eventq.hh"
+#include "mem/ruby/common/Consumer.hh"
+//class Consumer;
 
-class RubyEventQueueNode {
+class RubyEventQueueNode : public Event {
 public:
   // Constructors
-  RubyEventQueueNode() { m_time = 0; m_consumer_ptr = NULL; }
+  RubyEventQueueNode(Consumer* _consumer) 
+    : m_consumer_ptr(_consumer)
+  { 
+    setFlags(AutoDelete); 
+  }
 
   // Destructor
   //~RubyEventQueueNode();
 
   // Public Methods
   void print(ostream& out) const;
+  virtual void process() { m_consumer_ptr->wakeup(); }
+  virtual const char *description() const { return "Ruby Event"; }
 
-  // Assignment operator and copy constructor since the default
-  // constructors confuse purify when long longs are present.
-  RubyEventQueueNode& operator=(const RubyEventQueueNode& obj) {
-    m_time = obj.m_time;
-    m_consumer_ptr = obj.m_consumer_ptr;
-    return *this;
-  }
-
-  RubyEventQueueNode(const RubyEventQueueNode& obj) {
-    m_time = obj.m_time;
-    m_consumer_ptr = obj.m_consumer_ptr;
-  }
 private:
   // Private Methods
 
@@ -68,8 +64,6 @@ private:
   // RubyEventQueueNode(const RubyEventQueueNode& obj);
 
   // Data Members (m_ prefix)
-public:
-  Time m_time;
   Consumer* m_consumer_ptr;
 };
 
@@ -77,14 +71,6 @@ public:
 ostream& operator<<(ostream& out, const RubyEventQueueNode& obj);
 
 // ******************* Definitions *******************
-
-inline extern bool node_less_then_eq(const RubyEventQueueNode& n1, const RubyEventQueueNode& n2);
-
-inline extern
-bool node_less_then_eq(const RubyEventQueueNode& n1, const RubyEventQueueNode& n2)
-{
-  return (n1.m_time <= n2.m_time);
-}
 
 // Output operator definition
 extern inline

@@ -62,15 +62,16 @@
 #include "config/no_vector_bounds_checks.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
+#include "sim/eventq.hh"
 
 class Consumer;
 template <class TYPE> class PrioHeap;
 class RubyEventQueueNode;
 
-class RubyEventQueue {
+class RubyEventQueue : public EventManager {
 public:
   // Constructors
-  RubyEventQueue(Tick clock);
+  RubyEventQueue(EventQueue* eventq, Tick _clock);
 
   // Destructor
   ~RubyEventQueue();
@@ -78,28 +79,21 @@ public:
   // Public Methods
 
   Time getTime() const { return curTick/m_clock; }
-  void scheduleEvent(Consumer* consumer, Time timeDelta) { scheduleEventAbsolute(consumer, timeDelta + m_globalTime); }
+  void scheduleEvent(Consumer* consumer, Time timeDelta);
   void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
-  void triggerEvents(Time t); // called to handle all events <= time t
-  void triggerAllEvents();
   void print(ostream& out) const;
-  bool isEmpty() const;
 
-  Time getTimeOfLastRecovery() {return m_timeOfLastRecovery;}
-  void setTimeOfLastRecovery(Time t) {m_timeOfLastRecovery = t;}
+  void triggerEvents(Time t) { assert(0); }
+  void triggerAllEvents() { assert(0); }
 
   // Private Methods
 private:
   // Private copy constructor and assignment operator
-  void init();
   RubyEventQueue(const RubyEventQueue& obj);
   RubyEventQueue& operator=(const RubyEventQueue& obj);
 
   // Data Members (m_ prefix)
   Tick m_clock;
-  PrioHeap<RubyEventQueueNode>* m_prio_heap_ptr;
-  Time m_globalTime;
-  Time m_timeOfLastRecovery;
 };
 
 // Output operator declaration
