@@ -54,3 +54,4 @@ opt = EnumVariable('PROTOCOL', 'Coherence Protocol for Ruby', 'MOESI_CMP_directo
                    all_protocols)
 
 sticky_vars.AddVariables(opt)
+export_vars += ['PROTOCOL']

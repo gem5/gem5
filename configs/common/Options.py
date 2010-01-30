@@ -36,7 +36,9 @@ parser.add_option("--l2cache", action="store_true")
 parser.add_option("--fastmem", action="store_true")
 
 # Run duration options
-parser.add_option("-m", "--maxtick", type="int")
+parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
+                  metavar="T",
+                  help="Stop after T ticks")
 parser.add_option("--maxtime", type="float")
 parser.add_option("--maxinsts", type="int")
 parser.add_option("--prog_intvl", type="int")
