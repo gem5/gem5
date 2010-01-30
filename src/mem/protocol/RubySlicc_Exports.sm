@@ -338,5 +338,12 @@ enumeration(TransientRequestType, desc="...", default="TransientRequestType_Unde
   LocalTransient, desc="";
 }
 
-
-
+// Request Status
+enumeration(RequestStatus, desc="...", default="RequestStatus_NULL")  {
+  Ready, desc="The sequencer is ready and the request does not alias";
+  Issued, desc="The sequencer successfully issued the request";
+  BufferFull, desc="Can not issue because the sequencer is full";
+  Aliased, desc="This request aliased with a currently outstanding request";
+  LlscFailed, desc="The write failed in the Load-Link Store-Conditional pair";
+  NULL, desc="";
+}

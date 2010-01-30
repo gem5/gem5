@@ -85,7 +85,8 @@ void TraceRecord::issueRequest() const
                       RubySystem::getBlockSizeBytes(), 
                       m_pc_address.getAddress(), 
                       m_type, 
-                      RubyAccessMode_User);
+                      RubyAccessMode_User,
+                      NULL);
 
   // Clear out the sequencer
   while (!m_sequencer_ptr->empty()) {

@@ -24,7 +24,7 @@ void DMASequencer::init()
   m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
 }
 
-int64_t DMASequencer::makeRequest(const RubyRequest & request)
+RequestStatus DMASequencer::makeRequest(const RubyRequest & request)
 {
   uint64_t paddr = request.paddr;
   uint8_t* data = request.data;
@@ -44,7 +44,8 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   case RubyRequestType_RMW_Read:
   case RubyRequestType_RMW_Write:
   case RubyRequestType_NUM:
-    assert(0);
+    panic("DMASequencer::makeRequest does not support the RubyRequestType");
+    return RequestStatus_NULL;
   }
 
   assert(!m_is_busy);  // only support one outstanding DMA request
@@ -56,7 +57,7 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   active_request.len = len;
   active_request.bytes_completed = 0;
   active_request.bytes_issued = 0;
-  active_request.id = makeUniqueRequestID();
+  active_request.pkt = request.pkt;
 
   SequencerMsg msg;
   msg.getPhysicalAddress() = Address(paddr);
@@ -76,7 +77,7 @@ int64_t DMASequencer::makeRequest(const RubyRequest & request)
   m_mandatory_q_ptr->enqueue(msg);
   active_request.bytes_issued += msg.getLen();
 
-  return active_request.id;
+  return RequestStatus_Issued;
 }
 
 void DMASequencer::issueNext()
@@ -84,14 +85,14 @@ void DMASequencer::issueNext()
   assert(m_is_busy == true);
   active_request.bytes_completed = active_request.bytes_issued;
   if (active_request.len == active_request.bytes_completed) {
-    m_hit_callback(active_request.id);
+    ruby_hit_callback(active_request.pkt);
     m_is_busy = false;
     return;
   }
 
   SequencerMsg msg;
   msg.getPhysicalAddress() = Address(active_request.start_paddr + 
-				     active_request.bytes_completed);
+                                     active_request.bytes_completed);
 
   assert((msg.getPhysicalAddress().getAddress() & m_data_block_mask) == 0);
   msg.getLineAddress() = line_address(msg.getPhysicalAddress());

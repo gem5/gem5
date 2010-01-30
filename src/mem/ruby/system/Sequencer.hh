@@ -56,11 +56,12 @@ class RubySequencerParams;
 
 struct SequencerRequest {
   RubyRequest ruby_request;
-  int64_t id;
   Time issue_time;
 
-  SequencerRequest(const RubyRequest & _ruby_request, int64_t _id, Time _issue_time)
-    : ruby_request(_ruby_request), id(_id), issue_time(_issue_time)
+  SequencerRequest(const RubyRequest & _ruby_request, 
+                   Time _issue_time)
+    : ruby_request(_ruby_request), 
+      issue_time(_issue_time)
   {}
 };
 
@@ -85,9 +86,8 @@ public:
   void writeCallback(const Address& address, DataBlock& data);
   void readCallback(const Address& address, DataBlock& data);
 
-  // called by Tester or Simics
-  int64_t makeRequest(const RubyRequest & request);
-  int isReady(const RubyRequest& request);
+  RequestStatus makeRequest(const RubyRequest & request);
+  RequestStatus getRequestStatus(const RubyRequest& request);
   bool empty() const;
 
   void print(ostream& out) const;

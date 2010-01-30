@@ -15,7 +15,7 @@ struct DMARequest {
   int bytes_completed;
   int bytes_issued;
   uint8* data;
-  int64_t id;
+  PacketPtr pkt;
 };
 
 class DMASequencer :public RubyPort {
@@ -24,9 +24,7 @@ public:
   DMASequencer(const Params *);
   void init();
   /* external interface */
-  int64_t makeRequest(const RubyRequest & request);
-  bool isReady(const RubyRequest & request, bool dont_set = false) { assert(0); return false;};
-  //  void issueRequest(uint64_t paddr, uint8* data, int len, bool rw);
+  RequestStatus makeRequest(const RubyRequest & request);
   bool busy() { return m_is_busy;}
 
   /* SLICC callback */

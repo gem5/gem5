@@ -132,7 +132,11 @@ void libruby_init(const char* cfg_filename)
 
 RubyPortHandle libruby_get_port(const char* port_name, void (*hit_callback)(int64_t access_id))
 {
-  return static_cast<RubyPortHandle>(RubySystem::getPort(port_name, hit_callback));
+  //
+  // Fix me: Hit callback is now a non-static member function pointer of 
+  // RubyPort and cannot be set to an arbitrary global function
+  //
+  return NULL;//static_cast<RubyPortHandle>(RubySystem::getPort(port_name, hit_callback));
 }
 
 RubyPortHandle libruby_get_port_by_name(const char* port_name)

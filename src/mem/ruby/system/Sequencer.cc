@@ -45,11 +45,6 @@
 
 #include "params/RubySequencer.hh"
 
-//Sequencer::Sequencer(int core_id, MessageBuffer* mandatory_q)
-
-#define LLSC_FAIL -2
-long int already = 0;
-
 Sequencer *
 RubySequencerParams::create()
 {
@@ -352,30 +347,18 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
   // Note: RubyPort will access it's sender state before the RubyTester.
   //
   if (m_usingRubyTester) {
-      //
-      // Since the hit callback func only takes a request id, we must iterate
-      // through the requests and update the packet's subBlock here.
-      // All this would be fixed if we could attach a M5 pkt pointer to the
-      // ruby request, however that change will break the libruby interface so
-      // we'll hold off on that for now.
-      //
-      RequestMap::iterator i = pending_cpu_requests.find(srequest->id);
-      if (i == pending_cpu_requests.end())
-          panic("could not find pending request %d\n", srequest->id);
-      RequestCookie *cookie = i->second;
-      Packet *pkt = cookie->pkt;
-
       RubyTester::SenderState* testerSenderState;
-      testerSenderState = safe_cast<RubyTester::SenderState*>(pkt->senderState);
+      testerSenderState = safe_cast<RubyTester::SenderState*>( \
+          safe_cast<RubyPort::SenderState*>(ruby_request.pkt->senderState)->saved);
       testerSenderState->subBlock->mergeFrom(data);
   }
 
-  m_hit_callback(srequest->id);
+  ruby_hit_callback(ruby_request.pkt);
   delete srequest;
 }
 
 // Returns true if the sequencer already has a load or store outstanding
-int Sequencer::isReady(const RubyRequest& request) {
+RequestStatus Sequencer::getRequestStatus(const RubyRequest& request) {
   bool is_outstanding_store = m_writeRequestTable.exist(line_address(Address(request.paddr)));
   bool is_outstanding_load = m_readRequestTable.exist(line_address(Address(request.paddr)));
   if ( is_outstanding_store ) {
@@ -386,7 +369,7 @@ int Sequencer::isReady(const RubyRequest& request) {
     } else {
       m_store_waiting_on_store_cycles++;
     }
-    return LIBRUBY_ALIASED_REQUEST;
+    return RequestStatus_Aliased;
   } else if ( is_outstanding_load ) {
     if ((request.type == RubyRequestType_ST) ||
         (request.type == RubyRequestType_RMW_Write) ) {
@@ -394,14 +377,14 @@ int Sequencer::isReady(const RubyRequest& request) {
     } else {
       m_load_waiting_on_load_cycles++;
     }
-    return LIBRUBY_ALIASED_REQUEST;
+    return RequestStatus_Aliased;
   }
 
   if (m_outstanding_count >= m_max_outstanding_requests) {
-    return LIBRUBY_BUFFER_FULL;
+    return RequestStatus_BufferFull;
   }
   
-  return 1;
+  return RequestStatus_Ready;
 }
 
 bool Sequencer::empty() const {
@@ -409,20 +392,21 @@ bool Sequencer::empty() const {
 }
 
 
-int64_t Sequencer::makeRequest(const RubyRequest & request)
+RequestStatus Sequencer::makeRequest(const RubyRequest & request)
 {
-  assert(Address(request.paddr).getOffset() + request.len <= RubySystem::getBlockSizeBytes());
-  int ready = isReady(request);
-  if (ready > 0) {
-    int64_t id = makeUniqueRequestID();
-    SequencerRequest *srequest = new SequencerRequest(request, id, g_eventQueue_ptr->getTime());
+  assert(Address(request.paddr).getOffset() + request.len <= 
+         RubySystem::getBlockSizeBytes());
+  RequestStatus status = getRequestStatus(request);
+  if (status == RequestStatus_Ready) {
+    SequencerRequest *srequest = new SequencerRequest(request, 
+                                                  g_eventQueue_ptr->getTime());
     bool found = insertRequest(srequest);
     if (!found) {
       if (request.type == RubyRequestType_Locked_Write) {
         // NOTE: it is OK to check the locked flag here as the mandatory queue will be checked first
         // ensuring that nothing comes between checking the flag and servicing the store
         if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), m_version)) {
-          return LLSC_FAIL;
+          return RequestStatus_LlscFailed;
         }
         else {
           m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
@@ -431,14 +415,15 @@ int64_t Sequencer::makeRequest(const RubyRequest & request)
       issueRequest(request);
 
       // TODO: issue hardware prefetches here
-      return id;
+      return RequestStatus_Issued;
     }
     else {
-      assert(0);
-      return 0;
+        panic("Sequencer::makeRequest should never be called if the request"\
+              "is already outstanding\n");
+        return RequestStatus_NULL;
     }
   } else {
-    return ready;
+    return status;
   }
 }
 

@@ -32,10 +32,6 @@
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "cpu/rubytest/RubyTester.hh"
 
-uint16_t RubyPort::m_num_ports = 0;
-
-RubyPort::RequestMap RubyPort::pending_cpu_requests;
-
 RubyPort::RubyPort(const Params *p)
     : MemObject(p)
 {
@@ -47,12 +43,9 @@ RubyPort::RubyPort(const Params *p)
     m_controller = NULL;
     m_mandatory_q_ptr = NULL;
 
-    m_port_id = m_num_ports++;
     m_request_cnt = 0;
-    m_hit_callback = ruby_hit_callback;
     pio_port = NULL;
     physMemPort = NULL;
-    assert(m_num_ports <= 2048); // see below for reason
 }
 
 void RubyPort::init()
@@ -169,8 +162,7 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     //dsm: based on SimpleTimingPort::recvTiming(pkt);
 
     //
-    // After checking for pio responses, the remainder of packets
-    // received by ruby should only be M5 requests, which should never 
+    // The received packets should only be M5 requests, which should never 
     // get nacked.  There used to be code to hanldle nacks here, but 
     // I'm pretty sure it didn't work correctly with the drain code, 
     // so that would need to be fixed if we ever added it back.
@@ -186,17 +178,20 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
     }
 
     //
+    // Save the port in the sender state object to be used later to
+    // route the response
+    //
+    pkt->senderState = new SenderState(this, pkt->senderState);
+
+    //
     // Check for pio requests and directly send them to the dedicated
     // pio port.
     //
     if (!isPhysMemAddress(pkt->getAddr())) {
         assert(ruby_port->pio_port != NULL);
-
-        //
-        // Save the port in the sender state object to be used later to
-        // route the response
-        //
-        pkt->senderState = new SenderState(this, pkt->senderState);
+        DPRINTF(MemoryAccess, 
+                "Request for address 0x%#x is assumed to be a pio request\n",
+                pkt->getAddr());
 
         return ruby_port->pio_port->sendTiming(pkt);
     }
@@ -225,41 +220,49 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         type = RubyRequestType_ST;
     } else if (pkt->isReadWrite()) {
         type = RubyRequestType_RMW_Write;
+    } else {
+      panic("Unsupported ruby packet type\n");
     }
 
-    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(),
-                             pkt->getSize(), pc, type,
-                             RubyAccessMode_Supervisor);
+    RubyRequest ruby_request(pkt->getAddr(), 
+                             pkt->getPtr<uint8_t>(),
+                             pkt->getSize(), 
+                             pc, 
+                             type,
+                             RubyAccessMode_Supervisor,
+                             pkt);
 
     // Submit the ruby request
-    int64_t req_id = ruby_port->makeRequest(ruby_request);
-    if (req_id == -1) {
-        return false;
+    RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
+    if (requestStatus == RequestStatus_Issued) {
+        return true;
     }
-
-    // Save the request for the callback
-    RubyPort::pending_cpu_requests[req_id] = new RequestCookie(pkt, this);
-
-    return true;
+     
+    DPRINTF(MemoryAccess, 
+            "Request for address #x did not issue because %s\n",
+            pkt->getAddr(),
+            RequestStatus_to_string(requestStatus));
+    
+    SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
+    pkt->senderState = senderState->saved;
+    delete senderState;
+    return false;
 }
 
 void
-RubyPort::ruby_hit_callback(int64_t req_id)
+RubyPort::ruby_hit_callback(PacketPtr pkt)
 {
     //
-    // Note: This single fuction can be called by cpu and dma ports,
-    // as well as the functional port.  
+    // Retrieve the request port from the sender State
     //
-    RequestMap::iterator i = pending_cpu_requests.find(req_id);
-    if (i == pending_cpu_requests.end())
-        panic("could not find pending request %d\n", req_id);
-
-    RequestCookie *cookie = i->second;
-    pending_cpu_requests.erase(i);
-
-    Packet *pkt = cookie->pkt;
-    M5Port *port = cookie->m5Port;
-    delete cookie;
+    RubyPort::SenderState *senderState = 
+        safe_cast<RubyPort::SenderState *>(pkt->senderState);
+    M5Port *port = senderState->port;
+    assert(port != NULL);
+    
+    // pop the sender state from the packet
+    pkt->senderState = senderState->saved;
+    delete senderState;
 
     port->hitCallback(pkt);
 }
