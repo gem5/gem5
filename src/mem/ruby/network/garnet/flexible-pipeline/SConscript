@@ -30,11 +30,10 @@
 
 Import('*')
 
-# temporarily disable
-Return()
-
 if not env['RUBY']:
     Return()
+
+SimObject('GarnetNetwork.py')
 
 Source('GarnetNetwork.cc')
 Source('InVcState.cc')

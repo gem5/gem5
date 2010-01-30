@@ -28,7 +28,6 @@
  * Authors: Niket Agarwal
  */
 
-#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/VCallocator_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/InputUnit_d.hh"

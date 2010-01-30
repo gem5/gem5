@@ -33,8 +33,9 @@
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/gems_common/Vector.hh"
-#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
+#include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 #include "mem/ruby/network/Network.hh"
+#include "params/GarnetNetwork_d.hh"
 
 class NetworkInterface_d;
 class MessageBuffer;
@@ -44,16 +45,14 @@ class NetDest;
 class NetworkLink_d;
 class CreditLink_d;
 
-class GarnetNetwork_d : public Network{
+class GarnetNetwork_d : public BaseGarnetNetwork {
 public:
-        GarnetNetwork_d(const string & name);
+    typedef GarnetNetwork_dParams Params;
+    GarnetNetwork_d(const Params *p);
 
         ~GarnetNetwork_d();
 
         void init();
-
-        //added by SS
-        NetworkConfig* getNetworkConfig() { return m_network_config_ptr; }
 
         int getNumNodes(){ return m_nodes;}
 
@@ -99,8 +98,6 @@ public:
         void makeInternalLink(SwitchID src, NodeID dest, const NetDest& routing_table_entry, int link_latency, int link_weight, int bw_multiplier, bool isReconfiguration);
 
 private:
-        NetworkConfig* m_network_config_ptr;
-
         void checkNetworkAllocation(NodeID id, bool ordered, int network_num);
 
 // Private copy constructor and assignment operator

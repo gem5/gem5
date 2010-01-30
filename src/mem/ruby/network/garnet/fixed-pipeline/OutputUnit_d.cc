@@ -30,7 +30,6 @@
 
 #include "mem/ruby/network/garnet/fixed-pipeline/OutputUnit_d.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/Router_d.hh"
-#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
 
 OutputUnit_d::OutputUnit_d(int id, Router_d *router)
 {

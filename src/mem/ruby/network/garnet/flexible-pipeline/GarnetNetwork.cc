@@ -39,63 +39,54 @@
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
 #include "mem/ruby/common/NetDest.hh"
 
-GarnetNetwork::GarnetNetwork(const string & name)
-  : Network(name)
+GarnetNetwork::GarnetNetwork(const Params *p)
+  : BaseGarnetNetwork(p)
 {
+    m_ruby_start = 0;
+    
+    // Allocate to and from queues
+    m_toNetQueues.setSize(m_nodes);         // Queues that are getting messages from protocol
+    m_fromNetQueues.setSize(m_nodes);       // Queues that are feeding the protocol
+    m_in_use.setSize(m_virtual_networks);
+    m_ordered.setSize(m_virtual_networks);
+    for (int i = 0; i < m_virtual_networks; i++)
+    {
+        m_in_use[i] = false;
+        m_ordered[i] = false;
+    }
+    
+    for (int node = 0; node < m_nodes; node++)
+    {
+        //Setting how many vitual message buffers will there be per Network Queue
+        m_toNetQueues[node].setSize(m_virtual_networks);
+        m_fromNetQueues[node].setSize(m_virtual_networks);
+        
+        for (int j = 0; j < m_virtual_networks; j++)
+        {
+            m_toNetQueues[node][j] = new MessageBuffer();   // Instantiating the Message Buffers that interact with the coherence protocol
+            m_fromNetQueues[node][j] = new MessageBuffer();
+        }
+    }
 }
 
 void GarnetNetwork::init()
 {
-//        printf("hello\n");
-        Network::init(argv);
-//added by SS
-//        assert (m_topology_ptr!=NULL);
+    BaseGarnetNetwork::init();
 
-        m_network_config_ptr = new NetworkConfig;
-
-        m_network_config_ptr->init(argv);
-
-        m_ruby_start = 0;
-
-        // Allocate to and from queues
-        m_toNetQueues.setSize(m_nodes);         // Queues that are getting messages from protocol
-        m_fromNetQueues.setSize(m_nodes);       // Queues that are feeding the protocol
-        m_in_use.setSize(m_virtual_networks);
-        m_ordered.setSize(m_virtual_networks);
-        for (int i = 0; i < m_virtual_networks; i++)
-        {
-                m_in_use[i] = false;
-                m_ordered[i] = false;
-        }
-
-        for (int node = 0; node < m_nodes; node++)
-        {
-                //Setting how many vitual message buffers will there be per Network Queue
-                m_toNetQueues[node].setSize(m_virtual_networks);
-                m_fromNetQueues[node].setSize(m_virtual_networks);
-
-                for (int j = 0; j < m_virtual_networks; j++)
-                {
-                        m_toNetQueues[node][j] = new MessageBuffer();   // Instantiating the Message Buffers that interact with the coherence protocol
-                        m_fromNetQueues[node][j] = new MessageBuffer();
-                }
-        }
-
-        // Setup the network switches
-        assert (m_topology_ptr!=NULL);
-        m_topology_ptr->makeTopology();
-
-        int number_of_routers = m_topology_ptr->numSwitches();
-        for (int i=0; i<number_of_routers; i++) {
-                m_router_ptr_vector.insertAtBottom(new Router(i, this));
-        }
-
-        for (int i=0; i < m_nodes; i++) {
-                NetworkInterface *ni = new NetworkInterface(i, m_virtual_networks, this);
-                ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
-                m_ni_ptr_vector.insertAtBottom(ni);
-        }
-        m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
+    // Setup the network switches
+    assert (m_topology_ptr!=NULL);
+    
+    int number_of_routers = m_topology_ptr->numSwitches();
+    for (int i=0; i<number_of_routers; i++) {
+        m_router_ptr_vector.insertAtBottom(new Router(i, this));
+    }
+    
+    for (int i=0; i < m_nodes; i++) {
+        NetworkInterface *ni = new NetworkInterface(i, m_virtual_networks, this);
+        ni->addNode(m_toNetQueues[i], m_fromNetQueues[i]);
+        m_ni_ptr_vector.insertAtBottom(ni);
+    }
+    m_topology_ptr->createLinks(this, false);  // false because this isn't a reconfiguration
 }
 
 GarnetNetwork::~GarnetNetwork()
@@ -216,9 +207,9 @@ Time GarnetNetwork::getRubyStartTime()
 void GarnetNetwork::printStats(ostream& out) const
 {       double average_link_utilization = 0;
         Vector<double > average_vc_load;
-        average_vc_load.setSize(m_virtual_networks*m_network_config_ptr->getVCsPerClass());
+        average_vc_load.setSize(m_virtual_networks*m_vcs_per_class);
 
-        for(int i = 0; i < m_virtual_networks*m_network_config_ptr->getVCsPerClass(); i++)
+        for(int i = 0; i < m_virtual_networks*m_vcs_per_class; i++)
         {
                 average_vc_load[i] = 0;
         }
@@ -233,7 +224,7 @@ void GarnetNetwork::printStats(ostream& out) const
                 Vector<int > vc_load = m_link_ptr_vector[i]->getVcLoad();
                 for(int j = 0; j < vc_load.size(); j++)
                 {
-                        assert(vc_load.size() == m_network_config_ptr->getVCsPerClass()*m_virtual_networks);
+                        assert(vc_load.size() == m_vcs_per_class*m_virtual_networks);
                         average_vc_load[j] += vc_load[j];
                 }
         }
@@ -241,7 +232,7 @@ void GarnetNetwork::printStats(ostream& out) const
         out << "Average Link Utilization :: " << average_link_utilization << " flits/cycle" <<endl;
         out << "-------------" << endl;
 
-        for(int i = 0; i < m_network_config_ptr->getVCsPerClass()*m_virtual_networks; i++)
+        for(int i = 0; i < m_vcs_per_class*m_virtual_networks; i++)
         {
                 average_vc_load[i] = (double(average_vc_load[i]) / (double(g_eventQueue_ptr->getTime()) - m_ruby_start));
                 out << "Average VC Load [" << i << "] = " << average_vc_load[i] << " flits/cycle" << endl;
@@ -294,4 +285,10 @@ void GarnetNetwork::printConfig(ostream& out) const
 void GarnetNetwork::print(ostream& out) const
 {
         out << "[GarnetNetwork]";
+}
+
+GarnetNetwork *
+GarnetNetworkParams::create()
+{
+    return new GarnetNetwork(this);
 }

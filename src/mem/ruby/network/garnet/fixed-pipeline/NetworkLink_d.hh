@@ -53,8 +53,8 @@ public:
         int get_id(){return m_id;}
         void wakeup();
 
-        double calculate_offline_power(power_bus*);
-        double calculate_power();
+    double calculate_offline_power(power_bus*) { return 0.0; }
+    double calculate_power() { return 0.0; }
 
         inline bool isReady()
         {

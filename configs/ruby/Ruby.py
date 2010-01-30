@@ -90,7 +90,12 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
                                 len(cpu_sequencers),
                                 options.mesh_rows)
 
-    network = SimpleNetwork(topology = net_topology)
+    if options.garnet_network == "fixed":
+        network = GarnetNetwork_d(topology = net_topology)
+    elif options.garnet_network == "flexible":
+        network = GarnetNetwork(topology = net_topology)
+    else:
+        network = SimpleNetwork(topology = net_topology)
 
     #
     # determine the total memory size of the ruby system and verify it is equal

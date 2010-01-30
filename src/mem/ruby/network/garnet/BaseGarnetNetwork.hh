@@ -33,40 +33,33 @@
  * required by the interconnection network.
  */
 
-#ifndef NETWORKCONFIG_H
-#define NETWORKCONFIG_H
+#ifndef BASEGARNETNETWORK_H
+#define BASEGARNETNETWORK_H
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
 #include "mem/gems_common/util.hh"
+#include "mem/ruby/network/Network.hh"
+#include "params/BaseGarnetNetwork.hh"
 
-class NetworkConfig {
-        private:
-                int m_flit_size;
-                int m_number_of_pipe_stages;
-                int m_vcs_per_class;
-                int m_buffer_size;
-                bool m_using_network_testing;
-        public:
-                NetworkConfig(){}
-                void init() {
-                  for (size_t i=0; i<argv.size(); i+=2) {
-                   if (argv[i] == "flit_size")
-                     m_flit_size = atoi(argv[i+1].c_str());
-                   else if (argv[i] == "number_of_pipe_stages")
-                     m_number_of_pipe_stages = atoi(argv[i+1].c_str());
-                   else if (argv[i] == "vcs_per_class")
-                     m_vcs_per_class = atoi(argv[i+1].c_str());
-                   else if (argv[i] == "buffer_size")
-                     m_buffer_size = atoi(argv[i+1].c_str());
-                   else if (argv[i] == "using_network_testing")
-                     m_using_network_testing = atoi(argv[i+1].c_str());
-                  }
-                }
-                bool isNetworkTesting() {return m_using_network_testing; }
-                int getFlitSize() {return m_flit_size; }
-                int getNumPipeStages() {return m_number_of_pipe_stages; }
-                int getVCsPerClass() {return m_vcs_per_class; }
-                int getBufferSize() {return m_buffer_size; }
+class BaseGarnetNetwork : public Network {
+  public:
+    typedef BaseGarnetNetworkParams Params;
+    BaseGarnetNetwork(const Params *p);
+
+    void init();
+    bool isNetworkTesting() {return m_using_network_testing; }
+    int getFlitSize() {return m_flit_size; }
+    int getNumPipeStages() {return m_number_of_pipe_stages; }
+    int getVCsPerClass() {return m_vcs_per_class; }
+    int getBufferSize() {return m_buffer_size; }
+
+  protected:
+    int m_flit_size;
+    int m_number_of_pipe_stages;
+    int m_vcs_per_class;
+    int m_buffer_size;
+    bool m_using_network_testing;
+
 };
 
 

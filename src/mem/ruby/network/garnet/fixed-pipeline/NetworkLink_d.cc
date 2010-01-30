@@ -29,7 +29,6 @@
  */
 
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkLink_d.hh"
-#include "mem/ruby/network/garnet-flexible-pipeline/NetworkConfig.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/GarnetNetwork_d.hh"
 
 /*
@@ -54,9 +53,9 @@ NetworkLink_d::NetworkLink_d(int id, int link_latency, GarnetNetwork_d *net_ptr)
         m_latency = link_latency;
         linkBuffer = new flitBuffer_d();
         m_link_utilized = 0;
-        m_vc_load.setSize(m_net_ptr->getNetworkConfig()->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks());
+        m_vc_load.setSize(m_net_ptr->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks());
 
-        for(int i = 0; i < m_net_ptr->getNetworkConfig()->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks(); i++)
+        for(int i = 0; i < m_net_ptr->getVCsPerClass()*net_ptr->getNumberOfVirtualNetworks(); i++)
                 m_vc_load[i] = 0;
 }
 

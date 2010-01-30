@@ -28,20 +28,19 @@
  * Authors: Niket Agarwal
  */
 
-#ifndef NETWORK_HEADER_H
-#define NETWORK_HEADER_H
+#include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
+BaseGarnetNetwork::BaseGarnetNetwork(const Params *p)
+    : Network(p)
+{
+    m_flit_size = p->flit_size;
+    m_number_of_pipe_stages = p->number_of_pipe_stages;
+    m_vcs_per_class = p->vcs_per_class;
+    m_buffer_size = p->buffer_size;
+    m_using_network_testing = p->using_network_testing;
+}
 
-using namespace std;
-using namespace __gnu_cxx;
-
-enum flit_type {HEAD_, BODY_, TAIL_, HEAD_TAIL_, NUM_FLIT_TYPE_};
-enum VC_state_type {IDLE_, VC_AB_, ACTIVE_, NUM_VC_STATE_TYPE_};
-enum flit_stage {I_, VA_, SA_, ST_, LT_, NUM_FLIT_STAGE_};
-
-#define INFINITE_ 10000
-
-#endif
-
+void BaseGarnetNetwork::init()
+{
+    Network::init();
+}

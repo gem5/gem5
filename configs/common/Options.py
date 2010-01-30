@@ -41,6 +41,8 @@ parser.add_option("--topology", type="string", default="crossbar",
                   help="'crossbar'|'mesh'")
 parser.add_option("--mesh-rows", type="int", default=1,
                   help="the number of rows in the mesh topology")
+parser.add_option("--garnet-network", type="string", default=none,
+                  help="'fixed'|'flexible'")
       
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,

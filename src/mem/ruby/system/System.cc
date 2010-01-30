@@ -53,8 +53,6 @@
 #include "mem/ruby/network/simple/Topology.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/system/RubyPort.hh"
-//#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
-//#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 #include "base/output.hh"
 

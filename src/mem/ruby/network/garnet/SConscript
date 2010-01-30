@@ -33,19 +33,7 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-SimObject('GarnetNetwork_d.py')
+SimObject('BaseGarnetNetwork.py')
 
-Source('GarnetNetwork_d.cc', Werror=False)
-Source('InputUnit_d.cc', Werror=False)
-Source('NetworkInterface_d.cc')
-Source('NetworkLink_d.cc')
-Source('OutVcState_d.cc')
-Source('OutputUnit_d.cc')
-Source('Router_d.cc')
-Source('RoutingUnit_d.cc')
-Source('SWallocator_d.cc')
-Source('Switch_d.cc')
-Source('VCallocator_d.cc')
-Source('VirtualChannel_d.cc')
-Source('flitBuffer_d.cc')
-Source('flit_d.cc')
+Source('BaseGarnetNetwork.cc')
+

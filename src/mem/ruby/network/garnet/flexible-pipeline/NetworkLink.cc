@@ -29,7 +29,6 @@
  */
 
 #include "mem/ruby/network/garnet/flexible-pipeline/NetworkLink.hh"
-#include "mem/ruby/network/garnet/flexible-pipeline/NetworkConfig.hh"
 #include "mem/ruby/network/garnet/flexible-pipeline/GarnetNetwork.hh"
 
 NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
@@ -42,7 +41,7 @@ NetworkLink::NetworkLink(int id, int latency, GarnetNetwork *net_ptr)
         m_net_ptr = net_ptr;
         m_latency = latency;
         int num_net = net_ptr->getNumberOfVirtualNetworks();
-        int num_vc = m_net_ptr->getNetworkConfig()->getVCsPerClass();
+        int num_vc = m_net_ptr->getVCsPerClass();
         m_vc_load.setSize(num_net*num_vc);
 
         for(int i = 0; i < num_net*num_vc; i++)

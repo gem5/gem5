@@ -32,9 +32,10 @@
 #define GARNET_NETWORK_H
 
 #include "mem/ruby/network/garnet/NetworkHeader.hh"
+#include "mem/ruby/network/garnet/BaseGarnetNetwork.hh"
 #include "mem/gems_common/Vector.hh"
-#include "mem/ruby/network/garnet/flexible-pipeline/NetworkConfig.hh"
 #include "mem/ruby/network/Network.hh"
+#include "params/GarnetNetwork.hh"
 
 class NetworkInterface;
 class MessageBuffer;
@@ -43,16 +44,14 @@ class Topology;
 class NetDest;
 class NetworkLink;
 
-class GarnetNetwork : public Network{
+class GarnetNetwork : public BaseGarnetNetwork {
 public:
-        GarnetNetwork(const string & name);
+    typedef GarnetNetworkParams Params;
+    GarnetNetwork(const Params *p);
 
-        ~GarnetNetwork();
+    ~GarnetNetwork();
 
         void init();
-
-        //added by SS
-        NetworkConfig* getNetworkConfig() { return m_network_config_ptr; }
 
         // returns the queue requested for the given component
         MessageBuffer* getToNetQueue(NodeID id, bool ordered, int network_num);
@@ -100,8 +99,6 @@ private:
 
 //      Topology* m_topology_ptr;
         Time m_ruby_start;
-
-        NetworkConfig* m_network_config_ptr;
 };
 
 // Output operator declaration
