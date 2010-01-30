@@ -11,6 +11,7 @@ class RubySystem(SimObject):
     freq_mhz = Param.Int(3000, "default frequency for the system");
     block_size_bytes = Param.Int(64,
         "default cache block size; must be a power of two");
+    mem_size_mb = Param.Int("");
     network = Param.RubyNetwork("")
     debug = Param.RubyDebug("the default debug object")
     profiler = Param.RubyProfiler("");

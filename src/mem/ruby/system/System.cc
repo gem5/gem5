@@ -94,9 +94,14 @@ RubySystem::RubySystem(const Params *p)
     m_randomization = p->randomization;
     m_tech_nm = p->tech_nm;
     m_freq_mhz = p->freq_mhz;
+
     m_block_size_bytes = p->block_size_bytes;
     assert(is_power_of_2(m_block_size_bytes));
     m_block_size_bits = log_int(m_block_size_bytes);
+
+    m_memory_size_bytes = (uint64_t)p->mem_size_mb * 1024 * 1024;
+    m_memory_size_bits = log_int(m_memory_size_bytes);
+
     m_network_ptr = p->network;
     g_debug_ptr = p->debug;
     m_profiler_ptr = p->profiler;
@@ -104,23 +109,12 @@ RubySystem::RubySystem(const Params *p)
 
     g_system_ptr = this;
     m_mem_vec_ptr = new MemoryVector;
+    m_mem_vec_ptr->setSize(m_memory_size_bytes);
 }
 
 
 void RubySystem::init()
 {
-  // calculate system-wide parameters
-  m_memory_size_bytes = 0;
-  DirectoryMemory* prev = NULL;
-  for (map< string, DirectoryMemory*>::const_iterator it = m_directories.begin();
-       it != m_directories.end(); it++) {
-    if (prev != NULL)
-      assert((*it).second->getSize() == prev->getSize()); // must be equal for proper address mapping
-    m_memory_size_bytes += (*it).second->getSize();
-    prev = (*it).second;
-  }
-  m_mem_vec_ptr->setSize(m_memory_size_bytes);
-  m_memory_size_bits = log_int(m_memory_size_bytes);
 }
 
 

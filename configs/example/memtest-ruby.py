@@ -127,10 +127,14 @@ for cpu in cpus:
 network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
                                                 dir_cntrl_nodes))
 
+mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
+                   for dir_cntrl in dir_cntrl_nodes])
+
 system.ruby = RubySystem(network = network,
                          profiler = RubyProfiler(),
                          tracer = RubyTracer(),
-                         debug = RubyDebug())
+                         debug = RubyDebug(),
+                         mem_size_mb = mem_size_mb)
 
 
 # -----------------------
