@@ -64,6 +64,52 @@ def makeCrossbar(nodes):
     return Topology(ext_links=ext_links, int_links=int_links,
                     num_int_nodes=len(nodes)+1)
 
+def makeMesh(nodes, num_routers, num_rows):
+    #
+    # There must be an evenly divisible number of cntrls to routers
+    # Also, obviously the number or rows must be <= the number of routers
+    #
+    cntrls_per_router, remainder = divmod(len(nodes), num_routers)
+    assert(remainder == 0)
+    assert(num_rows <= num_routers)
+    num_columns = int(num_routers / num_rows)
+    assert(num_columns * num_rows == num_routers)
+
+    #
+    # Connect each node to the appropriate router
+    #
+    ext_links = []
+    for (i, n) in enumerate(nodes):
+        cntrl_level, router_id = divmod(i, num_routers)
+        assert(cntrl_level < cntrls_per_router)
+        ext_links.append(ExtLink(ext_node=n, int_node=router_id))
+
+    #
+    # Create the mesh links.  First row (east-west) links then column
+    # (north-south) links
+    #
+    int_links = []
+    for row in xrange(num_rows):
+        for col in xrange(num_columns):
+            if (col + 1 < num_columns):
+                east_id = col + (row * num_columns)
+                west_id = (col + 1) + (row * num_columns)
+                int_links.append(IntLink(node_a=east_id,
+                                         node_b=west_id,
+                                         weight=1))
+    for col in xrange(num_columns):
+        for row in xrange(num_rows):
+            if (row + 1 < num_rows):
+                north_id = col + (row * num_columns)
+                south_id = col + ((row + 1) * num_columns)
+                int_links.append(IntLink(node_a=north_id,
+                                         node_b=south_id,
+                                         weight=2))
+
+    return Topology(ext_links=ext_links,
+                    int_links=int_links,
+                    num_int_nodes=num_routers)
+
 class RubyNetwork(SimObject):
     type = 'RubyNetwork'
     cxx_class = 'Network'

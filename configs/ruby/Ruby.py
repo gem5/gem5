@@ -80,7 +80,17 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     # Important: the topology constructor must be called before the network
     # constructor.
     #
-    network = SimpleNetwork(topology = makeCrossbar(all_cntrls))
+    if options.topology == "crossbar":
+        net_topology = makeCrossbar(all_cntrls)
+    elif options.topology == "mesh":
+        #
+        # The uniform mesh topology assumes one router per cpu
+        #
+        net_topology = makeMesh(all_cntrls,
+                                len(cpu_sequencers),
+                                options.mesh_rows)
+
+    network = SimpleNetwork(topology = net_topology)
 
     #
     # determine the total memory size of the ruby system and verify it is equal
