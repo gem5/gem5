@@ -35,7 +35,7 @@ machine(DMA, "DMA Controller")
   cur_state := state;
   }
 
-  out_port(reqToDirectory_out, DMARequestMsg, reqToDirectory, desc="...");
+  out_port(reqToDirectory_out, RequestMsg, reqToDirectory, desc="...");
 
   in_port(dmaRequestQueue_in, SequencerMsg, mandatoryQueue, desc="...") {
     if (dmaRequestQueue_in.isReady()) {
