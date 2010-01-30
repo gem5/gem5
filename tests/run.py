@@ -41,9 +41,8 @@ m5.disableAllListeners()
 
 # find path to directory containing this file
 tests_root = os.path.dirname(__file__)
-if os.path.isdir('/dist/m5/regression/test-progs'):
-    test_progs = '/dist/m5/regression/test-progs'
-else:
+test_progs = os.environ.get('M5_TEST_PROGS', '/dist/m5/regression/test-progs')
+if not os.path.isdir(test_progs):
     test_progs = joinpath(tests_root, 'test-progs')
 
 # generate path to binary file
