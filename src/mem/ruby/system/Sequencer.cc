@@ -56,14 +56,13 @@ RubySequencerParams::create()
 }
  
 Sequencer::Sequencer(const Params *p)
-    : RubyPort(p)
+    : RubyPort(p), deadlockCheckEvent(this)
 {
     m_store_waiting_on_load_cycles = 0;
     m_store_waiting_on_store_cycles = 0;
     m_load_waiting_on_store_cycles = 0;
     m_load_waiting_on_load_cycles = 0;
     
-    m_deadlock_check_scheduled = false;
     m_outstanding_count = 0;
 
     m_max_outstanding_requests = 0;
@@ -128,9 +127,8 @@ void Sequencer::wakeup() {
   assert(m_outstanding_count == total_outstanding);
 
   if (m_outstanding_count > 0) { // If there are still outstanding requests, keep checking
-    g_eventQueue_ptr->scheduleEvent(this, m_deadlock_threshold);
-  } else {
-    m_deadlock_check_scheduled = false;
+    schedule(deadlockCheckEvent, 
+             (m_deadlock_threshold * g_eventQueue_ptr->getClock()) + curTick);
   }
 }
 
@@ -198,9 +196,8 @@ bool Sequencer::insertRequest(SequencerRequest* request) {
   assert(m_outstanding_count == total_outstanding);
 
   // See if we should schedule a deadlock check
-  if (m_deadlock_check_scheduled == false) {
-    g_eventQueue_ptr->scheduleEvent(this, m_deadlock_threshold);
-    m_deadlock_check_scheduled = true;
+  if (deadlockCheckEvent.scheduled() == false) {
+    schedule(deadlockCheckEvent, m_deadlock_threshold);
   }
 
   Address line_addr(request->ruby_request.paddr);

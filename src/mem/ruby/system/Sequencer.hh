@@ -128,6 +128,18 @@ private:
   int m_store_waiting_on_store_cycles;
   int m_load_waiting_on_store_cycles;
   int m_load_waiting_on_load_cycles;
+
+  class SequencerWakeupEvent : public Event
+  {
+      Sequencer *m_sequencer_ptr;
+
+    public:
+      SequencerWakeupEvent(Sequencer *_seq) : m_sequencer_ptr(_seq) {}
+      void process() { m_sequencer_ptr->wakeup(); }
+      const char *description() const { return "Sequencer deadlock check"; }
+  };
+
+  SequencerWakeupEvent deadlockCheckEvent;
 };
 
 // Output operator declaration

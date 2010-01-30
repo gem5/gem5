@@ -79,6 +79,7 @@ public:
   // Public Methods
 
   Time getTime() const { return curTick/m_clock; }
+  Tick getClock() const { return m_clock; }
   void scheduleEvent(Consumer* consumer, Time timeDelta);
   void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
   void print(ostream& out) const;
