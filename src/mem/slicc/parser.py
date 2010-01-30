@@ -421,8 +421,20 @@ class SLICC(Grammar):
         "param : type STAR ident"
         p[0] = ast.FormalParamAST(self, p[1], p[3], None, True)
 
-    def p_param__default(self, p):
+    def p_param__pointer_default(self, p):
+        "param : type STAR ident '=' STRING"
+        p[0] = ast.FormalParamAST(self, p[1], p[3], p[5], True)
+
+    def p_param__default_number(self, p):
         "param : type ident '=' NUMBER"
+        p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
+
+    def p_param__default_bool(self, p):
+        "param : type ident '=' LIT_BOOL"
+        p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
+
+    def p_param__default_string(self, p):
+        "param : type ident '=' STRING"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
 
     # Idents and lists
