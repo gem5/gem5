@@ -209,6 +209,7 @@ public:
     const string toString() const;
     const string getName() const;
     const MachineType getMachineType() const;
+    void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
     void print(ostream& out) const;
     void printConfig(ostream& out) const;
     void wakeup();

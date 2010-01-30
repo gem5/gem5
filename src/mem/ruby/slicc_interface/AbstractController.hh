@@ -8,6 +8,7 @@
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/network/Network.hh"
 
 class MessageBuffer;
 class Network;
@@ -26,6 +27,7 @@ public:
   virtual const MachineType getMachineType() const = 0;
   virtual void blockOnQueue(Address, MessageBuffer*) = 0;
   virtual void unblock(Address) = 0;
+  virtual void initNetworkPtr(Network* net_ptr) = 0;
 
   virtual void print(ostream & out) const = 0;
   virtual void printStats(ostream & out) const = 0;

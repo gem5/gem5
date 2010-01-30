@@ -97,15 +97,21 @@ class L2Cache(RubyCache):
     latency = 15
     size = 1048576
 
-# It would be nice to lump all the network nodes into a single list,
-# but for consistency with the old scripts I'm segregating them by
-# type.  I'm not sure if this is really necessary or not.
+#
+# The ruby network creation expects the list of nodes in the system to be
+# consistent with the NetDest list.  Therefore the l1 controller nodes must be
+# listed before the directory nodes and directory nodes before dma nodes, etc.
+#
  
 # net_nodes = []
 l1_cntrl_nodes = []
 dir_cntrl_nodes = []
 
-for cpu in cpus:
+#
+# Must create the individual controllers before the network to ensure the
+# controller constructors are called before the network constructor
+#
+for (i, cpu) in enumerate(cpus):
     l1_cntrl = L1Cache_Controller()
     cpu_seq = RubySequencer(controller = l1_cntrl,
                             icache = L1Cache(controller = l1_cntrl),
@@ -124,6 +130,10 @@ for cpu in cpus:
     l1_cntrl_nodes.append(l1_cntrl)
     dir_cntrl_nodes.append(dir_cntrl)
 
+#
+# Important: the topology constructor must be called before the network
+# constructor.
+#
 network = SimpleNetwork(topology = makeCrossbar(l1_cntrl_nodes + \
                                                 dir_cntrl_nodes))
 

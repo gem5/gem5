@@ -68,54 +68,41 @@ Topology::Topology(const Params *p)
 {
     m_print_config = p->print_config;
     m_number_of_switches = p->num_int_nodes;
-  // initialize component latencies record
-  m_component_latencies.setSize(0);
-  m_component_inter_switches.setSize(0);
-}
+    // initialize component latencies record
+    m_component_latencies.setSize(0);
+    m_component_inter_switches.setSize(0);
 
-void Topology::init()
-{
-    // need to defer this until init, to guarantee that constructors
-    // for all the controller objects have been called.
+    //
+    // Total nodes/controllers in network
+    // Must make sure this is called after the State Machine constructors
+    //
     m_nodes = MachineType_base_number(MachineType_NUM);
-}
+    assert(m_nodes > 1);
 
-void Topology::makeTopology()
-{
     if (m_nodes != params()->ext_links.size()) {
         fatal("m_nodes (%d) != ext_links vector length (%d)\n",
               m_nodes != params()->ext_links.size());
     }
 
-    
-
-  /*
-  if (m_nodes == 1) {
-    SwitchID id = newSwitchID();
-    addLink(0, id, m_network_ptr->getOffChipLinkLatency());
-    addLink(id, 1, m_network_ptr->getOffChipLinkLatency());
-    return;
-  }
-  */
-  assert(m_nodes > 1);
-
-  Vector< Vector < SwitchID > > nodePairs;  // node pairs extracted from the file
-  Vector<int> latencies;  // link latencies for each link extracted
-  Vector<int> bw_multis;  // bw multipliers for each link extracted
-  Vector<int> weights;  // link weights used to enfore e-cube deadlock free routing
-  Vector< SwitchID > int_network_switches;  // internal switches extracted from the file
-  Vector<bool> endpointConnectionExist;  // used to ensure all endpoints are connected to the network
-
+    //
+    // First create the links between the endpoints (i.e. controllers) and the
+    // network.
+    //
   for (vector<ExtLink*>::const_iterator i = params()->ext_links.begin();
        i != params()->ext_links.end(); ++i)
   {
       const ExtLinkParams *p = (*i)->params();
       AbstractController *c = p->ext_node;
+
+      // Store the controller pointers for later
+      m_controller_vector.insertAtBottom(c);
+
       int ext_idx1 =
           MachineType_base_number(c->getMachineType()) + c->getVersion();
       int ext_idx2 = ext_idx1 + m_nodes;
       int int_idx = p->int_node + 2*m_nodes;
 
+      // create the links in both directions
       addLink(ext_idx1, int_idx, p->latency, p->bw_multiplier, p->weight);
       addLink(int_idx, ext_idx2, p->latency, p->bw_multiplier, p->weight);
   }
@@ -126,9 +113,20 @@ void Topology::makeTopology()
       const IntLinkParams *p = (*i)->params();
       int a = p->node_a + 2*m_nodes;
       int b = p->node_b + 2*m_nodes;
+
+      // create the links in both directions
       addLink(a, b, p->latency, p->bw_multiplier, p->weight);
       addLink(b, a, p->latency, p->bw_multiplier, p->weight);
   }
+}
+
+
+void Topology::initNetworkPtr(Network* net_ptr)
+{
+    for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++)
+    {
+        m_controller_vector[cntrl]->initNetworkPtr(net_ptr);
+    }
 }
 
 

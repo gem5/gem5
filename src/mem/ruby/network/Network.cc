@@ -28,6 +28,7 @@
 
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/network/simple/Topology.hh"
 
 Network::Network(const Params *p)
     : SimObject(p)
@@ -40,14 +41,24 @@ Network::Network(const Params *p)
     m_link_latency = p->link_latency;
     m_control_msg_size = p->control_msg_size;
 
+    //
+    // Total nodes/controllers in network
+    // Must make sure this is called after the State Machine constructors
+    //
+    m_nodes = MachineType_base_number(MachineType_NUM); 
+    assert(m_nodes != 0);
+
     assert(m_virtual_networks != 0);
     assert(m_topology_ptr != NULL);
+
+    //
+    // Initialize the controller's network pointers
+    //
+    m_topology_ptr->initNetworkPtr(this);
 }
 
 void Network::init()
 {
-  m_nodes = MachineType_base_number(MachineType_NUM); // Total nodes in network
-
   m_data_msg_size = RubySystem::getBlockSizeBytes() + m_control_msg_size;
 }
 

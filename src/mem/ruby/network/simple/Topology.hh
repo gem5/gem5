@@ -95,12 +95,11 @@ public:
   // Destructor
   virtual ~Topology() {}
 
-  virtual void init();
-
   // Public Methods
-  void makeTopology();
   int numSwitches() const { return m_number_of_switches; }
   void createLinks(Network *net, bool isReconfiguration);
+
+  void initNetworkPtr(Network* net_ptr);
 
   const string getName() { return m_name; }
   void printStats(ostream& out) const {}
@@ -128,6 +127,8 @@ protected:
   bool m_print_config;
   NodeID m_nodes;
   int m_number_of_switches;
+
+  Vector<AbstractController*> m_controller_vector;
 
   Vector<SwitchID> m_links_src_vector;
   Vector<SwitchID> m_links_dest_vector;

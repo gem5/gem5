@@ -62,13 +62,12 @@ Network* Network::createNetwork(int nodes)
 SimpleNetwork::SimpleNetwork(const Params *p)
     : Network(p)
 {
-}
-
-void SimpleNetwork::init()
-{
-
-  Network::init();
-
+  //
+  // Note: the parent Network Object constructor is called before the 
+  // SimpleNetwork child constructor.  Therefore, the member variables
+  // used below should already be initialized.
+  //
+  
   m_endpoint_switches.setSize(m_nodes);
 
   m_in_use.setSize(m_virtual_networks);
@@ -91,10 +90,18 @@ void SimpleNetwork::init()
                    "fromNet node "+int_to_string(node)+" j "+int_to_string(j));
     }
   }
+}
 
-  // Setup the network switches
-  //  m_topology_ptr = new Topology(this, m_nodes);
-  m_topology_ptr->makeTopology();
+void SimpleNetwork::init()
+{
+
+  Network::init();
+
+  //
+  // The topology pointer should have already been initialized in the parent 
+  // class network constructor.
+  //
+  assert(m_topology_ptr != NULL);
   int number_of_switches = m_topology_ptr->numSwitches();
   for (int i=0; i<number_of_switches; i++) {
     m_switch_ptr_vector.insertAtBottom(new Switch(i, this));
