@@ -55,11 +55,14 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     network = SimpleNetwork(topology = makeCrossbar(all_cntrls))
 
     #
-    # determine the total memory size of the ruby system
+    # determine the total memory size of the ruby system and verify it is equal
+    # to physmem
     #
     total_mem_size = MemorySize('0B')
     for dir_cntrl in dir_cntrls:
         total_mem_size.value += dir_cntrl.directory.size.value
+    physmem_size = long(physmem.range.second) - long(physmem.range.first) + 1
+    assert(total_mem_size.value == physmem_size)
 
     ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers))
     

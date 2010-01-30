@@ -96,6 +96,9 @@ def create_system(options, phys_mem, piobus, dma_devices):
         cpu_sequencers.append(cpu_seq)
         l1_cntrl_nodes.append(l1_cntrl)
 
+    phys_mem_size = long(phys_mem.range.second) - long(phys_mem.range.first) + 1
+    mem_module_size = phys_mem_size / options.num_dirs
+
     for i in xrange(options.num_dirs):
         #
         # Create the Ruby objects associated with the directory controller
@@ -103,9 +106,13 @@ def create_system(options, phys_mem, piobus, dma_devices):
 
         mem_cntrl = RubyMemoryControl(version = i)
 
+        dir_size = MemorySize('0B')
+        dir_size.value = mem_module_size
+
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
-                                           RubyDirectoryMemory(version = i),
+                                         RubyDirectoryMemory(version = i,
+                                                             size = dir_size),
                                          memBuffer = mem_cntrl)
 
         dir_cntrl_nodes.append(dir_cntrl)
