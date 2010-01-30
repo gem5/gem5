@@ -90,40 +90,6 @@ Profiler::Profiler(const Params *p)
 
   m_num_of_sequencers = p->num_of_sequencers;
 
-  //
-  // Initialize the memory controller profiler structs
-  //
-  m_mc_profilers.setSize(p->mem_cntrl_count);
-  for (int mem_cntrl = 0; mem_cntrl < p->mem_cntrl_count; mem_cntrl++) {
-    m_mc_profilers[mem_cntrl] = new memory_control_profiler;
-    m_mc_profilers[mem_cntrl]->m_memReq = 0;
-    m_mc_profilers[mem_cntrl]->m_memBankBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memBusBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memReadWriteBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memDataBusBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memTfawBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memRefresh = 0;
-    m_mc_profilers[mem_cntrl]->m_memRead = 0;
-    m_mc_profilers[mem_cntrl]->m_memWrite = 0;
-    m_mc_profilers[mem_cntrl]->m_memWaitCycles = 0;
-    m_mc_profilers[mem_cntrl]->m_memInputQ = 0;
-    m_mc_profilers[mem_cntrl]->m_memBankQ = 0;
-    m_mc_profilers[mem_cntrl]->m_memArbWait = 0;
-    m_mc_profilers[mem_cntrl]->m_memRandBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memNotOld = 0;
-
-    m_mc_profilers[mem_cntrl]->m_banks_per_rank = p->banks_per_rank;
-    m_mc_profilers[mem_cntrl]->m_ranks_per_dimm = p->ranks_per_dimm;
-    m_mc_profilers[mem_cntrl]->m_dimms_per_channel = 
-      p->dimms_per_channel;
-
-    int totalBanks = p->banks_per_rank * 
-                     p->ranks_per_dimm * 
-                     p->dimms_per_channel;
-
-    m_mc_profilers[mem_cntrl]->m_memBankCount.setSize(totalBanks);
-  }    
-
   m_hot_lines = false;
   m_all_instructions = false;
 
@@ -142,12 +108,6 @@ Profiler::~Profiler()
 {
   if (m_periodic_output_file_ptr != &cerr) {
     delete m_periodic_output_file_ptr;
-  }
-
-  for (int mem_cntrl = 0; 
-       mem_cntrl < m_mc_profilers.size(); 
-       mem_cntrl++) {
-    delete m_mc_profilers[mem_cntrl];
   }
 
   delete m_requestProfileMap_ptr;
@@ -363,64 +323,6 @@ void Profiler::printStats(ostream& out, bool short_stats)
 
   out << endl;
 
-  for (int mem_cntrl = 0; 
-       mem_cntrl < m_mc_profilers.size(); 
-       mem_cntrl++) {
-    uint64 m_memReq = m_mc_profilers[mem_cntrl]->m_memReq;
-    uint64 m_memRefresh = m_mc_profilers[mem_cntrl]->m_memRefresh;
-    uint64 m_memInputQ = m_mc_profilers[mem_cntrl]->m_memInputQ;
-    uint64 m_memBankQ = m_mc_profilers[mem_cntrl]->m_memBankQ;
-    uint64 m_memWaitCycles = m_mc_profilers[mem_cntrl]->m_memWaitCycles;
-    uint64 m_memRead = m_mc_profilers[mem_cntrl]->m_memRead;
-    uint64 m_memWrite = m_mc_profilers[mem_cntrl]->m_memWrite;
-    uint64 m_memBankBusy = m_mc_profilers[mem_cntrl]->m_memBankBusy;
-    uint64 m_memRandBusy = m_mc_profilers[mem_cntrl]->m_memRandBusy;
-    uint64 m_memNotOld = m_mc_profilers[mem_cntrl]->m_memNotOld;
-    uint64 m_memArbWait = m_mc_profilers[mem_cntrl]->m_memArbWait;
-    uint64 m_memBusBusy = m_mc_profilers[mem_cntrl]->m_memBusBusy;
-    uint64 m_memTfawBusy = m_mc_profilers[mem_cntrl]->m_memTfawBusy;
-    uint64 m_memReadWriteBusy = m_mc_profilers[mem_cntrl]->m_memReadWriteBusy;
-    uint64 m_memDataBusBusy = m_mc_profilers[mem_cntrl]->m_memDataBusBusy;
-    Vector<uint64> m_memBankCount = m_mc_profilers[mem_cntrl]->m_memBankCount;
-
-    if (m_memReq || m_memRefresh) {    // if there's a memory controller at all
-      uint64 total_stalls = m_memInputQ + m_memBankQ + m_memWaitCycles;
-      double stallsPerReq = total_stalls * 1.0 / m_memReq;
-      out << "Memory control " << mem_cntrl << ":" << endl;
-      out << "  memory_total_requests: " << m_memReq << endl;  // does not include refreshes
-      out << "  memory_reads: " << m_memRead << endl;
-      out << "  memory_writes: " << m_memWrite << endl;
-      out << "  memory_refreshes: " << m_memRefresh << endl;
-      out << "  memory_total_request_delays: " << total_stalls << endl;
-      out << "  memory_delays_per_request: " << stallsPerReq << endl;
-      out << "  memory_delays_in_input_queue: " << m_memInputQ << endl;
-      out << "  memory_delays_behind_head_of_bank_queue: " << m_memBankQ << endl;
-      out << "  memory_delays_stalled_at_head_of_bank_queue: " << m_memWaitCycles << endl;
-      // Note:  The following "memory stalls" entries are a breakdown of the
-      // cycles which already showed up in m_memWaitCycles.  The order is
-      // significant; it is the priority of attributing the cycles.
-      // For example, bank_busy is before arbitration because if the bank was
-      // busy, we didn't even check arbitration.
-      // Note:  "not old enough" means that since we grouped waiting heads-of-queues
-      // into batches to avoid starvation, a request in a newer batch
-      // didn't try to arbitrate yet because there are older requests waiting.
-      out << "  memory_stalls_for_bank_busy: " << m_memBankBusy << endl;
-      out << "  memory_stalls_for_random_busy: " << m_memRandBusy << endl;
-      out << "  memory_stalls_for_anti_starvation: " << m_memNotOld << endl;
-      out << "  memory_stalls_for_arbitration: " << m_memArbWait << endl;
-      out << "  memory_stalls_for_bus: " << m_memBusBusy << endl;
-      out << "  memory_stalls_for_tfaw: " << m_memTfawBusy << endl;
-      out << "  memory_stalls_for_read_write_turnaround: " << m_memReadWriteBusy << endl;
-      out << "  memory_stalls_for_read_read_turnaround: " << m_memDataBusBusy << endl;
-      out << "  accesses_per_bank: ";
-      for (int bank=0; bank < m_memBankCount.size(); bank++) {
-        out << m_memBankCount[bank] << "  ";
-        //if ((bank % 8) == 7) out << "                     " << endl;
-      }
-      out << endl;
-      out << endl;
-    }
-  }
   if (!short_stats) {
     out << "Busy Controller Counts:" << endl;
     for(int i=0; i < MachineType_NUM; i++) {
@@ -643,34 +545,6 @@ void Profiler::clearStats()
   m_outstanding_requests.clear();
   m_outstanding_persistent_requests.clear();
 
-//added by SS
-  vector<string>::iterator it;
-
-  for (int mem_cntrl = 0; 
-       mem_cntrl < m_mc_profilers.size(); 
-       mem_cntrl++) {
-    m_mc_profilers[mem_cntrl]->m_memReq = 0;
-    m_mc_profilers[mem_cntrl]->m_memBankBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memBusBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memTfawBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memReadWriteBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memDataBusBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memRefresh = 0;
-    m_mc_profilers[mem_cntrl]->m_memRead = 0;
-    m_mc_profilers[mem_cntrl]->m_memWrite = 0;
-    m_mc_profilers[mem_cntrl]->m_memWaitCycles = 0;
-    m_mc_profilers[mem_cntrl]->m_memInputQ = 0;
-    m_mc_profilers[mem_cntrl]->m_memBankQ = 0;
-    m_mc_profilers[mem_cntrl]->m_memArbWait = 0;
-    m_mc_profilers[mem_cntrl]->m_memRandBusy = 0;
-    m_mc_profilers[mem_cntrl]->m_memNotOld = 0;
-
-    for (int bank=0; 
-         bank < m_mc_profilers[mem_cntrl]->m_memBankCount.size(); 
-         bank++) {
-        m_mc_profilers[mem_cntrl]->m_memBankCount[bank] = 0;
-    }
-  }
   // Flush the prefetches through the system - used so that there are no outstanding requests after stats are cleared
   //g_eventQueue_ptr->triggerAllEvents();
 
@@ -861,68 +735,6 @@ bool Profiler::watchAddress(Address addr){
 
 int64 Profiler::getTotalTransactionsExecuted() const {
   return m_perProcEndTransaction.sum();
-}
-
-// For MemoryControl:
-void Profiler::profileMemReq(int mem_cntrl, int bank) {
-  m_mc_profilers[mem_cntrl]->m_memReq++;
-  m_mc_profilers[mem_cntrl]->m_memBankCount[bank]++;
-}
-
-void Profiler::profileMemBankBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memBankBusy++; 
-}
-
-void Profiler::profileMemBusBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memBusBusy++; 
-}
-
-void Profiler::profileMemReadWriteBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memReadWriteBusy++; 
-}
-
-void Profiler::profileMemDataBusBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memDataBusBusy++; 
-}
-
-void Profiler::profileMemTfawBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memTfawBusy++; 
-}
-
-void Profiler::profileMemRefresh(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memRefresh++; 
-}
-
-void Profiler::profileMemRead(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memRead++; 
-}
-
-void Profiler::profileMemWrite(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memWrite++; 
-}
-
-void Profiler::profileMemWaitCycles(int mem_cntrl, int cycles) {
-  m_mc_profilers[mem_cntrl]->m_memWaitCycles += cycles; 
-}
-
-void Profiler::profileMemInputQ(int mem_cntrl, int cycles) {    
-  m_mc_profilers[mem_cntrl]->m_memInputQ += cycles; 
-}
-
-void Profiler::profileMemBankQ(int mem_cntrl, int cycles) {    
-  m_mc_profilers[mem_cntrl]->m_memBankQ += cycles; 
-}
-
-void Profiler::profileMemArbWait(int mem_cntrl, int cycles) {    
-  m_mc_profilers[mem_cntrl]->m_memArbWait += cycles; 
-}
-
-void Profiler::profileMemRandBusy(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memRandBusy++; 
-}
-
-void Profiler::profileMemNotOld(int mem_cntrl) {    
-  m_mc_profilers[mem_cntrl]->m_memNotOld++; 
 }
 
 

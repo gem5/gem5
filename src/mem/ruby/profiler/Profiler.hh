@@ -79,29 +79,6 @@ class AddressProfiler;
 
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
-struct memory_control_profiler {
-  uint64 m_memReq;
-  uint64 m_memBankBusy;
-  uint64 m_memBusBusy;
-  uint64 m_memTfawBusy;
-  uint64 m_memReadWriteBusy;
-  uint64 m_memDataBusBusy;
-  uint64 m_memRefresh;
-  uint64 m_memRead;
-  uint64 m_memWrite;
-  uint64 m_memWaitCycles;
-  uint64 m_memInputQ;
-  uint64 m_memBankQ;
-  uint64 m_memArbWait;
-  uint64 m_memRandBusy;
-  uint64 m_memNotOld;
-  Vector<uint64> m_memBankCount;
-  int m_banks_per_rank;
-  int m_ranks_per_dimm;
-  int m_dimms_per_channel;
-};
-
-
 class Profiler : public SimObject, public Consumer {
 public:
   // Constructors
@@ -170,29 +147,11 @@ public:
     return m_ruby_start;
   }
 
-  // added for MemoryControl:
-  void profileMemReq(int mem_cntrl, int bank);
-  void profileMemBankBusy(int mem_cntrl);
-  void profileMemBusBusy(int mem_cntrl);
-  void profileMemTfawBusy(int mem_cntrl);
-  void profileMemReadWriteBusy(int mem_cntrl);
-  void profileMemDataBusBusy(int mem_cntrl);
-  void profileMemRefresh(int mem_cntrl);
-  void profileMemRead(int mem_cntrl);
-  void profileMemWrite(int mem_cntrl);
-  void profileMemWaitCycles(int mem_cntrl, int cycles);
-  void profileMemInputQ(int mem_cntrl, int cycles);
-  void profileMemBankQ(int mem_cntrl, int cycles);
-  void profileMemArbWait(int mem_cntrl, int cycles);
-  void profileMemRandBusy(int mem_cntrl);
-  void profileMemNotOld(int mem_cntrl);
   //added by SS
   bool getHotLines() { return m_hot_lines; }
   bool getAllInstructions() { return m_all_instructions; }
 
 private:
-  //added by SS
-  vector<string> m_memory_control_names;
 
   // Private copy constructor and assignment operator
   Profiler(const Profiler& obj);
@@ -254,10 +213,6 @@ private:
   // counts all initiated cache request including PUTs
   int m_requests;
   Map <string, int>* m_requestProfileMap_ptr;
-
-  // added for MemoryControl:
-  //added by SS
-  Vector < memory_control_profiler* > m_mc_profilers;
 
   //added by SS
   bool m_hot_lines;

@@ -57,20 +57,7 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
     mem_size_mb = sum([int(dir_cntrl.directory.size_mb) \
                        for dir_cntrl in dir_cntrls])
 
-    #
-    # determine the number of memory controllers and other memory controller
-    # parameters for the profiler
-    #
-    mcCount = len(dir_cntrls)
-    banksPerRank = dir_cntrls[0].memBuffer.banks_per_rank
-    ranksPerDimm = dir_cntrls[0].memBuffer.ranks_per_dimm
-    dimmsPerChannel = dir_cntrls[0].memBuffer.dimms_per_channel
-
-    ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers),
-                                 mem_cntrl_count = mcCount,
-                                 banks_per_rank = banksPerRank,
-                                 ranks_per_dimm = ranksPerDimm,
-                                 dimms_per_channel = dimmsPerChannel)
+    ruby_profiler = RubyProfiler(num_of_sequencers = len(cpu_sequencers))
     
     ruby = RubySystem(clock = options.clock,
                       network = network,

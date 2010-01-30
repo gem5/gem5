@@ -42,7 +42,7 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/profiler/MemCntrlProfiler.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/gems_common/util.hh"
@@ -99,6 +99,8 @@ public:
   void printConfig (ostream& out);
   void print (ostream& out) const;
   void setDebug (int debugFlag);
+  void clearStats() const;
+  void printStats(ostream& out) const;
 
 
   //added by SS
@@ -123,7 +125,6 @@ private:
 
   // data members
   Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-  int m_version;
   string m_description;
   int m_msg_counter;
   int m_awakened;
@@ -178,6 +179,8 @@ private:
   int m_ageCounter;         // age of old requests; to detect starvation
   int m_idleCount;          // watchdog timer for shutting down
   int m_debug;              // turn on printf's
+
+  MemCntrlProfiler* m_profiler_ptr;
 };
 
 #endif  // MEMORY_CONTROL_H

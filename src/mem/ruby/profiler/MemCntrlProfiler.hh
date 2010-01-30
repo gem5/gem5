@@ -28,7 +28,7 @@
  */
 
 /*
- * CacheProfiler.hh
+ * MemCntrlProfiler.hh
  *
  * Description:
  *
@@ -36,65 +36,88 @@
  *
  */
 
-#ifndef CACHEPROFILER_H
-#define CACHEPROFILER_H
+#ifndef MEM_CNTRL_PROFILER_H
+#define MEM_CNTRL_PROFILER_H
 
+#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/common/Histogram.hh"
-#include "mem/protocol/AccessModeType.hh"
-#include "mem/protocol/PrefetchBit.hh"
-#include "mem/protocol/CacheRequestType.hh"
 
 template <class TYPE> class Vector;
 
-class CacheProfiler {
+class MemCntrlProfiler {
 public:
   // Constructors
-  CacheProfiler(const string& description);
+  MemCntrlProfiler(const string& description,
+                   int banks_per_rank,
+                   int ranks_per_dimm,
+                   int dimms_per_channel);
 
   // Destructor
-  ~CacheProfiler();
+  ~MemCntrlProfiler();
 
   // Public Methods
   void printStats(ostream& out) const;
   void clearStats();
 
-  void addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit);
+  void profileMemReq(int bank);
+  void profileMemBankBusy();
+  void profileMemBusBusy();
+  void profileMemTfawBusy();
+  void profileMemReadWriteBusy();
+  void profileMemDataBusBusy();
+  void profileMemRefresh();
+  void profileMemRead();
+  void profileMemWrite();
+  void profileMemWaitCycles(int cycles);
+  void profileMemInputQ(int cycles);
+  void profileMemBankQ(int cycles);
+  void profileMemArbWait(int cycles);
+  void profileMemRandBusy();
+  void profileMemNotOld();
 
   void print(ostream& out) const;
 private:
   // Private Methods
 
   // Private copy constructor and assignment operator
-  CacheProfiler(const CacheProfiler& obj);
-  CacheProfiler& operator=(const CacheProfiler& obj);
+  MemCntrlProfiler(const MemCntrlProfiler& obj);
+  MemCntrlProfiler& operator=(const MemCntrlProfiler& obj);
 
   // Data Members (m_ prefix)
   string m_description;
-  Histogram m_requestSize;
-  int64 m_misses;
-  int64 m_demand_misses;
-  int64 m_prefetches;
-  int64 m_sw_prefetches;
-  int64 m_hw_prefetches;
-  int64 m_accessModeTypeHistogram[AccessModeType_NUM];
-
-  Vector < int >* m_requestTypeVec_ptr;
+  uint64 m_memReq;
+  uint64 m_memBankBusy;
+  uint64 m_memBusBusy;
+  uint64 m_memTfawBusy;
+  uint64 m_memReadWriteBusy;
+  uint64 m_memDataBusBusy;
+  uint64 m_memRefresh;
+  uint64 m_memRead;
+  uint64 m_memWrite;
+  uint64 m_memWaitCycles;
+  uint64 m_memInputQ;
+  uint64 m_memBankQ;
+  uint64 m_memArbWait;
+  uint64 m_memRandBusy;
+  uint64 m_memNotOld;
+  Vector<uint64> m_memBankCount;
+  int m_banks_per_rank;
+  int m_ranks_per_dimm;
+  int m_dimms_per_channel;
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const CacheProfiler& obj);
+ostream& operator<<(ostream& out, const MemCntrlProfiler& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const CacheProfiler& obj)
+ostream& operator<<(ostream& out, const MemCntrlProfiler& obj)
 {
   obj.print(out);
   out << flush;
   return out;
 }
 
-#endif //CACHEPROFILER_H
+#endif //MEM_CNTRL_PROFILER_H

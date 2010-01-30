@@ -57,7 +57,7 @@ CacheMemory::CacheMemory(const Params *p)
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
     m_policy = p->replacement_policy;
-    m_profiler_ptr = p->cache_profiler;
+    m_profiler_ptr = new CacheProfiler(name());
 }
 
 
