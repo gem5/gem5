@@ -6,8 +6,6 @@ class RubySystem(SimObject):
     random_seed = Param.Int(1234, "random seed used by the simulation");
     randomization = Param.Bool(False,
         "insert random delays on message enqueue times");
-    tech_nm = Param.Int(45,
-        "device size used to calculate latency and area information");
     clock = Param.Clock('1GHz', "")
     block_size_bytes = Param.Int(64,
         "default cache block size; must be a power of two");

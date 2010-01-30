@@ -96,7 +96,6 @@ public:
   // config accessors
   static int getRandomSeed() { return m_random_seed; }
   static int getRandomization() { return m_randomization; }
-  static int getTechNm() { return m_tech_nm; }
   static int getBlockSizeBytes() { return m_block_size_bytes; }
   static int getBlockSizeBits() { return m_block_size_bits; }
   static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
@@ -162,7 +161,6 @@ private:
   // configuration parameters
   static int m_random_seed;
   static bool m_randomization;
-  static int m_tech_nm;
   static Tick m_clock;
   static int m_block_size_bytes;
   static int m_block_size_bits;
