@@ -44,6 +44,9 @@ if buildEnv['FULL_SYSTEM']:
     panic("This script requires syscall emulation mode (*_SE).")
 
 addToPath('../common')
+addToPath('../ruby')
+
+import Ruby
 
 import Simulation
 from cpu2000 import *
@@ -64,9 +67,15 @@ parser.add_option("-o", "--options", default="",
 parser.add_option("-i", "--input", default="", help="Read stdin from a file.")
 parser.add_option("--output", default="", help="Redirect stdout to a file.")
 parser.add_option("--errout", default="", help="Redirect stderr to a file.")
-parser.add_option("--ruby-debug", action="store_true")
-parser.add_option("--ruby-debug-file", default="", help="Ruby debug out file (stdout if blank)")
 
+# cache parameters
+parser.add_option("--l1d_size", type="string", default="32kB")
+parser.add_option("--l1i_size", type="string", default="32kB")
+parser.add_option("--l2_size", type="string", default="1MB")
+parser.add_option("--l1d_assoc", type="int", default=2)
+parser.add_option("--l1i_assoc", type="int", default=2)
+parser.add_option("--l2_assoc", type="int", default=16)
+ 
 execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
@@ -130,46 +139,36 @@ if options.detailed:
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(options)
 
+#
+# Currently ruby only works in timing mode 
+#
+assert(options.timing)
+assert(test_mem_mode == 'timing')
+assert(FutureClass == None)
+
 CPUClass.clock = '1GHz'
 
 np = options.num_cpus
 
-rubymem = RubyMemory(
-  range = AddrRange("512MB"),
-  clock = "1GHz",
-  num_cpus = np,
-  config_file = "ruby.config",
-  stats_file = "m5out/ruby.stats"
-)
-
-if options.ruby_debug == True:
-  rubymem.debug = True
-  rubymem.debug_file = options.ruby_debug_file
-
 system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(np)],
-                physmem = rubymem)
+                physmem = PhysicalMemory())
 
-if options.l2cache:
-    print "Error: -l2cache incompatible with ruby, must configure it ruby-style"
-    sys.exit(1)
+system.ruby = Ruby.create_system(options, system.physmem)
 
-if options.caches:
-    print "Error: -caches incompatible with ruby, must configure it ruby-style"
-    sys.exit(1)
+assert(options.num_cpus == len(system.ruby.cpu_ruby_ports))
 
-for i in xrange(np):
-    system.cpu[i].connectMemPorts(system.physmem)
-
+for (i, cpu) in enumerate(system.cpu):
+    #
+    # Tie the cpu ports to the ruby cpu ports
+    #
+    cpu.icache_port = system.ruby.cpu_ruby_ports[i].port
+    cpu.dcache_port = system.ruby.cpu_ruby_ports[i].port
 
     '''process = LiveProcess()
     process.executable = options.cmd
     process.cmd = [options.cmd, str(i)]
     '''
-    system.cpu[i].workload = process
-
-    if options.fastmem:
-        system.cpu[i].physmem_port = system.physmem.port
-
+    cpu.workload = process
 
 root = Root(system = system)
 
