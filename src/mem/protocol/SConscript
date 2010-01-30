@@ -70,6 +70,25 @@ def slicc_emitter(target, source, env):
         print "    %s" % name
 
     target.extend(sorted(slicc.files()))
+    pdir = str(protocol_dir)
+    hdir = str(html_dir)
+
+    if not isdir(pdir):
+        os.mkdir(pdir)
+    if not isdir(hdir):
+        os.mkdir(hdir)
+
+    print "SLICC Generator pass 1..."
+    slicc.findMachines()
+
+    print "SLICC Generator pass 2..."
+    slicc.generate()
+
+    print "SLICC writing C++ files..."
+    slicc.writeCodeFiles(pdir)
+
+    print "SLICC writing HTML files..."
+    slicc.writeHTMLFiles(hdir)
     return target, source
 
 def slicc_action(target, source, env):
@@ -108,5 +127,10 @@ env.Append(BUILDERS={'SLICC' : slicc_builder})
 nodes = env.SLICC([], [ Value(protocol) ] + sources)
 env.Depends(nodes, slicc_depends)
 
-for f in sorted(s for s in nodes if str(s).endswith('.cc')):
-    Source(f)
+for f in nodes:
+    s = str(f)
+    if s.endswith('.cc'):
+        Source(f)
+    elif s.endswith('.py'):
+        SimObject(f)
+

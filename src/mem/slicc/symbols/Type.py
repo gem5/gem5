@@ -478,7 +478,6 @@ ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj);
 ''')
 
         if self.isMachineType:
-            code('#include "mem/protocol/ControllerFactory.hh"')
             for enum in self.enums.itervalues():
                 code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
 

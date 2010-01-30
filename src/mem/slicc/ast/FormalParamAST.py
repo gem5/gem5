@@ -29,10 +29,11 @@ from slicc.ast.AST import AST
 from slicc.symbols import Var
 
 class FormalParamAST(AST):
-    def __init__(self, slicc, type_ast, ident):
+    def __init__(self, slicc, type_ast, ident, default = None):
         super(FormalParamAST, self).__init__(slicc)
         self.type_ast = type_ast
         self.ident = ident
+        self.default = default
 
     def __repr__(self):
         return "[FormalParamAST: %s]" % self.ident

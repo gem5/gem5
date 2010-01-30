@@ -34,7 +34,7 @@
  */
 
 machine(Directory, "AMD Hammer-like protocol") 
-: int memory_controller_latency
+: int memory_controller_latency = 12
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";

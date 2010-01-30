@@ -133,63 +133,6 @@ class SymbolTable(object):
         for symbol in self.sym_vec:
             symbol.writeCodeFiles(path)
 
-        self.writeControllerFactory(path)
-
-    def writeControllerFactory(self, path):
-        code = code_formatter()
-
-        code('''
-/** \\file ControllerFactory.hh
- * Auto generatred C++ code started by $__file__:$__line__
- */
-
-#ifndef CONTROLLERFACTORY_H
-#define CONTROLLERFACTORY_H
-
-#include <string>
-class Network;
-class AbstractController;
-
-class ControllerFactory {
-  public:
-    static AbstractController *createController(const std::string &controller_type, const std::string &name);
-};
-#endif // CONTROLLERFACTORY_H''')
-        code.write(path, "ControllerFactory.hh")
-
-        code = code_formatter()
-        code('''
-/** \\file ControllerFactory.cc
- * Auto generatred C++ code started by $__file__:$__line__
- */
-
-#include "mem/protocol/ControllerFactory.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "mem/protocol/MachineType.hh"
-''')
-
-        controller_types = []
-        for symbol in self.getAllType(StateMachine):
-            code('#include "mem/protocol/${{symbol.ident}}_Controller.hh"')
-            controller_types.append(symbol.ident)
-
-        code('''
-AbstractController *ControllerFactory::createController(const std::string &controller_type, const std::string &name) {
-''')
-
-        for ct in controller_types:
-            code('''
-    if (controller_type == "$ct")
-        return new ${ct}_Controller(name);
-''')
-
-        code('''
-    assert(0); // invalid controller type
-    return NULL;
-}
-''')
-        code.write(path, "ControllerFactory.cc")
-
     def writeHTMLFiles(self, path):
         machines = list(self.getAllType(StateMachine))
         if len(machines) > 1:

@@ -16,7 +16,6 @@ class AbstractController : public SimObject, public Consumer {
 public:
     typedef RubyControllerParams Params;
     AbstractController(const Params *p) : SimObject(p) {}
-  virtual void init(Network* net_ptr, const vector<string> & argv) = 0;
 
   // returns the number of controllers created of the specific subtype
   //  virtual int getNumberOfControllers() const = 0;

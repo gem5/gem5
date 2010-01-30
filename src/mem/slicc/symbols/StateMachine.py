@@ -124,6 +124,7 @@ class StateMachine(Symbol):
         self.table = table
 
     def writeCodeFiles(self, path):
+        self.printControllerPython(path)
         self.printControllerHH(path)
         self.printControllerCC(path)
         self.printCSwitch(path)
@@ -133,6 +134,29 @@ class StateMachine(Symbol):
 
         for func in self.functions:
             func.writeCodeFiles(path)
+
+    def printControllerPython(self, path):
+        code = code_formatter()
+        ident = self.ident
+        py_ident = "%s_Controller" % ident
+        c_ident = "%s_Controller" % self.ident
+        code('''
+from m5.params import *
+from m5.SimObject import SimObject
+from Controller import RubyController
+
+class $py_ident(RubyController):
+    type = '$py_ident'
+''')
+        code.indent()
+        for param in self.config_parameters:
+            dflt_str = ''
+            if param.default is not None:
+                dflt_str = str(param.default) + ', '
+            code('${{param.name}} = Param.Int(${dflt_str}"")')
+        code.dedent()
+        code.write(path, '%s.py' % py_ident)
+        
 
     def printControllerHH(self, path):
         '''Output the method declarations for the class declaration'''
@@ -151,6 +175,8 @@ class StateMachine(Symbol):
 
 #ifndef ${ident}_CONTROLLER_H
 #define ${ident}_CONTROLLER_H
+
+#include "params/$c_ident.hh"
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -174,9 +200,10 @@ class $c_ident : public AbstractController {
 #ifdef CHECK_COHERENCE
 #endif /* CHECK_COHERENCE */
 public:
-    $c_ident(const string & name);
+    typedef ${c_ident}Params Params;
+    $c_ident(const Params *p);
     static int getNumControllers();
-    void init(Network* net_ptr, const vector<string> & argv);
+    void init();
     MessageBuffer* getMandatoryQueue() const;
     const int & getVersion() const;
     const string toString() const;
@@ -278,16 +305,30 @@ static int m_num_controllers;
             seen_types.add(var.type.ident)
 
         code('''
+$c_ident *
+${c_ident}Params::create()
+{
+    return new $c_ident(this);
+}
+
+
 int $c_ident::m_num_controllers = 0;
 
 stringstream ${ident}_transitionComment;
 #define APPEND_TRANSITION_COMMENT(str) (${ident}_transitionComment << str)
 /** \\brief constructor */
-$c_ident::$c_ident(const string &name)
-    : m_name(name)
+$c_ident::$c_ident(const Params *p)
+    : AbstractController(p)
 {
+    m_version = p->version;
+    m_transitions_per_cycle = p->transitions_per_cycle;
+    m_buffer_size = p->buffer_size;
+    m_recycle_latency = p->recycle_latency;
+    m_number_of_TBEs = p->number_of_TBEs;
 ''')
         code.indent()
+        for param in self.config_parameters:
+            code('m_${{param.name}} = p->${{param.name}};')
 
         code('m_num_controllers++;')
         for var in self.objects:
@@ -298,44 +339,10 @@ $c_ident::$c_ident(const string &name)
         code('''
 }
 
-void $c_ident::init(Network *net_ptr, const vector<string> &argv)
+void $c_ident::init()
 {
-    for (size_t i = 0; i < argv.size(); i += 2) {
-        if (argv[i] == "version")
-            m_version = atoi(argv[i+1].c_str());
-        else if (argv[i] == "transitions_per_cycle")
-            m_transitions_per_cycle = atoi(argv[i+1].c_str());
-        else if (argv[i] == "buffer_size")
-            m_buffer_size = atoi(argv[i+1].c_str());
-        else if (argv[i] == "recycle_latency")
-            m_recycle_latency = atoi(argv[i+1].c_str());
-        else if (argv[i] == "number_of_TBEs")
-            m_number_of_TBEs = atoi(argv[i+1].c_str());
-''')
-
-        code.indent()
-        code.indent()
-        for param in self.config_parameters:
-            code('else if (argv[i] == "${{param.name}}")')
-            if param.type_ast.type.ident == "int":
-                code('    m_${{param.name}} = atoi(argv[i+1].c_str());')
-            elif param.type_ast.type.ident == "bool":
-                code('    m_${{param.name}} = string_to_bool(argv[i+1]);')
-            else:
-                self.error("only int and bool parameters are "\
-                           "currently supported")
-        code.dedent()
-        code.dedent()
-        code('''
-    }
-
-    m_net_ptr = net_ptr;
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
-    for (size_t i = 0; i < argv.size(); i += 2) {
-        if (argv[i] != "version")
-            m_cfg[argv[i]] = argv[i+1];
-    }
 
     // Objects
     s_profiler.setVersion(m_version);

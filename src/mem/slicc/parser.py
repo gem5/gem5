@@ -115,8 +115,6 @@ class SLICC(Grammar):
 
     def files(self):
         f = set([
-            'ControllerFactory.cc',
-            'ControllerFactory.hh',
             'MachineType.cc',
             'MachineType.hh',
             'Types.hh' ])
@@ -417,6 +415,10 @@ class SLICC(Grammar):
     def p_param(self, p):
         "param : type ident"
         p[0] = ast.FormalParamAST(self, p[1], p[2])
+
+    def p_param__default(self, p):
+        "param : type ident '=' NUMBER"
+        p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
 
     # Idents and lists
     def p_idents__braced(self, p):
