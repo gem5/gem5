@@ -69,8 +69,11 @@ Set::Set(const Set& obj) {
 Set::Set(int size)
 {
   m_p_nArray = NULL;
-  assert(size>0);
-  setSize(size);
+  m_nArrayLen = 0;
+  m_nSize = 0;
+  if(size > 0) {
+    setSize(size);
+  }
 }
 
 Set::~Set() {
