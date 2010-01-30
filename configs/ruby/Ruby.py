@@ -32,50 +32,20 @@ from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
 
-import MOESI_hammer
-import MESI_CMP_directory
-import MOESI_CMP_directory
-import MI_example
-import MOESI_CMP_token
+protocol = buildEnv['PROTOCOL']
+
+exec "import %s" % protocol
 
 def create_system(options, physmem, piobus = None, dma_devices = []):
 
-    protocol = buildEnv['PROTOCOL']
-
-    if protocol == "MOESI_hammer":
+    try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
-            MOESI_hammer.create_system(options, \
-                                       physmem, \
-                                       piobus, \
-                                       dma_devices)
-    elif protocol == "MESI_CMP_directory":
-        (cpu_sequencers, dir_cntrls, all_cntrls) = \
-            MESI_CMP_directory.create_system(options, \
-                                             physmem, \
-                                             piobus, \
-                                             dma_devices)
-    elif protocol == "MOESI_CMP_directory":
-        (cpu_sequencers, dir_cntrls, all_cntrls) = \
-            MOESI_CMP_directory.create_system(options, \
-                                          physmem, \
-                                          piobus, \
-                                          dma_devices)
-    elif protocol == "MI_example":
-        (cpu_sequencers, dir_cntrls, all_cntrls) = \
-            MI_example.create_system(options, \
-                                     physmem, \
-                                     piobus, \
-                                     dma_devices)
-    elif protocol == "MOESI_CMP_token":
-        (cpu_sequencers, dir_cntrls, all_cntrls) = \
-            MOESI_CMP_token.create_system(options, \
-                                          physmem, \
-                                          piobus, \
-                                          dma_devices)
-    else:
-         print "Error: unsupported ruby protocol"
-         sys.exit(1)
-
+          eval("%s.create_system(options, physmem, piobus, dma_devices)" \
+               % protocol)
+    except:
+        print "Error: could not create sytem for ruby protocol %s" % protocol
+        sys.exit(1)
+        
     #
     # Important: the topology constructor must be called before the network
     # constructor.
