@@ -102,8 +102,6 @@ class L2Cache(RubyCache):
 # consistent with the NetDest list.  Therefore the l1 controller nodes must be
 # listed before the directory nodes and directory nodes before dma nodes, etc.
 #
- 
-# net_nodes = []
 l1_cntrl_nodes = []
 dir_cntrl_nodes = []
 
@@ -112,23 +110,43 @@ dir_cntrl_nodes = []
 # controller constructors are called before the network constructor
 #
 for (i, cpu) in enumerate(cpus):
-    l1_cntrl = L1Cache_Controller()
-    cpu_seq = RubySequencer(controller = l1_cntrl,
-                            icache = L1Cache(controller = l1_cntrl),
-                            dcache = L1Cache(controller = l1_cntrl))
-    cpu.controller = l1_cntrl
-    cpu.sequencer = cpu_seq
-    cpu.test = cpu_seq.port
-    cpu_seq.funcmem_port = system.physmem.port
-    cpu.functional = system.funcmem.port
+    #
+    # First create the Ruby objects associated with this cpu
+    # Eventually this code should go in a python file specific to the
+    # MOESI_hammer protocol
+    #
     
+    l1i_cache = L1Cache()
+    l1d_cache = L1Cache()
+    l2_cache = L2Cache()
+
+    cpu_seq = RubySequencer(icache = l1i_cache,
+                            dcache = l1d_cache,
+                            funcmem_port = system.physmem.port)
+
+    l1_cntrl = L1Cache_Controller(version = i,
+                                  sequencer = cpu_seq,
+                                  L1IcacheMemory = l1i_cache,
+                                  L1DcacheMemory = l1d_cache,
+                                  L2cacheMemory = l2_cache)
+
     dir_cntrl = Directory_Controller(version = i,
                                      directory = RubyDirectoryMemory(),
-                                     memory_control = RubyMemoryControl())
+                                     memBuffer = RubyMemoryControl())
 
-    # net_nodes += [l1_cntrl, dir_cntrl]
+    #
+    # As noted above: Two independent list are track to maintain the order of
+    # nodes/controllers assumed by the ruby network
+    #
     l1_cntrl_nodes.append(l1_cntrl)
     dir_cntrl_nodes.append(dir_cntrl)
+
+    #
+    # Finally tie the memtester ports to the correct system ports
+    #
+    cpu.test = cpu_seq.port
+    cpu.functional = system.funcmem.port
+    
 
 #
 # Important: the topology constructor must be called before the network

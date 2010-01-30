@@ -34,7 +34,9 @@
  */
 
 machine(Directory, "AMD Hammer-like protocol") 
-: int memory_controller_latency = 12
+: DirectoryMemory * directory,
+  MemoryControl * memBuffer,
+  int memory_controller_latency = 12
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
@@ -108,18 +110,9 @@ machine(Directory, "AMD Hammer-like protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...") {
+  structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
-  }
-
-  external_type(DirectoryMemory) {
-    Entry lookup(Address);
-    bool isPresent(Address);
-  }
-
-  external_type(MemoryControl, inport="yes", outport="yes") {
-
   }
 
   // TBE entries for DMA requests
@@ -145,17 +138,17 @@ machine(Directory, "AMD Hammer-like protocol")
 
   // ** OBJECTS **
 
-  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory_name"])';
-
-  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_controller_name"])';
-
   TBETable TBEs, template_hack="<Directory_TBE>";
+
+  Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
+    return static_cast(Entry, directory[addr]);
+  }
 
   State getState(Address addr) {
     if (TBEs.isPresent(addr)) {
       return TBEs[addr].TBEState;
     } else {
-      return directory[addr].DirectoryState;
+      return getDirectoryEntry(addr).DirectoryState;
     }
   }
   
@@ -163,7 +156,7 @@ machine(Directory, "AMD Hammer-like protocol")
     if (TBEs.isPresent(addr)) {
       TBEs[addr].TBEState := state;
     }
-    directory[addr].DirectoryState := state;
+    getDirectoryEntry(addr).DirectoryState := state;
   }
   
   MessageBuffer triggerQueue, ordered="true";
@@ -454,7 +447,7 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := directory[address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DEBUG_EXPR(out_msg);
       }
     }
@@ -468,7 +461,7 @@ machine(Directory, "AMD Hammer-like protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := directory[address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DEBUG_EXPR(out_msg);
       }
     }
@@ -564,15 +557,15 @@ machine(Directory, "AMD Hammer-like protocol")
     peek(unblockNetwork_in, ResponseMsg) {
       assert(in_msg.Dirty);
       assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
-      directory[address].DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(address).DataBlk := in_msg.DataBlk;
       DEBUG_EXPR(in_msg.Address);
       DEBUG_EXPR(in_msg.DataBlk);
     }
   }
 
   action(dwt_writeDmaDataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    directory[address].DataBlk := TBEs[address].DataBlk;
-    directory[address].DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
+    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DmaDataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
   }
 
   action(a_assertCacheData, "ac", desc="Assert that a cache provided the data") {
@@ -610,7 +603,7 @@ machine(Directory, "AMD Hammer-like protocol")
       // implementation.  We include the data in the "dataless"
       // message so we can assert the clean data matches the datablock
       // in memory
-      assert(directory[address].DataBlk == in_msg.DataBlk);
+      assert(getDirectoryEntry(address).DataBlk == in_msg.DataBlk);
     }
   }
 

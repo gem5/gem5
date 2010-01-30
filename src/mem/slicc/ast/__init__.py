@@ -59,6 +59,7 @@ from slicc.ast.PeekStatementAST import *
 from slicc.ast.ReturnStatementAST import *
 from slicc.ast.StatementAST import *
 from slicc.ast.StatementListAST import *
+from slicc.ast.StaticCastAST import *
 from slicc.ast.TransitionDeclAST import *
 from slicc.ast.TypeAST import *
 from slicc.ast.TypeDeclAST import *

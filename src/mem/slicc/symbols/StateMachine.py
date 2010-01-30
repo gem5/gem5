@@ -31,14 +31,27 @@ from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
 import slicc.generate.html as html
 
+python_class_map = {"int": "Int",
+                    "string": "String",
+                    "bool": "Bool",
+                    "CacheMemory": "RubyCache",
+                    "Sequencer": "RubySequencer",
+                    "DirectoryMemory": "RubyDirectoryMemory",
+                    "MemoryControl": "RubyMemoryControl",
+                    }
+
 class StateMachine(Symbol):
     def __init__(self, symtab, ident, location, pairs, config_parameters):
         super(StateMachine, self).__init__(symtab, ident, location, pairs)
         self.table = None
         self.config_parameters = config_parameters
         for param in config_parameters:
-            var = Var(symtab, param.name, location, param.type_ast.type,
-                      "m_%s" % param.name, {}, self)
+            if param.pointer:
+                var = Var(symtab, param.name, location, param.type_ast.type,
+                          "(*m_%s_ptr)" % param.name, {}, self)
+            else:
+                var = Var(symtab, param.name, location, param.type_ast.type,
+                          "m_%s" % param.name, {}, self)
             self.symtab.registerSym(param.name, var)
 
         self.states = orderdict()
@@ -153,7 +166,13 @@ class $py_ident(RubyController):
             dflt_str = ''
             if param.default is not None:
                 dflt_str = str(param.default) + ', '
-            code('${{param.name}} = Param.Int(${dflt_str}"")')
+            if python_class_map.has_key(param.type_ast.type.c_ident):
+                python_type = python_class_map[param.type_ast.type.c_ident]
+                code('${{param.name}} = Param.${{python_type}}(${dflt_str}"")')
+            else:
+                self.error("Unknown c++ to python class conversion for c++ " \
+                           "type: '%s'. Please update the python_class_map " \
+                           "in StateMachine.py", param.type_ast.type.c_ident)
         code.dedent()
         code.write(path, '%s.py' % py_ident)
         
@@ -223,7 +242,10 @@ private:
         code.indent()
         # added by SS
         for param in self.config_parameters:
-            code('int m_${{param.ident}};')
+            if param.pointer:
+                code('${{param.type_ast.type}}* m_${{param.ident}}_ptr;')
+            else:
+                code('${{param.type_ast.type}} m_${{param.ident}};')
 
         code('''
 int m_number_of_TBEs;
@@ -328,8 +350,34 @@ $c_ident::$c_ident(const Params *p)
     m_number_of_TBEs = p->number_of_TBEs;
 ''')
         code.indent()
+
+        #
+        # After initializing the universal machine parameters, initialize the
+        # this machines config parameters.  Also detemine if these configuration
+        # params include a sequencer.  This information will be used later for
+        # contecting the sequencer back to the L1 cache controller.
+        #
+        contains_sequencer = False
         for param in self.config_parameters:
-            code('m_${{param.name}} = p->${{param.name}};')
+            if param.name == "sequencer":
+                contains_sequencer = True
+            if param.pointer:
+                code('m_${{param.name}}_ptr = p->${{param.name}};')
+            else:
+                code('m_${{param.name}} = p->${{param.name}};')
+
+        #
+        # For the l1 cache controller, add the special atomic support which 
+        # includes passing the sequencer a pointer to the controller.
+        #
+        if self.ident == "L1Cache":
+            if not contains_sequencer:
+                self.error("The L1Cache controller must include the sequencer " \
+                           "configuration parameter")
+
+            code('''
+m_sequencer_ptr->setController(this);
+''')
 
         code('m_num_controllers++;')
         for var in self.objects:

@@ -72,10 +72,6 @@ public:
   // Destructor
   ~CacheMemory();
 
-  // factory
-  //  static CacheMemory* createCache(int level, int num, char split_type, AbstractCacheEntry* (*entry_factory)());
-  //  static CacheMemory* getCache(int cache_id);
-
   // Public Methods
   void printConfig(ostream& out);
 
@@ -155,7 +151,6 @@ private:
 
 private:
   const string m_cache_name;
-  AbstractController* m_controller;
   int m_latency;
 
   // Data Members (m_prefix)
@@ -172,6 +167,8 @@ private:
 
   CacheProfiler* m_profiler_ptr;
 
+  int m_cache_size;
+  string m_policy;
   int m_cache_num_sets;
   int m_cache_num_set_bits;
   int m_cache_assoc;

@@ -27,50 +27,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- * Description: Common base class for a machine node.
- *
- */
-
-#ifndef AbstractCacheEntry_H
-#define AbstractCacheEntry_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 
-class DataBlock;
-
-class AbstractCacheEntry : public AbstractEntry {
-public:
-  // Constructors
-  AbstractCacheEntry();
-
-  // Destructor, prevent it from instantiation
-  virtual ~AbstractCacheEntry() = 0;
-
-  // Data Members (m_ prefix)
-  Address m_Address; // Address of this block, required by CacheMemory
-  Time m_LastRef; // Last time this block was referenced, required by CacheMemory
-  AccessPermission m_Permission; // Access permission for this block, required by CacheMemory
-};
-
-// Output operator declaration
-ostream& operator<<(ostream& out, const AbstractCacheEntry& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const AbstractCacheEntry& obj)
-{
-  obj.print(out);
-  out << flush;
-  return out;
+// Must define constructor and destructor in subclasses
+AbstractEntry::AbstractEntry() {
 }
 
-#endif //AbstractCacheEntry_H
+AbstractEntry::~AbstractEntry() {
+}
 

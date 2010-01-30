@@ -34,7 +34,11 @@
  */
 
 machine(L1Cache, "AMD Hammer-like protocol") 
-: int cache_response_latency = 12,
+: Sequencer * sequencer,
+  CacheMemory * L1IcacheMemory,
+  CacheMemory * L1DcacheMemory,
+  CacheMemory * L2cacheMemory,
+  int cache_response_latency = 12,
   int issue_latency = 2
 {
 
@@ -104,7 +108,6 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // STRUCTURE DEFINITIONS
 
   MessageBuffer mandatoryQueue, ordered="false";
-  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
@@ -122,17 +125,6 @@ machine(L1Cache, "AMD Hammer-like protocol")
     bool Sharers,            desc="On a GetS, did we find any other sharers in the system";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-    void profileMiss(CacheMsg);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -141,17 +133,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
   }
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
-  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
-  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
-  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["l2cache"])';
 
   Entry getCacheEntry(Address addr), return_by_ref="yes" {
     if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory[addr];
+      return static_cast(Entry, L2cacheMemory[addr]);
     } else if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory[addr];
+      return static_cast(Entry, L1DcacheMemory[addr]);
     } else {
-      return L1IcacheMemory[addr];
+      return static_cast(Entry, L1IcacheMemory[addr]);
     }
   }
 
@@ -670,17 +659,21 @@ machine(L1Cache, "AMD Hammer-like protocol")
 
   action(ss_copyFromL1toL2, "\s", desc="Copy data block from L1 (I or D) to L2") {
     if (L1DcacheMemory.isTagPresent(address)) {
-      L2cacheMemory[address] := L1DcacheMemory[address];
+      static_cast(Entry, L2cacheMemory[address]).Dirty := static_cast(Entry, L1DcacheMemory[address]).Dirty;
+      static_cast(Entry, L2cacheMemory[address]).DataBlk := static_cast(Entry, L1DcacheMemory[address]).DataBlk;
     } else {
-      L2cacheMemory[address] := L1IcacheMemory[address];
+      static_cast(Entry, L2cacheMemory[address]).Dirty := static_cast(Entry, L1IcacheMemory[address]).Dirty;
+      static_cast(Entry, L2cacheMemory[address]).DataBlk := static_cast(Entry, L1IcacheMemory[address]).DataBlk;
     }
   }
   
   action(tt_copyFromL2toL1, "\t", desc="Copy data block from L2 to L1 (I or D)") {
     if (L1DcacheMemory.isTagPresent(address)) {
-      L1DcacheMemory[address] := L2cacheMemory[address];
+      static_cast(Entry, L1DcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
+      static_cast(Entry, L1DcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
     } else {
-      L1IcacheMemory[address] := L2cacheMemory[address];
+      static_cast(Entry, L1IcacheMemory[address]).Dirty := static_cast(Entry, L2cacheMemory[address]).Dirty;
+      static_cast(Entry, L1IcacheMemory[address]).DataBlk := static_cast(Entry, L2cacheMemory[address]).DataBlk;
     }
   }
 

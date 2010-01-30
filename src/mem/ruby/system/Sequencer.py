@@ -1,12 +1,13 @@
 from m5.params import *
+from m5.proxy import *
 from MemObject import MemObject
 
 class RubyPort(MemObject):
     type = 'RubyPort'
     abstract = True
     port = VectorPort("M5 port")
-    controller = Param.RubyController("")
     version = Param.Int(0, "")
+    pio_port = Port("Ruby_pio_port")
 
 class RubySequencer(RubyPort):
     type = 'RubySequencer'

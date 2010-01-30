@@ -154,6 +154,7 @@ class SLICC(Grammar):
         'copy_head' : 'COPY_HEAD',
         'check_allocate' : 'CHECK_ALLOCATE',
         'check_stop_slots' : 'CHECK_STOP_SLOTS',
+        'static_cast' : 'STATIC_CAST',
         'if' : 'IF',
         'else' : 'ELSE',
         'return' : 'RETURN',
@@ -416,6 +417,10 @@ class SLICC(Grammar):
         "param : type ident"
         p[0] = ast.FormalParamAST(self, p[1], p[2])
 
+    def p_param__pointer(self, p):
+        "param : type STAR ident"
+        p[0] = ast.FormalParamAST(self, p[1], p[3], None, True)
+
     def p_param__default(self, p):
         "param : type ident '=' NUMBER"
         p[0] = ast.FormalParamAST(self, p[1], p[2], p[4])
@@ -530,6 +535,10 @@ class SLICC(Grammar):
     def p_statement__check_stop(self, p):
         "statement : CHECK_STOP_SLOTS '(' var ',' STRING ',' STRING ')' SEMI"
         p[0] = ast.CheckStopStatementAST(self, p[3], p[5], p[7])
+
+    def p_statement__static_cast(self, p):
+        "aexpr : STATIC_CAST '(' type ',' expr ')'"
+        p[0] = ast.StaticCastAST(self, p[3], p[5])
 
     def p_statement__return(self, p):
         "statement : RETURN expr SEMI"

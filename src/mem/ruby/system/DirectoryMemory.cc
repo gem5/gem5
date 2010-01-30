@@ -39,7 +39,6 @@
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/gems_common/util.hh"
 
 int DirectoryMemory::m_num_directories = 0;
@@ -52,7 +51,6 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     m_version = p->version;
     m_size_bytes = p->size_mb * static_cast<uint64>(1<<20);
     m_size_bits = log_int(m_size_bytes);
-    m_controller = p->controller;
 }
 
 void DirectoryMemory::init()
@@ -85,7 +83,6 @@ DirectoryMemory::~DirectoryMemory()
 void DirectoryMemory::printConfig(ostream& out) const
 {
   out << "DirectoryMemory module config: " << m_name << endl;
-  out << "  controller: " << m_controller->getName() << endl;
   out << "  version: " << m_version << endl;
   out << "  memory_bits: " << m_size_bits << endl;
   out << "  memory_size_bytes: " << m_size_bytes << endl;

@@ -31,9 +31,6 @@
 int CacheMemory::m_num_last_level_caches = 0;
 MachineType CacheMemory::m_last_level_machine_type = MachineType_FIRST;
 
-// Output operator declaration
-//ostream& operator<<(ostream& out, const CacheMemory<ENTRY>& obj);
-
 // ******************* Definitions *******************
 
 // Output operator definition
@@ -56,29 +53,27 @@ RubyCacheParams::create()
 CacheMemory::CacheMemory(const Params *p)
     : SimObject(p)
 {
-    int cache_size = p->size;
+    m_cache_size = p->size;
     m_latency = p->latency;
     m_cache_assoc = p->assoc;
-    string policy = p->replacement_policy;
-    m_controller = p->controller;
-
-  int num_lines = cache_size/RubySystem::getBlockSizeBytes();
-  m_cache_num_sets = num_lines / m_cache_assoc;
-  m_cache_num_set_bits = log_int(m_cache_num_sets);
-  assert(m_cache_num_set_bits > 0);
-
-  if(policy == "PSEUDO_LRU")
-    m_replacementPolicy_ptr = new PseudoLRUPolicy(m_cache_num_sets, m_cache_assoc);
-  else if (policy == "LRU")
-    m_replacementPolicy_ptr = new LRUPolicy(m_cache_num_sets, m_cache_assoc);
-  else
-    assert(false);
-
+    m_policy = p->replacement_policy;
 }
 
 
 void CacheMemory::init()
 {
+    m_cache_num_sets = (m_cache_size / m_cache_assoc) / RubySystem::getBlockSizeBytes();
+    assert(m_cache_num_sets > 1);
+    m_cache_num_set_bits = log_int(m_cache_num_sets);
+    assert(m_cache_num_set_bits > 0);
+    
+    if(m_policy == "PSEUDO_LRU")
+      m_replacementPolicy_ptr = new PseudoLRUPolicy(m_cache_num_sets, m_cache_assoc);
+    else if (m_policy == "LRU")
+      m_replacementPolicy_ptr = new LRUPolicy(m_cache_num_sets, m_cache_assoc);
+    else
+      assert(false);
+
   m_num_last_level_caches = 
     MachineType_base_count(MachineType_FIRST);
 #if 0
@@ -126,8 +121,6 @@ CacheMemory::numberOfLastLevelCaches()
 void CacheMemory::printConfig(ostream& out)
 {
   out << "Cache config: " << m_cache_name << endl;
-  if (m_controller != NULL)
-    out << "  controller: " << m_controller->getName() << endl;
   out << "  cache_associativity: " << m_cache_assoc << endl;
   out << "  num_cache_sets_bits: " << m_cache_num_set_bits << endl;
   const int cache_num_sets = 1 << m_cache_num_set_bits;

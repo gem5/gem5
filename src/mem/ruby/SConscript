@@ -87,6 +87,7 @@ def MakeInclude(source):
     target = generated_dir.File(basename(source))
     env.Command(target, source, MakeIncludeAction)
 
+MakeInclude('slicc_interface/AbstractEntry.hh')
 MakeInclude('slicc_interface/AbstractCacheEntry.hh')
 MakeInclude('slicc_interface/AbstractProtocol.hh')
 MakeInclude('slicc_interface/Message.hh')

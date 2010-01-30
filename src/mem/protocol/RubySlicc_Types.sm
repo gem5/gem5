@@ -98,6 +98,30 @@ external_type(Sequencer) {
   void profileNack(Address, int, int, uint64);
 }
 
+external_type(AbstractEntry, primitive="yes");
+
+external_type(DirectoryMemory) {
+  AbstractEntry lookup(Address);
+  bool isPresent(Address);
+}
+
+external_type(AbstractCacheEntry, primitive="yes");
+
+external_type(CacheMemory) {
+  bool cacheAvail(Address);
+  Address cacheProbe(Address);
+  void allocate(Address, AbstractCacheEntry);
+  void deallocate(Address);
+  AbstractCacheEntry lookup(Address);
+  void changePermission(Address, AccessPermission);
+  bool isTagPresent(Address);
+  void profileMiss(CacheMsg);
+}
+
+external_type(MemoryControl, inport="yes", outport="yes") {
+
+}
+
 external_type(TimerTable, inport="yes") {
   bool isReady();
   Address readyAddress();
@@ -117,5 +141,7 @@ external_type(GenericBloomFilter) {
   bool isSet(Address, int);
   int getCount(Address, int);
 }
+
+
 
 

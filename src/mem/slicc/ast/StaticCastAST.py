@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,17 +23,32 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#
-# Authors: Nathan Binkert
 
-Import('*')
+from slicc.ast.ExprAST import ExprAST
 
-if not env['RUBY']:
-    Return()
+class StaticCastAST(ExprAST):
+    def __init__(self, slicc, type_ast, expr_ast):
+        super(StaticCastAST, self).__init__(slicc)
 
-SimObject('Controller.py')
+        self.type_ast = type_ast
+        self.expr_ast = expr_ast
 
-Source('AbstractEntry.cc')
-Source('AbstractCacheEntry.cc')
-Source('RubySlicc_Profiler_interface.cc')
-Source('RubySlicc_ComponentMapping.cc')
+    def __repr__(self):
+        return "[StaticCastAST: %r]" % self.expr_ast
+
+    def generate(self, code):
+        actual_type, ecode = self.expr_ast.inline(True)
+        code('static_cast<${{self.type_ast.type.c_ident}} &>($ecode)')
+
+        if not "interface" in self.type_ast.type:
+            self.expr_ast.error("static cast only premitted for those types " \
+                                "that implement inherit an interface")
+
+        # The interface type should match
+        if str(actual_type) != str(self.type_ast.type["interface"]):
+            self.expr_ast.error("static cast miss-match, type is '%s'," \
+                                "but inherited type is '%s'",
+                                actual_type, self.type_ast.type["interface"])
+
+        return self.type_ast.type
+

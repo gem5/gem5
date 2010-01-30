@@ -27,87 +27,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * DirectoryMemory.hh
- *
- * Description:
- *
- * $Id$
- *
- */
-
-#ifndef DIRECTORYMEMORY_H
-#define DIRECTORYMEMORY_H
+#ifndef AbstractEntry_H
+#define AbstractEntry_H
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/MemoryVector.hh"
-#include "mem/protocol/Directory_Entry.hh"
-#include "sim/sim_object.hh"
-#include "params/RubyDirectoryMemory.hh"
+#include "mem/protocol/AccessPermission.hh"
 
-class DirectoryMemory : public SimObject {
+class DataBlock;
+
+class AbstractEntry {
 public:
   // Constructors
-    typedef RubyDirectoryMemoryParams Params;
-    DirectoryMemory(const Params *p);
-  void init();
-  //  DirectoryMemory(int version);
+  AbstractEntry();
 
-  // Destructor
-  ~DirectoryMemory();
-
-  int mapAddressToLocalIdx(PhysAddress address);
-  static int mapAddressToDirectoryVersion(PhysAddress address);
-
-  uint64 getSize() { return m_size_bytes; }
+  // Destructor, prevent it from instantiation
+  virtual ~AbstractEntry() = 0;
 
   // Public Methods
-  void printConfig(ostream& out) const;
-  static void printGlobalConfig(ostream & out);
-  bool isPresent(PhysAddress address);
-  Directory_Entry& lookup(PhysAddress address);
 
-  void invalidateBlock(PhysAddress address);
+  // The methods below are those called by ruby runtime, add when it is
+  // absolutely necessary and should all be virtual function.
+  virtual DataBlock& getDataBlk() = 0;
 
-  void print(ostream& out) const;
 
-private:
-  // Private Methods
+  virtual void print(ostream& out) const = 0;
 
-  // Private copy constructor and assignment operator
-  DirectoryMemory(const DirectoryMemory& obj);
-  DirectoryMemory& operator=(const DirectoryMemory& obj);
-
-private:
-  const string m_name;
-  // Data Members (m_ prefix)
-  Directory_Entry **m_entries;
-  //  int m_size;  // # of memory module blocks this directory is responsible for
-  uint64 m_size_bytes;
-  uint64 m_size_bits;
-  int m_num_entries;
-  int m_version;
-
-  static int m_num_directories;
-  static int m_num_directories_bits;
-  static uint64_t m_total_size_bytes;
-
-  MemoryVector* m_ram;
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const DirectoryMemory& obj);
+ostream& operator<<(ostream& out, const AbstractEntry& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const DirectoryMemory& obj)
+ostream& operator<<(ostream& out, const AbstractEntry& obj)
 {
   obj.print(out);
   out << flush;
   return out;
 }
 
-#endif //DIRECTORYMEMORY_H
+#endif //AbstractEntry_H
+

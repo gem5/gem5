@@ -7,4 +7,3 @@ class RubyDirectoryMemory(SimObject):
     cxx_class = 'DirectoryMemory'
     version = Param.Int(0, "")
     size_mb = Param.Int(1024, "")
-    controller = Param.RubyController(Parent.any, "")

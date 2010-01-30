@@ -51,6 +51,7 @@ class Type(Symbol):
     def __init__(self, table, ident, location, pairs, machine=None):
         super(Type, self).__init__(table, ident, location, pairs)
         self.c_ident = ident
+        self.abstract_ident = ""
         if machine:
             if self.isExternal or self.isPrimitive:
                 if "external_name" in self:
@@ -153,6 +154,9 @@ class Type(Symbol):
 
     def methodId(self, name, param_type_vec):
         return '_'.join([name] + [ pt.c_ident for pt in param_type_vec ])
+
+    def methodIdAbstract(self, name, param_type_vec):
+        return '_'.join([name] + [ pt.abstract_ident for pt in param_type_vec ])
 
     def methodAdd(self, name, return_type, param_type_vec):
         ident = self.methodId(name, param_type_vec)

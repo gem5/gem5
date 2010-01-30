@@ -118,9 +118,6 @@ private:
   CacheMemory* m_dataCache_ptr;
   CacheMemory* m_instCache_ptr;
 
-  // indicates what processor on the chip this sequencer is associated with
-  int m_controller_type;
-
   Map<Address, SequencerRequest*> m_writeRequestTable;
   Map<Address, SequencerRequest*> m_readRequestTable;
   // Global outstanding request count, across all request tables

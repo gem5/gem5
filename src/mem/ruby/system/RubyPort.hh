@@ -46,18 +46,81 @@ class AbstractController;
 
 class RubyPort : public MemObject {
 public:
+
+    class M5Port : public SimpleTimingPort
+    {
+
+        RubyPort *ruby_port;
+
+      public:
+        M5Port(const std::string &_name, 
+               RubyPort *_port);
+        bool sendTiming(PacketPtr pkt);
+        void hitCallback(PacketPtr pkt);
+
+      protected:
+        virtual bool recvTiming(PacketPtr pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
+
+      private:
+        bool isPioAddress(Addr addr);
+        bool isPhysMemAddress(Addr addr);
+    };
+
+    friend class M5Port;
+
+    class PioPort : public SimpleTimingPort
+    {
+
+        RubyPort *ruby_port;
+
+      public:
+        PioPort(const std::string &_name, 
+                RubyPort *_port);
+        bool sendTiming(PacketPtr pkt);
+
+      protected:
+        virtual bool recvTiming(PacketPtr pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
+    };
+
+    friend class PioPort;
+
+    struct SenderState : public Packet::SenderState
+    {
+        M5Port* port;
+        Packet::SenderState *saved;
+
+        SenderState(M5Port* _port, 
+                    Packet::SenderState *sender_state = NULL)
+            : port(_port), saved(sender_state)
+        {}
+    };
+
     typedef RubyPortParams Params;
     RubyPort(const Params *p);
-  virtual ~RubyPort() {}
+    virtual ~RubyPort() {}
+
+    void init();
 
     Port *getPort(const std::string &if_name, int idx);
 
-  virtual int64_t makeRequest(const RubyRequest & request) = 0;
+    virtual int64_t makeRequest(const RubyRequest & request) = 0;
 
-  void registerHitCallback(void (*hit_callback)(int64_t request_id)) {
-    assert(m_hit_callback == NULL); // can't assign hit_callback twice
-    m_hit_callback = hit_callback;
-  }
+    void registerHitCallback(void (*hit_callback)(int64_t request_id)) {
+        //
+        // Can't assign hit_callback twice and by default it is set to the
+        // RubyPort's default callback function.
+        //
+        assert(m_hit_callback == ruby_hit_callback); 
+        m_hit_callback = hit_callback;
+    }
+
+    //
+    // Called by the controller to give the sequencer a pointer.
+    // A pointer to the controller is needed for atomic support.
+    //
+    void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
 
 protected:
   const string m_name;
@@ -87,11 +150,26 @@ protected:
   int m_version;
   AbstractController* m_controller;
   MessageBuffer* m_mandatory_q_ptr;
+    PioPort* pio_port;
 
 private:
   static uint16_t m_num_ports;
   uint16_t m_port_id;
   uint64_t m_request_cnt;
+
+    struct RequestCookie {
+        Packet *pkt;
+        M5Port *m5Port;
+        RequestCookie(Packet *p, M5Port *m5p)
+            : pkt(p), m5Port(m5p)
+        {}
+    };
+
+    typedef std::map<int64_t, RequestCookie*> RequestMap;
+    static RequestMap pending_cpu_requests;
+    static void ruby_hit_callback(int64_t req_id);
+
+    FunctionalPort funcMemPort;
 };
 
 #endif

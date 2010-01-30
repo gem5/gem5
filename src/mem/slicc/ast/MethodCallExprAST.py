@@ -68,7 +68,8 @@ class MethodCallExprAST(ExprAST):
 
         for actual_type, expected_type in \
                 zip(paramTypes, obj_type.methods[methodId].param_types):
-            if actual_type != expected_type:
+            if actual_type != expected_type and \
+                   str(actual_type["interface"]) != str(expected_type):
                 self.error("Type mismatch: expected: %s actual: %s",
                            expected_type, actual_type)
 
@@ -97,9 +98,48 @@ class MemberMethodCallExprAST(MethodCallExprAST):
         methodId = obj_type.methodId(self.proc_name, paramTypes)
 
         prefix = ""
+        implements_interface = False
         if methodId not in obj_type.methods:
-            self.error("Invalid method call: Type '%s' does not have a method '%s'",
-                       obj_type, methodId)
+            #
+            # The initial method check has failed, but before generating an
+            # error we must check whether any of the paramTypes implement
+            # an interface.  If so, we must check if the method ids using
+            # the inherited types exist.
+            #
+            # This code is a temporary fix and only checks for the methodId
+            # where all paramTypes are converted to their inherited type.  The
+            # right way to do this is to replace slicc's simple string
+            # comparison for determining the correct overloaded method, with a
+            # more robust param by param check.
+            #
+            implemented_paramTypes = []
+            for paramType in paramTypes:
+                implemented_paramType = paramType
+                if paramType.isInterface:
+                    implements_interface = True
+                    implemented_paramType.abstract_ident = paramType["interface"]
+                else:
+                    implemented_paramType.abstract_ident = paramType.c_ident
+                    
+                implemented_paramTypes.append(implemented_paramType)
+
+            if implements_interface:
+                implementedMethodId = obj_type.methodIdAbstract(self.proc_name,
+                                                                implemented_paramTypes)
+            else:
+                implementedMethodId = ""
+            
+            if implementedMethodId not in obj_type.methods:
+                self.error("Invalid method call: " \
+                           "Type '%s' does not have a method '%s' nor '%s'",
+                           obj_type, methodId, implementedMethodId)
+            else:
+                #
+                # Replace the methodId with the implementedMethodId found in
+                # the method list.
+                #
+                methodId = implementedMethodId
+                
         return_type = obj_type.methods[methodId].return_type
         if return_type.isInterface:
             prefix = "static_cast<%s &>" % return_type.c_ident
