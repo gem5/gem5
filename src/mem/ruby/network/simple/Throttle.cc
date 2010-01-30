@@ -102,8 +102,6 @@ void Throttle::addLinks(const Vector<MessageBuffer*>& in_vec, const Vector<Messa
       m_message_counters[i][j] = 0;
     }
   }
-
-  m_out_link_vec.insertAtBottom(out_vec);
 }
 
 void Throttle::addVirtualNetwork(MessageBuffer* in_ptr, MessageBuffer* out_ptr)

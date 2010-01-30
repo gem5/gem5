@@ -47,7 +47,7 @@ class MessageBuffer;
 class Consumer {
 public:
   // Constructors
-  Consumer() { m_last_scheduled_wakeup = 0; m_last_wakeup = 0; m_out_link_vec.setSize(0); }
+  Consumer() { m_last_scheduled_wakeup = 0; m_last_wakeup = 0; }
 
   // Destructor
   virtual ~Consumer() { }
@@ -59,10 +59,6 @@ public:
   virtual void print(ostream& out) const = 0;
   const Time& getLastScheduledWakeup() const { return m_last_scheduled_wakeup; }
   void setLastScheduledWakeup(const Time& time) { m_last_scheduled_wakeup = time; }
-  Vector< Vector<MessageBuffer*> > getOutBuffers() { return m_out_link_vec; }
-
-protected:
-  Vector< Vector<MessageBuffer*> > m_out_link_vec;
 
 private:
   // Private Methods

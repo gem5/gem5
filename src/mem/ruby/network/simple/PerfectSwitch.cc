@@ -88,7 +88,6 @@ void PerfectSwitch::addOutPort(const Vector<MessageBuffer*>& out, const NetDest&
   m_out.insertAtBottom(out);
   m_routing_table.insertAtBottom(routing_table_entry);
 
-  m_out_link_vec.insertAtBottom(out);
 }
 
 void PerfectSwitch::clearRoutingTables()
