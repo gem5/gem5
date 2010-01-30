@@ -103,6 +103,7 @@ external_type(AbstractEntry, primitive="yes");
 external_type(DirectoryMemory) {
   AbstractEntry lookup(Address);
   bool isPresent(Address);
+  void invalidateBlock(Address);
 }
 
 external_type(AbstractCacheEntry, primitive="yes");

@@ -1,7 +1,9 @@
 
 machine(L1Cache, "MI Example L1 Cache")
-: int cache_response_latency,
-  int issue_latency
+: Sequencer * sequencer,
+  CacheMemory * cacheMemory,
+  int cache_response_latency = 12,
+  int issue_latency = 2
 {
 
   // NETWORK BUFFERS
@@ -44,7 +46,6 @@ machine(L1Cache, "MI Example L1 Cache")
   // STRUCTURE DEFINITIONS
 
   MessageBuffer mandatoryQueue, ordered="false";
-  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
 
   // CacheEntry
   structure(Entry, desc="...", interface="AbstractCacheEntry") {
@@ -53,17 +54,6 @@ machine(L1Cache, "MI Example L1 Cache")
     DataBlock DataBlk,       desc="Data in the block";
   }
 
-
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-    void profileMiss(CacheMsg);
-  }
 
   // TBE fields
   structure(TBE, desc="...") {
@@ -80,8 +70,6 @@ machine(L1Cache, "MI Example L1 Cache")
 
 
   // STRUCTURES
-
-  CacheMemory cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
 
   TBETable TBEs, template_hack="<L1Cache_TBE>";
 
@@ -100,6 +88,9 @@ machine(L1Cache, "MI Example L1 Cache")
     }
   }
 
+  Entry getCacheEntry(Address addr), return_by_ref="yes" {
+    return static_cast(Entry, cacheMemory[addr]);
+  }
 
   State getState(Address addr) {
 
@@ -107,7 +98,7 @@ machine(L1Cache, "MI Example L1 Cache")
       return TBEs[addr].TBEState;
     }
     else if (cacheMemory.isTagPresent(addr)) {
-      return cacheMemory[addr].CacheState;
+      return getCacheEntry(addr).CacheState;
     }
     else {
       return State:I;
@@ -121,7 +112,7 @@ machine(L1Cache, "MI Example L1 Cache")
     }
 
     if (cacheMemory.isTagPresent(addr)) {
-      cacheMemory[addr].CacheState := state;
+      getCacheEntry(addr).CacheState := state;
       if (state == State:M) {
         cacheMemory.changePermission(addr, AccessPermission:Read_Write);
       } else {
@@ -207,7 +198,7 @@ machine(L1Cache, "MI Example L1 Cache")
       out_msg.Type := CoherenceRequestType:PUTX;
       out_msg.Requestor := machineID;
       out_msg.Destination.add(map_Address_to_Directory(address));
-      out_msg.DataBlk := cacheMemory[address].DataBlk;
+      out_msg.DataBlk := getCacheEntry(address).DataBlk;
       out_msg.MessageSize := MessageSizeType:Data;
     }
   }
@@ -220,7 +211,7 @@ machine(L1Cache, "MI Example L1 Cache")
         out_msg.Type := CoherenceResponseType:DATA;
         out_msg.Sender := machineID;
         out_msg.Destination.add(in_msg.Requestor);
-        out_msg.DataBlk := cacheMemory[address].DataBlk;
+        out_msg.DataBlk := getCacheEntry(address).DataBlk;
         out_msg.MessageSize := MessageSizeType:Response_Data;
       }
     }
@@ -271,19 +262,19 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(r_load_hit, "r", desc="Notify sequencer the load completed.") {
-    DEBUG_EXPR(cacheMemory[address].DataBlk);
-    sequencer.readCallback(address, cacheMemory[address].DataBlk);
+    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    sequencer.readCallback(address, getCacheEntry(address).DataBlk);
   }
 
   action(s_store_hit, "s", desc="Notify sequencer that store completed.") {
-    DEBUG_EXPR(cacheMemory[address].DataBlk);
-    sequencer.writeCallback(address, cacheMemory[address].DataBlk);
+    DEBUG_EXPR(getCacheEntry(address).DataBlk);
+    sequencer.writeCallback(address, getCacheEntry(address).DataBlk);
   }
 
 
   action(u_writeDataToCache, "u", desc="Write data to the cache") {
     peek(responseNetwork_in, ResponseMsg) {
-      cacheMemory[address].DataBlk := in_msg.DataBlk;
+      getCacheEntry(address).DataBlk := in_msg.DataBlk;
     }
   }
 
@@ -298,7 +289,7 @@ machine(L1Cache, "MI Example L1 Cache")
   }
 
   action(x_copyDataFromCacheToTBE, "x", desc="Copy data from cache to TBE") {
-    TBEs[address].DataBlk := cacheMemory[address].DataBlk;
+    TBEs[address].DataBlk := getCacheEntry(address).DataBlk;
   }
 
   action(z_stall, "z", desc="stall") {

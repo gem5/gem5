@@ -1,6 +1,8 @@
 
 machine(Directory, "Directory protocol") 
-: int directory_latency
+: DirectoryMemory * directory,
+  MemoryControl * memBuffer,
+  int directory_latency = 12
 {
 
   MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
@@ -48,23 +50,12 @@ machine(Directory, "Directory protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...") {
+  structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
     NetDest Sharers,                   desc="Sharers for this block";
     NetDest Owner,                     desc="Owner of this block";
   }
-
-  external_type(DirectoryMemory) {
-    Entry lookup(Address);
-    bool isPresent(Address);
-    void invalidateBlock(Address);
-  }
-
-  external_type(MemoryControl, inport="yes", outport="yes") {
-
-  }
-
 
   // TBE entries for DMA requests
   structure(TBE, desc="TBE entries for outstanding DMA requests") {
@@ -83,17 +74,17 @@ machine(Directory, "Directory protocol")
   }
 
   // ** OBJECTS **
-  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory"])';
-
-  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_control"])';
-
   TBETable TBEs, template_hack="<Directory_TBE>";
 
+  Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
+    return static_cast(Entry, directory[addr]);
+  }
+ 
   State getState(Address addr) {
     if (TBEs.isPresent(addr)) {
       return TBEs[addr].TBEState;
     } else if (directory.isPresent(addr)) {
-      return directory[addr].DirectoryState;
+      return getDirectoryEntry(addr).DirectoryState;
     } else {
       return State:I;
     }
@@ -108,14 +99,14 @@ machine(Directory, "Directory protocol")
     if (directory.isPresent(addr)) {
 
       if (state == State:I)  {
-        assert(directory[addr].Owner.count() == 0);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 0);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       } else if (state == State:M) {
-        assert(directory[addr].Owner.count() == 1);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 1);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
 
-      directory[addr].DirectoryState := state;
+      getDirectoryEntry(addr).DirectoryState := state;
     }
   }
 
@@ -151,7 +142,7 @@ machine(Directory, "Directory protocol")
         } else if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:GETX, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:PUTX) {
-          if (directory[in_msg.Address].Owner.isElement(in_msg.Requestor)) {
+          if (getDirectoryEntry(in_msg.Address).Owner.isElement(in_msg.Requestor)) {
             trigger(Event:PUTX, in_msg.Address);
           } else {
             trigger(Event:PUTX_NotOwner, in_msg.Address);
@@ -219,7 +210,7 @@ machine(Directory, "Directory protocol")
   }
 
   action(c_clearOwner, "c", desc="Clear the owner field") {
-    directory[address].Owner.clear();
+    getDirectoryEntry(address).Owner.clear();
   }
 
   action(d_sendData, "d", desc="Send data to requestor") {
@@ -279,22 +270,22 @@ machine(Directory, "Directory protocol")
 
   action(e_ownerIsRequestor, "e", desc="The owner is now the requestor") {
     peek(requestQueue_in, RequestMsg) {
-      directory[address].Owner.clear();
-      directory[address].Owner.add(in_msg.Requestor);
+      getDirectoryEntry(address).Owner.clear();
+      getDirectoryEntry(address).Owner.add(in_msg.Requestor);
     }
   }
 
   action(f_forwardRequest, "f", desc="Forward request to owner") {
     peek(requestQueue_in, RequestMsg) {
       APPEND_TRANSITION_COMMENT("Own: ");
-      APPEND_TRANSITION_COMMENT(directory[in_msg.Address].Owner);
+      APPEND_TRANSITION_COMMENT(getDirectoryEntry(in_msg.Address).Owner);
       APPEND_TRANSITION_COMMENT("Req: ");
       APPEND_TRANSITION_COMMENT(in_msg.Requestor);
       enqueue(forwardNetwork_out, RequestMsg, latency=directory_latency) {
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination := directory[in_msg.Address].Owner;
+        out_msg.Destination := getDirectoryEntry(in_msg.Address).Owner;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
@@ -306,7 +297,7 @@ machine(Directory, "Directory protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := machineID;
-        out_msg.Destination := directory[in_msg.PhysicalAddress].Owner;
+        out_msg.Destination := getDirectoryEntry(in_msg.PhysicalAddress).Owner;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
     }
@@ -324,13 +315,13 @@ machine(Directory, "Directory protocol")
     peek(requestQueue_in, RequestMsg) {
       // assert(in_msg.Dirty);
       // assert(in_msg.MessageSize == MessageSizeType:Writeback_Data);
-      directory[in_msg.Address].DataBlk := in_msg.DataBlk;
-      //directory[in_msg.Address].DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
+      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
+      //getDirectoryEntry(in_msg.Address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
     }
   }
   
   action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
@@ -378,7 +369,7 @@ machine(Directory, "Directory protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
         DEBUG_EXPR(out_msg);
       }
     }
@@ -392,7 +383,7 @@ machine(Directory, "Directory protocol")
         out_msg.Sender := machineID;
         //out_msg.OriginalRequestorMachId := machineID;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := directory[address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DEBUG_EXPR(out_msg);
       }
     }
@@ -453,8 +444,10 @@ machine(Directory, "Directory protocol")
   }
 
   action(w_writeDataToMemoryFromTBE, "\w", desc="Write date to directory memory from TBE") {
-    //directory[address].DataBlk := TBEs[address].DataBlk;
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    //getDirectoryEntry(address).DataBlk := TBEs[address].DataBlk;
+    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, 
+                                addressOffset(TBEs[address].PhysicalAddress), 
+                                TBEs[address].Len);
 
   }
 
