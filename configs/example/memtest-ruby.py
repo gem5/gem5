@@ -68,6 +68,17 @@ parser.add_option("--progress", type="int", default=1000,
                   help="Progress message interval "
                   "[default: %default]")
 
+#
+# Set the default cache size and associativity to be very small to encourage
+# races between requests and writebacks.
+#
+parser.add_option("--l1d_size", type="string", default="256B")
+parser.add_option("--l1i_size", type="string", default="256B")
+parser.add_option("--l2_size", type="string", default="512B")
+parser.add_option("--l1d_assoc", type="int", default=2)
+parser.add_option("--l1i_assoc", type="int", default=2)
+parser.add_option("--l2_assoc", type="int", default=2)
+
 execfile(os.path.join(config_root, "common", "Options.py"))
 
 (options, args) = parser.parse_args()
