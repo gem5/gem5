@@ -28,11 +28,13 @@
  */
 
 machine(L1Cache, "MSI Directory L1 Cache CMP")
- : int l1_request_latency,
-   int l1_response_latency,
-   int to_l2_latency,
-   int l2_select_low_bit,
-   int l2_select_num_bits
+ : Sequencer * sequencer,
+   CacheMemory * L1IcacheMemory,
+   CacheMemory * L1DcacheMemory,
+   int l2_select_num_bits,
+   int l1_request_latency = 2,
+   int l1_response_latency = 2,
+   int to_l2_latency = 1
 {
 
 
@@ -118,16 +120,6 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
     int pendingAcks, default="0", desc="number of pending acks";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -137,30 +129,17 @@ machine(L1Cache, "MSI Directory L1 Cache CMP")
 
   TBETable L1_TBEs, template_hack="<L1Cache_TBE>";
 
-//  CacheMemory L1IcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1I"', abstract_chip_ptr="true";
-//  CacheMemory L1DcacheMemory, template_hack="<L1Cache_Entry>", constructor_hack='L1_CACHE_NUM_SETS_BITS,L1_CACHE_ASSOC,MachineType_L1Cache,int_to_string(i)+"_L1D"', abstract_chip_ptr="true";
-
-  CacheMemory L1IcacheMemory, factory='RubySystem::getCache(m_cfg["icache"])';
-
-  CacheMemory L1DcacheMemory, factory='RubySystem::getCache(m_cfg["dcache"])';
-
-
-//  MessageBuffer mandatoryQueue, ordered="false", rank="100", abstract_chip_ptr="true";
-
-//  Sequencer sequencer, abstract_chip_ptr="true", constructor_hack="i";
-
   MessageBuffer mandatoryQueue, ordered="false";
-  Sequencer sequencer, factory='RubySystem::getSequencer(m_cfg["sequencer"])';
-
 
   int cache_state_to_int(State state);
+  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
 
   // inclusive cache returns L1 entries only
   Entry getL1CacheEntry(Address addr), return_by_ref="yes" {
     if (L1DcacheMemory.isTagPresent(addr)) {
-      return L1DcacheMemory[addr];
+      return static_cast(Entry, L1DcacheMemory[addr]);
     } else {
-      return L1IcacheMemory[addr];
+      return static_cast(Entry, L1IcacheMemory[addr]);
     }
   }
 

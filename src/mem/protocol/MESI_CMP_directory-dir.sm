@@ -36,8 +36,10 @@
 
 
 machine(Directory, "MESI_CMP_filter_directory protocol") 
- : int to_mem_ctrl_latency,
-   int directory_latency
+ : DirectoryMemory * directory,
+   MemoryControl * memBuffer,
+   int to_mem_ctrl_latency = 1,
+   int directory_latency = 6
 {
 
   MessageBuffer requestToDir, network="From", virtual_network="0", ordered="false";
@@ -78,21 +80,11 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   // TYPES
 
   // DirectoryEntry
-  structure(Entry, desc="...") {
+  structure(Entry, desc="...", interface="AbstractEntry") {
     State DirectoryState,          desc="Directory state";
     DataBlock DataBlk,             desc="data for the block";
     NetDest Sharers,                   desc="Sharers for this block";
     NetDest Owner,                     desc="Owner of this block"; 
-  }
-
-  external_type(DirectoryMemory) {
-    Entry lookup(Address);
-    bool isPresent(Address);
-  }
-
-  // to simulate detailed DRAM
-  external_type(MemoryControl, inport="yes", outport="yes") {
-
   }
 
   // TBE entries for DMA requests
@@ -113,21 +105,17 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   // ** OBJECTS **
 
-//  DirectoryMemory directory, constructor_hack="i";
-//  MemoryControl memBuffer, constructor_hack="i";
-
-  DirectoryMemory directory, factory='RubySystem::getDirectory(m_cfg["directory"])';
-
-  MemoryControl memBuffer, factory='RubySystem::getMemoryControl(m_cfg["memory_control"])';
-
-
   TBETable TBEs, template_hack="<Directory_TBE>";
       
+  Entry getDirectoryEntry(Address addr), return_by_ref="yes" {
+    return static_cast(Entry, directory[addr]);
+  }
+
   State getState(Address addr) {
     if (TBEs.isPresent(addr)) {
       return TBEs[addr].TBEState;   
     } else if (directory.isPresent(addr)) {
-      return directory[addr].DirectoryState;
+      return getDirectoryEntry(addr).DirectoryState;
     } else {
       return State:I;
     }
@@ -143,14 +131,14 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
     if (directory.isPresent(addr)) {
   
       if (state == State:I)  {
-        assert(directory[addr].Owner.count() == 0);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 0);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       } else if (state == State:M) {
-        assert(directory[addr].Owner.count() == 1);
-        assert(directory[addr].Sharers.count() == 0);
+        assert(getDirectoryEntry(addr).Owner.count() == 1);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
       
-      directory[addr].DirectoryState := state;
+      getDirectoryEntry(addr).DirectoryState := state;
     }
   }
 
@@ -281,7 +269,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.MessageSize := in_msg.MessageSize;
         out_msg.Prefetch := in_msg.Prefetch;
-        out_msg.DataBlk := directory[in_msg.Address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
 
         DEBUG_EXPR(out_msg);
       }
@@ -306,7 +294,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   action(m_writeDataToMemory, "m", desc="Write dirty writeback to memory") {
     peek(responseNetwork_in, ResponseMsg) {
-      directory[in_msg.Address].DataBlk := in_msg.DataBlk;
+      getDirectoryEntry(in_msg.Address).DataBlk := in_msg.DataBlk;
       DEBUG_EXPR(in_msg.Address);
       DEBUG_EXPR(in_msg.DataBlk);
     }
@@ -320,7 +308,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
         out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := machineID;
         out_msg.MessageSize := in_msg.MessageSize;
-        out_msg.DataBlk := directory[address].DataBlk;
+        out_msg.DataBlk := getDirectoryEntry(address).DataBlk;
         DEBUG_EXPR(out_msg);
       }
     }
@@ -344,7 +332,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   action(dw_writeDMAData, "dw", desc="DMA Write data to memory") {
     peek(requestNetwork_in, RequestMsg) {
-      directory[address].DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
+      getDirectoryEntry(address).DataBlk.copyPartial(in_msg.DataBlk, addressOffset(in_msg.Address), in_msg.Len);
     }
   }
 
@@ -386,8 +374,8 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
 
   action(e_ownerIsRequestor, "e", desc="The owner is now the requestor") {
     peek(requestNetwork_in, RequestMsg) {
-      directory[address].Owner.clear();
-      directory[address].Owner.add(in_msg.Requestor);
+      getDirectoryEntry(address).Owner.clear();
+      getDirectoryEntry(address).Owner.add(in_msg.Requestor);
     }
   }
 
@@ -398,7 +386,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:INV;
       out_msg.Sender := machineID;
-      out_msg.Destination := directory[address].Owner;
+      out_msg.Destination := getDirectoryEntry(address).Owner;
       out_msg.MessageSize := MessageSizeType:Response_Control;
       }
     }
@@ -418,7 +406,7 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   }
 
   action(c_clearOwner, "c", desc="Clear the owner field") {
-    directory[address].Owner.clear();
+    getDirectoryEntry(address).Owner.clear();
   }
 
   action(v_allocateTBE, "v", desc="Allocate TBE") {
@@ -431,8 +419,8 @@ machine(Directory, "MESI_CMP_filter_directory protocol")
   }
 
   action(dwt_writeDMADataFromTBE, "dwt", desc="DMA Write data to memory from TBE") {
-    //directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
-    directory[address].DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
+    //getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, TBEs[address].Offset, TBEs[address].Len);
+    getDirectoryEntry(address).DataBlk.copyPartial(TBEs[address].DataBlk, addressOffset(TBEs[address].PhysicalAddress), TBEs[address].Len);
 
 
   }

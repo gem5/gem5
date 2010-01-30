@@ -33,9 +33,10 @@
  */
 
 machine(L2Cache, "MESI Directory L2 Cache CMP")
- : int l2_request_latency,  
-   int l2_response_latency,
-   int to_l1_latency
+ : CacheMemory * L2cacheMemory,
+   int l2_request_latency = 2,  
+   int l2_response_latency = 2,
+   int to_l1_latency = 1
 {
 
   // L2 BANK QUEUES
@@ -145,17 +146,6 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     int pendingAcks,            desc="number of pending acks for invalidates during writeback";
   }
 
-  external_type(CacheMemory) {
-    bool cacheAvail(Address);
-    Address cacheProbe(Address);
-    void allocate(Address, Entry);
-    void deallocate(Address);
-    Entry lookup(Address);
-    void changePermission(Address, AccessPermission);
-    bool isTagPresent(Address);
-    void setMRU(Address);
-  }
-
   external_type(TBETable) {
     TBE lookup(Address);
     void allocate(Address);
@@ -165,14 +155,9 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   TBETable L2_TBEs, template_hack="<L2Cache_TBE>";
 
-//  CacheMemory L2cacheMemory, template_hack="<L2Cache_Entry>", constructor_hack='L2_CACHE_NUM_SETS_BITS,L2_CACHE_ASSOC,MachineType_L2Cache,int_to_string(i)';
-
-
-  CacheMemory L2cacheMemory, factory='RubySystem::getCache(m_cfg["cache"])';
-
   // inclusive cache, returns L2 entries only
   Entry getL2CacheEntry(Address addr), return_by_ref="yes" {
-    return L2cacheMemory[addr];
+    return static_cast(Entry, L2cacheMemory[addr]);
   }
 
   void changeL2Permission(Address addr, AccessPermission permission) {
@@ -190,13 +175,13 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
   }
 
   bool isOneSharerLeft(Address addr, MachineID requestor) {
-    assert(L2cacheMemory[addr].Sharers.isElement(requestor));
-    return (L2cacheMemory[addr].Sharers.count() == 1);
+    assert(getL2CacheEntry(addr).Sharers.isElement(requestor));
+    return (getL2CacheEntry(addr).Sharers.count() == 1);
   }
 
   bool isSharer(Address addr, MachineID requestor) {
     if (L2cacheMemory.isTagPresent(addr)) {
-      return L2cacheMemory[addr].Sharers.isElement(requestor);
+      return getL2CacheEntry(addr).Sharers.isElement(requestor);
     } else {
       return false;
     }
@@ -206,7 +191,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
     //DEBUG_EXPR(machineID);
     //DEBUG_EXPR(requestor);
     //DEBUG_EXPR(addr);
-    L2cacheMemory[addr].Sharers.add(requestor);
+    getL2CacheEntry(addr).Sharers.add(requestor);
   }
 
   State getState(Address addr) {
@@ -361,7 +346,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
             trigger(L1Cache_request_type_to_event(in_msg.Type, in_msg.Address, in_msg.Requestor), in_msg.Address);
           } else {
             // No room in the L2, so we need to make room before handling the request
-            if (L2cacheMemory[ L2cacheMemory.cacheProbe(in_msg.Address) ].Dirty ) {
+            if (getL2CacheEntry( L2cacheMemory.cacheProbe(in_msg.Address) ).Dirty ) {
               trigger(Event:L2_Replacement, L2cacheMemory.cacheProbe(in_msg.Address));
             } else {
               trigger(Event:L2_Replacement_clean, L2cacheMemory.cacheProbe(in_msg.Address));
@@ -393,7 +378,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination.add(L2cacheMemory[address].Exclusive);
+        out_msg.Destination.add(getL2CacheEntry(address).Exclusive);
         out_msg.MessageSize := MessageSizeType:Request_Control;
       }
     }
@@ -537,7 +522,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
       out_msg.Address := address;
       out_msg.Type := CoherenceRequestType:INV;
       out_msg.Requestor := machineID;
-      out_msg.Destination := L2cacheMemory[address].Sharers;
+      out_msg.Destination := getL2CacheEntry(address).Sharers;
       out_msg.MessageSize := MessageSizeType:Request_Control;
     }
   }
@@ -548,7 +533,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination := L2cacheMemory[address].Sharers;
+        out_msg.Destination := getL2CacheEntry(address).Sharers;
         out_msg.MessageSize := MessageSizeType:Request_Control;
       }
     }
@@ -561,7 +546,7 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:INV;
         out_msg.Requestor := in_msg.Requestor;
-        out_msg.Destination := L2cacheMemory[address].Sharers;
+        out_msg.Destination := getL2CacheEntry(address).Sharers;
         out_msg.Destination.remove(in_msg.Requestor);
         out_msg.MessageSize := MessageSizeType:Request_Control;
       }
@@ -713,28 +698,28 @@ machine(L2Cache, "MESI Directory L2 Cache CMP")
 
   action(kk_removeRequestSharer, "\k", desc="Remove L1 Request sharer from list") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      L2cacheMemory[address].Sharers.remove(in_msg.Requestor);
+      getL2CacheEntry(address).Sharers.remove(in_msg.Requestor);
     }
   }
 
   action(ll_clearSharers, "\l", desc="Remove all L1 sharers from list") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      L2cacheMemory[address].Sharers.clear();
+      getL2CacheEntry(address).Sharers.clear();
     }
   }
 
   action(mm_markExclusive, "\m", desc="set the exclusive owner") {
     peek(L1RequestIntraChipL2Network_in, RequestMsg) {
-      L2cacheMemory[address].Sharers.clear();
-      L2cacheMemory[address].Exclusive := in_msg.Requestor;
+      getL2CacheEntry(address).Sharers.clear();
+      getL2CacheEntry(address).Exclusive := in_msg.Requestor;
       addSharer(address, in_msg.Requestor);
     }
   }
 
   action(mmu_markExclusiveFromUnblock, "\mu", desc="set the exclusive owner") {
     peek(L1unblockNetwork_in, ResponseMsg) {
-      L2cacheMemory[address].Sharers.clear();
-      L2cacheMemory[address].Exclusive := in_msg.Sender;
+      getL2CacheEntry(address).Sharers.clear();
+      getL2CacheEntry(address).Exclusive := in_msg.Sender;
       addSharer(address, in_msg.Sender);
     }
   }
