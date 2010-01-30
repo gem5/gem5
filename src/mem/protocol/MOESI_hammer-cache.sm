@@ -245,7 +245,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // Forward Network
   in_port(forwardToCache_in, RequestMsg, forwardToCache) {
     if (forwardToCache_in.isReady()) {
-      peek(forwardToCache_in, RequestMsg) {
+      peek(forwardToCache_in, RequestMsg, block_on="Address") {
         if (in_msg.Type == CoherenceRequestType:GETX) {
           trigger(Event:Other_GETX, in_msg.Address);
         } else if (in_msg.Type == CoherenceRequestType:GETS) {
@@ -264,7 +264,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // Response Network
   in_port(responseToCache_in, ResponseMsg, responseToCache) {
     if (responseToCache_in.isReady()) {
-      peek(responseToCache_in, ResponseMsg) {
+      peek(responseToCache_in, ResponseMsg, block_on="Address") {
         if (in_msg.Type == CoherenceResponseType:ACK) {
           trigger(Event:Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceResponseType:ACK_SHARED) {
@@ -287,7 +287,7 @@ machine(L1Cache, "AMD Hammer-like protocol")
   // Mandatory Queue
   in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
 
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
