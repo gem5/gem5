@@ -39,10 +39,13 @@
 #include "mem/ruby/system/System.hh"
 
 //added by SS
-Tracer::Tracer(const string & name)
+Tracer::Tracer(const Params *p)
+    : SimObject(p)
 {
-  m_name = name;
   m_enabled = false;
+  m_warmup_length = p->warmup_length;
+  assert(m_warmup_length  > 0);
+  RubySystem::m_tracer_ptr = this;
 }
 
 //commented by SS
@@ -55,20 +58,8 @@ Tracer::~Tracer()
 {
 }
 
-void Tracer::init(const vector<string> & argv)
+void Tracer::init()
 {
-  m_warmup_length = 0;
-
-  for (size_t i=0; i<argv.size(); i+=2) {
-    if ( argv[i] == "warmup_length") {
-      m_warmup_length = atoi(argv[i+1].c_str());
-    }
-    else {
-      cerr << "WARNING: Tracer: Unkown configuration parameter: " << argv[i] << endl;
-      assert(false);
-    }
-  }
-  assert(m_warmup_length  > 0);
 }
 
 void Tracer::startTrace(string filename)
@@ -154,4 +145,11 @@ int Tracer::playbackTrace(string filename)
 
 void Tracer::print(ostream& out) const
 {
+}
+
+
+Tracer *
+RubyTracerParams::create()
+{
+    return new Tracer(this);
 }

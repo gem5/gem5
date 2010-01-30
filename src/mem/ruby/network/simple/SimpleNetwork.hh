@@ -73,6 +73,8 @@
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/system/NodeID.hh"
+#include "sim/sim_object.hh"
+#include "params/SimpleNetwork.hh"
 
 class NetDest;
 class MessageBuffer;
@@ -83,13 +85,13 @@ class Topology;
 class SimpleNetwork : public Network {
 public:
   // Constructors
-  //  SimpleNetwork(int nodes);
-  SimpleNetwork(const string & name);
+    typedef SimpleNetworkParams Params;
+    SimpleNetwork(const Params *p);
 
   // Destructor
   ~SimpleNetwork();
 
-  void init(const vector<string> & argv);
+  void init();
 
   // Public Methods
   void printStats(ostream& out) const;

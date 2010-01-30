@@ -47,15 +47,14 @@
 #include "mem/ruby/system/Sequencer.hh"
 #include "mem/ruby/system/DMASequencer.hh"
 #include "mem/ruby/system/MemoryVector.hh"
-#include "mem/protocol/ControllerFactory.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/CacheMemory.hh"
 #include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/ruby/network/simple/Topology.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 #include "mem/ruby/system/RubyPort.hh"
-#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
-#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
+//#include "mem/ruby/network/garnet-flexible-pipeline/GarnetNetwork.hh"
+//#include "mem/ruby/network/garnet-fixed-pipeline/GarnetNetwork_d.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 
 int RubySystem::m_random_seed;
@@ -84,180 +83,32 @@ Tracer* RubySystem::m_tracer_ptr;
 MemoryVector* RubySystem::m_mem_vec_ptr;
 
 
-RubySystem* RubySystem::create(const vector <RubyObjConf> & sys_conf)
+RubySystem::RubySystem(const Params *p)
+    : SimObject(p)
 {
-  if (g_system_ptr == NULL)
-    return new RubySystem(sys_conf);
-  return g_system_ptr;
+    if (g_system_ptr != NULL)
+        fatal("Only one RubySystem object currently allowed.\n");
+
+    m_random_seed = p->random_seed;
+    srandom(m_random_seed);
+    m_randomization = p->randomization;
+    m_tech_nm = p->tech_nm;
+    m_freq_mhz = p->freq_mhz;
+    m_block_size_bytes = p->block_size_bytes;
+    assert(is_power_of_2(m_block_size_bytes));
+    m_block_size_bits = log_int(m_block_size_bytes);
+    m_network_ptr = p->network;
+    g_debug_ptr = p->debug;
+    m_profiler_ptr = p->profiler;
+    m_tracer_ptr = p->tracer;
+
+    g_system_ptr = this;
+    m_mem_vec_ptr = new MemoryVector;
 }
 
-void RubySystem::init(const vector<string> & argv)
+
+void RubySystem::init()
 {
-  for (size_t i=0; i < argv.size(); i+=2) {
-    if (argv[i] == "random_seed") {
-      m_random_seed = atoi(argv[i+1].c_str());
-      srandom(m_random_seed);
-    } else if (argv[i] == "randomization") {
-      m_randomization = string_to_bool(argv[i+1]);
-    } else if (argv[i] == "tech_nm") {
-      m_tech_nm = atoi(argv[i+1].c_str());
-    } else if (argv[i] == "freq_mhz") {
-      m_freq_mhz = atoi(argv[i+1].c_str());
-    } else if (argv[i] == "block_size_bytes") {
-      m_block_size_bytes = atoi(argv[i+1].c_str());
-      assert(is_power_of_2(m_block_size_bytes));
-      m_block_size_bits = log_int(m_block_size_bytes);
-    } else if (argv[i] == "debug") {
-
-    } else if (argv[i] == "tracer") {
-
-    } else if (argv[i] == "profiler") {
-
-  //  } else if (argv[i] == "MI_example") {
-
-    } else {
-      cerr << "Error: Unknown RubySystem config parameter -- " << argv[i] << endl;
-     assert(0);
-    }
-  }
-}
-
-RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
-{
-  //  DEBUG_MSG(SYSTEM_COMP, MedPrio,"initializing");
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    const string & type = sys_conf[i].type;
-    const string & name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "System") {
-      init(argv);  // initialize system-wide variables before doing anything else!
-    } else if (type == "Debug") {
-      g_debug_ptr = new Debug(name, argv);
-    }
-  }
-
-  assert( g_debug_ptr != NULL);
-  g_eventQueue_ptr = new RubyEventQueue;
-  g_system_ptr = this;
-  m_mem_vec_ptr = new MemoryVector;
-
-  /* object contruction is broken into two steps (Constructor and init) to avoid cyclic dependencies
-   *  e.g. a sequencer needs a pointer to a controller and a controller needs a pointer to a sequencer
-   */
-
-  vector<string> memory_control_names;
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    const string & type = sys_conf[i].type;
-    const string & name = sys_conf[i].name;
-    if (type == "System" || type == "Debug")
-      continue;
-    else if (type == "SetAssociativeCache")
-      m_caches[name] = new CacheMemory(name);
-    else if (type == "DirectoryMemory")
-      m_directories[name] = new DirectoryMemory(name);
-    else if (type == "Sequencer") {
-      m_sequencers[name] = new Sequencer(name);
-      m_ports[name] = m_sequencers[name];
-    } else if (type == "DMASequencer") {
-      m_dma_sequencers[name] = new DMASequencer(name);
-      m_ports[name] = m_dma_sequencers[name];
-    } else if (type == "Topology") {
-      assert(m_topologies.size() == 0); // only one toplogy at a time is supported right now
-      m_topologies[name] = new Topology(name);
-    } else if (type == "SimpleNetwork") {
-      assert(m_network_ptr == NULL); // only one network at a time is supported right now
-      m_network_ptr = new SimpleNetwork(name);
-    } else if (type.find("generated") == 0) {
-      string controller_type = type.substr(10);
-      m_controllers[name] = ControllerFactory::createController(controller_type, name);
-//      printf ("ss: generated %s \n", controller_type);
-//added by SS
-    } else if (type == "Tracer") {
-      //m_tracers[name] = new Tracer(name);
-      m_tracer_ptr = new Tracer(name);
-    } else if (type == "Profiler") {
-      m_profiler_ptr = new Profiler(name);
-    } else if (type == "GarnetNetwork") {
-      assert(m_network_ptr == NULL); // only one network at a time is supported right now
-      m_network_ptr = new GarnetNetwork(name);
-    } else if (type == "GarnetNetwork_d") {
-      assert(m_network_ptr == NULL); // only one network at a time is supported right now
-      m_network_ptr = new GarnetNetwork_d(name);
-    } else if (type == "MemoryControl") {
-      m_memorycontrols[name] = new MemoryControl(name);
-      memory_control_names.push_back (name);
-    } else {
-      cerr << "Error: Unknown object type -- " << type << endl;
-      assert(0);
-    }
-  }
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    string type = sys_conf[i].type;
-    string name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "Topology")
-      m_topologies[name]->init(argv);
-  }
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    string type = sys_conf[i].type;
-    string name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "SimpleNetwork" || type == "GarnetNetwork" || type == "GarnetNetwork_d"){
-      m_network_ptr->init(argv);
-    }
-  }
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    string type = sys_conf[i].type;
-    string name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "MemoryControl" ){
-      m_memorycontrols[name]->init(argv);
-    }
-  }
-
-  for (size_t i=0;i<sys_conf.size(); i++) {
-    string type = sys_conf[i].type;
-    string name = sys_conf[i].name;
-    const vector<string> & argv = sys_conf[i].argv;
-    if (type == "System" || type == "Debug")
-      continue;
-    else if (type == "SetAssociativeCache")
-      m_caches[name]->init(argv);
-    else if (type == "DirectoryMemory")
-      m_directories[name]->init(argv);
-    else if (type == "MemoryControl")
-      continue;
-    else if (type == "Sequencer")
-      m_sequencers[name]->init(argv);
-    else if (type == "DMASequencer")
-      m_dma_sequencers[name]->init(argv);
-    else if (type == "Topology")
-      continue;
-    else if (type == "SimpleNetwork" || type == "GarnetNetwork" || type == "GarnetNetwork_d")
-      continue;
-    else if (type.find("generated") == 0) {
-      string controller_type = type.substr(11);
-      m_controllers[name]->init(m_network_ptr, argv);
-    }
-//added by SS
-    else if (type == "Tracer")
-      //m_tracers[name]->init(argv);
-      m_tracer_ptr->init(argv);
-    else if (type == "Profiler")
-      m_profiler_ptr->init(argv, memory_control_names);
-//    else if (type == "MI_example"){
-//    }
-    else
-      assert(0);
-  }
-
-//  m_profiler_ptr = new Profiler;
-
   // calculate system-wide parameters
   m_memory_size_bytes = 0;
   DirectoryMemory* prev = NULL;
@@ -270,11 +121,8 @@ RubySystem::RubySystem(const vector <RubyObjConf> & sys_conf)
   }
   m_mem_vec_ptr->setSize(m_memory_size_bytes);
   m_memory_size_bits = log_int(m_memory_size_bytes);
-
-//  m_tracer_ptr = new Tracer;
-  DEBUG_MSG(SYSTEM_COMP, MedPrio,"finished initializing");
-  DEBUG_NEWLINE(SYSTEM_COMP, MedPrio);
 }
+
 
 RubySystem::~RubySystem()
 {
@@ -423,5 +271,8 @@ void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
 #endif
 
 
-
-
+RubySystem *
+RubySystemParams::create()
+{
+    return new RubySystem(this);
+}

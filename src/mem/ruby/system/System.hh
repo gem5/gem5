@@ -46,6 +46,8 @@
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include <map>
+#include "sim/sim_object.hh"
+#include "params/RubySystem.hh"
 
 class Profiler;
 class Network;
@@ -84,9 +86,10 @@ struct RubyObjConf {
   {}
 };
 
-class RubySystem {
+class RubySystem : public SimObject {
 public:
-  static RubySystem* create(const vector <RubyObjConf> & sys_conf);
+    typedef RubySystemParams Params;
+    RubySystem(const Params *p);
   // Destructor
   ~RubySystem();
 
@@ -152,7 +155,7 @@ private:
   RubySystem(const RubySystem& obj);
   RubySystem& operator=(const RubySystem& obj);
 
-  void init(const vector<string> & argv);
+  void init();
 
   static void printSystemConfig(ostream& out);
 
@@ -181,6 +184,7 @@ private:
   //added by SS
   //static map< string, Tracer* > m_tracers;
 
+public:
   static Profiler* m_profiler_ptr;
   static Tracer* m_tracer_ptr;
   static MemoryVector* m_mem_vec_ptr;

@@ -33,4 +33,6 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('Network.py')
+
 Source('Network.cc')

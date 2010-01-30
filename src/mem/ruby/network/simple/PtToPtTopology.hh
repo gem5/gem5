@@ -8,7 +8,7 @@ class PtToPtTopology : public Topology
 {
 public:
   PtToPtTopology(const string & name);
-  void init(const vector<string> & argv);
+  void init();
 
 protected:
   void construct();

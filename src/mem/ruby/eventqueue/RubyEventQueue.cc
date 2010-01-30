@@ -40,10 +40,14 @@
 
 // Class public method definitions
 
+RubyEventQueue theEventQueue;
+
 RubyEventQueue::RubyEventQueue()
 {
   m_prio_heap_ptr = NULL;
   init();
+  assert(g_eventQueue_ptr == NULL);
+  g_eventQueue_ptr = this;
 }
 
 RubyEventQueue::~RubyEventQueue()

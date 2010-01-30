@@ -51,6 +51,8 @@
 #include "mem/protocol/MemoryMsg.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/system/AbstractMemOrCache.hh"
+#include "sim/sim_object.hh"
+#include "params/RubyMemoryControl.hh"
 
 #include <list>
 
@@ -62,12 +64,13 @@
 
 class Consumer;
 
-class MemoryControl : public Consumer, public AbstractMemOrCache {
+class MemoryControl : public SimObject, public Consumer, public AbstractMemOrCache {
 public:
 
   // Constructors
-  MemoryControl(const string & name);
-  void init(const vector<string> & argv);
+    typedef RubyMemoryControlParams Params;
+    MemoryControl(const Params *p);
+  void init();
 
   // Destructor
   ~MemoryControl ();
@@ -122,7 +125,6 @@ private:
   Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
   string m_name;
   string m_description;
-  int m_version;
   int m_msg_counter;
   int m_awakened;
 

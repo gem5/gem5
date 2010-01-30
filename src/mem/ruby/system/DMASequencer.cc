@@ -8,25 +8,13 @@
 #include "mem/protocol/SequencerRequestType.hh"
 #include "mem/ruby/system/System.hh"
 
-DMASequencer::DMASequencer(const string & name)
-  : RubyPort(name)
+DMASequencer::DMASequencer(const Params *p)
+  : RubyPort(p)
 {
 }
 
-void DMASequencer::init(const vector<string> & argv)
+void DMASequencer::init()
 {
-  m_version = -1;
-  m_controller = NULL;
-  for (size_t i=0;i<argv.size();i+=2) {
-    if (argv[i] == "controller")
-      m_controller = RubySystem::getController(argv[i+1]);
-    else if (argv[i] == "version")
-      m_version = atoi(argv[i+1].c_str());
-  }
-  assert(m_controller != NULL);
-  assert(m_version != -1);
-
-  m_mandatory_q_ptr = m_controller->getMandatoryQueue();
   m_is_busy = false;
   m_data_block_mask = ~ (~0 << RubySystem::getBlockSizeBits());
 }
@@ -134,4 +122,11 @@ void DMASequencer::ackCallback()
 void DMASequencer::printConfig(ostream & out)
 {
 
+}
+
+
+DMASequencer *
+DMASequencerParams::create()
+{
+    return new DMASequencer(this);
 }

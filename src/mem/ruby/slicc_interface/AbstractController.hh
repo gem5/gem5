@@ -2,6 +2,9 @@
 #ifndef ABSTRACTCONTROLLER_H
 #define ABSTRACTCONTROLLER_H
 
+#include "sim/sim_object.hh"
+#include "params/RubyController.hh"
+
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/common/Address.hh"
@@ -9,9 +12,10 @@
 class MessageBuffer;
 class Network;
 
-class AbstractController : public Consumer {
+class AbstractController : public SimObject, public Consumer {
 public:
-  AbstractController() {}
+    typedef RubyControllerParams Params;
+    AbstractController(const Params *p) : SimObject(p) {}
   virtual void init(Network* net_ptr, const vector<string> & argv) = 0;
 
   // returns the number of controllers created of the specific subtype

@@ -48,7 +48,7 @@ class NetworkConfig {
                 bool m_using_network_testing;
         public:
                 NetworkConfig(){}
-                void init(const vector<string> & argv) {
+                void init() {
                   for (size_t i=0; i<argv.size(); i+=2) {
                    if (argv[i] == "flit_size")
                      m_flit_size = atoi(argv[i+1].c_str());

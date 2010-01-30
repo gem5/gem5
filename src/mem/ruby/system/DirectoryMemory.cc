@@ -46,29 +46,17 @@ int DirectoryMemory::m_num_directories = 0;
 int DirectoryMemory::m_num_directories_bits = 0;
 uint64_t DirectoryMemory::m_total_size_bytes = 0;
 
-DirectoryMemory::DirectoryMemory(const string & name)
- : m_name(name)
+DirectoryMemory::DirectoryMemory(const Params *p)
+    : SimObject(p)
 {
+    m_version = p->version;
+    m_size_bytes = p->size_mb * static_cast<uint64>(1<<20);
+    m_size_bits = log_int(m_size_bytes);
+    m_controller = p->controller;
 }
 
-void DirectoryMemory::init(const vector<string> & argv)
+void DirectoryMemory::init()
 {
-  m_controller = NULL;
-  for (vector<string>::const_iterator it = argv.begin(); it != argv.end(); it++) {
-    if ( (*it) == "version" )
-      m_version = atoi( (*(++it)).c_str() );
-    else if ( (*it) == "size_mb" ) {
-      m_size_bytes = atoi((*(++it)).c_str()) * static_cast<uint64>(1<<20);
-      m_size_bits = log_int(m_size_bytes);
-    } else if ( (*it) == "controller" ) {
-      m_controller = RubySystem::getController((*(++it)));
-    } else {
-      cerr << "DirectoryMemory: Unkown config parameter: " << (*it) << endl;
-      assert(0);
-    }
-  }
-  assert(m_controller != NULL);
-
   m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
   m_entries = new Directory_Entry*[m_num_entries];
   for (int i=0; i < m_num_entries; i++)
@@ -205,3 +193,8 @@ void DirectoryMemory::print(ostream& out) const
 
 }
 
+DirectoryMemory *
+RubyDirectoryMemoryParams::create()
+{
+    return new DirectoryMemory(this);
+}

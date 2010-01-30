@@ -33,6 +33,8 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('Profiler.py')
+
 Source('AccessTraceForAddress.cc')
 Source('AddressProfiler.cc')
 Source('CacheProfiler.cc')

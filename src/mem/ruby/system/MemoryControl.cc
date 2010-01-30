@@ -151,61 +151,30 @@ ostream& operator<<(ostream& out, const MemoryControl& obj)
 // ****************************************************************
 
 // CONSTRUCTOR
-MemoryControl::MemoryControl(const string & name)
- : m_name(name)
+MemoryControl::MemoryControl(const Params *p)
+    : SimObject(p)
 {
-  m_name = name;
-//  printf ("MemoryControl name is %s \n", m_name.c_str());
+    m_mem_bus_cycle_multiplier = p->mem_bus_cycle_multiplier;
+    m_banks_per_rank = p->banks_per_rank;
+    m_ranks_per_dimm = p->ranks_per_dimm;
+    m_dimms_per_channel = p->dimms_per_channel;
+    m_bank_bit_0 = p->bank_bit_0;
+    m_rank_bit_0 = p->rank_bit_0;
+    m_dimm_bit_0 = p->dimm_bit_0;
+    m_bank_queue_size = p->bank_queue_size;
+    m_bank_busy_time = p->bank_busy_time;
+    m_rank_rank_delay = p->rank_rank_delay;
+    m_read_write_delay = p->read_write_delay;
+    m_basic_bus_busy_time = p->basic_bus_busy_time;
+    m_mem_ctl_latency = p->mem_ctl_latency;
+    m_refresh_period = p->refresh_period;
+    m_tFaw = p->tFaw;
+    m_mem_random_arbitrate = p->mem_random_arbitrate;
+    m_mem_fixed_delay = p->mem_fixed_delay;
 }
 
-void MemoryControl::init(const vector<string> & argv)
+void MemoryControl::init()
 {
-
-  for (vector<string>::const_iterator it = argv.begin(); it != argv.end(); it++) {
-    if ( (*it) == "version" )
-      m_version = atoi( (*(++it)).c_str() );
-    else if ( (*it) == "mem_bus_cycle_multiplier" ) {
-      m_mem_bus_cycle_multiplier = atoi((*(++it)).c_str());
-    } else if ( (*it) == "banks_per_rank" ) {
-      m_banks_per_rank = atoi((*(++it)).c_str());
-    } else if ( (*it) == "ranks_per_dimm" ) {
-      m_ranks_per_dimm = atoi((*(++it)).c_str());
-    } else if ( (*it) == "dimms_per_channel" ) {
-      m_dimms_per_channel = atoi((*(++it)).c_str());
-    } else if ( (*it) == "bank_bit_0" ) {
-      m_bank_bit_0 = atoi((*(++it)).c_str());
-    } else if ( (*it) == "rank_bit_0" ) {
-      m_rank_bit_0 = atoi((*(++it)).c_str());
-    } else if ( (*it) == "dimm_bit_0" ) {
-      m_dimm_bit_0 = atoi((*(++it)).c_str());
-    } else if ( (*it) == "bank_queue_size" ) {
-      m_bank_queue_size = atoi((*(++it)).c_str());
-    } else if ( (*it) == "bank_busy_time" ) {
-      m_bank_busy_time = atoi((*(++it)).c_str());
-    } else if ( (*it) == "rank_rank_delay" ) {
-      m_rank_rank_delay = atoi((*(++it)).c_str());
-    } else if ( (*it) == "read_write_delay" ) {
-      m_read_write_delay = atoi((*(++it)).c_str());
-    } else if ( (*it) == "basic_bus_busy_time" ) {
-      m_basic_bus_busy_time = atoi((*(++it)).c_str());
-    } else if ( (*it) == "mem_ctl_latency" ) {
-      m_mem_ctl_latency = atoi((*(++it)).c_str());
-    } else if ( (*it) == "refresh_period" ) {
-      m_refresh_period = atoi((*(++it)).c_str());
-    } else if ( (*it) == "tFaw" ) {
-      m_tFaw = atoi((*(++it)).c_str());
-    } else if ( (*it) == "mem_random_arbitrate" ) {
-      m_mem_random_arbitrate = atoi((*(++it)).c_str());
-    } else if ( (*it) == "mem_fixed_delay" ) {
-      m_mem_fixed_delay = atoi((*(++it)).c_str());
-    }
-//    } else
-//      assert(0);
-  }
-
-
-///////
-  //m_version = version;
   m_msg_counter = 0;
 
   m_debug = 0;
@@ -351,7 +320,6 @@ void MemoryControl::print (ostream& out) const {
 
 
 void MemoryControl::printConfig (ostream& out) {
-  out << "Memory Control " << m_version << ":" << endl;
   out << "  Ruby cycles per memory cycle: " << m_mem_bus_cycle_multiplier << endl;
   out << "  Basic read latency: " << m_mem_ctl_latency << endl;
   if (m_mem_fixed_delay) {
@@ -662,4 +630,9 @@ void MemoryControl::wakeup () {
   }
 }
 
+MemoryControl *
+RubyMemoryControlParams::create()
+{
+    return new MemoryControl(this);
+}
 

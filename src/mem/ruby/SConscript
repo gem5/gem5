@@ -72,14 +72,6 @@ def do_embed_text(target, source, env):
     fin.close()
     fout.close()
 
-def EmbedText(target, source, param):
-    env.Command(target, [source, Value(param)], do_embed_text)
-
-EmbedText('default_param.hh', 'config/rubyconfig.defaults',
-          'global_default_param')
-EmbedText('tester_param.hh', 'config/tester.defaults',
-          'global_default_tester_param')
-
 #
 # Link includes
 #

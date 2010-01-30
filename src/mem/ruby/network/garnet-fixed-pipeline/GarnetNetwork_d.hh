@@ -50,7 +50,7 @@ public:
 
         ~GarnetNetwork_d();
 
-        void init(const vector<string> & argv);
+        void init();
 
         //added by SS
         NetworkConfig* getNetworkConfig() { return m_network_config_ptr; }

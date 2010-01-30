@@ -43,7 +43,7 @@ GarnetNetwork_d::GarnetNetwork_d(const string & name)
 {
 }
 
-void GarnetNetwork_d::init(const vector<string> & argv)
+void GarnetNetwork_d::init()
 {
         Network::init(argv);
 

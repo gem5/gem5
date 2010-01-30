@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2009 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +24,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-# Authors: Nathan Binkert
+# Authors: Steve Reinhardt
+#          Brad Beckmann
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-if not env['RUBY']:
-    Return()
+class Topology(SimObject):
+    type = 'Topology'
+    connections = Param.String("")
+    print_config = Param.Bool(False,
+        "display topology config in the stats file")
 
+class RubyNetwork(SimObject):
+    type = 'RubyNetwork'
+    cxx_class = 'Network'
+    abstract = True
+    number_of_virtual_networks = Param.Int(10, "");
+    topology = Param.Topology("");
+    buffer_size = Param.Int(0,
+        "default buffer size; 0 indicates infinite buffering");
+    endpoint_bandwidth = Param.Int(10000, "");
+    adaptive_routing = Param.Bool(True, "");
+    link_latency = Param.Int(1,
+        "local memory latency ?? NetworkLinkLatency");
+    control_msg_size = Param.Int(8, "");

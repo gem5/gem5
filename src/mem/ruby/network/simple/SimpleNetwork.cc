@@ -59,17 +59,17 @@ Network* Network::createNetwork(int nodes)
 }
 */
 
-SimpleNetwork::SimpleNetwork(const string & name)
-  : Network(name)
+SimpleNetwork::SimpleNetwork(const Params *p)
+    : Network(p)
 {
   m_virtual_networks = 0;
   m_topology_ptr = NULL;
 }
 
-void SimpleNetwork::init(const vector<string> & argv)
+void SimpleNetwork::init()
 {
 
-  Network::init(argv);
+  Network::init();
 
   m_endpoint_switches.setSize(m_nodes);
 
@@ -262,4 +262,11 @@ void SimpleNetwork::printConfig(ostream& out) const
 void SimpleNetwork::print(ostream& out) const
 {
   out << "[SimpleNetwork]";
+}
+
+
+SimpleNetwork *
+SimpleNetworkParams::create()
+{
+    return new SimpleNetwork(this);
 }

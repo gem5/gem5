@@ -50,22 +50,24 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/system/NodeID.hh"
+#include "sim/sim_object.hh"
+#include "params/Topology.hh"
 
 class Network;
 class NetDest;
 
 typedef Vector < Vector <int> > Matrix;
 
-class Topology {
+class Topology : public SimObject {
 public:
   // Constructors
-  //  Topology(Network* network_ptr, int number_of_nodes);
-  Topology(const string & name);
+    typedef TopologyParams Params;
+    Topology(const Params *p);
 
   // Destructor
   virtual ~Topology() {}
 
-  virtual void init(const vector<string> & argv);
+  virtual void init();
 
   // Public Methods
   void makeTopology();
@@ -80,7 +82,6 @@ public:
 
 protected:
   // Private Methods
-  void init();
   SwitchID newSwitchID();
   void addLink(SwitchID src, SwitchID dest, int link_latency);
   void addLink(SwitchID src, SwitchID dest, int link_latency, int bw_multiplier);

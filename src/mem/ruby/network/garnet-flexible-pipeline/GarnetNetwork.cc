@@ -44,7 +44,7 @@ GarnetNetwork::GarnetNetwork(const string & name)
 {
 }
 
-void GarnetNetwork::init(const vector<string> & argv)
+void GarnetNetwork::init()
 {
 //        printf("hello\n");
         Network::init(argv);

@@ -34,8 +34,6 @@ from m5.defines import buildEnv
 from m5.util import addToPath
 import os, optparse, sys
 addToPath('../common')
-addToPath('../../tests/configs/')
-import ruby_config
 
 parser = optparse.OptionParser()
 
@@ -85,19 +83,43 @@ cpus = [ MemTest(atomic=options.atomic, max_loads=options.maxloads, \
                  progress_interval=options.progress) \
          for i in xrange(options.testers) ]
 
-# create the desired simulated system
-# ruby memory must be at least 16 MB to work with the mem tester
-ruby_memory = ruby_config.generate("MI_example-homogeneous.rb",
-                                   cores = options.testers,
-                                   memory_size = 16,
-                                   ports_per_cpu = 1)
+system = System(cpu = cpus,
+                funcmem = PhysicalMemory(),
+                physmem = PhysicalMemory())
 
-system = System(cpu = cpus, funcmem = PhysicalMemory(),
-                physmem = ruby_memory)
+class L1Cache(RubyCache):
+    assoc = 2
+    latency = 3
+    size = 32768
 
-for cpu in cpus:
-     cpu.test = system.physmem.port
-     cpu.functional = system.funcmem.port
+class L2Cache(RubyCache):
+    assoc = 16
+    latency = 15
+    size = 1048576
+
+class CrossbarTopology(Topology):
+    connections="hi"
+
+ for cpu in cpus:
+    l1_cntrl = L1Cache_Controller()
+    cpu_seq = RubySequencer(controller=l1_cntrl,
+                            icache=L1Cache(controller=l1_cntrl),
+                            dcache=L1Cache(controller=l1_cntrl))
+    cpu.controller = l1_cntrl
+    cpu.sequencer = cpu_seq
+    cpu.test = cpu_seq.port
+    cpu_seq.funcmem_port = system.physmem.port
+    cpu.functional = system.funcmem.port
+    
+    dir_cntrl = Directory_Controller(directory=RubyDirectoryMemory(),
+                                     memory_control=RubyMemoryControl())
+
+network = SimpleNetwork(topology=CrossbarTopology())
+
+system.ruby = RubySystem(network = network,
+                         profiler = RubyProfiler(),
+                         tracer = RubyTracer(),
+                         debug = RubyDebug())
 
 
 # -----------------------

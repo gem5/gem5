@@ -8,7 +8,7 @@ class Torus2DTopology : public Topology
 {
 public:
   Torus2DTopology(const string & name);
-  void init(const vector<string> & argv);
+  void init();
 
 protected:
   void construct();

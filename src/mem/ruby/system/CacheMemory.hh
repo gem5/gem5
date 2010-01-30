@@ -38,6 +38,9 @@
 #ifndef CACHEMEMORY_H
 #define CACHEMEMORY_H
 
+#include "sim/sim_object.hh"
+#include "params/RubyCache.hh"
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/AccessPermission.hh"
 #include "mem/ruby/common/Address.hh"
@@ -57,12 +60,14 @@
 #include "base/hashmap.hh"
 #include <vector>
 
-class CacheMemory {
+class CacheMemory : public SimObject {
 public:
 
+    typedef RubyCacheParams Params;
   // Constructors
-  CacheMemory(const string & name);
-  void init(const vector<string> & argv);
+  CacheMemory(const Params *p);
+    // CacheMemory(const string & name);
+  void init();
 
   // Destructor
   ~CacheMemory();

@@ -8,7 +8,7 @@ class HierarchicalSwitchTopology : public Topology
 {
 public:
   HierarchicalSwitchTopology(const string & name);
-  void init(const vector<string> & argv);
+  void init();
 
 protected:
   void construct();

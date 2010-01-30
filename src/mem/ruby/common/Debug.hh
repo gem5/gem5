@@ -41,6 +41,9 @@
 
 #include "config/ruby_debug.hh"
 #include "mem/ruby/common/Global.hh"
+#include "sim/sim_object.hh"
+
+#include "params/RubyDebug.hh"
 
 extern std::ostream * debug_cout_ptr;
 
@@ -70,13 +73,11 @@ enum DebugComponents
 enum PriorityLevel {HighPrio, MedPrio, LowPrio};
 enum VerbosityLevel {No_Verb, Low_Verb, Med_Verb, High_Verb};
 
-class Debug {
+class Debug : public SimObject {
 public:
   // Constructors
-  Debug();
-  Debug(const std::string & name, const std::vector<std::string> & argv);
-  Debug( const char *filterString, const char *verboseString,
-         Time filterStartTime, const char *filename );
+    typedef RubyDebugParams Params;
+  Debug(const Params *p);
 
   // Destructor
   ~Debug();

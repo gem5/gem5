@@ -29,38 +29,26 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/ruby/network/Network.hh"
 
-Network::Network(const string & name)
-  :  m_name(name)
+Network::Network(const Params *p)
+    : SimObject(p)
 {
-  m_virtual_networks = 0;
-  m_topology_ptr = NULL;
+    m_virtual_networks = p->number_of_virtual_networks;
+    m_topology_ptr = p->topology;
+    m_buffer_size = p->buffer_size;
+    m_endpoint_bandwidth = p->endpoint_bandwidth;
+    m_adaptive_routing = p->adaptive_routing;
+    m_link_latency = p->link_latency;
+    m_control_msg_size = p->control_msg_size;
+
+    assert(m_virtual_networks != 0);
+    assert(m_topology_ptr != NULL);
 }
 
-void Network::init(const vector<string> & argv)
+void Network::init()
 {
   m_nodes = MachineType_base_number(MachineType_NUM); // Total nodes in network
 
-  for (size_t i=0; i<argv.size(); i+=2) {
-   if (argv[i] == "number_of_virtual_networks")
-     m_virtual_networks = atoi(argv[i+1].c_str());
-   else if (argv[i] == "topology")
-     m_topology_ptr = RubySystem::getTopology(argv[i+1]);
-   else if (argv[i] == "buffer_size")
-     m_buffer_size = atoi(argv[i+1].c_str());
-   else if (argv[i] == "endpoint_bandwidth")
-     m_endpoint_bandwidth = atoi(argv[i+1].c_str());
-   else if (argv[i] == "adaptive_routing")
-     m_adaptive_routing = (argv[i+1]=="true");
-   else if (argv[i] == "link_latency")
-     m_link_latency = atoi(argv[i+1].c_str());
-   else if (argv[i] == "control_msg_size")
-     m_control_msg_size = atoi(argv[i+1].c_str());		 
-  }
-
   m_data_msg_size = RubySystem::getBlockSizeBytes() + m_control_msg_size;
-
-  assert(m_virtual_networks != 0);
-  assert(m_topology_ptr != NULL);
 }
 
 int Network::MessageSizeType_to_int(MessageSizeType size_type)

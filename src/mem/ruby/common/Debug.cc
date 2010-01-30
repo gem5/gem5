@@ -87,53 +87,20 @@ void changeDebugFilter(int filter)
   g_debug_ptr->setFilter(filter);
 }
 
-Debug::Debug()
+Debug::Debug(const Params *p)
+    : SimObject(p)
 {
-  m_verbosityLevel = No_Verb;
-  m_starting_cycle = ~0;
-  clearFilter();
-  debug_cout_ptr = &cout;
-}
-
-Debug::Debug( const string & name, const vector<string> & argv )
-{
-  // 
-  // must clear the filter before adding filter strings
-  //
-  clearFilter();
-
-  for (size_t i=0;i<argv.size();i+=2) {
-    if (argv[i] == "filter_string") {
-      if (setFilterString(argv[i+1].c_str())) {
-        fatal("could not set filter string to %s\n", argv[i+1].c_str());
-      }
-    } else if (argv[i] == "verbosity_string") {
-      setVerbosityString( argv[i+1].c_str() );
-    } else if (argv[i] == "start_time") {
-      m_starting_cycle = atoi( argv[i+1].c_str() );
-    } else if (argv[i] == "output_filename") {
-      setDebugOutputFile( argv[i+1].c_str() );
-    } else if (argv[i] == "protocol_trace") {
-      m_protocol_trace = string_to_bool(argv[i+1]);
-    } else {
-      fatal("invalid argument %s\n");
-    }
-  }
-}
-
-Debug::Debug( const char *filterString, const char *verboseString,
-              Time filterStartTime, const char *filename )
-{
-  m_verbosityLevel = No_Verb;
   clearFilter();
   debug_cout_ptr = &cout;
 
-  m_starting_cycle = filterStartTime;
-  if (setFilterString(filterString))
-    fatal("could not set filter string to %s\n", filterString);
-  setVerbosityString( verboseString );
-  setDebugOutputFile( filename );
+  setFilterString(p->filter_string.c_str());
+  setVerbosityString(p->verbosity_string.c_str());
+  setDebugOutputFile(p->output_filename.c_str());
+  m_starting_cycle = p->start_time;
+  m_protocol_trace = p->protocol_trace;
+  g_debug_ptr = this;
 }
+
 
 Debug::~Debug()
 {
@@ -417,3 +384,9 @@ void ERROR_OUT( const char* fmt, ... ) {
 }
 */
 
+
+Debug *
+RubyDebugParams::create()
+{
+    return new Debug(this);
+}

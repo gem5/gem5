@@ -6,6 +6,8 @@
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/system/RubyPort.hh"
 
+#include "params/DMASequencer.hh"
+
 struct DMARequest {
   uint64_t start_paddr;
   int len;
@@ -16,13 +18,11 @@ struct DMARequest {
   int64_t id;
 };
 
-class MessageBuffer;
-class AbstractController;
-
 class DMASequencer :public RubyPort {
 public:
-  DMASequencer(const string & name);
-  void init(const vector<string> & argv);
+    typedef DMASequencerParams Params;
+  DMASequencer(const Params *);
+  void init();
   /* external interface */
   int64_t makeRequest(const RubyRequest & request);
   bool isReady(const RubyRequest & request, bool dont_set = false) { assert(0); return false;};
@@ -39,13 +39,10 @@ private:
   void issueNext();
 
 private:
-  int m_version;
-  AbstractController* m_controller;
   bool m_is_busy;
   uint64_t m_data_block_mask;
   DMARequest active_request;
   int num_active_requests;
-  MessageBuffer* m_mandatory_q_ptr;
 };
 
 #endif // DMACONTROLLER_H

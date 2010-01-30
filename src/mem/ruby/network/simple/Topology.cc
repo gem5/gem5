@@ -62,26 +62,18 @@ static Matrix shortest_path(const Matrix& weights, Matrix& latencies, Matrix& in
 static bool link_is_shortest_path_to_node(SwitchID src, SwitchID next, SwitchID final, const Matrix& weights, const Matrix& dist);
 static NetDest shortest_path_to_node(SwitchID src, SwitchID next, const Matrix& weights, const Matrix& dist);
 
-Topology::Topology(const string & name)
-  : m_name(name)
+Topology::Topology(const Params *p)
+    : SimObject(p)
 {
-  m_network_ptr = NULL;
+//    m_network_ptr = p->network;
+    m_connections = p->connections;
+    m_print_config = p->print_config;
   m_nodes = MachineType_base_number(MachineType_NUM);
   m_number_of_switches = 0;
 }
 
-void Topology::init(const vector<string> & argv)
+void Topology::init()
 {
-  for (size_t i=0; i<argv.size(); i+=2) {
-    if (argv[i] == "network")
-      m_network_ptr = RubySystem::getNetwork();
-    else if (argv[i] == "connections")
-      m_connections = argv[i+1];
-    else if (argv[i] == "print_config") {
-      m_print_config = string_to_bool(argv[i+1]);
-    }
-  }
-  assert(m_network_ptr != NULL);
 }
 
 void Topology::makeTopology()
@@ -457,3 +449,8 @@ static NetDest shortest_path_to_node(SwitchID src, SwitchID next,
   return result;
 }
 
+Topology *
+TopologyParams::create()
+{
+    return new Topology(this);
+}

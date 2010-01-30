@@ -47,41 +47,20 @@ ostream& operator<<(ostream& out, const CacheMemory& obj)
 
 // ****************************************************************
 
-CacheMemory::CacheMemory(const string & name)
-  : m_cache_name(name)
+CacheMemory *
+RubyCacheParams::create()
 {
-  m_profiler_ptr = new CacheProfiler(name);
+    return new CacheMemory(this);
 }
 
-void CacheMemory::init(const vector<string> & argv)
+CacheMemory::CacheMemory(const Params *p)
+    : SimObject(p)
 {
-  int cache_size = -1;
-  string policy;
-
-  m_num_last_level_caches = 
-    MachineType_base_count(MachineType_FIRST);
-  m_controller = NULL;
-  for (uint32 i=0; i<argv.size(); i+=2) {
-    if (argv[i] == "size") {
-      cache_size = atoi(argv[i+1].c_str());
-    } else if (argv[i] == "latency") {
-      m_latency = atoi(argv[i+1].c_str());
-    } else if (argv[i] == "assoc") {
-      m_cache_assoc = atoi(argv[i+1].c_str());
-    } else if (argv[i] == "replacement_policy") {
-      policy = argv[i+1];
-    } else if (argv[i] == "controller") {
-      m_controller = RubySystem::getController(argv[i+1]);
-      if (m_last_level_machine_type < m_controller->getMachineType()) {
-        m_num_last_level_caches = 
-          MachineType_base_count(m_controller->getMachineType());
-        m_last_level_machine_type = 
-          m_controller->getMachineType();
-      } 
-    } else {
-      cerr << "WARNING: CacheMemory: Unknown configuration parameter: " << argv[i] << endl;
-    }
-  }
+    int cache_size = p->size;
+    m_latency = p->latency;
+    m_cache_assoc = p->assoc;
+    string policy = p->replacement_policy;
+    m_controller = p->controller;
 
   int num_lines = cache_size/RubySystem::getBlockSizeBytes();
   m_cache_num_sets = num_lines / m_cache_assoc;
@@ -94,6 +73,24 @@ void CacheMemory::init(const vector<string> & argv)
     m_replacementPolicy_ptr = new LRUPolicy(m_cache_num_sets, m_cache_assoc);
   else
     assert(false);
+
+}
+
+
+void CacheMemory::init()
+{
+  m_num_last_level_caches = 
+    MachineType_base_count(MachineType_FIRST);
+#if 0
+  for (uint32 i=0; i<argv.size(); i+=2) {
+      if (m_last_level_machine_type < m_controller->getMachineType()) {
+        m_num_last_level_caches = 
+          MachineType_base_count(m_controller->getMachineType());
+        m_last_level_machine_type = 
+          m_controller->getMachineType();
+      } 
+  }
+#endif
 
   m_cache.setSize(m_cache_num_sets);
   m_locked.setSize(m_cache_num_sets);

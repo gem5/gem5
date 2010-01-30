@@ -63,6 +63,8 @@
 #include "mem/ruby/common/Debug.hh"
 #include "mem/protocol/MachineType.hh"
 
+#include "mem/ruby/system/System.hh"
+
 // Allows use of times() library call, which determines virtual runtime
 #include <sys/times.h>
 
@@ -71,9 +73,9 @@ extern std::ostream * debug_cout_ptr;
 static double process_memory_total();
 static double process_memory_resident();
 
-Profiler::Profiler(const string & name)
+Profiler::Profiler(const Params *p)
+    : SimObject(p)
 {
-  m_name = name;
   m_requestProfileMap_ptr = new Map<string, int>;
 
   m_inst_profiler_ptr = NULL;
@@ -83,6 +85,10 @@ Profiler::Profiler(const string & name)
   m_stats_period = 1000000; // Default
   m_periodic_output_file_ptr = &cerr;
 
+  m_hot_lines = p->hot_lines;
+  m_all_instructions = p->all_instructions;
+
+  RubySystem::m_profiler_ptr = this;
 }
 
 Profiler::~Profiler()
@@ -135,17 +141,6 @@ void Profiler::init(const vector<string> & argv, vector<string> memory_control_n
   clearStats();
   m_hot_lines = false;
   m_all_instructions = false;
-
-  for (size_t i=0; i<argv.size(); i+=2) {
-    if ( argv[i] == "hot_lines") {
-      m_hot_lines = (argv[i+1]=="true");
-    } else if ( argv[i] == "all_instructions") {
-      m_all_instructions = (argv[i+1]=="true");
-    }else {
-      cerr << "WARNING: Profiler: Unkown configuration parameter: " << argv[i] << endl;
-      assert(false);
-    }
-  }
 
   m_address_profiler_ptr = new AddressProfiler;
   m_address_profiler_ptr -> setHotLines(m_hot_lines);
@@ -849,3 +844,9 @@ void Profiler::profileMemArbWait(string name, int cycles) {   assert(m_memory_co
 void Profiler::profileMemRandBusy(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memRandBusy++; }
 void Profiler::profileMemNotOld(string name) {   assert(m_memory_control_profilers.count(name) == 1); m_memory_control_profilers[name] -> m_memNotOld++; }
 
+
+Profiler *
+RubyProfilerParams::create()
+{
+    return new Profiler(this);
+}

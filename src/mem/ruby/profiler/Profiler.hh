@@ -71,6 +71,9 @@
 #include "mem/protocol/GenericRequestType.hh"
 #include "mem/ruby/system/MemoryControl.hh"
 
+#include "params/RubyProfiler.hh"
+#include "sim/sim_object.hh"
+
 class CacheMsg;
 class AddressProfiler;
 
@@ -99,10 +102,11 @@ struct memory_control_profiler {
 };
 
 
-class Profiler : public Consumer {
+class Profiler : public SimObject, public Consumer {
 public:
   // Constructors
-  Profiler(const string & name);
+    typedef RubyProfilerParams Params;
+  Profiler(const Params *);
 
   void init(const vector<string> & argv, vector<string> memory_control_names);
 
@@ -260,8 +264,6 @@ private:
   //added by SS
   bool m_hot_lines;
   bool m_all_instructions;
-  string m_name;
-
 };
 
 // Output operator declaration

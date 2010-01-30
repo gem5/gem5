@@ -42,55 +42,44 @@
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 
+#include "params/RubySequencer.hh"
+
 //Sequencer::Sequencer(int core_id, MessageBuffer* mandatory_q)
 
 #define LLSC_FAIL -2
 long int already = 0;
-Sequencer::Sequencer(const string & name)
-  :RubyPort(name)
+
+Sequencer *
+RubySequencerParams::create()
 {
-  m_store_waiting_on_load_cycles = 0;
-  m_store_waiting_on_store_cycles = 0;
-  m_load_waiting_on_store_cycles = 0;
-  m_load_waiting_on_load_cycles = 0;
+    return new Sequencer(this);
 }
-
-void Sequencer::init(const vector<string> & argv)
+ 
+Sequencer::Sequencer(const Params *p)
+    : RubyPort(p)
 {
-  m_deadlock_check_scheduled = false;
-  m_outstanding_count = 0;
+    m_store_waiting_on_load_cycles = 0;
+    m_store_waiting_on_store_cycles = 0;
+    m_load_waiting_on_store_cycles = 0;
+    m_load_waiting_on_load_cycles = 0;
+    
+    m_deadlock_check_scheduled = false;
+    m_outstanding_count = 0;
 
-  m_max_outstanding_requests = 0;
-  m_deadlock_threshold = 0;
-  m_version = -1;
-  m_instCache_ptr = NULL;
-  m_dataCache_ptr = NULL;
-  m_controller = NULL;
-  for (size_t i=0; i<argv.size(); i+=2) {
-    if ( argv[i] == "controller") {
-      m_controller = RubySystem::getController(argv[i+1]); // args[i] = "L1Cache"
-      m_mandatory_q_ptr = m_controller->getMandatoryQueue();
-    } else if ( argv[i] == "icache")
-      m_instCache_ptr = RubySystem::getCache(argv[i+1]);
-    else if ( argv[i] == "dcache")
-      m_dataCache_ptr = RubySystem::getCache(argv[i+1]);
-    else if ( argv[i] == "version")
-      m_version = atoi(argv[i+1].c_str());
-    else if ( argv[i] == "max_outstanding_requests")
-      m_max_outstanding_requests = atoi(argv[i+1].c_str());
-    else if ( argv[i] == "deadlock_threshold")
-      m_deadlock_threshold = atoi(argv[i+1].c_str());
-    else {
-      cerr << "WARNING: Sequencer: Unkown configuration parameter: " << argv[i] << endl;
-      assert(false);
-    }
-  }
-  assert(m_max_outstanding_requests > 0);
-  assert(m_deadlock_threshold > 0);
-  assert(m_version > -1);
-  assert(m_instCache_ptr != NULL);
-  assert(m_dataCache_ptr != NULL);
-  assert(m_controller != NULL);
+    m_max_outstanding_requests = 0;
+    m_deadlock_threshold = 0;
+    m_instCache_ptr = NULL;
+    m_dataCache_ptr = NULL;
+
+    m_instCache_ptr = p->icache;
+    m_dataCache_ptr = p->dcache;
+    m_max_outstanding_requests = p->max_outstanding_requests;
+    m_deadlock_threshold = p->deadlock_threshold;
+    
+    assert(m_max_outstanding_requests > 0);
+    assert(m_deadlock_threshold > 0);
+    assert(m_instCache_ptr != NULL);
+    assert(m_dataCache_ptr != NULL);
 }
 
 Sequencer::~Sequencer() {
@@ -495,7 +484,7 @@ void Sequencer::issueRequest(const RubyRequest& request) {
   // Send the message to the cache controller
   assert(latency > 0);
 
-
+  assert(m_mandatory_q_ptr != NULL);
   m_mandatory_q_ptr->enqueue(msg, latency);
 }
 /*

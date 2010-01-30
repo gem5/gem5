@@ -43,17 +43,22 @@
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "sim/sim_object.hh"
+
+#include "params/RubyTracer.hh"
+
 #include "gzstream.hh"
 
 template <class TYPE> class PrioHeap;
 class Address;
 class TraceRecord;
 
-class Tracer {
+class Tracer : public SimObject {
 public:
   // Constructors
 //  Tracer();
-  Tracer(const string & name);
+    typedef RubyTracerParams Params;
+  Tracer(const Params *p);
 
   // Destructor
   ~Tracer();
@@ -68,7 +73,7 @@ public:
 
   // Public Class Methods
   int playbackTrace(string filename);
-  void init(const vector<string> & argv);
+  void init();
 private:
   // Private Methods
 
@@ -82,7 +87,6 @@ private:
 
   //added by SS
   int m_warmup_length;
-  string m_name;
 };
 
 // Output operator declaration

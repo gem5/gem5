@@ -51,7 +51,8 @@ class DataBlock;
 class CacheMsg;
 class MachineID;
 class CacheMemory;
-class AbstractController;
+
+class RubySequencerParams;
 
 struct SequencerRequest {
   RubyRequest ruby_request;
@@ -65,11 +66,11 @@ struct SequencerRequest {
 
 std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
 
-class Sequencer : public Consumer, public RubyPort {
+class Sequencer : public RubyPort, public Consumer {
 public:
+    typedef RubySequencerParams Params;
   // Constructors
-  Sequencer(const string & name);
-  void init(const vector<string> & argv);
+  Sequencer(const Params *);
 
   // Destructor
   ~Sequencer();
@@ -114,13 +115,10 @@ private:
   int m_max_outstanding_requests;
   int m_deadlock_threshold;
 
-  AbstractController* m_controller;
-  MessageBuffer* m_mandatory_q_ptr;
   CacheMemory* m_dataCache_ptr;
   CacheMemory* m_instCache_ptr;
 
   // indicates what processor on the chip this sequencer is associated with
-  int m_version;
   int m_controller_type;
 
   Map<Address, SequencerRequest*> m_writeRequestTable;

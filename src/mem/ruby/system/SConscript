@@ -33,6 +33,12 @@ Import('*')
 if not env['RUBY']:
     Return()
 
+SimObject('Cache.py')
+SimObject('Sequencer.py')
+SimObject('DirectoryMemory.py')
+SimObject('MemoryControl.py')
+SimObject('RubySystem.py')
+
 Source('DMASequencer.cc')
 Source('DirectoryMemory.cc')
 Source('CacheMemory.cc')

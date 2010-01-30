@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -50,17 +49,20 @@
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/MessageSizeType.hh"
 #include "mem/ruby/system/System.hh"
+#include "sim/sim_object.hh"
+#include "params/RubyNetwork.hh"
 
 class NetDest;
 class MessageBuffer;
 class Throttle;
 class Topology;
 
-class Network {
+class Network : public SimObject {
 public:
   // Constructors
-  Network(const string & name);
-  virtual void init(const vector<string> & argv);
+    typedef RubyNetworkParams Params;
+    Network(const Params *p);
+  virtual void init();
 
   // Destructor
   virtual ~Network() {}

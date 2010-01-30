@@ -89,6 +89,15 @@ vector<string> tokenizeString(string str, string delims)
   return tokens;
 }
 
+
+/*
+ * The current state of M5/Ruby integration breaks the libruby
+ * interface.  This code is ifdef'd out for now so that we can move
+ * forward with the integration process for non-libruby uses.  We'll
+ * have to go back and resolve the libruby compatibility issue at a
+ * later date.
+ */
+#if 0
 void libruby_init(const char* cfg_filename)
 {
   ifstream cfg_output(cfg_filename);
@@ -115,6 +124,7 @@ void libruby_init(const char* cfg_filename)
   RubySystem::create(*sys_conf);
   delete sys_conf;
 }
+#endif
 
 RubyPortHandle libruby_get_port(const char* port_name, void (*hit_callback)(int64_t access_id))
 {

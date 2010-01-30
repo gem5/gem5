@@ -43,14 +43,17 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/system/MemoryVector.hh"
 #include "mem/protocol/Directory_Entry.hh"
+#include "sim/sim_object.hh"
+#include "params/RubyDirectoryMemory.hh"
 
 class AbstractController;
 
-class DirectoryMemory {
+class DirectoryMemory : public SimObject {
 public:
   // Constructors
-  DirectoryMemory(const string & name);
-  void init(const vector<string> & argv);
+    typedef RubyDirectoryMemoryParams Params;
+    DirectoryMemory(const Params *p);
+  void init();
   //  DirectoryMemory(int version);
 
   // Destructor
