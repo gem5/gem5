@@ -438,7 +438,7 @@ machine(L1Cache, "Token protocol")
   // Persistent Network
   in_port(persistentNetwork_in, PersistentMsg, persistentToL1Cache) {
     if (persistentNetwork_in.isReady()) {
-      peek(persistentNetwork_in, PersistentMsg) {
+      peek(persistentNetwork_in, PersistentMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
 
         // Apply the lockdown or unlockdown message to the table
@@ -476,7 +476,7 @@ machine(L1Cache, "Token protocol")
   // Request Network
   in_port(requestNetwork_in, RequestMsg, requestToL1Cache) {
     if (requestNetwork_in.isReady()) {
-      peek(requestNetwork_in, RequestMsg) {
+      peek(requestNetwork_in, RequestMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
         if (in_msg.Type == CoherenceRequestType:GETX) {
           if (in_msg.isLocal) {
@@ -512,7 +512,7 @@ machine(L1Cache, "Token protocol")
   // Response Network
   in_port(responseNetwork_in, ResponseMsg, responseToL1Cache) {
     if (responseNetwork_in.isReady()) {
-      peek(responseNetwork_in, ResponseMsg) {
+      peek(responseNetwork_in, ResponseMsg, block_on="Address") {
         assert(in_msg.Destination.isElement(machineID));
 
         // Mark TBE flag if response received off-chip.  Use this to update average latency estimate
@@ -578,7 +578,7 @@ machine(L1Cache, "Token protocol")
   // Mandatory Queue
   in_port(mandatoryQueue_in, CacheMsg, mandatoryQueue, desc="...") {
     if (mandatoryQueue_in.isReady()) {
-      peek(mandatoryQueue_in, CacheMsg) {
+      peek(mandatoryQueue_in, CacheMsg, block_on="LineAddress") {
         // Check for data access to blocks in I-cache and ifetchs to blocks in D-cache
 
         if (in_msg.Type == CacheRequestType:IFETCH) {
