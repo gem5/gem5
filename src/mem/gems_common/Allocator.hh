@@ -60,7 +60,7 @@ inline
 TYPE* Allocator<TYPE>::allocate(const TYPE& obj)
 {
   m_counter++;
-  DEBUG_EXPR(ALLOCATOR_COMP, LowPrio, m_counter);
+  DPRINTF(GemsCommon, "couter %d", m_counter);
   TYPE* new_obj_ptr;
 
   // See if we need to allocate any new objects

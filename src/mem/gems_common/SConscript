@@ -43,3 +43,5 @@ benv.CXXFile('ioutil/attrparse.yy')
 Source('ioutil/attrlex.cc', Werror=False)
 Source('ioutil/attrparse.cc', Werror=False)
 Source('util.cc')
+
+TraceFlag('GemsCommon')
