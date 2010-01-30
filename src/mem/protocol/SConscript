@@ -87,8 +87,11 @@ def slicc_emitter(target, source, env):
     print "SLICC writing C++ files..."
     slicc.writeCodeFiles(pdir)
 
-    print "SLICC writing HTML files..."
-    slicc.writeHTMLFiles(hdir)
+    if env['NO_HTML']:
+        print "skipping HTML file creation"
+    else:
+        print "SLICC writing HTML files..."
+        slicc.writeHTMLFiles(hdir)
     return target, source
 
 def slicc_action(target, source, env):
@@ -114,8 +117,11 @@ def slicc_action(target, source, env):
     print "SLICC writing C++ files..."
     slicc.writeCodeFiles(pdir)
 
-    print "SLICC writing HTML files..."
-    slicc.writeHTMLFiles(hdir)
+    if env['NO_HTML']:
+        print "skipping HTML file creation"
+    else:
+        print "SLICC writing HTML files..."
+        slicc.writeHTMLFiles(hdir)
 
 slicc_builder = Builder(action=slicc_action, emitter=slicc_emitter)
 

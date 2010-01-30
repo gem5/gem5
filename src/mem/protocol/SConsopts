@@ -55,3 +55,6 @@ opt = EnumVariable('PROTOCOL', 'Coherence Protocol for Ruby', 'MOESI_CMP_directo
 
 sticky_vars.AddVariables(opt)
 export_vars += ['PROTOCOL']
+
+opt = BoolVariable('NO_HTML', 'Do not create HTML files', False)
+sticky_vars.AddVariables(opt)
