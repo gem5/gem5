@@ -115,7 +115,8 @@ InOrderCPU::CPUEvent::process()
         cpu->activateThread(tid);
         break;
 
-      //@TODO: Consider Implementing "Suspend Thread" as Separate from Deallocate
+      //@TODO: Consider Implementing "Suspend Thread" as Separate from 
+      //Deallocate
       case SuspendThread: // Suspend & Deallocate are same for now.
         //cpu->suspendThread(tid);
         //break;
@@ -145,10 +146,13 @@ InOrderCPU::CPUEvent::process()
 
       default:
         fatal("Unrecognized Event Type %d", cpuEventType);
+    
     }
-
+    
     cpu->cpuEventRemoveList.push(this);
 }
+
+    
 
 const char *
 InOrderCPU::CPUEvent::description()
@@ -185,6 +189,10 @@ InOrderCPU::InOrderCPU(Params *params)
       system(params->system),
       physmem(system->physmem),
 #endif // FULL_SYSTEM
+#ifdef DEBUG
+      cpuEventNum(0),
+      resReqCount(0),
+#endif // DEBUG
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
@@ -301,7 +309,7 @@ InOrderCPU::InOrderCPU(Params *params)
 
     // Define dummy instructions and resource requests to be used.
     DynInstPtr dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0);
-    dummyReq = new ResourceRequest(NULL, NULL, 0, 0, 0, 0);
+    dummyReq = new ResourceRequest(resPool->getResource(0), NULL, 0, 0, 0, 0);
 
     // Reset CPU to reset state.
 #if FULL_SYSTEM
@@ -321,6 +329,13 @@ InOrderCPU::regStats()
 {
     /* Register the Resource Pool's stats here.*/
     resPool->regStats();
+
+#ifdef DEBUG
+    maxResReqCount
+        .name(name() + ".maxResReqCount")
+        .desc("Maximum number of live resource requests in CPU")
+        .prereq(maxResReqCount);   
+#endif
 
     /* Register any of the InOrderCPU's stats here.*/
     timesIdled
@@ -342,7 +357,7 @@ InOrderCPU::regStats()
 
     smtCycles
         .name(name() + ".smtCycles")
-        .desc("Total number of cycles that the CPU was simultaneous multithreading.(SMT)");
+        .desc("Total number of cycles that the CPU was in SMT-mode");
 
     committedInsts
         .init(numThreads)
@@ -435,7 +450,8 @@ InOrderCPU::tick()
             //Tick next_tick = curTick + cycles(1);
             //tickEvent.schedule(next_tick);
             mainEventQueue.schedule(&tickEvent, nextCycle(curTick + 1));
-            DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", nextCycle(curTick + 1));
+            DPRINTF(InOrderCPU, "Scheduled CPU for next tick @ %i.\n", 
+                    nextCycle(curTick + 1));
         }
     }
 
@@ -640,8 +656,8 @@ void
 InOrderCPU::addToCurrentThreads(ThreadID tid)
 {
     if (!isThreadInCPU(tid)) {
-        DPRINTF(InOrderCPU, "Adding Thread %i to current threads list in CPU.\n",
-                tid);
+        DPRINTF(InOrderCPU, "Adding Thread %i to current threads list in CPU."
+                "\n", tid);
         currentThreads.push_back(tid);
     }
 }
@@ -1002,9 +1018,11 @@ InOrderCPU::readRegOtherThread(unsigned reg_idx, ThreadID tid)
         tid = TheISA::getTargetThread(tcBase(tid));
     }
 
-    if (reg_idx < FP_Base_DepTag) {                   // Integer Register File
+    if (reg_idx < FP_Base_DepTag) {                   
+        // Integer Register File
         return readIntReg(reg_idx, tid);
-    } else if (reg_idx < Ctrl_Base_DepTag) {          // Float Register File
+    } else if (reg_idx < Ctrl_Base_DepTag) {          
+        // Float Register File
         reg_idx -= FP_Base_DepTag;
         return readFloatRegBits(reg_idx, tid);
     } else {
@@ -1070,9 +1088,12 @@ InOrderCPU::addInst(DynInstPtr &inst)
 void
 InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 {
-    // Set the CPU's PCs - This contributes to the precise state of the CPU which can be used
-    // when restoring a thread to the CPU after a fork or after an exception
-    // @TODO: Set-Up Grad-Info/Committed-Info to let ThreadState know if it's a branch or not
+    // Set the CPU's PCs - This contributes to the precise state of the CPU 
+    // which can be used when restoring a thread to the CPU after a fork or 
+    // after an exception
+    // =================
+    // @TODO: Set-Up Grad-Info/Committed-Info to let ThreadState know if 
+    // it's a branch or not
     setPC(inst->readPC(), tid);
     setNextPC(inst->readNextPC(), tid);
     setNextNPC(inst->readNextNPC(), tid);
@@ -1112,7 +1133,8 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 
     // Broadcast to other resources an instruction
     // has been completed
-    resPool->scheduleEvent((CPUEventType)ResourcePool::InstGraduated, inst, tid);
+    resPool->scheduleEvent((CPUEventType)ResourcePool::InstGraduated, inst, 
+                           tid);
 
     // Finally, remove instruction from CPU
     removeInst(inst);
@@ -1380,7 +1402,8 @@ InOrderCPU::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
 {
     //@TODO: Generalize name "CacheUnit" to "MemUnit" just in case
     //       you want to run w/out caches?
-    CacheUnit *cache_res = dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
+    CacheUnit *cache_res = 
+        dynamic_cast<CacheUnit*>(resPool->getResource(dataPortIdx));
 
     return cache_res->read(inst, addr, data, flags);
 }
@@ -1483,14 +1506,16 @@ InOrderCPU::write(DynInstPtr inst, uint8_t data, Addr addr,
 
 template<>
 Fault
-InOrderCPU::write(DynInstPtr inst, double data, Addr addr, unsigned flags, uint64_t *res)
+InOrderCPU::write(DynInstPtr inst, double data, Addr addr, unsigned flags, 
+                  uint64_t *res)
 {
     return write(inst, *(uint64_t*)&data, addr, flags, res);
 }
 
 template<>
 Fault
-InOrderCPU::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64_t *res)
+InOrderCPU::write(DynInstPtr inst, float data, Addr addr, unsigned flags, 
+                  uint64_t *res)
 {
     return write(inst, *(uint32_t*)&data, addr, flags, res);
 }
@@ -1498,7 +1523,8 @@ InOrderCPU::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64
 
 template<>
 Fault
-InOrderCPU::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, uint64_t *res)
+InOrderCPU::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, 
+                  uint64_t *res)
 {
     return write(inst, (uint32_t)data, addr, flags, res);
 }

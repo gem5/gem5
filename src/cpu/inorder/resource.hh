@@ -70,7 +70,8 @@ class Resource {
     /** Define this function if resource, has a port to connect to an outside
      *  simulation object.
      */
-    virtual Port* getPort(const std::string &if_name, int idx) { return NULL; }
+    virtual Port* getPort(const std::string &if_name, int idx) 
+    { return NULL; }
 
     /** Return ID for this resource */
     int getId() { return id; }
@@ -114,9 +115,9 @@ class Resource {
     /** Free a resource slot */
     virtual void freeSlot(int slot_idx);
 
-    /** Request usage of a resource for this instruction. If this instruction already
-     *  has made this request to this resource, and that request is uncompleted
-     *  this function will just return that request
+    /** Request usage of a resource for this instruction. If this instruction 
+     *  already has made this request to this resource, and that request is 
+     *  uncompleted this function will just return that request
      */
     virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
@@ -166,7 +167,8 @@ class Resource {
     /** Schedule resource event, regardless of its current state. */
     void scheduleEvent(int slot_idx, int delay);
 
-    /** Find instruction in list, Schedule resource event, regardless of its current state. */
+    /** Find instruction in list, Schedule resource event, regardless of its 
+     *  current state. */
     bool scheduleEvent(DynInstPtr inst, int delay);
 
     /** Unschedule resource event, regardless of its current state. */
@@ -303,30 +305,14 @@ class ResourceRequest
 
     static int resReqID;
 
-    static int resReqCount;
-
+    static int maxReqCount;
+    
   public:
     ResourceRequest(Resource *_res, DynInstPtr _inst, int stage_num,
-                    int res_idx, int slot_num, unsigned _cmd)
-        : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
-          resIdx(res_idx), slotNum(slot_num), completed(false),
-          squashed(false), processing(false), waiting(false)
-    {
-        reqID = resReqID++;
-        resReqCount++;
-        DPRINTF(ResReqCount, "Res. Req %i created. resReqCount=%i.\n", reqID, resReqCount);
-
-        if (resReqCount > 100) {
-            fatal("Too many undeleted resource requests. Memory leak?\n");
-        }
-    }
-
-    virtual ~ResourceRequest()
-    {
-        resReqCount--;
-        DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, resReqCount);
-    }
-
+                    int res_idx, int slot_num, unsigned _cmd);
+    
+    virtual ~ResourceRequest();
+    
     int reqID;
 
     /** Acknowledge that this is a request is done and remove

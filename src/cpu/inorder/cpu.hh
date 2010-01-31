@@ -144,9 +144,11 @@ class InOrderCPU : public BaseCPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-          mainEventQueue.reschedule(&tickEvent, nextCycle(curTick + ticks(delay)));
+          mainEventQueue.reschedule(&tickEvent, 
+                                    nextCycle(curTick + ticks(delay)));
         else if (!tickEvent.scheduled())
-          mainEventQueue.schedule(&tickEvent, nextCycle(curTick + ticks(delay)));
+          mainEventQueue.schedule(&tickEvent, 
+                                  nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule tick event, regardless of its current state. */
@@ -228,7 +230,8 @@ class InOrderCPU : public BaseCPU
     /** Interface between the CPU and CPU resources. */
     ResourcePool *resPool;
 
-    /** Instruction used to signify that there is no *real* instruction in buffer slot */
+    /** Instruction used to signify that there is no *real* instruction in 
+        buffer slot */
     DynInstPtr dummyBufferInst;
 
     /** Used by resources to signify a denied access to a resource. */
@@ -420,7 +423,11 @@ class InOrderCPU : public BaseCPU
     /** Get & Update Next Event Number */
     InstSeqNum getNextEventNum()
     {
+#ifdef DEBUG
         return cpuEventNum++;
+#else
+        return 0;
+#endif
     }
 
     /** Register file accessors  */
@@ -550,8 +557,8 @@ class InOrderCPU : public BaseCPU
      */
     std::queue<ListIt> removeList;
 
-    /** List of all the resource requests that will be removed at the end of this
-     *  cycle.
+    /** List of all the resource requests that will be removed at the end 
+     *  of this cycle.
      */
     std::queue<ResourceRequest*> reqRemoveList;
 
@@ -632,8 +639,12 @@ class InOrderCPU : public BaseCPU
 
     // LL/SC debug functionality
     unsigned stCondFails;
-    unsigned readStCondFailures() { return stCondFails; }
-    unsigned setStCondFailures(unsigned st_fails) { return stCondFails = st_fails; }
+
+    unsigned readStCondFailures() 
+    { return stCondFails; }
+
+    unsigned setStCondFailures(unsigned st_fails) 
+    { return stCondFails = st_fails; }
 
     /** Returns a pointer to a thread context. */
     ThreadContext *tcBase(ThreadID tid = 0)
@@ -663,8 +674,15 @@ class InOrderCPU : public BaseCPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum[ThePipeline::MaxThreads];
 
+#ifdef DEBUG
     /** The global event number counter. */
     InstSeqNum cpuEventNum;
+
+    /** Number of resource requests active in CPU **/
+    unsigned resReqCount;
+
+    Stats::Scalar maxResReqCount;    
+#endif
 
     /** Counter of how many stages have completed switching out. */
     int switchCount;

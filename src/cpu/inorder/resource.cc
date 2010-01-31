@@ -80,7 +80,8 @@ Resource::regStats()
 {
     instReqsProcessed
         .name(name() + ".instReqsProcessed")
-        .desc("Number of Instructions Requests that completed in this resource.");
+        .desc("Number of Instructions Requests that completed in "
+              "this resource.");
 }
 
 int
@@ -98,7 +99,8 @@ Resource::slotsInUse()
 void
 Resource::freeSlot(int slot_idx)
 {
-    DPRINTF(RefCount, "Removing [tid:%i] [sn:%i]'s request from resource [slot:%i].\n",
+    DPRINTF(RefCount, "Removing [tid:%i] [sn:%i]'s request from resource "
+            "[slot:%i].\n",
             reqMap[slot_idx]->inst->readTid(),
             reqMap[slot_idx]->inst->seqNum,
             slot_idx);
@@ -159,7 +161,8 @@ Resource::getSlot(DynInstPtr inst)
 
         while (map_it != map_end) {
             if ((*map_it).second) {
-                DPRINTF(Resource, "Currently Serving request from: [tid:%i] [sn:%i].\n",
+                DPRINTF(Resource, "Currently Serving request from: "
+                        "[tid:%i] [sn:%i].\n",
                         (*map_it).second->getInst()->readTid(),
                         (*map_it).second->getInst()->seqNum);
             }
@@ -202,10 +205,12 @@ Resource::request(DynInstPtr inst)
             inst_req = getRequest(inst, stage_num, id, slot_num, cmd);
 
             if (inst->staticInst) {
-                DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource.\n",
+                DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this "
+                        "resource.\n",
                         inst->readTid(), inst->seqNum);
             } else {
-                DPRINTF(Resource, "[tid:%i]: instruction requesting this resource.\n",
+                DPRINTF(Resource, "[tid:%i]: instruction requesting this "
+                        "resource.\n",
                         inst->readTid());
             }
 
@@ -232,7 +237,8 @@ Resource::requestAgain(DynInstPtr inst, bool &do_request)
     do_request = true;
 
     if (inst->staticInst) {
-        DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource again.\n",
+        DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource "
+                "again.\n",
                 inst->readTid(), inst->seqNum);
     } else {
         DPRINTF(Resource, "[tid:%i]: requesting this resource again.\n",
@@ -394,7 +400,41 @@ Resource::unscheduleEvent(DynInstPtr inst)
 
 int ResourceRequest::resReqID = 0;
 
-int ResourceRequest::resReqCount = 0;
+int ResourceRequest::maxReqCount = 0;
+
+ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst, 
+                                 int stage_num, int res_idx, int slot_num, 
+                                 unsigned _cmd)
+    : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
+      resIdx(res_idx), slotNum(slot_num), completed(false),
+      squashed(false), processing(false), waiting(false)
+{
+#ifdef DEBUG
+        reqID = resReqID++;
+        res->cpu->resReqCount++;
+        DPRINTF(ResReqCount, "Res. Req %i created. resReqCount=%i.\n", reqID, 
+                res->cpu->resReqCount);
+
+        if (res->cpu->resReqCount > 100) {
+            fatal("Too many undeleted resource requests. Memory leak?\n");
+        }
+
+        if (res->cpu->resReqCount > maxReqCount) {            
+            maxReqCount = res->cpu->resReqCount;
+            res->cpu->maxResReqCount = maxReqCount;            
+        }
+        
+#endif
+}
+
+ResourceRequest::~ResourceRequest()
+{
+#ifdef DEBUG
+        res->cpu->resReqCount--;
+        DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, 
+                res->cpu->resReqCount);
+#endif
+}
 
 void
 ResourceRequest::done(bool completed)
