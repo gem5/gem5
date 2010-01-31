@@ -611,7 +611,7 @@ class InOrderCPU : public BaseCPU
         if (numActiveThreads() > 0)
             return activeThreads.front();
         else
-            return -1;
+            return InvalidThreadID;
     }
     
      

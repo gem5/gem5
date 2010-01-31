@@ -205,11 +205,12 @@ FirstStage::processInsts(ThreadID tid)
 ThreadID
 FirstStage::getFetchingThread(FetchPriority &fetch_priority)
 {
-    if (numThreads > 1) {
-        switch (fetch_priority) {
+    ThreadID num_active_threads = cpu->numActiveThreads();
 
+    if (num_active_threads > 1) {
+        switch (fetch_priority) {
           case SingleThread:
-            return 0;
+            return cpu->activeThreadId();
 
           case RoundRobin:
             return roundRobin();
@@ -217,7 +218,7 @@ FirstStage::getFetchingThread(FetchPriority &fetch_priority)
           default:
             return InvalidThreadID;
         }
-    } else {
+    } else if (num_active_threads == 1) {
         ThreadID tid = *activeThreads->begin();
 
         if (stageStatus[tid] == Running ||
@@ -226,8 +227,9 @@ FirstStage::getFetchingThread(FetchPriority &fetch_priority)
         } else {
             return InvalidThreadID;
         }
-    }
-
+    } else {
+        return InvalidThreadID;
+    }    
 }
 
 ThreadID
