@@ -674,6 +674,8 @@ InOrderCPU::activateNextReadyThread()
         DPRINTF(InOrderCPU,
                 "Attempting to activate new thread, but No Ready Threads to"
                 "activate.\n");
+        DPRINTF(InOrderCPU,
+                "Unable to switch to next active thread.\n");
     }        
 }
 
@@ -696,7 +698,7 @@ InOrderCPU::activateThread(ThreadID tid)
                 "Ignoring activation of [tid:%i], since [tid:%i] is "
                 "already running.\n", tid, activeThreadId());
         
-        DPRINTF(InOrderCPU,"Placing [tid:%i] ready threads list\n", 
+        DPRINTF(InOrderCPU,"Placing [tid:%i] on ready threads list\n", 
                 tid);        
 
         readyThreads.push_back(tid);
@@ -706,8 +708,18 @@ InOrderCPU::activateThread(ThreadID tid)
                 "Adding [tid:%i] to active threads list.\n", tid);
         activeThreads.push_back(tid);
         
+        activateThreadInPipeline(tid);
+        
         wakeCPU();
     }
+}
+
+void
+InOrderCPU::activateThreadInPipeline(ThreadID tid)
+{
+    for (int stNum=0; stNum < NumStages; stNum++) {
+        pipelineStage[stNum]->activateThread(tid);
+    }    
 }
 
 void

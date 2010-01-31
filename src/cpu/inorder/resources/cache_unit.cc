@@ -708,9 +708,12 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
         if (cache_req->isMemStall() && 
             cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {    
-            DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n");
+            DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n", tid);
             
             cpu->activateContext(tid);            
+            
+            DPRINTF(ThreadModel, "Activating [tid:%i] after return from cache"
+                    "miss.\n", tid);            
         }
         
         // Wake up the CPU (if it went to sleep and was waiting on this

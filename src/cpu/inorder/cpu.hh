@@ -346,7 +346,8 @@ class InOrderCPU : public BaseCPU
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay = 0);
     void activateThread(ThreadID tid);
-
+    void activateThreadInPipeline(ThreadID tid);
+    
     /** Add Thread to Active Threads List. */
     void activateNextReadyContext(int delay = 0);
     void activateNextReadyThread();

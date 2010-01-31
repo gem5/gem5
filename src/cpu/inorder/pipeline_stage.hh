@@ -235,6 +235,8 @@ class PipelineStage
 
 
   public:
+    virtual void activateThread(ThreadID tid);
+    
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */

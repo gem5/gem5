@@ -558,6 +558,28 @@ PipelineStage::updateStatus()
     }
 }
 
+void 
+PipelineStage::activateThread(ThreadID tid)
+{    
+    if (cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
+        if (!switchedOutValid[tid]) {
+            DPRINTF(InOrderStage, "[tid:%i] No instruction available in "
+                    "switch out buffer.\n", tid);        
+        } else {
+            DynInstPtr inst = switchedOutBuffer[tid];
+
+            DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%#x into stage skidBuffer %i\n",
+                    tid, inst->seqNum, inst->readPC(), inst->threadNumber);
+
+            skidBuffer[tid].push(inst);            
+
+            switchedOutBuffer[tid] = NULL;
+
+            switchedOutValid[tid] = false;            
+        }        
+    }
+    
+}
 
 
 void
@@ -945,6 +967,11 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
                 if (req->isMemStall() && 
                     cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
                     // Save Stalling Instruction
+                    DPRINTF(ThreadModel, "[tid:%i] Detected cache miss.\n", tid);
+
+                    DPRINTF(InOrderStage, "Inserting [tid:%i][sn:%i] into switch out buffer.\n",
+                             tid, inst->seqNum);                    
+
                     switchedOutBuffer[tid] = inst;
                     switchedOutValid[tid] = true;
                     
@@ -956,9 +983,12 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
                     // Switch On Cache Miss
                     //=====================
                     // Suspend Thread at end of cycle
+                    DPRINTF(ThreadModel, "Suspending [tid:%i] due to cache miss.\n", tid);
                     cpu->suspendContext(tid);                    
 
                     // Activate Next Ready Thread at end of cycle
+                    DPRINTF(ThreadModel, "Attempting to activate next ready thread due to"
+                            " cache miss.\n");
                     cpu->activateNextReadyContext();                                                                                               
                 }
                 
