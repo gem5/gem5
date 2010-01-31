@@ -44,6 +44,9 @@ PipelineStage::PipelineStage(Params *params, unsigned stage_num)
       stageBufferMax(ThePipeline::interStageBuffSize[stage_num]),
       prevStageValid(false), nextStageValid(false)
 {
+    switchedOutBuffer.resize(ThePipeline::MaxThreads);
+    switchedOutValid.resize(ThePipeline::MaxThreads);
+    
     init(params);
 }
 
@@ -267,7 +270,8 @@ PipelineStage::isBlocked(ThreadID tid)
 bool
 PipelineStage::block(ThreadID tid)
 {
-    DPRINTF(InOrderStage, "[tid:%d]: Blocking, sending block signal back to previous stages.\n", tid);
+    DPRINTF(InOrderStage, "[tid:%d]: Blocking, sending block signal back to "
+            "previous stages.\n", tid);
 
     // Add the current inputs to the skid buffer so they can be
     // reprocessed when this stage unblocks.
@@ -296,7 +300,8 @@ PipelineStage::block(ThreadID tid)
 void
 PipelineStage::blockDueToBuffer(ThreadID tid)
 {
-    DPRINTF(InOrderStage, "[tid:%d]: Blocking instructions from passing to next stage.\n", tid);
+    DPRINTF(InOrderStage, "[tid:%d]: Blocking instructions from passing to "
+            "next stage.\n", tid);
 
     if (stageStatus[tid] != Blocked) {
         // Set the status to Blocked.
@@ -334,8 +339,9 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
     if (cpu->squashSeqNum[tid] < inst->seqNum &&
         cpu->lastSquashCycle[tid] == curTick){
-        DPRINTF(Resource, "Ignoring [sn:%i] squash signal due to another stage's squash "
-                "signal for after [sn:%i].\n", inst->seqNum, cpu->squashSeqNum[tid]);
+        DPRINTF(Resource, "Ignoring [sn:%i] squash signal due to another "
+                "stage's squash signal for after [sn:%i].\n", inst->seqNum, 
+                cpu->squashSeqNum[tid]);
     } else {
         // Send back mispredict information.
         toPrevStages->stageInfo[stageNum][tid].branchMispredict = true;
@@ -346,20 +352,28 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 
 
 #if ISA_HAS_DELAY_SLOT
-        toPrevStages->stageInfo[stageNum][tid].branchTaken = inst->readNextNPC() !=
+        toPrevStages->stageInfo[stageNum][tid].branchTaken = 
+            inst->readNextNPC() !=
             (inst->readNextPC() + sizeof(TheISA::MachInst));
-        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->bdelaySeqNum;
+
+        toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = 
+            inst->bdelaySeqNum;
+
         InstSeqNum squash_seq_num = inst->bdelaySeqNum;
 #else
-        toPrevStages->stageInfo[stageNum][tid].branchTaken = inst->readNextPC() !=
+        toPrevStages->stageInfo[stageNum][tid].branchTaken = 
+            inst->readNextPC() !=
             (inst->readPC() + sizeof(TheISA::MachInst));
+
         toPrevStages->stageInfo[stageNum][tid].bdelayDoneSeqNum = inst->seqNum;
         InstSeqNum squash_seq_num = inst->seqNum;
 #endif
 
-        DPRINTF(InOrderStage, "Target being re-set to %08p\n", inst->readPredTarg());
-        DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], due to [sn:%i] "
-                "branch.\n", tid, squash_seq_num, inst->seqNum);
+        DPRINTF(InOrderStage, "Target being re-set to %08p\n", 
+                inst->readPredTarg());
+        DPRINTF(InOrderStage, "[tid:%i]: Squashing after [sn:%i], "
+                "due to [sn:%i] branch.\n", tid, squash_seq_num, 
+                inst->seqNum);
 
         // Save squash num for later stage use
         cpu->squashSeqNum[tid] = squash_seq_num;
@@ -394,8 +408,8 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
 
     squashPrevStageInsts(squash_seq_num, tid);
 
-    DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from incoming stage skidbuffer.\n",
-            tid);
+    DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from incoming stage"
+            " skidbuffer.\n", tid);
     while (!skidBuffer[tid].empty()) {
         if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
             DPRINTF(InOrderStage, "[tid:%i]: Cannot remove skidBuffer "
@@ -404,8 +418,9 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
                     skidBuffer[tid].size());
             break;
         }
-        DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] PC %08p.\n",
-                tid, skidBuffer[tid].front()->seqNum, skidBuffer[tid].front()->PC);
+        DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
+                " PC %08p.\n", tid, skidBuffer[tid].front()->seqNum, 
+                skidBuffer[tid].front()->PC);
         skidBuffer[tid].pop();
     }
 
@@ -427,7 +442,8 @@ PipelineStage::stageBufferAvail()
     int avail = stageBufferMax - total -0;// incoming_insts;
 
     if (avail < 0)
-        fatal("stageNum %i:stageBufferAvail() < 0...stBMax=%i,total=%i,incoming=%i=>%i",
+        fatal("stageNum %i:stageBufferAvail() < 0..."
+              "stBMax=%i,total=%i,incoming=%i=>%i",
               stageNum, stageBufferMax, total, incoming_insts, avail);
 
     return avail;
@@ -443,7 +459,8 @@ PipelineStage::canSendInstToStage(unsigned stage_num)
     }
 
     if (!buffer_avail && nextStageQueueValid(stage_num)) {
-        DPRINTF(InOrderStall, "STALL: No room in stage %i buffer.\n", stageNum + 1);
+        DPRINTF(InOrderStall, "STALL: No room in stage %i buffer.\n", 
+                stageNum + 1);
     }
 
     return buffer_avail;
@@ -461,8 +478,9 @@ PipelineStage::skidInsert(ThreadID tid)
 
         assert(tid == inst->threadNumber);
 
-        DPRINTF(InOrderStage,"[tid:%i]: Inserting [sn:%lli] PC:%#x into stage skidBuffer %i\n",
-                tid, inst->seqNum, inst->readPC(), inst->threadNumber);
+        DPRINTF(InOrderStage,"[tid:%i]: Inserting [sn:%lli] PC:%#x into stage "
+                "skidBuffer %i\n", tid, inst->seqNum, inst->readPC(), 
+                inst->threadNumber);
 
         skidBuffer[tid].push(inst);
     }
@@ -547,16 +565,16 @@ PipelineStage::sortInsts()
         for (int i = 0; i < insts_from_prev_stage; ++i) {
 
             if (prevStage->insts[i]->isSquashed()) {
-                DPRINTF(InOrderStage, "[tid:%i]: Ignoring squashed [sn:%i], not inserting "
-                        "into stage buffer.\n",
+                DPRINTF(InOrderStage, "[tid:%i]: Ignoring squashed [sn:%i], "
+                        "not inserting into stage buffer.\n",
                     prevStage->insts[i]->readTid(),
                     prevStage->insts[i]->seqNum);
 
                 continue;
             }
 
-            DPRINTF(InOrderStage, "[tid:%i]: Inserting [sn:%i] into stage buffer.\n",
-                    prevStage->insts[i]->readTid(),
+            DPRINTF(InOrderStage, "[tid:%i]: Inserting [sn:%i] into stage "
+                    "buffer.\n", prevStage->insts[i]->readTid(),
                     prevStage->insts[i]->seqNum);
 
             ThreadID tid = prevStage->insts[i]->threadNumber;
@@ -611,8 +629,8 @@ PipelineStage::checkSignalsAndUpdate(ThreadID tid)
     // Check for squash from later pipeline stages
     for (int stage_idx=stageNum; stage_idx < NumStages; stage_idx++) {
         if (fromNextStages->stageInfo[stage_idx][tid].squash) {
-            DPRINTF(InOrderStage, "[tid:%u]: Squashing instructions due to squash "
-                "from stage %u.\n", tid, stage_idx);
+            DPRINTF(InOrderStage, "[tid:%u]: Squashing instructions due to "
+                    "squash from stage %u.\n", tid, stage_idx);
             InstSeqNum squash_seq_num = fromNextStages->
                 stageInfo[stage_idx][tid].bdelayDoneSeqNum;
             squash(squash_seq_num, tid);
@@ -625,8 +643,8 @@ PipelineStage::checkSignalsAndUpdate(ThreadID tid)
     }
 
     if (stageStatus[tid] == Blocked) {
-        DPRINTF(InOrderStage, "[tid:%u]: Done blocking, switching to unblocking.\n",
-                tid);
+        DPRINTF(InOrderStage, "[tid:%u]: Done blocking, switching to "
+                "unblocking.\n", tid);
 
         stageStatus[tid] = Unblocking;
 
@@ -637,15 +655,15 @@ PipelineStage::checkSignalsAndUpdate(ThreadID tid)
 
     if (stageStatus[tid] == Squashing) {
         if (!skidBuffer[tid].empty()) {
-            DPRINTF(InOrderStage, "[tid:%u]: Done squashing, switching to unblocking.\n",
-                    tid);
+            DPRINTF(InOrderStage, "[tid:%u]: Done squashing, switching to "
+                    "unblocking.\n", tid);
 
             stageStatus[tid] = Unblocking;
         } else {
             // Switch status to running if stage isn't being told to block or
             // squash this cycle.
-            DPRINTF(InOrderStage, "[tid:%u]: Done squashing, switching to running.\n",
-                    tid);
+            DPRINTF(InOrderStage, "[tid:%u]: Done squashing, switching to "
+                    "running.\n", tid);
 
             stageStatus[tid] = Running;
         }
@@ -717,13 +735,13 @@ PipelineStage::unsetResStall(ResReqPtr res_req, ThreadID tid)
     }
 
     if (stalls[tid].resources.size() == 0) {
-        DPRINTF(InOrderStage, "[tid:%u]: There are no remaining resource stalls.\n",
-                tid);
+        DPRINTF(InOrderStage, "[tid:%u]: There are no remaining resource"
+                "stalls.\n", tid);
     }
 }
 
-// @TODO: Update How we handled threads in CPU. Maybe threads shouldnt be handled
-// one at a time, but instead first come first serve by instruction?
+// @TODO: Update How we handled threads in CPU. Maybe threads shouldnt be 
+// handled one at a time, but instead first come first serve by instruction?
 // Questions are how should a pipeline stage handle thread-specific stalls &
 // pipeline squashes
 void
@@ -749,8 +767,8 @@ PipelineStage::processStage(bool &status_change)
     DPRINTF(InOrderStage, "%i left in stage %i incoming buffer.\n", skidSize(),
             stageNum);
 
-    DPRINTF(InOrderStage, "%i available in stage %i incoming buffer.\n", stageBufferAvail(),
-            stageNum);
+    DPRINTF(InOrderStage, "%i available in stage %i incoming buffer.\n", 
+            stageBufferAvail(), stageNum);
 }
 
 void
@@ -828,8 +846,8 @@ PipelineStage::processInsts(ThreadID tid)
 
         inst = insts_to_stage.front();
 
-        DPRINTF(InOrderStage, "[tid:%u]: Processing instruction [sn:%lli] with "
-                "PC %#x\n",
+        DPRINTF(InOrderStage, "[tid:%u]: Processing instruction [sn:%lli] "
+                "with PC %#x\n",
                 tid, inst->seqNum, inst->readPC());
 
         if (inst->isSquashed()) {
@@ -856,8 +874,8 @@ PipelineStage::processInsts(ThreadID tid)
 
         // Send to Next Stage or Break Loop
         if (nextStageValid && !sendInstToNextStage(inst)) {
-            DPRINTF(InOrderStage, "[tid:%i] [sn:%i] unable to proceed to stage %i.\n",
-                    tid, inst->seqNum,inst->nextStage);
+            DPRINTF(InOrderStage, "[tid:%i] [sn:%i] unable to proceed to stage"
+                    " %i.\n", tid, inst->seqNum,inst->nextStage);
             break;
         }
 
@@ -897,14 +915,15 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
             int res_num = inst->nextResource();
 
 
-            DPRINTF(InOrderStage, "[tid:%i]: [sn:%i]: sending request to %s.\n",
-                    tid, inst->seqNum, cpu->resPool->name(res_num));
+            DPRINTF(InOrderStage, "[tid:%i]: [sn:%i]: sending request to %s."
+                    "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
 
             ResReqPtr req = cpu->resPool->request(res_num, inst);
 
             if (req->isCompleted()) {
-                DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s completed.\n",
-                        tid, inst->seqNum, cpu->resPool->name(res_num));
+                DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s "
+                        "completed.\n", tid, inst->seqNum, 
+                        cpu->resPool->name(res_num));
 
                 if (req->fault == NoFault) {
                     inst->popSchedEntry();
@@ -913,8 +932,8 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
                           curTick, req->fault->name());
                 }
             } else {
-                DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed.\n",
-                        tid, inst->seqNum, cpu->resPool->name(res_num));
+                DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
+                        "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
 
                 last_req_completed = false;
 
@@ -956,12 +975,12 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
     assert(next_stage >= 1);
     assert(prev_stage >= 0);
 
-    DPRINTF(InOrderStage, "[tid:%u]: Attempting to send instructions to stage %u.\n", tid,
-            stageNum+1);
+    DPRINTF(InOrderStage, "[tid:%u]: Attempting to send instructions to "
+            "stage %u.\n", tid, stageNum+1);
 
     if (!canSendInstToStage(inst->nextStage)) {
-        DPRINTF(InOrderStage, "[tid:%u]: Could not send instruction to stage %u.\n", tid,
-            stageNum+1);
+        DPRINTF(InOrderStage, "[tid:%u]: Could not send instruction to "
+                "stage %u.\n", tid, stageNum+1);
         return false;
     }
 
@@ -969,12 +988,14 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
     if (nextStageQueueValid(inst->nextStage - 1)) {
         if (inst->seqNum > cpu->squashSeqNum[tid] &&
             curTick == cpu->lastSquashCycle[tid]) {
-            DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping insertion "
-                    "into stage %i queue.\n", tid, inst->seqNum, inst->nextStage);
+            DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: squashed, skipping "
+                    "insertion into stage %i queue.\n", tid, inst->seqNum, 
+                    inst->nextStage);
         } else {
             if (nextStageValid) {
-                DPRINTF(InOrderStage, "[tid:%u] %i slots available in next stage buffer.\n",
-                    tid, cpu->pipelineStage[next_stage]->stageBufferAvail());
+                DPRINTF(InOrderStage, "[tid:%u] %i slots available in next "
+                        "stage buffer.\n", tid, 
+                        cpu->pipelineStage[next_stage]->stageBufferAvail());
             }
 
             DPRINTF(InOrderStage, "[tid:%u]: [sn:%i]: being placed into  "
@@ -982,11 +1003,13 @@ PipelineStage::sendInstToNextStage(DynInstPtr inst)
                     tid, inst->seqNum, toNextStageIndex,
                     cpu->pipelineStage[prev_stage]->nextStageQueue->id());
 
-            int next_stage_idx = cpu->pipelineStage[prev_stage]->nextStage->size;
+            int next_stage_idx = 
+                cpu->pipelineStage[prev_stage]->nextStage->size;
 
-            // Place instructions in inter-stage communication struct for the next
+            // Place instructions in inter-stage communication struct for next
             // pipeline stage to read next cycle
-            cpu->pipelineStage[prev_stage]->nextStage->insts[next_stage_idx] = inst;
+            cpu->pipelineStage[prev_stage]->nextStage->insts[next_stage_idx] 
+                = inst;
 
             ++(cpu->pipelineStage[prev_stage]->nextStage->size);
 

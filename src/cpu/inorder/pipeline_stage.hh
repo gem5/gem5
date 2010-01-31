@@ -240,6 +240,8 @@ class PipelineStage
      */
     virtual void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
 
+    virtual void squashDueToMemStall(DynInstPtr &inst, ThreadID tid);
+
     /** Squash instructions from stage buffer  */
     virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
 
@@ -259,19 +261,28 @@ class PipelineStage
     /** List of active thread ids */
     std::list<ThreadID> *activeThreads;
 
+    /** Buffer of instructions switched out to mem-stall. 
+     *  Only used when using SwitchOnCacheMiss threading model
+     *  Used as 1-to-1 mapping between ThreadID and Entry. 
+     */
+    std::vector<DynInstPtr> switchedOutBuffer;
+    std::vector<bool> switchedOutValid;
+
     /** Queue of all instructions coming from previous stage on this cycle. */
     std::queue<DynInstPtr> insts[ThePipeline::MaxThreads];
 
-    /** Queue of instructions that are finished processing and ready to go next stage.
-     *  This is used to prevent from processing an instrution more than once on any
-     *  stage. NOTE: It is up to the PROGRAMMER must manage this as a queue
+    /** Queue of instructions that are finished processing and ready to go 
+     *  next stage. This is used to prevent from processing an instrution more 
+     *  than once on any stage. NOTE: It is up to the PROGRAMMER must manage 
+     *  this as a queue
      */
     std::list<DynInstPtr> instsToNextStage;
 
     /** Skid buffer between previous stage and this one. */
     std::queue<DynInstPtr> skidBuffer[ThePipeline::MaxThreads];
 
-    /** Instruction used to signify that there is no *real* instruction in buffer slot */
+    /** Instruction used to signify that there is no *real* instruction in
+     *  buffer slot */
     DynInstPtr dummyBufferInst;
 
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS) */
