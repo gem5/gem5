@@ -346,6 +346,11 @@ InOrderCPU::regStats()
         .prereq(maxResReqCount);   
 #endif
 
+    /* Register for each Pipeline Stage */
+    for (int stage_num=0; stage_num < ThePipeline::NumStages; stage_num++) {
+        pipelineStage[stage_num]->regStats();
+    }
+
     /* Register any of the InOrderCPU's stats here.*/
     timesIdled
         .name(name() + ".timesIdled")
@@ -1289,8 +1294,14 @@ InOrderCPU::wakeCPU()
 
     DPRINTF(Activity, "Waking up CPU\n");
 
-    //@todo: figure out how to count idleCycles correctly
-    //idleCycles += (curTick - 1) - lastRunningCycle;
+    Tick extra_cycles = tickToCycles((curTick - 1) - lastRunningCycle);
+
+    idleCycles += extra_cycles;    
+    for (int stage_num = 0; stage_num < NumStages; stage_num++) {
+        pipelineStage[stage_num]->idleCycles += extra_cycles;
+    }    
+
+    numCycles += extra_cycles;
 
     mainEventQueue.schedule(&tickEvent, curTick);
 }

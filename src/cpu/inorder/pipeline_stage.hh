@@ -353,24 +353,19 @@ class PipelineStage
         std::vector<ResReqPtr> resources;
     };
 
-    /** Tracks which stages are telling decode to stall. */
+    /** Tracks stage/resource stalls */
     Stalls stalls[ThePipeline::MaxThreads];
 
-    //@TODO: Use Stats for the pipeline stages
-    /** Stat for total number of idle cycles. */
-    //Stats::Scalar stageIdleCycles;
-    /** Stat for total number of blocked cycles. */
-    //Stats::Scalar stageBlockedCycles;
-    /** Stat for total number of normal running cycles. */
-    //Stats::Scalar stageRunCycles;
-    /** Stat for total number of unblocking cycles. */
-    //Stats::Scalar stageUnblockCycles;
-    /** Stat for total number of squashing cycles. */
-    //Stats::Scalar stageSquashCycles;
-    /** Stat for total number of staged instructions. */
-    //Stats::Scalar stageProcessedInsts;
-    /** Stat for total number of squashed instructions. */
-    //Stats::Scalar stageSquashedInsts;
+    /** Number of cycles 0 instruction(s) are processed. */
+    Stats::Scalar idleCycles;
+
+    /** Number of cycles 1+ instructions are processed. */
+    Stats::Scalar runCycles;
+
+    /** Percentage of cycles 1+ instructions are processed. */
+    Stats::Formula utilization;
+
+
 };
 
 #endif

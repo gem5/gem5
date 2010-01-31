@@ -72,41 +72,27 @@ PipelineStage::init(Params *params)
 std::string
 PipelineStage::name() const
 {
-    return cpu->name() + ".stage-" + to_string(stageNum);
+     return cpu->name() + ".stage-" + to_string(stageNum);
 }
 
 
 void
 PipelineStage::regStats()
 {
-/*    stageIdleCycles
-        .name(name() + ".IdleCycles")
-        .desc("Number of cycles stage is idle")
-        .prereq(stageIdleCycles);
-    stageBlockedCycles
-        .name(name() + ".BlockedCycles")
-        .desc("Number of cycles stage is blocked")
-        .prereq(stageBlockedCycles);
-    stageRunCycles
-        .name(name() + ".RunCycles")
-        .desc("Number of cycles stage is running")
-        .prereq(stageRunCycles);
-    stageUnblockCycles
-        .name(name() + ".UnblockCycles")
-        .desc("Number of cycles stage is unblocking")
-        .prereq(stageUnblockCycles);
-    stageSquashCycles
-        .name(name() + ".SquashCycles")
-        .desc("Number of cycles stage is squashing")
-        .prereq(stageSquashCycles);
-    stageProcessedInsts
-        .name(name() + ".ProcessedInsts")
-        .desc("Number of instructions handled by stage")
-        .prereq(stageProcessedInsts);
-    stageSquashedInsts
-        .name(name() + ".SquashedInsts")
-        .desc("Number of squashed instructions handled by stage")
-        .prereq(stageSquashedInsts);*/
+   idleCycles
+        .name(name() + ".idleCycles")
+       .desc("Number of cycles 0 instructions are processed.");
+   
+    runCycles
+        .name(name() + ".runCycles")
+        .desc("Number of cycles 1+ instructions are processed.");
+
+    utilization
+        .name(name() + ".utilization")
+        .desc("Percentage of cycles stage was utilized (processing insts).")
+        .precision(6);
+    utilization = (runCycles / cpu->numCycles) * 100;
+    
 }
 
 
@@ -803,6 +789,12 @@ PipelineStage::processStage(bool &status_change)
                 nextStage->size, stageNum + 1);
     }
 
+    if (instsProcessed > 0) {
+        ++runCycles;
+    } else {
+        ++idleCycles;        
+    }
+    
     DPRINTF(InOrderStage, "%i left in stage %i incoming buffer.\n", skidSize(),
             stageNum);
 
@@ -819,12 +811,6 @@ PipelineStage::processThread(bool &status_change, ThreadID tid)
     //     buffer any instructions coming from fetch
     //     continue trying to empty skid buffer
     //     check if stall conditions have passed
-
-    if (stageStatus[tid] == Blocked) {
-        ;//++stageBlockedCycles;
-    } else if (stageStatus[tid] == Squashing) {
-        ;//++stageSquashCycles;
-    }
 
     // Stage should try to process as many instructions as its bandwidth
     // will allow, as long as it is not currently blocked.
@@ -867,8 +853,6 @@ PipelineStage::processInsts(ThreadID tid)
     if (insts_available == 0) {
         DPRINTF(InOrderStage, "[tid:%u]: Nothing to do, breaking out"
                 " early.\n",tid);
-        // Should I change the status to idle?
-        //++stageIdleCycles;
         return;
     }
 
@@ -891,8 +875,6 @@ PipelineStage::processInsts(ThreadID tid)
             DPRINTF(InOrderStage, "[tid:%u]: Instruction %i with PC %#x is "
                     "squashed, skipping.\n",
                     tid, inst->seqNum, inst->readPC());
-
-            //++stageSquashedInsts;
 
             insts_to_stage.pop();
 
@@ -924,7 +906,6 @@ PipelineStage::processInsts(ThreadID tid)
 
         insts_to_stage.pop();
 
-        //++stageProcessedInsts;
         --insts_available;
     }
 

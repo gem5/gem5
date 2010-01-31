@@ -118,9 +118,9 @@ FirstStage::processStage(bool &status_change)
         status_change =  checkSignalsAndUpdate(tid) || status_change;
     }
 
-    for (int threadFetched = 0; threadFetched < numFetchingThreads;
-         threadFetched++) {
-
+    for (int insts_fetched = 0; 
+         insts_fetched < stageWidth && canSendInstToStage(1); 
+         insts_fetched++) {
         ThreadID tid = getFetchingThread(fetchPolicy);
 
         if (tid >= 0) {
@@ -130,6 +130,13 @@ FirstStage::processStage(bool &status_change)
             DPRINTF(InOrderStage, "No more threads to fetch from.\n");
         }
     }
+
+    if (instsProcessed > 0) {
+        ++runCycles;
+    } else {
+        ++idleCycles;        
+    }
+
 }
 
 //@TODO: Note in documentation, that when you make a pipeline stage change, 
@@ -197,7 +204,6 @@ FirstStage::processInsts(ThreadID tid)
         }
 
         sendInstToNextStage(inst);
-        //++stageProcessedInsts;
     }
 
     // Record that stage has written to the time buffer for activity
