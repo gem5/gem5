@@ -726,8 +726,10 @@ PipelineStage::tick()
         nextStage->size = 0;
 
     toNextStageIndex = 0;
-
+    
     sortInsts();
+
+    instsProcessed = 0;
 
     processStage(status_change);
 
@@ -873,10 +875,8 @@ PipelineStage::processInsts(ThreadID tid)
     DynInstPtr inst;
     bool last_req_completed = true;
 
-    int insts_processed = 0;
-
     while (insts_available > 0 &&
-           insts_processed < stageWidth &&
+           instsProcessed < stageWidth &&
            (!nextStageValid || canSendInstToStage(stageNum+1)) &&
            last_req_completed) {
         assert(!insts_to_stage.empty());
@@ -901,8 +901,14 @@ PipelineStage::processInsts(ThreadID tid)
             continue;
         }
 
+        int reqs_processed = 0;        
+        last_req_completed = processInstSchedule(inst, reqs_processed);
 
-        last_req_completed = processInstSchedule(inst);
+        // If the instruction isnt squashed & we've completed one request
+        // Then we can officially count this instruction toward the stage's 
+        // bandwidth count
+        if (reqs_processed > 0)
+            instsProcessed++;
 
         // Don't let instruction pass to next stage if it hasnt completed
         // all of it's requests for this stage.
@@ -915,8 +921,6 @@ PipelineStage::processInsts(ThreadID tid)
                     " %i.\n", tid, inst->seqNum,inst->nextStage);
             break;
         }
-
-        insts_processed++;
 
         insts_to_stage.pop();
 
@@ -938,7 +942,7 @@ PipelineStage::processInsts(ThreadID tid)
 }
 
 bool
-PipelineStage::processInstSchedule(DynInstPtr inst)
+PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
 {
     bool last_req_completed = true;
     ThreadID tid = inst->readTid();
@@ -966,6 +970,8 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
                     panic("%i: encountered %s fault!\n",
                           curTick, req->fault->name());
                 }
+
+                reqs_processed++;                
             } else {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
                         "\n", tid, inst->seqNum, cpu->resPool->name(res_num));

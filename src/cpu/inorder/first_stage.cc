@@ -175,9 +175,14 @@ FirstStage::processInsts(ThreadID tid)
             ThePipeline::createFrontEndSchedule(inst);
         }
 
-        // Don't let instruction pass to next stage if it hasnt completed
-        // all of it's requests for this stage.
-        all_reqs_completed = processInstSchedule(inst);
+        int reqs_processed = 0;            
+        all_reqs_completed = processInstSchedule(inst, reqs_processed);
+
+        // If the instruction isnt squashed & we've completed one request
+        // Then we can officially count this instruction toward the stage's 
+        // bandwidth count
+        if (reqs_processed > 0)
+            instsProcessed++;
 
         if (!all_reqs_completed) {
             if (new_inst) {

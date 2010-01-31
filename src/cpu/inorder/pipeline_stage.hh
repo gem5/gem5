@@ -178,7 +178,7 @@ class PipelineStage
     virtual void processInsts(ThreadID tid);
 
     /** Process all resources on an instruction's resource schedule */
-    virtual bool processInstSchedule(DynInstPtr inst);
+    virtual bool processInstSchedule(DynInstPtr inst, int &reqs_processed);
 
     /** Is there room in the next stage buffer for this instruction? */
     virtual bool canSendInstToStage(unsigned stage_num);
@@ -269,6 +269,11 @@ class PipelineStage
      */
     std::vector<DynInstPtr> switchedOutBuffer;
     std::vector<bool> switchedOutValid;
+
+    /** Instructions that we've processed this tick
+     *  NOTE: "Processed" means completed at least 1 instruction request 
+     */
+    unsigned instsProcessed;    
 
     /** Queue of all instructions coming from previous stage on this cycle. */
     std::queue<DynInstPtr> insts[ThePipeline::MaxThreads];
