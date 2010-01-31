@@ -707,6 +707,11 @@ class InOrderCPU : public BaseCPU
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
 
+    void updateContextSwitchStats();    
+    unsigned instsPerSwitch;    
+    Stats::Average instsPerCtxtSwitch;    
+    Stats::Scalar numCtxtSwitches;
+    
     /** Update Thread , used for statistic purposes*/
     inline void tickThreadStats();
 

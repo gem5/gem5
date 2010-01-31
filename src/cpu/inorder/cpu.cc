@@ -189,7 +189,8 @@ InOrderCPU::InOrderCPU(Params *params)
 #endif // DEBUG
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
-      stageTracing(params->stageTracing)
+      stageTracing(params->stageTracing),
+      instsPerSwitch(0)
 {    
     ThreadID active_threads;
     cpu_params = params;
@@ -352,6 +353,15 @@ InOrderCPU::regStats()
     }
 
     /* Register any of the InOrderCPU's stats here.*/
+    instsPerCtxtSwitch
+        .name(name() + ".instsPerContextSwitch")
+        .desc("Instructions Committed Per Context Switch")
+        .prereq(instsPerCtxtSwitch);
+    
+    numCtxtSwitches
+        .name(name() + ".contextSwitches")
+        .desc("Number of context switches");
+            
     timesIdled
         .name(name() + ".timesIdled")
         .desc("Number of times that the entire CPU went into an idle state and"
@@ -719,6 +729,8 @@ InOrderCPU::activateThread(ThreadID tid)
         tcBase(tid)->setStatus(ThreadContext::Active);    
 
         wakeCPU();
+
+        numCtxtSwitches++;        
     }
 }
 
@@ -1056,6 +1068,15 @@ InOrderCPU::addInst(DynInstPtr &inst)
     return --(instList[tid].end());
 }
 
+void 
+InOrderCPU::updateContextSwitchStats()
+{
+    // Set Average Stat Here, then reset to 0    
+    instsPerCtxtSwitch = instsPerSwitch;
+    instsPerSwitch = 0;
+}
+
+    
 void
 InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 {
@@ -1086,6 +1107,9 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
         inst->traceData = NULL;
     }
 
+    // Increment active thread's instruction count
+    instsPerSwitch++;
+    
     // Increment thread-state's instruction count
     thread[tid]->numInst++;
 

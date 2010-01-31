@@ -570,6 +570,9 @@ PipelineStage::activateThread(ThreadID tid)
             // Clear switchout buffer
             switchedOutBuffer[tid] = NULL;
             switchedOutValid[tid] = false;            
+
+            // Update any CPU stats based off context switches
+            cpu->updateContextSwitchStats();            
         }        
     }
     
