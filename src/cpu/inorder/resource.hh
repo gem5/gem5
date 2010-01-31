@@ -93,6 +93,10 @@ class Resource {
      */
     virtual void deactivateThread(ThreadID tid);
 
+    /** Resources that care about thread activation override this. */
+    virtual void suspendThread(ThreadID tid) { }
+    
+
     /** Resources that care when an instruction has been graduated
      *  can override this
      */

@@ -158,9 +158,9 @@ CacheUnit::getSlot(DynInstPtr inst)
         return new_slot;
     } else {
         DPRINTF(InOrderCachePort,
-                "Denying request because there is an outstanding"
+                "[tid:%i] Denying request because there is an outstanding"
                 " request to/for addr. %08p. by [sn:%i] @ tick %i\n",
-                req_addr, addrMap[req_addr], inst->memTime);
+                inst->readTid(), req_addr, addrMap[req_addr], inst->memTime);
         return -1;
     }
 }
@@ -702,6 +702,13 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
         cache_req->setMemAccPending(false);
         cache_req->setMemAccCompleted();
 
+        if (cache_req->isMemStall() && 
+            cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {    
+            DPRINTF(InOrderCachePort, "[tid:%u] Waking up from Cache Miss.\n");
+            
+            cpu->activateContext(tid);            
+        }
+        
         // Wake up the CPU (if it went to sleep and was waiting on this
         // completion event).
         cpu->wakeCPU();
@@ -784,6 +791,9 @@ CacheUnit::squashDueToMemStall(DynInstPtr inst, int stage_num,
     //       thread then you need to reevaluate this code
     // NOTE: squash should originate from 
     //       pipeline_stage.cc:processInstSchedule
+    DPRINTF(InOrderCachePort, "Squashing above [sn:%u]\n", 
+            squash_seq_num + 1);
+    
     squash(inst, stage_num, squash_seq_num + 1, tid);    
 }
 

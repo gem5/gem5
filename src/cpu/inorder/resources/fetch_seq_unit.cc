@@ -336,3 +336,9 @@ FetchSeqUnit::deactivateThread(ThreadID tid)
     if (thread_it != cpu->fetchPriorityList.end())
         cpu->fetchPriorityList.erase(thread_it);
 }
+
+void
+FetchSeqUnit::suspendThread(ThreadID tid)
+{
+    deactivateThread(tid);    
+}

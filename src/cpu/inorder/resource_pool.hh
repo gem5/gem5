@@ -172,6 +172,9 @@ class ResourcePool {
     /** De-Activate Thread in all resources */
     void deactivateAll(ThreadID tid);
 
+    /** De-Activate Thread in all resources */
+    void suspendAll(ThreadID tid);
+
     /** Broadcast graduation to all resources */
     void instGraduated(InstSeqNum seq_num, ThreadID tid);
 

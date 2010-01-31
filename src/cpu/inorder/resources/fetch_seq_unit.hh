@@ -59,6 +59,7 @@ class FetchSeqUnit : public Resource {
     virtual void init();
     virtual void activateThread(ThreadID tid);
     virtual void deactivateThread(ThreadID tid);
+    virtual void suspendThread(ThreadID tid);
     virtual void execute(int slot_num);
 
     /** Override default Resource squash sequence. This actually,

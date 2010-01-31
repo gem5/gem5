@@ -226,7 +226,7 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         }
         break;
 
-      case InOrderCPU::SuspendThread:
+      case InOrderCPU::DeactivateThread:
       case InOrderCPU::DeallocateThread:
         {
 
@@ -242,6 +242,23 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 
             mainEventQueue.schedule(res_pool_event, 
                                     curTick + cpu->ticks(delay));
+
+        }
+        break;
+
+      case InOrderCPU::SuspendThread:
+        {
+
+            DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool Event for tick %i.\n",
+                    curTick + delay);
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
+                                                            e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->bdelaySeqNum,
+                                                            tid);
+
+            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
 
         }
         break;
@@ -309,8 +326,9 @@ void
 ResourcePool::squashAll(DynInstPtr inst, int stage_num,
                         InstSeqNum done_seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Stage %i squashing all instructions above "
-            "[sn:%i].\n", tid, stage_num, done_seq_num);
+    DPRINTF(Resource, "[tid:%i] Broadcasting Squash All Event "
+            " starting w/stage %i for all instructions above [sn:%i].\n",
+             tid, stage_num, done_seq_num);
 
     int num_resources = resources.size();
 
@@ -323,8 +341,9 @@ void
 ResourcePool::squashDueToMemStall(DynInstPtr inst, int stage_num,
                              InstSeqNum done_seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Stage %i squashing all instructions above "
-            "[sn:%i].\n", stage_num, tid, done_seq_num);
+    DPRINTF(Resource, "[tid:%i] Broadcasting SquashDueToMemStall Event"
+            " starting w/stage %i for all instructions above [sn:%i].\n",
+            tid, stage_num, done_seq_num);
 
     int num_resources = resources.size();
 
@@ -371,6 +390,19 @@ ResourcePool::deactivateAll(ThreadID tid)
 }
 
 void
+ResourcePool::suspendAll(ThreadID tid)
+{
+    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Suspension to all resources.\n",
+            tid);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        resources[idx]->suspendThread(tid);
+    }
+}
+
+void
 ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to all "
@@ -409,9 +441,13 @@ ResourcePool::ResPoolEvent::process()
         resPool->activateAll(tid);
         break;
 
-      case InOrderCPU::SuspendThread:
+      case InOrderCPU::DeactivateThread:
       case InOrderCPU::DeallocateThread:
         resPool->deactivateAll(tid);
+        break;
+
+      case InOrderCPU::SuspendThread:
+        resPool->suspendAll(tid);
         break;
 
       case ResourcePool::InstGraduated:
