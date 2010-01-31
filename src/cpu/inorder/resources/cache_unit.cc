@@ -283,6 +283,14 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
                 inst->readTid(), inst->seqNum, inst->getMemAddr());
         break;
 
+      case InitSecondSplitWrite:
+        pkt_cmd = MemCmd::WriteReq;
+
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: Write request from [sn:%i] for addr %08p\n",
+                inst->readTid(), inst->seqNum, inst->split2ndAddr);
+        break;
+
       case InitiateWriteData:
         pkt_cmd = MemCmd::WriteReq;
 
@@ -327,7 +335,8 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
                 "instruction\n ", inst->readTid(), inst->seqNum);
 
         service_request = true;
-    } else if (inst->resSched.top()->idx != CacheUnit::InitSecondSplitRead) {        
+    } else if (inst->resSched.top()->idx != CacheUnit::InitSecondSplitRead &&
+               inst->resSched.top()->idx != CacheUnit::InitSecondSplitWrite) {        
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
         DPRINTF(InOrderCachePort,
@@ -406,7 +415,7 @@ Fault
 CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
 {
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
-    assert(cache_req);
+    assert(cache_req && "Can't Find Instruction for Read!");
 
     // The block size of our peer
     unsigned blockSize = this->cachePort->peerBlockSize();
@@ -456,7 +465,8 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         inst->resSched.push(new ScheduleEntry(stage_num + 1, 
                                               1/*stage_pri*/, 
                                               cpu->resPool->getResIdx(DCache),
-                                              CacheUnit::CompleteSecondSplitRead, 1)
+                                              CacheUnit::CompleteSecondSplitRead, 
+                                              1)
             );
 
 
@@ -473,11 +483,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         inst->split2ndFlags = flags;        
     }
     
-    //cout << "h1" << endl;
-    
     doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Read);
-
-    //cout << "h2" << endl;
 
     if (cache_req->fault == NoFault) {
         if (!cache_req->splitAccess) {            
@@ -494,8 +500,6 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         }        
     }
 
-    //cout << "h3" << endl;
-
     return cache_req->fault;
 }
 
@@ -505,7 +509,7 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
             uint64_t *write_res)
 {
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
-    assert(cache_req);
+    assert(cache_req && "Can't Find Instruction for Write!");
 
     // The block size of our peer
     unsigned blockSize = this->cachePort->peerBlockSize();
@@ -513,22 +517,75 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
     //The size of the data we're trying to read.
     int dataSize = sizeof(T);
 
+    if (inst->split2ndAccess) {     
+        dataSize = inst->split2ndSize;
+        cache_req->splitAccess = true;        
+        cache_req->split2ndAccess = true;
+        
+        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Write Access (2 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+                inst->getMemAddr(), inst->split2ndAddr);       
+    }  
+
     //The address of the second part of this access if it needs to be split
     //across a cache line boundary.
     Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
 
-    if (secondAddr > addr) {
-        assert(0 && "Need Split Write Code!");
-    }    
+    if (secondAddr > addr && !inst->split2ndAccess) {
+        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Write Access (1 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+                addr, secondAddr);       
 
-    int acc_size =  sizeof(T);
-    doTLBAccess(inst, cache_req, acc_size, flags, TheISA::TLB::Write);
+        // Save All "Total" Split Information
+        // ==============================
+        inst->splitInst = true;        
+        inst->splitTotalSize = dataSize;
+
+        // Schedule Split Read/Complete for Instruction
+        // ==============================
+        int stage_num = cache_req->getStageNum();
+        
+        int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+        
+        inst->resSched.push(new ScheduleEntry(stage_num, 
+                                              stage_pri, 
+                                              cpu->resPool->getResIdx(DCache),
+                                              CacheUnit::InitSecondSplitWrite,
+                                              1)
+            );
+
+        inst->resSched.push(new ScheduleEntry(stage_num + 1, 
+                                              1/*stage_pri*/, 
+                                              cpu->resPool->getResIdx(DCache),
+                                              CacheUnit::CompleteSecondSplitWrite, 
+                                              1)
+            );
+
+        // Split Information for First Access
+        // ==============================
+        dataSize = secondAddr - addr;
+        cache_req->splitAccess = true;
+
+        // Split Information for Second Access
+        // ==============================
+        inst->split2ndSize = addr + sizeof(T) - secondAddr;
+        inst->split2ndAddr = secondAddr;            
+        inst->split2ndStoreDataPtr = &cache_req->inst->storeData;
+        inst->split2ndStoreDataPtr += dataSize;            
+        inst->split2ndFlags = flags;        
+    }    
+        
+    doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Write);
 
     if (cache_req->fault == NoFault) {
-        cache_req->reqData = new uint8_t[acc_size];
-        doCacheAccess(inst, write_res);
+        if (!cache_req->splitAccess) {            
+            // Remove this line since storeData is saved in INST?
+            cache_req->reqData = new uint8_t[dataSize];
+            doCacheAccess(inst, write_res);
+        } else {            
+            doCacheAccess(inst, write_res, cache_req);            
+        }        
+        
     }
-
+    
     return cache_req->fault;
 }
 
@@ -596,9 +653,6 @@ CacheUnit::execute(int slot_num)
             inst->execute();
         } else {
             inst->initiateAcc();
-            //if (inst->splitAccess) {
-            //  assert(0 && " Marked as spill inst");                
-            //}
         }
         
         break;
@@ -608,6 +662,7 @@ CacheUnit::execute(int slot_num)
                 "[tid:%u]: [sn:%i] Initiating split data read access to %s for addr. %08p\n",
                 tid, inst->seqNum, name(), cache_req->inst->split2ndAddr);
         inst->split2ndAccess = true;
+        assert(inst->split2ndAddr != 0);
         read(inst, inst->split2ndAddr, inst->split2ndData, inst->split2ndFlags);        
         break;
 
@@ -615,9 +670,10 @@ CacheUnit::execute(int slot_num)
         DPRINTF(InOrderCachePort,
                 "[tid:%u]: [sn:%i] Initiating split data write access to %s for addr. %08p\n",
                 tid, inst->seqNum, name(), cache_req->inst->getMemAddr());
-        assert(0);        
+
         inst->split2ndAccess = true;
-        //write(inst, inst->split2ndAddr, inst->split2ndData, inst->split2ndFlags);        
+        assert(inst->split2ndAddr != 0);
+        write(inst, inst->split2ndAddr, inst->split2ndData, inst->split2ndFlags, NULL);        
         break;
 
 
@@ -668,6 +724,24 @@ CacheUnit::execute(int slot_num)
       case CompleteSecondSplitRead:
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Trying to Complete Split Data Read Access\n",
+                tid, inst->seqNum);
+
+        if (cache_req->isMemAccComplete() ||
+            inst->isDataPrefetch() ||
+            inst->isInstPrefetch()) {
+            cache_req->setMemStall(false);            
+            cache_req->done();
+        } else {
+            DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
+                    tid, cache_req->inst->split2ndAddr);
+            cache_req->setCompleted(false);
+            cache_req->setMemStall(true);            
+        }
+        break;
+
+      case CompleteSecondSplitWrite:
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Trying to Complete Split Data Write Access\n",
                 tid, inst->seqNum);
 
         if (cache_req->isMemAccComplete() ||
@@ -761,9 +835,13 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res, CacheReqPtr split
 
     if (cache_req->dataPkt->isRead()) {
         cache_req->dataPkt->dataStatic(cache_req->reqData);
-    } else if (cache_req->dataPkt->isWrite()) {
-        cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);
-
+    } else if (cache_req->dataPkt->isWrite()) {        
+        if (inst->split2ndAccess) {            
+            cache_req->dataPkt->dataStatic(inst->split2ndStoreDataPtr);
+        } else {
+            cache_req->dataPkt->dataStatic(&cache_req->inst->storeData);            
+        }
+        
         if (cache_req->memReq->isCondSwap()) {
             assert(write_res);
             cache_req->memReq->setExtraData(*write_res);
@@ -910,7 +988,6 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 inst->splitFinishCnt++;
                 
                 if (inst->splitFinishCnt == 2) {
-
                     cache_req->memReq->setVirt(0/*inst->tid*/, 
                                                inst->getMemAddr(),
                                                inst->splitTotalSize,
@@ -919,7 +996,14 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                     
                     Packet split_pkt(cache_req->memReq, cache_req->pktCmd,
                                      Packet::Broadcast);                    
-                    split_pkt.dataStatic(inst->splitMemData);
+
+
+                    if (inst->isLoad()) {                        
+                        split_pkt.dataStatic(inst->splitMemData);
+                    } else  {                            
+                        split_pkt.dataStatic(&inst->storeData);                        
+                    }
+                    
                     inst->completeAcc(&split_pkt);
                 }                
             } else {                            

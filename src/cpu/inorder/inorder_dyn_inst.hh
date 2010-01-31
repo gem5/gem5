@@ -341,7 +341,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     unsigned split2ndFlags;
     bool splitInst;
     int splitFinishCnt;
-    
+    uint64_t *split2ndStoreDataPtr;    
     
     ////////////////////////////////////////////////////////////
     //

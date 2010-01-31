@@ -112,6 +112,7 @@ InOrderDynInst::initVars()
     fetchMemReq = NULL;
     dataMemReq = NULL;
     splitMemData = NULL;
+    split2ndAddr = 0;
     split2ndAccess = false;
     splitInst = false;
     splitFinishCnt = 0;
@@ -192,7 +193,7 @@ InOrderDynInst::~InOrderDynInst()
     }
 
     if (splitMemData) {
-        delete splitMemData;
+        delete [] splitMemData;
     }
     
     fault = NoFault;

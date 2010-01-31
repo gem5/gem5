@@ -75,7 +75,8 @@ class CacheUnit : public Resource
         WriteData,
         InitSecondSplitRead,
         InitSecondSplitWrite,
-        CompleteSecondSplitRead
+        CompleteSecondSplitRead,
+        CompleteSecondSplitWrite
     };
 
   public:
