@@ -588,6 +588,7 @@ class InOrderCPU : public BaseCPU
 
     /** Thread Status Functions */
     bool isThreadActive(ThreadID tid);
+    bool isThreadReady(ThreadID tid);
     bool isThreadSuspended(ThreadID tid);
 
   private:

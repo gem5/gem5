@@ -628,7 +628,7 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     resPool->scheduleEvent(c_event, inst, 0, 0, tid);
 }
 
-inline bool
+bool
 InOrderCPU::isThreadActive(ThreadID tid)
 {
   list<ThreadID>::iterator isActive =
@@ -637,6 +637,23 @@ InOrderCPU::isThreadActive(ThreadID tid)
     return (isActive != activeThreads.end());
 }
 
+bool
+InOrderCPU::isThreadReady(ThreadID tid)
+{
+  list<ThreadID>::iterator isReady =
+      std::find(readyThreads.begin(), readyThreads.end(), tid);
+
+    return (isReady != readyThreads.end());
+}
+
+bool
+InOrderCPU::isThreadSuspended(ThreadID tid)
+{
+  list<ThreadID>::iterator isSuspended =
+      std::find(suspendedThreads.begin(), suspendedThreads.end(), tid);
+
+    return (isSuspended != suspendedThreads.end());
+}
 
 void
 InOrderCPU::activateNextReadyThread()
@@ -655,26 +672,40 @@ InOrderCPU::activateNextReadyThread()
         readyThreads.erase(ready_it);                        
     } else {
         DPRINTF(InOrderCPU,
-                "No Ready Threads to Activate.\n");
+                "Attempting to activate new thread, but No Ready Threads to"
+                "activate.\n");
     }        
 }
 
 void
 InOrderCPU::activateThread(ThreadID tid)
 {
+    if (isThreadSuspended(tid)) {
+        DPRINTF(InOrderCPU,
+                "Removing [tid:%i] from suspended threads list.\n", tid);
+
+        list<ThreadID>::iterator susp_it =
+            std::find(suspendedThreads.begin(), suspendedThreads.end(), 
+                      tid);
+        suspendedThreads.erase(susp_it);                        
+    }
+
     if (threadModel == SwitchOnCacheMiss &&
         numActiveThreads() == 1) {
         DPRINTF(InOrderCPU,
-                "Ignoring Activation of [tid:%i]. Placing on "
-                "ready list\n", tid);        
+                "Ignoring activation of [tid:%i], since [tid:%i] is "
+                "already running.\n", tid, activeThreadId());
+        
+        DPRINTF(InOrderCPU,"Placing [tid:%i] ready threads list\n", 
+                tid);        
 
         readyThreads.push_back(tid);
         
-    } else if (!isThreadActive(tid)) {
+    } else if (!isThreadActive(tid)) {                
         DPRINTF(InOrderCPU,
-                "Adding Thread %i to active threads list in CPU.\n", tid);
+                "Adding [tid:%i] to active threads list.\n", tid);
         activeThreads.push_back(tid);
-
+        
         wakeCPU();
     }
 }
@@ -710,6 +741,8 @@ InOrderCPU::deactivateThread(ThreadID tid)
 
         activeThreads.erase(thread_it);
     }
+
+    assert(!isThreadActive(tid));    
 }
 
 void
@@ -756,15 +789,6 @@ InOrderCPU::removePipelineStalls(ThreadID tid)
         pipelineStage[stNum]->removeStalls(tid);
     }
 
-}
-
-bool
-InOrderCPU::isThreadSuspended(ThreadID tid)
-{
-  list<ThreadID>::iterator isSuspended =
-      std::find(suspendedThreads.begin(), suspendedThreads.end(), tid);
-
-    return (isSuspended!= suspendedThreads.end());
 }
 
 void
