@@ -133,8 +133,10 @@ FirstStage::processStage(bool &status_change)
 
     if (instsProcessed > 0) {
         ++runCycles;
+        idle = false;        
     } else {
-        ++idleCycles;        
+        ++idleCycles;
+        idle = true;        
     }
 
 }

@@ -347,6 +347,8 @@ class PipelineStage
     /** Is Next Stage Valid? */
     bool nextStageValid;
 
+    bool idle;
+    
     /** Source of possible stalls. */
     struct Stalls {
         bool stage[ThePipeline::NumStages];

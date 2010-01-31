@@ -143,7 +143,8 @@ CacheUnit::getSlot(DynInstPtr inst)
     Addr req_addr = inst->getMemAddr();
 
     if (resName == "icache_port" ||
-        find(addrList[tid].begin(), addrList[tid].end(), req_addr) == addrList[tid].end()) {
+        find(addrList[tid].begin(), addrList[tid].end(), req_addr) == 
+        addrList[tid].end()) {
 
         int new_slot = Resource::getSlot(inst);
 
@@ -171,8 +172,9 @@ CacheUnit::freeSlot(int slot_num)
 {
     ThreadID tid = reqMap[slot_num]->inst->readTid();
 
-    vector<Addr>::iterator vect_it = find(addrList[tid].begin(), addrList[tid].end(),
-            reqMap[slot_num]->inst->getMemAddr());
+    vector<Addr>::iterator vect_it = 
+        find(addrList[tid].begin(), addrList[tid].end(),
+             reqMap[slot_num]->inst->getMemAddr());
     assert(vect_it != addrList[tid].end());
 
     DPRINTF(InOrderCachePort,
@@ -533,8 +535,6 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
         }
     }
 
-    cache_req->dataPkt->time = curTick;
-
     bool do_access = true;  // flag to suppress cache access
 
     Request *memReq = cache_req->dataPkt->req;
@@ -590,6 +590,7 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 {
     // Cast to correct packet type
     CacheReqPacket* cache_pkt = dynamic_cast<CacheReqPacket*>(pkt);
+             
     assert(cache_pkt);
 
     if (cache_pkt->cacheReq->isSquashed()) {
@@ -600,6 +601,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
         cache_pkt->cacheReq->done();
         delete cache_pkt;
+
+        cpu->wakeCPU();
+
         return;
     }
 
@@ -730,6 +734,8 @@ CacheUnit::recvRetry()
 
     // Clear the cache port for use again
     cachePortBlocked = false;
+
+    cpu->wakeCPU();
 }
 
 CacheUnitEvent::CacheUnitEvent()

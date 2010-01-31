@@ -42,7 +42,7 @@ PipelineStage::PipelineStage(Params *params, unsigned stage_num)
     : stageNum(stage_num), stageWidth(ThePipeline::StageWidth),
       numThreads(ThePipeline::MaxThreads), _status(Inactive),
       stageBufferMax(ThePipeline::interStageBuffSize[stage_num]),
-      prevStageValid(false), nextStageValid(false)
+      prevStageValid(false), nextStageValid(false), idle(false)
 {
     switchedOutBuffer.resize(ThePipeline::MaxThreads);
     switchedOutValid.resize(ThePipeline::MaxThreads);
@@ -707,6 +707,8 @@ PipelineStage::checkSignalsAndUpdate(ThreadID tid)
 void
 PipelineStage::tick()
 {
+    idle = false;
+    
     wroteToTimeBuffer = false;
 
     bool status_change = false;
@@ -794,8 +796,10 @@ PipelineStage::processStage(bool &status_change)
 
     if (instsProcessed > 0) {
         ++runCycles;
+        idle = false;        
     } else {
         ++idleCycles;        
+        idle = true;        
     }
     
     DPRINTF(InOrderStage, "%i left in stage %i incoming buffer.\n", skidSize(),

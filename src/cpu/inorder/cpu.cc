@@ -389,9 +389,17 @@ InOrderCPU::regStats()
 
     idleCycles
         .name(name() + ".idleCycles")
-        .desc("Total number of cycles that the CPU has spent unscheduled due "
-              "to idling")
-        .prereq(idleCycles);
+        .desc("Number of cycles cpu's stages were not processed");
+
+    runCycles
+        .name(name() + ".runCycles")
+        .desc("Number of cycles cpu stages are processed.");
+
+    activity
+        .name(name() + ".activity")
+        .desc("Percentage of cycles cpu is active")
+        .precision(6);
+    activity = (runCycles / numCycles) * 100;
 
     threadCycles
         .init(numThreads)
@@ -463,18 +471,27 @@ InOrderCPU::tick()
 
     ++numCycles;
 
+    bool pipes_idle = true;
+    
     //Tick each of the stages
     for (int stNum=NumStages - 1; stNum >= 0 ; stNum--) {
         pipelineStage[stNum]->tick();
+
+        pipes_idle = pipes_idle && pipelineStage[stNum]->idle;
     }
 
+    if (pipes_idle)
+        idleCycles++;
+    else
+        runCycles++;
+    
     // Now advance the time buffers one tick
     timeBuffer.advance();
     for (int sqNum=0; sqNum < NumStages - 1; sqNum++) {
         stageQueue[sqNum]->advance();
     }
     activityRec.advance();
-
+   
     // Any squashed requests, events, or insts then remove them now
     cleanUpRemovedReqs();
     cleanUpRemovedEvents();
