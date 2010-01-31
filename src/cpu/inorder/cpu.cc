@@ -709,7 +709,9 @@ InOrderCPU::activateThread(ThreadID tid)
         activeThreads.push_back(tid);
         
         activateThreadInPipeline(tid);
-        
+
+        thread[tid]->lastActivate = curTick;            
+
         wakeCPU();
     }
 }
@@ -888,6 +890,7 @@ InOrderCPU::suspendThread(ThreadID tid)
     DPRINTF(InOrderCPU, "[tid: %i]: Placing on Suspended Threads List...\n", tid);
     deactivateThread(tid);
     suspendedThreads.push_back(tid);    
+    thread[tid]->lastSuspend = curTick;    
 }
 
 void
@@ -1063,14 +1066,21 @@ void
 InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
 {
     // Set the CPU's PCs - This contributes to the precise state of the CPU 
-    // which can be used when restoring a thread to the CPU after a fork or 
-    // after an exception
-    // =================
-    // @TODO: Set-Up Grad-Info/Committed-Info to let ThreadState know if 
-    // it's a branch or not
+    // which can be used when restoring a thread to the CPU after after any
+    // type of context switching activity (fork, exception, etc.)
     setPC(inst->readPC(), tid);
     setNextPC(inst->readNextPC(), tid);
     setNextNPC(inst->readNextNPC(), tid);
+
+    if (inst->isControl()) {
+        thread[tid]->lastGradIsBranch = true;
+        thread[tid]->lastBranchPC = inst->readPC();
+        thread[tid]->lastBranchNextPC = inst->readNextPC();
+        thread[tid]->lastBranchNextNPC = inst->readNextNPC();        
+    } else {
+        thread[tid]->lastGradIsBranch = false;
+    }
+        
 
     // Finalize Trace Data For Instruction
     if (inst->traceData) {
@@ -1081,9 +1091,6 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
         delete inst->traceData;
         inst->traceData = NULL;
     }
-
-    // Set Last Graduated Instruction In Thread State
-    //thread[tid]->lastGradInst = inst;
 
     // Increment thread-state's instruction count
     thread[tid]->numInst++;
@@ -1108,7 +1115,7 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     // Broadcast to other resources an instruction
     // has been completed
     resPool->scheduleEvent((CPUEventType)ResourcePool::InstGraduated, inst, 
-                           tid);
+                           0, 0, tid);
 
     // Finally, remove instruction from CPU
     removeInst(inst);

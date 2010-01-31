@@ -348,11 +348,23 @@ FetchSeqUnit::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
 {
     pcValid[tid] = true;
 
-    PC[tid] = inst->readNextPC();
-    nextPC[tid] = inst->readNextNPC();
-    nextNPC[tid] = inst->readNextNPC() + instSize;
-
-
-    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating  PC:%08p NPC:%08p NNPC:%08p.\n",
-            tid, PC[tid], nextPC[tid], nextNPC[tid]);
+    if (cpu->thread[tid]->lastGradIsBranch) {
+        /** This function assumes that the instruction causing the context
+         *  switch was right after the branch. Thus, if it's not, then
+         *  we are updating incorrectly here
+         */
+        assert(cpu->thread[tid]->lastBranchNextPC == inst->readPC());
+        
+        PC[tid] = cpu->thread[tid]->lastBranchNextNPC;
+        nextPC[tid] = PC[tid] + instSize;
+        nextNPC[tid] = nextPC[tid] + instSize;
+    } else {
+        PC[tid] = inst->readNextPC();
+        nextPC[tid] = inst->readNextNPC();
+        nextNPC[tid] = inst->readNextNPC() + instSize;        
+    }
+    
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating PCs due to Context Switch."
+            "Assigning  PC:%08p NPC:%08p NNPC:%08p.\n", tid, PC[tid], 
+            nextPC[tid], nextNPC[tid]);
 }
