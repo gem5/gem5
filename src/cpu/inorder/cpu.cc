@@ -140,6 +140,10 @@ InOrderCPU::CPUEvent::process()
         cpu->disableThreads(tid, vpe);
         break;
 
+      case SquashFromMemStall:
+        cpu->squashDueToMemStall(inst->squashingStage, inst->seqNum, tid);
+        break;
+
       case Trap:
         cpu->trapCPU(fault, tid);
         break;
@@ -577,6 +581,31 @@ void
 InOrderCPU::trapCPU(Fault fault, ThreadID tid)
 {
     fault->invoke(tcBase(tid));
+}
+
+void 
+InOrderCPU::squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay)
+{
+    scheduleCpuEvent(SquashFromMemStall, NoFault, tid, inst, delay);
+}
+
+
+void
+InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid)
+{
+    DPRINTF(InOrderCPU, "Squashing Pipeline Stages Due to Memory Stall...\n");
+        
+    // Squash all instructions in each stage including 
+    // instruction that caused the squash (seq_num - 1)
+    // NOTE: The stage bandwidth needs to be cleared so thats why
+    //       the stalling instruction is squashed as well. The stalled
+    //       instruction is previously placed in another intermediate buffer
+    //       while it's stall is being handled.
+    InstSeqNum squash_seq_num = seq_num - 1;
+    
+    for (int stNum=stage_num; stNum >= 0 ; stNum--) {
+        pipelineStage[stNum]->squashDueToMemStall(squash_seq_num, tid);
+    }
 }
 
 void

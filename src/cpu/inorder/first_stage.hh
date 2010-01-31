@@ -61,6 +61,8 @@ class FirstStage : public PipelineStage {
     /** Squash Instructions Above a Seq. Num */
     void squash(InstSeqNum squash_seq_num, ThreadID tid);
 
+    void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
+
     /** There are no insts. coming from previous stages, so there is
      *	no need to sort insts here
      */

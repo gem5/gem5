@@ -67,11 +67,12 @@ FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
 
     // Clear the instruction list and skid buffer in case they have any
     // insts in them.
-    DPRINTF(InOrderStage, "Removing instructions from stage instruction list.\n");
+    DPRINTF(InOrderStage, "Removing instructions from stage instruction "
+            "list.\n");
     while (!insts[tid].empty()) {
         if (insts[tid].front()->seqNum <= squash_seq_num) {
-            DPRINTF(InOrderStage,"[tid:%i]: Cannot remove [sn:%i] because it's <= "
-                    "squashing seqNum %i.\n",
+            DPRINTF(InOrderStage,"[tid:%i]: Cannot remove [sn:%i] because "
+                    "it's <= squashing seqNum %i.\n",
                     tid,
                     insts[tid].front()->seqNum,
                     squash_seq_num);
@@ -82,8 +83,9 @@ FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
                     insts[tid].size());
             break;
         }
-        DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] PC %08p.\n",
-                tid, insts[tid].front()->seqNum, insts[tid].front()->PC);
+        DPRINTF(InOrderStage, "[tid:%i]: Removing instruction, [sn:%i] "
+                "PC %08p.\n", tid, insts[tid].front()->seqNum, 
+                insts[tid].front()->PC);
         insts[tid].pop();
     }
 
@@ -92,6 +94,18 @@ FirstStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
     // @todo: Move this to the CPU object.
     cpu->removeInstsUntil(squash_seq_num, tid);
 }
+
+void 
+FirstStage::squashDueToMemStall(InstSeqNum seq_num, ThreadID tid)
+{
+    // Need to preserve the stalling instruction in first-stage
+    // since the squash() from first stage also removes
+    // the instruction from the CPU (removeInstsUntil). If that
+    // functionality gets changed then you can move this offset.
+    // (stalling instruction = seq_num + 1)
+    squash(seq_num+1, tid);
+}
+
 
 void
 FirstStage::processStage(bool &status_change)
@@ -106,6 +120,7 @@ FirstStage::processStage(bool &status_change)
 
     for (int threadFetched = 0; threadFetched < numFetchingThreads;
          threadFetched++) {
+
         ThreadID tid = getFetchingThread(fetchPolicy);
 
         if (tid >= 0) {
@@ -117,14 +132,17 @@ FirstStage::processStage(bool &status_change)
     }
 }
 
-//@TODO: Note in documentation, that when you make a pipeline stage change, then
-//make sure you change the first stage too
+//@TODO: Note in documentation, that when you make a pipeline stage change, 
+//then make sure you change the first stage too
 void
 FirstStage::processInsts(ThreadID tid)
 {
     bool all_reqs_completed = true;
 
-    for (int insts_fetched = 0; insts_fetched < stageWidth && canSendInstToStage(1); insts_fetched++) {
+    for (int insts_fetched = 0; 
+         insts_fetched < stageWidth && canSendInstToStage(1); 
+         insts_fetched++) {
+
         DynInstPtr inst;
         bool new_inst = false;
 
@@ -150,18 +168,8 @@ FirstStage::processInsts(ThreadID tid)
             inst->traceData = NULL;
 #endif      // TRACING_ON
 
-            DPRINTF(RefCount, "creation: [tid:%i]: [sn:%i]: Refcount = %i.\n",
-                    inst->readTid(),
-                    inst->seqNum,
-                    0/*inst->curCount()*/);
-
             // Add instruction to the CPU's list of instructions.
             inst->setInstListIt(cpu->addInst(inst));
-
-            DPRINTF(RefCount, "after add to CPU List: [tid:%i]: [sn:%i]: Refcount = %i.\n",
-                    inst->readTid(),
-                    inst->seqNum,
-                    0/*inst->curCount()*/);
 
             // Create Front-End Resource Schedule For Instruction
             ThePipeline::createFrontEndSchedule(inst);

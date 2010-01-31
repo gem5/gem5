@@ -340,6 +340,12 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
     }
 }
 
+void
+Resource::squashDueToMemStall(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                              ThreadID tid)
+{
+    squash(inst, stage_num, squash_seq_num, tid);    
+}
 
 Tick
 Resource::ticks(int num_cycles)
@@ -407,7 +413,7 @@ ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst,
                                  unsigned _cmd)
     : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
       resIdx(res_idx), slotNum(slot_num), completed(false),
-      squashed(false), processing(false), waiting(false)
+      squashed(false), processing(false), memStall(false)
 {
 #ifdef DEBUG
         reqID = resReqID++;

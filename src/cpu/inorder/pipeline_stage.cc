@@ -339,9 +339,9 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 {
     if (cpu->squashSeqNum[tid] < inst->seqNum &&
         cpu->lastSquashCycle[tid] == curTick){
-        DPRINTF(Resource, "Ignoring [sn:%i] squash signal due to another "
-                "stage's squash signal for after [sn:%i].\n", inst->seqNum, 
-                cpu->squashSeqNum[tid]);
+        DPRINTF(Resource, "Ignoring [sn:%i] branch squash signal due to "
+                "another stage's squash signal for after [sn:%i].\n", 
+                inst->seqNum, cpu->squashSeqNum[tid]);
     } else {
         // Send back mispredict information.
         toPrevStages->stageInfo[stageNum][tid].branchMispredict = true;
@@ -382,6 +382,12 @@ PipelineStage::squashDueToBranch(DynInstPtr &inst, ThreadID tid)
 }
 
 void
+PipelineStage::squashDueToMemStall(InstSeqNum seq_num, ThreadID tid)
+{
+    squash(seq_num, tid);    
+}
+
+void
 PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
 {
     DPRINTF(InOrderStage, "[tid:%i]: Removing instructions from "
@@ -413,8 +419,9 @@ PipelineStage::squash(InstSeqNum squash_seq_num, ThreadID tid)
     while (!skidBuffer[tid].empty()) {
         if (skidBuffer[tid].front()->seqNum <= squash_seq_num) {
             DPRINTF(InOrderStage, "[tid:%i]: Cannot remove skidBuffer "
-                    "instructions before delay slot [sn:%i]. %i insts"
-                    "left.\n", tid, squash_seq_num,
+                    "instructions (starting w/[sn:%i]) before delay slot "
+                    "[sn:%i]. %i insts left.\n", tid, 
+                    skidBuffer[tid].front()->seqNum, squash_seq_num,
                     skidBuffer[tid].size());
             break;
         }
@@ -775,7 +782,7 @@ void
 PipelineStage::processThread(bool &status_change, ThreadID tid)
 {
     // If status is Running or idle,
-    //     call stageInsts()
+    //     call processInsts()
     // If status is Unblocking,
     //     buffer any instructions coming from fetch
     //     continue trying to empty skid buffer
@@ -787,7 +794,7 @@ PipelineStage::processThread(bool &status_change, ThreadID tid)
         ;//++stageSquashCycles;
     }
 
-    // Stage should try to stage as many instructions as its bandwidth
+    // Stage should try to process as many instructions as its bandwidth
     // will allow, as long as it is not currently blocked.
     if (stageStatus[tid] == Running ||
         stageStatus[tid] == Idle) {
@@ -904,9 +911,7 @@ bool
 PipelineStage::processInstSchedule(DynInstPtr inst)
 {
     bool last_req_completed = true;
-#if TRACING_ON
     ThreadID tid = inst->readTid();
-#endif
 
     if (inst->nextResStage() == stageNum) {
         int res_stage_num = inst->nextResStage();
@@ -937,6 +942,18 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
 
                 last_req_completed = false;
 
+                if (req->isMemStall() && 
+                    cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
+                    // Save Stalling Instruction
+                    switchedOutBuffer[tid] = inst;
+                    switchedOutValid[tid] = true;
+                    
+                    // Remove Thread From Pipeline & Resource Pool
+                    inst->squashingStage = stageNum;         
+                    inst->bdelaySeqNum = inst->seqNum;                               
+                    cpu->squashFromMemStall(inst, tid);                    
+                }
+                
                 break;
             }
 

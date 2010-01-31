@@ -156,6 +156,9 @@ class Resource {
     virtual void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
+    virtual void squashDueToMemStall(DynInstPtr inst, int stage_num,
+                                     InstSeqNum squash_seq_num, ThreadID tid);
+
     /** The number of instructions available that this resource can
      *  can still process
      */
@@ -376,8 +379,8 @@ class ResourceRequest
     void setProcessing() { processing = true; }
 
     /** Get/Set IsWaiting variables */
-    bool isWaiting() { return waiting; }
-    void setWaiting() { waiting = true; }
+    bool isMemStall() { return memStall; }
+    void setMemStall(bool stall = true) { memStall = stall; }
 
   protected:
     /** Resource Identification */
@@ -386,11 +389,12 @@ class ResourceRequest
     int resIdx;
     int slotNum;
 
-    /** Resource Status */
+    /** Resource Request Status */
     bool completed;
     bool squashed;
     bool processing;
-    bool waiting;
+
+    bool memStall;
 };
 
 #endif //__CPU_INORDER_RESOURCE_HH__

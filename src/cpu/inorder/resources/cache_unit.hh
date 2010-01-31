@@ -146,6 +146,9 @@ class CacheUnit : public Resource
     void squash(DynInstPtr inst, int stage_num,
                 InstSeqNum squash_seq_num, ThreadID tid);
 
+    void squashDueToMemStall(DynInstPtr inst, int stage_num,
+                             InstSeqNum squash_seq_num, ThreadID tid);
+
     /** Processes cache completion event. */
     void processCacheCompletion(PacketPtr pkt);
 

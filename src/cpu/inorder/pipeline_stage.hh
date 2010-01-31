@@ -240,7 +240,7 @@ class PipelineStage
      */
     virtual void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
 
-    virtual void squashDueToMemStall(DynInstPtr &inst, ThreadID tid);
+    virtual void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
 
     /** Squash instructions from stage buffer  */
     virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);

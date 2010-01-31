@@ -241,8 +241,8 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
         // If different, then update command in the request
         cache_req->cmd = inst->resSched.top()->cmd;
         DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: Updating the command for this instruction\n",
-                inst->readTid(), inst->seqNum);
+                "[tid:%i]: [sn:%i]: Updating the command for this "
+                "instruction\n ", inst->readTid(), inst->seqNum);
 
         service_request = true;
     } else {
@@ -416,6 +416,7 @@ CacheUnit::execute(int slot_num)
                     tid, seq_num, inst->staticInst->disassemble(inst->PC));
 
             delete cache_req->dataPkt;
+            //cache_req->setMemStall(false);            
             cache_req->done();
         } else {
             DPRINTF(InOrderCachePort,
@@ -425,6 +426,7 @@ CacheUnit::execute(int slot_num)
                     "STALL: [tid:%i]: Fetch miss from %08p\n",
                     tid, cache_req->inst->readPC());
             cache_req->setCompleted(false);
+            //cache_req->setMemStall(true);            
         }
         break;
 
@@ -437,11 +439,13 @@ CacheUnit::execute(int slot_num)
         if (cache_req->isMemAccComplete() ||
             inst->isDataPrefetch() ||
             inst->isInstPrefetch()) {
+            cache_req->setMemStall(false);            
             cache_req->done();
         } else {
             DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
                     tid, cache_req->inst->getMemAddr());
             cache_req->setCompleted(false);
+            cache_req->setMemStall(true);            
         }
         break;
 
@@ -510,7 +514,8 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
     if (cache_req->pktCmd == MemCmd::WriteReq) {
         cache_req->pktCmd =
             cache_req->memReq->isSwap() ? MemCmd::SwapReq :
-            (cache_req->memReq->isLLSC() ? MemCmd::StoreCondReq : MemCmd::WriteReq);
+            (cache_req->memReq->isLLSC() ? MemCmd::StoreCondReq 
+             : MemCmd::WriteReq);
     }
 
     cache_req->dataPkt = new CacheReqPacket(cache_req, cache_req->pktCmd,
@@ -641,8 +646,9 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             ExtMachInst ext_inst;
             StaticInstPtr staticInst = NULL;
             Addr inst_pc = inst->readPC();
-            MachInst mach_inst = TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
-                                (cache_pkt->getPtr<uint8_t>()));
+            MachInst mach_inst = 
+                TheISA::gtoh(*reinterpret_cast<TheISA::MachInst *>
+                             (cache_pkt->getPtr<uint8_t>()));
 
             predecoder.setTC(cpu->thread[tid]->getTC());
             predecoder.moreBytes(inst_pc, inst_pc, mach_inst);
@@ -755,7 +761,8 @@ CacheUnitEvent::process()
 
     tlb_res->tlbBlocked[tid] = false;
 
-    tlb_res->cpu->pipelineStage[stage_num]->unsetResStall(tlb_res->reqMap[slotIdx], tid);
+    tlb_res->cpu->pipelineStage[stage_num]->
+        unsetResStall(tlb_res->reqMap[slotIdx], tid);
 
     req_ptr->tlbStall = false;
 
@@ -763,6 +770,23 @@ CacheUnitEvent::process()
         req_ptr->done();
     }
 }
+
+void
+CacheUnit::squashDueToMemStall(DynInstPtr inst, int stage_num,
+                               InstSeqNum squash_seq_num, ThreadID tid)
+{
+    // If squashing due to memory stall, then we do NOT want to 
+    // squash the instruction that caused the stall so we
+    // increment the sequence number here to prevent that.
+    //
+    // NOTE: This is only for the SwitchOnCacheMiss Model
+    // NOTE: If you have multiple outstanding misses from the same
+    //       thread then you need to reevaluate this code
+    // NOTE: squash should originate from 
+    //       pipeline_stage.cc:processInstSchedule
+    squash(inst, stage_num, squash_seq_num + 1, tid);    
+}
+
 
 void
 CacheUnit::squash(DynInstPtr inst, int stage_num,
@@ -798,7 +822,8 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
 
                 int stall_stage = reqMap[req_slot_num]->getStageNum();
 
-                cpu->pipelineStage[stall_stage]->unsetResStall(reqMap[req_slot_num], tid);
+                cpu->pipelineStage[stall_stage]->
+                    unsetResStall(reqMap[req_slot_num], tid);
             }
 
             if (!cache_req->tlbStall && !cache_req->isMemAccPending()) {
@@ -927,14 +952,16 @@ CacheUnit::write(DynInstPtr inst, uint8_t data, Addr addr,
 
 template<>
 Fault
-CacheUnit::write(DynInstPtr inst, double data, Addr addr, unsigned flags, uint64_t *res)
+CacheUnit::write(DynInstPtr inst, double data, Addr addr, unsigned flags, 
+                 uint64_t *res)
 {
     return write(inst, *(uint64_t*)&data, addr, flags, res);
 }
 
 template<>
 Fault
-CacheUnit::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64_t *res)
+CacheUnit::write(DynInstPtr inst, float data, Addr addr, unsigned flags, 
+                 uint64_t *res)
 {
     return write(inst, *(uint32_t*)&data, addr, flags, res);
 }
@@ -942,7 +969,8 @@ CacheUnit::write(DynInstPtr inst, float data, Addr addr, unsigned flags, uint64_
 
 template<>
 Fault
-CacheUnit::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, uint64_t *res)
+CacheUnit::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags, 
+                 uint64_t *res)
 {
     return write(inst, (uint32_t)data, addr, flags, res);
 }

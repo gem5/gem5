@@ -123,7 +123,7 @@ class ResourcePool {
     };
 
   public:
-  ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params);
+    ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params);
     virtual ~ResourcePool() {}
 
     std::string name();
@@ -159,6 +159,12 @@ class ResourcePool {
     /** Squash All Resources in Pool after Done Seq. Num */
     void squashAll(DynInstPtr inst, int stage_num,
                    InstSeqNum done_seq_num, ThreadID tid);
+
+    /** Squash Resources in Pool after a memory stall 
+     *  NOTE: Only use during Switch-On-Miss Thread model
+     */    
+    void squashDueToMemStall(DynInstPtr inst, int stage_num,
+                             InstSeqNum done_seq_num, ThreadID tid);
 
     /** Activate Thread in all resources */
     void activateAll(ThreadID tid);

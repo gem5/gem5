@@ -183,7 +183,7 @@ class InOrderCPU : public BaseCPU
         EnableVPEs,
         Trap,
         InstGraduated,
-        SquashAll,
+        SquashFromMemStall,
         UpdatePCs,
         NumCPUEvents
     };
@@ -343,6 +343,12 @@ class InOrderCPU : public BaseCPU
      */
     void trap(Fault fault, ThreadID tid, int delay = 0);
     void trapCPU(Fault fault, ThreadID tid);
+
+    /** squashFromMemStall() - sets up a squash event
+     *  squashDueToMemStall() - squashes pipeline
+     */
+    void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
+    void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
 
     /** Setup CPU to insert a thread's context */
     void insertThread(ThreadID tid);
