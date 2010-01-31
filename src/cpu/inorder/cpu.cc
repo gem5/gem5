@@ -1190,8 +1190,18 @@ void
 InOrderCPU::addToRemoveList(DynInstPtr &inst)
 {
     removeInstsThisCycle = true;
-
-    removeList.push(inst->getInstListIt());
+    if (!inst->isRemoveList()) {            
+        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+                "[sn:%lli] to remove list\n",
+                inst->threadNumber, inst->readPC(), inst->seqNum);
+        inst->setRemoveList();        
+        removeList.push(inst->getInstListIt());
+    }  else {
+        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
+                "[sn:%lli], already remove list\n",
+                inst->threadNumber, inst->readPC(), inst->seqNum);
+    }
+    
 }
 
 void
@@ -1204,11 +1214,18 @@ InOrderCPU::removeInst(DynInstPtr &inst)
     removeInstsThisCycle = true;
 
     // Remove the instruction.
+    if (!inst->isRemoveList()) {            
+        DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+                "[sn:%lli] to remove list\n",
+                inst->threadNumber, inst->readPC(), inst->seqNum);
+        inst->setRemoveList();        
+        removeList.push(inst->getInstListIt());
+    } else {
+        DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
+                "[sn:%lli], already on remove list\n",
+                inst->threadNumber, inst->readPC(), inst->seqNum);
+    }
 
-    DPRINTF(RefCount, "Pushing instruction [tid:%i] PC %#x "
-            "[sn:%lli] to remove list\n",
-            inst->threadNumber, inst->readPC(), inst->seqNum);
-    removeList.push(inst->getInstListIt());
 }
 
 void
@@ -1252,11 +1269,22 @@ InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
 
         (*instIt)->setSquashed();
 
-        DPRINTF(RefCount, "Pushing instruction [tid:%i] PC %#x "
-                "[sn:%lli] to remove list\n",
-                (*instIt)->threadNumber, (*instIt)->readPC(), (*instIt)->seqNum);
-        removeList.push(instIt);
+        if (!(*instIt)->isRemoveList()) {            
+            DPRINTF(InOrderCPU, "Pushing instruction [tid:%i] PC %#x "
+                    "[sn:%lli] to remove list\n",
+                    (*instIt)->threadNumber, (*instIt)->readPC(), 
+                    (*instIt)->seqNum);
+            (*instIt)->setRemoveList();        
+            removeList.push(instIt);
+        } else {
+            DPRINTF(InOrderCPU, "Ignoring instruction removal for [tid:%i] PC %#x "
+                    "[sn:%lli], already on remove list\n",
+                    (*instIt)->threadNumber, (*instIt)->readPC(), 
+                    (*instIt)->seqNum);
+        }
+    
     }
+    
 }
 
 

@@ -115,6 +115,7 @@ InOrderDynInst::initVars()
     split2ndAddr = 0;
     split2ndAccess = false;
     splitInst = false;
+    splitInstSked = false;    
     splitFinishCnt = 0;
     
     effAddr = 0;

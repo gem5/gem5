@@ -380,6 +380,7 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
     for (int i=0; i < prevStage->size; i++) {
         if (prevStage->insts[i]->threadNumber == tid &&
             prevStage->insts[i]->seqNum > squash_seq_num) {
+            // Change Comment to Annulling previous instruction
             DPRINTF(InOrderStage, "[tid:%i]: Squashing instruction, "
                     "[sn:%i] PC %08p.\n",
                     tid,

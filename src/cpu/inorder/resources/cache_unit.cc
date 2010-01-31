@@ -140,7 +140,8 @@ CacheUnit::getSlot(DynInstPtr inst)
     // For a Split-Load, the instruction would have processed once already
     // causing the address to be unset.
     if (!inst->validMemAddr() && !inst->splitInst) {
-        panic("Mem. Addr. must be set before requesting cache access\n");
+        panic("[tid:%i][sn:%i] Mem. Addr. must be set before requesting cache access\n",
+              inst->readTid(), inst->seqNum);
     }
 
     Addr req_addr = inst->getMemAddr();
@@ -439,7 +440,7 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         cache_req->splitAccess = true;        
         cache_req->split2ndAccess = true;
         
-        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (2 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+        DPRINTF(InOrderCachePort, "[sn:%i] Split Read Access (2 of 2) for (%#x, %#x).\n", inst->seqNum, 
                 inst->getMemAddr(), inst->split2ndAddr);       
     }  
     
@@ -459,27 +460,31 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
         inst->splitMemData = new uint8_t[dataSize];
         inst->splitTotalSize = dataSize;
         
-
-        // Schedule Split Read/Complete for Instruction
-        // ==============================
-        int stage_num = cache_req->getStageNum();
+        if (!inst->splitInstSked) {
+            // Schedule Split Read/Complete for Instruction
+            // ==============================
+            int stage_num = cache_req->getStageNum();
         
-        int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
         
-        inst->resSched.push(new ScheduleEntry(stage_num, 
-                                              stage_pri, 
-                                              cpu->resPool->getResIdx(DCache),
-                                              CacheUnit::InitSecondSplitRead,
-                                              1)
-            );
+            inst->resSched.push(new ScheduleEntry(stage_num, 
+                                                  stage_pri, 
+                                                  cpu->resPool->getResIdx(DCache),
+                                                  CacheUnit::InitSecondSplitRead,
+                                                  1)
+                );
 
-        inst->resSched.push(new ScheduleEntry(stage_num + 1, 
-                                              1/*stage_pri*/, 
-                                              cpu->resPool->getResIdx(DCache),
-                                              CacheUnit::CompleteSecondSplitRead, 
-                                              1)
-            );
-
+            inst->resSched.push(new ScheduleEntry(stage_num + 1, 
+                                                  1/*stage_pri*/, 
+                                                  cpu->resPool->getResIdx(DCache),
+                                                  CacheUnit::CompleteSecondSplitRead, 
+                                                  1)
+                );
+            inst->splitInstSked = true;
+        } else {
+            DPRINTF(InOrderCachePort, "[tid:%i] [sn:%i] Retrying Split Read Access (1 of 2) for (%#x, %#x).\n", 
+                    inst->readTid(), inst->seqNum, addr, secondAddr);                   
+        }
 
         // Split Information for First Access
         // ==============================
@@ -533,7 +538,7 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
         cache_req->splitAccess = true;        
         cache_req->split2ndAccess = true;
         
-        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Write Access (2 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+        DPRINTF(InOrderCachePort, "[sn:%i] Split Write Access (2 of 2) for (%#x, %#x).\n", inst->seqNum, 
                 inst->getMemAddr(), inst->split2ndAddr);       
     }  
 
@@ -542,7 +547,8 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
     Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
 
     if (secondAddr > addr && !inst->split2ndAccess) {
-        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Write Access (1 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+            
+        DPRINTF(InOrderCachePort, "[sn:%i] Split Write Access (1 of 2) for (%#x, %#x).\n", inst->seqNum, 
                 addr, secondAddr);       
 
         // Save All "Total" Split Information
@@ -550,25 +556,33 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
         inst->splitInst = true;        
         inst->splitTotalSize = dataSize;
 
-        // Schedule Split Read/Complete for Instruction
-        // ==============================
-        int stage_num = cache_req->getStageNum();
+        if (!inst->splitInstSked) {
+            // Schedule Split Read/Complete for Instruction
+            // ==============================
+            int stage_num = cache_req->getStageNum();
         
-        int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+            int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
         
-        inst->resSched.push(new ScheduleEntry(stage_num, 
-                                              stage_pri, 
-                                              cpu->resPool->getResIdx(DCache),
-                                              CacheUnit::InitSecondSplitWrite,
-                                              1)
-            );
+            inst->resSched.push(new ScheduleEntry(stage_num, 
+                                                  stage_pri, 
+                                                  cpu->resPool->getResIdx(DCache),
+                                                  CacheUnit::InitSecondSplitWrite,
+                                                  1)
+                );
 
-        inst->resSched.push(new ScheduleEntry(stage_num + 1, 
-                                              1/*stage_pri*/, 
-                                              cpu->resPool->getResIdx(DCache),
-                                              CacheUnit::CompleteSecondSplitWrite, 
-                                              1)
-            );
+            inst->resSched.push(new ScheduleEntry(stage_num + 1, 
+                                                  1/*stage_pri*/, 
+                                                  cpu->resPool->getResIdx(DCache),
+                                                  CacheUnit::CompleteSecondSplitWrite, 
+                                                  1)
+                );
+            inst->splitInstSked = true;
+        } else {
+            DPRINTF(InOrderCachePort, "[tid:%i] sn:%i] Retrying Split Read Access (1 of 2) for (%#x, %#x).\n", 
+                    inst->readTid(), inst->seqNum, addr, secondAddr);                   
+        }
+        
+        
 
         // Split Information for First Access
         // ==============================
@@ -582,6 +596,7 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
         inst->split2ndStoreDataPtr = &cache_req->inst->storeData;
         inst->split2ndStoreDataPtr += dataSize;            
         inst->split2ndFlags = flags;        
+        inst->splitInstSked = true;
     }    
         
     doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Write);

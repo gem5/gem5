@@ -164,6 +164,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
                                  /// instructions ahead of it
         SerializeAfter,          /// Needs to serialize instructions behind it
         SerializeHandled,        /// Serialization has been handled
+        RemoveList,               /// Is Instruction on Remove List?
         NumStatus
     };
 
@@ -342,7 +343,8 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     bool splitInst;
     int splitFinishCnt;
     uint64_t *split2ndStoreDataPtr;    
-    
+    bool splitInstSked;
+
     ////////////////////////////////////////////////////////////
     //
     //  BASE INSTRUCTION INFORMATION.
@@ -914,6 +916,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
 
     /** Returns whether or not the entry is on the CPU Reg Dep Map */
     bool isRegDepEntry() const { return status[RegDepMapEntry]; }
+
+    /** Sets this instruction as entered on the CPU Reg Dep Map */
+    void setRemoveList() { status.set(RemoveList); }
+
+    /** Returns whether or not the entry is on the CPU Reg Dep Map */
+    bool isRemoveList() const { return status[RemoveList]; }
 
     /** Sets this instruction as completed. */
     void setCompleted() { status.set(Completed); }
