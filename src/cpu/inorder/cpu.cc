@@ -84,8 +84,10 @@ InOrderCPU::TickEvent::description()
 }
 
 InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
-                             Fault fault, ThreadID _tid, DynInstPtr inst)
-    : Event(CPU_Tick_Pri), cpu(_cpu)
+                               Fault fault, ThreadID _tid, DynInstPtr inst,
+                               unsigned event_pri_offset)
+    : Event(Event::Priority((unsigned int)CPU_Tick_Pri + event_pri_offset)),
+      cpu(_cpu)
 {
     setEvent(e_type, fault, _tid, inst);
 }
@@ -611,13 +613,14 @@ InOrderCPU::squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid)
 void
 InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
                              ThreadID tid, DynInstPtr inst, 
-                             unsigned delay)
+                             unsigned delay, unsigned event_pri_offset)
 {
-    CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst);
+    CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst,
+                                       event_pri_offset);
 
     if (delay >= 0) {
-        DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i.\n",
-                eventNames[c_event], curTick + delay);
+        DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i, [tid:%i].\n",
+                eventNames[c_event], curTick + delay, tid);
         mainEventQueue.schedule(cpu_event,curTick + delay);
     } else {
         cpu_event->process();

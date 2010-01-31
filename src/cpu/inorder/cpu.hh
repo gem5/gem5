@@ -206,7 +206,7 @@ class InOrderCPU : public BaseCPU
       public:
         /** Constructs a CPU event. */
         CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
-                 ThreadID _tid, DynInstPtr inst);
+                 ThreadID _tid, DynInstPtr inst, unsigned event_pri_offset);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
@@ -234,7 +234,8 @@ class InOrderCPU : public BaseCPU
 
     /** Schedule a CPU Event */
     void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
-                          DynInstPtr inst, unsigned delay = 0);
+                          DynInstPtr inst, unsigned delay = 0,
+                          unsigned event_pri_offset = 0);
 
   public:
     /** Interface between the CPU and CPU resources. */
