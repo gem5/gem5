@@ -131,6 +131,8 @@ CacheUnit::init()
 int
 CacheUnit::getSlot(DynInstPtr inst)
 {
+    ThreadID tid = inst->readTid();
+    
     if (tlbBlocked[inst->threadNumber]) {
         return -1;
     }
@@ -142,7 +144,7 @@ CacheUnit::getSlot(DynInstPtr inst)
     Addr req_addr = inst->getMemAddr();
 
     if (resName == "icache_port" ||
-        find(addrList.begin(), addrList.end(), req_addr) == addrList.end()) {
+        find(addrList[tid].begin(), addrList[tid].end(), req_addr) == addrList[tid].end()) {
 
         int new_slot = Resource::getSlot(inst);
 
@@ -150,8 +152,8 @@ CacheUnit::getSlot(DynInstPtr inst)
             return -1;
 
         inst->memTime = curTick;
-        addrList.push_back(req_addr);
-        addrMap[req_addr] = inst->seqNum;
+        addrList[tid].push_back(req_addr);
+        addrMap[tid][req_addr] = inst->seqNum;
         DPRINTF(InOrderCachePort,
                 "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
                 inst->readTid(), inst->seqNum, req_addr);
@@ -160,7 +162,7 @@ CacheUnit::getSlot(DynInstPtr inst)
         DPRINTF(InOrderCachePort,
                 "[tid:%i] Denying request because there is an outstanding"
                 " request to/for addr. %08p. by [sn:%i] @ tick %i\n",
-                inst->readTid(), req_addr, addrMap[req_addr], inst->memTime);
+                inst->readTid(), req_addr, addrMap[tid][req_addr], inst->memTime);
         return -1;
     }
 }
@@ -168,15 +170,17 @@ CacheUnit::getSlot(DynInstPtr inst)
 void
 CacheUnit::freeSlot(int slot_num)
 {
-    vector<Addr>::iterator vect_it = find(addrList.begin(), addrList.end(),
+    ThreadID tid = reqMap[slot_num]->inst->readTid();
+
+    vector<Addr>::iterator vect_it = find(addrList[tid].begin(), addrList[tid].end(),
             reqMap[slot_num]->inst->getMemAddr());
-    assert(vect_it != addrList.end());
+    assert(vect_it != addrList[tid].end());
 
     DPRINTF(InOrderCachePort,
             "[tid:%i]: Address %08p removed from dependency list\n",
             reqMap[slot_num]->inst->readTid(), (*vect_it));
 
-    addrList.erase(vect_it);
+    addrList[tid].erase(vect_it);
 
     Resource::freeSlot(slot_num);
 }
