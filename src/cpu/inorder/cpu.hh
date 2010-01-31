@@ -179,10 +179,6 @@ class InOrderCPU : public BaseCPU
         DeactivateThread,
         DeallocateThread,
         SuspendThread,
-        DisableThreads,
-        EnableThreads,
-        DisableVPEs,
-        EnableVPEs,
         Trap,
         InstGraduated,
         SquashFromMemStall,
@@ -347,18 +343,6 @@ class InOrderCPU : public BaseCPU
     void trap(Fault fault, ThreadID tid, int delay = 0);
     void trapCPU(Fault fault, ThreadID tid);
 
-    /** squashFromMemStall() - sets up a squash event
-     *  squashDueToMemStall() - squashes pipeline
-     */
-    void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
-    void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
-
-    /** Setup CPU to insert a thread's context */
-    void insertThread(ThreadID tid);
-
-    /** Remove all of a thread's context from CPU */
-    void removeThread(ThreadID tid);
-
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay = 0);
     void activateThread(ThreadID tid);
@@ -367,16 +351,28 @@ class InOrderCPU : public BaseCPU
     void activateNextReadyContext(int delay = 0);
     void activateNextReadyThread();
 
-    /** Remove Thread from Active Threads List */
+    /** Remove from Active Thread List */
+    void deactivateContext(ThreadID tid, int delay = 0);
+    void deactivateThread(ThreadID tid);
+
+    /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
+    void haltContext(ThreadID tid, int delay = 0);
     void suspendContext(ThreadID tid, int delay = 0);
     void suspendThread(ThreadID tid);
 
-    /** Remove Thread from Active Threads List &&
-     *  Remove Thread Context from CPU.
-     */
+    /** Remove Thread from Active Threads List, Remove Any Loaded Thread State */
     void deallocateContext(ThreadID tid, int delay = 0);
     void deallocateThread(ThreadID tid);
-    void deactivateThread(ThreadID tid);
+
+    /** squashFromMemStall() - sets up a squash event
+     *  squashDueToMemStall() - squashes pipeline
+     */
+    void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
+    void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
+
+    void removePipelineStalls(ThreadID tid);
+    void squashThreadInPipeline(ThreadID tid);
+    void squashBehindMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
 
     PipelineStage* getPipeStage(int stage_num);
 
@@ -386,37 +382,6 @@ class InOrderCPU : public BaseCPU
         hack_once("return a bogus context id");
         return 0;
     }
-
-    /** Remove Thread from Active Threads List &&
-     *  Remove Thread Context from CPU.
-     */
-    void haltContext(ThreadID tid, int delay = 0);
-
-    void removePipelineStalls(ThreadID tid);
-
-    void squashThreadInPipeline(ThreadID tid);
-
-    /// Notify the CPU to enable a virtual processor element.
-    virtual void enableVirtProcElement(unsigned vpe);
-    void enableVPEs(unsigned vpe);
-
-    /// Notify the CPU to disable a virtual processor element.
-    virtual void disableVirtProcElement(ThreadID tid, unsigned vpe);
-    void disableVPEs(ThreadID tid, unsigned vpe);
-
-    /// Notify the CPU that multithreading is enabled.
-    virtual void enableMultiThreading(unsigned vpe);
-    void enableThreads(unsigned vpe);
-
-    /// Notify the CPU that multithreading is disabled.
-    virtual void disableMultiThreading(ThreadID tid, unsigned vpe);
-    void disableThreads(ThreadID tid, unsigned vpe);
-
-    /** Activate a Thread When CPU Resources are Available. */
-    void activateWhenReady(ThreadID tid);
-
-    /** Add or Remove a Thread Context in the CPU. */
-    void doContextSwitch();
 
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
@@ -615,21 +580,15 @@ class InOrderCPU : public BaseCPU
     /** Active Threads List */
     std::list<ThreadID> activeThreads;
 
-    /** Current Threads List */
-    std::list<ThreadID> currentThreads;
-
     /** Ready Threads List */
     std::list<ThreadID> readyThreads;
 
     /** Suspended Threads List */
     std::list<ThreadID> suspendedThreads;
 
-    /** Thread Status Functions (Unused Currently) */
-    bool isThreadInCPU(ThreadID tid);
+    /** Thread Status Functions */
     bool isThreadActive(ThreadID tid);
     bool isThreadSuspended(ThreadID tid);
-    void addToCurrentThreads(ThreadID tid);
-    void removeFromCurrentThreads(ThreadID tid);
 
   private:
     /** The activity recorder; used to tell if the CPU has any
@@ -643,7 +602,8 @@ class InOrderCPU : public BaseCPU
     ThreadID numActiveThreads() { return activeThreads.size(); }
 
     /** Thread id of active thread
-     *  Only used for SwitchOnCacheMiss model. Assumes only 1 thread active
+     *  Only used for SwitchOnCacheMiss model. 
+     *  Assumes only 1 thread active
      */
     ThreadID activeThreadId() 
     { 
@@ -671,9 +631,6 @@ class InOrderCPU : public BaseCPU
 #if FULL_SYSTEM
     virtual void wakeup();
 #endif
-
-    /** Gets a free thread id. Use if thread ids change across system. */
-    ThreadID getFreeTid();
 
     // LL/SC debug functionality
     unsigned stCondFails;
@@ -740,17 +697,8 @@ class InOrderCPU : public BaseCPU
     /** Per-Stage Instruction Tracing */
     bool stageTracing;
 
-    /** Is there a context switch pending? */
-    bool contextSwitch;
-
-    /** Threads Scheduled to Enter CPU */
-    std::list<int> cpuWaitList;
-
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
-
-    /** Number of Virtual Processors the CPU can process */
-    unsigned numVirtProcs;
 
     /** Update Thread , used for statistic purposes*/
     inline void tickThreadStats();

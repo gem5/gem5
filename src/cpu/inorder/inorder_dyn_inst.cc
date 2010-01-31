@@ -583,30 +583,6 @@ InOrderDynInst::deallocateContext(int thread_num)
     this->cpu->deallocateContext(thread_num);
 }
 
-void
-InOrderDynInst::enableVirtProcElement(unsigned vpe)
-{
-    this->cpu->enableVirtProcElement(vpe);
-}
-
-void
-InOrderDynInst::disableVirtProcElement(unsigned vpe)
-{
-    this->cpu->disableVirtProcElement(threadNumber, vpe);
-}
-
-void
-InOrderDynInst::enableMultiThreading(unsigned vpe)
-{
-    this->cpu->enableMultiThreading(vpe);
-}
-
-void
-InOrderDynInst::disableMultiThreading(unsigned vpe)
-{
-    this->cpu->disableMultiThreading(threadNumber, vpe);
-}
-
 template<class T>
 inline Fault
 InOrderDynInst::read(Addr addr, T &data, unsigned flags)

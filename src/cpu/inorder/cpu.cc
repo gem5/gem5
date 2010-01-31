@@ -100,13 +100,9 @@ std::string InOrderCPU::eventNames[NumCPUEvents] =
     "DeactivateThread",
     "DeallocateThread",
     "SuspendThread",
-    "DisableThreads",
-    "EnableThreads",
-    "DisableVPEs",
-    "EnableVPEs",
     "Trap",
     "InstGraduated",
-    "SquashAll",
+    "SquashFromMemStall",
     "UpdatePCs"
 };
 
@@ -119,8 +115,6 @@ InOrderCPU::CPUEvent::process()
         cpu->activateThread(tid);
         break;
 
-      //@TODO: Consider Implementing "Suspend Thread" as Separate from 
-      //Deallocate
       case ActivateNextReadyThread:
         cpu->activateNextReadyThread();
         break;
@@ -129,28 +123,12 @@ InOrderCPU::CPUEvent::process()
         cpu->deactivateThread(tid);
         break;
 
-      case SuspendThread: // Suspend & Deallocate are same for now.
-        cpu->suspendThread(tid);
-        break;
-
       case DeallocateThread:
         cpu->deallocateThread(tid);
         break;
 
-      case EnableVPEs:
-        cpu->enableVPEs(vpe);
-        break;
-
-      case DisableVPEs:
-        cpu->disableVPEs(tid, vpe);
-        break;
-
-      case EnableThreads:
-        cpu->enableThreads(vpe);
-        break;
-
-      case DisableThreads:
-        cpu->disableThreads(tid, vpe);
+      case SuspendThread: 
+        cpu->suspendThread(tid);
         break;
 
       case SquashFromMemStall:
@@ -212,8 +190,7 @@ InOrderCPU::InOrderCPU(Params *params)
 #endif // DEBUG
       switchCount(0),
       deferRegistration(false/*params->deferRegistration*/),
-      stageTracing(params->stageTracing),
-      numVirtProcs(1)
+      stageTracing(params->stageTracing)
 {    
     ThreadID active_threads;
     cpu_params = params;
@@ -335,11 +312,10 @@ InOrderCPU::InOrderCPU(Params *params)
         memset(floatRegs.i[tid], 0, sizeof(floatRegs.i[tid]));
         isa[tid].clear();
 
-        isa[tid].expandForMultithreading(numThreads, numVirtProcs);
+        isa[tid].expandForMultithreading(numThreads, 1/*numVirtProcs*/);
     }
 
     lastRunningCycle = curTick;
-    contextSwitch = false;
 
     // Define dummy instructions and resource requests to be used.
     dummyInst = new InOrderDynInst(this, NULL, 0, 0);
@@ -526,7 +502,7 @@ InOrderCPU::reset()
 {
     for (int i = 0; i < numThreads; i++) {
         isa[i].reset(coreType, numThreads,
-                numVirtProcs, dynamic_cast<BaseCPU*>(this));
+                     1/*numVirtProcs*/, dynamic_cast<BaseCPU*>(this));
     }
 }
 
@@ -704,6 +680,20 @@ InOrderCPU::activateThread(ThreadID tid)
 }
 
 void
+InOrderCPU::deactivateContext(ThreadID tid, int delay)
+{
+    DPRINTF(InOrderCPU,"[tid:%i]: Deactivating ...\n", tid);
+
+    scheduleCpuEvent(DeactivateThread, NoFault, tid, dummyInst, delay);
+
+    // Be sure to signal that there's some activity so the CPU doesn't
+    // deschedule itself.
+    activityRec.activity();
+
+    _status = Running;
+}
+
+void
 InOrderCPU::deactivateThread(ThreadID tid)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Calling deactivate thread.\n", tid);
@@ -723,6 +713,40 @@ InOrderCPU::deactivateThread(ThreadID tid)
 }
 
 void
+InOrderCPU::deallocateContext(ThreadID tid, int delay)
+{
+    DPRINTF(InOrderCPU,"[tid:%i]: Deallocating ...\n", tid);
+
+    scheduleCpuEvent(DeallocateThread, NoFault, tid, dummyInst, delay);
+
+    // Be sure to signal that there's some activity so the CPU doesn't
+    // deschedule itself.
+    activityRec.activity();
+
+    _status = Running;
+}
+
+void
+InOrderCPU::deallocateThread(ThreadID tid)
+{
+    DPRINTF(InOrderCPU, "[tid:%i]: Calling deallocate thread.\n", tid);
+
+    if (isThreadActive(tid)) {
+        DPRINTF(InOrderCPU,"[tid:%i]: Removing from active threads list\n",
+                tid);
+        list<ThreadID>::iterator thread_it =
+            std::find(activeThreads.begin(), activeThreads.end(), tid);
+
+        removePipelineStalls(*thread_it);
+
+        activeThreads.erase(thread_it);
+    }
+
+    // TODO: "Un"Load/Unmap register file state
+  
+}
+
+void
 InOrderCPU::removePipelineStalls(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Removing all pipeline stalls\n",
@@ -733,36 +757,6 @@ InOrderCPU::removePipelineStalls(ThreadID tid)
     }
 
 }
-bool
-InOrderCPU::isThreadInCPU(ThreadID tid)
-{
-  list<ThreadID>::iterator isCurrent =
-      std::find(currentThreads.begin(), currentThreads.end(), tid);
-
-    return (isCurrent != currentThreads.end());
-}
-
-void
-InOrderCPU::addToCurrentThreads(ThreadID tid)
-{
-    if (!isThreadInCPU(tid)) {
-        DPRINTF(InOrderCPU, "Adding Thread %i to current threads list in CPU."
-                "\n", tid);
-        currentThreads.push_back(tid);
-    }
-}
-
-void
-InOrderCPU::removeFromCurrentThreads(ThreadID tid)
-{
-    if (isThreadInCPU(tid)) {
-        DPRINTF(InOrderCPU,
-                "Adding Thread %i to current threads list in CPU.\n", tid);
-        list<ThreadID>::iterator isCurrent =
-            std::find(currentThreads.begin(), currentThreads.end(), tid);
-        currentThreads.erase(isCurrent);
-    }
-}
 
 bool
 InOrderCPU::isThreadSuspended(ThreadID tid)
@@ -771,125 +765,6 @@ InOrderCPU::isThreadSuspended(ThreadID tid)
       std::find(suspendedThreads.begin(), suspendedThreads.end(), tid);
 
     return (isSuspended!= suspendedThreads.end());
-}
-
-void
-InOrderCPU::enableVirtProcElement(unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[vpe:%i]: Scheduling  "
-            "Enabling of concurrent virtual processor execution",
-            vpe);
-
-    scheduleCpuEvent(EnableVPEs, NoFault, 0/*tid*/, dummyInst);
-}
-
-void
-InOrderCPU::enableVPEs(unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[vpe:%i]: Enabling Concurrent Execution "
-            "virtual processors %i", vpe);
-
-    list<ThreadID>::iterator thread_it = currentThreads.begin();
-
-    while (thread_it != currentThreads.end()) {
-        if (!isThreadSuspended(*thread_it)) {
-            activateThread(*thread_it);
-        }
-        thread_it++;
-    }
-}
-
-void
-InOrderCPU::disableVirtProcElement(ThreadID tid, unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[vpe:%i]: Scheduling  "
-            "Disabling of concurrent virtual processor execution",
-            vpe);
-
-    scheduleCpuEvent(DisableVPEs, NoFault, 0/*tid*/, dummyInst);
-}
-
-void
-InOrderCPU::disableVPEs(ThreadID tid, unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[vpe:%i]: Disabling Concurrent Execution of "
-            "virtual processors %i", vpe);
-
-    unsigned base_vpe = TheISA::getVirtProcNum(tcBase(tid));
-
-    list<ThreadID>::iterator thread_it = activeThreads.begin();
-
-    vector<list<ThreadID>::iterator> removeList;
-
-    while (thread_it != activeThreads.end()) {
-        if (base_vpe != vpe) {
-            removeList.push_back(thread_it);
-        }
-        thread_it++;
-    }
-
-    for (int i = 0; i < removeList.size(); i++) {
-        activeThreads.erase(removeList[i]);
-    }
-}
-
-void
-InOrderCPU::enableMultiThreading(unsigned vpe)
-{
-    // Schedule event to take place at end of cycle
-    DPRINTF(InOrderCPU, "[vpe:%i]: Scheduling Enable Multithreading on "
-            "virtual processor %i", vpe);
-
-    scheduleCpuEvent(EnableThreads, NoFault, 0/*tid*/, dummyInst);
-}
-
-void
-InOrderCPU::enableThreads(unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[vpe:%i]: Enabling Multithreading on "
-            "virtual processor %i", vpe);
-
-    list<ThreadID>::iterator thread_it = currentThreads.begin();
-
-    while (thread_it != currentThreads.end()) {
-        if (TheISA::getVirtProcNum(tcBase(*thread_it)) == vpe) {
-            if (!isThreadSuspended(*thread_it)) {
-                activateThread(*thread_it);
-            }
-        }
-        thread_it++;
-    }
-}
-void
-InOrderCPU::disableMultiThreading(ThreadID tid, unsigned vpe)
-{
-    // Schedule event to take place at end of cycle
-   DPRINTF(InOrderCPU, "[tid:%i]: Scheduling Disable Multithreading on "
-            "virtual processor %i", tid, vpe);
-
-    scheduleCpuEvent(DisableThreads, NoFault, tid, dummyInst);
-}
-
-void
-InOrderCPU::disableThreads(ThreadID tid, unsigned vpe)
-{
-    DPRINTF(InOrderCPU, "[tid:%i]: Disabling Multithreading on "
-            "virtual processor %i", tid, vpe);
-
-    list<ThreadID>::iterator thread_it = activeThreads.begin();
-
-    vector<list<ThreadID>::iterator> removeList;
-
-    while (thread_it != activeThreads.end()) {
-        if (TheISA::getVirtProcNum(tcBase(*thread_it)) == vpe) {
-            removeList.push_back(thread_it);
-        }
-        thread_it++;
-    }
-
-    for (int i = 0; i < removeList.size(); i++) {
-        activeThreads.erase(removeList[i]);
-    }
 }
 
 void
@@ -959,6 +834,12 @@ InOrderCPU::activateNextReadyContext(int delay)
 }
 
 void
+InOrderCPU::haltContext(ThreadID tid, int delay)
+{
+    suspendContext(tid, delay);
+}
+
+void
 InOrderCPU::suspendContext(ThreadID tid, int delay)
 {
     scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst, delay);
@@ -974,24 +855,6 @@ InOrderCPU::suspendThread(ThreadID tid)
 }
 
 void
-InOrderCPU::deallocateContext(ThreadID tid, int delay)
-{
-    scheduleCpuEvent(DeallocateThread, NoFault, tid, dummyInst, delay);
-}
-
-void
-InOrderCPU::deallocateThread(ThreadID tid)
-{
-    DPRINTF(InOrderCPU,"[tid:%i]: Deallocating ...", tid);
-
-    removeFromCurrentThreads(tid);
-
-    deactivateThread(tid);
-
-    squashThreadInPipeline(tid);
-}
-
-void
 InOrderCPU::squashThreadInPipeline(ThreadID tid)
 {
     //Squash all instructions in each stage
@@ -1000,44 +863,11 @@ InOrderCPU::squashThreadInPipeline(ThreadID tid)
     }
 }
 
-void
-InOrderCPU::haltContext(ThreadID tid, int delay)
-{
-    DPRINTF(InOrderCPU, "[tid:%i]: Halt context called.\n", tid);
-
-    // Halt is same thing as deallocate for now
-    // @TODO: Differentiate between halt & deallocate in the CPU
-    // model
-    deallocateContext(tid, delay);
-}
-
-void
-InOrderCPU::insertThread(ThreadID tid)
-{
-    panic("Unimplemented Function\n.");
-}
-
-void
-InOrderCPU::removeThread(ThreadID tid)
-{
-    DPRINTF(InOrderCPU, "Removing Thread %i from CPU.\n", tid);
-
-    /** Broadcast to CPU resources*/
-}
-
 PipelineStage*
 InOrderCPU::getPipeStage(int stage_num)
 {
     return pipelineStage[stage_num];
 }
-
-
-void
-InOrderCPU::activateWhenReady(ThreadID tid)
-{
-    panic("Unimplemented Function\n.");
-}
-
 
 uint64_t
 InOrderCPU::readPC(ThreadID tid)

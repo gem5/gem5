@@ -515,12 +515,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     ////////////////////////////////////////////////////////////
     virtual void deallocateContext(int thread_num);
 
-    virtual void enableVirtProcElement(unsigned vpe);
-    virtual void disableVirtProcElement(unsigned vpe);
-
-    virtual void enableMultiThreading(unsigned vpe);
-    virtual void disableMultiThreading(unsigned vpe);
-
     ////////////////////////////////////////////////////////////
     //
     //  PROGRAM COUNTERS - PC/NPC/NPC
