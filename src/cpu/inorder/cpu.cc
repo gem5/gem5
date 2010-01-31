@@ -84,10 +84,10 @@ InOrderCPU::TickEvent::description()
 }
 
 InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
-                             Fault fault, ThreadID _tid, unsigned _vpe)
+                             Fault fault, ThreadID _tid, DynInstPtr inst)
     : Event(CPU_Tick_Pri), cpu(_cpu)
 {
-    setEvent(e_type, fault, _tid, _vpe);
+    setEvent(e_type, fault, _tid, inst);
 }
 
 
@@ -317,7 +317,7 @@ InOrderCPU::InOrderCPU(Params *params)
     contextSwitch = false;
 
     // Define dummy instructions and resource requests to be used.
-    DynInstPtr dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0);
+    dummyInst = new InOrderDynInst(this, NULL, 0, 0);
     dummyReq = new ResourceRequest(resPool->getResource(0), NULL, 0, 0, 0, 0);
 
     // Reset CPU to reset state.
@@ -570,7 +570,7 @@ void
 InOrderCPU::trap(Fault fault, ThreadID tid, int delay)
 {
     //@ Squash Pipeline during TRAP
-    scheduleCpuEvent(Trap, fault, tid, 0/*vpe*/, delay);
+    scheduleCpuEvent(Trap, fault, tid, dummyInst, delay);
 }
 
 void
@@ -581,9 +581,10 @@ InOrderCPU::trapCPU(Fault fault, ThreadID tid)
 
 void
 InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
-                           ThreadID tid, unsigned vpe, unsigned delay)
+                             ThreadID tid, DynInstPtr inst, 
+                             unsigned delay)
 {
-    CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, vpe);
+    CPUEvent *cpu_event = new CPUEvent(this, c_event, fault, tid, inst);
 
     if (delay >= 0) {
         DPRINTF(InOrderCPU, "Scheduling CPU Event (%s) for cycle %i.\n",
@@ -597,7 +598,7 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     // Broadcast event to the Resource Pool
     DynInstPtr dummy_inst =
         new InOrderDynInst(this, NULL, getNextEventNum(), tid);
-    resPool->scheduleEvent(c_event, dummy_inst, 0, 0, tid);
+    resPool->scheduleEvent(c_event, inst, 0, 0, tid);
 }
 
 inline bool
@@ -699,7 +700,7 @@ InOrderCPU::enableVirtProcElement(unsigned vpe)
             "Enabling of concurrent virtual processor execution",
             vpe);
 
-    scheduleCpuEvent(EnableVPEs, NoFault, 0/*tid*/, vpe);
+    scheduleCpuEvent(EnableVPEs, NoFault, 0/*tid*/, dummyInst);
 }
 
 void
@@ -725,7 +726,7 @@ InOrderCPU::disableVirtProcElement(ThreadID tid, unsigned vpe)
             "Disabling of concurrent virtual processor execution",
             vpe);
 
-    scheduleCpuEvent(DisableVPEs, NoFault, 0/*tid*/, vpe);
+    scheduleCpuEvent(DisableVPEs, NoFault, 0/*tid*/, dummyInst);
 }
 
 void
@@ -759,7 +760,7 @@ InOrderCPU::enableMultiThreading(unsigned vpe)
     DPRINTF(InOrderCPU, "[vpe:%i]: Scheduling Enable Multithreading on "
             "virtual processor %i", vpe);
 
-    scheduleCpuEvent(EnableThreads, NoFault, 0/*tid*/, vpe);
+    scheduleCpuEvent(EnableThreads, NoFault, 0/*tid*/, dummyInst);
 }
 
 void
@@ -786,7 +787,7 @@ InOrderCPU::disableMultiThreading(ThreadID tid, unsigned vpe)
    DPRINTF(InOrderCPU, "[tid:%i]: Scheduling Disable Multithreading on "
             "virtual processor %i", tid, vpe);
 
-    scheduleCpuEvent(DisableThreads, NoFault, tid, vpe);
+    scheduleCpuEvent(DisableThreads, NoFault, tid, dummyInst);
 }
 
 void
@@ -850,7 +851,7 @@ InOrderCPU::activateContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Activating ...\n", tid);
 
-    scheduleCpuEvent(ActivateThread, NoFault, tid, 0/*vpe*/, delay);
+    scheduleCpuEvent(ActivateThread, NoFault, tid, dummyInst, delay);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
@@ -863,7 +864,7 @@ InOrderCPU::activateContext(ThreadID tid, int delay)
 void
 InOrderCPU::suspendContext(ThreadID tid, int delay)
 {
-    scheduleCpuEvent(SuspendThread, NoFault, tid, 0/*vpe*/, delay);
+    scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst, delay);
     //_status = Idle;
 }
 
@@ -877,7 +878,7 @@ InOrderCPU::suspendThread(ThreadID tid)
 void
 InOrderCPU::deallocateContext(ThreadID tid, int delay)
 {
-    scheduleCpuEvent(DeallocateThread, NoFault, tid, 0/*vpe*/, delay);
+    scheduleCpuEvent(DeallocateThread, NoFault, tid, dummyInst, delay);
 }
 
 void

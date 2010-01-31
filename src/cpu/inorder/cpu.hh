@@ -199,22 +199,24 @@ class InOrderCPU : public BaseCPU
       public:
         CPUEventType cpuEventType;
         ThreadID tid;
-        unsigned vpe;
+        DynInstPtr inst;
         Fault fault;
-
+        unsigned vpe;
+        
       public:
         /** Constructs a CPU event. */
         CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
-                 ThreadID _tid, unsigned _vpe);
+                 ThreadID _tid, DynInstPtr inst);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
-                      unsigned _vpe)
+                      DynInstPtr _inst)
         {
             fault = _fault;
             cpuEventType = e_type;
             tid = _tid;
-            vpe = _vpe;
+            inst = _inst;
+            vpe = 0;            
         }
 
         /** Processes a resource event. */
@@ -232,7 +234,7 @@ class InOrderCPU : public BaseCPU
 
     /** Schedule a CPU Event */
     void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
-                          unsigned vpe, unsigned delay = 0);
+                          DynInstPtr inst, unsigned delay = 0);
 
   public:
     /** Interface between the CPU and CPU resources. */
@@ -240,7 +242,7 @@ class InOrderCPU : public BaseCPU
 
     /** Instruction used to signify that there is no *real* instruction in 
         buffer slot */
-    DynInstPtr dummyBufferInst;
+    DynInstPtr dummyInst;
 
     /** Used by resources to signify a denied access to a resource. */
     ResourceRequest *dummyReq;
