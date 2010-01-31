@@ -65,16 +65,18 @@ int getNextPriority(DynInstPtr &inst, int stage_num)
 
 void createFrontEndSchedule(DynInstPtr &inst)
 {
-    InstStage *I = inst->addStage();
-    InstStage *E = inst->addStage();
+    InstStage *F = inst->addStage();
+    InstStage *D = inst->addStage();
 
-    I->needs(FetchSeq, FetchSeqUnit::AssignNextPC);
-    I->needs(ICache, CacheUnit::InitiateFetch);
+    // FETCH
+    F->needs(FetchSeq, FetchSeqUnit::AssignNextPC);
+    F->needs(ICache, CacheUnit::InitiateFetch);
 
-    E->needs(ICache, CacheUnit::CompleteFetch);
-    E->needs(Decode, DecodeUnit::DecodeInst);
-    E->needs(BPred, BranchPredictor::PredictBranch);
-    E->needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
+    // DECODE
+    D->needs(ICache, CacheUnit::CompleteFetch);
+    D->needs(Decode, DecodeUnit::DecodeInst);
+    D->needs(BPred, BranchPredictor::PredictBranch);
+    D->needs(FetchSeq, FetchSeqUnit::UpdateTargetPC);
 }
 
 bool createBackEndSchedule(DynInstPtr &inst)
@@ -83,45 +85,48 @@ bool createBackEndSchedule(DynInstPtr &inst)
         return false;
     }
 
-    InstStage *E = inst->currentStage();
+    InstStage *X = inst->addStage();
     InstStage *M = inst->addStage();
-    InstStage *A = inst->addStage();
     InstStage *W = inst->addStage();
 
+    // EXECUTE
     for (int idx=0; idx < inst->numSrcRegs(); idx++) {
         if (!idx || !inst->isStore()) {
-            E->needs(RegManager, UseDefUnit::ReadSrcReg, idx);
+            X->needs(RegManager, UseDefUnit::ReadSrcReg, idx);
         }
     }
-
 
     if ( inst->isNonSpeculative() ) {
         // skip execution of non speculative insts until later
     } else if ( inst->isMemRef() ) {
         if ( inst->isLoad() ) {
-            E->needs(AGEN, AGENUnit::GenerateAddr);
-            E->needs(DCache, CacheUnit::InitiateReadData);
+            X->needs(AGEN, AGENUnit::GenerateAddr);
         }
     } else if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
-        E->needs(MDU, MultDivUnit::StartMultDiv);
+        X->needs(MDU, MultDivUnit::StartMultDiv);
     } else {
-        E->needs(ExecUnit, ExecutionUnit::ExecuteInst);
+        X->needs(ExecUnit, ExecutionUnit::ExecuteInst);
     }
 
     if (inst->opClass() == IntMultOp || inst->opClass() == IntDivOp) {
-        M->needs(MDU, MultDivUnit::EndMultDiv);
+        X->needs(MDU, MultDivUnit::EndMultDiv);
     }
 
+    // MEMORY
     if ( inst->isLoad() ) {
-        M->needs(DCache, CacheUnit::CompleteReadData);
+        M->needs(DCache, CacheUnit::InitiateReadData);
     } else if ( inst->isStore() ) {
         M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
         M->needs(AGEN, AGENUnit::GenerateAddr);
         M->needs(DCache, CacheUnit::InitiateWriteData);
     }
 
-    if ( inst->isStore() ) {
-        A->needs(DCache, CacheUnit::CompleteWriteData);
+
+    // WRITEBACK
+    if ( inst->isLoad() ) {
+        W->needs(DCache, CacheUnit::CompleteReadData);
+    } else if ( inst->isStore() ) {
+        W->needs(DCache, CacheUnit::CompleteWriteData);
     }
 
     if ( inst->isNonSpeculative() ) {

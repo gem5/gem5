@@ -113,7 +113,8 @@ namespace ThePipeline {
     };
 
     struct entryCompare {
-        bool operator()(const ScheduleEntry* lhs, const ScheduleEntry* rhs) const
+        bool operator()(const ScheduleEntry* lhs, const ScheduleEntry* rhs) 
+            const
         {
             // Prioritize first by stage number that the resource is needed
             if (lhs->stageNum > rhs->stageNum) {
