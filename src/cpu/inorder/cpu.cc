@@ -711,6 +711,8 @@ InOrderCPU::activateThread(ThreadID tid)
 
         thread[tid]->lastActivate = curTick;            
 
+        tcBase(tid)->setStatus(ThreadContext::Active);    
+
         wakeCPU();
     }
 }
@@ -750,9 +752,11 @@ InOrderCPU::deactivateThread(ThreadID tid)
 
         removePipelineStalls(*thread_it);
 
-        //@TODO: change stage status' to Idle?
-
         activeThreads.erase(thread_it);
+
+        // Ideally, this should be triggered from the
+        // suspendContext/Thread functions
+        tcBase(tid)->setStatus(ThreadContext::Suspended);    
     }
 
     assert(!isThreadActive(tid));    
@@ -854,6 +858,8 @@ InOrderCPU::haltThread(ThreadID tid)
     squashThreadInPipeline(tid);   
     haltedThreads.push_back(tid);    
 
+    tcBase(tid)->setStatus(ThreadContext::Halted);    
+
     if (threadModel == SwitchOnCacheMiss) {        
         activateNextReadyContext();    
     }
@@ -872,6 +878,8 @@ InOrderCPU::suspendThread(ThreadID tid)
     deactivateThread(tid);
     suspendedThreads.push_back(tid);    
     thread[tid]->lastSuspend = curTick;    
+
+    tcBase(tid)->setStatus(ThreadContext::Suspended);    
 }
 
 void
