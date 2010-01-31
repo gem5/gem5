@@ -119,12 +119,6 @@ class CacheUnit : public Resource
         virtual void recvRetry();
     };
 
-    enum CachePortStatus {
-        cacheWaitResponse,
-        cacheWaitRetry,
-        cacheAccessComplete
-    };
-
     void init();
 
     virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
@@ -188,15 +182,7 @@ class CacheUnit : public Resource
     /** Cache interface. */
     CachePort *cachePort;
 
-    CachePortStatus cacheStatus;
-
-    CacheReqPtr retryReq;
-
-    PacketPtr retryPkt;
-
-    int retrySlot;
-
-    bool cacheBlocked;
+    bool cachePortBlocked;
 
     std::vector<Addr> addrList[ThePipeline::MaxThreads];
 

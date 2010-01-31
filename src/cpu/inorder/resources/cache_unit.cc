@@ -84,8 +84,7 @@ CacheUnit::CachePort::recvRetry()
 CacheUnit::CacheUnit(string res_name, int res_id, int res_width,
         int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params)
     : Resource(res_name, res_id, res_width, res_latency, _cpu),
-      retryPkt(NULL), retrySlot(-1), cacheBlocked(false),
-      predecoder(NULL)
+      cachePortBlocked(false), predecoder(NULL)
 {
     cachePort = new CachePort(this);
 
@@ -351,8 +350,8 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
 void
 CacheUnit::execute(int slot_num)
 {
-    if (cacheBlocked) {
-        DPRINTF(InOrderCachePort, "Cache Blocked. Cannot Access\n");
+    if (cachePortBlocked) {
+        DPRINTF(InOrderCachePort, "Cache Port Blocked. Cannot Access\n");
         return;
     }
 
@@ -470,8 +469,7 @@ CacheUnit::prefetch(DynInstPtr inst)
     // Clean-Up cache resource request so
     // other memory insts. can use them
     cache_req->setCompleted();
-    cacheStatus = cacheAccessComplete;
-    cacheBlocked = false;
+    cachePortBlocked = false;
     cache_req->setMemAccPending(false);
     cache_req->setMemAccCompleted();
     inst->unsetMemAddr();
@@ -490,8 +488,7 @@ CacheUnit::writeHint(DynInstPtr inst)
     // Clean-Up cache resource request so
     // other memory insts. can use them
     cache_req->setCompleted();
-    cacheStatus = cacheAccessComplete;
-    cacheBlocked = false;
+    cachePortBlocked = false;
     cache_req->setMemAccPending(false);
     cache_req->setMemAccCompleted();
     inst->unsetMemAddr();
@@ -555,28 +552,18 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
     if (do_access) {
         if (!cachePort->sendTiming(cache_req->dataPkt)) {
             DPRINTF(InOrderCachePort,
-                    "[tid:%i] [sn:%i] is waiting to retry request\n",
-                    tid, inst->seqNum);
-
-            retrySlot = cache_req->getSlot();
-            retryReq = cache_req;
-            retryPkt = cache_req->dataPkt;
-
-            cacheStatus = cacheWaitRetry;
-
-            //cacheBlocked = true;
-
-            DPRINTF(InOrderStall, "STALL: \n");
-
+                    "[tid:%i] [sn:%i] cannot access cache, because port "
+                    "is blocked. now waiting to retry request\n", tid, 
+                    inst->seqNum);
             cache_req->setCompleted(false);
+            cachePortBlocked = true;
         } else {
             DPRINTF(InOrderCachePort,
                     "[tid:%i] [sn:%i] is now waiting for cache response\n",
                     tid, inst->seqNum);
             cache_req->setCompleted();
             cache_req->setMemAccPending();
-            cacheStatus = cacheWaitResponse;
-            cacheBlocked = false;
+            cachePortBlocked = false;
         }
     } else if (!do_access && memReq->isLLSC()){
         // Store-Conditional instructions complete even if they "failed"
@@ -737,22 +724,12 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 void
 CacheUnit::recvRetry()
 {
-    DPRINTF(InOrderCachePort, "Retrying Request for [tid:%i] [sn:%i]\n",
-            retryReq->inst->readTid(), retryReq->inst->seqNum);
+    DPRINTF(InOrderCachePort, "Unblocking Cache Port. \n");
+    
+    assert(cachePortBlocked);
 
-    assert(retryPkt != NULL);
-    assert(cacheBlocked);
-    assert(cacheStatus == cacheWaitRetry);
-
-    if (cachePort->sendTiming(retryPkt)) {
-        cacheStatus = cacheWaitResponse;
-        retryPkt = NULL;
-        cacheBlocked = false;
-    } else {
-        DPRINTF(InOrderCachePort,
-                "Retry Request for [tid:%i] [sn:%i] failed\n",
-                retryReq->inst->readTid(), retryReq->inst->seqNum);
-    }
+    // Clear the cache port for use again
+    cachePortBlocked = false;
 }
 
 CacheUnitEvent::CacheUnitEvent()
