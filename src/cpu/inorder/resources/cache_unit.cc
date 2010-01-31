@@ -40,6 +40,7 @@
 #include "cpu/inorder/resources/cache_unit.hh"
 #include "cpu/inorder/pipeline_traits.hh"
 #include "cpu/inorder/cpu.hh"
+#include "cpu/inorder/resource_pool.hh"
 #include "mem/request.hh"
 
 using namespace std;
@@ -136,7 +137,9 @@ CacheUnit::getSlot(DynInstPtr inst)
         return -1;
     }
 
-    if (!inst->validMemAddr()) {
+    // For a Split-Load, the instruction would have processed once already
+    // causing the address to be unset.
+    if (!inst->validMemAddr() && !inst->splitInst) {
         panic("Mem. Addr. must be set before requesting cache access\n");
     }
 
@@ -159,12 +162,24 @@ CacheUnit::getSlot(DynInstPtr inst)
                 inst->readTid(), inst->seqNum, req_addr);
         return new_slot;
     } else {
-        DPRINTF(InOrderCachePort,
+        // Allow same instruction multiple accesses to same address
+        if (addrMap[tid][req_addr] == inst->seqNum) {
+            int new_slot = Resource::getSlot(inst);
+        
+            if (new_slot == -1)
+                return -1;     
+
+            return new_slot;       
+        } else {                    
+            DPRINTF(InOrderCachePort,
                 "[tid:%i] Denying request because there is an outstanding"
                 " request to/for addr. %08p. by [sn:%i] @ tick %i\n",
                 inst->readTid(), req_addr, addrMap[tid][req_addr], inst->memTime);
-        return -1;
+            return -1;
+        }        
     }
+
+    return -1;   
 }
 
 void
@@ -175,16 +190,68 @@ CacheUnit::freeSlot(int slot_num)
     vector<Addr>::iterator vect_it = 
         find(addrList[tid].begin(), addrList[tid].end(),
              reqMap[slot_num]->inst->getMemAddr());
-    assert(vect_it != addrList[tid].end());
+    
+    assert(vect_it != addrList[tid].end() || 
+           reqMap[slot_num]->inst->splitInst);
 
     DPRINTF(InOrderCachePort,
             "[tid:%i]: Address %08p removed from dependency list\n",
             reqMap[slot_num]->inst->readTid(), (*vect_it));
 
-    addrList[tid].erase(vect_it);
+    if (vect_it != addrList[tid].end()) {
+        
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: Address %08p removed from dependency list\n",
+                reqMap[slot_num]->inst->readTid(), (*vect_it));
+ 
+        addrList[tid].erase(vect_it);
+    }   
 
     Resource::freeSlot(slot_num);
 }
+
+ResReqPtr
+CacheUnit::findRequest(DynInstPtr inst)
+{
+    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
+    map<int, ResReqPtr>::iterator map_end = reqMap.end();
+
+    while (map_it != map_end) {
+        CacheRequest* cache_req = dynamic_cast<CacheRequest*>((*map_it).second);
+        assert(cache_req);
+
+        if (cache_req &&
+            cache_req->getInst() == inst &&
+            cache_req->instIdx == inst->resSched.top()->idx) {
+            return cache_req;
+        }
+        map_it++;
+    }
+
+    return NULL;
+}
+
+ResReqPtr
+CacheUnit::findSplitRequest(DynInstPtr inst, int idx)
+{
+    map<int, ResReqPtr>::iterator map_it = reqMap.begin();
+    map<int, ResReqPtr>::iterator map_end = reqMap.end();
+
+    while (map_it != map_end) {
+        CacheRequest* cache_req = dynamic_cast<CacheRequest*>((*map_it).second);
+        assert(cache_req);
+
+        if (cache_req &&
+            cache_req->getInst() == inst &&
+            cache_req->instIdx == idx) {
+            return cache_req;
+        }
+        map_it++;
+    }
+
+    return NULL;
+}
+
 
 ResReqPtr
 CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
@@ -200,6 +267,14 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
 
     switch (sched_entry->cmd)
     {
+      case InitSecondSplitRead:
+        pkt_cmd = MemCmd::ReadReq;
+
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: Read request from [sn:%i] for addr %08p\n",
+                inst->readTid(), inst->seqNum, inst->split2ndAddr);
+        break;
+
       case InitiateReadData:
         pkt_cmd = MemCmd::ReadReq;
 
@@ -231,7 +306,8 @@ CacheUnit::getRequest(DynInstPtr inst, int stage_num, int res_idx,
 
     return new CacheRequest(this, inst, stage_num, id, slot_num,
                             sched_entry->cmd, 0, pkt_cmd,
-                            0/*flags*/, this->cpu->readCpuId());
+                            0/*flags*/, this->cpu->readCpuId(),
+                            inst->resSched.top()->idx);
 }
 
 void
@@ -242,7 +318,8 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
 
     // Check to see if this instruction is requesting the same command
     // or a different one
-    if (cache_req->cmd != inst->resSched.top()->cmd) {
+    if (cache_req->cmd != inst->resSched.top()->cmd &&
+        cache_req->instIdx == inst->resSched.top()->idx) {
         // If different, then update command in the request
         cache_req->cmd = inst->resSched.top()->cmd;
         DPRINTF(InOrderCachePort,
@@ -250,7 +327,7 @@ CacheUnit::requestAgain(DynInstPtr inst, bool &service_request)
                 "instruction\n ", inst->readTid(), inst->seqNum);
 
         service_request = true;
-    } else {
+    } else if (inst->resSched.top()->idx != CacheUnit::InitSecondSplitRead) {        
         // If same command, just check to see if memory access was completed
         // but dont try to re-execute
         DPRINTF(InOrderCachePort,
@@ -276,12 +353,25 @@ CacheUnit::doTLBAccess(DynInstPtr inst, CacheReqPtr cache_req, int acc_size,
                                             cpu->readCpuId(), inst->readTid());
             cache_req->memReq = inst->fetchMemReq;
     } else {
-            inst->dataMemReq = new Request(inst->readTid(), aligned_addr,
+        if (!cache_req->is2ndSplit()) {            
+            inst->dataMemReq = new Request(cpu->asid[tid], aligned_addr,
                                            acc_size, flags, inst->readPC(),
                                            cpu->readCpuId(), inst->readTid());
             cache_req->memReq = inst->dataMemReq;
+        } else {
+            assert(inst->splitInst);
+            
+            inst->splitMemReq = new Request(cpu->asid[tid], 
+                                            inst->split2ndAddr,
+                                            acc_size, 
+                                            flags, 
+                                            inst->readPC(),
+                                            cpu->readCpuId(), 
+                                            tid);
+            cache_req->memReq = inst->splitMemReq;            
+        }
     }
-
+    
 
     cache_req->fault =
         _tlb->translateAtomic(cache_req->memReq,
@@ -318,13 +408,93 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
     assert(cache_req);
 
-    int acc_size =  sizeof(T);
-    doTLBAccess(inst, cache_req, acc_size, flags, TheISA::TLB::Read);
+    // The block size of our peer
+    unsigned blockSize = this->cachePort->peerBlockSize();
+
+    //The size of the data we're trying to read.
+    int dataSize = sizeof(T);
+
+    if (inst->split2ndAccess) {     
+        dataSize = inst->split2ndSize;
+        cache_req->splitAccess = true;        
+        cache_req->split2ndAccess = true;
+        
+        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (2 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+                inst->getMemAddr(), inst->split2ndAddr);       
+    }  
+    
+
+    //The address of the second part of this access if it needs to be split
+    //across a cache line boundary.
+    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+
+    
+    if (secondAddr > addr && !inst->split2ndAccess) {
+        DPRINTF(InOrderCachePort, "%i: sn[%i] Split Read Access (1 of 2) for (%#x, %#x).\n", curTick, inst->seqNum, 
+                addr, secondAddr);       
+        
+        // Save All "Total" Split Information
+        // ==============================
+        inst->splitInst = true;        
+        inst->splitMemData = new uint8_t[dataSize];
+        inst->splitTotalSize = dataSize;
+        
+
+        // Schedule Split Read/Complete for Instruction
+        // ==============================
+        int stage_num = cache_req->getStageNum();
+        
+        int stage_pri = ThePipeline::getNextPriority(inst, stage_num);
+        
+        inst->resSched.push(new ScheduleEntry(stage_num, 
+                                              stage_pri, 
+                                              cpu->resPool->getResIdx(DCache),
+                                              CacheUnit::InitSecondSplitRead,
+                                              1)
+            );
+
+        inst->resSched.push(new ScheduleEntry(stage_num + 1, 
+                                              1/*stage_pri*/, 
+                                              cpu->resPool->getResIdx(DCache),
+                                              CacheUnit::CompleteSecondSplitRead, 1)
+            );
+
+
+        // Split Information for First Access
+        // ==============================
+        dataSize = secondAddr - addr;
+        cache_req->splitAccess = true;
+
+        // Split Information for Second Access
+        // ==============================
+        inst->split2ndSize = addr + sizeof(T) - secondAddr;
+        inst->split2ndAddr = secondAddr;            
+        inst->split2ndDataPtr = inst->splitMemData + dataSize;            
+        inst->split2ndFlags = flags;        
+    }
+    
+    //cout << "h1" << endl;
+    
+    doTLBAccess(inst, cache_req, dataSize, flags, TheISA::TLB::Read);
+
+    //cout << "h2" << endl;
 
     if (cache_req->fault == NoFault) {
-        cache_req->reqData = new uint8_t[acc_size];
-        doCacheAccess(inst, NULL);
+        if (!cache_req->splitAccess) {            
+            cache_req->reqData = new uint8_t[dataSize];
+            doCacheAccess(inst, NULL);
+        } else {
+            if (!inst->split2ndAccess) {                
+                cache_req->reqData = inst->splitMemData;
+            } else {
+                cache_req->reqData = inst->split2ndDataPtr;                
+            }
+            
+            doCacheAccess(inst, NULL, cache_req);            
+        }        
     }
+
+    //cout << "h3" << endl;
 
     return cache_req->fault;
 }
@@ -336,6 +506,20 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
 {
     CacheReqPtr cache_req = dynamic_cast<CacheReqPtr>(findRequest(inst));
     assert(cache_req);
+
+    // The block size of our peer
+    unsigned blockSize = this->cachePort->peerBlockSize();
+
+    //The size of the data we're trying to read.
+    int dataSize = sizeof(T);
+
+    //The address of the second part of this access if it needs to be split
+    //across a cache line boundary.
+    Addr secondAddr = roundDown(addr + dataSize - 1, blockSize);
+
+    if (secondAddr > addr) {
+        assert(0 && "Need Split Write Code!");
+    }    
 
     int acc_size =  sizeof(T);
     doTLBAccess(inst, cache_req, acc_size, flags, TheISA::TLB::Write);
@@ -364,6 +548,8 @@ CacheUnit::execute(int slot_num)
 #if TRACING_ON
     ThreadID tid = inst->readTid();
     int seq_num = inst->seqNum;
+    std::string acc_type = "write";
+    
 #endif
 
     cache_req->fault = NoFault;
@@ -395,10 +581,14 @@ CacheUnit::execute(int slot_num)
         }
 
       case InitiateReadData:
+#if TRACING_ON
+        acc_type = "read";
+#endif        
       case InitiateWriteData:
+            
         DPRINTF(InOrderCachePort,
-                "[tid:%u]: Initiating data access to %s for addr. %08p\n",
-                tid, name(), cache_req->inst->getMemAddr());
+                "[tid:%u]: [sn:%i] Initiating data %s access to %s for addr. %08p\n",
+                tid, inst->seqNum, acc_type, name(), cache_req->inst->getMemAddr());
 
         inst->setCurResSlot(slot_num);
 
@@ -406,9 +596,30 @@ CacheUnit::execute(int slot_num)
             inst->execute();
         } else {
             inst->initiateAcc();
+            //if (inst->splitAccess) {
+            //  assert(0 && " Marked as spill inst");                
+            //}
         }
-
+        
         break;
+
+      case InitSecondSplitRead:
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: [sn:%i] Initiating split data read access to %s for addr. %08p\n",
+                tid, inst->seqNum, name(), cache_req->inst->split2ndAddr);
+        inst->split2ndAccess = true;
+        read(inst, inst->split2ndAddr, inst->split2ndData, inst->split2ndFlags);        
+        break;
+
+      case InitSecondSplitWrite:
+        DPRINTF(InOrderCachePort,
+                "[tid:%u]: [sn:%i] Initiating split data write access to %s for addr. %08p\n",
+                tid, inst->seqNum, name(), cache_req->inst->getMemAddr());
+        assert(0);        
+        inst->split2ndAccess = true;
+        //write(inst, inst->split2ndAddr, inst->split2ndData, inst->split2ndFlags);        
+        break;
+
 
       case CompleteFetch:
         if (cache_req->isMemAccComplete()) {
@@ -425,7 +636,7 @@ CacheUnit::execute(int slot_num)
             cache_req->done();
         } else {
             DPRINTF(InOrderCachePort,
-                    "[tid:%i]: [sn:%i]: Unable to Complete Fetch Access\n",
+                     "[tid:%i]: [sn:%i]: Unable to Complete Fetch Access\n",
                     tid, inst->seqNum);
             DPRINTF(InOrderStall,
                     "STALL: [tid:%i]: Fetch miss from %08p\n",
@@ -454,6 +665,24 @@ CacheUnit::execute(int slot_num)
         }
         break;
 
+      case CompleteSecondSplitRead:
+        DPRINTF(InOrderCachePort,
+                "[tid:%i]: [sn:%i]: Trying to Complete Split Data Read Access\n",
+                tid, inst->seqNum);
+
+        if (cache_req->isMemAccComplete() ||
+            inst->isDataPrefetch() ||
+            inst->isInstPrefetch()) {
+            cache_req->setMemStall(false);            
+            cache_req->done();
+        } else {
+            DPRINTF(InOrderStall, "STALL: [tid:%i]: Data miss from %08p\n",
+                    tid, cache_req->inst->split2ndAddr);
+            cache_req->setCompleted(false);
+            cache_req->setMemStall(true);            
+        }
+        break;
+        
       default:
         fatal("Unrecognized command to %s", resName);
     }
@@ -498,15 +727,21 @@ CacheUnit::writeHint(DynInstPtr inst)
 
 // @TODO: Split into doCacheRead() and doCacheWrite()
 Fault
-CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
+CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res, CacheReqPtr split_req)
 {
     Fault fault = NoFault;
 #if TRACING_ON
     ThreadID tid = inst->readTid();
 #endif
 
-    CacheReqPtr cache_req
-        = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
+    CacheReqPtr cache_req;
+    
+    if (split_req == NULL) {        
+        cache_req = dynamic_cast<CacheReqPtr>(reqMap[inst->getCurResSlot()]);
+    } else{
+        cache_req = split_req;
+    }        
+
     assert(cache_req);
 
     // Check for LL/SC and if so change command
@@ -522,7 +757,7 @@ CacheUnit::doCacheAccess(DynInstPtr inst, uint64_t *write_res)
     }
 
     cache_req->dataPkt = new CacheReqPacket(cache_req, cache_req->pktCmd,
-                                            Packet::Broadcast);
+                                            Packet::Broadcast, cache_req->instIdx);
 
     if (cache_req->dataPkt->isRead()) {
         cache_req->dataPkt->dataStatic(cache_req->reqData);
@@ -615,7 +850,16 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
 
     // Cast to correct request type
     CacheRequest *cache_req = dynamic_cast<CacheReqPtr>(
-        findRequest(cache_pkt->cacheReq->getInst()));
+        findSplitRequest(cache_pkt->cacheReq->getInst(), cache_pkt->instIdx));
+
+    if (!cache_req) {
+        warn(
+                "[tid:%u]: [sn:%i]: Can't find slot for cache access to addr. %08p\n",
+                cache_pkt->cacheReq->getInst()->readTid(),
+                cache_pkt->cacheReq->getInst()->seqNum,
+                cache_pkt->cacheReq->getInst()->getMemAddr());
+    }
+    
     assert(cache_req);
 
 
@@ -661,9 +905,27 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
             DPRINTF(InOrderCachePort,
                     "[tid:%u]: [sn:%i]: Processing cache access\n",
                     tid, inst->seqNum);
+            
+            if (inst->splitInst) {
+                inst->splitFinishCnt++;
+                
+                if (inst->splitFinishCnt == 2) {
 
-            inst->completeAcc(pkt);
-
+                    cache_req->memReq->setVirt(0/*inst->tid*/, 
+                                               inst->getMemAddr(),
+                                               inst->splitTotalSize,
+                                               0,
+                                               0);
+                    
+                    Packet split_pkt(cache_req->memReq, cache_req->pktCmd,
+                                     Packet::Broadcast);                    
+                    split_pkt.dataStatic(inst->splitMemData);
+                    inst->completeAcc(&split_pkt);
+                }                
+            } else {                            
+                inst->completeAcc(pkt);
+            }
+            
             if (inst->isLoad()) {
                 assert(cache_pkt->isRead());
 

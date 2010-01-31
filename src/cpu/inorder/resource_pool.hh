@@ -141,6 +141,7 @@ class ResourcePool {
 
     /** Returns a specific resource. */
     unsigned getResIdx(const std::string &res_name);
+    unsigned getResIdx(const ThePipeline::ResourceId &res_id);
 
     /** Returns a pointer to a resource */
     Resource* getResource(int res_idx) { return resources[res_idx]; }

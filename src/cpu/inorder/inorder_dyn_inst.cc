@@ -111,7 +111,11 @@ InOrderDynInst::initVars()
 {
     fetchMemReq = NULL;
     dataMemReq = NULL;
-
+    splitMemData = NULL;
+    split2ndAccess = false;
+    splitInst = false;
+    splitFinishCnt = 0;
+    
     effAddr = 0;
     physEffAddr = 0;
 
@@ -187,6 +191,10 @@ InOrderDynInst::~InOrderDynInst()
         delete traceData;
     }
 
+    if (splitMemData) {
+        delete splitMemData;
+    }
+    
     fault = NoFault;
 
     --instcount;

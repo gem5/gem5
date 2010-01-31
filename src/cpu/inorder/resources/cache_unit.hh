@@ -72,7 +72,10 @@ class CacheUnit : public Resource
         CompleteWriteData,
         Fetch,
         ReadData,
-        WriteData
+        WriteData,
+        InitSecondSplitRead,
+        InitSecondSplitWrite,
+        CompleteSecondSplitRead
     };
 
   public:
@@ -124,6 +127,9 @@ class CacheUnit : public Resource
                                         int res_idx, int slot_num,
                                         unsigned cmd);
 
+    ResReqPtr findRequest(DynInstPtr inst);
+    ResReqPtr findSplitRequest(DynInstPtr inst, int idx);
+
     void requestAgain(DynInstPtr inst, bool &try_request);
 
     int getSlot(DynInstPtr inst);
@@ -155,7 +161,7 @@ class CacheUnit : public Resource
 
     /** Returns a specific port. */
     Port *getPort(const std::string &if_name, int idx);
-
+    
     template <class T>
     Fault read(DynInstPtr inst, Addr addr, T &data, unsigned flags);
 
@@ -169,7 +175,7 @@ class CacheUnit : public Resource
     /** Read/Write on behalf of an instruction.
      *  curResSlot needs to be a valid value in instruction.
      */
-    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL);
+    Fault doCacheAccess(DynInstPtr inst, uint64_t *write_result=NULL, CacheReqPtr split_req=NULL);
 
     void prefetch(DynInstPtr inst);
 
@@ -237,17 +243,18 @@ class CacheRequest : public ResourceRequest
   public:
     CacheRequest(CacheUnit *cres, DynInstPtr inst, int stage_num, int res_idx,
                  int slot_num, unsigned cmd, int req_size,
-                 MemCmd::Command pkt_cmd, unsigned flags, int cpu_id)
+                 MemCmd::Command pkt_cmd, unsigned flags, int cpu_id, int idx)
         : ResourceRequest(cres, inst, stage_num, res_idx, slot_num, cmd),
           pktCmd(pkt_cmd), memReq(NULL), reqData(NULL), dataPkt(NULL),
           retryPkt(NULL), memAccComplete(false), memAccPending(false),
-          tlbStall(false)
+          tlbStall(false), splitAccess(false), splitAccessNum(-1),
+          split2ndAccess(false), instIdx(idx)
     { }
 
 
     virtual ~CacheRequest()
     {
-        if (reqData) {
+        if (reqData && !splitAccess) {
             delete [] reqData;
         }
     }
@@ -261,6 +268,11 @@ class CacheRequest : public ResourceRequest
         memAccComplete = completed;
     }
 
+    bool is2ndSplit() 
+    {
+        return split2ndAccess;
+    }
+    
     bool isMemAccComplete() { return memAccComplete; }
 
     void setMemAccPending(bool pending = true) { memAccPending = pending; }
@@ -276,19 +288,27 @@ class CacheRequest : public ResourceRequest
     bool memAccComplete;
     bool memAccPending;
     bool tlbStall;
+
+    bool splitAccess;
+    int splitAccessNum;
+    bool split2ndAccess;
+    int instIdx;    
+    
 };
 
 class CacheReqPacket : public Packet
 {
   public:
     CacheReqPacket(CacheRequest *_req,
-                   Command _cmd, short _dest)
-        : Packet(_req->memReq, _cmd, _dest), cacheReq(_req)
+                   Command _cmd, short _dest, int _idx = 0)
+        : Packet(_req->memReq, _cmd, _dest), cacheReq(_req), instIdx(_idx)
     {
 
     }
 
     CacheRequest *cacheReq;
+    int instIdx;
+    
 };
 
 #endif //__CPU_CACHE_UNIT_HH__

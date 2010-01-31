@@ -53,8 +53,8 @@ namespace ThePipeline {
     const unsigned StageWidth = 1;
     const unsigned BackEndStartStage = 2;
 
-    // Enumerated List of Resources The Pipeline Uses
-    enum ResourceList {
+    // List of Resources The Pipeline Uses
+    enum ResourceId {
        FetchSeq = 0,
        ICache,
        Decode,
@@ -94,6 +94,7 @@ namespace ThePipeline {
             stageNum(stage_num), resNum(res_num), cmd(_cmd),
             idx(_idx), priority(_priority)
         { }
+
         virtual ~ScheduleEntry(){}
 
         // Stage number to perform this service.
@@ -159,7 +160,6 @@ namespace ThePipeline {
                 stageNum, nextTaskPriority++, unit, request, param
             ));
         }
-
     };
 };
 

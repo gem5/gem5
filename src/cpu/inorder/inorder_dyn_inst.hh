@@ -330,6 +330,19 @@ class InOrderDynInst : public FastAlloc, public RefCounted
   public:
     Tick memTime;
 
+    PacketDataPtr splitMemData;
+    RequestPtr splitMemReq;    
+    int splitTotalSize;
+    int split2ndSize;
+    Addr split2ndAddr;
+    bool split2ndAccess;
+    uint8_t split2ndData;
+    PacketDataPtr split2ndDataPtr;
+    unsigned split2ndFlags;
+    bool splitInst;
+    int splitFinishCnt;
+    
+    
     ////////////////////////////////////////////////////////////
     //
     //  BASE INSTRUCTION INFORMATION.
@@ -468,7 +481,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         if (!resSched.empty()) {
             ThePipeline::ScheduleEntry* sked = resSched.top();
             resSched.pop();
-            delete sked;
+            if (sked != 0) {
+                delete sked;
+                
+            }            
         }
     }
 

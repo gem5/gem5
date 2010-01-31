@@ -262,15 +262,22 @@ Resource::findRequest(DynInstPtr inst)
     map<int, ResReqPtr>::iterator map_it = reqMap.begin();
     map<int, ResReqPtr>::iterator map_end = reqMap.end();
 
+    bool found = false;
+    ResReqPtr req = NULL;
+    
     while (map_it != map_end) {
         if ((*map_it).second &&
-            (*map_it).second->getInst() == inst) {
-            return (*map_it).second;
+            (*map_it).second->getInst() == inst) {            
+            req = (*map_it).second;
+            //return (*map_it).second;
+            assert(found == false);
+            found = true;            
         }
         map_it++;
     }
 
-    return NULL;
+    return req;    
+    //return NULL;
 }
 
 void

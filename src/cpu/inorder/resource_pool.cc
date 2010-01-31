@@ -181,6 +181,25 @@ ResourcePool::getResIdx(const std::string &res_name)
             return idx;
     }
 
+    panic("Can't find resource idx for: %s\n", res_name);
+    return 0;
+}
+
+unsigned
+ResourcePool::getResIdx(const ThePipeline::ResourceId &res_id)
+{
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        if (resources[idx]->getId() == res_id)
+            return idx;
+    }
+
+    // todo: change return value to int and return a -1 here
+    //       maybe even have enumerated type
+    //       panic for now...
+    panic("Can't find resource idx for: %i\n", res_id);
+
     return 0;
 }
 
