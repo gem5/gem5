@@ -79,8 +79,6 @@ GraduationUnit::execute(int slot_num)
                     "[tid:%i] Graduating instruction [sn:%i].\n",
                     tid, inst->seqNum);
 
-            DPRINTF(RefCount, "Refcount = %i.\n", 0/*inst->curCount()*/);
-
             // Release Non-Speculative "Block" on instructions that could not execute
             // because there was a non-speculative inst. active.
             // @TODO: Fix this functionality. Probably too conservative.

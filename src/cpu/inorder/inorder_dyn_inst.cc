@@ -164,7 +164,7 @@ InOrderDynInst::initVars()
 
     // Update Instruction Count for this instruction
     ++instcount;
-    if (instcount > 500) {
+    if (instcount > 100) {
         fatal("Number of Active Instructions in CPU is too high. "
                 "(Not Dereferencing Ptrs. Correctly?)\n");
     }
@@ -173,6 +173,12 @@ InOrderDynInst::initVars()
 
     DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created. (active insts: %i)\n",
             threadNumber, seqNum, instcount);
+}
+
+void
+InOrderDynInst::resetInstCount()
+{
+    instcount = 0;
 }
 
 

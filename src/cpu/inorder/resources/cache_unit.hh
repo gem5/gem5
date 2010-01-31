@@ -135,8 +135,6 @@ class CacheUnit : public Resource
 
     int getSlot(DynInstPtr inst);
 
-    void freeSlot(int slot_num);
-
     /** Execute the function of this resource. The Default is action
      *  is to do nothing. More specific models will derive from this
      *  class and define their own execute function.
@@ -184,6 +182,9 @@ class CacheUnit : public Resource
 
     uint64_t getMemData(Packet *packet);
 
+    void setAddrDependency(DynInstPtr inst);
+    void removeAddrDependency(DynInstPtr inst);
+    
   protected:
     /** Cache interface. */
     CachePort *cachePort;

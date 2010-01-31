@@ -101,8 +101,6 @@ PipelineStage::setCPU(InOrderCPU *cpu_ptr)
 {
     cpu = cpu_ptr;
 
-    dummyBufferInst = new InOrderDynInst(cpu_ptr, NULL, 0, 0, 0);
-
     DPRINTF(InOrderStage, "Set CPU pointer.\n");
 
     tracer = dynamic_cast<Trace::InOrderTrace *>(cpu->getTracer());
@@ -388,6 +386,8 @@ PipelineStage::squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid)
                     prevStage->insts[i]->seqNum,
                     prevStage->insts[i]->readPC());
             prevStage->insts[i]->setSquashed();
+
+            prevStage->insts[i] = cpu->dummyBufferInst;
         }
     }
 }
@@ -609,7 +609,7 @@ PipelineStage::sortInsts()
 
             skidBuffer[tid].push(prevStage->insts[i]);
 
-            prevStage->insts[i] = dummyBufferInst;
+            prevStage->insts[i] = cpu->dummyBufferInst;
 
         }
     }
@@ -816,7 +816,7 @@ PipelineStage::processThread(bool &status_change, ThreadID tid)
     //     call processInsts()
     // If status is Unblocking,
     //     buffer any instructions coming from fetch
-    //     continue trying to empty skid buffer
+   //     continue trying to empty skid buffer
     //     check if stall conditions have passed
 
     // Stage should try to process as many instructions as its bandwidth
@@ -960,6 +960,8 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                 }
 
                 reqs_processed++;                
+
+                req->stagePasses++;                
             } else {
                 DPRINTF(InOrderStage, "[tid:%i]: [sn:%i] request to %s failed."
                         "\n", tid, inst->seqNum, cpu->resPool->name(res_num));
@@ -969,7 +971,7 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                 if (req->isMemStall() && 
                     cpu->threadModel == InOrderCPU::SwitchOnCacheMiss) {
                     // Save Stalling Instruction
-                    DPRINTF(ThreadModel, "[tid:%i] Detected cache miss.\n", tid);
+                    DPRINTF(ThreadModel, "[tid:%i] [sn:%i] Detected cache miss.\n", tid, inst->seqNum);
 
                     DPRINTF(InOrderStage, "Inserting [tid:%i][sn:%i] into switch out buffer.\n",
                              tid, inst->seqNum);                    
@@ -993,6 +995,20 @@ PipelineStage::processInstSchedule(DynInstPtr inst,int &reqs_processed)
                             " cache miss.\n");
                     cpu->activateNextReadyContext();                                                                                               
                 }
+                
+                // Mark request for deletion
+                // if it isnt currently being used by a resource
+                if (!req->hasSlot()) {                   
+                    DPRINTF(InOrderStage, "[sn:%i] Deleting Request, has no slot in resource.\n",
+                            inst->seqNum);
+                    
+                    cpu->reqRemoveList.push(req);
+                } else {
+                    DPRINTF(InOrderStage, "[sn:%i] Ignoring Request Deletion, in resource [slot:%i].\n",
+                            inst->seqNum, req->getSlot());
+                    //req = cpu->dummyReq[tid];                    
+                }
+                
                 
                 break;
             }

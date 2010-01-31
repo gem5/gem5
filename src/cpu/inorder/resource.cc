@@ -101,12 +101,6 @@ Resource::slotsInUse()
 void
 Resource::freeSlot(int slot_idx)
 {
-    DPRINTF(RefCount, "Removing [tid:%i] [sn:%i]'s request from resource "
-            "[slot:%i].\n",
-            reqMap[slot_idx]->inst->readTid(),
-            reqMap[slot_idx]->inst->seqNum,
-            slot_idx);
-
     // Put slot number on this resource's free list
     availSlots.push_back(slot_idx);
 
@@ -181,7 +175,7 @@ Resource::request(DynInstPtr inst)
     // See if the resource is already serving this instruction.
     // If so, use that request;
     bool try_request = false;
-    int slot_num;
+    int slot_num = -1;
     int stage_num;
     ResReqPtr inst_req = findRequest(inst);
 
@@ -440,6 +434,10 @@ ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst,
         }
         
 #endif
+
+        stagePasses = 0;
+        complSlotNum = -1;
+        
 }
 
 ResourceRequest::~ResourceRequest()
@@ -454,17 +452,29 @@ ResourceRequest::~ResourceRequest()
 void
 ResourceRequest::done(bool completed)
 {
-    DPRINTF(Resource, "%s done with request from [sn:%i] [tid:%i].\n",
-            res->name(), inst->seqNum, inst->readTid());
+    DPRINTF(Resource, "%s [slot:%i] done with request from [sn:%i] [tid:%i].\n",
+            res->name(), slotNum, inst->seqNum, inst->readTid());
 
     setCompleted(completed);
 
-    // Add to remove list
-    res->cpu->reqRemoveList.push(res->reqMap[slotNum]);
-
+    // Used for debugging purposes
+    if (completed) {
+        complSlotNum = slotNum;
+    
+        // Would like to start a convention such as all requests deleted in resources/pipeline
+        // but a little more complex then it seems...
+        // For now, all COMPLETED requests deleted in resource..
+        //          all FAILED requests deleted in pipeline stage
+        //          *all SQUASHED requests deleted in resource
+        res->cpu->reqRemoveList.push(res->reqMap[slotNum]);
+    }
+    
     // Free Slot So Another Instruction Can Use This Resource
     res->freeSlot(slotNum);
 
+    // change slot # to -1, since we check slotNum to see if request is still valid
+    slotNum = -1;
+        
     res->instReqsProcessed++;
 }
 

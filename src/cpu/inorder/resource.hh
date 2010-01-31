@@ -331,6 +331,8 @@ class ResourceRequest
      */
     void done(bool completed = true);
 
+    short stagePasses;
+    
     /////////////////////////////////////////////
     //
     // GET RESOURCE REQUEST IDENTIFICATION / INFO
@@ -339,8 +341,11 @@ class ResourceRequest
     /** Get Resource Index */
     int getResIdx() { return resIdx; }
 
+       
     /** Get Slot Number */
     int getSlot() { return slotNum; }
+    int getComplSlot() { return complSlotNum; }
+    bool hasSlot()  { return slotNum >= 0; }     
 
     /** Get Stage Number */
     int getStageNum() { return stageNum; }
@@ -363,6 +368,9 @@ class ResourceRequest
     /** Instruction being used */
     DynInstPtr inst;
 
+    /** Not guaranteed to be set, used for debugging */
+    InstSeqNum seqNum;
+    
     /** Fault Associated With This Resource Request */
     Fault fault;
 
@@ -396,7 +404,8 @@ class ResourceRequest
     int stageNum;
     int resIdx;
     int slotNum;
-
+    int complSlotNum;
+    
     /** Resource Request Status */
     bool completed;
     bool squashed;

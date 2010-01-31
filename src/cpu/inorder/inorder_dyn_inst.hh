@@ -1032,14 +1032,15 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
+    void resetInstCount();
+    
     /** Dumps out contents of this BaseDynInst. */
     void dump();
 
     /** Dumps out contents of this BaseDynInst into given string. */
     void dump(std::string &outstring);
 
-
-  //inline int curCount() { return curCount(); }
+    //inline int curCount() { return curCount(); }
 };
 
 

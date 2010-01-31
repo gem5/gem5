@@ -155,14 +155,11 @@ CacheUnit::getSlot(DynInstPtr inst)
             return -1;
 
         inst->memTime = curTick;
-        addrList[tid].push_back(req_addr);
-        addrMap[tid][req_addr] = inst->seqNum;
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
-                inst->readTid(), inst->seqNum, req_addr);
+        setAddrDependency(inst);            
         return new_slot;
     } else {
         // Allow same instruction multiple accesses to same address
+        // should only happen maybe after a squashed inst. needs to replay
         if (addrMap[tid][req_addr] == inst->seqNum) {
             int new_slot = Resource::getSlot(inst);
         
@@ -183,31 +180,45 @@ CacheUnit::getSlot(DynInstPtr inst)
 }
 
 void
-CacheUnit::freeSlot(int slot_num)
+CacheUnit::setAddrDependency(DynInstPtr inst)
 {
-    ThreadID tid = reqMap[slot_num]->inst->readTid();
+    Addr req_addr = inst->getMemAddr();
+    ThreadID tid = inst->readTid();
 
-    vector<Addr>::iterator vect_it = 
-        find(addrList[tid].begin(), addrList[tid].end(),
-             reqMap[slot_num]->inst->getMemAddr());
-    
-    assert(vect_it != addrList[tid].end() || 
-           reqMap[slot_num]->inst->splitInst);
-
+    addrList[tid].push_back(req_addr);
+    addrMap[tid][req_addr] = inst->seqNum;
     DPRINTF(InOrderCachePort,
-            "[tid:%i]: Address %08p removed from dependency list\n",
-            reqMap[slot_num]->inst->readTid(), (*vect_it));
+            "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
+            inst->readTid(), inst->seqNum, req_addr);
+    DPRINTF(AddrDep,
+            "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
+            inst->readTid(), inst->seqNum, req_addr);
+}
+
+void
+CacheUnit::removeAddrDependency(DynInstPtr inst)
+{
+    ThreadID tid = inst->readTid();
+
+    Addr mem_addr = inst->getMemAddr();
+    
+    // Erase from Address List
+    vector<Addr>::iterator vect_it = find(addrList[tid].begin(), addrList[tid].end(),
+                                          mem_addr);
+    assert(vect_it != addrList[tid].end() || inst->splitInst);
 
     if (vect_it != addrList[tid].end()) {
-        
-        DPRINTF(InOrderCachePort,
-                "[tid:%i]: Address %08p removed from dependency list\n",
-                reqMap[slot_num]->inst->readTid(), (*vect_it));
- 
-        addrList[tid].erase(vect_it);
-    }   
+        DPRINTF(AddrDep,
+                "[tid:%i]: [sn:%i] Address %08p removed from dependency list\n",
+                inst->readTid(), inst->seqNum, (*vect_it));
 
-    Resource::freeSlot(slot_num);
+        addrList[tid].erase(vect_it);
+
+        // Erase From Address Map (Used for Debugging)
+        addrMap[tid].erase(addrMap[tid].find(mem_addr));
+    }
+    
+
 }
 
 ResReqPtr
@@ -687,8 +698,14 @@ CacheUnit::execute(int slot_num)
             DPRINTF(InOrderCachePort, "[tid:%i]: Instruction [sn:%i] is: %s\n",
                     tid, seq_num, inst->staticInst->disassemble(inst->PC));
 
+            removeAddrDependency(inst);
+            
             delete cache_req->dataPkt;
-            //cache_req->setMemStall(false);            
+            
+            // Do not stall and switch threads for fetch... for now..
+            // TODO: We need to detect cache misses for latencies > 1
+            // cache_req->setMemStall(false);            
+            
             cache_req->done();
         } else {
             DPRINTF(InOrderCachePort,
@@ -711,6 +728,7 @@ CacheUnit::execute(int slot_num)
         if (cache_req->isMemAccComplete() ||
             inst->isDataPrefetch() ||
             inst->isInstPrefetch()) {
+            removeAddrDependency(inst);
             cache_req->setMemStall(false);            
             cache_req->done();
         } else {
@@ -729,6 +747,7 @@ CacheUnit::execute(int slot_num)
         if (cache_req->isMemAccComplete() ||
             inst->isDataPrefetch() ||
             inst->isInstPrefetch()) {
+            removeAddrDependency(inst);
             cache_req->setMemStall(false);            
             cache_req->done();
         } else {
@@ -747,6 +766,7 @@ CacheUnit::execute(int slot_num)
         if (cache_req->isMemAccComplete() ||
             inst->isDataPrefetch() ||
             inst->isInstPrefetch()) {
+            removeAddrDependency(inst);
             cache_req->setMemStall(false);            
             cache_req->done();
         } else {
@@ -911,6 +931,10 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
                 cache_pkt->cacheReq->getInst()->readTid(),
                 cache_pkt->cacheReq->getInst()->seqNum);
+        DPRINTF(RefCount,
+                "Ignoring completion of squashed access, [tid:%i] [sn:%i]\n",
+                cache_pkt->cacheReq->getTid(),
+                cache_pkt->cacheReq->seqNum);
 
         cache_pkt->cacheReq->done();
         delete cache_pkt;
@@ -1154,6 +1178,14 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                     "[tid:%i] Squashing request from [sn:%i]\n",
                     req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
 
+            if (req_ptr->isSquashed()) {
+                DPRINTF(AddrDep, "Request for [tid:%i] [sn:%i] already squashed, ignoring squash process.\n",
+                        req_ptr->getInst()->readTid(),
+                        req_ptr->getInst()->seqNum);
+                map_it++;                
+                continue;                
+            }
+            
             req_ptr->setSquashed();
 
             req_ptr->getInst()->setSquashed();
@@ -1178,7 +1210,29 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
 
                 // Mark slot for removal from resource
                 slot_remove_list.push_back(req_ptr->getSlot());
+
+                DPRINTF(InOrderCachePort,
+                        "[tid:%i] Squashing request from [sn:%i]\n",
+                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
+            } else {
+                DPRINTF(InOrderCachePort,
+                        "[tid:%i] Request from [sn:%i] squashed, but still pending completion.\n",
+                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
+                DPRINTF(RefCount,
+                        "[tid:%i] Request from [sn:%i] squashed (split:%i), but still pending completion.\n",
+                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum,
+                        req_ptr->getInst()->splitInst);
             }
+
+            if (req_ptr->getInst()->validMemAddr()) {                    
+                DPRINTF(AddrDep, "Squash of [tid:%i] [sn:%i], attempting to remove addr. %08p dependencies.\n",
+                        req_ptr->getInst()->readTid(),
+                        req_ptr->getInst()->seqNum, 
+                        req_ptr->getInst()->getMemAddr());
+                
+                removeAddrDependency(req_ptr->getInst());
+            }
+
         }
 
         map_it++;
@@ -1320,3 +1374,4 @@ CacheUnit::write(DynInstPtr inst, int32_t data, Addr addr, unsigned flags,
 {
     return write(inst, (uint32_t)data, addr, flags, res);
 }
+

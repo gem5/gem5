@@ -191,6 +191,7 @@ UseDefUnit::execute(int slot_idx)
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
                             "[sn:%i] to write\n",
                             tid, outReadSeqNum[tid]);
+                    ud_req->done(false);
                 }
 
             } else {
@@ -249,6 +250,7 @@ UseDefUnit::execute(int slot_idx)
                         DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
                                 "[sn:%i] to forward\n",
                                 tid, outReadSeqNum[tid]);
+                        ud_req->done(false);
                     }
                 } else {
                     DPRINTF(InOrderUseDef, "[tid:%i]: Source register idx: %i"
@@ -258,6 +260,7 @@ UseDefUnit::execute(int slot_idx)
                             "register (idx=%i)\n",
                             tid, reg_idx);
                     outReadSeqNum[tid] = inst->seqNum;
+                    ud_req->done(false);
                 }
             }
         }
@@ -360,6 +363,7 @@ UseDefUnit::execute(int slot_idx)
                     DPRINTF(InOrderStall, "STALL: [tid:%i]: waiting for "
                             "[sn:%i] to read\n",
                             tid, outReadSeqNum);
+                    ud_req->done(false);
                 }
             } else {
                 DPRINTF(InOrderUseDef, "[tid:%i]: Dest. register idx: %i is "
@@ -369,6 +373,7 @@ UseDefUnit::execute(int slot_idx)
                         "register (idx=%i)\n",
                         tid, reg_idx);
                 outWriteSeqNum[tid] = inst->seqNum;
+                ud_req->done(false);
             }
         }
         break;
@@ -402,12 +407,16 @@ UseDefUnit::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
                     req_ptr->getInst()->readTid(),
                     req_ptr->getInst()->seqNum);
 
-            regDepMap[tid]->remove(req_ptr->getInst());
-
             int req_slot_num = req_ptr->getSlot();
 
-            if (latency > 0)
+            if (latency > 0) {                
+                assert(0);
+                
                 unscheduleEvent(req_slot_num);
+            }
+            
+            // Mark request for later removal
+            cpu->reqRemoveList.push(req_ptr);
 
             // Mark slot for removal from resource
             slot_remove_list.push_back(req_ptr->getSlot());

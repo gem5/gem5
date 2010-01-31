@@ -333,6 +333,12 @@ InOrderCPU::InOrderCPU(Params *params)
                                             0);        
     }
 
+    dummyReqInst = new InOrderDynInst(this, NULL, 0, 0, 0);
+    dummyReqInst->setSquashed();
+
+    dummyBufferInst = new InOrderDynInst(this, NULL, 0, 0, 0);
+    dummyBufferInst->setSquashed();
+    
     lastRunningCycle = curTick;
 
     // Reset CPU to reset state.
@@ -343,6 +349,8 @@ InOrderCPU::InOrderCPU(Params *params)
     reset();
 #endif
 
+    dummyBufferInst->resetInstCount();
+    
     // Schedule First Tick Event, CPU will reschedule itself from here on out.
     scheduleTickEvent(0);
 }
@@ -1176,6 +1184,8 @@ InOrderCPU::instDone(DynInstPtr inst, ThreadID tid)
     removeInst(inst);
 }
 
+// currently unused function, but substitute repetitive code w/this function
+// call
 void
 InOrderCPU::addToRemoveList(DynInstPtr &inst)
 {
@@ -1194,6 +1204,10 @@ InOrderCPU::removeInst(DynInstPtr &inst)
     removeInstsThisCycle = true;
 
     // Remove the instruction.
+
+    DPRINTF(RefCount, "Pushing instruction [tid:%i] PC %#x "
+            "[sn:%lli] to remove list\n",
+            inst->threadNumber, inst->readPC(), inst->seqNum);
     removeList.push(inst->getInstListIt());
 }
 
@@ -1208,7 +1222,7 @@ InOrderCPU::removeInstsUntil(const InstSeqNum &seq_num, ThreadID tid)
 
     inst_iter--;
 
-    DPRINTF(InOrderCPU, "Deleting instructions from CPU instruction "
+    DPRINTF(InOrderCPU, "Squashing instructions from CPU instruction "
             "list that are from [tid:%i] and above [sn:%lli] (end=%lli).\n",
             tid, seq_num, (*inst_iter)->seqNum);
 
@@ -1238,6 +1252,9 @@ InOrderCPU::squashInstIt(const ListIt &instIt, ThreadID tid)
 
         (*instIt)->setSquashed();
 
+        DPRINTF(RefCount, "Pushing instruction [tid:%i] PC %#x "
+                "[sn:%lli] to remove list\n",
+                (*instIt)->threadNumber, (*instIt)->readPC(), (*instIt)->seqNum);
         removeList.push(instIt);
     }
 }
@@ -1251,7 +1268,7 @@ InOrderCPU::cleanUpRemovedInsts()
                 "[tid:%i] [sn:%lli] PC %#x\n",
                 (*removeList.front())->threadNumber,
                 (*removeList.front())->seqNum,
-                (*removeList.front())->readPC());
+               (*removeList.front())->readPC());
 
         DynInstPtr inst = *removeList.front();
         ThreadID tid = inst->threadNumber;
@@ -1279,11 +1296,6 @@ InOrderCPU::cleanUpRemovedInsts()
         instList[tid].erase(removeList.front());
 
         removeList.pop();
-
-        DPRINTF(RefCount, "pop from remove list: [sn:%i]: Refcount = %i.\n",
-                inst->seqNum,
-                0/*inst->curCount()*/);
-
     }
 
     removeInstsThisCycle = false;
@@ -1295,22 +1307,18 @@ InOrderCPU::cleanUpRemovedReqs()
     while (!reqRemoveList.empty()) {
         ResourceRequest *res_req = reqRemoveList.front();
 
-        DPRINTF(RefCount, "[tid:%i]: Removing Request, "
-                "[sn:%lli] [slot:%i] [stage_num:%i] [res:%s] [refcount:%i].\n",
+        DPRINTF(InOrderCPU, "[tid:%i] [sn:%lli]: Removing Request "
+                "[stage_num:%i] [res:%s] [slot:%i] [completed:%i].\n",
                 res_req->inst->threadNumber,
                 res_req->inst->seqNum,
-                res_req->getSlot(),
                 res_req->getStageNum(),
                 res_req->res->name(),
-                0/*res_req->inst->curCount()*/);
+                (res_req->isCompleted()) ? res_req->getComplSlot() : res_req->getSlot(),
+                res_req->isCompleted());
 
         reqRemoveList.pop();
 
         delete res_req;
-
-        DPRINTF(RefCount, "after remove request: [sn:%i]: Refcount = %i.\n",
-                res_req->inst->seqNum,
-                0/*res_req->inst->curCount()*/);
     }
 }
 

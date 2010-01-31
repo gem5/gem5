@@ -247,6 +247,8 @@ class InOrderCPU : public BaseCPU
     /** Instruction used to signify that there is no *real* instruction in 
         buffer slot */
     DynInstPtr dummyInst[ThePipeline::MaxThreads];
+    DynInstPtr dummyBufferInst;
+    DynInstPtr dummyReqInst;
 
     /** Used by resources to signify a denied access to a resource. */
     ResourceRequest *dummyReq[ThePipeline::MaxThreads];

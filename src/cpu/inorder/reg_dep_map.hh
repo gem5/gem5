@@ -88,6 +88,8 @@ class RegDepMap
     /** Size of Dependency of Map */
     int depSize(unsigned idx);
 
+    void dump();
+    
   protected:
     // Eventually make this a map of lists for
     // efficiency sake!
