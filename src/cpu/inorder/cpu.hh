@@ -100,6 +100,15 @@ class InOrderCPU : public BaseCPU
     /** Type of core that this is */
     std::string coreType;
 
+    // Only need for SE MODE
+    enum ThreadModel {
+        Single,
+        SMT,
+        SwitchOnCacheMiss
+    };
+    
+    ThreadModel threadModel;
+
     int readCpuId() { return cpu_id; }
 
     void setCpuId(int val) { cpu_id = val; }
@@ -117,7 +126,6 @@ class InOrderCPU : public BaseCPU
 
     /** Overall CPU status. */
     Status _status;
-
   private:
     /** Define TickEvent for the CPU */
     class TickEvent : public Event

@@ -197,7 +197,7 @@ InOrderCPU::InOrderCPU(Params *params)
       deferRegistration(false/*params->deferRegistration*/),
       stageTracing(params->stageTracing),
       numVirtProcs(1)
-{
+{    
     ThreadID active_threads;
     cpu_params = params;
 
@@ -216,6 +216,15 @@ InOrderCPU::InOrderCPU(Params *params)
               "in your InOrder implementation or "
               "edit your workload size.");
     }
+
+    if (active_threads > 1) {
+        threadModel = (InOrderCPU::ThreadModel) params->threadModel;
+    } else {
+        threadModel = Single;
+    }
+     
+        
+    
 #endif
 
     // Bind the fetch & data ports from the resource pool.
