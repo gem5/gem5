@@ -52,7 +52,8 @@ InstBuffer::regStats()
 {
     instsBypassed
         .name(name() + ".instsBypassed")
-        .desc("Number of Instructions Bypassed.");
+        .desc("Number of Instructions Bypassed.")
+        .prereq(instsBypassed);    
 
     Resource::regStats();
 }

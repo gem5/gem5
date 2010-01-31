@@ -81,7 +81,8 @@ Resource::regStats()
     instReqsProcessed
         .name(name() + ".instReqsProcessed")
         .desc("Number of Instructions Requests that completed in "
-              "this resource.");
+              "this resource.")
+        .prereq(instReqsProcessed);
 }
 
 int
