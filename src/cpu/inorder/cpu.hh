@@ -89,7 +89,7 @@ class InOrderCPU : public BaseCPU
     typedef TimeBuffer<InterStageStruct> StageQueue;
 
     friend class Resource;
-
+    
   public:
     /** Constructs a CPU with the given parameters. */
     InOrderCPU(Params *params);
@@ -175,6 +175,8 @@ class InOrderCPU : public BaseCPU
     // pool event.
     enum CPUEventType {
         ActivateThread,
+        ActivateNextReadyThread,
+        DeactivateThread,
         DeallocateThread,
         SuspendThread,
         DisableThreads,
@@ -360,6 +362,10 @@ class InOrderCPU : public BaseCPU
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay = 0);
     void activateThread(ThreadID tid);
+
+    /** Add Thread to Active Threads List. */
+    void activateNextReadyContext(int delay = 0);
+    void activateNextReadyThread();
 
     /** Remove Thread from Active Threads List */
     void suspendContext(ThreadID tid, int delay = 0);
@@ -612,6 +618,9 @@ class InOrderCPU : public BaseCPU
     /** Current Threads List */
     std::list<ThreadID> currentThreads;
 
+    /** Ready Threads List */
+    std::list<ThreadID> readyThreads;
+
     /** Suspended Threads List */
     std::list<ThreadID> suspendedThreads;
 
@@ -633,6 +642,18 @@ class InOrderCPU : public BaseCPU
     /** Number of Active Threads in the CPU */
     ThreadID numActiveThreads() { return activeThreads.size(); }
 
+    /** Thread id of active thread
+     *  Only used for SwitchOnCacheMiss model. Assumes only 1 thread active
+     */
+    ThreadID activeThreadId() 
+    { 
+        if (numActiveThreads() > 0)
+            return activeThreads.front();
+        else
+            return -1;
+    }
+    
+     
     /** Records that there was time buffer activity this cycle. */
     void activityThisCycle() { activityRec.activity(); }
 

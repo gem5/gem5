@@ -96,6 +96,8 @@ InOrderCPU::CPUEvent::CPUEvent(InOrderCPU *_cpu, CPUEventType e_type,
 std::string InOrderCPU::eventNames[NumCPUEvents] =
 {
     "ActivateThread",
+    "ActivateNextReadyThread",
+    "DeactivateThread",
     "DeallocateThread",
     "SuspendThread",
     "DisableThreads",
@@ -119,9 +121,18 @@ InOrderCPU::CPUEvent::process()
 
       //@TODO: Consider Implementing "Suspend Thread" as Separate from 
       //Deallocate
+      case ActivateNextReadyThread:
+        cpu->activateNextReadyThread();
+        break;
+
+      case DeactivateThread:
+        cpu->deactivateThread(tid);
+        break;
+
       case SuspendThread: // Suspend & Deallocate are same for now.
-        //cpu->suspendThread(tid);
-        //break;
+        cpu->suspendThread(tid);
+        break;
+
       case DeallocateThread:
         cpu->deallocateThread(tid);
         break;
@@ -225,6 +236,14 @@ InOrderCPU::InOrderCPU(Params *params)
 
     if (active_threads > 1) {
         threadModel = (InOrderCPU::ThreadModel) params->threadModel;
+
+        if (threadModel == SMT) {
+            DPRINTF(InOrderCPU, "Setting Thread Model to SMT.\n");            
+        } else if (threadModel == SwitchOnCacheMiss) {
+            DPRINTF(InOrderCPU, "Setting Thread Model to "
+                    "Switch On Cache Miss\n");
+        }
+        
     } else {
         threadModel = Single;
     }
@@ -628,8 +647,8 @@ InOrderCPU::scheduleCpuEvent(CPUEventType c_event, Fault fault,
     }
 
     // Broadcast event to the Resource Pool
-    DynInstPtr dummy_inst =
-        new InOrderDynInst(this, NULL, getNextEventNum(), tid);
+    // Need to reset tid just in case this is a dummy instruction
+    inst->setTid(tid);        
     resPool->scheduleEvent(c_event, inst, 0, 0, tid);
 }
 
@@ -644,9 +663,38 @@ InOrderCPU::isThreadActive(ThreadID tid)
 
 
 void
+InOrderCPU::activateNextReadyThread()
+{
+    if (readyThreads.size() >= 1) {          
+        ThreadID ready_tid = readyThreads.front();
+        
+        // Activate in Pipeline
+        activateThread(ready_tid);                        
+        
+        // Activate in Resource Pool
+        resPool->activateAll(ready_tid);
+        
+        list<ThreadID>::iterator ready_it =
+            std::find(readyThreads.begin(), readyThreads.end(), ready_tid);
+        readyThreads.erase(ready_it);                        
+    } else {
+        DPRINTF(InOrderCPU,
+                "No Ready Threads to Activate.\n");
+    }        
+}
+
+void
 InOrderCPU::activateThread(ThreadID tid)
 {
-    if (!isThreadActive(tid)) {
+    if (threadModel == SwitchOnCacheMiss &&
+        numActiveThreads() == 1) {
+        DPRINTF(InOrderCPU,
+                "Ignoring Activation of [tid:%i]. Placing on "
+                "ready list\n", tid);        
+
+        readyThreads.push_back(tid);
+        
+    } else if (!isThreadActive(tid)) {
         DPRINTF(InOrderCPU,
                 "Adding Thread %i to active threads list in CPU.\n", tid);
         activeThreads.push_back(tid);
@@ -892,6 +940,23 @@ InOrderCPU::activateContext(ThreadID tid, int delay)
     _status = Running;
 }
 
+void
+InOrderCPU::activateNextReadyContext(int delay)
+{
+    DPRINTF(InOrderCPU,"Activating next ready thread\n");
+
+    // NOTE: Add 5 to the event priority so that we always activate
+    // threads after we've finished deactivating, squashing,etc.
+    // other threads
+    scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst, 
+                     delay, 5);
+
+    // Be sure to signal that there's some activity so the CPU doesn't
+    // deschedule itself.
+    activityRec.activity();
+
+    _status = Running;
+}
 
 void
 InOrderCPU::suspendContext(ThreadID tid, int delay)
@@ -903,8 +968,9 @@ InOrderCPU::suspendContext(ThreadID tid, int delay)
 void
 InOrderCPU::suspendThread(ThreadID tid)
 {
-    DPRINTF(InOrderCPU,"[tid: %i]: Suspended ...\n", tid);
+    DPRINTF(InOrderCPU, "[tid: %i]: Placing on Suspended Threads List...\n", tid);
     deactivateThread(tid);
+    suspendedThreads.push_back(tid);    
 }
 
 void

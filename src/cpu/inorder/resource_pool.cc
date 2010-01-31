@@ -212,7 +212,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       case InOrderCPU::ActivateThread:
         {
             DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event "
-                    "for tick %i.\n", curTick + delay);
+                    "for tick %i, [tid:%i].\n", curTick + delay, 
+                    inst->readTid());
             ResPoolEvent *res_pool_event = 
                 new ResPoolEvent(this,
                                  e_type,
@@ -295,7 +296,6 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
       default:
         DPRINTF(Resource, "Ignoring Unrecognized CPU Event (%s).\n", 
                 InOrderCPU::eventNames[e_type]);
-        ; // If Resource Pool doesnt recognize event, we ignore it.
     }
 }
 
@@ -310,7 +310,7 @@ ResourcePool::squashAll(DynInstPtr inst, int stage_num,
                         InstSeqNum done_seq_num, ThreadID tid)
 {
     DPRINTF(Resource, "[tid:%i] Stage %i squashing all instructions above "
-            "[sn:%i].\n", stage_num, tid, done_seq_num);
+            "[sn:%i].\n", tid, stage_num, done_seq_num);
 
     int num_resources = resources.size();
 
@@ -337,14 +337,24 @@ ResourcePool::squashDueToMemStall(DynInstPtr inst, int stage_num,
 void
 ResourcePool::activateAll(ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Activation to all "
-            "resources.\n", tid);
-
-    int num_resources = resources.size();
-
-    for (int idx = 0; idx < num_resources; idx++) {
-        resources[idx]->activateThread(tid);
-    }
+    bool do_activate = cpu->threadModel != InOrderCPU::SwitchOnCacheMiss ||
+        cpu->numActiveThreads() < 1 ||
+        cpu->activeThreadId() == tid;
+    
+        
+    if (do_activate) {
+        DPRINTF(Resource, "[tid:%i] Broadcasting Thread Activation to all "
+                    "resources.\n", tid);
+ 
+        int num_resources = resources.size();
+ 
+        for (int idx = 0; idx < num_resources; idx++) {
+            resources[idx]->activateThread(tid);
+        }
+    } else {
+        DPRINTF(Resource, "[tid:%i] Ignoring Thread Activation to all "
+                    "resources.\n", tid);
+     }
 }
 
 void
@@ -374,7 +384,7 @@ ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
 }
 
 ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool)
-    : Event(CPU_Tick_Pri), resPool(_resPool),
+    : Event((Event::Priority)((unsigned)CPU_Tick_Pri+5)), resPool(_resPool),
       eventType((InOrderCPU::CPUEventType) Default)
 { }
 

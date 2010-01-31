@@ -951,7 +951,15 @@ PipelineStage::processInstSchedule(DynInstPtr inst)
                     // Remove Thread From Pipeline & Resource Pool
                     inst->squashingStage = stageNum;         
                     inst->bdelaySeqNum = inst->seqNum;                               
-                    cpu->squashFromMemStall(inst, tid);                    
+                    cpu->squashFromMemStall(inst, tid);  
+
+                    // Switch On Cache Miss
+                    //=====================
+                    // Suspend Thread at end of cycle
+                    cpu->suspendContext(tid);                    
+
+                    // Activate Next Ready Thread at end of cycle
+                    cpu->activateNextReadyContext();                                                                                               
                 }
                 
                 break;
