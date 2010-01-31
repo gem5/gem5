@@ -448,11 +448,6 @@ ResourcePool::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
     }
 }
 
-ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool)
-    : Event((Event::Priority)((unsigned)CPU_Tick_Pri+5)), resPool(_resPool),
-      eventType((InOrderCPU::CPUEventType) Default)
-{ }
-
 ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
                                          InOrderCPU::CPUEventType e_type,
                                          DynInstPtr _inst,

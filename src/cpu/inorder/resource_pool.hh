@@ -86,9 +86,6 @@ class ResourcePool {
 
       public:
         /** Constructs a resource event. */
-        ResPoolEvent(ResourcePool *_resPool);
-
-        /** Constructs a resource event. */
         ResPoolEvent(ResourcePool *_resPool,
                      InOrderCPU::CPUEventType e_type,
                      DynInstPtr _inst,

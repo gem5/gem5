@@ -211,6 +211,7 @@ InOrderCPU::InOrderCPU(Params *params)
               "edit your workload size.");
     }
 
+    
     if (active_threads > 1) {
         threadModel = (InOrderCPU::ThreadModel) params->threadModel;
 
@@ -257,6 +258,9 @@ InOrderCPU::InOrderCPU(Params *params)
             Process* dummy_proc = params->workload[0];
             thread[tid] = new Thread(this, tid, dummy_proc);
         }
+        
+        // Eventually set this with parameters...
+        asid[tid] = tid;
 #endif
 
         // Setup the TC that will serve as the interface to the threads/CPU.
@@ -313,13 +317,23 @@ InOrderCPU::InOrderCPU(Params *params)
         isa[tid].clear();
 
         isa[tid].expandForMultithreading(numThreads, 1/*numVirtProcs*/);
+
+        // Define dummy instructions and resource requests to be used.
+        dummyInst[tid] = new InOrderDynInst(this, 
+                                            thread[tid], 
+                                            0, 
+                                            tid, 
+                                            asid[tid]);
+
+        dummyReq[tid] = new ResourceRequest(resPool->getResource(0), 
+                                            dummyInst[tid], 
+                                            0, 
+                                            0, 
+                                            0, 
+                                            0);        
     }
 
     lastRunningCycle = curTick;
-
-    // Define dummy instructions and resource requests to be used.
-    dummyInst = new InOrderDynInst(this, NULL, 0, 0);
-    dummyReq = new ResourceRequest(resPool->getResource(0), NULL, 0, 0, 0, 0);
 
     // Reset CPU to reset state.
 #if FULL_SYSTEM
@@ -585,7 +599,7 @@ void
 InOrderCPU::trap(Fault fault, ThreadID tid, int delay)
 {
     //@ Squash Pipeline during TRAP
-    scheduleCpuEvent(Trap, fault, tid, dummyInst, delay);
+    scheduleCpuEvent(Trap, fault, tid, dummyInst[tid], delay);
 }
 
 void
@@ -747,7 +761,7 @@ InOrderCPU::deactivateContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Deactivating ...\n", tid);
 
-    scheduleCpuEvent(DeactivateThread, NoFault, tid, dummyInst, delay);
+    scheduleCpuEvent(DeactivateThread, NoFault, tid, dummyInst[tid], delay);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
@@ -830,7 +844,8 @@ InOrderCPU::activateContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Activating ...\n", tid);
 
-    scheduleCpuEvent(ActivateThread, NoFault, tid, dummyInst, delay);
+    
+    scheduleCpuEvent(ActivateThread, NoFault, tid, dummyInst[tid], delay);
 
     // Be sure to signal that there's some activity so the CPU doesn't
     // deschedule itself.
@@ -847,7 +862,7 @@ InOrderCPU::activateNextReadyContext(int delay)
     // NOTE: Add 5 to the event priority so that we always activate
     // threads after we've finished deactivating, squashing,etc.
     // other threads
-    scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst, 
+    scheduleCpuEvent(ActivateNextReadyThread, NoFault, 0/*tid*/, dummyInst[0], 
                      delay, 5);
 
     // Be sure to signal that there's some activity so the CPU doesn't
@@ -862,7 +877,7 @@ InOrderCPU::haltContext(ThreadID tid, int delay)
 {
     DPRINTF(InOrderCPU, "[tid:%i]: Calling Halt Context...\n", tid);
 
-    scheduleCpuEvent(HaltThread, NoFault, tid, dummyInst, delay);
+    scheduleCpuEvent(HaltThread, NoFault, tid, dummyInst[tid], delay);
 
     activityRec.activity();
 }
@@ -885,7 +900,7 @@ InOrderCPU::haltThread(ThreadID tid)
 void
 InOrderCPU::suspendContext(ThreadID tid, int delay)
 {
-    scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst, delay);
+    scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst[tid], delay);
 }
 
 void

@@ -97,6 +97,9 @@ class InOrderCPU : public BaseCPU
     /** CPU ID */
     int cpu_id;
 
+    // SE Mode ASIDs
+    ThreadID asid[ThePipeline::MaxThreads];
+
     /** Type of core that this is */
     std::string coreType;
 
@@ -241,10 +244,10 @@ class InOrderCPU : public BaseCPU
 
     /** Instruction used to signify that there is no *real* instruction in 
         buffer slot */
-    DynInstPtr dummyInst;
+    DynInstPtr dummyInst[ThePipeline::MaxThreads];
 
     /** Used by resources to signify a denied access to a resource. */
-    ResourceRequest *dummyReq;
+    ResourceRequest *dummyReq[ThePipeline::MaxThreads];
 
     /** Identifies the resource id that identifies a fetch
      * access unit.
