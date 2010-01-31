@@ -96,6 +96,10 @@ class Resource {
     /** Resources that care about thread activation override this. */
     virtual void suspendThread(ThreadID tid) { }
     
+    /** Will be called the cycle before a context switch. Any bookkeeping
+     *  that needs to be kept for that, can be done here
+     */
+    virtual void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid) { }    
 
     /** Resources that care when an instruction has been graduated
      *  can override this

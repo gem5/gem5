@@ -49,14 +49,14 @@ using namespace ThePipeline;
 Tick
 CacheUnit::CachePort::recvAtomic(PacketPtr pkt)
 {
-    panic("DefaultFetch doesn't expect recvAtomic callback!");
+    panic("CacheUnit::CachePort doesn't expect recvAtomic callback!");
     return curTick;
 }
 
 void
 CacheUnit::CachePort::recvFunctional(PacketPtr pkt)
 {
-    panic("DefaultFetch doesn't expect recvFunctional callback!");
+    panic("CacheUnit::CachePort doesn't expect recvFunctional callback!");
 }
 
 void
@@ -65,7 +65,7 @@ CacheUnit::CachePort::recvStatusChange(Status status)
     if (status == RangeChange)
         return;
 
-    panic("DefaultFetch doesn't expect recvStatusChange callback!");
+    panic("CacheUnit::CachePort doesn't expect recvStatusChange callback!");
 }
 
 bool

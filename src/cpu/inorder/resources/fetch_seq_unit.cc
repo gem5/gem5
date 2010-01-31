@@ -342,3 +342,17 @@ FetchSeqUnit::suspendThread(ThreadID tid)
 {
     deactivateThread(tid);    
 }
+
+void
+FetchSeqUnit::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
+{
+    pcValid[tid] = true;
+
+    PC[tid] = inst->readNextPC();
+    nextPC[tid] = inst->readNextNPC();
+    nextNPC[tid] = inst->readNextNPC() + instSize;
+
+
+    DPRINTF(InOrderFetchSeq, "[tid:%i]: Updating  PC:%08p NPC:%08p NNPC:%08p.\n",
+            tid, PC[tid], nextPC[tid], nextNPC[tid]);
+}

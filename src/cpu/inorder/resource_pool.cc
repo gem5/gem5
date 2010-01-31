@@ -201,6 +201,9 @@ ResourcePool::slotsInUse(int res_idx)
     return resources[res_idx]->slotsInUse();
 }
 
+//@todo: split this function and call this version schedulePoolEvent
+//       and use this scheduleEvent for scheduling a specific event on 
+//       a resource
 void
 ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                             int delay,  int res_idx, ThreadID tid)
@@ -310,6 +313,20 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         }
         break;
 
+      case ResourcePool::UpdateAfterContextSwitch:
+        {
+            DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event for tick %i.\n",
+                    curTick + delay);
+            ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
+                                                            inst,
+                                                            inst->squashingStage,
+                                                            inst->seqNum,
+                                                            inst->readTid());
+            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
+
+        }
+        break;
+
       default:
         DPRINTF(Resource, "Ignoring Unrecognized CPU Event (%s).\n", 
                 InOrderCPU::eventNames[e_type]);
@@ -415,6 +432,19 @@ ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
     }
 }
 
+void
+ResourcePool::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
+{
+    DPRINTF(Resource, "[tid:%i] Broadcasting Update PC to all resources.\n",
+            tid);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        resources[idx]->updateAfterContextSwitch(inst, tid);
+    }
+}
+
 ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool)
     : Event((Event::Priority)((unsigned)CPU_Tick_Pri+5)), resPool(_resPool),
       eventType((InOrderCPU::CPUEventType) Default)
@@ -460,6 +490,10 @@ ResourcePool::ResPoolEvent::process()
 
       case InOrderCPU::SquashFromMemStall:
         resPool->squashDueToMemStall(inst, stageNum, seqNum, tid);
+        break;
+
+      case ResourcePool::UpdateAfterContextSwitch:
+        resPool->updateAfterContextSwitch(inst, tid);
         break;
 
       default:

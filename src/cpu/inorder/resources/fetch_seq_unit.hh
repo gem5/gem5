@@ -61,6 +61,8 @@ class FetchSeqUnit : public Resource {
     virtual void deactivateThread(ThreadID tid);
     virtual void suspendThread(ThreadID tid);
     virtual void execute(int slot_num);
+    void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
+    
 
     /** Override default Resource squash sequence. This actually,
      *  looks in the global communication buffer to get squash

@@ -63,6 +63,7 @@ class ResourcePool {
     enum ResPoolEventType {
         InstGraduated = InOrderCPU::NumCPUEvents,
         SquashAll,
+        UpdateAfterContextSwitch,
         Default
     };
 
@@ -174,6 +175,9 @@ class ResourcePool {
 
     /** De-Activate Thread in all resources */
     void suspendAll(ThreadID tid);
+
+    /** Broadcast Context Switch Update to all resources */
+    void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
 
     /** Broadcast graduation to all resources */
     void instGraduated(InstSeqNum seq_num, ThreadID tid);

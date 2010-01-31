@@ -571,10 +571,15 @@ PipelineStage::activateThread(ThreadID tid)
             DPRINTF(InOrderStage,"[tid:%i]: Re-Inserting [sn:%lli] PC:%#x into stage skidBuffer %i\n",
                     tid, inst->seqNum, inst->readPC(), inst->threadNumber);
 
+            // Make instruction available for pipeline processing
             skidBuffer[tid].push(inst);            
 
-            switchedOutBuffer[tid] = NULL;
+            // Update PC so that we start fetching after this instruction to prevent
+            // "double"-execution of instructions
+            cpu->resPool->scheduleEvent((InOrderCPU::CPUEventType)ResourcePool::UpdateAfterContextSwitch, inst, 0, 0, tid);
 
+            // Clear switchout buffer
+            switchedOutBuffer[tid] = NULL;
             switchedOutValid[tid] = false;            
         }        
     }
