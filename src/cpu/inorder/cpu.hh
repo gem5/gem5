@@ -177,7 +177,7 @@ class InOrderCPU : public BaseCPU
         ActivateThread,
         ActivateNextReadyThread,
         DeactivateThread,
-        DeallocateThread,
+        HaltThread,
         SuspendThread,
         Trap,
         InstGraduated,
@@ -357,16 +357,18 @@ class InOrderCPU : public BaseCPU
     void deactivateThread(ThreadID tid);
 
     /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
-    void haltContext(ThreadID tid, int delay = 0);
     void suspendContext(ThreadID tid, int delay = 0);
     void suspendThread(ThreadID tid);
 
-    /** Remove Thread from Active Threads List, Remove Any Loaded Thread State */
-    void deallocateContext(ThreadID tid, int delay = 0);
-    void deallocateThread(ThreadID tid);
+    /** Halt Thread, Remove from Active Thread List, Place Thread on Halted 
+     *  Threads List 
+     */
+    void haltContext(ThreadID tid, int delay = 0);
+    void haltThread(ThreadID tid);
 
     /** squashFromMemStall() - sets up a squash event
      *  squashDueToMemStall() - squashes pipeline
+     *  @note: maybe squashContext/squashThread would be better?
      */
     void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
     void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
@@ -586,6 +588,9 @@ class InOrderCPU : public BaseCPU
 
     /** Suspended Threads List */
     std::list<ThreadID> suspendedThreads;
+
+    /** Halted Threads List */
+    std::list<ThreadID> haltedThreads;
 
     /** Thread Status Functions */
     bool isThreadActive(ThreadID tid);

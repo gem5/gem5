@@ -204,6 +204,9 @@ ResourcePool::slotsInUse(int res_idx)
 //@todo: split this function and call this version schedulePoolEvent
 //       and use this scheduleEvent for scheduling a specific event on 
 //       a resource
+//@todo: For arguments that arent being used in a ResPoolEvent, a dummyParam
+//       or some typedef can be used to signify what's important info
+//       to the event construction
 void
 ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                             int delay,  int res_idx, ThreadID tid)
@@ -229,8 +232,8 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         }
         break;
 
+      case InOrderCPU::HaltThread:
       case InOrderCPU::DeactivateThread:
-      case InOrderCPU::DeallocateThread:
         {
 
             DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool "
@@ -472,7 +475,7 @@ ResourcePool::ResPoolEvent::process()
         break;
 
       case InOrderCPU::DeactivateThread:
-      case InOrderCPU::DeallocateThread:
+      case InOrderCPU::HaltThread:
         resPool->deactivateAll(tid);
         break;
 

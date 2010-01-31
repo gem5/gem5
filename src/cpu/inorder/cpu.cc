@@ -98,7 +98,7 @@ std::string InOrderCPU::eventNames[NumCPUEvents] =
     "ActivateThread",
     "ActivateNextReadyThread",
     "DeactivateThread",
-    "DeallocateThread",
+    "HaltThread",
     "SuspendThread",
     "Trap",
     "InstGraduated",
@@ -123,8 +123,8 @@ InOrderCPU::CPUEvent::process()
         cpu->deactivateThread(tid);
         break;
 
-      case DeallocateThread:
-        cpu->deallocateThread(tid);
+      case HaltThread:
+        cpu->haltThread(tid);
         break;
 
       case SuspendThread: 
@@ -140,8 +140,7 @@ InOrderCPU::CPUEvent::process()
         break;
 
       default:
-        fatal("Unrecognized Event Type %d", cpuEventType);
-    
+        fatal("Unrecognized Event Type %s", eventNames[cpuEventType]);    
     }
     
     cpu->cpuEventRemoveList.push(this);
@@ -760,40 +759,6 @@ InOrderCPU::deactivateThread(ThreadID tid)
 }
 
 void
-InOrderCPU::deallocateContext(ThreadID tid, int delay)
-{
-    DPRINTF(InOrderCPU,"[tid:%i]: Deallocating ...\n", tid);
-
-    scheduleCpuEvent(DeallocateThread, NoFault, tid, dummyInst, delay);
-
-    // Be sure to signal that there's some activity so the CPU doesn't
-    // deschedule itself.
-    activityRec.activity();
-
-    _status = Running;
-}
-
-void
-InOrderCPU::deallocateThread(ThreadID tid)
-{
-    DPRINTF(InOrderCPU, "[tid:%i]: Calling deallocate thread.\n", tid);
-
-    if (isThreadActive(tid)) {
-        DPRINTF(InOrderCPU,"[tid:%i]: Removing from active threads list\n",
-                tid);
-        list<ThreadID>::iterator thread_it =
-            std::find(activeThreads.begin(), activeThreads.end(), tid);
-
-        removePipelineStalls(*thread_it);
-
-        activeThreads.erase(thread_it);
-    }
-
-    // TODO: "Un"Load/Unmap register file state
-  
-}
-
-void
 InOrderCPU::removePipelineStalls(ThreadID tid)
 {
     DPRINTF(InOrderCPU,"[tid:%i]: Removing all pipeline stalls\n",
@@ -874,20 +839,36 @@ InOrderCPU::activateNextReadyContext(int delay)
 void
 InOrderCPU::haltContext(ThreadID tid, int delay)
 {
-    suspendContext(tid, delay);
+    DPRINTF(InOrderCPU, "[tid:%i]: Calling Halt Context...\n", tid);
+
+    scheduleCpuEvent(HaltThread, NoFault, tid, dummyInst, delay);
+
+    activityRec.activity();
+}
+
+void
+InOrderCPU::haltThread(ThreadID tid)
+{
+    DPRINTF(InOrderCPU, "[tid:%i]: Placing on Halted Threads List...\n", tid);
+    deactivateThread(tid);
+    squashThreadInPipeline(tid);   
+    haltedThreads.push_back(tid);    
+
+    if (threadModel == SwitchOnCacheMiss) {        
+        activateNextReadyContext();    
+    }
 }
 
 void
 InOrderCPU::suspendContext(ThreadID tid, int delay)
 {
     scheduleCpuEvent(SuspendThread, NoFault, tid, dummyInst, delay);
-    //_status = Idle;
 }
 
 void
 InOrderCPU::suspendThread(ThreadID tid)
 {
-    DPRINTF(InOrderCPU, "[tid: %i]: Placing on Suspended Threads List...\n", tid);
+    DPRINTF(InOrderCPU, "[tid:%i]: Placing on Suspended Threads List...\n", tid);
     deactivateThread(tid);
     suspendedThreads.push_back(tid);    
     thread[tid]->lastSuspend = curTick;    
