@@ -54,6 +54,11 @@ FetchSeqUnit::FetchSeqUnit(std::string res_name, int res_id, int res_width,
     }
 }
 
+FetchSeqUnit::~FetchSeqUnit()
+{
+    delete [] resourceEvent;
+}
+
 void
 FetchSeqUnit::init()
 {

@@ -347,6 +347,11 @@ InOrderCPU::InOrderCPU(Params *params)
     scheduleTickEvent(0);
 }
 
+InOrderCPU::~InOrderCPU()
+{
+    delete resPool;
+}
+
 
 void
 InOrderCPU::regStats()

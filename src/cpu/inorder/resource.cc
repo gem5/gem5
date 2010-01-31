@@ -47,6 +47,7 @@ Resource::Resource(string res_name, int res_id, int res_width,
 Resource::~Resource()
 {
     delete [] resourceEvent;
+    delete deniedReq;    
 }
 
 

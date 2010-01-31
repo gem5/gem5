@@ -54,8 +54,8 @@ class FetchSeqUnit : public Resource {
   public:
     FetchSeqUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~FetchSeqUnit() {}
-
+    virtual ~FetchSeqUnit();
+    
     virtual void init();
     virtual void activateThread(ThreadID tid);
     virtual void deactivateThread(ThreadID tid);

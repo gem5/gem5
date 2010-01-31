@@ -91,6 +91,18 @@ ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
                                        0, _cpu, params));
 }
 
+ResourcePool::~ResourcePool()
+{
+    cout << "Deleting resources ..." << endl;
+    
+    for (int i=0; i < resources.size(); i++) {
+        DPRINTF(Resource, "Deleting resource: %s.\n", resources[i]->name());
+        
+        delete resources[i];
+    }    
+}
+
+
 void
 ResourcePool::init()
 {

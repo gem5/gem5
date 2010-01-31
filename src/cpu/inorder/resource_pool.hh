@@ -122,7 +122,7 @@ class ResourcePool {
 
   public:
     ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~ResourcePool() {}
+    ~ResourcePool();    
 
     std::string name();
 

@@ -93,7 +93,9 @@ class InOrderCPU : public BaseCPU
   public:
     /** Constructs a CPU with the given parameters. */
     InOrderCPU(Params *params);
-
+    /* Destructor */
+    ~InOrderCPU();
+    
     /** CPU ID */
     int cpu_id;
 
