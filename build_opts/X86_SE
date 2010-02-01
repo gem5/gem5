@@ -1,3 +1,4 @@
 TARGET_ISA = 'x86'
 CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU'
 FULL_SYSTEM = 0
+PROTOCOL = 'MI_example'

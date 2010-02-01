@@ -1,2 +1,3 @@
 TARGET_ISA = 'mips'
 FULL_SYSTEM = 1
+PROTOCOL = 'MI_example'

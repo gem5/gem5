@@ -1,3 +1,4 @@
 TARGET_ISA = 'arm'
 FULL_SYSTEM = 0
 CPU_MODELS = 'AtomicSimpleCPU,TimingSimpleCPU'
+PROTOCOL = 'MI_example'
