@@ -70,20 +70,39 @@ def makeMesh(nodes, num_routers, num_rows):
     # Also, obviously the number or rows must be <= the number of routers
     #
     cntrls_per_router, remainder = divmod(len(nodes), num_routers)
-    assert(remainder == 0)
     assert(num_rows <= num_routers)
     num_columns = int(num_routers / num_rows)
     assert(num_columns * num_rows == num_routers)
 
     #
+    # Add all but the remainder nodes to the list of nodes to be uniformly
+    # distributed across the network.
+    #
+    network_nodes = []
+    remainder_nodes = []
+    for node_index in xrange(len(nodes)):
+        if node_index < (len(nodes) - remainder):
+            network_nodes.append(nodes[node_index])
+        else:
+            remainder_nodes.append(nodes[node_index])
+
+    #
     # Connect each node to the appropriate router
     #
     ext_links = []
-    for (i, n) in enumerate(nodes):
+    for (i, n) in enumerate(network_nodes):
         cntrl_level, router_id = divmod(i, num_routers)
         assert(cntrl_level < cntrls_per_router)
         ext_links.append(ExtLink(ext_node=n, int_node=router_id))
 
+    #
+    # Connect the remainding nodes to router 0.  These should only be DMA nodes.
+    #
+    for (i, node) in enumerate(remainder_nodes):
+        assert(node.type == 'DMA_Controller')
+        assert(i < remainder)
+        ext_links.append(ExtLink(ext_node=node, int_node=0))
+    
     #
     # Create the mesh links.  First row (east-west) links then column
     # (north-south) links
