@@ -235,3 +235,27 @@ RegDepMap::findBypassInst(unsigned idx)
 
     return NULL;
 }
+
+void
+RegDepMap::dump()
+{
+    
+    for (int idx=0; idx < regMap.size(); idx++) {
+        
+        if (regMap[idx].size() > 0) {
+            cprintf("Reg #%i (size:%i): ", idx, regMap[idx].size());
+
+            std::list<DynInstPtr>::iterator list_it = regMap[idx].begin();
+            std::list<DynInstPtr>::iterator list_end = regMap[idx].end();
+        
+            while (list_it != list_end) {
+                cprintf("[sn:%i] ", (*list_it)->seqNum);
+
+                list_it++;            
+            }        
+
+            cprintf("\n");
+        }
+        
+    }    
+}

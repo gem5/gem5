@@ -63,6 +63,7 @@ class ResourcePool {
     enum ResPoolEventType {
         InstGraduated = InOrderCPU::NumCPUEvents,
         SquashAll,
+        UpdateAfterContextSwitch,
         Default
     };
 
@@ -84,9 +85,6 @@ class ResourcePool {
         ThreadID tid;
 
       public:
-        /** Constructs a resource event. */
-        ResPoolEvent(ResourcePool *_resPool);
-
         /** Constructs a resource event. */
         ResPoolEvent(ResourcePool *_resPool,
                      InOrderCPU::CPUEventType e_type,
@@ -123,8 +121,8 @@ class ResourcePool {
     };
 
   public:
-  ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~ResourcePool() {}
+    ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params);
+    ~ResourcePool();    
 
     std::string name();
 
@@ -143,6 +141,7 @@ class ResourcePool {
 
     /** Returns a specific resource. */
     unsigned getResIdx(const std::string &res_name);
+    unsigned getResIdx(const ThePipeline::ResourceId &res_id);
 
     /** Returns a pointer to a resource */
     Resource* getResource(int res_idx) { return resources[res_idx]; }
@@ -160,11 +159,23 @@ class ResourcePool {
     void squashAll(DynInstPtr inst, int stage_num,
                    InstSeqNum done_seq_num, ThreadID tid);
 
+    /** Squash Resources in Pool after a memory stall 
+     *  NOTE: Only use during Switch-On-Miss Thread model
+     */    
+    void squashDueToMemStall(DynInstPtr inst, int stage_num,
+                             InstSeqNum done_seq_num, ThreadID tid);
+
     /** Activate Thread in all resources */
     void activateAll(ThreadID tid);
 
     /** De-Activate Thread in all resources */
     void deactivateAll(ThreadID tid);
+
+    /** De-Activate Thread in all resources */
+    void suspendAll(ThreadID tid);
+
+    /** Broadcast Context Switch Update to all resources */
+    void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
 
     /** Broadcast graduation to all resources */
     void instGraduated(InstSeqNum seq_num, ThreadID tid);

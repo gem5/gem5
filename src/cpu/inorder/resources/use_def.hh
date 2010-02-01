@@ -68,8 +68,12 @@ class UseDefUnit : public Resource {
     virtual void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
+    void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);    
+
     const InstSeqNum maxSeqNum;
 
+    void regStats();
+    
   protected:
     RegDepMap *regDepMap[ThePipeline::MaxThreads];
 
@@ -84,14 +88,18 @@ class UseDefUnit : public Resource {
 
     InstSeqNum floatRegSize[ThePipeline::MaxThreads];
 
+    Stats::Average uniqueRegsPerSwitch;
+    std::map<unsigned, bool> uniqueRegMap;    
+
   public:
     class UseDefRequest : public ResourceRequest {
       public:
         typedef ThePipeline::DynInstPtr DynInstPtr;
 
       public:
-        UseDefRequest(UseDefUnit *res, DynInstPtr inst, int stage_num, int res_idx,
-                      int slot_num, unsigned cmd, int use_def_idx)
+        UseDefRequest(UseDefUnit *res, DynInstPtr inst, int stage_num, 
+                      int res_idx, int slot_num, unsigned cmd, 
+                      int use_def_idx)
             : ResourceRequest(res, inst, stage_num, res_idx, slot_num, cmd),
               useDefIdx(use_def_idx)
         { }

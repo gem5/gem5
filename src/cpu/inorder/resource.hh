@@ -70,7 +70,8 @@ class Resource {
     /** Define this function if resource, has a port to connect to an outside
      *  simulation object.
      */
-    virtual Port* getPort(const std::string &if_name, int idx) { return NULL; }
+    virtual Port* getPort(const std::string &if_name, int idx) 
+    { return NULL; }
 
     /** Return ID for this resource */
     int getId() { return id; }
@@ -91,6 +92,14 @@ class Resource {
      *  from deactivated thread.
      */
     virtual void deactivateThread(ThreadID tid);
+
+    /** Resources that care about thread activation override this. */
+    virtual void suspendThread(ThreadID tid) { }
+    
+    /** Will be called the cycle before a context switch. Any bookkeeping
+     *  that needs to be kept for that, can be done here
+     */
+    virtual void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid) { }    
 
     /** Resources that care when an instruction has been graduated
      *  can override this
@@ -114,9 +123,9 @@ class Resource {
     /** Free a resource slot */
     virtual void freeSlot(int slot_idx);
 
-    /** Request usage of a resource for this instruction. If this instruction already
-     *  has made this request to this resource, and that request is uncompleted
-     *  this function will just return that request
+    /** Request usage of a resource for this instruction. If this instruction 
+     *  already has made this request to this resource, and that request is 
+     *  uncompleted this function will just return that request
      */
     virtual ResourceRequest* getRequest(DynInstPtr _inst, int stage_num,
                                         int res_idx, int slot_num,
@@ -155,6 +164,9 @@ class Resource {
     virtual void squash(DynInstPtr inst, int stage_num,
                         InstSeqNum squash_seq_num, ThreadID tid);
 
+    virtual void squashDueToMemStall(DynInstPtr inst, int stage_num,
+                                     InstSeqNum squash_seq_num, ThreadID tid);
+
     /** The number of instructions available that this resource can
      *  can still process
      */
@@ -166,7 +178,8 @@ class Resource {
     /** Schedule resource event, regardless of its current state. */
     void scheduleEvent(int slot_idx, int delay);
 
-    /** Find instruction in list, Schedule resource event, regardless of its current state. */
+    /** Find instruction in list, Schedule resource event, regardless of its 
+     *  current state. */
     bool scheduleEvent(DynInstPtr inst, int delay);
 
     /** Unschedule resource event, regardless of its current state. */
@@ -303,30 +316,14 @@ class ResourceRequest
 
     static int resReqID;
 
-    static int resReqCount;
-
+    static int maxReqCount;
+    
   public:
     ResourceRequest(Resource *_res, DynInstPtr _inst, int stage_num,
-                    int res_idx, int slot_num, unsigned _cmd)
-        : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
-          resIdx(res_idx), slotNum(slot_num), completed(false),
-          squashed(false), processing(false), waiting(false)
-    {
-        reqID = resReqID++;
-        resReqCount++;
-        DPRINTF(ResReqCount, "Res. Req %i created. resReqCount=%i.\n", reqID, resReqCount);
-
-        if (resReqCount > 100) {
-            fatal("Too many undeleted resource requests. Memory leak?\n");
-        }
-    }
-
-    virtual ~ResourceRequest()
-    {
-        resReqCount--;
-        DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, resReqCount);
-    }
-
+                    int res_idx, int slot_num, unsigned _cmd);
+    
+    virtual ~ResourceRequest();
+    
     int reqID;
 
     /** Acknowledge that this is a request is done and remove
@@ -334,6 +331,8 @@ class ResourceRequest
      */
     void done(bool completed = true);
 
+    short stagePasses;
+    
     /////////////////////////////////////////////
     //
     // GET RESOURCE REQUEST IDENTIFICATION / INFO
@@ -342,8 +341,11 @@ class ResourceRequest
     /** Get Resource Index */
     int getResIdx() { return resIdx; }
 
+       
     /** Get Slot Number */
     int getSlot() { return slotNum; }
+    int getComplSlot() { return complSlotNum; }
+    bool hasSlot()  { return slotNum >= 0; }     
 
     /** Get Stage Number */
     int getStageNum() { return stageNum; }
@@ -366,6 +368,9 @@ class ResourceRequest
     /** Instruction being used */
     DynInstPtr inst;
 
+    /** Not guaranteed to be set, used for debugging */
+    InstSeqNum seqNum;
+    
     /** Fault Associated With This Resource Request */
     Fault fault;
 
@@ -390,8 +395,8 @@ class ResourceRequest
     void setProcessing() { processing = true; }
 
     /** Get/Set IsWaiting variables */
-    bool isWaiting() { return waiting; }
-    void setWaiting() { waiting = true; }
+    bool isMemStall() { return memStall; }
+    void setMemStall(bool stall = true) { memStall = stall; }
 
   protected:
     /** Resource Identification */
@@ -399,12 +404,14 @@ class ResourceRequest
     int stageNum;
     int resIdx;
     int slotNum;
-
-    /** Resource Status */
+    int complSlotNum;
+    
+    /** Resource Request Status */
     bool completed;
     bool squashed;
     bool processing;
-    bool waiting;
+
+    bool memStall;
 };
 
 #endif //__CPU_INORDER_RESOURCE_HH__

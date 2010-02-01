@@ -54,6 +54,17 @@ ExecutionUnit::regStats()
         .name(name() + ".predictedNotTakenIncorrect")
         .desc("Number of Branches Incorrectly Predicted As Not Taken).");
 
+    lastExecuteCycle = curTick;
+
+    cyclesExecuted
+        .name(name() + ".cyclesExecuted")
+        .desc("Number of Cycles Execution Unit was used.");
+
+    utilization
+        .name(name() + ".utilization")
+        .desc("Utilization of Execution Unit (cycles / totalCycles).");
+    utilization = cyclesExecuted / cpu->numCycles;
+
     Resource::regStats();
 }
 
@@ -75,6 +86,12 @@ ExecutionUnit::execute(int slot_num)
     {
       case ExecuteInst:
         {
+            if (curTick != lastExecuteCycle) {
+                lastExecuteCycle = curTick;
+                cyclesExecuted++;
+            }
+
+
             if (inst->isMemRef()) {
                 panic("%s not configured to handle memory ops.\n", resName);
             } else if (inst->isControl()) {

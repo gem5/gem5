@@ -30,10 +30,15 @@ from m5.params import *
 from m5.proxy import *
 from BaseCPU import BaseCPU
 
+class ThreadModel(Enum):
+    vals = ['Single', 'SMT', 'SwitchOnCacheMiss']
+
 class InOrderCPU(BaseCPU):
     type = 'InOrderCPU'
     activity = Param.Unsigned(0, "Initial count")
 
+    threadModel = Param.ThreadModel('SMT', "Multithreading model (SE-MODE only)")
+    
     cachePorts = Param.Unsigned(2, "Cache Ports")
     stageWidth = Param.Unsigned(1, "Stage width")
 

@@ -63,8 +63,6 @@ class GraduationUnit : public Resource {
     bool *nonSpecInstActive[ThePipeline::MaxThreads];
 
     InstSeqNum *nonSpecSeqNum[ThePipeline::MaxThreads];
-
-    /** @todo: Add Resource Stats Here */
 };
 
 #endif //__CPU_INORDER_GRAD_UNIT_HH__

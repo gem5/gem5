@@ -54,12 +54,15 @@ class FetchSeqUnit : public Resource {
   public:
     FetchSeqUnit(std::string res_name, int res_id, int res_width,
               int res_latency, InOrderCPU *_cpu, ThePipeline::Params *params);
-    virtual ~FetchSeqUnit() {}
-
+    virtual ~FetchSeqUnit();
+    
     virtual void init();
     virtual void activateThread(ThreadID tid);
     virtual void deactivateThread(ThreadID tid);
+    virtual void suspendThread(ThreadID tid);
     virtual void execute(int slot_num);
+    void updateAfterContextSwitch(DynInstPtr inst, ThreadID tid);
+    
 
     /** Override default Resource squash sequence. This actually,
      *  looks in the global communication buffer to get squash

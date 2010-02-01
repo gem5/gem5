@@ -89,16 +89,30 @@ class InOrderCPU : public BaseCPU
     typedef TimeBuffer<InterStageStruct> StageQueue;
 
     friend class Resource;
-
+    
   public:
     /** Constructs a CPU with the given parameters. */
     InOrderCPU(Params *params);
-
+    /* Destructor */
+    ~InOrderCPU();
+    
     /** CPU ID */
     int cpu_id;
 
+    // SE Mode ASIDs
+    ThreadID asid[ThePipeline::MaxThreads];
+
     /** Type of core that this is */
     std::string coreType;
+
+    // Only need for SE MODE
+    enum ThreadModel {
+        Single,
+        SMT,
+        SwitchOnCacheMiss
+    };
+    
+    ThreadModel threadModel;
 
     int readCpuId() { return cpu_id; }
 
@@ -117,7 +131,6 @@ class InOrderCPU : public BaseCPU
 
     /** Overall CPU status. */
     Status _status;
-
   private:
     /** Define TickEvent for the CPU */
     class TickEvent : public Event
@@ -144,9 +157,11 @@ class InOrderCPU : public BaseCPU
     void scheduleTickEvent(int delay)
     {
         if (tickEvent.squashed())
-          mainEventQueue.reschedule(&tickEvent, nextCycle(curTick + ticks(delay)));
+          mainEventQueue.reschedule(&tickEvent, 
+                                    nextCycle(curTick + ticks(delay)));
         else if (!tickEvent.scheduled())
-          mainEventQueue.schedule(&tickEvent, nextCycle(curTick + ticks(delay)));
+          mainEventQueue.schedule(&tickEvent, 
+                                  nextCycle(curTick + ticks(delay)));
     }
 
     /** Unschedule tick event, regardless of its current state. */
@@ -165,15 +180,13 @@ class InOrderCPU : public BaseCPU
     // pool event.
     enum CPUEventType {
         ActivateThread,
-        DeallocateThread,
+        ActivateNextReadyThread,
+        DeactivateThread,
+        HaltThread,
         SuspendThread,
-        DisableThreads,
-        EnableThreads,
-        DisableVPEs,
-        EnableVPEs,
         Trap,
         InstGraduated,
-        SquashAll,
+        SquashFromMemStall,
         UpdatePCs,
         NumCPUEvents
     };
@@ -189,22 +202,24 @@ class InOrderCPU : public BaseCPU
       public:
         CPUEventType cpuEventType;
         ThreadID tid;
-        unsigned vpe;
+        DynInstPtr inst;
         Fault fault;
-
+        unsigned vpe;
+        
       public:
         /** Constructs a CPU event. */
         CPUEvent(InOrderCPU *_cpu, CPUEventType e_type, Fault fault,
-                 ThreadID _tid, unsigned _vpe);
+                 ThreadID _tid, DynInstPtr inst, unsigned event_pri_offset);
 
         /** Set Type of Event To Be Scheduled */
         void setEvent(CPUEventType e_type, Fault _fault, ThreadID _tid,
-                      unsigned _vpe)
+                      DynInstPtr _inst)
         {
             fault = _fault;
             cpuEventType = e_type;
             tid = _tid;
-            vpe = _vpe;
+            inst = _inst;
+            vpe = 0;            
         }
 
         /** Processes a resource event. */
@@ -222,17 +237,21 @@ class InOrderCPU : public BaseCPU
 
     /** Schedule a CPU Event */
     void scheduleCpuEvent(CPUEventType cpu_event, Fault fault, ThreadID tid,
-                          unsigned vpe, unsigned delay = 0);
+                          DynInstPtr inst, unsigned delay = 0,
+                          unsigned event_pri_offset = 0);
 
   public:
     /** Interface between the CPU and CPU resources. */
     ResourcePool *resPool;
 
-    /** Instruction used to signify that there is no *real* instruction in buffer slot */
+    /** Instruction used to signify that there is no *real* instruction in 
+        buffer slot */
+    DynInstPtr dummyInst[ThePipeline::MaxThreads];
     DynInstPtr dummyBufferInst;
+    DynInstPtr dummyReqInst;
 
     /** Used by resources to signify a denied access to a resource. */
-    ResourceRequest *dummyReq;
+    ResourceRequest *dummyReq[ThePipeline::MaxThreads];
 
     /** Identifies the resource id that identifies a fetch
      * access unit.
@@ -331,26 +350,39 @@ class InOrderCPU : public BaseCPU
     void trap(Fault fault, ThreadID tid, int delay = 0);
     void trapCPU(Fault fault, ThreadID tid);
 
-    /** Setup CPU to insert a thread's context */
-    void insertThread(ThreadID tid);
-
-    /** Remove all of a thread's context from CPU */
-    void removeThread(ThreadID tid);
-
     /** Add Thread to Active Threads List. */
     void activateContext(ThreadID tid, int delay = 0);
     void activateThread(ThreadID tid);
+    void activateThreadInPipeline(ThreadID tid);
+    
+    /** Add Thread to Active Threads List. */
+    void activateNextReadyContext(int delay = 0);
+    void activateNextReadyThread();
 
-    /** Remove Thread from Active Threads List */
+    /** Remove from Active Thread List */
+    void deactivateContext(ThreadID tid, int delay = 0);
+    void deactivateThread(ThreadID tid);
+
+    /** Suspend Thread, Remove from Active Threads List, Add to Suspend List */
     void suspendContext(ThreadID tid, int delay = 0);
     void suspendThread(ThreadID tid);
 
-    /** Remove Thread from Active Threads List &&
-     *  Remove Thread Context from CPU.
+    /** Halt Thread, Remove from Active Thread List, Place Thread on Halted 
+     *  Threads List 
      */
-    void deallocateContext(ThreadID tid, int delay = 0);
-    void deallocateThread(ThreadID tid);
-    void deactivateThread(ThreadID tid);
+    void haltContext(ThreadID tid, int delay = 0);
+    void haltThread(ThreadID tid);
+
+    /** squashFromMemStall() - sets up a squash event
+     *  squashDueToMemStall() - squashes pipeline
+     *  @note: maybe squashContext/squashThread would be better?
+     */
+    void squashFromMemStall(DynInstPtr inst, ThreadID tid, int delay = 0);
+    void squashDueToMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
+
+    void removePipelineStalls(ThreadID tid);
+    void squashThreadInPipeline(ThreadID tid);
+    void squashBehindMemStall(int stage_num, InstSeqNum seq_num, ThreadID tid);    
 
     PipelineStage* getPipeStage(int stage_num);
 
@@ -360,37 +392,6 @@ class InOrderCPU : public BaseCPU
         hack_once("return a bogus context id");
         return 0;
     }
-
-    /** Remove Thread from Active Threads List &&
-     *  Remove Thread Context from CPU.
-     */
-    void haltContext(ThreadID tid, int delay = 0);
-
-    void removePipelineStalls(ThreadID tid);
-
-    void squashThreadInPipeline(ThreadID tid);
-
-    /// Notify the CPU to enable a virtual processor element.
-    virtual void enableVirtProcElement(unsigned vpe);
-    void enableVPEs(unsigned vpe);
-
-    /// Notify the CPU to disable a virtual processor element.
-    virtual void disableVirtProcElement(ThreadID tid, unsigned vpe);
-    void disableVPEs(ThreadID tid, unsigned vpe);
-
-    /// Notify the CPU that multithreading is enabled.
-    virtual void enableMultiThreading(unsigned vpe);
-    void enableThreads(unsigned vpe);
-
-    /// Notify the CPU that multithreading is disabled.
-    virtual void disableMultiThreading(ThreadID tid, unsigned vpe);
-    void disableThreads(ThreadID tid, unsigned vpe);
-
-    /** Activate a Thread When CPU Resources are Available. */
-    void activateWhenReady(ThreadID tid);
-
-    /** Add or Remove a Thread Context in the CPU. */
-    void doContextSwitch();
 
     /** Update The Order In Which We Process Threads. */
     void updateThreadPriority();
@@ -420,7 +421,11 @@ class InOrderCPU : public BaseCPU
     /** Get & Update Next Event Number */
     InstSeqNum getNextEventNum()
     {
+#ifdef DEBUG
         return cpuEventNum++;
+#else
+        return 0;
+#endif
     }
 
     /** Register file accessors  */
@@ -550,8 +555,8 @@ class InOrderCPU : public BaseCPU
      */
     std::queue<ListIt> removeList;
 
-    /** List of all the resource requests that will be removed at the end of this
-     *  cycle.
+    /** List of all the resource requests that will be removed at the end 
+     *  of this cycle.
      */
     std::queue<ResourceRequest*> reqRemoveList;
 
@@ -585,18 +590,19 @@ class InOrderCPU : public BaseCPU
     /** Active Threads List */
     std::list<ThreadID> activeThreads;
 
-    /** Current Threads List */
-    std::list<ThreadID> currentThreads;
+    /** Ready Threads List */
+    std::list<ThreadID> readyThreads;
 
     /** Suspended Threads List */
     std::list<ThreadID> suspendedThreads;
 
-    /** Thread Status Functions (Unused Currently) */
-    bool isThreadInCPU(ThreadID tid);
+    /** Halted Threads List */
+    std::list<ThreadID> haltedThreads;
+
+    /** Thread Status Functions */
     bool isThreadActive(ThreadID tid);
+    bool isThreadReady(ThreadID tid);
     bool isThreadSuspended(ThreadID tid);
-    void addToCurrentThreads(ThreadID tid);
-    void removeFromCurrentThreads(ThreadID tid);
 
   private:
     /** The activity recorder; used to tell if the CPU has any
@@ -609,6 +615,19 @@ class InOrderCPU : public BaseCPU
     /** Number of Active Threads in the CPU */
     ThreadID numActiveThreads() { return activeThreads.size(); }
 
+    /** Thread id of active thread
+     *  Only used for SwitchOnCacheMiss model. 
+     *  Assumes only 1 thread active
+     */
+    ThreadID activeThreadId() 
+    { 
+        if (numActiveThreads() > 0)
+            return activeThreads.front();
+        else
+            return InvalidThreadID;
+    }
+    
+     
     /** Records that there was time buffer activity this cycle. */
     void activityThisCycle() { activityRec.activity(); }
 
@@ -627,13 +646,14 @@ class InOrderCPU : public BaseCPU
     virtual void wakeup();
 #endif
 
-    /** Gets a free thread id. Use if thread ids change across system. */
-    ThreadID getFreeTid();
-
     // LL/SC debug functionality
     unsigned stCondFails;
-    unsigned readStCondFailures() { return stCondFails; }
-    unsigned setStCondFailures(unsigned st_fails) { return stCondFails = st_fails; }
+
+    unsigned readStCondFailures() 
+    { return stCondFails; }
+
+    unsigned setStCondFailures(unsigned st_fails) 
+    { return stCondFails = st_fails; }
 
     /** Returns a pointer to a thread context. */
     ThreadContext *tcBase(ThreadID tid = 0)
@@ -663,8 +683,15 @@ class InOrderCPU : public BaseCPU
     /** The global sequence number counter. */
     InstSeqNum globalSeqNum[ThePipeline::MaxThreads];
 
+#ifdef DEBUG
     /** The global event number counter. */
     InstSeqNum cpuEventNum;
+
+    /** Number of resource requests active in CPU **/
+    unsigned resReqCount;
+
+    Stats::Scalar maxResReqCount;    
+#endif
 
     /** Counter of how many stages have completed switching out. */
     int switchCount;
@@ -684,18 +711,14 @@ class InOrderCPU : public BaseCPU
     /** Per-Stage Instruction Tracing */
     bool stageTracing;
 
-    /** Is there a context switch pending? */
-    bool contextSwitch;
-
-    /** Threads Scheduled to Enter CPU */
-    std::list<int> cpuWaitList;
-
     /** The cycle that the CPU was last running, used for statistics. */
     Tick lastRunningCycle;
 
-    /** Number of Virtual Processors the CPU can process */
-    unsigned numVirtProcs;
-
+    void updateContextSwitchStats();    
+    unsigned instsPerSwitch;    
+    Stats::Average instsPerCtxtSwitch;    
+    Stats::Scalar numCtxtSwitches;
+    
     /** Update Thread , used for statistic purposes*/
     inline void tickThreadStats();
 
@@ -708,8 +731,14 @@ class InOrderCPU : public BaseCPU
     /** Stat for total number of times the CPU is descheduled. */
     Stats::Scalar timesIdled;
 
-    /** Stat for total number of cycles the CPU spends descheduled. */
+    /** Stat for total number of cycles the CPU spends descheduled or no stages active. */
     Stats::Scalar idleCycles;
+
+    /** Stat for total number of cycles the CPU is active. */
+    Stats::Scalar runCycles;
+
+    /** Percentage of cycles a stage was active */
+    Stats::Formula activity;
 
     /** Stat for the number of committed instructions per thread. */
     Stats::Vector committedInsts;

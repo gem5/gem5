@@ -64,7 +64,6 @@ class InOrderThreadContext : public ThreadContext
     /** Pointer to the thread state that this TC corrseponds to. */
     InOrderThreadState *thread;
 
-
     /** Returns a pointer to the ITB. */
     /** @TODO: PERF: Should we bind this to a pointer in constructor? */
     TheISA::TLB *getITBPtr() { return cpu->getITBPtr(); }

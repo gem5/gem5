@@ -111,7 +111,13 @@ InOrderDynInst::initVars()
 {
     fetchMemReq = NULL;
     dataMemReq = NULL;
-
+    splitMemData = NULL;
+    split2ndAddr = 0;
+    split2ndAccess = false;
+    splitInst = false;
+    splitInstSked = false;    
+    splitFinishCnt = 0;
+    
     effAddr = 0;
     physEffAddr = 0;
 
@@ -159,7 +165,7 @@ InOrderDynInst::initVars()
 
     // Update Instruction Count for this instruction
     ++instcount;
-    if (instcount > 500) {
+    if (instcount > 100) {
         fatal("Number of Active Instructions in CPU is too high. "
                 "(Not Dereferencing Ptrs. Correctly?)\n");
     }
@@ -168,6 +174,12 @@ InOrderDynInst::initVars()
 
     DPRINTF(InOrderDynInst, "DynInst: [tid:%i] [sn:%lli] Instruction created. (active insts: %i)\n",
             threadNumber, seqNum, instcount);
+}
+
+void
+InOrderDynInst::resetInstCount()
+{
+    instcount = 0;
 }
 
 
@@ -187,6 +199,10 @@ InOrderDynInst::~InOrderDynInst()
         delete traceData;
     }
 
+    if (splitMemData) {
+        delete [] splitMemData;
+    }
+    
     fault = NoFault;
 
     --instcount;
@@ -581,30 +597,6 @@ void
 InOrderDynInst::deallocateContext(int thread_num)
 {
     this->cpu->deallocateContext(thread_num);
-}
-
-void
-InOrderDynInst::enableVirtProcElement(unsigned vpe)
-{
-    this->cpu->enableVirtProcElement(vpe);
-}
-
-void
-InOrderDynInst::disableVirtProcElement(unsigned vpe)
-{
-    this->cpu->disableVirtProcElement(threadNumber, vpe);
-}
-
-void
-InOrderDynInst::enableMultiThreading(unsigned vpe)
-{
-    this->cpu->enableMultiThreading(vpe);
-}
-
-void
-InOrderDynInst::disableMultiThreading(unsigned vpe)
-{
-    this->cpu->disableMultiThreading(threadNumber, vpe);
 }
 
 template<class T>

@@ -178,7 +178,7 @@ class PipelineStage
     virtual void processInsts(ThreadID tid);
 
     /** Process all resources on an instruction's resource schedule */
-    virtual bool processInstSchedule(DynInstPtr inst);
+    virtual bool processInstSchedule(DynInstPtr inst, int &reqs_processed);
 
     /** Is there room in the next stage buffer for this instruction? */
     virtual bool canSendInstToStage(unsigned stage_num);
@@ -235,10 +235,14 @@ class PipelineStage
 
 
   public:
+    virtual void activateThread(ThreadID tid);
+    
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      */
     virtual void squashDueToBranch(DynInstPtr &inst, ThreadID tid);
+
+    virtual void squashDueToMemStall(InstSeqNum seq_num, ThreadID tid);
 
     /** Squash instructions from stage buffer  */
     virtual void squashPrevStageInsts(InstSeqNum squash_seq_num, ThreadID tid);
@@ -259,19 +263,33 @@ class PipelineStage
     /** List of active thread ids */
     std::list<ThreadID> *activeThreads;
 
+    /** Buffer of instructions switched out to mem-stall. 
+     *  Only used when using SwitchOnCacheMiss threading model
+     *  Used as 1-to-1 mapping between ThreadID and Entry. 
+     */
+    std::vector<DynInstPtr> switchedOutBuffer;
+    std::vector<bool> switchedOutValid;
+
+    /** Instructions that we've processed this tick
+     *  NOTE: "Processed" means completed at least 1 instruction request 
+     */
+    unsigned instsProcessed;    
+
     /** Queue of all instructions coming from previous stage on this cycle. */
     std::queue<DynInstPtr> insts[ThePipeline::MaxThreads];
 
-    /** Queue of instructions that are finished processing and ready to go next stage.
-     *  This is used to prevent from processing an instrution more than once on any
-     *  stage. NOTE: It is up to the PROGRAMMER must manage this as a queue
+    /** Queue of instructions that are finished processing and ready to go 
+     *  next stage. This is used to prevent from processing an instrution more 
+     *  than once on any stage. NOTE: It is up to the PROGRAMMER must manage 
+     *  this as a queue
      */
     std::list<DynInstPtr> instsToNextStage;
 
     /** Skid buffer between previous stage and this one. */
     std::queue<DynInstPtr> skidBuffer[ThePipeline::MaxThreads];
 
-    /** Instruction used to signify that there is no *real* instruction in buffer slot */
+    /** Instruction used to signify that there is no *real* instruction in
+     *  buffer slot */
     DynInstPtr dummyBufferInst;
 
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS) */
@@ -329,30 +347,27 @@ class PipelineStage
     /** Is Next Stage Valid? */
     bool nextStageValid;
 
+    bool idle;
+    
     /** Source of possible stalls. */
     struct Stalls {
         bool stage[ThePipeline::NumStages];
         std::vector<ResReqPtr> resources;
     };
 
-    /** Tracks which stages are telling decode to stall. */
+    /** Tracks stage/resource stalls */
     Stalls stalls[ThePipeline::MaxThreads];
 
-    //@TODO: Use Stats for the pipeline stages
-    /** Stat for total number of idle cycles. */
-    //Stats::Scalar stageIdleCycles;
-    /** Stat for total number of blocked cycles. */
-    //Stats::Scalar stageBlockedCycles;
-    /** Stat for total number of normal running cycles. */
-    //Stats::Scalar stageRunCycles;
-    /** Stat for total number of unblocking cycles. */
-    //Stats::Scalar stageUnblockCycles;
-    /** Stat for total number of squashing cycles. */
-    //Stats::Scalar stageSquashCycles;
-    /** Stat for total number of staged instructions. */
-    //Stats::Scalar stageProcessedInsts;
-    /** Stat for total number of squashed instructions. */
-    //Stats::Scalar stageSquashedInsts;
+    /** Number of cycles 0 instruction(s) are processed. */
+    Stats::Scalar idleCycles;
+
+    /** Number of cycles 1+ instructions are processed. */
+    Stats::Scalar runCycles;
+
+    /** Percentage of cycles 1+ instructions are processed. */
+    Stats::Formula utilization;
+
+
 };
 
 #endif

@@ -79,14 +79,14 @@ class InOrderThreadState : public ThreadState {
 #if FULL_SYSTEM
     InOrderThreadState(InOrderCPU *_cpu, ThreadID _thread_num)
         : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), _thread_num),
-          cpu(_cpu), inSyscall(0), trapPending(0)
+          cpu(_cpu), inSyscall(0), trapPending(0), lastGradIsBranch(false)
     { }
 #else
     InOrderThreadState(InOrderCPU *_cpu, ThreadID _thread_num,
                        Process *_process)
         : ThreadState(reinterpret_cast<BaseCPU*>(_cpu), _thread_num,
                       _process),
-          cpu(_cpu), inSyscall(0), trapPending(0)
+          cpu(_cpu), inSyscall(0), trapPending(0), lastGradIsBranch(false)
     { }
 #endif
 
@@ -105,10 +105,15 @@ class InOrderThreadState : public ThreadState {
     /** Returns a pointer to the TC of this thread. */
     ThreadContext *getTC() { return tc; }
 
+    /** Return the thread id */
     int readTid() { return threadId(); }
 
-    /** Pointer to the last graduated instruction in the thread */
-    //DynInstPtr lastGradInst;
+    
+    /** Is last instruction graduated a branch? */
+    bool lastGradIsBranch;
+    Addr lastBranchPC;    
+    Addr lastBranchNextPC;    
+    Addr lastBranchNextNPC;    
 };
 
 #endif // __CPU_INORDER_THREAD_STATE_HH__

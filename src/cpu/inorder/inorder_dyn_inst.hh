@@ -164,6 +164,7 @@ class InOrderDynInst : public FastAlloc, public RefCounted
                                  /// instructions ahead of it
         SerializeAfter,          /// Needs to serialize instructions behind it
         SerializeHandled,        /// Serialization has been handled
+        RemoveList,               /// Is Instruction on Remove List?
         NumStatus
     };
 
@@ -330,6 +331,20 @@ class InOrderDynInst : public FastAlloc, public RefCounted
   public:
     Tick memTime;
 
+    PacketDataPtr splitMemData;
+    RequestPtr splitMemReq;    
+    int splitTotalSize;
+    int split2ndSize;
+    Addr split2ndAddr;
+    bool split2ndAccess;
+    uint8_t split2ndData;
+    PacketDataPtr split2ndDataPtr;
+    unsigned split2ndFlags;
+    bool splitInst;
+    int splitFinishCnt;
+    uint64_t *split2ndStoreDataPtr;    
+    bool splitInstSked;
+
     ////////////////////////////////////////////////////////////
     //
     //  BASE INSTRUCTION INFORMATION.
@@ -468,7 +483,10 @@ class InOrderDynInst : public FastAlloc, public RefCounted
         if (!resSched.empty()) {
             ThePipeline::ScheduleEntry* sked = resSched.top();
             resSched.pop();
-            delete sked;
+            if (sked != 0) {
+                delete sked;
+                
+            }            
         }
     }
 
@@ -514,12 +532,6 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     //
     ////////////////////////////////////////////////////////////
     virtual void deallocateContext(int thread_num);
-
-    virtual void enableVirtProcElement(unsigned vpe);
-    virtual void disableVirtProcElement(unsigned vpe);
-
-    virtual void enableMultiThreading(unsigned vpe);
-    virtual void disableMultiThreading(unsigned vpe);
 
     ////////////////////////////////////////////////////////////
     //
@@ -905,6 +917,12 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Returns whether or not the entry is on the CPU Reg Dep Map */
     bool isRegDepEntry() const { return status[RegDepMapEntry]; }
 
+    /** Sets this instruction as entered on the CPU Reg Dep Map */
+    void setRemoveList() { status.set(RemoveList); }
+
+    /** Returns whether or not the entry is on the CPU Reg Dep Map */
+    bool isRemoveList() const { return status[RemoveList]; }
+
     /** Sets this instruction as completed. */
     void setCompleted() { status.set(Completed); }
 
@@ -1022,14 +1040,15 @@ class InOrderDynInst : public FastAlloc, public RefCounted
     /** Count of total number of dynamic instructions. */
     static int instcount;
 
+    void resetInstCount();
+    
     /** Dumps out contents of this BaseDynInst. */
     void dump();
 
     /** Dumps out contents of this BaseDynInst into given string. */
     void dump(std::string &outstring);
 
-
-  //inline int curCount() { return curCount(); }
+    //inline int curCount() { return curCount(); }
 };
 
 

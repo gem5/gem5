@@ -41,45 +41,74 @@ using namespace ThePipeline;
 ResourcePool::ResourcePool(InOrderCPU *_cpu, ThePipeline::Params *params)
     : cpu(_cpu)
 {
-    //@todo: use this function to instantiate the resources in resource pool. This will help in the
-    //auto-generation of this pipeline model.
+    //@todo: use this function to instantiate the resources in resource pool. 
+    //This will help in the auto-generation of this pipeline model.
     //ThePipeline::addResources(resources, memObjects);
 
     // Declare Resource Objects
     // name - id - bandwidth - latency - CPU - Parameters
     // --------------------------------------------------
-    resources.push_back(new FetchSeqUnit("Fetch-Seq-Unit", FetchSeq, StageWidth * 2, 0, _cpu, params));
+    resources.push_back(new FetchSeqUnit("Fetch-Seq-Unit", FetchSeq, 
+                                         StageWidth * 2, 0, _cpu, params));
 
     memObjects.push_back(ICache);
-    resources.push_back(new CacheUnit("icache_port", ICache, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new CacheUnit("icache_port", ICache, 
+                                      StageWidth * MaxThreads, 0, _cpu, 
+                                      params));
 
-    resources.push_back(new DecodeUnit("Decode-Unit", Decode, StageWidth, 0, _cpu, params));
+    resources.push_back(new DecodeUnit("Decode-Unit", Decode, 
+                                       StageWidth, 0, _cpu, params));
 
-    resources.push_back(new BranchPredictor("Branch-Predictor", BPred, StageWidth, 0, _cpu, params));
+    resources.push_back(new BranchPredictor("Branch-Predictor", BPred, 
+                                            StageWidth, 0, _cpu, params));
 
-    resources.push_back(new InstBuffer("Fetch-Buffer-T0", FetchBuff, 4, 0, _cpu, params));
+    resources.push_back(new InstBuffer("Fetch-Buffer-T0", FetchBuff, 4, 
+                                       0, _cpu, params));
 
-    resources.push_back(new UseDefUnit("RegFile-Manager", RegManager, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new UseDefUnit("RegFile-Manager", RegManager, 
+                                       StageWidth * MaxThreads, 0, _cpu, 
+                                       params));
 
-    resources.push_back(new AGENUnit("AGEN-Unit", AGEN, StageWidth, 0, _cpu, params));
+    resources.push_back(new AGENUnit("AGEN-Unit", AGEN, 
+                                     StageWidth, 0, _cpu, params));
 
-    resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, StageWidth, 0, _cpu, params));
+    resources.push_back(new ExecutionUnit("Execution-Unit", ExecUnit, 
+                                          StageWidth, 0, _cpu, params));
 
-    resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, params));
+    resources.push_back(new MultDivUnit("Mult-Div-Unit", MDU, 5, 0, _cpu, 
+                                        params));
 
     memObjects.push_back(DCache);
-    resources.push_back(new CacheUnit("dcache_port", DCache, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new CacheUnit("dcache_port", DCache, 
+                                      StageWidth * MaxThreads, 0, _cpu, 
+                                      params));
 
-    resources.push_back(new GraduationUnit("Graduation-Unit", Grad, StageWidth * MaxThreads, 0, _cpu, params));
+    resources.push_back(new GraduationUnit("Graduation-Unit", Grad, 
+                                           StageWidth * MaxThreads, 0, _cpu, 
+                                           params));
 
-    resources.push_back(new InstBuffer("Fetch-Buffer-T1", FetchBuff2, 4, 0, _cpu, params));
+    resources.push_back(new InstBuffer("Fetch-Buffer-T1", FetchBuff2, 4, 
+                                       0, _cpu, params));
 }
+
+ResourcePool::~ResourcePool()
+{
+    cout << "Deleting resources ..." << endl;
+    
+    for (int i=0; i < resources.size(); i++) {
+        DPRINTF(Resource, "Deleting resource: %s.\n", resources[i]->name());
+        
+        delete resources[i];
+    }    
+}
+
 
 void
 ResourcePool::init()
 {
     for (int i=0; i < resources.size(); i++) {
-        DPRINTF(Resource, "Initializing resource: %s.\n", resources[i]->name());
+        DPRINTF(Resource, "Initializing resource: %s.\n", 
+                resources[i]->name());
         
         resources[i]->init();
     }
@@ -113,8 +142,8 @@ ResourcePool::getPort(const std::string &if_name, int idx)
         int obj_idx = memObjects[i];
         Port *port = resources[obj_idx]->getPort(if_name, idx);
         if (port != NULL) {
-            DPRINTF(Resource, "%s set to resource %s(#%i) in Resource Pool.\n", if_name,
-                    resources[obj_idx]->name(), obj_idx);
+            DPRINTF(Resource, "%s set to resource %s(#%i) in Resource Pool.\n", 
+                    if_name, resources[obj_idx]->name(), obj_idx);
             return port;
         }
     }
@@ -131,7 +160,8 @@ ResourcePool::getPortIdx(const std::string &port_name)
         unsigned obj_idx = memObjects[i];
         Port *port = resources[obj_idx]->getPort(port_name, obj_idx);
         if (port != NULL) {
-            DPRINTF(Resource, "Returning Port Idx %i for %s.\n", obj_idx, port_name);
+            DPRINTF(Resource, "Returning Port Idx %i for %s.\n", obj_idx, 
+                    port_name);
             return obj_idx;
         }
     }
@@ -151,6 +181,25 @@ ResourcePool::getResIdx(const std::string &res_name)
             return idx;
     }
 
+    panic("Can't find resource idx for: %s\n", res_name);
+    return 0;
+}
+
+unsigned
+ResourcePool::getResIdx(const ThePipeline::ResourceId &res_id)
+{
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        if (resources[idx]->getId() == res_id)
+            return idx;
+    }
+
+    // todo: change return value to int and return a -1 here
+    //       maybe even have enumerated type
+    //       panic for now...
+    panic("Can't find resource idx for: %i\n", res_id);
+
     return 0;
 }
 
@@ -167,7 +216,8 @@ void
 ResourcePool::squash(DynInstPtr inst, int res_idx, InstSeqNum done_seq_num,
                      ThreadID tid)
 {
-    resources[res_idx]->squash(inst, ThePipeline::NumStages-1, done_seq_num, tid);
+    resources[res_idx]->squash(inst, ThePipeline::NumStages-1, done_seq_num, 
+                               tid);
 }
 
 int
@@ -182,6 +232,12 @@ ResourcePool::slotsInUse(int res_idx)
     return resources[res_idx]->slotsInUse();
 }
 
+//@todo: split this function and call this version schedulePoolEvent
+//       and use this scheduleEvent for scheduling a specific event on 
+//       a resource
+//@todo: For arguments that arent being used in a ResPoolEvent, a dummyParam
+//       or some typedef can be used to signify what's important info
+//       to the event construction
 void
 ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
                             int delay,  int res_idx, ThreadID tid)
@@ -192,23 +248,45 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
     {
       case InOrderCPU::ActivateThread:
         {
-            DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event for tick %i.\n",
-                    curTick + delay);
-            ResPoolEvent *res_pool_event = new ResPoolEvent(this,
-                                                            e_type,
-                                                            inst,
-                                                            inst->squashingStage,
-                                                            inst->bdelaySeqNum,
-                                                            inst->readTid());
-            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
+            DPRINTF(Resource, "Scheduling Activate Thread Resource Pool Event "
+                    "for tick %i, [tid:%i].\n", curTick + delay, 
+                    inst->readTid());
+            ResPoolEvent *res_pool_event = 
+                new ResPoolEvent(this,
+                                 e_type,
+                                 inst,
+                                 inst->squashingStage,
+                                 inst->bdelaySeqNum,
+                                 inst->readTid());
+            mainEventQueue.schedule(res_pool_event, 
+                                    curTick + cpu->ticks(delay));
+        }
+        break;
+
+      case InOrderCPU::HaltThread:
+      case InOrderCPU::DeactivateThread:
+        {
+
+            DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool "
+                    "Event for tick %i.\n", curTick + delay);
+            ResPoolEvent *res_pool_event = 
+                new ResPoolEvent(this,
+                                 e_type,
+                                 inst,
+                                 inst->squashingStage,
+                                 inst->bdelaySeqNum,
+                                 tid);
+
+            mainEventQueue.schedule(res_pool_event, 
+                                    curTick + cpu->ticks(delay));
+
         }
         break;
 
       case InOrderCPU::SuspendThread:
-      case InOrderCPU::DeallocateThread:
         {
 
-            DPRINTF(Resource, "Scheduling Deactivate Thread Resource Pool Event for tick %i.\n",
+            DPRINTF(Resource, "Scheduling Suspend Thread Resource Pool Event for tick %i.\n",
                     curTick + delay);
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,
                                                             e_type,
@@ -224,7 +302,54 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
 
       case ResourcePool::InstGraduated:
         {
-            DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool Event for tick %i.\n",
+            DPRINTF(Resource, "Scheduling Inst-Graduated Resource Pool "
+                    "Event for tick %i.\n", curTick + delay);
+            ResPoolEvent *res_pool_event = 
+                new ResPoolEvent(this,e_type,
+                                 inst,
+                                 inst->squashingStage,
+                                 inst->seqNum,
+                                 inst->readTid());
+            mainEventQueue.schedule(res_pool_event, 
+                                    curTick + cpu->ticks(delay));
+
+        }
+        break;
+
+      case ResourcePool::SquashAll:
+        {
+            DPRINTF(Resource, "Scheduling Squash Resource Pool Event for "
+                    "tick %i.\n", curTick + delay);
+            ResPoolEvent *res_pool_event = 
+                new ResPoolEvent(this,e_type,
+                                 inst,
+                                 inst->squashingStage,
+                                 inst->bdelaySeqNum,
+                                 inst->readTid());
+            mainEventQueue.schedule(res_pool_event, 
+                                    curTick + cpu->ticks(delay));
+        }
+        break;
+
+      case InOrderCPU::SquashFromMemStall:
+        {
+            DPRINTF(Resource, "Scheduling Squash Due to Memory Stall Resource "
+                    "Pool Event for tick %i.\n",
+                    curTick + delay);
+            ResPoolEvent *res_pool_event = 
+                new ResPoolEvent(this,e_type,
+                                 inst,
+                                 inst->squashingStage,
+                                 inst->seqNum - 1,
+                                 inst->readTid());
+            mainEventQueue.schedule(res_pool_event, 
+                                    curTick + cpu->ticks(delay));
+        }
+        break;
+
+      case ResourcePool::UpdateAfterContextSwitch:
+        {
+            DPRINTF(Resource, "Scheduling UpdatePC Resource Pool Event for tick %i.\n",
                     curTick + delay);
             ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
                                                             inst,
@@ -236,22 +361,9 @@ ResourcePool::scheduleEvent(InOrderCPU::CPUEventType e_type, DynInstPtr inst,
         }
         break;
 
-      case ResourcePool::SquashAll:
-        {
-            DPRINTF(Resource, "Scheduling Squash Resource Pool Event for tick %i.\n",
-                    curTick + delay);
-            ResPoolEvent *res_pool_event = new ResPoolEvent(this,e_type,
-                                                            inst,
-                                                            inst->squashingStage,
-                                                            inst->bdelaySeqNum,
-                                                            inst->readTid());
-            mainEventQueue.schedule(res_pool_event, curTick + cpu->ticks(delay));
-        }
-        break;
-
       default:
-        DPRINTF(Resource, "Ignoring Unrecognized CPU Event (%s).\n", InOrderCPU::eventNames[e_type]);
-        ; // If Resource Pool doesnt recognize event, we ignore it.
+        DPRINTF(Resource, "Ignoring Unrecognized CPU Event (%s).\n", 
+                InOrderCPU::eventNames[e_type]);
     }
 }
 
@@ -265,8 +377,9 @@ void
 ResourcePool::squashAll(DynInstPtr inst, int stage_num,
                         InstSeqNum done_seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Stage %i squashing all instructions above [sn:%i].\n",
-            stage_num, tid, done_seq_num);
+    DPRINTF(Resource, "[tid:%i] Broadcasting Squash All Event "
+            " starting w/stage %i for all instructions above [sn:%i].\n",
+             tid, stage_num, done_seq_num);
 
     int num_resources = resources.size();
 
@@ -276,23 +389,49 @@ ResourcePool::squashAll(DynInstPtr inst, int stage_num,
 }
 
 void
-ResourcePool::activateAll(ThreadID tid)
+ResourcePool::squashDueToMemStall(DynInstPtr inst, int stage_num,
+                             InstSeqNum done_seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Activation to all resources.\n",
-            tid);
+    DPRINTF(Resource, "[tid:%i] Broadcasting SquashDueToMemStall Event"
+            " starting w/stage %i for all instructions above [sn:%i].\n",
+            tid, stage_num, done_seq_num);
 
     int num_resources = resources.size();
 
     for (int idx = 0; idx < num_resources; idx++) {
-        resources[idx]->activateThread(tid);
+        resources[idx]->squashDueToMemStall(inst, stage_num, done_seq_num, 
+                                            tid);
     }
+}
+
+void
+ResourcePool::activateAll(ThreadID tid)
+{
+    bool do_activate = cpu->threadModel != InOrderCPU::SwitchOnCacheMiss ||
+        cpu->numActiveThreads() < 1 ||
+        cpu->activeThreadId() == tid;
+    
+        
+    if (do_activate) {
+        DPRINTF(Resource, "[tid:%i] Broadcasting Thread Activation to all "
+                    "resources.\n", tid);
+ 
+        int num_resources = resources.size();
+ 
+        for (int idx = 0; idx < num_resources; idx++) {
+            resources[idx]->activateThread(tid);
+        }
+    } else {
+        DPRINTF(Resource, "[tid:%i] Ignoring Thread Activation to all "
+                    "resources.\n", tid);
+     }
 }
 
 void
 ResourcePool::deactivateAll(ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Deactivation to all resources.\n",
-            tid);
+    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Deactivation to all "
+            "resources.\n", tid);
 
     int num_resources = resources.size();
 
@@ -302,10 +441,23 @@ ResourcePool::deactivateAll(ThreadID tid)
 }
 
 void
+ResourcePool::suspendAll(ThreadID tid)
+{
+    DPRINTF(Resource, "[tid:%i] Broadcasting Thread Suspension to all resources.\n",
+            tid);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        resources[idx]->suspendThread(tid);
+    }
+}
+
+void
 ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
 {
-    DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to all resources.\n",
-            tid, seq_num);
+    DPRINTF(Resource, "[tid:%i] Broadcasting [sn:%i] graduation to all "
+            "resources.\n", tid, seq_num);
 
     int num_resources = resources.size();
 
@@ -314,10 +466,18 @@ ResourcePool::instGraduated(InstSeqNum seq_num, ThreadID tid)
     }
 }
 
-ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool)
-    : Event(CPU_Tick_Pri), resPool(_resPool),
-      eventType((InOrderCPU::CPUEventType) Default)
-{ }
+void
+ResourcePool::updateAfterContextSwitch(DynInstPtr inst, ThreadID tid)
+{
+    DPRINTF(Resource, "[tid:%i] Broadcasting Update PC to all resources.\n",
+            tid);
+
+    int num_resources = resources.size();
+
+    for (int idx = 0; idx < num_resources; idx++) {
+        resources[idx]->updateAfterContextSwitch(inst, tid);
+    }
+}
 
 ResourcePool::ResPoolEvent::ResPoolEvent(ResourcePool *_resPool,
                                          InOrderCPU::CPUEventType e_type,
@@ -340,9 +500,13 @@ ResourcePool::ResPoolEvent::process()
         resPool->activateAll(tid);
         break;
 
-      case InOrderCPU::SuspendThread:
-      case InOrderCPU::DeallocateThread:
+      case InOrderCPU::DeactivateThread:
+      case InOrderCPU::HaltThread:
         resPool->deactivateAll(tid);
+        break;
+
+      case InOrderCPU::SuspendThread:
+        resPool->suspendAll(tid);
         break;
 
       case ResourcePool::InstGraduated:
@@ -351,6 +515,14 @@ ResourcePool::ResPoolEvent::process()
 
       case ResourcePool::SquashAll:
         resPool->squashAll(inst, stageNum, seqNum, tid);
+        break;
+
+      case InOrderCPU::SquashFromMemStall:
+        resPool->squashDueToMemStall(inst, stageNum, seqNum, tid);
+        break;
+
+      case ResourcePool::UpdateAfterContextSwitch:
+        resPool->updateAfterContextSwitch(inst, tid);
         break;
 
       default:

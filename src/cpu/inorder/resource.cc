@@ -47,6 +47,7 @@ Resource::Resource(string res_name, int res_id, int res_width,
 Resource::~Resource()
 {
     delete [] resourceEvent;
+    delete deniedReq;    
 }
 
 
@@ -80,7 +81,9 @@ Resource::regStats()
 {
     instReqsProcessed
         .name(name() + ".instReqsProcessed")
-        .desc("Number of Instructions Requests that completed in this resource.");
+        .desc("Number of Instructions Requests that completed in "
+              "this resource.")
+        .prereq(instReqsProcessed);
 }
 
 int
@@ -98,11 +101,6 @@ Resource::slotsInUse()
 void
 Resource::freeSlot(int slot_idx)
 {
-    DPRINTF(RefCount, "Removing [tid:%i] [sn:%i]'s request from resource [slot:%i].\n",
-            reqMap[slot_idx]->inst->readTid(),
-            reqMap[slot_idx]->inst->seqNum,
-            slot_idx);
-
     // Put slot number on this resource's free list
     availSlots.push_back(slot_idx);
 
@@ -159,7 +157,8 @@ Resource::getSlot(DynInstPtr inst)
 
         while (map_it != map_end) {
             if ((*map_it).second) {
-                DPRINTF(Resource, "Currently Serving request from: [tid:%i] [sn:%i].\n",
+                DPRINTF(Resource, "Currently Serving request from: "
+                        "[tid:%i] [sn:%i].\n",
                         (*map_it).second->getInst()->readTid(),
                         (*map_it).second->getInst()->seqNum);
             }
@@ -176,7 +175,7 @@ Resource::request(DynInstPtr inst)
     // See if the resource is already serving this instruction.
     // If so, use that request;
     bool try_request = false;
-    int slot_num;
+    int slot_num = -1;
     int stage_num;
     ResReqPtr inst_req = findRequest(inst);
 
@@ -202,10 +201,12 @@ Resource::request(DynInstPtr inst)
             inst_req = getRequest(inst, stage_num, id, slot_num, cmd);
 
             if (inst->staticInst) {
-                DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource.\n",
+                DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this "
+                        "resource.\n",
                         inst->readTid(), inst->seqNum);
             } else {
-                DPRINTF(Resource, "[tid:%i]: instruction requesting this resource.\n",
+                DPRINTF(Resource, "[tid:%i]: instruction requesting this "
+                        "resource.\n",
                         inst->readTid());
             }
 
@@ -232,7 +233,8 @@ Resource::requestAgain(DynInstPtr inst, bool &do_request)
     do_request = true;
 
     if (inst->staticInst) {
-        DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource again.\n",
+        DPRINTF(Resource, "[tid:%i]: [sn:%i] requesting this resource "
+                "again.\n",
                 inst->readTid(), inst->seqNum);
     } else {
         DPRINTF(Resource, "[tid:%i]: requesting this resource again.\n",
@@ -254,15 +256,22 @@ Resource::findRequest(DynInstPtr inst)
     map<int, ResReqPtr>::iterator map_it = reqMap.begin();
     map<int, ResReqPtr>::iterator map_end = reqMap.end();
 
+    bool found = false;
+    ResReqPtr req = NULL;
+    
     while (map_it != map_end) {
         if ((*map_it).second &&
-            (*map_it).second->getInst() == inst) {
-            return (*map_it).second;
+            (*map_it).second->getInst() == inst) {            
+            req = (*map_it).second;
+            //return (*map_it).second;
+            assert(found == false);
+            found = true;            
         }
         map_it++;
     }
 
-    return NULL;
+    return req;    
+    //return NULL;
 }
 
 void
@@ -334,6 +343,12 @@ Resource::squash(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
     }
 }
 
+void
+Resource::squashDueToMemStall(DynInstPtr inst, int stage_num, InstSeqNum squash_seq_num,
+                              ThreadID tid)
+{
+    squash(inst, stage_num, squash_seq_num, tid);    
+}
 
 Tick
 Resource::ticks(int num_cycles)
@@ -394,22 +409,72 @@ Resource::unscheduleEvent(DynInstPtr inst)
 
 int ResourceRequest::resReqID = 0;
 
-int ResourceRequest::resReqCount = 0;
+int ResourceRequest::maxReqCount = 0;
+
+ResourceRequest::ResourceRequest(Resource *_res, DynInstPtr _inst, 
+                                 int stage_num, int res_idx, int slot_num, 
+                                 unsigned _cmd)
+    : res(_res), inst(_inst), cmd(_cmd),  stageNum(stage_num),
+      resIdx(res_idx), slotNum(slot_num), completed(false),
+      squashed(false), processing(false), memStall(false)
+{
+#ifdef DEBUG
+        reqID = resReqID++;
+        res->cpu->resReqCount++;
+        DPRINTF(ResReqCount, "Res. Req %i created. resReqCount=%i.\n", reqID, 
+                res->cpu->resReqCount);
+
+        if (res->cpu->resReqCount > 100) {
+            fatal("Too many undeleted resource requests. Memory leak?\n");
+        }
+
+        if (res->cpu->resReqCount > maxReqCount) {            
+            maxReqCount = res->cpu->resReqCount;
+            res->cpu->maxResReqCount = maxReqCount;            
+        }
+        
+#endif
+
+        stagePasses = 0;
+        complSlotNum = -1;
+        
+}
+
+ResourceRequest::~ResourceRequest()
+{
+#ifdef DEBUG
+        res->cpu->resReqCount--;
+        DPRINTF(ResReqCount, "Res. Req %i deleted. resReqCount=%i.\n", reqID, 
+                res->cpu->resReqCount);
+#endif
+}
 
 void
 ResourceRequest::done(bool completed)
 {
-    DPRINTF(Resource, "%s done with request from [sn:%i] [tid:%i].\n",
-            res->name(), inst->seqNum, inst->readTid());
+    DPRINTF(Resource, "%s [slot:%i] done with request from [sn:%i] [tid:%i].\n",
+            res->name(), slotNum, inst->seqNum, inst->readTid());
 
     setCompleted(completed);
 
-    // Add to remove list
-    res->cpu->reqRemoveList.push(res->reqMap[slotNum]);
-
+    // Used for debugging purposes
+    if (completed) {
+        complSlotNum = slotNum;
+    
+        // Would like to start a convention such as all requests deleted in resources/pipeline
+        // but a little more complex then it seems...
+        // For now, all COMPLETED requests deleted in resource..
+        //          all FAILED requests deleted in pipeline stage
+        //          *all SQUASHED requests deleted in resource
+        res->cpu->reqRemoveList.push(res->reqMap[slotNum]);
+    }
+    
     // Free Slot So Another Instruction Can Use This Resource
     res->freeSlot(slotNum);
 
+    // change slot # to -1, since we check slotNum to see if request is still valid
+    slotNum = -1;
+        
     res->instReqsProcessed++;
 }
 
