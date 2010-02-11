@@ -429,6 +429,7 @@ machine(Directory, "Directory protocol")
       enqueue(memQueue_out, MemoryMsg, latency="1") {
         out_msg.Address := address;
         out_msg.Type := MemoryRequestType:MEMORY_WB;
+        out_msg.Sender := machineID;
         out_msg.OriginalRequestorMachId := in_msg.Requestor;
         out_msg.DataBlk := in_msg.DataBlk;
         out_msg.MessageSize := in_msg.MessageSize;
