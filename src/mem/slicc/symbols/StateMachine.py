@@ -349,6 +349,7 @@ $c_ident::$c_ident(const Params *p)
     m_buffer_size = p->buffer_size;
     m_recycle_latency = p->recycle_latency;
     m_number_of_TBEs = p->number_of_TBEs;
+    m_is_blocking = false;
 ''')
         code.indent()
 
