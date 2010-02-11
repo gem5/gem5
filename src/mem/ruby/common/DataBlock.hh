@@ -82,7 +82,9 @@ bool operator==(const DataBlock& obj1, const DataBlock& obj2);
 inline
 void DataBlock::assign(uint8* data)
 {
-  delete [] m_data;
+  if (m_alloc) {
+    delete [] m_data;
+  }
   m_data = data;
   m_alloc = false;
 }
