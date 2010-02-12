@@ -131,8 +131,13 @@ class BaseDynInst : public FastAlloc, public RefCounted
     template <class T>
     Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
 
+    /** Splits a request in two if it crosses a dcache block. */
+    void splitRequest(RequestPtr req, RequestPtr &sreqLow,
+                      RequestPtr &sreqHigh);
+
     /** Initiate a DTB address translation. */
-    void initiateTranslation(RequestPtr req, uint64_t *res,
+    void initiateTranslation(RequestPtr req, RequestPtr sreqLow,
+                             RequestPtr sreqHigh, uint64_t *res,
                              BaseTLB::Mode mode);
 
     /** Finish a DTB address translation. */
@@ -870,12 +875,19 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
                                thread->contextId(), threadNumber);
 
-    initiateTranslation(req, NULL, BaseTLB::Read);
+    Request *sreqLow = NULL;
+    Request *sreqHigh = NULL;
+
+    // Only split the request if the ISA supports unaligned accesses.
+    if (TheISA::HasUnalignedMemAcc) {
+        splitRequest(req, sreqLow, sreqHigh);
+    }
+    initiateTranslation(req, sreqLow, sreqHigh, NULL, BaseTLB::Read);
 
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        cpu->read(req, data, lqIdx);
+        cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
     } else {
 
         // Return a fixed value to keep simulation deterministic even
@@ -909,12 +921,19 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
                                thread->contextId(), threadNumber);
 
-    initiateTranslation(req, res, BaseTLB::Write);
+    Request *sreqLow = NULL;
+    Request *sreqHigh = NULL;
+
+    // Only split the request if the ISA supports unaligned accesses.
+    if (TheISA::HasUnalignedMemAcc) {
+        splitRequest(req, sreqLow, sreqHigh);
+    }
+    initiateTranslation(req, sreqLow, sreqHigh, res, BaseTLB::Write);
 
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        cpu->write(req, data, sqIdx);
+        cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
     }
 
     return fault;
@@ -922,14 +941,48 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
 template<class Impl>
 inline void
-BaseDynInst<Impl>::initiateTranslation(RequestPtr req, uint64_t *res,
+BaseDynInst<Impl>::splitRequest(RequestPtr req, RequestPtr &sreqLow,
+                                RequestPtr &sreqHigh)
+{
+    // Check to see if the request crosses the next level block boundary.
+    unsigned block_size = cpu->getDcachePort()->peerBlockSize();
+    Addr addr = req->getVaddr();
+    Addr split_addr = roundDown(addr + req->getSize() - 1, block_size);
+    assert(split_addr <= addr || split_addr - addr < block_size);
+
+    // Spans two blocks.
+    if (split_addr > addr) {
+        req->splitOnVaddr(split_addr, sreqLow, sreqHigh);
+    }
+}
+
+template<class Impl>
+inline void
+BaseDynInst<Impl>::initiateTranslation(RequestPtr req, RequestPtr sreqLow,
+                                       RequestPtr sreqHigh, uint64_t *res,
                                        BaseTLB::Mode mode)
 {
-    WholeTranslationState *state =
-        new WholeTranslationState(req, NULL, res, mode);
-    DataTranslation<BaseDynInst<Impl> > *trans =
-        new DataTranslation<BaseDynInst<Impl> >(this, state);
-    cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
+    if (!TheISA::HasUnalignedMemAcc || sreqLow == NULL) {
+        WholeTranslationState *state =
+            new WholeTranslationState(req, NULL, res, mode);
+
+        // One translation if the request isn't split.
+        DataTranslation<BaseDynInst<Impl> > *trans =
+            new DataTranslation<BaseDynInst<Impl> >(this, state);
+        cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
+    } else {
+        WholeTranslationState *state =
+            new WholeTranslationState(req, sreqLow, sreqHigh, NULL, res, mode);
+
+        // Two translations when the request is split.
+        DataTranslation<BaseDynInst<Impl> > *stransLow =
+            new DataTranslation<BaseDynInst<Impl> >(this, state, 0);
+        DataTranslation<BaseDynInst<Impl> > *stransHigh =
+            new DataTranslation<BaseDynInst<Impl> >(this, state, 1);
+
+        cpu->dtb->translateTiming(sreqLow, thread->getTC(), stransLow, mode);
+        cpu->dtb->translateTiming(sreqHigh, thread->getTC(), stransHigh, mode);
+    }
 }
 
 template<class Impl>

@@ -85,11 +85,23 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
 
     assert(!pkt->wasNacked());
 
+    // If this is a split access, wait until all packets are received.
+    if (TheISA::HasUnalignedMemAcc && !state->complete()) {
+        delete pkt->req;
+        delete pkt;
+        return;
+    }
+
     if (isSwitchedOut() || inst->isSquashed()) {
         iewStage->decrWb(inst->seqNum);
     } else {
         if (!state->noWB) {
-            writeback(inst, pkt);
+            if (!TheISA::HasUnalignedMemAcc || !state->isSplit ||
+                !state->isLoad) {
+                writeback(inst, pkt);
+            } else {
+                writeback(inst, state->mainPkt);
+            }
         }
 
         if (inst->isStore()) {
@@ -97,6 +109,10 @@ LSQUnit<Impl>::completeDataAccess(PacketPtr pkt)
         }
     }
 
+    if (TheISA::HasUnalignedMemAcc && state->isSplit && state->isLoad) {
+        delete state->mainPkt->req;
+        delete state->mainPkt;
+    }
     delete state;
     delete pkt->req;
     delete pkt;
@@ -106,7 +122,7 @@ template <class Impl>
 LSQUnit<Impl>::LSQUnit()
     : loads(0), stores(0), storesToWB(0), stalled(false),
       isStoreBlocked(false), isLoadBlocked(false),
-      loadBlockedHandled(false)
+      loadBlockedHandled(false), hasPendingPkt(false)
 {
 }
 
@@ -605,8 +621,30 @@ LSQUnit<Impl>::commitStores(InstSeqNum &youngest_inst)
 
 template <class Impl>
 void
+LSQUnit<Impl>::writebackPendingStore()
+{
+    if (hasPendingPkt) {
+        assert(pendingPkt != NULL);
+
+        // If the cache is blocked, this will store the packet for retry.
+        if (sendStore(pendingPkt)) {
+            storePostSend(pendingPkt);
+        }
+        pendingPkt = NULL;
+        hasPendingPkt = false;
+    }
+}
+
+template <class Impl>
+void
 LSQUnit<Impl>::writebackStores()
 {
+    // First writeback the second packet from any split store that didn't
+    // complete last cycle because there weren't enough cache ports available.
+    if (TheISA::HasUnalignedMemAcc) {
+        writebackPendingStore();
+    }
+
     while (storesToWB > 0 &&
            storeWBIdx != storeTail &&
            storeQueue[storeWBIdx].inst &&
@@ -640,6 +678,11 @@ LSQUnit<Impl>::writebackStores()
         assert(storeQueue[storeWBIdx].req);
         assert(!storeQueue[storeWBIdx].committed);
 
+        if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
+            assert(storeQueue[storeWBIdx].sreqLow);
+            assert(storeQueue[storeWBIdx].sreqHigh);
+        }
+
         DynInstPtr inst = storeQueue[storeWBIdx].inst;
 
         Request *req = storeQueue[storeWBIdx].req;
@@ -653,15 +696,41 @@ LSQUnit<Impl>::writebackStores()
         MemCmd command =
             req->isSwap() ? MemCmd::SwapReq :
             (req->isLLSC() ? MemCmd::StoreCondReq : MemCmd::WriteReq);
-        PacketPtr data_pkt = new Packet(req, command,
-                                        Packet::Broadcast);
-        data_pkt->dataStatic(inst->memData);
+        PacketPtr data_pkt;
+        PacketPtr snd_data_pkt = NULL;
 
         LSQSenderState *state = new LSQSenderState;
         state->isLoad = false;
         state->idx = storeWBIdx;
         state->inst = inst;
-        data_pkt->senderState = state;
+
+        if (!TheISA::HasUnalignedMemAcc || !storeQueue[storeWBIdx].isSplit) {
+
+            // Build a single data packet if the store isn't split.
+            data_pkt = new Packet(req, command, Packet::Broadcast);
+            data_pkt->dataStatic(inst->memData);
+            data_pkt->senderState = state;
+        } else {
+            RequestPtr sreqLow = storeQueue[storeWBIdx].sreqLow;
+            RequestPtr sreqHigh = storeQueue[storeWBIdx].sreqHigh;
+
+            // Create two packets if the store is split in two.
+            data_pkt = new Packet(sreqLow, command, Packet::Broadcast);
+            snd_data_pkt = new Packet(sreqHigh, command, Packet::Broadcast);
+
+            data_pkt->dataStatic(inst->memData);
+            snd_data_pkt->dataStatic(inst->memData + sreqLow->getSize());
+
+            data_pkt->senderState = state;
+            snd_data_pkt->senderState = state;
+
+            state->isSplit = true;
+            state->outstanding = 2;
+
+            // Can delete the main request now.
+            delete req;
+            req = sreqLow;
+        }
 
         DPRINTF(LSQUnit, "D-Cache: Writing back store idx:%i PC:%#x "
                 "to Addr:%#x, data:%#x [sn:%lli]\n",
@@ -671,6 +740,7 @@ LSQUnit<Impl>::writebackStores()
 
         // @todo: Remove this SC hack once the memory system handles it.
         if (inst->isStoreConditional()) {
+            assert(!storeQueue[storeWBIdx].isSplit);
             // Disable recording the result temporarily.  Writing to
             // misc regs normally updates the result, but this is not
             // the desired behavior when handling store conditionals.
@@ -694,18 +764,44 @@ LSQUnit<Impl>::writebackStores()
             state->noWB = true;
         }
 
-        if (!dcachePort->sendTiming(data_pkt)) {
-            // Need to handle becoming blocked on a store.
+        if (!sendStore(data_pkt)) {
             DPRINTF(IEW, "D-Cache became blocked when writing [sn:%lli], will"
                     "retry later\n",
                     inst->seqNum);
-            isStoreBlocked = true;
-            ++lsqCacheBlocked;
-            assert(retryPkt == NULL);
-            retryPkt = data_pkt;
-            lsq->setRetryTid(lsqID);
+
+            // Need to store the second packet, if split.
+            if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
+                state->pktToSend = true;
+                state->pendingPacket = snd_data_pkt;
+            }
         } else {
-            storePostSend(data_pkt);
+
+            // If split, try to send the second packet too
+            if (TheISA::HasUnalignedMemAcc && storeQueue[storeWBIdx].isSplit) {
+                assert(snd_data_pkt);
+
+                // Ensure there are enough ports to use.
+                if (usedPorts < cachePorts) {
+                    ++usedPorts;
+                    if (sendStore(snd_data_pkt)) {
+                        storePostSend(snd_data_pkt);
+                    } else {
+                        DPRINTF(IEW, "D-Cache became blocked when writing"
+                                " [sn:%lli] second packet, will retry later\n",
+                                inst->seqNum);
+                    }
+                } else {
+
+                    // Store the packet for when there's free ports.
+                    assert(pendingPkt == NULL);
+                    pendingPkt = snd_data_pkt;
+                    hasPendingPkt = true;
+                }
+            } else {
+
+                // Not a split store.
+                storePostSend(data_pkt);
+            }
         }
     }
 
@@ -808,6 +904,13 @@ LSQUnit<Impl>::squash(const InstSeqNum &squashed_num)
         // memory.  This is quite ugly.  @todo: Figure out the proper
         // place to really handle request deletes.
         delete storeQueue[store_idx].req;
+        if (TheISA::HasUnalignedMemAcc && storeQueue[store_idx].isSplit) {
+            delete storeQueue[store_idx].sreqLow;
+            delete storeQueue[store_idx].sreqHigh;
+
+            storeQueue[store_idx].sreqLow = NULL;
+            storeQueue[store_idx].sreqHigh = NULL;
+        }
 
         storeQueue[store_idx].req = NULL;
         --stores;
@@ -927,6 +1030,22 @@ LSQUnit<Impl>::completeStore(int store_idx)
 }
 
 template <class Impl>
+bool
+LSQUnit<Impl>::sendStore(PacketPtr data_pkt)
+{
+    if (!dcachePort->sendTiming(data_pkt)) {
+        // Need to handle becoming blocked on a store.
+        isStoreBlocked = true;
+        ++lsqCacheBlocked;
+        assert(retryPkt == NULL);
+        retryPkt = data_pkt;
+        lsq->setRetryTid(lsqID);
+        return false;
+    }
+    return true;
+}
+
+template <class Impl>
 void
 LSQUnit<Impl>::recvRetry()
 {
@@ -935,10 +1054,24 @@ LSQUnit<Impl>::recvRetry()
         assert(retryPkt != NULL);
 
         if (dcachePort->sendTiming(retryPkt)) {
-            storePostSend(retryPkt);
+            LSQSenderState *state =
+                dynamic_cast<LSQSenderState *>(retryPkt->senderState);
+
+            // Don't finish the store unless this is the last packet.
+            if (!TheISA::HasUnalignedMemAcc || !state->pktToSend) {
+                storePostSend(retryPkt);
+            }
             retryPkt = NULL;
             isStoreBlocked = false;
             lsq->setRetryTid(InvalidThreadID);
+
+            // Send any outstanding packet.
+            if (TheISA::HasUnalignedMemAcc && state->pktToSend) {
+                assert(state->pendingPacket);
+                if (sendStore(state->pendingPacket)) {
+                    storePostSend(state->pendingPacket);
+                }
+            }
         } else {
             // Still blocked!
             ++lsqCacheBlocked;

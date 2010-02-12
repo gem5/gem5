@@ -70,6 +70,9 @@ const int MachineBytes = 4;
 // This is ori 0, 0, 0
 const ExtMachInst NoopMachInst = 0x60000000;
 
+// Memory accesses can be unaligned
+const bool HasUnalignedMemAcc = true;
+
 } // PowerISA namespace
 
 #endif // __ARCH_POWER_ISA_TRAITS_HH__

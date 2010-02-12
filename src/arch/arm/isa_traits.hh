@@ -106,6 +106,9 @@ namespace ArmISA
     const int ByteBytes = 1;
 
     const uint32_t HighVecs = 0xFFFF0000;
+
+    // Memory accesses cannot be unaligned
+    const bool HasUnalignedMemAcc = false;
 };
 
 using namespace ArmISA;

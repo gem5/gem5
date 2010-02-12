@@ -270,15 +270,19 @@ class LSQ {
     void dumpInsts(ThreadID tid)
     { thread[tid].dumpInsts(); }
 
-    /** Executes a read operation, using the load specified at the load index. */
-    template <class T>
-    Fault read(RequestPtr req, T &data, int load_idx);
-
-    /** Executes a store operation, using the store specified at the store
-     *   index.
+    /** Executes a read operation, using the load specified at the load
+     * index.
      */
     template <class T>
-    Fault write(RequestPtr req, T &data, int store_idx);
+    Fault read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+               T &data, int load_idx);
+
+    /** Executes a store operation, using the store specified at the store
+     * index.
+     */
+    template <class T>
+    Fault write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+                T &data, int store_idx);
 
     /** The CPU pointer. */
     O3CPU *cpu;
@@ -369,21 +373,23 @@ class LSQ {
 template <class Impl>
 template <class T>
 Fault
-LSQ<Impl>::read(RequestPtr req, T &data, int load_idx)
+LSQ<Impl>::read(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+                T &data, int load_idx)
 {
     ThreadID tid = req->threadId();
 
-    return thread[tid].read(req, data, load_idx);
+    return thread[tid].read(req, sreqLow, sreqHigh, data, load_idx);
 }
 
 template <class Impl>
 template <class T>
 Fault
-LSQ<Impl>::write(RequestPtr req, T &data, int store_idx)
+LSQ<Impl>::write(RequestPtr req, RequestPtr sreqLow, RequestPtr sreqHigh,
+                 T &data, int store_idx)
 {
     ThreadID tid = req->threadId();
 
-    return thread[tid].write(req, data, store_idx);
+    return thread[tid].write(req, sreqLow, sreqHigh, data, store_idx);
 }
 
 #endif // __CPU_O3_LSQ_HH__

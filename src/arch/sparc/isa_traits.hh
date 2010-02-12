@@ -98,6 +98,9 @@ namespace SparcISA
     };
 
 #endif
+
+// Memory accesses cannot be unaligned
+const bool HasUnalignedMemAcc = false;
 }
 
 #endif // __ARCH_SPARC_ISA_TRAITS_HH__

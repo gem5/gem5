@@ -703,17 +703,24 @@ class FullO3CPU : public BaseO3CPU
 
     /** CPU read function, forwards read to LSQ. */
     template <class T>
-    Fault read(RequestPtr &req, T &data, int load_idx)
+    Fault read(RequestPtr &req, RequestPtr &sreqLow, RequestPtr &sreqHigh,
+               T &data, int load_idx)
     {
-        return this->iew.ldstQueue.read(req, data, load_idx);
+        return this->iew.ldstQueue.read(req, sreqLow, sreqHigh,
+                                        data, load_idx);
     }
 
     /** CPU write function, forwards write to LSQ. */
     template <class T>
-    Fault write(RequestPtr &req, T &data, int store_idx)
+    Fault write(RequestPtr &req, RequestPtr &sreqLow, RequestPtr &sreqHigh,
+                T &data, int store_idx)
     {
-        return this->iew.ldstQueue.write(req, data, store_idx);
+        return this->iew.ldstQueue.write(req, sreqLow, sreqHigh,
+                                         data, store_idx);
     }
+
+    /** Get the dcache port (used to find block size for translations). */
+    Port *getDcachePort() { return this->iew.ldstQueue.getDcachePort(); }
 
     Addr lockAddr;
 
