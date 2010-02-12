@@ -156,6 +156,8 @@ class TLB : public BaseTLB
     // static helper functions... really
     static bool validVirtualAddress(Addr vaddr);
     static Fault checkCacheability(RequestPtr &req);
+    Fault translateInst(RequestPtr req, ThreadContext *tc);
+    Fault translateData(RequestPtr req, ThreadContext *tc, bool write);
     Fault translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode);
     void translateTiming(RequestPtr req, ThreadContext *tc,
                          Translation *translation, Mode mode);

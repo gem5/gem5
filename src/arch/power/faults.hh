@@ -76,6 +76,22 @@ class MachineCheckFault : public PowerFault
 };
 
 
+class AlignmentFault : public PowerFault
+{
+  public:
+    AlignmentFault()
+        : PowerFault("Alignment")
+    {
+    }
+
+    bool
+    isAlignmentFault() const
+    {
+        return true;
+    }
+};
+
+
 static inline Fault
 genMachineCheckFault()
 {

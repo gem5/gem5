@@ -281,9 +281,27 @@ TLB::regStats()
 }
 
 Fault
-TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+TLB::translateInst(RequestPtr req, ThreadContext *tc)
 {
-#if !FULL_SYSTEM
+    // Instruction accesses must be word-aligned
+    if (req->getVaddr() & 0x3) {
+        DPRINTF(TLB, "Alignment Fault on %#x, size = %d\n", req->getVaddr(),
+                req->getSize());
+        return new AlignmentFault();
+    }
+
+     Process * p = tc->getProcessPtr();
+
+     Fault fault = p->pTable->translate(req);
+    if (fault != NoFault)
+        return fault;
+
+    return NoFault;
+}
+
+Fault
+TLB::translateData(RequestPtr req, ThreadContext *tc, bool write)
+{
     Process * p = tc->getProcessPtr();
 
     Fault fault = p->pTable->translate(req);
@@ -291,6 +309,16 @@ TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
         return fault;
 
     return NoFault;
+}
+
+Fault
+TLB::translateAtomic(RequestPtr req, ThreadContext *tc, Mode mode)
+{
+#if !FULL_SYSTEM
+    if (mode == Execute)
+        return translateInst(req, tc);
+    else
+        return translateData(req, tc, mode == Write);
 #else
   fatal("translate atomic not yet implemented\n");
 #endif
