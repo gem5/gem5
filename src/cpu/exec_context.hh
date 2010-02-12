@@ -140,4 +140,7 @@ class ExecContext {
     /** Executes a syscall specified by the callnum. */
     void syscall(int64_t callnum);
 #endif
+
+    /** Finish a DTB address translation. */
+    void finishTranslation(WholeTranslationState *state);
 };

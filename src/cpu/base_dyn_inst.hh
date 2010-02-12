@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2004-2006 The Regents of The University of Michigan
+ * Copyright (c) 2009 The University of Edinburgh
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,6 +27,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * Authors: Kevin Lim
+ *          Timothy M. Jones
  */
 
 #ifndef __CPU_BASE_DYN_INST_HH__
@@ -45,6 +47,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/op_class.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/translation.hh"
 #include "mem/packet.hh"
 #include "sim/system.hh"
 #include "sim/tlb.hh"
@@ -126,8 +129,14 @@ class BaseDynInst : public FastAlloc, public RefCounted
      * @return Returns any fault due to the write.
      */
     template <class T>
-    Fault write(T data, Addr addr, unsigned flags,
-                        uint64_t *res);
+    Fault write(T data, Addr addr, unsigned flags, uint64_t *res);
+
+    /** Initiate a DTB address translation. */
+    void initiateTranslation(RequestPtr req, uint64_t *res,
+                             BaseTLB::Mode mode);
+
+    /** Finish a DTB address translation. */
+    void finishTranslation(WholeTranslationState *state);
 
     void prefetch(Addr addr, unsigned flags);
     void writeHint(Addr addr, int size, unsigned flags);
@@ -861,29 +870,14 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
                                thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Read);
-
-    if (req->isUncacheable())
-        isUncacheable = true;
+    initiateTranslation(req, NULL, BaseTLB::Read);
 
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        physEffAddr = req->getPaddr();
-        memReqFlags = req->getFlags();
-
-#if 0
-        if (cpu->system->memctrl->badaddr(physEffAddr)) {
-            fault = TheISA::genMachineCheckFault();
-            data = (T)-1;
-            this->setExecuted();
-        } else {
-            fault = cpu->read(req, data, lqIdx);
-        }
-#else
-        fault = cpu->read(req, data, lqIdx);
-#endif
+        cpu->read(req, data, lqIdx);
     } else {
+
         // Return a fixed value to keep simulation deterministic even
         // along misspeculated paths.
         data = (T)-1;
@@ -891,7 +885,6 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
         // Commit will have to clean up whatever happened.  Set this
         // instruction as executed.
         this->setExecuted();
-        delete req;
     }
 
     if (traceData) {
@@ -916,35 +909,51 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     Request *req = new Request(asid, addr, sizeof(T), flags, this->PC,
                                thread->contextId(), threadNumber);
 
-    fault = cpu->dtb->translateAtomic(req, thread->getTC(), BaseTLB::Write);
-
-    if (req->isUncacheable())
-        isUncacheable = true;
+    initiateTranslation(req, res, BaseTLB::Write);
 
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        physEffAddr = req->getPaddr();
-        memReqFlags = req->getFlags();
-
-        if (req->isCondSwap()) {
-            assert(res);
-            req->setExtraData(*res);
-        }
-#if 0
-        if (cpu->system->memctrl->badaddr(physEffAddr)) {
-            fault = TheISA::genMachineCheckFault();
-        } else {
-            fault = cpu->write(req, data, sqIdx);
-        }
-#else
-        fault = cpu->write(req, data, sqIdx);
-#endif
-    } else {
-        delete req;
+        cpu->write(req, data, sqIdx);
     }
 
     return fault;
+}
+
+template<class Impl>
+inline void
+BaseDynInst<Impl>::initiateTranslation(RequestPtr req, uint64_t *res,
+                                       BaseTLB::Mode mode)
+{
+    WholeTranslationState *state =
+        new WholeTranslationState(req, NULL, res, mode);
+    DataTranslation<BaseDynInst<Impl> > *trans =
+        new DataTranslation<BaseDynInst<Impl> >(this, state);
+    cpu->dtb->translateTiming(req, thread->getTC(), trans, mode);
+}
+
+template<class Impl>
+inline void
+BaseDynInst<Impl>::finishTranslation(WholeTranslationState *state)
+{
+    fault = state->getFault();
+
+    if (state->isUncacheable())
+        isUncacheable = true;
+
+    if (fault == NoFault) {
+        physEffAddr = state->getPaddr();
+        memReqFlags = state->getFlags();
+
+        if (state->mainReq->isCondSwap()) {
+            assert(state->res);
+            state->mainReq->setExtraData(*state->res);
+        }
+
+    } else {
+        state->deleteReqs();
+    }
+    delete state;
 }
 
 #endif // __CPU_BASE_DYN_INST_HH__

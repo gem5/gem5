@@ -32,6 +32,7 @@
 #define __CPU_SIMPLE_TIMING_HH__
 
 #include "cpu/simple/base.hh"
+#include "cpu/translation.hh"
 
 #include "params/TimingSimpleCPU.hh"
 
@@ -115,95 +116,9 @@ class TimingSimpleCPU : public BaseSimpleCPU
     };
     FetchTranslation fetchTranslation;
 
-    class DataTranslation : public BaseTLB::Translation
-    {
-      protected:
-        TimingSimpleCPU *cpu;
-        uint8_t *data;
-        uint64_t *res;
-        BaseTLB::Mode mode;
-
-      public:
-        DataTranslation(TimingSimpleCPU *_cpu,
-                uint8_t *_data, uint64_t *_res, BaseTLB::Mode _mode)
-            : cpu(_cpu), data(_data), res(_res), mode(_mode)
-        {
-            assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
-        }
-
-        void
-        finish(Fault fault, RequestPtr req, ThreadContext *tc,
-               BaseTLB::Mode mode)
-        {
-            assert(mode == this->mode);
-            cpu->sendData(fault, req, data, res, mode == BaseTLB::Read);
-            delete this;
-        }
-    };
-
-    class SplitDataTranslation : public BaseTLB::Translation
-    {
-      public:
-        struct WholeTranslationState
-        {
-          public:
-            int outstanding;
-            RequestPtr requests[2];
-            RequestPtr mainReq;
-            Fault faults[2];
-            uint8_t *data;
-            BaseTLB::Mode mode;
-
-            WholeTranslationState(RequestPtr req1, RequestPtr req2,
-                    RequestPtr main, uint8_t *data, BaseTLB::Mode mode)
-            {
-                assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
-
-                outstanding = 2;
-                requests[0] = req1;
-                requests[1] = req2;
-                mainReq = main;
-                faults[0] = faults[1] = NoFault;
-                this->data = data;
-                this->mode = mode;
-            }
-        };
-
-        TimingSimpleCPU *cpu;
-        int index;
-        WholeTranslationState *state;
-
-        SplitDataTranslation(TimingSimpleCPU *_cpu, int _index,
-                WholeTranslationState *_state)
-            : cpu(_cpu), index(_index), state(_state)
-        {}
-
-        void
-        finish(Fault fault, RequestPtr req, ThreadContext *tc,
-               BaseTLB::Mode mode)
-        {
-            assert(state);
-            assert(state->outstanding);
-            state->faults[index] = fault;
-            if (--state->outstanding == 0) {
-                cpu->sendSplitData(state->faults[0],
-                                   state->faults[1],
-                                   state->requests[0],
-                                   state->requests[1],
-                                   state->mainReq,
-                                   state->data,
-                                   state->mode == BaseTLB::Read);
-                delete state;
-            }
-            delete this;
-        }
-    };
-
-    void sendData(Fault fault, RequestPtr req,
-            uint8_t *data, uint64_t *res, bool read);
-    void sendSplitData(Fault fault1, Fault fault2,
-            RequestPtr req1, RequestPtr req2, RequestPtr req,
-            uint8_t *data, bool read);
+    void sendData(RequestPtr req, uint8_t *data, uint64_t *res, bool read);
+    void sendSplitData(RequestPtr req1, RequestPtr req2, RequestPtr req,
+                       uint8_t *data, bool read);
 
     void translationFault(Fault fault);
 
@@ -350,6 +265,12 @@ class TimingSimpleCPU : public BaseSimpleCPU
      * debugging).
      */
     void printAddr(Addr a);
+
+    /**
+     * Finish a DTB translation.
+     * @param state The DTB translation state.
+     */
+    void finishTranslation(WholeTranslationState *state);
 
   private:
 

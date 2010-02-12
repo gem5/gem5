@@ -268,19 +268,9 @@ TimingSimpleCPU::handleReadPacket(PacketPtr pkt)
 }
 
 void
-TimingSimpleCPU::sendData(Fault fault, RequestPtr req,
-        uint8_t *data, uint64_t *res, bool read)
+TimingSimpleCPU::sendData(RequestPtr req, uint8_t *data, uint64_t *res,
+                          bool read)
 {
-    _status = Running;
-    if (fault != NoFault) {
-        if (req->isPrefetch())
-            fault = NoFault;
-        delete data;
-        delete req;
-
-        translationFault(fault);
-        return;
-    }
     PacketPtr pkt;
     buildPacket(pkt, req, read);
     pkt->dataDynamic<uint8_t>(data);
@@ -311,25 +301,9 @@ TimingSimpleCPU::sendData(Fault fault, RequestPtr req,
 }
 
 void
-TimingSimpleCPU::sendSplitData(Fault fault1, Fault fault2,
-        RequestPtr req1, RequestPtr req2, RequestPtr req,
-        uint8_t *data, bool read)
+TimingSimpleCPU::sendSplitData(RequestPtr req1, RequestPtr req2,
+                               RequestPtr req, uint8_t *data, bool read)
 {
-    _status = Running;
-    if (fault1 != NoFault || fault2 != NoFault) {
-        if (req1->isPrefetch())
-            fault1 = NoFault;
-        if (req2->isPrefetch())
-            fault2 = NoFault;
-        delete data;
-        delete req1;
-        delete req2;
-        if (fault1 != NoFault)
-            translationFault(fault1);
-        else if (fault2 != NoFault)
-            translationFault(fault2);
-        return;
-    }
     PacketPtr pkt1, pkt2;
     buildSplitPacket(pkt1, pkt2, req1, req2, req, data, read);
     if (req->getFlags().isSet(Request::NO_ACCESS)) {
@@ -450,6 +424,7 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     const Addr pc = thread->readPC();
     unsigned block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
+    BaseTLB::Mode mode = BaseTLB::Read;
 
     RequestPtr req  = new Request(asid, addr, data_size,
                                   flags, pc, _cpuId, tid);
@@ -457,24 +432,28 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
-
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
         assert(!req->isLLSC() && !req->isSwap());
         req->splitOnVaddr(split_addr, req1, req2);
 
-        typedef SplitDataTranslation::WholeTranslationState WholeState;
-        WholeState *state = new WholeState(req1, req2, req,
-                                           (uint8_t *)(new T), BaseTLB::Read);
-        thread->dtb->translateTiming(req1, tc,
-                new SplitDataTranslation(this, 0, state), BaseTLB::Read);
-        thread->dtb->translateTiming(req2, tc,
-                new SplitDataTranslation(this, 1, state), BaseTLB::Read);
+        WholeTranslationState *state =
+            new WholeTranslationState(req, req1, req2, (uint8_t *)(new T),
+                                      NULL, mode);
+        DataTranslation<TimingSimpleCPU> *trans1 =
+            new DataTranslation<TimingSimpleCPU>(this, state, 0);
+        DataTranslation<TimingSimpleCPU> *trans2 =
+            new DataTranslation<TimingSimpleCPU>(this, state, 1);
+
+        thread->dtb->translateTiming(req1, tc, trans1, mode);
+        thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
-        DataTranslation *translation =
-            new DataTranslation(this, (uint8_t *)(new T), NULL, BaseTLB::Read);
-        thread->dtb->translateTiming(req, tc, translation, BaseTLB::Read);
+        WholeTranslationState *state =
+            new WholeTranslationState(req, (uint8_t *)(new T), NULL, mode);
+        DataTranslation<TimingSimpleCPU> *translation
+            = new DataTranslation<TimingSimpleCPU>(this, state);
+        thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
     if (traceData) {
@@ -568,6 +547,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     const Addr pc = thread->readPC();
     unsigned block_size = dcachePort.peerBlockSize();
     int data_size = sizeof(T);
+    BaseTLB::Mode mode = BaseTLB::Write;
 
     RequestPtr req = new Request(asid, addr, data_size,
                                  flags, pc, _cpuId, tid);
@@ -583,17 +563,22 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         assert(!req->isLLSC() && !req->isSwap());
         req->splitOnVaddr(split_addr, req1, req2);
 
-        typedef SplitDataTranslation::WholeTranslationState WholeState;
-        WholeState *state = new WholeState(req1, req2, req,
-                (uint8_t *)dataP, BaseTLB::Write);
-        thread->dtb->translateTiming(req1, tc,
-                new SplitDataTranslation(this, 0, state), BaseTLB::Write);
-        thread->dtb->translateTiming(req2, tc,
-                new SplitDataTranslation(this, 1, state), BaseTLB::Write);
+        WholeTranslationState *state =
+            new WholeTranslationState(req, req1, req2, (uint8_t *)dataP,
+                                      res, mode);
+        DataTranslation<TimingSimpleCPU> *trans1 =
+            new DataTranslation<TimingSimpleCPU>(this, state, 0);
+        DataTranslation<TimingSimpleCPU> *trans2 =
+            new DataTranslation<TimingSimpleCPU>(this, state, 1);
+
+        thread->dtb->translateTiming(req1, tc, trans1, mode);
+        thread->dtb->translateTiming(req2, tc, trans2, mode);
     } else {
-        DataTranslation *translation =
-            new DataTranslation(this, (uint8_t *)dataP, res, BaseTLB::Write);
-        thread->dtb->translateTiming(req, tc, translation, BaseTLB::Write);
+        WholeTranslationState *state =
+            new WholeTranslationState(req, (uint8_t *)dataP, res, mode);
+        DataTranslation<TimingSimpleCPU> *translation =
+            new DataTranslation<TimingSimpleCPU>(this, state);
+        thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
     if (traceData) {
@@ -664,6 +649,32 @@ Fault
 TimingSimpleCPU::write(int32_t data, Addr addr, unsigned flags, uint64_t *res)
 {
     return write((uint32_t)data, addr, flags, res);
+}
+
+
+void
+TimingSimpleCPU::finishTranslation(WholeTranslationState *state)
+{
+    _status = Running;
+
+    if (state->getFault() != NoFault) {
+        if (state->isPrefetch()) {
+            state->setNoFault();
+        }
+        delete state->data;
+        state->deleteReqs();
+        translationFault(state->getFault());
+    } else {
+        if (!state->isSplit) {
+            sendData(state->mainReq, state->data, state->res,
+                     state->mode == BaseTLB::Read);
+        } else {
+            sendSplitData(state->sreqLow, state->sreqHigh, state->mainReq,
+                          state->data, state->mode == BaseTLB::Read);
+        }
+    }
+
+    delete state;
 }
 
 
