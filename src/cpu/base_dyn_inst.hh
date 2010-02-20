@@ -887,7 +887,7 @@ BaseDynInst<Impl>::read(Addr addr, T &data, unsigned flags)
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
+        fault = cpu->read(req, sreqLow, sreqHigh, data, lqIdx);
     } else {
 
         // Return a fixed value to keep simulation deterministic even
@@ -933,7 +933,7 @@ BaseDynInst<Impl>::write(T data, Addr addr, unsigned flags, uint64_t *res)
     if (fault == NoFault) {
         effAddr = req->getVaddr();
         effAddrValid = true;
-        cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
+        fault = cpu->write(req, sreqLow, sreqHigh, data, sqIdx);
     }
 
     return fault;
