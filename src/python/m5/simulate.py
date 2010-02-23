@@ -148,6 +148,7 @@ def restoreCheckpoint(root, dir):
     print "Restoring from checkpoint"
     internal.core.unserializeAll(dir)
     need_resume.append(root)
+    stats.reset()
 
 def changeToAtomic(system):
     if not isinstance(system, (objects.Root, objects.System)):

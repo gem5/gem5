@@ -492,6 +492,8 @@ class AvgStor
   private:
     /** The current count. */
     Counter current;
+    /** The tick of the last reset */
+    Tick lastReset;
     /** The total count for all tick. */
     mutable Result total;
     /** The tick that current last changed. */
@@ -505,7 +507,7 @@ class AvgStor
      * Build and initializes this stat storage.
      */
     AvgStor(Info *info)
-        : current(0), total(0), last(0)
+        : current(0), lastReset(0), total(0), last(0)
     { }
 
     /**
@@ -547,7 +549,7 @@ class AvgStor
     result() const
     {
         assert(last == curTick);
-        return (Result)(total + current) / (Result)(curTick + 1);
+        return (Result)(total + current) / (Result)(curTick - lastReset + 1);
     }
 
     /**
@@ -573,6 +575,7 @@ class AvgStor
     {
         total = 0.0;
         last = curTick;
+        lastReset = curTick;
     }
 
 };
@@ -2548,6 +2551,10 @@ class Temp
      * @param s The VectorStat to place in a node.
      */
     Temp(const Vector &s)
+        : node(new VectorStatNode(s.info()))
+    { }
+
+    Temp(const AverageVector &s)
         : node(new VectorStatNode(s.info()))
     { }
 
