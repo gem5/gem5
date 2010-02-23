@@ -62,7 +62,8 @@ BaseCache::BaseCache(const Params *p)
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
       drainEvent(NULL),
-      addrRange(p->addr_range)
+      addrRange(p->addr_range),
+      _numCpus(p->num_cpus)
 {
 }
 
@@ -148,7 +149,11 @@ BaseCache::regStats()
         const string &cstr = cmd.toString();
 
         hits[access_idx]
-            .init(maxThreadsPerCPU)
+#if FULL_SYSTEM
+            .init(_numCpus + 1)
+#else
+            .init(_numCpus)
+#endif
             .name(name() + "." + cstr + "_hits")
             .desc("number of " + cstr + " hits")
             .flags(total | nozero | nonan)
@@ -185,7 +190,11 @@ BaseCache::regStats()
         const string &cstr = cmd.toString();
 
         misses[access_idx]
-            .init(maxThreadsPerCPU)
+#if FULL_SYSTEM
+            .init(_numCpus + 1)
+#else
+            .init(_numCpus)
+#endif
             .name(name() + "." + cstr + "_misses")
             .desc("number of " + cstr + " misses")
             .flags(total | nozero | nonan)

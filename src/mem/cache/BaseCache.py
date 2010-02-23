@@ -44,6 +44,7 @@ class BaseCache(MemObject):
     prioritizeRequests = Param.Bool(False,
         "always service demand misses first")
     repl = Param.Repl(NULL, "replacement policy")
+    num_cpus =  Param.Int(1, "number of cpus sharing this cache")
     size = Param.MemorySize("capacity in bytes")
     forward_snoops = Param.Bool(True,
         "forward snoops from mem side to cpu side")

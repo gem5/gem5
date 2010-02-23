@@ -74,7 +74,8 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     sets = new CacheSet[numSets];
     blks = new BlkType[numSets * assoc];
     // allocate data storage in one big chunk
-    dataBlks = new uint8_t[numSets*assoc*blkSize];
+    numBlocks = numSets * assoc;
+    dataBlks = new uint8_t[numBlocks * blkSize];
 
     unsigned blkIndex = 0;       // index into blks array
     for (unsigned i = 0; i < numSets; ++i) {
@@ -157,6 +158,12 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
         ++sampledRefs;
         blk->refCount = 0;
 
+        // deal with evicted block
+        if (blk->contextSrc != -1) {
+            occupancies[blk->contextSrc % cache->numCpus()]--;
+            blk->contextSrc = -1;
+        }
+
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
                 set, regenerateBlkAddr(blk->tag, set));
     }
@@ -178,6 +185,12 @@ LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
     // Set tag for new block.  Caller is responsible for setting status.
     blk->tag = extractTag(addr);
 
+    // deal with what we are bringing in
+    if (context_src != -1) {
+        occupancies[context_src % cache->numCpus()]++;
+        blk->contextSrc = context_src;
+    }
+
     unsigned set = extractSet(addr);
     sets[set].moveToHead(blk);
 }
@@ -190,6 +203,10 @@ LRU::invalidateBlk(BlkType *blk)
         blk->isTouched = false;
         blk->clearLoadLocks();
         tagsInUse--;
+        if (blk->contextSrc != -1) {
+            occupancies[blk->contextSrc % cache->numCpus()]--;
+            blk->contextSrc = -1;
+        }
     }
 }
 

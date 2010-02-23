@@ -277,7 +277,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
 
         if (pkt->needsExclusive() ? blk->isWritable() : blk->isReadable()) {
             // OK to satisfy access
-            hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+            incHitCount(pkt, id);
             satisfyCpuSideRequest(pkt, blk);
             return true;
         }
@@ -297,7 +297,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
             if (blk == NULL) {
                 // no replaceable block available, give up.
                 // writeback will be forwarded to next level.
-                incMissCount(pkt);
+                incMissCount(pkt, id);
                 return false;
             }
             int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
@@ -308,11 +308,11 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         blk->status |= BlkDirty;
         // nothing else to do; writeback doesn't expect response
         assert(!pkt->needsResponse());
-        hits[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+        incHitCount(pkt, id);
         return true;
     }
 
-    incMissCount(pkt);
+    incMissCount(pkt, id);
 
     if (blk == NULL && pkt->isLLSC() && pkt->isWrite()) {
         // complete miss on store conditional... just give up now

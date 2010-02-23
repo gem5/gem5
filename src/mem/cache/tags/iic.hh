@@ -197,8 +197,6 @@ class IIC : public BaseTags
 
     /** The latency of a hash lookup. */
     const unsigned hashDelay;
-    /** The number of data blocks. */
-    const unsigned numBlocks;
     /** The total number of tags in primary and secondary. */
     const unsigned numTags;
     /** The number of tags in the secondary tag store. */

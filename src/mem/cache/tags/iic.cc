@@ -60,7 +60,6 @@ IIC::IIC(IIC::Params &params) :
     tagShift(floorLog2(blkSize)), blkMask(blkSize - 1),
     subShift(floorLog2(subSize)), subMask(numSub - 1),
     hashDelay(params.hashDelay),
-    numBlocks(params.size/subSize),
     numTags(hashSets * assoc + params.size/blkSize -1),
     numSecondary(params.size/blkSize),
     tagNull(numTags),
@@ -88,6 +87,7 @@ IIC::IIC(IIC::Params &params) :
 
     warmedUp = false;
     warmupBound = params.size/blkSize;
+    numBlocks = params.size/subSize;
 
     // Replacement Policy Initialization
     repl = params.rp;

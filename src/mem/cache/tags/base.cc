@@ -87,5 +87,20 @@ BaseTags::regStats(const string &name)
         .desc("Cycle when the warmup percentage was hit.")
         ;
 
+    occupancies
+        .init(cache->numCpus())
+        .name(name + ".occ_blocks")
+        .desc("Average occupied blocks per context")
+        .flags(nozero | nonan)
+        ;
+
+    avgOccs
+        .name(name + ".occ_%")
+        .desc("Average percentage of cache occupancy")
+        .flags(nozero)
+        ;
+
+    avgOccs = occupancies / Stats::constant(numBlocks);
+
     registerExitCallback(new BaseTagsCallback(this));
 }

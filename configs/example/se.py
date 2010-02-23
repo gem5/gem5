@@ -151,6 +151,7 @@ if options.l2cache:
     system.tol2bus = Bus()
     system.l2.cpu_side = system.tol2bus.port
     system.l2.mem_side = system.membus.port
+    system.l2.num_cpus = np
 
 for i in xrange(np):
     if options.caches:

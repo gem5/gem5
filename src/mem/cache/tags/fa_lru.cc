@@ -43,8 +43,7 @@
 using namespace std;
 
 FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
-    : blkSize(_blkSize), size(_size),
-      numBlks(size/blkSize), hitLatency(hit_latency)
+    : blkSize(_blkSize), size(_size), hitLatency(hit_latency)
 {
     if (!isPowerOf2(blkSize))
         fatal("cache block size (in bytes) `%d' must be a power of two",
@@ -65,23 +64,24 @@ FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
 
     warmedUp = false;
     warmupBound = size/blkSize;
+    numBlocks = size/blkSize;
 
-    blks = new FALRUBlk[numBlks];
+    blks = new FALRUBlk[numBlocks];
     head = &(blks[0]);
-    tail = &(blks[numBlks-1]);
+    tail = &(blks[numBlocks-1]);
 
     head->prev = NULL;
     head->next = &(blks[1]);
     head->inCache = cacheMask;
 
-    tail->prev = &(blks[numBlks-2]);
+    tail->prev = &(blks[numBlocks-2]);
     tail->next = NULL;
     tail->inCache = 0;
 
     unsigned index = (1 << 17) / blkSize;
     unsigned j = 0;
     int flags = cacheMask;
-    for (unsigned i = 1; i < numBlks - 1; i++) {
+    for (unsigned i = 1; i < numBlocks - 1; i++) {
         blks[i].inCache = flags;
         if (i == index - 1){
             cacheBoundaries[j] = &(blks[i]);
@@ -94,7 +94,7 @@ FALRU::FALRU(unsigned _blkSize, unsigned _size, unsigned hit_latency)
         blks[i].isTouched = false;
     }
     assert(j == numCaches);
-    assert(index == numBlks);
+    assert(index == numBlocks);
     //assert(check());
 }
 

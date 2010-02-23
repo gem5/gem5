@@ -47,6 +47,7 @@
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "base/types.hh"
+#include "config/full_system.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/mem_object.hh"
 #include "mem/packet.hh"
@@ -219,7 +220,11 @@ class BaseCache : public MemObject
      * Normally this is all possible memory addresses. */
     Range<Addr> addrRange;
 
+    /** number of cpus sharing this cache - from config file */
+    int _numCpus;
+
   public:
+    int numCpus() { return _numCpus; }
     // Statistics
     /**
      * @addtogroup CacheStatistics
@@ -481,14 +486,53 @@ class BaseCache : public MemObject
 
     virtual bool inMissQueue(Addr addr) = 0;
 
-    void incMissCount(PacketPtr pkt)
+    void incMissCount(PacketPtr pkt, int id)
     {
-        misses[pkt->cmdToIndex()][0/*pkt->req->threadId()*/]++;
+
+        if (pkt->cmd == MemCmd::Writeback) {
+            assert(id == -1);
+            misses[pkt->cmdToIndex()][0]++;
+            /* same thing for writeback hits as misses - no context id
+             * available, meanwhile writeback hit/miss stats are not used
+             * in any aggregate hit/miss calculations, so just lump them all
+             * in bucket 0 */
+#if FULL_SYSTEM
+        } else if (id == -1) {
+            // Device accesses have id -1
+            // lump device accesses into their own bucket
+            misses[pkt->cmdToIndex()][_numCpus]++;
+#endif
+        } else {
+            misses[pkt->cmdToIndex()][id % _numCpus]++;
+        }
 
         if (missCount) {
             --missCount;
             if (missCount == 0)
                 exitSimLoop("A cache reached the maximum miss count");
+        }
+    }
+    void incHitCount(PacketPtr pkt, int id)
+    {
+
+        /* Writeback requests don't have a context id associated with
+         * them, so attributing a hit to a -1 context id is obviously a
+         * problem.  I've noticed in the stats that hits are split into
+         * demand and non-demand hits - neither of which include writeback
+         * hits, so here, I'll just put the writeback hits into bucket 0
+         * since it won't mess with any other stats -hsul */
+        if (pkt->cmd == MemCmd::Writeback) {
+            assert(id == -1);
+            hits[pkt->cmdToIndex()][0]++;
+#if FULL_SYSTEM
+        } else if (id == -1) {
+            // Device accesses have id -1
+            // lump device accesses into their own bucket
+            hits[pkt->cmdToIndex()][_numCpus]++;
+#endif
+        } else {
+            /* the % is necessary in case there are switch cpus */
+            hits[pkt->cmdToIndex()][id % _numCpus]++;
         }
     }
 

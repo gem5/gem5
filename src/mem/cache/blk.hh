@@ -104,6 +104,9 @@ class CacheBlk
     /** Number of references to this block since it was brought in. */
     int refCount;
 
+    /** holds the context source ID of the requestor for this block. */
+    int contextSrc;
+
   protected:
     /**
      * Represents that the indicated thread context has a "lock" on
@@ -133,7 +136,7 @@ class CacheBlk
 
     CacheBlk()
         : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
-          set(-1), isTouched(false), refCount(0)
+          set(-1), isTouched(false), refCount(0), contextSrc(-1)
     {}
 
     /**

@@ -84,8 +84,6 @@ class FALRU : public BaseTags
     const unsigned blkSize;
     /** The size of the cache. */
     const unsigned size;
-    /** The number of blocks in the cache. */
-    const unsigned numBlks; // calculated internally
     /** The hit latency of the cache. */
     const unsigned hitLatency;
 

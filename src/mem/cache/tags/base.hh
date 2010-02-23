@@ -63,6 +63,9 @@ class BaseTags
     /** Marked true when the cache is warmed up. */
     bool warmedUp;
 
+    /** the number of blocks in the cache */
+    unsigned numBlocks;
+
     // Statistics
     /**
      * @addtogroup CacheStatistics
@@ -92,6 +95,13 @@ class BaseTags
 
     /** The cycle that the warmup percentage was hit. */
     Stats::Scalar warmupCycle;
+
+    /** Average occupancy of each context/cpu using the cache */
+    Stats::AverageVector occupancies;
+
+    /** Average occ % of each context/cpu using the cache */
+    Stats::Formula avgOccs;
+
     /**
      * @}
      */
