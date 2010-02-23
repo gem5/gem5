@@ -98,6 +98,9 @@ class CacheBlk
      */
     int set;
 
+    /** whether this block has been touched */
+    bool isTouched;
+
     /** Number of references to this block since it was brought in. */
     int refCount;
 
@@ -130,7 +133,7 @@ class CacheBlk
 
     CacheBlk()
         : asid(-1), tag(0), data(0) ,size(0), status(0), whenReady(0),
-          set(-1), refCount(0)
+          set(-1), isTouched(false), refCount(0)
     {}
 
     /**

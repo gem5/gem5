@@ -45,42 +45,8 @@
 #include "mem/packet.hh"
 
 class BaseCache;
+class CacheSet;
 
-/**
- * LRU cache block.
- */
-class LRUBlk : public CacheBlk {
-  public:
-    /** Has this block been touched? Used to aid calculation of warmup time. */
-    bool isTouched;
-};
-
-/**
- * An associative set of cache blocks.
- */
-class CacheSet
-{
-  public:
-    /** The associativity of this set. */
-    int assoc;
-
-    /** Cache blocks in this set, maintained in LRU order 0 = MRU. */
-    LRUBlk **blks;
-
-    /**
-     * Find a block matching the tag in this set.
-     * @param asid The address space ID.
-     * @param tag The Tag to find.
-     * @return Pointer to the block if found.
-     */
-    LRUBlk* findBlk(Addr tag) const;
-
-    /**
-     * Move the given block to the head of the list.
-     * @param blk The block to move.
-     */
-    void moveToHead(LRUBlk *blk);
-};
 
 /**
  * A LRU cache tag store.
@@ -89,9 +55,9 @@ class LRU : public BaseTags
 {
   public:
     /** Typedef the block type used in this tag store. */
-    typedef LRUBlk BlkType;
+    typedef CacheBlk BlkType;
     /** Typedef for a list of pointers to the local block class. */
-    typedef std::list<LRUBlk*> BlkList;
+    typedef std::list<BlkType*> BlkList;
 
   protected:
     /** The number of sets in the cache. */
@@ -107,7 +73,7 @@ class LRU : public BaseTags
     CacheSet *sets;
 
     /** The cache blocks. */
-    LRUBlk *blks;
+    BlkType *blks;
     /** The data blocks, 1 per cache block. */
     uint8_t *dataBlks;
 
@@ -172,7 +138,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* accessBlock(Addr addr, int &lat, int context_src);
+    BlkType* accessBlock(Addr addr, int &lat, int context_src);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -181,7 +147,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    LRUBlk* findBlock(Addr addr) const;
+    BlkType* findBlock(Addr addr) const;
 
     /**
      * Find a block to evict for the address provided.
@@ -189,7 +155,7 @@ public:
      * @param writebacks List for any writebacks to be performed.
      * @return The candidate block.
      */
-    LRUBlk* findVictim(Addr addr, PacketList &writebacks);
+    BlkType* findVictim(Addr addr, PacketList &writebacks);
 
     /**
      * Insert the new block into the cache.  For LRU this means inserting into

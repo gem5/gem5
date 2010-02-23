@@ -39,45 +39,9 @@
 #include "base/intmath.hh"
 #include "mem/cache/tags/lru.hh"
 #include "sim/core.hh"
+#include "cacheset.hh"
 
 using namespace std;
-
-LRUBlk*
-CacheSet::findBlk(Addr tag) const
-{
-    for (int i = 0; i < assoc; ++i) {
-        if (blks[i]->tag == tag && blks[i]->isValid()) {
-            return blks[i];
-        }
-    }
-    return 0;
-}
-
-
-void
-CacheSet::moveToHead(LRUBlk *blk)
-{
-    // nothing to do if blk is already head
-    if (blks[0] == blk)
-        return;
-
-    // write 'next' block into blks[i], moving up from MRU toward LRU
-    // until we overwrite the block we moved to head.
-
-    // start by setting up to write 'blk' into blks[0]
-    int i = 0;
-    LRUBlk *next = blk;
-
-    do {
-        assert(i < assoc);
-        // swap blks[i] and next
-        LRUBlk *tmp = blks[i];
-        blks[i] = next;
-        next = tmp;
-        ++i;
-    } while (next != blk);
-}
-
 
 // create and initialize a LRU/MRU cache structure
 LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
@@ -108,7 +72,7 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     warmupBound = numSets * assoc;
 
     sets = new CacheSet[numSets];
-    blks = new LRUBlk[numSets * assoc];
+    blks = new BlkType[numSets * assoc];
     // allocate data storage in one big chunk
     dataBlks = new uint8_t[numSets*assoc*blkSize];
 
@@ -116,12 +80,12 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     for (unsigned i = 0; i < numSets; ++i) {
         sets[i].assoc = assoc;
 
-        sets[i].blks = new LRUBlk*[assoc];
+        sets[i].blks = new BlkType*[assoc];
 
         // link in the data blocks
         for (unsigned j = 0; j < assoc; ++j) {
             // locate next cache block
-            LRUBlk *blk = &blks[blkIndex];
+            BlkType *blk = &blks[blkIndex];
             blk->data = &dataBlks[blkSize*blkIndex];
             ++blkIndex;
 
@@ -149,12 +113,12 @@ LRU::~LRU()
     delete [] sets;
 }
 
-LRUBlk*
+LRU::BlkType*
 LRU::accessBlock(Addr addr, int &lat, int context_src)
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(tag);
+    BlkType *blk = sets[set].findBlk(tag);
     lat = hitLatency;
     if (blk != NULL) {
         // move this block to head of the MRU list
@@ -172,21 +136,21 @@ LRU::accessBlock(Addr addr, int &lat, int context_src)
 }
 
 
-LRUBlk*
+LRU::BlkType*
 LRU::findBlock(Addr addr) const
 {
     Addr tag = extractTag(addr);
     unsigned set = extractSet(addr);
-    LRUBlk *blk = sets[set].findBlk(tag);
+    BlkType *blk = sets[set].findBlk(tag);
     return blk;
 }
 
-LRUBlk*
+LRU::BlkType*
 LRU::findVictim(Addr addr, PacketList &writebacks)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate
-    LRUBlk *blk = sets[set].blks[assoc-1];
+    BlkType *blk = sets[set].blks[assoc-1];
     if (blk->isValid()) {
         replacements[0]++;
         totalRefs += blk->refCount;
@@ -200,7 +164,7 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
 }
 
 void
-LRU::insertBlock(Addr addr, LRU::BlkType *blk, int context_src)
+LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
 {
     if (!blk->isTouched) {
         tagsInUse++;
@@ -219,7 +183,7 @@ LRU::insertBlock(Addr addr, LRU::BlkType *blk, int context_src)
 }
 
 void
-LRU::invalidateBlk(LRU::BlkType *blk)
+LRU::invalidateBlk(BlkType *blk)
 {
     if (blk) {
         blk->status = 0;

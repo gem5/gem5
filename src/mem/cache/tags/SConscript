@@ -34,6 +34,7 @@ Source('base.cc')
 Source('fa_lru.cc')
 Source('iic.cc')
 Source('lru.cc')
+Source('cacheset.cc')
 
 SimObject('iic_repl/Repl.py')
 Source('iic_repl/gen.cc')
