@@ -162,6 +162,8 @@ LRU::findVictim(Addr addr, PacketList &writebacks)
         if (blk->contextSrc != -1) {
             occupancies[blk->contextSrc % cache->numCpus()]--;
             blk->contextSrc = -1;
+        } else {
+            occupancies[cache->numCpus()]--;
         }
 
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
@@ -188,8 +190,10 @@ LRU::insertBlock(Addr addr, BlkType *blk, int context_src)
     // deal with what we are bringing in
     if (context_src != -1) {
         occupancies[context_src % cache->numCpus()]++;
-        blk->contextSrc = context_src;
+    } else {
+        occupancies[cache->numCpus()]++;
     }
+    blk->contextSrc = context_src;
 
     unsigned set = extractSet(addr);
     sets[set].moveToHead(blk);
@@ -206,6 +210,8 @@ LRU::invalidateBlk(BlkType *blk)
         if (blk->contextSrc != -1) {
             occupancies[blk->contextSrc % cache->numCpus()]--;
             blk->contextSrc = -1;
+        } else {
+            occupancies[cache->numCpus()]--;
         }
     }
 }

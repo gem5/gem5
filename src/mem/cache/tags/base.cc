@@ -88,7 +88,7 @@ BaseTags::regStats(const string &name)
         ;
 
     occupancies
-        .init(cache->numCpus())
+        .init(cache->numCpus() + 1)
         .name(name + ".occ_blocks")
         .desc("Average occupied blocks per context")
         .flags(nozero | nonan)
