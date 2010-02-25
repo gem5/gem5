@@ -44,6 +44,7 @@ from FSConfig import *
 from SysPaths import *
 from Benchmarks import *
 import Simulation
+import CacheConfig
 from Caches import *
 
 # Get paths we might need.  It's expected this file is in m5/configs/example.
@@ -120,11 +121,7 @@ if options.kernel is not None:
 if options.script is not None:
     test_sys.readfile = options.script
 
-if options.l2cache:
-    test_sys.l2 = L2Cache(size = '2MB')
-    test_sys.tol2bus = Bus()
-    test_sys.l2.cpu_side = test_sys.tol2bus.port
-    test_sys.l2.mem_side = test_sys.membus.port
+CacheConfig.config_cache(options, system)
 
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
 
@@ -136,14 +133,6 @@ if options.caches or options.l2cache:
     test_sys.iocache.mem_side = test_sys.membus.port
 
 for i in xrange(np):
-    if options.caches:
-        test_sys.cpu[i].addPrivateSplitL1Caches(L1Cache(size = '32kB'),
-                                                L1Cache(size = '64kB'))
-    if options.l2cache:
-        test_sys.cpu[i].connectMemPorts(test_sys.tol2bus)
-    else:
-        test_sys.cpu[i].connectMemPorts(test_sys.membus)
-
     if options.fastmem:
         test_sys.cpu[i].physmem_port = test_sys.physmem.port
 
