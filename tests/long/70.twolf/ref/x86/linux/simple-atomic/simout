@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Aug 17 2009 20:29:57
-M5 revision 84f7bdc43a4f 6605 default qtip tip x86fsdate.patch
-M5 started Aug 17 2009 20:37:58
-M5 executing on tater
-command line: build/X86_SE/m5.opt -d build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-atomic -re tests/run.py build/X86_SE/tests/opt/long/70.twolf/x86/linux/simple-atomic
+M5 compiled Feb 25 2010 03:41:05
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 04:02:03
+M5 executing on SC2B0619
+command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic -re tests/run.py build/X86_SE/tests/fast/long/70.twolf/x86/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 

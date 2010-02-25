@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Oct 15 2009 15:43:13
-M5 revision b43c2c69a460 6694 default hello-world-outputs.patch qtip tip
-M5 started Oct 15 2009 15:49:09
-M5 executing on frontend01
+M5 compiled Feb 24 2010 23:13:07
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 24 2010 23:13:11
+M5 executing on SC2B0619
 command line: build/POWER_SE/m5.fast -d build/POWER_SE/tests/fast/quick/00.hello/power/linux/o3-timing -re tests/run.py build/POWER_SE/tests/fast/quick/00.hello/power/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul 27 2009 00:45:04
-M5 revision 44a3d32f3217 6414 default qtip tip runnableagainstatupdate.patch
-M5 started Jul 27 2009 00:45:05
-M5 executing on fajita
+M5 compiled Feb 25 2010 04:11:39
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 04:11:44
+M5 executing on SC2B0619
 command line: build/ARM_SE/m5.fast -d build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic -re tests/run.py build/ARM_SE/tests/fast/quick/00.hello/arm/linux/simple-atomic
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

@@ -1,4 +1,4 @@
 warn: Sockets disabled, not accepting gdb connections
 For more information see: http://www.m5sim.org/warn/d946bea6
-warn: ignoring syscall sigprocmask(1, 0, ...)
+warn: ignoring syscall sigprocmask(0, 1, ...)
 For more information see: http://www.m5sim.org/warn/5c5b547f

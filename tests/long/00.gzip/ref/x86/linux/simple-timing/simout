@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Nov  8 2009 16:16:58
-M5 revision 5d58e4833e79 6726 default qtip tip x86_tests.diff
-M5 started Nov  8 2009 16:32:22
-M5 executing on maize
+M5 compiled Feb 25 2010 03:41:05
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 03:47:37
+M5 executing on SC2B0619
 command line: build/X86_SE/m5.fast -d build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-timing -re tests/run.py build/X86_SE/tests/fast/long/00.gzip/x86/linux/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...

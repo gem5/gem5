@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jul  6 2009 11:03:45
-M5 revision d3635cac686a 6289 default ruby_refs.diff qtip tip
-M5 started Jul  6 2009 11:11:06
-M5 executing on maize
-command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/o3-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/o3-timing
+M5 compiled Feb 24 2010 23:12:54
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 01:04:08
+M5 executing on SC2B0619
+command line: build/ALPHA_SE_MOESI_hammer/m5.fast -d build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/o3-timing -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/fast/quick/00.hello/alpha/linux/o3-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.

@@ -5,10 +5,10 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Apr 22 2009 06:58:26
-M5 revision ce26a627c841 6126 default qtip tip stats_no_compat.diff
-M5 started Apr 22 2009 07:17:24
-M5 executing on maize
+M5 compiled Feb 24 2010 23:12:40
+M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
+M5 started Feb 25 2010 02:33:34
+M5 executing on SC2B0619
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/20.eio-short/alpha/eio/simple-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
