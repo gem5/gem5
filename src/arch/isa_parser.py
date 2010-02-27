@@ -36,6 +36,8 @@ from types import *
 
 from m5.util.grammar import Grammar
 
+debug=False
+
 ###################
 # Utility functions
 
@@ -83,7 +85,7 @@ class ISAParserError(Exception):
             self.lineno = first
             self.string = second
 
-    def display(self, filename_stack, print_traceback=False):
+    def display(self, filename_stack, print_traceback=debug):
         # Output formatted to work under Emacs compile-mode.  Optional
         # 'print_traceback' arg, if set to True, prints a Python stack
         # backtrace too (can be handy when trying to debug the parser
@@ -104,7 +106,7 @@ class ISAParserError(Exception):
 
         return "%s%s %s" % (spaces, line_str, self.string)
 
-    def exit(self, filename_stack, print_traceback=False):
+    def exit(self, filename_stack, print_traceback=debug):
         # Just call exit.
 
         sys.exit(self.display(filename_stack, print_traceback))
@@ -247,6 +249,8 @@ class Format(object):
         try:
             vars = self.func(self.user_code, context, *args[0], **args[1])
         except Exception, exc:
+            if debug:
+                raise
             error(lineno, 'error defining "%s": %s.' % (name, exc))
         for k in vars.keys():
             if k not in ('header_output', 'decoder_output',
@@ -882,6 +886,8 @@ def buildOperandNameMap(user_dict, lineno):
         try:
             base_cls = eval(base_cls_name + 'Operand')
         except NameError:
+            if debug:
+                raise
             error(lineno,
                   'error: unknown operand base class "%s"' % base_cls_name)
         # The following statement creates a new class called
@@ -1518,6 +1524,8 @@ StaticInstPtr
         try:
             exec fixPythonIndentation(t[2]) in exportContext
         except Exception, exc:
+            if debug:
+                raise
             error(t, 'error: %s in global let block "%s".' % (exc, t[2]))
         t[0] = GenCode(header_output = exportContext["header_output"],
                        decoder_output = exportContext["decoder_output"],
@@ -1531,6 +1539,8 @@ StaticInstPtr
         try:
             user_dict = eval('{' + t[3] + '}')
         except Exception, exc:
+            if debug:
+                raise
             error(t,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
         buildOperandTypeMap(user_dict, t.lexer.lineno)
@@ -1545,6 +1555,8 @@ StaticInstPtr
         try:
             user_dict = eval('{' + t[3] + '}', exportContext)
         except Exception, exc:
+            if debug:
+                raise
             error(t, 'error: %s in def operands block "%s".' % (exc, t[3]))
         buildOperandNameMap(user_dict, t.lexer.lineno)
         t[0] = GenCode() # contributes nothing to the output C++ file
