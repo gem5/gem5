@@ -157,7 +157,7 @@ class Template(object):
             snippetLabels = [l for l in labelRE.findall(template)
                              if d.snippets.has_key(l)]
 
-            snippets = dict([(s, mungeSnippet(d.snippets[s]))
+            snippets = dict([(s, self.parser.mungeSnippet(d.snippets[s]))
                              for s in snippetLabels])
 
             myDict.update(snippets)
@@ -168,7 +168,7 @@ class Template(object):
             # operands explicitly (like Mem)
             compositeCode += ' ' + template
 
-            operands = SubOperandList(compositeCode, d.operands)
+            operands = SubOperandList(self.parser, compositeCode, d.operands)
 
             myDict['op_decl'] = operands.concatAttrStrings('op_decl')
 
@@ -380,34 +380,6 @@ def makeList(arg):
     else:
         return [ arg ]
 
-# Generate operandTypeMap from the user's 'def operand_types'
-# statement.
-def buildOperandTypeMap(user_dict, lineno):
-    global operandTypeMap
-    operandTypeMap = {}
-    for (ext, (desc, size)) in user_dict.iteritems():
-        if desc == 'signed int':
-            ctype = 'int%d_t' % size
-            is_signed = 1
-        elif desc == 'unsigned int':
-            ctype = 'uint%d_t' % size
-            is_signed = 0
-        elif desc == 'float':
-            is_signed = 1       # shouldn't really matter
-            if size == 32:
-                ctype = 'float'
-            elif size == 64:
-                ctype = 'double'
-        elif desc == 'twin64 int':
-            is_signed = 0
-            ctype = 'Twin64_t'
-        elif desc == 'twin32 int':
-            is_signed = 0
-            ctype = 'Twin32_t'
-        if ctype == '':
-            error(lineno, 'Unrecognized type description "%s" in user_dict')
-        operandTypeMap[ext] = (size, ctype, is_signed)
-
 class Operand(object):
     '''Base class for operand descriptors.  An instance of this class
     (or actually a class derived from this one) represents a specific
@@ -448,7 +420,7 @@ class Operand(object):
             if (traceData) { traceData->setData(final_val); }
         }''' % (self.dflt_ctype, final_val, code)
 
-    def __init__(self, full_name, ext, is_src, is_dest):
+    def __init__(self, parser, full_name, ext, is_src, is_dest):
         self.full_name = full_name
         self.ext = ext
         self.is_src = is_src
@@ -460,7 +432,8 @@ class Operand(object):
         else:
             self.eff_ext = self.dflt_ext
 
-        (self.size, self.ctype, self.is_signed) = operandTypeMap[self.eff_ext]
+        self.size, self.ctype, self.is_signed = \
+                    parser.operandTypeMap[self.eff_ext]
 
         # note that mem_acc_size is undefined for non-mem operands...
         # template must be careful not to use it if it doesn't apply.
@@ -770,91 +743,6 @@ class NNPCOperand(Operand):
             return self.buildWriteCode('setNextNPC')
         return 'xc->setNextNPC(%s);\n' % self.base_name
 
-def buildOperandNameMap(user_dict, lineno):
-    global operandNameMap
-    operandNameMap = {}
-    for (op_name, val) in user_dict.iteritems():
-        (base_cls_name, dflt_ext, reg_spec, flags, sort_pri) = val[:5]
-        if len(val) > 5:
-            read_code = val[5]
-        else:
-            read_code = None
-        if len(val) > 6:
-            write_code = val[6]
-        else:
-            write_code = None
-        if len(val) > 7:
-            error(lineno,
-                  'error: too many attributes for operand "%s"' %
-                  base_cls_name)
-            
-        (dflt_size, dflt_ctype, dflt_is_signed) = operandTypeMap[dflt_ext]
-        # Canonical flag structure is a triple of lists, where each list
-        # indicates the set of flags implied by this operand always, when
-        # used as a source, and when used as a dest, respectively.
-        # For simplicity this can be initialized using a variety of fairly
-        # obvious shortcuts; we convert these to canonical form here.
-        if not flags:
-            # no flags specified (e.g., 'None')
-            flags = ( [], [], [] )
-        elif isinstance(flags, str):
-            # a single flag: assumed to be unconditional
-            flags = ( [ flags ], [], [] )
-        elif isinstance(flags, list):
-            # a list of flags: also assumed to be unconditional
-            flags = ( flags, [], [] )
-        elif isinstance(flags, tuple):
-            # it's a tuple: it should be a triple,
-            # but each item could be a single string or a list
-            (uncond_flags, src_flags, dest_flags) = flags
-            flags = (makeList(uncond_flags),
-                     makeList(src_flags), makeList(dest_flags))
-        # Accumulate attributes of new operand class in tmp_dict
-        tmp_dict = {}
-        for attr in ('dflt_ext', 'reg_spec', 'flags', 'sort_pri',
-                     'dflt_size', 'dflt_ctype', 'dflt_is_signed',
-                     'read_code', 'write_code'):
-            tmp_dict[attr] = eval(attr)
-        tmp_dict['base_name'] = op_name
-        # New class name will be e.g. "IntReg_Ra"
-        cls_name = base_cls_name + '_' + op_name
-        # Evaluate string arg to get class object.  Note that the
-        # actual base class for "IntReg" is "IntRegOperand", i.e. we
-        # have to append "Operand".
-        try:
-            base_cls = eval(base_cls_name + 'Operand')
-        except NameError:
-            if debug:
-                raise
-            error(lineno,
-                  'error: unknown operand base class "%s"' % base_cls_name)
-        # The following statement creates a new class called
-        # <cls_name> as a subclass of <base_cls> with the attributes
-        # in tmp_dict, just as if we evaluated a class declaration.
-        operandNameMap[op_name] = type(cls_name, (base_cls,), tmp_dict)
-
-    # Define operand variables.
-    operands = user_dict.keys()
-
-    operandsREString = (r'''
-    (?<![\w\.])      # neg. lookbehind assertion: prevent partial matches
-    ((%s)(?:\.(\w+))?)   # match: operand with optional '.' then suffix
-    (?![\w\.])       # neg. lookahead assertion: prevent partial matches
-    '''
-                        % string.join(operands, '|'))
-
-    global operandsRE
-    operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
-
-    # Same as operandsREString, but extension is mandatory, and only two
-    # groups are returned (base and ext, not full name as above).
-    # Used for subtituting '_' for '.' to make C++ identifiers.
-    operandsWithExtREString = (r'(?<![\w\.])(%s)\.(\w+)(?![\w\.])'
-                               % string.join(operands, '|'))
-
-    global operandsWithExtRE
-    operandsWithExtRE = re.compile(operandsWithExtREString, re.MULTILINE)
-
 class OperandList(object):
     '''Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList).'''
@@ -866,7 +754,7 @@ class OperandList(object):
         # search for operands
         next_pos = 0
         while 1:
-            match = operandsRE.search(code, next_pos)
+            match = parser.operandsRE.search(code, next_pos)
             if not match:
                 # no more matches: we're done
                 break
@@ -887,8 +775,8 @@ class OperandList(object):
                 op_desc.is_dest = op_desc.is_dest or is_dest
             else:
                 # new operand: create new descriptor
-                op_desc = operandNameMap[op_base](op_full, op_ext,
-                                                  is_src, is_dest)
+                op_desc = parser.operandNameMap[op_base](parser,
+                    op_full, op_ext, is_src, is_dest)
                 self.append(op_desc)
             # start next search after end of current match
             next_pos = match.end()
@@ -973,7 +861,7 @@ class OperandList(object):
 class SubOperandList(OperandList):
     '''Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList).'''
-    def __init__(self, code, master_list):
+    def __init__(self, parser, code, master_list):
         self.items = []
         self.bases = {}
         # delete comments so we don't match on reg specifiers inside
@@ -981,7 +869,7 @@ class SubOperandList(OperandList):
         # search for operands
         next_pos = 0
         while 1:
-            match = operandsRE.search(code, next_pos)
+            match = parser.operandsRE.search(code, next_pos)
             if not match:
                 # no more matches: we're done
                 break
@@ -1017,19 +905,6 @@ commentRE = re.compile(r'//.*\n')
 # Regular expression object to match assignment statements
 # (used in findOperands())
 assignRE = re.compile(r'\s*=(?!=)', re.MULTILINE)
-
-# Munge operand names in code string to make legal C++ variable names.
-# This means getting rid of the type extension if any.
-# (Will match base_name attribute of Operand object.)
-def substMungedOpNames(code):
-    return operandsWithExtRE.sub(r'\1', code)
-
-# Fix up code snippets for final substitution in templates.
-def mungeSnippet(s):
-    if isinstance(s, str):
-        return substMungedOpNames(substBitOps(s))
-    else:
-        return s
 
 def makeFlagConstructor(flag_list):
     if len(flag_list) == 0:
@@ -1128,13 +1003,6 @@ class Stack(list):
     def top(self):
         return self[-1]
 
-# Global stack that tracks current file and line number.
-# Each element is a tuple (filename, lineno) that records the
-# *current* filename and the line number in the *previous* file where
-# it was included.
-fileNameStack = Stack()
-
-
 #######################
 #
 # Output file template
@@ -1194,6 +1062,12 @@ class ISAParser(Grammar):
 
         # The default case stack.
         self.defaultStack = Stack(None)
+
+        # Stack that tracks current file and line number.  Each
+        # element is a tuple (filename, lineno) that records the
+        # *current* filename and the line number in the *previous*
+        # file where it was included.
+        self.fileNameStack = Stack()
 
         symbols = ('makeList', 're', 'string')
         self.exportContext = dict([(s, eval(s)) for s in symbols])
@@ -1322,12 +1196,12 @@ class ISAParser(Grammar):
 
     def t_NEWFILE(self, t):
         r'^\#\#newfile\s+"[\w/.-]*"'
-        fileNameStack.push((t.value[11:-1], t.lexer.lineno))
+        self.fileNameStack.push((t.value[11:-1], t.lexer.lineno))
         t.lexer.lineno = 0
 
     def t_ENDFILE(self, t):
         r'^\#\#endfile'
-        (old_filename, t.lexer.lineno) = fileNameStack.pop()
+        (old_filename, t.lexer.lineno) = self.fileNameStack.pop()
 
     #
     # The functions t_NEWLINE, t_ignore, and t_error are
@@ -1489,14 +1363,14 @@ StaticInstPtr
                 raise
             error(t,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
-        buildOperandTypeMap(user_dict, t.lexer.lineno)
+        self.buildOperandTypeMap(user_dict, t.lexer.lineno)
         t[0] = GenCode(self) # contributes nothing to the output C++ file
 
     # Define the mapping from operand names to operand classes and
     # other traits.  Stored in operandNameMap.
     def p_def_operands(self, t):
         'def_operands : DEF OPERANDS CODELIT SEMI'
-        if not globals().has_key('operandTypeMap'):
+        if not hasattr(self, 'operandTypeMap'):
             error(t, 'error: operand types must be defined before operands')
         try:
             user_dict = eval('{' + t[3] + '}', self.exportContext)
@@ -1504,7 +1378,7 @@ StaticInstPtr
             if debug:
                 raise
             error(t, 'error: %s in def operands block "%s".' % (exc, t[3]))
-        buildOperandNameMap(user_dict, t.lexer.lineno)
+        self.buildOperandNameMap(user_dict, t.lexer.lineno)
         t[0] = GenCode(self) # contributes nothing to the output C++ file
 
     # A bitfield definition looks like:
@@ -1950,6 +1824,133 @@ StaticInstPtr
 
         return re.sub(r'%(?!\()', '%%', s)
 
+    def buildOperandTypeMap(self, user_dict, lineno):
+        """Generate operandTypeMap from the user's 'def operand_types'
+        statement."""
+        operand_type = {}
+        for (ext, (desc, size)) in user_dict.iteritems():
+            if desc == 'signed int':
+                ctype = 'int%d_t' % size
+                is_signed = 1
+            elif desc == 'unsigned int':
+                ctype = 'uint%d_t' % size
+                is_signed = 0
+            elif desc == 'float':
+                is_signed = 1       # shouldn't really matter
+                if size == 32:
+                    ctype = 'float'
+                elif size == 64:
+                    ctype = 'double'
+            elif desc == 'twin64 int':
+                is_signed = 0
+                ctype = 'Twin64_t'
+            elif desc == 'twin32 int':
+                is_signed = 0
+                ctype = 'Twin32_t'
+            if ctype == '':
+                error(parser, lineno,
+                      'Unrecognized type description "%s" in user_dict')
+            operand_type[ext] = (size, ctype, is_signed)
+
+        self.operandTypeMap = operand_type
+
+    def buildOperandNameMap(self, user_dict, lineno):
+        operand_name = {}
+        for op_name, val in user_dict.iteritems():
+            base_cls_name, dflt_ext, reg_spec, flags, sort_pri = val[:5]
+            if len(val) > 5:
+                read_code = val[5]
+            else:
+                read_code = None
+            if len(val) > 6:
+                write_code = val[6]
+            else:
+                write_code = None
+            if len(val) > 7:
+                error(lineno,
+                      'error: too many attributes for operand "%s"' %
+                      base_cls_name)
+
+            (dflt_size, dflt_ctype, dflt_is_signed) = \
+                        self.operandTypeMap[dflt_ext]
+            # Canonical flag structure is a triple of lists, where each list
+            # indicates the set of flags implied by this operand always, when
+            # used as a source, and when used as a dest, respectively.
+            # For simplicity this can be initialized using a variety of fairly
+            # obvious shortcuts; we convert these to canonical form here.
+            if not flags:
+                # no flags specified (e.g., 'None')
+                flags = ( [], [], [] )
+            elif isinstance(flags, str):
+                # a single flag: assumed to be unconditional
+                flags = ( [ flags ], [], [] )
+            elif isinstance(flags, list):
+                # a list of flags: also assumed to be unconditional
+                flags = ( flags, [], [] )
+            elif isinstance(flags, tuple):
+                # it's a tuple: it should be a triple,
+                # but each item could be a single string or a list
+                (uncond_flags, src_flags, dest_flags) = flags
+                flags = (makeList(uncond_flags),
+                         makeList(src_flags), makeList(dest_flags))
+            # Accumulate attributes of new operand class in tmp_dict
+            tmp_dict = {}
+            for attr in ('dflt_ext', 'reg_spec', 'flags', 'sort_pri',
+                         'dflt_size', 'dflt_ctype', 'dflt_is_signed',
+                         'read_code', 'write_code'):
+                tmp_dict[attr] = eval(attr)
+            tmp_dict['base_name'] = op_name
+            # New class name will be e.g. "IntReg_Ra"
+            cls_name = base_cls_name + '_' + op_name
+            # Evaluate string arg to get class object.  Note that the
+            # actual base class for "IntReg" is "IntRegOperand", i.e. we
+            # have to append "Operand".
+            try:
+                base_cls = eval(base_cls_name + 'Operand')
+            except NameError:
+                error(lineno,
+                      'error: unknown operand base class "%s"' % base_cls_name)
+            # The following statement creates a new class called
+            # <cls_name> as a subclass of <base_cls> with the attributes
+            # in tmp_dict, just as if we evaluated a class declaration.
+            operand_name[op_name] = type(cls_name, (base_cls,), tmp_dict)
+
+        self.operandNameMap = operand_name
+
+        # Define operand variables.
+        operands = user_dict.keys()
+
+        operandsREString = (r'''
+        (?<![\w\.])      # neg. lookbehind assertion: prevent partial matches
+        ((%s)(?:\.(\w+))?)   # match: operand with optional '.' then suffix
+        (?![\w\.])       # neg. lookahead assertion: prevent partial matches
+        '''
+                            % string.join(operands, '|'))
+
+        self.operandsRE = re.compile(operandsREString, re.MULTILINE|re.VERBOSE)
+
+        # Same as operandsREString, but extension is mandatory, and only two
+        # groups are returned (base and ext, not full name as above).
+        # Used for subtituting '_' for '.' to make C++ identifiers.
+        operandsWithExtREString = (r'(?<![\w\.])(%s)\.(\w+)(?![\w\.])'
+                                   % string.join(operands, '|'))
+
+        self.operandsWithExtRE = \
+            re.compile(operandsWithExtREString, re.MULTILINE)
+
+    def substMungedOpNames(self, code):
+        '''Munge operand names in code string to make legal C++
+        variable names.  This means getting rid of the type extension
+        if any.  Will match base_name attribute of Operand object.)'''
+        return self.operandsWithExtRE.sub(r'\1', code)
+
+    def mungeSnippet(self, s):
+        '''Fix up code snippets for final substitution in templates.'''
+        if isinstance(s, str):
+            return self.substMungedOpNames(substBitOps(s))
+        else:
+            return s
+
     def update_if_needed(self, file, contents):
         '''Update the output file only if the new contents are
         different from the current contents.  Minimizes the files that
@@ -2001,14 +2002,14 @@ StaticInstPtr
         except IOError:
             error('Error including file "%s"' % filename)
 
-        fileNameStack.push((filename, 0))
+        self.fileNameStack.push((filename, 0))
 
         # Find any includes and include them
         def replace(matchobj):
             return self.replace_include(matchobj, current_dir)
         contents = self.includeRE.sub(replace, contents)
 
-        fileNameStack.pop()
+        self.fileNameStack.pop()
         return contents
 
     def _parse_isa_desc(self, isa_desc_file):
@@ -2020,7 +2021,7 @@ StaticInstPtr
         isa_desc = self.read_and_flatten(isa_desc_file)
 
         # Initialize filename stack with outer file.
-        fileNameStack.push((isa_desc_file, 0))
+        self.fileNameStack.push((isa_desc_file, 0))
 
         # Parse it.
         (isa_name, namespace, global_code, namespace_code) = \
@@ -2067,7 +2068,7 @@ StaticInstPtr
         try:
             self._parse_isa_desc(*args, **kwargs)
         except ISAParserError, e:
-            e.exit(fileNameStack)
+            e.exit(self.fileNameStack)
 
 # Called as script: get args from command line.
 # Args are: <path to cpu_models.py> <isa desc file> <output dir> <cpu models>
