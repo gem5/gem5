@@ -30,7 +30,7 @@ import os
 import sys
 import re
 import string
-import traceback
+import inspect, traceback
 # get type names
 from types import *
 
@@ -71,23 +71,46 @@ def fixPythonIndentation(s):
         s = 'if 1:\n' + s
     return s
 
-# Error handler.  Just call exit.  Output formatted to work under
-# Emacs compile-mode.  Optional 'print_traceback' arg, if set to True,
-# prints a Python stack backtrace too (can be handy when trying to
-# debug the parser itself).
-def error(lineno, string, print_traceback = False):
-    spaces = ""
-    for (filename, line) in fileNameStack[0:-1]:
-        print spaces + "In file included from " + filename + ":"
-        spaces += "  "
-    # Print a Python stack backtrace if requested.
-    if (print_traceback):
-        traceback.print_exc()
-    if lineno != 0:
-        line_str = "%d:" % lineno
-    else:
-        line_str = ""
-    sys.exit(spaces + "%s:%s %s" % (fileNameStack[-1][0], line_str, string))
+class ISAParserError(Exception):
+    """Error handler for parser errors"""
+    def __init__(self, first, second=None):
+        if second is None:
+            self.lineno = 0
+            self.string = first
+        else:
+            if hasattr(first, 'lexer'):
+                first = first.lexer.lineno
+            self.lineno = first
+            self.string = second
+
+    def display(self, filename_stack, print_traceback=False):
+        # Output formatted to work under Emacs compile-mode.  Optional
+        # 'print_traceback' arg, if set to True, prints a Python stack
+        # backtrace too (can be handy when trying to debug the parser
+        # itself).
+
+        spaces = ""
+        for (filename, line) in filename_stack[:-1]:
+            print "%sIn file included from %s:" % (spaces, filename)
+            spaces += "  "
+
+        # Print a Python stack backtrace if requested.
+        if print_traceback or not self.lineno:
+            traceback.print_exc()
+
+        line_str = "%s:" % (filename_stack[-1][0], )
+        if self.lineno:
+            line_str += "%d:" % (self.lineno, )
+
+        return "%s%s %s" % (spaces, line_str, self.string)
+
+    def exit(self, filename_stack, print_traceback=False):
+        # Just call exit.
+
+        sys.exit(self.display(filename_stack, print_traceback))
+
+def error(*args):
+    raise ISAParserError(*args)
 
 ####################
 # Template objects.
@@ -578,7 +601,7 @@ class IntRegOperand(Operand):
 
     def makeRead(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to read integer register as FP')
+            error('Attempt to read integer register as FP')
         if self.read_code != None:
             return self.buildReadCode('readIntRegOperand')
         if (self.size == self.dflt_size):
@@ -596,7 +619,7 @@ class IntRegOperand(Operand):
 
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to write integer register as FP')
+            error('Attempt to write integer register as FP')
         if self.write_code != None:
             return self.buildWriteCode('setIntRegOperand')
         if (self.size != self.dflt_size and self.is_signed):
@@ -687,7 +710,7 @@ class ControlRegOperand(Operand):
     def makeRead(self):
         bit_select = 0
         if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to read control register as FP')
+            error('Attempt to read control register as FP')
         if self.read_code != None:
             return self.buildReadCode('readMiscRegOperand')
         base = 'xc->readMiscRegOperand(this, %s)' % self.src_reg_idx
@@ -699,7 +722,7 @@ class ControlRegOperand(Operand):
 
     def makeWrite(self):
         if (self.ctype == 'float' or self.ctype == 'double'):
-            error(0, 'Attempt to write control register as FP')
+            error('Attempt to write control register as FP')
         if self.write_code != None:
             return self.buildWriteCode('setMiscRegOperand')
         wb = 'xc->setMiscRegOperand(this, %s, %s);\n' % \
@@ -917,7 +940,7 @@ class OperandList(object):
             op_desc = self.find_base(op_base)
             if op_desc:
                 if op_desc.ext != op_ext:
-                    error(0, 'Inconsistent extensions for operand %s' % \
+                    error('Inconsistent extensions for operand %s' % \
                           op_base)
                 op_desc.is_src = op_desc.is_src or is_src
                 op_desc.is_dest = op_desc.is_dest or is_dest
@@ -950,7 +973,7 @@ class OperandList(object):
                         self.numIntDestRegs += 1
             elif op_desc.isMem():
                 if self.memOperand:
-                    error(0, "Code block has more than one memory operand.")
+                    error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
         global maxInstSrcRegs
         global maxInstDestRegs
@@ -1029,9 +1052,8 @@ class SubOperandList(OperandList):
             # find this op in the master list
             op_desc = master_list.find_base(op_base)
             if not op_desc:
-                error(0, 'Found operand %s which is not in the master list!' \
-                        ' This is an internal error' % \
-                          op_base)
+                error('Found operand %s which is not in the master list!' \
+                      ' This is an internal error' % op_base)
             else:
                 # See if we've already found this operand
                 op_desc = self.find_base(op_base)
@@ -1046,7 +1068,7 @@ class SubOperandList(OperandList):
         for op_desc in self.items:
             if op_desc.isMem():
                 if self.memOperand:
-                    error(0, "Code block has more than one memory operand.")
+                    error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
 
 # Regular expression object to match C++ comments
@@ -1137,7 +1159,7 @@ class InstObjParams(object):
             elif opClassRE.match(oa):
                 self.op_class = oa
             else:
-                error(0, 'InstObjParams: optional arg "%s" not recognized '
+                error('InstObjParams: optional arg "%s" not recognized '
                       'as StaticInst::Flag or OpClass.' % oa)
 
         # add flag initialization to contructor here to include
@@ -1319,7 +1341,7 @@ class ISAParser(Grammar):
         try:
             t.value = int(t.value,0)
         except ValueError:
-            error(t.lexer.lineno, 'Integer value "%s" too large' % t.value)
+            error(t, 'Integer value "%s" too large' % t.value)
             t.value = 0
         return t
 
@@ -1375,7 +1397,7 @@ class ISAParser(Grammar):
 
     # Error handler
     def t_error(self, t):
-        error(t.lexer.lineno, "illegal character '%s'" % t.value[0])
+        error(t, "illegal character '%s'" % t.value[0])
         t.skip(1)
 
     #####################################################################
@@ -1496,8 +1518,7 @@ StaticInstPtr
         try:
             exec fixPythonIndentation(t[2]) in exportContext
         except Exception, exc:
-            error(t.lexer.lineno,
-                  'error: %s in global let block "%s".' % (exc, t[2]))
+            error(t, 'error: %s in global let block "%s".' % (exc, t[2]))
         t[0] = GenCode(header_output = exportContext["header_output"],
                        decoder_output = exportContext["decoder_output"],
                        exec_output = exportContext["exec_output"],
@@ -1510,7 +1531,7 @@ StaticInstPtr
         try:
             user_dict = eval('{' + t[3] + '}')
         except Exception, exc:
-            error(t.lexer.lineno,
+            error(t,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
         buildOperandTypeMap(user_dict, t.lexer.lineno)
         t[0] = GenCode() # contributes nothing to the output C++ file
@@ -1520,13 +1541,11 @@ StaticInstPtr
     def p_def_operands(self, t):
         'def_operands : DEF OPERANDS CODELIT SEMI'
         if not globals().has_key('operandTypeMap'):
-            error(t.lexer.lineno,
-                  'error: operand types must be defined before operands')
+            error(t, 'error: operand types must be defined before operands')
         try:
             user_dict = eval('{' + t[3] + '}', exportContext)
         except Exception, exc:
-            error(t.lexer.lineno,
-                  'error: %s in def operands block "%s".' % (exc, t[3]))
+            error(t, 'error: %s in def operands block "%s".' % (exc, t[3]))
         buildOperandNameMap(user_dict, t.lexer.lineno)
         t[0] = GenCode() # contributes nothing to the output C++ file
 
@@ -1554,8 +1573,7 @@ StaticInstPtr
     def p_def_bitfield_struct(self, t):
         'def_bitfield_struct : DEF opt_signed BITFIELD ID id_with_dot SEMI'
         if (t[2] != ''):
-            error(t.lexer.lineno,
-                  'error: structure bitfields are always unsigned.')
+            error(t, 'error: structure bitfields are always unsigned.')
         expr = 'machInst.%s' % t[5]
         hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
         t[0] = GenCode(header_output = hash_define)
@@ -1697,7 +1715,7 @@ StaticInstPtr
     def p_decode_stmt_list_1(self, t):
         'decode_stmt_list : decode_stmt decode_stmt_list'
         if (t[1].has_decode_default and t[2].has_decode_default):
-            error(t.lexer.lineno, 'Two default cases in decode block')
+            error(t, 'Two default cases in decode block')
         t[0] = t[1] + t[2]
 
     #
@@ -1744,8 +1762,7 @@ StaticInstPtr
             formatStack.push(formatMap[t[1]])
             t[0] = ('', '// format %s' % t[1])
         except KeyError:
-            error(t.lexer.lineno,
-                  'instruction format "%s" not defined.' % t[1])
+            error(t, 'instruction format "%s" not defined.' % t[1])
 
     # Nested decode block: if the value of the current field matches
     # the specified constant, do a nested decode on some other field.
@@ -1818,8 +1835,7 @@ StaticInstPtr
         try:
             format = formatMap[t[1]]
         except KeyError:
-            error(t.lexer.lineno,
-                  'instruction format "%s" not defined.' % t[1])
+            error(t, 'instruction format "%s" not defined.' % t[1])
         codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
         comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
         codeObj.prepend_all(comment)
@@ -1911,9 +1927,9 @@ StaticInstPtr
     # t.value)
     def p_error(self, t):
         if t:
-            error(t.lexer.lineno, "syntax error at '%s'" % t.value)
+            error(t, "syntax error at '%s'" % t.value)
         else:
-            error(0, "unknown syntax error", True)
+            error("unknown syntax error")
 
     # END OF GRAMMAR RULES
 
@@ -1966,7 +1982,7 @@ StaticInstPtr
         try:
             contents = open(filename).read()
         except IOError:
-            error(0, 'Error including file "%s"' % filename)
+            error('Error including file "%s"' % filename)
 
         fileNameStack.push((filename, 0))
 
@@ -1978,7 +1994,7 @@ StaticInstPtr
         fileNameStack.pop()
         return contents
 
-    def parse_isa_desc(self, isa_desc_file):
+    def _parse_isa_desc(self, isa_desc_file):
         '''Read in and parse the ISA description.'''
 
         # Read file and (recursively) all included files into a string.
@@ -2031,6 +2047,12 @@ StaticInstPtr
         # max_inst_regs.hh
         self.update_if_needed('max_inst_regs.hh',
                               max_inst_regs_template % vars())
+
+    def parse_isa_desc(self, *args, **kwargs):
+        try:
+            self._parse_isa_desc(*args, **kwargs)
+        except ISAParserError, e:
+            e.exit(fileNameStack)
 
 # global list of CpuModel objects (see cpu_models.py)
 cpu_models = []
