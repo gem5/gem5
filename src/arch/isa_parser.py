@@ -1195,12 +1195,6 @@ class Stack(list):
     def top(self):
         return self[-1]
 
-# The global format stack.
-formatStack = Stack(NoFormat())
-
-# The global default case stack.
-defaultStack = Stack(None)
-
 # Global stack that tracks current file and line number.
 # Each element is a tuple (filename, lineno) that records the
 # *current* filename and the line number in the *previous* file where
@@ -1255,6 +1249,12 @@ class ISAParser(Grammar):
         self.output_dir = output_dir
 
         self.templateMap = {}
+
+        # The format stack.
+        self.formatStack = Stack(NoFormat())
+
+        # The default case stack.
+        self.defaultStack = Stack(None)
 
     #####################################################################
     #
@@ -1690,7 +1690,7 @@ StaticInstPtr
     #
     def p_decode_block(self, t):
         'decode_block : DECODE ID opt_default LBRACE decode_stmt_list RBRACE'
-        default_defaults = defaultStack.pop()
+        default_defaults = self.defaultStack.pop()
         codeObj = t[5]
         # use the "default defaults" only if there was no explicit
         # default statement in decode_stmt_list
@@ -1707,7 +1707,7 @@ StaticInstPtr
         'opt_default : empty'
         # no default specified: reuse the one currently at the top of
         # the stack
-        defaultStack.push(defaultStack.top())
+        self.defaultStack.push(self.defaultStack.top())
         # no meaningful value returned
         t[0] = None
 
@@ -1716,7 +1716,7 @@ StaticInstPtr
         # push the new default
         codeObj = t[2]
         codeObj.wrap_decode_block('\ndefault:\n', 'break;\n')
-        defaultStack.push(codeObj)
+        self.defaultStack.push(codeObj)
         # no meaningful value returned
         t[0] = None
 
@@ -1762,7 +1762,7 @@ StaticInstPtr
         # is processed (see below).  Once the parser has recognized
         # the full production (though the right brace), we're done
         # with the format, so now we can pop it.
-        formatStack.pop()
+        self.formatStack.pop()
         t[0] = t[4]
 
     # This rule exists so we can set the current format (& push the
@@ -1771,7 +1771,7 @@ StaticInstPtr
     def p_push_format_id(self, t):
         'push_format_id : ID'
         try:
-            formatStack.push(formatMap[t[1]])
+            self.formatStack.push(formatMap[t[1]])
             t[0] = ('', '// format %s' % t[1])
         except KeyError:
             error(t, 'instruction format "%s" not defined.' % t[1])
@@ -1831,7 +1831,7 @@ StaticInstPtr
     def p_inst_0(self, t):
         'inst : ID LPAREN arg_list RPAREN'
         # Pass the ID and arg list to the current format class to deal with.
-        currentFormat = formatStack.top()
+        currentFormat = self.formatStack.top()
         codeObj = currentFormat.defineInst(t[1], t[3], t.lexer.lineno)
         args = ','.join(map(str, t[3]))
         args = re.sub('(?m)^', '//', args)
