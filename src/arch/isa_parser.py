@@ -123,7 +123,8 @@ def error(*args):
 labelRE = re.compile(r'(?<!%)%\(([^\)]+)\)[sd]')
 
 class Template(object):
-    def __init__(self, t):
+    def __init__(self, parser, t):
+        self.parser = parser
         self.template = t
 
     def subst(self, d):
@@ -131,14 +132,14 @@ class Template(object):
 
         # Protect non-Python-dict substitutions (e.g. if there's a printf
         # in the templated C++ code)
-        template = protect_non_subst_percents(self.template)
+        template = self.parser.protectNonSubstPercents(self.template)
         # CPU-model-specific substitutions are handled later (in GenCode).
-        template = protect_cpu_symbols(template)
+        template = self.parser.protectCpuSymbols(template)
 
         # Build a dict ('myDict') to use for the template substitution.
         # Start with the template namespace.  Make a copy since we're
         # going to modify it.
-        myDict = parser.templateMap.copy()
+        myDict = self.parser.templateMap.copy()
 
         if isinstance(d, InstObjParams):
             # If we're dealing with an InstObjParams object, we need
@@ -200,7 +201,7 @@ class Template(object):
     # CPU-specific term gets interpolated into another template or into
     # an output block.
     def __str__(self):
-        return expand_cpu_symbols_to_string(self.template)
+        return self.parser.expandCpuSymbolsToString(self.template)
 
 ################
 # Format object.
@@ -210,8 +211,7 @@ class Template(object):
 # definition.
 
 class Format(object):
-    def __init__(self, parser, id, params, code):
-        self.parser = parser
+    def __init__(self, id, params, code):
         self.id = id
         self.params = params
         label = 'def format ' + id
@@ -225,9 +225,9 @@ class Format(object):
         exec c
         self.func = defInst
 
-    def defineInst(self, name, args, lineno):
-        self.parser.updateExportContext()
-        context = self.parser.exportContext.copy()
+    def defineInst(self, parser, name, args, lineno):
+        parser.updateExportContext()
+        context = parser.exportContext.copy()
         if len(name):
             Name = name[0].upper()
             if len(name) > 1:
@@ -243,7 +243,7 @@ class Format(object):
             if k not in ('header_output', 'decoder_output',
                          'exec_output', 'decode_block'):
                 del vars[k]
-        return GenCode(**vars)
+        return GenCode(parser, **vars)
 
 # Special null format to catch an implicit-format instruction
 # definition outside of any format block.
@@ -251,49 +251,9 @@ class NoFormat(object):
     def __init__(self):
         self.defaultInst = ''
 
-    def defineInst(self, name, args, lineno):
+    def defineInst(self, parser, name, args, lineno):
         error(lineno,
               'instruction definition "%s" with no active format!' % name)
-
-#####################################################################
-#
-#                           Support Classes
-#
-#####################################################################
-
-# Expand template with CPU-specific references into a dictionary with
-# an entry for each CPU model name.  The entry key is the model name
-# and the corresponding value is the template with the CPU-specific
-# refs substituted for that model.
-def expand_cpu_symbols_to_dict(template):
-    # Protect '%'s that don't go with CPU-specific terms
-    t = re.sub(r'%(?!\(CPU_)', '%%', template)
-    result = {}
-    for cpu in cpu_models:
-        result[cpu.name] = t % cpu.strings
-    return result
-
-# *If* the template has CPU-specific references, return a single
-# string containing a copy of the template for each CPU model with the
-# corresponding values substituted in.  If the template has no
-# CPU-specific references, it is returned unmodified.
-def expand_cpu_symbols_to_string(template):
-    if template.find('%(CPU_') != -1:
-        return reduce(lambda x,y: x+y,
-                      expand_cpu_symbols_to_dict(template).values())
-    else:
-        return template
-
-# Protect CPU-specific references by doubling the corresponding '%'s
-# (in preparation for substituting a different set of references into
-# the template).
-def protect_cpu_symbols(template):
-    return re.sub(r'%(?=\(CPU_)', '%%', template)
-
-# Protect any non-dict-substitution '%'s in a format string
-# (i.e. those not followed by '(')
-def protect_non_subst_percents(s):
-    return re.sub(r'%(?!\()', '%%', s)
 
 ###############
 # GenCode class
@@ -314,29 +274,31 @@ class GenCode(object):
     # symbols.  For the exec output, these go into the per-model
     # dictionary.  For all other output types they get collapsed into
     # a single string.
-    def __init__(self,
+    def __init__(self, parser,
                  header_output = '', decoder_output = '', exec_output = '',
                  decode_block = '', has_decode_default = False):
-        self.header_output = expand_cpu_symbols_to_string(header_output)
-        self.decoder_output = expand_cpu_symbols_to_string(decoder_output)
+        self.parser = parser
+        self.header_output = parser.expandCpuSymbolsToString(header_output)
+        self.decoder_output = parser.expandCpuSymbolsToString(decoder_output)
         if isinstance(exec_output, dict):
             self.exec_output = exec_output
         elif isinstance(exec_output, str):
             # If the exec_output arg is a single string, we replicate
             # it for each of the CPU models, substituting and
             # %(CPU_foo)s params appropriately.
-            self.exec_output = expand_cpu_symbols_to_dict(exec_output)
-        self.decode_block = expand_cpu_symbols_to_string(decode_block)
+            self.exec_output = parser.expandCpuSymbolsToDict(exec_output)
+        self.decode_block = parser.expandCpuSymbolsToString(decode_block)
         self.has_decode_default = has_decode_default
 
     # Override '+' operator: generate a new GenCode object that
     # concatenates all the individual strings in the operands.
     def __add__(self, other):
         exec_output = {}
-        for cpu in cpu_models:
+        for cpu in self.parser.cpuModels:
             n = cpu.name
             exec_output[n] = self.exec_output[n] + other.exec_output[n]
-        return GenCode(self.header_output + other.header_output,
+        return GenCode(self.parser,
+                       self.header_output + other.header_output,
                        self.decoder_output + other.decoder_output,
                        exec_output,
                        self.decode_block + other.decode_block,
@@ -347,7 +309,7 @@ class GenCode(object):
         self.header_output = pre + self.header_output
         self.decoder_output  = pre + self.decoder_output
         self.decode_block = pre + self.decode_block
-        for cpu in cpu_models:
+        for cpu in self.parser.cpuModels:
             self.exec_output[cpu.name] = pre + self.exec_output[cpu.name]
 
     # Wrap the decode block in a pair of strings (e.g., 'case foo:'
@@ -896,7 +858,7 @@ def buildOperandNameMap(user_dict, lineno):
 class OperandList(object):
     '''Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList).'''
-    def __init__(self, code):
+    def __init__(self, parser, code):
         self.items = []
         self.bases = {}
         # delete comments so we don't match on reg specifiers inside
@@ -1092,7 +1054,7 @@ instFlagRE = re.compile(r'Is.*')
 opClassRE = re.compile(r'.*Op|No_OpClass')
 
 class InstObjParams(object):
-    def __init__(self, mnem, class_name, base_class = '',
+    def __init__(self, parser, mnem, class_name, base_class = '',
                  snippets = {}, opt_args = []):
         self.mnemonic = mnem
         self.class_name = class_name
@@ -1102,7 +1064,7 @@ class InstObjParams(object):
         compositeCode = ' '.join(map(str, snippets.values()))
         self.snippets = snippets
 
-        self.operands = OperandList(compositeCode)
+        self.operands = OperandList(parser, compositeCode)
         self.constructor = self.operands.concatAttrStrings('constructor')
         self.constructor += \
                  '\n\t_numSrcRegs = %d;' % self.operands.numSrcRegs
@@ -1215,10 +1177,13 @@ namespace %(namespace)s {
 '''
 
 class ISAParser(Grammar):
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, cpu_models):
         super(ISAParser, self).__init__()
         self.output_dir = output_dir
 
+        self.cpuModels = cpu_models
+
+        # variable to hold templates
         self.templateMap = {}
 
         # This dictionary maps format name strings to Format objects.
@@ -1230,7 +1195,8 @@ class ISAParser(Grammar):
         # The default case stack.
         self.defaultStack = Stack(None)
 
-        self.exportContext = {}
+        symbols = ('makeList', 're', 'string')
+        self.exportContext = dict([(s, eval(s)) for s in symbols])
 
         self.maxInstSrcRegs = 0
         self.maxInstDestRegs = 0
@@ -1435,7 +1401,7 @@ StaticInstPtr
     # def and/or output statements.
     def p_opt_defs_and_outputs_0(self, t):
         'opt_defs_and_outputs : empty'
-        t[0] = GenCode()
+        t[0] = GenCode(self)
 
     def p_opt_defs_and_outputs_1(self, t):
         'opt_defs_and_outputs : defs_and_outputs'
@@ -1472,22 +1438,22 @@ StaticInstPtr
     # get handled in GenCode) by doubling them first so that the
     # format operation will reduce them back to single '%'s.
     def process_output(self, s):
-        s = protect_non_subst_percents(s)
+        s = self.protectNonSubstPercents(s)
         # protects cpu-specific symbols too
-        s = protect_cpu_symbols(s)
+        s = self.protectCpuSymbols(s)
         return substBitOps(s % self.templateMap)
 
     def p_output_header(self, t):
         'output_header : OUTPUT HEADER CODELIT SEMI'
-        t[0] = GenCode(header_output = self.process_output(t[3]))
+        t[0] = GenCode(self, header_output = self.process_output(t[3]))
 
     def p_output_decoder(self, t):
         'output_decoder : OUTPUT DECODER CODELIT SEMI'
-        t[0] = GenCode(decoder_output = self.process_output(t[3]))
+        t[0] = GenCode(self, decoder_output = self.process_output(t[3]))
 
     def p_output_exec(self, t):
         'output_exec : OUTPUT EXEC CODELIT SEMI'
-        t[0] = GenCode(exec_output = self.process_output(t[3]))
+        t[0] = GenCode(self, exec_output = self.process_output(t[3]))
 
     # global let blocks 'let {{...}}' (Python code blocks) are
     # executed directly when seen.  Note that these execute in a
@@ -1506,7 +1472,8 @@ StaticInstPtr
             if debug:
                 raise
             error(t, 'error: %s in global let block "%s".' % (exc, t[2]))
-        t[0] = GenCode(header_output=self.exportContext["header_output"],
+        t[0] = GenCode(self,
+                       header_output=self.exportContext["header_output"],
                        decoder_output=self.exportContext["decoder_output"],
                        exec_output=self.exportContext["exec_output"],
                        decode_block=self.exportContext["decode_block"])
@@ -1523,7 +1490,7 @@ StaticInstPtr
             error(t,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
         buildOperandTypeMap(user_dict, t.lexer.lineno)
-        t[0] = GenCode() # contributes nothing to the output C++ file
+        t[0] = GenCode(self) # contributes nothing to the output C++ file
 
     # Define the mapping from operand names to operand classes and
     # other traits.  Stored in operandNameMap.
@@ -1538,7 +1505,7 @@ StaticInstPtr
                 raise
             error(t, 'error: %s in def operands block "%s".' % (exc, t[3]))
         buildOperandNameMap(user_dict, t.lexer.lineno)
-        t[0] = GenCode() # contributes nothing to the output C++ file
+        t[0] = GenCode(self) # contributes nothing to the output C++ file
 
     # A bitfield definition looks like:
     # 'def [signed] bitfield <ID> [<first>:<last>]'
@@ -1549,7 +1516,7 @@ StaticInstPtr
         if (t[2] == 'signed'):
             expr = 'sext<%d>(%s)' % (t[6] - t[8] + 1, expr)
         hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-        t[0] = GenCode(header_output = hash_define)
+        t[0] = GenCode(self, header_output=hash_define)
 
     # alternate form for single bit: 'def [signed] bitfield <ID> [<bit>]'
     def p_def_bitfield_1(self, t):
@@ -1558,7 +1525,7 @@ StaticInstPtr
         if (t[2] == 'signed'):
             expr = 'sext<%d>(%s)' % (1, expr)
         hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-        t[0] = GenCode(header_output = hash_define)
+        t[0] = GenCode(self, header_output=hash_define)
 
     # alternate form for structure member: 'def bitfield <ID> <ID>'
     def p_def_bitfield_struct(self, t):
@@ -1567,7 +1534,7 @@ StaticInstPtr
             error(t, 'error: structure bitfields are always unsigned.')
         expr = 'machInst.%s' % t[5]
         hash_define = '#undef %s\n#define %s\t%s\n' % (t[4], t[4], expr)
-        t[0] = GenCode(header_output = hash_define)
+        t[0] = GenCode(self, header_output=hash_define)
 
     def p_id_with_dot_0(self, t):
         'id_with_dot : ID'
@@ -1587,8 +1554,8 @@ StaticInstPtr
 
     def p_def_template(self, t):
         'def_template : DEF TEMPLATE ID CODELIT SEMI'
-        self.templateMap[t[3]] = Template(t[4])
-        t[0] = GenCode()
+        self.templateMap[t[3]] = Template(self, t[4])
+        t[0] = GenCode(self)
 
     # An instruction format definition looks like
     # "def format <fmt>(<params>) {{...}};"
@@ -1596,7 +1563,7 @@ StaticInstPtr
         'def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI'
         (id, params, code) = (t[3], t[5], t[7])
         self.defFormat(id, params, code, t.lexer.lineno)
-        t[0] = GenCode()
+        t[0] = GenCode(self)
 
     # The formal parameter list for an instruction format is a
     # possibly empty list of comma-separated parameters.  Positional
@@ -1728,7 +1695,7 @@ StaticInstPtr
     # the code generated by the other statements.
     def p_decode_stmt_cpp(self, t):
         'decode_stmt : CPPDIRECTIVE'
-        t[0] = GenCode(t[1], t[1], t[1], t[1])
+        t[0] = GenCode(self, t[1], t[1], t[1], t[1])
 
     # A format block 'format <foo> { ... }' sets the default
     # instruction format used to handle instruction definitions inside
@@ -1811,7 +1778,7 @@ StaticInstPtr
         'inst : ID LPAREN arg_list RPAREN'
         # Pass the ID and arg list to the current format class to deal with.
         currentFormat = self.formatStack.top()
-        codeObj = currentFormat.defineInst(t[1], t[3], t.lexer.lineno)
+        codeObj = currentFormat.defineInst(self, t[1], t[3], t.lexer.lineno)
         args = ','.join(map(str, t[3]))
         args = re.sub('(?m)^', '//', args)
         args = re.sub('^//', '', args)
@@ -1827,7 +1794,8 @@ StaticInstPtr
             format = self.formatMap[t[1]]
         except KeyError:
             error(t, 'instruction format "%s" not defined.' % t[1])
-        codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
+
+        codeObj = format.defineInst(self, t[3], t[5], t.lexer.lineno)
         comment = '\n// %s::%s(%s)\n' % (t[1], t[3], t[5])
         codeObj.prepend_all(comment)
         t[0] = codeObj
@@ -1924,11 +1892,13 @@ StaticInstPtr
 
     # END OF GRAMMAR RULES
 
-    exportContextSymbols = ('InstObjParams', 'makeList', 're', 'string')
     def updateExportContext(self):
-        exportDict = dict([(s, eval(s)) for s in self.exportContextSymbols])
-        self.exportContext.update(exportDict)
-        self.exportContext.update(parser.templateMap)
+
+        # create a continuation that allows us to grab the current parser
+        def wrapInstObjParams(*args):
+            return InstObjParams(self, *args)
+        self.exportContext['InstObjParams'] = wrapInstObjParams
+        self.exportContext.update(self.templateMap)
 
     def defFormat(self, id, params, code, lineno):
         '''Define a new format'''
@@ -1938,7 +1908,47 @@ StaticInstPtr
             error(lineno, 'format %s redefined.' % id)
 
         # create new object and store in global map
-        self.formatMap[id] = Format(self, id, params, code)
+        self.formatMap[id] = Format(id, params, code)
+
+    def expandCpuSymbolsToDict(self, template):
+        '''Expand template with CPU-specific references into a
+        dictionary with an entry for each CPU model name.  The entry
+        key is the model name and the corresponding value is the
+        template with the CPU-specific refs substituted for that
+        model.'''
+
+        # Protect '%'s that don't go with CPU-specific terms
+        t = re.sub(r'%(?!\(CPU_)', '%%', template)
+        result = {}
+        for cpu in self.cpuModels:
+            result[cpu.name] = t % cpu.strings
+        return result
+
+    def expandCpuSymbolsToString(self, template):
+        '''*If* the template has CPU-specific references, return a
+        single string containing a copy of the template for each CPU
+        model with the corresponding values substituted in.  If the
+        template has no CPU-specific references, it is returned
+        unmodified.'''
+
+        if template.find('%(CPU_') != -1:
+            return reduce(lambda x,y: x+y,
+                          self.expandCpuSymbolsToDict(template).values())
+        else:
+            return template
+
+    def protectCpuSymbols(self, template):
+        '''Protect CPU-specific references by doubling the
+        corresponding '%'s (in preparation for substituting a different
+        set of references into the template).'''
+
+        return re.sub(r'%(?=\(CPU_)', '%%', template)
+
+    def protectNonSubstPercents(self, s):
+        '''Protect any non-dict-substitution '%'s in a format string
+        (i.e. those not followed by '(')'''
+
+        return re.sub(r'%(?!\()', '%%', s)
 
     def update_if_needed(self, file, contents):
         '''Update the output file only if the new contents are
@@ -2036,7 +2046,7 @@ StaticInstPtr
         self.update_if_needed('decoder.cc', file_template % vars())
 
         # generate per-cpu exec files
-        for cpu in cpu_models:
+        for cpu in self.cpuModels:
             includes = '#include "decoder.hh"\n'
             includes += cpu.includes
             global_output = global_code.exec_output[cpu.name]
@@ -2059,13 +2069,9 @@ StaticInstPtr
         except ISAParserError, e:
             e.exit(fileNameStack)
 
-# global list of CpuModel objects (see cpu_models.py)
-cpu_models = []
-
 # Called as script: get args from command line.
 # Args are: <path to cpu_models.py> <isa desc file> <output dir> <cpu models>
 if __name__ == '__main__':
     execfile(sys.argv[1])  # read in CpuModel definitions
     cpu_models = [CpuModel.dict[cpu] for cpu in sys.argv[4:]]
-    parser = ISAParser(sys.argv[3])
-    parser.parse_isa_desc(sys.argv[2])
+    ISAParser(sys.argv[3], cpu_models).parse_isa_desc(sys.argv[2])
