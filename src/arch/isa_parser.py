@@ -893,9 +893,6 @@ def buildOperandNameMap(user_dict, lineno):
     global operandsWithExtRE
     operandsWithExtRE = re.compile(operandsWithExtREString, re.MULTILINE)
 
-maxInstSrcRegs = 0
-maxInstDestRegs = 0
-
 class OperandList(object):
     '''Find all the operands in the given code block.  Returns an operand
     descriptor list (instance of class OperandList).'''
@@ -957,12 +954,10 @@ class OperandList(object):
                 if self.memOperand:
                     error("Code block has more than one memory operand.")
                 self.memOperand = op_desc
-        global maxInstSrcRegs
-        global maxInstDestRegs
-        if maxInstSrcRegs < self.numSrcRegs:
-            maxInstSrcRegs = self.numSrcRegs
-        if maxInstDestRegs < self.numDestRegs:
-            maxInstDestRegs = self.numDestRegs
+        if parser.maxInstSrcRegs < self.numSrcRegs:
+            parser.maxInstSrcRegs = self.numSrcRegs
+        if parser.maxInstDestRegs < self.numDestRegs:
+            parser.maxInstDestRegs = self.numDestRegs
         # now make a final pass to finalize op_desc fields that may depend
         # on the register enumeration
         for op_desc in self.items:
@@ -1236,6 +1231,9 @@ class ISAParser(Grammar):
         self.defaultStack = Stack(None)
 
         self.exportContext = {}
+
+        self.maxInstSrcRegs = 0
+        self.maxInstDestRegs = 0
 
     #####################################################################
     #
@@ -2049,10 +2047,8 @@ StaticInstPtr
         # The variable names here are hacky, but this will creat local
         # variables which will be referenced in vars() which have the
         # value of the globals.
-        global maxInstSrcRegs
-        MaxInstSrcRegs = maxInstSrcRegs
-        global maxInstDestRegs
-        MaxInstDestRegs = maxInstDestRegs
+        MaxInstSrcRegs = self.maxInstSrcRegs
+        MaxInstDestRegs = self.maxInstDestRegs
         # max_inst_regs.hh
         self.update_if_needed('max_inst_regs.hh',
                               max_inst_regs_template % vars())
