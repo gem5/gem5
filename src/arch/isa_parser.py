@@ -321,11 +321,11 @@ StaticInstPtr
     def p_def_operand_types(self, t):
         'def_operand_types : DEF OPERAND_TYPES CODELIT SEMI'
         try:
-            userDict = eval('{' + t[3] + '}')
+            user_dict = eval('{' + t[3] + '}')
         except Exception, exc:
             error(t.lexer.lineno,
                   'error: %s in def operand_types block "%s".' % (exc, t[3]))
-        buildOperandTypeMap(userDict, t.lexer.lineno)
+        buildOperandTypeMap(user_dict, t.lexer.lineno)
         t[0] = GenCode() # contributes nothing to the output C++ file
 
     # Define the mapping from operand names to operand classes and
@@ -336,11 +336,11 @@ StaticInstPtr
             error(t.lexer.lineno,
                   'error: operand types must be defined before operands')
         try:
-            userDict = eval('{' + t[3] + '}', exportContext)
+            user_dict = eval('{' + t[3] + '}', exportContext)
         except Exception, exc:
             error(t.lexer.lineno,
                   'error: %s in def operands block "%s".' % (exc, t[3]))
-        buildOperandNameMap(userDict, t.lexer.lineno)
+        buildOperandNameMap(user_dict, t.lexer.lineno)
         t[0] = GenCode() # contributes nothing to the output C++ file
 
     # A bitfield definition looks like:
@@ -787,7 +787,7 @@ def protect_non_subst_percents(s):
 # has_decode_default attribute is used in the decode block to allow
 # explicit default clauses to override default default clauses.
 
-class GenCode:
+class GenCode(object):
     # Constructor.  At this point we substitute out all CPU-specific
     # symbols.  For the exec output, these go into the per-model
     # dictionary.  For all other output types they get collapsed into
@@ -852,7 +852,7 @@ def exportDict(*symNames):
     return dict([(s, eval(s)) for s in symNames])
 
 
-class Format:
+class Format(object):
     def __init__(self, id, params, code):
         # constructor: just save away arguments
         self.id = id
@@ -889,7 +889,7 @@ class Format:
 
 # Special null format to catch an implicit-format instruction
 # definition outside of any format block.
-class NoFormat:
+class NoFormat(object):
     def __init__(self):
         self.defaultInst = ''
 
@@ -1040,7 +1040,7 @@ def substBitOps(code):
 
 labelRE = re.compile(r'(?<!%)%\(([^\)]+)\)[sd]')
 
-class Template:
+class Template(object):
     def __init__(self, t):
         self.template = t
 
@@ -1144,10 +1144,10 @@ def makeList(arg):
 
 # Generate operandTypeMap from the user's 'def operand_types'
 # statement.
-def buildOperandTypeMap(userDict, lineno):
+def buildOperandTypeMap(user_dict, lineno):
     global operandTypeMap
     operandTypeMap = {}
-    for (ext, (desc, size)) in userDict.iteritems():
+    for (ext, (desc, size)) in user_dict.iteritems():
         if desc == 'signed int':
             ctype = 'int%d_t' % size
             is_signed = 1
@@ -1167,19 +1167,16 @@ def buildOperandTypeMap(userDict, lineno):
             is_signed = 0
             ctype = 'Twin32_t'
         if ctype == '':
-            error(lineno, 'Unrecognized type description "%s" in userDict')
+            error(lineno, 'Unrecognized type description "%s" in user_dict')
         operandTypeMap[ext] = (size, ctype, is_signed)
 
-#
-#
-#
-# Base class for operand descriptors.  An instance of this class (or
-# actually a class derived from this one) represents a specific
-# operand for a code block (e.g, "Rc.sq" as a dest). Intermediate
-# derived classes encapsulates the traits of a particular operand type
-# (e.g., "32-bit integer register").
-#
 class Operand(object):
+    '''Base class for operand descriptors.  An instance of this class
+    (or actually a class derived from this one) represents a specific
+    operand for a code block (e.g, "Rc.sq" as a dest). Intermediate
+    derived classes encapsulates the traits of a particular operand
+    type (e.g., "32-bit integer register").'''
+
     def buildReadCode(self, func = None):
         code = self.read_code % {"name": self.base_name,
                                  "func": func,
@@ -1450,10 +1447,9 @@ class MemOperand(Operand):
         # to avoid 'uninitialized variable' errors from the compiler.
         # Declare memory data variable.
         if self.ctype in ['Twin32_t','Twin64_t']:
-            return "%s %s; %s.a = 0; %s.b = 0;\n" % (self.ctype, self.base_name,
-                    self.base_name, self.base_name)
-        c = '%s %s = 0;\n' % (self.ctype, self.base_name)
-        return c
+            return "%s %s; %s.a = 0; %s.b = 0;\n" % \
+                   (self.ctype, self.base_name, self.base_name, self.base_name)
+        return '%s %s = 0;\n' % (self.ctype, self.base_name)
 
     def makeRead(self):
         if self.read_code != None:
@@ -1536,10 +1532,10 @@ class NNPCOperand(Operand):
             return self.buildWriteCode('setNextNPC')
         return 'xc->setNextNPC(%s);\n' % self.base_name
 
-def buildOperandNameMap(userDict, lineno):
+def buildOperandNameMap(user_dict, lineno):
     global operandNameMap
     operandNameMap = {}
-    for (op_name, val) in userDict.iteritems():
+    for (op_name, val) in user_dict.iteritems():
         (base_cls_name, dflt_ext, reg_spec, flags, sort_pri) = val[:5]
         if len(val) > 5:
             read_code = val[5]
@@ -1598,7 +1594,7 @@ def buildOperandNameMap(userDict, lineno):
         operandNameMap[op_name] = type(cls_name, (base_cls,), tmp_dict)
 
     # Define operand variables.
-    operands = userDict.keys()
+    operands = user_dict.keys()
 
     operandsREString = (r'''
     (?<![\w\.])      # neg. lookbehind assertion: prevent partial matches
@@ -1622,10 +1618,9 @@ def buildOperandNameMap(userDict, lineno):
 maxInstSrcRegs = 0
 maxInstDestRegs = 0
 
-class OperandList:
-
-    # Find all the operands in the given code block.  Returns an operand
-    # descriptor list (instance of class OperandList).
+class OperandList(object):
+    '''Find all the operands in the given code block.  Returns an operand
+    descriptor list (instance of class OperandList).'''
     def __init__(self, code):
         self.items = []
         self.bases = {}
@@ -1741,9 +1736,8 @@ class OperandList:
         self.items.sort(lambda a, b: a.sort_pri - b.sort_pri)
 
 class SubOperandList(OperandList):
-
-    # Find all the operands in the given code block.  Returns an operand
-    # descriptor list (instance of class OperandList).
+    '''Find all the operands in the given code block.  Returns an operand
+    descriptor list (instance of class OperandList).'''
     def __init__(self, code, master_list):
         self.items = []
         self.bases = {}
@@ -1825,7 +1819,7 @@ instFlagRE = re.compile(r'Is.*')
 # OpClass constants end in 'Op' except No_OpClass
 opClassRE = re.compile(r'.*Op|No_OpClass')
 
-class InstObjParams:
+class InstObjParams(object):
     def __init__(self, mnem, class_name, base_class = '',
                  snippets = {}, opt_args = []):
         self.mnemonic = mnem
