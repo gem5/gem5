@@ -209,21 +209,9 @@ class Template(object):
 # a defineInst() method that generates the code for an instruction
 # definition.
 
-exportContextSymbols = ('InstObjParams', 'makeList', 're', 'string')
-
-exportContext = {}
-
-def updateExportContext():
-    exportContext.update(exportDict(*exportContextSymbols))
-    exportContext.update(parser.templateMap)
-
-def exportDict(*symNames):
-    return dict([(s, eval(s)) for s in symNames])
-
-
 class Format(object):
-    def __init__(self, id, params, code):
-        # constructor: just save away arguments
+    def __init__(self, parser, id, params, code):
+        self.parser = parser
         self.id = id
         self.params = params
         label = 'def format ' + id
@@ -238,14 +226,13 @@ class Format(object):
         self.func = defInst
 
     def defineInst(self, name, args, lineno):
-        context = {}
-        updateExportContext()
-        context.update(exportContext)
+        self.parser.updateExportContext()
+        context = self.parser.exportContext.copy()
         if len(name):
             Name = name[0].upper()
             if len(name) > 1:
                 Name += name[1:]
-        context.update({ 'name': name, 'Name': Name })
+        context.update({ 'name' : name, 'Name' : Name })
         try:
             vars = self.func(self.user_code, context, *args[0], **args[1])
         except Exception, exc:
@@ -267,17 +254,6 @@ class NoFormat(object):
     def defineInst(self, name, args, lineno):
         error(lineno,
               'instruction definition "%s" with no active format!' % name)
-
-# This dictionary maps format name strings to Format objects.
-formatMap = {}
-
-# Define a new format
-def defFormat(id, params, code, lineno):
-    # make sure we haven't already defined this one
-    if formatMap.get(id, None) != None:
-        error(lineno, 'format %s redefined.' % id)
-    # create new object and store in global map
-    formatMap[id] = Format(id, params, code)
 
 #####################################################################
 #
@@ -1250,11 +1226,16 @@ class ISAParser(Grammar):
 
         self.templateMap = {}
 
+        # This dictionary maps format name strings to Format objects.
+        self.formatMap = {}
+
         # The format stack.
         self.formatStack = Stack(NoFormat())
 
         # The default case stack.
         self.defaultStack = Stack(None)
+
+        self.exportContext = {}
 
     #####################################################################
     #
@@ -1516,21 +1497,21 @@ StaticInstPtr
     # from polluting this script's namespace.
     def p_global_let(self, t):
         'global_let : LET CODELIT SEMI'
-        updateExportContext()
-        exportContext["header_output"] = ''
-        exportContext["decoder_output"] = ''
-        exportContext["exec_output"] = ''
-        exportContext["decode_block"] = ''
+        self.updateExportContext()
+        self.exportContext["header_output"] = ''
+        self.exportContext["decoder_output"] = ''
+        self.exportContext["exec_output"] = ''
+        self.exportContext["decode_block"] = ''
         try:
-            exec fixPythonIndentation(t[2]) in exportContext
+            exec fixPythonIndentation(t[2]) in self.exportContext
         except Exception, exc:
             if debug:
                 raise
             error(t, 'error: %s in global let block "%s".' % (exc, t[2]))
-        t[0] = GenCode(header_output = exportContext["header_output"],
-                       decoder_output = exportContext["decoder_output"],
-                       exec_output = exportContext["exec_output"],
-                       decode_block = exportContext["decode_block"])
+        t[0] = GenCode(header_output=self.exportContext["header_output"],
+                       decoder_output=self.exportContext["decoder_output"],
+                       exec_output=self.exportContext["exec_output"],
+                       decode_block=self.exportContext["decode_block"])
 
     # Define the mapping from operand type extensions to C++ types and
     # bit widths (stored in operandTypeMap).
@@ -1553,7 +1534,7 @@ StaticInstPtr
         if not globals().has_key('operandTypeMap'):
             error(t, 'error: operand types must be defined before operands')
         try:
-            user_dict = eval('{' + t[3] + '}', exportContext)
+            user_dict = eval('{' + t[3] + '}', self.exportContext)
         except Exception, exc:
             if debug:
                 raise
@@ -1616,7 +1597,7 @@ StaticInstPtr
     def p_def_format(self, t):
         'def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI'
         (id, params, code) = (t[3], t[5], t[7])
-        defFormat(id, params, code, t.lexer.lineno)
+        self.defFormat(id, params, code, t.lexer.lineno)
         t[0] = GenCode()
 
     # The formal parameter list for an instruction format is a
@@ -1771,7 +1752,7 @@ StaticInstPtr
     def p_push_format_id(self, t):
         'push_format_id : ID'
         try:
-            self.formatStack.push(formatMap[t[1]])
+            self.formatStack.push(self.formatMap[t[1]])
             t[0] = ('', '// format %s' % t[1])
         except KeyError:
             error(t, 'instruction format "%s" not defined.' % t[1])
@@ -1845,7 +1826,7 @@ StaticInstPtr
     def p_inst_1(self, t):
         'inst : ID DBLCOLON ID LPAREN arg_list RPAREN'
         try:
-            format = formatMap[t[1]]
+            format = self.formatMap[t[1]]
         except KeyError:
             error(t, 'instruction format "%s" not defined.' % t[1])
         codeObj = format.defineInst(t[3], t[5], t.lexer.lineno)
@@ -1944,6 +1925,22 @@ StaticInstPtr
             error("unknown syntax error")
 
     # END OF GRAMMAR RULES
+
+    exportContextSymbols = ('InstObjParams', 'makeList', 're', 'string')
+    def updateExportContext(self):
+        exportDict = dict([(s, eval(s)) for s in self.exportContextSymbols])
+        self.exportContext.update(exportDict)
+        self.exportContext.update(parser.templateMap)
+
+    def defFormat(self, id, params, code, lineno):
+        '''Define a new format'''
+
+        # make sure we haven't already defined this one
+        if id in self.formatMap:
+            error(lineno, 'format %s redefined.' % id)
+
+        # create new object and store in global map
+        self.formatMap[id] = Format(self, id, params, code)
 
     def update_if_needed(self, file, contents):
         '''Update the output file only if the new contents are
