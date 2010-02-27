@@ -466,6 +466,14 @@ class EventWrapper : public Event
     }
 
     void process() { (object->*F)(); }
+
+    const std::string
+    name() const
+    {
+        return object->name() + ".wrapped_event";
+    }
+
+    const char *description() const { return "EventWrapped"; }
 };
 
 inline void
