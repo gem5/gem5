@@ -1222,8 +1222,10 @@ namespace %(namespace)s {
 '''
 
 class ISAParser(Grammar):
-    def __init__(self, *args, **kwargs):
-        super(ISAParser, self).__init__(*args, **kwargs)
+    def __init__(self, output_dir):
+        super(ISAParser, self).__init__()
+        self.output_dir = output_dir
+
         self.templateMap = {}
 
     #####################################################################
@@ -1915,115 +1917,120 @@ StaticInstPtr
 
     # END OF GRAMMAR RULES
 
-# Now build the parser.
-parser = ISAParser()
+    def update_if_needed(self, file, contents):
+        '''Update the output file only if the new contents are
+        different from the current contents.  Minimizes the files that
+        need to be rebuilt after minor changes.'''
 
-# Update the output file only if the new contents are different from
-# the current contents.  Minimizes the files that need to be rebuilt
-# after minor changes.
-def update_if_needed(file, contents):
-    update = False
-    if os.access(file, os.R_OK):
-        f = open(file, 'r')
-        old_contents = f.read()
-        f.close()
-        if contents != old_contents:
-            print 'Updating', file
-            os.remove(file) # in case it's write-protected
-            update = True
+        file = os.path.join(self.output_dir, file)
+        update = False
+        if os.access(file, os.R_OK):
+            f = open(file, 'r')
+            old_contents = f.read()
+            f.close()
+            if contents != old_contents:
+                print 'Updating', file
+                os.remove(file) # in case it's write-protected
+                update = True
+            else:
+                print 'File', file, 'is unchanged'
         else:
-            print 'File', file, 'is unchanged'
-    else:
-        print 'Generating', file
-        update = True
-    if update:
-        f = open(file, 'w')
-        f.write(contents)
-        f.close()
+            print 'Generating', file
+            update = True
+        if update:
+            f = open(file, 'w')
+            f.write(contents)
+            f.close()
 
-# This regular expression matches '##include' directives
-includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[\w/.-]*)".*$',
-                       re.MULTILINE)
+    # This regular expression matches '##include' directives
+    includeRE = re.compile(r'^\s*##include\s+"(?P<filename>[\w/.-]*)".*$',
+                           re.MULTILINE)
 
-# Function to replace a matched '##include' directive with the
-# contents of the specified file (with nested ##includes replaced
-# recursively).  'matchobj' is an re match object (from a match of
-# includeRE) and 'dirname' is the directory relative to which the file
-# path should be resolved.
-def replace_include(matchobj, dirname):
-    fname = matchobj.group('filename')
-    full_fname = os.path.normpath(os.path.join(dirname, fname))
-    contents = '##newfile "%s"\n%s\n##endfile\n' % \
-               (full_fname, read_and_flatten(full_fname))
-    return contents
+    def replace_include(self, matchobj, dirname):
+        """Function to replace a matched '##include' directive with the
+        contents of the specified file (with nested ##includes
+        replaced recursively).  'matchobj' is an re match object
+        (from a match of includeRE) and 'dirname' is the directory
+        relative to which the file path should be resolved."""
 
-# Read a file and recursively flatten nested '##include' files.
-def read_and_flatten(filename):
-    current_dir = os.path.dirname(filename)
-    try:
-        contents = open(filename).read()
-    except IOError:
-        error(0, 'Error including file "%s"' % filename)
-    fileNameStack.push((filename, 0))
-    # Find any includes and include them
-    contents = includeRE.sub(lambda m: replace_include(m, current_dir),
-                             contents)
-    fileNameStack.pop()
-    return contents
+        fname = matchobj.group('filename')
+        full_fname = os.path.normpath(os.path.join(dirname, fname))
+        contents = '##newfile "%s"\n%s\n##endfile\n' % \
+                   (full_fname, self.read_and_flatten(full_fname))
+        return contents
 
-#
-# Read in and parse the ISA description.
-#
-def parse_isa_desc(isa_desc_file, output_dir):
-    # Read file and (recursively) all included files into a string.
-    # PLY requires that the input be in a single string so we have to
-    # do this up front.
-    isa_desc = read_and_flatten(isa_desc_file)
+    def read_and_flatten(self, filename):
+        """Read a file and recursively flatten nested '##include' files."""
 
-    # Initialize filename stack with outer file.
-    fileNameStack.push((isa_desc_file, 0))
+        current_dir = os.path.dirname(filename)
+        try:
+            contents = open(filename).read()
+        except IOError:
+            error(0, 'Error including file "%s"' % filename)
 
-    # Parse it.
-    (isa_name, namespace, global_code, namespace_code) = parser.parse(isa_desc)
+        fileNameStack.push((filename, 0))
 
-    # grab the last three path components of isa_desc_file to put in
-    # the output
-    filename = '/'.join(isa_desc_file.split('/')[-3:])
+        # Find any includes and include them
+        def replace(matchobj):
+            return self.replace_include(matchobj, current_dir)
+        contents = self.includeRE.sub(replace, contents)
 
-    # generate decoder.hh
-    includes = '#include "base/bitfield.hh" // for bitfield support'
-    global_output = global_code.header_output
-    namespace_output = namespace_code.header_output
-    decode_function = ''
-    update_if_needed(output_dir + '/decoder.hh', file_template % vars())
+        fileNameStack.pop()
+        return contents
 
-    # generate decoder.cc
-    includes = '#include "decoder.hh"'
-    global_output = global_code.decoder_output
-    namespace_output = namespace_code.decoder_output
-    # namespace_output += namespace_code.decode_block
-    decode_function = namespace_code.decode_block
-    update_if_needed(output_dir + '/decoder.cc', file_template % vars())
+    def parse_isa_desc(self, isa_desc_file):
+        '''Read in and parse the ISA description.'''
 
-    # generate per-cpu exec files
-    for cpu in cpu_models:
-        includes = '#include "decoder.hh"\n'
-        includes += cpu.includes
-        global_output = global_code.exec_output[cpu.name]
-        namespace_output = namespace_code.exec_output[cpu.name]
+        # Read file and (recursively) all included files into a string.
+        # PLY requires that the input be in a single string so we have to
+        # do this up front.
+        isa_desc = self.read_and_flatten(isa_desc_file)
+
+        # Initialize filename stack with outer file.
+        fileNameStack.push((isa_desc_file, 0))
+
+        # Parse it.
+        (isa_name, namespace, global_code, namespace_code) = \
+                   self.parse(isa_desc)
+
+        # grab the last three path components of isa_desc_file to put in
+        # the output
+        filename = '/'.join(isa_desc_file.split('/')[-3:])
+
+        # generate decoder.hh
+        includes = '#include "base/bitfield.hh" // for bitfield support'
+        global_output = global_code.header_output
+        namespace_output = namespace_code.header_output
         decode_function = ''
-        update_if_needed(output_dir + '/' + cpu.filename,
-                          file_template % vars())
+        self.update_if_needed('decoder.hh', file_template % vars())
 
-    # The variable names here are hacky, but this will creat local variables
-    # which will be referenced in vars() which have the value of the globals.
-    global maxInstSrcRegs
-    MaxInstSrcRegs = maxInstSrcRegs
-    global maxInstDestRegs
-    MaxInstDestRegs = maxInstDestRegs
-    # max_inst_regs.hh
-    update_if_needed(output_dir + '/max_inst_regs.hh', \
-            max_inst_regs_template % vars())
+        # generate decoder.cc
+        includes = '#include "decoder.hh"'
+        global_output = global_code.decoder_output
+        namespace_output = namespace_code.decoder_output
+        # namespace_output += namespace_code.decode_block
+        decode_function = namespace_code.decode_block
+        self.update_if_needed('decoder.cc', file_template % vars())
+
+        # generate per-cpu exec files
+        for cpu in cpu_models:
+            includes = '#include "decoder.hh"\n'
+            includes += cpu.includes
+            global_output = global_code.exec_output[cpu.name]
+            namespace_output = namespace_code.exec_output[cpu.name]
+            decode_function = ''
+            self.update_if_needed(cpu.filename, file_template % vars())
+
+        # The variable names here are hacky, but this will creat local
+        # variables which will be referenced in vars() which have the
+        # value of the globals.
+        global maxInstSrcRegs
+        MaxInstSrcRegs = maxInstSrcRegs
+        global maxInstDestRegs
+        MaxInstDestRegs = maxInstDestRegs
+        # max_inst_regs.hh
+        self.update_if_needed('max_inst_regs.hh',
+                              max_inst_regs_template % vars())
 
 # global list of CpuModel objects (see cpu_models.py)
 cpu_models = []
@@ -2033,4 +2040,5 @@ cpu_models = []
 if __name__ == '__main__':
     execfile(sys.argv[1])  # read in CpuModel definitions
     cpu_models = [CpuModel.dict[cpu] for cpu in sys.argv[4:]]
-    parse_isa_desc(sys.argv[2], sys.argv[3])
+    parser = ISAParser(sys.argv[3])
+    parser.parse_isa_desc(sys.argv[2])
