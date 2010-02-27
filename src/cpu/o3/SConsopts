@@ -30,5 +30,7 @@
 
 Import('*')
 
-all_cpu_list.append('O3CPU')
-default_cpus.append('O3CPU')
+CpuModel('O3CPU', 'o3_cpu_exec.cc',
+         '#include "cpu/o3/isa_specific.hh"',
+         { 'CPU_exec_context': 'O3DynInst' },
+         default=True)

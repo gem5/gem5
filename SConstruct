@@ -612,10 +612,34 @@ main = conf.Finish()
 all_isa_list = [ ]
 Export('all_isa_list')
 
-# Define the universe of supported CPU models
-all_cpu_list = [ ]
-default_cpus = [ ]
-Export('all_cpu_list', 'default_cpus')
+class CpuModel(object):
+    '''The CpuModel class encapsulates everything the ISA parser needs to
+    know about a particular CPU model.'''
+
+    # Dict of available CPU model objects.  Accessible as CpuModel.dict.
+    dict = {}
+    list = []
+    defaults = []
+
+    # Constructor.  Automatically adds models to CpuModel.dict.
+    def __init__(self, name, filename, includes, strings, default=False):
+        self.name = name           # name of model
+        self.filename = filename   # filename for output exec code
+        self.includes = includes   # include files needed in exec file
+        # The 'strings' dict holds all the per-CPU symbols we can
+        # substitute into templates etc.
+        self.strings = strings
+
+        # This cpu is enabled by default
+        self.default = default
+
+        # Add self to dict
+        if name in CpuModel.dict:
+            raise AttributeError, "CpuModel '%s' already registered" % name
+        CpuModel.dict[name] = self
+        CpuModel.list.append(name)
+
+Export('CpuModel')
 
 # Sticky variables get saved in the variables file so they persist from
 # one invocation to the next (unless overridden, in which case the new
@@ -640,13 +664,13 @@ for bdir in [ base_dir ] + extras_dir_list:
             SConscript(joinpath(root, 'SConsopts'))
 
 all_isa_list.sort()
-all_cpu_list.sort()
-default_cpus.sort()
 
 sticky_vars.AddVariables(
     EnumVariable('TARGET_ISA', 'Target ISA', 'alpha', all_isa_list),
     BoolVariable('FULL_SYSTEM', 'Full-system support', False),
-    ListVariable('CPU_MODELS', 'CPU models', default_cpus, all_cpu_list),
+    ListVariable('CPU_MODELS', 'CPU models',
+                 sorted(n for n,m in CpuModel.dict.iteritems() if m.default),
+                 sorted(CpuModel.list)),
     BoolVariable('NO_FAST_ALLOC', 'Disable fast object allocator', False),
     BoolVariable('FAST_ALLOC_DEBUG', 'Enable fast object allocator debugging',
                  False),

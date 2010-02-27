@@ -30,4 +30,10 @@
 
 Import('*')
 
-all_cpu_list.append('OzoneCPU')
+CpuModel('OzoneSimpleCPU', 'ozone_simple_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<SimpleImpl>' })
+CpuModel('OzoneCPU', 'ozone_exec.cc',
+         '#include "cpu/ozone/dyn_inst.hh"',
+         { 'CPU_exec_context': 'OzoneDynInst<OzoneImpl>' })
+

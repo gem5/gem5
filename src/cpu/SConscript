@@ -40,12 +40,6 @@ Import('*')
 #
 #################################################################
 
-# CPU model-specific data is contained in cpu_models.py
-# Convert to SCons File node to get path handling
-models_db = File('cpu_models.py')
-# slurp in contents of file
-execfile(models_db.srcnode().abspath)
-
 # Template for execute() signature.
 exec_sig_template = '''
 virtual Fault execute(%(type)s *xc, Trace::InstRecord *traceData) const = 0;
@@ -97,7 +91,7 @@ def gen_sigs_string(target, source, env):
            + ', '.join(temp_cpu_list)
 
 # Add command to generate header to environment.
-env.Command('static_inst_exec_sigs.hh', models_db,
+env.Command('static_inst_exec_sigs.hh', (),
             Action(gen_cpu_exec_signatures, gen_sigs_string,
                    varlist = temp_cpu_list))
 

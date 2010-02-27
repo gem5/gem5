@@ -30,5 +30,11 @@
 
 Import('*')
 
-all_cpu_list.extend(('AtomicSimpleCPU', 'TimingSimpleCPU'))
-default_cpus.extend(('AtomicSimpleCPU', 'TimingSimpleCPU'))
+CpuModel('AtomicSimpleCPU', 'atomic_simple_cpu_exec.cc',
+         '#include "cpu/simple/atomic.hh"',
+         { 'CPU_exec_context': 'AtomicSimpleCPU' },
+         default=True)
+CpuModel('TimingSimpleCPU', 'timing_simple_cpu_exec.cc',
+         '#include "cpu/simple/timing.hh"',
+         { 'CPU_exec_context': 'TimingSimpleCPU' },
+         default=True)
