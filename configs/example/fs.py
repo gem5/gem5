@@ -121,9 +121,9 @@ if options.kernel is not None:
 if options.script is not None:
     test_sys.readfile = options.script
 
-CacheConfig.config_cache(options, system)
-
 test_sys.cpu = [TestCPUClass(cpu_id=i) for i in xrange(np)]
+
+CacheConfig.config_cache(options, test_sys)
 
 if options.caches or options.l2cache:
     test_sys.bridge.filter_ranges_a=[AddrRange(0, Addr.max)]
