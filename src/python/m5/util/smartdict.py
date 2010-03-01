@@ -43,6 +43,7 @@
 
 
 from convert import *
+from attrdict import attrdict
 
 class Variable(str):
     """Intelligent proxy class for SmartDict.  Variable will use the
@@ -109,7 +110,7 @@ class UndefinedVariable(object):
     def __nonzero__(self):
         return False
 
-class SmartDict(dict):
+class SmartDict(attrdict):
     """Dictionary class that holds strings, but intelligently converts
     those strings to other types depending on their usage"""
 
