@@ -107,6 +107,9 @@ def isa_desc_emitter(target, source, env):
 
 ARCH_DIR = Dir('.')
 
+# import ply here because SCons screws with sys.path when performing actions.
+import ply
+
 def isa_desc_action(target, source, env):
     # Add the current directory to the system path so we can import files
     sys.path[0:0] = [ ARCH_DIR.srcnode().abspath ]
