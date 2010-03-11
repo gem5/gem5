@@ -28,6 +28,8 @@
 #ifndef MEMORYNODE_H
 #define MEMORYNODE_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/protocol/MemoryRequestType.hh"
@@ -61,7 +63,7 @@ public:
   ~MemoryNode() {};
 
   // Public Methods
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
   // Data Members (m_ prefix)  (all public -- this is really more a struct)
 
@@ -74,16 +76,16 @@ public:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const MemoryNode& obj);
+std::ostream& operator<<(std::ostream& out, const MemoryNode& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const MemoryNode& obj)
+std::ostream& operator<<(std::ostream& out, const MemoryNode& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

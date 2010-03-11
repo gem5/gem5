@@ -45,7 +45,6 @@
 #include "mem/protocol/MachineType.hh"
 #include "mem/protocol/Protocol.hh"
 #include "mem/ruby/system/System.hh"
-#include <string>
 
 static const int INFINITE_LATENCY = 10000; // Yes, this is a big hack
 static const int DEFAULT_BW_MULTIPLIER = 1;  // Just to be consistent with above :)
@@ -238,7 +237,7 @@ void Topology::makeLink(Network *net, SwitchID src, SwitchID dest, const NetDest
   }
 }
 
-void Topology::printStats(ostream& out) const
+void Topology::printStats(std::ostream& out) const
 {
     for (int cntrl = 0; cntrl < m_controller_vector.size(); cntrl++) {
       m_controller_vector[cntrl]->printStats(out);
@@ -252,8 +251,10 @@ void Topology::clearStats()
     }
 }
 
-void Topology::printConfig(ostream& out) const
+void Topology::printConfig(std::ostream& out) const
 {
+  using namespace std;
+
   if (m_print_config == false) return;
 
   assert(m_component_latencies.size() > 0);

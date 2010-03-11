@@ -38,11 +38,13 @@
 #ifndef CACHERECORDER_H
 #define CACHERECORDER_H
 
-#include "mem/ruby/libruby_internal.hh"
+#include <iostream>
+#include <string>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/libruby_internal.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 template <class TYPE> class PrioHeap;
 class Address;
@@ -63,9 +65,9 @@ public:
                  const Address& pc_addr, 
                  RubyRequestType type, 
                  Time time);
-  int dumpRecords(string filename);
+  int dumpRecords(std::string filename);
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -78,16 +80,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const CacheRecorder& obj);
+std::ostream& operator<<(std::ostream& out, const CacheRecorder& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const CacheRecorder& obj)
+std::ostream& operator<<(std::ostream& out, const CacheRecorder& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

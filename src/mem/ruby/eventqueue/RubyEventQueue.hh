@@ -59,6 +59,8 @@
 #ifndef RUBYEVENTQUEUE_H
 #define RUBYEVENTQUEUE_H
 
+#include <iostream>
+
 #include "config/no_vector_bounds_checks.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
@@ -82,7 +84,7 @@ public:
   Tick getClock() const { return m_clock; }
   void scheduleEvent(Consumer* consumer, Time timeDelta);
   void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
   void triggerEvents(Time t) { assert(0); }
   void triggerAllEvents() { assert(0); }
@@ -99,16 +101,16 @@ private:
 
 // Output operator declaration
 inline extern
-ostream& operator<<(ostream& out, const RubyEventQueue& obj);
+std::ostream& operator<<(std::ostream& out, const RubyEventQueue& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 inline extern
-ostream& operator<<(ostream& out, const RubyEventQueue& obj)
+std::ostream& operator<<(std::ostream& out, const RubyEventQueue& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

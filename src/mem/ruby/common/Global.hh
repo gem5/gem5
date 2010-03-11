@@ -66,7 +66,6 @@ const bool TWO_LEVEL_CACHE = true;
 
 // external includes for all classes
 #include "mem/ruby/common/TypeDefines.hh"
-#include "mem/gems_common/std-includes.hh"
 #include "mem/ruby/common/Debug.hh"
 
 // simple type declarations

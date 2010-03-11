@@ -29,6 +29,8 @@
 #ifndef PRIOHEAP_H
 #define PRIOHEAP_H
 
+#include <iostream>
+
 #include "mem/gems_common/Vector.hh"
 
 typedef unsigned int HeapIndex;
@@ -49,7 +51,7 @@ public:
   const TYPE& peekMin() const;
   const TYPE& peekElement(int index) const;
   TYPE extractMin();
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
   bool verifyHeap() const;
@@ -67,7 +69,7 @@ private:
 
 // Output operator declaration
 template <class TYPE>
-ostream& operator<<(ostream& out, const PrioHeap<TYPE>& obj);
+std::ostream& operator<<(std::ostream& out, const PrioHeap<TYPE>& obj);
 
 // ******************* Helper Functions *******************
 inline
@@ -210,7 +212,7 @@ void PrioHeap<TYPE>::heapify()
 }
 
 template <class TYPE>
-void PrioHeap<TYPE>::print(ostream& out) const
+void PrioHeap<TYPE>::print(std::ostream& out) const
 {
   Vector<TYPE> copyHeap(m_heap);
 
@@ -239,10 +241,10 @@ void PrioHeap<TYPE>::print(ostream& out) const
 
 // Output operator definition
 template <class TYPE>
-ostream& operator<<(ostream& out, const PrioHeap<TYPE>& obj)
+std::ostream& operator<<(std::ostream& out, const PrioHeap<TYPE>& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

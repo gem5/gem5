@@ -39,12 +39,14 @@
 #ifndef NODEID_H
 #define NODEID_H
 
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/util.hh"
 
 typedef int NodeID;
 
 extern inline
-string NodeIDToString (NodeID node) { return int_to_string(node); }
+std::string NodeIDToString (NodeID node) { return int_to_string(node); }
 
 #endif //NODEID_H

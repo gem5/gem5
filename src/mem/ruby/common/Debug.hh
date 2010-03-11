@@ -35,6 +35,8 @@
 #define __MEM_RUBY_DEBUG_HH__
 
 #include <unistd.h>
+
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -133,7 +135,7 @@ extern inline
 std::ostream& operator<<(std::ostream& out, const Debug& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 
@@ -151,6 +153,7 @@ const bool ASSERT_FLAG = true;
 #undef ASSERT
 #define ASSERT(EXPR)\
 {\
+  using namespace std;\
   if (ASSERT_FLAG) {\
     if (!(EXPR)) {\
       cerr << "failed assertion '"\
@@ -179,6 +182,7 @@ const bool ASSERT_FLAG = true;
 
 #define BREAK(X)\
 {\
+    using namespace std;\
     cerr << "breakpoint '"\
          << #X << "' reached at fn "\
          << __PRETTY_FUNCTION__ << " in "\
@@ -195,6 +199,7 @@ const bool ASSERT_FLAG = true;
 
 #define ERROR_MSG(MESSAGE)\
 {\
+  using namespace std;\
   if (ERROR_MESSAGE_FLAG) {\
     cerr << "Fatal Error: in fn "\
          << __PRETTY_FUNCTION__ << " in "\
@@ -212,6 +217,7 @@ const bool ASSERT_FLAG = true;
 
 #define WARN_MSG(MESSAGE)\
 {\
+  using namespace std;\
   if (WARNING_MESSAGE_FLAG) {\
     cerr << "Warning: in fn "\
          << __PRETTY_FUNCTION__ << " in "\
@@ -228,6 +234,7 @@ const bool ASSERT_FLAG = true;
 
 #define WARN_EXPR(EXPR)\
 {\
+  using namespace std;\
   if (WARNING_MESSAGE_FLAG) {\
     cerr << "Warning: in fn "\
          << __PRETTY_FUNCTION__ << " in "\
@@ -246,6 +253,7 @@ const bool ASSERT_FLAG = true;
 
 #define DEBUG_MSG(module, priority, MESSAGE)\
 {\
+  using namespace std;\
   if (RUBY_DEBUG) {\
     if (g_debug_ptr->validDebug(module, priority)) {\
       (* debug_cout_ptr) << "Debug: in fn "\
@@ -259,6 +267,7 @@ const bool ASSERT_FLAG = true;
 
 #define DEBUG_EXPR(module, priority, EXPR)\
 {\
+  using namespace std;\
   if (RUBY_DEBUG) {\
     if (g_debug_ptr->validDebug(module, priority)) {\
       (* debug_cout_ptr) << "Debug: in fn "\
@@ -273,6 +282,7 @@ const bool ASSERT_FLAG = true;
 
 #define DEBUG_NEWLINE(module, priority)\
 {\
+  using namespace std;\
   if (RUBY_DEBUG) {\
     if (g_debug_ptr->validDebug(module, priority)) {\
       (* debug_cout_ptr) << endl << flush;\
@@ -282,6 +292,7 @@ const bool ASSERT_FLAG = true;
 
 #define DEBUG_SLICC(priority, LINE, MESSAGE)\
 {\
+  using namespace std;\
   if (RUBY_DEBUG) {\
     if (g_debug_ptr->validDebug(SLICC_COMP, priority)) {\
       (* debug_cout_ptr) << (LINE) << (MESSAGE) << endl << flush;\
@@ -291,6 +302,7 @@ const bool ASSERT_FLAG = true;
 
 #define DEBUG_OUT( rest... ) \
 {\
+  using namespace std;\
   if (RUBY_DEBUG) {\
     cout << "Debug: in fn "\
          << __PRETTY_FUNCTION__\
@@ -302,6 +314,7 @@ const bool ASSERT_FLAG = true;
 
 #define ERROR_OUT( rest... ) \
 {\
+  using namespace std;\
   if (ERROR_MESSAGE_FLAG) {\
     cout << "error: in fn "\
          << __PRETTY_FUNCTION__ << " in "\

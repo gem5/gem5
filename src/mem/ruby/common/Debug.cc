@@ -41,9 +41,11 @@
 #include "mem/gems_common/util.hh"
 #include "base/misc.hh"
 
+using namespace std;
+
 class Debug;
 extern Debug* g_debug_ptr;
-std::ostream * debug_cout_ptr;
+ostream *debug_cout_ptr;
 
 bool Debug::m_protocol_trace = false;
 struct DebugComponentData
@@ -328,7 +330,7 @@ void Debug::setDebugOutputFile (const char * filename)
   if (m_fout.is_open() ) {
     m_fout.close ();
   }
-  m_fout.open (filename, std::ios::out);
+  m_fout.open (filename, ios::out);
   if (! m_fout.is_open() ) {
     cerr << "setDebugOutputFile: can't open file " << filename << endl;
   }

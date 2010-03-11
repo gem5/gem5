@@ -41,6 +41,8 @@
 #ifndef PerfectSwitch_H
 #define PerfectSwitch_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -76,11 +78,11 @@ public:
   // Public Methods
   void wakeup();
 
-  void printStats(ostream& out) const;
+  void printStats(std::ostream& out) const;
   void clearStats();
-  void printConfig(ostream& out) const;
+  void printConfig(std::ostream& out) const;
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
 
   // Private copy constructor and assignment operator
@@ -102,16 +104,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const PerfectSwitch& obj);
+std::ostream& operator<<(std::ostream& out, const PerfectSwitch& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const PerfectSwitch& obj)
+std::ostream& operator<<(std::ostream& out, const PerfectSwitch& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

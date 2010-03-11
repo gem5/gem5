@@ -29,6 +29,8 @@
 #ifndef REFCNT_H
 #define REFCNT_H
 
+#include <iostream>
+
 template <class TYPE>
 class RefCnt {
 public:
@@ -44,7 +46,7 @@ public:
   TYPE* ref() { return m_data_ptr; }
   TYPE* mod_ref() const { return m_data_ptr; }
   void freeRef();
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
   // Public copy constructor and assignment operator
   RefCnt(const RefCnt& obj);
@@ -61,7 +63,7 @@ private:
 // Output operator declaration
 template <class TYPE>
 inline
-ostream& operator<<(ostream& out, const RefCnt<TYPE>& obj);
+std::ostream& operator<<(std::ostream& out, const RefCnt<TYPE>& obj);
 
 // ******************* Definitions *******************
 
@@ -103,7 +105,7 @@ void RefCnt<TYPE>::freeRef()
 
 template <class TYPE>
 inline
-void RefCnt<TYPE>::print(ostream& out) const
+void RefCnt<TYPE>::print(std::ostream& out) const
 {
   if (m_data_ptr == NULL) {
     out << "[RefCnt: Null]";
@@ -150,10 +152,10 @@ RefCnt<TYPE>& RefCnt<TYPE>::operator=(const RefCnt<TYPE>& obj)
 // Output operator definition
 template <class TYPE>
 inline
-ostream& operator<<(ostream& out, const RefCnt<TYPE>& obj)
+std::ostream& operator<<(std::ostream& out, const RefCnt<TYPE>& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

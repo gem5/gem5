@@ -29,7 +29,8 @@
 
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 
-void MessageBufferNode::print(ostream& out) const
+void
+MessageBufferNode::print(std::ostream& out) const
 {
   out << "[";
   out << m_time << ", ";

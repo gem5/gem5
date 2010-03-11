@@ -37,6 +37,8 @@
 #ifndef HISTOGRAM_H
 #define HISTOGRAM_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 
@@ -61,9 +63,9 @@ public:
   int64 getTotal() const { return m_sumSamples; }
   int64 getData(int index) const { return m_data[index]; }
 
-  void printWithMultiplier(ostream& out, double multiplier) const;
-  void printPercent(ostream& out) const;
-  void print(ostream& out) const;
+  void printWithMultiplier(std::ostream& out, double multiplier) const;
+  void printPercent(std::ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -88,16 +90,16 @@ private:
 bool node_less_then_eq(const Histogram* n1, const Histogram* n2);
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Histogram& obj);
+std::ostream& operator<<(std::ostream& out, const Histogram& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Histogram& obj)
+std::ostream& operator<<(std::ostream& out, const Histogram& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

@@ -38,7 +38,9 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "mem/gems_common/std-includes.hh"
+#include <cassert>
+#include <iostream>
+#include <vector>
 
 template <class TYPE>
 class Vector
@@ -63,7 +65,7 @@ public:
                          // elements and sets them to NULL, can only
                          // be used when the TYPE is a pointer type.
   void removeFromTop(int num);  // removes elements from top
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
 
   // Array Reference operator overloading
@@ -84,7 +86,7 @@ private:
 };
 
 template <class TYPE>
-ostream& operator<<(ostream& out, const Vector<TYPE>& vec);
+std::ostream& operator<<(std::ostream& out, const Vector<TYPE>& vec);
 
 // *********************
 
@@ -139,7 +141,7 @@ void Vector<TYPE>::setSize(int new_size)
 {
   // FIXME - this should also decrease or shrink the size of the array at some point.
   if (new_size > m_max_size) {
-    grow(max((m_max_size+1)*2, new_size));
+    grow(std::max((m_max_size+1)*2, new_size));
   }
   m_size = new_size;
 #ifndef NO_VECTOR_BOUNDS_CHECKS
@@ -154,7 +156,7 @@ void Vector<TYPE>::increaseSize(int new_size, const TYPE& reset)
 {
   assert(new_size >= m_size);
   if (new_size >= m_max_size) {
-    grow(max((m_max_size+1)*2, new_size));
+    grow(std::max((m_max_size+1)*2, new_size));
   }
   int old_size = m_size;
   m_size = new_size;
@@ -243,7 +245,7 @@ void Vector<TYPE>::deletePointers()
 }
 
 template <class TYPE>
-void Vector<TYPE>::print(ostream& out) const
+void Vector<TYPE>::print(std::ostream& out) const
 {
   out << "[ ";
   for(int i=0; i<m_size; i++) {
@@ -253,7 +255,7 @@ void Vector<TYPE>::print(ostream& out) const
     out << ref(i);
   }
   out << " ]";
-  out << flush;
+  out << std::flush;
 }
 
 // Copy constructor
@@ -325,7 +327,7 @@ void Vector<TYPE>::grow(int new_max_size)
 }
 
 template <class TYPE>
-ostream& operator<<(ostream& out, const Vector<TYPE>& vec)
+std::ostream& operator<<(std::ostream& out, const Vector<TYPE>& vec)
 {
   vec.print(out);
   return out;

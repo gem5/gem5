@@ -34,6 +34,8 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/RefCnt.hh"
 #include "mem/gems_common/RefCountable.hh"
@@ -53,7 +55,7 @@ public:
   // Public Methods
   virtual Message* clone() const = 0;
   virtual void destroy() = 0;
-  virtual void print(ostream& out) const = 0;
+  virtual void print(std::ostream& out) const = 0;
 
   void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
   const int& getDelayedCycles() const {return m_DelayedCycles;}
@@ -75,16 +77,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Message& obj);
+std::ostream& operator<<(std::ostream& out, const Message& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Message& obj)
+std::ostream& operator<<(std::ostream& out, const Message& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

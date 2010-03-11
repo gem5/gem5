@@ -295,7 +295,7 @@ void PerfectSwitch::wakeup()
   }
 }
 
-void PerfectSwitch::printStats(ostream& out) const
+void PerfectSwitch::printStats(std::ostream& out) const
 {
   out << "PerfectSwitch printStats" << endl;
 }
@@ -304,11 +304,11 @@ void PerfectSwitch::clearStats()
 {
 }
 
-void PerfectSwitch::printConfig(ostream& out) const
+void PerfectSwitch::printConfig(std::ostream& out) const
 {
 }
 
-void PerfectSwitch::print(ostream& out) const
+void PerfectSwitch::print(std::ostream& out) const
 {
   out << "[PerfectSwitch " << m_switch_id << "]";
 }

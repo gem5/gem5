@@ -51,6 +51,10 @@
  *
  */
 
+// Allows use of times() library call, which determines virtual runtime
+#include <sys/resource.h>
+#include <sys/times.h>
+
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/system/System.hh"
@@ -64,9 +68,6 @@
 #include "mem/protocol/MachineType.hh"
 
 #include "mem/ruby/system/System.hh"
-
-// Allows use of times() library call, which determines virtual runtime
-#include <sys/times.h>
 
 extern std::ostream * debug_cout_ptr;
 

@@ -29,6 +29,8 @@
 
 #include "mem/ruby/profiler/MemCntrlProfiler.hh"
 
+using namespace std;
+
 MemCntrlProfiler::MemCntrlProfiler(const string& description,
                                    int banks_per_rank,
                                    int ranks_per_dimm,

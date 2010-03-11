@@ -202,6 +202,8 @@ class Type(Symbol):
 #ifndef ${{self.c_ident}}_H
 #define ${{self.c_ident}}_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Allocator.hh"
 ''')
@@ -323,7 +325,7 @@ ${{dm.type.c_ident}}& get${{dm.ident}}() { return m_${{dm.ident}}; }
 void set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}}) { m_${{dm.ident}} = local_${{dm.ident}}; }
 ''')
 
-        code('void print(ostream& out) const;')
+        code('void print(std::ostream& out) const;')
         code.dedent()
         code('  //private:')
         code.indent()
@@ -358,14 +360,14 @@ void set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}}) { m_${{dm
 
         code('''
 // Output operator declaration
-ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj);
+std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj)
+std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 {
     obj.print(out);
-    out << flush;
+    out << std::flush;
     return out;
 }
 
@@ -383,7 +385,11 @@ ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj)
  * Auto generated C++ code started by $__file__:$__line__
  */
 
+#include <iostream>
+
 #include "mem/protocol/${{self.c_ident}}.hh"
+
+using namespace std;
 ''')
 
         if self.isMessage:
@@ -421,6 +427,9 @@ void ${{self.c_ident}}::print(ostream& out) const
 #ifndef ${{self.c_ident}}_H
 #define ${{self.c_ident}}_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 
 /** \\enum ${{self.c_ident}}
@@ -443,8 +452,8 @@ enum ${{self.c_ident}} {
         code('''
     ${{self.c_ident}}_NUM
 };
-${{self.c_ident}} string_to_${{self.c_ident}}(const string& str);
-string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj);
+${{self.c_ident}} string_to_${{self.c_ident}}(const std::string& str);
+std::string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj);
 ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
 ''')
 
@@ -462,7 +471,7 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
 
         # Trailer
         code('''
-ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj);
+std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 
 #endif // ${{self.c_ident}}_H
 ''')
@@ -477,7 +486,12 @@ ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj);
  * Auto generated C++ code started by $__file__:$__line__
  */
 
+#include <iostream>
+#include <string>
+
 #include "mem/protocol/${{self.c_ident}}.hh"
+
+using namespace std;
 
 ''')
 

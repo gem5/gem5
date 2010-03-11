@@ -38,6 +38,9 @@
 #ifndef MESSAGEBUFFER_H
 #define MESSAGEBUFFER_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/buffers/MessageBufferNode.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -49,13 +52,13 @@
 class MessageBuffer {
 public:
   // Constructors
-  MessageBuffer(const string &name = "");
+  MessageBuffer(const std::string &name = "");
 
   // ~MessageBuffer()
 
   // Public Methods
 
-  static void printConfig(ostream& out) {}
+  static void printConfig(std::ostream& out) {}
   void setRecycleLatency(int recycle_latency) { m_recycle_latency = recycle_latency; }
 
   // TRUE if head of queue timestamp <= SystemTime
@@ -73,8 +76,8 @@ public:
   int getPriority() { return m_priority_rank; }
   void setPriority(int rank) { m_priority_rank = rank; }
   void setConsumer(Consumer* consumer_ptr) { ASSERT(m_consumer_ptr==NULL); m_consumer_ptr = consumer_ptr; }
-  void setDescription(const string& name) { m_name = name; }
-  string getDescription() { return m_name;}
+  void setDescription(const std::string& name) { m_name = name; }
+  std::string getDescription() { return m_name;}
 
   Consumer* getConsumer() { return m_consumer_ptr; }
 
@@ -102,8 +105,8 @@ public:
 
   void clear();
 
-  void print(ostream& out) const;
-  void printStats(ostream& out);
+  void print(std::ostream& out) const;
+  void printStats(std::ostream& out);
   void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
 private:
@@ -120,7 +123,7 @@ private:
   // Data Members (m_ prefix)
   Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
   PrioHeap<MessageBufferNode> m_prio_heap;
-  string m_name;
+  std::string m_name;
 
   int m_max_size;
   int m_size;
@@ -145,16 +148,16 @@ private:
 
 // Output operator declaration
 //template <class TYPE>
-ostream& operator<<(ostream& out, const MessageBuffer& obj);
+std::ostream& operator<<(std::ostream& out, const MessageBuffer& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const MessageBuffer& obj)
+std::ostream& operator<<(std::ostream& out, const MessageBuffer& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

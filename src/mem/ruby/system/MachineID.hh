@@ -39,6 +39,9 @@
 #ifndef MACHINEID_H
 #define MACHINEID_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/util.hh"
 #include "mem/protocol/MachineType.hh"
@@ -49,7 +52,7 @@ struct MachineID {
 };
 
 extern inline
-string MachineIDToString (MachineID machine) {
+std::string MachineIDToString (MachineID machine) {
   return MachineType_to_string(machine.type)+"_"+int_to_string(machine.num);
 }
 
@@ -66,13 +69,13 @@ bool operator!=(const MachineID & obj1, const MachineID & obj2)
 }
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const MachineID& obj);
+std::ostream& operator<<(std::ostream& out, const MachineID& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const MachineID& obj)
+std::ostream& operator<<(std::ostream& out, const MachineID& obj)
 {
   if ((obj.type < MachineType_NUM) && (obj.type >= MachineType_FIRST)) {
     out << MachineType_to_string(obj.type);
@@ -81,7 +84,7 @@ ostream& operator<<(ostream& out, const MachineID& obj)
   }
   out << "-";
   out << obj.num;
-  out << flush;
+  out << std::flush;
   return out;
 }
 

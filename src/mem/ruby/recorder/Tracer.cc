@@ -62,7 +62,7 @@ void Tracer::init()
 {
 }
 
-void Tracer::startTrace(string filename)
+void Tracer::startTrace(std::string filename)
 {
   if (m_enabled) {
     stopTrace();
@@ -101,7 +101,7 @@ void Tracer::traceRequest(Sequencer* sequencer,
 }
 
 // Class method
-int Tracer::playbackTrace(string filename)
+int Tracer::playbackTrace(std::string filename)
 {
   igzstream in(filename.c_str());
   if (in.fail()) {
@@ -147,7 +147,7 @@ int Tracer::playbackTrace(string filename)
   return counter;
 }
 
-void Tracer::print(ostream& out) const
+void Tracer::print(std::ostream& out) const
 {
 }
 

@@ -35,6 +35,8 @@
 #ifndef RUBYEVENTQUEUENODE_H
 #define RUBYEVENTQUEUENODE_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "sim/eventq.hh"
 #include "mem/ruby/common/Consumer.hh"
@@ -53,7 +55,7 @@ public:
   //~RubyEventQueueNode();
 
   // Public Methods
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
   virtual void process() { m_consumer_ptr->wakeup(); }
   virtual const char *description() const { return "Ruby Event"; }
 
@@ -68,16 +70,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const RubyEventQueueNode& obj);
+std::ostream& operator<<(std::ostream& out, const RubyEventQueueNode& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const RubyEventQueueNode& obj)
+std::ostream& operator<<(std::ostream& out, const RubyEventQueueNode& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

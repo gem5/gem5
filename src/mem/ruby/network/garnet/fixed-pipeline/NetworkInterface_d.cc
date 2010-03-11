@@ -28,6 +28,8 @@
  * Authors: Niket Agarwal
  */
 
+#include <cmath>
+
 #include "mem/ruby/network/garnet/fixed-pipeline/NetworkInterface_d.hh"
 #include "mem/ruby/buffers/MessageBuffer.hh"
 #include "mem/ruby/network/garnet/fixed-pipeline/flitBuffer_d.hh"

@@ -30,6 +30,8 @@
 #ifndef MESSAGEBUFFERNODE_H
 #define MESSAGEBUFFERNODE_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -43,7 +45,7 @@ public:
   //~MessageBufferNode();
 
   // Public Methods
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -59,7 +61,7 @@ public:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const MessageBufferNode& obj);
+std::ostream& operator<<(std::ostream& out, const MessageBufferNode& obj);
 
 // ******************* Definitions *******************
 
@@ -78,10 +80,10 @@ bool node_less_then_eq(const MessageBufferNode& n1, const MessageBufferNode& n2)
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const MessageBufferNode& obj)
+std::ostream& operator<<(std::ostream& out, const MessageBufferNode& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

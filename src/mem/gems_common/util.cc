@@ -31,8 +31,12 @@
  */
 
 #include <cassert>
+#include <iomanip>
+#include <sstream>
 
 #include "mem/gems_common/util.hh"
+
+using namespace std;
 
 // Split a string into a head and tail strings on the specified
 // character.  Return the head and the string passed in is modified by
@@ -43,7 +47,7 @@ string string_split(string& str, char split_character)
   string head = "";
   string tail = "";
 
-  uint counter = 0;
+  unsigned counter = 0;
   while(counter < str.size()) {
     if (str[counter] == split_character) {
       counter++;

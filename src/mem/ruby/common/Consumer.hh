@@ -39,6 +39,8 @@
 #ifndef CONSUMER_H
 #define CONSUMER_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
@@ -56,7 +58,7 @@ public:
   // void triggerWakeup() { Time time = g_eventQueue_ptr->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
   void triggerWakeup(RubyEventQueue * eventQueue) { Time time = eventQueue->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
   virtual void wakeup() = 0;
-  virtual void print(ostream& out) const = 0;
+  virtual void print(std::ostream& out) const = 0;
   const Time& getLastScheduledWakeup() const { return m_last_scheduled_wakeup; }
   void setLastScheduledWakeup(const Time& time) { m_last_scheduled_wakeup = time; }
 
@@ -70,16 +72,16 @@ private:
 
 // Output operator declaration
 inline extern
-ostream& operator<<(ostream& out, const Consumer& obj);
+std::ostream& operator<<(std::ostream& out, const Consumer& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 inline extern
-ostream& operator<<(ostream& out, const Consumer& obj)
+std::ostream& operator<<(std::ostream& out, const Consumer& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

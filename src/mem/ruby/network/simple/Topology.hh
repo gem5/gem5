@@ -47,6 +47,9 @@
 #ifndef TOPOLOGY_H
 #define TOPOLOGY_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -101,11 +104,11 @@ public:
 
   void initNetworkPtr(Network* net_ptr);
 
-  const string getName() { return m_name; }
-  void printStats(ostream& out) const;
+  const std::string getName() { return m_name; }
+  void printStats(std::ostream& out) const;
   void clearStats();
-  void printConfig(ostream& out) const;
-  void print(ostream& out) const { out << "[Topology]"; }
+  void printConfig(std::ostream& out) const;
+  void print(std::ostream& out) const { out << "[Topology]"; }
 
 protected:
   // Private Methods
@@ -117,13 +120,13 @@ protected:
 
   //  void makeSwitchesPerChip(Vector< Vector < SwitchID > > &nodePairs, Vector<int> &latencies, Vector<int> &bw_multis, int numberOfChips);
 
-  string getDesignStr();
+  std::string getDesignStr();
   // Private copy constructor and assignment operator
   Topology(const Topology& obj);
   Topology& operator=(const Topology& obj);
 
   // Data Members (m_ prefix)
-  string m_name;
+  std::string m_name;
   bool m_print_config;
   NodeID m_nodes;
   int m_number_of_switches;
@@ -141,16 +144,16 @@ protected:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Topology& obj);
+std::ostream& operator<<(std::ostream& out, const Topology& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Topology& obj)
+std::ostream& operator<<(std::ostream& out, const Topology& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

@@ -196,6 +196,10 @@ class $py_ident(RubyController):
 #ifndef ${ident}_CONTROLLER_H
 #define ${ident}_CONTROLLER_H
 
+#include <iostream>
+#include <sstream>
+#include <string>
+
 #include "params/$c_ident.hh"
 
 #include "mem/ruby/common/Global.hh"
@@ -214,7 +218,7 @@ class $py_ident(RubyController):
 
         # for adding information to the protocol debug trace
         code('''
-extern stringstream ${ident}_transitionComment;
+extern std::stringstream ${ident}_transitionComment;
 
 class $c_ident : public AbstractController {
 #ifdef CHECK_COHERENCE
@@ -226,14 +230,14 @@ public:
     void init();
     MessageBuffer* getMandatoryQueue() const;
     const int & getVersion() const;
-    const string toString() const;
-    const string getName() const;
+    const std::string toString() const;
+    const std::string getName() const;
     const MachineType getMachineType() const;
     void initNetworkPtr(Network* net_ptr) { m_net_ptr = net_ptr; }
-    void print(ostream& out) const;
-    void printConfig(ostream& out) const;
+    void print(std::ostream& out) const;
+    void printConfig(std::ostream& out) const;
     void wakeup();
-    void printStats(ostream& out) const;
+    void printStats(std::ostream& out) const;
     void clearStats();
     void blockOnQueue(Address addr, MessageBuffer* port);
     void unblock(Address addr);
@@ -253,11 +257,11 @@ int m_number_of_TBEs;
 
 TransitionResult doTransition(${ident}_Event event, ${ident}_State state, const Address& addr); // in ${ident}_Transitions.cc
 TransitionResult doTransitionWorker(${ident}_Event event, ${ident}_State state, ${ident}_State& next_state, const Address& addr); // in ${ident}_Transitions.cc
-string m_name;
+std::string m_name;
 int m_transitions_per_cycle;
 int m_buffer_size;
 int m_recycle_latency;
-map< string, string > m_cfg;
+map<std::string, std::string> m_cfg;
 NodeID m_version;
 Network* m_net_ptr;
 MachineID m_machineID;
@@ -312,6 +316,9 @@ static int m_num_controllers;
  * Created by slicc definition of Module "${{self.short}}"
  */
 
+#include <sstream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
 #include "mem/protocol/${ident}_Controller.hh"
@@ -319,6 +326,8 @@ static int m_num_controllers;
 #include "mem/protocol/${ident}_Event.hh"
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
+
+using namespace std;
 ''')
 
         # include object classes
@@ -863,6 +872,8 @@ if (!%s.areNSlotsAvailable(%s)) {
 #ifndef ${ident}_PROFILER_H
 #define ${ident}_PROFILER_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
@@ -873,7 +884,7 @@ class ${ident}_Profiler {
     void setVersion(int version);
     void countTransition(${ident}_State state, ${ident}_Event event);
     void possibleTransition(${ident}_State state, ${ident}_Event event);
-    void dumpStats(ostream& out) const;
+    void dumpStats(std::ostream& out) const;
     void clearStats();
 
   private:
@@ -935,8 +946,10 @@ void ${ident}_Profiler::possibleTransition(${ident}_State state, ${ident}_Event 
 {
     m_possible[state][event] = true;
 }
-void ${ident}_Profiler::dumpStats(ostream& out) const
+void ${ident}_Profiler::dumpStats(std::ostream& out) const
 {
+    using namespace std;
+
     out << " --- ${ident} " << m_version << " ---" << endl;
     out << " - Event Counts -" << endl;
     for (int event = 0; event < ${ident}_Event_NUM; event++) {

@@ -32,7 +32,12 @@
  *
  */
 
+#include <cmath>
+#include <iomanip>
+
 #include "mem/ruby/common/Histogram.hh"
+
+using namespace std;
 
 Histogram::Histogram(int binsize, int bins)
 {

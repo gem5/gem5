@@ -39,6 +39,9 @@
 #ifndef CACHEPROFILER_H
 #define CACHEPROFILER_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/common/Histogram.hh"
@@ -51,18 +54,18 @@ template <class TYPE> class Vector;
 class CacheProfiler {
 public:
   // Constructors
-  CacheProfiler(const string& description);
+  CacheProfiler(const std::string& description);
 
   // Destructor
   ~CacheProfiler();
 
   // Public Methods
-  void printStats(ostream& out) const;
+  void printStats(std::ostream& out) const;
   void clearStats();
 
   void addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit);
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -71,7 +74,7 @@ private:
   CacheProfiler& operator=(const CacheProfiler& obj);
 
   // Data Members (m_ prefix)
-  string m_description;
+  std::string m_description;
   Histogram m_requestSize;
   int64 m_misses;
   int64 m_demand_misses;
@@ -84,16 +87,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const CacheProfiler& obj);
+std::ostream& operator<<(std::ostream& out, const CacheProfiler& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const CacheProfiler& obj)
+std::ostream& operator<<(std::ostream& out, const CacheProfiler& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

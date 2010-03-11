@@ -38,6 +38,9 @@
 #ifndef TRACER_H
 #define TRACER_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/ruby/libruby_internal.hh"
 
 #include "mem/ruby/common/Global.hh"
@@ -65,7 +68,7 @@ public:
   ~Tracer();
 
   // Public Methods
-  void startTrace(string filename);
+  void startTrace(std::string filename);
   void stopTrace();
   bool traceEnabled() { return m_enabled; }
   void traceRequest(Sequencer* sequencer, 
@@ -74,10 +77,10 @@ public:
                     RubyRequestType type, 
                     Time time);
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
   // Public Class Methods
-  int playbackTrace(string filename);
+  int playbackTrace(std::string filename);
   void init();
 private:
   // Private Methods
@@ -95,16 +98,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const Tracer& obj);
+std::ostream& operator<<(std::ostream& out, const Tracer& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const Tracer& obj)
+std::ostream& operator<<(std::ostream& out, const Tracer& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

@@ -2,6 +2,8 @@
 #ifndef PSEUDOLRUPOLICY_H
 #define PSEUDOLRUPOLICY_H
 
+#include <cmath>
+
 #include "mem/ruby/system/AbstractReplacementPolicy.hh"
 
 /**

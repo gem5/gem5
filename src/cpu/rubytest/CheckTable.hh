@@ -31,6 +31,8 @@
 #ifndef CHECKTABLE_H
 #define CHECKTABLE_H
 
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 
@@ -57,7 +59,7 @@ public:
   //  bool isTableFull() const;
   // Need a method to select a check or retrieve a check
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
   void addCheck(const Address& address);
@@ -75,16 +77,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const CheckTable& obj);
+std::ostream& operator<<(std::ostream& out, const CheckTable& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline 
-ostream& operator<<(ostream& out, const CheckTable& obj)
+std::ostream& operator<<(std::ostream& out, const CheckTable& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

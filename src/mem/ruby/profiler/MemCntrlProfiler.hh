@@ -39,6 +39,9 @@
 #ifndef MEM_CNTRL_PROFILER_H
 #define MEM_CNTRL_PROFILER_H
 
+#include <iostream>
+#include <string>
+
 #include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 
@@ -47,7 +50,7 @@ template <class TYPE> class Vector;
 class MemCntrlProfiler {
 public:
   // Constructors
-  MemCntrlProfiler(const string& description,
+ MemCntrlProfiler(const std::string& description,
                    int banks_per_rank,
                    int ranks_per_dimm,
                    int dimms_per_channel);
@@ -56,7 +59,7 @@ public:
   ~MemCntrlProfiler();
 
   // Public Methods
-  void printStats(ostream& out) const;
+  void printStats(std::ostream& out) const;
   void clearStats();
 
   void profileMemReq(int bank);
@@ -75,7 +78,7 @@ public:
   void profileMemRandBusy();
   void profileMemNotOld();
 
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 private:
   // Private Methods
 
@@ -84,7 +87,7 @@ private:
   MemCntrlProfiler& operator=(const MemCntrlProfiler& obj);
 
   // Data Members (m_ prefix)
-  string m_description;
+  std::string m_description;
   uint64 m_memReq;
   uint64 m_memBankBusy;
   uint64 m_memBusBusy;
@@ -107,16 +110,16 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const MemCntrlProfiler& obj);
+std::ostream& operator<<(std::ostream& out, const MemCntrlProfiler& obj);
 
 // ******************* Definitions *******************
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const MemCntrlProfiler& obj)
+std::ostream& operator<<(std::ostream& out, const MemCntrlProfiler& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

@@ -28,6 +28,8 @@
 
 #include "mem/ruby/system/MemoryNode.hh"
 
+using namespace std;
+
 void MemoryNode::print(ostream& out) const
 {
   out << "[";

@@ -35,6 +35,8 @@
 #define ADDRESS_H
 
 #include <iomanip>
+
+#include "base/hashmap.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/ruby/system/NodeID.hh"
@@ -223,11 +225,12 @@ ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
 inline
 void Address::print(ostream& out) const
 {
-  out << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush;
+    using namespace std;
+    out << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush;
 }
 
 class Address;
-namespace __gnu_cxx {
+namespace __hash_namespace {
   template <> struct hash<Address>
   {
     size_t operator()(const Address &s) const { return (size_t) s.getAddress(); }

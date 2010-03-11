@@ -30,6 +30,9 @@
 #ifndef DATABLOCK_H
 #define DATABLOCK_H
 
+#include <iomanip>
+#include <iostream>
+
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/System.hh"
 #include "mem/gems_common/Vector.hh"
@@ -63,7 +66,7 @@ class DataBlock {
   void setData(uint8* data, int offset, int len);
   void copyPartial(const DataBlock & dblk, int offset, int len);
   bool equal(const DataBlock& obj) const;
-  void print(ostream& out) const;
+  void print(std::ostream& out) const;
 
 private:
   void alloc();
@@ -73,7 +76,7 @@ private:
 };
 
 // Output operator declaration
-ostream& operator<<(ostream& out, const DataBlock& obj);
+std::ostream& operator<<(std::ostream& out, const DataBlock& obj);
 
 bool operator==(const DataBlock& obj1, const DataBlock& obj2);
 
@@ -110,8 +113,10 @@ bool DataBlock::equal(const DataBlock& obj) const
 }
 
 inline
-void DataBlock::print(ostream& out) const
+void DataBlock::print(std::ostream& out) const
 {
+  using namespace std;
+
   int size = RubySystem::getBlockSizeBytes();
   out << "[ ";
   for (int i = 0; i < size; i++) {
@@ -157,10 +162,10 @@ void DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
 
 // Output operator definition
 extern inline
-ostream& operator<<(ostream& out, const DataBlock& obj)
+std::ostream& operator<<(std::ostream& out, const DataBlock& obj)
 {
   obj.print(out);
-  out << flush;
+  out << std::flush;
   return out;
 }
 

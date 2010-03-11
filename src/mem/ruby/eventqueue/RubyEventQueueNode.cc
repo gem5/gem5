@@ -34,7 +34,7 @@
 
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
 
-void RubyEventQueueNode::print(ostream& out) const
+void RubyEventQueueNode::print(std::ostream& out) const
 {
   out << "[";
   if (m_consumer_ptr != NULL) {

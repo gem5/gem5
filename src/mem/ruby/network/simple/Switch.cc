@@ -129,8 +129,10 @@ const Vector<Throttle*>* Switch::getThrottles() const
   return &m_throttles;
 }
 
-void Switch::printStats(ostream& out) const
+void Switch::printStats(std::ostream& out) const
 {
+  using namespace std;
+
   out << "switch_" << m_switch_id << "_inlinks: " << m_perfect_switch_ptr->getInLinks() << endl;
   out << "switch_" << m_switch_id << "_outlinks: " << m_perfect_switch_ptr->getOutLinks() << endl;
 
@@ -188,7 +190,7 @@ void Switch::clearStats()
   }
 }
 
-void Switch::printConfig(ostream& out) const
+void Switch::printConfig(std::ostream& out) const
 {
   m_perfect_switch_ptr->printConfig(out);
   for (int i=0; i<m_throttles.size(); i++) {
@@ -198,7 +200,7 @@ void Switch::printConfig(ostream& out) const
   }
 }
 
-void Switch::print(ostream& out) const
+void Switch::print(std::ostream& out) const
 {
   // FIXME printing
   out << "[Switch]";

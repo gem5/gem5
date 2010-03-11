@@ -34,12 +34,19 @@
 #ifndef MAP_H
 #define MAP_H
 
+#include <iostream>
+
 #include "base/hashmap.hh"
 #include "mem/gems_common/Vector.hh"
 
 template <class KEY_TYPE, class VALUE_TYPE>
 class Map
 {
+  private:
+    typedef typename m5::hash_map<KEY_TYPE, VALUE_TYPE> MapType;
+    typedef typename MapType::iterator iterator;
+    typedef typename MapType::const_iterator const_iterator;
+
 public:
   Map() { /* empty */ }
   ~Map() { /* empty */ }
@@ -54,7 +61,7 @@ public:
   void deleteValues();
   VALUE_TYPE& lookup(const KEY_TYPE& key) const;
   void clear() { m_map.clear(); }
-  void print(ostream& out) const;
+    void print(std::ostream& out) const;
 
   // Synonyms
   void remove(const KEY_TYPE& key) { erase(key); }
@@ -73,7 +80,8 @@ private:
 };
 
 template <class KEY_TYPE, class VALUE_TYPE>
-ostream& operator<<(ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map);
+std::ostream&
+operator<<(std::ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map);
 
 // *********************
 
@@ -94,7 +102,7 @@ template <class KEY_TYPE, class VALUE_TYPE>
 VALUE_TYPE& Map<KEY_TYPE, VALUE_TYPE>::lookup(const KEY_TYPE& key) const
 {
   if (!exist(key))
-    cerr << *this << " is looking for " << key << endl;
+    std::cerr << *this << " is looking for " << key << std::endl;
   assert(exist(key));
   return m_map[key];
 }
@@ -103,7 +111,7 @@ template <class KEY_TYPE, class VALUE_TYPE>
 Vector<KEY_TYPE> Map<KEY_TYPE, VALUE_TYPE>::keys() const
 {
   Vector<KEY_TYPE> keys;
-  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
+  const_iterator iter;
   for (iter = m_map.begin(); iter != m_map.end(); iter++) {
     keys.insertAtBottom((*iter).first);
   }
@@ -114,8 +122,8 @@ template <class KEY_TYPE, class VALUE_TYPE>
 Vector<VALUE_TYPE> Map<KEY_TYPE, VALUE_TYPE>::values() const
 {
   Vector<VALUE_TYPE> values;
-  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
-  pair<KEY_TYPE, VALUE_TYPE> p;
+  const_iterator iter;
+  std::pair<KEY_TYPE, VALUE_TYPE> p;
 
   for (iter = m_map.begin(); iter != m_map.end(); iter++) {
     p = *iter;
@@ -127,8 +135,8 @@ Vector<VALUE_TYPE> Map<KEY_TYPE, VALUE_TYPE>::values() const
 template <class KEY_TYPE, class VALUE_TYPE>
 void Map<KEY_TYPE, VALUE_TYPE>::deleteKeys()
 {
-  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
-  pair<KEY_TYPE, VALUE_TYPE> p;
+  const_iterator iter;
+  std::pair<KEY_TYPE, VALUE_TYPE> p;
 
   for (iter = m_map.begin(); iter != m_map.end(); iter++) {
     p = *iter;
@@ -139,8 +147,8 @@ void Map<KEY_TYPE, VALUE_TYPE>::deleteKeys()
 template <class KEY_TYPE, class VALUE_TYPE>
 void Map<KEY_TYPE, VALUE_TYPE>::deleteValues()
 {
-  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
-  pair<KEY_TYPE, VALUE_TYPE> p;
+  const_iterator iter;
+  std::pair<KEY_TYPE, VALUE_TYPE> p;
 
   for (iter = m_map.begin(); iter != m_map.end(); iter++) {
     p = *iter;
@@ -149,10 +157,10 @@ void Map<KEY_TYPE, VALUE_TYPE>::deleteValues()
 }
 
 template <class KEY_TYPE, class VALUE_TYPE>
-void Map<KEY_TYPE, VALUE_TYPE>::print(ostream& out) const
+void Map<KEY_TYPE, VALUE_TYPE>::print(std::ostream& out) const
 {
-  typename hash_map<KEY_TYPE, VALUE_TYPE>::const_iterator iter;
-  pair<KEY_TYPE, VALUE_TYPE> p;
+  const_iterator iter;
+  std::pair<KEY_TYPE, VALUE_TYPE> p;
 
   out << "[";
   for (iter = m_map.begin(); iter != m_map.end(); iter++) {
@@ -164,7 +172,8 @@ void Map<KEY_TYPE, VALUE_TYPE>::print(ostream& out) const
 }
 
 template <class KEY_TYPE, class VALUE_TYPE>
-ostream& operator<<(ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map)
+std::ostream&
+operator<<(std::ostream& out, const Map<KEY_TYPE, VALUE_TYPE>& map)
 {
   map.print(out);
   return out;
