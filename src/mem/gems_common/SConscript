@@ -33,15 +33,6 @@ Import('*')
 if not env['RUBY']:
     Return()
 
-#benv['LEXCOM'] = "$LEX $LEXFLAGS -o$TARGET $SOURCES"
-benv = env.Clone()
-benv.Append(YACCFLAGS=["-pat"])
-benv.Append(LEXFLAGS=["-Pat"])
-benv.CXXFile('ioutil/attrlex.ll')
-benv.CXXFile('ioutil/attrparse.yy')
-
-Source('ioutil/attrlex.cc', Werror=False)
-Source('ioutil/attrparse.cc', Werror=False)
 Source('util.cc')
 
 TraceFlag('GemsCommon')
