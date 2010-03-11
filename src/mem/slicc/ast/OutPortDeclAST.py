@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.DeclAST import DeclAST
 from slicc.ast.TypeAST import TypeAST
 from slicc.symbols import Var
@@ -45,7 +43,7 @@ class OutPortDeclAST(DeclAST):
         return "[OutPortDecl: %r]" % self.ident
 
     def generate(self):
-        code = code_formatter(newlines=False)
+        code = self.slicc.codeFormatter(newlines=False)
 
         queue_type = self.var_expr.generate(code)
         if not queue_type.isOutPort:

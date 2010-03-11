@@ -55,15 +55,14 @@ class lookup(object):
         if item == '__line__':
             return self.frame.f_lineno
 
+        if self.formatter.locals and item in self.frame.f_locals:
+            return self.frame.f_locals[item]
+
         if item in self.dict:
             return self.dict[item]
 
-        if self.formatter.locals or self.formatter.globals:
-            if self.formatter.locals and item in self.frame.f_locals:
-                return self.frame.f_locals[item]
-
-            if self.formatter.globals and item in self.frame.f_globals:
-                return self.frame.f_globals[item]
+        if self.formatter.globals and item in self.frame.f_globals:
+            return self.frame.f_globals[item]
 
         if item in __builtin__.__dict__:
             return __builtin__.__dict__[item]
@@ -124,7 +123,7 @@ class code_formatter(object):
         self._dict = {}
         self._indent_level = 0
         self._indent_spaces = 4
-        self.globals = kwargs.pop('globals',type(self).globals)
+        self.globals = kwargs.pop('globals', type(self).globals)
         self.locals = kwargs.pop('locals', type(self).locals)
         self._fix_newlines = \
                 kwargs.pop('fix_newlines', type(self).fix_newlines)

@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter, orderdict
+from m5.util import orderdict
 
 from slicc.symbols.Symbol import Symbol
 from slicc.symbols.Var import Var
@@ -150,7 +150,7 @@ class StateMachine(Symbol):
             func.writeCodeFiles(path)
 
     def printControllerPython(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
         py_ident = "%s_Controller" % ident
         c_ident = "%s_Controller" % self.ident
@@ -180,7 +180,7 @@ class $py_ident(RubyController):
 
     def printControllerHH(self, path):
         '''Output the method declarations for the class declaration'''
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
 
@@ -301,7 +301,7 @@ static int m_num_controllers;
     def printControllerCC(self, path):
         '''Output the actions for performing the actions'''
 
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = "%s_Controller" % self.ident
 
@@ -641,7 +641,7 @@ void $c_ident::${{action.ident}}(const Address& addr)
     def printCWakeup(self, path):
         '''Output the wakeup loop for the events'''
 
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
 
         code('''
@@ -696,7 +696,7 @@ void ${ident}_Controller::wakeup()
     def printCSwitch(self, path):
         '''Output switch statement for transition table'''
 
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
 
         code('''
@@ -778,7 +778,7 @@ TransitionResult ${ident}_Controller::doTransitionWorker(${ident}_Event event, $
             case_string = "%s_State_%s, %s_Event_%s" % \
                 (self.ident, trans.state.ident, self.ident, trans.event.ident)
 
-            case = code_formatter()
+            case = self.symtab.codeFormatter()
             # Only set next_state if it changes
             if trans.state != trans.nextState:
                 ns_ident = trans.nextState.ident
@@ -853,7 +853,7 @@ if (!%s.areNSlotsAvailable(%s)) {
         code.write(path, "%s_Transitions.cc" % self.ident)
 
     def printProfilerHH(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
 
         code('''
@@ -888,7 +888,7 @@ class ${ident}_Profiler {
         code.write(path, "%s_Profiler.hh" % self.ident)
 
     def printProfilerCC(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         ident = self.ident
 
         code('''
@@ -967,7 +967,7 @@ void ${ident}_Profiler::dumpStats(ostream& out) const
     # **************************
     def frameRef(self, click_href, click_target, over_href, over_target_num,
                  text):
-        code = code_formatter(fix_newlines=False)
+        code = self.symtab.codeFormatter(fix_newlines=False)
         code("""<A href=\"$click_href\" target=\"$click_target\" onMouseOver=\"if (parent.frames[$over_target_num].location != parent.location + '$over_href') { parent.frames[$over_target_num].location='$over_href' }\" >${{html.formatShorthand(text)}}</A>""")
         return str(code)
 
@@ -998,7 +998,7 @@ void ${ident}_Profiler::dumpStats(ostream& out) const
             code.write(path, name)
 
     def printHTMLTransitions(self, path, active_state):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
 
         code('''
 <HTML><BODY link="blue" vlink="blue">

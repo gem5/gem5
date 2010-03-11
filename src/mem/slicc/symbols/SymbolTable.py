@@ -33,7 +33,9 @@ from slicc.symbols.Type import Type
 from slicc.util import Location
 
 class SymbolTable(object):
-    def __init__(self):
+    def __init__(self, slicc):
+        self.slicc = slicc
+
         self.sym_vec = []
         self.sym_map_vec = [ {} ]
         self.machine_components = {}
@@ -51,6 +53,9 @@ class SymbolTable(object):
 
     def __repr__(self):
         return "[SymbolTable]" # FIXME
+
+    def codeFormatter(self, *args, **kwargs):
+        return self.slicc.codeFormatter(*args, **kwargs)
 
     def newSymbol(self, sym):
         self.registerSym(str(sym), sym)
@@ -118,7 +123,7 @@ class SymbolTable(object):
                 yield symbol
 
     def writeCodeFiles(self, path):
-        code = code_formatter()
+        code = self.codeFormatter()
         code('''
 /** Auto generated C++ code started by $__file__:$__line__ */
 
@@ -140,7 +145,7 @@ class SymbolTable(object):
         else:
             name = "empty.html"
 
-        code = code_formatter()
+        code = self.codeFormatter()
         code('''
 <html>
 <head>
@@ -154,7 +159,7 @@ class SymbolTable(object):
 ''')
         code.write(path, "index.html")
 
-        code = code_formatter()
+        code = self.codeFormatter()
         code("<HTML></HTML>")
         code.write(path, "empty.html")
 

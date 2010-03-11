@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.util import PairContainer, Location
 
 class AST(PairContainer):
@@ -54,7 +52,7 @@ class AST(PairContainer):
     def embedError(self, message, *args):
         if args:
             message = message % args
-        code = code_formatter()
+        code = self.slicc.codeFormatter()
         code('''
 cerr << "Runtime Error at ${{self.location}}, Ruby Time: " << g_eventQueue_ptr->getTime() << ": "<< $message << ", PID: " << getpid() << endl;
 char c; cerr << "press return to continue." << endl; cin.get(c); abort();

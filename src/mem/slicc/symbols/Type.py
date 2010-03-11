@@ -25,7 +25,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter, orderdict
+from m5.util import orderdict
 
 from slicc.util import PairContainer
 from slicc.symbols.Symbol import Symbol
@@ -191,7 +191,7 @@ class Type(Symbol):
             self.printTypeCC(path)
 
     def printTypeHH(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         code('''
 /** \\file ${{self.c_ident}}.hh
  *
@@ -375,7 +375,7 @@ ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj)
         code.write(path, "%s.hh" % self.c_ident)
 
     def printTypeCC(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
 
         code('''
 /** \\file ${{self.c_ident}}.cc
@@ -412,7 +412,7 @@ void ${{self.c_ident}}::print(ostream& out) const
         code.write(path, "%s.cc" % self.c_ident)
 
     def printEnumHH(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         code('''
 /** \\file ${{self.c_ident}}.hh
  *
@@ -470,7 +470,7 @@ ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj);
         code.write(path, "%s.hh" % self.c_ident)
 
     def printEnumCC(self, path):
-        code = code_formatter()
+        code = self.symtab.codeFormatter()
         code('''
 /** \\file ${{self.c_ident}}.hh
  *

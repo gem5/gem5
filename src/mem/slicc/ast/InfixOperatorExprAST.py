@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.ExprAST import ExprAST
 from slicc.symbols import Type
 
@@ -42,8 +40,8 @@ class InfixOperatorExprAST(ExprAST):
         return "[InfixExpr: %r %s %r]" % (self.left, self.op, self.right)
 
     def generate(self, code):
-        lcode = code_formatter()
-        rcode = code_formatter()
+        lcode = self.slicc.codeFormatter()
+        rcode = self.slicc.codeFormatter()
 
         ltype = self.left.generate(lcode)
         rtype = self.right.generate(rcode)

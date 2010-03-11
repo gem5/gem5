@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.StatementAST import StatementAST
 from slicc.symbols import Type
 
@@ -45,7 +43,7 @@ class IfStatementAST(StatementAST):
         return "[IfStatement: %r%r%r]" % (self.cond, self.then, self.else_)
 
     def generate(self, code, return_type):
-        cond_code = code_formatter()
+        cond_code = self.slicc.codeFormatter()
         cond_type = self.cond.generate(cond_code)
 
         if cond_type != self.symtab.find("bool", Type):

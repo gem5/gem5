@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.StatementAST import StatementAST
 
 class AssignStatementAST(StatementAST):
@@ -39,8 +37,8 @@ class AssignStatementAST(StatementAST):
         return "[AssignStatementAST: %r := %r]" % (self.lvalue, self.rvalue)
 
     def generate(self, code, return_type):
-        lcode = code_formatter()
-        rcode = code_formatter()
+        lcode = self.slicc.codeFormatter()
+        rcode = self.slicc.codeFormatter()
 
         ltype = self.lvalue.generate(lcode)
         rtype = self.rvalue.generate(rcode)

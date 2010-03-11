@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Action, Type, Var
 
@@ -55,7 +53,7 @@ class ActionDeclAST(DeclAST):
             self.symtab.newSymbol(var)
 
             # Do not allows returns in actions
-            code = code_formatter()
+            code = self.slicc.codeFormatter()
             self.statement_list.generate(code, None)
             self.pairs["c_code"] = str(code)
 

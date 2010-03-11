@@ -30,6 +30,7 @@ import os.path
 import re
 import sys
 
+from m5.util import code_formatter
 from m5.util.grammar import Grammar, TokenError, ParseError
 
 import slicc.ast as ast
@@ -50,11 +51,17 @@ def read_slicc(sources):
             yield sm_file
 
 class SLICC(Grammar):
-    def __init__(self, **kwargs):
+    def __init__(self, protocol, **kwargs):
         super(SLICC, self).__init__(**kwargs)
         self.decl_list_vec = []
         self.current_file = None
-        self.symtab = SymbolTable()
+        self.protocol = protocol
+        self.symtab = SymbolTable(self)
+
+    def codeFormatter(self, *args, **kwargs):
+        code = code_formatter(*args, **kwargs)
+        code['protocol'] = self.protocol
+        return code
 
     def parse(self, filename):
         self.current_file = filename

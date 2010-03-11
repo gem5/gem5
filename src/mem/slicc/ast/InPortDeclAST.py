@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.DeclAST import DeclAST
 from slicc.ast.TypeAST import TypeAST
 from slicc.symbols import Func, Type, Var
@@ -48,7 +46,7 @@ class InPortDeclAST(DeclAST):
         symtab = self.symtab
         void_type = symtab.find("void", Type)
 
-        code = code_formatter()
+        code = self.slicc.codeFormatter()
         queue_type = self.var_expr.generate(code)
         if not queue_type.isInPort:
             self.error("The inport queue's type must have the 'inport' " + \
@@ -115,7 +113,7 @@ class InPortDeclAST(DeclAST):
         symtab.newSymbol(func)
 
         if self.statements is not None:
-            rcode = code_formatter()
+            rcode = self.slicc.codeFormatter()
             rcode.indent()
             rcode.indent()
             self.statements.generate(rcode, None)

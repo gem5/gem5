@@ -63,8 +63,9 @@ def slicc_scanner(node, env, path):
 env.Append(SCANNERS=Scanner(function=slicc_scanner,skeys=['.slicc']))
 
 def slicc_emitter(target, source, env):
+    protocol = source[0].get_contents()
     files = [s.srcnode().abspath for s in source[1:]]
-    slicc = SLICC(debug=True)
+    slicc = SLICC(protocol, debug=True)
     print "SLICC parsing..."
     for name in slicc.load(files, verbose=True):
         print "    %s" % name
@@ -104,7 +105,7 @@ def slicc_action(target, source, env):
     if not isdir(hdir):
         os.mkdir(hdir)
 
-    slicc = SLICC(debug=True)
+    slicc = SLICC(protocol, debug=True)
     files = [str(s) for s in source[1:]]
     slicc.load(files, verbose=False)
 

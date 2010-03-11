@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.ExprAST import ExprAST
 
 class MethodCallExprAST(ExprAST):
@@ -36,7 +34,7 @@ class MethodCallExprAST(ExprAST):
         self.expr_ast_vec = expr_ast_vec
 
     def generate(self, code):
-        tmp = code_formatter()
+        tmp = self.slicc.codeFormatter()
         paramTypes = []
         for expr_ast in self.expr_ast_vec:
             return_type = expr_ast.generate(tmp)
@@ -91,7 +89,7 @@ class MemberMethodCallExprAST(MethodCallExprAST):
                                               self.obj_expr_ast,
                                               self.expr_ast_vec)
     def generate_prefix(self, paramTypes):
-        code = code_formatter()
+        code = self.slicc.codeFormatter()
 
         # member method call
         obj_type = self.obj_expr_ast.generate(code)

@@ -25,8 +25,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util.code_formatter import code_formatter
-
 from slicc.ast.DeclAST import DeclAST
 from slicc.symbols import Func, Type
 
@@ -70,7 +68,7 @@ class FuncDeclAST(DeclAST):
             types.append(type)
             params.append(ident)
 
-        body = code_formatter()
+        body = self.slicc.codeFormatter()
         if self.statements is None:
             self["external"] = "yes"
         else:

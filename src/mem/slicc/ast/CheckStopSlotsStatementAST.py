@@ -45,7 +45,7 @@ class CheckStopSlotsStatementAST(StatementAST):
         var = self.variable.var
         assert var not in self.resources
 
-        check_code = code_formatter()
+        check_code = self.slicc.codeFormatter()
         if self.condStr == "((*in_msg_ptr)).m_isOnChipSearch":
             check_code('''
 const Response9Msg* in_msg_ptr =

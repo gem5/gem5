@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.util import code_formatter
-
 from slicc.ast.AST import AST
 
 class ExprAST(AST):
@@ -37,7 +35,7 @@ class ExprAST(AST):
         pass
 
     def inline(self, get_type=False):
-        code = code_formatter(fix_newlines=False)
+        code = self.slicc.codeFormatter(fix_newlines=False)
         return_type = self.generate(code)
         if get_type:
             return return_type, code
