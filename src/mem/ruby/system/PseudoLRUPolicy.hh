@@ -2,8 +2,6 @@
 #ifndef PSEUDOLRUPOLICY_H
 #define PSEUDOLRUPOLICY_H
 
-#include <cmath>
-
 #include "mem/ruby/system/AbstractReplacementPolicy.hh"
 
 /**
@@ -57,7 +55,7 @@ PseudoLRUPolicy::PseudoLRUPolicy(Index num_sets, Index assoc)
     m_num_levels++;
   }
   assert(m_num_levels < sizeof(unsigned int)*4);
-  num_tree_nodes = ((int)pow(2, m_num_levels))-1;
+  num_tree_nodes = (1 << m_num_levels) - 1;
   m_trees = new uint64[m_num_sets];
   for(unsigned int i=0; i< m_num_sets; i++){
     m_trees[i] = 0;
