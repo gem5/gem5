@@ -29,9 +29,11 @@ from m5.util.code_formatter import code_formatter
 
 def createSymbol(symbol, title):
     code = code_formatter()
-    code('''<HTML><BODY><BIG>
-$title:
-${{formatShorthand(symbol.short)}} - ${{symbol.desc}}</BIG></BODY></HTML>''')
+    code('''
+<HTML><BODY><BIG>
+$title: ${{formatShorthand(symbol.short)}} - ${{symbol.desc}}
+</BIG></BODY></HTML>
+''')
     return code
 
 def formatShorthand(short):

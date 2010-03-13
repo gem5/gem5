@@ -187,14 +187,14 @@ class $py_ident(RubyController):
         self.message_buffer_names = []
 
         code('''
-/** \\file $ident.hh
+/** \\file $c_ident.hh
  *
  * Auto generated C++ code started by $__file__:$__line__
  * Created by slicc definition of Module "${{self.short}}"
  */
 
-#ifndef ${ident}_CONTROLLER_H
-#define ${ident}_CONTROLLER_H
+#ifndef __${ident}_CONTROLLER_HH__
+#define __${ident}_CONTROLLER_HH__
 
 #include <iostream>
 #include <sstream>
@@ -220,9 +220,11 @@ class $py_ident(RubyController):
         code('''
 extern std::stringstream ${ident}_transitionComment;
 
-class $c_ident : public AbstractController {
-#ifdef CHECK_COHERENCE
-#endif /* CHECK_COHERENCE */
+class $c_ident : public AbstractController
+{
+// the coherence checker needs to call isBlockExclusive() and isBlockShared()
+// making the Chip a friend class is an easy way to do this for now
+
 public:
     typedef ${c_ident}Params Params;
     $c_ident(const Params *p);
@@ -241,6 +243,7 @@ public:
     void clearStats();
     void blockOnQueue(Address addr, MessageBuffer* port);
     void unblock(Address addr);
+
 private:
 ''')
 
@@ -255,8 +258,15 @@ private:
         code('''
 int m_number_of_TBEs;
 
-TransitionResult doTransition(${ident}_Event event, ${ident}_State state, const Address& addr); // in ${ident}_Transitions.cc
-TransitionResult doTransitionWorker(${ident}_Event event, ${ident}_State state, ${ident}_State& next_state, const Address& addr); // in ${ident}_Transitions.cc
+TransitionResult doTransition(${ident}_Event event,
+                              ${ident}_State state,
+                              const Address& addr);
+
+TransitionResult doTransitionWorker(${ident}_Event event,
+                                    ${ident}_State state,
+                                    ${ident}_State& next_state,
+                                    const Address& addr);
+
 std::string m_name;
 int m_transitions_per_cycle;
 int m_buffer_size;
@@ -269,6 +279,7 @@ bool m_is_blocking;
 map< Address, MessageBuffer* > m_block_map;
 ${ident}_Profiler s_profiler;
 static int m_num_controllers;
+
 // Internal functions
 ''')
 
@@ -288,7 +299,7 @@ static int m_num_controllers;
         # the controller internal variables
         code('''
 
-// Object
+// Objects
 ''')
         for var in self.objects:
             th = var.get("template_hack", "")
@@ -299,7 +310,7 @@ static int m_num_controllers;
 
         code.dedent()
         code('};')
-        code('#endif // ${ident}_CONTROLLER_H')
+        code('#endif // __${ident}_CONTROLLER_H__')
         code.write(path, '%s.hh' % c_ident)
 
     def printControllerCC(self, path):
@@ -310,7 +321,7 @@ static int m_num_controllers;
         c_ident = "%s_Controller" % self.ident
 
         code('''
-/** \\file $ident.cc
+/** \\file $c_ident.cc
  *
  * Auto generated C++ code started by $__file__:$__line__
  * Created by slicc definition of Module "${{self.short}}"
@@ -344,11 +355,12 @@ ${c_ident}Params::create()
     return new $c_ident(this);
 }
 
-
 int $c_ident::m_num_controllers = 0;
 
+// for adding information to the protocol debug trace
 stringstream ${ident}_transitionComment;
 #define APPEND_TRANSITION_COMMENT(str) (${ident}_transitionComment << str)
+
 /** \\brief constructor */
 $c_ident::$c_ident(const Params *p)
     : AbstractController(p)
@@ -411,13 +423,18 @@ m_dma_sequencer_ptr->setController(this);
         code('''
 }
 
-void $c_ident::init()
+void
+$c_ident::init()
 {
+    MachineType machine_type;
+    int base;
+
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
 
-    // Objects
+    // initialize objects
     s_profiler.setVersion(m_version);
+
 ''')
 
         code.indent()
@@ -445,18 +462,16 @@ void $c_ident::init()
                                 args = "m_number_of_TBEs"
                             else:
                                 args = var.get("constructor_hack", "")
-                            args = "(%s)" % args
 
-                        code('$expr$args;')
-                    else:
-                        code(';')
+                        code('$expr($args);')
 
                     code('assert($vid != NULL);')
 
                     if "default" in var:
-                        code('(*$vid) = ${{var["default"]}}; // Object default')
+                        code('*$vid = ${{var["default"]}}; // Object default')
                     elif "default" in vtype:
-                        code('(*$vid) = ${{vtype["default"]}}; // Type ${{vtype.ident}} default')
+                        comment = "Type %s default" % vtype.ident
+                        code('*$vid = ${{vtype["default"]}}; // $comment')
 
                     # Set ordering
                     if "ordered" in var and "trigger_queue" not in var:
@@ -480,7 +495,9 @@ void $c_ident::init()
 
                 assert var.machine is not None
                 code('''
-$vid = m_net_ptr->get${network}NetQueue(m_version+MachineType_base_number(string_to_MachineType("${{var.machine.ident}}")), $ordered, $vnet);
+machine_type = string_to_MachineType("${{var.machine.ident}}");
+base = MachineType_base_number(machine_type);
+$vid = m_net_ptr->get${network}NetQueue(m_version + base, $ordered, $vnet);
 ''')
 
                 code('assert($vid != NULL);')
@@ -508,7 +525,10 @@ if (m_buffer_size > 0) {
 ''')
 
                 # set description (may be overriden later by port def)
-                code('$vid->setDescription("[Version " + int_to_string(m_version) + ", ${ident}, name=${{var.c_ident}}]");')
+                code('''
+$vid->setDescription("[Version " + int_to_string(m_version) + ", ${ident}, name=${{var.c_ident}}]");
+
+''')
 
         # Set the queue consumers
         code.insert_newline()
@@ -553,51 +573,77 @@ if (m_buffer_size > 0) {
             mq_ident = "NULL"
 
         code('''
-int $c_ident::getNumControllers() {
+int
+$c_ident::getNumControllers()
+{
     return m_num_controllers;
 }
 
-MessageBuffer* $c_ident::getMandatoryQueue() const {
+MessageBuffer*
+$c_ident::getMandatoryQueue() const
+{
     return $mq_ident;
 }
 
-const int & $c_ident::getVersion() const{
+const int &
+$c_ident::getVersion() const
+{
     return m_version;
 }
 
-const string $c_ident::toString() const{
+const string
+$c_ident::toString() const
+{
     return "$c_ident";
 }
 
-const string $c_ident::getName() const{
+const string
+$c_ident::getName() const
+{
     return m_name;
 }
-const MachineType $c_ident::getMachineType() const{
+
+const MachineType
+$c_ident::getMachineType() const
+{
     return MachineType_${ident};
 }
 
-void $c_ident::blockOnQueue(Address addr, MessageBuffer* port) {
+void
+$c_ident::blockOnQueue(Address addr, MessageBuffer* port)
+{
     m_is_blocking = true;
     m_block_map[addr] = port;
 }
-void $c_ident::unblock(Address addr) {
+
+void
+$c_ident::unblock(Address addr)
+{
     m_block_map.erase(addr);
     if (m_block_map.size() == 0) {
        m_is_blocking = false;
     }
 }
 
-void $c_ident::print(ostream& out) const { out << "[$c_ident " << m_version << "]"; }
-
-void $c_ident::printConfig(ostream& out) const {
-    out << "$c_ident config: " << m_name << endl;
-    out << "  version: " << m_version << endl;
-    for (map<string, string>::const_iterator it = m_cfg.begin(); it != m_cfg.end(); it++) {
-        out << "  " << (*it).first << ": " << (*it).second << endl;
-    }
+void
+$c_ident::print(ostream& out) const
+{
+    out << "[$c_ident " << m_version << "]";
 }
 
-void $c_ident::printStats(ostream& out) const {
+void
+$c_ident::printConfig(ostream& out) const
+{
+    out << "$c_ident config: " << m_name << endl;
+    out << "  version: " << m_version << endl;
+    map<string, string>::const_iterator it;
+    for (it = m_cfg.begin(); it != m_cfg.end(); it++)
+        out << "  " << it->first << ": " << it->second << endl;
+}
+
+void
+$c_ident::printStats(ostream& out) const
+{
 ''')
         #
         # Cache and Memory Controllers have specific profilers associated with
@@ -638,7 +684,8 @@ void $c_ident::clearStats() {
 
             code('''
 /** \\brief ${{action.desc}} */
-void $c_ident::${{action.ident}}(const Address& addr)
+void
+$c_ident::${{action.ident}}(const Address& addr)
 {
     DEBUG_MSG(GENERATED_COMP, HighPrio, "executing");
     ${{action["c_code"]}}
@@ -657,6 +704,7 @@ void $c_ident::${{action.ident}}(const Address& addr)
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
+#include "base/misc.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_includes.hh"
 #include "mem/protocol/${ident}_Controller.hh"
@@ -665,16 +713,22 @@ void $c_ident::${{action.ident}}(const Address& addr)
 #include "mem/protocol/Types.hh"
 #include "mem/ruby/system/System.hh"
 
-void ${ident}_Controller::wakeup()
+void
+${ident}_Controller::wakeup()
 {
+    // DEBUG_EXPR(GENERATED_COMP, MedPrio, *this);
+    // DEBUG_EXPR(GENERATED_COMP, MedPrio, g_eventQueue_ptr->getTime());
 
     int counter = 0;
     while (true) {
         // Some cases will put us into an infinite loop without this limit
         assert(counter <= m_transitions_per_cycle);
         if (counter == m_transitions_per_cycle) {
-            g_system_ptr->getProfiler()->controllerBusy(m_machineID); // Count how often we\'re fully utilized
-            g_eventQueue_ptr->scheduleEvent(this, 1); // Wakeup in another cycle and try again
+            // Count how often we are fully utilized
+            g_system_ptr->getProfiler()->controllerBusy(m_machineID);
+
+            // Wakeup in another cycle and try again
+            g_eventQueue_ptr->scheduleEvent(this, 1);
             break;
         }
 ''')
@@ -697,6 +751,8 @@ void ${ident}_Controller::wakeup()
         code('''
         break;  // If we got this far, we have nothing left todo
     }
+    // g_eventQueue_ptr->scheduleEvent(this, 1);
+    // DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
 }
 ''')
 
@@ -724,8 +780,10 @@ void ${ident}_Controller::wakeup()
 #define GET_TRANSITION_COMMENT() (${ident}_transitionComment.str())
 #define CLEAR_TRANSITION_COMMENT() (${ident}_transitionComment.str(""))
 
-TransitionResult ${ident}_Controller::doTransition(${ident}_Event event, ${ident}_State state, const Address& addr
-)
+TransitionResult
+${ident}_Controller::doTransition(${ident}_Event event,
+                                  ${ident}_State state,
+                                  const Address &addr)
 {
     ${ident}_State next_state = state;
 
@@ -736,24 +794,28 @@ TransitionResult ${ident}_Controller::doTransition(${ident}_Event event, ${ident
     DEBUG_EXPR(GENERATED_COMP, MedPrio,event);
     DEBUG_EXPR(GENERATED_COMP, MedPrio,addr);
 
-    TransitionResult result = doTransitionWorker(event, state, next_state, addr);
+    TransitionResult result =
+        doTransitionWorker(event, state, next_state, addr);
 
     if (result == TransitionResult_Valid) {
         DEBUG_EXPR(GENERATED_COMP, MedPrio, next_state);
         DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
         s_profiler.countTransition(state, event);
         if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}", m_version, addr,
+            g_system_ptr->getProfiler()->profileTransition("${ident}",
+                    m_version, addr,
                     ${ident}_State_to_string(state),
                     ${ident}_Event_to_string(event),
-                    ${ident}_State_to_string(next_state), GET_TRANSITION_COMMENT());
+                    ${ident}_State_to_string(next_state),
+                    GET_TRANSITION_COMMENT());
         }
     CLEAR_TRANSITION_COMMENT();
     ${ident}_setState(addr, next_state);
 
     } else if (result == TransitionResult_ResourceStall) {
         if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}", m_version, addr,
+            g_system_ptr->getProfiler()->profileTransition("${ident}",
+                   m_version, addr,
                    ${ident}_State_to_string(state),
                    ${ident}_Event_to_string(event),
                    ${ident}_State_to_string(next_state),
@@ -763,7 +825,8 @@ TransitionResult ${ident}_Controller::doTransition(${ident}_Event event, ${ident
         DEBUG_MSG(GENERATED_COMP, HighPrio, "stalling");
         DEBUG_NEWLINE(GENERATED_COMP, MedPrio);
         if (Debug::getProtocolTrace()) {
-            g_system_ptr->getProfiler()->profileTransition("${ident}", m_version, addr,
+            g_system_ptr->getProfiler()->profileTransition("${ident}",
+                   m_version, addr,
                    ${ident}_State_to_string(state),
                    ${ident}_Event_to_string(event),
                    ${ident}_State_to_string(next_state),
@@ -774,8 +837,11 @@ TransitionResult ${ident}_Controller::doTransition(${ident}_Event event, ${ident
     return result;
 }
 
-TransitionResult ${ident}_Controller::doTransitionWorker(${ident}_Event event, ${ident}_State state, ${ident}_State& next_state, const Address& addr
-)
+TransitionResult
+${ident}_Controller::doTransitionWorker(${ident}_Event event,
+                                        ${ident}_State state,
+                                        ${ident}_State& next_state,
+                                        const Address& addr)
 {
     switch(HASH_FUN(state, event)) {
 ''')
@@ -801,9 +867,8 @@ TransitionResult ${ident}_Controller::doTransitionWorker(${ident}_Event event, $
             for key,val in res.iteritems():
                 if key.type.ident != "DNUCAStopTable":
                     val = '''
-if (!%s.areNSlotsAvailable(%s)) {
+if (!%s.areNSlotsAvailable(%s))
     return TransitionResult_ResourceStall;
-}
 ''' % (key.code, val)
                 case_sorter.append(val)
 
@@ -843,9 +908,7 @@ if (!%s.areNSlotsAvailable(%s)) {
             # the same code
             for trans in transitions:
                 code('  case HASH_FUN($trans):')
-            code('  {')
             code('    $case')
-            code('  }')
 
         code('''
       default:
@@ -869,8 +932,8 @@ if (!%s.areNSlotsAvailable(%s)) {
 // Auto generated C++ code started by $__file__:$__line__
 // ${ident}: ${{self.short}}
 
-#ifndef ${ident}_PROFILER_H
-#define ${ident}_PROFILER_H
+#ifndef __${ident}_PROFILER_HH_
+#define __${ident}_PROFILER_HH_
 
 #include <iostream>
 
@@ -878,7 +941,8 @@ if (!%s.areNSlotsAvailable(%s)) {
 #include "mem/protocol/${ident}_State.hh"
 #include "mem/protocol/${ident}_Event.hh"
 
-class ${ident}_Profiler {
+class ${ident}_Profiler
+{
   public:
     ${ident}_Profiler();
     void setVersion(int version);
@@ -894,7 +958,7 @@ class ${ident}_Profiler {
     int m_version;
 };
 
-#endif // ${ident}_PROFILER_H
+#endif // __${ident}_PROFILER_HH__
 ''')
         code.write(path, "%s_Profiler.hh" % self.ident)
 
@@ -920,11 +984,15 @@ ${ident}_Profiler::${ident}_Profiler()
         m_event_counters[event] = 0;
     }
 }
-void ${ident}_Profiler::setVersion(int version)
+
+void
+${ident}_Profiler::setVersion(int version)
 {
     m_version = version;
 }
-void ${ident}_Profiler::clearStats()
+
+void
+${ident}_Profiler::clearStats()
 {
     for (int state = 0; state < ${ident}_State_NUM; state++) {
         for (int event = 0; event < ${ident}_Event_NUM; event++) {
@@ -936,17 +1004,22 @@ void ${ident}_Profiler::clearStats()
         m_event_counters[event] = 0;
     }
 }
-void ${ident}_Profiler::countTransition(${ident}_State state, ${ident}_Event event)
+void
+${ident}_Profiler::countTransition(${ident}_State state, ${ident}_Event event)
 {
     assert(m_possible[state][event]);
     m_counters[state][event]++;
     m_event_counters[event]++;
 }
-void ${ident}_Profiler::possibleTransition(${ident}_State state, ${ident}_Event event)
+void
+${ident}_Profiler::possibleTransition(${ident}_State state,
+                                      ${ident}_Event event)
 {
     m_possible[state][event] = true;
 }
-void ${ident}_Profiler::dumpStats(std::ostream& out) const
+
+void
+${ident}_Profiler::dumpStats(std::ostream& out) const
 {
     using namespace std;
 
@@ -962,7 +1035,8 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
         for (int event = 0; event < ${ident}_Event_NUM; event++) {
             if (m_possible[state][event]) {
                 int count = m_counters[state][event];
-                out << (${ident}_State) state << "  " << (${ident}_Event) event << "  " << count;
+                out << (${ident}_State) state << "  "
+                    << (${ident}_Event) event << "  " << count;
                 if (count == 0) {
                     out << " <-- ";
                 }
@@ -978,10 +1052,14 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
     # **************************
     # ******* HTML Files *******
     # **************************
-    def frameRef(self, click_href, click_target, over_href, over_target_num,
-                 text):
+    def frameRef(self, click_href, click_target, over_href, over_num, text):
         code = self.symtab.codeFormatter(fix_newlines=False)
-        code("""<A href=\"$click_href\" target=\"$click_target\" onMouseOver=\"if (parent.frames[$over_target_num].location != parent.location + '$over_href') { parent.frames[$over_target_num].location='$over_href' }\" >${{html.formatShorthand(text)}}</A>""")
+        code("""<A href=\"$click_href\" target=\"$click_target\" onmouseover=\"
+    if (parent.frames[$over_num].location != parent.location + '$over_href') {
+        parent.frames[$over_num].location='$over_href'
+    }\">
+    ${{html.formatShorthand(text)}}
+    </A>""")
         return str(code)
 
     def writeHTMLFiles(self, path):
@@ -1014,7 +1092,8 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
         code = self.symtab.codeFormatter()
 
         code('''
-<HTML><BODY link="blue" vlink="blue">
+<HTML>
+<BODY link="blue" vlink="blue">
 
 <H1 align="center">${{html.formatShorthand(self.short)}}:
 ''')
@@ -1098,13 +1177,12 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
                 else:
                     color = "white"
 
-                fix = code.nofix()
                 code('<TD bgcolor=$color>')
                 for action in trans.actions:
                     href = "%s_action_%s.html" % (self.ident, action.ident)
                     ref = self.frameRef(href, "Status", href, "1",
                                         action.short)
-                    code('  $ref\n')
+                    code('  $ref')
                 if next != state:
                     if trans.actions:
                         code('/')
@@ -1112,8 +1190,7 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
                     over = "%s_State_%s.html" % (self.ident, next.ident)
                     ref = self.frameRef(click, "Table", over, "1", next.short)
                     code("$ref")
-                code("</TD>\n")
-                code.fix(fix)
+                code("</TD>")
 
             # -- Each row
             if state == active_state:
@@ -1129,6 +1206,7 @@ void ${ident}_Profiler::dumpStats(std::ostream& out) const
 </TR>
 ''')
         code('''
+<!- Column footer->     
 <TR>
   <TH> </TH>
 ''')

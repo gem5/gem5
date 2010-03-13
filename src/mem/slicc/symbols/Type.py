@@ -199,8 +199,8 @@ class Type(Symbol):
  * Auto generated C++ code started by $__file__:$__line__
  */
 
-#ifndef ${{self.c_ident}}_H
-#define ${{self.c_ident}}_H
+#ifndef __${{self.c_ident}}_HH__
+#define __${{self.c_ident}}_HH__
 
 #include <iostream>
 
@@ -218,17 +218,14 @@ class Type(Symbol):
             parent = " :  public %s" % self["interface"]
 
         code('''
-$klass ${{self.c_ident}}$parent {
+$klass ${{self.c_ident}}$parent
+{
   public:
     ${{self.c_ident}}()
+    {
 ''', klass="class")
 
-        # Call superclass constructor
-        if "interface" in self:
-            code('        : ${{self["interface"]}}()')
-
         code.indent()
-        code("{")
         if not self.isGlobal:
             code.indent()
             for dm in self.data_members.values():
@@ -244,9 +241,6 @@ $klass ${{self.c_ident}}$parent {
                     code('// m_$ident has no default')
             code.dedent()
         code('}')
-
-        # ******** Default destructor ********
-        code('~${{self.c_ident}}() { };')
 
         # ******** Full init constructor ********
         if not self.isGlobal:
@@ -279,7 +273,9 @@ $klass ${{self.c_ident}}$parent {
         # create a static factory method
         if "interface" in self:
             code('''
-static ${{self["interface"]}}* create() {
+static ${{self["interface"]}}*
+create()
+{
     return new ${{self.c_ident}}();
 }
 ''')
@@ -290,10 +286,29 @@ static ${{self["interface"]}}* create() {
 
         if self.isMessage:
             code('''
-Message* clone() const { checkAllocator(); return s_allocator_ptr->allocate(*this); }
-void destroy() { checkAllocator(); s_allocator_ptr->deallocate(this); }
+Message *
+clone() const
+{
+    checkAllocator();
+    return s_allocator_ptr->allocate(*this);
+}
+
+void
+destroy()
+{
+    checkAllocator();
+    s_allocator_ptr->deallocate(this);
+}
+
 static Allocator<${{self.c_ident}}>* s_allocator_ptr;
-static void checkAllocator() { if (s_allocator_ptr == NULL) { s_allocator_ptr = new Allocator<${{self.c_ident}}>; }}
+
+static void
+checkAllocator()
+{
+    if (s_allocator_ptr == NULL) {
+        s_allocator_ptr = new Allocator<${{self.c_ident}}>;
+    }
+}
 ''')
 
         if not self.isGlobal:
@@ -304,7 +319,11 @@ static void checkAllocator() { if (s_allocator_ptr == NULL) { s_allocator_ptr = 
 /** \\brief Const accessor method for ${{dm.ident}} field.
  *  \\return ${{dm.ident}} field
  */
-const ${{dm.type.c_ident}}& get${{dm.ident}}() const { return m_${{dm.ident}}; }
+const ${{dm.type.c_ident}}&
+get${{dm.ident}}() const
+{
+    return m_${{dm.ident}};
+}
 ''')
 
             # Non-const Get methods for each field
@@ -314,7 +333,11 @@ const ${{dm.type.c_ident}}& get${{dm.ident}}() const { return m_${{dm.ident}}; }
 /** \\brief Non-const accessor method for ${{dm.ident}} field.
  *  \\return ${{dm.ident}} field
  */
-${{dm.type.c_ident}}& get${{dm.ident}}() { return m_${{dm.ident}}; }
+${{dm.type.c_ident}}&
+get${{dm.ident}}()
+{
+    return m_${{dm.ident}};
+}
 ''')
 
             #Set methods for each field
@@ -322,7 +345,11 @@ ${{dm.type.c_ident}}& get${{dm.ident}}() { return m_${{dm.ident}}; }
             for dm in self.data_members.values():
                 code('''
 /** \\brief Mutator method for ${{dm.ident}} field */
-void set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}}) { m_${{dm.ident}} = local_${{dm.ident}}; }
+void
+set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}})
+{
+    m_${{dm.ident}} = local_${{dm.ident}};
+}
 ''')
 
         code('void print(std::ostream& out) const;')
@@ -346,11 +373,10 @@ void set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}}) { m_${{dm
                     assert self.isGlobal
                     init = " = %s" % (dm.init_code)
 
-                desc = ""
                 if "desc" in dm:
-                    desc = '/**< %s */' % dm["desc"]
+                    code('/** ${{dm["desc"]}} */')
 
-                code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init; $desc')
+                code('$const${{dm.type.c_ident}} m_${{dm.ident}}$init;')
 
         if self.isMessage:
             code('unsigned proc_id;')
@@ -360,18 +386,19 @@ void set${{dm.ident}}(const ${{dm.type.c_ident}}& local_${{dm.ident}}) { m_${{dm
 
         code('''
 // Output operator declaration
-std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
+std::ostream&
+operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 
 // Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
+extern inline std::ostream&
+operator<<(std::ostream& out, const ${{self.c_ident}}& obj)
 {
     obj.print(out);
     out << std::flush;
     return out;
 }
 
-#endif // ${{self.c_ident}}_H
+#endif // __${{self.c_ident}}_HH__
 ''')
 
         code.write(path, "%s.hh" % self.c_ident)
@@ -396,7 +423,8 @@ using namespace std;
             code('Allocator<${{self.c_ident}}>* ${{self.c_ident}}::s_allocator_ptr = NULL;')
         code('''
 /** \\brief Print the state of this object */
-void ${{self.c_ident}}::print(ostream& out) const
+void
+${{self.c_ident}}::print(ostream& out) const
 {
     out << "[${{self.c_ident}}: ";
 ''')
@@ -424,14 +452,16 @@ void ${{self.c_ident}}::print(ostream& out) const
  *
  * Auto generated C++ code started by $__file__:$__line__
  */
-#ifndef ${{self.c_ident}}_H
-#define ${{self.c_ident}}_H
+
+#ifndef __${{self.c_ident}}_HH__
+#define __${{self.c_ident}}_HH__
 
 #include <iostream>
 #include <string>
 
 #include "mem/ruby/common/Global.hh"
 
+// Class definition
 /** \\enum ${{self.c_ident}}
  *  \\brief ${{self.desc}}
  */
@@ -452,8 +482,14 @@ enum ${{self.c_ident}} {
         code('''
     ${{self.c_ident}}_NUM
 };
+
+// Code to convert from a string to the enumeration
 ${{self.c_ident}} string_to_${{self.c_ident}}(const std::string& str);
+
+// Code to convert state to a string
 std::string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj);
+
+// Code to increment an enumeration type
 ${{self.c_ident}} &operator++(${{self.c_ident}} &e);
 ''')
 
@@ -473,7 +509,7 @@ int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj);
         code('''
 std::ostream& operator<<(std::ostream& out, const ${{self.c_ident}}& obj);
 
-#endif // ${{self.c_ident}}_H
+#endif // __${{self.c_ident}}_HH__
 ''')
 
         code.write(path, "%s.hh" % self.c_ident)
@@ -500,14 +536,18 @@ using namespace std;
                 code('#include "mem/protocol/${{enum.ident}}_Controller.hh"')
 
         code('''
-ostream& operator<<(ostream& out, const ${{self.c_ident}}& obj)
+// Code for output operator
+ostream&
+operator<<(ostream& out, const ${{self.c_ident}}& obj)
 {
     out << ${{self.c_ident}}_to_string(obj);
     out << flush;
     return out;
 }
 
-string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
+// Code to convert state to a string
+string
+${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 ''')
@@ -527,17 +567,19 @@ string ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
     }
 }
 
-${{self.c_ident}} string_to_${{self.c_ident}}(const string& str)
+// Code to convert from a string to the enumeration
+${{self.c_ident}}
+string_to_${{self.c_ident}}(const string& str)
 {
 ''')
 
         # For each field
+        start = ""
         code.indent()
-        code("if (false) {")
-        start = "} else "
         for enum in self.enums.itervalues():
             code('${start}if (str == "${{enum.ident}}") {')
             code('    return ${{self.c_ident}}_${{enum.ident}};')
+            start = "} else "
         code.dedent()
 
         code('''
@@ -547,7 +589,10 @@ ${{self.c_ident}} string_to_${{self.c_ident}}(const string& str)
     }
 }
 
-${{self.c_ident}}& operator++(${{self.c_ident}}& e) {
+// Code to increment an enumeration type
+${{self.c_ident}}&
+operator++(${{self.c_ident}}& e)
+{
     assert(e < ${{self.c_ident}}_NUM);
     return e = ${{self.c_ident}}(e+1);
 }
@@ -557,12 +602,14 @@ ${{self.c_ident}}& operator++(${{self.c_ident}}& e) {
         # components for each Machine
         if self.isMachineType:
             code('''
-/** \\brief returns the base vector index for each machine type to be used by NetDest
+/** \\brief returns the base vector index for each machine type to be
+  * used by NetDest
   *
   * \\return the base vector index for each machine type to be used by NetDest
   * \\see NetDest.hh
   */
-int ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
+int
+${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 ''')
@@ -587,9 +634,10 @@ int ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
 
 /** \\brief returns the machine type for each base vector index used by NetDest
  *
- * \\return the MachineTYpe
+ * \\return the MachineType
  */
-MachineType ${{self.c_ident}}_from_base_level(int type)
+MachineType
+${{self.c_ident}}_from_base_level(int type)
 {
     switch(type) {
 ''')
@@ -614,7 +662,8 @@ MachineType ${{self.c_ident}}_from_base_level(int type)
  *
  * \\return the base number of components for each machine
  */
-int ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
+int
+${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 {
     int base = 0;
     switch(obj) {
@@ -641,7 +690,8 @@ int ${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
 /** \\brief returns the total number of components for each machine
  * \\return the total number of components for each machine
  */
-int ${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
+int
+${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
 {
     switch(obj) {
 ''')

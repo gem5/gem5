@@ -59,10 +59,12 @@ class PeekStatementAST(StatementAST):
         qcode = self.queue_name.var.code
         code('''
 {
+    // Declare message
     const $mtid* in_msg_ptr;
     in_msg_ptr = dynamic_cast<const $mtid *>(($qcode).${{self.method}}());
-    assert(in_msg_ptr != NULL);
+    assert(in_msg_ptr != NULL); // Check the cast result
 ''')
+
         if self.pairs.has_key("block_on"):
             address_field = self.pairs['block_on']
             code('''

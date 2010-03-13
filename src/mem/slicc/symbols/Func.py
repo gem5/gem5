@@ -95,7 +95,8 @@ class Func(Symbol):
         params = ', '.join(self.param_strings)
 
         code('''
-$return_type ${klass}::${{self.c_ident}}($params)
+$return_type
+${klass}::${{self.c_ident}}($params)
 {
 ${{self.body}}
 }
