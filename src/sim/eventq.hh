@@ -39,9 +39,8 @@
 #include <algorithm>
 #include <cassert>
 #include <climits>
-#include <map>
+#include <iosfwd>
 #include <string>
-#include <vector>
 
 #include "base/fast_alloc.hh"
 #include "base/flags.hh"
