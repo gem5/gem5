@@ -311,6 +311,47 @@ class Event : public Serializable, public FastAlloc
 #endif
 };
 
+#ifndef SWIG
+inline bool
+operator<(const Event &l, const Event &r)
+{
+    return l.when() < r.when() ||
+        (l.when() == r.when() && l.priority() < r.priority());
+}
+
+inline bool
+operator>(const Event &l, const Event &r)
+{
+    return l.when() > r.when() ||
+        (l.when() == r.when() && l.priority() > r.priority());
+}
+
+inline bool
+operator<=(const Event &l, const Event &r)
+{
+    return l.when() < r.when() ||
+        (l.when() == r.when() && l.priority() <= r.priority());
+}
+inline bool
+operator>=(const Event &l, const Event &r)
+{
+    return l.when() > r.when() ||
+        (l.when() == r.when() && l.priority() >= r.priority());
+}
+
+inline bool
+operator==(const Event &l, const Event &r)
+{
+    return l.when() == r.when() && l.priority() == r.priority();
+}
+
+inline bool
+operator!=(const Event &l, const Event &r)
+{
+    return l.when() != r.when() || l.priority() != r.priority();
+}
+#endif
+
 /*
  * Queue of events sorted in time order
  */
@@ -430,51 +471,6 @@ class EventManager
     }
 };
 
-template <class T, void (T::* F)()>
-void
-DelayFunction(EventQueue *eventq, Tick when, T *object)
-{
-    class DelayEvent : public Event
-    {
-      private:
-        T *object;
-
-      public:
-        DelayEvent(T *o)
-            : object(o)
-        { this->setFlags(AutoDelete); }
-        void process() { (object->*F)(); }
-        const char *description() const { return "delay"; }
-    };
-
-    eventq->schedule(new DelayEvent(object), when);
-}
-
-template <class T, void (T::* F)()>
-class EventWrapper : public Event
-{
-  private:
-    T *object;
-
-  public:
-    EventWrapper(T *obj, bool del = false, Priority p = Default_Pri)
-        : Event(p), object(obj)
-    {
-        if (del)
-            setFlags(AutoDelete);
-    }
-
-    void process() { (object->*F)(); }
-
-    const std::string
-    name() const
-    {
-        return object->name() + ".wrapped_event";
-    }
-
-    const char *description() const { return "EventWrapped"; }
-};
-
 inline void
 EventQueue::schedule(Event *event, Tick when)
 {
@@ -541,44 +537,50 @@ EventQueue::reschedule(Event *event, Tick when, bool always)
         event->trace("rescheduled");
 }
 
-inline bool
-operator<(const Event &l, const Event &r)
+template <class T, void (T::* F)()>
+void
+DelayFunction(EventQueue *eventq, Tick when, T *object)
 {
-    return l.when() < r.when() ||
-        (l.when() == r.when() && l.priority() < r.priority());
+    class DelayEvent : public Event
+    {
+      private:
+        T *object;
+
+      public:
+        DelayEvent(T *o)
+            : object(o)
+        { this->setFlags(AutoDelete); }
+        void process() { (object->*F)(); }
+        const char *description() const { return "delay"; }
+    };
+
+    eventq->schedule(new DelayEvent(object), when);
 }
 
-inline bool
-operator>(const Event &l, const Event &r)
+template <class T, void (T::* F)()>
+class EventWrapper : public Event
 {
-    return l.when() > r.when() ||
-        (l.when() == r.when() && l.priority() > r.priority());
-}
+  private:
+    T *object;
 
-inline bool
-operator<=(const Event &l, const Event &r)
-{
-    return l.when() < r.when() ||
-        (l.when() == r.when() && l.priority() <= r.priority());
-}
-inline bool
-operator>=(const Event &l, const Event &r)
-{
-    return l.when() > r.when() ||
-        (l.when() == r.when() && l.priority() >= r.priority());
-}
+  public:
+    EventWrapper(T *obj, bool del = false, Priority p = Default_Pri)
+        : Event(p), object(obj)
+    {
+        if (del)
+            setFlags(AutoDelete);
+    }
 
-inline bool
-operator==(const Event &l, const Event &r)
-{
-    return l.when() == r.when() && l.priority() == r.priority();
-}
+    void process() { (object->*F)(); }
 
-inline bool
-operator!=(const Event &l, const Event &r)
-{
-    return l.when() != r.when() || l.priority() != r.priority();
-}
+    const std::string
+    name() const
+    {
+        return object->name() + ".wrapped_event";
+    }
+
+    const char *description() const { return "EventWrapped"; }
+};
 #endif
 
 #endif // __SIM_EVENTQ_HH__
