@@ -359,7 +359,7 @@ typedef enum {
 
 */
 /* some utility routines */
-extern unsigned int SIM_power_logtwo(LIB_Type_max_uint x);
+extern uint32_t SIM_power_logtwo(uint64_t x);
 //extern int SIM_power_squarify(int rows, int cols);
 extern double SIM_power_driver_size(double driving_cap, double desiredrisetime);
 
@@ -371,7 +371,8 @@ extern double SIM_power_restowidth(double res, int nchannel);
 
 extern int SIM_power_init(void);
 
-extern unsigned int SIM_power_Hamming(LIB_Type_max_uint old_val, LIB_Type_max_uint new_val, LIB_Type_max_uint mask);
+extern uint32_t SIM_power_Hamming(uint64_t old_val, uint64_t new_val,
+                                      uint64_t mask);
 extern unsigned int SIM_power_Hamming_group(LIB_Type_max_uint d1_new, LIB_Type_max_uint d1_old, LIB_Type_max_uint d2_new, LIB_Type_max_uint d2_old, u_int width, u_int n_grp);
 
 /* statistical functions */

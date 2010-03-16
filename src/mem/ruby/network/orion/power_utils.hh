@@ -28,8 +28,12 @@
 
 #ifndef _POWER_UTILS_H
 #define _POWER_UTILS_H
-extern unsigned SIM_power_Hamming(unsigned long int old_val, unsigned long int new_val, unsigned long int mask);
+
+#include "base/types.hh"
+
+extern uint32_t SIM_power_Hamming(uint64_t old_val, uint64_t new_val,
+                                  uint64_t mask);
 extern double logtwo(double x);
-extern unsigned SIM_power_logtwo(unsigned long int x);
+extern uint32_t SIM_power_logtwo(uint64_t x);
 
 #endif
