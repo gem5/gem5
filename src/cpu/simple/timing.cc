@@ -432,6 +432,10 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
+    // This will need a new way to tell if it's hooked up to a cache or not.
+    if (req->isUncacheable())
+        recordEvent("Uncached Write");
+
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
@@ -460,10 +464,6 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         traceData->setData(data);
         traceData->setAddr(addr);
     }
-
-    // This will need a new way to tell if it has a dcache attached.
-    if (req->isUncacheable())
-        recordEvent("Uncached Read");
 
     return NoFault;
 }
@@ -510,7 +510,6 @@ TimingSimpleCPU::read(Addr addr, float &data, unsigned flags)
     return read(addr, *(uint32_t*)&data, flags);
 }
 
-
 template<>
 Fault
 TimingSimpleCPU::read(Addr addr, int32_t &data, unsigned flags)
@@ -555,6 +554,10 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
+    // This will need a new way to tell if it's hooked up to a cache or not.
+    if (req->isUncacheable())
+        recordEvent("Uncached Write");
+
     T *dataP = new T;
     *dataP = TheISA::htog(data);
     _status = DTBWaitResponse;
@@ -585,10 +588,6 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         traceData->setAddr(req->getVaddr());
         traceData->setData(data);
     }
-
-    // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->isUncacheable())
-        recordEvent("Uncached Write");
 
     // If the write needs to have a fault on the access, consider calling
     // changeStatus() and changing it to "bad addr write" or something.
