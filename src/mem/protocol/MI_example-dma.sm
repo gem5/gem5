@@ -4,8 +4,8 @@ machine(DMA, "DMA Controller")
   int request_latency = 6
 {
 
-  MessageBuffer responseFromDir, network="From", virtual_network="4", ordered="true", no_vector="true";
-  MessageBuffer reqToDirectory, network="To", virtual_network="5", ordered="false", no_vector="true";
+  MessageBuffer responseFromDir, network="From", virtual_network="1", ordered="true", no_vector="true";
+  MessageBuffer reqToDirectory, network="To", virtual_network="0", ordered="false", no_vector="true";
 
   enumeration(State, desc="DMA states", default="DMA_State_READY") {
     READY, desc="Ready to accept a new request";

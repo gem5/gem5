@@ -5,12 +5,12 @@ machine(Directory, "Directory protocol")
   int directory_latency = 12
 {
 
-  MessageBuffer forwardFromDir, network="To", virtual_network="2", ordered="false";
-  MessageBuffer responseFromDir, network="To", virtual_network="1", ordered="false";
-  MessageBuffer dmaRequestFromDir, network="To", virtual_network="4", ordered="true";
+  MessageBuffer forwardFromDir, network="To", virtual_network="3", ordered="false";
+  MessageBuffer responseFromDir, network="To", virtual_network="4", ordered="false";
+  MessageBuffer dmaResponseFromDir, network="To", virtual_network="1", ordered="true";
 
-  MessageBuffer requestToDir, network="From", virtual_network="0", ordered="true";
-  MessageBuffer dmaRequestToDir, network="From", virtual_network="5", ordered="true";
+  MessageBuffer requestToDir, network="From", virtual_network="2", ordered="true";
+  MessageBuffer dmaRequestToDir, network="From", virtual_network="0", ordered="true";
 
   // STATES
   enumeration(State, desc="Directory states", default="Directory_State_I") {
@@ -117,7 +117,7 @@ machine(Directory, "Directory protocol")
   out_port(forwardNetwork_out, RequestMsg, forwardFromDir);
   out_port(responseNetwork_out, ResponseMsg, responseFromDir);
   out_port(requestQueue_out, ResponseMsg, requestToDir); // For recycling requests
-  out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaRequestFromDir);
+  out_port(dmaResponseNetwork_out, DMAResponseMsg, dmaResponseFromDir);
 
 //added by SS
   out_port(memQueue_out, MemoryMsg, memBuffer);

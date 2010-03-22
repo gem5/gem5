@@ -43,12 +43,12 @@ machine(L1Cache, "AMD Hammer-like protocol")
 {
 
   // NETWORK BUFFERS
-  MessageBuffer requestFromCache, network="To", virtual_network="3", ordered="false";
-  MessageBuffer responseFromCache, network="To", virtual_network="1", ordered="false";
-  MessageBuffer unblockFromCache, network="To", virtual_network="0", ordered="false";
+  MessageBuffer requestFromCache, network="To", virtual_network="2", ordered="false";
+  MessageBuffer responseFromCache, network="To", virtual_network="4", ordered="false";
+  MessageBuffer unblockFromCache, network="To", virtual_network="5", ordered="false";
 
-  MessageBuffer forwardToCache, network="From", virtual_network="2", ordered="false";
-  MessageBuffer responseToCache, network="From", virtual_network="1", ordered="false";
+  MessageBuffer forwardToCache, network="From", virtual_network="3", ordered="false";
+  MessageBuffer responseToCache, network="From", virtual_network="4", ordered="false";
 
 
   // STATES
