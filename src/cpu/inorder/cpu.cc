@@ -1335,7 +1335,7 @@ InOrderCPU::cleanUpRemovedReqs()
     while (!reqRemoveList.empty()) {
         ResourceRequest *res_req = reqRemoveList.front();
 
-        DPRINTF(InOrderCPU, "[tid:%i] [sn:%lli]: Removing Request "
+        DPRINTF(Resource, "[tid:%i] [sn:%lli]: Removing Request "
                 "[stage_num:%i] [res:%s] [slot:%i] [completed:%i].\n",
                 res_req->inst->threadNumber,
                 res_req->inst->seqNum,

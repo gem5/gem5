@@ -188,12 +188,18 @@ CacheUnit::setAddrDependency(DynInstPtr inst)
 
     addrList[tid].push_back(req_addr);
     addrMap[tid][req_addr] = inst->seqNum;
-    DPRINTF(InOrderCachePort,
-            "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
-            inst->readTid(), inst->seqNum, req_addr);
+
     DPRINTF(AddrDep,
             "[tid:%i]: [sn:%i]: Address %08p added to dependency list\n",
             inst->readTid(), inst->seqNum, req_addr);
+
+    //@NOTE: 10 is an arbitrarily "high" number here, but to be exact
+    //       we would need to know the # of outstanding accesses
+    //       a priori. Information like fetch width, stage width,
+    //       and the branch resolution stage would be useful for the
+    //       icache_port (among other things). For the dcache, the #
+    //       of outstanding cache accesses might be sufficient.
+    assert(addrList[tid].size() < 10);    
 }
 
 void
@@ -203,6 +209,8 @@ CacheUnit::removeAddrDependency(DynInstPtr inst)
 
     Addr mem_addr = inst->getMemAddr();
     
+    inst->unsetMemAddr();
+
     // Erase from Address List
     vector<Addr>::iterator vect_it = find(addrList[tid].begin(), addrList[tid].end(),
                                           mem_addr);
@@ -1106,8 +1114,6 @@ CacheUnit::processCacheCompletion(PacketPtr pkt)
                 tid, cache_req->inst->readPC());
         cache_req->setMemAccCompleted();
     }
-
-    inst->unsetMemAddr();
 }
 
 void
@@ -1225,10 +1231,6 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
 
                 // Mark slot for removal from resource
                 slot_remove_list.push_back(req_ptr->getSlot());
-
-                DPRINTF(InOrderCachePort,
-                        "[tid:%i] Squashing request from [sn:%i]\n",
-                        req_ptr->getInst()->readTid(), req_ptr->getInst()->seqNum);
             } else {
                 DPRINTF(InOrderCachePort,
                         "[tid:%i] Request from [sn:%i] squashed, but still pending completion.\n",
@@ -1246,8 +1248,7 @@ CacheUnit::squash(DynInstPtr inst, int stage_num,
                         req_ptr->getInst()->getMemAddr());
                 
                 removeAddrDependency(req_ptr->getInst());
-            }
-
+            }            
         }
 
         map_it++;

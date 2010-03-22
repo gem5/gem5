@@ -61,7 +61,7 @@ if 'InOrderCPU' in env['CPU_MODELS']:
 	       'InOrderMDU', 'InOrderAGEN', 'InOrderFetchSeq', 'InOrderTLB', 'InOrderBPred',
 	       'InOrderDecode', 'InOrderExecute', 'InOrderInstBuffer', 'InOrderUseDef',
 	       'InOrderGraduation', 'InOrderCachePort', 'RegDepMap', 'Resource',
-	       'ThreadModel'])
+	       'ThreadModel', 'AddrDep'])
 
 	Source('pipeline_traits.cc')        
 	Source('inorder_dyn_inst.cc')
