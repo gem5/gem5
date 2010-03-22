@@ -220,7 +220,8 @@ machine(Directory, "AMD Hammer-like protocol")
           trigger(Event:Shared_Ack, in_msg.Address);
         } else if (in_msg.Type == CoherenceResponseType:DATA_SHARED) {
           trigger(Event:Shared_Data, in_msg.Address);
-        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE) {
+        } else if (in_msg.Type == CoherenceResponseType:DATA_EXCLUSIVE ||
+                   in_msg.Type == CoherenceResponseType:DATA) {
           trigger(Event:Exclusive_Data, in_msg.Address);
         } else {
           error("Unexpected message");
