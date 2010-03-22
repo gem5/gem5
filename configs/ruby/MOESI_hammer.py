@@ -77,7 +77,8 @@ def create_system(options, phys_mem, piobus, dma_devices):
         l2_cache = L2Cache(size = options.l2_size,
                            assoc = options.l2_assoc)
 
-        cpu_seq = RubySequencer(icache = l1i_cache,
+        cpu_seq = RubySequencer(version = i,
+                                icache = l1i_cache,
                                 dcache = l1d_cache,
                                 physMemPort = phys_mem.port,
                                 physmem = phys_mem)

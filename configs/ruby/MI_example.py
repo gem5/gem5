@@ -71,7 +71,8 @@ def create_system(options, phys_mem, piobus, dma_devices):
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.
         #
-        cpu_seq = RubySequencer(icache = cache,
+        cpu_seq = RubySequencer(version = i,
+                                icache = cache,
                                 dcache = cache,
                                 physMemPort = phys_mem.port,
                                 physmem = phys_mem)
