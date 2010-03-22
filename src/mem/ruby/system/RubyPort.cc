@@ -230,8 +230,10 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
             type = RubyRequestType_ST;
         } else if (pkt->isReadWrite()) {
             //
-            // Fix me. Just because the packet is a read/write request does not
-            // necessary mean it is a read-modify-write atomic operation.
+            // Fix me.  This conditional will never be executed because 
+            // isReadWrite() is just an OR of isRead() and isWrite().  
+            // Furthermore, just because the packet is a read/write request does
+            // not necessary mean it is a read-modify-write atomic operation.
             //
             type = RubyRequestType_RMW_Write;
         } else {
