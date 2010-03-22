@@ -31,6 +31,8 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
+addToPath('../ruby/networks')
+from MeshDirCorners import *
 
 protocol = buildEnv['PROTOCOL']
 
@@ -59,6 +61,14 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
         net_topology = makeMesh(all_cntrls,
                                 len(cpu_sequencers),
                                 options.mesh_rows)
+        
+    elif options.topology == "mesh_dir_corner":
+        #
+        # The uniform mesh topology assumes one router per cpu
+        #
+        net_topology = makeMeshDirCorners(all_cntrls,
+                                          len(cpu_sequencers),
+                                          options.mesh_rows)
 
     if options.garnet_network == "fixed":
         network = GarnetNetwork_d(topology = net_topology)
