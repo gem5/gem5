@@ -113,7 +113,9 @@ def create_system(options, phys_mem, piobus, dma_devices):
         dir_cntrl = Directory_Controller(version = i,
                                          directory = \
                                          RubyDirectoryMemory(version = i,
-                                                             size = dir_size),
+                                               size = dir_size,
+                                               use_map = options.use_map,
+                                               map_levels = options.map_levels),
                                          memBuffer = mem_cntrl)
 
         dir_cntrl_nodes.append(dir_cntrl)
