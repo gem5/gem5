@@ -683,7 +683,8 @@ machine(L1Cache, "AMD Hammer-like protocol")
         L1IcacheMemory.profileMiss(in_msg);
       } else if (L1DcacheMemory.isTagPresent(address)) {
         L1DcacheMemory.profileMiss(in_msg);
-      } else {
+      }
+      if (L2cacheMemory.isTagPresent(address) == false) {
         L2cacheMemory.profileMiss(in_msg);
       }
     }
@@ -724,12 +725,14 @@ machine(L1Cache, "AMD Hammer-like protocol")
   transition({I, S, O, M, MM}, L2_to_L1D) {
     ii_allocateL1DCacheBlock;
     tt_copyFromL2toL1; // Not really needed for state I
+    uu_profileMiss;
     rr_deallocateL2CacheBlock;
   }
 
   transition({I, S, O, M, MM}, L2_to_L1I) {
     jj_allocateL1ICacheBlock;
     tt_copyFromL2toL1; // Not really needed for state I
+    uu_profileMiss;
     rr_deallocateL2CacheBlock;
   }
 
