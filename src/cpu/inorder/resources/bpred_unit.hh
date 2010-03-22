@@ -39,6 +39,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/inorder/inorder_dyn_inst.hh"
 #include "cpu/inorder/pipeline_traits.hh"
+#include "cpu/inorder/resource.hh"
 #include "cpu/pred/2bit_local.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/ras.hh"
@@ -65,7 +66,9 @@ class BPredUnit
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
-    BPredUnit(ThePipeline::Params *params);
+    BPredUnit(Resource *_res, ThePipeline::Params *params);
+
+    std::string name();
 
     /**
      * Registers statistics.
@@ -169,6 +172,8 @@ class BPredUnit
     void dump();
 
   private:
+    Resource *res;
+    
     struct PredictorHistory {
         /**
          * Makes a predictor history struct that contains any

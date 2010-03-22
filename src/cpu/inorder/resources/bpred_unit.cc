@@ -39,10 +39,9 @@
 using namespace std;
 using namespace ThePipeline;
 
-BPredUnit::BPredUnit(ThePipeline::Params *params)
-  : BTB(params->BTBEntries,
-        params->BTBTagSize,
-        params->instShiftAmt)
+BPredUnit::BPredUnit(Resource *_res, ThePipeline::Params *params)
+    : res(_res), 
+      BTB(params->BTBEntries, params->BTBTagSize, params->instShiftAmt)
 {
     // Setup the selected predictor.
     if (params->predType == "local") {
@@ -70,48 +69,47 @@ BPredUnit::BPredUnit(ThePipeline::Params *params)
 	RAS[i].init(params->RASSize);
 }
 
+std::string
+BPredUnit::name()
+{
+    return res->name();
+}
 
 void
 BPredUnit::regStats()
 {
     lookups
-        .name(name() + ".BPredUnit.lookups")
+        .name(name() + ".lookups")
         .desc("Number of BP lookups")
         ;
 
     condPredicted
-        .name(name() + ".BPredUnit.condPredicted")
+        .name(name() + ".condPredicted")
         .desc("Number of conditional branches predicted")
         ;
 
     condIncorrect
-        .name(name() + ".BPredUnit.condIncorrect")
+        .name(name() + ".condIncorrect")
         .desc("Number of conditional branches incorrect")
         ;
 
     BTBLookups
-        .name(name() + ".BPredUnit.BTBLookups")
+        .name(name() + ".BTBLookups")
         .desc("Number of BTB lookups")
         ;
 
     BTBHits
-        .name(name() + ".BPredUnit.BTBHits")
+        .name(name() + ".BTBHits")
         .desc("Number of BTB hits")
         ;
 
-    BTBCorrect
-        .name(name() + ".BPredUnit.BTBCorrect")
-        .desc("Number of correct BTB predictions (this stat may not "
-              "work properly.")
-        ;
-
     usedRAS
-        .name(name() + ".BPredUnit.usedRAS")
+        .name(name() + ".usedRAS")
         .desc("Number of times the RAS was used to get a target.")
         ;
 
     RASIncorrect
-        .name(name() + ".BPredUnit.RASInCorrect")
+        .name(name() + ".RASInCorrect")
         .desc("Number of incorrect RAS predictions.")
         ;
 }
