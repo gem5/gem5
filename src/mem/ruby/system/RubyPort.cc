@@ -210,18 +210,33 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         pc = pkt->req->getPC();
     }
 
-    if (pkt->isRead()) {
-        if (pkt->req->isInstFetch()) {
-            type = RubyRequestType_IFETCH;
+    if (pkt->isLLSC()) {
+        if (pkt->isWrite()) {
+            DPRINTF(MemoryAccess, "Issuing SC\n");
+            type = RubyRequestType_Locked_Write;
         } else {
-            type = RubyRequestType_LD; 
+            DPRINTF(MemoryAccess, "Issuing LL\n");
+            assert(pkt->isRead());
+            type = RubyRequestType_Locked_Read;
         }
-    } else if (pkt->isWrite()) {
-        type = RubyRequestType_ST;
-    } else if (pkt->isReadWrite()) {
-        type = RubyRequestType_RMW_Write;
     } else {
-      panic("Unsupported ruby packet type\n");
+        if (pkt->isRead()) {
+            if (pkt->req->isInstFetch()) {
+                type = RubyRequestType_IFETCH;
+            } else {
+                type = RubyRequestType_LD; 
+            }
+        } else if (pkt->isWrite()) {
+            type = RubyRequestType_ST;
+        } else if (pkt->isReadWrite()) {
+            //
+            // Fix me. Just because the packet is a read/write request does not
+            // necessary mean it is a read-modify-write atomic operation.
+            //
+            type = RubyRequestType_RMW_Write;
+        } else {
+            panic("Unsupported ruby packet type\n");
+        }
     }
 
     RubyRequest ruby_request(pkt->getAddr(), 
@@ -234,10 +249,31 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
 
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
-    if (requestStatus == RequestStatus_Issued) {
+
+    //
+    // If the request successfully issued or the SC request completed because
+    // exclusive permission was lost, then we should return true.
+    // Otherwise, we need to delete the senderStatus we just created and return
+    // false.
+    //
+    if ((requestStatus == RequestStatus_Issued) ||
+        (requestStatus == RequestStatus_LlscFailed)) {
+
+        //
+        // The communicate to M5 whether the SC command succeeded by seting the
+        // packet's extra data.
+        //
+        if (pkt->isLLSC() && pkt->isWrite()) {
+            if (requestStatus == RequestStatus_LlscFailed) {
+                DPRINTF(MemoryAccess, "SC failed and request completed\n");
+                pkt->req->setExtraData(0);
+            } else {
+                pkt->req->setExtraData(1);
+            }
+        }
         return true;
     }
-     
+
     DPRINTF(MemoryAccess, 
             "Request for address #x did not issue because %s\n",
             pkt->getAddr(),

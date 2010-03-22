@@ -334,11 +334,24 @@ void Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data) {
   if (ruby_request.data != NULL) {
     if ((type == RubyRequestType_LD) ||
         (type == RubyRequestType_IFETCH) ||
-        (type == RubyRequestType_RMW_Read)) {
-      memcpy(ruby_request.data, data.getData(request_address.getOffset(), ruby_request.len), ruby_request.len);
+        (type == RubyRequestType_RMW_Read) ||
+        (type == RubyRequestType_Locked_Read)) {
+
+        memcpy(ruby_request.data, 
+               data.getData(request_address.getOffset(), ruby_request.len), 
+               ruby_request.len);
+        
     } else {
-      data.setData(ruby_request.data, request_address.getOffset(), ruby_request.len);
+
+        data.setData(ruby_request.data, 
+                     request_address.getOffset(), 
+                     ruby_request.len);
+
     }
+  } else {
+      DPRINTF(MemoryAccess, 
+              "WARNING.  Data not transfered from Ruby to M5 for type %s\n",
+              RubyRequestType_to_string(type));
   }
 
   //
@@ -403,11 +416,27 @@ RequestStatus Sequencer::makeRequest(const RubyRequest & request)
     bool found = insertRequest(srequest);
     if (!found) {
       if (request.type == RubyRequestType_Locked_Write) {
-        // NOTE: it is OK to check the locked flag here as the mandatory queue will be checked first
-        // ensuring that nothing comes between checking the flag and servicing the store
-        if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), m_version)) {
-          return RequestStatus_LlscFailed;
-        }
+          //
+          // NOTE: it is OK to check the locked flag here as the mandatory queue
+          // will be checked first ensuring that nothing comes between checking 
+          // the flag and servicing the store.
+          //
+          if (!m_dataCache_ptr->isLocked(line_address(Address(request.paddr)), 
+                                         m_version)) {
+              removeRequest(srequest);
+              if (Debug::getProtocolTrace()) {
+
+                  g_system_ptr->getProfiler()->profileTransition("Seq", 
+                                     m_version, 
+                                     Address(request.paddr),
+                                     "", 
+                                     "SC Fail", 
+                                     "", 
+                                     RubyRequestType_to_string(request.type));
+
+            }
+            return RequestStatus_LlscFailed;
+       }
         else {
           m_dataCache_ptr->clearLocked(line_address(Address(request.paddr)));
         }

@@ -252,6 +252,7 @@ void CacheMemory::allocate(const Address& address, AbstractCacheEntry* entry)
       m_cache[cacheSet][i] = entry;  // Init entry
       m_cache[cacheSet][i]->m_Address = address;
       m_cache[cacheSet][i]->m_Permission = AccessPermission_Invalid;
+      DPRINTF(RubyCache, "Allocate clearing lock for addr: %llx\n", address);
       m_locked[cacheSet][i] = -1;
       m_tag_index[address] = i;
 
@@ -273,6 +274,7 @@ void CacheMemory::deallocate(const Address& address)
   if (location != -1){
     delete m_cache[cacheSet][location];
     m_cache[cacheSet][location] = NULL;
+    DPRINTF(RubyCache, "Deallocate clearing lock for addr: %llx\n", address);
     m_locked[cacheSet][location] = -1;
     m_tag_index.erase(address);
   }
@@ -320,7 +322,10 @@ void CacheMemory::changePermission(const Address& address, AccessPermission new_
   lookup(address).m_Permission = new_perm;
   Index cacheSet = addressToCacheSet(address);
   int loc = findTagInSet(cacheSet, address);
-  m_locked[cacheSet][loc] = -1; 
+  if (new_perm != AccessPermission_Read_Write) {
+      DPRINTF(RubyCache, "Permission clearing lock for addr: %llx\n", address);
+      m_locked[cacheSet][loc] = -1; 
+  }
   assert(getPermission(address) == new_perm);
 }
 
@@ -422,6 +427,10 @@ void CacheMemory::setMemoryValue(const Address& addr, char* value,
 void 
 CacheMemory::setLocked(const Address& address, int context) 
 {  
+    DPRINTF(RubyCache, 
+            "Setting Lock for addr: %llx to %d\n", 
+            address,
+            context);
   assert(address == line_address(address));
   Index cacheSet = addressToCacheSet(address);
   int loc = findTagInSet(cacheSet, address);
@@ -432,6 +441,7 @@ CacheMemory::setLocked(const Address& address, int context)
 void 
 CacheMemory::clearLocked(const Address& address) 
 {
+    DPRINTF(RubyCache, "Clear Lock for addr: %llx\n", address);
   assert(address == line_address(address));
   Index cacheSet = addressToCacheSet(address);
   int loc = findTagInSet(cacheSet, address);
@@ -446,6 +456,11 @@ CacheMemory::isLocked(const Address& address, int context)
   Index cacheSet = addressToCacheSet(address);
   int loc = findTagInSet(cacheSet, address);
   assert(loc != -1);
+    DPRINTF(RubyCache, 
+            "Testing Lock for addr: %llx cur %d con %d\n", 
+            address,
+            m_locked[cacheSet][loc],
+            context);
   return m_locked[cacheSet][loc] == context; 
 }
 
