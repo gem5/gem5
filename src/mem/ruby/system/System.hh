@@ -66,7 +66,7 @@ class MemoryVector;
  * set sizes at the cost of a (much) larger memory footprint
  *
  */
-const int NUMBER_WORDS_PER_SET = 4;
+const int NUMBER_WORDS_PER_SET = 1;
 
 class RubySystem : public SimObject {
 public:
