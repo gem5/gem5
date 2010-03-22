@@ -56,6 +56,8 @@ BranchPredictor::regStats()
         .desc("Number of Branches Predicted As Not Taken (False).");
 
     Resource::regStats();
+   
+    branchPred.regStats();
 }
 
 void
@@ -140,7 +142,9 @@ BranchPredictor::squash(DynInstPtr inst, int squash_stage,
                         InstSeqNum squash_seq_num, ThreadID tid)
 {
     DPRINTF(InOrderBPred, "Squashing...\n");
-    branchPred.squash(squash_seq_num, tid);
+    Addr corr_targ=inst->readPredPC();
+    bool taken=inst->predTaken();
+    branchPred.squash(squash_seq_num,corr_targ,taken,tid);
 }
 
 void

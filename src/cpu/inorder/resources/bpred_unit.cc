@@ -343,6 +343,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     // corresponding to the squash.  In that case, don't bother trying to
     // fix up the entry.
     if (!pred_hist.empty()) {
+	if(pred_hist.front().seqNum==squashed_sn){
+
         assert(pred_hist.front().seqNum == squashed_sn);
         if (pred_hist.front().usedRAS) {
             ++RASIncorrect;
@@ -353,6 +355,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
 
         BTB.update(pred_hist.front().PC, corr_target, tid);
         pred_hist.pop_front();
+        }
     }
 }
 
