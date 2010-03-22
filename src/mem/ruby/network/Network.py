@@ -138,7 +138,7 @@ class RubyNetwork(SimObject):
     buffer_size = Param.Int(0,
         "default buffer size; 0 indicates infinite buffering");
     endpoint_bandwidth = Param.Int(10000, "");
-    adaptive_routing = Param.Bool(True, "");
+    adaptive_routing = Param.Bool(False, "enable adaptive routing");
     link_latency = Param.Int(1,
         "local memory latency ?? NetworkLinkLatency");
     control_msg_size = Param.Int(8, "");
