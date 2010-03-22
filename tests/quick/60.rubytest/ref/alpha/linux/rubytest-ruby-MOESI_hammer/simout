@@ -5,11 +5,11 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Jan 27 2010 22:05:53
-M5 revision 6068d4fc30d3 6931 default qtip tip brad/rubycfg_regress_udpate
-M5 started Jan 27 2010 22:06:45
-M5 executing on svvint06
+M5 compiled Mar 18 2010 14:59:19
+M5 revision 6a6bb24e484f+ 7041+ default qtip tip brad/regress_updates
+M5 started Mar 18 2010 14:59:22
+M5 executing on cabr0210
 command line: build/ALPHA_SE_MOESI_hammer/m5.fast -d build/ALPHA_SE_MOESI_hammer/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer -re tests/run.py build/ALPHA_SE_MOESI_hammer/tests/fast/quick/60.rubytest/alpha/linux/rubytest-ruby-MOESI_hammer
 Global frequency set at 1000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
-Exiting @ tick 225461 because Ruby Tester completed
+Exiting @ tick 222961 because Ruby Tester completed
