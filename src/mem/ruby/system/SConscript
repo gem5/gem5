@@ -41,6 +41,7 @@ SimObject('RubySystem.py')
 
 Source('DMASequencer.cc')
 Source('DirectoryMemory.cc')
+Source('SparseMemory.cc')
 Source('CacheMemory.cc')
 Source('MemoryControl.cc')
 Source('MemoryNode.cc')

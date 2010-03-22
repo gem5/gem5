@@ -51,14 +51,24 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     m_version = p->version;
     m_size_bytes = p->size;
     m_size_bits = log_int(m_size_bytes);
+    m_num_entries = 0;
+    m_use_map = p->use_map;
+    m_map_levels = p->map_levels;
 }
 
 void DirectoryMemory::init()
 {
   m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
-  m_entries = new Directory_Entry*[m_num_entries];
-  for (int i=0; i < m_num_entries; i++)
-    m_entries[i] = NULL;
+
+  if (m_use_map) {
+      int entry_bits = log_int(m_num_entries);
+      assert(entry_bits >= m_map_levels);
+      m_sparseMemory = new SparseMemory(entry_bits, m_map_levels);
+  } else {
+      m_entries = new Directory_Entry*[m_num_entries];
+      for (int i=0; i < m_num_entries; i++)
+          m_entries[i] = NULL;
+  }
 
   m_ram = g_system_ptr->getMemoryVector();
 
@@ -70,13 +80,15 @@ void DirectoryMemory::init()
 DirectoryMemory::~DirectoryMemory()
 {
   // free up all the directory entries
-  for (uint64 i=0;i<m_num_entries;i++) {
-    if (m_entries[i] != NULL) {
-      delete m_entries[i];
-    }
-  }
   if (m_entries != NULL) {
-    delete [] m_entries;
+      for (uint64 i = 0; i < m_num_entries; i++) {
+          if (m_entries[i] != NULL) {
+              delete m_entries[i];
+          }
+      }
+      delete [] m_entries;
+  } else if (m_use_map) {
+      delete m_sparseMemory;
   }
 }
 
@@ -102,14 +114,14 @@ void DirectoryMemory::printGlobalConfig(ostream & out)
         << "-" << RubySystem::getBlockSizeBits() << endl;
   }
   out << "  total memory size bytes: " << m_total_size_bytes << endl;
-  out << "  total memory size bits: " << log_int(m_total_size_bytes) << endl;
+  out << "  total memory bits: " << log_int(m_total_size_bytes) << endl;
 
 }
 
-int DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
+uint64 DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
 {
   if (m_num_directories_bits == 0) return 0;
-  int ret = address.bitSelect(RubySystem::getBlockSizeBits(),
+  uint64 ret = address.bitSelect(RubySystem::getBlockSizeBits(),
                               RubySystem::getBlockSizeBits()+m_num_directories_bits-1);
   return ret;
 }
@@ -121,9 +133,10 @@ bool DirectoryMemory::isPresent(PhysAddress address)
   return ret;
 }
 
-int DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
+uint64 DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
 {
-  int ret = address.getAddress() >> (RubySystem::getBlockSizeBits() + m_num_directories_bits);
+  uint64 ret = address.getAddress()
+      >> (RubySystem::getBlockSizeBits() + m_num_directories_bits);
   return ret;
 }
 
@@ -131,13 +144,32 @@ Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
 {
   assert(isPresent(address));
   Directory_Entry* entry;
-  int idx = mapAddressToLocalIdx(address);
-  entry = m_entries[idx];
-  if (entry == NULL) {
-    entry = new Directory_Entry;
-    entry->getDataBlk().assign(m_ram->getBlockPtr(address));
-    m_entries[idx] = entry;
+  uint64 idx;
+  DEBUG_EXPR(CACHE_COMP, HighPrio, address);
+
+  if (m_use_map) {
+    if (m_sparseMemory->exist(address)) {
+      entry = m_sparseMemory->lookup(address);
+      assert(entry != NULL);
+    } else {
+      //
+      // Note: SparseMemory internally creates a new Directory Entry
+      //
+      m_sparseMemory->add(address);
+      entry = m_sparseMemory->lookup(address);
+    }
+  } else {
+    idx = mapAddressToLocalIdx(address);
+    assert(idx < m_num_entries);
+    entry = m_entries[idx];
+
+    if (entry == NULL) {
+      entry = new Directory_Entry();
+      entry->getDataBlk().assign(m_ram->getBlockPtr(address));
+      m_entries[idx] = entry;
+    }
   }
+
   return (*entry);
 }
 /*
@@ -169,25 +201,41 @@ Directory_Entry& DirectoryMemory::lookup(PhysAddress address)
 
 void DirectoryMemory::invalidateBlock(PhysAddress address)
 {
-  /*
-  assert(isPresent(address));
-
-  Index index = address.memoryModuleIndex();
-
-  if (index < 0 || index > m_size) {
-    ERROR_MSG("Directory Memory Assertion: accessing memory out of range.");
+  
+  if (m_use_map) {
+    assert(m_sparseMemory->exist(address));
+    m_sparseMemory->remove(address);
   }
+  /*
+  else {
+    assert(isPresent(address));
+    
+    Index index = address.memoryModuleIndex();
+    
+    if (index < 0 || index > m_size) {
+      ERROR_MSG("Directory Memory Assertion: accessing memory out of range.");
+    }
 
-  if(m_entries[index] != NULL){
-    delete m_entries[index];
-    m_entries[index] = NULL;
+    if(m_entries[index] != NULL){
+      delete m_entries[index];
+      m_entries[index] = NULL;
+    }
   }
   */
+
+
 }
 
 void DirectoryMemory::print(ostream& out) const
 {
 
+}
+
+void DirectoryMemory::printStats(ostream& out) const
+{
+    if (m_use_map) {
+        m_sparseMemory->printStats(out);
+    }
 }
 
 DirectoryMemory *

@@ -76,7 +76,11 @@ RubySystem::RubySystem(const Params *p)
     m_block_size_bits = log_int(m_block_size_bytes);
 
     m_memory_size_bytes = p->mem_size;
-    m_memory_size_bits = log_int(m_memory_size_bytes);
+    if (m_memory_size_bytes == 0) {
+        m_memory_size_bits = 0;
+    } else {
+        m_memory_size_bits = log_int(m_memory_size_bytes);
+    }
 
     m_network_ptr = p->network;
     g_debug_ptr = p->debug;
@@ -104,7 +108,10 @@ void RubySystem::init()
 
 RubySystem::~RubySystem()
 {
-
+  delete m_network_ptr;
+  delete m_profiler_ptr;
+  delete m_tracer_ptr;
+  delete m_mem_vec_ptr;
 }
 
 void RubySystem::printSystemConfig(ostream & out)

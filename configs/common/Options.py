@@ -43,7 +43,11 @@ parser.add_option("--mesh-rows", type="int", default=1,
                   help="the number of rows in the mesh topology")
 parser.add_option("--garnet-network", type="string", default=none,
                   help="'fixed'|'flexible'")
-      
+
+# ruby sparse memory options
+parser.add_option("--use-map", action="store_true", default=False)
+parser.add_option("--map-levels", type="int", default=4)
+
 # Run duration options
 parser.add_option("-m", "--maxtick", type="int", default=m5.MaxTick,
                   metavar="T",

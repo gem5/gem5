@@ -78,8 +78,10 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
         network = SimpleNetwork(topology = net_topology)
 
     #
-    # determine the total memory size of the ruby system and verify it is equal
-    # to physmem
+    # Determine the total memory size of the ruby system and verify it is equal
+    # to physmem.  However, if Ruby memory is using sparse memory in SE 
+    # mode, then the system should not back-up the memory state with
+    # the Memory Vector and thus the memory size bytes should stay at 0.
     #
     total_mem_size = MemorySize('0B')
     for dir_cntrl in dir_cntrls:

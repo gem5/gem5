@@ -651,6 +651,7 @@ $c_ident::printStats(ostream& out) const
         #
         for param in self.config_parameters:
             if param.type_ast.type.ident == "CacheMemory" or \
+               param.type_ast.type.ident == "DirectoryMemory" or \
                    param.type_ast.type.ident == "MemoryControl":
                 assert(param.pointer)
                 code('    m_${{param.ident}}_ptr->printStats(out);')

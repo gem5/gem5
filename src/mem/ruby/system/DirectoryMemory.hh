@@ -45,6 +45,7 @@
 #include "mem/protocol/Directory_Entry.hh"
 #include "sim/sim_object.hh"
 #include "params/RubyDirectoryMemory.hh"
+#include "mem/ruby/system/SparseMemory.hh"
 
 class DirectoryMemory : public SimObject {
 public:
@@ -57,9 +58,10 @@ public:
   // Destructor
   ~DirectoryMemory();
 
-  int mapAddressToLocalIdx(PhysAddress address);
-  static int mapAddressToDirectoryVersion(PhysAddress address);
+  uint64 mapAddressToLocalIdx(PhysAddress address);
+  static uint64 mapAddressToDirectoryVersion(PhysAddress address);
 
+  bool isSparseImplementation() { return m_use_map; }
   uint64 getSize() { return m_size_bytes; }
 
   // Public Methods
@@ -71,6 +73,7 @@ public:
   void invalidateBlock(PhysAddress address);
 
   void print(ostream& out) const;
+  void printStats(ostream& out) const;
 
 private:
   // Private Methods
@@ -86,7 +89,7 @@ private:
   //  int m_size;  // # of memory module blocks this directory is responsible for
   uint64 m_size_bytes;
   uint64 m_size_bits;
-  int m_num_entries;
+  uint64 m_num_entries;
   int m_version;
 
   static int m_num_directories;
@@ -94,6 +97,9 @@ private:
   static uint64_t m_total_size_bytes;
 
   MemoryVector* m_ram;
+  SparseMemory* m_sparseMemory;
+  bool m_use_map;
+  int m_map_levels;
 };
 
 // Output operator declaration

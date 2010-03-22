@@ -98,15 +98,18 @@ machine(Directory, "Directory protocol")
 
     if (directory.isPresent(addr)) {
 
-      if (state == State:I)  {
-        assert(getDirectoryEntry(addr).Owner.count() == 0);
-        assert(getDirectoryEntry(addr).Sharers.count() == 0);
-      } else if (state == State:M) {
+      if (state == State:M) {
         assert(getDirectoryEntry(addr).Owner.count() == 1);
         assert(getDirectoryEntry(addr).Sharers.count() == 0);
       }
 
       getDirectoryEntry(addr).DirectoryState := state;
+    
+      if (state == State:I)  {
+        assert(getDirectoryEntry(addr).Owner.count() == 0);
+        assert(getDirectoryEntry(addr).Sharers.count() == 0);
+        directory.invalidateBlock(addr);
+      }
     }
   }
 
@@ -262,10 +265,6 @@ machine(Directory, "Directory protocol")
         out_msg.Destination.add(TBEs[address].DmaRequestor); 
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
       }
-  }
-
-  action(d_deallocateDirectory, "\d", desc="Deallocate Directory Entry") {
-      directory.invalidateBlock(address);
   }
 
   action(e_ownerIsRequestor, "e", desc="The owner is now the requestor") {
@@ -527,7 +526,6 @@ machine(Directory, "Directory protocol")
   transition(M_DRDI, Memory_Ack, I) {
     l_sendWriteBackAck;
     w_deallocateTBE;   
-    d_deallocateDirectory;
     l_popMemQueue;
   }
 
@@ -550,7 +548,6 @@ machine(Directory, "Directory protocol")
     l_sendWriteBackAck;
     da_sendDMAAck;
     w_deallocateTBE;
-    d_deallocateDirectory;
     l_popMemQueue;
   }
 
@@ -572,7 +569,6 @@ machine(Directory, "Directory protocol")
     w_writeDataToMemoryFromTBE;
     l_sendWriteBackAck;
     w_deallocateTBE;
-    d_deallocateDirectory;
     l_popMemQueue;
   }
 
