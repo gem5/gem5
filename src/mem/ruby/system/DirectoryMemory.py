@@ -38,3 +38,4 @@ class RubyDirectoryMemory(SimObject):
     size = Param.MemorySize("1GB", "capacity in bytes")
     use_map = Param.Bool(False, "enable sparse memory")
     map_levels = Param.Int(4, "sparse memory map levels")
+    numa_high_bit = Param.Int(0, "numa high bit")

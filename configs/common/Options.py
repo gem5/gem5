@@ -43,6 +43,8 @@ parser.add_option("--mesh-rows", type="int", default=1,
                   help="the number of rows in the mesh topology")
 parser.add_option("--garnet-network", type="string", default=none,
                   help="'fixed'|'flexible'")
+parser.add_option("--numa-high-bit", type="int", default=none,
+                  help="high order address bit to use for numa mapping")
 
 # ruby sparse memory options
 parser.add_option("--use-map", action="store_true", default=False)

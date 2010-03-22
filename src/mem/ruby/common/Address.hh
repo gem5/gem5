@@ -66,6 +66,7 @@ public:
   physical_address_t getAddress() const {return m_address;}
   // selects bits inclusive
   physical_address_t bitSelect(int small, int big) const;
+  physical_address_t bitRemove(int small, int big) const;
   physical_address_t maskLowOrderBits(int number) const;
   physical_address_t maskHighOrderBits(int number) const;
   physical_address_t shiftLowOrderBits(int number) const;
@@ -160,6 +161,35 @@ physical_address_t Address::bitSelect(int small, int big) const // rips bits inc
     physical_address_t partial = (m_address & mask);
     return (partial >> small);
   }
+}
+
+// removes bits inclusive
+inline
+physical_address_t Address::bitRemove(int small, int big) const
+{
+    physical_address_t mask;
+    assert((unsigned)big >= (unsigned)small);
+    
+    if (small >= ADDRESS_WIDTH - 1) {
+        return m_address;
+    } else if (big >= ADDRESS_WIDTH - 1) {
+        mask = (physical_address_t)~0 >> small;
+        return (m_address & mask);
+    } else if (small == 0) {
+        mask = (physical_address_t)~0 << big;
+        return (m_address & mask);
+    } else {
+        mask = ~((physical_address_t)~0 << small);
+        physical_address_t lower_bits = m_address & mask;
+        mask = (physical_address_t)~0 << (big + 1);
+        physical_address_t higher_bits = m_address & mask;
+
+        //
+        // Shift the valid high bits over the removed section
+        //
+        higher_bits = higher_bits >> (big - small);
+        return (higher_bits | lower_bits);
+    }
 }
 
 inline

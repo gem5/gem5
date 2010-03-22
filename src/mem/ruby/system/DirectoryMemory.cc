@@ -44,6 +44,7 @@
 int DirectoryMemory::m_num_directories = 0;
 int DirectoryMemory::m_num_directories_bits = 0;
 uint64_t DirectoryMemory::m_total_size_bytes = 0;
+int DirectoryMemory::m_numa_high_bit = 0;
 
 DirectoryMemory::DirectoryMemory(const Params *p)
     : SimObject(p)
@@ -54,6 +55,7 @@ DirectoryMemory::DirectoryMemory(const Params *p)
     m_num_entries = 0;
     m_use_map = p->use_map;
     m_map_levels = p->map_levels;
+    m_numa_high_bit = p->numa_high_bit;
 }
 
 void DirectoryMemory::init()
@@ -74,6 +76,11 @@ void DirectoryMemory::init()
   m_num_directories++;
   m_num_directories_bits = log_int(m_num_directories);
   m_total_size_bytes += m_size_bytes;
+
+  if (m_numa_high_bit == 0) {
+      m_numa_high_bit = RubySystem::getMemorySizeBits();
+  }
+  assert(m_numa_high_bit != 0);
 }
 
 DirectoryMemory::~DirectoryMemory()
@@ -109,8 +116,9 @@ void DirectoryMemory::printGlobalConfig(ostream & out)
   out << "  number of directory memories: " << m_num_directories << endl;
   if (m_num_directories > 1) {
     out << "  number of selection bits: " << m_num_directories_bits << endl;
-    out << "  selection bits: " << RubySystem::getBlockSizeBits()+m_num_directories_bits-1
-        << "-" << RubySystem::getBlockSizeBits() << endl;
+    out << "  selection bits: " << m_numa_high_bit
+        << "-" << m_numa_high_bit-m_num_directories_bits 
+        << endl;
   }
   out << "  total memory size bytes: " << m_total_size_bytes << endl;
   out << "  total memory bits: " << log_int(m_total_size_bytes) << endl;
@@ -120,8 +128,8 @@ void DirectoryMemory::printGlobalConfig(ostream & out)
 uint64 DirectoryMemory::mapAddressToDirectoryVersion(PhysAddress address)
 {
   if (m_num_directories_bits == 0) return 0;
-  uint64 ret = address.bitSelect(RubySystem::getBlockSizeBits(),
-                              RubySystem::getBlockSizeBits()+m_num_directories_bits-1);
+  uint64 ret = address.bitSelect(m_numa_high_bit - m_num_directories_bits,
+                                 m_numa_high_bit);
   return ret;
 }
 
@@ -134,9 +142,10 @@ bool DirectoryMemory::isPresent(PhysAddress address)
 
 uint64 DirectoryMemory::mapAddressToLocalIdx(PhysAddress address)
 {
-  uint64 ret = address.getAddress()
-      >> (RubySystem::getBlockSizeBits() + m_num_directories_bits);
-  return ret;
+    uint64 ret = address.bitRemove(m_numa_high_bit - m_num_directories_bits,
+                                   m_numa_high_bit)
+        >> (RubySystem::getBlockSizeBits());
+    return ret;
 }
 
 Directory_Entry& DirectoryMemory::lookup(PhysAddress address)

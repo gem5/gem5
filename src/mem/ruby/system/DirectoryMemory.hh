@@ -95,6 +95,7 @@ private:
   static int m_num_directories;
   static int m_num_directories_bits;
   static uint64_t m_total_size_bytes;
+  static int m_numa_high_bit;
 
   MemoryVector* m_ram;
   SparseMemory* m_sparseMemory;
