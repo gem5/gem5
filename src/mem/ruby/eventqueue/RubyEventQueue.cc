@@ -56,12 +56,12 @@ void RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
 {
   // Check to see if this is a redundant wakeup
   ASSERT(consumer != NULL);
-  if (consumer->getLastScheduledWakeup() != timeAbs) {
+  if (!consumer->alreadyScheduled(timeAbs)) {	
     // This wakeup is not redundant
-    RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer);
+    RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer, this);
     assert(timeAbs > getTime());
     schedule(thisNode, (timeAbs * m_clock));
-    consumer->setLastScheduledWakeup(timeAbs * m_clock);
+    consumer->insertScheduledWakeupTime(timeAbs);
   }
 }
 

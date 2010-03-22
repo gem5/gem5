@@ -40,6 +40,7 @@
 #define CONSUMER_H
 
 #include <iostream>
+#include <set>
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
@@ -55,18 +56,43 @@ public:
   virtual ~Consumer() { }
 
   // Public Methods - pure virtual methods
-  // void triggerWakeup() { Time time = g_eventQueue_ptr->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
-  void triggerWakeup(RubyEventQueue * eventQueue) { Time time = eventQueue->getTime(); if (m_last_wakeup != time) { wakeup(); m_last_wakeup = time; }}
+  void triggerWakeup(RubyEventQueue * eventQueue) 
+  {
+      Time time = eventQueue->getTime(); 
+      if (m_last_wakeup != time) { 
+          wakeup(); m_last_wakeup = time; 
+      }
+  }
   virtual void wakeup() = 0;
   virtual void print(std::ostream& out) const = 0;
-  const Time& getLastScheduledWakeup() const { return m_last_scheduled_wakeup; }
-  void setLastScheduledWakeup(const Time& time) { m_last_scheduled_wakeup = time; }
+  const Time& getLastScheduledWakeup() const 
+  { 
+      return m_last_scheduled_wakeup; 
+  }
+  void setLastScheduledWakeup(const Time& time) 
+  { 
+      m_last_scheduled_wakeup = time; 
+  }
+  bool alreadyScheduled(Time time) 
+  { 
+      return (m_scheduled_wakeups.find(time) != m_scheduled_wakeups.end());
+  }
+  void insertScheduledWakeupTime(Time time) 
+  { 
+      m_scheduled_wakeups.insert(time); 
+  }
+  void removeScheduledWakeupTime(Time time) 
+  { 
+      assert(alreadyScheduled(time)); 
+      m_scheduled_wakeups.erase(time); 
+  }
 
 private:
   // Private Methods
 
   // Data Members (m_ prefix)
   Time m_last_scheduled_wakeup;
+  std::set<Time> m_scheduled_wakeups;
   Time m_last_wakeup;
 };
 
