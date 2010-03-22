@@ -477,7 +477,6 @@ machine(L2Cache, "Token protocol")
            out_msg.Address := in_msg.Address;
            out_msg.Type := in_msg.Type;
            out_msg.Requestor := in_msg.Requestor;
-           out_msg.RequestorMachine := in_msg.RequestorMachine;
            out_msg.RetryNum := in_msg.RetryNum;
 
            //
@@ -507,7 +506,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.MessageSize := in_msg.MessageSize;
@@ -523,7 +521,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(map_Address_to_Directory(address));
         out_msg.Tokens := getL2CacheEntry(address).Tokens;
         out_msg.MessageSize := MessageSizeType:Writeback_Control;
@@ -536,7 +533,6 @@ machine(L2Cache, "Token protocol")
     enqueue(responseNetwork_out, ResponseMsg, latency=l2_response_latency) {
       out_msg.Address := address;
       out_msg.Sender := machineID;
-      out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.Destination.add(map_Address_to_Directory(address));
       out_msg.Tokens := getL2CacheEntry(address).Tokens;
       out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
@@ -560,7 +556,6 @@ machine(L2Cache, "Token protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
-          out_msg.SenderMachine := MachineType:L2Cache;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.Tokens := N_tokens;
           out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
@@ -574,7 +569,6 @@ machine(L2Cache, "Token protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:DATA_SHARED;
           out_msg.Sender := machineID;
-          out_msg.SenderMachine := MachineType:L2Cache;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.Tokens := 1;
           out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
@@ -592,7 +586,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         assert(getL2CacheEntry(address).Tokens >= 1);
         out_msg.Tokens := getL2CacheEntry(address).Tokens;
@@ -610,7 +603,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getL2CacheEntry(address).Tokens >= 1);
         out_msg.Tokens := getL2CacheEntry(address).Tokens;
@@ -625,7 +617,6 @@ machine(L2Cache, "Token protocol")
       out_msg.Address := address;
       out_msg.Type := CoherenceResponseType:DATA_OWNER;
       out_msg.Sender := machineID;
-      out_msg.SenderMachine := MachineType:L2Cache;
       out_msg.Destination.add(persistentTable.findSmallest(address));
       assert(getL2CacheEntry(address).Tokens >= 1);
       out_msg.Tokens := getL2CacheEntry(address).Tokens;
@@ -644,7 +635,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getL2CacheEntry(address).Tokens >= 1);
         out_msg.Tokens := getL2CacheEntry(address).Tokens - 1;
@@ -662,7 +652,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getL2CacheEntry(address).Tokens >= 1);
         out_msg.Tokens := getL2CacheEntry(address).Tokens - 1;
@@ -684,7 +673,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -706,7 +694,6 @@ machine(L2Cache, "Token protocol")
           out_msg.Type := CoherenceResponseType:ACK;
         }
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -724,7 +711,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.DataBlk := in_msg.DataBlk;
@@ -752,7 +738,6 @@ machine(L2Cache, "Token protocol")
         enqueue(localRequestNetwork_out, RequestMsg, latency=l2_response_latency ) {
            out_msg.Address := in_msg.Address;
            out_msg.Requestor := in_msg.Requestor;
-           out_msg.RequestorMachine := in_msg.RequestorMachine;
            
            //
            // Currently assuming only one chip so all L1s are local
@@ -781,7 +766,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_SHARED;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
         out_msg.Dirty := false;
@@ -799,7 +783,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
         out_msg.Dirty := getL2CacheEntry(address).Dirty;
@@ -818,7 +801,6 @@ machine(L2Cache, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:L2Cache;
         out_msg.Destination.add(in_msg.Requestor);
         out_msg.DataBlk := getL2CacheEntry(address).DataBlk;
         out_msg.Dirty := getL2CacheEntry(address).Dirty;
@@ -892,7 +874,6 @@ machine(L2Cache, "Token protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
-          out_msg.SenderMachine := MachineType:L2Cache;
           out_msg.Destination.add(in_msg.Requestor);
           assert(getL2CacheEntry(address).Tokens >= 1);
           out_msg.Tokens := getL2CacheEntry(address).Tokens;
@@ -910,7 +891,6 @@ machine(L2Cache, "Token protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
-          out_msg.SenderMachine := MachineType:L2Cache;
           out_msg.Destination.add(in_msg.Requestor);
           assert(getL2CacheEntry(address).Tokens >= 1);
           out_msg.Tokens := getL2CacheEntry(address).Tokens;

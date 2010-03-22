@@ -355,7 +355,6 @@ machine(Directory, "Token protocol")
           out_msg.Address := address;
           out_msg.Type := CoherenceResponseType:ACK;
           out_msg.Sender := machineID;
-          out_msg.SenderMachine := MachineType:Directory;
           out_msg.Destination.add(in_msg.Requestor);
           out_msg.Tokens := getDirectoryEntry(in_msg.Address).Tokens;
           out_msg.MessageSize := MessageSizeType:Response_Control;
@@ -371,7 +370,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := PersistentRequestType:GETX_PERSISTENT;
         out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:Directory;
         out_msg.Destination.broadcast(MachineType:L1Cache);
 
         //
@@ -418,7 +416,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETX;
         out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:Directory;
 
         //
         // Since only one chip, assuming all L1 caches are local
@@ -443,7 +440,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := PersistentRequestType:GETS_PERSISTENT;
         out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:Directory;
         out_msg.Destination.broadcast(MachineType:L1Cache);
 
         //
@@ -486,7 +482,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceRequestType:GETS;
         out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:Directory;
 
         //
         // Since only one chip, assuming all L1 caches are local
@@ -513,7 +508,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:ACK;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := getDirectoryEntry(address).Tokens;
         out_msg.MessageSize := MessageSizeType:Response_Control;
@@ -528,7 +522,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(in_msg.OriginalRequestorMachId);
         assert(getDirectoryEntry(address).Tokens > 0);
         out_msg.Tokens := getDirectoryEntry(in_msg.Address).Tokens;
@@ -546,7 +539,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         assert(getDirectoryEntry(address).Tokens > 0);
         out_msg.Tokens := getDirectoryEntry(address).Tokens;
@@ -648,7 +640,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := PersistentRequestType:DEACTIVATE_PERSISTENT;
         out_msg.Requestor := machineID;
-        out_msg.RequestorMachine := MachineType:Directory;
         out_msg.Destination.broadcast(MachineType:L1Cache);
 
         //
@@ -746,7 +737,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := in_msg.Type;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:Directory;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.MessageSize := in_msg.MessageSize;
@@ -788,8 +778,6 @@ machine(Directory, "Token protocol")
         out_msg.Address := address;
         out_msg.Type := CoherenceResponseType:DATA_OWNER;
         out_msg.Sender := machineID;
-        out_msg.SenderMachine := MachineType:Directory;
-        out_msg.DestMachine := MachineType:L1Cache;
         out_msg.Destination.add(persistentTable.findSmallest(address));
         out_msg.Tokens := in_msg.Tokens;
         out_msg.DataBlk := getDirectoryEntry(in_msg.Address).DataBlk;
