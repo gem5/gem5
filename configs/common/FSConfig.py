@@ -79,14 +79,14 @@ def makeLinuxAlphaSystem(mem_mode, mdesc = None):
 
     return self
 
-def makeLinuxAlphaRubySystem(mem_mode, phys_mem, mdesc = None):
+def makeLinuxAlphaRubySystem(mem_mode, mdesc = None):
     class BaseTsunami(Tsunami):
         ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
         ide = IdeController(disks=[Parent.disk0, Parent.disk2],
                             pci_func=0, pci_dev=0, pci_bus=0)
         
-
-    self = LinuxAlphaSystem(physmem = phys_mem)
+    physmem = PhysicalMemory(range = AddrRange(mdesc.mem()))
+    self = LinuxAlphaSystem(physmem = physmem)
     if not mdesc:
         # generic system
         mdesc = SysConfig()
@@ -100,7 +100,7 @@ def makeLinuxAlphaRubySystem(mem_mode, phys_mem, mdesc = None):
     # RubyPort currently does support functional accesses.  Therefore provide
     # the piobus a direct connection to physical memory
     #
-    self.piobus.port = phys_mem.port
+    self.piobus.port = physmem.port
 
     self.disk0 = CowIdeDisk(driveID='master')
     self.disk2 = CowIdeDisk(driveID='master')

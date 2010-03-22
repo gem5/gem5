@@ -116,12 +116,10 @@ FutureClass = None
 
 CPUClass.clock = options.clock
 
-physmem = PhysicalMemory()
-
-system = makeLinuxAlphaRubySystem(test_mem_mode, physmem, bm[0])
+system = makeLinuxAlphaRubySystem(test_mem_mode, bm[0])
 
 system.ruby = Ruby.create_system(options,
-                                 physmem,
+                                 system.physmem,
                                  system.piobus,
                                  system.dma_devices)
 
