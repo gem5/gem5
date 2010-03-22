@@ -137,8 +137,6 @@ public:
 
   void print(ostream& out) const;
 
-  int64 getTotalTransactionsExecuted() const;
-
   void rubyWatch(int proc);
   bool watchAddress(Address addr);
 
@@ -170,11 +168,6 @@ private:
   Time m_ruby_start;
   time_t m_real_time_start_time;
 
-  Vector<integer_t> m_perProcTotalMisses;
-  Vector<integer_t> m_perProcUserMisses;
-  Vector<integer_t> m_perProcSupervisorMisses;
-  Vector<integer_t> m_perProcStartTransaction;
-  Vector<integer_t> m_perProcEndTransaction;
   Vector < Vector < integer_t > > m_busyControllerCount;
   integer_t m_busyBankCount;
   Histogram m_multicast_retry_histogram;

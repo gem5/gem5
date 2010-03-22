@@ -126,37 +126,8 @@ void Profiler::wakeup()
     // The +1 allows us to avoid division by zero
   }
 
-  integer_t total_misses = m_perProcTotalMisses.sum();
-  integer_t simics_cycles_executed = perProcCycleCount.sum();
-  integer_t transactions_started = m_perProcStartTransaction.sum();
-  integer_t transactions_ended = m_perProcEndTransaction.sum();
-
   (*m_periodic_output_file_ptr) << "ruby_cycles: " 
                                 << g_eventQueue_ptr->getTime()-m_ruby_start 
-                                << endl;
-
-  (*m_periodic_output_file_ptr) << "total_misses: " 
-                                << total_misses 
-                                << " " 
-                                << m_perProcTotalMisses 
-                                << endl;
-
-  (*m_periodic_output_file_ptr) << "simics_cycles_executed: " 
-                                << simics_cycles_executed 
-                                << " " 
-                                << perProcCycleCount 
-                                << endl;
-
-  (*m_periodic_output_file_ptr) << "transactions_started: " 
-                                << transactions_started 
-                                << " " 
-                                << m_perProcStartTransaction 
-                                << endl;
-
-  (*m_periodic_output_file_ptr) << "transactions_ended: " 
-                                << transactions_ended 
-                                << " " 
-                                << m_perProcEndTransaction 
                                 << endl;
 
   (*m_periodic_output_file_ptr) << "mbytes_resident: " 
@@ -276,51 +247,14 @@ void Profiler::printStats(ostream& out, bool short_stats)
   }
 
   Vector<integer_t> perProcCycleCount;
-  Vector<double> perProcCyclesPerTrans;
-  Vector<double> perProcMissesPerTrans;
-
-
   perProcCycleCount.setSize(m_num_of_sequencers);
-  perProcCyclesPerTrans.setSize(m_num_of_sequencers);
-  perProcMissesPerTrans.setSize(m_num_of_sequencers);
 
   for(int i=0; i < m_num_of_sequencers; i++) {
     perProcCycleCount[i] = g_system_ptr->getCycleCount(i) - m_cycles_executed_at_start[i] + 1;
     // The +1 allows us to avoid division by zero
-
-    int trans = m_perProcEndTransaction[i];
-    if (trans == 0) {
-      perProcCyclesPerTrans[i] = 0;
-      perProcMissesPerTrans[i] = 0;
-    } else {
-      perProcCyclesPerTrans[i] = ruby_cycles / double(trans);
-      perProcMissesPerTrans[i] = m_perProcTotalMisses[i] / double(trans);
-    }
   }
 
-  integer_t total_misses = m_perProcTotalMisses.sum();
-  integer_t user_misses = m_perProcUserMisses.sum();
-  integer_t supervisor_misses = m_perProcSupervisorMisses.sum();
-  integer_t simics_cycles_executed = perProcCycleCount.sum();
-  integer_t transactions_started = m_perProcStartTransaction.sum();
-  integer_t transactions_ended = m_perProcEndTransaction.sum();
-
-  double cycles_per_transaction = (transactions_ended != 0) ? (m_num_of_sequencers * double(ruby_cycles)) / double(transactions_ended) : 0;
-  double misses_per_transaction = (transactions_ended != 0) ? double(total_misses) / double(transactions_ended) : 0;
-
-  out << "Total_misses: " << total_misses << endl;
-  out << "total_misses: " << total_misses << " " << m_perProcTotalMisses << endl;
-  out << "user_misses: " << user_misses << " " << m_perProcUserMisses << endl;
-  out << "supervisor_misses: " << supervisor_misses << " " << m_perProcSupervisorMisses << endl;
-  out << endl;
-  out << "ruby_cycles_executed: " << simics_cycles_executed << " " << perProcCycleCount << endl;
-  out << endl;
-  out << "transactions_started: " << transactions_started << " " << m_perProcStartTransaction << endl;
-  out << "transactions_ended: " << transactions_ended << " " << m_perProcEndTransaction << endl;
-  out << "cycles_per_transaction: " << cycles_per_transaction  << " " << perProcCyclesPerTrans << endl;
-  out << "misses_per_transaction: " << misses_per_transaction << " " << perProcMissesPerTrans << endl;
-
-  out << endl;
+  out << "ruby_cycles_executed: " << perProcCycleCount << endl;
 
   out << endl;
 
@@ -480,20 +414,6 @@ void Profiler::clearStats()
     }
   }
 
-  m_perProcTotalMisses.setSize(m_num_of_sequencers);
-  m_perProcUserMisses.setSize(m_num_of_sequencers);
-  m_perProcSupervisorMisses.setSize(m_num_of_sequencers);
-  m_perProcStartTransaction.setSize(m_num_of_sequencers);
-  m_perProcEndTransaction.setSize(m_num_of_sequencers);
-
-  for(int i=0; i < m_num_of_sequencers; i++) {
-    m_perProcTotalMisses[i] = 0;
-    m_perProcUserMisses[i] = 0;
-    m_perProcSupervisorMisses[i] = 0;
-    m_perProcStartTransaction[i] = 0;
-    m_perProcEndTransaction[i] = 0;
-  }
-
   m_busyControllerCount.setSize(MachineType_NUM); // all machines
   for(int i=0; i < MachineType_NUM; i++) {
     m_busyControllerCount[i].setSize(MachineType_base_count((MachineType)i));
@@ -610,16 +530,6 @@ void Profiler::profileRequest(const string& requestStr)
   }
 }
 
-void Profiler::startTransaction(int cpu)
-{
-  m_perProcStartTransaction[cpu]++;
-}
-
-void Profiler::endTransaction(int cpu)
-{
-  m_perProcEndTransaction[cpu]++;
-}
-
 void Profiler::controllerBusy(MachineID machID)
 {
   m_busyControllerCount[(int)machID.type][(int)machID.num]++;
@@ -709,8 +619,7 @@ static double process_memory_resident()
 }
 
 void Profiler::rubyWatch(int id){
-    //int rn_g1 = 0;//SIMICS_get_register_number(id, "g1");
-  uint64 tr = 0;//SIMICS_read_register(id, rn_g1);
+    uint64 tr = 0;
     Address watch_address = Address(tr);
     const int ID_SPACES = 3;
     const int TIME_SPACES = 7;
@@ -733,11 +642,6 @@ bool Profiler::watchAddress(Address addr){
     else
       return false;
 }
-
-int64 Profiler::getTotalTransactionsExecuted() const {
-  return m_perProcEndTransaction.sum();
-}
-
 
 Profiler *
 RubyProfilerParams::create()

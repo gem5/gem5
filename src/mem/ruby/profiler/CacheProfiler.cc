@@ -67,10 +67,6 @@ void CacheProfiler::printStats(ostream& out) const
   out << description << "_total_prefetches: " << m_prefetches << endl;
   out << description << "_total_sw_prefetches: " << m_sw_prefetches << endl;
   out << description << "_total_hw_prefetches: " << m_hw_prefetches << endl;
-
-  double trans_executed = double(g_system_ptr->getProfiler()->getTotalTransactionsExecuted());
-
-  out << description << "_misses_per_transaction: " << double(m_misses) / trans_executed << endl;
   out << endl;
 
   int requests = 0;
