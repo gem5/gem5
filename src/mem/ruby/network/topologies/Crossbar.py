@@ -1,4 +1,4 @@
-# Copyright (c) 2009 Advanced Micro Devices, Inc.
+# Copyright (c) 2010 Advanced Micro Devices, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,47 +25,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Steve Reinhardt
-#          Brad Beckmann
 
 from m5.params import *
-from m5.SimObject import SimObject
+from m5.objects import *
 
-class Link(SimObject):
-    type = 'Link'
-    latency = Param.Int(1, "")
-    bw_multiplier = Param.Int("")
-    weight = Param.Int(1, "")
+def makeTopology(nodes, options):
+    ext_links = [ExtLink(ext_node=n, int_node=i)
+                 for (i, n) in enumerate(nodes)]
+    xbar = len(nodes) # node ID for crossbar switch
+    int_links = [IntLink(node_a=i, node_b=xbar) for i in range(len(nodes))]    
+    return Topology(ext_links=ext_links, int_links=int_links,
+                    num_int_nodes=len(nodes)+1)
 
-class ExtLink(Link):
-    type = 'ExtLink'
-    ext_node = Param.RubyController("External node")
-    int_node = Param.Int("ID of internal node")
-    bw_multiplier = 64
 
-class IntLink(Link):
-    type = 'IntLink'
-    node_a = Param.Int("ID of internal node on one end")
-    node_b = Param.Int("ID of internal node on other end")
-    bw_multiplier = 16
-
-class Topology(SimObject):
-    type = 'Topology'
-    ext_links = VectorParam.ExtLink("Links to external nodes")
-    int_links = VectorParam.IntLink("Links between internal nodes")
-    num_int_nodes = Param.Int("Nunber of internal nodes")
-    print_config = Param.Bool(False,
-        "display topology config in the stats file")
-
-class RubyNetwork(SimObject):
-    type = 'RubyNetwork'
-    cxx_class = 'Network'
-    abstract = True
-    number_of_virtual_networks = Param.Int(10, "");
-    topology = Param.Topology("");
-    buffer_size = Param.Int(0,
-        "default buffer size; 0 indicates infinite buffering");
-    endpoint_bandwidth = Param.Int(10000, "");
-    adaptive_routing = Param.Bool(False, "enable adaptive routing");
-    link_latency = Param.Int(1,
-        "local memory latency ?? NetworkLinkLatency");
-    control_msg_size = Param.Int(8, "");

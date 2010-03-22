@@ -30,64 +30,50 @@ from m5.params import *
 from m5.objects import *
 
 #
-# This file contains a special network creation function.  This networks is not
-# general and will only work with specific system configurations.  The network
-# specified is similar to GEMS old file specified network.
+# Makes a generic mesh assuming an equal number of cache and directory cntrls
 #
 
-def makeMeshDirCorners(nodes, num_routers, num_rows):
+def makeTopology(nodes, options):
+
+    num_routers = options.num_cpus
+    num_rows = options.mesh_rows
+    
     #
-    # First determine which nodes are cache cntrls vs. dirs vs. dma
+    # There must be an evenly divisible number of cntrls to routers
+    # Also, obviously the number or rows must be <= the number of routers
     #
-    cache_nodes = []
-    dir_nodes = []
-    dma_nodes = []
-    for node in nodes:
-        if node.type == 'L1Cache_Controller' or \
-           node.type == 'L2Cache_Controller':
-            cache_nodes.append(node)
-        elif node.type == 'Directory_Controller':
-            dir_nodes.append(node)
-        elif node.type == 'DMA_Controller':
-            dma_nodes.append(node)
-            
-    #
-    # Obviously the number or rows must be <= the number of routers and evenly
-    # divisible.  Also the number of caches must be a multiple of the number of
-    # routers and the number of directories must be four.
-    #
+    cntrls_per_router, remainder = divmod(len(nodes), num_routers)
     assert(num_rows <= num_routers)
     num_columns = int(num_routers / num_rows)
     assert(num_columns * num_rows == num_routers)
-    caches_per_router, remainder = divmod(len(cache_nodes), num_routers)
-    assert(remainder == 0)
-    assert(len(dir_nodes) == 4)
 
     #
-    # Connect each cache controller to the appropriate router
+    # Add all but the remainder nodes to the list of nodes to be uniformly
+    # distributed across the network.
+    #
+    network_nodes = []
+    remainder_nodes = []
+    for node_index in xrange(len(nodes)):
+        if node_index < (len(nodes) - remainder):
+            network_nodes.append(nodes[node_index])
+        else:
+            remainder_nodes.append(nodes[node_index])
+
+    #
+    # Connect each node to the appropriate router
     #
     ext_links = []
-    for (i, n) in enumerate(cache_nodes):
+    for (i, n) in enumerate(network_nodes):
         cntrl_level, router_id = divmod(i, num_routers)
-        assert(cntrl_level < caches_per_router)
+        assert(cntrl_level < cntrls_per_router)
         ext_links.append(ExtLink(ext_node=n, int_node=router_id))
 
     #
-    # Connect the dir nodes to the corners.
+    # Connect the remainding nodes to router 0.  These should only be DMA nodes.
     #
-    ext_links.append(ExtLink(ext_node=dir_nodes[0], int_node=0))
-    ext_links.append(ExtLink(ext_node=dir_nodes[1], int_node=(num_columns - 1)))
-
-    ext_links.append(ExtLink(ext_node=dir_nodes[2],
-                             int_node=(num_routers - num_columns)))
-
-    ext_links.append(ExtLink(ext_node=dir_nodes[3], int_node=(num_routers - 1)))
-
-    #
-    # Connect the dma nodes to router 0.  These should only be DMA nodes.
-    #
-    for (i, node) in enumerate(dma_nodes):
+    for (i, node) in enumerate(remainder_nodes):
         assert(node.type == 'DMA_Controller')
+        assert(i < remainder)
         ext_links.append(ExtLink(ext_node=node, int_node=0))
     
     #
@@ -115,4 +101,3 @@ def makeMeshDirCorners(nodes, num_routers, num_rows):
     return Topology(ext_links=ext_links,
                     int_links=int_links,
                     num_int_nodes=num_routers)
-

@@ -31,15 +31,11 @@ import m5
 from m5.objects import *
 from m5.defines import buildEnv
 from m5.util import addToPath
-addToPath('../ruby/networks')
-from MeshDirCorners import *
-
-protocol = buildEnv['PROTOCOL']
-
-exec "import %s" % protocol
 
 def create_system(options, physmem, piobus = None, dma_devices = []):
 
+    protocol = buildEnv['PROTOCOL']
+    exec "import %s" % protocol
     try:
         (cpu_sequencers, dir_cntrls, all_cntrls) = \
           eval("%s.create_system(options, physmem, piobus, dma_devices)" \
@@ -49,27 +45,16 @@ def create_system(options, physmem, piobus = None, dma_devices = []):
         sys.exit(1)
         
     #
-    # Important: the topology constructor must be called before the network
-    # constructor.
+    # Important: the topology must be created before the network and after the
+    # controllers.
     #
-    if options.topology == "crossbar":
-        net_topology = makeCrossbar(all_cntrls)
-    elif options.topology == "mesh":
-        #
-        # The uniform mesh topology assumes one router per cpu
-        #
-        net_topology = makeMesh(all_cntrls,
-                                len(cpu_sequencers),
-                                options.mesh_rows)
+    exec "import %s" % options.topology
+    try:
+        net_topology = eval("%s.makeTopology(all_cntrls, options)" % options.topology)
+    except:
+        print "Error: could not create topology %s" % options.topology
+        sys.exit(1)
         
-    elif options.topology == "mesh_dir_corner":
-        #
-        # The uniform mesh topology assumes one router per cpu
-        #
-        net_topology = makeMeshDirCorners(all_cntrls,
-                                          len(cpu_sequencers),
-                                          options.mesh_rows)
-
     if options.garnet_network == "fixed":
         network = GarnetNetwork_d(topology = net_topology)
     elif options.garnet_network == "flexible":
