@@ -63,7 +63,6 @@ public:
   // Public Methods
   void addLinks(const Vector<MessageBuffer*>& in_vec, const Vector<MessageBuffer*>& out_vec);
   void wakeup();
-  bool broadcastBandwidthAvailable(int rand) const;
 
   void printStats(ostream& out) const;
   void clearStats();
@@ -96,9 +95,6 @@ private:
   Vector<int> m_units_remaining;
   int m_sID;
   NodeID m_node;
-  int m_bash_counter;
-  int m_bandwidth_since_sample;
-  Time m_last_bandwidth_sample;
   int m_link_bandwidth_multiplier;
   int m_link_latency;
   int m_wakeups_wo_switch;

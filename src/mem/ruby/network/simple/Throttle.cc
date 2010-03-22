@@ -73,9 +73,6 @@ void Throttle::init(NodeID node, int link_latency, int link_bandwidth_multiplier
   m_link_bandwidth_multiplier = link_bandwidth_multiplier;
   m_link_latency = link_latency;
 
-  m_bash_counter = HIGH_RANGE;
-  m_bandwidth_since_sample = 0;
-  m_last_bandwidth_sample = 0;
   m_wakeups_wo_switch = 0;
   clearStats();
 }
@@ -191,28 +188,6 @@ void Throttle::wakeup()
   // If ratio = 0, we used no bandwidth, if ratio = 1, we used all
   linkUtilized(ratio);
 
-  // Sample the link bandwidth utilization over a number of cycles
-  int bw_used = getLinkBandwidth()-bw_remaining;
-  m_bandwidth_since_sample += bw_used;
-
-  // FIXME - comment out the bash specific code for faster performance
-  // Start Bash code
-  // Update the predictor
-  Time current_time = g_eventQueue_ptr->getTime();
-  while ((current_time - m_last_bandwidth_sample) > ADJUST_INTERVAL) {
-    // Used less bandwidth
-    m_bash_counter--;
-
-    // Make sure we don't overflow
-    m_bash_counter = min(HIGH_RANGE, m_bash_counter);
-    m_bash_counter = max(0, m_bash_counter);
-
-    // Reset samples
-    m_last_bandwidth_sample += ADJUST_INTERVAL;
-    m_bandwidth_since_sample = 0;
-  }
-  // End Bash code
-
   if ((bw_remaining > 0) && !schedule_wakeup) {
     // We have extra bandwidth and our output buffer was available, so we must not have anything else to do until another message arrives.
     DEBUG_MSG(NETWORK_COMP,LowPrio,*this);
@@ -223,12 +198,6 @@ void Throttle::wakeup()
     // We are out of bandwidth for this cycle, so wakeup next cycle and continue
     g_eventQueue_ptr->scheduleEvent(this, 1);
   }
-}
-
-bool Throttle::broadcastBandwidthAvailable(int rand) const
-{
-  bool result =  !(m_bash_counter > ((HIGH_RANGE/4) + (rand % (HIGH_RANGE/2))));
-  return result;
 }
 
 void Throttle::printStats(ostream& out) const
