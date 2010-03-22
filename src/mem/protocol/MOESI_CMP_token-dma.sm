@@ -29,7 +29,7 @@
 
 machine(DMA, "DMA Controller") 
 : DMASequencer * dma_sequencer,
-  int request_latency
+  int request_latency = 6
 {
 
   MessageBuffer responseFromDir, network="From", virtual_network="0", ordered="true", no_vector="true";
