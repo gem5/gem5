@@ -45,3 +45,4 @@ class RubySystem(SimObject):
     tracer = Param.RubyTracer("");
     stats_filename = Param.String("ruby.stats",
         "file to which ruby dumps its stats")
+    no_mem_vec = Param.Bool(False, "do not allocate Ruby's mem vector");

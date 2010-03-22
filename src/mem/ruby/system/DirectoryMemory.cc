@@ -68,9 +68,8 @@ void DirectoryMemory::init()
       m_entries = new Directory_Entry*[m_num_entries];
       for (int i=0; i < m_num_entries; i++)
           m_entries[i] = NULL;
+      m_ram = g_system_ptr->getMemoryVector();
   }
-
-  m_ram = g_system_ptr->getMemoryVector();
 
   m_num_directories++;
   m_num_directories_bits = log_int(m_num_directories);

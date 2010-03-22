@@ -89,8 +89,12 @@ RubySystem::RubySystem(const Params *p)
 
     g_eventQueue_ptr = new RubyEventQueue(p->eventq, m_clock);
     g_system_ptr = this;
-    m_mem_vec_ptr = new MemoryVector;
-    m_mem_vec_ptr->setSize(m_memory_size_bytes);
+    if (p->no_mem_vec) {
+        m_mem_vec_ptr = NULL;
+    } else {
+        m_mem_vec_ptr = new MemoryVector;
+        m_mem_vec_ptr->setSize(m_memory_size_bytes);
+    }
 
     //
     // Print ruby configuration and stats at exit
@@ -111,7 +115,9 @@ RubySystem::~RubySystem()
   delete m_network_ptr;
   delete m_profiler_ptr;
   delete m_tracer_ptr;
-  delete m_mem_vec_ptr;
+  if (m_mem_vec_ptr != NULL) {
+      delete m_mem_vec_ptr;
+  }
 }
 
 void RubySystem::printSystemConfig(ostream & out)
