@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,20 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
-#ifndef ADDRESS_H
-#define ADDRESS_H
+#ifndef __MEM_RUBY_COMMON_ADDRESS_HH__
+#define __MEM_RUBY_COMMON_ADDRESS_HH__
 
 #include <iomanip>
 
 #include "base/hashmap.hh"
 #include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/System.hh"
 
 const int ADDRESS_WIDTH = 64; // address width in bytes
 
@@ -48,124 +43,131 @@ class Address;
 typedef Address PhysAddress;
 typedef Address VirtAddress;
 
-class Address {
-public:
-  // Constructors
-  Address() { m_address = 0; }
-  explicit Address(physical_address_t address) { m_address = address; }
+class Address
+{
+  public:
+    Address()
+        : m_address(0)
+    { }
 
-  Address(const Address& obj);
-  Address& operator=(const Address& obj);
+    explicit
+    Address(physical_address_t address)
+        : m_address(address)
+    { }
 
-  // Destructor
-  //  ~Address();
+    Address(const Address& obj);
+    Address& operator=(const Address& obj);
 
-  // Public Methods
+    void setAddress(physical_address_t address) { m_address = address; }
+    physical_address_t getAddress() const {return m_address;}
+    // selects bits inclusive
+    physical_address_t bitSelect(int small, int big) const;
+    physical_address_t bitRemove(int small, int big) const;
+    physical_address_t maskLowOrderBits(int number) const;
+    physical_address_t maskHighOrderBits(int number) const;
+    physical_address_t shiftLowOrderBits(int number) const;
 
-  void setAddress(physical_address_t address) { m_address = address; }
-  physical_address_t getAddress() const {return m_address;}
-  // selects bits inclusive
-  physical_address_t bitSelect(int small, int big) const;
-  physical_address_t bitRemove(int small, int big) const;
-  physical_address_t maskLowOrderBits(int number) const;
-  physical_address_t maskHighOrderBits(int number) const;
-  physical_address_t shiftLowOrderBits(int number) const;
-  physical_address_t getLineAddress() const
-    { return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH); }
-  physical_address_t getOffset() const
-    { return bitSelect(0, RubySystem::getBlockSizeBits()-1); }
+    physical_address_t
+    getLineAddress() const
+    {
+        return bitSelect(RubySystem::getBlockSizeBits(), ADDRESS_WIDTH);
+    }
 
-  void makeLineAddress() { m_address = maskLowOrderBits(RubySystem::getBlockSizeBits()); }
-  // returns the next stride address based on line address
-  void makeNextStrideAddress( int stride) {
-    m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
-      + RubySystem::getBlockSizeBytes()*stride;
-  }
-  int getBankSetNum() const;
-  int getBankSetDist() const;
+    physical_address_t
+    getOffset() const
+    {
+        return bitSelect(0, RubySystem::getBlockSizeBits() - 1);
+    }
 
-  Index memoryModuleIndex() const;
+    void
+    makeLineAddress()
+    {
+        m_address = maskLowOrderBits(RubySystem::getBlockSizeBits());
+    }
 
-  void print(ostream& out) const;
-  void output(ostream& out) const;
-  void input(istream& in);
+    // returns the next stride address based on line address
+    void
+    makeNextStrideAddress(int stride)
+    {
+        m_address = maskLowOrderBits(RubySystem::getBlockSizeBits())
+            + RubySystem::getBlockSizeBytes()*stride;
+    }
 
-  void setOffset( int offset ){
-    // first, zero out the offset bits
-    makeLineAddress();
-    m_address |= (physical_address_t) offset;
-  }
+    int getBankSetNum() const;
+    int getBankSetDist() const;
 
-private:
-  // Private Methods
+    Index memoryModuleIndex() const;
 
-  // Private copy constructor and assignment operator
-  //  Address(const Address& obj);
-  //  Address& operator=(const Address& obj);
+    void print(ostream& out) const;
+    void output(ostream& out) const;
+    void input(istream& in);
 
-  // Data Members (m_ prefix)
-  physical_address_t m_address;
+    void
+    setOffset(int offset)
+    {
+        // first, zero out the offset bits
+        makeLineAddress();
+        m_address |= (physical_address_t) offset;
+    }
+
+  private:
+    physical_address_t m_address;
 };
 
-inline
-Address line_address(const Address& addr) { Address temp(addr); temp.makeLineAddress(); return temp; }
-
-// Output operator declaration
-ostream& operator<<(ostream& out, const Address& obj);
-// comparison operator declaration
-bool operator==(const Address& obj1, const Address& obj2);
-bool operator!=(const Address& obj1, const Address& obj2);
-bool operator<(const Address& obj1, const Address& obj2);
-/* Address& operator=(const physical_address_t address); */
-
-inline
-bool operator<(const Address& obj1, const Address& obj2)
+inline Address
+line_address(const Address& addr)
 {
-  return obj1.getAddress() < obj2.getAddress();
+    Address temp(addr);
+    temp.makeLineAddress();
+    return temp;
 }
 
-// ******************* Definitions *******************
-
-// Output operator definition
-inline
-ostream& operator<<(ostream& out, const Address& obj)
+inline bool
+operator<(const Address& obj1, const Address& obj2)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    return obj1.getAddress() < obj2.getAddress();
 }
 
-inline
-bool operator==(const Address& obj1, const Address& obj2)
+inline ostream&
+operator<<(ostream& out, const Address& obj)
 {
-  return (obj1.getAddress() == obj2.getAddress());
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-inline
-bool operator!=(const Address& obj1, const Address& obj2)
+inline bool
+operator==(const Address& obj1, const Address& obj2)
 {
-  return (obj1.getAddress() != obj2.getAddress());
+    return (obj1.getAddress() == obj2.getAddress());
 }
 
-inline
-physical_address_t Address::bitSelect(int small, int big) const // rips bits inclusive
+inline bool
+operator!=(const Address& obj1, const Address& obj2)
 {
-  physical_address_t mask;
-  assert((unsigned)big >= (unsigned)small);
+    return (obj1.getAddress() != obj2.getAddress());
+}
 
-  if (big >= ADDRESS_WIDTH - 1) {
-    return (m_address >> small);
-  } else {
-    mask = ~((physical_address_t)~0 << (big + 1));
-    // FIXME - this is slow to manipulate a 64-bit number using 32-bits
-    physical_address_t partial = (m_address & mask);
-    return (partial >> small);
-  }
+// rips bits inclusive
+inline physical_address_t
+Address::bitSelect(int small, int big) const
+{
+    physical_address_t mask;
+    assert((unsigned)big >= (unsigned)small);
+
+    if (big >= ADDRESS_WIDTH - 1) {
+        return (m_address >> small);
+    } else {
+        mask = ~((physical_address_t)~0 << (big + 1));
+        // FIXME - this is slow to manipulate a 64-bit number using 32-bits
+        physical_address_t partial = (m_address & mask);
+        return (partial >> small);
+    }
 }
 
 // removes bits inclusive
-inline
-physical_address_t Address::bitRemove(int small, int big) const
+inline physical_address_t
+Address::bitRemove(int small, int big) const
 {
     physical_address_t mask;
     assert((unsigned)big >= (unsigned)small);
@@ -184,60 +186,64 @@ physical_address_t Address::bitRemove(int small, int big) const
         mask = (physical_address_t)~0 << (big + 1);
         physical_address_t higher_bits = m_address & mask;
 
-        //
         // Shift the valid high bits over the removed section
-        //
         higher_bits = higher_bits >> (big - small);
         return (higher_bits | lower_bits);
     }
 }
 
-inline
-physical_address_t Address::maskLowOrderBits(int number) const
+inline physical_address_t
+Address::maskLowOrderBits(int number) const
 {
   physical_address_t mask;
 
   if (number >= ADDRESS_WIDTH - 1) {
-    mask = ~0;
+      mask = ~0;
   } else {
-    mask = (physical_address_t)~0 << number;
+      mask = (physical_address_t)~0 << number;
   }
   return (m_address & mask);
 }
 
-inline
-physical_address_t Address::maskHighOrderBits(int number) const
+inline physical_address_t
+Address::maskHighOrderBits(int number) const
 {
-  physical_address_t mask;
+    physical_address_t mask;
 
-  if (number >= ADDRESS_WIDTH - 1) {
-    mask = ~0;
-  } else {
-    mask = (physical_address_t)~0 >> number;
-  }
-  return (m_address & mask);
+    if (number >= ADDRESS_WIDTH - 1) {
+        mask = ~0;
+    } else {
+        mask = (physical_address_t)~0 >> number;
+    }
+    return (m_address & mask);
 }
 
-inline
-physical_address_t Address::shiftLowOrderBits(int number) const
+inline physical_address_t
+Address::shiftLowOrderBits(int number) const
 {
-  return (m_address >> number);
+    return (m_address >> number);
 }
 
-inline
-integer_t Address::memoryModuleIndex() const
+inline integer_t
+Address::memoryModuleIndex() const
 {
-  integer_t index = bitSelect(RubySystem::getBlockSizeBits()+RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
-  assert (index >= 0);
-  return index;
+    integer_t index =
+        bitSelect(RubySystem::getBlockSizeBits() + 
+                  RubySystem::getMemorySizeBits(), ADDRESS_WIDTH);
+    assert (index >= 0);
+    return index;
 
-  //  Index indexHighPortion = address.bitSelect(MEMORY_SIZE_BITS-1, PAGE_SIZE_BITS+NUMBER_OF_MEMORY_MODULE_BITS);
-  //  Index indexLowPortion  = address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS-1);
+    // Index indexHighPortion =
+    //     address.bitSelect(MEMORY_SIZE_BITS - 1,
+    //                       PAGE_SIZE_BITS + NUMBER_OF_MEMORY_MODULE_BITS);
+    // Index indexLowPortion =
+    //     address.bitSelect(DATA_BLOCK_BITS, PAGE_SIZE_BITS - 1);
+    //
+    // Index index = indexLowPortion |
+    //     (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
 
-  //Index index = indexLowPortion | (indexHighPortion << (PAGE_SIZE_BITS - DATA_BLOCK_BITS));
-
-  /*
-  Round-robin mapping of addresses, at page size granularity
+    /*
+      Round-robin mapping of addresses, at page size granularity
 
 ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
   |                    |                       |               |
@@ -249,29 +255,39 @@ ADDRESS_WIDTH    MEMORY_SIZE_BITS        PAGE_SIZE_BITS  DATA_BLOCK_BITS
                         indexHighPortion         indexLowPortion
                                         <------->
                                NUMBER_OF_MEMORY_MODULE_BITS
-  */
+    */
 }
 
-inline
-void Address::print(ostream& out) const
+inline void
+Address::print(ostream& out) const
 {
     using namespace std;
-    out << "[" << hex << "0x" << m_address << "," << " line 0x" << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]" << flush;
+    out << "[" << hex << "0x" << m_address << "," << " line 0x"
+        << maskLowOrderBits(RubySystem::getBlockSizeBits()) << dec << "]"
+        << flush;
 }
 
 class Address;
 namespace __hash_namespace {
-  template <> struct hash<Address>
-  {
-    size_t operator()(const Address &s) const { return (size_t) s.getAddress(); }
-  };
-}
+template <> struct hash<Address>
+{
+    size_t
+    operator()(const Address &s) const
+    {
+        return (size_t)s.getAddress();
+    }
+};
+/* namespace __hash_namespace */ }
+
 namespace std {
-  template <> struct equal_to<Address>
-  {
-    bool operator()(const Address& s1, const Address& s2) const { return s1 == s2; }
-  };
-}
+template <> struct equal_to<Address>
+{
+    bool
+    operator()(const Address& s1, const Address& s2) const
+    {
+        return s1 == s2;
+    }
+};
+/* namespace std */ }
 
-#endif //ADDRESS_H
-
+#endif // __MEM_RUBY_COMMON_ADDRESS_HH__

@@ -35,68 +35,59 @@
  * message is enqueued to be sent back to the directory.
  */
 
-#ifndef MEMORYNODE_H
-#define MEMORYNODE_H
+#ifndef __MEM_RUBY_SYSTEM_MEMORYNODE_HH__
+#define __MEM_RUBY_SYSTEM_MEMORYNODE_HH__
 
 #include <iostream>
 
+#include "mem/protocol/MemoryRequestType.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/protocol/MemoryRequestType.hh"
 
-class MemoryNode {
+class MemoryNode
+{
+  public:
+    // old constructor
+    MemoryNode(const Time& time, int counter, const MsgPtr& msgptr,
+               const physical_address_t addr, const bool is_mem_read)
+    {
+        m_time = time;
+        m_msg_counter = counter;
+        m_msgptr = msgptr;
+        m_addr = addr;
+        m_is_mem_read = is_mem_read;
+        m_is_dirty_wb = !is_mem_read;
+    }
 
-public:
-  // Constructors
+    // new constructor
+    MemoryNode(const Time& time, const MsgPtr& msgptr,
+               const physical_address_t addr, const bool is_mem_read,
+               const bool is_dirty_wb)
+    {
+        m_time = time;
+        m_msg_counter = 0;
+        m_msgptr = msgptr;
+        m_addr = addr;
+        m_is_mem_read = is_mem_read;
+        m_is_dirty_wb = is_dirty_wb;
+    }
 
-// old one:
-  MemoryNode(const Time& time, int counter, const MsgPtr& msgptr, const physical_address_t addr, const bool is_mem_read) {
-    m_time = time;
-    m_msg_counter = counter;
-    m_msgptr = msgptr;
-    m_addr = addr;
-    m_is_mem_read = is_mem_read;
-    m_is_dirty_wb = !is_mem_read;
-  }
+    void print(std::ostream& out) const;
 
-// new one:
-  MemoryNode(const Time& time, const MsgPtr& msgptr, const physical_address_t addr, const bool is_mem_read, const bool is_dirty_wb) {
-    m_time = time;
-    m_msg_counter = 0;
-    m_msgptr = msgptr;
-    m_addr = addr;
-    m_is_mem_read = is_mem_read;
-    m_is_dirty_wb = is_dirty_wb;
-  }
-
-  // Destructor
-  ~MemoryNode() {};
-
-  // Public Methods
-  void print(std::ostream& out) const;
-
-  // Data Members (m_ prefix)  (all public -- this is really more a struct)
-
-  Time m_time;
-  int m_msg_counter;
-  MsgPtr m_msgptr;
-  physical_address_t m_addr;
-  bool m_is_mem_read;
-  bool m_is_dirty_wb;
+    Time m_time;
+    int m_msg_counter;
+    MsgPtr m_msgptr;
+    physical_address_t m_addr;
+    bool m_is_mem_read;
+    bool m_is_dirty_wb;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const MemoryNode& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const MemoryNode& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const MemoryNode& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //MEMORYNODE_H
+#endif // __MEM_RUBY_SYSTEM_MEMORYNODE_HH__

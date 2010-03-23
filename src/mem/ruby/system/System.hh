@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,32 +27,27 @@
  */
 
 /*
- * System.hh
- *
- * Description: Contains all of the various parts of the system we are
- * simulating.  Performs allocation, deallocation, and setup of all
- * the major components of the system
- *
- * $Id$
- *
+ * Contains all of the various parts of the system we are simulating.
+ * Performs allocation, deallocation, and setup of all the major
+ * components of the system
  */
 
-#ifndef SYSTEM_H
-#define SYSTEM_H
+#ifndef __MEM_RUBY_SYSTEM_SYSTEM_HH__
+#define __MEM_RUBY_SYSTEM_SYSTEM_HH__
 
-#include "mem/ruby/system/RubyPort.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/gems_common/Vector.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "sim/sim_object.hh"
-#include "params/RubySystem.hh"
 #include "base/callback.hh"
+#include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/system/RubyPort.hh"
+#include "params/RubySystem.hh"
+#include "sim/sim_object.hh"
 
-class Profiler;
-class Network;
 class CacheRecorder;
-class Tracer;
 class MemoryVector;
+class Network;
+class Profiler;
+class Tracer;
 
 /*
  * This defines the number of longs (32-bits on 32 bit machines,
@@ -68,83 +62,103 @@ class MemoryVector;
  */
 const int NUMBER_WORDS_PER_SET = 1;
 
-class RubySystem : public SimObject {
-public:
+class RubySystem : public SimObject
+{
+  public:
     typedef RubySystemParams Params;
     RubySystem(const Params *p);
-  // Destructor
-  ~RubySystem();
+    ~RubySystem();
 
-  // config accessors
-  static int getRandomSeed() { return m_random_seed; }
-  static int getRandomization() { return m_randomization; }
-  static int getBlockSizeBytes() { return m_block_size_bytes; }
-  static int getBlockSizeBits() { return m_block_size_bits; }
-  static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
-  static int getMemorySizeBits() { return m_memory_size_bits; }
+    // config accessors
+    static int getRandomSeed() { return m_random_seed; }
+    static int getRandomization() { return m_randomization; }
+    static int getBlockSizeBytes() { return m_block_size_bytes; }
+    static int getBlockSizeBits() { return m_block_size_bits; }
+    static uint64 getMemorySizeBytes() { return m_memory_size_bytes; }
+    static int getMemorySizeBits() { return m_memory_size_bits; }
 
-  // Public Methods
-  static Network* getNetwork() { assert(m_network_ptr != NULL); return m_network_ptr; }
-  static RubyEventQueue* getEventQueue() { return g_eventQueue_ptr; }
-  Profiler* getProfiler() {assert(m_profiler_ptr != NULL); return m_profiler_ptr; }
-  static Tracer* getTracer() { assert(m_tracer_ptr != NULL); return m_tracer_ptr; }
-  static MemoryVector* getMemoryVector() { assert(m_mem_vec_ptr != NULL); return m_mem_vec_ptr;}
+    // Public Methods
+    static Network*
+    getNetwork()
+    {
+        assert(m_network_ptr != NULL);
+        return m_network_ptr;
+    }
 
-  void recordCacheContents(CacheRecorder& tr) const;
-  static void printConfig(ostream& out);
-  static void printStats(ostream& out);
-  void clearStats() const;
+    static RubyEventQueue*
+    getEventQueue()
+    {
+        return g_eventQueue_ptr;
+    }
 
-  uint64 getInstructionCount(int thread) { return 1; }
-  static uint64 getCycleCount(int thread) { return g_eventQueue_ptr->getTime(); }
+    Profiler*
+    getProfiler()
+    {
+        assert(m_profiler_ptr != NULL);
+        return m_profiler_ptr;
+    }
 
-  void print(ostream& out) const;
-  /*
-#ifdef CHECK_COHERENCE
-  void checkGlobalCoherenceInvariant(const Address& addr);
-#endif
-  */
+    static Tracer*
+    getTracer()
+    {
+        assert(m_tracer_ptr != NULL);
+        return m_tracer_ptr;
+    }
 
-private:
-  // Private copy constructor and assignment operator
-  RubySystem(const RubySystem& obj);
-  RubySystem& operator=(const RubySystem& obj);
+    static MemoryVector*
+    getMemoryVector()
+    {
+        assert(m_mem_vec_ptr != NULL);
+        return m_mem_vec_ptr;
+    }
 
-  void init();
+    void recordCacheContents(CacheRecorder& tr) const;
+    static void printConfig(ostream& out);
+    static void printStats(ostream& out);
+    void clearStats() const;
 
-  static void printSystemConfig(ostream& out);
+    uint64 getInstructionCount(int thread) { return 1; }
+    static uint64
+    getCycleCount(int thread)
+    {
+        return g_eventQueue_ptr->getTime();
+    }
 
-private:
-  // configuration parameters
-  static int m_random_seed;
-  static bool m_randomization;
-  static Tick m_clock;
-  static int m_block_size_bytes;
-  static int m_block_size_bits;
-  static uint64 m_memory_size_bytes;
-  static int m_memory_size_bits;
+    void print(ostream& out) const;
 
-  // Data Members (m_ prefix)
-  static Network* m_network_ptr;
+  private:
+    // Private copy constructor and assignment operator
+    RubySystem(const RubySystem& obj);
+    RubySystem& operator=(const RubySystem& obj);
 
-public:
-  static Profiler* m_profiler_ptr;
-  static Tracer* m_tracer_ptr;
-  static MemoryVector* m_mem_vec_ptr;
+    void init();
+
+    static void printSystemConfig(ostream& out);
+
+  private:
+    // configuration parameters
+    static int m_random_seed;
+    static bool m_randomization;
+    static Tick m_clock;
+    static int m_block_size_bytes;
+    static int m_block_size_bits;
+    static uint64 m_memory_size_bytes;
+    static int m_memory_size_bits;
+
+    static Network* m_network_ptr;
+
+  public:
+    static Profiler* m_profiler_ptr;
+    static Tracer* m_tracer_ptr;
+    static MemoryVector* m_mem_vec_ptr;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const RubySystem& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-inline
-ostream& operator<<(ostream& out, const RubySystem& obj)
+inline ostream&
+operator<<(ostream& out, const RubySystem& obj)
 {
-//  obj.print(out);
-  out << flush;
-  return out;
+    //obj.print(out);
+    out << flush;
+    return out;
 }
 
 class RubyExitCallback : public Callback
@@ -153,22 +167,17 @@ class RubyExitCallback : public Callback
     string stats_filename;
 
   public:
-    /**
-     * virtualize the destructor to make sure that the correct one
-     * gets called.
-     */
-
     virtual ~RubyExitCallback() {}
 
     RubyExitCallback(const string& _stats_filename)
     {
-      stats_filename = _stats_filename;
+        stats_filename = _stats_filename;
     }
 
     virtual void process();
 };
 
-#endif //SYSTEM_H
+#endif // __MEM_RUBY_SYSTEM_SYSTEM_HH__
 
 
 

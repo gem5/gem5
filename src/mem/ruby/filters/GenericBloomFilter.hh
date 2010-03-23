@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,67 +26,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * GenericBloomFilter.hh
- *
- * Description:
- *
- *
- */
-
-#ifndef GENERIC_BLOOM_FILTER_H
-#define GENERIC_BLOOM_FILTER_H
+#ifndef __MEM_RUBY_FILTERS_GENERICBLOOMFILTER_HH__
+#define __MEM_RUBY_FILTERS_GENERICBLOOMFILTER_HH__
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-class GenericBloomFilter {
-public:
+class GenericBloomFilter
+{
+  public:
+    GenericBloomFilter(string config);
+    ~GenericBloomFilter();
 
-  // Constructors
-  GenericBloomFilter(string config);
+    void clear();
+    void increment(const Address& addr);
+    void decrement(const Address& addr);
+    void merge(GenericBloomFilter * other_filter);
+    void set(const Address& addr);
+    void unset(const Address& addr);
+    AbstractBloomFilter *
+    getFilter()
+    {
+        return m_filter;
+    }
 
-  void clear();
-  void increment(const Address& addr);
-  void decrement(const Address& addr);
-  void merge(GenericBloomFilter * other_filter);
-  void set(const Address& addr);
-  void unset(const Address& addr);
-  AbstractBloomFilter * getFilter(){
-    return m_filter;
-  }
+    bool isSet(const Address& addr);
 
-  bool isSet(const Address& addr);
+    int getCount(const Address& addr);
 
-  int getCount(const Address& addr);
+    int getTotalCount();
 
-  int getTotalCount();
+    int getIndex(const Address& addr);
+    int readBit(const int index);
+    void writeBit(const int index, const int value);
 
-  int getIndex(const Address& addr);
-  int readBit(const int index);
-  void writeBit(const int index, const int value);
+    void print(ostream& out) const;
+    void printConfig(ostream& out) { out << "GenericBloomFilter" << endl; }
 
-  void print(ostream& out) const;
-  void printConfig(ostream& out) { out << "GenericBloomFilter" << endl; }
-
-  // Destructor
-  ~GenericBloomFilter();
-
-
-private:
-
-  AbstractBloomFilter* m_filter;
+  private:
+    AbstractBloomFilter* m_filter;
 };
 
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const GenericBloomFilter& obj)
+inline ostream&
+operator<<(ostream& out, const GenericBloomFilter& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-
-#endif
+#endif // __MEM_RUBY_FILTERS_GENERICBLOOMFILTER_HH__

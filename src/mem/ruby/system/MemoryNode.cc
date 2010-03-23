@@ -30,11 +30,12 @@
 
 using namespace std;
 
-void MemoryNode::print(ostream& out) const
+void
+MemoryNode::print(ostream& out) const
 {
-  out << "[";
-  out << m_time << ", ";
-  out << m_msg_counter << ", ";
-  out << m_msgptr << "; ";
-  out << "]";
+    out << "[";
+    out << m_time << ", ";
+    out << m_msg_counter << ", ";
+    out << m_msgptr << "; ";
+    out << "]";
 }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,149 +27,163 @@
  */
 
 /*
- * slicc_util.hh
- *
- * Description: These are the functions that exported to slicc from ruby.
- *
- * $Id$
- *
+ * These are the functions that exported to slicc from ruby.
  */
 
-#ifndef SLICC_UTIL_H
-#define SLICC_UTIL_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/system/MachineID.hh"
-#include "mem/protocol/CacheMsg.hh"
-#include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/AccessType.hh"
-#include "mem/protocol/MachineType.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/Directory_State.hh"
+#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/L1Cache_State.hh"
+#include "mem/protocol/MachineType.hh"
 #include "mem/protocol/MessageSizeType.hh"
-#include "mem/ruby/network/Network.hh"
 #include "mem/protocol/PrefetchBit.hh"
-#include "mem/ruby/system/System.hh"
-
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/system/NodeID.hh"
+#include "mem/ruby/system/System.hh"
 
 class Set;
 class NetDest;
 
-extern inline int random(int n)
+inline int
+random(int n)
 {
   return random() % n;
 }
 
-extern inline bool multicast_retry()
+inline bool
+multicast_retry()
 {
-  if (RubySystem::getRandomization()) {
-    return (random() & 0x1);
-  } else {
-    return true;
-  }
+    if (RubySystem::getRandomization()) {
+        return (random() & 0x1);
+    } else {
+        return true;
+    }
 }
 
-extern inline int cache_state_to_int(L1Cache_State state)
+inline int
+cache_state_to_int(L1Cache_State state)
 {
-  return state;
+    return state;
 }
 
-extern inline Time get_time()
+inline Time
+get_time()
 {
-  return g_eventQueue_ptr->getTime();
+    return g_eventQueue_ptr->getTime();
 }
 
-extern inline Time zero_time()
+inline Time
+zero_time()
 {
-  return 0;
-}
-
-extern inline NodeID intToID(int nodenum)
-{
-  NodeID id = nodenum;
-  return id;
-}
-
-extern inline int IDToInt(NodeID id)
-{
-  int nodenum = id;
-  return nodenum;
-}
-
-extern inline int addressToInt(Address addr)
-{
-  return (int) addr.getLineAddress();
-}
-
-extern inline bool long_enough_ago(Time event)
-{
-  return ((get_time() - event) > 200);
-}
-
-extern inline int getAddThenMod(int addend1, int addend2, int modulus)
-{
-  return (addend1 + addend2) % modulus;
-}
-
-extern inline Time getTimeModInt(Time time, int modulus)
-{
-  return time % modulus;
-}
-
-extern inline Time getTimePlusInt(Time addend1, int addend2)
-{
-  return (Time) addend1 + addend2;
-}
-
-extern inline Time getTimeMinusTime(Time t1, Time t2)
-{
-  ASSERT(t1 >= t2);
-  return t1 - t2;
-}
-
-extern inline Time getPreviousDelayedCycles(Time t1, Time t2)
-{
-  if (RubySystem::getRandomization()) {  // when randomizing delayed
     return 0;
-  } else {
-    return getTimeMinusTime(t1, t2);
-  }
 }
 
-extern inline void WARN_ERROR_TIME(Time time)
+inline NodeID
+intToID(int nodenum)
 {
-  WARN_EXPR(time);
+    NodeID id = nodenum;
+    return id;
 }
 
-// Return type for time_to_int is "Time" and not "int" so we get a 64-bit integer
-extern inline Time time_to_int(Time time)
+inline int
+IDToInt(NodeID id)
 {
-  return time;
+    int nodenum = id;
+    return nodenum;
+}
+
+inline int
+addressToInt(Address addr)
+{
+    return (int)addr.getLineAddress();
+}
+
+inline bool
+long_enough_ago(Time event)
+{
+    return ((get_time() - event) > 200);
+}
+
+inline int
+getAddThenMod(int addend1, int addend2, int modulus)
+{
+    return (addend1 + addend2) % modulus;
+}
+
+inline Time
+getTimeModInt(Time time, int modulus)
+{
+    return time % modulus;
+}
+
+inline Time
+getTimePlusInt(Time addend1, int addend2)
+{
+    return (Time) addend1 + addend2;
+}
+
+inline Time
+getTimeMinusTime(Time t1, Time t2)
+{
+    ASSERT(t1 >= t2);
+    return t1 - t2;
+}
+
+inline Time
+getPreviousDelayedCycles(Time t1, Time t2)
+{
+    if (RubySystem::getRandomization()) {  // when randomizing delayed
+        return 0;
+    } else {
+        return getTimeMinusTime(t1, t2);
+    }
+}
+
+inline void
+WARN_ERROR_TIME(Time time)
+{
+    WARN_EXPR(time);
+}
+
+// Return type for time_to_int is "Time" and not "int" so we get a
+// 64-bit integer
+inline Time
+time_to_int(Time time)
+{
+    return time;
 }
 
 // Appends an offset to an address
-extern inline Address setOffset(Address addr, int offset)
+inline Address
+setOffset(Address addr, int offset)
 {
-  Address result = addr;
-  result.setOffset(offset);
-  return result;
+    Address result = addr;
+    result.setOffset(offset);
+    return result;
 }
 
 // Makes an address into a line address
-extern inline Address makeLineAddress(Address addr)
+inline Address
+makeLineAddress(Address addr)
 {
-  Address result = addr;
-  result.makeLineAddress();
-  return result;
+    Address result = addr;
+    result.makeLineAddress();
+    return result;
 }
 
-extern inline int addressOffset(Address addr)
+inline int
+addressOffset(Address addr)
 {
-  return addr.getOffset();
+    return addr.getOffset();
 }
 
-#endif //SLICC_UTIL_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICCUTIL_HH__

@@ -26,12 +26,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RUBYSLICC_INCLUDES_H
-#define RUBYSLICC_INCLUDES_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_INCLUDES_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_INCLUDES_HH__
 
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
 
-#endif
+#endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_INCLUDES_HH__
 

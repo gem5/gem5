@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,80 +26,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- * Description: The histogram class implements a simple histogram
- *
- */
-
-#ifndef HISTOGRAM_H
-#define HISTOGRAM_H
+#ifndef __MEM_RUBY_COMMON_HISTOGRAM_HH__
+#define __MEM_RUBY_COMMON_HISTOGRAM_HH__
 
 #include <iostream>
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
 
-class Histogram {
-public:
-  // Constructors
-  Histogram(int binsize = 1, int bins = 50);
+class Histogram
+{
+  public:
+    Histogram(int binsize = 1, int bins = 50);
+    ~Histogram();
 
-  // Destructor
-  ~Histogram();
+    void add(int64 value);
+    void add(const Histogram& hist);
+    void clear() { clear(m_bins); }
+    void clear(int bins);
+    void clear(int binsize, int bins);
+    int64 size() const { return m_count; }
+    int getBins() const { return m_bins; }
+    int getBinSize() const { return m_binsize; }
+    int64 getTotal() const { return m_sumSamples; }
+    int64 getData(int index) const { return m_data[index]; }
 
-  // Public Methods
+    void printWithMultiplier(std::ostream& out, double multiplier) const;
+    void printPercent(std::ostream& out) const;
+    void print(std::ostream& out) const;
 
-  void add(int64 value);
-  void add(const Histogram& hist);
-  void clear() { clear(m_bins); }
-  void clear(int bins);
-  void clear(int binsize, int bins);
-  int64 size() const { return m_count; }
-  int getBins() const { return m_bins; }
-  int getBinSize() const { return m_binsize; }
-  int64 getTotal() const { return m_sumSamples; }
-  int64 getData(int index) const { return m_data[index]; }
-
-  void printWithMultiplier(std::ostream& out, double multiplier) const;
-  void printPercent(std::ostream& out) const;
-  void print(std::ostream& out) const;
 private:
-  // Private Methods
+    Vector<int64> m_data;
+    int64 m_max;          // the maximum value seen so far
+    int64 m_count;                // the number of elements added
+    int m_binsize;                // the size of each bucket
+    int m_bins;           // the number of buckets
+    int m_largest_bin;      // the largest bin used
 
-  // Private copy constructor and assignment operator
-  //  Histogram(const Histogram& obj);
-  //  Histogram& operator=(const Histogram& obj);
+    int64 m_sumSamples;   // the sum of all samples
+    int64 m_sumSquaredSamples; // the sum of the square of all samples
 
-  // Data Members (m_ prefix)
-  Vector<int64> m_data;
-  int64 m_max;          // the maximum value seen so far
-  int64 m_count;                // the number of elements added
-  int m_binsize;                // the size of each bucket
-  int m_bins;           // the number of buckets
-  int m_largest_bin;      // the largest bin used
-
-  int64 m_sumSamples;   // the sum of all samples
-  int64 m_sumSquaredSamples; // the sum of the square of all samples
-
-  double getStandardDeviation() const;
+    double getStandardDeviation() const;
 };
 
 bool node_less_then_eq(const Histogram* n1, const Histogram* n2);
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const Histogram& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const Histogram& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Histogram& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //HISTOGRAM_H
+#endif // __MEM_RUBY_COMMON_HISTOGRAM_HH__

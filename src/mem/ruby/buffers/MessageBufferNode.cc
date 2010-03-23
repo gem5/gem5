@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -32,9 +31,9 @@
 void
 MessageBufferNode::print(std::ostream& out) const
 {
-  out << "[";
-  out << m_time << ", ";
-  out << m_msg_counter << ", ";
-  out << m_msgptr << "; ";
-  out << "]";
+    out << "[";
+    out << m_time << ", ";
+    out << m_msg_counter << ", ";
+    out << m_msgptr << "; ";
+    out << "]";
 }

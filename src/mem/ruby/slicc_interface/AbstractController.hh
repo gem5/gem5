@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef ABSTRACTCONTROLLER_H
-#define ABSTRACTCONTROLLER_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__
 
 #include "sim/sim_object.hh"
 #include "params/RubyController.hh"
@@ -40,29 +40,30 @@
 class MessageBuffer;
 class Network;
 
-class AbstractController : public SimObject, public Consumer {
-public:
+class AbstractController : public SimObject, public Consumer
+{
+  public:
     typedef RubyControllerParams Params;
     AbstractController(const Params *p) : SimObject(p) {}
 
-  // returns the number of controllers created of the specific subtype
-  //  virtual int getNumberOfControllers() const = 0;
-  virtual MessageBuffer* getMandatoryQueue() const = 0;
-  virtual const int & getVersion() const = 0;
-  virtual const string toString() const = 0;  // returns text version of controller type
-  virtual const string getName() const = 0;   // return instance name
-  virtual const MachineType getMachineType() const = 0;
-  virtual void blockOnQueue(Address, MessageBuffer*) = 0;
-  virtual void unblock(Address) = 0;
-  virtual void initNetworkPtr(Network* net_ptr) = 0;
+    // returns the number of controllers created of the specific subtype
+    //  virtual int getNumberOfControllers() const = 0;
+    virtual MessageBuffer* getMandatoryQueue() const = 0;
+    virtual const int & getVersion() const = 0;
+    virtual const string toString() const = 0;  // returns text version of
+                                                // controller type
+    virtual const string getName() const = 0;   // return instance name
+    virtual const MachineType getMachineType() const = 0;
+    virtual void blockOnQueue(Address, MessageBuffer*) = 0;
+    virtual void unblock(Address) = 0;
+    virtual void initNetworkPtr(Network* net_ptr) = 0;
 
-  virtual void print(ostream & out) const = 0;
-  virtual void printStats(ostream & out) const = 0;
-  virtual void printConfig(ostream & out) const = 0;
-  virtual void wakeup() = 0;
-  //  virtual void dumpStats(ostream & out) = 0;
-  virtual void clearStats() = 0;
-
+    virtual void print(ostream & out) const = 0;
+    virtual void printStats(ostream & out) const = 0;
+    virtual void printConfig(ostream & out) const = 0;
+    virtual void wakeup() = 0;
+    //  virtual void dumpStats(ostream & out) = 0;
+    virtual void clearStats() = 0;
 };
 
-#endif
+#endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCONTROLLER_HH__

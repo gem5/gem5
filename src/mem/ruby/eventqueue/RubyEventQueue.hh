@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,9 +27,7 @@
  */
 
 /*
- * $Id$
- *
- * Description: The RubyEventQueue class implements an event queue which
+ * The RubyEventQueue class implements an event queue which
  * can be trigger events, allowing our simulation to be event driven.
  *
  * Currently, the only event we support is a Consumer being signaled
@@ -56,8 +53,8 @@
  *
  */
 
-#ifndef RUBYEVENTQUEUE_H
-#define RUBYEVENTQUEUE_H
+#ifndef __MEM_RUBY_EVENTQUEUE_RUBYEVENTQUEUE_HH__
+#define __MEM_RUBY_EVENTQUEUE_RUBYEVENTQUEUE_HH__
 
 #include <iostream>
 
@@ -70,48 +67,36 @@ class Consumer;
 template <class TYPE> class PrioHeap;
 class RubyEventQueueNode;
 
-class RubyEventQueue : public EventManager {
-public:
-  // Constructors
-  RubyEventQueue(EventQueue* eventq, Tick _clock);
+class RubyEventQueue : public EventManager
+{
+  public:
+    RubyEventQueue(EventQueue* eventq, Tick _clock);
+    ~RubyEventQueue();
 
-  // Destructor
-  ~RubyEventQueue();
+    Time getTime() const { return curTick/m_clock; }
+    Tick getClock() const { return m_clock; }
+    void scheduleEvent(Consumer* consumer, Time timeDelta);
+    void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
+    void print(std::ostream& out) const;
 
-  // Public Methods
+    void triggerEvents(Time t) { assert(0); }
+    void triggerAllEvents() { assert(0); }
 
-  Time getTime() const { return curTick/m_clock; }
-  Tick getClock() const { return m_clock; }
-  void scheduleEvent(Consumer* consumer, Time timeDelta);
-  void scheduleEventAbsolute(Consumer* consumer, Time timeAbs);
-  void print(std::ostream& out) const;
+  private:
+    // Private copy constructor and assignment operator
+    RubyEventQueue(const RubyEventQueue& obj);
+    RubyEventQueue& operator=(const RubyEventQueue& obj);
 
-  void triggerEvents(Time t) { assert(0); }
-  void triggerAllEvents() { assert(0); }
-
-  // Private Methods
-private:
-  // Private copy constructor and assignment operator
-  RubyEventQueue(const RubyEventQueue& obj);
-  RubyEventQueue& operator=(const RubyEventQueue& obj);
-
-  // Data Members (m_ prefix)
-  Tick m_clock;
+    // Data Members (m_ prefix)
+    Tick m_clock;
 };
 
-// Output operator declaration
-inline extern
-std::ostream& operator<<(std::ostream& out, const RubyEventQueue& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-inline extern
-std::ostream& operator<<(std::ostream& out, const RubyEventQueue& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const RubyEventQueue& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //EVENTQUEUE_H
+#endif // __MEM_RUBY_EVENTQUEUE_RUBYEVENTQUEUE_HH__

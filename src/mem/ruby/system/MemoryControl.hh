@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,34 +26,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * MemoryControl.hh
- *
- * Description:  See MemoryControl.cc
- *
- * $Id: $
- *
- */
-
-#ifndef MEMORY_CONTROL_H
-#define MEMORY_CONTROL_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/profiler/MemCntrlProfiler.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
-#include "mem/gems_common/util.hh"
-#include "mem/ruby/system/MemoryNode.hh"
-// Note that "MemoryMsg" is in the "generated" directory:
-#include "mem/protocol/MemoryMsg.hh"
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/system/AbstractMemOrCache.hh"
-#include "sim/sim_object.hh"
-#include "params/RubyMemoryControl.hh"
+#ifndef __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
+#define __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__
 
 #include <list>
+
+#include "mem/gems_common/Map.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/protocol/MemoryMsg.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/profiler/MemCntrlProfiler.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
+#include "mem/ruby/system/AbstractMemOrCache.hh"
+#include "mem/ruby/system/MemoryNode.hh"
+#include "mem/ruby/system/System.hh"
+#include "params/RubyMemoryControl.hh"
+#include "sim/sim_object.hh"
 
 // This constant is part of the definition of tFAW; see
 // the comments in header to MemoryControl.cc
@@ -64,124 +53,117 @@
 
 class Consumer;
 
-class MemoryControl : public SimObject, public Consumer, public AbstractMemOrCache {
-public:
-
-  // Constructors
+class MemoryControl :
+    public SimObject, public Consumer, public AbstractMemOrCache
+{
+  public:
     typedef RubyMemoryControlParams Params;
     MemoryControl(const Params *p);
-  void init();
+    void init();
 
-  // Destructor
-  ~MemoryControl ();
+    ~MemoryControl();
 
-  // Public Methods
+    void wakeup();
 
-  void wakeup() ;
+    void setConsumer(Consumer* consumer_ptr);
+    Consumer* getConsumer() { return m_consumer_ptr; };
+    void setDescription(const string& name) { m_description = name; };
+    string getDescription() { return m_description; };
 
-  void setConsumer (Consumer* consumer_ptr);
-  Consumer* getConsumer () { return m_consumer_ptr; };
-  void setDescription (const string& name) { m_description = name; };
-  string getDescription () { return m_description; };
+    // Called from the directory:
+    void enqueue(const MsgPtr& message, int latency );
+    void enqueueMemRef(MemoryNode& memRef);
+    void dequeue();
+    const Message* peek();
+    MemoryNode peekNode();
+    bool isReady();
+    bool areNSlotsAvailable(int n) { return true; };  // infinite queue length
 
-  // Called from the directory:
-  void enqueue (const MsgPtr& message, int latency );
-  void enqueueMemRef (MemoryNode& memRef);
-  void dequeue ();
-  const Message* peek ();
-  MemoryNode peekNode ();
-  bool isReady();
-  bool areNSlotsAvailable (int n) { return true; };  // infinite queue length
+    //// Called from L3 cache:
+    //void writeBack(physical_address_t addr);
 
-  //// Called from L3 cache:
-  //void writeBack(physical_address_t addr);
+    void printConfig(ostream& out);
+    void print(ostream& out) const;
+    void setDebug(int debugFlag);
+    void clearStats() const;
+    void printStats(ostream& out) const;
 
-  void printConfig (ostream& out);
-  void print (ostream& out) const;
-  void setDebug (int debugFlag);
-  void clearStats() const;
-  void printStats(ostream& out) const;
+    //added by SS
+    int getBanksPerRank() { return m_banks_per_rank; };
+    int getRanksPerDimm() { return m_ranks_per_dimm; };
+    int getDimmsPerChannel() { return m_dimms_per_channel; }
 
+  private:
+    void enqueueToDirectory(MemoryNode req, int latency);
+    int getBank(physical_address_t addr);
+    int getRank(int bank);
+    bool queueReady(int bank);
+    void issueRequest(int bank);
+    bool issueRefresh(int bank);
+    void markTfaw(int rank);
+    void executeCycle();
 
-  //added by SS
-  int getBanksPerRank() { return m_banks_per_rank; };
-  int getRanksPerDimm() { return m_ranks_per_dimm; };
-  int getDimmsPerChannel() { return m_dimms_per_channel; }
+    // Private copy constructor and assignment operator
+    MemoryControl (const MemoryControl& obj);
+    MemoryControl& operator=(const MemoryControl& obj);
 
-private:
+    // data members
+    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
+    string m_description;
+    int m_msg_counter;
+    int m_awakened;
 
-  void enqueueToDirectory (MemoryNode req, int latency);
-  int getBank (physical_address_t addr);
-  int getRank (int bank);
-  bool queueReady (int bank);
-  void issueRequest (int bank);
-  bool issueRefresh (int bank);
-  void markTfaw (int rank);
-  void executeCycle ();
+    int m_mem_bus_cycle_multiplier;
+    int m_banks_per_rank;
+    int m_ranks_per_dimm;
+    int m_dimms_per_channel;
+    int m_bank_bit_0;
+    int m_rank_bit_0;
+    int m_dimm_bit_0;
+    unsigned int m_bank_queue_size;
+    int m_bank_busy_time;
+    int m_rank_rank_delay;
+    int m_read_write_delay;
+    int m_basic_bus_busy_time;
+    int m_mem_ctl_latency;
+    int m_refresh_period;
+    int m_mem_random_arbitrate;
+    int m_tFaw;
+    int m_mem_fixed_delay;
 
-  // Private copy constructor and assignment operator
-  MemoryControl (const MemoryControl& obj);
-  MemoryControl& operator=(const MemoryControl& obj);
+    int m_total_banks;
+    int m_total_ranks;
+    int m_refresh_period_system;
 
-  // data members
-  Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-  string m_description;
-  int m_msg_counter;
-  int m_awakened;
+    // queues where memory requests live
+    list<MemoryNode> m_response_queue;
+    list<MemoryNode> m_input_queue;
+    list<MemoryNode>* m_bankQueues;
 
-  int m_mem_bus_cycle_multiplier;
-  int m_banks_per_rank;
-  int m_ranks_per_dimm;
-  int m_dimms_per_channel;
-  int m_bank_bit_0;
-  int m_rank_bit_0;
-  int m_dimm_bit_0;
-  unsigned int m_bank_queue_size;
-  int m_bank_busy_time;
-  int m_rank_rank_delay;
-  int m_read_write_delay;
-  int m_basic_bus_busy_time;
-  int m_mem_ctl_latency;
-  int m_refresh_period;
-  int m_mem_random_arbitrate;
-  int m_tFaw;
-  int m_mem_fixed_delay;
+    // Each entry indicates number of address-bus cycles until bank
+    // is reschedulable:
+    int* m_bankBusyCounter;
+    int* m_oldRequest;
 
-  int m_total_banks;
-  int m_total_ranks;
-  int m_refresh_period_system;
+    uint64* m_tfaw_shift;
+    int* m_tfaw_count;
 
-  // queues where memory requests live
+    // Each of these indicates number of address-bus cycles until
+    // we can issue a new request of the corresponding type:
+    int m_busBusyCounter_Write;
+    int m_busBusyCounter_ReadNewRank;
+    int m_busBusyCounter_Basic;
 
-  list<MemoryNode> m_response_queue;
-  list<MemoryNode> m_input_queue;
-  list<MemoryNode>* m_bankQueues;
+    int m_busBusy_WhichRank;  // which rank last granted
+    int m_roundRobin;         // which bank queue was last granted
+    int m_refresh_count;      // cycles until next refresh
+    int m_need_refresh;       // set whenever m_refresh_count goes to zero
+    int m_refresh_bank;       // which bank to refresh next
+    int m_ageCounter;         // age of old requests; to detect starvation
+    int m_idleCount;          // watchdog timer for shutting down
+    int m_debug;              // turn on printf's
 
-  // Each entry indicates number of address-bus cycles until bank
-  // is reschedulable:
-  int* m_bankBusyCounter;
-  int* m_oldRequest;
-
-  uint64* m_tfaw_shift;
-  int* m_tfaw_count;
-
-  // Each of these indicates number of address-bus cycles until
-  // we can issue a new request of the corresponding type:
-  int m_busBusyCounter_Write;
-  int m_busBusyCounter_ReadNewRank;
-  int m_busBusyCounter_Basic;
-
-  int m_busBusy_WhichRank;  // which rank last granted
-  int m_roundRobin;         // which bank queue was last granted
-  int m_refresh_count;      // cycles until next refresh
-  int m_need_refresh;       // set whenever m_refresh_count goes to zero
-  int m_refresh_bank;       // which bank to refresh next
-  int m_ageCounter;         // age of old requests; to detect starvation
-  int m_idleCount;          // watchdog timer for shutting down
-  int m_debug;              // turn on printf's
-
-  MemCntrlProfiler* m_profiler_ptr;
+    MemCntrlProfiler* m_profiler_ptr;
 };
 
-#endif  // MEMORY_CONTROL_H
-
+#endif // __MEM_RUBY_SYSTEM_MEMORY_CONTROL_HH__

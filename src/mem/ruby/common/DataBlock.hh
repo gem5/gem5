@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,152 +26,144 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DATABLOCK_H
-#define DATABLOCK_H
+#ifndef __MEM_RUBY_COMMON_DATABLOCK_HH__
+#define __MEM_RUBY_COMMON_DATABLOCK_HH__
 
 #include <iomanip>
 #include <iostream>
 
+#include "mem/gems_common/Vector.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/system/System.hh"
-#include "mem/gems_common/Vector.hh"
 
-class DataBlock {
- public:
-  // Constructors
-  DataBlock() {alloc();}
-  DataBlock(const DataBlock & cp) {
-    m_data = new uint8[RubySystem::getBlockSizeBytes()];
-    memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
-    m_alloc = true;
-  }
-
-  // Destructor
-  ~DataBlock() { 
-    if(m_alloc) {
-      delete [] m_data;
+class DataBlock
+{
+  public:
+    DataBlock()
+    {
+        alloc();
     }
-  }
 
-  DataBlock& operator=(const DataBlock& obj);
+    DataBlock(const DataBlock &cp)
+    {
+        m_data = new uint8[RubySystem::getBlockSizeBytes()];
+        memcpy(m_data, cp.m_data, RubySystem::getBlockSizeBytes());
+        m_alloc = true;
+    }
 
-  // Public Methods
-  void assign(uint8* data);
+    ~DataBlock()
+    {
+        if (m_alloc)
+            delete [] m_data;
+    }
 
-  void clear();
-  uint8 getByte(int whichByte) const;
-  const uint8* getData(int offset, int len) const;
-  void setByte(int whichByte, uint8 data);
-  void setData(uint8* data, int offset, int len);
-  void copyPartial(const DataBlock & dblk, int offset, int len);
-  bool equal(const DataBlock& obj) const;
-  void print(std::ostream& out) const;
+    DataBlock& operator=(const DataBlock& obj);
 
-private:
-  void alloc();
-  // Data Members (m_ prefix)
-  uint8* m_data;
-  bool m_alloc;
+    void assign(uint8* data);
+
+    void clear();
+    uint8 getByte(int whichByte) const;
+    const uint8* getData(int offset, int len) const;
+    void setByte(int whichByte, uint8 data);
+    void setData(uint8* data, int offset, int len);
+    void copyPartial(const DataBlock & dblk, int offset, int len);
+    bool equal(const DataBlock& obj) const;
+    void print(std::ostream& out) const;
+
+  private:
+    void alloc();
+    uint8* m_data;
+    bool m_alloc;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const DataBlock& obj);
-
-bool operator==(const DataBlock& obj1, const DataBlock& obj2);
-
-// inline functions for speed
-
-inline
-void DataBlock::assign(uint8* data)
+inline void
+DataBlock::assign(uint8* data)
 {
-  if (m_alloc) {
-    delete [] m_data;
-  }
-  m_data = data;
-  m_alloc = false;
+    if (m_alloc) {
+        delete [] m_data;
+    }
+    m_data = data;
+    m_alloc = false;
 }
 
-inline
-void DataBlock::alloc()
+inline void
+DataBlock::alloc()
 {
-  m_data = new uint8[RubySystem::getBlockSizeBytes()];
-  m_alloc = true;
-  clear();
+    m_data = new uint8[RubySystem::getBlockSizeBytes()];
+    m_alloc = true;
+    clear();
 }
 
-inline
-void DataBlock::clear()
+inline void
+DataBlock::clear()
 {
-  memset(m_data, 0, RubySystem::getBlockSizeBytes());
+    memset(m_data, 0, RubySystem::getBlockSizeBytes());
 }
 
-inline
-bool DataBlock::equal(const DataBlock& obj) const
+inline bool
+DataBlock::equal(const DataBlock& obj) const
 {
-  return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+    return !memcmp(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
 }
 
-inline
-void DataBlock::print(std::ostream& out) const
+inline void
+DataBlock::print(std::ostream& out) const
 {
-  using namespace std;
+    using namespace std;
 
-  int size = RubySystem::getBlockSizeBytes();
-  out << "[ ";
-  for (int i = 0; i < size; i++) {
-    out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
-    out << setfill(' ');
-  }
-  out << dec << "]" << flush;
+    int size = RubySystem::getBlockSizeBytes();
+    out << "[ ";
+    for (int i = 0; i < size; i++) {
+        out << setw(2) << setfill('0') << hex << "0x" << (int)m_data[i] << " ";
+        out << setfill(' ');
+    }
+    out << dec << "]" << flush;
 }
 
-inline
-uint8 DataBlock::getByte(int whichByte) const
+inline uint8
+DataBlock::getByte(int whichByte) const
 {
-  return m_data[whichByte];
+    return m_data[whichByte];
 }
 
-inline
-const uint8* DataBlock::getData(int offset, int len) const
+inline const uint8*
+DataBlock::getData(int offset, int len) const
 {
-  assert(offset + len <= RubySystem::getBlockSizeBytes());
-  return &m_data[offset];
+    assert(offset + len <= RubySystem::getBlockSizeBytes());
+    return &m_data[offset];
 }
 
-inline
-void DataBlock::setByte(int whichByte, uint8 data)
+inline void
+DataBlock::setByte(int whichByte, uint8 data)
 {
     m_data[whichByte] = data;
 }
 
-inline
-void DataBlock::setData(uint8* data, int offset, int len)
+inline void
+DataBlock::setData(uint8* data, int offset, int len)
 {
-  assert(offset + len <= RubySystem::getBlockSizeBytes());
-  memcpy(&m_data[offset], data, len);
+    assert(offset + len <= RubySystem::getBlockSizeBytes());
+    memcpy(&m_data[offset], data, len);
 }
 
-inline
-void DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
+inline void
+DataBlock::copyPartial(const DataBlock & dblk, int offset, int len)
 {
-  setData(&dblk.m_data[offset], offset, len);
+    setData(&dblk.m_data[offset], offset, len);
 }
 
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const DataBlock& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const DataBlock& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-extern inline
-bool operator==(const DataBlock& obj1,const DataBlock& obj2)
+inline bool
+operator==(const DataBlock& obj1,const DataBlock& obj2)
 {
-  return (obj1.equal(obj2));
+    return obj1.equal(obj2);
 }
 
-#endif //DATABLOCK_H
+#endif // __MEM_RUBY_COMMON_DATABLOCK_HH__

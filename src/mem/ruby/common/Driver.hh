@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,58 +26,40 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- * Description:
- *
- */
+#ifndef __MEM_RUBY_COMMON_DRIVER_HH__
+#define __MEM_RUBY_COMMON_DRIVER_HH__
 
-#ifndef DRIVER_H
-#define DRIVER_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/system/NodeID.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/NodeID.hh"
 
+class Driver
+{
+  public:
+    Driver();
+    virtual ~Driver() = 0;
 
-class Driver {
-public:
-  // Constructors
-  Driver();
+    // Public Methods
+    virtual void get_network_config() {}
+    virtual void dmaHitCallback() {};
+    virtual void hitCallback(int64_t id) = 0; // Called by sequencer
+    virtual void go() = 0;
+    virtual integer_t getInstructionCount(int procID) const;
+    virtual integer_t getCycleCount(int procID) const;
+    virtual void addThreadDependency(int procID, int requestor_thread,
+                                     int conflict_thread) const;
+    virtual void printDebug(); //called by Sequencer
 
-  // Destructor
-  virtual ~Driver() = 0;
+    virtual void printStats(ostream& out) const = 0;
+    virtual void clearStats() = 0;
 
-  // Public Methods
-  virtual void get_network_config() {}
-  virtual void dmaHitCallback() {};
-  virtual void hitCallback(int64_t id) = 0; // Called by sequencer
-  virtual void go() = 0;
-  virtual integer_t getInstructionCount(int procID) const { return 1; }
-  virtual integer_t getCycleCount(int procID) const { return 1; }
-  virtual void addThreadDependency(int procID, int requestor_thread, int conflict_thread) const { assert(0);}
-  virtual void printDebug(){}  //called by Sequencer
+    virtual void printConfig(ostream& out) const = 0;
 
-  virtual void printStats(ostream& out) const = 0;
-  virtual void clearStats() = 0;
-
-  virtual void printConfig(ostream& out) const = 0;
-
-
-  virtual integer_t readPhysicalMemory(int procID, physical_address_t address,
-                                       int len ){ ASSERT(0); return 0; }
-
-  virtual void writePhysicalMemory( int procID, physical_address_t address,
-                                    integer_t value, int len ){ ASSERT(0); }
-
-protected:
-  // accessible by subclasses
-
-private:
-  // inaccessible by subclasses
-
+    virtual integer_t readPhysicalMemory(int procID, physical_address_t addr,
+                                         int len);
+    virtual void writePhysicalMemory(int procID, physical_address_t addr,
+                                     integer_t value, int len);
 };
 
-#endif //DRIVER_H
+#endif //__MEM_RUBY_COMMON_DRIVER_HH__

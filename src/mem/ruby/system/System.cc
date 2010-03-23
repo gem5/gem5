@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,25 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * RubySystem.cc
- *
- * Description: See System.hh
- *
- * $Id$
- *
- */
-
-
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/network/Network.hh"
-#include "mem/ruby/recorder/Tracer.hh"
-#include "mem/ruby/buffers/MessageBuffer.hh"
-#include "mem/ruby/system/MemoryVector.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "base/output.hh"
+#include "mem/ruby/buffers/MessageBuffer.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/network/Network.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/recorder/Tracer.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/MemoryVector.hh"
+#include "mem/ruby/system/System.hh"
 
 int RubySystem::m_random_seed;
 bool RubySystem::m_randomization;
@@ -103,68 +92,68 @@ RubySystem::RubySystem(const Params *p)
     registerExitCallback(rubyExitCB);
 }
 
-
-void RubySystem::init()
+void
+RubySystem::init()
 {
-  m_profiler_ptr->clearStats();
+    m_profiler_ptr->clearStats();
 }
-
 
 RubySystem::~RubySystem()
 {
-  delete m_network_ptr;
-  delete m_profiler_ptr;
-  delete m_tracer_ptr;
-  if (m_mem_vec_ptr != NULL) {
-      delete m_mem_vec_ptr;
-  }
+    delete m_network_ptr;
+    delete m_profiler_ptr;
+    delete m_tracer_ptr;
+    if (m_mem_vec_ptr)
+        delete m_mem_vec_ptr;
 }
 
-void RubySystem::printSystemConfig(ostream & out)
+void
+RubySystem::printSystemConfig(ostream & out)
 {
-  out << "RubySystem config:" << endl;
-  out << "  random_seed: " << m_random_seed << endl;
-  out << "  randomization: " << m_randomization << endl;
-  out << "  cycle_period: " << m_clock << endl;
-  out << "  block_size_bytes: " << m_block_size_bytes << endl;
-  out << "  block_size_bits: " << m_block_size_bits << endl;
-  out << "  memory_size_bytes: " << m_memory_size_bytes << endl;
-  out << "  memory_size_bits: " << m_memory_size_bits << endl;
-
+    out << "RubySystem config:" << endl
+        << "  random_seed: " << m_random_seed << endl
+        << "  randomization: " << m_randomization << endl
+        << "  cycle_period: " << m_clock << endl
+        << "  block_size_bytes: " << m_block_size_bytes << endl
+        << "  block_size_bits: " << m_block_size_bits << endl
+        << "  memory_size_bytes: " << m_memory_size_bytes << endl
+        << "  memory_size_bits: " << m_memory_size_bits << endl;
 }
 
-void RubySystem::printConfig(ostream& out)
+void
+RubySystem::printConfig(ostream& out)
 {
-  out << "\n================ Begin RubySystem Configuration Print ================\n\n";
-  printSystemConfig(out);
-  m_network_ptr->printConfig(out);
-  m_profiler_ptr->printConfig(out);
-  out << "\n================ End RubySystem Configuration Print ================\n\n";
+    out << "\n================ Begin RubySystem Configuration Print ================\n\n";
+    printSystemConfig(out);
+    m_network_ptr->printConfig(out);
+    m_profiler_ptr->printConfig(out);
+    out << "\n================ End RubySystem Configuration Print ================\n\n";
 }
 
-void RubySystem::printStats(ostream& out)
+void
+RubySystem::printStats(ostream& out)
 {
+    const time_t T = time(NULL);
+    tm *localTime = localtime(&T);
+    char buf[100];
+    strftime(buf, 100, "%b/%d/%Y %H:%M:%S", localTime);
 
-  const time_t T = time(NULL);
-  tm *localTime = localtime(&T);
-  char buf[100];
-  strftime(buf, 100, "%b/%d/%Y %H:%M:%S", localTime);
+    out << "Real time: " << buf << endl;
 
-  out << "Real time: " << buf << endl;
-
-  m_profiler_ptr->printStats(out);
-  m_network_ptr->printStats(out);
+    m_profiler_ptr->printStats(out);
+    m_network_ptr->printStats(out);
 }
 
-void RubySystem::clearStats() const
+void
+RubySystem::clearStats() const
 {
-  m_profiler_ptr->clearStats();
-  m_network_ptr->clearStats();
+    m_profiler_ptr->clearStats();
+    m_network_ptr->clearStats();
 }
 
-void RubySystem::recordCacheContents(CacheRecorder& tr) const
+void
+RubySystem::recordCacheContents(CacheRecorder& tr) const
 {
-
 }
 
 #ifdef CHECK_COHERENCE
@@ -176,48 +165,46 @@ void RubySystem::recordCacheContents(CacheRecorder& tr) const
 // in setState.  The SLICC spec must also define methods "isBlockShared"
 // and "isBlockExclusive" that are specific to that protocol
 //
-void RubySystem::checkGlobalCoherenceInvariant(const Address& addr  )  {
-  /*
-  NodeID exclusive = -1;
-  bool sharedDetected = false;
-  NodeID lastShared = -1;
+void
+RubySystem::checkGlobalCoherenceInvariant(const Address& addr)
+{
+#if 0
+    NodeID exclusive = -1;
+    bool sharedDetected = false;
+    NodeID lastShared = -1;
 
-  for (int i = 0; i < m_chip_vector.size(); i++) {
+    for (int i = 0; i < m_chip_vector.size(); i++) {
+        if (m_chip_vector[i]->isBlockExclusive(addr)) {
+            if (exclusive != -1) {
+                // coherence violation
+                WARN_EXPR(exclusive);
+                WARN_EXPR(m_chip_vector[i]->getID());
+                WARN_EXPR(addr);
+                WARN_EXPR(g_eventQueue_ptr->getTime());
+                ERROR_MSG("Coherence Violation Detected -- 2 exclusive chips");
+            } else if (sharedDetected) {
+                WARN_EXPR(lastShared);
+                WARN_EXPR(m_chip_vector[i]->getID());
+                WARN_EXPR(addr);
+                WARN_EXPR(g_eventQueue_ptr->getTime());
+                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
+            } else {
+                exclusive = m_chip_vector[i]->getID();
+            }
+        } else if (m_chip_vector[i]->isBlockShared(addr)) {
+            sharedDetected = true;
+            lastShared = m_chip_vector[i]->getID();
 
-    if (m_chip_vector[i]->isBlockExclusive(addr)) {
-      if (exclusive != -1) {
-        // coherence violation
-        WARN_EXPR(exclusive);
-        WARN_EXPR(m_chip_vector[i]->getID());
-        WARN_EXPR(addr);
-        WARN_EXPR(g_eventQueue_ptr->getTime());
-        ERROR_MSG("Coherence Violation Detected -- 2 exclusive chips");
-      }
-      else if (sharedDetected) {
-        WARN_EXPR(lastShared);
-        WARN_EXPR(m_chip_vector[i]->getID());
-        WARN_EXPR(addr);
-        WARN_EXPR(g_eventQueue_ptr->getTime());
-        ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-      }
-      else {
-        exclusive = m_chip_vector[i]->getID();
-      }
+            if (exclusive != -1) {
+                WARN_EXPR(lastShared);
+                WARN_EXPR(exclusive);
+                WARN_EXPR(addr);
+                WARN_EXPR(g_eventQueue_ptr->getTime());
+                ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
+            }
+        }
     }
-    else if (m_chip_vector[i]->isBlockShared(addr)) {
-      sharedDetected = true;
-      lastShared = m_chip_vector[i]->getID();
-
-      if (exclusive != -1) {
-        WARN_EXPR(lastShared);
-        WARN_EXPR(exclusive);
-        WARN_EXPR(addr);
-        WARN_EXPR(g_eventQueue_ptr->getTime());
-        ERROR_MSG("Coherence Violation Detected -- exclusive chip with >=1 shared");
-      }
-    }
-  }
-  */
+#endif
 }
 #endif
 
@@ -231,7 +218,8 @@ RubySystemParams::create()
  * virtual process function that is invoked when the callback
  * queue is executed.
  */
-void RubyExitCallback::process()
+void
+RubyExitCallback::process()
 {
     std::ostream *os = simout.create(stats_filename);
     RubySystem::printConfig(*os);

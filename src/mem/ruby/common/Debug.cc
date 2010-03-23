@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,19 +26,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
 #include <fstream>
 #include <stdarg.h>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Debug.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/gems_common/util.hh"
 #include "base/misc.hh"
+#include "mem/gems_common/util.hh"
+#include "mem/ruby/common/Debug.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 using namespace std;
 
@@ -79,313 +73,272 @@ DebugComponentData debugComponents[] =
 extern "C" void changeDebugVerbosity(VerbosityLevel vb);
 extern "C" void changeDebugFilter(int filter);
 
-void changeDebugVerbosity(VerbosityLevel vb)
+void
+changeDebugVerbosity(VerbosityLevel vb)
 {
-  g_debug_ptr->setVerbosity(vb);
+    g_debug_ptr->setVerbosity(vb);
 }
 
-void changeDebugFilter(int filter)
+void
+changeDebugFilter(int filter)
 {
-  g_debug_ptr->setFilter(filter);
+    g_debug_ptr->setFilter(filter);
 }
 
 Debug::Debug(const Params *p)
     : SimObject(p)
 {
-  clearFilter();
-  debug_cout_ptr = &cout;
+    clearFilter();
+    debug_cout_ptr = &cout;
 
-  setFilterString(p->filter_string.c_str());
-  setVerbosityString(p->verbosity_string.c_str());
-  setDebugOutputFile(p->output_filename.c_str());
-  m_starting_cycle = p->start_time;
-  m_protocol_trace = p->protocol_trace;
-  g_debug_ptr = this;
+    setFilterString(p->filter_string.c_str());
+    setVerbosityString(p->verbosity_string.c_str());
+    setDebugOutputFile(p->output_filename.c_str());
+    m_starting_cycle = p->start_time;
+    m_protocol_trace = p->protocol_trace;
+    g_debug_ptr = this;
 }
-
 
 Debug::~Debug()
 {
 }
 
-void Debug::printVerbosity(ostream& out) const
+void
+Debug::printVerbosity(ostream& out) const
 {
-  switch (getVerbosity()) {
-  case No_Verb:
-    out << "verbosity = No_Verb" << endl;
-    break;
-  case Low_Verb:
-    out << "verbosity = Low_Verb" << endl;
-    break;
-  case Med_Verb:
-    out << "verbosity = Med_Verb" << endl;
-    break;
-  case High_Verb:
-    out << "verbosity = High_Verb" << endl;
-    break;
-  default:
-    out << "verbosity = unknown" << endl;
-  }
-}
-
-bool Debug::validDebug(int module, PriorityLevel priority)
-{
-  int local_module = (1 << module);
-  if(m_filter & local_module) {
-    if (g_eventQueue_ptr == NULL ||
-        g_eventQueue_ptr->getTime() >= m_starting_cycle) {
-      switch(m_verbosityLevel) {
+    switch (getVerbosity()) {
       case No_Verb:
-        return false;
+        out << "verbosity = No_Verb" << endl;
         break;
       case Low_Verb:
-        if(priority == HighPrio) {
-          return true;
-        }else{
-          return false;
-        }
+        out << "verbosity = Low_Verb" << endl;
         break;
       case Med_Verb:
-        if(priority == HighPrio || priority == MedPrio ) {
-          return true;
-        }else{
-          return false;
-        }
+        out << "verbosity = Med_Verb" << endl;
         break;
       case High_Verb:
-        return true;
+        out << "verbosity = High_Verb" << endl;
         break;
-      }
+      default:
+        out << "verbosity = unknown" << endl;
     }
-  }
-  return false;
 }
 
-void Debug::setDebugTime(Time t)
+bool
+Debug::validDebug(int module, PriorityLevel priority)
 {
-  m_starting_cycle = t;
-}
-
-void Debug::setVerbosity(VerbosityLevel vb)
-{
-  m_verbosityLevel = vb;
-}
-
-void Debug::setFilter(int filter)
-{
-  m_filter = filter;
-}
-
-bool Debug::checkVerbosityString(const char *verb_str)
-{
-  if (verb_str == NULL) {
-    cerr << "Error: unrecognized verbosity (use none, low, med, high): NULL" << endl;
-    return true; // error
-  } else if ( (string(verb_str) == "none") ||
-              (string(verb_str) == "low") ||
-              (string(verb_str) == "med") ||
-              (string(verb_str) == "high") ) {
+    int local_module = (1 << module);
+    if (m_filter & local_module) {
+        if (g_eventQueue_ptr == NULL ||
+            g_eventQueue_ptr->getTime() >= m_starting_cycle) {
+            switch (m_verbosityLevel) {
+              case No_Verb:
+                return false;
+              case Low_Verb:
+                return (priority == HighPrio);
+              case Med_Verb:
+                return (priority == HighPrio || priority == MedPrio);
+              case High_Verb:
+                return true;
+            }
+        }
+    }
     return false;
-  }
-  cerr << "Error: unrecognized verbosity (use none, low, med, high): NULL" << endl;
-  return true; // error
 }
 
-bool Debug::setVerbosityString(const char *verb_str)
+void
+Debug::setDebugTime(Time t)
 {
-  bool check_fails = checkVerbosityString(verb_str);
-  if (check_fails) {
-    return true; // error
-  }
-  if (string(verb_str) == "none") {
-    setVerbosity(No_Verb);
-  } else if (string(verb_str) == "low") {
-    setVerbosity(Low_Verb);
-  } else if (string(verb_str) == "med") {
-    setVerbosity(Med_Verb);
-  } else if (string(verb_str) == "high") {
-    setVerbosity(High_Verb);
-  } else {
-    cerr << "Error: unrecognized verbosity (use none, low, med, high): " << verb_str << endl;
-    return true; // error
-  }
-  return false; // no error
+    m_starting_cycle = t;
 }
 
-bool Debug::checkFilter(char ch)
+void
+Debug::setVerbosity(VerbosityLevel vb)
 {
-  for (int i=0; i<NUMBER_OF_COMPS; i++) {
-    // Look at all components to find a character match
-    if (debugComponents[i].ch == ch) {
-      // We found a match - return no error
-      return false; // no error
-    }
-  }
-  return true; // error
+    m_verbosityLevel = vb;
 }
 
-bool Debug::checkFilterString(const char *filter_str)
+void
+Debug::setFilter(int filter)
 {
-  if (filter_str == NULL) {
-    cerr << "Error: unrecognized component filter: NULL" << endl;
-    return true; // error
-  }
-
-  // check for default filter ("none") before reporting RUBY_DEBUG error
-  if ( (string(filter_str) == "none") ) {
-    return false; // no error
-  }
-
-  if (RUBY_DEBUG == false) {
-    cerr << "Error: User specified set of debug components, but the RUBY_DEBUG compile-time flag is false." << endl;
-    cerr << "Solution: Re-compile with RUBY_DEBUG set to true." << endl;
-    return true; // error
-  }
-
-  if ( (string(filter_str) == "all") ) {
-    return false; // no error
-  }
-
-  // scan string checking each character
-  for (unsigned int i = 0; i < strlen(filter_str); i++) {
-    bool unrecognized = checkFilter( filter_str[i] );
-    if (unrecognized == true) {
-      return true; // error
-    }
-  }
-  return false; // no error
+    m_filter = filter;
 }
 
-bool Debug::setFilterString(const char *filter_str)
+bool
+Debug::setVerbosityString(const char *verb_str)
 {
-  if (checkFilterString(filter_str)) {
-    return true; // error
-  }
-
-  if (string(filter_str) == "all" ) {
-    allFilter();
-  } else if (string(filter_str) == "none") {
-    clearFilter();
-  } else {
-    // scan string adding to bit mask for each component which is present
-    for (unsigned int i = 0; i < strlen(filter_str); i++) {
-      bool error = addFilter( filter_str[i] );
-      if (error) {
+    string verb = verb_str ? verb_str : "";
+    if (verb == "none") {
+        setVerbosity(No_Verb);
+    } else if (verb == "low") {
+        setVerbosity(Low_Verb);
+    } else if (verb == "med") {
+        setVerbosity(Med_Verb);
+    } else if (verb == "high") {
+        setVerbosity(High_Verb);
+    } else {
+        cerr << "Error: unrecognized verbosity (use none, low, med, high): "
+             << verb << endl;
         return true; // error
-      }
     }
-  }
-  return false; // no error
+    return false; // no error
 }
 
-bool Debug::addFilter(char ch)
+bool
+Debug::checkFilter(char ch)
 {
-  for (int i=0; i<NUMBER_OF_COMPS; i++) {
-    // Look at all components to find a character match
-    if (debugComponents[i].ch == ch) {
-      // We found a match - update the filter bit mask
-      cout << "  Debug: Adding to filter: '" << ch << "' (" << debugComponents[i].desc << ")" << endl;
-      m_filter |= (1 << i);
-      return false; // no error
+    for (int i = 0; i < NUMBER_OF_COMPS; i++) {
+        // Look at all components to find a character match
+        if (debugComponents[i].ch == ch) {
+            // We found a match - return no error
+            return false; // no error
+        }
     }
-  }
-
-  // We didn't find the character
-  cerr << "Error: unrecognized component filter: " << ch << endl;
-  usageInstructions();
-  return true; // error
+    return true; // error
 }
 
-void Debug::clearFilter()
+bool
+Debug::checkFilterString(const char *filter_str)
 {
-  m_filter = 0;
+    if (filter_str == NULL) {
+        cerr << "Error: unrecognized component filter: NULL" << endl;
+        return true; // error
+    }
+
+    // check for default filter ("none") before reporting RUBY_DEBUG error
+    if (string(filter_str) == "none") {
+        return false; // no error
+    }
+
+    if (RUBY_DEBUG == false) {
+        cerr << "Error: User specified set of debug components, but the "
+             << "RUBY_DEBUG compile-time flag is false." << endl
+             << "Solution: Re-compile with RUBY_DEBUG set to true." << endl;
+        return true; // error
+    }
+
+    if (string(filter_str) == "all") {
+        return false; // no error
+    }
+
+    // scan string checking each character
+    for (unsigned int i = 0; i < strlen(filter_str); i++) {
+        bool unrecognized = checkFilter(filter_str[i]);
+        if (unrecognized == true) {
+            return true; // error
+        }
+    }
+    return false; // no error
+}
+
+bool
+Debug::setFilterString(const char *filter_str)
+{
+    if (checkFilterString(filter_str)) {
+        return true; // error
+    }
+
+    if (string(filter_str) == "all" ) {
+        allFilter();
+    } else if (string(filter_str) == "none") {
+        clearFilter();
+    } else {
+        // scan string adding to bit mask for each component which is present
+        for (unsigned int i = 0; i < strlen(filter_str); i++) {
+            bool error = addFilter( filter_str[i] );
+            if (error) {
+                return true; // error
+            }
+        }
+    }
+    return false; // no error
+}
+
+bool
+Debug::addFilter(char ch)
+{
+    for (int i = 0; i < NUMBER_OF_COMPS; i++) {
+        // Look at all components to find a character match
+        if (debugComponents[i].ch == ch) {
+            // We found a match - update the filter bit mask
+            cout << "  Debug: Adding to filter: '" << ch << "' ("
+                 << debugComponents[i].desc << ")" << endl;
+            m_filter |= (1 << i);
+            return false; // no error
+        }
+    }
+
+    // We didn't find the character
+    cerr << "Error: unrecognized component filter: " << ch << endl;
+    usageInstructions();
+    return true; // error
+}
+
+void
+Debug::clearFilter()
+{
+    m_filter = 0;
 }
 
 void Debug::allFilter()
 {
-  m_filter = ~0;
+    m_filter = ~0;
 }
 
-void Debug::usageInstructions(void)
+void
+Debug::usageInstructions(void)
 {
-  cerr << "Debug components: " << endl;
-  for (int i=0; i<NUMBER_OF_COMPS; i++) {
-    cerr << "  " << debugComponents[i].ch << ": " << debugComponents[i].desc << endl;
-  }
+    cerr << "Debug components: " << endl;
+    for (int i = 0; i < NUMBER_OF_COMPS; i++) {
+        cerr << "  " << debugComponents[i].ch << ": "
+             << debugComponents[i].desc << endl;
+    }
 }
 
-void Debug::print(ostream& out) const
+void
+Debug::print(ostream& out) const
 {
-  out << "[Debug]" << endl;
+    out << "[Debug]" << endl;
 }
 
-void Debug::setDebugOutputFile (const char * filename)
+void
+Debug::setDebugOutputFile (const char *filename)
 {
-  if ( (filename == NULL) ||
-       (!strcmp(filename, "none")) ) {
-    debug_cout_ptr = &cout;
-    return;
-  }
+    if (filename == NULL || !strcmp(filename, "none")) {
+        debug_cout_ptr = &cout;
+        return;
+    }
 
-  if (m_fout.is_open() ) {
-    m_fout.close ();
-  }
-  m_fout.open (filename, ios::out);
-  if (! m_fout.is_open() ) {
-    cerr << "setDebugOutputFile: can't open file " << filename << endl;
-  }
-  else {
-    debug_cout_ptr = &m_fout;
-  }
+    if (m_fout.is_open()) {
+        m_fout.close();
+    }
+    m_fout.open(filename, ios::out);
+    if (!m_fout.is_open()) {
+        cerr << "setDebugOutputFile: can't open file " << filename << endl;
+    } else {
+        debug_cout_ptr = &m_fout;
+    }
 }
 
-void Debug::closeDebugOutputFile ()
+void
+Debug::closeDebugOutputFile ()
 {
-  if (m_fout.is_open() ) {
-    m_fout.close ();
-    debug_cout_ptr = &cout;
-  }
+    if (m_fout.is_open()) {
+        m_fout.close ();
+        debug_cout_ptr = &cout;
+    }
 }
 
-void Debug::debugMsg( const char *fmt, ... )
+void
+Debug::debugMsg( const char *fmt, ...)
 {
-  va_list  args;
-
-  // you could check validDebug() here before printing the message
-  va_start(args, fmt);
-  vfprintf(stdout, fmt, args);
-  va_end(args);
-}
-
-/*
-void DEBUG_OUT( const char* fmt, ...) {
-  if (RUBY_DEBUG) {
-    cout << "Debug: in fn "
-         << __PRETTY_FUNCTION__
-         << " in " << __FILE__ << ":"
-         << __LINE__ << ": ";
     va_list  args;
+
+    // you could check validDebug() here before printing the message
     va_start(args, fmt);
     vfprintf(stdout, fmt, args);
     va_end(args);
-  }
 }
-
-void ERROR_OUT( const char* fmt, ... ) {
-  if (ERROR_MESSAGE_FLAG) {
-    cout << "error: in fn "
-         << __PRETTY_FUNCTION__ << " in "
-         << __FILE__ << ":"
-         << __LINE__ << ": ";
-    va_list  args;
-    va_start(args, fmt);
-    vfprintf(stdout, fmt, args);
-    va_end(args);
-  }
-  assert(0);
-}
-*/
-
 
 Debug *
 RubyDebugParams::create()

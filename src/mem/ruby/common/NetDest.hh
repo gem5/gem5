@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,22 +26,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * Set.hh
- *
- * Description:
- *
- * $Id$
- *
- */
-
 // NetDest specifies the network destination of a NetworkMessage
 // This is backward compatible with the Set class that was previously
 // used to specify network destinations.
 // NetDest supports both node networks and component networks
 
-#ifndef NETDEST_H
-#define NETDEST_H
+#ifndef __MEM_RUBY_COMMON_NETDEST_HH__
+#define __MEM_RUBY_COMMON_NETDEST_HH__
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
@@ -51,94 +41,92 @@
 #include "mem/ruby/common/Set.hh"
 #include "mem/protocol/MachineType.hh"
 
-class Set;
+class NetDest
+{
+  public:
+    // Constructors
+    // creates and empty set
+    NetDest();
+    explicit NetDest(int bit_size);
 
-class NetDest {
-public:
-  // Constructors
-  // creates and empty set
-  NetDest();
-  explicit NetDest(int bit_size);
+    NetDest& operator=(const Set& obj);
 
-  NetDest& operator=(const Set& obj);
+    ~NetDest()
+    {
+        DEBUG_MSG(MEMORY_COMP, LowPrio, "NetDest Destructor");
+    }
 
-  // Destructor
-  ~NetDest() { DEBUG_MSG(MEMORY_COMP, LowPrio, "NetDest Destructor"); }
+    void add(MachineID newElement);
+    void addNetDest(const NetDest& netDest);
+    void addRandom();
+    void setNetDest(MachineType machine, const Set& set);
+    void remove(MachineID oldElement);
+    void removeNetDest(const NetDest& netDest);
+    void clear();
+    void broadcast();
+    void broadcast(MachineType machine);
+    int count() const;
+    bool isEqual(const NetDest& netDest);
 
-  // Public Methods
-  void add(MachineID newElement);
-  void addNetDest(const NetDest& netDest);
-  void addRandom();
-  void setNetDest(MachineType machine, const Set& set);
-  void remove(MachineID oldElement);
-  void removeNetDest(const NetDest& netDest);
-  void clear();
-  void broadcast();
-  void broadcast(MachineType machine);
-  int count() const;
-  bool isEqual(const NetDest& netDest);
+    // return the logical OR of this netDest and orNetDest
+    NetDest OR(const NetDest& orNetDest) const;
 
-  NetDest OR(const NetDest& orNetDest) const;  // return the logical OR of this netDest and orNetDest
-  NetDest AND(const NetDest& andNetDest) const;  // return the logical AND of this netDest and andNetDest
+    // return the logical AND of this netDest and andNetDest
+    NetDest AND(const NetDest& andNetDest) const;
 
-  // Returns true if the intersection of the two netDests is non-empty
-  bool intersectionIsNotEmpty(const NetDest& other_netDest) const;
+    // Returns true if the intersection of the two netDests is non-empty
+    bool intersectionIsNotEmpty(const NetDest& other_netDest) const;
 
-  // Returns true if the intersection of the two netDests is empty
-  bool intersectionIsEmpty(const NetDest& other_netDest) const;
+    // Returns true if the intersection of the two netDests is empty
+    bool intersectionIsEmpty(const NetDest& other_netDest) const;
 
-  bool isSuperset(const NetDest& test) const;
-  bool isSubset(const NetDest& test) const { return test.isSuperset(*this); }
-  bool isElement(MachineID element) const;
-  bool isBroadcast() const;
-  bool isEmpty() const;
+    bool isSuperset(const NetDest& test) const;
+    bool isSubset(const NetDest& test) const { return test.isSuperset(*this); }
+    bool isElement(MachineID element) const;
+    bool isBroadcast() const;
+    bool isEmpty() const;
 
-  //For Princeton Network
-  Vector<NodeID> getAllDest();
+    // For Princeton Network
+    Vector<NodeID> getAllDest();
 
-  MachineID smallestElement() const;
-  MachineID smallestElement(MachineType machine) const;
+    MachineID smallestElement() const;
+    MachineID smallestElement(MachineType machine) const;
 
-  void setSize();
-  int getSize() const { return m_bits.size(); }
+    void setSize();
+    int getSize() const { return m_bits.size(); }
 
-  // get element for a index
-  NodeID elementAt(MachineID index);
+    // get element for a index
+    NodeID elementAt(MachineID index);
 
-  void print(ostream& out) const;
+    void print(ostream& out) const;
 
-private:
+  private:
+    // returns a value >= MachineType_base_level("this machine")
+    // and < MachineType_base_level("next highest machine")
+    int
+    vecIndex(MachineID m) const
+    {
+        int vec_index = MachineType_base_level(m.type);
+        assert(vec_index < m_bits.size());
+        return vec_index;
+    }
 
-  // Private Methods
-  // returns a value >= MachineType_base_level("this machine") and < MachineType_base_level("next highest machine")
-  int vecIndex(MachineID m) const {
-    int vec_index = MachineType_base_level(m.type);
-    assert(vec_index < m_bits.size());
-    return vec_index;
-  }
+    NodeID
+    bitIndex(NodeID index) const
+    {
+        return index;
+    }
 
-  NodeID bitIndex(NodeID index) const {
-    return index;
-  }
-
-  // Data Members (m_ prefix)
-  Vector < Set > m_bits;  // a Vector of bit vectors - i.e. Sets
-
+    Vector <Set> m_bits;  // a Vector of bit vectors - i.e. Sets
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const NetDest& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const NetDest& obj)
+inline ostream&
+operator<<(ostream& out, const NetDest& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //NETDEST_H
+#endif // __MEM_RUBY_COMMON_NETDEST_HH__
 

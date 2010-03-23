@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,76 +26,74 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef PersistentTable_H
-#define PersistentTable_H
+#ifndef __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
+#define __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/MachineID.hh"
 #include "mem/protocol/AccessType.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/system/MachineID.hh"
 
-class PersistentTableEntry {
-public:
-  void print(ostream& out) const {}
+class PersistentTableEntry
+{
+  public:
+    void print(ostream& out) const {}
 
-  NetDest m_starving;
-  NetDest m_marked;
-  NetDest m_request_to_write;
+    NetDest m_starving;
+    NetDest m_marked;
+    NetDest m_request_to_write;
 };
 
-class PersistentTable {
-public:
-  // Constructors
-  PersistentTable();
+class PersistentTable
+{
+  public:
+    // Constructors
+    PersistentTable();
 
-  // Destructor
-  ~PersistentTable();
+    // Destructor
+    ~PersistentTable();
   
-  // Public Methods
-  void persistentRequestLock(const Address& address, MachineID locker, AccessType type);
-  void persistentRequestUnlock(const Address& address, MachineID unlocker);
-  bool okToIssueStarving(const Address& address, MachineID machID) const;
-  MachineID findSmallest(const Address& address) const;
-  AccessType typeOfSmallest(const Address& address) const;
-  void markEntries(const Address& address);
-  bool isLocked(const Address& addr) const;
-  int countStarvingForAddress(const Address& addr) const;
-  int countReadStarvingForAddress(const Address& addr) const;
+    // Public Methods
+    void persistentRequestLock(const Address& address, MachineID locker,
+                               AccessType type);
+    void persistentRequestUnlock(const Address& address, MachineID unlocker);
+    bool okToIssueStarving(const Address& address, MachineID machID) const;
+    MachineID findSmallest(const Address& address) const;
+    AccessType typeOfSmallest(const Address& address) const;
+    void markEntries(const Address& address);
+    bool isLocked(const Address& addr) const;
+    int countStarvingForAddress(const Address& addr) const;
+    int countReadStarvingForAddress(const Address& addr) const;
 
-  static void printConfig(ostream& out) {}
+    static void printConfig(ostream& out) {}
 
-  void print(ostream& out) const;
-private:
-  // Private Methods
+    void print(ostream& out) const;
 
-  // Private copy constructor and assignment operator
-  PersistentTable(const PersistentTable& obj);
-  PersistentTable& operator=(const PersistentTable& obj);
+  private:
+    // Private copy constructor and assignment operator
+    PersistentTable(const PersistentTable& obj);
+    PersistentTable& operator=(const PersistentTable& obj);
 
-  // Data Members (m_prefix)
-  Map<Address, PersistentTableEntry>* m_map_ptr;
+    // Data Members (m_prefix)
+    Map<Address, PersistentTableEntry>* m_map_ptr;
 };
 
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const PersistentTable& obj)
+inline ostream&
+operator<<(ostream& out, const PersistentTable& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const PersistentTableEntry& obj)
+inline ostream&
+operator<<(ostream& out, const PersistentTableEntry& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //PersistentTable_H
+#endif // __MEM_RUBY_SYSTEM_PERSISTENTTABLE_HH__

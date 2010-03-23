@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,94 +26,74 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * DirectoryMemory.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
+#define __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__
 
-#ifndef DIRECTORYMEMORY_H
-#define DIRECTORYMEMORY_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/system/MemoryVector.hh"
 #include "mem/protocol/Directory_Entry.hh"
-#include "sim/sim_object.hh"
-#include "params/RubyDirectoryMemory.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/MemoryVector.hh"
 #include "mem/ruby/system/SparseMemory.hh"
+#include "params/RubyDirectoryMemory.hh"
+#include "sim/sim_object.hh"
 
-class DirectoryMemory : public SimObject {
-public:
-  // Constructors
+class DirectoryMemory : public SimObject
+{
+  public:
     typedef RubyDirectoryMemoryParams Params;
     DirectoryMemory(const Params *p);
-  void init();
-  //  DirectoryMemory(int version);
+    ~DirectoryMemory();
 
-  // Destructor
-  ~DirectoryMemory();
+    void init();
 
-  uint64 mapAddressToLocalIdx(PhysAddress address);
-  static uint64 mapAddressToDirectoryVersion(PhysAddress address);
+    uint64 mapAddressToLocalIdx(PhysAddress address);
+    static uint64 mapAddressToDirectoryVersion(PhysAddress address);
 
-  bool isSparseImplementation() { return m_use_map; }
-  uint64 getSize() { return m_size_bytes; }
+    bool isSparseImplementation() { return m_use_map; }
+    uint64 getSize() { return m_size_bytes; }
 
-  // Public Methods
-  void printConfig(ostream& out) const;
-  static void printGlobalConfig(ostream & out);
-  bool isPresent(PhysAddress address);
-  Directory_Entry& lookup(PhysAddress address);
+    void printConfig(ostream& out) const;
+    static void printGlobalConfig(ostream & out);
+    bool isPresent(PhysAddress address);
+    Directory_Entry& lookup(PhysAddress address);
 
-  void invalidateBlock(PhysAddress address);
+    void invalidateBlock(PhysAddress address);
 
-  void print(ostream& out) const;
-  void printStats(ostream& out) const;
+    void print(ostream& out) const;
+    void printStats(ostream& out) const;
 
-private:
-  // Private Methods
+  private:
+    // Private copy constructor and assignment operator
+    DirectoryMemory(const DirectoryMemory& obj);
+    DirectoryMemory& operator=(const DirectoryMemory& obj);
 
-  // Private copy constructor and assignment operator
-  DirectoryMemory(const DirectoryMemory& obj);
-  DirectoryMemory& operator=(const DirectoryMemory& obj);
+  private:
+    const string m_name;
+    Directory_Entry **m_entries;
+    // int m_size;  // # of memory module blocks this directory is
+                    // responsible for
+    uint64 m_size_bytes;
+    uint64 m_size_bits;
+    uint64 m_num_entries;
+    int m_version;
 
-private:
-  const string m_name;
-  // Data Members (m_ prefix)
-  Directory_Entry **m_entries;
-  //  int m_size;  // # of memory module blocks this directory is responsible for
-  uint64 m_size_bytes;
-  uint64 m_size_bits;
-  uint64 m_num_entries;
-  int m_version;
+    static int m_num_directories;
+    static int m_num_directories_bits;
+    static uint64_t m_total_size_bytes;
+    static int m_numa_high_bit;
 
-  static int m_num_directories;
-  static int m_num_directories_bits;
-  static uint64_t m_total_size_bytes;
-  static int m_numa_high_bit;
-
-  MemoryVector* m_ram;
-  SparseMemory* m_sparseMemory;
-  bool m_use_map;
-  int m_map_levels;
+    MemoryVector* m_ram;
+    SparseMemory* m_sparseMemory;
+    bool m_use_map;
+    int m_map_levels;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const DirectoryMemory& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const DirectoryMemory& obj)
+inline ostream&
+operator<<(ostream& out, const DirectoryMemory& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //DIRECTORYMEMORY_H
+#endif // __MEM_RUBY_SYSTEM_DIRECTORYMEMORY_HH__

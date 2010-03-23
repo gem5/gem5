@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,47 +26,35 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef AbstractEntry_H
-#define AbstractEntry_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/protocol/AccessPermission.hh"
 
 class DataBlock;
 
-class AbstractEntry {
-public:
-  // Constructors
-  AbstractEntry();
+class AbstractEntry
+{
+  public:
+    AbstractEntry();
+    virtual ~AbstractEntry() = 0;
 
-  // Destructor, prevent it from instantiation
-  virtual ~AbstractEntry() = 0;
+    // The methods below are those called by ruby runtime, add when it
+    // is absolutely necessary and should all be virtual function.
+    virtual DataBlock& getDataBlk() = 0;
 
-  // Public Methods
-
-  // The methods below are those called by ruby runtime, add when it is
-  // absolutely necessary and should all be virtual function.
-  virtual DataBlock& getDataBlk() = 0;
-
-
-  virtual void print(ostream& out) const = 0;
-
+    virtual void print(ostream& out) const = 0;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const AbstractEntry& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const AbstractEntry& obj)
+inline ostream&
+operator<<(ostream& out, const AbstractEntry& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //AbstractEntry_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTENTRY_HH__
 

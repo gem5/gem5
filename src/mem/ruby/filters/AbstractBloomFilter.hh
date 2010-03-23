@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,44 +26,32 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * AbstractBloomFilter.hh
- *
- * Description:
- *
- *
- */
+#ifndef __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
+#define __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__
 
-#ifndef ABSTRACT_BLOOM_FILTER_H
-#define ABSTRACT_BLOOM_FILTER_H
-
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 
-class AbstractBloomFilter {
-public:
+class AbstractBloomFilter
+{
+  public:
+    virtual ~AbstractBloomFilter() {};
+    virtual void clear() = 0;
+    virtual void increment(const Address& addr) = 0;
+    virtual void decrement(const Address& addr) = 0;
+    virtual void merge(AbstractBloomFilter * other_filter) = 0;
+    virtual void set(const Address& addr) = 0;
+    virtual void unset(const Address& addr) = 0;
 
-  virtual ~AbstractBloomFilter() {};
-  virtual void clear() = 0;
-  virtual void increment(const Address& addr) = 0;
-  virtual void decrement(const Address& addr) = 0;
-  virtual void merge(AbstractBloomFilter * other_filter) = 0;
-  virtual void set(const Address& addr) = 0;
-  virtual void unset(const Address& addr) = 0;
+    virtual bool isSet(const Address& addr) = 0;
+    virtual int getCount(const Address& addr) = 0;
+    virtual int getTotalCount() = 0;
 
-  virtual bool isSet(const Address& addr) = 0;
-  virtual int getCount(const Address& addr) = 0;
-  virtual int getTotalCount() = 0;
+    virtual void print(ostream& out) const = 0;
 
-  virtual void print(ostream& out) const = 0;
-
-  virtual int getIndex(const Address& addr) = 0;
-  virtual int readBit(const int index) = 0;
-  virtual void writeBit(const int index, const int value) = 0;
-
-private:
-
+    virtual int getIndex(const Address& addr) = 0;
+    virtual int readBit(const int index) = 0;
+    virtual void writeBit(const int index, const int value) = 0;
 };
 
-
-#endif
+#endif // __MEM_RUBY_FILTERS_ABSTRACTBLOOMFILTER_HH__

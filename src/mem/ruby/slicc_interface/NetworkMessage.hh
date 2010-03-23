@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,89 +26,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * NetworkMessage.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__
 
-#ifndef NetworkMessage_H
-#define NetworkMessage_H
-
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/RefCnt.hh"
 #include "mem/gems_common/RefCountable.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/protocol/MessageSizeType.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 class Address;
 
 class NetworkMessage;
 typedef RefCnt<NetworkMessage> NetMsgPtr;
 
-class NetworkMessage : public Message {
-public:
-  // Constructors
-  NetworkMessage()
-    :Message()
+class NetworkMessage : public Message
+{
+  public:
+    NetworkMessage()
+        : Message()
     {
-      m_internal_dest_valid = false;
+        m_internal_dest_valid = false;
     }
 
-  // Destructor
-  virtual ~NetworkMessage() { }
+    virtual ~NetworkMessage() { }
 
-  // Public Methods
+    virtual const NetDest& getDestination() const = 0;
+    virtual NetDest& getDestination() = 0;
+    virtual const MessageSizeType& getMessageSize() const = 0;
+    virtual MessageSizeType& getMessageSize() = 0;
 
-  virtual const NetDest& getDestination() const = 0;
-  virtual NetDest& getDestination() = 0;
-  virtual const MessageSizeType& getMessageSize() const = 0;
-  virtual MessageSizeType& getMessageSize() = 0;
-  //  virtual const Address& getAddress() const = 0;
-  //  virtual Address& getAddress() = 0;
+    const NetDest&
+    getInternalDestination() const
+    {
+        if (m_internal_dest_valid == false)
+            return getDestination();
 
-  const NetDest& getInternalDestination() const {
-    if (m_internal_dest_valid == false) {
-      return getDestination();
-    } else {
-      return m_internal_dest;
+        return m_internal_dest;
     }
-  }
 
-  NetDest& getInternalDestination() {
-    if (m_internal_dest_valid == false) {
-      m_internal_dest = getDestination();
-      m_internal_dest_valid = true;
+    NetDest&
+    getInternalDestination()
+    {
+        if (m_internal_dest_valid == false) {
+            m_internal_dest = getDestination();
+            m_internal_dest_valid = true;
+        }
+        return m_internal_dest;
     }
-    return m_internal_dest;
-  }
 
-  virtual void print(ostream& out) const = 0;
+    virtual void print(ostream& out) const = 0;
 
-private:
-  // Private Methods
-
-  // Data Members (m_ prefix)
-  NetDest m_internal_dest;
-  bool m_internal_dest_valid;
+  private:
+    NetDest m_internal_dest;
+    bool m_internal_dest_valid;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const NetworkMessage& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const NetworkMessage& obj)
+inline ostream&
+operator<<(ostream& out, const NetworkMessage& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //NetworkMessage_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_NETWORKMESSAGE_HH__

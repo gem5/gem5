@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,49 +27,39 @@
  */
 
 /*
- * $Id$
- *
- * Description: Common base class for a machine node.
- *
+ * Common base class for a machine node.
  */
 
-#ifndef AbstractCacheEntry_H
-#define AbstractCacheEntry_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/protocol/AccessPermission.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/AbstractEntry.hh"
 
 class DataBlock;
 
-class AbstractCacheEntry : public AbstractEntry {
-public:
-  // Constructors
-  AbstractCacheEntry();
+class AbstractCacheEntry : public AbstractEntry
+{
+  public:
+    AbstractCacheEntry();
+    virtual ~AbstractCacheEntry() = 0;
 
-  // Destructor, prevent it from instantiation
-  virtual ~AbstractCacheEntry() = 0;
-
-  // Data Members (m_ prefix)
-  Address m_Address; // Address of this block, required by CacheMemory
-  Time m_LastRef; // Last time this block was referenced, required by CacheMemory
-  AccessPermission m_Permission; // Access permission for this block, required by CacheMemory
+    Address m_Address; // Address of this block, required by CacheMemory
+    Time m_LastRef; // Last time this block was referenced, required
+                    // by CacheMemory
+    AccessPermission m_Permission; // Access permission for this
+                                   // block, required by CacheMemory
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const AbstractCacheEntry& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const AbstractCacheEntry& obj)
+inline ostream&
+operator<<(ostream& out, const AbstractCacheEntry& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //AbstractCacheEntry_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTCACHEENTRY_HH__
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,65 +26,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-#ifndef RUBYEVENTQUEUENODE_H
-#define RUBYEVENTQUEUENODE_H
+#ifndef __MEM_RUBY_EVENTQUEUE_RUBYEVENTQUEUENODE_HH__
+#define __MEM_RUBY_EVENTQUEUE_RUBYEVENTQUEUENODE_HH__
 
 #include <iostream>
 
+#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/common/Global.hh"
 #include "sim/eventq.hh"
-#include "mem/ruby/common/Consumer.hh"
-//class Consumer;
 
-class RubyEventQueueNode : public Event {
-public:
-  // Constructors
-  RubyEventQueueNode(Consumer* _consumer, RubyEventQueue* _eventq) 
-    : m_consumer_ptr(_consumer), m_eventq_ptr(_eventq)
-  { 
-    setFlags(AutoDelete); 
-  }
+class RubyEventQueueNode : public Event
+{
+  public:
+    RubyEventQueueNode(Consumer* _consumer, RubyEventQueue* _eventq) 
+        : m_consumer_ptr(_consumer), m_eventq_ptr(_eventq)
+    { 
+        setFlags(AutoDelete); 
+    }
 
-  // Destructor
-  //~RubyEventQueueNode();
+    void print(std::ostream& out) const;
+    virtual void
+    process() 
+    { 
+        m_consumer_ptr->wakeup(); 
+        m_consumer_ptr->removeScheduledWakeupTime(m_eventq_ptr->getTime()); 
+    }
+    virtual const char *description() const { return "Ruby Event"; }
 
-  // Public Methods
-  void print(std::ostream& out) const;
-  virtual void process() 
-  { 
-      m_consumer_ptr->wakeup(); 
-      m_consumer_ptr->removeScheduledWakeupTime(m_eventq_ptr->getTime()); 
-  }
-  virtual const char *description() const { return "Ruby Event"; }
-
-private:
-  // Private Methods
-
-  // Default copy constructor and assignment operator
-  // RubyEventQueueNode(const RubyEventQueueNode& obj);
-
-  // Data Members (m_ prefix)
-  Consumer* m_consumer_ptr;
-  RubyEventQueue* m_eventq_ptr;
+  private:
+    Consumer* m_consumer_ptr;
+    RubyEventQueue* m_eventq_ptr;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const RubyEventQueueNode& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const RubyEventQueueNode& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const RubyEventQueueNode& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //EVENTQUEUENODE_H
+#endif // __MEM_RUBY_EVENTQUEUE_EVENTQUEUENODE_HH__

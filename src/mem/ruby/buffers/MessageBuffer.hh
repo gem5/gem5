@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,137 +27,156 @@
  */
 
 /*
- * $Id$
- *
- * Description: Unordered buffer of messages that can be inserted such
+ * Unordered buffer of messages that can be inserted such
  * that they can be dequeued after a given delta time has expired.
- *
  */
 
-#ifndef MESSAGEBUFFER_H
-#define MESSAGEBUFFER_H
+#ifndef __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
+#define __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__
 
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/buffers/MessageBufferNode.hh"
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/gems_common/PrioHeap.hh"
 #include "mem/gems_common/util.hh"
+#include "mem/ruby/buffers/MessageBufferNode.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
-class MessageBuffer {
-public:
-  // Constructors
-  MessageBuffer(const std::string &name = "");
+class MessageBuffer
+{
+  public:
+    MessageBuffer(const std::string &name = "");
 
-  // ~MessageBuffer()
+    static void printConfig(std::ostream& out) {}
+    void
+    setRecycleLatency(int recycle_latency)
+    {
+        m_recycle_latency = recycle_latency;
+    }
 
-  // Public Methods
+    // TRUE if head of queue timestamp <= SystemTime
+    bool
+    isReady() const
+    {
+        return ((m_prio_heap.size() > 0) &&
+                (m_prio_heap.peekMin().m_time <= g_eventQueue_ptr->getTime()));
+    }
 
-  static void printConfig(std::ostream& out) {}
-  void setRecycleLatency(int recycle_latency) { m_recycle_latency = recycle_latency; }
+    void
+    delayHead()
+    {
+        MessageBufferNode node = m_prio_heap.extractMin();
+        enqueue(node.m_msgptr, 1);
+    }
 
-  // TRUE if head of queue timestamp <= SystemTime
-  bool isReady() const {
-    return ((m_prio_heap.size() > 0) &&
-            (m_prio_heap.peekMin().m_time <= g_eventQueue_ptr->getTime()));
-  }
+    bool areNSlotsAvailable(int n);
+    int getPriority() { return m_priority_rank; }
+    void setPriority(int rank) { m_priority_rank = rank; }
+    void setConsumer(Consumer* consumer_ptr)
+    {
+        ASSERT(m_consumer_ptr == NULL);
+        m_consumer_ptr = consumer_ptr;
+    }
 
-  void delayHead() {
-    MessageBufferNode node = m_prio_heap.extractMin();
-    enqueue(node.m_msgptr, 1);
-  }
+    void setDescription(const std::string& name) { m_name = name; }
+    std::string getDescription() { return m_name;}
 
-  bool areNSlotsAvailable(int n);
-  int getPriority() { return m_priority_rank; }
-  void setPriority(int rank) { m_priority_rank = rank; }
-  void setConsumer(Consumer* consumer_ptr) { ASSERT(m_consumer_ptr==NULL); m_consumer_ptr = consumer_ptr; }
-  void setDescription(const std::string& name) { m_name = name; }
-  std::string getDescription() { return m_name;}
+    Consumer* getConsumer() { return m_consumer_ptr; }
 
-  Consumer* getConsumer() { return m_consumer_ptr; }
+    const Message* peekAtHeadOfQueue() const;
+    const Message* peek() const { return peekAtHeadOfQueue(); }
+    const MsgPtr getMsgPtrCopy() const;
 
-  const Message* peekAtHeadOfQueue() const;
-  const Message* peek() const { return peekAtHeadOfQueue(); }
-  const MsgPtr getMsgPtrCopy() const;
-  const MsgPtr& peekMsgPtr() const { assert(isReady()); return m_prio_heap.peekMin().m_msgptr; }
-  const MsgPtr& peekMsgPtrEvenIfNotReady() const {return m_prio_heap.peekMin().m_msgptr; }
+    const MsgPtr&
+    peekMsgPtr() const
+    {
+        assert(isReady());
+        return m_prio_heap.peekMin().m_msgptr;
+    }
 
-  void enqueue(const MsgPtr& message) { enqueue(message, 1); }
-  void enqueue(const MsgPtr& message, Time delta);
-  //  void enqueueAbsolute(const MsgPtr& message, Time absolute_time);
-  int dequeue_getDelayCycles(MsgPtr& message);  // returns delay cycles of the message
-  void dequeue(MsgPtr& message);
-  int dequeue_getDelayCycles();  // returns delay cycles of the message
-  void dequeue() { pop(); }
-  void pop();
-  void recycle();
-  bool isEmpty() const { return m_prio_heap.size() == 0; }
+    const MsgPtr&
+    peekMsgPtrEvenIfNotReady() const
+    {
+        return m_prio_heap.peekMin().m_msgptr;
+    }
 
-  void setOrdering(bool order) { m_strict_fifo = order; m_ordering_set = true; }
-  void setSize(int size) {m_max_size = size;}
-  int getSize();
-  void setRandomization(bool random_flag) { m_randomization = random_flag; }
+    void enqueue(const MsgPtr& message) { enqueue(message, 1); }
+    void enqueue(const MsgPtr& message, Time delta);
+    //  void enqueueAbsolute(const MsgPtr& message, Time absolute_time);
+    int dequeue_getDelayCycles(MsgPtr& message);  // returns delay
+                                                  // cycles of the
+                                                  // message
+    void dequeue(MsgPtr& message);
+    int dequeue_getDelayCycles();  // returns delay cycles of the message
+    void dequeue() { pop(); }
+    void pop();
+    void recycle();
+    bool isEmpty() const { return m_prio_heap.size() == 0; }
 
-  void clear();
+    void
+    setOrdering(bool order)
+    {
+        m_strict_fifo = order;
+        m_ordering_set = true;
+    }
+    void setSize(int size) { m_max_size = size; }
+    int getSize();
+    void setRandomization(bool random_flag) { m_randomization = random_flag; }
 
-  void print(std::ostream& out) const;
-  void printStats(std::ostream& out);
-  void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
+    void clear();
 
-private:
-  //added by SS
-  int m_recycle_latency;
+    void print(std::ostream& out) const;
+    void printStats(std::ostream& out);
+    void clearStats() { m_not_avail_count = 0; m_msg_counter = 0; }
 
-  // Private Methods
-  int setAndReturnDelayCycles(MsgPtr& message);
+  private:
+    //added by SS
+    int m_recycle_latency;
 
-  // Private copy constructor and assignment operator
-  MessageBuffer(const MessageBuffer& obj);
-  MessageBuffer& operator=(const MessageBuffer& obj);
+    // Private Methods
+    int setAndReturnDelayCycles(MsgPtr& message);
 
-  // Data Members (m_ prefix)
-  Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
-  PrioHeap<MessageBufferNode> m_prio_heap;
-  std::string m_name;
+    // Private copy constructor and assignment operator
+    MessageBuffer(const MessageBuffer& obj);
+    MessageBuffer& operator=(const MessageBuffer& obj);
 
-  int m_max_size;
-  int m_size;
+    // Data Members (m_ prefix)
+    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup(), can be NULL
+    PrioHeap<MessageBufferNode> m_prio_heap;
+    std::string m_name;
 
-  Time m_time_last_time_size_checked;
-  int m_size_last_time_size_checked;
+    int m_max_size;
+    int m_size;
 
-  // variables used so enqueues appear to happen imediately, while pop happen the next cycle
-  Time m_time_last_time_enqueue;
-  Time m_time_last_time_pop;
-  int m_size_at_cycle_start;
-  int m_msgs_this_cycle;
+    Time m_time_last_time_size_checked;
+    int m_size_last_time_size_checked;
 
-  int m_not_avail_count;  // count the # of times I didn't have N slots available
-  int m_msg_counter;
-  int m_priority_rank;
-  bool m_strict_fifo;
-  bool m_ordering_set;
-  bool m_randomization;
-  Time m_last_arrival_time;
+    // variables used so enqueues appear to happen imediately, while
+    // pop happen the next cycle
+    Time m_time_last_time_enqueue;
+    Time m_time_last_time_pop;
+    int m_size_at_cycle_start;
+    int m_msgs_this_cycle;
+
+    int m_not_avail_count;  // count the # of times I didn't have N
+                            // slots available
+    int m_msg_counter;
+    int m_priority_rank;
+    bool m_strict_fifo;
+    bool m_ordering_set;
+    bool m_randomization;
+    Time m_last_arrival_time;
 };
 
-// Output operator declaration
-//template <class TYPE>
-std::ostream& operator<<(std::ostream& out, const MessageBuffer& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const MessageBuffer& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const MessageBuffer& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //MESSAGEBUFFER_H
+#endif // __MEM_RUBY_BUFFERS_MESSAGEBUFFER_HH__

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,42 +26,41 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
 #include "mem/ruby/common/Address.hh"
 
-void Address::output(ostream& out) const
+void
+Address::output(ostream& out) const
 {
-  // Note: this outputs addresses in the form "ffff", not "0xffff".
-  // This code should always be able to write out addresses in a
-  // format that can be read in by the below input() method.  Please
-  // don't change this without talking to Milo first.
-  out << hex << m_address << dec;
+    // Note: this outputs addresses in the form "ffff", not "0xffff".
+    // This code should always be able to write out addresses in a
+    // format that can be read in by the below input() method.  Please
+    // don't change this without talking to Milo first.
+    out << hex << m_address << dec;
 }
 
-void Address::input(istream& in)
+void
+Address::input(istream& in)
 {
-  // Note: this only works with addresses in the form "ffff", not
-  // "0xffff".  This code should always be able to read in addresses
-  // written out by the above output() method.  Please don't change
-  // this without talking to Milo first.
-  in >> hex >> m_address >> dec;
+    // Note: this only works with addresses in the form "ffff", not
+    // "0xffff".  This code should always be able to read in addresses
+    // written out by the above output() method.  Please don't change
+    // this without talking to Milo first.
+    in >> hex >> m_address >> dec;
 }
 
 Address::Address(const Address& obj)
 {
-  m_address = obj.m_address;
+    m_address = obj.m_address;
 }
 
-Address& Address::operator=(const Address& obj)
+Address&
+Address::operator=(const Address& obj)
 {
-  if (this == &obj) {
-    //    assert(false);
-  } else {
-    m_address = obj.m_address;
-  }
-  return *this;
+    if (this == &obj) {
+        // assert(false);
+    } else {
+        m_address = obj.m_address;
+    }
+    return *this;
 }
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -27,38 +26,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
+#define __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__
 
-#ifndef SPARSEMEMORY_H
-#define SPARSEMEMORY_H
-
-#include "mem/ruby/common/Global.hh"
 #include "base/hashmap.hh"
-#include "mem/ruby/common/Address.hh"
 #include "mem/protocol/Directory_Entry.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 
-typedef struct SparseMemEntry {
+struct SparseMemEntry
+{
     void* entry;
-} SparseMemEntry_t;
+};
 
-typedef m5::hash_map<Address, SparseMemEntry_t> SparseMapType;
+typedef m5::hash_map<Address, SparseMemEntry> SparseMapType;
 
-typedef struct curNextInfo {
+struct CurNextInfo
+{
     SparseMapType* curTable;
     int level;
     int highBit;
     int lowBit;
 };
 
-class SparseMemory {
+class SparseMemory
+{
   public:
-
-    // Constructors
     SparseMemory(int number_of_bits, int number_of_levels);
-    
-    // Destructor
     ~SparseMemory();
-    
-    // Public Methods
     
     void printConfig(ostream& out) { }
     
@@ -83,7 +78,7 @@ class SparseMemory {
     void recursivelyRemoveTables(SparseMapType* currentTable, int level);
     
     // recursive search for address and remove associated entries
-    int recursivelyRemoveLevels(const Address& address, curNextInfo& curInfo);
+    int recursivelyRemoveLevels(const Address& address, CurNextInfo& curInfo);
     
     // Data Members (m_prefix)
     SparseMapType* m_map_head;
@@ -98,17 +93,12 @@ class SparseMemory {
     uint64_t* m_removes_per_level;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const SparseMemEntry& obj);
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const SparseMemEntry& obj)
+inline ostream&
+operator<<(ostream& out, const SparseMemEntry& obj)
 {
     out << "SparseMemEntry";
     out << flush;
     return out;
 }
 
-
-#endif //SPARSEMEMORY_H
+#endif // __MEM_RUBY_SYSTEM_SPARSEMEMORY_HH__

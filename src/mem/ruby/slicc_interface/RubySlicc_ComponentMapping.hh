@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,22 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_COMPONENTMAPPINGS_HH__
 
-#ifndef COMPONENTMAPPINGFNS_H
-#define COMPONENTMAPPINGFNS_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/system/MachineID.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/ruby/common/Set.hh"
-#include "mem/ruby/common/NetDest.hh"
 #include "mem/protocol/GenericMachineType.hh"
-#include "mem/ruby/system/DirectoryMemory.hh"
 #include "mem/protocol/MachineType.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/NetDest.hh"
+#include "mem/ruby/common/Set.hh"
+#include "mem/ruby/system/DirectoryMemory.hh"
+#include "mem/ruby/system/MachineID.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 #ifdef MACHINETYPE_L1Cache
 #define MACHINETYPE_L1CACHE_ENUM MachineType_L1Cache
@@ -70,88 +65,100 @@
 
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
-inline
-NodeID map_Address_to_DirectoryNode(const Address& addr)
+inline NodeID
+map_Address_to_DirectoryNode(const Address& addr)
 {
-  return DirectoryMemory::mapAddressToDirectoryVersion(addr);
+    return DirectoryMemory::mapAddressToDirectoryVersion(addr);
 }
 
 // used to determine the home directory
 // returns a value between 0 and total_directories_within_the_system
-inline
-MachineID map_Address_to_Directory(const Address &addr)
+inline MachineID
+map_Address_to_Directory(const Address &addr)
 {
-  MachineID mach = {MachineType_Directory, map_Address_to_DirectoryNode(addr)};
-  return mach;
-}
-
-inline
-MachineID map_Address_to_DMA(const Address & addr)
-{
-  MachineID dma = {MACHINETYPE_DMA_ENUM, 0};
-  return dma;
-}
-
-inline 
-NetDest broadcast(MachineType type)
-{
-  NetDest dest;
-  for (int i=0; i<MachineType_base_count(type); i++) {
-    MachineID mach = {type, i};
-    dest.add(mach);
-  }
-  return dest;
-}
-
-inline
-MachineID mapAddressToRange(const Address & addr, MachineType type, int low_bit, int num_bits)
-{
-  MachineID mach = {type, 0};
-  if (num_bits == 0)
+    MachineID mach =
+        {MachineType_Directory, map_Address_to_DirectoryNode(addr)};
     return mach;
-  mach.num = addr.bitSelect(low_bit, low_bit+num_bits-1);
-  return mach;
 }
 
-extern inline NodeID machineIDToNodeID(MachineID machID)
+inline MachineID
+map_Address_to_DMA(const Address & addr)
 {
-  return machID.num;
+    MachineID dma = {MACHINETYPE_DMA_ENUM, 0};
+    return dma;
 }
 
-extern inline MachineType machineIDToMachineType(MachineID machID)
+inline NetDest
+broadcast(MachineType type)
 {
-  return machID.type;
+    NetDest dest;
+    for (int i = 0; i < MachineType_base_count(type); i++) {
+        MachineID mach = {type, i};
+        dest.add(mach);
+    }
+    return dest;
 }
 
-extern inline NodeID L1CacheMachIDToProcessorNum(MachineID machID)
+inline MachineID
+mapAddressToRange(const Address & addr, MachineType type, int low_bit,
+                  int num_bits)
 {
-  assert(machID.type == MachineType_L1Cache);
-  return machID.num;
+    MachineID mach = {type, 0};
+    if (num_bits == 0)
+        return mach;
+    mach.num = addr.bitSelect(low_bit, low_bit + num_bits - 1);
+    return mach;
 }
 
-extern inline MachineID getL1MachineID(NodeID L1RubyNode)
+inline NodeID
+machineIDToNodeID(MachineID machID)
 {
-  MachineID mach = {MACHINETYPE_L1CACHE_ENUM, L1RubyNode};
-  return mach;
+    return machID.num;
 }
 
-extern inline GenericMachineType ConvertMachToGenericMach(MachineType machType) {
-  if (machType == MACHINETYPE_L1CACHE_ENUM) {
-    return GenericMachineType_L1Cache;
-  } else if (machType == MACHINETYPE_L2CACHE_ENUM) {
-    return GenericMachineType_L2Cache;
-  } else if (machType == MACHINETYPE_L3CACHE_ENUM) {
-    return GenericMachineType_L3Cache;
-  } else if (machType == MachineType_Directory) {
-    return GenericMachineType_Directory;
-  } else {
+inline MachineType
+machineIDToMachineType(MachineID machID)
+{
+    return machID.type;
+}
+
+inline NodeID
+L1CacheMachIDToProcessorNum(MachineID machID)
+{
+    assert(machID.type == MachineType_L1Cache);
+    return machID.num;
+}
+
+inline MachineID
+getL1MachineID(NodeID L1RubyNode)
+{
+    MachineID mach = {MACHINETYPE_L1CACHE_ENUM, L1RubyNode};
+    return mach;
+}
+
+inline GenericMachineType
+ConvertMachToGenericMach(MachineType machType)
+{
+    if (machType == MACHINETYPE_L1CACHE_ENUM)
+        return GenericMachineType_L1Cache;
+
+    if (machType == MACHINETYPE_L2CACHE_ENUM)
+        return GenericMachineType_L2Cache;
+
+    if (machType == MACHINETYPE_L3CACHE_ENUM)
+        return GenericMachineType_L3Cache;
+
+    if (machType == MachineType_Directory)
+        return GenericMachineType_Directory;
+
     ERROR_MSG("cannot convert to a GenericMachineType");
     return GenericMachineType_NULL;
-  }
 }
 
-extern inline int machineCount(MachineType machType) {
+inline int
+machineCount(MachineType machType)
+{
     return MachineType_base_count(machType);
 }
 
-#endif  // COMPONENTMAPPINGFNS_H
+#endif  // __MEM_RUBY_SLICC_INTERFACE_COMPONENTMAPPINGS_HH__

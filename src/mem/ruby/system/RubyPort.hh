@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -27,18 +26,17 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RUBYPORT_H
-#define RUBYPORT_H
+#ifndef __MEM_RUBY_SYSTEM_RUBYPORT_HH__
+#define __MEM_RUBY_SYSTEM_RUBYPORT_HH__
 
-#include "mem/ruby/libruby.hh"
+#include <cassert>
 #include <string>
-#include <assert.h>
 
 #include "mem/mem_object.hh"
-#include "mem/tport.hh"
 #include "mem/physical.hh"
 #include "mem/protocol/RequestStatus.hh"
-
+#include "mem/ruby/libruby.hh"
+#include "mem/tport.hh"
 #include "params/RubyPort.hh"
 
 using namespace std;
@@ -46,17 +44,16 @@ using namespace std;
 class MessageBuffer;
 class AbstractController;
 
-class RubyPort : public MemObject {
-public:
-
+class RubyPort : public MemObject
+{
+  public:
     class M5Port : public SimpleTimingPort
     {
-
+      private:
         RubyPort *ruby_port;
 
       public:
-        M5Port(const std::string &_name, 
-               RubyPort *_port);
+        M5Port(const std::string &_name, RubyPort *_port);
         bool sendTiming(PacketPtr pkt);
         void hitCallback(PacketPtr pkt);
 
@@ -72,12 +69,11 @@ public:
 
     class PioPort : public SimpleTimingPort
     {
-
+      private:
         RubyPort *ruby_port;
 
       public:
-        PioPort(const std::string &_name, 
-                RubyPort *_port);
+        PioPort(const std::string &_name, RubyPort *_port);
         bool sendTiming(PacketPtr pkt);
 
       protected:
@@ -92,8 +88,7 @@ public:
         M5Port* port;
         Packet::SenderState *saved;
 
-        SenderState(M5Port* _port, 
-                    Packet::SenderState *sender_state = NULL)
+        SenderState(M5Port* _port, Packet::SenderState *sender_state = NULL)
             : port(_port), saved(sender_state)
         {}
     };
@@ -114,17 +109,17 @@ public:
     //
     void setController(AbstractController* _cntrl) { m_controller = _cntrl; }
 
-protected:
-  const string m_name;
-  void ruby_hit_callback(PacketPtr pkt);
-  void hit(PacketPtr pkt);
+  protected:
+    const string m_name;
+    void ruby_hit_callback(PacketPtr pkt);
+    void hit(PacketPtr pkt);
 
-  int m_version;
-  AbstractController* m_controller;
-  MessageBuffer* m_mandatory_q_ptr;
+    int m_version;
+    AbstractController* m_controller;
+    MessageBuffer* m_mandatory_q_ptr;
     PioPort* pio_port;
 
-private:
+  private:
     uint16_t m_port_id;
     uint64_t m_request_cnt;
 
@@ -133,4 +128,4 @@ private:
     PhysicalMemory* physmem;
 };
 
-#endif
+#endif // __MEM_RUBY_SYSTEM_RUBYPORT_HH__

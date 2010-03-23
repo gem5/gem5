@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,64 +26,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MESSAGEBUFFERNODE_H
-#define MESSAGEBUFFERNODE_H
+#ifndef __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__
+#define __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__
 
 #include <iostream>
 
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
-class MessageBufferNode {
-public:
-  // Constructors
-  MessageBufferNode() { m_time = 0; m_msg_counter = 0; }
-  MessageBufferNode(const Time& time, int counter, const MsgPtr& msgptr)
-    { m_time = time; m_msgptr = msgptr; m_msg_counter = counter; }
-  // Destructor
-  //~MessageBufferNode();
+class MessageBufferNode
+{
+  public:
+    MessageBufferNode()
+    {
+        m_time = 0;
+        m_msg_counter = 0;
+    }
 
-  // Public Methods
-  void print(std::ostream& out) const;
-private:
-  // Private Methods
+    MessageBufferNode(const Time& time, int counter, const MsgPtr& msgptr)
+    {
+        m_time = time;
+        m_msgptr = msgptr;
+        m_msg_counter = counter;
+    }
 
-  // Default copy constructor and assignment operator
-  // MessageBufferNode(const MessageBufferNode& obj);
-  // MessageBufferNode& operator=(const MessageBufferNode& obj);
+    void print(std::ostream& out) const;
 
-  // Data Members (m_ prefix)
-public:
-  Time m_time;
-  int m_msg_counter; // FIXME, should this be a 64-bit value?
-  MsgPtr m_msgptr;
+  public:
+    Time m_time;
+    int m_msg_counter; // FIXME, should this be a 64-bit value?
+    MsgPtr m_msgptr;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const MessageBufferNode& obj);
-
-// ******************* Definitions *******************
-
-inline extern bool node_less_then_eq(const MessageBufferNode& n1, const MessageBufferNode& n2);
-
-inline extern
-bool node_less_then_eq(const MessageBufferNode& n1, const MessageBufferNode& n2)
+inline bool
+node_less_then_eq(const MessageBufferNode& n1, const MessageBufferNode& n2)
 {
-  if (n1.m_time == n2.m_time) {
-    assert(n1.m_msg_counter != n2.m_msg_counter);
-    return (n1.m_msg_counter <= n2.m_msg_counter);
-  } else {
-    return (n1.m_time <= n2.m_time);
-  }
+    if (n1.m_time == n2.m_time) {
+        assert(n1.m_msg_counter != n2.m_msg_counter);
+        return (n1.m_msg_counter <= n2.m_msg_counter);
+    } else {
+        return (n1.m_time <= n2.m_time);
+    }
 }
 
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const MessageBufferNode& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const MessageBufferNode& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //MESSAGEBUFFERNODE_H
+#endif // __MEM_RUBY_BUFFERS_MESSAGEBUFFERNODE_HH__

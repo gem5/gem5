@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,15 +26,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * NetDest.C
- *
- * Description: See NetDest.hh
- *
- * $Id$
- *
- */
-
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/protocol/Protocol.hh"
 
@@ -44,216 +34,242 @@ NetDest::NetDest()
   setSize();
 }
 
-void NetDest::add(MachineID newElement)
+void
+NetDest::add(MachineID newElement)
 {
-  m_bits[vecIndex(newElement)].add(bitIndex(newElement.num));
+    m_bits[vecIndex(newElement)].add(bitIndex(newElement.num));
 }
 
-void NetDest::addNetDest(const NetDest& netDest)
+void
+NetDest::addNetDest(const NetDest& netDest)
 {
-  assert(m_bits.size() == netDest.getSize());
-  for (int i = 0; i < m_bits.size(); i++) {
-    m_bits[i].addSet(netDest.m_bits[i]);
-  }
+    assert(m_bits.size() == netDest.getSize());
+    for (int i = 0; i < m_bits.size(); i++) {
+        m_bits[i].addSet(netDest.m_bits[i]);
+    }
 }
 
-void NetDest::addRandom()
+void
+NetDest::addRandom()
 {
-  int i = random()%m_bits.size();
-  m_bits[i].addRandom();
+    int i = random()%m_bits.size();
+    m_bits[i].addRandom();
 }
 
-void NetDest::setNetDest(MachineType machine, const Set& set)
+void
+NetDest::setNetDest(MachineType machine, const Set& set)
 {
-  // assure that there is only one set of destinations for this machine
-  assert(MachineType_base_level((MachineType)(machine+1)) - MachineType_base_level(machine) == 1);
-  m_bits[MachineType_base_level(machine)] = set;
+    // assure that there is only one set of destinations for this machine
+    assert(MachineType_base_level((MachineType)(machine + 1)) -
+           MachineType_base_level(machine) == 1);
+    m_bits[MachineType_base_level(machine)] = set;
 }
 
-void NetDest::remove(MachineID oldElement)
+void
+NetDest::remove(MachineID oldElement)
 {
-  m_bits[vecIndex(oldElement)].remove(bitIndex(oldElement.num));
+    m_bits[vecIndex(oldElement)].remove(bitIndex(oldElement.num));
 }
 
-void NetDest::removeNetDest(const NetDest& netDest)
+void
+NetDest::removeNetDest(const NetDest& netDest)
 {
-  assert(m_bits.size() == netDest.getSize());
-  for (int i = 0; i < m_bits.size(); i++) {
-    m_bits[i].removeSet(netDest.m_bits[i]);
-
-  }
+    assert(m_bits.size() == netDest.getSize());
+    for (int i = 0; i < m_bits.size(); i++) {
+        m_bits[i].removeSet(netDest.m_bits[i]);
+    }
 }
 
-void NetDest::clear()
+void
+NetDest::clear()
 {
-  for (int i = 0; i < m_bits.size(); i++) {
-    m_bits[i].clear();
-  }
+    for (int i = 0; i < m_bits.size(); i++) {
+        m_bits[i].clear();
+    }
 }
 
-void NetDest::broadcast()
+void
+NetDest::broadcast()
 {
-  for (MachineType machine = MachineType_FIRST; machine < MachineType_NUM; ++machine) {
-    broadcast(machine);
-  }
+    for (MachineType machine = MachineType_FIRST;
+         machine < MachineType_NUM; ++machine) {
+        broadcast(machine);
+    }
 }
 
-void NetDest::broadcast(MachineType machineType) {
-
-  for (int i = 0; i < MachineType_base_count(machineType); i++) {
-    MachineID mach = {machineType, i};
-    add(mach);
-  }
+void
+NetDest::broadcast(MachineType machineType)
+{
+    for (int i = 0; i < MachineType_base_count(machineType); i++) {
+        MachineID mach = {machineType, i};
+        add(mach);
+    }
 }
 
 //For Princeton Network
-Vector<NodeID> NetDest::getAllDest() {
-        Vector<NodeID> dest;
-        dest.clear();
-        for (int i=0; i<m_bits.size(); i++) {
-                for (int j=0; j<m_bits[i].getSize(); j++) {
-                        if (m_bits[i].isElement(j)) {
-                                dest.insertAtBottom((NodeID) (MachineType_base_number((MachineType) i) + j));
-                        }
-                }
+Vector<NodeID>
+NetDest::getAllDest()
+{
+    Vector<NodeID> dest;
+    dest.clear();
+    for (int i = 0; i < m_bits.size(); i++) {
+        for (int j = 0; j < m_bits[i].getSize(); j++) {
+            if (m_bits[i].isElement(j)) {
+                int id = MachineType_base_number((MachineType)i) + j;
+                dest.insertAtBottom((NodeID)id);
+            }
         }
-        return dest;
-}
-
-int NetDest::count() const
-{
-  int counter = 0;
-  for (int i=0; i<m_bits.size(); i++) {
-    counter += m_bits[i].count();
-  }
-  return counter;
-}
-
-NodeID NetDest::elementAt(MachineID index) {
-  return m_bits[vecIndex(index)].elementAt(bitIndex(index.num));
-}
-
-MachineID NetDest::smallestElement() const
-{
-  assert(count() > 0);
-  for (int i=0; i<m_bits.size(); i++) {
-    for (int j=0; j<m_bits[i].getSize(); j++) {
-      if (m_bits[i].isElement(j)) {
-        MachineID mach = {MachineType_from_base_level(i), j};
-        return mach;
-      }
     }
-  }
-  ERROR_MSG("No smallest element of an empty set.");
+    return dest;
 }
 
-MachineID NetDest::smallestElement(MachineType machine) const
+int
+NetDest::count() const
 {
-  for (int j = 0; j < m_bits[MachineType_base_level(machine)].getSize(); j++) {
-    if (m_bits[MachineType_base_level(machine)].isElement(j)) {
-      MachineID mach = {machine, j};
-      return mach;
+    int counter = 0;
+    for (int i = 0; i < m_bits.size(); i++) {
+        counter += m_bits[i].count();
     }
-  }
-
-  ERROR_MSG("No smallest element of given MachineType.");
+    return counter;
 }
 
+NodeID
+NetDest::elementAt(MachineID index)
+{
+    return m_bits[vecIndex(index)].elementAt(bitIndex(index.num));
+}
+
+MachineID
+NetDest::smallestElement() const
+{
+    assert(count() > 0);
+    for (int i = 0; i < m_bits.size(); i++) {
+        for (int j = 0; j < m_bits[i].getSize(); j++) {
+            if (m_bits[i].isElement(j)) {
+                MachineID mach = {MachineType_from_base_level(i), j};
+                return mach;
+            }
+        }
+    }
+    ERROR_MSG("No smallest element of an empty set.");
+}
+
+MachineID
+NetDest::smallestElement(MachineType machine) const
+{
+    int size = m_bits[MachineType_base_level(machine)].getSize();
+    for (int j = 0; j < size; j++) {
+        if (m_bits[MachineType_base_level(machine)].isElement(j)) {
+            MachineID mach = {machine, j};
+            return mach;
+        }
+    }
+
+    ERROR_MSG("No smallest element of given MachineType.");
+}
 
 // Returns true iff all bits are set
-bool NetDest::isBroadcast() const
+bool
+NetDest::isBroadcast() const
 {
-  for (int i=0; i<m_bits.size(); i++) {
-    if (!m_bits[i].isBroadcast()) {
-      return false;
+    for (int i = 0; i < m_bits.size(); i++) {
+        if (!m_bits[i].isBroadcast()) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 // Returns true iff no bits are set
-bool NetDest::isEmpty() const
+bool
+NetDest::isEmpty() const
 {
-  for (int i=0; i<m_bits.size(); i++) {
-    if (!m_bits[i].isEmpty()) {
-      return false;
+    for (int i = 0; i < m_bits.size(); i++) {
+        if (!m_bits[i].isEmpty()) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
 // returns the logical OR of "this" set and orNetDest
-NetDest NetDest::OR(const NetDest& orNetDest) const
+NetDest
+NetDest::OR(const NetDest& orNetDest) const
 {
-  assert(m_bits.size() == orNetDest.getSize());
-  NetDest result;
-  for (int i=0; i<m_bits.size(); i++) {
-    result.m_bits[i] = m_bits[i].OR(orNetDest.m_bits[i]);
-  }
-  return result;
+    assert(m_bits.size() == orNetDest.getSize());
+    NetDest result;
+    for (int i = 0; i < m_bits.size(); i++) {
+        result.m_bits[i] = m_bits[i].OR(orNetDest.m_bits[i]);
+    }
+    return result;
 }
 
-
 // returns the logical AND of "this" set and andNetDest
-NetDest NetDest::AND(const NetDest& andNetDest) const
+NetDest
+NetDest::AND(const NetDest& andNetDest) const
 {
-  assert(m_bits.size() == andNetDest.getSize());
-  NetDest result;
-  for (int i=0; i<m_bits.size(); i++) {
-    result.m_bits[i] = m_bits[i].AND(andNetDest.m_bits[i]);
-  }
-  return result;
+    assert(m_bits.size() == andNetDest.getSize());
+    NetDest result;
+    for (int i = 0; i < m_bits.size(); i++) {
+        result.m_bits[i] = m_bits[i].AND(andNetDest.m_bits[i]);
+    }
+    return result;
 }
 
 // Returns true if the intersection of the two sets is non-empty
-bool NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
+bool
+NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
 {
-  assert(m_bits.size() == other_netDest.getSize());
-  for (int i=0; i<m_bits.size(); i++) {
-    if (m_bits[i].intersectionIsNotEmpty(other_netDest.m_bits[i])) {
-      return true;
+    assert(m_bits.size() == other_netDest.getSize());
+    for (int i = 0; i < m_bits.size(); i++) {
+        if (m_bits[i].intersectionIsNotEmpty(other_netDest.m_bits[i])) {
+            return true;
+        }
     }
-  }
-  return false;
+    return false;
 }
 
-bool NetDest::isSuperset(const NetDest& test) const
+bool
+NetDest::isSuperset(const NetDest& test) const
 {
-  assert(m_bits.size() == test.getSize());
+    assert(m_bits.size() == test.getSize());
 
-  for (int i=0; i<m_bits.size(); i++) {
-    if (!m_bits[i].isSuperset(test.m_bits[i])) {
-      return false;
+    for (int i = 0; i < m_bits.size(); i++) {
+        if (!m_bits[i].isSuperset(test.m_bits[i])) {
+            return false;
+        }
     }
-  }
-  return true;
+    return true;
 }
 
-bool NetDest::isElement(MachineID element) const
+bool
+NetDest::isElement(MachineID element) const
 {
-  return ((m_bits[vecIndex(element)])).isElement(bitIndex(element.num));
+    return ((m_bits[vecIndex(element)])).isElement(bitIndex(element.num));
 }
 
-void NetDest::setSize()
+void
+NetDest::setSize()
 {
-  m_bits.setSize(MachineType_base_level(MachineType_NUM));
-  assert(m_bits.size() == MachineType_NUM);
+    m_bits.setSize(MachineType_base_level(MachineType_NUM));
+    assert(m_bits.size() == MachineType_NUM);
 
-  for (int i = 0; i < m_bits.size(); i++) {
-    m_bits[i].setSize(MachineType_base_count((MachineType)i));
-  }
-}
-
-void NetDest::print(ostream& out) const
-{
-  out << "[NetDest (" << m_bits.size() << ") ";
-
-  for (int i=0; i<m_bits.size(); i++) {
-    for (int j=0; j<m_bits[i].getSize(); j++) {
-      out << (bool) m_bits[i].isElement(j) << " ";
+    for (int i = 0; i < m_bits.size(); i++) {
+        m_bits[i].setSize(MachineType_base_count((MachineType)i));
     }
-    out << " - ";
-  }
-  out << "]";
+}
+
+void
+NetDest::print(ostream& out) const
+{
+    out << "[NetDest (" << m_bits.size() << ") ";
+
+    for (int i = 0; i < m_bits.size(); i++) {
+        for (int j = 0; j < m_bits[i].getSize(); j++) {
+            out << (bool) m_bits[i].isElement(j) << " ";
+        }
+        out << " - ";
+    }
+    out << "]";
 }
 

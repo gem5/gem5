@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,21 +26,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- * Description: See AbstractCacheEntry.hh
- *
- */
-
 #include "mem/ruby/slicc_interface/AbstractCacheEntry.hh"
 
-AbstractCacheEntry::AbstractCacheEntry() {
-  m_Address.setAddress(0);
-  m_Permission = AccessPermission_NotPresent;
+AbstractCacheEntry::AbstractCacheEntry()
+{
+    m_Address.setAddress(0);
+    m_Permission = AccessPermission_NotPresent;
 }
 
-// still need to define destructor for subclasses
-AbstractCacheEntry::~AbstractCacheEntry() {
+AbstractCacheEntry::~AbstractCacheEntry()
+{
 }
 
