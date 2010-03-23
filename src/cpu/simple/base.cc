@@ -205,6 +205,27 @@ change_thread_state(ThreadID tid, int activate, int priority)
 {
 }
 
+void
+BaseSimpleCPU::prefetch(Addr addr, unsigned flags)
+{
+    if (traceData) {
+        traceData->setAddr(addr);
+    }
+
+    // need to do this...
+}
+
+void
+BaseSimpleCPU::writeHint(Addr addr, int size, unsigned flags)
+{
+    if (traceData) {
+        traceData->setAddr(addr);
+    }
+
+    // need to do this...
+}
+
+
 Fault
 BaseSimpleCPU::copySrcTranslate(Addr src)
 {

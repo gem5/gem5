@@ -38,9 +38,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
 
-    # add hook to get effective addresses into execution trace output.
-    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
-
     # Some CPU models execute the memory operation as an atomic unit,
     # while others want to separate them into an effective address
     # computation and a memory access operation.  As a result, we need

@@ -451,6 +451,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     if (traceData) {
         traceData->setAddr(addr);
+        traceData->setData(data);
     }
 
     //The block size of our peer.
@@ -530,12 +531,6 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         //stop now.
         if (fault != NoFault || secondAddr <= addr)
         {
-            // If the write needs to have a fault on the access, consider
-            // calling changeStatus() and changing it to "bad addr write"
-            // or something.
-            if (traceData) {
-                traceData->setData(gtoh(data));
-            }
             if (req->isLocked() && fault == NoFault) {
                 assert(locked);
                 locked = false;

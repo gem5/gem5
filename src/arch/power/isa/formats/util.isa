@@ -97,9 +97,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
 
-    # add hook to get effective addresses into execution trace output.
-    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
-
     # Generate InstObjParams for the memory access.
     iop = InstObjParams(name, Name, base_class,
                         {'ea_code': ea_code,

@@ -275,7 +275,6 @@ def template StoreExecute {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         if (fault == NoFault) {
@@ -310,7 +309,6 @@ def template StoreCondExecute {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, &write_result);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         if (fault == NoFault) {
@@ -344,7 +342,6 @@ def template StoreInitiateAcc {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         return fault;
@@ -477,9 +474,6 @@ def LoadStoreBase(name, Name, ea_code, memacc_code, mem_flags, inst_flags,
     # Make sure flags are in lists (convert to lists if not).
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
-
-    # add hook to get effective addresses into execution trace output.
-    ea_code += '\nif (traceData) { traceData->setAddr(EA); }\n'
 
     # Some CPU models execute the memory operation as an atomic unit,
     # while others want to separate them into an effective address

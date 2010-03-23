@@ -426,6 +426,10 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     int data_size = sizeof(T);
     BaseTLB::Mode mode = BaseTLB::Read;
 
+    if (traceData) {
+        traceData->setAddr(addr);
+    }
+
     RequestPtr req  = new Request(asid, addr, data_size,
                                   flags, pc, _cpuId, tid);
 
@@ -458,11 +462,6 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
         DataTranslation<TimingSimpleCPU> *translation
             = new DataTranslation<TimingSimpleCPU>(this, state);
         thread->dtb->translateTiming(req, tc, translation, mode);
-    }
-
-    if (traceData) {
-        traceData->setData(data);
-        traceData->setAddr(addr);
     }
 
     return NoFault;
@@ -548,6 +547,11 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
     int data_size = sizeof(T);
     BaseTLB::Mode mode = BaseTLB::Write;
 
+    if (traceData) {
+        traceData->setAddr(addr);
+        traceData->setData(data);
+    }
+
     RequestPtr req = new Request(asid, addr, data_size,
                                  flags, pc, _cpuId, tid);
 
@@ -584,13 +588,7 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
         thread->dtb->translateTiming(req, tc, translation, mode);
     }
 
-    if (traceData) {
-        traceData->setAddr(req->getVaddr());
-        traceData->setData(data);
-    }
-
-    // If the write needs to have a fault on the access, consider calling
-    // changeStatus() and changing it to "bad addr write" or something.
+    // Translation faults will be returned via finishTranslation()
     return NoFault;
 }
 

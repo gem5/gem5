@@ -443,6 +443,10 @@ CacheUnit::read(DynInstPtr inst, Addr addr, T &data, unsigned flags)
     //The size of the data we're trying to read.
     int dataSize = sizeof(T);
 
+    if (inst->traceData) {
+        inst->traceData->setAddr(addr);
+    }
+
     if (inst->split2ndAccess) {     
         dataSize = inst->split2ndSize;
         cache_req->splitAccess = true;        
@@ -540,6 +544,11 @@ CacheUnit::write(DynInstPtr inst, T data, Addr addr, unsigned flags,
 
     //The size of the data we're trying to read.
     int dataSize = sizeof(T);
+
+    if (inst->traceData) {
+        inst->traceData->setAddr(addr);
+        inst->traceData->setData(data);
+    }
 
     if (inst->split2ndAccess) {     
         dataSize = inst->split2ndSize;
