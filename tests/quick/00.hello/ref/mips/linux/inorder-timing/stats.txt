@@ -1,17 +1,24 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  38577                       # Simulator instruction rate (inst/s)
-host_mem_usage                                 191640                       # Number of bytes of host memory used
-host_seconds                                     0.15                       # Real time elapsed on the host
-host_tick_rate                              192989817                       # Simulator tick rate (ticks/s)
+host_inst_rate                                  30626                       # Simulator instruction rate (inst/s)
+host_mem_usage                                 154136                       # Number of bytes of host memory used
+host_seconds                                     0.19                       # Real time elapsed on the host
+host_tick_rate                              153245779                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                        5827                       # Number of instructions simulated
 sim_seconds                                  0.000029                       # Number of seconds simulated
 sim_ticks                                    29206500                       # Number of ticks simulated
 system.cpu.AGEN-Unit.instReqsProcessed           2090                       # Number of Instructions Requests that completed in this resource.
+system.cpu.Branch-Predictor.BTBHits                 0                       # Number of BTB hits
+system.cpu.Branch-Predictor.BTBLookups            641                       # Number of BTB lookups
+system.cpu.Branch-Predictor.RASInCorrect            0                       # Number of incorrect RAS predictions.
+system.cpu.Branch-Predictor.condIncorrect          666                       # Number of conditional branches incorrect
+system.cpu.Branch-Predictor.condPredicted          677                       # Number of conditional branches predicted
 system.cpu.Branch-Predictor.instReqsProcessed         5828                       # Number of Instructions Requests that completed in this resource.
+system.cpu.Branch-Predictor.lookups               916                       # Number of BP lookups
 system.cpu.Branch-Predictor.predictedNotTaken          826                       # Number of Branches Predicted As Not Taken (False).
 system.cpu.Branch-Predictor.predictedTaken           90                       # Number of Branches Predicted As Taken (True).
+system.cpu.Branch-Predictor.usedRAS                86                       # Number of times the RAS was used to get a target.
 system.cpu.Decode-Unit.instReqsProcessed         5828                       # Number of Instructions Requests that completed in this resource.
 system.cpu.Execution-Unit.cyclesExecuted         3725                       # Number of Cycles Execution Unit was used.
 system.cpu.Execution-Unit.instReqsProcessed         3734                       # Number of Instructions Requests that completed in this resource.

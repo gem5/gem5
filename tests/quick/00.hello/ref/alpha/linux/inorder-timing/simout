@@ -5,13 +5,13 @@ The Regents of The University of Michigan
 All Rights Reserved
 
 
-M5 compiled Feb 24 2010 23:12:40
-M5 revision 1a33ca29ec29 6980 default share-aware-test-update.patch tip qtip
-M5 started Feb 25 2010 02:21:00
-M5 executing on SC2B0619
+M5 compiled Mar 23 2010 00:24:02
+M5 revision ba1ff0a71710 7040 default tip
+M5 started Mar 23 2010 00:24:03
+M5 executing on zooks
 command line: build/ALPHA_SE/m5.fast -d build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing -re tests/run.py build/ALPHA_SE/tests/fast/quick/00.hello/alpha/linux/inorder-timing
 Global frequency set at 1000000000000 ticks per second
 info: Entering event queue @ 0.  Starting simulation...
 info: Increasing stack size by one page.
 Hello world!
-Exiting @ tick 31286000 because target called exit()
+Exiting @ tick 31225500 because target called exit()
