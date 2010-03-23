@@ -36,28 +36,29 @@ from subprocess import call
 progname = os.path.basename(sys.argv[0])
 
 optparser = optparse.OptionParser()
-optparser.add_option('-v', '--verbose', dest='verbose', action='store_true',
-                     default=False,
-                     help='echo commands before executing')
-optparser.add_option('--builds', dest='builds',
-                     default='ALPHA_SE,ALPHA_SE_MOESI_hammer,' \
-                     'ALPHA_SE_MESI_CMP_directory,'  \
-                     'ALPHA_SE_MOESI_CMP_directory,' \
-                     'ALPHA_SE_MOESI_CMP_token,' \
-                     'ALPHA_FS,MIPS_SE,' \
-                     'POWER_SE,SPARC_SE,SPARC_FS,X86_SE,ARM_SE',
-                     help='comma-separated list of build targets to test  '
-                     " (default: '%default')" )
-optparser.add_option('--variants', dest='variants',
-                     default='fast',
-                     help='comma-separated list of build variants to test '
-                     " (default: '%default')" )
-optparser.add_option('--scons-opts', dest='scons_opts', default='',
-                     help='scons options', metavar='OPTS')
-optparser.add_option('-j', '--jobs', type='int', default=1,
-                     help='number of parallel jobs to use')
-optparser.add_option('-k', '--keep-going', action='store_true',
-                     help='keep going after errors')
+add_option = optparser.add_option
+add_option('-v', '--verbose', dest='verbose', action='store_true',
+           default=False,
+           help='echo commands before executing')
+add_option('--builds', dest='builds',
+           default='ALPHA_SE,ALPHA_SE_MOESI_hammer,' \
+           'ALPHA_SE_MESI_CMP_directory,'  \
+           'ALPHA_SE_MOESI_CMP_directory,' \
+           'ALPHA_SE_MOESI_CMP_token,' \
+           'ALPHA_FS,MIPS_SE,POWER_SE,SPARC_SE,SPARC_FS,X86_SE,ARM_SE',
+           help="comma-separated build targets to test (default: '%default')")
+add_option('--variants', dest='variants', default='fast',
+           help="comma-separated build variants to test (default: '%default')")
+add_option('--scons-opts', dest='scons_opts', default='', metavar='OPTS',
+           help='scons options')
+add_option('-j', '--jobs', type='int', default=1,
+           help='number of parallel jobs to use')
+add_option('-k', '--keep-going', action='store_true',
+           help='keep going after errors')
+add_option('-D', '--build-dir', default='',
+           help='build directory location')
+add_option('-n', "--no-exec", default=False, action='store_true',
+           help="don't actually invoke scons, just echo SCons command line")
 
 (options, tests) = optparser.parse_args()
 
@@ -65,6 +66,8 @@ optparser.add_option('-k', '--keep-going', action='store_true',
 # split list options on ',' to get Python lists
 builds = options.builds.split(',')
 variants = options.variants.split(',')
+
+options.build_dir = os.path.join(options.build_dir, 'build')
 
 # Call os.system() and raise exception if return status is non-zero
 def system(cmd):
@@ -91,11 +94,11 @@ def shellquote(s):
 
 if not tests:
     print "No tests specified, just building binaries."
-    targets = ['build/%s/m5.%s' % (build, variant)
+    targets = ['%s/%s/m5.%s' % (options.build_dir, build, variant)
                for build in builds
                for variant in variants]
 elif 'all' in tests:
-    targets = ['build/%s/tests/%s' % (build, variant)
+    targets = ['%s/%s/tests/%s' % (options.build_dir, build, variant)
                for build in builds
                for variant in variants]
 else:
@@ -103,17 +106,36 @@ else:
     # If we ever get a quick SPARC_FS test, this code should be removed
     if 'quick' in tests and 'SPARC_FS' in builds:
         builds.remove('SPARC_FS')
-    targets = ['build/%s/tests/%s/%s' % (build, variant, test)
+    targets = ['%s/%s/tests/%s/%s' % (options.build_dir, build, variant, test)
                for build in builds
                for variant in variants
                for test in tests]
 
+def cpu_count():
+    if 'bsd' in sys.platform or sys.platform == 'darwin':
+        try:
+            return int(os.popen('sysctl -n hw.ncpu').read())
+        except ValueError:
+            pass
+    else:
+        try:
+            return os.sysconf('SC_NPROCESSORS_ONLN')
+        except (ValueError, OSError, AttributeError):
+            pass
+
+    raise NotImplementedError('cannot determine number of cpus')
+
 scons_opts = options.scons_opts
 if options.jobs != 1:
+    if options.jobs == 0:
+        options.jobs = cpu_count()
     scons_opts += ' -j %d' % options.jobs
 if options.keep_going:
     scons_opts += ' -k'
 
-system('scons IGNORE_STYLE=True %s %s' % (scons_opts, ' '.join(targets)))
-
-sys.exit(0)
+cmd = 'scons IGNORE_STYLE=True %s %s' % (scons_opts, ' '.join(targets))
+if options.no_exec:
+    print cmd
+else:
+    system(cmd)
+    sys.exit(0)
