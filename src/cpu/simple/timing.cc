@@ -436,10 +436,6 @@ TimingSimpleCPU::read(Addr addr, T &data, unsigned flags)
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
 
-    // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->isUncacheable())
-        recordEvent("Uncached Write");
-
     _status = DTBWaitResponse;
     if (split_addr > addr) {
         RequestPtr req1, req2;
@@ -557,10 +553,6 @@ TimingSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     Addr split_addr = roundDown(addr + data_size - 1, block_size);
     assert(split_addr <= addr || split_addr - addr < block_size);
-
-    // This will need a new way to tell if it's hooked up to a cache or not.
-    if (req->isUncacheable())
-        recordEvent("Uncached Write");
 
     T *dataP = new T;
     *dataP = TheISA::htog(data);

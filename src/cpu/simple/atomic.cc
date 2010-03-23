@@ -351,10 +351,6 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
             }
         }
 
-        // This will need a new way to tell if it has a dcache attached.
-        if (req->isUncacheable())
-            recordEvent("Uncached Read");
-
         //If there's a fault, return it
         if (fault != NoFault) {
             if (req->isPrefetch()) {
@@ -522,10 +518,6 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
                 *res = req->getExtraData();
             }
         }
-
-        // This will need a new way to tell if it's hooked up to a cache or not.
-        if (req->isUncacheable())
-            recordEvent("Uncached Write");
 
         //If there's a fault or we don't need to access a second cache line,
         //stop now.
