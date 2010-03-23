@@ -26,16 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef LIBRUBY_INTERNAL_H
-#define LIBRUBY_INTERNAL_H
-
-#include "mem/ruby/libruby.hh"
+#ifndef __MEM_RUBY_LIBRUBY_INTERNAL_HH__
+#define __MEM_RUBY_LIBRUBY_INTERNAL_HH__
 
 #include <ostream>
 #include <string>
+
+#include "mem/ruby/libruby.hh"
 
 std::string RubyRequestType_to_string(const RubyRequestType& obj);
 RubyRequestType string_to_RubyRequestType(std::string);
 std::ostream& operator<<(std::ostream& out, const RubyRequestType& obj);
 
-#endif
+#endif // __MEM_RUBY_LIBRUBY_INTERNAL_HH__

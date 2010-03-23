@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,60 +26,50 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * BulkBloomFilter.hh
- *
- * Description:
- *
- *
- */
-
-#ifndef BULK_BLOOM_FILTER_H
-#define BULK_BLOOM_FILTER_H
+#ifndef __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
+#define __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__
 
 #include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
 
-class BulkBloomFilter : public AbstractBloomFilter {
-public:
+class BulkBloomFilter : public AbstractBloomFilter
+{
+  public:
+    BulkBloomFilter(string config);
+    ~BulkBloomFilter();
 
-  ~BulkBloomFilter();
-  BulkBloomFilter(string config);
+    void clear();
+    void increment(const Address& addr);
+    void decrement(const Address& addr);
+    void merge(AbstractBloomFilter * other_filter);
+    void set(const Address& addr);
+    void unset(const Address& addr);
 
-  void clear();
-  void increment(const Address& addr);
-  void decrement(const Address& addr);
-  void merge(AbstractBloomFilter * other_filter);
-  void set(const Address& addr);
-  void unset(const Address& addr);
+    bool isSet(const Address& addr);
+    int getCount(const Address& addr);
+    int getTotalCount();
+    int getIndex(const Address& addr);
+    int readBit(const int index);
+    void writeBit(const int index, const int value);
 
-  bool isSet(const Address& addr);
-  int getCount(const Address& addr);
-  int getTotalCount();
-  int getIndex(const Address& addr);
-  int readBit(const int index);
-  void writeBit(const int index, const int value);
+    void print(ostream& out) const;
 
-  void print(ostream& out) const;
+  private:
+    int get_index(const Address& addr);
+    Address permute(const Address & addr);
 
-private:
+    Vector<int> m_filter;
+    Vector<int> m_temp_filter;
 
-  int get_index(const Address& addr);
-  Address permute(const Address & addr);
+    int m_filter_size;
+    int m_filter_size_bits;
 
-  Vector<int> m_filter;
-  Vector<int> m_temp_filter;
+    int m_sector_bits;
 
-  int m_filter_size;
-  int m_filter_size_bits;
-
-  int m_sector_bits;
-
-  int m_count_bits;
-  int m_count;
+    int m_count_bits;
+    int m_count;
 };
 
-
-#endif
+#endif // __MEM_RUBY_FILTERS_BULKBLOOMFILTER_HH__

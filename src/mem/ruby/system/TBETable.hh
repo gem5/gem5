@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,141 +26,115 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * TBETable.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_SYSTEM_TBETABLE_HH__
+#define __MEM_RUBY_SYSTEM_TBETABLE_HH__
 
-#ifndef TBETABLE_H
-#define TBETABLE_H
-
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/system/System.hh"
 
 template<class ENTRY>
-class TBETable {
-public:
+class TBETable
+{
+  public:
+    TBETable(int number_of_TBEs)
+        : m_number_of_TBEs(number_of_TBEs)
+    {
+    }
 
-  // Constructors
-  TBETable(int number_of_TBEs);
+    void
+    printConfig(ostream& out)
+    {
+        out << "TBEs_per_TBETable: " << m_number_of_TBEs << endl;
+    }
 
+    bool isPresent(const Address& address) const;
+    void allocate(const Address& address);
+    void deallocate(const Address& address);
+    bool
+    areNSlotsAvailable(int n) const
+    {
+        return (m_number_of_TBEs - m_map.size()) >= n;
+    }
 
-  // Destructor
-  //~TBETable();
+    ENTRY& lookup(const Address& address);
+    const ENTRY& lookup(const Address& address) const;
 
-  // Public Methods
+    // Print cache contents
+    void print(ostream& out) const;
 
-  void printConfig(ostream& out) { out << "TBEs_per_TBETable: " << m_number_of_TBEs << endl; }
+  private:
+    // Private copy constructor and assignment operator
+    TBETable(const TBETable& obj);
+    TBETable& operator=(const TBETable& obj);
 
-  bool isPresent(const Address& address) const;
-  void allocate(const Address& address);
-  void deallocate(const Address& address);
-  bool areNSlotsAvailable(int n) const { return (m_number_of_TBEs - m_map.size()) >= n; }
+    // Data Members (m_prefix)
+    Map<Address, ENTRY> m_map;
 
-  ENTRY& lookup(const Address& address);
-  const ENTRY& lookup(const Address& address) const;
-
-  // Print cache contents
-  void print(ostream& out) const;
-private:
-  // Private Methods
-
-  // Private copy constructor and assignment operator
-  TBETable(const TBETable& obj);
-  TBETable& operator=(const TBETable& obj);
-
-  // Data Members (m_prefix)
-  Map<Address, ENTRY> m_map;
-
-private:
-  int m_number_of_TBEs;
+  private:
+    int m_number_of_TBEs;
 };
 
-// Output operator declaration
-//ostream& operator<<(ostream& out, const TBETable<ENTRY>& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
 template<class ENTRY>
-extern inline
-ostream& operator<<(ostream& out, const TBETable<ENTRY>& obj)
+inline ostream&
+operator<<(ostream& out, const TBETable<ENTRY>& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
-}
-
-
-// ****************************************************************
-
-
-template<class ENTRY>
-extern inline
-TBETable<ENTRY>::TBETable(int number_of_TBEs)
-{
-  m_number_of_TBEs = number_of_TBEs;
-}
-
-// PUBLIC METHODS
-
-// tests to see if an address is present in the cache
-template<class ENTRY>
-extern inline
-bool TBETable<ENTRY>::isPresent(const Address& address) const
-{
-  assert(address == line_address(address));
-  assert(m_map.size() <= m_number_of_TBEs);
-  return m_map.exist(address);
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
 template<class ENTRY>
-extern inline
-void TBETable<ENTRY>::allocate(const Address& address)
+inline bool
+TBETable<ENTRY>::isPresent(const Address& address) const
 {
-  assert(isPresent(address) == false);
-  assert(m_map.size() < m_number_of_TBEs);
-  m_map.add(address, ENTRY());
+    assert(address == line_address(address));
+    assert(m_map.size() <= m_number_of_TBEs);
+    return m_map.exist(address);
 }
 
 template<class ENTRY>
-extern inline
-void TBETable<ENTRY>::deallocate(const Address& address)
+inline void
+TBETable<ENTRY>::allocate(const Address& address)
 {
-  assert(isPresent(address) == true);
-  assert(m_map.size() > 0);
-  m_map.erase(address);
+    assert(isPresent(address) == false);
+    assert(m_map.size() < m_number_of_TBEs);
+    m_map.add(address, ENTRY());
+}
+
+template<class ENTRY>
+inline void
+TBETable<ENTRY>::deallocate(const Address& address)
+{
+    assert(isPresent(address) == true);
+    assert(m_map.size() > 0);
+    m_map.erase(address);
 }
 
 // looks an address up in the cache
 template<class ENTRY>
-extern inline
-ENTRY& TBETable<ENTRY>::lookup(const Address& address)
+inline ENTRY&
+TBETable<ENTRY>::lookup(const Address& address)
 {
-  assert(isPresent(address) == true);
-  return m_map.lookup(address);
+    assert(isPresent(address) == true);
+    return m_map.lookup(address);
 }
 
 // looks an address up in the cache
 template<class ENTRY>
-extern inline
-const ENTRY& TBETable<ENTRY>::lookup(const Address& address) const
+inline const ENTRY&
+TBETable<ENTRY>::lookup(const Address& address) const
 {
-  assert(isPresent(address) == true);
-  return m_map.lookup(address);
+    assert(isPresent(address) == true);
+    return m_map.lookup(address);
 }
 
 template<class ENTRY>
-extern inline
-void TBETable<ENTRY>::print(ostream& out) const
+inline void
+TBETable<ENTRY>::print(ostream& out) const
 {
 }
 
-#endif //TBETABLE_H
+#endif // __MEM_RUBY_SYSTEM_TBETABLE_HH__

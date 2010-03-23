@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,142 +26,156 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * MultiGrainBloomFilter.cc
- *
- * Description:
- *
- *
- */
-
-#include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/filters/MultiGrainBloomFilter.hh"
 
 MultiGrainBloomFilter::MultiGrainBloomFilter(string str)
 {
-  string tail(str);
+    string tail(str);
 
-  // split into the 2 filter sizes
-  string head = string_split(tail, '_');
+    // split into the 2 filter sizes
+    string head = string_split(tail, '_');
 
-  // head contains size of 1st bloom filter, tail contains size of 2nd bloom filter
+    // head contains size of 1st bloom filter, tail contains size of
+    // 2nd bloom filter
 
-  m_filter_size = atoi(head.c_str());
-  m_filter_size_bits = log_int(m_filter_size);
+    m_filter_size = atoi(head.c_str());
+    m_filter_size_bits = log_int(m_filter_size);
 
-  m_page_filter_size = atoi(tail.c_str());
-  m_page_filter_size_bits = log_int(m_page_filter_size);
+    m_page_filter_size = atoi(tail.c_str());
+    m_page_filter_size_bits = log_int(m_page_filter_size);
 
-  m_filter.setSize(m_filter_size);
-  m_page_filter.setSize(m_page_filter_size);
-  clear();
+    m_filter.setSize(m_filter_size);
+    m_page_filter.setSize(m_page_filter_size);
+    clear();
 }
 
-MultiGrainBloomFilter::~MultiGrainBloomFilter(){
-}
-
-void MultiGrainBloomFilter::clear()
-{
-  for (int i = 0; i < m_filter_size; i++) {
-    m_filter[i] = 0;
-  }
-  for(int i=0; i < m_page_filter_size; ++i){
-    m_page_filter[i] = 0;
-  }
-}
-
-void MultiGrainBloomFilter::increment(const Address& addr)
-{
-  // Not used
-}
-
-
-void MultiGrainBloomFilter::decrement(const Address& addr)
-{
-  // Not used
-}
-
-void MultiGrainBloomFilter::merge(AbstractBloomFilter * other_filter)
-{
-  // TODO
-}
-
-void MultiGrainBloomFilter::set(const Address& addr)
-{
-  int i = get_block_index(addr);
-  assert(i < m_filter_size);
-  assert(get_page_index(addr) < m_page_filter_size);
-  m_filter[i] = 1;
-  m_page_filter[i] = 1;
-
-}
-
-void MultiGrainBloomFilter::unset(const Address& addr)
-{
-  // not used
-}
-
-bool MultiGrainBloomFilter::isSet(const Address& addr)
-{
-  int i = get_block_index(addr);
-  assert(i < m_filter_size);
-  assert(get_page_index(addr) < m_page_filter_size);
-  // we have to have both indices set
-  return (m_filter[i] && m_page_filter[i]);
-}
-
-int MultiGrainBloomFilter::getCount(const Address& addr)
-{
-  // not used
-  return 0;
-}
-
-int MultiGrainBloomFilter::getTotalCount()
-{
-  int count = 0;
-
-  for (int i = 0; i < m_filter_size; i++) {
-    count += m_filter[i];
-  }
-
-  for(int i=0; i < m_page_filter_size; ++i){
-    count += m_page_filter[i] = 0;
-  }
-
-  return count;
-}
-
-int MultiGrainBloomFilter::getIndex(const Address& addr)
-{
-  return 0;
-  // TODO
-}
-
-int MultiGrainBloomFilter::readBit(const int index) {
-  return 0;
-  // TODO
-}
-
-void MultiGrainBloomFilter::writeBit(const int index, const int value) {
-  // TODO
-}
-
-void MultiGrainBloomFilter::print(ostream& out) const
+MultiGrainBloomFilter::~MultiGrainBloomFilter()
 {
 }
 
-int MultiGrainBloomFilter::get_block_index(const Address& addr)
+void
+MultiGrainBloomFilter::clear()
 {
-  // grap a chunk of bits after byte offset
-  return addr.bitSelect( RubySystem::getBlockSizeBits(), RubySystem::getBlockSizeBits() + m_filter_size_bits - 1);
+    for (int i = 0; i < m_filter_size; i++) {
+        m_filter[i] = 0;
+    }
+    for(int i=0; i < m_page_filter_size; ++i){
+        m_page_filter[i] = 0;
+    }
 }
 
-int MultiGrainBloomFilter::get_page_index(const Address & addr)
+void
+MultiGrainBloomFilter::increment(const Address& addr)
 {
-  // grap a chunk of bits after first chunk
-  return addr.bitSelect( RubySystem::getBlockSizeBits() + m_filter_size_bits - 1,
-                         RubySystem::getBlockSizeBits() + m_filter_size_bits - 1 + m_page_filter_size_bits  - 1);
+    // Not used
+}
+
+
+void
+MultiGrainBloomFilter::decrement(const Address& addr)
+{
+    // Not used
+}
+
+void
+MultiGrainBloomFilter::merge(AbstractBloomFilter *other_filter)
+{
+    // TODO
+}
+
+void
+MultiGrainBloomFilter::set(const Address& addr)
+{
+    int i = get_block_index(addr);
+    assert(i < m_filter_size);
+    assert(get_page_index(addr) < m_page_filter_size);
+    m_filter[i] = 1;
+    m_page_filter[i] = 1;
+
+}
+
+void
+MultiGrainBloomFilter::unset(const Address& addr)
+{
+    // not used
+}
+
+bool
+MultiGrainBloomFilter::isSet(const Address& addr)
+{
+    int i = get_block_index(addr);
+    assert(i < m_filter_size);
+    assert(get_page_index(addr) < m_page_filter_size);
+    // we have to have both indices set
+    return (m_filter[i] && m_page_filter[i]);
+}
+
+int
+MultiGrainBloomFilter::getCount(const Address& addr)
+{
+    // not used
+    return 0;
+}
+
+int
+MultiGrainBloomFilter::getTotalCount()
+{
+    int count = 0;
+
+    for (int i = 0; i < m_filter_size; i++) {
+        count += m_filter[i];
+    }
+
+    for(int i=0; i < m_page_filter_size; ++i) {
+        count += m_page_filter[i] = 0;
+    }
+
+    return count;
+}
+
+int
+MultiGrainBloomFilter::getIndex(const Address& addr)
+{
+    return 0;
+    // TODO
+}
+
+int
+MultiGrainBloomFilter::readBit(const int index)
+{
+    return 0;
+    // TODO
+}
+
+void
+MultiGrainBloomFilter::writeBit(const int index, const int value)
+{
+    // TODO
+}
+
+void
+MultiGrainBloomFilter::print(ostream& out) const
+{
+}
+
+int
+MultiGrainBloomFilter::get_block_index(const Address& addr)
+{
+    // grap a chunk of bits after byte offset
+    return addr.bitSelect(RubySystem::getBlockSizeBits(),
+                          RubySystem::getBlockSizeBits() +
+                          m_filter_size_bits - 1);
+}
+
+int
+MultiGrainBloomFilter::get_page_index(const Address & addr)
+{
+    int bits = RubySystem::getBlockSizeBits() + m_filter_size_bits - 1;
+
+    // grap a chunk of bits after first chunk
+    return addr.bitSelect(bits, bits + m_page_filter_size_bits - 1);
 }
 
 

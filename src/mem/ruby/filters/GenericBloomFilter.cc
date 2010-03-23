@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,123 +26,122 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * GenericBloomFilter.hh
- *
- * Description:
- *
- *
- */
-
-#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/common/Address.hh"
-
-#include "mem/ruby/filters/GenericBloomFilter.hh"
-#include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
-#include "mem/ruby/filters/NonCountingBloomFilter.hh"
-#include "mem/ruby/filters/BulkBloomFilter.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/BlockBloomFilter.hh"
-#include "mem/ruby/filters/MultiGrainBloomFilter.hh"
-#include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
+#include "mem/ruby/filters/BulkBloomFilter.hh"
+#include "mem/ruby/filters/GenericBloomFilter.hh"
 #include "mem/ruby/filters/H3BloomFilter.hh"
+#include "mem/ruby/filters/LSB_CountingBloomFilter.hh"
+#include "mem/ruby/filters/MultiBitSelBloomFilter.hh"
+#include "mem/ruby/filters/MultiGrainBloomFilter.hh"
+#include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
 GenericBloomFilter::GenericBloomFilter(string config)
 {
-  string tail(config);
-  string head = string_split(tail,'_');
+    string tail(config);
+    string head = string_split(tail,'_');
 
-  if (head == "LSB_Counting" ) {
-    m_filter = new LSB_CountingBloomFilter(tail);
-  }
-  else if(head == "NonCounting" ) {
-    m_filter = new NonCountingBloomFilter(tail);
-  }
-  else if(head == "Bulk" ) {
-    m_filter = new BulkBloomFilter(tail);
-  }
-  else if(head == "Block") {
-    m_filter = new BlockBloomFilter(tail);
-  }
-  else if(head == "Multigrain"){
-    m_filter = new MultiGrainBloomFilter(tail);
-  }
-  else if(head == "MultiBitSel"){
-    m_filter = new MultiBitSelBloomFilter(tail);
-  }
-  else if(head == "H3"){
-    m_filter = new H3BloomFilter(tail);
-  }
-  else {
-    assert(0);
-  }
+    if (head == "LSB_Counting" ) {
+        m_filter = new LSB_CountingBloomFilter(tail);
+    } else if(head == "NonCounting" ) {
+        m_filter = new NonCountingBloomFilter(tail);
+    } else if(head == "Bulk" ) {
+        m_filter = new BulkBloomFilter(tail);
+    } else if(head == "Block") {
+        m_filter = new BlockBloomFilter(tail);
+    } else if(head == "Multigrain"){
+        m_filter = new MultiGrainBloomFilter(tail);
+    } else if(head == "MultiBitSel"){
+        m_filter = new MultiBitSelBloomFilter(tail);
+    } else if(head == "H3"){
+        m_filter = new H3BloomFilter(tail);
+    } else {
+        assert(0);
+    }
 }
 
 GenericBloomFilter::~GenericBloomFilter()
 {
-  delete m_filter;
+    delete m_filter;
 }
 
-void GenericBloomFilter::clear()
+void
+GenericBloomFilter::clear()
 {
-  m_filter->clear();
+    m_filter->clear();
 }
 
-void GenericBloomFilter::increment(const Address& addr)
+void
+GenericBloomFilter::increment(const Address& addr)
 {
-  m_filter->increment(addr);
+    m_filter->increment(addr);
 }
 
-void GenericBloomFilter::decrement(const Address& addr)
+void
+GenericBloomFilter::decrement(const Address& addr)
 {
-  m_filter->decrement(addr);
+    m_filter->decrement(addr);
 }
 
-void GenericBloomFilter::merge(GenericBloomFilter * other_filter)
+void
+GenericBloomFilter::merge(GenericBloomFilter * other_filter)
 {
-  m_filter->merge(other_filter->getFilter());
+    m_filter->merge(other_filter->getFilter());
 }
 
-void GenericBloomFilter::set(const Address& addr)
+void
+GenericBloomFilter::set(const Address& addr)
 {
-  m_filter->set(addr);
+    m_filter->set(addr);
 }
 
-void GenericBloomFilter::unset(const Address& addr)
+void
+GenericBloomFilter::unset(const Address& addr)
 {
-  m_filter->unset(addr);
+    m_filter->unset(addr);
 }
 
-bool GenericBloomFilter::isSet(const Address& addr)
+bool
+GenericBloomFilter::isSet(const Address& addr)
 {
-  return m_filter->isSet(addr);
+    return m_filter->isSet(addr);
 }
 
-int GenericBloomFilter::getCount(const Address& addr)
+int
+GenericBloomFilter::getCount(const Address& addr)
 {
-  return m_filter->getCount(addr);
+    return m_filter->getCount(addr);
 }
 
-int GenericBloomFilter::getTotalCount()
+int
+GenericBloomFilter::getTotalCount()
 {
-  return m_filter->getTotalCount();
+    return m_filter->getTotalCount();
 }
 
-int GenericBloomFilter::getIndex(const Address& addr)
+int
+GenericBloomFilter::getIndex(const Address& addr)
 {
-  return m_filter->getIndex(addr);
+    return m_filter->getIndex(addr);
 }
 
-int GenericBloomFilter::readBit(const int index) {
-  return m_filter->readBit(index);
-}
-
-void GenericBloomFilter::writeBit(const int index, const int value) {
-  m_filter->writeBit(index, value);
-}
-
-void GenericBloomFilter::print(ostream& out) const
+int
+GenericBloomFilter::readBit(const int index)
 {
-  return m_filter->print(out);
+    return m_filter->readBit(index);
+}
+
+void
+GenericBloomFilter::writeBit(const int index, const int value)
+{
+    m_filter->writeBit(index, value);
+}
+
+void
+GenericBloomFilter::print(ostream& out) const
+{
+    return m_filter->print(out);
 }
 
 

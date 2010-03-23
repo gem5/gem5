@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,66 +26,75 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * slicc_util.cc
- *
- * Description: See slicc_util.hh
- *
- * $Id$
- *
- */
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/protocol/Protocol.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
-// #include "TransactionInterfaceManager.hh"
+#include "mem/ruby/slicc_interface/RubySlicc_Profiler_interface.hh"
+#include "mem/ruby/system/System.hh"
 
-void profile_request(int cache_state, Directory_State directory_state, GenericRequestType request_type)
+void
+profile_request(int cache_state, Directory_State directory_state,
+                GenericRequestType request_type)
 {
-  string requestStr = L1Cache_State_to_string(L1Cache_State(cache_state))+":"+
-    Directory_State_to_string(directory_state)+":"+
-    GenericRequestType_to_string(request_type);
-  g_system_ptr->getProfiler()->profileRequest(requestStr);
+    string requestStr = L1Cache_State_to_string(L1Cache_State(cache_state))+
+        ":" +
+        Directory_State_to_string(directory_state) + ":" +
+        GenericRequestType_to_string(request_type);
+    g_system_ptr->getProfiler()->profileRequest(requestStr);
 }
 
-void profile_request(const string& L1CacheState, const string& L2CacheState, const string& directoryState, const string& requestType)
+void
+profile_request(const string& L1CacheState, const string& L2CacheState,
+                const string& directoryState, const string& requestType)
 {
-  string requestStr = L1CacheState+":"+L2CacheState+":"+directoryState+":"+requestType;
-  g_system_ptr->getProfiler()->profileRequest(requestStr);
+    string requestStr = L1CacheState + ":" + L2CacheState + ":" +
+        directoryState + ":" + requestType;
+
+    g_system_ptr->getProfiler()->profileRequest(requestStr);
 }
 
-void profile_outstanding_request(int outstanding)
+void
+profile_outstanding_request(int outstanding)
 {
-  g_system_ptr->getProfiler()->profileOutstandingRequest(outstanding);
+    g_system_ptr->getProfiler()->profileOutstandingRequest(outstanding);
 }
 
-void profile_average_latency_estimate(int latency)
+void
+profile_average_latency_estimate(int latency)
 {
-  g_system_ptr->getProfiler()->profileAverageLatencyEstimate(latency);
+    g_system_ptr->getProfiler()->profileAverageLatencyEstimate(latency);
 }
 
-void profile_sharing(const Address& addr, AccessType type, NodeID requestor, const Set& sharers, const Set& owner)
+void
+profile_sharing(const Address& addr, AccessType type, NodeID requestor,
+                const Set& sharers, const Set& owner)
 {
-  g_system_ptr->getProfiler()->profileSharing(addr, type, requestor, sharers, owner);
+    g_system_ptr->getProfiler()->
+        profileSharing(addr, type, requestor, sharers, owner);
 }
 
-void profileMsgDelay(int virtualNetwork, int delayCycles)
+void
+profileMsgDelay(int virtualNetwork, int delayCycles)
 {
-  g_system_ptr->getProfiler()->profileMsgDelay(virtualNetwork, delayCycles);
+    g_system_ptr->getProfiler()->profileMsgDelay(virtualNetwork, delayCycles);
 }
 
-void profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor)
+void
+profileGetX(const Address& datablock, const Address& PC, const Set& owner,
+            const Set& sharers, NodeID requestor)
 {
-  g_system_ptr->getProfiler()->getAddressProfiler()->profileGetX(datablock, PC, owner, sharers, requestor);
+    g_system_ptr->getProfiler()->getAddressProfiler()->
+        profileGetX(datablock, PC, owner, sharers, requestor);
 }
 
-void profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor)
+void
+profileGetS(const Address& datablock, const Address& PC, const Set& owner,
+            const Set& sharers, NodeID requestor)
 {
-  g_system_ptr->getProfiler()->getAddressProfiler()->profileGetS(datablock, PC, owner, sharers, requestor);
+    g_system_ptr->getProfiler()->getAddressProfiler()->
+        profileGetS(datablock, PC, owner, sharers, requestor);
 }
 
 

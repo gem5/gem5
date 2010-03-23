@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,42 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- * */
-
-#ifndef GLOBAL_H
-#define GLOBAL_H
-
-/*
-#ifdef SINGLE_LEVEL_CACHE
-const bool TWO_LEVEL_CACHE = false;
-#define L1I_CACHE_MEMBER_VARIABLE m_L1Cache_cacheMemory_vec[m_version] // currently all protocols require L1s == nodes
-#define L1D_CACHE_MEMBER_VARIABLE m_L1Cache_cacheMemory_vec[m_version] // "
-#define L2_CACHE_MEMBER_VARIABLE m_L1Cache_cacheMemory_vec[m_version] // "
-#define L2_CACHE_VARIABLE m_L1Cache_cacheMemory_vec
-#else
-const bool TWO_LEVEL_CACHE = true;
-#ifdef IS_CMP
-#define L1I_CACHE_MEMBER_VARIABLE m_L1Cache_L1IcacheMemory_vec[m_version]
-#define L1D_CACHE_MEMBER_VARIABLE m_L1Cache_L1DcacheMemory_vec[m_version]
-#define L2_CACHE_MEMBER_VARIABLE m_L2Cache_L2cacheMemory_vec[m_version]
-#define L2_CACHE_VARIABLE m_L2Cache_L2cacheMemory_vec
-#else  // not IS_CMP
-#define L1I_CACHE_MEMBER_VARIABLE m_L1Cache_L1IcacheMemory_vec[m_version] // currently all protocols require L1s == nodes
-#define L1D_CACHE_MEMBER_VARIABLE m_L1Cache_L1DcacheMemory_vec[m_version] // "
-// #define L2_CACHE_MEMBER_VARIABLE m_L1Cache_L2cacheMemory_vec[m_version] // old exclusive caches don't support L2s != nodes
-#define L2_CACHE_MEMBER_VARIABLE m_L1Cache_cacheMemory_vec[m_version] // old exclusive caches don't support L2s != nodes
-#define L2_CACHE_VARIABLE m_L1Cache_L2cacheMemory_vec
-#endif // IS_CMP
-#endif //SINGLE_LEVEL_CACHE
-
-#define DIRECTORY_MEMBER_VARIABLE m_Directory_directory_vec[m_version]
-#define TBE_TABLE_MEMBER_VARIABLE m_L1Cache_TBEs_vec[m_version]
-
-*/
-
+#ifndef __MEM_RUBY_COMMON_GLOBAL_HH__
+#define __MEM_RUBY_COMMON_GLOBAL_HH__
 
 // external includes for all classes
 #include "mem/ruby/common/TypeDefines.hh"
@@ -85,13 +50,12 @@ extern RubySystem* g_system_ptr;
 class Debug;
 extern Debug* g_debug_ptr;
 
-// FIXME:  this is required by the contructor of Directory_Entry.hh.  It can't go
-// into slicc_util.hh because it opens a can of ugly worms
+// FIXME: this is required by the contructor of Directory_Entry.hh.
+// It can't go into slicc_util.hh because it opens a can of ugly worms
 extern inline int max_tokens()
 {
   return 1024;
 }
 
-
-#endif //GLOBAL_H
+#endif // __MEM_RUBY_COMMON_GLOBAL_HH__
 

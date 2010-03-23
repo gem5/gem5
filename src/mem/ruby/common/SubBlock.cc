@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,44 +26,44 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
 #include "mem/ruby/common/SubBlock.hh"
 
 SubBlock::SubBlock(const Address& addr, int size)
 {
-  m_address = addr;
-  setSize(size);
-  for(int i=0; i<size; i++) {
-    setByte(i, 0);
-  }
+    m_address = addr;
+    setSize(size);
+    for (int i = 0; i < size; i++) {
+        setByte(i, 0);
+    }
 }
 
-void SubBlock::internalMergeFrom(const DataBlock& data)
+void
+SubBlock::internalMergeFrom(const DataBlock& data)
 {
-  int size = getSize();
-  assert(size > 0);
-  int offset = m_address.getOffset();
-  for(int i=0; i<size; i++) {
-    this->setByte(i, data.getByte(offset+i));
-  }
+    int size = getSize();
+    assert(size > 0);
+    int offset = m_address.getOffset();
+    for (int i = 0; i < size; i++) {
+        this->setByte(i, data.getByte(offset + i));
+    }
 }
 
-void SubBlock::internalMergeTo(DataBlock& data) const
+void
+SubBlock::internalMergeTo(DataBlock& data) const
 {
-  int size = getSize();
-  assert(size > 0);
-  int offset = m_address.getOffset();
-  for(int i=0; i<size; i++) {
-    data.setByte(offset+i, this->getByte(i)); // This will detect crossing a cache line boundary
-  }
+    int size = getSize();
+    assert(size > 0);
+    int offset = m_address.getOffset();
+    for (int i = 0; i < size; i++) {
+        // This will detect crossing a cache line boundary
+        data.setByte(offset + i, this->getByte(i));
+    }
 }
 
-void SubBlock::print(ostream& out) const
+void
+SubBlock::print(ostream& out) const
 {
-  out << "[" << m_address << ", " << getSize() << ", " << m_data << "]";
+    out << "[" << m_address << ", " << getSize() << ", " << m_data << "]";
 }
 
 

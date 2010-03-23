@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,36 +27,37 @@
  */
 
 /*
- * slicc_util.hh
- *
- * Description: These are the functions that exported to slicc from ruby.
- *
- * $Id$
- *
+ * These are the functions that exported to slicc from ruby.
  */
 
-#ifndef RUBYSLICC_PROFILER_INTERFACE_H
-#define RUBYSLICC_PROFILER_INTERFACE_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__
 
+#include "mem/protocol/AccessType.hh"
+#include "mem/protocol/Directory_State.hh"
+#include "mem/protocol/GenericRequestType.hh"
+#include "mem/protocol/L1Cache_State.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Global.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/protocol/L1Cache_State.hh"
-#include "mem/protocol/AccessType.hh"
-#include "mem/protocol/GenericRequestType.hh"
-#include "mem/protocol/Directory_State.hh"
 #include "mem/ruby/system/NodeID.hh"
 
 class Set;
 
-void profile_request(int cache_state, Directory_State directory_state, GenericRequestType request_type);
+void profile_request(int cache_state, Directory_State directory_state,
+                     GenericRequestType request_type);
 void profile_outstanding_persistent_request(int outstanding);
 void profile_outstanding_request(int outstanding);
-void profile_sharing(const Address& addr, AccessType type, NodeID requestor, const Set& sharers, const Set& owner);
-void profile_request(const string& L1CacheStateStr, const string& L2CacheStateStr, const string& directoryStateStr, const string& requestTypeStr);
+void profile_sharing(const Address& addr, AccessType type, NodeID requestor,
+                     const Set& sharers, const Set& owner);
+void profile_request(const string& L1CacheStateStr,
+                     const string& L2CacheStateStr,
+                     const string& directoryStateStr,
+                     const string& requestTypeStr);
 void profile_miss(const CacheMsg& msg, NodeID id);
 void profile_L1Cache_miss(const CacheMsg& msg, NodeID id);
-void profile_L2Cache_miss(GenericRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit, NodeID l2cacheID);
+void profile_L2Cache_miss(GenericRequestType requestType, AccessModeType type,
+                          int msgSize, PrefetchBit pfBit, NodeID l2cacheID);
 void profile_token_retry(const Address& addr, AccessType type, int count);
 void profile_filter_action(int action);
 void profile_persistent_prediction(const Address& addr, AccessType type);
@@ -65,9 +65,11 @@ void profile_average_latency_estimate(int latency);
 void profileMsgDelay(int virtualNetwork, int delayCycles);
 
 void profile_multicast_retry(const Address& addr, int count);
-void profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
-void profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
+void profileGetX(const Address& datablock, const Address& PC, const Set& owner,
+                 const Set& sharers, NodeID requestor);
+void profileGetS(const Address& datablock, const Address& PC, const Set& owner,
+                 const Set& sharers, NodeID requestor);
 
 void profileOverflow(const Address & addr, MachineID mach);
 
-#endif // RUBYSLICC_PROFILER_INTERFACE_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_RUBYSLICC_PROFILER_INTERFACE_HH__

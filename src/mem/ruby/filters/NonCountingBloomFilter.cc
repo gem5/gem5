@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,118 +26,126 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * NonCountingBloomFilter.cc
- *
- * Description:
- *
- *
- */
-
-#include "mem/ruby/filters/NonCountingBloomFilter.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/filters/NonCountingBloomFilter.hh"
 
 NonCountingBloomFilter::NonCountingBloomFilter(string str)
 {
-  string tail(str);
-  string head = string_split(tail, '_');
+    string tail(str);
+    string head = string_split(tail, '_');
 
-  // head contains filter size, tail contains bit offset from block number
-  m_filter_size = atoi(head.c_str());
-  m_offset = atoi(tail.c_str());
-  m_filter_size_bits = log_int(m_filter_size);
+    // head contains filter size, tail contains bit offset from block number
+    m_filter_size = atoi(head.c_str());
+    m_offset = atoi(tail.c_str());
+    m_filter_size_bits = log_int(m_filter_size);
 
-
-  m_filter.setSize(m_filter_size);
-  clear();
+    m_filter.setSize(m_filter_size);
+    clear();
 }
 
-NonCountingBloomFilter::~NonCountingBloomFilter(){
-}
-
-void NonCountingBloomFilter::clear()
+NonCountingBloomFilter::~NonCountingBloomFilter()
 {
-  for (int i = 0; i < m_filter_size; i++) {
+}
+
+void
+NonCountingBloomFilter::clear()
+{
+    for (int i = 0; i < m_filter_size; i++) {
+        m_filter[i] = 0;
+    }
+}
+
+void
+NonCountingBloomFilter::increment(const Address& addr)
+{
+    // Not used
+}
+
+void
+NonCountingBloomFilter::decrement(const Address& addr)
+{
+    // Not used
+}
+
+void
+NonCountingBloomFilter::merge(AbstractBloomFilter *other_filter)
+{
+    // assumes both filters are the same size!
+    NonCountingBloomFilter * temp = (NonCountingBloomFilter*) other_filter;
+    for(int i = 0; i < m_filter_size; ++i){
+        m_filter[i] |= (*temp)[i];
+    }
+}
+
+void
+NonCountingBloomFilter::set(const Address& addr)
+{
+    int i = get_index(addr);
+    m_filter[i] = 1;
+}
+
+void
+NonCountingBloomFilter::unset(const Address& addr)
+{
+    int i = get_index(addr);
     m_filter[i] = 0;
-  }
 }
 
-void NonCountingBloomFilter::increment(const Address& addr)
+bool
+NonCountingBloomFilter::isSet(const Address& addr)
 {
-  // Not used
+    int i = get_index(addr);
+    return (m_filter[i]);
 }
 
 
-void NonCountingBloomFilter::decrement(const Address& addr)
+int
+NonCountingBloomFilter::getCount(const Address& addr)
 {
-  // Not used
+    return m_filter[get_index(addr)];
 }
 
-void NonCountingBloomFilter::merge(AbstractBloomFilter * other_filter){
-  // assumes both filters are the same size!
-  NonCountingBloomFilter * temp = (NonCountingBloomFilter*) other_filter;
-  for(int i=0; i < m_filter_size; ++i){
-    m_filter[i] |= (*temp)[i];
-  }
-
-}
-
-void NonCountingBloomFilter::set(const Address& addr)
+int
+NonCountingBloomFilter::getTotalCount()
 {
-  int i = get_index(addr);
-  m_filter[i] = 1;
+    int count = 0;
+
+    for (int i = 0; i < m_filter_size; i++) {
+        count += m_filter[i];
+    }
+    return count;
 }
 
-void NonCountingBloomFilter::unset(const Address& addr)
-{
-  int i = get_index(addr);
-  m_filter[i] = 0;
-}
-
-bool NonCountingBloomFilter::isSet(const Address& addr)
-{
-  int i = get_index(addr);
-  return (m_filter[i]);
-}
-
-
-int NonCountingBloomFilter::getCount(const Address& addr)
-{
-  return m_filter[get_index(addr)];
-}
-
-int NonCountingBloomFilter::getTotalCount()
-{
-  int count = 0;
-
-  for (int i = 0; i < m_filter_size; i++) {
-    count += m_filter[i];
-  }
-  return count;
-}
-
-void NonCountingBloomFilter::print(ostream& out) const
+void
+NonCountingBloomFilter::print(ostream& out) const
 {
 }
 
-int NonCountingBloomFilter::getIndex(const Address& addr)
+int
+NonCountingBloomFilter::getIndex(const Address& addr)
 {
-  return get_index(addr);
+    return get_index(addr);
 }
 
-int NonCountingBloomFilter::readBit(const int index) {
-  return m_filter[index];
-}
-
-void NonCountingBloomFilter::writeBit(const int index, const int value) {
-  m_filter[index] = value;
-}
-
-int NonCountingBloomFilter::get_index(const Address& addr)
+int
+NonCountingBloomFilter::readBit(const int index)
 {
-  return addr.bitSelect( RubySystem::getBlockSizeBits() + m_offset,
-                         RubySystem::getBlockSizeBits() + m_offset + m_filter_size_bits - 1);
+    return m_filter[index];
+}
+
+void
+NonCountingBloomFilter::writeBit(const int index, const int value)
+{
+    m_filter[index] = value;
+}
+
+int
+NonCountingBloomFilter::get_index(const Address& addr)
+{
+    return addr.bitSelect(RubySystem::getBlockSizeBits() + m_offset,
+                          RubySystem::getBlockSizeBits() + m_offset +
+                          m_filter_size_bits - 1);
 }
 
 

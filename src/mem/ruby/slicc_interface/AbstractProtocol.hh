@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,33 +27,24 @@
  */
 
 /*
- * $Id$
- *
- * Description: Define all possible protocol parameters and their
- *              default value here. Normally, all parameters should
- *              have default value "false" means the feature of the
- *              protocol is turned off.
- *
+ * Define all possible protocol parameters and their default value
+ * here. Normally, all parameters should have default value "false"
+ * means the feature of the protocol is turned off.
  */
 
-#ifndef AbstractProtocol_H
-#define AbstractProtocol_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_ABSTRACTPROTOCOL_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_ABSTRACTPROTOCOL_HH__
 
-class AbstractProtocol {
-public:
-  // Constructors
-  AbstractProtocol() {};
+class AbstractProtocol
+{
+  public:
+    AbstractProtocol() {}
 
-  // Destructor, no instantiation
-  // No definition also, so no subclass can be instantiated also
-  virtual ~AbstractProtocol() = 0;
+    virtual ~AbstractProtocol() = 0;
 
-  // Public Methods
-
-  // Data Members (m_ prefix)
-  static const  bool m_CMP = false ;
-  static const  bool m_TwoLevelCache = false ;
+    static const bool m_CMP = false ;
+    static const bool m_TwoLevelCache = false ;
 };
 
-#endif //AbstractProtocol_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_ABSTRACTPROTOCOL_HH__
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -28,16 +27,13 @@
  */
 
 /*
- * $Id$
- *
- * Description: This is the virtual base class of all classes that can
- * be the targets of wakeup events.  There is only two methods,
- * wakeup() and print() and no data members.
- *
+ * This is the virtual base class of all classes that can be the
+ * targets of wakeup events.  There is only two methods, wakeup() and
+ * print() and no data members.
  */
 
-#ifndef CONSUMER_H
-#define CONSUMER_H
+#ifndef __MEM_RUBY_COMMON_CONSUMER_HH__
+#define __MEM_RUBY_COMMON_CONSUMER_HH__
 
 #include <iostream>
 #include <set>
@@ -47,68 +43,74 @@
 
 class MessageBuffer;
 
-class Consumer {
-public:
-  // Constructors
-  Consumer() { m_last_scheduled_wakeup = 0; m_last_wakeup = 0; }
+class Consumer
+{
+  public:
+    Consumer()
+        : m_last_scheduled_wakeup(0), m_last_wakeup(0)
+    {
+    }
 
-  // Destructor
-  virtual ~Consumer() { }
+    virtual
+    ~Consumer()
+    { }
 
-  // Public Methods - pure virtual methods
-  void triggerWakeup(RubyEventQueue * eventQueue) 
-  {
-      Time time = eventQueue->getTime(); 
-      if (m_last_wakeup != time) { 
-          wakeup(); m_last_wakeup = time; 
-      }
-  }
-  virtual void wakeup() = 0;
-  virtual void print(std::ostream& out) const = 0;
-  const Time& getLastScheduledWakeup() const 
-  { 
-      return m_last_scheduled_wakeup; 
-  }
-  void setLastScheduledWakeup(const Time& time) 
-  { 
-      m_last_scheduled_wakeup = time; 
-  }
-  bool alreadyScheduled(Time time) 
-  { 
-      return (m_scheduled_wakeups.find(time) != m_scheduled_wakeups.end());
-  }
-  void insertScheduledWakeupTime(Time time) 
-  { 
-      m_scheduled_wakeups.insert(time); 
-  }
-  void removeScheduledWakeupTime(Time time) 
-  { 
-      assert(alreadyScheduled(time)); 
-      m_scheduled_wakeups.erase(time); 
-  }
+    void
+    triggerWakeup(RubyEventQueue *eventQueue)
+    {
+        Time time = eventQueue->getTime();
+        if (m_last_wakeup != time) {
+            wakeup();
+            m_last_wakeup = time;
+        }
+    }
 
-private:
-  // Private Methods
+    virtual void wakeup() = 0;
+    virtual void print(std::ostream& out) const = 0;
 
-  // Data Members (m_ prefix)
-  Time m_last_scheduled_wakeup;
-  std::set<Time> m_scheduled_wakeups;
-  Time m_last_wakeup;
+    const Time&
+    getLastScheduledWakeup() const
+    {
+        return m_last_scheduled_wakeup;
+    }
+
+    void
+    setLastScheduledWakeup(const Time& time)
+    {
+        m_last_scheduled_wakeup = time;
+    }
+
+    bool
+    alreadyScheduled(Time time)
+    {
+        return m_scheduled_wakeups.find(time) != m_scheduled_wakeups.end();
+    }
+
+    void
+    insertScheduledWakeupTime(Time time)
+    {
+        m_scheduled_wakeups.insert(time);
+    }
+
+    void
+    removeScheduledWakeupTime(Time time)
+    {
+        assert(alreadyScheduled(time));
+        m_scheduled_wakeups.erase(time);
+    }
+
+  private:
+    Time m_last_scheduled_wakeup;
+    std::set<Time> m_scheduled_wakeups;
+    Time m_last_wakeup;
 };
 
-// Output operator declaration
-inline extern
-std::ostream& operator<<(std::ostream& out, const Consumer& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-inline extern
-std::ostream& operator<<(std::ostream& out, const Consumer& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Consumer& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //CONSUMER_H
+#endif // __MEM_RUBY_COMMON_CONSUMER_HH__

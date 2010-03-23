@@ -26,42 +26,34 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * AbstractMemOrCache.hh
- *
- * Description:
- *
- *
- */
+#ifndef __MEM_RUBY_SYSTEM_ABSTRACTMEMORCACHE_HH__
+#define __MEM_RUBY_SYSTEM_ABSTRACTMEMORCACHE_HH__
 
-#ifndef ABSTRACT_MEM_OR_CACHE_H
-#define ABSTRACT_MEM_OR_CACHE_H
+#include <iosfwd>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
-class AbstractMemOrCache {
-public:
+class Consumer;
+class MemoryNode;
+class Message;
 
-  virtual ~AbstractMemOrCache() {};
-  virtual void setConsumer(Consumer* consumer_ptr) = 0;
-  virtual Consumer* getConsumer() = 0;
+class AbstractMemOrCache
+{
+  public:
+    virtual ~AbstractMemOrCache() {};
+    virtual void setConsumer(Consumer* consumer_ptr) = 0;
+    virtual Consumer* getConsumer() = 0;
 
-  virtual void enqueue (const MsgPtr& message, int latency ) = 0;
-  virtual void enqueueMemRef (MemoryNode& memRef) = 0;
-  virtual void dequeue () = 0;
-  virtual const Message* peek () = 0;
-  virtual bool isReady () = 0;
-  virtual MemoryNode peekNode () = 0;
-  virtual bool areNSlotsAvailable (int n) = 0;
-  virtual void printConfig (ostream& out) = 0;
-  virtual void print (ostream& out) const = 0;
-  virtual void setDebug (int debugFlag) = 0;
-
-private:
-
+    virtual void enqueue (const MsgPtr& message, int latency) = 0;
+    virtual void enqueueMemRef (MemoryNode& memRef) = 0;
+    virtual void dequeue () = 0;
+    virtual const Message* peek () = 0;
+    virtual bool isReady () = 0;
+    virtual MemoryNode peekNode () = 0;
+    virtual bool areNSlotsAvailable (int n) = 0;
+    virtual void printConfig (std::ostream& out) = 0;
+    virtual void print (std::ostream& out) const = 0;
+    virtual void setDebug (int debugFlag) = 0;
 };
 
-
-#endif
-
+#endif // __MEM_RUBY_SYSTEM_ABSTRACTMEMORCACHE_HH__

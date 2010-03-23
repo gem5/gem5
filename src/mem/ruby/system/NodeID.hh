@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,26 +26,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * NodeID.hh
- *
- * Description:
- *
- * $Id: NodeID.hh,v 3.3 2003/12/04 15:01:39 xu Exp $
- *
- */
-
-#ifndef NODEID_H
-#define NODEID_H
+#ifndef __MEM_RUBY_SYSTEM_NODEID_HH__
+#define __MEM_RUBY_SYSTEM_NODEID_HH__
 
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/util.hh"
+#include "mem/ruby/common/Global.hh"
 
 typedef int NodeID;
 
-extern inline
-std::string NodeIDToString (NodeID node) { return int_to_string(node); }
+inline std::string
+NodeIDToString(NodeID node)
+{
+    return int_to_string(node);
+}
 
-#endif //NODEID_H
+#endif // __MEM_RUBY_SYSTEM_NODEID_HH__

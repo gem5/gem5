@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -27,10 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/physical.hh"
-#include "mem/ruby/system/RubyPort.hh"
-#include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "cpu/rubytest/RubyTester.hh"
+#include "mem/physical.hh"
+#include "mem/ruby/slicc_interface/AbstractController.hh"
+#include "mem/ruby/system/RubyPort.hh"
 
 RubyPort::RubyPort(const Params *p)
     : MemObject(p)
@@ -39,7 +38,7 @@ RubyPort::RubyPort(const Params *p)
     assert(m_version != -1);
 
     physmem = p->physmem;
-    
+
     m_controller = NULL;
     m_mandatory_q_ptr = NULL;
 
@@ -48,7 +47,8 @@ RubyPort::RubyPort(const Params *p)
     physMemPort = NULL;
 }
 
-void RubyPort::init()
+void
+RubyPort::init()
 {
     assert(m_controller != NULL);
     m_mandatory_q_ptr = m_controller->getMandatoryQueue();
@@ -59,38 +59,38 @@ RubyPort::getPort(const std::string &if_name, int idx)
 {
     if (if_name == "port") {
         return new M5Port(csprintf("%s-port%d", name(), idx), this);
-    } else if (if_name == "pio_port") {
-        //
+    }
+
+    if (if_name == "pio_port") {
         // ensure there is only one pio port
-        //
         assert(pio_port == NULL);
 
-        pio_port = new PioPort(csprintf("%s-pio-port%d", name(), idx), 
-                                     this);
+        pio_port = new PioPort(csprintf("%s-pio-port%d", name(), idx), this);
 
         return pio_port;
-    } else if (if_name == "physMemPort") {
-        //
+    }
+
+    if (if_name == "physMemPort") {
         // RubyPort should only have one port to physical memory
-        //
         assert (physMemPort == NULL);
 
-        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), 
-                                 this);
-        
+        physMemPort = new M5Port(csprintf("%s-physMemPort", name()), this);
+
         return physMemPort;
-    } else if (if_name == "functional") {
-        //
-        // Calls for the functional port only want to access functional memory.
-        // Therefore, directly pass these calls ports to physmem.
-        //
+    }
+
+    if (if_name == "functional") {
+        // Calls for the functional port only want to access
+        // functional memory.  Therefore, directly pass these calls
+        // ports to physmem.
         assert(physmem != NULL);
         return physmem->getPort(if_name, idx);
     }
+
     return NULL;
 }
 
-RubyPort::PioPort::PioPort(const std::string &_name, 
+RubyPort::PioPort::PioPort(const std::string &_name,
                            RubyPort *_port)
     : SimpleTimingPort(_name, _port)
 {
@@ -98,7 +98,7 @@ RubyPort::PioPort::PioPort(const std::string &_name,
     ruby_port = _port;
 }
 
-RubyPort::M5Port::M5Port(const std::string &_name, 
+RubyPort::M5Port::M5Port(const std::string &_name,
                          RubyPort *_port)
     : SimpleTimingPort(_name, _port)
 {
@@ -113,7 +113,6 @@ RubyPort::PioPort::recvAtomic(PacketPtr pkt)
     return 0;
 }
 
-
 Tick
 RubyPort::M5Port::recvAtomic(PacketPtr pkt)
 {
@@ -125,48 +124,39 @@ RubyPort::M5Port::recvAtomic(PacketPtr pkt)
 bool
 RubyPort::PioPort::recvTiming(PacketPtr pkt)
 {
-    //
-    // In FS mode, ruby memory will receive pio responses from devices and
-    // it must forward these responses back to the particular CPU.
-    //
-    DPRINTF(MemoryAccess, 
-            "Pio response for address %#x\n",
-            pkt->getAddr());
+    // In FS mode, ruby memory will receive pio responses from devices
+    // and it must forward these responses back to the particular CPU.
+    DPRINTF(MemoryAccess,  "Pio response for address %#x\n", pkt->getAddr());
 
     assert(pkt->isResponse());
 
-    //
     // First we must retrieve the request port from the sender State
-    //
-    RubyPort::SenderState *senderState = 
+    RubyPort::SenderState *senderState =
       safe_cast<RubyPort::SenderState *>(pkt->senderState);
     M5Port *port = senderState->port;
     assert(port != NULL);
-    
+
     // pop the sender state from the packet
     pkt->senderState = senderState->saved;
     delete senderState;
-    
+
     port->sendTiming(pkt);
-    
+
     return true;
 }
 
 bool
 RubyPort::M5Port::recvTiming(PacketPtr pkt)
 {
-    DPRINTF(MemoryAccess, 
-            "Timing access caught for address %#x\n",
-            pkt->getAddr());
+    DPRINTF(MemoryAccess,
+            "Timing access caught for address %#x\n", pkt->getAddr());
 
     //dsm: based on SimpleTimingPort::recvTiming(pkt);
 
-    //
-    // The received packets should only be M5 requests, which should never 
-    // get nacked.  There used to be code to hanldle nacks here, but 
-    // I'm pretty sure it didn't work correctly with the drain code, 
+    // The received packets should only be M5 requests, which should never
+    // get nacked.  There used to be code to hanldle nacks here, but
+    // I'm pretty sure it didn't work correctly with the drain code,
     // so that would need to be fixed if we ever added it back.
-    //
     assert(pkt->isRequest());
 
     if (pkt->memInhibitAsserted()) {
@@ -177,34 +167,26 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         return true;
     }
 
-    //
     // Save the port in the sender state object to be used later to
     // route the response
-    //
     pkt->senderState = new SenderState(this, pkt->senderState);
 
-    //
     // Check for pio requests and directly send them to the dedicated
     // pio port.
-    //
     if (!isPhysMemAddress(pkt->getAddr())) {
         assert(ruby_port->pio_port != NULL);
-        DPRINTF(MemoryAccess, 
+        DPRINTF(MemoryAccess,
                 "Request for address 0x%#x is assumed to be a pio request\n",
                 pkt->getAddr());
 
         return ruby_port->pio_port->sendTiming(pkt);
     }
 
-    //
     // For DMA and CPU requests, translate them to ruby requests before
     // sending them to our assigned ruby port.
-    //
     RubyRequestType type = RubyRequestType_NULL;
 
-    //
     // If valid, copy the pc to the ruby request
-    //
     Addr pc = 0;
     if (pkt->req->hasPC()) {
         pc = pkt->req->getPC();
@@ -224,47 +206,38 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
             if (pkt->req->isInstFetch()) {
                 type = RubyRequestType_IFETCH;
             } else {
-                type = RubyRequestType_LD; 
+                type = RubyRequestType_LD;
             }
         } else if (pkt->isWrite()) {
             type = RubyRequestType_ST;
         } else if (pkt->isReadWrite()) {
-            //
-            // Fix me.  This conditional will never be executed because 
-            // isReadWrite() is just an OR of isRead() and isWrite().  
-            // Furthermore, just because the packet is a read/write request does
-            // not necessary mean it is a read-modify-write atomic operation.
-            //
+            // Fix me.  This conditional will never be executed
+            // because isReadWrite() is just an OR of isRead() and
+            // isWrite().  Furthermore, just because the packet is a
+            // read/write request does not necessary mean it is a
+            // read-modify-write atomic operation.
             type = RubyRequestType_RMW_Write;
         } else {
             panic("Unsupported ruby packet type\n");
         }
     }
 
-    RubyRequest ruby_request(pkt->getAddr(), 
-                             pkt->getPtr<uint8_t>(),
-                             pkt->getSize(), 
-                             pc, 
-                             type,
-                             RubyAccessMode_Supervisor,
-                             pkt);
+    RubyRequest ruby_request(pkt->getAddr(), pkt->getPtr<uint8_t>(),
+                             pkt->getSize(), pc, type,
+                             RubyAccessMode_Supervisor, pkt);
 
     // Submit the ruby request
     RequestStatus requestStatus = ruby_port->makeRequest(ruby_request);
 
-    //
     // If the request successfully issued or the SC request completed because
     // exclusive permission was lost, then we should return true.
     // Otherwise, we need to delete the senderStatus we just created and return
     // false.
-    //
     if ((requestStatus == RequestStatus_Issued) ||
         (requestStatus == RequestStatus_LlscFailed)) {
 
-        //
         // The communicate to M5 whether the SC command succeeded by seting the
         // packet's extra data.
-        //
         if (pkt->isLLSC() && pkt->isWrite()) {
             if (requestStatus == RequestStatus_LlscFailed) {
                 DPRINTF(MemoryAccess, "SC failed and request completed\n");
@@ -276,11 +249,10 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
         return true;
     }
 
-    DPRINTF(MemoryAccess, 
+    DPRINTF(MemoryAccess,
             "Request for address #x did not issue because %s\n",
-            pkt->getAddr(),
-            RequestStatus_to_string(requestStatus));
-    
+            pkt->getAddr(), RequestStatus_to_string(requestStatus));
+
     SenderState* senderState = safe_cast<SenderState*>(pkt->senderState);
     pkt->senderState = senderState->saved;
     delete senderState;
@@ -290,14 +262,12 @@ RubyPort::M5Port::recvTiming(PacketPtr pkt)
 void
 RubyPort::ruby_hit_callback(PacketPtr pkt)
 {
-    //
     // Retrieve the request port from the sender State
-    //
-    RubyPort::SenderState *senderState = 
+    RubyPort::SenderState *senderState =
         safe_cast<RubyPort::SenderState *>(pkt->senderState);
     M5Port *port = senderState->port;
     assert(port != NULL);
-    
+
     // pop the sender state from the packet
     pkt->senderState = senderState->saved;
     delete senderState;
@@ -308,11 +278,9 @@ RubyPort::ruby_hit_callback(PacketPtr pkt)
 void
 RubyPort::M5Port::hitCallback(PacketPtr pkt)
 {
-
     bool needsResponse = pkt->needsResponse();
 
-    DPRINTF(MemoryAccess, "Hit callback needs response %d\n",
-            needsResponse);
+    DPRINTF(MemoryAccess, "Hit callback needs response %d\n", needsResponse);
 
     ruby_port->physMemPort->sendAtomic(pkt);
 
@@ -349,9 +317,9 @@ RubyPort::M5Port::isPhysMemAddress(Addr addr)
     AddrRangeList physMemAddrList;
     bool snoop = false;
     ruby_port->physMemPort->getPeerAddressRanges(physMemAddrList, snoop);
-    for(AddrRangeIter iter = physMemAddrList.begin(); 
-        iter != physMemAddrList.end(); 
-        iter++) {
+    for (AddrRangeIter iter = physMemAddrList.begin();
+         iter != physMemAddrList.end();
+         iter++) {
         if (addr >= iter->start && addr <= iter->end) {
             DPRINTF(MemoryAccess, "Request found in %#llx - %#llx range\n",
                     iter->start, iter->end);

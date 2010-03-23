@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,76 +26,65 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * H3BloomFilter.hh
- *
- * Description:
- *
- *
- */
-
-#ifndef H3_BLOOM_FILTER_H
-#define H3_BLOOM_FILTER_H
+#ifndef __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
+#define __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__
 
 #include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
 
-class H3BloomFilter : public AbstractBloomFilter {
-public:
+class H3BloomFilter : public AbstractBloomFilter
+{
+  public:
+    H3BloomFilter(string config);
+    ~H3BloomFilter();
 
-  ~H3BloomFilter();
-  H3BloomFilter(string config);
+    void clear();
+    void increment(const Address& addr);
+    void decrement(const Address& addr);
+    void merge(AbstractBloomFilter * other_filter);
+    void set(const Address& addr);
+    void unset(const Address& addr);
 
-  void clear();
-  void increment(const Address& addr);
-  void decrement(const Address& addr);
-  void merge(AbstractBloomFilter * other_filter);
-  void set(const Address& addr);
-  void unset(const Address& addr);
+    bool isSet(const Address& addr);
+    int getCount(const Address& addr);
+    int getTotalCount();
+    void print(ostream& out) const;
 
-  bool isSet(const Address& addr);
-  int getCount(const Address& addr);
-  int getTotalCount();
-  void print(ostream& out) const;
+    int getIndex(const Address& addr);
+    int readBit(const int index);
+    void writeBit(const int index, const int value);
 
-  int getIndex(const Address& addr);
-  int readBit(const int index);
-  void writeBit(const int index, const int value);
+    int
+    operator[](const int index) const
+    {
+        return this->m_filter[index];
+    }
 
-  int operator[](const int index) const{
-    return this->m_filter[index];
-  }
+  private:
+    int get_index(const Address& addr, int hashNumber);
 
-private:
+    int hash_H3(uint64 value, int index);
 
-  int get_index(const Address& addr, int hashNumber);
+    Vector<int> m_filter;
+    int m_filter_size;
+    int m_num_hashes;
+    int m_filter_size_bits;
 
-  int hash_H3(uint64 value, int index);
+    int m_par_filter_size;
+    int m_par_filter_size_bits;
 
-  Vector<int> m_filter;
-  int m_filter_size;
-  int m_num_hashes;
-  int m_filter_size_bits;
+    int m_count_bits;
+    int m_count;
 
-  int m_par_filter_size;
-  int m_par_filter_size_bits;
+    int primes_list[6];// = {9323,11279,10247,30637,25717,43711};
+    int mults_list[6]; //= {255,29,51,3,77,43};
+    int adds_list[6]; //= {841,627,1555,241,7777,65391};
 
-  int m_count_bits;
-  int m_count;
-
-
-
-  int primes_list[6];// = {9323,11279,10247,30637,25717,43711};
-  int mults_list[6]; //= {255,29,51,3,77,43};
-  int adds_list[6]; //= {841,627,1555,241,7777,65391};
-
-  bool isParallel;
-
+    bool isParallel;
 };
 
-
-#endif
+#endif // __MEM_RUBY_FILTERS_H3BLOOMFILTER_HH__

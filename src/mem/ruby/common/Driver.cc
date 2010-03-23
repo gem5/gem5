@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,6 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "mem/ruby/common/Driver.hh"
 
 Driver::Driver()
@@ -36,4 +37,41 @@ Driver::Driver()
 // still need to be defined for subclasses
 Driver::~Driver()
 {
+}
+
+integer_t
+Driver::getInstructionCount(int procID) const
+{
+    return 1;
+}
+
+integer_t
+Driver::getCycleCount(int procID) const
+{
+    return 1;
+}
+
+void
+Driver::addThreadDependency(int procID, int requestor_thread,
+                            int conflict_thread) const
+{
+    assert(0);
+}
+
+void
+Driver::printDebug()
+{}
+
+integer_t
+Driver::readPhysicalMemory(int procID, physical_address_t address, int len)
+{
+    assert(0);
+    return 0;
+}
+
+void
+Driver::writePhysicalMemory(int procID, physical_address_t address,
+                            integer_t value, int len)
+{
+    assert(0);
 }

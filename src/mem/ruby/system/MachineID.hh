@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,66 +26,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * NodeID.hh
- *
- * Description:
- *
- * $Id$
- *
- */
-
-#ifndef MACHINEID_H
-#define MACHINEID_H
+#ifndef __MEM_RUBY_SYSTEM_MACHINEID_HH__
+#define __MEM_RUBY_SYSTEM_MACHINEID_HH__
 
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/util.hh"
 #include "mem/protocol/MachineType.hh"
+#include "mem/ruby/common/Global.hh"
 
-struct MachineID {
-  MachineType type;
-  int num;  // range: 0 ... number of this machine's components in the system - 1
+struct MachineID
+{
+    MachineType type;
+    int num;  // range: 0 ... number of this machine's components in system - 1
 };
 
-extern inline
-std::string MachineIDToString (MachineID machine) {
-  return MachineType_to_string(machine.type)+"_"+int_to_string(machine.num);
+inline std::string
+MachineIDToString(MachineID machine)
+{
+    return MachineType_to_string(machine.type)+"_"+int_to_string(machine.num);
 }
 
-extern inline
-bool operator==(const MachineID & obj1, const MachineID & obj2)
+inline bool
+operator==(const MachineID & obj1, const MachineID & obj2)
 {
-  return (obj1.type == obj2.type && obj1.num == obj2.num);
+    return (obj1.type == obj2.type && obj1.num == obj2.num);
 }
 
-extern inline
-bool operator!=(const MachineID & obj1, const MachineID & obj2)
+inline bool
+operator!=(const MachineID & obj1, const MachineID & obj2)
 {
-  return (obj1.type != obj2.type || obj1.num != obj2.num);
+    return (obj1.type != obj2.type || obj1.num != obj2.num);
 }
 
 // Output operator declaration
 std::ostream& operator<<(std::ostream& out, const MachineID& obj);
 
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const MachineID& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const MachineID& obj)
 {
-  if ((obj.type < MachineType_NUM) && (obj.type >= MachineType_FIRST)) {
-    out << MachineType_to_string(obj.type);
-  } else {
-    out << "NULL";
-  }
-  out << "-";
-  out << obj.num;
-  out << std::flush;
-  return out;
+    if ((obj.type < MachineType_NUM) && (obj.type >= MachineType_FIRST)) {
+        out << MachineType_to_string(obj.type);
+    } else {
+        out << "NULL";
+    }
+    out << "-";
+    out << obj.num;
+    out << std::flush;
+    return out;
 }
 
-
-#endif //MACHINEID_H
+#endif // __MEM_RUBY_SYSTEM_MACHINEID_HH__

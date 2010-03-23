@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,20 +26,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
 
-void RubyEventQueueNode::print(std::ostream& out) const
+void
+RubyEventQueueNode::print(std::ostream& out) const
 {
-  out << "[";
-  if (m_consumer_ptr != NULL) {
-    out << " Consumer=" << m_consumer_ptr;
-  } else {
-    out << " Consumer=NULL";
-  }
-  out << "]";
+    out << "[";
+    if (m_consumer_ptr != NULL) {
+        out << " Consumer=" << m_consumer_ptr;
+    } else {
+        out << " Consumer=NULL";
+    }
+    out << "]";
 }

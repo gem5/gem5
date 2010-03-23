@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,25 +26,18 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id: Sequencer.hh 1.70 2006/09/27 14:56:41-05:00 bobba@s1-01.cs.wisc.edu $
- *
- * Description:
- *
- */
+#ifndef __MEM_RUBY_SYSTEM_SEQUENCER_HH__
+#define __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 
-#ifndef SEQUENCER_H
-#define SEQUENCER_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/common/Consumer.hh"
-#include "mem/protocol/CacheRequestType.hh"
+#include "mem/gems_common/Map.hh"
 #include "mem/protocol/AccessModeType.hh"
+#include "mem/protocol/CacheRequestType.hh"
 #include "mem/protocol/GenericMachineType.hh"
 #include "mem/protocol/PrefetchBit.hh"
-#include "mem/ruby/system/RubyPort.hh"
-#include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/system/RubyPort.hh"
 
 class DataBlock;
 class CacheMsg;
@@ -54,109 +46,100 @@ class CacheMemory;
 
 class RubySequencerParams;
 
-struct SequencerRequest {
-  RubyRequest ruby_request;
-  Time issue_time;
+struct SequencerRequest
+{
+    RubyRequest ruby_request;
+    Time issue_time;
 
-  SequencerRequest(const RubyRequest & _ruby_request, 
-                   Time _issue_time)
-    : ruby_request(_ruby_request), 
-      issue_time(_issue_time)
-  {}
+    SequencerRequest(const RubyRequest & _ruby_request, Time _issue_time)
+        : ruby_request(_ruby_request), issue_time(_issue_time)
+    {}
 };
 
 std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
 
-class Sequencer : public RubyPort, public Consumer {
-public:
+class Sequencer : public RubyPort, public Consumer
+{
+  public:
     typedef RubySequencerParams Params;
-  // Constructors
-  Sequencer(const Params *);
+    Sequencer(const Params *);
+    ~Sequencer();
 
-  // Destructor
-  ~Sequencer();
+    // Public Methods
+    void wakeup(); // Used only for deadlock detection
 
-  // Public Methods
-  void wakeup(); // Used only for deadlock detection
+    void printConfig(ostream& out) const;
 
-  void printConfig(ostream& out) const;
+    void printProgress(ostream& out) const;
 
-  void printProgress(ostream& out) const;
+    void writeCallback(const Address& address, DataBlock& data);
+    void readCallback(const Address& address, DataBlock& data);
 
-  void writeCallback(const Address& address, DataBlock& data);
-  void readCallback(const Address& address, DataBlock& data);
+    RequestStatus makeRequest(const RubyRequest & request);
+    RequestStatus getRequestStatus(const RubyRequest& request);
+    bool empty() const;
 
-  RequestStatus makeRequest(const RubyRequest & request);
-  RequestStatus getRequestStatus(const RubyRequest& request);
-  bool empty() const;
+    void print(ostream& out) const;
+    void printStats(ostream & out) const;
+    void checkCoherence(const Address& address);
 
-  void print(ostream& out) const;
-  void printStats(ostream & out) const;
-  void checkCoherence(const Address& address);
+    void removeRequest(SequencerRequest* request);
 
-  //  bool getRubyMemoryValue(const Address& addr, char* value, unsigned int size_in_bytes);
-  //  bool setRubyMemoryValue(const Address& addr, char *value, unsigned int size_in_bytes);
+  private:
+    bool tryCacheAccess(const Address& addr, CacheRequestType type,
+                        const Address& pc, AccessModeType access_mode,
+                        int size, DataBlock*& data_ptr);
+    void issueRequest(const RubyRequest& request);
 
-  void removeRequest(SequencerRequest* request);
-private:
-  // Private Methods
-  bool tryCacheAccess(const Address& addr, CacheRequestType type, const Address& pc, AccessModeType access_mode, int size, DataBlock*& data_ptr);
-  void issueRequest(const RubyRequest& request);
-
-  void hitCallback(SequencerRequest* request, DataBlock& data);
-  bool insertRequest(SequencerRequest* request);
+    void hitCallback(SequencerRequest* request, DataBlock& data);
+    bool insertRequest(SequencerRequest* request);
 
 
-  // Private copy constructor and assignment operator
-  Sequencer(const Sequencer& obj);
-  Sequencer& operator=(const Sequencer& obj);
+    // Private copy constructor and assignment operator
+    Sequencer(const Sequencer& obj);
+    Sequencer& operator=(const Sequencer& obj);
 
-private:
-  int m_max_outstanding_requests;
-  int m_deadlock_threshold;
+  private:
+    int m_max_outstanding_requests;
+    int m_deadlock_threshold;
 
-  CacheMemory* m_dataCache_ptr;
-  CacheMemory* m_instCache_ptr;
+    CacheMemory* m_dataCache_ptr;
+    CacheMemory* m_instCache_ptr;
 
-  Map<Address, SequencerRequest*> m_writeRequestTable;
-  Map<Address, SequencerRequest*> m_readRequestTable;
-  // Global outstanding request count, across all request tables
-  int m_outstanding_count;
-  bool m_deadlock_check_scheduled;
+    Map<Address, SequencerRequest*> m_writeRequestTable;
+    Map<Address, SequencerRequest*> m_readRequestTable;
+    // Global outstanding request count, across all request tables
+    int m_outstanding_count;
+    bool m_deadlock_check_scheduled;
 
-  int m_store_waiting_on_load_cycles;
-  int m_store_waiting_on_store_cycles;
-  int m_load_waiting_on_store_cycles;
-  int m_load_waiting_on_load_cycles;
+    int m_store_waiting_on_load_cycles;
+    int m_store_waiting_on_store_cycles;
+    int m_load_waiting_on_store_cycles;
+    int m_load_waiting_on_load_cycles;
 
-  bool m_usingRubyTester;
+    bool m_usingRubyTester;
 
-  class SequencerWakeupEvent : public Event
-  {
-      Sequencer *m_sequencer_ptr;
+    class SequencerWakeupEvent : public Event
+    {
+      private:
+        Sequencer *m_sequencer_ptr;
 
-    public:
-      SequencerWakeupEvent(Sequencer *_seq) : m_sequencer_ptr(_seq) {}
-      void process() { m_sequencer_ptr->wakeup(); }
-      const char *description() const { return "Sequencer deadlock check"; }
-  };
+      public:
+        SequencerWakeupEvent(Sequencer *_seq) : m_sequencer_ptr(_seq) {}
+        void process() { m_sequencer_ptr->wakeup(); }
+        const char *description() const { return "Sequencer deadlock check"; }
+    };
 
-  SequencerWakeupEvent deadlockCheckEvent;
+    SequencerWakeupEvent deadlockCheckEvent;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const Sequencer& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const Sequencer& obj)
+inline ostream&
+operator<<(ostream& out, const Sequencer& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //SEQUENCER_H
+#endif // __MEM_RUBY_SYSTEM_SEQUENCER_HH__
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,70 +26,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * MultiBitSelBloomFilter.hh
- *
- * Description:
- *
- *
- */
-
-#ifndef MULTIBITSEL_BLOOM_FILTER_H
-#define MULTIBITSEL_BLOOM_FILTER_H
+#ifndef __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
+#define __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__
 
 #include "mem/gems_common/Map.hh"
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/filters/AbstractBloomFilter.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
 
-class MultiBitSelBloomFilter : public AbstractBloomFilter {
-public:
+class MultiBitSelBloomFilter : public AbstractBloomFilter
+{
+  public:
+    MultiBitSelBloomFilter(string config);
+    ~MultiBitSelBloomFilter();
 
-  ~MultiBitSelBloomFilter();
-  MultiBitSelBloomFilter(string config);
+    void clear();
+    void increment(const Address& addr);
+    void decrement(const Address& addr);
+    void merge(AbstractBloomFilter * other_filter);
+    void set(const Address& addr);
+    void unset(const Address& addr);
 
-  void clear();
-  void increment(const Address& addr);
-  void decrement(const Address& addr);
-  void merge(AbstractBloomFilter * other_filter);
-  void set(const Address& addr);
-  void unset(const Address& addr);
+    bool isSet(const Address& addr);
+    int getCount(const Address& addr);
+    int getTotalCount();
+    void print(ostream& out) const;
 
-  bool isSet(const Address& addr);
-  int getCount(const Address& addr);
-  int getTotalCount();
-  void print(ostream& out) const;
+    int getIndex(const Address& addr);
+    int readBit(const int index);
+    void writeBit(const int index, const int value);
 
-  int getIndex(const Address& addr);
-  int readBit(const int index);
-  void writeBit(const int index, const int value);
+    int
+    operator[](const int index) const
+    {
+        return this->m_filter[index];
+    }
 
-  int operator[](const int index) const{
-    return this->m_filter[index];
-  }
+  private:
+    int get_index(const Address& addr, int hashNumber);
 
-private:
+    int hash_bitsel(uint64 value, int index, int jump, int maxBits,
+                    int numBits);
 
-  int get_index(const Address& addr, int hashNumber);
+    Vector<int> m_filter;
+    int m_filter_size;
+    int m_num_hashes;
+    int m_filter_size_bits;
+    int m_skip_bits;
 
-  int hash_bitsel(uint64 value, int index, int jump, int maxBits, int numBits);
+    int m_par_filter_size;
+    int m_par_filter_size_bits;
 
-  Vector<int> m_filter;
-  int m_filter_size;
-  int m_num_hashes;
-  int m_filter_size_bits;
-  int m_skip_bits;
+    int m_count_bits;
+    int m_count;
 
-  int m_par_filter_size;
-  int m_par_filter_size_bits;
-
-  int m_count_bits;
-  int m_count;
-
-  bool isParallel;
-
+    bool isParallel;
 };
 
-#endif
+#endif // __MEM_RUBY_FILTERS_MULTIBITSELBLOOMFILTER_HH__

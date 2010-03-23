@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -32,13 +31,14 @@
 DataBlock &
 DataBlock::operator=(const DataBlock & obj)
 {
-  if (this == &obj) {
-    //    assert(false);
-  } else {
-    if (!m_alloc)
-      m_data = new uint8[RubySystem::getBlockSizeBytes()];
-    memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
-    m_alloc = true;
-  }
-  return *this;
+    if (this == &obj) {
+        // assert(false);
+    } else {
+        if (!m_alloc)
+            m_data = new uint8[RubySystem::getBlockSizeBytes()];
+        memcpy(m_data, obj.m_data, RubySystem::getBlockSizeBytes());
+        m_alloc = true;
+    }
+
+    return *this;
 }

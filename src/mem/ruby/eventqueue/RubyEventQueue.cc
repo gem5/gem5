@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,16 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/common/Consumer.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
 #include "mem/ruby/eventqueue/RubyEventQueueNode.hh"
-
-// Class public method definitions
+#include "mem/ruby/system/System.hh"
 
 RubyEventQueue::RubyEventQueue(EventQueue* eventq, Tick _clock)
   : EventManager(eventq), m_clock(_clock)
@@ -47,28 +40,28 @@ RubyEventQueue::~RubyEventQueue()
 {
 }
 
-void RubyEventQueue::scheduleEvent(Consumer* consumer, Time timeDelta) 
-{ 
-  scheduleEventAbsolute(consumer, timeDelta + getTime()); 
-}
-
-void RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
+void
+RubyEventQueue::scheduleEvent(Consumer* consumer, Time timeDelta)
 {
-  // Check to see if this is a redundant wakeup
-  ASSERT(consumer != NULL);
-  if (!consumer->alreadyScheduled(timeAbs)) {	
-    // This wakeup is not redundant
-    RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer, this);
-    assert(timeAbs > getTime());
-    schedule(thisNode, (timeAbs * m_clock));
-    consumer->insertScheduledWakeupTime(timeAbs);
-  }
+    scheduleEventAbsolute(consumer, timeDelta + getTime());
 }
 
-// Class private method definitions
+void
+RubyEventQueue::scheduleEventAbsolute(Consumer* consumer, Time timeAbs)
+{
+    // Check to see if this is a redundant wakeup
+    ASSERT(consumer != NULL);
+    if (!consumer->alreadyScheduled(timeAbs)) {
+        // This wakeup is not redundant
+        RubyEventQueueNode *thisNode = new RubyEventQueueNode(consumer, this);
+        assert(timeAbs > getTime());
+        schedule(thisNode, (timeAbs * m_clock));
+        consumer->insertScheduledWakeupTime(timeAbs);
+    }
+}
 
 void
 RubyEventQueue::print(ostream& out) const
 {
-  out << "[Event Queue:]";
+    out << "[Event Queue:]";
 }

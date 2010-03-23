@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,70 +26,69 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * TimerTable.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
+#define __MEM_RUBY_SYSTEM_TIMERTABLE_HH__
 
-#ifndef TIMERTABLE_H
-#define TIMERTABLE_H
+#include <cassert>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Map.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+
 class Consumer;
 
-class TimerTable {
-public:
+class TimerTable
+{
+  public:
+    TimerTable();
 
-  // Constructors
-  TimerTable();
+    static void printConfig(ostream& out) {}
 
-  // Destructor
-  //~TimerTable();
+    void
+    setConsumer(Consumer* consumer_ptr)
+    {
+        assert(m_consumer_ptr == NULL);
+        m_consumer_ptr = consumer_ptr;
+    }
 
-  // Class Methods
-  static void printConfig(ostream& out) {}
+    void
+    setDescription(const string& name)
+    {
+        m_name = name;
+    }
 
-  // Public Methods
-  void setConsumer(Consumer* consumer_ptr) { ASSERT(m_consumer_ptr==NULL); m_consumer_ptr = consumer_ptr; }
-  void setDescription(const string& name) { m_name = name; }
+    bool isReady() const;
+    const Address& readyAddress() const;
+    bool isSet(const Address& address) const { return m_map.exist(address); }
+    void set(const Address& address, Time relative_latency);
+    void unset(const Address& address);
+    void print(ostream& out) const;
 
-  bool isReady() const;
-  const Address& readyAddress() const;
-  bool isSet(const Address& address) const { return m_map.exist(address); }
-  void set(const Address& address, Time relative_latency);
-  void unset(const Address& address);
-  void print(ostream& out) const;
-private:
-  // Private Methods
-  void updateNext() const;
+  private:
+    void updateNext() const;
 
-  // Private copy constructor and assignment operator
-  TimerTable(const TimerTable& obj);
-  TimerTable& operator=(const TimerTable& obj);
+    // Private copy constructor and assignment operator
+    TimerTable(const TimerTable& obj);
+    TimerTable& operator=(const TimerTable& obj);
 
-  // Data Members (m_prefix)
-  Map<Address, Time> m_map;
-  mutable bool m_next_valid;
-  mutable Time m_next_time; // Only valid if m_next_valid is true
-  mutable Address m_next_address;  // Only valid if m_next_valid is true
-  Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
-  string m_name;
+    // Data Members (m_prefix)
+    Map<Address, Time> m_map;
+    mutable bool m_next_valid;
+    mutable Time m_next_time; // Only valid if m_next_valid is true
+    mutable Address m_next_address;  // Only valid if m_next_valid is true
+    Consumer* m_consumer_ptr;  // Consumer to signal a wakeup()
+    string m_name;
 };
 
 // ******************* Definitions *******************
 
 // Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const TimerTable& obj)
+inline ostream&
+operator<<(ostream& out, const TimerTable& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
-#endif //TIMERTABLE_H
+
+#endif // __MEM_RUBY_SYSTEM_TIMERTABLE_HH__

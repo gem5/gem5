@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,67 +26,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- */
-
-#ifndef MESSAGE_H
-#define MESSAGE_H
+#ifndef __MEM_RUBY_SLICC_INTERFACE_MESSAGE_HH__
+#define __MEM_RUBY_SLICC_INTERFACE_MESSAGE_HH__
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/RefCnt.hh"
 #include "mem/gems_common/RefCountable.hh"
+#include "mem/ruby/common/Global.hh"
 #include "mem/ruby/eventqueue/RubyEventQueue.hh"
 
 class Message;
 typedef RefCnt<Message> MsgPtr;
 
-class Message : public RefCountable {
-public:
-  // Constructors
-  Message() : RefCountable() { m_time = g_eventQueue_ptr->getTime();  m_LastEnqueueTime = g_eventQueue_ptr->getTime(); m_DelayedCycles = 0;}
+class Message : public RefCountable
+{
+  public:
+    Message()
+        : RefCountable()
+    {
+        m_time = g_eventQueue_ptr->getTime();
+        m_LastEnqueueTime = g_eventQueue_ptr->getTime();
+        m_DelayedCycles = 0;
+    }
 
-  // Destructor
-  virtual ~Message() { }
+    virtual ~Message() { }
 
-  // Public Methods
-  virtual Message* clone() const = 0;
-  virtual void destroy() = 0;
-  virtual void print(std::ostream& out) const = 0;
+    virtual Message* clone() const = 0;
+    virtual void destroy() = 0;
+    virtual void print(std::ostream& out) const = 0;
 
-  void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
-  const int& getDelayedCycles() const {return m_DelayedCycles;}
-  int& getDelayedCycles() {return m_DelayedCycles;}
-  void setLastEnqueueTime(const Time& time) { m_LastEnqueueTime = time; }
-  const Time& getLastEnqueueTime() const {return m_LastEnqueueTime;}
-  Time& getLastEnqueueTime() {return m_LastEnqueueTime;}
+    void setDelayedCycles(const int& cycles) { m_DelayedCycles = cycles; }
+    const int& getDelayedCycles() const {return m_DelayedCycles;}
+    int& getDelayedCycles() {return m_DelayedCycles;}
+    void setLastEnqueueTime(const Time& time) { m_LastEnqueueTime = time; }
+    const Time& getLastEnqueueTime() const {return m_LastEnqueueTime;}
+    Time& getLastEnqueueTime() {return m_LastEnqueueTime;}
 
-  const Time& getTime() const { return m_time; }
-  void setTime(const Time& new_time) { m_time = new_time; }
-private:
-  // Private Methods
+    const Time& getTime() const { return m_time; }
+    void setTime(const Time& new_time) { m_time = new_time; }
 
-  // Data Members (m_ prefix)
-  Time m_time;
-  Time m_LastEnqueueTime; // my last enqueue time
-  int m_DelayedCycles; // my delayed cycles
-
+  private:
+    Time m_time;
+    Time m_LastEnqueueTime; // my last enqueue time
+    int m_DelayedCycles; // my delayed cycles
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const Message& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const Message& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const Message& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //MESSAGE_H
+#endif // __MEM_RUBY_SLICC_INTERFACE_MESSAGE_HH__
