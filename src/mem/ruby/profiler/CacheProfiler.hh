@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,77 +26,58 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * CacheProfiler.hh
- *
- * Description:
- *
- * $Id$
- *
- */
-
-#ifndef CACHEPROFILER_H
-#define CACHEPROFILER_H
+#ifndef __MEM_RUBY_PROFILER_CACHEPROFILER_HH__
+#define __MEM_RUBY_PROFILER_CACHEPROFILER_HH__
 
 #include <iostream>
 #include <string>
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/common/Histogram.hh"
 #include "mem/protocol/AccessModeType.hh"
-#include "mem/protocol/PrefetchBit.hh"
 #include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/PrefetchBit.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 template <class TYPE> class Vector;
 
-class CacheProfiler {
-public:
-  // Constructors
-  CacheProfiler(const std::string& description);
+class CacheProfiler
+{
+  public:
+    CacheProfiler(const std::string& description);
+    ~CacheProfiler();
 
-  // Destructor
-  ~CacheProfiler();
+    void printStats(std::ostream& out) const;
+    void clearStats();
 
-  // Public Methods
-  void printStats(std::ostream& out) const;
-  void clearStats();
+    void addStatSample(CacheRequestType requestType, AccessModeType type,
+                       int msgSize, PrefetchBit pfBit);
 
-  void addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit);
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
-private:
-  // Private Methods
+  private:
+    // Private copy constructor and assignment operator
+    CacheProfiler(const CacheProfiler& obj);
+    CacheProfiler& operator=(const CacheProfiler& obj);
 
-  // Private copy constructor and assignment operator
-  CacheProfiler(const CacheProfiler& obj);
-  CacheProfiler& operator=(const CacheProfiler& obj);
+    std::string m_description;
+    Histogram m_requestSize;
+    int64 m_misses;
+    int64 m_demand_misses;
+    int64 m_prefetches;
+    int64 m_sw_prefetches;
+    int64 m_hw_prefetches;
+    int64 m_accessModeTypeHistogram[AccessModeType_NUM];
 
-  // Data Members (m_ prefix)
-  std::string m_description;
-  Histogram m_requestSize;
-  int64 m_misses;
-  int64 m_demand_misses;
-  int64 m_prefetches;
-  int64 m_sw_prefetches;
-  int64 m_hw_prefetches;
-  int64 m_accessModeTypeHistogram[AccessModeType_NUM];
-
-  Vector < int >* m_requestTypeVec_ptr;
+    Vector <int>* m_requestTypeVec_ptr;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const CacheProfiler& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const CacheProfiler& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const CacheProfiler& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //CACHEPROFILER_H
+#endif // __MEM_RUBY_PROFILER_CACHEPROFILER_HH__

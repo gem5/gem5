@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,100 +26,96 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * $Id$
- *
- */
-
-#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 
 AccessTraceForAddress::AccessTraceForAddress()
 {
-  m_histogram_ptr = NULL;
+    m_histogram_ptr = NULL;
 }
 
 AccessTraceForAddress::AccessTraceForAddress(const Address& addr)
 {
-  m_addr = addr;
-  m_total = 0;
-  m_loads = 0;
-  m_stores = 0;
-  m_atomics = 0;
-  m_user = 0;
-  m_sharing = 0;
-  m_histogram_ptr = NULL;
+    m_addr = addr;
+    m_total = 0;
+    m_loads = 0;
+    m_stores = 0;
+    m_atomics = 0;
+    m_user = 0;
+    m_sharing = 0;
+    m_histogram_ptr = NULL;
 }
 
 AccessTraceForAddress::~AccessTraceForAddress()
 {
-  if (m_histogram_ptr != NULL) {
-    delete m_histogram_ptr;
-    m_histogram_ptr = NULL;
-  }
+    if (m_histogram_ptr != NULL) {
+        delete m_histogram_ptr;
+        m_histogram_ptr = NULL;
+    }
 }
 
-void AccessTraceForAddress::print(ostream& out) const
+void
+AccessTraceForAddress::print(ostream& out) const
 {
-  out << m_addr;
+    out << m_addr;
 
-  if (m_histogram_ptr == NULL) {
-    out << " " << m_total;
-    out << " | " << m_loads;
-    out << " " << m_stores;
-    out << " " << m_atomics;
-    out << " | " << m_user;
-    out << " " << m_total-m_user;
-    out << " | " << m_sharing;
-    out << " | " << m_touched_by.count();
-  } else {
+    if (m_histogram_ptr == NULL) {
+        out << " " << m_total;
+        out << " | " << m_loads;
+        out << " " << m_stores;
+        out << " " << m_atomics;
+        out << " | " << m_user;
+        out << " " << m_total-m_user;
+        out << " | " << m_sharing;
+        out << " | " << m_touched_by.count();
+    } else {
+        assert(m_total == 0);
+        out << " " << (*m_histogram_ptr);
+    }
+}
+
+void
+AccessTraceForAddress::update(CacheRequestType type,
+                              AccessModeType access_mode, NodeID cpu,
+                              bool sharing_miss)
+{
+    m_touched_by.add(cpu);
+    m_total++;
+    if(type == CacheRequestType_ATOMIC) {
+        m_atomics++;
+    } else if(type == CacheRequestType_LD){
+        m_loads++;
+    } else if (type == CacheRequestType_ST){
+        m_stores++;
+    } else {
+        //  ERROR_MSG("Trying to add invalid access to trace");
+    }
+
+    if (access_mode == AccessModeType_UserMode) {
+        m_user++;
+    }
+
+    if (sharing_miss) {
+        m_sharing++;
+    }
+}
+
+int
+AccessTraceForAddress::getTotal() const
+{
+    if (m_histogram_ptr == NULL) {
+        return m_total;
+    } else {
+        return m_histogram_ptr->getTotal();
+    }
+}
+
+void
+AccessTraceForAddress::addSample(int value)
+{
     assert(m_total == 0);
-    out << " " << (*m_histogram_ptr);
-  }
-}
-
-void AccessTraceForAddress::update(CacheRequestType type, AccessModeType access_mode, NodeID cpu, bool sharing_miss)
-{
-  m_touched_by.add(cpu);
-  m_total++;
-  if(type == CacheRequestType_ATOMIC) {
-    m_atomics++;
-  } else if(type == CacheRequestType_LD){
-    m_loads++;
-  } else if (type == CacheRequestType_ST){
-    m_stores++;
-  } else {
-    //  ERROR_MSG("Trying to add invalid access to trace");
-  }
-
-  if (access_mode == AccessModeType_UserMode) {
-    m_user++;
-  }
-
-  if (sharing_miss) {
-    m_sharing++;
-  }
-}
-
-int AccessTraceForAddress::getTotal() const
-{
-  if (m_histogram_ptr == NULL) {
-    return m_total;
-  } else {
-    return m_histogram_ptr->getTotal();
-  }
-}
-
-void AccessTraceForAddress::addSample(int value)
-{
-  assert(m_total == 0);
-  if (m_histogram_ptr == NULL) {
-    m_histogram_ptr = new Histogram;
-  }
-  m_histogram_ptr->add(value);
-}
-
-bool node_less_then_eq(const AccessTraceForAddress* n1, const AccessTraceForAddress* n2)
-{
-  return (n1->getTotal() > n2->getTotal());
+    if (m_histogram_ptr == NULL) {
+        m_histogram_ptr = new Histogram;
+    }
+    m_histogram_ptr->add(value);
 }

@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,272 +26,293 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * AddressProfiler.cc
- *
- * Description: See AddressProfiler.hh
- *
- * $Id$
- *
- */
-
-#include "mem/ruby/profiler/AddressProfiler.hh"
+#include "mem/gems_common/Map.hh"
+#include "mem/gems_common/PrioHeap.hh"
 #include "mem/protocol/CacheMsg.hh"
 #include "mem/ruby/profiler/AccessTraceForAddress.hh"
-#include "mem/gems_common/PrioHeap.hh"
-#include "mem/gems_common/Map.hh"
-#include "mem/ruby/system/System.hh"
+#include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
+
+typedef AddressProfiler::AddressMap AddressMap;
 
 // Helper functions
-static AccessTraceForAddress& lookupTraceForAddress(const Address& addr, 
-                                                    Map<Address, 
-                                                    AccessTraceForAddress>* record_map);
+AccessTraceForAddress&
+lookupTraceForAddress(const Address& addr, AddressMap* record_map)
+{
+    if (!record_map->exist(addr)) {
+        record_map->add(addr, AccessTraceForAddress(addr));
+    }
+    return record_map->lookup(addr);
+}
 
-static void printSorted(ostream& out, 
-                        int num_of_sequencers,
-                        const Map<Address, AccessTraceForAddress>* record_map, 
-                        string description);
+void
+printSorted(ostream& out, int num_of_sequencers, const AddressMap* record_map, 
+            string description)
+{
+    const int records_printed = 100;
+
+    uint64 misses = 0;
+    PrioHeap<AccessTraceForAddress*> heap;
+    Vector<Address> keys = record_map->keys();
+    for (int i = 0; i < keys.size(); i++) {
+        AccessTraceForAddress* record = &(record_map->lookup(keys[i]));
+        misses += record->getTotal();
+        heap.insert(record);
+    }
+
+    out << "Total_entries_" << description << ": " << keys.size() << endl;
+    if (g_system_ptr->getProfiler()->getAllInstructions())
+        out << "Total_Instructions_" << description << ": " << misses << endl;
+    else
+        out << "Total_data_misses_" << description << ": " << misses << endl;
+
+    out << "total | load store atomic | user supervisor | sharing | touched-by"
+        << endl;
+
+    Histogram remaining_records(1, 100);
+    Histogram all_records(1, 100);
+    Histogram remaining_records_log(-1);
+    Histogram all_records_log(-1);
+
+    // Allows us to track how many lines where touched by n processors
+    Vector<int64> m_touched_vec;
+    Vector<int64> m_touched_weighted_vec;
+    m_touched_vec.setSize(num_of_sequencers+1);
+    m_touched_weighted_vec.setSize(num_of_sequencers+1);
+    for (int i = 0; i < m_touched_vec.size(); i++) {
+        m_touched_vec[i] = 0;
+        m_touched_weighted_vec[i] = 0;
+    }
+
+    int counter = 0;
+    while (heap.size() > 0 && counter < records_printed) {
+        AccessTraceForAddress* record = heap.extractMin();
+        double percent = 100.0 * (record->getTotal() / double(misses));
+        out << description << " | " << percent << " % " << *record << endl;
+        all_records.add(record->getTotal());
+        all_records_log.add(record->getTotal());
+        counter++;
+        m_touched_vec[record->getTouchedBy()]++;
+        m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
+    }
+
+    while (heap.size() > 0) {
+        AccessTraceForAddress* record = heap.extractMin();
+        all_records.add(record->getTotal());
+        remaining_records.add(record->getTotal());
+        all_records_log.add(record->getTotal());
+        remaining_records_log.add(record->getTotal());
+        m_touched_vec[record->getTouchedBy()]++;
+        m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
+    }
+    out << endl;
+    out << "all_records_" << description << ": "
+        << all_records << endl
+        << "all_records_log_" << description << ": "
+        << all_records_log << endl
+        << "remaining_records_" << description << ": "
+        << remaining_records << endl
+        << "remaining_records_log_" << description << ": "
+        << remaining_records_log << endl
+        << "touched_by_" << description << ": "
+        << m_touched_vec << endl
+        << "touched_by_weighted_" << description << ": "
+        << m_touched_weighted_vec << endl
+        << endl;
+}
 
 AddressProfiler::AddressProfiler(int num_of_sequencers)
 {
-  m_dataAccessTrace = new Map<Address, AccessTraceForAddress>;
-  m_macroBlockAccessTrace = new Map<Address, AccessTraceForAddress>;
-  m_programCounterAccessTrace = new Map<Address, AccessTraceForAddress>;
-  m_retryProfileMap = new Map<Address, AccessTraceForAddress>;
-  m_num_of_sequencers = num_of_sequencers;
-  clearStats();
+    m_dataAccessTrace = new AddressMap;
+    m_macroBlockAccessTrace = new AddressMap;
+    m_programCounterAccessTrace = new AddressMap;
+    m_retryProfileMap = new AddressMap;
+    m_num_of_sequencers = num_of_sequencers;
+    clearStats();
 }
 
 AddressProfiler::~AddressProfiler()
 {
-  delete m_dataAccessTrace;
-  delete m_macroBlockAccessTrace;
-  delete m_programCounterAccessTrace;
-  delete m_retryProfileMap;
+    delete m_dataAccessTrace;
+    delete m_macroBlockAccessTrace;
+    delete m_programCounterAccessTrace;
+    delete m_retryProfileMap;
 }
 
-void AddressProfiler::setHotLines(bool hot_lines){
-  m_hot_lines = hot_lines;
-}
-void AddressProfiler::setAllInstructions(bool all_instructions){
-  m_all_instructions = all_instructions;
-}
-
-void AddressProfiler::printStats(ostream& out) const
+void
+AddressProfiler::setHotLines(bool hot_lines)
 {
-  if (m_hot_lines) {
-    out << endl;
-    out << "AddressProfiler Stats" << endl;
-    out << "---------------------" << endl;
-
-    out << endl;
-    out << "sharing_misses: " << m_sharing_miss_counter << endl;
-    out << "getx_sharing_histogram: " << m_getx_sharing_histogram << endl;
-    out << "gets_sharing_histogram: " << m_gets_sharing_histogram << endl;
-
-    out << endl;
-    out << "Hot Data Blocks" << endl;
-    out << "---------------" << endl;
-    out << endl;
-    printSorted(out, m_num_of_sequencers, m_dataAccessTrace, "block_address");
-
-    out << endl;
-    out << "Hot MacroData Blocks" << endl;
-    out << "--------------------" << endl;
-    out << endl;
-    printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace, "macroblock_address");
-
-    out << "Hot Instructions" << endl;
-    out << "----------------" << endl;
-    out << endl;
-    printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace, "pc_address");
-  }
-
-  if (m_all_instructions){
-    out << endl;
-    out << "All Instructions Profile:" << endl;
-    out << "-------------------------" << endl;
-    out << endl;
-    printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace, "pc_address");
-    out << endl;
-  }
-
-  if (m_retryProfileHisto.size() > 0) {
-    out << "Retry Profile" << endl;
-    out << "-------------" << endl;
-    out << endl;
-    out << "retry_histogram_absolute: " << m_retryProfileHisto << endl;
-    out << "retry_histogram_write: " << m_retryProfileHistoWrite << endl;
-    out << "retry_histogram_read: " << m_retryProfileHistoRead << endl;
-
-    out << "retry_histogram_percent: ";
-    m_retryProfileHisto.printPercent(out);
-    out << endl;
-
-    printSorted(out, m_num_of_sequencers, m_retryProfileMap, "block_address");
-    out << endl;
-  }
-
+    m_hot_lines = hot_lines;
 }
 
-void AddressProfiler::clearStats()
+void
+AddressProfiler::setAllInstructions(bool all_instructions)
 {
-  // Clear the maps
-  m_sharing_miss_counter = 0;
-  m_dataAccessTrace->clear();
-  m_macroBlockAccessTrace->clear();
-  m_programCounterAccessTrace->clear();
-  m_retryProfileMap->clear();
-  m_retryProfileHisto.clear();
-  m_retryProfileHistoRead.clear();
-  m_retryProfileHistoWrite.clear();
-  m_getx_sharing_histogram.clear();
-  m_gets_sharing_histogram.clear();
+    m_all_instructions = all_instructions;
 }
 
-void AddressProfiler::profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor)
+void
+AddressProfiler::printStats(ostream& out) const
 {
-  Set indirection_set;
-  indirection_set.addSet(sharers);
-  indirection_set.addSet(owner);
-  indirection_set.remove(requestor);
-  int num_indirections = indirection_set.count();
+    if (m_hot_lines) {
+        out << endl;
+        out << "AddressProfiler Stats" << endl;
+        out << "---------------------" << endl;
 
-  m_getx_sharing_histogram.add(num_indirections);
-  bool indirection_miss = (num_indirections > 0);
+        out << endl;
+        out << "sharing_misses: " << m_sharing_miss_counter << endl;
+        out << "getx_sharing_histogram: " << m_getx_sharing_histogram << endl;
+        out << "gets_sharing_histogram: " << m_gets_sharing_histogram << endl;
 
-  addTraceSample(datablock, PC, CacheRequestType_ST, AccessModeType(0), requestor, indirection_miss);
-}
+        out << endl;
+        out << "Hot Data Blocks" << endl;
+        out << "---------------" << endl;
+        out << endl;
+        printSorted(out, m_num_of_sequencers, m_dataAccessTrace,
+                    "block_address");
 
-void AddressProfiler::profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor)
-{
-  Set indirection_set;
-  indirection_set.addSet(owner);
-  indirection_set.remove(requestor);
-  int num_indirections = indirection_set.count();
+        out << endl;
+        out << "Hot MacroData Blocks" << endl;
+        out << "--------------------" << endl;
+        out << endl;
+        printSorted(out, m_num_of_sequencers, m_macroBlockAccessTrace,
+                    "macroblock_address");
 
-  m_gets_sharing_histogram.add(num_indirections);
-  bool indirection_miss = (num_indirections > 0);
-
-  addTraceSample(datablock, PC, CacheRequestType_LD, AccessModeType(0), requestor, indirection_miss);
-}
-
-void AddressProfiler::addTraceSample(Address data_addr, Address pc_addr, CacheRequestType type, AccessModeType access_mode, NodeID id, bool sharing_miss)
-{
-  if (m_all_instructions) {
-    if (sharing_miss) {
-      m_sharing_miss_counter++;
+        out << "Hot Instructions" << endl;
+        out << "----------------" << endl;
+        out << endl;
+        printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
+                    "pc_address");
     }
 
-    // record data address trace info
-    data_addr.makeLineAddress();
-    lookupTraceForAddress(data_addr, m_dataAccessTrace).update(type, access_mode, id, sharing_miss);
+    if (m_all_instructions) {
+        out << endl;
+        out << "All Instructions Profile:" << endl;
+        out << "-------------------------" << endl;
+        out << endl;
+        printSorted(out, m_num_of_sequencers, m_programCounterAccessTrace,
+                    "pc_address");
+        out << endl;
+    }
 
-    // record macro data address trace info
-    Address macro_addr(data_addr.maskLowOrderBits(10)); // 6 for datablock, 4 to make it 16x more coarse
-    lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace).update(type, access_mode, id, sharing_miss);
+    if (m_retryProfileHisto.size() > 0) {
+        out << "Retry Profile" << endl;
+        out << "-------------" << endl;
+        out << endl;
+        out << "retry_histogram_absolute: " << m_retryProfileHisto << endl;
+        out << "retry_histogram_write: " << m_retryProfileHistoWrite << endl;
+        out << "retry_histogram_read: " << m_retryProfileHistoRead << endl;
 
-    // record program counter address trace info
-    lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).update(type, access_mode, id, sharing_miss);
-  }
+        out << "retry_histogram_percent: ";
+        m_retryProfileHisto.printPercent(out);
+        out << endl;
 
-  if (m_all_instructions) {
-    // This code is used if the address profiler is an all-instructions profiler
-    // record program counter address trace info
-    lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).update(type, access_mode, id, sharing_miss);
-  }
+        printSorted(out, m_num_of_sequencers, m_retryProfileMap,
+                    "block_address");
+        out << endl;
+    }
 }
 
-void AddressProfiler::profileRetry(const Address& data_addr, AccessType type, int count)
+void
+AddressProfiler::clearStats()
 {
-  m_retryProfileHisto.add(count);
-  if (type == AccessType_Read) {
-    m_retryProfileHistoRead.add(count);
-  } else {
-    m_retryProfileHistoWrite.add(count);
-  }
-  if (count > 1) {
-    lookupTraceForAddress(data_addr, m_retryProfileMap).addSample(count);
-  }
+    // Clear the maps
+    m_sharing_miss_counter = 0;
+    m_dataAccessTrace->clear();
+    m_macroBlockAccessTrace->clear();
+    m_programCounterAccessTrace->clear();
+    m_retryProfileMap->clear();
+    m_retryProfileHisto.clear();
+    m_retryProfileHistoRead.clear();
+    m_retryProfileHistoWrite.clear();
+    m_getx_sharing_histogram.clear();
+    m_gets_sharing_histogram.clear();
 }
 
-// ***** Normal Functions ******
-
-static void printSorted(ostream& out, 
-                        int num_of_sequencers,
-                        const Map<Address, AccessTraceForAddress>* record_map, 
-                        string description)
+void
+AddressProfiler::profileGetX(const Address& datablock, const Address& PC,
+                             const Set& owner, const Set& sharers,
+                             NodeID requestor)
 {
-  const int records_printed = 100;
+    Set indirection_set;
+    indirection_set.addSet(sharers);
+    indirection_set.addSet(owner);
+    indirection_set.remove(requestor);
+    int num_indirections = indirection_set.count();
 
-  uint64 misses = 0;
-  PrioHeap<AccessTraceForAddress*> heap;
-  Vector<Address> keys = record_map->keys();
-  for(int i=0; i<keys.size(); i++){
-    AccessTraceForAddress* record = &(record_map->lookup(keys[i]));
-    misses += record->getTotal();
-    heap.insert(record);
-  }
+    m_getx_sharing_histogram.add(num_indirections);
+    bool indirection_miss = (num_indirections > 0);
 
-  out << "Total_entries_" << description << ": " << keys.size() << endl;
-  if (g_system_ptr->getProfiler()->getAllInstructions())
-    out << "Total_Instructions_" << description << ": " << misses << endl;
-  else
-    out << "Total_data_misses_" << description << ": " << misses << endl;
-
-  out << "total | load store atomic | user supervisor | sharing | touched-by" << endl;
-
-  Histogram remaining_records(1, 100);
-  Histogram all_records(1, 100);
-  Histogram remaining_records_log(-1);
-  Histogram all_records_log(-1);
-
-  // Allows us to track how many lines where touched by n processors
-  Vector<int64> m_touched_vec;
-  Vector<int64> m_touched_weighted_vec;
-  m_touched_vec.setSize(num_of_sequencers+1);
-  m_touched_weighted_vec.setSize(num_of_sequencers+1);
-  for (int i=0; i<m_touched_vec.size(); i++) {
-    m_touched_vec[i] = 0;
-    m_touched_weighted_vec[i] = 0;
-  }
-
-  int counter = 0;
-  while((heap.size() > 0) && (counter < records_printed)) {
-    AccessTraceForAddress* record = heap.extractMin();
-    double percent = 100.0*(record->getTotal()/double(misses));
-    out << description << " | " << percent << " % " << *record << endl;
-    all_records.add(record->getTotal());
-    all_records_log.add(record->getTotal());
-    counter++;
-    m_touched_vec[record->getTouchedBy()]++;
-    m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
-  }
-
-  while(heap.size() > 0) {
-    AccessTraceForAddress* record = heap.extractMin();
-    all_records.add(record->getTotal());
-    remaining_records.add(record->getTotal());
-    all_records_log.add(record->getTotal());
-    remaining_records_log.add(record->getTotal());
-    m_touched_vec[record->getTouchedBy()]++;
-    m_touched_weighted_vec[record->getTouchedBy()] += record->getTotal();
-  }
-  out << endl;
-  out << "all_records_" << description << ": " << all_records << endl;
-  out << "all_records_log_" << description << ": " << all_records_log << endl;
-  out << "remaining_records_" << description << ": " << remaining_records << endl;
-  out << "remaining_records_log_" << description << ": " << remaining_records_log << endl;
-  out << "touched_by_" << description << ": " << m_touched_vec << endl;
-  out << "touched_by_weighted_" << description << ": " << m_touched_weighted_vec << endl;
-  out << endl;
+    addTraceSample(datablock, PC, CacheRequestType_ST, AccessModeType(0),
+                   requestor, indirection_miss);
 }
 
-static AccessTraceForAddress& lookupTraceForAddress(const Address& addr, Map<Address, AccessTraceForAddress>* record_map)
+void
+AddressProfiler::profileGetS(const Address& datablock, const Address& PC,
+                             const Set& owner, const Set& sharers,
+                             NodeID requestor)
 {
-  if(record_map->exist(addr) == false){
-    record_map->add(addr, AccessTraceForAddress(addr));
-  }
-  return record_map->lookup(addr);
+    Set indirection_set;
+    indirection_set.addSet(owner);
+    indirection_set.remove(requestor);
+    int num_indirections = indirection_set.count();
+
+    m_gets_sharing_histogram.add(num_indirections);
+    bool indirection_miss = (num_indirections > 0);
+
+    addTraceSample(datablock, PC, CacheRequestType_LD, AccessModeType(0),
+                   requestor, indirection_miss);
+}
+
+void
+AddressProfiler::addTraceSample(Address data_addr, Address pc_addr,
+                                CacheRequestType type,
+                                AccessModeType access_mode, NodeID id,
+                                bool sharing_miss)
+{
+    if (m_all_instructions) {
+        if (sharing_miss) {
+            m_sharing_miss_counter++;
+        }
+
+        // record data address trace info
+        data_addr.makeLineAddress();
+        lookupTraceForAddress(data_addr, m_dataAccessTrace).
+            update(type, access_mode, id, sharing_miss);
+
+        // record macro data address trace info
+
+        // 6 for datablock, 4 to make it 16x more coarse
+        Address macro_addr(data_addr.maskLowOrderBits(10));
+        lookupTraceForAddress(macro_addr, m_macroBlockAccessTrace).
+            update(type, access_mode, id, sharing_miss);
+
+        // record program counter address trace info
+        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).
+            update(type, access_mode, id, sharing_miss);
+    }
+
+    if (m_all_instructions) {
+        // This code is used if the address profiler is an
+        // all-instructions profiler record program counter address
+        // trace info
+        lookupTraceForAddress(pc_addr, m_programCounterAccessTrace).
+            update(type, access_mode, id, sharing_miss);
+    }
+}
+
+void
+AddressProfiler::profileRetry(const Address& data_addr, AccessType type,
+                              int count)
+{
+    m_retryProfileHisto.add(count);
+    if (type == AccessType_Read) {
+        m_retryProfileHistoRead.add(count);
+    } else {
+        m_retryProfileHistoWrite.add(count);
+    }
+    if (count > 1) {
+        lookupTraceForAddress(data_addr, m_retryProfileMap).addSample(count);
+    }
 }

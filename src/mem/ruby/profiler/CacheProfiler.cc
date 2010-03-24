@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,111 +26,113 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * CacheProfiler.C
- *
- * Description: See CacheProfiler.hh
- *
- * $Id$
- *
- */
-
-#include "mem/ruby/profiler/CacheProfiler.hh"
-#include "mem/ruby/profiler/AccessTraceForAddress.hh"
 #include "mem/gems_common/PrioHeap.hh"
-#include "mem/ruby/system/System.hh"
-#include "mem/ruby/profiler/Profiler.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/ruby/profiler/AccessTraceForAddress.hh"
+#include "mem/ruby/profiler/CacheProfiler.hh"
+#include "mem/ruby/profiler/Profiler.hh"
+#include "mem/ruby/system/System.hh"
 
 CacheProfiler::CacheProfiler(const string& description)
 {
-  m_description = description;
-  m_requestTypeVec_ptr = new Vector<int>;
-  m_requestTypeVec_ptr->setSize(int(CacheRequestType_NUM));
+    m_description = description;
+    m_requestTypeVec_ptr = new Vector<int>;
+    m_requestTypeVec_ptr->setSize(int(CacheRequestType_NUM));
 
-  clearStats();
+    clearStats();
 }
 
 CacheProfiler::~CacheProfiler()
 {
-  delete m_requestTypeVec_ptr;
+    delete m_requestTypeVec_ptr;
 }
 
-void CacheProfiler::printStats(ostream& out) const
+void
+CacheProfiler::printStats(ostream& out) const
 {
-  out << "Cache Stats: " << m_description << endl;
-  string description = "  " + m_description;
+    out << "Cache Stats: " << m_description << endl;
+    string description = "  " + m_description;
 
-  out << description << "_total_misses: " << m_misses << endl;
-  out << description << "_total_demand_misses: " << m_demand_misses << endl;
-  out << description << "_total_prefetches: " << m_prefetches << endl;
-  out << description << "_total_sw_prefetches: " << m_sw_prefetches << endl;
-  out << description << "_total_hw_prefetches: " << m_hw_prefetches << endl;
-  out << endl;
-
-  int requests = 0;
-
-  for(int i=0; i<int(CacheRequestType_NUM); i++) {
-    requests += m_requestTypeVec_ptr->ref(i);
-  }
-
-  assert(m_misses == requests);
-
-  if (requests > 0) {
-    for(int i=0; i<int(CacheRequestType_NUM); i++){
-      if (m_requestTypeVec_ptr->ref(i) > 0) {
-        out << description << "_request_type_" << CacheRequestType_to_string(CacheRequestType(i)) << ":   "
-            << (100.0 * double((m_requestTypeVec_ptr->ref(i)))) / double(requests)
-            << "%" << endl;
-      }
-    }
-
+    out << description << "_total_misses: " << m_misses << endl;
+    out << description << "_total_demand_misses: " << m_demand_misses << endl;
+    out << description << "_total_prefetches: " << m_prefetches << endl;
+    out << description << "_total_sw_prefetches: " << m_sw_prefetches << endl;
+    out << description << "_total_hw_prefetches: " << m_hw_prefetches << endl;
     out << endl;
 
-    for(int i=0; i<AccessModeType_NUM; i++){
-      if (m_accessModeTypeHistogram[i] > 0) {
-        out << description << "_access_mode_type_" << (AccessModeType) i << ":   " << m_accessModeTypeHistogram[i]
-            << "    " << (100.0 * m_accessModeTypeHistogram[i]) / requests << "%" << endl;
-      }
+    int requests = 0;
+
+    for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+        requests += m_requestTypeVec_ptr->ref(i);
     }
-  }
 
-  out << description << "_request_size: " << m_requestSize << endl;
-  out << endl;
+    assert(m_misses == requests);
 
+    if (requests > 0) {
+        for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+            if (m_requestTypeVec_ptr->ref(i) > 0) {
+                out << description << "_request_type_"
+                    << CacheRequestType_to_string(CacheRequestType(i))
+                    << ":   "
+                    << 100.0 * (double)m_requestTypeVec_ptr->ref(i) /
+                    (double)requests
+                    << "%" << endl;
+            }
+        }
+
+        out << endl;
+
+        for (int i = 0; i < AccessModeType_NUM; i++){
+            if (m_accessModeTypeHistogram[i] > 0) {
+                out << description << "_access_mode_type_"
+                    << (AccessModeType) i << ":   "
+                    << m_accessModeTypeHistogram[i] << "    "
+                    << 100.0 * m_accessModeTypeHistogram[i] / requests
+                    << "%" << endl;
+            }
+        }
+    }
+
+    out << description << "_request_size: " << m_requestSize << endl;
+    out << endl;
 }
 
-void CacheProfiler::clearStats()
+void
+CacheProfiler::clearStats()
 {
-  for(int i=0; i<int(CacheRequestType_NUM); i++) {
-    m_requestTypeVec_ptr->ref(i) = 0;
-  }
-  m_requestSize.clear();
-  m_misses = 0;
-  m_demand_misses = 0;
-  m_prefetches = 0;
-  m_sw_prefetches = 0;
-  m_hw_prefetches = 0;
-  for(int i=0; i<AccessModeType_NUM; i++){
-    m_accessModeTypeHistogram[i] = 0;
-  }
+    for (int i = 0; i < int(CacheRequestType_NUM); i++) {
+        m_requestTypeVec_ptr->ref(i) = 0;
+    }
+    m_requestSize.clear();
+    m_misses = 0;
+    m_demand_misses = 0;
+    m_prefetches = 0;
+    m_sw_prefetches = 0;
+    m_hw_prefetches = 0;
+    for (int i = 0; i < AccessModeType_NUM; i++) {
+        m_accessModeTypeHistogram[i] = 0;
+    }
 }
 
-void CacheProfiler::addStatSample(CacheRequestType requestType, AccessModeType type, int msgSize, PrefetchBit pfBit)
+void
+CacheProfiler::addStatSample(CacheRequestType requestType,
+                             AccessModeType type, int msgSize,
+                             PrefetchBit pfBit)
 {
-  m_misses++;
+    m_misses++;
 
-  m_requestTypeVec_ptr->ref(requestType)++;
+    m_requestTypeVec_ptr->ref(requestType)++;
 
-  m_accessModeTypeHistogram[type]++;
-  m_requestSize.add(msgSize);
-  if (pfBit == PrefetchBit_No) {
-    m_demand_misses++;
-  } else if (pfBit == PrefetchBit_Yes) {
-    m_prefetches++;
-    m_sw_prefetches++;
-  } else { // must be L1_HW || L2_HW prefetch
-    m_prefetches++;
-    m_hw_prefetches++;
-  }
+    m_accessModeTypeHistogram[type]++;
+    m_requestSize.add(msgSize);
+    if (pfBit == PrefetchBit_No) {
+        m_demand_misses++;
+    } else if (pfBit == PrefetchBit_Yes) {
+        m_prefetches++;
+        m_sw_prefetches++;
+    } else {
+        // must be L1_HW || L2_HW prefetch
+        m_prefetches++;
+        m_hw_prefetches++;
+    }
 }

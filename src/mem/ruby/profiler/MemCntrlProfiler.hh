@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,17 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * MemCntrlProfiler.hh
- *
- * Description:
- *
- * $Id$
- *
- */
-
-#ifndef MEM_CNTRL_PROFILER_H
-#define MEM_CNTRL_PROFILER_H
+#ifndef __MEM_RUBY_PROFILER_MEMCNTRLPROFILER_HH__
+#define __MEM_RUBY_PROFILER_MEMCNTRLPROFILER_HH__
 
 #include <iostream>
 #include <string>
@@ -47,80 +37,67 @@
 
 template <class TYPE> class Vector;
 
-class MemCntrlProfiler {
-public:
-  // Constructors
- MemCntrlProfiler(const std::string& description,
-                   int banks_per_rank,
-                   int ranks_per_dimm,
-                   int dimms_per_channel);
+class MemCntrlProfiler
+{
+  public:
+    MemCntrlProfiler(const std::string& description, int banks_per_rank,
+                     int ranks_per_dimm, int dimms_per_channel);
+    ~MemCntrlProfiler();
 
-  // Destructor
-  ~MemCntrlProfiler();
+    void printStats(std::ostream& out) const;
+    void clearStats();
 
-  // Public Methods
-  void printStats(std::ostream& out) const;
-  void clearStats();
+    void profileMemReq(int bank);
+    void profileMemBankBusy();
+    void profileMemBusBusy();
+    void profileMemTfawBusy();
+    void profileMemReadWriteBusy();
+    void profileMemDataBusBusy();
+    void profileMemRefresh();
+    void profileMemRead();
+    void profileMemWrite();
+    void profileMemWaitCycles(int cycles);
+    void profileMemInputQ(int cycles);
+    void profileMemBankQ(int cycles);
+    void profileMemArbWait(int cycles);
+    void profileMemRandBusy();
+    void profileMemNotOld();
 
-  void profileMemReq(int bank);
-  void profileMemBankBusy();
-  void profileMemBusBusy();
-  void profileMemTfawBusy();
-  void profileMemReadWriteBusy();
-  void profileMemDataBusBusy();
-  void profileMemRefresh();
-  void profileMemRead();
-  void profileMemWrite();
-  void profileMemWaitCycles(int cycles);
-  void profileMemInputQ(int cycles);
-  void profileMemBankQ(int cycles);
-  void profileMemArbWait(int cycles);
-  void profileMemRandBusy();
-  void profileMemNotOld();
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
 private:
-  // Private Methods
+    // Private copy constructor and assignment operator
+    MemCntrlProfiler(const MemCntrlProfiler& obj);
+    MemCntrlProfiler& operator=(const MemCntrlProfiler& obj);
 
-  // Private copy constructor and assignment operator
-  MemCntrlProfiler(const MemCntrlProfiler& obj);
-  MemCntrlProfiler& operator=(const MemCntrlProfiler& obj);
-
-  // Data Members (m_ prefix)
-  std::string m_description;
-  uint64 m_memReq;
-  uint64 m_memBankBusy;
-  uint64 m_memBusBusy;
-  uint64 m_memTfawBusy;
-  uint64 m_memReadWriteBusy;
-  uint64 m_memDataBusBusy;
-  uint64 m_memRefresh;
-  uint64 m_memRead;
-  uint64 m_memWrite;
-  uint64 m_memWaitCycles;
-  uint64 m_memInputQ;
-  uint64 m_memBankQ;
-  uint64 m_memArbWait;
-  uint64 m_memRandBusy;
-  uint64 m_memNotOld;
-  Vector<uint64> m_memBankCount;
-  int m_banks_per_rank;
-  int m_ranks_per_dimm;
-  int m_dimms_per_channel;
+    std::string m_description;
+    uint64 m_memReq;
+    uint64 m_memBankBusy;
+    uint64 m_memBusBusy;
+    uint64 m_memTfawBusy;
+    uint64 m_memReadWriteBusy;
+    uint64 m_memDataBusBusy;
+    uint64 m_memRefresh;
+    uint64 m_memRead;
+    uint64 m_memWrite;
+    uint64 m_memWaitCycles;
+    uint64 m_memInputQ;
+    uint64 m_memBankQ;
+    uint64 m_memArbWait;
+    uint64 m_memRandBusy;
+    uint64 m_memNotOld;
+    Vector<uint64> m_memBankCount;
+    int m_banks_per_rank;
+    int m_ranks_per_dimm;
+    int m_dimms_per_channel;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const MemCntrlProfiler& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-std::ostream& operator<<(std::ostream& out, const MemCntrlProfiler& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const MemCntrlProfiler& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //MEM_CNTRL_PROFILER_H
+#endif // __MEM_RUBY_PROFILER_MEMCNTRLPROFILER_HH__

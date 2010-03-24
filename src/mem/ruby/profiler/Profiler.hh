@@ -42,35 +42,24 @@
    ----------------------------------------------------------------------
 */
 
-/*
- * Profiler.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_PROFILER_PROFILER_HH__
+#define __MEM_RUBY_PROFILER_PROFILER_HH__
 
-#ifndef PROFILER_H
-#define PROFILER_H
-
-#include "mem/ruby/libruby.hh"
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/protocol/GenericMachineType.hh"
-#include "mem/ruby/common/Histogram.hh"
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/protocol/AccessModeType.hh"
 #include "mem/protocol/AccessType.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/system/MachineID.hh"
+#include "mem/protocol/CacheRequestType.hh"
+#include "mem/protocol/GenericMachineType.hh"
+#include "mem/protocol/GenericRequestType.hh"
 #include "mem/protocol/PrefetchBit.hh"
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Consumer.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Histogram.hh"
 #include "mem/ruby/common/Set.hh"
-#include "mem/protocol/CacheRequestType.hh"
-#include "mem/protocol/GenericRequestType.hh"
+#include "mem/ruby/libruby.hh"
+#include "mem/ruby/system/MachineID.hh"
 #include "mem/ruby/system/MemoryControl.hh"
-
+#include "mem/ruby/system/NodeID.hh"
 #include "params/RubyProfiler.hh"
 #include "sim/sim_object.hh"
 
@@ -79,155 +68,165 @@ class AddressProfiler;
 
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
-class Profiler : public SimObject, public Consumer {
-public:
-  // Constructors
+class Profiler : public SimObject, public Consumer
+{
+  public:
     typedef RubyProfilerParams Params;
-  Profiler(const Params *);
+    Profiler(const Params *);
+    ~Profiler();
 
-  // Destructor
-  ~Profiler();
+    void wakeup();
 
-  // Public Methods
-  void wakeup();
+    void setPeriodicStatsFile(const string& filename);
+    void setPeriodicStatsInterval(integer_t period);
 
-  void setPeriodicStatsFile(const string& filename);
-  void setPeriodicStatsInterval(integer_t period);
+    void printStats(ostream& out, bool short_stats=false);
+    void printShortStats(ostream& out) { printStats(out, true); }
+    void printTraceStats(ostream& out) const;
+    void clearStats();
+    void printConfig(ostream& out) const;
+    void printResourceUsage(ostream& out) const;
 
-  void printStats(ostream& out, bool short_stats=false);
-  void printShortStats(ostream& out) { printStats(out, true); }
-  void printTraceStats(ostream& out) const;
-  void clearStats();
-  void printConfig(ostream& out) const;
-  void printResourceUsage(ostream& out) const;
+    AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
+    AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
 
-  AddressProfiler* getAddressProfiler() { return m_address_profiler_ptr; }
-  AddressProfiler* getInstructionProfiler() { return m_inst_profiler_ptr; }
+    void addAddressTraceSample(const CacheMsg& msg, NodeID id);
 
-  void addAddressTraceSample(const CacheMsg& msg, NodeID id);
+    void profileRequest(const string& requestStr);
+    void profileSharing(const Address& addr, AccessType type,
+                        NodeID requestor, const Set& sharers,
+                        const Set& owner);
 
-  void profileRequest(const string& requestStr);
-  void profileSharing(const Address& addr, AccessType type, NodeID requestor, const Set& sharers, const Set& owner);
+    void profileMulticastRetry(const Address& addr, int count);
 
-  void profileMulticastRetry(const Address& addr, int count);
+    void profileFilterAction(int action);
 
-  void profileFilterAction(int action);
+    void profileConflictingRequests(const Address& addr);
 
-  void profileConflictingRequests(const Address& addr);
-  void profileOutstandingRequest(int outstanding) { m_outstanding_requests.add(outstanding); }
-  void profileOutstandingPersistentRequest(int outstanding) { m_outstanding_persistent_requests.add(outstanding); }
-  void profileAverageLatencyEstimate(int latency) { m_average_latency_estimate.add(latency); }
+    void
+    profileOutstandingRequest(int outstanding)
+    {
+        m_outstanding_requests.add(outstanding);
+    }
 
-  void recordPrediction(bool wasGood, bool wasPredicted);
+    void
+    profileOutstandingPersistentRequest(int outstanding)
+    {
+        m_outstanding_persistent_requests.add(outstanding);
+    }
 
-  void startTransaction(int cpu);
-  void endTransaction(int cpu);
-  void profilePFWait(Time waitTime);
+    void
+    profileAverageLatencyEstimate(int latency)
+    {
+        m_average_latency_estimate.add(latency);
+    }
 
-  void controllerBusy(MachineID machID);
-  void bankBusy();
-  void missLatency(Time t, RubyRequestType type);
-  void swPrefetchLatency(Time t, CacheRequestType type, GenericMachineType respondingMach);
-  void sequencerRequests(int num) { m_sequencer_requests.add(num); }
+    void recordPrediction(bool wasGood, bool wasPredicted);
 
-  void profileTransition(const string& component, NodeID version, Address addr,
-                         const string& state, const string& event,
-                         const string& next_state, const string& note);
-  void profileMsgDelay(int virtualNetwork, int delayCycles);
+    void startTransaction(int cpu);
+    void endTransaction(int cpu);
+    void profilePFWait(Time waitTime);
 
-  void print(ostream& out) const;
+    void controllerBusy(MachineID machID);
+    void bankBusy();
+    void missLatency(Time t, RubyRequestType type);
+    void swPrefetchLatency(Time t, CacheRequestType type,
+                           GenericMachineType respondingMach);
+    void sequencerRequests(int num) { m_sequencer_requests.add(num); }
 
-  void rubyWatch(int proc);
-  bool watchAddress(Address addr);
+    void profileTransition(const string& component, NodeID version,
+                           Address addr, const string& state,
+                           const string& event, const string& next_state,
+                           const string& note);
+    void profileMsgDelay(int virtualNetwork, int delayCycles);
 
-  // return Ruby's start time
-  Time getRubyStartTime(){
-    return m_ruby_start;
-  }
+    void print(ostream& out) const;
 
-  //added by SS
-  bool getHotLines() { return m_hot_lines; }
-  bool getAllInstructions() { return m_all_instructions; }
+    void rubyWatch(int proc);
+    bool watchAddress(Address addr);
 
-private:
+    // return Ruby's start time
+    Time
+    getRubyStartTime()
+    {
+        return m_ruby_start;
+    }
 
-  // Private copy constructor and assignment operator
-  Profiler(const Profiler& obj);
-  Profiler& operator=(const Profiler& obj);
+    // added by SS
+    bool getHotLines() { return m_hot_lines; }
+    bool getAllInstructions() { return m_all_instructions; }
 
-  // Data Members (m_ prefix)
-  AddressProfiler* m_address_profiler_ptr;
-  AddressProfiler* m_inst_profiler_ptr;
+  private:
+    // Private copy constructor and assignment operator
+    Profiler(const Profiler& obj);
+    Profiler& operator=(const Profiler& obj);
 
-  Vector<int64> m_instructions_executed_at_start;
-  Vector<int64> m_cycles_executed_at_start;
+    AddressProfiler* m_address_profiler_ptr;
+    AddressProfiler* m_inst_profiler_ptr;
 
-  ostream* m_periodic_output_file_ptr;
-  integer_t m_stats_period;
+    Vector<int64> m_instructions_executed_at_start;
+    Vector<int64> m_cycles_executed_at_start;
 
-  Time m_ruby_start;
-  time_t m_real_time_start_time;
+    ostream* m_periodic_output_file_ptr;
+    integer_t m_stats_period;
 
-  Vector < Vector < integer_t > > m_busyControllerCount;
-  integer_t m_busyBankCount;
-  Histogram m_multicast_retry_histogram;
+    Time m_ruby_start;
+    time_t m_real_time_start_time;
 
-  Histogram m_filter_action_histogram;
-  Histogram m_tbeProfile;
+    Vector <Vector<integer_t> > m_busyControllerCount;
+    integer_t m_busyBankCount;
+    Histogram m_multicast_retry_histogram;
 
-  Histogram m_sequencer_requests;
-  Histogram m_read_sharing_histogram;
-  Histogram m_write_sharing_histogram;
-  Histogram m_all_sharing_histogram;
-  int64 m_cache_to_cache;
-  int64 m_memory_to_cache;
+    Histogram m_filter_action_histogram;
+    Histogram m_tbeProfile;
 
-  Histogram m_prefetchWaitHistogram;
+    Histogram m_sequencer_requests;
+    Histogram m_read_sharing_histogram;
+    Histogram m_write_sharing_histogram;
+    Histogram m_all_sharing_histogram;
+    int64 m_cache_to_cache;
+    int64 m_memory_to_cache;
 
-  Vector<Histogram> m_missLatencyHistograms;
-  Vector<Histogram> m_machLatencyHistograms;
-  Histogram m_allMissLatencyHistogram;
+    Histogram m_prefetchWaitHistogram;
 
-  Histogram  m_allSWPrefetchLatencyHistogram;
-  Histogram  m_SWPrefetchL2MissLatencyHistogram;
-  Vector<Histogram> m_SWPrefetchLatencyHistograms;
-  Vector<Histogram> m_SWPrefetchMachLatencyHistograms;
+    Vector<Histogram> m_missLatencyHistograms;
+    Vector<Histogram> m_machLatencyHistograms;
+    Histogram m_allMissLatencyHistogram;
 
-  Histogram m_delayedCyclesHistogram;
-  Histogram m_delayedCyclesNonPFHistogram;
-  Vector<Histogram> m_delayedCyclesVCHistograms;
+    Histogram m_allSWPrefetchLatencyHistogram;
+    Histogram m_SWPrefetchL2MissLatencyHistogram;
+    Vector<Histogram> m_SWPrefetchLatencyHistograms;
+    Vector<Histogram> m_SWPrefetchMachLatencyHistograms;
 
-  Histogram m_outstanding_requests;
-  Histogram m_outstanding_persistent_requests;
+    Histogram m_delayedCyclesHistogram;
+    Histogram m_delayedCyclesNonPFHistogram;
+    Vector<Histogram> m_delayedCyclesVCHistograms;
 
-  Histogram m_average_latency_estimate;
+    Histogram m_outstanding_requests;
+    Histogram m_outstanding_persistent_requests;
 
-  Map<Address, int>* m_watch_address_list_ptr;
-  // counts all initiated cache request including PUTs
-  int m_requests;
-  Map <string, int>* m_requestProfileMap_ptr;
+    Histogram m_average_latency_estimate;
 
-  //added by SS
-  bool m_hot_lines;
-  bool m_all_instructions;
+    Map<Address, int>* m_watch_address_list_ptr;
+    // counts all initiated cache request including PUTs
+    int m_requests;
+    Map <string, int>* m_requestProfileMap_ptr;
 
-  int m_num_of_sequencers;
+    //added by SS
+    bool m_hot_lines;
+    bool m_all_instructions;
+
+    int m_num_of_sequencers;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const Profiler& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const Profiler& obj)
+inline ostream&
+operator<<(ostream& out, const Profiler& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //PROFILER_H
+#endif // __MEM_RUBY_PROFILER_PROFILER_HH__
 
 

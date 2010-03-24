@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
@@ -27,89 +26,77 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- * AddressProfiler.hh
- *
- * Description:
- *
- * $Id$
- *
- */
+#ifndef __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__
+#define __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__
 
-#ifndef ADDRESSPROFILER_H
-#define ADDRESSPROFILER_H
-
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/NodeID.hh"
-#include "mem/ruby/common/Histogram.hh"
-#include "mem/ruby/common/Address.hh"
-#include "mem/protocol/CacheMsg.hh"
 #include "mem/protocol/AccessType.hh"
+#include "mem/protocol/CacheMsg.hh"
+#include "mem/ruby/common/Address.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/system/NodeID.hh"
 
 class AccessTraceForAddress;
 class Set;
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
-class AddressProfiler {
-public:
-  // Constructors
-  AddressProfiler(int num_of_sequencers);
+class AddressProfiler
+{
+  public:
+    typedef Map<Address, AccessTraceForAddress> AddressMap;
 
-  // Destructor
-  ~AddressProfiler();
+  public:
+    AddressProfiler(int num_of_sequencers);
+    ~AddressProfiler();
 
-  // Public Methods
-  void printStats(ostream& out) const;
-  void clearStats();
+    void printStats(ostream& out) const;
+    void clearStats();
 
-  void addTraceSample(Address data_addr, Address pc_addr, CacheRequestType type, AccessModeType access_mode, NodeID id, bool sharing_miss);
-  void profileRetry(const Address& data_addr, AccessType type, int count);
-  void profileGetX(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
-  void profileGetS(const Address& datablock, const Address& PC, const Set& owner, const Set& sharers, NodeID requestor);
+    void addTraceSample(Address data_addr, Address pc_addr,
+                        CacheRequestType type, AccessModeType access_mode,
+                        NodeID id, bool sharing_miss);
+    void profileRetry(const Address& data_addr, AccessType type, int count);
+    void profileGetX(const Address& datablock, const Address& PC,
+                     const Set& owner, const Set& sharers, NodeID requestor);
+    void profileGetS(const Address& datablock, const Address& PC,
+                     const Set& owner, const Set& sharers, NodeID requestor);
 
-  void print(ostream& out) const;
+    void print(ostream& out) const;
 
-  //added by SS
-  void setHotLines(bool hot_lines);
-  void setAllInstructions(bool all_instructions);
-private:
-  // Private Methods
+    //added by SS
+    void setHotLines(bool hot_lines);
+    void setAllInstructions(bool all_instructions);
 
-  // Private copy constructor and assignment operator
-  AddressProfiler(const AddressProfiler& obj);
-  AddressProfiler& operator=(const AddressProfiler& obj);
+  private:
+    // Private copy constructor and assignment operator
+    AddressProfiler(const AddressProfiler& obj);
+    AddressProfiler& operator=(const AddressProfiler& obj);
 
-  // Data Members (m_ prefix)
-  int64 m_sharing_miss_counter;
+    int64 m_sharing_miss_counter;
 
-  Map<Address, AccessTraceForAddress>* m_dataAccessTrace;
-  Map<Address, AccessTraceForAddress>* m_macroBlockAccessTrace;
-  Map<Address, AccessTraceForAddress>* m_programCounterAccessTrace;
-  Map<Address, AccessTraceForAddress>* m_retryProfileMap;
-  Histogram m_retryProfileHisto;
-  Histogram m_retryProfileHistoWrite;
-  Histogram m_retryProfileHistoRead;
-  Histogram m_getx_sharing_histogram;
-  Histogram m_gets_sharing_histogram;
-//added by SS
-  bool m_hot_lines;
-  bool m_all_instructions;
+    AddressMap* m_dataAccessTrace;
+    AddressMap* m_macroBlockAccessTrace;
+    AddressMap* m_programCounterAccessTrace;
+    AddressMap* m_retryProfileMap;
+    Histogram m_retryProfileHisto;
+    Histogram m_retryProfileHistoWrite;
+    Histogram m_retryProfileHistoRead;
+    Histogram m_getx_sharing_histogram;
+    Histogram m_gets_sharing_histogram;
 
-  int m_num_of_sequencers;
+    //added by SS
+    bool m_hot_lines;
+    bool m_all_instructions;
+
+    int m_num_of_sequencers;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const AddressProfiler& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline
-ostream& operator<<(ostream& out, const AddressProfiler& obj)
+inline ostream&
+operator<<(ostream& out, const AddressProfiler& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //ADDRESSPROFILER_H
+#endif // __MEM_RUBY_PROFILER_ADDRESSPROFILER_HH__
