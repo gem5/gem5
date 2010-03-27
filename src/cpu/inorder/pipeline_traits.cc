@@ -116,7 +116,9 @@ bool createBackEndSchedule(DynInstPtr &inst)
     if ( inst->isLoad() ) {
         M->needs(DCache, CacheUnit::InitiateReadData);
     } else if ( inst->isStore() ) {
-        M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+        if ( inst->numSrcRegs() >= 2 ) {            
+            M->needs(RegManager, UseDefUnit::ReadSrcReg, 1);
+        }        
         M->needs(AGEN, AGENUnit::GenerateAddr);
         M->needs(DCache, CacheUnit::InitiateWriteData);
     }
