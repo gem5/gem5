@@ -305,7 +305,6 @@ def template StoreExecute {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         if (fault == NoFault) {
@@ -342,7 +341,6 @@ def template StoreFPExecute {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         if (fault == NoFault) {
@@ -377,7 +375,6 @@ def template StoreCondExecute {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, &write_result);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         if (fault == NoFault) {
@@ -411,7 +408,6 @@ def template StoreInitiateAcc {{
         if (fault == NoFault) {
             fault = xc->write((uint%(mem_acc_size)d_t&)Mem, EA,
                               memAccessFlags, NULL);
-            if (traceData) { traceData->setData(Mem); }
         }
 
         return fault;
@@ -435,8 +431,6 @@ def template StoreCompleteAcc {{
 
         if (fault == NoFault) {
             %(op_wb)s;
-
-            if (traceData) { traceData->setData(getMemData(xc, pkt)); }
         }
 
         return fault;
@@ -459,8 +453,6 @@ def template StoreCompleteAcc {{
 
         if (fault == NoFault) {
             %(op_wb)s;
-
-            if (traceData) { traceData->setData(getMemData(xc, pkt)); }
         }
 
         return fault;

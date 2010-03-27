@@ -35,6 +35,16 @@
 
 #include "sim/tlb.hh"
 
+/**
+ * This class captures the state of an address translation.  A translation
+ * can be split in two if the ISA supports it and the memory access crosses
+ * a page boundary.  In this case, this class is shared by two data
+ * translations (below).  Otherwise it is used by a single data translation
+ * class.  When each part of the translation is finished, the finish
+ * function is called which will indicate whether the whole translation is
+ * completed or not.  There are also functions for accessing parts of the
+ * translation state which deal with the possible split correctly.
+ */
 class WholeTranslationState
 {
   protected:
@@ -50,7 +60,10 @@ class WholeTranslationState
     uint64_t *res;
     BaseTLB::Mode mode;
 
-    /** Single translation state. */
+    /**
+     * Single translation state.  We set the number of outstanding
+     * translations to one and indicate that it is not split.
+     */
     WholeTranslationState(RequestPtr _req, uint8_t *_data, uint64_t *_res,
                           BaseTLB::Mode _mode)
         : outstanding(1), isSplit(false), mainReq(_req), sreqLow(NULL),
@@ -60,7 +73,11 @@ class WholeTranslationState
         assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
     }
 
-    /** Split translation state. */
+    /**
+     * Split translation state.  We copy all state into this class, set the
+     * number of outstanding translations to two and then mark this as a
+     * split translation.
+     */
     WholeTranslationState(RequestPtr _req, RequestPtr _sreqLow,
                           RequestPtr _sreqHigh, uint8_t *_data, uint64_t *_res,
                           BaseTLB::Mode _mode)
@@ -71,6 +88,13 @@ class WholeTranslationState
         assert(mode == BaseTLB::Read || mode == BaseTLB::Write);
     }
 
+    /**
+     * Finish part of a translation.  If there is only one request then this
+     * translation is completed.  If the request has been split in two then
+     * the outstanding count determines whether the translation is complete.
+     * In this case, flags from the split request are copied to the main
+     * request to make it easier to access them later on.
+     */
     bool
     finish(Fault fault, int index)
     {
@@ -89,6 +113,10 @@ class WholeTranslationState
         return outstanding == 0;
     }
 
+    /**
+     * Determine whether this translation produced a fault.  Both parts of the
+     * translation must be checked if this is a split translation.
+     */
     Fault
     getFault() const
     {
@@ -102,36 +130,54 @@ class WholeTranslationState
             return NoFault;
     }
 
+    /** Remove all faults from the translation. */
     void
     setNoFault()
     {
         faults[0] = faults[1] = NoFault;
     }
 
+    /**
+     * Check if this request is uncacheable.  We only need to check the main
+     * request because the flags will have been copied here on a split
+     * translation.
+     */
     bool
     isUncacheable() const
     {
         return mainReq->isUncacheable();
     }
 
+    /**
+     * Check if this request is a prefetch.  We only need to check the main
+     * request because the flags will have been copied here on a split
+     * translation.
+     */
     bool
     isPrefetch() const
     {
         return mainReq->isPrefetch();
     }
 
+    /** Get the physical address of this request. */
     Addr
     getPaddr() const
     {
         return mainReq->getPaddr();
     }
 
+    /**
+     * Get the flags associated with this request.  We only need to access
+     * the main request because the flags will have been copied here on a
+     * split translation.
+     */
     unsigned
     getFlags()
     {
         return mainReq->getFlags();
     }
 
+    /** Delete all requests that make up this translation. */
     void
     deleteReqs()
     {
@@ -143,6 +189,16 @@ class WholeTranslationState
     }
 };
 
+
+/**
+ * This class represents part of a data address translation.  All state for
+ * the translation is held in WholeTranslationState (above).  Therefore this
+ * class does not need to know whether the translation is split or not.  The
+ * index variable determines this but is simply passed on to the state class.
+ * When this part of the translation is completed, finish is called.  If the
+ * translation state class indicate that the whole translation is complete
+ * then the execution context is informed.
+ */
 template <class ExecContext>
 class DataTranslation : public BaseTLB::Translation
 {
@@ -163,6 +219,10 @@ class DataTranslation : public BaseTLB::Translation
     {
     }
 
+    /**
+     * Finish this part of the translation and indicate that the whole
+     * translation is complete if the state says so.
+     */
     void
     finish(Fault fault, RequestPtr req, ThreadContext *tc,
            BaseTLB::Mode mode)

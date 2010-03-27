@@ -232,16 +232,8 @@ class BaseSimpleCPU : public BaseCPU
     Addr getEA()        { panic("BaseSimpleCPU::getEA() not implemented\n");
         M5_DUMMY_RETURN}
 
-    void prefetch(Addr addr, unsigned flags)
-    {
-        // need to do this...
-    }
-
-    void writeHint(Addr addr, int size, unsigned flags)
-    {
-        // need to do this...
-    }
-
+    void prefetch(Addr addr, unsigned flags);
+    void writeHint(Addr addr, int size, unsigned flags);
 
     Fault copySrcTranslate(Addr src);
 

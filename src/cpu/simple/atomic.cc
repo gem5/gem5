@@ -351,10 +351,6 @@ AtomicSimpleCPU::read(Addr addr, T &data, unsigned flags)
             }
         }
 
-        // This will need a new way to tell if it has a dcache attached.
-        if (req->isUncacheable())
-            recordEvent("Uncached Read");
-
         //If there's a fault, return it
         if (fault != NoFault) {
             if (req->isPrefetch()) {
@@ -451,6 +447,7 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
 
     if (traceData) {
         traceData->setAddr(addr);
+        traceData->setData(data);
     }
 
     //The block size of our peer.
@@ -522,20 +519,10 @@ AtomicSimpleCPU::write(T data, Addr addr, unsigned flags, uint64_t *res)
             }
         }
 
-        // This will need a new way to tell if it's hooked up to a cache or not.
-        if (req->isUncacheable())
-            recordEvent("Uncached Write");
-
         //If there's a fault or we don't need to access a second cache line,
         //stop now.
         if (fault != NoFault || secondAddr <= addr)
         {
-            // If the write needs to have a fault on the access, consider
-            // calling changeStatus() and changing it to "bad addr write"
-            // or something.
-            if (traceData) {
-                traceData->setData(gtoh(data));
-            }
             if (req->isLocked() && fault == NoFault) {
                 assert(locked);
                 locked = false;
