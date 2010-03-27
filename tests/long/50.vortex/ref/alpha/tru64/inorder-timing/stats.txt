@@ -1,9 +1,9 @@
 
 ---------- Begin Simulation Statistics ----------
-host_inst_rate                                  52039                       # Simulator instruction rate (inst/s)
+host_inst_rate                                  49066                       # Simulator instruction rate (inst/s)
 host_mem_usage                                 166880                       # Number of bytes of host memory used
-host_seconds                                  1697.59                       # Real time elapsed on the host
-host_tick_rate                               62436709                       # Simulator tick rate (ticks/s)
+host_seconds                                  1800.43                       # Real time elapsed on the host
+host_tick_rate                               58870361                       # Simulator tick rate (ticks/s)
 sim_freq                                 1000000000000                       # Frequency of simulated ticks
 sim_insts                                    88340673                       # Number of instructions simulated
 sim_seconds                                  0.105992                       # Number of seconds simulated
@@ -30,7 +30,7 @@ system.cpu.Graduation-Unit.instReqsProcessed     88340673                       
 system.cpu.Mult-Div-Unit.divInstReqsProcessed            0                       # Number of Divide Requests Processed.
 system.cpu.Mult-Div-Unit.instReqsProcessed        82202                       # Number of Instructions Requests that completed in this resource.
 system.cpu.Mult-Div-Unit.multInstReqsProcessed        41101                       # Number of Multiply Requests Processed.
-system.cpu.RegFile-Manager.instReqsProcessed    165784566                       # Number of Instructions Requests that completed in this resource.
+system.cpu.RegFile-Manager.instReqsProcessed    165553324                       # Number of Instructions Requests that completed in this resource.
 system.cpu.activity                         85.622201                       # Percentage of cycles cpu is active
 system.cpu.committedInsts                    88340673                       # Number of Instructions Simulated (Per-Thread)
 system.cpu.committedInsts_total              88340673                       # Number of Instructions Simulated (Total)
