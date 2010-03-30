@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
@@ -28,135 +27,118 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef RUBY_TESTER_H
-#define RUBY_TESTER_H
+#ifndef __CPU_RUBYTEST_RUBYTESTER_HH__
+#define __CPU_RUBYTEST_RUBYTESTER_HH__
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/mem_object.hh"
 #include "cpu/rubytest/CheckTable.hh"
-#include "mem/ruby/system/RubyPort.hh"
-#include "mem/ruby/common/SubBlock.hh"
-#include "mem/ruby/common/DataBlock.hh"
+#include "mem/mem_object.hh"
 #include "mem/packet.hh"
+#include "mem/ruby/common/DataBlock.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/system/RubyPort.hh"
 #include "params/RubyTester.hh"
 
-class RubyTester : public MemObject 
+class RubyTester : public MemObject
 {
-
- public:
-
-  class CpuPort : public SimpleTimingPort
-  {
-    RubyTester *tester;
-
-   public:
-    
-    CpuPort(const std::string &_name, 
-            RubyTester *_tester,
-            int _idx)
-      : SimpleTimingPort(_name, _tester), tester(_tester), idx(_idx)
-    {}
-
-    int idx;
-    
-   protected:
-    
-    virtual bool recvTiming(PacketPtr pkt);
-
-    virtual Tick recvAtomic(PacketPtr pkt);
-    
-  };
-
-  struct SenderState : public Packet::SenderState
-  {
-    SubBlock* subBlock;
-    Packet::SenderState *saved;
-    
-    SenderState(Address addr,
-                int size,
-                Packet::SenderState *sender_state = NULL)
-      : saved(sender_state)
-    {subBlock = new SubBlock(addr, size);}
-
-    ~SenderState() {delete subBlock;}
-  };
-
-  typedef RubyTesterParams Params;
-  // Constructors
-  RubyTester(const Params *p);
-
-  // Destructor
-  ~RubyTester();
-  
-  // Public Methods
-  
-  virtual Port *getPort(const std::string &if_name, int idx = -1);
-
-  Port* getCpuPort(int idx);
-
-  void virtual init();
-
-  void wakeup();
-
-  void incrementCheckCompletions() { m_checks_completed++; }
-
-  void printStats(ostream& out) const {}
-  void clearStats() {}
-  void printConfig(ostream& out) const {}
-
-  void print(ostream& out) const;
-
- protected:
-  class CheckStartEvent : public Event
-  {
-  private:
-    RubyTester *tester;
-    
   public:
-    CheckStartEvent(RubyTester *_tester) : Event(CPU_Tick_Pri), tester(_tester) {}
-    void process() { tester->wakeup(); }
-    virtual const char *description() const { return "RubyTester tick"; }
-  };
-  
-  CheckStartEvent checkStartEvent;
+    class CpuPort : public SimpleTimingPort
+    {
+      private:
+        RubyTester *tester;
 
+      public:
+        CpuPort(const std::string &_name, RubyTester *_tester, int _idx)
+            : SimpleTimingPort(_name, _tester), tester(_tester), idx(_idx)
+        {}
 
- private:
-  // Private Methods
+        int idx;
 
-  void hitCallback(NodeID proc, SubBlock* data);
+      protected:
+        virtual bool recvTiming(PacketPtr pkt);
+        virtual Tick recvAtomic(PacketPtr pkt);
+    };
 
-  void checkForDeadlock();
+    struct SenderState : public Packet::SenderState
+    {
+        SubBlock* subBlock;
+        Packet::SenderState *saved;
 
-  // Private copy constructor and assignment operator
-  RubyTester(const RubyTester& obj);
-  RubyTester& operator=(const RubyTester& obj);
-  
-  // Data Members (m_ prefix)
-  
-  CheckTable* m_checkTable_ptr;
-  Vector<Time> m_last_progress_vector;
+        SenderState(Address addr, int size,
+                    Packet::SenderState *sender_state = NULL)
+            : saved(sender_state)
+        {
+            subBlock = new SubBlock(addr, size);
+        }
 
-  uint64 m_checks_completed;
-  std::vector<CpuPort*> ports;
-  uint64 m_checks_to_complete;
-  int m_deadlock_threshold;
-  int m_num_cpu_sequencers;
-  int m_wakeup_frequency;
+        ~SenderState()
+        {
+            delete subBlock;
+        }
+    };
+
+    typedef RubyTesterParams Params;
+    RubyTester(const Params *p);
+    ~RubyTester();
+
+    virtual Port *getPort(const std::string &if_name, int idx = -1);
+
+    Port* getCpuPort(int idx);
+
+    virtual void init();
+
+    void wakeup();
+
+    void incrementCheckCompletions() { m_checks_completed++; }
+
+    void printStats(ostream& out) const {}
+    void clearStats() {}
+    void printConfig(ostream& out) const {}
+
+    void print(ostream& out) const;
+
+  protected:
+    class CheckStartEvent : public Event
+    {
+      private:
+        RubyTester *tester;
+
+      public:
+        CheckStartEvent(RubyTester *_tester)
+            : Event(CPU_Tick_Pri), tester(_tester)
+        {}
+        void process() { tester->wakeup(); }
+        virtual const char *description() const { return "RubyTester tick"; }
+    };
+
+    CheckStartEvent checkStartEvent;
+
+  private:
+    void hitCallback(NodeID proc, SubBlock* data);
+
+    void checkForDeadlock();
+
+    // Private copy constructor and assignment operator
+    RubyTester(const RubyTester& obj);
+    RubyTester& operator=(const RubyTester& obj);
+
+    CheckTable* m_checkTable_ptr;
+    Vector<Time> m_last_progress_vector;
+
+    uint64 m_checks_completed;
+    std::vector<CpuPort*> ports;
+    uint64 m_checks_to_complete;
+    int m_deadlock_threshold;
+    int m_num_cpu_sequencers;
+    int m_wakeup_frequency;
 };
 
-// Output operator declaration
-ostream& operator<<(ostream& out, const RubyTester& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline 
-ostream& operator<<(ostream& out, const RubyTester& obj)
+inline ostream&
+operator<<(ostream& out, const RubyTester& obj)
 {
-  obj.print(out);
-  out << flush;
-  return out;
+    obj.print(out);
+    out << flush;
+    return out;
 }
 
-#endif //RUBY_TESTER_H
+#endif // __CPU_RUBYTEST_RUBYTESTER_HH__

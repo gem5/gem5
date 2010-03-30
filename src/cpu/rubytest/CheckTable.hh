@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
@@ -28,66 +27,55 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CHECKTABLE_H
-#define CHECKTABLE_H
+#ifndef __CPU_RUBYTEST_CHECKTABLE_HH__
+#define __CPU_RUBYTEST_CHECKTABLE_HH__
 
 #include <iostream>
 
-#include "mem/ruby/common/Global.hh"
 #include "mem/gems_common/Vector.hh"
+#include "mem/ruby/common/Global.hh"
 
 class Address;
 class Check;
 class RubyTester;
 template <class KEY_TYPE, class VALUE_TYPE> class Map;
 
-class CheckTable {
-public:
-  // Constructors
-  CheckTable(int _num_cpu_sequencers, RubyTester* _tester);
+class CheckTable
+{
+  public:
+    CheckTable(int _num_cpu_sequencers, RubyTester* _tester);
+    ~CheckTable();
 
-  // Destructor
-  ~CheckTable();
-  
-  // Public Methods
+    Check* getRandomCheck();
+    Check* getCheck(const Address& address);
 
-  Check* getRandomCheck();
-  Check* getCheck(const Address& address);
+    //  bool isPresent(const Address& address) const;
+    //  void removeCheckFromTable(const Address& address);
+    //  bool isTableFull() const;
+    // Need a method to select a check or retrieve a check
 
-  //  bool isPresent(const Address& address) const;
-  //  void removeCheckFromTable(const Address& address);
-  //  bool isTableFull() const;
-  // Need a method to select a check or retrieve a check
+    void print(std::ostream& out) const;
 
-  void print(std::ostream& out) const;
-private:
-  // Private Methods
-  void addCheck(const Address& address);
+  private:
+    void addCheck(const Address& address);
 
-  // Private copy constructor and assignment operator
-  CheckTable(const CheckTable& obj);
-  CheckTable& operator=(const CheckTable& obj);
-  
-  // Data Members (m_ prefix)
-  Vector<Check*> m_check_vector;
-  Map<Address, Check*>* m_lookup_map_ptr;
+    // Private copy constructor and assignment operator
+    CheckTable(const CheckTable& obj);
+    CheckTable& operator=(const CheckTable& obj);
 
-  int m_num_cpu_sequencers;
-  RubyTester* m_tester_ptr;
+    Vector<Check*> m_check_vector;
+    Map<Address, Check*>* m_lookup_map_ptr;
+
+    int m_num_cpu_sequencers;
+    RubyTester* m_tester_ptr;
 };
 
-// Output operator declaration
-std::ostream& operator<<(std::ostream& out, const CheckTable& obj);
-
-// ******************* Definitions *******************
-
-// Output operator definition
-extern inline 
-std::ostream& operator<<(std::ostream& out, const CheckTable& obj)
+inline std::ostream&
+operator<<(std::ostream& out, const CheckTable& obj)
 {
-  obj.print(out);
-  out << std::flush;
-  return out;
+    obj.print(out);
+    out << std::flush;
+    return out;
 }
 
-#endif //CHECKTABLE_H
+#endif // __CPU_RUBYTEST_CHECKTABLE_HH__

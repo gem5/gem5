@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
@@ -28,54 +27,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/common/Global.hh"
-#include "mem/ruby/system/System.hh"
-#include "cpu/rubytest/RubyTester.hh"
-#include "mem/ruby/eventqueue/RubyEventQueue.hh"
-#include "mem/ruby/common/SubBlock.hh"
 #include "cpu/rubytest/Check.hh"
+#include "cpu/rubytest/RubyTester.hh"
+#include "mem/ruby/common/Global.hh"
+#include "mem/ruby/common/SubBlock.hh"
+#include "mem/ruby/eventqueue/RubyEventQueue.hh"
+#include "mem/ruby/system/System.hh"
 #include "sim/sim_exit.hh"
 
 RubyTester::RubyTester(const Params *p)
-  : MemObject(p),
-    checkStartEvent(this),
+  : MemObject(p), checkStartEvent(this),
     m_checks_to_complete(p->checks_to_complete),
     m_deadlock_threshold(p->deadlock_threshold),
     m_wakeup_frequency(p->wakeup_frequency)
 {
-  m_checks_completed = 0;
+    m_checks_completed = 0;
 
-  // add the check start event to the event queue
-  schedule(checkStartEvent, 1);
-
+    // add the check start event to the event queue
+    schedule(checkStartEvent, 1);
 }
 
 RubyTester::~RubyTester()
 {
-  delete m_checkTable_ptr;
-  for (int i = 0; i < ports.size(); i++) {
-    delete ports[i];
-  }
+    delete m_checkTable_ptr;
+    for (int i = 0; i < ports.size(); i++)
+        delete ports[i];
 }
 
-void RubyTester::init()
+void
+RubyTester::init()
 {
-  assert(ports.size() > 0);
+    assert(ports.size() > 0);
 
-  m_last_progress_vector.setSize(ports.size());
-  for (int i = 0; i < m_last_progress_vector.size(); i++) {
-    m_last_progress_vector[i] = 0;
-  }
+    m_last_progress_vector.setSize(ports.size());
+    for (int i = 0; i < m_last_progress_vector.size(); i++) {
+        m_last_progress_vector[i] = 0;
+    }
 
-  m_num_cpu_sequencers = ports.size();
+    m_num_cpu_sequencers = ports.size();
 
-  m_checkTable_ptr = new CheckTable(m_num_cpu_sequencers, this);
+    m_checkTable_ptr = new CheckTable(m_num_cpu_sequencers, this);
 }
 
 Port *
 RubyTester::getPort(const std::string &if_name, int idx)
 {
-
     if (if_name != "cpuPort") {
         panic("RubyTester::getPort: unknown port %s requested", if_name);
     }
@@ -97,102 +93,99 @@ RubyTester::getPort(const std::string &if_name, int idx)
 Tick
 RubyTester::CpuPort::recvAtomic(PacketPtr pkt)
 {
-  panic("RubyTester::CpuPort::recvAtomic() not implemented!\n");
-  return 0;
+    panic("RubyTester::CpuPort::recvAtomic() not implemented!\n");
+    return 0;
 }
 
 bool
 RubyTester::CpuPort::recvTiming(PacketPtr pkt)
 {
-  //
-  // retrieve the subblock and call hitCallback
-  //
-  RubyTester::SenderState* senderState = 
-    safe_cast<RubyTester::SenderState*>(pkt->senderState);
-  SubBlock* subblock = senderState->subBlock;
-  assert(subblock != NULL);
-  
-  // pop the sender state from the packet
-  pkt->senderState = senderState->saved;
+    // retrieve the subblock and call hitCallback
+    RubyTester::SenderState* senderState =
+        safe_cast<RubyTester::SenderState*>(pkt->senderState);
+    SubBlock* subblock = senderState->subBlock;
+    assert(subblock != NULL);
 
-  tester->hitCallback(idx, subblock);
+    // pop the sender state from the packet
+    pkt->senderState = senderState->saved;
 
-  //
-  // Now that the tester has completed, delete the senderState 
-  // (includes sublock) and the packet, then return
-  //
-  delete senderState;
-  delete pkt->req;
-  delete pkt;
-  return true;
+    tester->hitCallback(idx, subblock);
+
+    // Now that the tester has completed, delete the senderState
+    // (includes sublock) and the packet, then return
+    delete senderState;
+    delete pkt->req;
+    delete pkt;
+    return true;
 }
 
-Port* 
+Port*
 RubyTester::getCpuPort(int idx)
 {
-  assert(idx >= 0 && idx < ports.size());
+    assert(idx >= 0 && idx < ports.size());
 
-  return ports[idx];
+    return ports[idx];
 }
 
-void RubyTester::hitCallback(NodeID proc, SubBlock* data)
+void
+RubyTester::hitCallback(NodeID proc, SubBlock* data)
 {
-  // Mark that we made progress
-  m_last_progress_vector[proc] = g_eventQueue_ptr->getTime();
+    // Mark that we made progress
+    m_last_progress_vector[proc] = g_eventQueue_ptr->getTime();
 
-  DPRINTF(RubyTest, "completed request for proc: %d\n", proc);
-  DPRINTF(RubyTest, 
-          "addr: 0x%x, size: %d, data: ", 
-          data->getAddress(),
-          data->getSize());
-  for (int byte = 0; byte < data->getSize(); byte++) {
-    DPRINTF(RubyTest, "%d", data->getByte(byte));
-  }
-  DPRINTF(RubyTest, "\n");
-
-  //
-  // This tells us our store has 'completed' or for a load gives us
-  // back the data to make the check 
-  //
-  Check* check_ptr = m_checkTable_ptr->getCheck(data->getAddress());
-  assert(check_ptr != NULL);
-  check_ptr->performCallback(proc, data);
-}
-
-void RubyTester::wakeup()
-{ 
-  if (m_checks_completed < m_checks_to_complete) {
-    // Try to perform an action or check
-    Check* check_ptr = m_checkTable_ptr->getRandomCheck();
-    assert(check_ptr != NULL);
-    check_ptr->initiate();
-    
-    checkForDeadlock();
-    
-    schedule(checkStartEvent, curTick + m_wakeup_frequency);
-  } else {
-    exitSimLoop("Ruby Tester completed");
-  }
-}
-
-void RubyTester::checkForDeadlock()
-{
-  int size = m_last_progress_vector.size();
-  Time current_time = g_eventQueue_ptr->getTime();
-  for (int processor = 0; processor < size; processor++) {
-    if ((current_time - m_last_progress_vector[processor]) > m_deadlock_threshold) {
-      WARN_EXPR(current_time);
-      WARN_EXPR(m_last_progress_vector[processor]);
-      WARN_EXPR(current_time - m_last_progress_vector[processor]);
-      WARN_EXPR(processor);
-      ERROR_MSG("Deadlock detected.");
+    DPRINTF(RubyTest, "completed request for proc: %d\n", proc);
+    DPRINTF(RubyTest, "addr: 0x%x, size: %d, data: ",
+            data->getAddress(), data->getSize());
+    for (int byte = 0; byte < data->getSize(); byte++) {
+        DPRINTF(RubyTest, "%d", data->getByte(byte));
     }
-  }
+    DPRINTF(RubyTest, "\n");
+
+    // This tells us our store has 'completed' or for a load gives us
+    // back the data to make the check
+    Check* check_ptr = m_checkTable_ptr->getCheck(data->getAddress());
+    assert(check_ptr != NULL);
+    check_ptr->performCallback(proc, data);
 }
 
-void RubyTester::print(ostream& out) const
+void
+RubyTester::wakeup()
 {
-  out << "[RubyTester]" << endl;
+    if (m_checks_completed < m_checks_to_complete) {
+        // Try to perform an action or check
+        Check* check_ptr = m_checkTable_ptr->getRandomCheck();
+        assert(check_ptr != NULL);
+        check_ptr->initiate();
+
+        checkForDeadlock();
+
+        schedule(checkStartEvent, curTick + m_wakeup_frequency);
+    } else {
+        exitSimLoop("Ruby Tester completed");
+    }
+}
+
+void
+RubyTester::checkForDeadlock()
+{
+    int size = m_last_progress_vector.size();
+    Time current_time = g_eventQueue_ptr->getTime();
+    for (int processor = 0; processor < size; processor++) {
+        if ((current_time - m_last_progress_vector[processor]) >
+                m_deadlock_threshold) {
+            WARN_EXPR(current_time);
+            WARN_EXPR(m_last_progress_vector[processor]);
+            WARN_EXPR(current_time - m_last_progress_vector[processor]);
+            WARN_EXPR(processor);
+            ERROR_MSG("Deadlock detected.");
+        }
+    }
+}
+
+void
+RubyTester::print(ostream& out) const
+{
+    out << "[RubyTester]" << endl;
 }
 
 RubyTester *

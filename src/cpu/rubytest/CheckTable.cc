@@ -1,4 +1,3 @@
-
 /*
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * Copyright (c) 2009 Advanced Micro Devices, Inc.
@@ -28,103 +27,105 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#include "cpu/rubytest/CheckTable.hh"
-#include "cpu/rubytest/CheckTable.hh"
 #include "cpu/rubytest/Check.hh"
+#include "cpu/rubytest/CheckTable.hh"
+#include "cpu/rubytest/CheckTable.hh"
 #include "mem/gems_common/Map.hh"
 
 CheckTable::CheckTable(int _num_cpu_sequencers, RubyTester* _tester)
-  : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)
+    : m_num_cpu_sequencers(_num_cpu_sequencers), m_tester_ptr(_tester)
 {
-  m_lookup_map_ptr = new Map<Address, Check*>;
-  physical_address_t physical = 0;
-  Address address;
+    m_lookup_map_ptr = new Map<Address, Check*>;
+    physical_address_t physical = 0;
+    Address address;
 
-  const int size1 = 32;
-  const int size2 = 100;
+    const int size1 = 32;
+    const int size2 = 100;
 
-  // The first set is to get some false sharing
-  physical = 1000;
-  for (int i=0; i<size1; i++) {
-    // Setup linear addresses
-    address.setAddress(physical);
-    addCheck(address);
-    physical += CHECK_SIZE;
-  }
+    // The first set is to get some false sharing
+    physical = 1000;
+    for (int i = 0; i < size1; i++) {
+        // Setup linear addresses
+        address.setAddress(physical);
+        addCheck(address);
+        physical += CHECK_SIZE;
+    }
 
-  // The next two sets are to get some limited false sharing and cache conflicts
-  physical = 1000;
-  for (int i=0; i<size2; i++) {
-    // Setup linear addresses
-    address.setAddress(physical);
-    addCheck(address);
-    physical += 256;
-  }
+    // The next two sets are to get some limited false sharing and
+    // cache conflicts
+    physical = 1000;
+    for (int i = 0; i < size2; i++) {
+        // Setup linear addresses
+        address.setAddress(physical);
+        addCheck(address);
+        physical += 256;
+    }
 
-  physical = 1000 + CHECK_SIZE;
-  for (int i=0; i<size2; i++) {
-    // Setup linear addresses
-    address.setAddress(physical);
-    addCheck(address);
-    physical += 256;
-  }
+    physical = 1000 + CHECK_SIZE;
+    for (int i = 0; i < size2; i++) {
+        // Setup linear addresses
+        address.setAddress(physical);
+        addCheck(address);
+        physical += 256;
+    }
 }
 
 CheckTable::~CheckTable()
 {
-  int size = m_check_vector.size();
-  for (int i=0; i<size; i++) {
-    delete m_check_vector[i];
-  }
-  delete m_lookup_map_ptr;
+    int size = m_check_vector.size();
+    for (int i = 0; i < size; i++)
+        delete m_check_vector[i];
+    delete m_lookup_map_ptr;
 }
 
-void CheckTable::addCheck(const Address& address)
+void
+CheckTable::addCheck(const Address& address)
 {
-  if (log_int(CHECK_SIZE) != 0) {
-    if (address.bitSelect(0,CHECK_SIZE_BITS-1) != 0) {
-      ERROR_MSG("Check not aligned");
+    if (log_int(CHECK_SIZE) != 0) {
+        if (address.bitSelect(0, CHECK_SIZE_BITS - 1) != 0) {
+            ERROR_MSG("Check not aligned");
+        }
     }
-  }
 
-  for (int i=0; i<CHECK_SIZE; i++) {
-    if (m_lookup_map_ptr->exist(Address(address.getAddress()+i))) {
-      // A mapping for this byte already existed, discard the entire check
-      return;
+    for (int i = 0; i < CHECK_SIZE; i++) {
+        if (m_lookup_map_ptr->exist(Address(address.getAddress()+i))) {
+            // A mapping for this byte already existed, discard the
+            // entire check
+            return;
+        }
     }
-  }
 
-  Check* check_ptr = new Check(address, 
-                               Address(100+m_check_vector.size()),
-                               m_num_cpu_sequencers,
-                               m_tester_ptr);
-  for (int i=0; i<CHECK_SIZE; i++) {
-    // Insert it once per byte
-    m_lookup_map_ptr->add(Address(address.getAddress()+i), check_ptr);
-  }
-  m_check_vector.insertAtBottom(check_ptr);
+    Check* check_ptr = new Check(address, Address(100 + m_check_vector.size()),
+                                 m_num_cpu_sequencers, m_tester_ptr);
+    for (int i = 0; i < CHECK_SIZE; i++) {
+        // Insert it once per byte
+        m_lookup_map_ptr->add(Address(address.getAddress() + i), check_ptr);
+    }
+    m_check_vector.insertAtBottom(check_ptr);
 }
 
-Check* CheckTable::getRandomCheck()
+Check*
+CheckTable::getRandomCheck()
 {
-  return m_check_vector[random() % m_check_vector.size()];
+    return m_check_vector[random() % m_check_vector.size()];
 }
 
-Check* CheckTable::getCheck(const Address& address)
+Check*
+CheckTable::getCheck(const Address& address)
 {
-  DEBUG_MSG(TESTER_COMP, MedPrio, "Looking for check by address");
-  DEBUG_EXPR(TESTER_COMP, MedPrio, address);
+    DEBUG_MSG(TESTER_COMP, MedPrio, "Looking for check by address");
+    DEBUG_EXPR(TESTER_COMP, MedPrio, address);
 
-  if (m_lookup_map_ptr->exist(address)) {
-    Check* check = m_lookup_map_ptr->lookup(address);
-    assert(check != NULL);
-    return check;
-  } else {
-    return NULL;
-  }
+    if (m_lookup_map_ptr->exist(address)) {
+        Check* check = m_lookup_map_ptr->lookup(address);
+        assert(check != NULL);
+        return check;
+    } else {
+        return NULL;
+    }
 }
 
-void CheckTable::print(ostream& out) const
+void
+CheckTable::print(ostream& out) const
 {
 }
